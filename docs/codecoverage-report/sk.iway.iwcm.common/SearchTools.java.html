@@ -20,11 +20,11 @@ import sk.iway.iwcm.Tools;
     {
 <span class="pc bpc" id="L21" title="1 of 2 branches missed.">        if (html != null)</span>
         {
-<span class="pc bpc" id="L23" title="1 of 2 branches missed.">            if (html.contains(&quot;)!&quot;))</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">            if (html.contains(&quot;)!&quot;))</span>
             {
-<span class="nc" id="L25">                Pattern replace = Pattern.compile(</span>
+<span class="fc" id="L25">                Pattern replace = Pattern.compile(</span>
                 &quot;(!INCLUDE.*?\\)!)|(!REMAP_PAGE.*?\\)!)|(!PARAMETER.*?\\)!)|(!REQUEST.*?\\)!)|(!LOGGED_USER.*?\\)!)&quot;, Pattern.CASE_INSENSITIVE);
-<span class="nc" id="L27">                html = replace.matcher(html).replaceAll(&quot;&quot;);</span>
+<span class="fc" id="L27">                html = replace.matcher(html).replaceAll(&quot;&quot;);</span>
             }
 <span class="fc" id="L29">            return html;</span>
         }
@@ -50,7 +50,7 @@ import sk.iway.iwcm.Tools;
 
     public static String htmlToPlain(String html)
     {
-<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (html == null) return &quot;&quot;;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (html == null) return &quot;&quot;;</span>
 <span class="fc" id="L54">        html = removeCommands(html);</span>
 <span class="fc" id="L55">        html = Tools.replace(html, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
 <span class="fc" id="L56">        int failsafe = 0;</span>
@@ -71,17 +71,17 @@ import sk.iway.iwcm.Tools;
                     {
 <span class="fc" id="L72">                        String tagName = sTok.nextToken().toLowerCase();</span>
 
-<span class="pc bpc" id="L74" title="3 of 8 branches missed.">                        if (tagName.startsWith(&quot;/p&quot;) || tagName.startsWith(&quot;/h&quot;) || tagName.startsWith(&quot;/ul&quot;) || tagName.startsWith(&quot;/div&quot;))</span>
+<span class="fc bfc" id="L74" title="All 8 branches covered.">                        if (tagName.startsWith(&quot;/p&quot;) || tagName.startsWith(&quot;/h&quot;) || tagName.startsWith(&quot;/ul&quot;) || tagName.startsWith(&quot;/div&quot;))</span>
                         {
                             //ten trim odstrani poslednu medzeru na konci riadku
 <span class="fc" id="L77">                            plain.append(&quot;\n\n&quot;);</span>
                         }
-<span class="pc bpc" id="L79" title="5 of 10 branches missed.">                        else if (tagName.startsWith(&quot;br&quot;) || tagName.startsWith(&quot;/tr&quot;) || tagName.startsWith(&quot;/li&quot;) || tagName.startsWith(&quot;ul&quot;) || tagName.startsWith(&quot;h&quot;) )</span>
+<span class="fc bfc" id="L79" title="All 10 branches covered.">                        else if (tagName.startsWith(&quot;br&quot;) || tagName.startsWith(&quot;/tr&quot;) || tagName.startsWith(&quot;/li&quot;) || tagName.startsWith(&quot;ul&quot;) || tagName.startsWith(&quot;h&quot;) )</span>
                         {
                             //ten trim odstrani poslednu medzeru na konci riadku
-<span class="nc" id="L82">                            plain.append(&quot;\n&quot;);</span>
+<span class="fc" id="L82">                            plain.append(&quot;\n&quot;);</span>
                         }
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">                        else if (tagName.startsWith(&quot;li&quot;)) plain.append(&quot;* &quot;);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                        else if (tagName.startsWith(&quot;li&quot;)) plain.append(&quot;* &quot;);</span>
 <span class="pc bpc" id="L85" title="5 of 6 branches missed.">                        else if (tagName.startsWith(&quot;span class='emailinput-&quot;) &amp;&amp; plain.toString().trim().endsWith(&quot;:&quot;)==false &amp;&amp; lastLineContains(plain.toString(), &quot;:&quot;)==false)</span>
                         {
                             //doplnime znak : za posledny text
@@ -96,10 +96,10 @@ import sk.iway.iwcm.Tools;
 						/*
 						 * if (pom.equals(&amp;nbsp;))
 						 */
-<span class="pc bpc" id="L99" title="2 of 4 branches missed.">                        if (pom!=null &amp;&amp; Tools.isNotEmpty(pom.trim()))</span>
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">                        if (pom!=null &amp;&amp; Tools.isNotEmpty(pom.trim()))</span>
                         {
                             //ak to nekonci na \n pridaj medzeru
-<span class="pc bpc" id="L102" title="1 of 4 branches missed.">                            if (plain.length()&gt;0 &amp;&amp; plain.toString().endsWith(&quot;\n&quot;)==false) plain.append(&quot; &quot;);</span>
+<span class="fc bfc" id="L102" title="All 4 branches covered.">                            if (plain.length()&gt;0 &amp;&amp; plain.toString().endsWith(&quot;\n&quot;)==false) plain.append(&quot; &quot;);</span>
 <span class="fc" id="L103">                            plain.append(pom.trim());</span>
                         }
                     }
@@ -131,7 +131,7 @@ import sk.iway.iwcm.Tools;
 
     public static String[] getCheckInputParams()
     {
-<span class="nc" id="L134">        return checkInputParams;</span>
+<span class="fc" id="L134">        return checkInputParams;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

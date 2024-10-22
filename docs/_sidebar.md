@@ -1,2 +1,3 @@
-[en](/en/)
-[sk](/sk/)
+[Slovensky](/sk/)
+[Česky](/cs/)
+[English](/en/)

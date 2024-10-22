@@ -8,7 +8,7 @@ V sekcii inštalácia je zoznam [najpoužívanejších konfiguračných premenn�
 
 ## Pridávanie konfiguračných premenných
 
-Pri pridávaní je najdôležitejší parameter ``Názov konfigurácie``, ktorý sa správa ako textové pole s funkciou automatického doplnenia. Pri zadávaní názvu konfigurácie bude ponúkať názvy už existujúcich premenných, vrátane tých, ktoré ešte nie sú upravené (nie sú v tabuľke).
+Pri pridávaní je najdôležitejší parameter **Názov konfigurácie**, ktorý sa správa ako textové pole s funkciou automatického doplnenia. Pri zadávaní názvu konfigurácie bude ponúkať názvy už existujúcich premenných, vrátane tých, ktoré ešte nie sú upravené (nie sú v tabuľke).
 
 ![](editor_1.png)
 
@@ -29,8 +29,8 @@ Zmena sa zvyčajne prejaví hneď po akcií pridania/upravenia. Niektoré konfig
 
 Môžu nastať 3 situácie:
 
-- nezmeníme ``Názov konfigurácie``, tak sa **vykoná úprava** premennej, ktorú sme upravovali
-- zmeníme ``Názov konfigurácie``, tak sa **nevykoná úprava** pôvodnej konfiguračnej premennej
+- nezmeníme **Názov konfigurácie**, tak sa **vykoná úprava** premennej, ktorú sme upravovali
+- zmeníme **Názov konfigurácie**, tak sa **nevykoná úprava** pôvodnej konfiguračnej premennej
   - ak zmenený názov, za názov **existujúcej** konfiguračnej premennej, tak sa **vykoná úprava**
   - ak zmenený názov, za názov **neexistujúcej** konfiguračnej premennej, tak sa **vykoná pridanie** novej premennej
 
@@ -41,4 +41,4 @@ Pri vymazaní konfiguračnej premennej môžu nastať 2 situácie:
 - vymažeme hodnotu z tabuľky a **existuje prednastavená hodnota** k tejto konfiguračnej premennej, ktorá sa začne využívať (premenná stále existuje)
 - vymažeme hodnotu z tabuľky a **neexistuje prednastavená hodnota** k tejto konfiguračnej premennej (premenná už nebude existovať)
 
-**Upozornenie:** oproti vytváraniu/editácií, pri vymazaní sa nastaví prázdna hodnota. Ak má konfiguračná premenná prednastavenú hodnotu, tá sa prejaví **až po reštartovaní** aplikačného servera.
+!>**Upozornenie:** oproti vytváraniu/editácií, pri vymazaní sa nastaví prázdna hodnota. Ak má konfiguračná premenná prednastavenú hodnotu, tá sa prejaví **až po reštartovaní** aplikačného servera.

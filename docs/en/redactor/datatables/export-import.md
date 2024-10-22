@@ -38,3 +38,17 @@ Click on the Import icon ![](import-icon.png ":no-zoom") opens a dialog for impo
 Clicking the Import button will start the import from the selected Excel file.
 
 Most tables, when updating an existing record, allow **import columns piecemeal**. In Excel, you can delete columns that you want to keep intact in the database. Subsequently, when importing, only the changes from the retained columns in Excel will be transferred to the existing records.
+
+### Skip erroneous entries
+
+The import offers the possibility to skip erroneous records. If this option is **Off**, and the imported data contains an error, the import will be aborted and an error message will be displayed. The disadvantage is when importing a large number of records, where one error will interrupt the import of other records.
+
+All matching records prior to the erroneous record have been saved.
+
+![](import_error.png)
+
+If this option is **Enabled**, the import does not stop when an error is found, but continues. The error values and the line number will be displayed in the notification:
+
+![](import_err_notification.png)
+
+More notifications can be displayed, as the data is processed in batches - they are sent sequentially in 25 records, for each of which an error message can be displayed. More technical information can be found in [Conversion from Excel](../../developer/datatables/export-import.md#konverzia-z-excelu).

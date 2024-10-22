@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.file_archiv;
 
-import java.io.File;
 import java.security.MessageDigest;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,9 +7,11 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
-import net.sourceforge.stripes.action.FileBean;
+
 import org.apache.commons.codec.digest.DigestUtils;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
@@ -47,7 +48,7 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class FileArchivatorKit
 {
-	private Prop prop = Prop.getInstance();
+    private Prop prop = Prop.getInstance();
     private List<String> errorsList;
 
     public FileArchivatorKit(Prop paramProp)
@@ -102,17 +103,10 @@ public class FileArchivatorKit
 
 	/** Vrati unikatne meno suboru
 	 *
-	 * @deprecated
 	 * @param file - subor
 	 * @param directoryPath - cesta k suboru
 	 * @param preferredDate - null / preferovany datum
 	 */
-	@Deprecated
-	public static String getUniqueFileName(FileBean file, String directoryPath, String preferredDate)
-	{
-		return getUniqueFileName(file != null ? file.getFileName() : null, directoryPath, preferredDate);
-	}
-
 	public static String getUniqueFileName(String fileNameParam, String directoryPath, String preferredDate)
 	{
 		String dirPath = directoryPath;
@@ -155,19 +149,18 @@ public class FileArchivatorKit
 	 *
 	 * @return true ak vsetko prebehlo v poriadku
 	 */
-	public static boolean  setFilePropertiesAfterUpload(FileArchivatorBean newFab, int oldId, boolean uploadLater, HttpServletRequest req)
+	public static boolean setFilePropertiesAfterUpload(FileArchivatorBean newFab, int oldId, boolean uploadLater, HttpServletRequest req)
 	{
 		boolean result = true;
 		//pri nahravani neskor existenciu kontrolujeme skor kvoli multidomain
 		if(uploadLater == false && !FileTools.isFile(newFab.getFilePath()+newFab.getFileName()))
+		{
 			return false;
+		}
 
-		//pri nahravani neskor nesetujeme vzdy aktualnu domenu
-		if(uploadLater == false)
-			newFab.setDomainId(CloudToolsForCore.getDomainId());
-		//ak sa ma subor nahrat neskor ulozime odkaz na subor ktory ma nahradit
-		else
-			newFab.setReferenceId(oldId);
+		newFab.setDomainId(CloudToolsForCore.getDomainId());
+		//always set referenceId, if provided. For main file it will be fixed in reSetReference method.
+		newFab.setReferenceId(oldId);
 
 		if(!newFab.save())
 		{
@@ -206,7 +199,8 @@ public class FileArchivatorKit
 				oldFab.setReferenceId(newFab.getId());
 				//globalne id je rovnake pre vsetky subory vo vlakne.
 				newFab.setGlobalId(oldFab.getGlobalId());
-				if(!oldFab.save() | !newFab.save())
+				newFab.setDateInsert(new Date());
+				if(!oldFab.save() || !newFab.save())
 					result = false;
 
 				//zmenime referenciu u suborov, ktore na neho odkazuju (a po novom budu odkazovat na novy subor)
@@ -249,15 +243,25 @@ public class FileArchivatorKit
 			newFab.setGlobalId(generateNextGlobalId());
 			newFab.save();
 		}
-        if(req != null) req.setAttribute("after_save_fab",newFab);
+		if (req != null) req.setAttribute("after_save_fab", newFab);
 		addSaveLogToAdminlog(newFab, newVersion);
 		return result;
 	}
 
-	public static boolean setFilePropertiesAfterUploadReplace(String dirPath, String fileName, int oldId, FileArchivatorBean newFab, HttpServletRequest req)
+	/**
+	 * Method is called when we are replacing existing file without creating new version in history
+	 * @param newFab
+	 * @param oldId
+	 * @param userId
+	 * @param req
+	 * @return
+	 */
+	public static boolean setFilePropertiesAfterUploadReplace(FileArchivatorBean newFab, int oldId, HttpServletRequest req)
 	{
-		if(!FileTools.isFile(dirPath+fileName))
+		if(!FileTools.isFile(newFab.getFilePath()+newFab.getFileName()))
+		{
 			return false;
+		}
 
 		newFab.setId(oldId);
 		newFab.setDateInsert(new Date());
@@ -286,6 +290,8 @@ public class FileArchivatorKit
 			return false;
 		}
 		addSaveLogToAdminlog(newFab, false, true);
+		//delete cache
+		FileArchivatorKit.deleteFileArchiveCache();
 
 		return true;
 	}
@@ -293,7 +299,7 @@ public class FileArchivatorKit
 
 	/**
 	 * zamena obsahu suborov dirPath+fileName <-> oldFileBean.getFilePath()+oldFileBean.getFileName()
-	 * BHR: musel som prerobit z Tools.renameFile, pretgradle oze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
+	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
 	 */
 	public static boolean renameFile(String dirPath, String fileName, FileArchivatorBean oldFileBean)
 	{
@@ -303,16 +309,19 @@ public class FileArchivatorKit
 		IwcmFile tmpFile = new IwcmFile(Tools.getRealPath(dirPath+"empty_file_for_rename_only"+getFileExtension(fileName)));
 		try
 		{
+			//copy old file to temp file for later usage
 			if(FileTools.copyFile(oldFile, tmpFile) == false)
 			{
 				 Logger.error(FileArchivatorKit.class, "renameFile: nepodarilo sa premenovat "+oldFile.getVirtualPath()+" > "+tmpFile.getVirtualPath());
 				 renamed = false;
 			}
+			//owerwrite old file with new file
 			if(FileTools.copyFile(newFile, oldFile) == false)
 			{
 				 Logger.error(FileArchivatorKit.class, "renameFile: nepodarilo sa premenovat "+newFile.getVirtualPath()+" > "+oldFile.getVirtualPath());
 				 renamed = false;
 			}
+			//copy temp (old) file over new file
 			if(FileTools.copyFile(tmpFile, newFile) == false)
 			{
 				 Logger.error(FileArchivatorKit.class, "renameFile: nepodarilo sa premenovat "+tmpFile.getVirtualPath()+" > "+newFile.getVirtualPath());
@@ -342,8 +351,17 @@ public class FileArchivatorKit
 				Logger.debug(FileArchivatorKit.class, "Change reference from "+oldReferenceId+" to "+newReferenceId+" file: "+file.getFilePath()+file.getFileName());
 				file.setReferenceId(newReferenceId);
 				if(!file.save())
+				{
 					return false;
+				}
 			}
+		}
+		FileArchivatorBean newBean = FileArchivatorDB.getInstance().getById(newReferenceId);
+		if (newBean != null)
+		{
+			newBean.setReferenceId(-1);
+			//force save to call FullTextIndexer
+			newBean.save();
 		}
 		return true;
 	}
@@ -363,20 +381,6 @@ public class FileArchivatorKit
 			}
 		}
 		return false;
-	}
-
-	 /**
-	  * @deprecated
-	  */
-	@Deprecated
-	public static String getMD5(File file)
-	{
-		return getMD5(new IwcmFile(file));
-	}
-
-	public static String getMD5(String virtualPath)
-	{
-		return getMD5(new IwcmFile(Tools.getRealPath(virtualPath)));
 	}
 
 	public static String getMD5(IwcmFile iwcmFile)
@@ -415,8 +419,9 @@ public class FileArchivatorKit
 		Calendar now = Calendar.getInstance();
 		if(date != null)
 			now.setTime(date);
-		return now.get(Calendar.YEAR) + "." + (now.get(Calendar.MONTH) + 1) + "." + now.get(Calendar.DAY_OF_MONTH) + "_" +
-				 now.get(Calendar.HOUR_OF_DAY) + "." + now.get(Calendar.MINUTE);
+		StringBuilder dateString = new StringBuilder();
+		dateString.append(now.get(Calendar.YEAR)).append(".").append(now.get(Calendar.MONTH)+1).append(".").append(now.get(Calendar.DAY_OF_MONTH)).append("_").append(now.get(Calendar.HOUR_OF_DAY)).append(".").append(now.get(Calendar.MINUTE));
+		return dateString.toString();
 	}
 
 	public static String getFileExtension(String fileName)
@@ -447,8 +452,24 @@ public class FileArchivatorKit
 
 	public static void incrementOrderId(int referenceId)
 	{
-		DB.execute("UPDATE file_archiv SET order_id = order_id+1 WHERE reference_id = ? AND order_id >= 0", referenceId);
-		DB.execute("UPDATE file_archiv SET order_id = 1 WHERE reference_id = ? AND order_id < 0", referenceId);
+		//DB.execute("UPDATE file_archiv SET order_id = order_id+1 WHERE reference_id = ? AND order_id >= 0", referenceId);
+		//DB.execute("UPDATE file_archiv SET order_id = 1 WHERE reference_id = ? AND order_id < 0", referenceId);
+		//USE JPA API to update because of JPA cache/object state
+		List<FileArchivatorBean> files = FileArchivatorDB.getByReferenceId(referenceId);
+		int oldOrder = -1;
+		if(files != null)
+		{
+			for(FileArchivatorBean file:files)
+			{
+				oldOrder = file.getOrderId();
+				if(file.getOrderId() == -1)
+					file.setOrderId(2);
+				else
+					file.setOrderId(file.getOrderId()+1);
+				Logger.debug(FileArchivatorKit.class, "Increment orderId from "+oldOrder+" to "+file.getOrderId()+" file: "+file.getFilePath()+file.getFileName());
+				file.save();
+			}
+		}
 		//musim tu vymazat cache
 		FileArchivatorKit.deleteFileArchiveCache();
 		Logger.debug(FileArchivatorKit.class, "Increment orderId for referenceId = "+referenceId);
@@ -476,20 +497,22 @@ public class FileArchivatorKit
 					return false;
 				}
 
-				boolean isSuccess = true;
+				boolean isSuccess = false;
 				IwcmFile iFile = new IwcmFile(Tools.getRealPath(fabToDelete.getFilePath()+fabToDelete.getFileName()));
-				if(iFile.exists() && iFile.delete() == false)
+				if(iFile.exists() && iFile.delete())
 				{
-					isSuccess = false;
-					Logger.warn(FileArchivatorKit.class, "Subor :"+fabToDelete.getFilePath()+fabToDelete.getFileName()+" sa nepodarilo zmazat.");
+					isSuccess = true;
+					deletePattern(FileArchivatorDB.getPatern(fabToDelete.getFilePath()+fabToDelete.getFileName()), user);
+				}
+				else
+				{
+					Logger.debug(FileArchivatorKit.class, "Subor :"+fabToDelete.getFilePath()+fabToDelete.getFileName()+" sa nepodarilo zmazat.");
 				}
 
-				deletePattern(FileArchivatorDB.getPatern(fabToDelete.getFilePath()+fabToDelete.getFileName()), user);
-
-				String fileDescription = "Subor "+fabToDelete.getFilePath()+fabToDelete.getFileName()+" zmazany \n "+fabToDelete.toString();
 				if(isSuccess && fabToDelete.delete())
 				{
-					Adminlog.add(Adminlog.TYPE_FILE_DELETE, fileDescription, -1, -1);
+					String fileDescription = "Subor "+fabToDelete.getFilePath()+fabToDelete.getFileName()+" zmazany \n "+fabToDelete.toString();
+					Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, fileDescription, -1, -1);
 					return true;
 				}
 
@@ -542,11 +565,12 @@ public class FileArchivatorKit
 	/** Ak je bean vzorom (ma vyplnene "reference_to_main") tak bude zmazany
 	 *
 	 */
-	private static void deletePattern(FileArchivatorBean fabPattern, UserDetails user)
+	private static boolean deletePattern(FileArchivatorBean fabPattern, UserDetails user)
 	{
 		if(fabPattern == null || Tools.isEmpty(fabPattern.getReferenceToMain()) || !Constants.getBoolean(FileArchivatorDB.getConstantsPrefix() + "AutoDeletePattern"))
-			return;
-		deleteFile(fabPattern, "Vzor ", user);
+			return false;
+
+		return deleteFile(fabPattern, "Vzor ", user);
 	}
 
 	/** Skontroluje prava na subory, zmaze subor fyzicky z disku a zmaze aj Bean
@@ -567,19 +591,20 @@ public class FileArchivatorKit
 		}
 		boolean isSuccess = true;
 		IwcmFile iFile = new IwcmFile(Tools.getRealPath(fabToDelete.getFilePath()+fabToDelete.getFileName()));
-		if(iFile.exists() && iFile.delete()==false)
+		if(iFile == null || !iFile.exists() || !iFile.delete())
 		{
 			isSuccess = false;
 			Logger.debug(FileArchivatorKit.class, prefixText+" subor :"+fabToDelete.getFilePath()+fabToDelete.getFileName()+" sa nepodarilo zmazat.");
 		}
 		else
 		{
-			// delete index
-			new SimpleQuery().execute("delete from documents where external_link = '/" + fabToDelete.getFilePath()+fabToDelete.getFileName() + "'");
+			// delete file index
+			new SimpleQuery().execute("DELETE FROM documents WHERE external_link=?", "'/" + fabToDelete.getFilePath()+fabToDelete.getFileName() + "'");
 
-			String fileDescription = "Subor "+fabToDelete.getFilePath()+fabToDelete.getFileName()+" zmazany \n "+fabToDelete.toString();
-			if(fabToDelete.delete())
-				Adminlog.add(Adminlog.TYPE_FILE_DELETE, fileDescription, user.getUserId(), -1);
+			if(fabToDelete.delete()) {
+				String fileDescription = "Subor "+fabToDelete.getFilePath()+fabToDelete.getFileName()+" zmazany \n "+fabToDelete.toString();
+				Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, fileDescription, user.getUserId(), -1);
+			}
 		}
 
 		return isSuccess;
@@ -626,8 +651,9 @@ public class FileArchivatorKit
 			md.update(source.getBytes());
 			byte[] byteData = md.digest();
 			StringBuilder sb = new StringBuilder();
-			for (byte byteDatum : byteData)
+			for (byte byteDatum : byteData) {
 				sb.append(Integer.toString((byteDatum & 0xff) + 0x100, 16).substring(1));
+			}
 			ret = sb.toString();
 		}
 		catch (Exception e)
@@ -732,7 +758,7 @@ public class FileArchivatorKit
 								}
 							}
 						}
-                        Adminlog.add(Adminlog.TYPE_FILE_EDIT,"File Archiv ROLLBACK zmeny:"+FileArchivatorKit.getPojoZmeny(previousFab, actualFab), -1, -1);
+                        Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "EDIT: File Archiv ROLLBACK zmeny:"+FileArchivatorKit.getPojoZmeny(previousFab, actualFab), actualFab.getId(), previousFab.getId());
 						return result;
 					}
 					else
@@ -844,7 +870,7 @@ public class FileArchivatorKit
             isDestinationFolderWritable = false;
         }
 
-        if (isDestinationFolderWritable && checkFileProperties(file,fab.getFilePath()+fab.getFileName(),oldId))
+        if (isDestinationFolderWritable && checkFileProperties(file.getName(), file.getLength(), fab.getFilePath()+fab.getFileName(),oldId))
         {
             if(setFilePropertiesAfterUpload(fab,oldId))
             {
@@ -889,69 +915,25 @@ public class FileArchivatorKit
         errorsList.add(text);
     }
 
-    public boolean checkFileProperties(net.sourceforge.stripes.action.FileBean fileToCheck, String pathName, int oldId)
-    {
-        // errorsList = new ArrayList<String>();
-        if(fileToCheck == null || fileToCheck.getFileName().length() < 5)
-        {
-            String fileName = "null";
-            if(fileToCheck != null)
-            {
-                fileName = fileToCheck.getFileName();
-            }
-            Logger.debug(SaveFileAction.class, "checkFileProperties() fileBean je null alebo ma kratky nazov. Subor: "+fileName);
-            setError("components.file_archiv.upload.file_not_exists_or_short_name", fileName);
-            return false;
-        }
-
-        if(!hasAllowedExtensions(fileToCheck,oldId))
-        {
-            return false;
-        }
-
-        if( fileToCheck.getSize() >= getMaxFileSize())
-        {
-            Logger.debug(SaveFileAction.class, "Velkost suboru je prekrocena. Aktualna velkost: "+fileToCheck.getSize()+" maximalna velkost: "+getMaxFileSize());
-            setError("components.file_archiv.upload.file_is_too_big", fileToCheck.getSize()+"", getMaxFileSize()+"");
-            return false;
-        }
-
-
-        //ak uz existuje referencia v databaze k suboru ktory este len ideme nahrat, tak je to problem. Niekto zmazal subor rucne.
-        //subor nemozeme nahrat pretoze by mohol byt zmazany inym zaznamom v databaze - omylom
-        if(FileArchivatorKit.existsPathInDB(pathName) && !FileTools.isFile(pathName) )
-        {
-            setError("components.file_archiv.upload.db_enrty_exists");
-            return false;
-        }
-
-        return true;
-    }
-
-	 public boolean checkFileProperties(IwcmFile fileToCheck, String pathName, int oldId)
+	 public boolean checkFileProperties(String fileName, long length, String pathName, int oldId)
 	 {
 		  // errorsList = new ArrayList<String>();
-		  if(fileToCheck == null || fileToCheck.getName().length() < 5)
+		  if(fileName == null || fileName.length() < 5)
 		  {
-				String fileName = "null";
-				if(fileToCheck != null)
-				{
-					 fileName = fileToCheck.getName();
-				}
-				Logger.debug(SaveFileAction.class, "checkFileProperties() fileBean je null alebo ma kratky nazov. Subor: "+fileName);
+				Logger.debug(SaveFileAction.class, "checkFileProperties() fileName je null alebo ma kratky nazov. Subor: "+fileName);
 				setError("components.file_archiv.upload.file_not_exists_or_short_name", fileName);
 				return false;
 		  }
 
-		  if(!hasAllowedExtensions(fileToCheck.getName(),oldId))
+		  if(!hasAllowedExtensions(fileName, oldId))
 		  {
 				return false;
 		  }
 
-		  if(fileToCheck.getLength() >= getMaxFileSize())
+		  if(length >= getMaxFileSize())
 		  {
-				Logger.debug(SaveFileAction.class, "Velkost suboru je prekrocena. Aktualna velkost: "+fileToCheck.getLength()+" maximalna velkost: "+getMaxFileSize());
-				setError("components.file_archiv.upload.file_is_too_big", fileToCheck.getLength()+"", getMaxFileSize()+"");
+				Logger.debug(SaveFileAction.class, "Velkost suboru je prekrocena. Aktualna velkost: "+length+" maximalna velkost: "+getMaxFileSize());
+				setError("components.file_archiv.upload.file_is_too_big", length+"", getMaxFileSize()+"");
 				return false;
 		  }
 
@@ -968,15 +950,8 @@ public class FileArchivatorKit
 	 }
 
     /** Sluzi na validaciu {@link FileArchivatorBean} pred ulozenim. Skontroluje velkost suboru, priponu atd.
-     * @deprecated
      * @return Ak vrati true, mozeme {@link FileArchivatorBean} ulozit.
      */
-	@Deprecated
-	 public boolean hasAllowedExtensions(FileBean fileBean, int oldId)
-	 {
-	 	 return hasAllowedExtensions(fileBean != null ? fileBean.getFileName() : null, oldId);
-	 }
-
     public boolean hasAllowedExtensions(String fileName, int oldId)
     {
         if(Tools.isEmpty(fileName))
@@ -1075,7 +1050,7 @@ public class FileArchivatorKit
 
                 //globalne id je rovnake pre vsetky subory vo vlakne.
                 newFab.setGlobalId(oldFab.getGlobalId());
-                if(!oldFab.save() | !newFab.save())
+                if(!oldFab.save() || !newFab.save())
                 {
                     result = false;
                 }
@@ -1120,11 +1095,11 @@ public class FileArchivatorKit
     {
         String strNewVersion = "";
         if(newVersion)
-            strNewVersion = "(Aktualizacia existujuceho suboru)";
+            strNewVersion = "(Aktualizacia existujuceho suboru) ";
         if(replace)
-            strNewVersion = "(Nahradenie povodneho suboru)";
+            strNewVersion = "(Nahradenie povodneho suboru) ";
 
-        Adminlog.add(Adminlog.TYPE_FILE_SAVE,"File Archiv "+strNewVersion+" ulozenie : "+fab.toString(),-1,-1);
+        Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "EDIT: File Archiv "+strNewVersion+"ulozenie:\n"+fab.toString(true), fab.getId(), -1);
     }
 
     public static String getPojoZmeny(Object newObj,Object originalObj)

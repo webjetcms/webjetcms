@@ -1,9 +1,14 @@
 {
     "news": [
         {
-            "title": "Verzia 2024.18",
+            "title": "Version 2024.40",
+            "perex": "In version 2024.40 Explorer brings **confirmation when moving files drag&drop**, which reduces the risk of errors. The image editor allows **sizing and cropping according to templates**, making editing easy. The settings of several **applications** have been reworked into a **new design**. The author of the page receives **notifications at the time of publishing and adding a post** to the forum. The new booking application allows **easy booking of objects** and offers statistics for better management. We improved PageBuilder and fixed bugs in File Archive for better stability.",
+            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2024?id=_202440"
+        },
+        {
+            "title": "Version 2024.18",
             "perex": "WebJET 2024.18 contains a **new set of icons**, Form easily supplemented with **advanced settings** (recipients, redirects...), applications AB Testing, Audit (awaiting publication, changed pages), Blog, Questionnaires, Calendar of events (approval). Adds **MultiWeb installation support** (separation of domain data) in Templates, Bulk Email and other applications. New library for **browser detection**, there will be minor differences in Statistics-Browsers, but we record browser data anonymously even without Cookies consent.",
-            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202418"
+            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2024?id=_202418"
         },
         {
             "title": "Version 2024.0",

@@ -1,3 +1,5 @@
+Feature('apps.podmienene-zobrazenie');
+
 function getDate(){
     let currentDate = new Date();
     let day = currentDate.getDate();
@@ -7,11 +9,8 @@ function getDate(){
     return formattedDate
 }
 
-Feature('apps.podmienene-zobrazenie');
-
-
 Scenario("Podmienené zobrazenie - test zobrazovania", ({ I }) => {
-    I.amOnPage("/apps/podmienene-zobrazenie/");
+    I.amOnPage("/apps/podmienene-zobrazenie/?forceBrowserDetector=pc");
     I.seeElement(locate("p").withText(("Demo component view, params:")));
     I.see('test1: Toto je test');
     I.see('stringField: Verzia pre PC');

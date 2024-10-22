@@ -78,7 +78,7 @@ module.exports = {
         //this.waitForLoader();
         //this is faster
         I.wait(0.3);
-        I.waitForInvisible(name, 40);
+        I.waitForInvisible("div.dataTables_processing", 40);
     },
 
     clearFilter(name) {
@@ -106,21 +106,26 @@ module.exports = {
       var container = "#"+name+"_wrapper";
       I.wait(1); //must be here otherwise on webpages it will not reset sorting correctly after load
       this.waitForLoader();
-      I.click(container+" button.buttons-settings");
-      I.click(container+" button.buttons-colvis");
+      I.clickCss(container+" button.buttons-settings");
+      I.clickCss(container+" button.buttons-colvis");
       I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
       I.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
       I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
       this.waitForLoader();
     },
 
+    /**
+     * Shows a column in the data table based on the column name (columnText).
+     * @param {string} columnText - The name of the column to be shown.
+     * @param {string} tableId - The ID of the table wrapper (default is "datatableInit").
+     */
     showColumn(columnText, tableId="datatableInit") {
         var container = "#"+tableId+"_wrapper";
-        I.click(container+" button.buttons-settings");
-        I.click(container+" button.buttons-colvis");
+        I.clickCss(container+" button.buttons-settings");
+        I.clickCss(container+" button.buttons-colvis");
         I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
         I.click(locate("div.colvisbtn_wrapper button.buttons-columnVisibility").withText(columnText));
-        I.click("button.btn.btn-primary.dt-close-modal");
+        I.clickCss("button.btn.btn-primary.dt-close-modal");
         I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
     },
 

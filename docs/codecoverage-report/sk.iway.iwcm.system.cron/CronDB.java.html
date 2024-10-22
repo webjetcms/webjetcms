@@ -65,11 +65,11 @@ import java.util.List;
 		{
 <span class="fc" id="L66">			return new ComplexQuery().setSql(&quot;SELECT * FROM crontab WHERE id = ?&quot;).setParams(id).singleResult(mapper);</span>
 		}
-<span class="nc" id="L68">		catch (Exception ex)</span>
+<span class="fc" id="L68">		catch (Exception ex)</span>
 		{
 
 		}
-<span class="nc" id="L72">		return null;</span>
+<span class="fc" id="L72">		return null;</span>
 	}
 
 	public static List&lt;CronTask&gt; getAll()
@@ -95,11 +95,11 @@ import java.util.List;
 <span class="fc" id="L95">		CronTask task = getById(id);</span>
 <span class="pc bpc" id="L96" title="1 of 2 branches missed.">		if (task != null)</span>
 		{
-<span class="fc" id="L98">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Zmazana uloha na pozadi, &quot;+id+&quot; &quot;+task.getTask()+&quot; &quot;+task.getParams(), id.intValue(), -1);</span>
+<span class="fc" id="L98">			Adminlog.add(Adminlog.TYPE_CRON, Adminlog.getChangelogDelete(task.getId(), task), id.intValue(), -1);</span>
 		}
 		else
 		{
-<span class="nc" id="L102">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Zmazana uloha na pozadi, &quot;+id, id.intValue(), -1);</span>
+<span class="nc" id="L102">			Adminlog.add(Adminlog.TYPE_CRON, &quot;DELETE: \nid:&quot;+id, id.intValue(), -1);</span>
 		}
 
 <span class="fc" id="L105">		new SimpleQuery().execute(&quot;DELETE FROM crontab WHERE id = ?&quot;, id);</span>
@@ -107,7 +107,7 @@ import java.util.List;
 
 	public static CronTask save(CronTask task)
 	{
-<span class="fc" id="L110">		Adminlog.add(Adminlog.TYPE_CRON, &quot;Upravena uloha na pozadi, &quot;+task.getId()+&quot; &quot;+task.getTask()+&quot; &quot;+task.getParams(), task.getId().intValue(), -1);</span>
+<span class="fc" id="L110">		CronTask old = getById(task.getId());</span>
 
 <span class="fc bfc" id="L112" title="All 2 branches covered.">		if (task.getId() &lt; 0)</span>
 <span class="fc" id="L113">			new SimpleQuery().execute(SQL_INSERT, task.getTaskName(), task.getSeconds(), task.getMinutes(), task.getHours(), task.getDaysOfMonth(), task.getMonths(),</span>
@@ -120,8 +120,13 @@ import java.util.List;
 <span class="pc bpc" id="L120" title="1 of 4 branches missed.">		if (id == null || id.longValue()&lt;1) {</span>
 <span class="fc" id="L121">			id = Long.valueOf((new SimpleQuery()).forLong(SQL_MAX_VALUE));</span>
 		}
-<span class="fc" id="L123">		return getById(id);</span>
+
+<span class="fc" id="L124">		CronTask saved = getById(id);</span>
+
+<span class="fc" id="L126">		Adminlog.add(Adminlog.TYPE_CRON, Adminlog.getChangelog(saved.getId(), saved, old), saved.getId().intValue(), -1);</span>
+
+<span class="fc" id="L128">		return saved;</span>
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

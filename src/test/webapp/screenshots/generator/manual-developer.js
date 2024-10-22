@@ -119,11 +119,20 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.wait(3);
 
     Document.screenshot("/custom-apps/appstore/democomponent-desc.png");
-
-    if("sk" === I.getConfLng()) {
-        I.click("Vložiť do stránky");
-    } else if("en" === I.getConfLng()) {
-        I.click("Add to page");
+    
+    confLng = I.getConfLng();
+    switch (confLng) {
+        case 'sk':
+            I.click("Vložiť do stránky");
+            break;
+        case 'en':
+            I.click("Add to page");
+            break;
+        case 'cs':
+            I.click("Vložit do stránky");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
     I.wait(6);
@@ -145,11 +154,20 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.click("#apps-contact-title");
     I.wait(3);
 
-    if("sk" === I.getConfLng()) {
-        I.click("Vložiť do stránky");
-    } else if("en" === I.getConfLng()) {
-        I.click("Add to page");
+    switch (confLng) {
+        case 'sk':
+            I.click("Vložiť do stránky");
+            break;
+        case 'en':
+            I.click("Add to page");
+            break;
+        case 'cs':
+            I.click("Vložit do stránky");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
+
 
     I.wait(6);
 

@@ -30,6 +30,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.UploadFileTools;
 import sk.iway.iwcm.editor.UploadFileAction;
@@ -279,14 +280,8 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 		List<String> notUploadedSession = (List<String>) request.getAttribute("MultipartWrapper.notUploaded");
 		if (notUploadedSession != null) notUploaded.addAll(notUploadedSession) ;
 
-		List<String> uploadPaths;
-
 		if (user != null && UsersDB.isFolderWritable(user.getWritableFolders(), dir.getPath()) && filesMap != null)
 		{
-			uploadPaths = Tools.getStringListValue(request.getParameterValues("upload_path[]"));
-			if (uploadPaths.size() > 0) {
-				uploadPaths = new ArrayList<>(uploadPaths);
-			}
 
 			if (renames != null && renames.length > 0) {
 				String path = dir.getPath();
@@ -438,7 +433,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 					}
 				}
 
-				//TODO: vo WJ9 je toto presunute do UploadService, pozor ale na cast VideoConvert, kde sa pracuje s FsItem kvoli premenovaniu, to tu treba zachovat
+				//POZOR: vo WJ9 je toto presunute do UploadService, pozor ale na cast VideoConvert, kde sa pracuje s FsItem kvoli premenovaniu, to tu treba zachovat
 
 				//kvoli chunked uploadu musime zrekonstruovat nanovo
 				newFileIwcm = new IwcmFile(Tools.getRealPath(dir.getPath()+directory+"/"+fileName));
@@ -526,7 +521,7 @@ public class UploadCommandExecutor extends AbstractJsonCommandExecutor
 				if (FileIndexer.isFileIndexerConfigured())
 				{
 					List<ResultBean> indexedFiles = new ArrayList<>();
-					FileIndexer.indexFile(dir.getPath() + directory + "/" + fileName, indexedFiles, request);
+					FileIndexerTools.indexFile(dir.getPath() + directory + "/" + fileName, indexedFiles, request);
 				}
 
 				UploadFileAction.reflectionLoader(request, user, dir.getPath() + directory + "/" + fileName);

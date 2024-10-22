@@ -22,15 +22,26 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     I.click(delete_webpage_button);
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
 
-    if("sk" === confLng) { 
-        I.click('Zmazať');
-        DTE.waitForLoader();
-        I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    } else if("en" === confLng) {
-        I.click('Delete');
-        DTE.waitForLoader();
-        I.see("No matching records found");
+    switch (confLng) {
+        case "sk":
+            I.click('Zmazať');
+            DTE.waitForLoader();
+            I.see("Nenašli sa žiadne vyhovujúce záznamy");
+            break;
+        case "en":
+            I.click('Delete');
+            DTE.waitForLoader();
+            I.see("No matching records found");
+            break;
+        case "cs":
+            I.click('Smazat');
+            DTE.waitForLoader();
+            I.see("Nenašly se žádné vyhovující záznamy");
+            break;
+        default:
+            throw new Error("Unknown language: " + confLng);
     }
+    
 
     I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
@@ -43,11 +54,20 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("#folderIdInputWrapper", "/redactor/webpages/recover-folder-id-1.png");
     I.click(recoveryWebPage);
   
-    if("sk" === confLng) { 
-        I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    } else if("en" === confLng) {
-        I.see("No matching records found");
+    switch (confLng) {
+        case "sk":
+            I.see("Nenašli sa žiadne vyhovujúce záznamy");
+            break;
+        case "en":
+            I.see("No matching records found");
+            break;
+        case "cs":
+            I.see("Nenašly se žádné vyhovující záznamy");
+            break;
+        default:
+            I.see("No matching records found");
     }
+    
 
     I.moveCursorTo("div.toast-success");
     Document.screenshotElement("div.toast-success", "/redactor/webpages/recover-page-success.png");
@@ -57,11 +77,20 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     I.click(delete_folder_button);
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
     
-    if("sk" === confLng) { 
-        I.click('Zmazať');
-    } else if("en" === confLng) {
-        I.click('Delete');
+    switch (confLng) {
+        case "sk":
+            I.click('Zmazať');
+            break;
+        case "en":
+            I.click('Delete');
+            break;
+        case "cs":
+            I.click('Smazat');
+            break;
+        default:
+            I.click('Unknown action');
     }
+    
 
     DTE.waitForLoader();
     I.clickCss("#pills-trash-tab");
@@ -72,11 +101,19 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("#folderIdInputWrapper", "/redactor/webpages/recover-folder-id-2.png");
     I.click(recoveryFolder);
     I.waitForElement("div.toast-info");
-
-    if("sk" === confLng) { 
-        I.see("Ste si istý, že chete obnoviť priečinok", "div.toast-title");
-    } else if("en" === confLng) {
-        I.see("Are you sure you want to recover this folder?", "div.toast-title");
+    
+    switch (confLng) {
+        case "sk":
+            I.see("Ste si istý, že chcete obnoviť priečinok", "div.toast-title");
+            break;
+        case "en":
+            I.see("Are you sure you want to recover this folder?", "div.toast-title");
+            break;
+        case "cs":
+            I.see("Jste si jisti, že chcete adresář obnovit?", "div.toast-title");
+            break;
+        default:
+            I.see("Unknown language message", "div.toast-title");
     }
 
     I.moveCursorTo("div.toast-title");

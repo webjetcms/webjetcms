@@ -23,8 +23,6 @@ taglib
 <iwcm:checkLogon admin="true" perms="cmp_app-impress_slideshow"/>
 <%
 	request.setAttribute("cmpName", "app-impress_slideshow");
-	String lng = PageLng.getUserLng(request);
-	pageContext.setAttribute("lng", lng);
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
 	if (Tools.isNotEmpty(paramPageParams)) {
 		request.setAttribute("includePageParams", paramPageParams);
@@ -237,7 +235,7 @@ image: {
     classes: "editorLeft"
 },
 title: {
-    title: '<iwcm:text key="editor.create_table.caption" />',
+    title: '<iwcm:text key="components.app-cookiebar.cookiebar_title" />',
     type: "text",
     classes: "editorRight",
 },
@@ -265,8 +263,8 @@ subtitle: {
 },
 
 redirectUrl: {
-    title: '<iwcm:text key="components.news.redirectAfterClick" />',
-    description: "Zadajte adresu stranky, alebo kliknite na ikonu na konci riadku pre jej vyber",
+    title: "<iwcm:text key="components.news.redirectAfterClick"/>",
+    description: "<iwcm:text key="components.news.redirectLinkHelp"/>",
     type: "conditionalText",
     classes: "editorRight"
 },

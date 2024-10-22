@@ -263,7 +263,7 @@ public class SitemapULAction
 <span class="pc bpc" id="L263" title="2 of 4 branches missed.">			if (group.getShowInSitemap(request) != GroupDetails.MENU_TYPE_ONLYDEFAULT &amp;&amp; currentDepth &lt; maxDepth)</span>
 			{
 
-<span class="fc" id="L266">				List&lt;DocDetails&gt; docs = docDB.getDocByGroup(rootGroup, DocDB.ORDER_PRIORITY, true, -1, -1, false); // docDB.getDocByGroup(rootGroup);</span>
+<span class="fc" id="L266">				List&lt;DocDetails&gt; docs = docDB.getBasicDocDetailsByGroup(rootGroup, DocDB.ORDER_PRIORITY); // docDB.getDocByGroup(rootGroup);</span>
 
 <span class="fc" id="L268">				group = groupsDB.getGroup(rootGroup);</span>
 <span class="fc bfc" id="L269" title="All 2 branches covered.">				for (DocDetails doc : docs)</span>
@@ -420,4 +420,4 @@ public class SitemapULAction
 <span class="nc" id="L420">		return htmlCode;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

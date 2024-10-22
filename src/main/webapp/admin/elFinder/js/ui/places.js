@@ -1,10 +1,11 @@
-"use strict";
 /**
  * @class elFinder places/favorites ui
  *
  * @author Dmitry (dio) Levashov
+ * @author Naoki Sawada
  **/
 $.fn.elfinderplaces = function(fm, opts) {
+	"use strict";
 	return this.each(function() {
 		var dirs      = {},
 			c         = 'class',
@@ -17,7 +18,8 @@ $.fn.elfinderplaces = function(fm, opts) {
 			tpl       = fm.res('tpl', 'placedir'),
 			ptpl      = fm.res('tpl', 'perms'),
 			spinner   = $(fm.res('tpl', 'navspinner')),
-			key       = 'places'+(opts.suffix? opts.suffix : ''),
+			suffix    = opts.suffix? opts.suffix : '',
+			key       = 'places' + suffix,
 			menuTimer = null,
 			/**
 			 * Convert places dir node into dir hash
@@ -27,12 +29,20 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 **/
 			id2hash   = function(id) { return id.substr(6);	},
 			/**
-			 * Convert places dir node into dir hash
+			 * Convert places dir hash into dir node id
 			 *
 			 * @param  String  directory id
 			 * @return String
 			 **/
 			hash2id   = function(hash) { return 'place-'+hash; },
+
+			/**
+			 * Convert places dir hash into dir node elment (jQuery object)
+			 *
+			 * @param  String  directory id
+			 * @return Object
+			 **/
+			hash2elm  = function(hash) { return $(document.getElementById(hash2id(hash))); },
 			
 			/**
 			 * Save current places state
@@ -56,6 +66,68 @@ $.fn.elfinderplaces = function(fm, opts) {
 				fm.storage(key, data);
 			},
 			/**
+			 * Init dir at places
+			 *
+			 * @return void
+			 **/
+			init = function() {
+				var dat, hashes;
+				key = 'places'+(opts.suffix? opts.suffix : ''),
+				dirs = {};
+				dat = fm.storage(key);
+				if (typeof dat === 'string') {
+					// old data type elFinder <= 2.1.12
+					dat = $.grep(dat.split(','), function(hash) { return hash? true : false;});
+					$.each(dat, function(i, d) {
+						var dir = d.split('#');
+						dirs[dir[0]] = dir[1]? dir[1] : dir[0];
+					});
+				} else if ($.isPlainObject(dat)) {
+					dirs = dat;
+				}
+				// allow modify `dirs`
+				/**
+				 * example for preset places
+				 * 
+				 * elfinderInstance.bind('placesload', function(e, fm) {
+				 * 	//if (fm.storage(e.data.storageKey) === null) { // for first time only
+				 * 	if (!fm.storage(e.data.storageKey)) {           // for empty places
+				 * 		e.data.dirs[targetHash] = fallbackName;     // preset folder
+				 * 	}
+				 * }
+				 **/
+				fm.trigger('placesload', {dirs: dirs, storageKey: key}, true);
+				
+				hashes = Object.keys(dirs);
+				if (hashes.length) {
+					root.prepend(spinner);
+					
+					fm.request({
+						data : {cmd : 'info', targets : hashes},
+						preventDefault : true
+					})
+					.done(function(data) {
+						var exists = {};
+						
+						data.files && data.files.length && fm.cache(data.files);
+						
+						$.each(data.files, function(i, f) {
+							var hash = f.hash;
+							exists[hash] = f;
+						});
+						$.each(dirs, function(h, f) {
+							add(exists[h] || Object.assign({notfound: true}, f));
+						});
+						if (fm.storage('placesState') > 0) {
+							root.trigger('click');
+						}
+					})
+					.always(function() {
+						spinner.remove();
+					});
+				}
+			},
+			/**
 			 * Return node for given dir object
 			 *
 			 * @param  Object  directory object
@@ -66,9 +138,9 @@ $.fn.elfinderplaces = function(fm, opts) {
 						.replace(/\{name\}/, fm.escape(dir? dir.i18 || dir.name : hash))
 						.replace(/\{cssclass\}/, dir? (fm.perms2class(dir) + (dir.notfound? ' elfinder-na' : '') + (dir.csscls? ' '+dir.csscls : '')) : '')
 						.replace(/\{permissions\}/, (dir && (!dir.read || !dir.write || dir.notfound))? ptpl : '')
-						.replace(/\{title\}/, (dir && dir.path)? fm.escape(dir.path) : '')
+						.replace(/\{title\}/, dir? (' title="' + fm.escape(fm.path(dir.hash, true) || dir.i18 || dir.name) + '"') : '')
 						.replace(/\{symlink\}/, '')
-						.replace(/\{style\}/, ''));
+						.replace(/\{style\}/, (dir && dir.icon)? fm.getIconStyle(dir) : ''));
 			},
 			/**
 			 * Add new node into places
@@ -108,7 +180,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 
 				if (dirs[hash]) {
 					delete dirs[hash];
-					tgt = $('#'+hash2id(hash));
+					tgt = hash2elm(hash);
 					if (tgt.length) {
 						name = tgt.text();
 						tgt.parent().remove();
@@ -131,7 +203,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 * @return void
 			 **/
 			moveup = function(hash) {
-				var self = $('#'+hash2id(hash)),
+				var self = hash2elm(hash),
 					tgt  = self.parent(),
 					prev = tgt.prev('div'),
 					cls  = 'ui-state-hover',
@@ -166,13 +238,13 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 **/
 			update = function(dir, preHash) {
 				var hash = dir.hash,
-					tgt  = $('#'+hash2id(preHash || hash)),
+					tgt  = hash2elm(preHash || hash),
 					node = create(dir, hash);
 
 				if (tgt.length > 0) {
 					tgt.parent().replaceWith(node);
 					dirs[hash] = dir;
-					return true
+					return true;
 				} else {
 					return false;
 				}
@@ -213,12 +285,12 @@ $.fn.elfinderplaces = function(fm, opts) {
 							return true;
 						}
 					}
-					!$('#'+hash2id(h)).length && subtree.append(node);
+					!hash2elm(h).length && subtree.append(node);
 				});
 				save();
 			},
 			// sort button
-			sortBtn = $('<span class="elfinder-button-icon elfinder-button-icon-sort elfinder-places-root-icon" title="'+fm.i18n('cmdsort')+'"/>')
+			sortBtn = $('<span class="elfinder-button-icon elfinder-button-icon-sort elfinder-places-root-icon" title="'+fm.i18n('cmdsort')+'"></span>')
 				.hide()
 				.on('click', function(e) {
 					e.stopPropagation();
@@ -244,7 +316,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			 **/
 			root = wrapper.children('.'+navdir)
 				.addClass(clroot)
-				.click(function(e) {
+				.on('click', function(e) {
 					e.stopPropagation();
 					if (root.hasClass(collapsed)) {
 						places.toggleClass(expanded);
@@ -320,7 +392,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 					},
 					over       : function(e, ui) {
 						var helper = ui.helper,
-							dir    = $.map(helper.data('files'), function(h) { return (fm.file(h).mime === 'directory' && !dirs[h])? h : null});
+							dir    = $.grep(helper.data('files'), function(h) { return (fm.file(h).mime === 'directory' && !dirs[h])? true : false; });
 						e.stopPropagation();
 						helper.data('dropover', helper.data('dropover') + 1);
 						if (fm.insideWorkzone(e.pageX, e.pageY)) {
@@ -333,13 +405,11 @@ $.fn.elfinderplaces = function(fm, opts) {
 						}
 					},
 					out : function(e, ui) {
-						var helper = ui.helper,
-							ctr    = (e.shiftKey||e.ctrlKey||e.metaKey);
+						var helper = ui.helper;
 						e.stopPropagation();
-						helper.toggleClass('elfinder-drag-helper-move elfinder-drag-helper-plus', helper.data('locked')? true : ctr).data('dropover', Math.max(helper.data('dropover') - 1, 0));
+						helper.removeClass('elfinder-drag-helper-move elfinder-drag-helper-plus').data('dropover', Math.max(helper.data('dropover') - 1, 0));
 						$(this).removeData('dropover')
 						       .removeClass(dropover);
-						fm.trigger(ctr? 'unlockfiles' : 'lockfiles', {files : helper.data('files'), helper: helper});
 					},
 					drop       : function(e, ui) {
 						var helper  = ui.helper,
@@ -353,7 +423,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 							} else {
 								resolve = false;
 							}
-						})
+						});
 						save();
 						resolve && helper.hide();
 					}
@@ -398,8 +468,8 @@ $.fn.elfinderplaces = function(fm, opts) {
 						
 					dir.children().removeClass('ui-state-hover');
 					
-					return $('<div class="ui-widget elfinder-place-drag elfinder-'+fm.direction+'"/>')
-							.append($('<div class="elfinder-navbar"/>').show().append(dir.clone()));
+					return $('<div class="ui-widget elfinder-place-drag elfinder-'+fm.direction+'"></div>')
+							.append($('<div class="elfinder-navbar"></div>').show().append(dir.clone()));
 
 				},
 				stop     : function(e, ui) {
@@ -446,57 +516,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			
 			places.show().parent().show();
 
-			dirs = {};
-			dat = fm.storage(key);
-			if (typeof dat === 'string') {
-				// old data type elFinder <= 2.1.12
-				dat = $.map(dat.split(','), function(hash) { return hash || null;});
-				$.each(dat, function(i, d) {
-					var dir = d.split('#')
-					dirs[dir[0]] = dir[1]? dir[1] : dir[0];
-				});
-			} else if ($.isPlainObject(dat)) {
-				dirs = dat;
-			}
-			// allow modify `dirs`
-			/**
-			 * example for preset places
-			 * 
-			 * elfinderInstance.bind('placesload', function(e, fm) {
-			 * 	//if (fm.storage(e.data.storageKey) === null) { // for first time only
-			 * 	if (!fm.storage(e.data.storageKey)) {           // for empty places
-			 * 		e.data.dirs[targetHash] = fallbackName;     // preset folder
-			 * 	}
-			 * }
-			 **/
-			fm.trigger('placesload', {dirs: dirs, storageKey: key}, true);
-			
-			hashes = Object.keys(dirs);
-			if (hashes.length) {
-				root.prepend(spinner);
-				
-				fm.request({
-					data : {cmd : 'info', targets : hashes},
-					preventDefault : true
-				})
-				.done(function(data) {
-					var exists = {};
-					$.each(data.files, function(i, f) {
-						var hash = f.hash;
-						exists[hash] = f;
-					});
-					$.each(dirs, function(h, f) {
-						add(exists[h] || $.extend({notfound: true}, f));
-					});
-					if (fm.storage('placesState') > 0) {
-						root.click();
-					}
-				})
-				.always(function() {
-					spinner.remove();
-				})
-			}
-			
+			init();
 
 			fm.change(function(e) {
 				var changed = false;
@@ -549,8 +569,22 @@ $.fn.elfinderplaces = function(fm, opts) {
 				}
 				changed && save();
 			})
-			.bind('sync netmount', function(e) {
-				var hashes = Object.keys(dirs);
+			.bind('sync netmount', function() {
+				var ev = this,
+					opSuffix = opts.suffix? opts.suffix : '',
+					hashes;
+				
+				if (ev.type === 'sync') {
+					// check is change of opts.suffix
+					if (suffix !== opSuffix) {
+						suffix = opSuffix;
+						clear();
+						init();
+						return;
+					}
+				}
+				
+				hashes = Object.keys(dirs);
 				if (hashes.length) {
 					root.prepend(spinner);
 
@@ -567,17 +601,17 @@ $.fn.elfinderplaces = function(fm, opts) {
 							exists[hash] = file;
 							if (!fm.files().hasOwnProperty(file.hash)) {
 								// update cache
-								fm.trigger('tree', {tree: [file]});
+								fm.updateCache({tree: [file]});
 							}
 						});
 						$.each(dirs, function(h, f) {
-							if (!f.notfound != !!exists[h]) {
-								if ((f.phash === cwd && e.type !== 'netmount') || (exists[h] && exists[h].mime !== 'directory')) {
+							if (Boolean(f.notfound) === Boolean(exists[h])) {
+								if ((f.phash === cwd && ev.type !== 'netmount') || (exists[h] && exists[h].mime !== 'directory')) {
 									if (remove(h)) {
 										updated = true;
 									}
 								} else {
-									if (update(exists[h] || $.extend({notfound: true}, f))) {
+									if (update(exists[h] || Object.assign({notfound: true}, f))) {
 										updated = true;
 									}
 								}
@@ -592,9 +626,9 @@ $.fn.elfinderplaces = function(fm, opts) {
 						spinner.remove();
 					});
 				}
-			})
+			});
 			
-		})
+		});
 		
 	});
 };

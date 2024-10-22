@@ -4,13 +4,13 @@
     if (path!=null) {
     	String currentYearPrefix = "/v"+java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
 
-    	String[] unknownLanguages = {"cs", "cz", "de"};
+    	String[] unknownLanguages = {"cz, de"};
 		for (String lng : unknownLanguages) {
 			String prefix = "/latest/"+lng+"/";
 			//System.out.println("prefix="+prefix);
 			if (path.startsWith(prefix)) {
 				String newLng = "en";
-				if (lng.equals("cs") || lng.equals("cz")) newLng = "sk";
+				if (lng.equals("cz")) newLng = "cs";
 				response.sendRedirect("/latest/"+newLng+"/"+path.substring(prefix.length()));
 				return;
 			}

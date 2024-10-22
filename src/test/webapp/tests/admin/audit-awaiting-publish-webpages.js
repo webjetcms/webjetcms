@@ -11,20 +11,23 @@ Scenario("Permission check", ({ I, DT }) => {
     DT.checkPerms("cmp_adminlog", "/admin/v9/apps/audit-awaiting-publish-webpages/");
 });
 
-Scenario("Permission check menuWebpages", ({ I, DT }) => {
-    I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/?removePerm=menuWebpages");
-    DT.filter("title", pageTitle);
-    DT.checkTableRow("awaitingPublishWebpagesDataTable", 1, ["22955", pageTitle, "01.12.2030 06:00:00", "", "/Test stavov/"+pageTitle]);
+Scenario("logout 1", ({ I }) => {
+    I.logout();
 });
 
-Scenario("logout", ({ I }) => {
+Scenario("Permission check menuWebpages", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/?removePerm=menuWebpages");
+    I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
+});
+
+Scenario("logout 2", ({ I }) => {
     I.logout();
 });
 
 Scenario("Check values", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/");
     DT.filter("title", pageTitle);
-    DT.checkTableRow("awaitingPublishWebpagesDataTable", 1, ["22955", pageTitle, "01.12.2030 06:00:00", "", "/Test stavov/"+pageTitle]);
+    DT.checkTableRow("awaitingPublishWebpagesDataTable", 1, [null, "22955", pageTitle, "01.12.2030 06:00:00", "", "/Test stavov/"+pageTitle]);
 });
 
 Scenario("Check buttons preview", ({ I, DT }) => {

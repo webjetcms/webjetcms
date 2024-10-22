@@ -144,6 +144,7 @@ script.
 <div id="SomStromcek"
     data-rest-url="/admin/rest/components/gallery/tree"
     data-rest-param-name="url">
+</div>
 ```
 
 ## Konfigurácia
@@ -224,7 +225,7 @@ window.getJstreeUrl = function() {
 
 ## Ikony a CSS triedy
 
-Ikonu sa nastavuje pomocou [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS triedy volaním [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). Hodnota je napríklad ```fas fa-folder``` alebo ```fas fa-globe```.
+Ikonu sa nastavuje pomocou [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS triedy volaním [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). Hodnota je napríklad ```ti ti-folder-filled``` alebo ```ti ti-map-pin```.
 
 API poskytuje metódy pre nastavenie HTML atribútov na LI aj A elemente pomocou atribútov [li_attr a a_attr](https://www.jstree.com/docs/json/). Pre jednoduché pridanie CSS triedy API poskytuje metódy ```JsTreeItem.addLiClass``` a ```JsTreeItem.addAClass```. Môžete tak nastaviť CSS stavy ```is-not-public``` alebo ```fa-is-internal```.
 
@@ -236,10 +237,10 @@ Príklady sú v triedach [GroupsJsTreeItem](../../../src/main/java/sk/iway/iwcm/
 
 Použitie ikon má nasledovné pravidlá:
 
-- <i class="fas fa-folder" role="presentation"></i> / <i class="fas fa-globe" role="presentation"></i> plná ikonka stránky aj priečinku = zobrazený v menu
-- <i class="far fa-folder" role="presentation"></i> / <i class="far fa-globe" role="presentation"></i> prázdna ikonka stránky aj priečinku = nezobrazený v menu
-- <i class="fas fa-lock" role="presentation"></i> zámok = dostupné len pre prihláseného návštevníka
+- <i class="ti ti-folder-filled" role="presentation"></i> / <i class="ti ti-map-pin" role="presentation"></i> plná ikonka stránky aj priečinku = zobrazený v menu
+- <i class="ti ti-folder" role="presentation"></i> / <i class="ti ti-map-pin-off" role="presentation"></i> prázdna ikonka stránky aj priečinku = nezobrazený v menu
+- <i class="ti ti-lock" role="presentation"></i> zámok = dostupné len pre prihláseného návštevníka
 - <span style="color: #FF4B58">červená farba</span> = nedostupné pre verejnosť (interný adresár) alebo stránka s vypnutým zobrazením (v DT je možné použiť CSS triedu is-not-public na riadok)
 - **tučné písmo** = hlavná stránka adresára (v DT je možné použiť CSS triedu ```is-default-page```)
-- <i class="fas fa-external-link-alt"></i> šípka von = stránka je presmerovaná
-- <i class="fas fa-eye-slash"></i> preškrtnuté oko = stránka sa nedá vyhľadať
+- <i class="ti ti-external-link"></i> šípka von = stránka je presmerovaná
+- <i class="ti ti-eye-off"></i> preškrtnuté oko = stránka sa nedá vyhľadať

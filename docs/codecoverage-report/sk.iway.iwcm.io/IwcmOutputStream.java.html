@@ -91,7 +91,7 @@ public class IwcmOutputStream extends OutputStream
 			{
 <span class="fc" id="L92">				File f = new File(filename);</span>
 <span class="fc" id="L93">				IwcmFile iwcmFile = new IwcmFile(f);</span>
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">				if(iwcmFile.exists())</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">				if(iwcmFile.exists())</span>
 <span class="pc bpc" id="L95" title="1 of 2 branches missed.">					if(!iwcmFile.delete())</span>
 <span class="nc" id="L96">						throw new IOException(&quot;Unable to delete file: &quot;+filename);</span>
 				//was deleted already, no need to check !exists()
@@ -369,4 +369,4 @@ public class IwcmOutputStream extends OutputStream
 		}
 <span class="nc" id="L370">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

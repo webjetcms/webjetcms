@@ -38,7 +38,7 @@ NotifyBean notify = new NotifyBean(prop.getText("text.warning"), prop.getText("e
 notify.addButton(new NotifyButton(
     prop.getText("editor.notify.editFromHistory"), //text tlacidla
     "btn btn-primary", //CSS trieda
-    "far fa-pencil", //FontAwesome ikona
+    "ti ti-pencil", //TablerIcons ikona
     "editFromHistory("+history.get(0).getDocId()+", "+history.get(0).getHistoryId()+")") //onclick funkcia
 );
 addNotify(notify);

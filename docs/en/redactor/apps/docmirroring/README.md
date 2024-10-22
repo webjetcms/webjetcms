@@ -89,10 +89,10 @@ Automatic translation of an existing page is performed under the following condi
 
 At the set value `structureMirroringAutoTranslatorLogin` the detection is more reliable because even an unpublished version of the web page may have already been corrected by another user, but not yet published. Your change would result in an overwriting of the text, which is an undesirable state. We recommend that you create a (virtual) user and set his login name to `structureMirroringAutoTranslatorLogin` for more reliable change detection.
 
-When you save a page, the changes are applied to all copies. So if I create an EN and a DE version from the SK version (which are not published yet, or have not been changed by a real editor), then when I change the EN version, the text is translated into the DE version. The SK version will not be affected, because it is typically already published or created by a real (not `structureMirroringAutoTranslatorLogin`
+When you save a page, the changes are applied to all copies. So if I create an EN and a DE version from the SK version (which are not published yet, or have not been changed by a real editor), then when I change the EN version, the text is translated into the DE version. The SK version will not be affected, because it is typically already published or created by a real (not `structureMirroringAutoTranslatorLogin`) to users.
 
-`syncGroupAndWebpageTitle` to the value of `true`
+If the conf. variable is set `syncGroupAndWebpageTitle` to the value of `true` (which is the default value) automatically synchronizes the folder name with the name of the main page in the folder. When the main page name is changed, the folder is renamed as well, even in translated versions.
 
 ## Technical information
 
-[](../../../developer/apps/docmirroring.md).
+More technical information can be found in [documentation for the developer](../../../developer/apps/docmirroring.md).

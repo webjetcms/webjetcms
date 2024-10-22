@@ -9,7 +9,7 @@ Before(({ I, login }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      if (typeof folder_name=="undefined") {
           var randomNumber = I.getRandomText();
-          folder_name = 'name-autotest-' + randomNumber;
+          folder_name = 'name-autotest-fralw' + randomNumber;
           subfolder_one = 'folder-autotest-' + randomNumber;
           subfolder_two = 'folder2-autotest-' + randomNumber;
      }
@@ -103,6 +103,8 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-passwordProtectedSubFolders_0').find('.form-check-label')); // aplikovat na vsetky
      DTE.save();
      I.waitForText(folder_name, 20);
+     I.wait(2);
+     I.jstreeClick(folder_name); //if refreshed click on it again
      I.seeElement(locate('.jstree-anchor.jstree-clicked').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(folder_name));
      I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(subfolder_one));
      I.seeElement(locate('.jstree-node.jstree-leaf').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder-filled.jstree-themeicon-custom').withText(subfolder_two));

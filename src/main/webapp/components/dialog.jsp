@@ -3,6 +3,8 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %>
 <%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%>
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
+<%@page import="sk.iway.iwcm.SetCharacterEncodingFilter"%>
+<%@page import="sk.iway.iwcm.RequestBean"%>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"%>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"%>
@@ -14,7 +16,14 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <%
 if (request.getAttribute("/common/dialog.jsp-inserted")!=null) return;
 request.setAttribute("/common/dialog.jsp-inserted", "1");
-Prop prop = Prop.getInstance( request.getParameter("language") );
+
+
+String language = request.getParameter("language");
+if(language == null) {
+	RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+	if(rb != null) language = rb.getLng();
+}
+Prop prop = Prop.getInstance( language );
 %>
 
 <script type="text/javascript">
@@ -72,6 +81,10 @@ Prop prop = Prop.getInstance( request.getParameter("language") );
 					closeDialog();
 				}
 			});
+
+			let redundantIcon = $("span.ui-button-icon.ui-icon.ui-icon-closethick");
+			if(redundantIcon != undefined && redundantIcon != null && redundantIcon.length > 0)
+				redundantIcon.hide();
 
 			if(buttons)
 			{

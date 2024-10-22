@@ -68,7 +68,7 @@ Hodnota **Neznámy** alebo **???** sa zobrazuje pre neznáme prehliadače a pre 
 
 > Čo návštevníci vyhľadávajú na našej stránke? Na aké vyhľadávané výrazy sa dostali na náš web z vyhľadávačov?
 
-Zoznam vyhľadávaných výrazov na vašom web sídle, ale aj na externých vyhľadávačoch ```google```, ```seznam``` atď. Kliknutím na hľadaný výraz zobrazíte detailný zoznam časov a použitého vyhľadávača pre hľadanie daného výrazu. V stĺpci adresa počítača sa zobrazuje IP adresa/doménové meno počítača z ktorého bolo vykonané hľadanie. Hodnota ```0.0.0.0``` sa zobrazí ak návštevník nedal súhlas na zbieranie štatistických cookies.
+Zoznam vyhľadávaných výrazov na vašom web sídle, ale aj na externých vyhľadávačoch ```Google```, ```Seznam``` atď. Kliknutím na hľadaný výraz zobrazíte detailný zoznam časov a použitého vyhľadávača pre hľadanie daného výrazu. V stĺpci adresa počítača sa zobrazuje IP adresa/doménové meno počítača z ktorého bolo vykonané hľadanie. Hodnota ```0.0.0.0``` sa zobrazí ak návštevník nedal súhlas na zbieranie štatistických cookies.
 
 Graf a tabuľku môžete ďalej v hlavnom hornom filtri filtrovať podľa vyhľadávača a prípadne stránky kde sa nachádzajú výsledky vyhľadávania (alebo bol prechod na danú stránku z externého vyhľadávača).
 

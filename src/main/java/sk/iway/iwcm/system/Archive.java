@@ -174,7 +174,7 @@ public class Archive
 		}
 
 		Identity user = UsersDB.getCurrentUser(request);
-		if (user == null || user.isAdmin() || user.isFolderWritable(zipDirPath)==false) {
+		if (user == null || user.isAdmin()==false || user.isFolderWritable(zipDirPath)==false) {
 			if (printWriter != null) printWriter.println("<b>Access denied!</b><br><br>");
 			return;
 		}

@@ -2,18 +2,18 @@
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.Map;
 
 import io.github.duckasteroid.cdb.Cdb;
 
-import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.lucene.analysis.cz.CzechStemmer;
 import org.apache.lucene.analysis.de.GermanMinimalStemmer;
 import org.apache.lucene.analysis.en.EnglishMinimalStemmer;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.fulltext.cdb.CdbCacheListener;
 import sk.iway.iwcm.system.fulltext.cdb.CdbFactory;
 import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
 
@@ -28,14 +28,11 @@ import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
  *@created Date: 4.5.2011 15:40:45
  *@modified $Date: 2004/08/16 06:26:11 $
  */
-@SuppressWarnings(&quot;rawtypes&quot;)
 public class Lemmas
 {
-<span class="nc" id="L34">	private static final Map&lt;String, GenericObjectPool&gt; pools = new Hashtable&lt;&gt;();</span>
-
-<span class="nc" id="L36">	protected Lemmas() {</span>
+<span class="nc" id="L33">	protected Lemmas() {</span>
 		//utility class
-<span class="nc" id="L38">	}</span>
+<span class="nc" id="L35">	}</span>
 
 	/**
 	 * Vytvori lemmas z celej vety:
@@ -45,15 +42,15 @@ public class Lemmas
 	 * @return
 	 */
 	public static String get(String language, String text) {
-<span class="nc" id="L48">		String[] words = Tools.getTokens(text, &quot; \t\n&quot;);</span>
-<span class="nc" id="L49">		StringBuilder response = new StringBuilder();</span>
-<span class="nc bnc" id="L50" title="All 2 branches missed.">		for (String word : words) {</span>
-<span class="nc bnc" id="L51" title="All 2 branches missed.">			if (response.length()&gt;1) response.append(&quot; &quot;);</span>
-<span class="nc" id="L52">			char[] lemmas = get(language, word.toCharArray(), 0, word.length());</span>
-<span class="nc bnc" id="L53" title="All 4 branches missed.">			if (lemmas != null &amp;&amp; lemmas.length&gt;1) response.append(lemmas);</span>
+<span class="fc" id="L45">		String[] words = Tools.getTokens(text, &quot; \t\n&quot;);</span>
+<span class="fc" id="L46">		StringBuilder response = new StringBuilder();</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">		for (String word : words) {</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">			if (response.length()&gt;1) response.append(&quot; &quot;);</span>
+<span class="fc" id="L49">			char[] lemmas = get(language, word.toCharArray(), 0, word.length());</span>
+<span class="pc bpc" id="L50" title="1 of 4 branches missed.">			if (lemmas != null &amp;&amp; lemmas.length&gt;1) response.append(lemmas);</span>
 		}
 
-<span class="nc" id="L56">		return response.toString();</span>
+<span class="fc" id="L53">		return response.toString();</span>
 	}
 
 	/**
@@ -64,65 +61,57 @@ public class Lemmas
 	 * @param length
 	 * @return
 	 */
-	@SuppressWarnings(&quot;unchecked&quot;)
 	public static char[] get(String language, char[] form,int offset,int length)
 	{
-<span class="nc bnc" id="L70" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;luceneIndexingSkAlgorithmicStemming&quot;) &amp;&amp; &quot;sk&quot;.equals(language)){</span>
-<span class="nc" id="L71">			return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();</span>
+<span class="pc bpc" id="L66" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;luceneIndexingSkAlgorithmicStemming&quot;) &amp;&amp; &quot;sk&quot;.equals(language)){</span>
+<span class="fc" id="L67">			return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();</span>
 		}
 
-<span class="nc bnc" id="L74" title="All 2 branches missed.">		if (&quot;cz&quot;.equals(language)) {</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">		if (&quot;cz&quot;.equals(language)) {</span>
 			//pre CZ nemame Lemmas, mame len stemmer, ale lepsie ako nic
-<span class="nc" id="L76">			CzechStemmer stemmer = new CzechStemmer();</span>
-<span class="nc" id="L77">			int baseLength = stemmer.stem(form, length);</span>
-<span class="nc bnc" id="L78" title="All 2 branches missed.">			if (baseLength&lt;1) return form;</span>
-<span class="nc" id="L79">			char[] stemmed = Arrays.copyOf(form, baseLength);</span>
-<span class="nc" id="L80">			return stemmed;</span>
+<span class="nc" id="L72">			CzechStemmer stemmer = new CzechStemmer();</span>
+<span class="nc" id="L73">			int baseLength = stemmer.stem(form, length);</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">			if (baseLength&lt;1) return form;</span>
+<span class="nc" id="L75">			char[] stemmed = Arrays.copyOf(form, baseLength);</span>
+<span class="nc" id="L76">			return stemmed;</span>
 		}
-<span class="nc bnc" id="L82" title="All 2 branches missed.">		else if (&quot;en&quot;.equals(language)) {</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">		else if (&quot;en&quot;.equals(language)) {</span>
 			//pre CZ nemame Lemmas, mame len stemmer, ale lepsie ako nic
-<span class="nc" id="L84">			EnglishMinimalStemmer stemmer = new EnglishMinimalStemmer();</span>
-<span class="nc" id="L85">			int baseLength = stemmer.stem(form, length);</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">			if (baseLength&lt;1) return form;</span>
-<span class="nc" id="L87">			char[] stemmed = Arrays.copyOf(form, baseLength);</span>
-<span class="nc" id="L88">			return stemmed;</span>
+<span class="nc" id="L80">			EnglishMinimalStemmer stemmer = new EnglishMinimalStemmer();</span>
+<span class="nc" id="L81">			int baseLength = stemmer.stem(form, length);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">			if (baseLength&lt;1) return form;</span>
+<span class="nc" id="L83">			char[] stemmed = Arrays.copyOf(form, baseLength);</span>
+<span class="nc" id="L84">			return stemmed;</span>
 		}
-<span class="nc bnc" id="L90" title="All 2 branches missed.">		else if (&quot;de&quot;.equals(language)) {</span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">		else if (&quot;de&quot;.equals(language)) {</span>
 			//pre CZ nemame Lemmas, mame len stemmer, ale lepsie ako nic
-<span class="nc" id="L92">			GermanMinimalStemmer stemmer = new GermanMinimalStemmer();</span>
-<span class="nc" id="L93">			int baseLength = stemmer.stem(form, length);</span>
-<span class="nc bnc" id="L94" title="All 2 branches missed.">			if (baseLength&lt;1) return form;</span>
-<span class="nc" id="L95">			char[] stemmed = Arrays.copyOf(form, baseLength);</span>
-<span class="nc" id="L96">			return stemmed;</span>
+<span class="nc" id="L88">			GermanMinimalStemmer stemmer = new GermanMinimalStemmer();</span>
+<span class="nc" id="L89">			int baseLength = stemmer.stem(form, length);</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">			if (baseLength&lt;1) return form;</span>
+<span class="nc" id="L91">			char[] stemmed = Arrays.copyOf(form, baseLength);</span>
+<span class="nc" id="L92">			return stemmed;</span>
 		}
 
-<span class="nc" id="L99">		synchronized (pools)</span>
-		{
-<span class="nc bnc" id="L101" title="All 2 branches missed.">			if (!pools.containsKey(language))</span>
-			{
-<span class="nc" id="L103">				GenericObjectPool pool = new GenericObjectPool(new CdbFactory(language,CdbFactory.Type.Lemmas));</span>
-<span class="nc" id="L104">				pools.put(language, pool);</span>
+		try {
+<span class="nc" id="L96">			Cache c = Cache.getInstance();</span>
+<span class="nc" id="L97">			CdbCacheListener.init();</span>
+<span class="nc" id="L98">			String CACHE_KEY = &quot;Lucene.Lemmas.&quot;+language+&quot;.&quot;+Thread.currentThread().getId();</span>
+<span class="nc" id="L99">			Cdb cdb = (Cdb)c.getObject(CACHE_KEY);</span>
+<span class="nc bnc" id="L100" title="All 2 branches missed.">			if (cdb == null) {</span>
+<span class="nc" id="L101">				cdb = (Cdb)new CdbFactory(language,CdbFactory.Type.LEMMAS).makeObject();</span>
+<span class="nc" id="L102">				c.setObjectSeconds(CACHE_KEY, cdb, 5*60, false);</span>
 			}
-			try
-			{
-<span class="nc" id="L108">				GenericObjectPool pool = pools.get(language);</span>
-<span class="nc" id="L109">				Cdb cdb = (Cdb)pool.borrowObject();</span>
-<span class="nc" id="L110">				ByteBuffer bytes = cdb.find( ByteBuffer.wrap(CdbUtils.encode(form, offset, length)) );</span>
 
-<span class="nc" id="L112">				pool.returnObject(cdb);</span>
-<span class="nc bnc" id="L113" title="All 4 branches missed.">				if (bytes != null &amp;&amp; bytes.hasArray())</span>
-				{
-<span class="nc" id="L115">					return CdbUtils.decode(bytes.array());</span>
-				}else{
-<span class="nc" id="L117">					return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();</span>
-				}
-			}
-<span class="nc" id="L120">			catch (Exception e)</span>
+<span class="nc" id="L105">			ByteBuffer bytes = cdb.find( ByteBuffer.wrap(CdbUtils.encode(form, offset, length)) );</span>
+
+<span class="nc bnc" id="L107" title="All 4 branches missed.">			if (bytes != null &amp;&amp; bytes.hasArray())</span>
 			{
-				//sk.iway.iwcm.Logger.error(e);
+<span class="nc" id="L109">				return CdbUtils.decode(bytes.array());</span>
 			}
-<span class="nc" id="L124">		}</span>
-<span class="nc" id="L125">		return form;</span>
+<span class="nc" id="L111">		} catch (Exception e) {</span>
+<span class="nc" id="L112">			Logger.error(Lemmas.class, e);</span>
+<span class="nc" id="L113">		}</span>
+<span class="nc" id="L114">		return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

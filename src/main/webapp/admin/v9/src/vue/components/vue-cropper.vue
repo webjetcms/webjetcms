@@ -99,7 +99,11 @@
             imgSrc: {
                 get() {
                     let now = (new Date()).getTime();
-                    let url = `${this.imagePath}/o_${this.imageName}?v=${now}`;
+                    let prefix = "o_";
+                    if (this.imagePath.indexOf("gallery") === -1) {
+                        prefix = "";
+                    }
+                    let url = `${this.imagePath}/${prefix}${this.imageName}?v=${now}`;
                     //console.log("url=", url);
                     return url;
                 },

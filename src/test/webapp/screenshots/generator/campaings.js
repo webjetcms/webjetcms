@@ -114,7 +114,7 @@ Scenario('campaings raw import', ({ I, DT, DTE, Document }) => {
     I.click( locate(recipientsWrapper).find("button.buttons-select-all") );
     I.click( locate(recipientsWrapper).find("button.buttons-remove") );
     I.waitForElement("div.DTE_Action_Remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
 
     addEmail(I, DTE, "Testovacie emaily", insertRecipient_error, true, true);
 
@@ -129,7 +129,7 @@ Scenario('campaings raw import', ({ I, DT, DTE, Document }) => {
     I.click( locate(recipientsWrapper).find("button.buttons-select-all") );
     I.click( locate(recipientsWrapper).find("button.buttons-remove") );
     I.waitForElement("div.DTE_Action_Remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
 });
 
 function addEmail(I, DTE, recipientName, recipientEmail, checkModalClose=true, skipWrong = false) {

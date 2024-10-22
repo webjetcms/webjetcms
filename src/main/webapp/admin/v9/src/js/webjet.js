@@ -1,4 +1,5 @@
 import {Tools} from "./libs/tools/tools";
+import { Base64 } from 'js-base64';
 
 const WJ = (() => {
 
@@ -118,6 +119,9 @@ const WJ = (() => {
         iframe.attr('width', options.width);
         iframe.attr('height', options.height);
 
+        let closeAfterSave = options.closeAfterSave;
+        if(closeAfterSave == undefined || closeAfterSave == null) closeAfterSave = true;
+
         //nastav height aj na modal-body, inak ho renderovalo o par px vyssie ako iframe
         $('#modalIframe div.modal-body').css('height', options.height + 'px');
 
@@ -144,7 +148,8 @@ const WJ = (() => {
                 //console.log("Klik na btn-prinary, e=", e);
                 let success = _modalOkClick();
                 if (false === success) return;
-                closeIframeModal();
+
+                if(closeAfterSave === true) closeIframeModal();
             });
             $('#modalIframe button.btn-close').on('click', () => {
                 closeIframeModal();
@@ -181,6 +186,45 @@ const WJ = (() => {
         $('.modal-backdrop').removeClass('modalIframeShown');
 
         if (window.parent!=window.self) $(window.parent.document).find("#modalIframe").removeClass("child-iframe-open");
+    }
+
+    /**
+     * Special version of openIframeModal with datatable support
+     * - it will trigger click on primary button in datatable modal
+     * - it will handle close of modal after datatables editor save
+     * @param {*} options - same as for openIframeModal
+     */
+    function openIframeModalDatatable(options) {
+        if (typeof options.okclick === 'undefined') {
+            options.okclick = function() {
+                $('#modalIframeIframeElement').contents().find('div.modal.DTED.show div.DTE_Footer button.btn-primary').trigger("click");
+                return false;
+            }
+        }
+        if (typeof options.onload === 'undefined') {
+            options.onload = function(detail) {
+                let iframeWindow = detail.window;
+                //console.log("iframeWindow=", iframeWindow.location.href);
+                iframeWindow.addEventListener("WJ.DTE.close", function(event) {
+                    //console.log("CLOSE EVENT RECEIVED, event=", event);
+
+                    //ulozenie nested modalu nema sposobit zatvorenie okna
+                    if (true===event.detail.dte.TABLE.DATA.nestedModal) return;
+                    setTimeout(() => {
+                        WJ.closeIframeModal();
+                    }, 100);
+                });
+            }
+        }
+        if (typeof options.closeButtonPosition === 'undefined') {
+            options.closeButtonPosition = "close-button-over";
+        }
+        //verify window height and adjust it
+        var height = options.height;
+        var windowHeight = $(window).height() - 80;
+        if (height > windowHeight) height = windowHeight;
+        if (height > 300) options.height = height;
+        openIframeModal(options);
     }
 
     function _showIframeModal() {
@@ -366,7 +410,7 @@ const WJ = (() => {
      */
     function urlAddParam(url, paramName, paramValue) {
         url += url.indexOf('?') === -1 ? '?' : '&';
-        url += paramName + '=' + paramValue;
+        url += paramName + '=' + encodeURIComponent(paramValue);
         return (url);
     }
 
@@ -381,13 +425,13 @@ const WJ = (() => {
         //Check if url includes this param
         if(url.includes((paramName + '='))) {
             //Url ends with param but without value
-            if(url.endsWith((paramName + '='))) return url + paramValue;
+            if(url.endsWith((paramName + '='))) return url + encodeURIComponent(paramValue);
 
             //Update parm value inside of url
             let urlParams = (url.split("?")[1]).split("&")
             for (var i = 0; i < urlParams.length; i++)
                 if(urlParams[i].startsWith((paramName + '=')))
-                    urlParams[i] = paramName + "=" + paramValue
+                    urlParams[i] = paramName + "=" + encodeURIComponent(paramValue)
 
             let newUrl = url.split("?")[0] + "?";
             for (var i = 0; i < urlParams.length; i++) {
@@ -463,15 +507,24 @@ const WJ = (() => {
      */
     function openElFinder(options) {
         /** @type {string} */
-        let url = '/admin/elFinder/dialog.jsp';
+        let url = '/admin/v9/files/dialog';
         //if (options.link !== undefined && options.link !== null && options.link !== '')
         if (!!options.link) {
             url = urlAddParam(url, 'link', options.link);
+        }
+        if (typeof options.volumes !== "undefined" && options.volumes !== null && options.volumes !== '') {
+            url = urlAddParam(url, 'volumes', options.volumes);
         }
 
         options.width = 800;
         options.height = 540;
         options.url = url;
+
+        //verify window height and adjust it
+        var height = options.height;
+        var windowHeight = $(window).height() - 80;
+        if (height > windowHeight) height = windowHeight;
+        if (height > 300) options.height = height;
 
         //musis osefovat callback
         /** @type {function} */
@@ -488,6 +541,8 @@ const WJ = (() => {
                 originalCallback(link);
             }
         }
+
+        options.closeButtonPosition = "close-button-over-nopadding";
 
         openIframeModal(options);
     }
@@ -559,6 +614,34 @@ const WJ = (() => {
         return String(string).replace(/[&<>"'`=\/]/g, function (s) {
             return entityMap[s];
         });
+    }
+
+    function fixFileName(fileName)
+    {
+        fileName = fileName.replace(/&/gi, "");
+        fileName = internationalToEnglish(fileName);
+        fileName = removeChars(fileName);
+        return fileName.toLowerCase();
+    }
+
+    function removeSpojky(text) {
+        let urlRemoveSpojky = window.Constants["urlRemoveSpojky"];
+
+        if(urlRemoveSpojky) {
+            let spojky = window.Constants["urlRemoveSpojkyList"];
+            spojky.forEach((element) => {
+                let spojka = element.replace(".", "\\.");
+
+                if(text != undefined && text != null && text.length > 1) {
+                    var regexA = new RegExp("-" + spojka + "-", "gi");
+                    var regexB = new RegExp("-" + spojka + "\/", "gi");
+                    text = text.replace(regexA, "-");
+                    text = text.replace(regexB, "/");
+                }
+            });
+
+            return text;
+        }
     }
 
     function _formatTime(timestamp, format) {
@@ -866,13 +949,12 @@ const WJ = (() => {
             //fix BR tag before H1-H6 tag
             .replace(/<br \/><h([1-6])>/gim, '<h$1>')
             .replace(/<br \/><h([1-6])>/gim, '<h$1>')
-
             ;
-
 
         if (typeof options != "undefined") {
             if (true === options.link) {
-                htmlText = htmlText.replace(/\[(.*?)\]\((.*?)\)/gim, "<a href='$2' target='_blank'>$1</a>")
+                htmlText = htmlText.replace(/\[(\s*http[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                                   .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
             }
 
             //badge span
@@ -890,7 +972,8 @@ const WJ = (() => {
         //This is for cases where [](link) link isn't for our documentatio but for some web page (so do it without our prefix)
         //OR in case that options are not set at all
         htmlText = htmlText.replace(/!\[(.*?)\]\((.*?)\)/gim, "<img alt='$1' src='$2' class='img-fluid' loading='lazy'/>")
-                            .replace(/(\[([^\]]+)])\(([^)]+)\)/g, '<a href="$3"> $2 </a>')
+                            .replace(/\[(\s*http[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                            .replace(/\[(\s*[^\[\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
 
         //console.log(htmlText);
 
@@ -1012,6 +1095,24 @@ const WJ = (() => {
         $('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
     }
 
+    /**
+     * Encode text to base64 including utf-8 characters
+     * @param {String} text
+     * @returns
+     */
+    function base64encode(text) {
+        return Base64.encode(text);
+    }
+
+    /**
+     * Decode base64 text to utf-8 characters
+     * @param {String} encodedText
+     * @returns
+     */
+    function base64decode(encodedText) {
+        return Base64.decode(encodedText);
+    }
+
     return {
         showHelpWindow: () => {
             return showHelpWindow();
@@ -1080,11 +1181,14 @@ const WJ = (() => {
         closeIframeModal: () => {
             return closeIframeModal();
         },
+        openIframeModalDatatable: options => {
+            return openIframeModalDatatable(options);
+        },
         openElFinder: (options) => {
             return openElFinder(options);
         },
         openElFinderButton: (button) => {
-            console.log("openElfinderButton, button=", button);
+            //console.log("openElfinderButton, button=", button);
             //kliklo sa na button, dohladaj pridruzeny input
             let $button = $(button);
             let input = $button.parents("div.input-group").find("input.form-control");
@@ -1190,6 +1294,9 @@ const WJ = (() => {
         toastWarning: (type, title, text, timeOut) => {
             return toastNotify(type, title, text, timeOut)
         },
+        popup: (url, width, height) => {
+            return openPopupDialog(url, width, height);
+        },
         popupFromDialog: (url, width, height) => {
             //toto je len kvoli WJ8 kompatibilite
             return openPopupDialog(url, width, height);
@@ -1207,6 +1314,18 @@ const WJ = (() => {
                     }
                 });
             }
+        },
+        fixFileName: (fileName) => {
+            return fixFileName(fileName);
+        },
+        removeSpojky: (text) => {
+            return removeSpojky(text);
+        },
+        base64encode: (text) => {
+            return base64encode(text);
+        },
+        base64decode: (encodedText) => {
+            return base64decode(encodedText);
         }
     };
 
@@ -1226,7 +1345,7 @@ window.openImageDialogWindow = function(formName, fieldName, requestedImageDir) 
     openElFinderDialogWindow(formName, fieldName, requestedImageDir);
 }
 window.openElFinderDialogWindow = function(form, elementName, requestedImageDir) {
-	var url = '/admin/elFinder/dialog.jsp';
+	var url = '/admin/v9/files/dialog';
     //console.log("openElFinderDialogWindow, form=", form, "elementName=", elementName);
 
 	if (form != null && elementName != null) {

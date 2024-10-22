@@ -23,9 +23,7 @@ taglib
 
 	<%@page import="sk.iway.iwcm.io.IwcmFile"%>
 <%
-	String lng = PageLng.getUserLng(request);
-	pageContext.setAttribute("lng", lng);
-	Prop prop = Prop.getInstance(lng);
+	Prop prop = Prop.getInstance(request);
 	request.setAttribute("cmpName", "app-social_icon");
 	request.setAttribute("titleKey",
 			"components.app-social_icon.title");

@@ -18,7 +18,7 @@ import sk.iway.iwcm.users.UsersDB;
 /**
  * Handle sending notification email's abou forum.
  *
- * Email's -&gt; Approving forum, New added forum, New added forumas response (answer) to existing forum
+ * Email's -&gt; Approving forum, New added forum, New added forums response (answer) to existing forum
  */
 public class DocForumEmailService {
 
@@ -40,54 +40,69 @@ public class DocForumEmailService {
 <span class="fc" id="L40">	private String docData = &quot;&quot;;</span>
 	private String docUrl;
 
-	//Inicialize if user is LOGGED and his email is SAME as sender email in forum form
-<span class="fc" id="L44">	private boolean senderIsLogged = false;</span>
+	private String pageOwnerEmail;
 
-<span class="fc" id="L46">	public DocForumEmailService(DocForumEntity forumForm, ForumGroupEntity forumGroup, HttpServletRequest request, Prop prop) {</span>
-<span class="fc" id="L47">		this.prop = prop;</span>
-<span class="fc" id="L48">		this.request = request;</span>
+	//Initialize if user is LOGGED and his email is SAME as sender email in forum form
+<span class="fc" id="L46">	private boolean senderIsLogged = false;</span>
 
-<span class="fc" id="L50">		this.forumForm = forumForm;</span>
-<span class="fc" id="L51">		this.forumGroup = forumGroup;</span>
-<span class="fc" id="L52">		this.forumFormDocId = forumForm.getDocId();</span>
+	private static final String MESSAGE_PART_TABLE = &quot;&lt;table border='0' cellpadding='0' cellspacing='0'&gt;&quot;;
+	private static final String MESSAGE_PART_TR_TD_TOP = &quot;&lt;tr&gt;&lt;td style='vertical-align: top;'&gt;&quot;;
+	private static final String MESSAGE_PART_ETABLE = &quot;&lt;/table&gt;&quot;;
+	private static final String MESSAGE_PART_ETD_TD = &quot;: &lt;/td&gt;&lt;td&gt;&quot;;
+	private static final String MESSAGE_PART_TR_TD = &quot;&lt;tr&gt;&lt;td&gt;&quot;;
+	private static final String MESSAGE_PART_ETD_ETR = &quot;&lt;/td&gt;&lt;/tr&gt;&quot;;
+	private static final String MESSAGE_PART_EA_EP = &quot;&lt;/a&gt;&lt;/p&gt;&quot;;
 
-<span class="fc" id="L54">		this.header = prop.getText(&quot;components.forum.hlavicka&quot;);</span>
-<span class="fc" id="L55">		this.footer = prop.getText(&quot;components.forum.paticka&quot;);</span>
-<span class="fc" id="L56">		this.baseHref = Tools.getBaseHref(request);</span>
+	private final String emailAnswerSubject;
 
-<span class="fc" id="L58">		prepareSupportValues();</span>
-<span class="fc" id="L59">	}</span>
+<span class="fc" id="L58">	public DocForumEmailService(DocForumEntity forumForm, ForumGroupEntity forumGroup, HttpServletRequest request, Prop prop) {</span>
+<span class="fc" id="L59">		this.prop = prop;</span>
+<span class="fc" id="L60">		this.request = request;</span>
+
+<span class="fc" id="L62">		this.forumForm = forumForm;</span>
+<span class="fc" id="L63">		this.forumGroup = forumGroup;</span>
+<span class="fc" id="L64">		this.forumFormDocId = forumForm.getDocId();</span>
+
+<span class="fc" id="L66">		this.header = prop.getText(&quot;components.forum.hlavicka&quot;);</span>
+<span class="fc" id="L67">		this.footer = prop.getText(&quot;components.forum.paticka&quot;);</span>
+<span class="fc" id="L68">		this.baseHref = Tools.getBaseHref(request);</span>
+
+<span class="fc" id="L70">		this.emailAnswerSubject = prop.getText(&quot;components.forum.email_answer_subject&quot;);</span>
+
+<span class="fc" id="L72">		prepareSupportValues();</span>
+<span class="fc" id="L73">	}</span>
 
 	/**
 	 * Prepare all the variables that are necessary to send forum email's.
 	 */
 	private void prepareSupportValues() {
 		//
-<span class="fc" id="L66">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L67" title="2 of 6 branches missed.">		if(user != null &amp;&amp; forumForm != null &amp;&amp; forumForm.getAuthorEmail().equals(user.getEmail())) senderIsLogged = true;</span>
+<span class="fc" id="L80">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L81" title="2 of 6 branches missed.">		if(user != null &amp;&amp; forumForm != null &amp;&amp; forumForm.getAuthorEmail().equals(user.getEmail())) senderIsLogged = true;</span>
 
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">		if(forumGroup == null) {</span>
-<span class="nc" id="L70">			forumGroup = new ForumGroupEntity();</span>
-<span class="nc" id="L71">			forumGroup.setMessageConfirmation(false);</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">		if(forumGroup == null) {</span>
+<span class="nc" id="L84">			forumGroup = new ForumGroupEntity();</span>
+<span class="nc" id="L85">			forumGroup.setMessageConfirmation(false);</span>
 		}
 
-<span class="fc" id="L74">		fromNameGlobal = Constants.getString(&quot;forumNotifySenderName&quot;);</span>
-<span class="pc bpc" id="L75" title="1 of 2 branches missed.">		if(Tools.isEmpty(fromNameGlobal)) fromNameGlobal = forumForm.getAuthorName();</span>
+<span class="fc" id="L88">		fromNameGlobal = Constants.getString(&quot;forumNotifySenderName&quot;);</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">		if(Tools.isEmpty(fromNameGlobal)) fromNameGlobal = forumForm.getAuthorName();</span>
 
-<span class="fc" id="L77">		fromEmailGlobal = Constants.getString(&quot;forumNotifySenderEmail&quot;);</span>
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">		if (Tools.isEmpty(fromEmailGlobal)) fromEmailGlobal = forumForm.getAuthorEmail();</span>
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		if (Tools.isEmpty(fromEmailGlobal)) fromEmailGlobal = &quot;info@&quot; + Tools.getServerName(request);</span>
+<span class="fc" id="L91">		fromEmailGlobal = Constants.getString(&quot;forumNotifySenderEmail&quot;);</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">		if (Tools.isEmpty(fromEmailGlobal)) fromEmailGlobal = forumForm.getAuthorEmail();</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (Tools.isEmpty(fromEmailGlobal)) fromEmailGlobal = &quot;info@&quot; + Tools.getServerName(request);</span>
 
 
-<span class="fc" id="L82">		DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L83">		DocDetails doc = docDB.getDoc(forumFormDocId);</span>
-<span class="fc" id="L84">		docUrl = &quot;/showdoc.do?docid=&quot; + forumFormDocId;</span>
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (doc != null) {</span>
-<span class="fc" id="L86">			docTitle = doc.getTitle();</span>
-<span class="fc" id="L87">			docData = doc.getData();</span>
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(doc.getVirtualPath())) docUrl = doc.getVirtualPath();</span>
+<span class="fc" id="L96">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L97">		DocDetails doc = docDB.getDoc(forumFormDocId);</span>
+<span class="fc" id="L98">		docUrl = &quot;/showdoc.do?docid=&quot; + forumFormDocId;</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		if (doc != null) {</span>
+<span class="fc" id="L100">			docTitle = doc.getTitle();</span>
+<span class="fc" id="L101">			docData = doc.getData();</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(doc.getVirtualPath())) docUrl = doc.getVirtualPath();</span>
+<span class="fc" id="L103">			pageOwnerEmail = doc.getAuthorEmail();</span>
 		}
-<span class="fc" id="L90">	}</span>
+<span class="fc" id="L105">	}</span>
 
 	/**
 	 * Send approve request email.
@@ -97,27 +112,27 @@ public class DocForumEmailService {
 	 * @param toEmail
 	 */
     private void sendApproveEmail(String fromEmail, String toEmail) {
-<span class="nc" id="L100">		String approveLink = baseHref + &quot;/apps/forum/admin/#dt-filter-id=&quot; + forumForm.getId() + &quot;&amp;dt-select=true&quot;;</span>
+<span class="nc" id="L115">		String approveLink = baseHref + &quot;/apps/forum/admin/#dt-filter-id=&quot; + forumForm.getId() + &quot;&amp;dt-select=true&quot;;</span>
 
-<span class="nc" id="L102">		StringBuilder message = new StringBuilder(header);</span>
-<span class="nc" id="L103">			message.append(&quot;&lt;p&gt;&quot;);</span>
-<span class="nc" id="L104">				message.append(prop.getText(&quot;components.forum.approve.text&quot;)).append(&quot;.&lt;br/&gt;&quot;);</span>
-<span class="nc" id="L105">				message.append(&quot;DocID: &quot;).append(forumFormDocId);</span>
-<span class="nc" id="L106">			message.append(&quot;&lt;/p&gt;&quot;);</span>
+<span class="nc" id="L117">		StringBuilder message = new StringBuilder(header);</span>
+<span class="nc" id="L118">			message.append(&quot;&lt;p&gt;&quot;);</span>
+<span class="nc" id="L119">				message.append(prop.getText(&quot;components.forum.approve.text&quot;)).append(&quot;.&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L120">				message.append(&quot;DocID: &quot;).append(forumFormDocId);</span>
+<span class="nc" id="L121">			message.append(&quot;&lt;/p&gt;&quot;);</span>
 
-<span class="nc" id="L108">			message.append(&quot;&lt;table border='0' cellpadding='0' cellspacing='0'&gt;&quot;);</span>
-<span class="nc" id="L109">				message.append(&quot;&lt;tr&gt;&lt;td style='vertical-align: top;'&gt;&quot;).append(prop.getText(&quot;components.forum.message_name&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(docTitle).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L110">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.author&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(fromNameGlobal).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L111">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.message_text&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(&quot; &quot; + forumForm.getQuestion()).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L112">			message.append(&quot;&lt;/table&gt;&quot;);</span>
+<span class="nc" id="L123">			message.append(MESSAGE_PART_TABLE);</span>
+<span class="nc" id="L124">				message.append(MESSAGE_PART_TR_TD_TOP).append(prop.getText(&quot;components.forum.message_name&quot;)).append(MESSAGE_PART_ETD_TD).append(docTitle).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="nc" id="L125">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.author&quot;)).append(MESSAGE_PART_ETD_TD).append(fromNameGlobal).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="nc" id="L126">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.message_text&quot;)).append(MESSAGE_PART_ETD_TD).append(&quot; &quot; + forumForm.getQuestion()).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="nc" id="L127">			message.append(MESSAGE_PART_ETABLE);</span>
 
-<span class="nc" id="L114">			message.append(&quot;&lt;p&gt;&quot;);</span>
-<span class="nc" id="L115">				message.append(prop.getText(&quot;components.forum.message_approve_link&quot;)).append(&quot;: &lt;a href='&quot;).append(approveLink).append(&quot;'&gt;&quot;).append(approveLink).append(&quot;&lt;/a&gt;&lt;br/&gt;&quot;);</span>
-<span class="nc" id="L116">			message.append(&quot;&lt;/a&gt;&lt;/p&gt;&quot;);</span>
-<span class="nc" id="L117">		message.append(footer);</span>
+<span class="nc" id="L129">			message.append(&quot;&lt;p&gt;&quot;);</span>
+<span class="nc" id="L130">				message.append(prop.getText(&quot;components.forum.message_approve_link&quot;)).append(&quot;: &lt;a href='&quot;).append(approveLink).append(&quot;'&gt;&quot;).append(approveLink).append(&quot;&lt;/a&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L131">			message.append(MESSAGE_PART_EA_EP);</span>
+<span class="nc" id="L132">		message.append(footer);</span>
 
-<span class="nc" id="L119">		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText(&quot;components.forum.approve.subject&quot;), message.toString());</span>
-<span class="nc" id="L120">	}</span>
+<span class="nc" id="L134">		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText(&quot;components.forum.approve.subject&quot;), message.toString());</span>
+<span class="nc" id="L135">	}</span>
 
 	/**
 	 * Send notification email, that inform about new added forum.
@@ -125,28 +140,28 @@ public class DocForumEmailService {
 	 *
 	 * @param fromEmail
 	 * @param toEmail
-	 * @param messageLink - link taht will be included in email body
+	 * @param messageLink - link that will be included in email body
 	 */
 	private void sendNotificationEmail(String fromEmail, String toEmail, String messageLink) {
-<span class="nc" id="L131">		StringBuilder message = new StringBuilder(header);</span>
-<span class="nc" id="L132">			message.append(&quot;&lt;p&gt;&quot;);</span>
-<span class="nc" id="L133">				message.append(prop.getText(&quot;components.forum.email_subject&quot;)).append(&quot;.&lt;br/&gt;&quot;);</span>
-<span class="nc" id="L134">			message.append(&quot;&lt;/p&gt;&quot;);</span>
+<span class="nc" id="L146">		StringBuilder message = new StringBuilder(header);</span>
+<span class="nc" id="L147">			message.append(&quot;&lt;p&gt;&quot;);</span>
+<span class="nc" id="L148">				message.append(prop.getText(&quot;components.forum.email_subject&quot;)).append(&quot;.&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L149">			message.append(&quot;&lt;/p&gt;&quot;);</span>
 
-<span class="nc" id="L136">			message.append(&quot;&lt;table border='0' cellpadding='0' cellspacing='0'&gt;&quot;);</span>
-<span class="nc" id="L137">				message.append(&quot;&lt;tr&gt;&lt;td style='vertical-align: top;'&gt;&quot;).append(prop.getText(&quot;components.forum.message_name&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(docTitle).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L138">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.author&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(fromNameGlobal).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L139">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.message_text&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(&quot; &quot; + forumForm.getQuestion()).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L140">			message.append(&quot;&lt;/table&gt;&quot;);</span>
+<span class="nc" id="L151">			message.append(MESSAGE_PART_TABLE);</span>
+<span class="nc" id="L152">				message.append(MESSAGE_PART_TR_TD_TOP).append(prop.getText(&quot;components.forum.message_name&quot;)).append(MESSAGE_PART_ETD_TD).append(docTitle).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="nc" id="L153">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.author&quot;)).append(MESSAGE_PART_ETD_TD).append(fromNameGlobal).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="nc" id="L154">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.message_text&quot;)).append(MESSAGE_PART_ETD_TD).append(&quot; &quot; + forumForm.getQuestion()).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="nc" id="L155">			message.append(MESSAGE_PART_ETABLE);</span>
 
-<span class="nc" id="L142">			message.append(&quot;&lt;p&gt;&quot;).append(prop.getText(&quot;components.forum.open_forum&quot;)).append(&quot;: &lt;br/&gt;&lt;a href='&quot;).append(messageLink).append(&quot;'&gt;&quot;).append(messageLink).append(&quot;&lt;/a&gt;&lt;/p&gt;&quot;);</span>
-<span class="nc" id="L143">		message.append(footer);</span>
+<span class="nc" id="L157">			message.append(&quot;&lt;p&gt;&quot;).append(prop.getText(&quot;components.forum.open_forum&quot;)).append(&quot;: &lt;br/&gt;&lt;a href='&quot;).append(messageLink).append(&quot;'&gt;&quot;).append(messageLink).append(MESSAGE_PART_EA_EP);</span>
+<span class="nc" id="L158">		message.append(footer);</span>
 
-<span class="nc" id="L145">		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText(&quot;components.forum.email_subject&quot;), message.toString());</span>
-<span class="nc" id="L146">	}</span>
+<span class="nc" id="L160">		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText(&quot;components.forum.email_subject&quot;), message.toString());</span>
+<span class="nc" id="L161">	}</span>
 
 	/**
-	 * Send notification email, abou ned added forum, that is response to allready existing forum.
+	 * Send notification email, abou ned added forum, that is response to already existing forum.
 	 * Body of email (message) will be generated.
 	 *
 	 * @param fromEmail
@@ -155,22 +170,22 @@ public class DocForumEmailService {
 	 * @param docForumEntity
 	 */
 	private void sendNotificationAnswerEmail(String fromEmail, String toEmail, String messageLink, DocForumEntity docForumEntity) {
-<span class="nc" id="L158">		StringBuilder message = new StringBuilder(header);</span>
-<span class="nc" id="L159">			message.append(&quot;&lt;p&gt;&quot;).append(prop.getText(&quot;components.forum.email_answer_subject&quot;)).append(&quot;.&lt;/p&gt;&quot;);</span>
+<span class="fc" id="L173">		StringBuilder message = new StringBuilder(header);</span>
+<span class="fc" id="L174">			message.append(&quot;&lt;p&gt;&quot;).append(emailAnswerSubject).append(&quot;.&lt;/p&gt;&quot;);</span>
 
-<span class="nc" id="L161">			message.append(&quot;&lt;table border='0' cellpadding='0' cellspacing='0'&gt;&quot;);</span>
-<span class="nc" id="L162">				message.append(&quot;&lt;tr&gt;&lt;td style='vertical-align: top;'&gt;&quot;).append(prop.getText(&quot;components.forum.answer_message_name&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(docForumEntity.getSubject()).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L163">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.email_your_question&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(docForumEntity.getQuestion()).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L164">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.email_answer&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(forumForm.getSubject()).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L165">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.answer_author&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(fromNameGlobal).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L166">				message.append(&quot;&lt;tr&gt;&lt;td&gt;&quot;).append(prop.getText(&quot;components.forum.answer_text&quot;)).append(&quot;: &lt;/td&gt;&lt;td&gt;&quot;).append(forumForm.getQuestion()).append(&quot;&lt;/td&gt;&lt;/tr&gt;&quot;);</span>
-<span class="nc" id="L167">			message.append(&quot;&lt;/table&gt;&quot;);</span>
+<span class="fc" id="L176">			message.append(MESSAGE_PART_TABLE);</span>
+<span class="fc" id="L177">				message.append(MESSAGE_PART_TR_TD_TOP).append(prop.getText(&quot;components.forum.answer_message_name&quot;)).append(MESSAGE_PART_ETD_TD).append(docForumEntity.getSubject()).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="fc" id="L178">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.email_your_question&quot;)).append(MESSAGE_PART_ETD_TD).append(docForumEntity.getQuestion()).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="fc" id="L179">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.email_answer&quot;)).append(MESSAGE_PART_ETD_TD).append(forumForm.getSubject()).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="fc" id="L180">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.answer_author&quot;)).append(MESSAGE_PART_ETD_TD).append(fromNameGlobal).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="fc" id="L181">				message.append(MESSAGE_PART_TR_TD).append(prop.getText(&quot;components.forum.answer_text&quot;)).append(MESSAGE_PART_ETD_TD).append(forumForm.getQuestion()).append(MESSAGE_PART_ETD_ETR);</span>
+<span class="fc" id="L182">			message.append(MESSAGE_PART_ETABLE);</span>
 
-<span class="nc" id="L169">			message.append(&quot;&lt;p&gt;&quot;).append(prop.getText(&quot;components.forum.open_forum&quot;)).append(&quot;: &lt;br/&gt;&lt;a href='&quot;).append(messageLink).append(&quot;'&gt;&quot;).append(messageLink).append(&quot;&lt;/a&gt;&lt;/p&gt;&quot;);</span>
-<span class="nc" id="L170">		message.append(footer);</span>
+<span class="fc" id="L184">			message.append(&quot;&lt;p&gt;&quot;).append(prop.getText(&quot;components.forum.open_forum&quot;)).append(&quot;: &lt;br/&gt;&lt;a href='&quot;).append(messageLink).append(&quot;'&gt;&quot;).append(messageLink).append(MESSAGE_PART_EA_EP);</span>
+<span class="fc" id="L185">		message.append(footer);</span>
 
-<span class="nc" id="L172">		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText(&quot;components.forum.email_answer_subject&quot;), message.toString());</span>
-<span class="nc" id="L173">	}</span>
+<span class="fc" id="L187">		SendMail.send(fromNameGlobal, fromEmail, toEmail, emailAnswerSubject, message.toString());</span>
+<span class="fc" id="L188">	}</span>
 
 	/**
 	 * Send notification email about new added forum that can be answer to another forum.
@@ -182,9 +197,9 @@ public class DocForumEmailService {
 	 * @param messageLink
 	 */
 	private void sendEmailByMessageKey(String fromEmail, String toEmail, String messageKey, String messageLink) {
-<span class="nc" id="L185">		String message = prop.getText(messageKey, messageLink, docTitle, docData, fromEmailGlobal, forumForm.getQuestion());</span>
-<span class="nc" id="L186">		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText(&quot;components.forum.email_answer_subject&quot;), message);</span>
-<span class="nc" id="L187">	}</span>
+<span class="nc" id="L200">		String message = prop.getText(messageKey, messageLink, docTitle, docData, fromEmailGlobal, forumForm.getQuestion());</span>
+<span class="nc" id="L201">		SendMail.send(fromNameGlobal, fromEmail, toEmail, emailAnswerSubject, message);</span>
+<span class="nc" id="L202">	}</span>
 
 	/**
 	 * Return ForumId of root parent.
@@ -192,14 +207,14 @@ public class DocForumEmailService {
 	 * @return
 	 */
 	private int getRootParentForumId() {
-<span class="fc" id="L195">		int rootForumId = forumForm.getId().intValue();</span>
-<span class="fc" id="L196">		int parentId = forumForm.getParentId();</span>
+<span class="fc" id="L210">		int rootForumId = forumForm.getId().intValue();</span>
+<span class="fc" id="L211">		int parentId = forumForm.getParentId();</span>
 
 		while(true) {
-<span class="fc bfc" id="L199" title="All 2 branches covered.">			if(parentId &lt; 1) return rootForumId;</span>
-<span class="fc" id="L200">			else rootForumId = parentId;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">			if(parentId &lt; 1) return rootForumId;</span>
+<span class="fc" id="L215">			else rootForumId = parentId;</span>
 
-<span class="fc" id="L202">			parentId = (new SimpleQuery()).forInt(&quot;SELECT parent_id FROM document_forum WHERE forum_id=?&quot;, rootForumId);</span>
+<span class="fc" id="L217">			parentId = (new SimpleQuery()).forInt(&quot;SELECT parent_id FROM document_forum WHERE forum_id=?&quot;, rootForumId);</span>
 		}
 	}
 
@@ -210,64 +225,73 @@ public class DocForumEmailService {
 	 * IF forum does not need to be required -&gt; send notif email's based on another params (more details in this fn).
 	 */
 	public void sendForumEmails() {
-		//Check if forummust be approved first
-<span class="pc bpc" id="L214" title="5 of 6 branches missed.">		if(forumGroup.getMessageConfirmation() &amp;&amp; Tools.isEmail(forumGroup.getApproveEmail()) &amp;&amp; !forumForm.getConfirmed()) {</span>
+		//Check if forum must be approved first
+<span class="pc bpc" id="L229" title="5 of 6 branches missed.">		if(Tools.isTrue(forumGroup.getMessageConfirmation()) &amp;&amp; Tools.isEmail(forumGroup.getApproveEmail()) &amp;&amp; !Tools.isTrue(forumForm.getConfirmed())) {</span>
 			//FORUM is not Approved, send approving request email
-<span class="nc" id="L216">			sendApproveEmail(fromEmailGlobal, forumGroup.getApproveEmail());</span>
+<span class="nc" id="L231">			sendApproveEmail(fromEmailGlobal, forumGroup.getApproveEmail());</span>
 		} else  {
 			//Forum is approved or do not need to be approved
 
 			//Prepare message link
-<span class="fc" id="L221">			String messageLink = &quot;&quot;;</span>
-<span class="pc bpc" id="L222" title="1 of 2 branches missed.">			if(forumFormDocId &gt; CalendarDB.FORUM_OFFSET) {</span>
-<span class="nc" id="L223">				String calendarUrl = prop.getText(&quot;components.calendar.url&quot;, String.valueOf(forumFormDocId - CalendarDB.FORUM_OFFSET));</span>
-<span class="nc" id="L224">				messageLink = baseHref + calendarUrl;</span>
-<span class="nc" id="L225">			} else {</span>
-<span class="fc" id="L226">				messageLink = baseHref + Tools.addParameterToUrl(docUrl, &quot;pId&quot;, &quot;&quot; + getRootParentForumId()); //To open right forum</span>
-<span class="fc" id="L227">				messageLink += &quot;#post&quot; + forumForm.getId(); //To scroll on this answer</span>
+<span class="fc" id="L236">			String messageLink = &quot;&quot;;</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">			if(forumFormDocId &gt; CalendarDB.FORUM_OFFSET) {</span>
+<span class="nc" id="L238">				String calendarUrl = prop.getText(&quot;components.calendar.url&quot;, String.valueOf(forumFormDocId - CalendarDB.FORUM_OFFSET));</span>
+<span class="nc" id="L239">				messageLink = baseHref + calendarUrl;</span>
+<span class="nc" id="L240">			} else {</span>
+<span class="fc" id="L241">				messageLink = baseHref + Tools.addParameterToUrl(docUrl, &quot;pId&quot;, &quot;&quot; + getRootParentForumId()); //To open right forum</span>
+<span class="fc" id="L242">				messageLink += &quot;#post&quot; + forumForm.getId(); //To scroll on this answer</span>
 			}
 
 			//moznost do request atributu zadat kluc, ktory sa pouzije na text spravy. Napr. na nastenke chceme mat iny text ako v diskusii na stranke
-<span class="fc" id="L231">			String messageKey = null;</span>
-<span class="pc bpc" id="L232" title="1 of 2 branches missed.">			if (request.getAttribute(&quot;forumNotifyMessageKey&quot;) != null) {</span>
-<span class="nc" id="L233">				String messageKeyVerify = (String)request.getAttribute(&quot;forumNotifyMessageKey&quot;);</span>
-<span class="nc" id="L234">				String messageText = prop.getText(messageKeyVerify);</span>
+<span class="fc" id="L246">			String messageKey = null;</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">			if (request.getAttribute(&quot;forumNotifyMessageKey&quot;) != null) {</span>
+<span class="nc" id="L248">				String messageKeyVerify = (String)request.getAttribute(&quot;forumNotifyMessageKey&quot;);</span>
+<span class="nc" id="L249">				String messageText = prop.getText(messageKeyVerify);</span>
 
-<span class="nc bnc" id="L236" title="All 2 branches missed.">				if (messageKeyVerify.equals(messageText) == false) messageKey = messageKeyVerify;</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">				if (messageKeyVerify.equals(messageText) == false) messageKey = messageKeyVerify;</span>
 			}
 
-			//NOTIFICATION EMAIL - NEW ADDED COMENT to forum (IT'S ANSWERS to another forum comment)
-<span class="fc" id="L240">			boolean answerEmailWasSend = false;</span>
-<span class="fc" id="L241">			String toParentEmail = &quot;&quot;;</span>
-<span class="fc bfc" id="L242" title="All 2 branches covered.">			if(forumForm.getParentId() &gt; 0) {</span>
-<span class="fc" id="L243">				DocForumEntity docForumEntity = DocForumService.getForumBean(forumForm.getParentId().intValue(), true);</span>
-<span class="pc bpc" id="L244" title="4 of 6 branches missed.">				if (docForumEntity != null &amp;&amp; docForumEntity.isSendNotif() &amp;&amp; Tools.isEmail(docForumEntity.getAuthorEmail())) {</span>
-<span class="nc" id="L245">					toParentEmail = docForumEntity.getAuthorEmail();</span>
-					//If FROM email and TO email are same, do not send email -&gt; we dont need inform user who answer to his own commnet
-<span class="nc bnc" id="L247" title="All 4 branches missed.">					if(senderIsLogged &amp;&amp; !fromEmailGlobal.equals(toParentEmail)) {</span>
-<span class="nc bnc" id="L248" title="All 2 branches missed.">						if (messageKey != null)</span>
-<span class="nc" id="L249">							sendEmailByMessageKey(fromEmailGlobal, toParentEmail, messageKey, messageLink);</span>
+			//NOTIFICATION EMAIL - NEW ADDED COMMENT to forum (IT'S ANSWERS to another forum comment)
+<span class="fc" id="L255">			boolean answerEmailWasSend = false;</span>
+<span class="fc" id="L256">			String toParentEmail = &quot;&quot;;</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">			if(forumForm.getParentId() &gt; 0) {</span>
+<span class="fc" id="L258">				DocForumEntity docForumEntity = DocForumService.getForumBean(forumForm.getParentId().intValue(), true);</span>
+<span class="pc bpc" id="L259" title="2 of 6 branches missed.">				if (docForumEntity != null &amp;&amp; docForumEntity.isSendNotif() &amp;&amp; Tools.isEmail(docForumEntity.getAuthorEmail())) {</span>
+<span class="fc" id="L260">					toParentEmail = docForumEntity.getAuthorEmail();</span>
+					//If FROM email and TO email are same, do not send email -&gt; we don't need inform user who answer to his own comment
+<span class="pc bpc" id="L262" title="1 of 4 branches missed.">					if(senderIsLogged &amp;&amp; !fromEmailGlobal.equals(toParentEmail)) {</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">						if (messageKey != null)</span>
+<span class="nc" id="L264">							sendEmailByMessageKey(fromEmailGlobal, toParentEmail, messageKey, messageLink);</span>
 						else
-<span class="nc" id="L251">							sendNotificationAnswerEmail(fromEmailGlobal, toParentEmail, messageLink, docForumEntity);</span>
+<span class="fc" id="L266">							sendNotificationAnswerEmail(fromEmailGlobal, toParentEmail, messageLink, docForumEntity);</span>
 
-<span class="nc" id="L253">						answerEmailWasSend = true;</span>
+<span class="fc" id="L268">						answerEmailWasSend = true;</span>
 					}
 				}
 			}
 
-			//NOTIFICATION EMAIL - NEW ADDED COMENT to forum
-<span class="fc" id="L259">			String toNotifyEmail = forumGroup.getNotifEmail();</span>
-			//If answer email was send AND receiver email is same as notifycation email DO NOT send notification email (it would be excesive)
-<span class="pc bpc" id="L261" title="5 of 6 branches missed.">			if(Tools.isEmail(toNotifyEmail) &amp;&amp; !( answerEmailWasSend &amp;&amp; toNotifyEmail.equals(toParentEmail))) {</span>
-				//If FROM email and TO email are same, do not send email -&gt; we dont need inform user who answer to topic
-<span class="nc bnc" id="L263" title="All 4 branches missed.">				if(senderIsLogged &amp;&amp; !fromEmailGlobal.equals(toNotifyEmail)) {</span>
-<span class="nc bnc" id="L264" title="All 2 branches missed.">					if (messageKey != null)</span>
-<span class="nc" id="L265">						sendEmailByMessageKey(fromEmailGlobal, toNotifyEmail, messageKey, messageLink);</span>
+			//NOTIFICATION EMAIL - NEW ADDED COMMENT to forum
+<span class="fc" id="L274">			String toNotifyEmail = forumGroup.getNotifEmail();</span>
+			//If answer email was send AND receiver email is same as notification email DO NOT send notification email (it would be excessive)
+<span class="pc bpc" id="L276" title="5 of 6 branches missed.">			if(Tools.isEmail(toNotifyEmail) &amp;&amp; !( answerEmailWasSend &amp;&amp; toNotifyEmail.equals(toParentEmail))) {</span>
+				//If FROM email and TO email are same, do not send email -&gt; we don't need inform user who answer to topic
+<span class="nc bnc" id="L278" title="All 4 branches missed.">				if(senderIsLogged &amp;&amp; !fromEmailGlobal.equals(toNotifyEmail)) {</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">					if (messageKey != null)</span>
+<span class="nc" id="L280">						sendEmailByMessageKey(fromEmailGlobal, toNotifyEmail, messageKey, messageLink);</span>
 					else
-<span class="nc" id="L267">						sendNotificationEmail(fromEmailGlobal, toNotifyEmail, messageLink);</span>
+<span class="nc" id="L282">						sendNotificationEmail(fromEmailGlobal, toNotifyEmail, messageLink);</span>
 				}
 			}
+
+			//NOTIFICATION EMAIL - NEW ADDED COMMENT to forum - TO OWNER OF PAGE
+			//Send only if owner of page isn't same as sender of forum form
+<span class="pc bpc" id="L288" title="5 of 8 branches missed.">			if(Tools.isEmail(pageOwnerEmail) &amp;&amp; (Tools.isTrue(forumGroup.getNotifyPageAuthor()) || Constants.getBoolean(&quot;forumAlwaysNotifyPageAuthor&quot;)) &amp;&amp; !pageOwnerEmail.equals(fromEmailGlobal)) {</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">				if (messageKey != null)</span>
+<span class="nc" id="L290">					sendEmailByMessageKey(fromEmailGlobal, pageOwnerEmail, messageKey, messageLink);</span>
+				else
+<span class="nc" id="L292">					sendNotificationEmail(fromEmailGlobal, pageOwnerEmail, messageLink);</span>
+			}
 		}
-<span class="fc" id="L271">	}</span>
+<span class="fc" id="L295">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

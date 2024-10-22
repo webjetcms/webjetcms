@@ -312,6 +312,13 @@ public class MenuService {
             { "/components/blog/blog_admin.jsp", "/apps/blog/admin/bloggers/"},
 
             { "/components/abtesting/admin_abtesting.jsp", "/apps/abtesting/admin/"},
+
+            { "/admin/elFinder/", "/admin/v9/files/index/"},
+            { "/admin/elFinder/dialog.jsp", "/admin/v9/files/dialog"},
+            { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp", "/admin/v9/files/wj_link"},
+            { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_image.jsp", "/admin/v9/files/wj_image"},
+
+            {"/admin/adminlog/logging/", "/admin/v9/apps/audit-log-levels/"}
         };
         for (String[] pair : linkReplaces) {
             menuLinkReplaces.put(pair[0], pair[1]);

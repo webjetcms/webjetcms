@@ -28,6 +28,11 @@ To unsubscribe, you can directly create a link to the unsubscribe page in the em
 
 `<a href="/odhlasenie-z-mailingu.html?email=!RECIPIENT_EMAIL!&save=true">Kliknite pre odhlásenie</a>`
 
+When you send an email, the email header is automatically set for unsubscribing [List-Unsubscribe=One-Click](https://support.google.com/a/answer/81126#subscriptions) in supported email clients. The unsubscribe link is set according to the domain of the page address of the sent email, if necessary the domain can be changed by setting the conf. variable `dmailListUnsubscribeBaseHref`. In order to display a direct unsubscribe button in the email client, the email/your domain must meet several criteria (we recommend setting these criteria for better email deliverability):
+- Settings [DKIM](https://www.dkim.org) domain keys with valid [SPF](https://sk.wikipedia.org/wiki/Sender_Policy_Framework) of record. We recommend to use for sending [Amazon SES](../../../../install/config/README.md#nastavenie-amazon-ses) a `DKIM` set there, it will also automatically set `SPF`.
+- Settings [DMARC](https://dmarc.org) record. In DNS, create a new `TXT` record for the domain `_dmarc.vasadomena.sk` with a value of at least `v=DMARC1; p=none; sp=none`.
+Additionally in the mailbox `gmail` the unsubscribe button will only appear if it puts you as a sender in the bulk email category.
+
 ## Email with text to log in / out
 
 If you need to modify the text of the email that is sent for login/logout confirmation you can modify the standard HTML code in the system configuration in the Text editing section. The text keys are `dmail.subscribe.bodyNew` for logging in and `dmail.unsubscribe.bodyNew` to log out.

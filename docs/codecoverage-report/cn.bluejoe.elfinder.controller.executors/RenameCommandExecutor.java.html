@@ -8,45 +8,49 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
-<span class="nc" id="L16">public class RenameCommandExecutor extends AbstractJsonCommandExecutor</span>
+<span class="fc" id="L17">public class RenameCommandExecutor extends AbstractJsonCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
 			throws Exception
 	{
-<span class="nc" id="L22">		String target = request.getParameter(&quot;target&quot;);</span>
-<span class="nc" id="L23">		String name = request.getParameter(&quot;name&quot;);</span>
-<span class="nc" id="L24">		FsItemEx fsi = super.findItem(fsService, target);</span>
-<span class="nc" id="L25">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L23">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="fc" id="L24">		String name = request.getParameter(&quot;name&quot;);</span>
+<span class="fc" id="L25">		FsItemEx fsi = super.findItem(fsService, target);</span>
+<span class="fc" id="L26">		Prop prop = Prop.getInstance(request);</span>
 
-<span class="nc bnc" id="L27" title="All 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(name)) {</span>
-<span class="nc" id="L28">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error.banned_character&quot;));</span>
-<span class="nc" id="L29">			return;</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(name)) {</span>
+<span class="nc" id="L29">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error.banned_character&quot;));</span>
+<span class="nc" id="L30">			return;</span>
 		}
 
-<span class="nc" id="L32">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
-<span class="nc bnc" id="L33" title="All 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))</span>
+<span class="fc" id="L33">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="pc bpc" id="L34" title="2 of 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))</span>
 		{
-<span class="nc" id="L35">			FsItemEx dst = new FsItemEx(fsi.getParent(), name);</span>
-			
-			//#20481 - po vystrihnuti/premenovani vytvori redirect
-<span class="nc bnc" id="L38" title="All 2 branches missed.">			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
-<span class="nc" id="L39">				PasteCommandExecutor.createRedirect(fsi, fsi.getPath(), dst.getPath(), request);</span>
-			
-<span class="nc" id="L41">			fsi.renameTo(dst);</span>
+			// remove diacritics
+<span class="fc" id="L37">			name = IwcmFsVolume.removeSpecialChars(name, fsi);</span>
 
-<span class="nc" id="L43">			json.put(&quot;added&quot;, new Object[] { getFsItemInfo(request, dst) });</span>
-<span class="nc" id="L44">			json.put(&quot;removed&quot;, new String[] { target });</span>
-<span class="nc" id="L45">		}</span>
+<span class="fc" id="L39">			FsItemEx dst = new FsItemEx(fsi.getParent(), name);</span>
+
+			//#20481 - po vystrihnuti/premenovani vytvori redirect
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
+<span class="fc" id="L43">				PasteCommandExecutor.createRedirect(fsi, fsi.getPath(), dst.getPath(), request);</span>
+
+<span class="fc" id="L45">			fsi.renameTo(dst);</span>
+
+<span class="fc" id="L47">			json.put(&quot;added&quot;, new Object[] { getFsItemInfo(request, dst) });</span>
+<span class="fc" id="L48">			json.put(&quot;removed&quot;, new String[] { target });</span>
+<span class="fc" id="L49">		}</span>
 		else
 		{
-<span class="nc" id="L48">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error&quot;, fsi.getParent().getPath()));</span>
+<span class="nc" id="L52">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rename.error&quot;, fsi.getParent().getPath()));</span>
 		}
-<span class="nc" id="L50">	}</span>
+<span class="fc" id="L54">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

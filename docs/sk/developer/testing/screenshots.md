@@ -8,7 +8,7 @@ Pre potreby dokumentácie existujú špeciálne funkcie:
 - ```Document.screenshotElement(selector, screenshotFilePath, width, height)``` - vytvorí snímku elementu podľa zadaného ```selector``` parametra.
 - ```Document.screenshotAppEditor(docId, path, callback, width, height)``` - vytvorí snímku nastavenia aplikácie v editore (napr. galérie).
 
-**POZOR**: snímky obrazovky sú automaticky ukladané do ```/docs``` adresára. Pre zadanú cestu ```/redactor/webpages/domain-select.png``` vznikne súbor ```/docs/redactor/webpages/domain-select.png```.
+!>**Upozornenie:** snímky obrazovky sú automaticky ukladané do ```/docs``` adresára. Pre zadanú cestu ```/redactor/webpages/domain-select.png``` vznikne súbor ```/docs/redactor/webpages/domain-select.png```.
 
 [Príklad](../../../src/test/webapp/screenshots/generator/manual-redactor.js) scenára pre vytvorenie snímkov obrazovky:
 

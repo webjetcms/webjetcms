@@ -11,24 +11,17 @@ import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.EmailDB;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.helpers.BeanDiff;
 import sk.iway.iwcm.helpers.BeanDiffPrinter;
-import sk.iway.iwcm.helpers.MailHelper;
-import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.system.Modules;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.lang.reflect.Method;
-import java.security.SecureRandom;
 import java.sql.*;
 import java.util.*;
 import java.util.Map.Entry;
-
-import static sk.iway.iwcm.Tools.isEmpty;
-
 
 /**
  *  Databaza registrovanych pouzivatelov
@@ -47,6 +40,8 @@ public class UsersDB
 	public static final int APPROVE_NOTIFY = 1;
 	public static final int APPROVE_NONE = 2;
 	public static final int APPROVE_LEVEL2 = 3;
+
+	public static final String IS_ADMIN_SECTION_KEY = "isAdminSection";
 
 	private static final String CACHE_KEY = "UsersDB.users";
 
@@ -309,6 +304,8 @@ public class UsersDB
 	 */
 	public static UserDetails getUser(int userId)
 	{
+		if (userId < 1) return null;
+
 		UserDetails usr = null;
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -843,7 +840,7 @@ public class UsersDB
 		try
 		{
 			db_conn = DBPool.getConnection(request);
-			ps = db_conn.prepareStatement("SELECT * FROM user_group_verify WHERE hash=?");
+			ps = db_conn.prepareStatement("SELECT * FROM user_group_verify WHERE hash=?"); //NOSONAR
 			ps.setString(1, hash);
 			rs = ps.executeQuery();
 			int verifyId = -1;
@@ -981,171 +978,31 @@ public class UsersDB
 		return(user);
 	}
 
+	/**
+	 * Deprecated, use UserChangePasswordService.sendPassword
+	 * @param request
+	 * @param login
+	 * @return
+	 * @deprecated UserChangePasswordService.sendPassword
+	 */
+	@Deprecated
 	public static boolean sendPassword(HttpServletRequest request, String login)
 	{
-		String emailParam = null;
-		if (login != null && login.contains("@")) emailParam = login;
-
-		return(sendPassword(request, login, emailParam));
+		return UserChangePasswordService.sendPassword(request, login);
 	}
 
 	/**
-	 * Odoslanie hesla na email adresu
+	 * Deprecated, use UserChangePasswordService.sendPassword
 	 * @param request
-	 * @param login - prihlasovacie meno
-	 * @param emailParam - email (ak je zadany email, hlada sa podla emailu, login moze byt vtedy null), alebo null
+	 * @param login
+	 * @param emailParams
 	 * @return
+	 * @deprecated UserChangePasswordService.sendPassword
 	 */
-	public static boolean sendPassword(HttpServletRequest request, String login, String emailParams)
-	{
-		String emailParam = emailParams;
-		if (SpamProtection.canPost("passwordSend", null, request)==false)
-		{
-			Prop prop = Prop.getInstance(Constants.getServletContext(), request);
-
-			Logger.error(UsersDB.class, prop.getText("logon.error.blocked"));
-			request.setAttribute("errors", prop.getText("logon.error.blocked"));
-			request.setAttribute("error.logon.user.blocked", "true");
-			return false;
-		}
-
-		String method = Constants.getString("sendPasswordMethod");
-		if (Tools.isNotEmpty(method))
-		{
-			int i = method.lastIndexOf('.');
-			String clazz = method.substring(0, i);
-			method = method.substring(i+1);
-			//String
-			try
-			{
-				Class<?> c = Class.forName(clazz);
-				Object o = c.getDeclaredConstructor().newInstance();
-				Method m;
-				Class<?>[] parameterTypes = new Class<?>[] {HttpServletRequest.class, String.class, String.class};
-				Object[] arguments = new Object[] {request, login, emailParam};
-				m = c.getMethod(method, parameterTypes);
-				return((boolean)m.invoke(o, arguments));
-			}
-			catch (Exception ex)
-			{
-				sk.iway.iwcm.Logger.error(ex);
-				return false;
-			}
-		}
-
-		UserDetails user = new UserDetails();
-
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-
-			db_conn = DBPool.getConnection(request);
-			String sql;
-
-			//asi zadal email namiesto loginu, hladajme podla emailu
-			if (login != null && emailParam == null && login.contains("@"))
-				emailParam = login;
-
-			sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("login")+"=?"+UsersDB.getDomainIdSqlWhere(true);
-			String param = login;
-			if (Tools.isNotEmpty(emailParam))
-			{
-				sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("email")+"=?"+UsersDB.getDomainIdSqlWhere(true);
-				param = emailParam;
-			}
-			sql += " ORDER BY user_id ASC, is_admin DESC";
-			ps = db_conn.prepareStatement(sql);
-			ps.setString(1, DB.fixAiCiValue(param));
-			rs = ps.executeQuery();
-			if(rs.next())
-			{
-				fillUserDetails(user, rs);
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			db_conn = null;
-			rs = null;
-			ps = null;
-
-			if(isEmpty(user.getEmail()) || user.getEmail().indexOf('@')==-1)
-			{
-				if (Constants.getBoolean("formLoginProtect"))
-				{
-					//nastavime na uspech aj ked user neexistuje aby sa to nedalo rozlisit
-					request.setAttribute("passResultEmail", "@");
-				}
-				else
-				{
-					Logger.println(UsersDB.class,"K zadanemu uzivatelovi neexistuje email");
-					request.setAttribute("passResultEmailFail","true");
-				}
-			}
-			else
-			{
-				sendPasswordEmail(request, user);
-				return (true);
-			}
-		}
-		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-		return (false);
-	}
-
-	public static void sendPasswordEmail(HttpServletRequest request, UserDetails user) throws Exception
-	{
-		Prop prop = Prop.getInstance(Constants.getServletContext(), request);
-		//if we are able to decrypt his/her original password
-		String subject = prop.getText("logon.mail.lost_password") + " " + Tools.getBaseHref(request);
-		if (!Constants.getBoolean("passwordUseHash"))
-		{
-			String text;
-			text = prop.getText("logon.mail.message") + "\n";
-			text += prop.getText("logon.mail.login_name") + ": " + user.getLogin() + "\n";
-			text += prop.getText("logon.mail.password") + ": " + user.getPassword() + "\n";
-			// from fromEmail toEmail subject text
-			SendMail.send(user.getFullName(), user.getEmail(), user.getEmail(), subject, text);
-		}else{
-			int randomNumber = new SecureRandom().nextInt();
-			String loginHash = new Password().encrypt(user.getLogin());
-			String auth = new Password().encrypt(Integer.toString(randomNumber));
-			Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "Vyžiadanie zmeny hesla", randomNumber, APPROVE_APPROVE);
-			//String text = prop.getText("logon.password.change_at")+"\n";
-
-			String pageUrl = Constants.getString("changePasswordPageUrl");
-			if (request !=null && request.getAttribute("sendPasswordUrl")!=null) pageUrl = (String)request.getAttribute("sendPasswordUrl");
-
-			pageUrl = Tools.getBaseHref(request) + pageUrl + "?login="+loginHash+"&auth="+auth;
-
-			String propKey = Tools.getRequestAttribute(request,  "sendPasswordTextKey", "logon.password.changeEmailText");
-			String subjectKey = Tools.getRequestAttribute(request,  "sendPasswordSubjectKey", null);
-			if (subjectKey != null)
-			{
-				subject = prop.getText(subjectKey, Tools.getBaseHref(request), DocDB.getDomain(request));
-			}
-
-			String fromName = Tools.getRequestAttribute(request,  "sendPasswordFromName", user.getFullName());
-			String fromEmail = Tools.getRequestAttribute(request,  "sendPasswordFromEmail", user.getEmail());
-
-			String text = prop.getText(propKey, pageUrl, String.valueOf(Constants.getInt("passwordResetValidityInMinutes")));
-
-			new MailHelper().
-				setFromEmail(fromEmail).
-				setFromName(fromName).
-				addRecipient(user.getEmail()).
-				setSubject(subject).
-				setMessage(text).
-				send();
-		}
-		if (request!=null) request.setAttribute("passResultEmail", user.getEmail());
+	@Deprecated
+	public static boolean sendPassword(HttpServletRequest request, String login, String emailParams) {
+		if (Tools.isNotEmpty(emailParams)) return sendPassword(request, emailParams);
+		return sendPassword(request, login);
 	}
 
 	/**
@@ -1768,7 +1625,7 @@ public class UsersDB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM user_group_verify WHERE user_id = ? AND verify_date IS NOT NULL ORDER BY verify_date DESC");
+			ps = db_conn.prepareStatement("SELECT * FROM user_group_verify WHERE user_id = ? AND verify_date IS NOT NULL ORDER BY verify_date DESC"); //NOSONAR
 			ps.setInt(1, userId);
 			rs = ps.executeQuery();
 
@@ -2388,7 +2245,7 @@ public class UsersDB
 			db_conn = DBPool.getConnection();
 
 			//user.setDisabledItems(DB.getDbString(db_result, "disabled_items"));
-			ps = db_conn.prepareStatement("SELECT * FROM user_disabled_items WHERE user_id=?");
+			ps = db_conn.prepareStatement("SELECT * FROM user_disabled_items WHERE user_id=?"); //NOSONAR
 			ps.setInt(1, user.getUserId());
 			rs = ps.executeQuery();
 			while (rs.next())

@@ -33,7 +33,6 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 <poolman><management-mode>local</management-mode>
     <datasource>
       <dbname>iwcm</dbname>
-      <jndiName>jndi-iwcm</jndiName>
       <driver>com.mysql.jdbc.Driver</driver>
       <url>jdbc:mysql://MENO-SQL-SERVERA/MENO-SCHEMY</url>
       <username>DB-LOGIN</username>
@@ -90,6 +89,23 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 </poolman>
 ```
 
+Podporované sú nasledovné XML elementy:
+
+- `dbname` - meno databázového pripojenia, pre WebJET CMS tabuľky musí mať hodnotu `iwcm`, v XML ale môžete nastaviť viac `datasource` elementov a vytvoriť tak pripojenie aj do ďalších databáz, nastavte sem unikátne meno
+- `driver` - java trieda databázového ovládača
+- `url` - URL adresa vo formáte pre `JDBC` pripojenie
+- `username` - prihlasovacie meno
+- `password` - prihlasovacie heslo
+
+Voliteľne je možné nastaviť:
+
+- `initialConnections` - predvolený počet otvorených databázových spojení (predvolene 0)
+- `minimumSize` - minimálny počet neustále otvorených databázových spojení (predvolene 0)
+- `maximumSize` - maximálny počet otvorených databázových spojení (predvolene 50)
+- `connectionTimeout` - počet sekúnd, kedy je spojenie považované za neuzavreté (predvolene 300)
+- `autoCommit` - ak je nastavené na true nastaví sa `connection.setAutoCommit(true);` (predvolene `false`)
+- `testQuery` - testovací SQL výraz pre overenie funkčnosti spojenia. Pre `JDBC` ovládače v4 sa používa volanie `isValid()`, pre staršie ovládače je potrebné nastaviť. Hodnota `true` nastaví predvolený výraz `SELECT 1` (použije sa automaticky pre `jtds` ovládač). Je ale možné nastaviť váš vlastný SQL výraz.
+
 ## Naplnenie DB schémy
 
 WebJET obsahuje vstavanú konfiguráciu, ktorá vie naplniť prázdnu DB schému.
@@ -137,10 +153,6 @@ V logu by ste mali vidieť niečo ako:
 ```log
 fillEmptyDatabaseMySQL
 fillEmptyDatabaseMySQL 1
-AbandonedObjectPool is used (org.apache.commons.dbcp.WebJETAbandonedObjectPool@727687f7)
-   LogAbandoned: true
-   RemoveAbandoned: true
-   RemoveAbandonedTimeout: 600
 fillEmptyDatabaseMySQL 2
 hasDatabase=false
 

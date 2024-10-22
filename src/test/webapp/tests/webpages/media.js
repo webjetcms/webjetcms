@@ -27,22 +27,25 @@ function mediaEditSteps(I, DTE, options, isFromWebpage=false) {
         I.wait(1);
 
         if (isFromWebpage) {
-            //otvor Media vsetkych stranok
-            I.click("#nav-iwcm_1_");
+            I.say("otvor Media vsetkych stranok");
+            I.click( locate("#nav-iwcm_1_"), null, { position: { x: 70, y: 15 } } );
         }
 
-        //Obrazky
-        I.clickCss("#nav-iwcm_1_L2ltYWdlcw_E_E");
+        I.waitForElement("#nav-iwcm_1_.ui-state-active", 10);
+        I.wait(1);
+
+        I.say("Obrazky");
+        I.click( locate("#nav-iwcm_1_L2ltYWdlcw_E_E"), null, { position: { x: 20, y: 5 } } );
         I.waitForInvisible("#WJLoaderDiv", 10);
         I.wait(1);
 
-        //bannery
-        I.clickCss("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5");
+        I.say("bannery");
+        I.click( locate("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5"), null, { position: { x: 20, y: 5 } } );
         I.waitForInvisible("#WJLoaderDiv", 10);
         I.wait(1);
 
-        //banner-investicie.jpg
-        I.clickCss("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E");
+        I.say("banner-investicie.jpg");
+        I.click( locate("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E"), null, { position: { x: 20, y: 5 } } );
         I.wait(1);
 
     I.switchTo();
@@ -50,7 +53,7 @@ function mediaEditSteps(I, DTE, options, isFromWebpage=false) {
     I.wait(1);
 
     //aby sa nam presunul fokus
-    I.forceClickCss('#DTE_Field_editorFields-groups_1');
+    DTE.fillField("mediaSortOrder", "20");
 
     //over, ze sa nam prenieslo meno obrazka do title
     I.seeInField("#DTE_Field_mediaTitleSk", "banner investicie");
@@ -59,7 +62,7 @@ function mediaEditSteps(I, DTE, options, isFromWebpage=false) {
     DTE.fillField("mediaTitleSk", mediaTitle);
 }
 
-Scenario('media-zakladne testy', async ({I, DTE, DataTables}) => {
+Scenario('media-zakladne testy @baseTest', async ({I, DTE, DataTables}) => {
     I.amOnPage("/admin/v9/webpages/media/");
     await DataTables.baseTest({
         dataTable: 'mediaTable',
@@ -83,7 +86,7 @@ Scenario('media-zakladne testy', async ({I, DTE, DataTables}) => {
     });
 });
 
-Scenario('media tabulka v stranke', async ({I, DataTables, DT, DTE, Browser}) => {
+Scenario('media tabulka v stranke @baseTest', async ({I, DataTables, DT, DTE, Browser}) => {
     if (Browser.isFirefox()) {
         //FF nevie tento test spravit, padne mu to vo funkcii mediaEditSteps na nezmysloch (necaka na dokoncenie akcie)
         //nic nepomaha, asi nejaky bug v Playwright
@@ -120,6 +123,7 @@ Scenario('media tabulka v stranke', async ({I, DataTables, DT, DTE, Browser}) =>
         containerModal: '#datatableFieldDTE_Field_editorFields-media_modal',
         perms: '-',
         skipRefresh: true,
+        skipDuplication: true,
         editSteps: function(I, options) {
             mediaEditSteps(I, DTE, options, true);
         },
@@ -486,7 +490,6 @@ Scenario('media all - filtering', ({I, DT, DTE}) => {
     I.dontSee("jeeff media test 2");
     I.see("about");
     I.dontSee("mediaTitleSk-autotest");
-
 });
 
 Scenario('custom fields in webpage', ({I, DT, DTE}) => {
@@ -587,7 +590,7 @@ Scenario('media tabulka v stranke-multigroup', async ({I, DataTables, DT, DTE, B
     I.say("save slave webpage");
     DTE.save();
 
-    await verifyMediaInWebpage([mediaTitleMaster, mediaTitleSlave] , "/apps/media/multigroup-media.html", I);
+    await verifyMediaInWebpage([mediaTitleMaster, mediaTitleSlave], "/apps/media/multigroup-media.html", I);
     await verifyMediaInWebpage([mediaTitleMaster, mediaTitleSlave], "/apps/media/multigroup/multigroup-media.html", I);
 
     //

@@ -76,7 +76,7 @@ Scenario('Recovery web page logic', ({ I, DT, DTE }) => {
     I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
     I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
     I.see("/Test stavov/page_folder_recovery/page_to_delete", "div.toast-message");
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 15, "#datatableInit_wrapper .dataTables_scrollBody");
 
     //
     I.say("Check recovered page");

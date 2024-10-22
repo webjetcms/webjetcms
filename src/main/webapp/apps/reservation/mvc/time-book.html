@@ -1,0 +1,319 @@
+<div class="time-book-app">
+    <div class="dateHeader">
+        <label data-th-text="#{components.reservation.reservation_date}" for="reservationDate">Reservation Date:</label>
+        <button onclick="addDays(-1)">
+            <svg style="width: 20px; height: 20px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path d="M9.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l192 192c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256 246.6 86.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-192 192z"/>
+            </svg>
+        </button>
+        <input type="date" name="reservationDate" id="reservationDate" class="datepicker" data-th-value="${reservationDate}" onchange="changeReservationDate()"/>
+        <button onclick="addDays(1)">
+            <svg style="width: 20px; height: 20px;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+                <path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table tabulkaStandard">
+            <tr>
+                <th data-th-text="#{components.contact.property.name}">reservationObjectNames</th>
+                <th data-th-each="hour : ${hours}" data-th-text="${hour}"></th>
+            </tr>
+            <tr data-th-each="tableLine : ${tableLines}">
+                <td data-th-text="${tableLine.key}">keyvalue</td>
+                <td data-th-each="tableCell : ${tableLine.value}" th:id="${tableCell.id}" data-th-text="${tableCell.value}" th:classappend="${tableCell.cssClass}" class="tableCell" th:attr="onclick=|selectCell('${tableCell.id}')|"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="time-book-form">
+        <form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${reservationEntity}" method="post">
+            <div data-th-if="${errors!=null}" class="alert alert-danger">
+                <p data-th-text="#{chat.form_fill_error}"></p>
+                <ul style="margin: 0px;">
+                    <li data-th-each="err : ${errors}">
+                        <span data-th-text="#{components.reservation.reservation_list.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div data-th-if="${customError!=null}" class="alert alert-danger">
+                <span data-th-text="${customError}">Custom error</span>
+            </div>
+
+            <div data-th-if="${saveMsg!=null}" class="alert alert-success">
+                <span data-th-text="${saveMsg}">After save message</span>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.reservations.time_range}" for="timeRange">Reservation time range</label>
+                    <input id="timeRange" name="timeRange" type="text" class="form-control" readonly="readonly">
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.reservations.price}" for="price">Price</label>
+                    <input id="price" type="number" class="form-control" data-th-field="*{price}" disabled>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.user.newuser.firstName}" for="name">Name</label>
+                    <input type="text" class="form-control" data-th-field="*{name}" required>
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.user.newuser.lastName}" for="surname">Surname</label>
+                    <input type="text" class="form-control" data-th-field="*{surname}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.user.newuser.email}" for="email">Email</label>
+                    <input type="email" id="email" class="form-control" data-th-field="*{email}" required>
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.formsimple.label.telefon}" for="phoneNumber">Phone Number</label>
+                    <input type="text" class="form-control" data-th-field="*{phoneNumber}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.reservation_list.purpose}" for="purpose">Purpose</label>
+                    <textarea class="form-control" data-th-field="*{purpose}"></textarea>
+                </div>
+            </div>
+
+            <input id="reservationObjectId" name ="reservationObjectId" type="hidden" class="form-control" readonly="readonly">
+            <input id="reservationDateHidden" name="reservationDateHidden" type="hidden" class="form-control" readonly="readonly">
+            <button type="submit" class="btn btn-primary" data-th-text="#{components.reservation.reservation_app.save_button}" name="saveForm" style="display: none;">Submit</button>
+        </form>
+    </div>
+
+    <style>
+        .unsupported { background-color: #63697A; }
+        .free { background-color: #00BE9F; }
+        .free:hover { background-color: #0063FB; }
+        .full { background-color: #b3b8c7; }
+        .tableCell { border: 1px solid white; }
+        .selectedTableCell {
+            background-color: #0063FB !important;
+            color: white !important;
+        }
+        .dateHeader {
+            margin: 5px;
+            display: flex;
+            align-items: center;
+            padding-bottom: 10px;
+        }
+
+        .dateHeader label {
+            padding-right: 10px;
+            margin: 0px;
+        }
+
+        .dateHeader button {
+            display: contents;
+        }
+
+        .dateHeader input#reservationDate {
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+    </style>
+
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        let selectedCells = "";
+        let reservationDate = $("#reservationDate");
+        $("#reservationDateHidden").val( reservationDate.val() );
+        let reservationObjectId = $("#reservationObjectId");
+        let email = $("#email").val();
+        if(email == undefined || email == null) email = "";
+
+        function addDays(days) {
+            var chooseDate=new Date(reservationDate.val());
+            chooseDate.setDate(chooseDate.getDate()+days);
+            var futureDate = chooseDate.getFullYear()+'-'+('0'+(chooseDate.getMonth()+1)).slice(-2)+'-'+('0'+(chooseDate.getDate())).slice(-2);
+            reservationDate.val(futureDate);
+            changeReservationDate();
+        }
+
+        function changeReservationDate() {
+            window.location.href = urlUpdateParam(window.location.href, "reservation-date", reservationDate.val());
+        }
+
+        let getReservationPriceTimer;
+        function setReservationPrice() {
+            let priceInput = $("#price");
+            if(selectedCells == null || selectedCells.length < 1) {
+                priceInput.val("");
+            } else {
+                let selectedCellsArr = selectedCells.split("+");
+                let firstInfo = selectedCellsArr[0].split("_");
+                let lastInfo = selectedCellsArr[selectedCellsArr.length - 1].split("_");
+
+                let url = "/rest/reservation-app/compute-reservation-price";
+                url =  urlUpdateParam(url, "reservation-date", reservationDate.val());
+                url =  urlUpdateParam(url, "time-range", firstInfo[1] + "-" + (Number(lastInfo[1]) + 1) );
+                url =  urlUpdateParam(url, "object-id", reservationObjectId.val());
+                url =  urlUpdateParam(url, "email", email);
+
+                //to prevent call it multimple times by onchange events at open editor
+                clearTimeout(getReservationPriceTimer);
+                getReservationPriceTimer = setTimeout(function() {
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        success: function(response) {
+                            if(response != null) {
+                                priceInput.val(response);
+                            }
+                        }
+                    });
+                }, 100);
+            }
+        }
+
+        function isCellSelected(cellId) {
+            let cell = $("#" + cellId);
+            return cell.hasClass("selectedTableCell");
+        }
+
+        function selectCell(cellId) {
+            let cell = $("#" + cellId);
+            let cellInfo = cellId.split("_");
+
+            //Check if cell can be selected
+            if(cell == null || cell.length < 1 || cell.hasClass("free") == false) return;
+
+            //debugger;
+            if(selectedCells.length < 1) {
+                cell.addClass("selectedTableCell");
+                selectedCells = cellId;
+                postChangeActions(cellInfo[0]);
+                return;
+            } else {
+                //Check if its different reservation object
+                //let first = selectedCells.split("+")[0];
+                if(reservationObjectId.val() != cellInfo[0]) {
+                    //its different reservation object, de-select all
+                    let selectedCellsArr = selectedCells.split("+");
+                    selectedCellsArr.forEach((element) => {
+                        $("#" + element).removeClass("selectedTableCell");
+                    });
+
+                    //Select new one
+                    cell.addClass("selectedTableCell");
+                    selectedCells = cellId;
+                    postChangeActions(cellInfo[0]);
+                    return;
+                }
+            }
+
+            if(isCellSelected(cellId)) {
+                let selectedCellsArr = selectedCells.split("+");
+                //Is first
+                if(selectedCellsArr[0] == cellId) {
+                    selectedCells = selectedCells.replace(cellId, "");
+                    cell.removeClass("selectedTableCell");
+                } else if(selectedCellsArr[selectedCellsArr.length - 1] == cellId) {
+                    selectedCells = selectedCells.replace(cellId, "");
+                    cell.removeClass("selectedTableCell");
+                } else {
+                    //its somewhere in middle, de-select all
+                    selectedCellsArr.forEach((element) => {
+                        $("#" + element).removeClass("selectedTableCell");
+                    });
+                    selectedCells = "";
+                }
+            } else {
+                //Check if it's going after each other start/end
+                let selectedCellsArr = selectedCells.split("+");
+                let firstInfo = selectedCellsArr[0].split("_");
+                let lastInfo = selectedCellsArr[selectedCellsArr.length - 1].split("_");
+                if(Number(firstInfo[1]) == Number(cellInfo[1]) + 1) {
+                    //its going after each other
+                    selectedCells =  cellId + "+" + selectedCells;
+                    cell.addClass("selectedTableCell");
+                } else if(Number(lastInfo[1]) == Number(cellInfo[1]) - 1) {
+                    //its going after each other
+                    selectedCells = selectedCells + "+" + cellId;
+                    cell.addClass("selectedTableCell");
+                } else {
+                    //its not going after each other, de-select all
+                    selectedCellsArr.forEach((element) => {
+                        $("#" + element).removeClass("selectedTableCell");
+                    });
+                    selectedCells = cellId;
+                    cell.addClass("selectedTableCell");
+                }
+            }
+
+            if(selectedCells.startsWith("+")) selectedCells = selectedCells.substring(1);
+            if(selectedCells.endsWith("+")) selectedCells = selectedCells.substring(0, selectedCells.length - 1);
+            postChangeActions(cellInfo[0]);
+        }
+
+        function postChangeActions(objectId) {
+            //Set value into hidden input
+            reservationObjectId.val(objectId);
+            //Button visibility
+            setReservationButtonState();
+            //Set time range
+            setTimeRangeValue();
+            //Set price
+            setReservationPrice();
+        }
+
+        function setTimeRangeValue() {
+            let timeRangeInput = $("#timeRange");
+            if(selectedCells == null || selectedCells.length < 1) {
+                timeRangeInput.val("");
+            } else {
+                let selectedCellsArr = selectedCells.split("+");
+                let firstInfo = selectedCellsArr[0].split("_");
+                let lastInfo = selectedCellsArr[selectedCellsArr.length - 1].split("_");
+                timeRangeInput.val(firstInfo[1] + ":00 - " + ( Number(lastInfo[1]) + 1) + ":00");
+            }
+        }
+
+        function setReservationButtonState() {
+            let button = $("button.btn-primary");
+            if(selectedCells.length > 0) {
+                button.show();
+            } else {
+                button.hide();
+            }
+        }
+
+        function urlUpdateParam(url, paramName, paramValue) {
+            //Check if url includes this param
+            if(url.includes((paramName + '='))) {
+                //Url ends with param but without value
+                if(url.endsWith((paramName + '='))) return url + paramValue;
+                //Update parm value inside of url
+                let urlParams = (url.split("?")[1]).split("&")
+                for (var i = 0; i < urlParams.length; i++)
+                    if(urlParams[i].startsWith((paramName + '=')))
+                        urlParams[i] = paramName + "=" + paramValue
+                let newUrl = url.split("?")[0] + "?";
+                for (var i = 0; i < urlParams.length; i++) {
+                    newUrl += urlParams[i];
+                    if(i + 1 < urlParams.length) newUrl += "&"
+                }
+                return newUrl;
+            } else {
+                //Add params
+                return urlAddParam(url, paramName, paramValue);
+            }
+        }
+
+        function urlAddParam(url, paramName, paramValue) {
+            url += url.indexOf('?') === -1 ? '?' : '&';
+            url += paramName + '=' + paramValue;
+            return (url);
+        }
+
+    /*]]>*/
+    </script>
+</div>

@@ -2,26 +2,38 @@ const { I } = inject();
 const DT = require("./DT");
 
 /**
- * Funkcie pre pracu s Datatable EDITOR
+ * Functions for working with the DataTable EDITOR
  */
 
 module.exports = {
 
-     //vybere hodnotu v selecte v DT editore
+          /**
+      * Selects a value in the dropdown in the DataTable editor
+      * @param {String} name - The name of the dropdown field
+      * @param {String} text - The text of the option to select
+      */
      selectOption(name, text) {
           I.click({ css: "div.modal-dialog div.DTE_Field_Name_" + name + " button.dropdown-toggle" });
           I.waitForElement(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
+          I.waitForVisible(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
+          I.waitForEnabled(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
           I.click(locate('div.dropdown-menu.show .dropdown-item').withText(text));
           I.wait(0.3);
      },
 
+     /**
+      * Waits for the loading indicator to disappear
+      */
      waitForLoader() {
           let name = "div.DTE_Processing_Indicator";
           I.waitForInvisible(name, 200);
           I.wait(0.2);
      },
 
-     //ulozi editor a pocka na vysledok
+     /**
+      * Saves the editor changes and waits for the result
+      * @param {String} [name] - Optional modal name for the editor
+      */
      save(name) {
           var prefixSelector = "div";
           if (typeof name != "undefined") prefixSelector = "#" + name + "_modal";
@@ -34,6 +46,9 @@ module.exports = {
           DT.waitForLoader();
      },
 
+     /**
+      * Saves the editor changes using the bubble interface
+      */
      saveBubble() {
           //ideme cez slector, pretoze to moze byt Pridat (novy zaznam) alebo Ulozit (existujuci)
           I.click({ css: "div.DTE.DTE_Bubble div.DTE_Form_Buttons button.btn.btn-primary" });
@@ -42,6 +57,11 @@ module.exports = {
           I.wait(3);
      },
 
+     /**
+      * Cancels the editing process and closes the editor
+      * @param {String} [name] - Optional modal name to target
+      * @param {Boolean} [clickTopButton=false] - Determines which close button to click (top or footer)
+      */
      cancel(name, clickTopButton=false) {
           var prefixSelector = "div";
           if (typeof name != "undefined" && name != null) prefixSelector = "#" + name + "_modal";
@@ -60,23 +80,40 @@ module.exports = {
           I.wait(0.5);
      },
 
+     /**
+      * Waits for the editor modal to be visible
+      * @param {String} [name] - Optional modal name
+      */
      waitForEditor(name) {
           if (typeof name == "undefined") { name = "datatableInit"; }
           I.waitForVisible("#" + name + "_modal", 200);
           I.wait(0.2);
      },
 
+     /**
+      * Waits for a specific modal to be visible
+      * @param {String} id - The ID of the modal to wait for
+      */
      waitForModal(id) {
           I.waitForVisible("#" + id);
           I.wait(0.2);
           if (id.endsWith("ImportModal")) I.wait(0.6);
      },
 
+     /**
+      * Waits for a specific modal to close
+      * @param {String} id - The ID of the modal to wait for
+      */
      waitForModalClose(id) {
           I.waitForInvisible("#" + id);
           I.wait(0.2);
      },
 
+     /**
+      * Fills a specified field with a given value
+      * @param {String} name - The name of the field to fill
+      * @param {String} value - The value to fill in the field
+      */
      fillField(name, value) {
           var value1 = value;
           if (value1.length>2) value1 = "**"; //just placeholder
@@ -85,6 +122,11 @@ module.exports = {
           I.fillField("#DTE_Field_" + name, value);
      },
 
+     /**
+      * Appends a value to a specified field
+      * @param {String} name - The name of the field to append to
+      * @param {String} value - The value to append
+      */
      appendField(name, value) {
           //I.appendField is broken (eg in translation-keys.js, user-list.js I.pressKey('Home') scrolls window instead of cursor in field)
           I.executeScript(({name, value}) => {
@@ -96,14 +138,21 @@ module.exports = {
      },
 
      /**
-      * Vyplni hodnotu do WYSIWYG editora Quill
-      * @param {*} htmlCode - html kod, ktory sa ma do editora nastavit
+      * Waits for the CKEditor to initialize
       */
-     async fillCkeditor(htmlCode) {
+     waitForCkeditor() {
           //pockaj na inicializaciu CK editora
           I.waitForElement("span.cke_toolbox");
           I.wait(2);
           I.waitForElement('#trEditor', 10);
+     },
+
+     /**
+      * Fills value into the WYSIWYG editor Quill
+      * @param {String} htmlCode - HTML code to set in the editor
+      */
+     async fillCkeditor(htmlCode) {
+          this.waitForCkeditor();
           I.click('#trEditor');
           I.pressKey('ArrowLeft');
           await I.executeScript(function (html) {
@@ -114,11 +163,12 @@ module.exports = {
      },
 
      /**
-      * Vyplni hodnotu do WYSIWYG editora Quill
-      * @param {*} name
-      * @param {*} value
+      * Fills value into the WYSIWYG editor Quill
+      * @param {String} name - Name of the field to fill
+      * @param {String} value - Value to fill in the field
       */
      fillQuill(name, value) {
+          I.wait(1); //wait for Quill editor to initialize
           I.click(locate('p').inside("#DTE_Field_" + name));
           I.wait(0.3);
           I.pressKey(['CommandOrControl', 'A']);
@@ -134,10 +184,10 @@ module.exports = {
      },
 
      /**
-     * Vyplni hodnotu do WYSIWYG editora Cleditor
-     * @param {*} parentSelector - selector parent elementu
-     * @param {*} value - hodnota na vyplnenie, POZOR, nevie to zatial diakritiku z dovodu pouzitia type prikazu
-     */
+      * Fills value into the WYSIWYG editor Cleditor
+      * @param {String} parentSelector - Selector for the parent element
+      * @param {String} value - Value to fill; WARNING: currently does not handle diacritics due to typing command
+      */
     fillCleditor(parentSelector, value) {
      I.click(parentSelector+" div.cleditorMain", null, { position: { x: 10, y: 30 } });
      I.wait(0.3);
@@ -155,4 +205,21 @@ module.exports = {
    clickSwitchLabel(text) {
      I.click(locate('div.modal.DTED.show div.custom-control.form-switch label').withText(text));
    },
+
+   /**
+    * Clicks on a switch element by its name
+    * @param {String} name - The name of the switch to click
+    */
+   clickSwitch(name){
+     I.clickCss('#DTE_Field_' + name);
+   },
+
+   /**
+    * Verifies that a specified field contains a specific value
+    * @param {String} name - The name of the field to check
+    * @param {String} value - The expected value to verify
+    */
+   seeInField(name, value) {
+     I.seeInField("#DTE_Field_" + name, value);
+   }
 }

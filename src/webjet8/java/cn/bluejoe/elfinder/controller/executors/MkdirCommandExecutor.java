@@ -1,6 +1,9 @@
 package cn.bluejoe.elfinder.controller.executors;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -11,12 +14,11 @@ import org.json.JSONObject;
 import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
-import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
 public class MkdirCommandExecutor extends AbstractJsonCommandExecutor
@@ -44,42 +46,49 @@ public class MkdirCommandExecutor extends AbstractJsonCommandExecutor
 			return;
 		}
 
+		List<Map<String, Object>> added = new ArrayList<>();
+
 		if (Tools.isNotEmpty(target)) {
 			if (dirs != null && dirs.length > 0) {
 				for (String dir : dirs) {
-					mkDir(target, dir);
+					Map<String, Object> fsItemEx = mkDir(target, dir);
+					if (fsItemEx != null) {
+						added.add(fsItemEx);
+					}
 				}
 			}
 			else if (Tools.isNotEmpty(name)) {
-				mkDir(target, name);
+				Map<String, Object> fsItemEx = mkDir(target, name);
+				if (fsItemEx != null) {
+					added.add(fsItemEx);
+				}
 			}
 		}
 		else {
 			json.put("error", prop.getText("target cannot be null"));
 		}
+		json.put("added", added.toArray());
 	}
 
-	private void mkDir(String target, String name) throws IOException, JSONException
+	private Map<String, Object> mkDir(String target, String name) throws IOException, JSONException
 	{
 		FsItemEx fsi = super.findItem(fsService, target);
-		Prop prop = Prop.getInstance(request);
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
 		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getPath()))
 		{
-			if (fsi.getPath().startsWith("/files") || fsi.getPath().startsWith("/images"))
-			{
-				name = DB.internationalToEnglish(name);
-				name = DocTools.removeCharsDir(name, true).toLowerCase();
-			}
+			// remove diacritics
+			name = IwcmFsVolume.removeSpecialChars(name, fsi);
+
 			FsItemEx dir = new FsItemEx(fsi, name);
 			dir.createFolder();
 
-			json.put("added", new Object[] { getFsItemInfo(request, dir) });
+			return getFsItemInfo(request, dir);
 		}
 		else
 		{
 			json.put("error", prop.getText("components.elfinder.commands.mkdir.error", fsi.getPath()));
-			json.put("added", new Object[] {});
+			//json.put("added", new Object[] {});
+			return null;
 		}
 	}
 }

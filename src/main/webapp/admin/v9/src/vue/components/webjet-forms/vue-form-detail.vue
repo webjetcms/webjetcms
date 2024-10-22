@@ -39,6 +39,13 @@
         methods: {
             async getColumns(formColumns, orderable) {
                 //console.log("formColumns=", formColumns);
+
+                //console.log("formColumns=", typeof formColumns.columns);
+                if (typeof formColumns.columns === "undefined") {
+                    WJ.notifyError(this.$permsDeniedTitle, this.$permsDeniedText);
+                    return null;
+                }
+
                 let that = this;
                 const columns = new Array(
                     {
@@ -85,11 +92,14 @@
                             },
                             tab: "metadata"
                         }
-                    },
-                    {
-                        data: "lastExportDate",
-                        name: "lastExportDate",
-                        title: this.$lastExportDate,
+                    }
+                );
+
+                if (formColumns.doubleOptIn===true) {
+                    columns.push({
+                        data: "doubleOptinConfirmationDate",
+                        name: "doubleOptinConfirmationDate",
+                        title: this.$doubleOptinConfirmationDate,
                         renderFormat: "dt-format-date-time",
                         orderable: true,
                         className: "cell-not-editable",
@@ -100,55 +110,66 @@
                             },
                             tab: "metadata"
                         }
-                    },
-                    {
-                        data: "note",
-                        name: "note",
-                        title: this.$note,
-                        renderFormat: "dt-format-text",
-                        className: "allow-html",
-                        orderable: true,
-                        editor: {
-                            type: "textarea",
-                            tab: "metadata"
-                        }
-                    },
-                    {
-                        data: "files",
-                        name: "files",
-                        title: this.$files,
-                        renderFormat: "dt-format-text",
-                        orderable: false,
-                        className: "cell-not-editable",
-                        editor: {
-                            type: "text",
-                            attr: {
-                                disabled: true
-                            },
-                            tab: "metadata"
-                        },
-                        render: function ( data, type, full, meta ) {
-                            let htmlCode = "";
-                            if (data != null && data.length>0){
-                                let fileNames = data.split(",");
-                                for (const fileName of fileNames) {
-                                    if (htmlCode != "") htmlCode += ", ";
-                                    let fileNameText = fileName;
-                                    let i = fileName.indexOf("_");
-                                    if (i>0) fileNameText = fileName.substring(i+1);
-                                    htmlCode += `<a href="/apps/forms/admin/attachment/?name=${fileName}" target="_blank">${fileNameText}</a>`;
-                                }
-                            }
-                            return htmlCode;
-                        }
-                    }
-                );
-
-                //console.log("formColumns=", typeof formColumns.columns);
-                if (typeof formColumns.columns === "undefined") {
-                    WJ.notifyError(this.$permsDeniedTitle, this.$permsDeniedText);
-                    return null;
+                    });
                 }
+
+                columns.push({
+                    data: "lastExportDate",
+                    name: "lastExportDate",
+                    title: this.$lastExportDate,
+                    renderFormat: "dt-format-date-time",
+                    orderable: true,
+                    className: "cell-not-editable",
+                    editor: {
+                        type: "datetime",
+                        attr: {
+                            disabled: true
+                        },
+                        tab: "metadata"
+                    }
+                });
+
+                columns.push({
+                    data: "note",
+                    name: "note",
+                    title: this.$note,
+                    renderFormat: "dt-format-text",
+                    className: "allow-html",
+                    orderable: true,
+                    editor: {
+                        type: "textarea",
+                        tab: "metadata"
+                    }
+                });
+                columns.push({
+                    data: "files",
+                    name: "files",
+                    title: this.$files,
+                    renderFormat: "dt-format-text",
+                    orderable: false,
+                    className: "cell-not-editable",
+                    editor: {
+                        type: "text",
+                        attr: {
+                            disabled: true
+                        },
+                        tab: "metadata"
+                    },
+                    render: function ( data, type, full, meta ) {
+                        let htmlCode = "";
+                        if (data != null && data.length>0){
+                            let fileNames = data.split(",");
+                            for (const fileName of fileNames) {
+                                if (htmlCode != "") htmlCode += ", ";
+                                let fileNameText = fileName;
+                                let i = fileName.indexOf("_");
+                                if (i>0) fileNameText = fileName.substring(i+1);
+                                htmlCode += `<a href="/apps/forms/admin/attachment/?name=${fileName}" target="_blank">${fileNameText}</a>`;
+                            }
+                        }
+                        return htmlCode;
+                    }
+                });
 
                 //fields formulara
                 for (let i=0; i<formColumns.columns.length; i++) {
@@ -467,12 +488,16 @@
                 return columns;
             },
             async createDetailDataTable() {
+
+                //destroy all click on export button, it will be reinitialized on table create
+                $('#datatableExportModal').off("click", ".btn-primary");
+
                 const url = `${window.formRestUrl}/columns/${this.$route.params.name}`;
                 //ziskaj pocet zaznamov a zoznam stlpcov
                 const formColumns = await $.get(url);
 
                 let serverSide = true;
-                let formCount = formColumns.count;
+                //let formCount = formColumns.count;
                 //if (typeof formCount != "undefined" && formCount < window.formsDatatableServerSizeLimit) serverSide = false;
 
                 //console.log("serverSide=", serverSide, "formCount=", formCount);
@@ -528,12 +553,17 @@
                     idAutoOpener: true,
                     onXhr: function(...args) {
                         const json = args[3];
+                        //console.log("onXhr json=", json);
                         json.forEach(j => {
                             for (let [key, value] of Object.entries(j.columnNamesAndValues)) {
-                                if (value === "") {
-                                    j["col_"+key] = 'prázdne';
-                                } else {
-                                    j["col_"+key] = value;
+                                j["col_"+key] = value;
+                            }
+                            //set class for not confirmed double optin forms
+                            if (typeof j.doubleOptinHash != "undefined" && j.doubleOptinHash != null && j.doubleOptinHash != "") {
+                                if (typeof j.doubleOptinConfirmationDate != "undefined" && j.doubleOptinConfirmationDate == null) {
+                                    j.editorFields = {
+                                        rowClass: "is-disabled"
+                                    }
                                 }
                             }
                         });

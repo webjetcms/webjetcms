@@ -4,7 +4,7 @@ Pomocou zaheslovaných stránok je možné definovať časť web sídla prístup
 
 ## Definovanie skupín
 
-Najskôr je potrebné zadefinovať skupiny používateľov. Zoznam skupín používateľov je dostupný v ľavom menu v sekcii ```Používatelia``` ako ```Skupiny používateľov```.
+Najskôr je potrebné zadefinovať skupiny používateľov. Zoznam skupín používateľov je dostupný v ľavom menu v sekcii **Používatelia** ako **Skupiny používateľov**.
 
 ![](user-groups-page.png)
 
@@ -25,7 +25,7 @@ Nás ďalej zaujíma práve typ **Prístupov k zaheslovanej sekcii web sídla**.
 
 ![](user-groups-page-editor.png)
 
-Do stránky s textom e-mailu je možné pomocou aplikácie Prihlásený používateľ vkladať polia, ktoré sa nahradia za hodnoty zadané používateľom podobne ako pri definovaní [hromadného emailu](../apps/dmail/campaings/README.md#karta---základné). Okrem uvedených polí je možné zadať dodatočné polia:
+Do stránky s textom e-mailu je možné pomocou aplikácie Prihlásený používateľ vkladať polia, ktoré sa nahradia za hodnoty zadané používateľom podobne ako pri definovaní [hromadného emailu](../apps/dmail/campaings/README.md#základné). Okrem uvedených polí je možné zadať dodatočné polia:
 
 - `!APPROVER_USER_NAME!` - celé meno schvaľovateľa.
 - `!APPROVER_USER_PHONE!` - telefónny kontakt na schvaľovateľa.
@@ -66,7 +66,7 @@ Kliknite na menu WEB Stránky->Zoznam web stránok a prejdite do priečinka, kto
 
 ![](set-user-groups.png)
 
-Zoznam priečinkov pre ktoré je Skupina Používateľov použitá sa zobrazuje pri editácii skupiny v karte ```Priečinky```.
+Zoznam priečinkov pre ktoré je Skupina Používateľov použitá sa zobrazuje pri editácii skupiny v karte **Priečinky**.
 
 ![](user-groups-page-editor-folders.png)
 
@@ -76,7 +76,7 @@ Priečinku môžete nastaviť ID stránky so špeciálnym formulárom pre prihl�
 
 Ak chcete zaheslovať iba špecifickú stránku, otvorte si ju v editore a kliknite na kartu Prístup a tam zvoľte skupiny, pre ktoré má byť stránka dostupná.
 
-Zoznam web stránok pre ktoré je Skupina Používateľov použitá sa zobrazuje pri editácii skupiny v karte ```Web stránky```.
+Zoznam web stránok pre ktoré je Skupina Používateľov použitá sa zobrazuje pri editácii skupiny v karte **Web stránky**.
 
 ![](user-groups-page-editor-pages.png)
 
@@ -96,9 +96,9 @@ Okamžité schválenie nového registrovaného používateľa nastáva iba v pr�
 
 Ak sú tieto požiadavky splnené, používateľ bude po registrácií automaticky schválený a okamžite prihlásený. Taktiež používateľ obdrží email o úspešnej registrácií, ktorý bude obsahovať používateľove prihlasovacie meno a heslo.
 
-**Upozornenie:** V prípade, že používateľská skupina vyžaduje schválenie, ale nemá povolené pridávanie/odoberanie zo skupiny samotným používateľom, parameter **Vyžaduje schválenie** sa bude ignorovať aj keby bol zvolený a okamžité schválenie prebehne.
+!>**Upozornenie:** V prípade, že používateľská skupina vyžaduje schválenie, ale nemá povolené pridávanie/odoberanie zo skupiny samotným používateľom, parameter **Vyžaduje schválenie** sa bude ignorovať aj keby bol zvolený a okamžité schválenie prebehne.
 
-**Upozornenie:** V prípade, že parameter **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom** nie je pri skupine užívateľov zvolený, skupina sa užívateľovi nepridá, aj keď samotná registrácia prebehne úspešne. Následkom môže byť stav, kedy sa používateľovi nepridá žiadna skupina a nebude schopný prihlásiť sa do zaheslovanej sekcie (registrácia prebehne úspešne a neohlási žiadnu chybu, no prihlásenie nebude možné).
+!>**Upozornenie:** V prípade, že parameter **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom** nie je pri skupine užívateľov zvolený, skupina sa užívateľovi nepridá, aj keď samotná registrácia prebehne úspešne. Následkom môže byť stav, kedy sa používateľovi nepridá žiadna skupina a nebude schopný prihlásiť sa do zaheslovanej sekcie (registrácia prebehne úspešne a neohlási žiadnu chybu, no prihlásenie nebude možné).
 
 ### Potvrdenie email adresy
 
@@ -110,7 +110,7 @@ Môže nastať situácie, kedy používateľ bude vyzvaný k tomu, aby najskôr 
 
 Ak sú tieto požiadavky splnené, na uvedenú email adresu používateľa bude zaslaný email s odkazom, na ktorú bude musieť kliknúť pre overenie. Po úspešnom overení sa používateľ bude vedieť prihlásiť do zaheslovanej sekcie a taktiež obdrží email o úspešnej registrácií, ktorý bude obsahovať používateľove prihlasovacie meno ale nie heslo.
 
-**Upozornenie:** V prípade, že parameter **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom** nie je pri skupine užívateľov zvolený, skupina sa užívateľovi nepridá, aj keď samotná registrácia prebehne úspešne. Následkom môže byť stav, kedy sa používateľovi nepridá žiadna skupina a nebude schopný prihlásiť sa do zaheslovanej sekcie (registrácia prebehne úspešne a neohlási žiadnu chybu, no prihlásenie nebude možné).
+!>**Upozornenie:** V prípade, že parameter **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom** nie je pri skupine užívateľov zvolený, skupina sa užívateľovi nepridá, aj keď samotná registrácia prebehne úspešne. Následkom môže byť stav, kedy sa používateľovi nepridá žiadna skupina a nebude schopný prihlásiť sa do zaheslovanej sekcie (registrácia prebehne úspešne a neohlási žiadnu chybu, no prihlásenie nebude možné).
 
 ### Schválenie administrátorom
 
@@ -120,7 +120,7 @@ Môže nastať situácie, kedy užívateľ musí byť schválený predtým, ako 
 2. používateľské skupiny vo formulári MAJÚ zvolenú možnosť **Vyžaduje schválenie**
 3. používateľské skupiny vo formulári MAJÚ zvolenú možnosť **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom**
 
-Schvaľovanie registrácie užívateľa (schválenie pridania do skupiny užívateľov) sa deje v sekcií ```Zoznam používateľov```.
+Schvaľovanie registrácie užívateľa (schválenie pridania do skupiny užívateľov) sa deje v sekcií **Zoznam používateľov**.
 
 ![](user-list-page.png)
 
@@ -129,4 +129,4 @@ Schvaľovanie je možné vykonať:
 - pomocou tlačidla ![](user-list-page-approve_1.png ":no-zoom") v nástrojovej lište, kde používatelia v označených riadkoch budú schválený. Po tomto schválení sa používateľ bude môcť prihlásiť do zaheslovanej sekcie a taktiež obdrží email o úspešnej registrácií, ktorý bude obsahovať používateľove prihlasovacie meno.
 - pomocou tlačidla ![](user-list-page-approve_2.png ":no-zoom") v nástrojovej lište, kde používatelia v označených riadkoch a bude im zmenené heslo na náhodne vygenerované. Po tomto overení sa používateľ bude vedieť prihlásiť do zaheslovanej sekcie a taktiež obdrží email o úspešnej registrácií, ktorý bude obsahovať používateľove prihlasovacie meno a novo VYGENEROVANÉ heslo.
 
-**Upozornenie:** V prípade, že používateľská skupina vyžaduje schválenie, ale nemá povolené pridávanie/odoberanie zo skupiny samotným používateľom, parameter **Vyžaduje schválenie** sa bude ignorovať aj keby bol zvolený a prebehne typ schválenia v závislosti od hodnoty parametra **Vyžadovať potvrdenie e-mailovej adresy**.
+!>**Upozornenie:** V prípade, že používateľská skupina vyžaduje schválenie, ale nemá povolené pridávanie/odoberanie zo skupiny samotným používateľom, parameter **Vyžaduje schválenie** sa bude ignorovať aj keby bol zvolený a prebehne typ schválenia v závislosti od hodnoty parametra **Vyžadovať potvrdenie e-mailovej adresy**.

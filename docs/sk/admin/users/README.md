@@ -7,9 +7,9 @@ V zozname používateľov je možné spravovať administrátorov (vyžaduje prá
 Pri filtrovaní v tabuľke sa v stĺpcoch Prístupové práva k neverejným sekciám web sídla alebo Prihlásenie k hromadnému e-mailu vyhľadáva podľa názvu zadanej skupiny. Ak zvolíte možnosť Rovná sa použije sa vyhľadanie podľa presného názvu zadanej skupiny a zároveň sa vyhľadajú používatelia, ktorí majú iba túto jednu skupinu (nie viacero skupín).
 
 
-## Karta - Osobné údaje
+## Osobné údaje
 
-Karta osobné údaje obsahuje základné údaje používateľa. Delí sa na dve časti a to „Osobné údaje“ a „Prístup“.
+Karta **Osobné údaje** obsahuje základné údaje používateľa. Delí sa na dve časti a to „Osobné údaje“ a „Prístup“.
 
 ![](users-tab-personalInfo.png)
 
@@ -34,9 +34,9 @@ Zadaním znaku `*` alebo textu `random` do poľa heslo sa heslo náhodne vygener
 
 Pre možnosť prihlásenia používateľa je dôležité je, aby používateľ mal zvolenú možnosť "Schválený používateľ".
 
-## Karta - Kontaktné údaje
+## Kontaktné údaje
 
-Karta Kontaktné údaje sa delí na dve časti a to :
+Karta **Kontaktné údaje** sa delí na dve časti a to :
 
 - Kontaktné údaje - obsahuje údaje používateľa ako Adresa, Mesto, Telefón a pod.
 - Adresa doručenia - obsahuje dodatočné údaje potrebné pre doručenie zásielky ako Meno, Priezvisko, Adresa, Mesto a pod (typicky využité v rámci aplikácie elektronický obchod).
@@ -45,27 +45,28 @@ Karta neobsahuje povinné pole, ktoré by bolo nutné vyplniť.
 
 ![](users-tab-contact.png)
 
-## Karta - Voliteľné polia
+## Voliteľné polia
 
-Táto karta obsahuje voľne použiteľné polia. Viac informácii k ich konfigurácii nájdete v dokumentácii [voliteľné polia](../../frontend/webpages/customfields/README.md).
+Karta **Voliteľné polia** obsahuje voľne použiteľné polia. Viac informácii k ich konfigurácii nájdete v dokumentácii [voliteľné polia](../../frontend/webpages/customfields/README.md).
 
 ![](users-tab-freeItems.png)
 
-## Karta - Skupiny
+## Skupiny
 
-Karta Skupiny sa delí na dve časti a to :
+Karta **Skupiny** sa delí na dve časti a to :
 
 - Skupiny používateľov - zvolením mena skupiny používateľov získa používateľ prístupové práva k neverejným sekciám web sídla.
 - Hromadný e-mail - zvolením mena skupiny sa prihlási používateľ k skupine hromadného e-mailu.
 
 Karta obsahuje taktiež možnosť Odoslať emaily o pridaní do používateľských skupín.
-**Pozor"** emaily sa odošlú iba ak daná skupina používateľov má nastavené ``ID stránky s textom e-mailu``.
+
+!>**Upozornenie:** emaily sa odošlú iba ak daná skupina používateľov má nastavené ``ID stránky s textom e-mailu``.
 
 ![](users-tab-groups.png)
 
-## Karta - Práva
+## Práva
 
-Karta slúži na nastavenie práv pre administračnú sekciu (definuje sa k čomu bude mať daný používateľ prístup / práva). Potrebné časti pre nastavovanie sa zobrazia iba v prípade, ak je zvolená možnosť vstup do admin sekcie (správa web sídla). Pokiaľ používateľ túto možnosť nemá zvolená, tak je v systéme len ako Registrovaný používateľ a nebude mať povolený vstup do administračnej časti web sídla.
+Karta **Práva** slúži na nastavenie práv pre administračnú sekciu (definuje sa k čomu bude mať daný používateľ prístup / práva). Potrebné časti pre nastavovanie sa zobrazia iba v prípade, ak je zvolená možnosť vstup do admin sekcie (správa web sídla). Pokiaľ používateľ túto možnosť nemá zvolená, tak je v systéme len ako Registrovaný používateľ a nebude mať povolený vstup do administračnej časti web sídla.
 
 ![](users-tab-right-without-admin-section.png)
 
@@ -127,9 +128,9 @@ Pole na konci obsahuje aj ikonu voľby všetkých práv a zrušenia voľky všet
 
 ![](users-tab-right-search.png)
 
-## Karta - Schvaľovanie
+## Schvaľovanie
 
-V karte schvaľovanie je možné definovať akciu pri zmene v zvolenom adresári web stránok (typicky schvaľovanie). Karta sa zobrazí len pre už uloženého používateľa (novo vytváraného používateľa je potrebné najskôr uložiť až následne nastaviť proces schvaľovania).
+V karte **Schvaľovanie** je možné definovať akciu pri zmene v zvolenom adresári web stránok (typicky schvaľovanie). Karta sa zobrazí len pre už uloženého používateľa (novo vytváraného používateľa je potrebné najskôr uložiť až následne nastaviť proces schvaľovania).
 
 Pri pridaní záznamu kliknutím na ikonu + (Pridať) volíte Adresár (zo štruktúry web stránok) a Akcia. Oba atribúty sú povinné. Môžete vybrať jednu z nasledovných akcií :
 

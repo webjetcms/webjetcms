@@ -167,6 +167,8 @@ public class ThumbServlet extends HttpServlet
 			String fillColor = null;
 			int q = -1;
 
+			boolean noIp = "true".equals(request.getParameter("noip"));
+
 			//if nie je potrebny triedy, metody referencovane na tuto metodu ho posielaju
 			//if (request != null )
 			boolean parsedFromName = false;
@@ -304,7 +306,7 @@ public class ThumbServlet extends HttpServlet
 				return;
 			}
 
-			String realPathSmall = realPathSmall(imagePath, width, height, ip, fillColor, q);
+			String realPathSmall = realPathSmall(imagePath, width, height, ip, noIp, fillColor, q);
 
 			//skontroluj cache
 			IwcmFile smallImageFile = new IwcmFile(realPathSmall);
@@ -315,7 +317,7 @@ public class ThumbServlet extends HttpServlet
 
 			if (!fileExists)
 			{
-				realPathSmall = realPathSmall("/components/_common/mime/big_unknown.gif", width, height, -1, null, q);
+				realPathSmall = realPathSmall("/components/_common/mime/big_unknown.gif", width, height, -1, noIp, null, q);
 				realPath = Tools.getRealPath("/components/_common/mime/big_unknown.gif");
 				imageFile = new IwcmFile(realPath);
 				smallImageFile = new IwcmFile(realPathSmall);
@@ -397,7 +399,7 @@ public class ThumbServlet extends HttpServlet
 						int imgwidth = imageSize[0];
 						int imgheight = imageSize[1];
 
-						if ("true".equals(request.getParameter("noip"))==false && bean != null && bean.getSelectedWidth()>5 && bean.getSelectedHeight()>5)
+						if (noIp == false && bean != null && bean.getSelectedWidth()>5 && bean.getSelectedHeight()>5)
 						{
 							if (bean.getSelectedX()>0) cleft = bean.getSelectedX();
 							if (bean.getSelectedY()>0) ctop = bean.getSelectedY();
@@ -686,11 +688,11 @@ public class ThumbServlet extends HttpServlet
 	 * @param height
 	 * @return
 	 */
-	private static String realPathSmall(String imagePath, int width, int height, int ip, String fillColor, int quality)
+	private static String realPathSmall(String imagePath, int width, int height, int ip, boolean noIp, String fillColor, int quality)
 	{
 		String realPathSmall = Tools.getRealPath(Constants.getString("thumbServletCacheDir")+imagePath);
 
-		return getImagePathCache(realPathSmall, width, height, ip, fillColor, quality);
+		return getImagePathCache(realPathSmall, width, height, ip, noIp, fillColor, quality);
 	}
 
 	/**
@@ -703,7 +705,22 @@ public class ThumbServlet extends HttpServlet
 	 * @param quality
 	 * @return
 	 */
-	public static String getImagePathCache(String realPathSmall, int width, int height, int ip, String fillColor, int quality)
+	public static String getImagePathCache(String realPathSmall, int width, int height, int ip, String fillColor, int quality) {
+		return getImagePathCache(realPathSmall, width, height, ip, false, fillColor, quality);
+	}
+
+	/**
+	 * Vrati cestu k suboru v cache upravenu o rozmer, ip, farbu a qualitu
+	 * @param realPathSmall
+	 * @param width
+	 * @param height
+	 * @param ip
+	 * @param noIp
+	 * @param fillColor
+	 * @param quality
+	 * @return
+	 */
+	public static String getImagePathCache(String realPathSmall, int width, int height, int ip, boolean noIp, String fillColor, int quality)
 	{
 		//uprav cache nazov
 		try
@@ -716,6 +733,7 @@ public class ThumbServlet extends HttpServlet
 
 			String ipName = "";
 			if (ip>0) ipName = "ip"+ip;
+			if (noIp) ipName += "n";
 
 			//najdi poslednu bodku v nazve suboru
 			int i = realPathSmall.lastIndexOf('.');

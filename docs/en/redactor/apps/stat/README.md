@@ -3,9 +3,9 @@
 The statistics application allows you to view statistical information about visitors to your website. It is available in the Overview section of the left menu as a Statistics item.
 
 The following terms are used in the application:
-- `videní` - total number of pages viewed
-- `návštev (alebo sedení)` - the number of visits by each person, where a visit is defined as the time during which the visitor has not closed the web browser. So if a visitor came to your site and viewed 5 pages, 5 views and 1 visit are counted. If they close their browser (or don't view any page for more than 30 minutes) and come to the site again, it counts as another visit
-- `rôznych používateľov` - the approximate number of genuinely different visitors to the site. If a visitor visits your site, a cookie will be sent to the visitor, which will be used to identify them the next time they visit. The validity of this cookie is set to one year, so even if he comes to the site for a relatively long period of time, he will still be considered the same visitor
+- views - total number of pages viewed
+- visits (or sessions) - the number of visits by each person, where a visit is considered to be the time during which the visitor has not closed the web browser. So if a visitor came to your site and viewed 5 pages, 5 views and 1 visit are counted. If they close their browser (or don't view any page for more than 30 minutes) and come to the site again, it counts as another visit
+- different users - the approximate number of really different visitors to the site. If a visitor visits your site, a cookie will be sent to the visitor, which will be used to identify them on their next visit. The validity of this cookie is set to one year, so even if he comes to the site for a relatively long period of time, he will still be considered the same visitor
 
 Please note: the storage of statistics is subject to GDPR consent to the storage of statistical cookies. If the visitor does not give consent to store them, the statistics are anonymised:
 - visit time is rounded to 15 minutes
@@ -45,7 +45,7 @@ The table below lists the most visited pages with data on the number of views, v
 
 > Which countries do visitors come from? Which languages should be targeted?
 
-Shows traffic by country. The country is determined by the HTTP header `accept-language` the browser that displays the web page. Typically, this is the language that the user has set in the operating system. If the country could not be identified it is classified as `Neznáma`.
+Shows traffic by country. The country is determined by the HTTP header `accept-language` the browser that displays the web page. Typically, this is the language that the user has set in the operating system. If the country could not be identified it is classified as **Unknown**.
 
 ![](country-page.png)
 
@@ -55,10 +55,11 @@ Shows traffic by country. The country is determined by the HTTP header `accept-l
 
 List of browsers and their versions. The chart shows the most used browsers with version, time view and complete table.
 
-Value `Neznámy` or `???` is displayed for unknown browsers and for browsers for which the visitor has not given consent to the collection of statistical cookies.
+Value **Unknown** or **???** is displayed for unknown browsers and for browsers for which the visitor has not given consent to the collection of statistical cookies.
 
 ![](browser-page.png)
 
+**Remark:** type, version, operating system is detected by HTTP header `User-Agent`. The library is used [UAP-java](https://github.com/ua-parser/uap-java). Used [YAML](https://github.com/ua-parser/uap-core/blob/master/regexes.yaml) the file can be updated and the path to it can be set in the conf. variable `uaParserYamlPath`. It is applied after restarting the application server.
 ## Search engines
 
 > What do visitors search for on our website? What search terms did they come to our site from search engines?

@@ -12,6 +12,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.DataTableColumn;
 import sk.iway.iwcm.system.datatable.json.DataTableTab;
 
@@ -139,14 +140,22 @@ public class DataTableColumnsFactory {
 
         if ("[[#{}]]".equals(str)) return "";
 
+        Prop prop = null;
+
         ServletRequestAttributes requestAttributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (requestAttributes != null) {
+            HttpServletRequest request = requestAttributes.getRequest();
+            prop = Prop.getInstance(request);
+        } else {
+            //use RequestBean lng instead of request
+            prop = Prop.getInstance();
+        }
+        if (prop != null) {
             int failsafe = 0;
             int startIndex = result.indexOf("[[#{");
             boolean hasDot = result.contains(".");
             if (hasDot) {
-                HttpServletRequest request = requestAttributes.getRequest();
-                Prop prop = Prop.getInstance(request);
+
 
                 if (startIndex == -1) {
                     result = escapeSpecialChars(prop.getText(result));
@@ -190,26 +199,47 @@ public class DataTableColumnsFactory {
             includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();
         }
 
-        Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
-
-        for (Field declaredField : declaredFields) {
-            if (!declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
-                continue;
+        if (dto.isAnnotationPresent(DataTableTabs.class)) {
+            DataTableTabs annotation = dto.getAnnotation(DataTableTabs.class);
+            for (sk.iway.iwcm.system.datatable.annotations.DataTableTab tab : annotation.tabs()) {
+                result.add(new DataTableTab(tab));
             }
+            if (includeCommonSettings) {
+                result.add(new DataTableTab("commonSettings", "commonSettings", false));
+            }
+        } else {
+            Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
 
-            sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
-            String tab = annotation.tab();
+            for (Field declaredField : declaredFields) {
+                if (!declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
+                    continue;
+                }
 
-            //If we dont want common settings, skip all fields with tab commonSettings
-            if(includeCommonSettings==false && "commonSettings".equals(tab)) continue;
+                sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
+                String tab = annotation.tab();
 
-            //If tab is not empty and tab is not already in result, add it
-            if (Tools.isNotEmpty(tab) && result.stream().noneMatch(r -> r.getId().equals(tab))) {
-                result.add(new DataTableTab(annotation, result.isEmpty()));
+                //If we dont want common settings, skip all fields with tab commonSettings
+                if(includeCommonSettings==false && "commonSettings".equals(tab)) continue;
+
+                //If tab is not empty and tab is not already in result, add it
+                if (Tools.isNotEmpty(tab) && result.stream().noneMatch(r -> r.getId().equals(tab))) {
+                    result.add(new DataTableTab(annotation, result.isEmpty()));
+                }
             }
         }
 
         return result;
+    }
+
+    /**
+     * Returns JSON object from DataTableTabs annotation
+     * @return
+     * @throws JsonProcessingException
+     */
+    public String getTabsJson() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        List<DataTableTab> tabs = getTabs();
+        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(tabs);
     }
 
     /**

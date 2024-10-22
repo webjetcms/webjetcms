@@ -12,42 +12,16 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-
-import com.drew.lang.annotations.NotNull;
 
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 @MappedSuperclass
-public class CalendarEventsBasic implements Serializable {
+<span class="fc" id="L23">public class CalendarEventsBasic implements Serializable {</span>
 
-<span class="fc" id="L26">    public CalendarEventsBasic() {}</span>
-
-<span class="nc" id="L28">    public CalendarEventsBasic(Long id, String title) {</span>
-<span class="nc" id="L29">        this.id = id;</span>
-<span class="nc" id="L30">        this.title = title;</span>
-<span class="nc" id="L31">    }</span>
-
-<span class="nc" id="L33">    public CalendarEventsBasic(Long id, String title, Date dateFrom, Date dateTo, Integer typeId) {</span>
-<span class="nc" id="L34">        this.id = id;</span>
-<span class="nc" id="L35">        this.title = title;</span>
-<span class="nc" id="L36">        this.dateFrom = dateFrom;</span>
-<span class="nc" id="L37">        this.dateTo = dateTo;</span>
-<span class="nc" id="L38">        this.typeId = typeId;</span>
-<span class="nc" id="L39">    }</span>
-
-<span class="nc" id="L41">    public CalendarEventsBasic(Long id, String title, Date dateFrom, Date dateTo, Integer typeId, Boolean suggest, Integer creatorId) {</span>
-<span class="nc" id="L42">        this.id = id;</span>
-<span class="nc" id="L43">        this.title = title;</span>
-<span class="nc" id="L44">        this.dateFrom = dateFrom;</span>
-<span class="nc" id="L45">        this.dateTo = dateTo;</span>
-<span class="nc" id="L46">        this.typeId = typeId;</span>
-<span class="nc" id="L47">        this.suggest = suggest;</span>
-<span class="nc" id="L48">        this.creatorId = creatorId;</span>
-<span class="nc" id="L49">    }</span>
-    
     @Id
     @Column(name = &quot;calendar_id&quot;)
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_calendar&quot;)
@@ -70,6 +44,7 @@ public class CalendarEventsBasic implements Serializable {
         title=&quot;calendar.begin&quot;,
         tab = &quot;basic&quot;
     )
+    @NotNull
 	private Date dateFrom;
 
     @Column(name = &quot;date_to&quot;)
@@ -120,7 +95,7 @@ public class CalendarEventsBasic implements Serializable {
     @NotNull
     private Integer domainId;
 
-<span class="pc" id="L123">    @Transient</span>
+<span class="fc" id="L98">    @Transient</span>
     @DataTableColumnNested
 	private CalendarEventsEditorFields editorFields = null;
 
@@ -128,93 +103,93 @@ public class CalendarEventsBasic implements Serializable {
     private Integer approve;
 
     public Long getId() {
-<span class="fc" id="L131">        return id;</span>
+<span class="fc" id="L106">        return id;</span>
     }
 
     public void setId(Long id) {
-<span class="fc" id="L135">        this.id = id;</span>
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L110">        this.id = id;</span>
+<span class="fc" id="L111">    }</span>
 
     public String getTitle() {
-<span class="fc" id="L139">        return title;</span>
+<span class="fc" id="L114">        return title;</span>
     }
 
     public void setTitle(String title) {
-<span class="fc" id="L143">        this.title = title;</span>
-<span class="fc" id="L144">    }</span>
+<span class="fc" id="L118">        this.title = title;</span>
+<span class="fc" id="L119">    }</span>
 
     public Date getDateFrom() {
-<span class="fc" id="L147">        return dateFrom;</span>
+<span class="fc" id="L122">        return dateFrom;</span>
     }
 
     public void setDateFrom(Date dateFrom) {
-<span class="fc" id="L151">        this.dateFrom = dateFrom;</span>
-<span class="fc" id="L152">    }</span>
+<span class="fc" id="L126">        this.dateFrom = dateFrom;</span>
+<span class="fc" id="L127">    }</span>
 
     public Date getDateTo() {
-<span class="fc" id="L155">        return dateTo;</span>
+<span class="fc" id="L130">        return dateTo;</span>
     }
 
     public void setDateTo(Date dateTo) {
-<span class="fc" id="L159">        this.dateTo = dateTo;</span>
-<span class="fc" id="L160">    }</span>
+<span class="fc" id="L134">        this.dateTo = dateTo;</span>
+<span class="fc" id="L135">    }</span>
 
     public String getArea() {
-<span class="fc" id="L163">        return area;</span>
+<span class="fc" id="L138">        return area;</span>
     }
 
     public void setArea(String area) {
-<span class="fc" id="L167">        this.area = area;</span>
-<span class="fc" id="L168">    }</span>
+<span class="fc" id="L142">        this.area = area;</span>
+<span class="fc" id="L143">    }</span>
 
     public Integer getTypeId() {
-<span class="fc" id="L171">        return typeId;</span>
+<span class="fc" id="L146">        return typeId;</span>
     }
 
     public void setTypeId(Integer typeId) {
-<span class="fc" id="L175">        this.typeId = typeId;</span>
-<span class="fc" id="L176">    }</span>
+<span class="fc" id="L150">        this.typeId = typeId;</span>
+<span class="fc" id="L151">    }</span>
 
     public Integer getCreatorId() {
-<span class="fc" id="L179">        return creatorId;</span>
+<span class="fc" id="L154">        return creatorId;</span>
     }
 
     public void setCreatorId(Integer creatorId) {
-<span class="fc" id="L183">        this.creatorId = creatorId;</span>
-<span class="fc" id="L184">    }</span>
+<span class="fc" id="L158">        this.creatorId = creatorId;</span>
+<span class="fc" id="L159">    }</span>
 
     public Integer getDomainId() {
-<span class="fc" id="L187">        return domainId;</span>
+<span class="fc" id="L162">        return domainId;</span>
     }
 
     public void setDomainId(Integer domainId) {
-<span class="fc" id="L191">        this.domainId = domainId;</span>
-<span class="fc" id="L192">    }</span>
+<span class="fc" id="L166">        this.domainId = domainId;</span>
+<span class="fc" id="L167">    }</span>
 
     public CalendarEventsEditorFields getEditorFields() {
-<span class="fc" id="L195">        return editorFields;</span>
+<span class="fc" id="L170">        return editorFields;</span>
     }
 
     public void setEditorFields(CalendarEventsEditorFields editorFields) {
-<span class="fc" id="L199">        this.editorFields = editorFields;</span>
-<span class="fc" id="L200">    }</span>
+<span class="fc" id="L174">        this.editorFields = editorFields;</span>
+<span class="fc" id="L175">    }</span>
 
     public Integer getApprove() {
-<span class="fc" id="L203">        return approve;</span>
+<span class="fc" id="L178">        return approve;</span>
     }
 
     public void setApprove(Integer approve) {
-<span class="fc" id="L207">        this.approve = approve;</span>
-<span class="fc" id="L208">    }</span>
+<span class="fc" id="L182">        this.approve = approve;</span>
+<span class="fc" id="L183">    }</span>
 
     public Boolean getSuggest() {
-<span class="fc" id="L211">        return suggest;</span>
+<span class="fc" id="L186">        return suggest;</span>
     }
 
     public void setSuggest(Boolean suggest) {
-<span class="fc" id="L215">        this.suggest = suggest;</span>
-<span class="fc" id="L216">    }</span>
+<span class="fc" id="L190">        this.suggest = suggest;</span>
+<span class="fc" id="L191">    }</span>
 
-    
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,10 +1,257 @@
 # Zoznam zmien verzia 2024
 
+## 2024.40
+
+> Vo verzii 2024.40 prináša **Prieskumník** nové funkcie a vylepšenia. Pri presune súborov pomocou **drag&drop sa teraz zobrazí potvrdenie**, čo zamedzí chybám pri správe súborov. V editore obrázkov bola pridaná možnosť nastavenia **veľkosti a orezania podľa šablón**, čo uľahčuje úpravu obrázkov priamo v rozhraní.
+>
+> Ďalším vylepšením je prepracovanie nastavení viacerých **aplikácií do nového, prehľadnejšieho dizajnu**. Autor stránky teraz dostáva **notifikácie pri časovom publikovaní stránky**, ako aj pri pridaní **príspevku do diskusného fóra**, čo zlepšuje kontrolu nad obsahom. Nová aplikácia pre rezervácie podľa času umožňuje jednoduché a prehľadné **rezervovanie objektov, ako sú tenisové kurty alebo zasadačky**. Táto aplikácia tiež ponúka štatistiky podľa používateľov a objektov, čo uľahčuje správu rezervácií.
+>
+> Vylepšili sme aj fungovanie nástroja PageBuilder a opravili chyby v publikovaní v Archíve súborov, čím sme zabezpečili lepšiu stabilitu a výkon pri práci s obsahom.
+
+
+### Prelomové zmeny
+
+- AB Testovanie - zamedzené volanie URL adries B verzie (obsahujúcich výraz `abtestvariant`) ak nie je prihlásený administrátor. Povoliť priame volanie takýchto URL je možné nastavením konf. premennej `ABTestingAllowVariantUrl` na hodnotu `true` (#56677).
+- Databázové pripojenie - zmenená knižnica pre manažment databázových spojení z `Apache DBCP` na [HikariCP](https://github.com/brettwooldridge/HikariCP) (#56821).
+- Inicializácia - upravená inicializácia WebJETu použitím `Spring.onStartup` namiesto `InitServlet`. Zabezpečené je správne poradie načítania konfiguračných premenných a ich použitia v `SpringBean` objektoch (#56913).
+- Kódovanie znakov - vzhľadom na zmenu v inicializácii je kódovanie znakov čítane z konf. premennej `defaultEncoding` s predvolenou hodnotou `utf-8`. Ak historicky používate kódovanie `windows-1250` je potrebné hodnotu v konfigurácii upraviť. Už sa nepoužíva hodnota vo `web.xml` pre `SetCharacterEncodingFilter` ale hodnota v konfigurácii WebJETu. Filter môžete z `web.xml` zmazať. Zrušená podpora nastavenia chybovej správy pri nefunkčnom databázovom spojení nastavením parametra `dbErrorMessageText`, potrebné je vytvoriť súbor `/wjerrorpages/dberror.html` ak chcete zobraziť špecifickú HTML stránku pri chybe databázového spojenia (#56913, #56393-12).
+- Optimalizované získanie presmerovania v `404.jsp`, vo vašich gradle projektoch odporúčame aktualizovať súbor `404.jsp` podľa [basecms](https://github.com/webjetcms/basecms/blob/master/src/main/webapp/404.jsp) projektu (#53469).
+- Archív súborov - upravená predvolená hodnota konf. premennej `fileArchivIndexOnlyMainFiles` na hodnotu `true`. Do vyhľadávania/plno textového indexu sa zapisujú teda len hlavné súbory a nie archívne verzie. Dôvod je, že nechceme používateľov z vyhľadávania štandardne smerovať na staršie (archívne) verzie súborov (#57037).
+- Archív súborov - opravené usporiadanie súborov v archíve podľa času, pridaná možnosť usporiadania podľa priority (tak sa usporadúvalo pri pôvodnej voľbe podľa času) (#57037).
+- Zaheslovaná zóna - upravené prihlasovanie a funkcia zabudnutého hesla, ak máte vami upravený súbor `/components/user/logon.jsp` alebo `/components/user/change_password.jsp` overte korektné správanie a prípadne podľa štandardnej verzie upravte (#57185).
+
+### Web stránky
+
+- Klonovanie štruktúry - doplnená možnosť [ponechať URL adresy pri klonovaní](redactor/apps/clone-structure/README.md). Z URL adries sa odstráni prefix podľa zdrojového priečinka a doplní sa prefix podľa cieľového. Ak teda klonujete napr. novú jazykovú mutáciu, pridá sa len napr. `/en/` prefix, ale ostatné URL adresy zostanú bez zmeny (#56673).
+
+![](redactor/apps/clone-structure/clone_structure.png)
+
+- Editor obrázkov - doplnená možnosť nastaviť Bod záujmu na ľubovoľný obrázok (#57037).
+- Editor obrázkov - upravené nastavenie veľkosti obrázku pre lepšie použitie funkcie zmeny veľkosti (ak je obrázok menší ako aktuálne okno bude sa zmenšovať) (#56969).
+- Audit - upravené zapisovanie auditného záznamu pri uložení web stránky na štandardný data tabuľkový zápis so zoznamom všetkých zmenených vlastností (#57037).
+- Porovnanie stránok - opravené zobrazenie "Zobraziť len text stránky" pri porovnaní verzií stránky z histórie (#57037).
+- Obrázky - pri zmene obrázku, ktorý má v názve výraz `placeholder` alebo `stock` sa v okne prieskumníka nezobrazí priečinok s týmto obrázkom ale zobrazí sa Média tejto stránky/Obrázky pre jednoduché nahratie nového obrázku namiesto zástupného obrázku (#57037).
+- Perex obrázok - upravené otvorenie okna tak, aby zobrazilo Média tejto stránky ako prvé a následne výber všetkých médií (nezobrazí sa zoznam všetkých súborov a odkazov na web stránky) (#57037).
+- Page Builder - opravené nastavenie priečinku podľa titulku novej stránky pri vkladaní obrázka (#57037).
+- Page Builder - opravené duplikovanie bloku pre `accordion` - korektné nastavenie ID editora aby nedošlo k prepísaniu textu pri uložení (#57037).
+- Page Builder - opravené nastavenie [šírky stĺpcov](frontend/page-builder/blocks.md#nastavenie-šírky-stĺpcov) - do úvahy sa berie šírka okna nie šírka elementu (#57037).
+- Zoznam promo aplikácii pri vkladaní novej aplikácie sa nastavuje cez konf. premennú `appstorePromo`, je možné tam okrem názvu priečinka zadať priamo aj `itemKey` hodnotu, napr. `cmp_news` pre podporu Spring aplikácií. Predvolená hodnota je `cmp_news,menuGallery,menuBanner,cmp_video` (#57157).
+- Export do HTML - vytvorená [dokumentácia](redactor/webpages/export-to-html/README.md), testy, vypnutá kontrola SSL certifikátov pre možnosť použitia `SelfSigned` certifikátov počas vývoja alebo testovania (#57141).
+- Publikovanie web stránky - pridané auditovanie úspešného časového publikovania web stránky a pridaná možnosť [poslať notifikáciu autorovi](redactor/webpages/editor.md#publikovanie-web-stránky) web stránky pri úspešnom publikovaní (#57173).
+
+![](redactor/webpages/export-to-html/export-to-html.png)
+
+- Značky - pridaná premenná `perexGroupsRenderAsSelect` na určenie od akého [počtu značiek](redactor/webpages/perexgroups.md) sa začnú generovať ako viacnásobné výberové pole, pôvodne bola táto hodnota nastavená v kóde na 30 (#57185).
+- Značky - aj pri vysokom počte definovaných značiek sa v tabuľke bude vždy filtrovanie zobrazovať ako textové pole (#57185).
+- Voliteľné polia - doplnené nastavenie názvov stĺpcov [voliteľných polí](frontend/webpages/customfields/README.md) v zozname web stránok vrátane prefixu textových kľúčov (napr. `temp-3.editor.field_a`) podľa šablóny priečinka (#57185).
+
+### Aplikácie
+
+Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP` na `Spring` aplikácie. Aplikácie automaticky získavajú aj možnosť nastaviť [zobrazenie na zariadeniach](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie). Dizajn je v zhode so zvyškom WebJET CMS a dátových tabuliek.
+
+- [Cookie lišta](redactor/apps/app-cookiebar/README.md)
+- [Content Block](redactor/apps/content-block/README.md)
+- [Disqus komentáre](redactor/apps/app-disqus/README.md)
+- [Facebook Like tlačidlo](redactor/apps/app-facebook_like/README.md)
+- [Facebook Like Box](redactor/apps/app-facebook_like_box/README.md)
+- [GDPR Cookies súhlas](redactor/apps/gdpr/README.md)
+- [Google vyhľadávanie](redactor/apps/app-vyhladavanie/README.md)
+- [Live chat (SmartsUpp)](redactor/apps/app-smartsupp/README.md)
+- [Menu navigačné](redactor/apps/menu/README.md)
+- [Počasie](redactor/apps/app-weather/README.md)
+- [Poslať stránku emailom](redactor/apps/send_link/README.md)
+- [Štatistika - mapa kliknutí](redactor/apps/stat/README.md)
+- [Vloženie dokumentu](redactor/apps/app-docsembed/README.md)
+- [Vloženie HTML kódu](redactor/apps/app-htmlembed/README.md)
+- [Vyhľadávanie](redactor/apps/search/README.md)
+- [Zobrazenie súborov](redactor/apps/site-browser/README.md)
+
+![](redactor/apps/search/editor.png)
+
+![](redactor/apps/app-cookiebar/editor-style.png)
+
+### Audit
+
+- Zlepšený zápis zmien v entite, pridaná podpora polí, získanie hodnoty pre dátum (`Date` objekt alebo premenná s `date` v názve), pridaná podpora značiek (výpis názvu namiesto ID) (#57037).
+- Prerobená sekcia **Úrovne logovania** na sekcie Audit->[Úrovne logovania](sysadmin/audit/audit-log-levels.md) a Audit->[Log súbory](sysadmin/audit/audit-log-files.md) do nového dizajnu (#56833).
+
+![](sysadmin/audit/audit-log-levels-datatable.png)
+
+- Upravene práva pre sekciu Audit-Zmenené stránky a Audit-Čaká na publikovanie aby sa správne skrývali v menu - vyžadujú právo na audit aj zoznam web stránok (#57145).
+- Upravená zlá rola pre sekciu Audit-Log súbory (#57145).
+- Zlepšené auditovanie záznamov úloh na pozadí - doplnený zoznam zmien pri úprave/vytvorení úlohy, doplnené ID úlohy (#56845).
+- [Notifikácie](sysadmin/audit/audit-notifications.md) - upravené pole "Len ak obsahuje text" na viac riadkové pole pre možnosť zaslania notifikácie s kontrolou viac riadkového výrazu (#57229).
+
+![](sysadmin/audit/audit-notification-editor.png)
+
+### AB Testovanie
+
+- Pre vyhľadávacie boty (napr. Google) sa vždy zobrazí A varianta, aby text stránok bol konzistentný. Bot sa deteguje rovnako ako pre štatistiku podľa `User-Agent` hlavičiek nastavených v konf. premennej `statDisableUserAgent` (#56677).
+- Do Ninja triedy pridaná [identifikácia zobrazenej varianty](frontend/ninja-starter-kit/ninja-bp/README.md) pomocou `data-ab-variant="${ninja.abVariant}` (#56677).
+- Zamedzené volanie URL adries B verzie (obsahujúcich výraz `abtestvariant`) ak nie je prihlásený administrátor. Povoliť priame volanie takýchto URL je možné nastavením konf. premennej `ABTestingAllowVariantUrl` na hodnotu `true` (#56677).
+
+### Archív súborov
+
+- Upravené generovanie názvov súborov pri aktualizácii tak, aby vždy bol zachovaný pôvodný názov súboru a staršie verzie sa ukladali ako `_v1,_v2` atď (#57037).
+- Opravené publikovanie súboru nastaveného ako Nahrať súbor neskôr (#57037).
+- Opravené vytvorenie plno textového indexu pre vyhľadávanie v súboroch (#57037).
+- Upravená predvolená hodnota konf. premennej `fileArchivIndexOnlyMainFiles` na hodnotu `true`. Do vyhľadávania/plno textového indexu sa zapisujú teda len hlavné súbory a nie archívne verzie. Dôvod je, že nechceme používateľov z vyhľadávania štandardne smerovať na staršie (archívne) verzie súborov (#57037).
+- Opravené usporiadanie súborov v archíve podľa času, pridaná možnosť usporiadania podľa priority (tak sa usporadúvalo pri pôvodnej voľbe podľa času) (#57037)
+- Doplnené zobrazenie poznámky a rozsahu platnosti dátumov aj pre archívne verzie súborov (#57037).
+
+![](redactor/apps/file_archiv/file_archiv.png)
+
+### Číselníky
+
+- Upravená kontrola ID záznamu pri importe dát číselníka - kontroluje sa, či sa dané ID nenachádza v inom type číselníka, ak áno je nastavená hodnota `ID` na `-1` pre import nového záznamu. Chráni sa tak prepísanie dát v inom ako zvolenom číselníku ak náhodou existuje záznam s rovnakým ID (#57149).
+
+### Diskusia
+
+-  Pridaná možnosť [Odoslať notifikáciu autorovi stránky pri pridaní príspevku do diskusie](redactor/apps/forum/README.md#karta---parametre-aplikácie) pri vkladaní aplikácie Diskusia do stránky. Nastavením konf. premennej `forumAlwaysNotifyPageAuthor` na hodnotu `true` môžete notifikáciu zapnúť automaticky pre všetky diskusie/fóra (#57013).
+
+![](redactor/apps/forum/clasic-forum.png)
+
+### Formuláre
+
+- Po odoslaní formuláru cez AJAX publikovaná udalosť `WJ.formSubmit`, na ktorú je možné počúvať pri napojení na `DataLayer`, napr. ako:
+
+```javascript
+    window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
+```
+
+- Pre formuláre, ktoré [vyžadujú potvrdiť platnosť email adresy](redactor/apps/form/README.md#nastavenie-potvrdenia-emailovej-adresy) kliknutím na odkaz v emaile, upravené hlásenie o úspešnosti odoslania na text "Formulár bol odoslaný, na váš email sme odoslali správu, v ktorej je potrebné potvrdiť odoslanie kliknutím na odkaz." aby návštevník dostal informáciu o nutnosti potvrdenia odoslania v email správe (#57125).
+- Formuláre, ktoré vyžadujú potvrdiť platnosť email adresy kliknutím na odkaz v emaile a zatiaľ nie sú potvrdené sa v zozname formulárov zobrazujú červenou farbou (#57125).
+
+![](redactor/apps/form/forms-list.png)
+
+### Galéria
+
+- Upravené zobrazenie obrázkov v administrácii tak, aby sa nebral do úvahy nastavený bod záujmu, ale v zozname obrázkov bol zobrazený celý obrázok (#56969).
+- Doplnená možnosť nastaviť [šablóny pre zmenu veľkosti obrázka a orezanie](redactor/image-editor/README.md) (#57201).
+- Opravené vkladanie textu v samostatnom editore obrázkov a preklad chýbajúceho textu (#57201).
+- Presunutá nástrojová lišta v editore obrázkov vľavo, aby sa lepšie využila plocha monitora (#57201).
+
+![](redactor/image-editor/editor-preview.png)
+
+- Zväčšená veľkosť poľa autor z 255 znakov na textové pole s rozsahom 64000 znakov (#57185).
+- Upravené formátovanie HTML kódu v poliach Perex - vypnuté zalamovanie riadkov/formátovanie kódu aby nedochádzalo k doplneniu medzier (#57185).
+- Doplnené čistenie HTML kódu od formátovania pri vložení textu cez schránku (#57185).
+
+### Novinky
+
+- Doplnená kontrola práv na priečinky - výberové pole priečinka pre zobrazenie noviniek je filtrované podľa práv na priečinky web stránok (#56661).
+
+### Používatelia
+
+- Pridaná možnosť nastaviť [skupine používateľov](admin/users/user-groups.md) zľavu z ceny v %, ktorá sa použije napr. pri vytvorení rezervácie ale v budúcnosti bude použitá aj v iných aplikáciách (#57049).
+- Upravená logika pri zmene [zabudnutého hesla](redactor/admin/password-recovery/README.md). Ak zadaný email patrí viacerým používateľom, pri zmene hesla je možné pomocou výberového poľa určiť, ktorému používateľovi s daným emailom bude heslo zmenené (#57185).
+
+![](redactor/admin/password-recovery/admin-recovery-form-1.png)
+
+### Prieskumník
+
+- Nová verzia knižnice [elfinder](https://github.com/webjetcms/libs-elFinder/tree/feature/webjetcms-integration) pre [správu súborov](redactor/files/fbrowser/README.md). Upravený dizajn podľa vzhľadu datatabuliek pre krajšiu integráciu.
+
+![](redactor/files/fbrowser/page.png)
+
+- Predvolené kódovanie súborov pre editor je nastavené podľa konf. premennej `defaultEncoding`. Pre JSP súbory je kódovanie `utf-8/windows-1250` detegované podľa atribútu `pageEncoding`, ak súbor na začiatku obsahuje výraz `#encoding=` použije sa podľa tejto hodnoty (#55849).
+- Po nastavení konf. premennej `iwfs_useVersioning` na `true` sa začne zapisovať história zmien v súboroch (každý súbor sa po nahratí a pred prepísaním archivuje do priečinka `/WEB-INF/libfilehistory`). Zoznam je dostupný v prieskumníku v kontextovom menu Nastavenie súboru s možnosťou porovnania, zobrazenia historickej verzie a vrátenia zmeny (#57037).
+- Opravené premenovanie súborov v priečinkoch `/images,/files` tak, aby sa automaticky odstránila diakritika (#57053).
+- Indexovanie súborov - do Perex-Začiatok publikovania doplnený dátum poslednej zmeny súboru (#57177).
+- Doplnená možnosť [potvrdenia presunu súboru/priečinka](redactor/files/fbrowser/README.md#konfigurácia). Potvrdzovanie môžete vypnúť nastavením konfiguračnej premennej `elfinderMoveConfirm` na hodnotu `false` (#57297).
+
+![](redactor/files/fbrowser/move-confirm.png)
+
+### Rezervácie
+
+- Pridaná podpora pre automatické vypočítanie ceny rezervácie pri jej vytváraní (#56841).
+- Pridaná nová MVC [Aplikácia Rezervácia času](redactor/apps/reservation/time-book-app/README.md), pre rezerváciu zvolených objektov v hodinových intervaloch (#56841).
+- Pridaná podpora pre získanie zľavy na [cenu rezervácie](redactor/apps/reservation/reservations/README.md#základné) z ceny rezervácie podľa nastavenej skupiny používateľov (#57049).
+- Pridaná sekcia [Štatistika rezervácií](redactor/apps/reservation/reservations-stat/README.md) pre časové aj celodenné rezervácie (#57049).
+
+![](redactor/apps/reservation/time-book-app/app-page.png)
+
+- Pridaná možnosť nastaviť [skupine používateľov](admin/users/user-groups.md) zľavu z ceny v %, ktorá sa použije pri vytvorení rezervácie (#57049).
+- Pridaná [štatistika rezervácií](redactor/apps/reservation/reservations-stat/README.md) kde vidno počty aj ceny rezervácií podľa používateľov (#57049).
+
+![](redactor/apps/reservation/reservations-stat/datatable_hours.png)
+
+### Bezpečnosť
+
+- Upravené dialógy pre heslá, ich zmenu a multi faktorovú autorizáciu pre podporu hesiel dĺžky 64 znakov, doplnené testy zmeny hesla (#56657).
+- Upravená logika pre [obnovenie hesla](redactor/admin/password-recovery/README.md), kde použitý email pre obnovenie patril viacerým účtom a pridaná bola možnosť výberu, ktorému používateľovi z nich sa dané heslo zmení (#57185).
+- Používatelia - pri duplikovaní používateľa, pokiaľ nie je zadané heslo je novému používateľovi nastavené náhodné heslo (#57185).
+
+### Dokumentácia
+
+- Doplnená dokumentácia k chýbajúcim aplikáciam do sekcie [Pre redaktora](redactor/README.md) (#56649).
+- Doplnená dokumentácia k aplikácii [skripty](redactor/apps/insert-script/README.md) (#56965).
+- Doplnená anglická verzia dokumentácie (#56773).
+- Doplnená dokumentácia k [editoru obrázkov](redactor/image-editor/README.md) (#56969).
+- Doplnená dokumentácia pre generovanie [náhľadových obrázkov](frontend/thumb-servlet/README.md) a nastavenie [bodu záujmu](frontend/thumb-servlet/interest-point.md) (#56969).
+- Vytvorená dokumentácia pre [prácu v editore stránok](redactor/webpages/working-in-editor/README.md) (#56981).
+- Doplnená dokumentácia k [archívu súborov](redactor/apps/file_archiv/README.md) (#56891).
+- Doplnená dokumentácia k [pred pripraveným blokom](redactor/apps/htmlbox/README.md) (#56981).
+- Pridaná [česká verzia](https://docs.webjetcms.sk/latest/cs/) dokumentácie (#57033).
+- Upravené generovanie odkazov na zdrojový kód tak, aby smerovali na [GitHub verziu](https://github.com/webjetcms/webjetcms/tree/main/src) zdrojového kódu (#57033).
+- Vytvorená dokumentácia pre prevádzku - [Mazanie dát](sysadmin/data-deleting/README.md), [Zálohovanie systému](sysadmin/files/backup/README.md) a [Reštartovať](sysadmin/restart.md) (#57141).
+- Vytvorená dokumentácia pre správcu - [Automatizované úlohy](admin/settings/cronjob/README.md) (#57141).
+- Vytvorená dokumentácia pre redaktora - [Poslať správu](redactor/admin/send-message.md), [Export do HTML](redactor/webpages/export-to-html/README.md), [Presmerovania](redactor/webpages/redirects/README.md) (#57141).
+- Vytvorená dokumentácia k použitiu funkcie [zabudnuté heslo](redactor/admin/password-recovery/README.md) (#57185).
+- Vytvorená dokumentácia k nastaveniu [Spam ochrany](install/config/spam-protection.md) (#57185).
+
+### Testovanie
+
+- Vytvorený objekt `TempMail` pre jednoduchšiu prácu s email schránkou [tempmail.plus](https://tempmail.plus) pre testovanie odoslaných emailov (#56929).
+- Všetky základné testy (používajúce `DataTables.baseTest`) doplnené o testovanie funkcie Duplikovať (#56849).
+- V automatických testoch Data Tabuliek pridané znaky s diakritikou pre testovanie ukladania a filtrovania s ohľadom na diakritiku (#56393-12).
+
+### Systémové zmeny
+
+- Inicializácia - pridaná možnosť [inicializovať hodnoty](install/external-configuration.md) pre cluster (napr. `clusterMyNodeName,clusterMyNodeType,useSMTPServer,pkeyGenOffset`) aj nastavením environmentálnych premenných s prefixom `webjet_` alebo systémových s prefixom `webjet.` (#56877).
+- Inicializácia - upravená inicializácia WebJETu použitím `Spring.onStartup` namiesto `InitServlet`. Zabezpečené je správne poradie načítania konfiguračných premenných a ich použitia v `SpringBean` objektoch (#56913).
+- Kódovanie znakov - vzhľadom na zmenu v inicializácii je kódovanie znakov čítane z konf. premennej `defaultEncoding` s predvolenou hodnotou `utf-8`. Ak historicky používate kódovanie `windows-1250` je potrebné hodnotu v konfigurácii upraviť. Už sa nepoužíva hodnota vo `web.xml` pre `SetCharacterEncodingFilter` ale hodnota v konfigurácii WebJETu. Filter môžete z `web.xml` zmazať. Zrušená podpora nastavenia chybovej správy pri nefunkčnom databázovom spojení nastavením parametra `dbErrorMessageText`, potrebné je vytvoriť súbor `/wjerrorpages/dberror.html` ak chcete zobraziť špecifickú HTML stránku pri chybe databázového spojenia (#56913, #56393-12).
+- Upravené získanie presmerovania z novej URL adresy (String) na priame získanie databázovej entity. Priamo sa tak získa aj presmerovací kód (301,302...) bez potreby dodatočného databázového volania. Zvýši sa tak výkon vykonania stránky 404 (#53469).
+- PostgreSQL - opravené ukladanie histórie zmien v priečinku a mazanie schvaľovania pri zmazaní priečinku (#57061).
+- Doplnená informácia o blížiacom sa konci platnosti licencie, zobrazí sa 2 mesiace pred jej exspiráciou na úvodnej obrazovke (#57169).
+
+![](install/license/license-expiration-notification.png)
+
+- Upravené volanie metód `before*/after*` v `DatatableRestControllerV2` tak, aby boli volané pre všetky `REST` služby a zároveň boli volané aj pri preťažení `insertItem,editItem,deleteItem` (#57186).
+- Pre verejné uzly clustra, ktoré nemajú [povolený počas monitorovania](sysadmin/monitoring/README.md) zápis do tabuľky `_conf_/webjet_conf` je možné nastaviť konf. premennú `monitoringEnableCountUsersOnAllNodes` na hodnotu `false`. To vypne zapisovanie počtu `sessions` na jednotlivých uzloch do konfigurácie (#43144-3).
+- Spam ochrana - pri zmazaní všetkých cache objektov v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) je zmazaný aj obsah Spam ochrany. V prípade potreby tak ľahko viete resetovať spam ochranu (#57185).
+
+### Pre programátora
+
+- Datatabuľky - pridaná možnosť nastaviť tlačidlá v okne editora (štandardne obsahuje tlačidlo Vytvoriť) aj pre [vytvorenie nového záznamu](developer/datatables-editor/README.md#špeciálne-tlačidlá) nastavením `createButtons` (#55849).
+- Dialógové okno - pridaná funkcia `WJ.openIframeModalDatatable` pre otvorenie [modálneho okna](developer/frameworks/webjetjs.md#iframe-dialóg) obsahujúceho editor datatabuľky (editácia záznamu). Automaticky nastaví možnosti pre uloženie a zatvorenie okna po uložení záznamu datatabuľky (#55849).
+- Zrušená podpora knižníc `Apache Commons DBCP, Commons Pool a Oracle UCP`. Databázové pripojenia sú manažované pomocou [HikariCP](https://github.com/brettwooldridge/HikariCP). Zrušené API `ConfigurableDataSource.printStackTraces` (#56821).
+- Databázové pripojenie - doplnené auditovanie nezatvorených databázových spojení (spojení, ktoré sú otvorené dlhšie ako 5 minút). Do auditu sa zaznamenajú ako typ `SQLERROR` s textom `Connection leak detection triggered` a výpisom zásobníka pre dohľadanie miesta, kde sa spojenie nezatvára (#56821).
+- Zrušená podpora knižníc `Apache Commons DBCP, Commons Pool, Oracle UCP`. Databázové pripojenia sú manažované pomocou [HikariCP](https://github.com/brettwooldridge/HikariCP). Zrušené API `ConfigurableDataSource.printStackTraces` (#56821).
+- Databázové pripojenie - doplnené auditovanie nezatvorených databázových spojení (spojení, ktoré sú otvorené dlhšie ako 5 minút). Do auditu sa zaznamenajú ako typ `SQLERROR` s textom `Connection leak detection triggered` a výpisom zásobníka pre dohľadanie miesta, kde sa spojenie nezatvára (#56821).
+- Anotácia [@WebjetAppStore](custom-apps/appstore/README.md) umožňuje nastaviť atribút `custom` pre určenie zákazníckej aplikácie, ktorá je v zozname na začiatku pred štandardnými aplikáciami (#56841).
+- Inicializácia - upravená inicializácia WebJETu použitím `Spring.onStartup` namiesto `InitServlet`. Zabezpečené je správne poradie načítania konfiguračných premenných a ich použitia v `SpringBean` objektoch (#56913).
+- `SpringSecurity` - anotácia `@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled=true)` nahradená `@EnableMethodSecurity(securedEnabled = true, prePostEnabled=true)` (#56913)
+- Do `RequestBean` pridaná metóda `addAuditValue(String key, String value)` ktorá umožňuje pred zápisom do Auditu pridať dodatočné parametre, ktoré sa zaznamenajú v audite, napr. `RequestBean.addAuditValue("historyId", String.valueOf(historyId));` (#57037).
+- Do Datatabuľky pridaný [typ poľa](developer/datatables-editor/standard-fields.md#boolean_text) `DataTableColumnType.BOOLEAN_TEXT` ktorý zobrazí titulok napravo namiesto naľavo a možnosti Áno pri zaškrtávacom poli (#57157).
+- Do Datatabuľky pridaný [typ poľa](developer/datatables-editor/standard-fields.md#color) `DataTableColumnType.COLOR` pre výber farby v `HEX` formáte napr. `#FF0000` (#57157).
+- Do Datatabuľky pridaný [typ poľa](developer/datatables-editor/standard-fields.md#iframe) `DataTableColumnType.IFRAME` pre vloženie inej stránky cez `iframe` element (#57157).
+- Do Datatabuľky pridaný [typ poľa](developer/datatables-editor/standard-fields.md#base64) `DataTableColumnType.BASE64` pre kódovanie a dekódovanie hodnoty cez `base64` algoritmus (#57161).
+- Do Datatabuľky pridaný [typ poľa](developer/datatables-editor/standard-fields.md#static_text) `DataTableColumnType.STATIC_TEXT` pre zobrazenie statického textu v pravej časti okna editora (#57161).
+- Datatabuľky - pre [typ poľa](developer/datatables-editor/standard-fields.md#json) `JSON dt-tree-dir-simple` pridaná možnosť nastavenia koreňového priečinku cez `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`. Pole nemá nastavený atribút `disabled`, hodnotu je možné teda zadať aj priamo (#57157).
+- Datatabuľky - pridaná možnosť nastavenia `editorLocking` pre vypnutie kontroly editácie záznamu viacerými používateľmi (#57161).
+- Pre Spring aplikácie v editore pridaná možnosť [inicializácie dát](custom-apps/appstore/README.md#inicializácia-dát) implementáciou metódy `initAppEditor` a možnosť [nastavenia výberových polí](custom-apps/appstore/README.md#nastavenie-výberových-polí) implementáciou metódy `getAppOptions` (#57157).
+- Amcharts - pridaná podpora pre nový typ grafu [DoublePie](developer/frameworks/charts/frontend/statjs.md#graf-typu-double_pie) pre účely štatistík (#57049).
+- `Base64` - pridané funkcie `WJ.base64encode(text),WJ.base64decode(encodedText)` pre kódovanie a dekódovanie textu algoritmom `base64` s podporou `utf-8` znakov (#57161).
+- Doplnené metódy `Adminlog.getChangelog(Long id, Object newObj, Object originalObj),Adminlog.getChangelogDelete(Long id, Object obj)` pre získanie zoznamu zmien pri vytvorení/úprave/zmazaní jednoduchého Java objektu (nie JPA entity) (#56845).
+
+![meme](_media/meme/2024-40.jpg ":no-zoom")
+
 ## 2024.18
 
 > Verzia 2024.18 obsahuje **novú sadu ikon**, Formulár ľahko doplnený o **pokročilé nastavenia** (príjemcovia, presmerovania...), do nového dizajnu sú prerobené aplikácie AB Testovanie, Audit (čaká na publikovanie, zmenené stránky), Blog, Dotazníky, Kalendár udalostí (schvaľovanie). Pridáva **podporu inštalácie typu MultiWeb** (oddelenie údajov domén) v Šablónach, Hromadnom e-maile a ďalších aplikáciách. Nová knižnica na **detekciu prehliadačov**, v Štatistika-Prehliadače dôjde k drobným rozdielom, ale údaje o prehliadači anonymizovane zaznamenávame aj bez Cookies súhlasu.
 
-**Upozornenie:** na spustenie verzie 2024 je potrebné mať na serveri inštalovanú Java verzie 17.
+!>**Upozornenie:** na spustenie verzie 2024 je potrebné mať na serveri inštalovanú Java verzie 17.
 
 ### Prelomové zmeny
 
@@ -13,7 +260,7 @@ Táto verzia prináša viaceré zmeny, ktoré nemusia byť spätne kompatibilné
 - Hromadný email - upravená podpora odosielania emailov cez službu Amazon SES z použitia špeciálneho API na [štandardný SMTP protokol](install/config/README.md#nastavenie-amazon-ses).
 - [Odstránené knižnice](install/README.md#zmeny-pri-prechode-na-20240-snapshot) `bsf,c3p0,cryptix,datetime,jericho-html,jsass,opencloud,spring-messaging,uadetector,joda-time,aws-java-sdk-core,aws-java-sdk-ses,jackson-dataformat-cbor,jmespath-java` (#56265).
 - Odstránená značka `iwcm:forEach`, je potrebné ju nahradiť za `c:forEach`. Rozdiel je v tom, že Java objekt nie je priamo dostupný, je potrebné ho získať pomocou `pageContext.getAttribute("name")`. Použite volanie `/admin/update/update-2023-18.jsp` pre aktualizáciu vašich JSP súborov (#56265).
-- Hromadný email - oddelené kampane, príjemcovia a odhlásené emaily podľa domén, staršie záznamy sú do domén zaradené podľa URL adresy web stránky pre odoslanie. Výhoda v oddelení odhlásených emailov je v prípade prevádzkovania viacerých web sídiel a rozdielnych zoznamov príjemcov, kedy sa odhlasuje oddelene pre jednotlivé domény. UPOZORNENIE: aktuálne odhlásené emaily sa nastavia pre doménu s ID 1, ak používate primárne hromadný email na inej ako prvej doméne aktualizujte stĺpec `domain_id` v databázovej tabuľke `emails_unsubscribe` (#56425).
+- Hromadný email - oddelené kampane, príjemcovia a odhlásené emaily podľa domén, staršie záznamy sú do domén zaradené podľa URL adresy web stránky pre odoslanie. Výhoda v oddelení odhlásených emailov je v prípade prevádzkovania viacerých web sídiel a rozdielnych zoznamov príjemcov, kedy sa odhlasuje oddelene pre jednotlivé domény. **Upozornenie:** aktuálne odhlásené emaily sa nastavia pre doménu s ID 1, ak používate primárne hromadný email na inej ako prvej doméne aktualizujte stĺpec `domain_id` v databázovej tabuľke `emails_unsubscribe` (#56425).
 - Hromadný email - zmazané nepoužívané metódy z Java triedy `sk.iway.iwcm.dmail.EmailDB`, ak ich vo vašom projekte používate presuňte si ich z [pôvodného zdrojového kódu](https://github.com/webjetcms/webjetcms/blob/ef495c96da14e09617b4dc642b173dd029856092/src/webjet8/java/sk/iway/iwcm/dmail/EmailDB.java) do vašej vlastnej triedy (#56425).
 - Ikony - z dôvodu prechodu na Open Source riešenia sme zmenili sadu ikon z pôvodnej FontAwesome na novú sadu [Tabler Icons](https://tabler.io/icons). Ak vo vašich vlastných aplikáciach používate ikony zo sady FontAwesome je potrebné upraviť kód a nahradiť ich ikonami zo sady `Tabler Icons`. Môžete použiť skript ```/admin/update/update-2023-18.jsp``` pre úpravu najčastejšie používaných ikon v administrácií (upraví iba súbory, ktoré vyžadujú prihlásenie).
 
@@ -112,7 +359,7 @@ Aplikácia [dotazníky](redactor/apps/quiz/README.md) prerobená do nového diza
 
 - Upravená podpora odosielania emailov cez službu Amazon SES z použitia špeciálneho API na [štandardný SMTP protokol](install/config/README.md#nastavenie-amazon-ses) (#56265).
 - Nastavenie doménových limitov pridané ako samostatné právo, predvolene je nepovolené, je potrebné ho pridať vhodným používateľom (#56421).
-- Oddelené kampane, príjemcovia a odhlásené emaily podľa domén, staršie záznamy sú do domén zaradené podľa URL adresy web stránky pre odoslanie. Výhoda v oddelení odhlásených emailov je v prípade prevádzkovania viacerých web sídiel a rozdielnych zoznamov príjemcov, kedy sa odhlasuje oddelene pre jednotlivé domény. UPOZORNENIE: aktuálne odhlásené emaily sa nastavia pre doménu s ID 1, ak používate primárne hromadný email na inej ako prvej doméne aktualizujte stĺpec `domain_id` v databázovej tabuľke `emails_unsubscribe` (#56425).
+- Oddelené kampane, príjemcovia a odhlásené emaily podľa domén, staršie záznamy sú do domén zaradené podľa URL adresy web stránky pre odoslanie. Výhoda v oddelení odhlásených emailov je v prípade prevádzkovania viacerých web sídiel a rozdielnych zoznamov príjemcov, kedy sa odhlasuje oddelene pre jednotlivé domény. **Upozornenie:** aktuálne odhlásené emaily sa nastavia pre doménu s ID 1, ak používate primárne hromadný email na inej ako prvej doméne aktualizujte stĺpec `domain_id` v databázovej tabuľke `emails_unsubscribe` (#56425).
 - Pridaná možnosť priameho [odhlásenia sa z hromadného emailu](redactor/apps/dmail/form/README.md#odhlásenie) kliknutím na odkaz zobrazený v emailovom klientovi/Gmail nastavením hlavičky emailu `List-Unsubscribe` a `List-Unsubscribe=One-Click` (#56409).
 
 ### Kalendár udalostí
@@ -203,9 +450,64 @@ dependencies {
 
 ### Oprava chýb
 
+2024.0.X
+
+- Datatabuľky - opravené zobrazené meno stĺpca pri nastavení zobrazenia stĺpcov ak je upravené ich poradie (#56393-14).
+- Export do HTML - opravená kontrola práv, opravené zobrazenie generovaných súborov v priečinku `/html` (#57141).
+- Persistent cache objekty - opravené uloženie záznamu - nastavenie správneho typu (#56393-15).
+- Úlohy na pozadí - opravený reštart úloh na pozadí po zmazaní úlohy (#56393-14).
+- Web stránky - opravené uloženie web stránok, ktorých názov je jedno písmenový `N,B,S,P` (#56393-15).
+- Web stránky - Page Builder - zlepšená klávesová skratka `CTRL/CMD+S` pre uloženie stránky bez zatvorenia editora, je aktívna aj mimo zelených častí s editorom.
+- Zálohovanie systému - opravená kontrola práv (#57141).
+- Značky - upravené zobrazenie priečinkov a ich výber tak, aby bolo možné voliť značku zo všetkých domén (#56393-15).
+- `DatatableRestControllerV2` presunuté volanie `afterDelete` mimo metódy `deleteItem` aby pri preťažení tejto metódy bolo `afterDelete` korektne zavolané.
+- Formuláre - opravené nastavenie jazyka pri presmerovaní formuláru na stránku, ktorá obsahuje `Spring` aplikáciu (#56393-15).
+- Web stránky - Editor - opravené nastavenie jazyka v náhľade vloženej `Spring` aplikácie (#56393-15).
+- Audit - Notifikácie - opravené uloženie novej notifikácie pri použití MicroSoft SQL databázy, doplnené zmazanie cache zoznamu notifikácií pri úprave záznamu (#57225).
+- Galéria - opravené zobrazenie možnosti pridania priečinku ak má používateľ obmedzené práva na priečinky (#56393-17).
+- Galéria - pridaná možnosť nastavenia vodoznaku rekurzívne aj na pod adresáre a pre generovanie obrázkov po zmene vodoznaku (#MR181).
+- Galéria - vytvorená dokumentácia pre [nastavenie vodoznaku](redactor/apps/gallery/watermark.md) v galérii (#MR181).
+- Galéria - opravená kontrola práv na presun priečinka pomocou Drag&Drop (#MR11).
+- Galéria - opravená chyba zobrazenia obrázkov pri presune priečinka pomocou Drag&Drop (#MR11).
+
+2024.0.34
+
+- Audit - opravené zobrazenie opisu auditu v prehliadači Firefox.
+- Bezpečnosť - pri chybe nahrávania súboru nebude zobrazená chyba zo servera ale generická chybová správa (#56277-13).
+- Číselníky - optimalizované načítanie údajov, upravené nastavenie rodiča číselníka na `autocomplete` pre optimálnejšie čítanie dát (#57017).
+- Datatabuľky - opravené vyhľadávanie podľa ID záznamu - hľadá sa typ rovná sa, nie obsahuje pri tabuľkách bez serverového stránkovania (#56993).
+- Galéria - opravené vyhľadávanie - hľadá sa len v aktuálne zobrazenom priečinku nie všetkých priečinkoch (#56945).
+- GDPR/Cookies - opravené nastavenie cookies v jedno doménovom WebJETe (duplikovanie nastavených cookies).
+- Datatabuľky - vypnutá možnosť filtrovania podľa ID v tabuľkách, kde ID nie je primárny kľúč, napr. Konfigurácia, Mazanie dát, Prekladové kľúče (#56277-12).
+- Formuláre - opravené zobrazenie stĺpca Dátum potvrdenia súhlasu pri formulároch s nastaveným [potvrdením email adresy](redactor/apps/form/README.md#nastavenie-potvrdenia-emailovej-adresy) (#56393-7).
+- Formuláre - opravené zobrazenie textu "prázdne" v tabuľke (#56277-10).
+- Formuláre - upravený export čísel - čísla s desatinným miestom oddeleným znakom čiarka sú skonvertované na oddeľovač bodka a na číselnú reprezentáciu pre správny formát v Exceli. Nepoužije sa na čísla začínajúce znakom + alebo 0 (#56277-10).
+- Formuláre - opravený duplicitný export pri prechode medzi viacerými formulármi bez obnovenia stránky (#56277-10).
+- Formuláre - pri vypnutej spam ochrane `spamProtection=false` sa už nebude kontrolovať CSRF token pri odoslaní formuláru (#56277-13).
+- Galéria - opravené zmazanie priečinka galérie vytvorenej cez web stránku pri vkladaní obrázku (#56393-8).
+- Galéria - opravené nastavenie parametrov priečinka galérie ak rodičovský priečinok nemá uložené nastavenia (je biely). Hľadá sa uložené nastavenie priečinka smerom ku koreňu (#56393-10).
+- Galéria/Editor obrázkov - doplnená chýbajúca funkcia na zmenu veľkosti obrázka.
+- Hromadný email - opravená chyba vloženia príjemcu zo skupiny používateľov, ktorý nemá povolené prihlásenie (je deaktivovaný, alebo nemá platné dátumy prihlásenia od-do) (#56701).
+- Klonovanie štruktúry - opravené nastavenie prepojenia priečinkov pri klonovaní (mohlo dochádzať k neúplnému klonovaniu priečinkov) (#56277-7).
+- Mapa stránok - opravené generovanie súboru `/sitemap.xml` podľa nastavených atribútov zobrazenia web stránky v Mape stránok (karta Navigácia web stránky) (#56993).
+- Prekladové kľúče - upravené zobrazenie aby sa zobrazil v tabuľke prípadný HTML kód hodnoty kľúča (#56993).
+- Skripty, Bannerový systém, Skupiny práv - opravená funkcia duplikovať záznam (#56849).
+- Štatistika - pridaná možnosť [nastaviť licenčné číslo](install/config/README.md#licencie) pre knižnicu amcharts na zobrazenie grafov (#56277-7).
+- Štatistika - upravené zaznamenávanie chybných URL adries - odstránený identifikátor session `jsessionid`, ktorý môžu pridávať do URL adresy niektoré roboty (#56277-11).
+- Úlohy na pozadí - opravený reštart úloh na pozadí po uložení úlohy.
+- Úrovne logovania - opravené nastavenie úrovní do `Logger` objektu (#56277-12).
+- Video - pridaná podpora vkladania odkazov na `YouTube Shorts` stránku (#56993).
+- Web stránky - opravené otvorenie priečinka zadaním jeho ID, ak sa priečinok nachádza v inej doméne (#56277-7).
+- Web stránky - PageBuilder - opravené vkladanie odkazu (duplikovanie okna súborov), vkladanie formulárových polí a upravený vizuál podľa aktuálnej verzie (#56277-9).
+- Web stránky - v okne vloženia obrázku pridaná podpora zobrazenia cesty v stromovej štruktúre k existujúcemu obrázku s prefixom `/thumb` (#56277-9).
+- Web stránky - opravené zobrazenie prekladových kľúčov na základe prefixu ID šablóny (#56393-7).
+- Web stránky - opravené zmazanie stránky, ktorá má nastavené aj publikovanie do budúcna/notifikáciu (a pred zmazaním bola zobrazená v editore stránok) (#56393-8).
+- Web stránky - Page Builder - opravené vkladanie video súborov (odkazov na YouTube video) (#56993).
+- Web stránky - pri vkladaní odkazu na web stránku sú filtrované priečinky `images,files` s plno textovým indexom aj keď sa nejedná o koreňový priečinok (#56981).
+
 2024.0.21
 
-UPOZORNENIE: upravené čítanie a ukladanie hesiel používateľov, po nasadení overte prácu s používateľským kontom, hlavne zmenu hesla, zabudnuté heslo atď. Použite skript `/admin/update/update-2023-18.jsp` pre základnú úpravu súborov.
+!>**Upozornenie:** upravené čítanie a ukladanie hesiel používateľov, po nasadení overte prácu s používateľským kontom, hlavne zmenu hesla, zabudnuté heslo atď. Použite skript `/admin/update/update-2023-18.jsp` pre základnú úpravu súborov.
 
 - Bezpečnosť - opravená kontrola prístupu k súborom v priečinku `/files/protected/` pri použití externých súborov - nastavená konf. premenná `cloudStaticFilesDir` (#56277-6).
 - Bezpečnosť - opravená kontrola typov súborov pri nahrávaní vo formulároch a použití `/XhrFileUpload` (#56633).
@@ -262,7 +564,7 @@ UPOZORNENIE: upravené čítanie a ukladanie hesiel používateľov, po nasaden�
 
 - Datatabuľky - základný test - pri povinných poliach, ktoré majú vopred nastavenú hodnotu sa preskočí test povinnosti poľa (#56265).
 
-<img class="meme" title="meme" src="_media/meme/2024-18.jpg"/>
+![meme](_media/meme/2024-18.jpg ":no-zoom")
 
 ## 2024.0
 

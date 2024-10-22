@@ -24,9 +24,9 @@
 <%
 	System.out.println(System.getProperty("catalina.base"));
 
-	String tomcatHomePath = new URI(Tools.replace(System.getProperty("catalina.base"), " ", "%20")).normalize().getPath();
-	File tomcatHome = new File(tomcatHomePath);
-	File logDir = new File(tomcatHomePath,"logs");
+	//String tomcatHomePath = new URI(Tools.replace(System.getProperty("catalina.base"), " ", "%20")).normalize().getPath();
+	File tomcatHome = new File(System.getProperty("catalina.base")); //new File(tomcatHomePath);
+	File logDir = new File(System.getProperty("catalina.base"),"logs");
 
 	String filePath = "";
 	if(Tools.isNotEmpty(Tools.getRequestParameter(request, "file"))) {
@@ -37,6 +37,7 @@
 		}
 	}
 	pageContext.setAttribute("filePath", filePath);
+	pageContext.setAttribute("iframed", Tools.getBooleanValue(Tools.getRequestParameter(request, "iframed"), false));
 %>
 
 <form action="<%=PathFilter.getOrigPath(request)%>">
@@ -49,13 +50,11 @@
 	<c:if test="${not empty filePath}">
 
 		<p>
-			<label>Exp
-
-				<input type="text" name="exp" value="${param.exp}"/></label>
-			lines before <input type="text" name="linesBefore"  value="${param.linesBefore}"/>
-			lines after <input type="text" name="linesAfter" value="${param.linesAfter}" />
-			<input type="submit"  name="grep" class="button100" value="Grep"/>
-			<input type="button"  name="" class="button100" value="Back to logs" onclick="javascript:window.location='/admin/tail.jsp'"/>
+			<input type="hidden" type="text" name="iframed" value="${iframed}"/>
+			<label> <iwcm:text key="admin.tail.exp"/> <input type="text" name="exp" value="${param.exp}"/></label>
+			<iwcm:text key="admin.tail.lines_before"/> <input type="text" name="linesBefore"  value="${param.linesBefore}"/>
+			<iwcm:text key="admin.tail.lines_after"/> <input type="text" name="linesAfter" value="${param.linesAfter}" />
+			<input type="submit"  name="grep" class="button100" value='<iwcm:text key="admin.tail.grep"/>'/>
 			<input type="hidden" name="file" value="${filePath}" />
 		</p>
 	</c:if>

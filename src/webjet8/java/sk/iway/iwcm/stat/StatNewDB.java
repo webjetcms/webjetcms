@@ -248,7 +248,7 @@ public class StatNewDB
 				"week int NOT NULL,"+
 				"url nvarchar(255),"+
 				"query_string nvarchar(255),"+
-				"count int DEFAULT 0"+
+				"count int DEFAULT 0,"+
 				"domain_id int DEFAULT 0"+
 				");"+
 				"CREATE INDEX IX_yw"+suffix+" ON stat_error"+suffix+" (year, week);";
@@ -260,7 +260,7 @@ public class StatNewDB
 				"week INTEGER NOT NULL,"+
 				"url nvarchar2(255),"+
 				"query_string nvarchar2(255),"+
-				"count INTEGER DEFAULT 0"+
+				"count INTEGER DEFAULT 0,"+
 				"domain_id INTEGER DEFAULT 0"+
 				");"+
 				"CREATE INDEX IX_ywse"+suffix+" ON stat_error"+suffix+" (year, week);";

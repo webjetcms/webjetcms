@@ -88,8 +88,8 @@ public class DocForumRestController extends DatatableRestControllerV2<DocForumEn
             //When it's edit
             Boolean oldValue = (new SimpleQuery()).forBoolean("SELECT active FROM document_forum WHERE forum_id=? AND domain_id=?", entity.getId(), entity.getDomainId());
             //If active value (actual) is different than old value in DB
-            if(oldValue != null && (oldValue != entity.getActive())) {
-                if(entity.getActive()) DocForumService.docForumRecursiveAction(DocForumService.ActionType.UNLOCK, entity.getId().intValue(), entity.getDocId(), getUser());
+            if(oldValue != null && oldValue.equals(entity.getActive())) {
+                if(Tools.isTrue(entity.getActive())) DocForumService.docForumRecursiveAction(DocForumService.ActionType.UNLOCK, entity.getId().intValue(), entity.getDocId(), getUser());
                 else DocForumService.docForumRecursiveAction(DocForumService.ActionType.LOCK, entity.getId().intValue(), entity.getDocId(), getUser());
             }
         }
@@ -148,8 +148,7 @@ public class DocForumRestController extends DatatableRestControllerV2<DocForumEn
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, DocForumEntity> target, Identity currentUser, Errors errors, Long id, DocForumEntity entity) {
         //Validate that if we choose approving via email, email must be set and must have valid form !!
-        if(entity.getForumGroupEntity() != null && Boolean.TRUE.equals(entity.getForumGroupEntity().getMessageConfirmation()))
-            if(!Tools.isEmail( entity.getForumGroupEntity().getApproveEmail() ))
-                errors.rejectValue("errorField.forumGroupEntity.approveEmail", null, getProp().getText("components.forum.message_confirmation.field_requested"));
+        if(entity.getForumGroupEntity() != null && Tools.isTrue(entity.getForumGroupEntity().getMessageConfirmation()) && Tools.isEmail( entity.getForumGroupEntity().getApproveEmail() ) == false)
+            errors.rejectValue("errorField.forumGroupEntity.approveEmail", null, getProp().getText("components.forum.message_confirmation.field_requested"));
     }
 }

@@ -43,14 +43,14 @@ public class MirroringService {
       //over, ci niektory z parent adresarov je v konfiguracii
       GroupsDB groupsDB = GroupsDB.getInstance();
       List<GroupDetails> parents = groupsDB.getParentGroups(groupId, true);
-      String lines[] = Tools.getTokens(mirroringConfig, "\n");
+      String[] lines = Tools.getTokens(mirroringConfig, "\n");
       for (String line : lines) {
          //odstan poznamku
          String ids = line;
          int i = line.indexOf(":");
          if (i>0) ids = line.substring(0, i);
 
-         int mapping[] = Tools.getTokensInt(ids, ",");
+         int[] mapping = Tools.getTokensInt(ids, ",");
          for (int id : mapping) {
             for (GroupDetails parent : parents) {
                if (parent.getGroupId()==id) return true;
@@ -73,7 +73,7 @@ public class MirroringService {
       List<GroupDetails> mapped = new ArrayList<>();
       //najskor over, ci to nie je root grupa podla mappingu
 
-      int rootIds[] = getRootIds(groupId);
+      int[] rootIds = getRootIds(groupId);
       if (rootIds != null) {
          //prebehni ich a pridaj do listu
          for (int rootGroup : rootIds) {
@@ -100,14 +100,14 @@ public class MirroringService {
    public static int[] getRootIds(int groupId) {
       //format zapisu: id,id,id:POZNAMKA\n
       String mirroringConfig = Constants.getString("structureMirroringConfig");
-      String lines[] = Tools.getTokens(mirroringConfig, "\n");
+      String[] lines = Tools.getTokens(mirroringConfig, "\n");
       for (String line : lines) {
          //odstan poznamku
          String ids = line;
          int i = line.indexOf(":");
          if (i>0) ids = line.substring(0, i);
 
-         int mapping[] = Tools.getTokensInt(ids, ",");
+         int[] mapping = Tools.getTokensInt(ids, ",");
          for (int id : mapping) {
             if (id > 0 && id == groupId) {
                //nasli sme riadok
@@ -132,7 +132,7 @@ public class MirroringService {
       for (GroupDetails rootGroup : parentGroups) {
          //ako prve musime prebehnut jednotlive riadky mapovania a vobec identifikovat riadok v ktorom je nase mapovanie
          //robime to tak, ze iterujeme cez parent grupy a snazime sa najst root mapovanie
-         int rootIds[] = getRootIds(rootGroup.getGroupId());
+         int[] rootIds = getRootIds(rootGroup.getGroupId());
          //rootGroup je najdena hlavna grupa mapovania, preto ju volame rootGroup
          if (rootIds != null) {
             //super, nasli sme riadok mapovania, teraz preiteruj syncedGroups a najdi taku, ktora patri do nasej vetvy
@@ -155,7 +155,7 @@ public class MirroringService {
       //preiteruj riadky konfiguracie a over/nastav zadanym adresarom syncid
       //format zapisu: id,id,id:POZNAMKA\n
       String mirroringConfig = Constants.getString("structureMirroringConfig");
-      String lines[] = Tools.getTokens(mirroringConfig, "\n");
+      String[] lines = Tools.getTokens(mirroringConfig, "\n");
       GroupsDB groupsDB = GroupsDB.getInstance();
       for (String line : lines) {
          //odstan poznamku
@@ -163,7 +163,7 @@ public class MirroringService {
          int i = line.indexOf(":");
          if (i>0) ids = line.substring(0, i);
 
-         int mapping[] = Tools.getTokensInt(ids, ",");
+         int[] mapping = Tools.getTokensInt(ids, ",");
          int syncId = 0;
          int defaultDocSyncId = 0;
          StringBuilder groupIdsList = new StringBuilder();
@@ -218,16 +218,16 @@ public class MirroringService {
 
       List<GroupDetails> groups = groupsDB.getGroupsTree(rootGroupId, true, true);
       //convert group.getGroupId to comma separated String
-      String groupIds = "";
+      StringBuilder groupIds = new StringBuilder();
       for(GroupDetails group : groups) {
-          if(groupIds.isEmpty()==false) groupIds += ",";
-          groupIds += group.getGroupId();
+          if(groupIds.isEmpty()==false) groupIds.append(",");
+          groupIds.append(String.valueOf(group.getGroupId()));
       }
 
       if (Tools.isNotEmpty(groupIds)) {
          //update database
-         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds+")");
-         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds+")");
+         (new SimpleQuery()).execute("UPDATE groups SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
+         (new SimpleQuery()).execute("UPDATE documents SET sync_id=0 WHERE group_id IN ("+groupIds.toString()+")");
       }
    }
 }

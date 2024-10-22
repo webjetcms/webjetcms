@@ -184,7 +184,7 @@ But the function is **useful already during development**, shows a list of chang
 
 ### How and when to create a Merge Request
 
-You create a Merge Request in Gitlab. In the corresponding project, select the left menu **Repository-\&gt;Branches**. For each Branch (except master) you will see **Merge request button**, click on it.
+You create a Merge Request in Gitlab. In the corresponding project, select the left menu **Repository->Branches**. For each Branch (except master) you will see **Merge request button**, click on it.
 
 Fill in the form **Title**, it should be **identical to the name branche**, e.g. `feature/47419-monitorovanie-servera`. If the gateway is still unfinished enter the title prefix **WIP:** (Work In Progress), i.e. `WIP: feature/47419-monitorovanie-servera`.
 

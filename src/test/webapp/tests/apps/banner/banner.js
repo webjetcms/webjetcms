@@ -4,8 +4,25 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('banner zakladne testy', async ({I, DataTables, DT, DTE}) => {
+Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => {
     I.amOnPage("/apps/banner/admin/");
+
+    //delete FAILED autotest-group banners
+    DT.filter("bannerGroup", "autotest-group");
+    DT.filterSelect("editorFields.viewable", "Áno");
+
+    I.dontSee("Exspirovaný dátum", "#bannerDataTable");
+
+    const rows = await I.getTotalRows();
+    I.say("Rows: "+rows);
+    if (rows > 0) {
+        I.clickCss(".buttons-select-all");
+        I.clickCss(".buttons-remove");
+        DTE.waitForEditor("bannerDataTable");
+        DTE.save();
+        DTE.waitForModalClose("bannerDataTable_modal");
+    }
+
     await DataTables.baseTest({
         dataTable: 'bannerDataTable',
         perms: 'menuBanner',
@@ -181,19 +198,19 @@ Scenario('BUG filtrovanie aktivny', ({I, DT}) => {
 
     I.see("Test banner vypnuty");
     I.see("Investičný vklad");
-    I.see("Expirovaný dátum");
+    I.see("Exspirovaný dátum");
 
     //
     I.say("Filter podla zobrazitelny");
     I.dtFilterSelect("editorFields.viewable", "Nie");
     I.see("Test banner vypnuty");
     I.dontSee("Investičný vklad");
-    I.see("Expirovaný dátum");
+    I.see("Exspirovaný dátum");
 
     I.dtFilterSelect("editorFields.viewable", "Áno");
     I.dontSee("Test banner vypnuty");
     I.see("Investičný vklad");
-    I.dontSee("Expirovaný dátum");
+    I.dontSee("Exspirovaný dátum");
 
     //
     I.say("Filter podla active");
@@ -204,12 +221,12 @@ Scenario('BUG filtrovanie aktivny', ({I, DT}) => {
     I.dtFilterSelect("active", "Nie");
     I.see("Test banner vypnuty");
     I.dontSee("Investičný vklad");
-    I.dontSee("Expirovaný dátum");
+    I.dontSee("Exspirovaný dátum");
 
     I.dtFilterSelect("active", "Áno");
     I.dontSee("Test banner vypnuty");
     I.see("Investičný vklad");
-    I.see("Expirovaný dátum");
+    I.see("Exspirovaný dátum");
 });
 
 Scenario('reset', ({I}) => {
@@ -266,7 +283,7 @@ Scenario('Kontrola prava cmp_banner_seeall', ({I, DT}) => {
     I.see("Terminovaný vklad 2");
     I.dontSee("Test banner vypnuty");
     I.dontSee("Investičný vklad");
-    I.dontSee("Expirovaný dátum");
+    I.dontSee("Exspirovaný dátum");
 });
 
 Scenario('odhlasenie2', ({I}) => {
@@ -453,6 +470,7 @@ function selectDevices(I, DTE, selectDevices) {
     I.switchTo("iframe.cke_dialog_ui_iframe") //iframe
     I.switchTo("#editorComponent") //iframe
 
+    I.waitForElement("#tabLinkcommonAdvancedSettings");
     I.clickCss("#tabLinkcommonAdvancedSettings");
 
     //Check wanted, unchecke rest

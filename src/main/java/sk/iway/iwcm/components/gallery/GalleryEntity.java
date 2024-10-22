@@ -277,7 +277,6 @@ public class GalleryEntity {
     @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
     private String descriptionLongEsp;
 
-    @Size(max = 255)
     @Column(name = "author")
     @DataTableColumn(
             inputType = DataTableColumnType.QUILL,

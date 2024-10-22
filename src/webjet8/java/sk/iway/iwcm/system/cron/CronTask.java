@@ -177,10 +177,19 @@ public class CronTask {
 	private boolean audit = true;
 	private boolean businessDays = false;
 
-	@DataTableColumn(inputType = DataTableColumnType.SELECT, title = "[[#{admin.crontab.cluster_node}]]")
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title = "[[#{admin.crontab.cluster_node}]]", editor = {
+		@DataTableColumnEditor(
+			attr = {
+				@DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/settings/cronjob/nodes"),
+				@DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+				@DataTableColumnEditorAttr(key = "data-ac-select", value = "true")
+			}
+		)
+	})
 	private String clusterNode = "all";
 
 	public CronTask() {
+		// empty constructor
 	}
 
 	public String receiveCronPattern() {
@@ -317,7 +326,7 @@ public class CronTask {
 
 	@Override
 	public String toString() {
-		return String.format("%s that runs every %s, audit task: " + getAudit(), getTask(), receiveCronPattern());
+		return String.format("%s that runs every %s, audit task: %b", getTask(), receiveCronPattern(), getAudit());
 	}
 
 	public void setAudit(boolean log) {

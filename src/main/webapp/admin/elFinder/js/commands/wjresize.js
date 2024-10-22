@@ -23,9 +23,6 @@ elFinder.prototype.commands.resize = function() {
 			dfrd  = $.Deferred(),
 
 			open = function(file, id) {
-				console.log("Open: ");
-				console.log(file)
-
 				var index = file.virtualPath.lastIndexOf("/");
 				var iID = -1;
 				var dir = file.virtualPath.substring(0, index);

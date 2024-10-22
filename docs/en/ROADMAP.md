@@ -296,8 +296,8 @@ Explanation of the pictograms used:
 - [x] +Integrate automatic translation of texts via https://www.deepl.com/translator (e.g. for mirroring structure, translation texts, etc.) (MR146).
 - [x] +Web pages - if the page is in more than one directory, it is not possible to edit the page in the secondary directory (the data of the original page is returned and the data by docid/ID line is not paired).
 - [x] +Modify the design of version 8 to resemble version 2021 (minimum menu behavior) (#54233).
-- [x] +Add deployment format for update via Settings-\&gt;WebJET Update (#54225).
-- [x] +Complete deletion of old conf. variables `statDistinctUsers-` a `statSessions-` in mode `auto` clustra, add nodes display to Monitoring-\&gt;Current values (#54453).
+- [x] +Add deployment format for update via Settings->WebJET Update (#54225).
+- [x] +Complete deletion of old conf. variables `statDistinctUsers-` a `statSessions-` in mode `auto` clustra, add nodes display to Monitoring->Current values (#54453).
 
 ### Applications in a new design
 

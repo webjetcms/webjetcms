@@ -1,0 +1,349 @@
+extends ../../partials/iframe
+
+block content
+
+    include jsinclude
+
+    //-fck_dialog_common
+    script(type="text/javascript", src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/js/fck_dialog_common.jsp")
+
+    script.
+        var lastDocId = -1;
+        var lastGroupId = -1;
+        var lastVirtualPath = "";
+        var lastTitle = "";
+        var elFinderInstance;
+
+        //ThymeLeaf variables
+        let uploadIcon = "[(${uploadIcon})]";
+        let currentTimeMillis = "[(${currentTimeMillis})]";
+
+        let denyImageSize = [(${denyImageSize})];
+        let haveFileIndexerPerm = [(${haveFileIndexerPerm})];
+        let elfinderMetadataEnabled = [(${elfinderMetadataEnabled})];
+        let elfinderMetadataAutopopup = [(${elfinderMetadataAutopopup})];
+
+        var wjCkMapping = [
+            {wj: 'txtUrl', tab:'info', ck:'url'},
+        ];
+
+        let commands = [
+            'archive', 'back', 'copy', 'cut', 'download', 'duplicate', 'edit', 'extract',
+            'forward', 'getfile', 'help', 'home', 'info', 'mkdir', 'mkfile', 'netmount',
+            'open', 'paste', 'quicklook', 'reload', 'rename', 'resize', 'rm',
+            'sort', 'up', 'upload', 'view',
+            'wjedit', 'wjfilearchive', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
+        ];
+
+        let files = [
+            'wjeditswitch', 'wjfileopen', 'wjfileupdate',
+            '|',
+            'quicklook',
+            '|',
+            'download',
+            '|',
+            'copy', 'cut', 'paste', 'duplicate',
+            '|',
+            'rm',
+            '|',
+            'rename',
+            '|',
+            'archive', 'extract',
+            '|',
+            'info', 'wjfileprops', 'wjdirprops'
+        ];
+
+        let toolbar = [
+            ['back', 'up', 'forward'],
+            ['paste', 'cut', 'copy'],
+            ['upload', 'mkdir', 'reload'],
+            ['view', 'sort'],
+            ['wjsearch']
+        ];
+
+        if(elfinderMetadataEnabled === true) {
+            commands.push('wjmetadata');
+            files.push('wjmetadata');
+        }
+
+        function selectLink(link)
+        {
+            var urlPath = link;
+            //window.parent.CKEDITOR.dialog.getCurrent().getContentElement("info", "url").setValue(link);
+            GetE('txtUrl').value=urlPath;
+            updateValuesToCk();
+            getFileInfoTitle(link);
+        }
+
+        function getFileInfoTitle(link)
+        {
+            try
+            {
+                if (window.parent && window.parent.tempId)
+                {
+                    var tempId = window.parent.editorForm.tempId.value;
+                    var title = window.parent.CKEDITOR.dialog.getCurrent().getValueOf("advanced", "advTitle");
+                    $.ajax({
+                        type: "POST",
+                        url: "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/link_file_info_ajax.jsp",
+                        data: "time=" + currentTimeMillis + "&link="+link+"&tempId="+tempId+"&title="+encodeURIComponent(title),
+                        success: function(data){
+                            if($.trim(data) != "")
+                            {
+                                //$("#txtAttTitle").val($.trim(data));
+                                window.parent.CKEDITOR.dialog.getCurrent().getContentElement("advanced", "advTitle").setValue($.trim(data));
+                            }
+                        }
+                    });
+                }
+            } catch (e) { console.log(e); }
+        }
+
+        function checkSelectionText()
+        {
+            try
+            {
+                var selectionText = window.parent.getCkEditorInstance().getSelectedHtml().$.textContent;
+                var linkHref = window.parent.CKEDITOR.dialog.getCurrent().getContentElement("info", "url").getValue();
+                //console.log("selectionText="+selectionText+" urlValue="+linkHref);
+                if (linkHref == "")
+                {
+                    var setLink = null;
+                    if (selectionText.indexOf("@")!=-1 && selectionText.indexOf(".")!=-1)
+                    {
+                        setLink = "mailto:"+selectionText;
+                    }
+                    else if (selectionText.indexOf("http")==0)
+                    {
+                        setLink = selectionText;
+                    }
+                    else if (selectionText.indexOf("www")==0)
+                    {
+                        setLink = "http://"+selectionText;
+                    }
+                    if (setLink != null)
+                    {
+                        setTimeout(function() { selectLink(setLink); }, 100);
+                    }
+                }
+            }
+            catch (e)
+            {
+                console.log(e);
+            }
+        }
+
+        function initializeElfinder()
+        {
+            var docId = window.parent.getCkEditorInstance().element.$.form.docId ? window.parent.getCkEditorInstance().element.$.form.docId.value : -1;
+            var groupId = window.parent.getCkEditorInstance().element.$.form.groupId ? window.parent.getCkEditorInstance().element.$.form.groupId.value : -1;
+            var virtualPath = window.parent.getCkEditorInstance().element.$.form.virtualPath ? window.parent.getCkEditorInstance().element.$.form.virtualPath.value : '/';
+
+            lastDocId = docId;
+            lastGroupId = groupId;
+            lastVirtualPath = virtualPath;
+            lastTitle = getPageNavbar();
+
+            var customData = {
+                volumes: "link",
+                docId: docId,
+                groupId: groupId,
+                title: getPageNavbar()
+            }
+
+            var file = $('#txtUrl').val();
+            //console.log(file);
+            if (file != "") {
+                customData.startPath = file.substring(0, file.lastIndexOf('/'));
+            }
+
+            elFinderInstance = $('#finder').elfinder({
+                url: '/admin/elfinder-connector/',
+                enableByMouseOver: false,
+                width: '100%',
+                height: 430,
+                resizable: false,
+                rememberLastDir: false,
+                requestType: 'post',
+                customData: customData,
+                //transport: new elFinderSupportVer1(),
+                getFileCallback: function(files, fm)
+                {
+                    //must be there otherwise getfile event will not be called
+                },
+                handlers: {
+                    select: function(event, elfinderInstance)
+                    {
+                        var selected = event.data.selected;
+                        //console.log("1"+selected);
+                        var files = elfinderInstance.selectedFiles();
+                        //v nazve musi byt znak bodka - prevencia pred vybratim adresara klikanim v strome (okrem web stranok)
+                        if (files.length == 1 && (files[0].hash.indexOf("_doc_group")!=-1 || files[0].virtualPath.indexOf(".")!=-1))
+                        {
+                            selectLink(files[0].virtualPath);
+                            //console.log(files[0]);
+                        }
+                        setTimeout(function() {
+                                txtUrlOnChange($("#txtUrl")[0]);
+                        }, 100);
+                    },
+                    add: function(event, elfinderInstance) {
+                        processEventReload(event, elfinderInstance);
+                    },
+                    remove: function(event, elfinderInstance) {
+                        processEventReload(event, elfinderInstance);
+                    },
+                    change: function(event, elfinderInstance) {
+                        processEventReload(event, elfinderInstance);
+                    },
+                    getfile: function(event, elfinderInstance) {
+                        //select will be called before, just close the window
+                        window.parent.CKEDITOR.dialog.getCurrent()._.buttons['ok'].click();
+                    }
+                },
+                lang: window.userLng,
+                baseUrl: "/admin/elFinder/", //Needed for loading main css style (theme)
+                commands: commands,
+                contextmenu: {
+                    files: files
+                },
+                ui: ['toolbar', 'tree', 'path', 'stat'],
+                uiOptions: {
+                    toolbar: toolbar
+                }
+            }).elfinder('instance');
+
+            elFinderInitialized = true;
+
+            var toolbarFixApplied = false;
+            elFinderInstance.bind('lazydone', function(event) {
+                if (!toolbarFixApplied) {
+                    toolbarFixApplied = true;
+
+                    if (file != "") {
+                        openElfinderInFolder(file);
+                    } else {
+                        //zvol prvy element v "Aktualna stranka"
+                        setTimeout(function () {
+                            if ($("span.elfinder-navbar-dir").length > 1 && $($("span.elfinder-navbar-dir")[1]).hasClass("ui-state-active") == false) {
+                                openDefaultImageFolder(false);
+                            }
+                        }, 500);
+                    }
+                }
+            });
+
+            if(elfinderMetadataEnabled == true && elfinderMetadataAutopopup == true) {
+                elFinderInstance.bind('upload', function(event) {
+                    if (event.data == null || event.data.added == null || event.data.added.length < 1) return;
+                    var hashes = $.map(event.data.added, function(v, i){
+                        if (v.virtualPath.indexOf("/files/") == 0) {
+                            return v.hash;
+                        }
+                        return false;
+                    });
+                    if (hashes.length > 0) {
+                        elFinderInstance.exec("wjmetadata", hashes);
+                    }
+                });
+            }
+        }
+
+        function updateElfinderCustomData() {
+            var docId = window.parent.getCkEditorInstance().element.$.form.docId.value;
+            var groupId = window.parent.getCkEditorInstance().element.$.form.groupId.value;
+            var virtualPath = window.parent.getCkEditorInstance().element.$.form.virtualPath.value;
+
+            var customData = {
+                volumes: "link",
+                docId: docId,
+                groupId: groupId,
+                title: getPageNavbar()
+            }
+            var file = $('#txtUrl').val();
+
+            if (file != "")
+            {
+                customData.startPath = file.substring(0, file.lastIndexOf('/'));
+            }
+
+            elfinderInstance.options.customData = customData;
+            elFinderInstance.optsCustomData = customData;
+            elFinderInstance.customData = customData;
+
+            var openTimeout = 100;
+            var reload = false
+            if (lastDocId != docId || lastGroupId != groupId || virtualPath != lastVirtualPath || lastTitle != getPageNavbar()) {
+                reload = true;
+                openTimeout = 500;
+            }
+
+            if (reload) {
+                openDefaultImageFolder(reload);
+            }
+
+            lastDocId = docId;
+            lastGroupId = groupId;
+            lastVirtualPath = virtualPath;
+            lastTitle = getPageNavbar();
+
+            if (file != "") {
+                setTimeout(function() {
+                    openElfinderInFolder(file);
+                }, openTimeout);
+            }
+
+            checkSelectionText();
+        }
+
+    #finder [[\#{divpopup-blank.wait_please}]]
+
+    .innerPadding
+        style(type='text/css').
+            table.urlFormTable { width: 100%; }
+        script(type='text/javascript').
+            function txtUrlOnChange(field)
+            {
+                if (field.value.indexOf("http")==0 || field.value.indexOf("www.")==0 || field.value.indexOf("/files/")==0)
+                {
+                    window.parent.CKEDITOR.dialog.getCurrent().getContentElement("target", "linkTargetType").setValue("_blank");
+                }
+            }
+        table.urlFormTable
+            tr
+                td(style='width: 80px;' data-th-title='\#{elfinder.image.urlTitle}').cke_dialog_ui_vbox_child
+                    label.cke_dialog_ui_labeled_label [[\#{components.groupEdit.url_info}]]:
+                td.cke_dialog_ui_vbox_child
+                    div.cke_dialog_ui_input_text
+                        input#txtUrl(style='width: 100%;' type='text' class="form-control cke_dialog_ui_input_text" onkeyup='txtUrlOnChange(this);')
+
+        script.
+            refreshValuesFromCk();
+            setChangeHandlerToUpdateCk();
+
+    #elfinder-modal.modal.fade(tabindex='-1' role='dialog' aria-labelledby='elfinder-modal')
+        .modal-dialog(role='document')
+            .modal-content
+                .modal-header
+                    button.close(type='button' data-dismiss='modal' aria-label='Close')
+                        span(aria-hidden='true') &times;
+                    h4#modalLabel.modal-title [[\#{fbrowser.dirprop.dir}]]
+            .modal-body
+            .modal-footer
+                button.btn.btn-default.closeModal(type='button' data-dismiss='modal') [[\#{webpages.modal.close}]]
+                select.btn.form-control.action(name='action' style='display: inline-block; width: 150px;')
+                    option.bSubmit(value='bSubmit') [[\#{fbrowse.save_button}]]
+                    option.bConvert2Pdf(value='bConvert2Pdf') [[\#{editor_dir.convert2pdf}]]
+                    option.bConvert(value='bConvert') [[\#{editor_dir.convert}]]
+                    option.bUsage(value='bUsage') [[\#{fbrowse.usage_button}]]
+                    option.showHistory(value='showHistory') [[\#{groupslist.show_history}]]
+                    option.bUnzip(value='bUnzip') [[\#{fbrowse.unzip_button}]]
+                    option.bBackup(value='bBackup') [[\#{fbrowse.backup_button}]]
+                    option.bDelete(value='bDelete') [[\#{fbrowse.delete_file}]]
+                button.btn.btn-primary.submit(type='button' name='submit') [[\#{elfinder.dirprops.save}]]
+
+    script.
+        if(haveFileIndexerPerm) {
+            $("#selectList").append(new Option("[[\#{fbrowse.reindex_file}]]", "bReindex"));
+
+        }

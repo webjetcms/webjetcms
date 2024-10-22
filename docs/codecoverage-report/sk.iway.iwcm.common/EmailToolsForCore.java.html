@@ -22,15 +22,15 @@ import sk.iway.iwcm.stat.StatDB;
      * sem sa uklada hash o aktualnom userovi, kontroluje to ShowDocAction
      * (ak sa v url nachadza id pouzivatela pre jeho prihlasenie)
      */
-<span class="nc" id="L25">    public static String ACTUAL_USER_HASH = null;</span>
+<span class="fc" id="L25">    public static String ACTUAL_USER_HASH = null;</span>
 
     public static boolean deleteUnsubscribedEmail(String email)
     {
         try
         {
-<span class="nc" id="L31">            new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE email = ?&quot;, email);</span>
-<span class="nc" id="L32">            Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, email=&quot;+email, -1, -1);</span>
-<span class="nc" id="L33">            return true;</span>
+<span class="fc" id="L31">            new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE email = ? AND domain_id=?&quot;, email, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L32">            Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, email=&quot;+email, -1, -1);</span>
+<span class="fc" id="L33">            return true;</span>
         }
 <span class="nc" id="L35">        catch (Exception e)</span>
         {
@@ -41,13 +41,13 @@ import sk.iway.iwcm.stat.StatDB;
 
     public static boolean addUnsubscribedEmail(String email)
     {
-<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (!deleteUnsubscribedEmail(email))//najprv skusi email vymazat, ak uz existuje</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (!deleteUnsubscribedEmail(email))//najprv skusi email vymazat, ak uz existuje</span>
 <span class="nc" id="L45">            return false;</span>
 
         try
         {
-<span class="nc" id="L49">            new SimpleQuery().execute(&quot;INSERT INTO emails_unsubscribed (email, create_date) VALUES (?,?)&quot;, email, new Date());</span>
-<span class="nc" id="L50">            return true;</span>
+<span class="fc" id="L49">            new SimpleQuery().execute(&quot;INSERT INTO emails_unsubscribed (email, create_date, domain_id) VALUES (?,?,?)&quot;, email, new Date(), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L50">            return true;</span>
         }
 <span class="nc" id="L52">        catch (Exception e)</span>
         {
@@ -60,7 +60,7 @@ import sk.iway.iwcm.stat.StatDB;
     {
         try
         {
-<span class="nc" id="L63">            new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE emails_unsubscribed_id = ?&quot;, id);</span>
+<span class="nc" id="L63">            new SimpleQuery().execute(&quot;DELETE FROM emails_unsubscribed WHERE emails_unsubscribed_id = ? AND domain_id=?&quot;, id, CloudToolsForCore.getDomainId());</span>
 <span class="nc" id="L64">            Adminlog.add(Adminlog.TYPE_DATA_DELETING, &quot;Unsubscribed email deleted, id=&quot;+id, id, -1);</span>
 <span class="nc" id="L65">            return true;</span>
         }
@@ -151,4 +151,4 @@ import sk.iway.iwcm.stat.StatDB;
         }
 <span class="nc" id="L152">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

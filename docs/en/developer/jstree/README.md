@@ -7,14 +7,14 @@ Library [jsTree](https://www.jstree.com/) is jquery `plugin`, which displays tre
 <!-- code_chunk_output -->
 
 - [jsTree](#jstree)
-	- [Basic initialization in cooperation with Spring REST](#základná-inicializácia-v-spolupráca-so-spring-rest)
-	- [Configuration](#konfigurácia)
-		- [Creating a new REST controller](#vytvorenie-nového-rest-controllera)
-		- [Custom object types](#vlastné-typy-objektov)
-		- [Adjusting the display](#úprava-zobrazenia)
-		- [Change the URL of a REST service](#zmena-url-adresy-rest-služby)
-	- [Icons and CSS classes](#ikony-a-css-triedy)
-		- [How to use icons](#spôsob-použitia-ikon)
+  - [Basic initialization in cooperation with Spring REST](#basic-initialization-in-cooperation-with-spring-rest)
+  - [Configuration](#configuration)
+    - [Creating a new REST controller](#creating-a-new-rest-controller)
+    - [Custom object types](#custom-object-types)
+    - [Adjusting the display](#adjusting-the-display)
+    - [Change the URL of a REST service](#change-the-url-of-a-rest-service)
+  - [Icons and CSS classes](#icons-and-css-classes)
+    - [How to use icons](#how-to-use-icons)
 <!-- /code_chunk_output -->
 
 ## Basic initialization in cooperation with Spring REST
@@ -232,10 +232,11 @@ Examples are in the classes [GroupsJsTreeItem](../../../src/main/java/sk/iway/iw
 ### How to use icons
 
 The use of icons has the following rules:
-- <i class="fas fa-folder" role="presentation" /> / <i class="fas fa-globe" role="presentation" /> full page and folder icon = displayed in menu
-- <i class="far fa-folder" role="presentation" /> / <i class="far fa-globe" role="presentation" /> empty page and folder icon = not shown in menu
-- <i class="fas fa-lock" role="presentation" /> lock = only available for logged in visitor
-- <span style="color: #FF4B58">red colour</span> = unavailable for public (internal directory) or page with display disabled (in DT it is possible to use CSS class is-not-public per line)
-- **bold font** = main page of the directory (in DT it is possible to use CSS class `is-default-page`)
-- <i class="fas fa-external-link-alt" /> out arrow = page is redirected
-- <i class="fas fa-eye-slash" /> crossed out eye = page not searchable
+
+- <i class="ti ti-folder-filled" role="presentation"></i> / <i class="ti ti-map-pin" role="presentation"></i> full page icon and folder = displayed in the menu
+- <i class="ti ti-folder" role="presentation"></i> / <i class="ti ti-map-pin-off" role="presentation"></i> empty page icon and folder = not displayed in the menu
+- <i class="ti ti-lock" role="presentation"></i> lock = available only to logged in visitor
+- <span style="color: #FF4B58">red color</span> = not available for public (internal directory) or page with display disabled (in DT it is possible to use CSS class is-not-public per line)
+- **bold font** = the main page of the directory (it is possible to use the CSS class ```is-default-page''' in DT)
+- <i class="ti ti-external-link"></i> arrow out = page is redirected
+- <i class="ti ti-eye-off"></i> crossed out eye = page cannot be searched

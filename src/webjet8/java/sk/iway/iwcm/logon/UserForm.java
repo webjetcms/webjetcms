@@ -1,5 +1,4 @@
 package sk.iway.iwcm.logon;
-
 /**
  * UserForm.java
  *
@@ -25,6 +24,11 @@ public class UserForm {
     // EDIT PASSWORD
     private String newPassword;
     private String retypeNewPassword;
+
+    // CHANGE PASSWORD
+    private String login;
+    private String auth;
+    private String selectedLogin;
 
     public String getUsername() {
         return username;
@@ -64,5 +68,29 @@ public class UserForm {
 
     public void setRetypeNewPassword(String retypeNewPassword) {
         this.retypeNewPassword = retypeNewPassword;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getAuth() {
+        return auth;
+    }
+
+    public void setAuth(String auth) {
+        this.auth = auth;
+    }
+
+    public String getSelectedLogin() {
+        return selectedLogin;
+    }
+
+    public void setSelectedLogin(String selectedLogin) {
+        this.selectedLogin = selectedLogin;
     }
 }

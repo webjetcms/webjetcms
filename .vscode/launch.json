@@ -13,7 +13,6 @@
             "preLaunchTask": "appStart",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -25,7 +24,6 @@
             "preLaunchTask": "appStartLocalDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -37,7 +35,6 @@
             "preLaunchTask": "appStartDemoDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -49,7 +46,6 @@
             "preLaunchTask": "appStartTemplatesDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -73,7 +69,6 @@
             "preLaunchTask": "appStartNNDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -85,7 +80,6 @@
             "preLaunchTask": "appStartOracleDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {
@@ -109,7 +103,6 @@
             "preLaunchTask": "appStartPssDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
             "internalConsoleOptions": "neverOpen"
         },
         {

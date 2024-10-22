@@ -4,8 +4,7 @@ import java.util.Date;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
-
-import com.drew.lang.annotations.NotNull;
+import javax.validation.constraints.NotNull;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,7 +24,7 @@ import sk.iway.iwcm.users.UsersDB;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_CONF_UPDATE)
 public class ConfPreparedEntity {
 
-<span class="fc" id="L28">    public ConfPreparedEntity(){}</span>
+<span class="fc" id="L27">    public ConfPreparedEntity(){}</span>
 
     @Id
     @Column(name = &quot;id&quot;)
@@ -85,16 +84,16 @@ public class ConfPreparedEntity {
 	private String userFullName;
 
 	public String getUserFullName() {
-<span class="pc bpc" id="L88" title="2 of 6 branches missed.">		if (userFullName == null &amp;&amp; userId != null &amp;&amp; userId.intValue()&gt;0) {</span>
-<span class="fc" id="L89">			UserDetails user = UsersDB.getUserCached(userId.intValue());</span>
-<span class="pc bpc" id="L90" title="1 of 2 branches missed.">			if (user!=null)	userFullName = user.getFullName();</span>
-<span class="nc" id="L91">			else userFullName = &quot;&quot;;</span>
+<span class="pc bpc" id="L87" title="2 of 6 branches missed.">		if (userFullName == null &amp;&amp; userId != null &amp;&amp; userId.intValue()&gt;0) {</span>
+<span class="fc" id="L88">			UserDetails user = UsersDB.getUserCached(userId.intValue());</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">			if (user!=null)	userFullName = user.getFullName();</span>
+<span class="nc" id="L90">			else userFullName = &quot;&quot;;</span>
 		}
-<span class="fc" id="L93">		return userFullName;</span>
+<span class="fc" id="L92">		return userFullName;</span>
 	}
 
 	public void setUserFullName(String userFullName) {
-<span class="fc" id="L97">		this.userFullName = userFullName;</span>
-<span class="fc" id="L98">	}</span>
+<span class="fc" id="L96">		this.userFullName = userFullName;</span>
+<span class="fc" id="L97">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

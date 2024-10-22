@@ -5,43 +5,8 @@ Before(({ login }) => {
 });
 
 Scenario('Forum types', async ({I, DTE, Document}) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=65077");
-    DTE.waitForEditor();
-
-    I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-    I.wait(2);
-
-    I.switchTo('.cke_wysiwyg_frame.cke_reset');
-
-    I.waitForElement("iframe.wj_component", 10);
-    I.wait(2);
-    I.click("iframe.wj_component");
-    I.wait(2);
-
-    I.switchTo();
-    I.switchTo(".cke_dialog_ui_iframe");
-
-    Document.screenshotElement("#editorComponent", "/redactor/apps/forum/clasic-forum.png");
-    I.switchTo();
-
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63761");
-    DTE.waitForEditor();
-
-    I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-    I.wait(2);
-
-    I.switchTo('.cke_wysiwyg_frame.cke_reset');
-
-    I.waitForElement("iframe.wj_component", 10);
-    I.wait(2);
-    I.click("iframe.wj_component");
-    I.wait(2);
-
-    I.switchTo();
-    I.switchTo(".cke_dialog_ui_iframe");
-
-    Document.screenshotElement("#editorComponent", "/redactor/apps/forum/message-board.png");
-    I.switchTo();
+    Document.screenshotAppEditor(65077, "/redactor/apps/forum/clasic-forum.png");
+    Document.screenshotAppEditor(63761, "/redactor/apps/forum/message-board.png");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63768");
     DTE.waitForEditor();
@@ -78,10 +43,18 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/forum/forum-list-editor-advanced.png", 1000, 1100);
     DTE.cancel();
 
-    if("sk" === confLng) {
-        I.amOnPage("/apps/diskusia/");
-    } else if("en" === confLng) { 
-        I.amOnPage("/apps/diskusia/?language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/diskusia/?NO_WJTOOLBAR=true");
+            break;
+        case 'en':
+            I.amOnPage("/apps/diskusia/?NO_WJTOOLBAR=true&language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/diskusia/?NO_WJTOOLBAR=true&language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
     I.waitForElement("#forumContentDiv", 15);
@@ -94,23 +67,49 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     //Resize back
     I.resizeWindow(1280, 760);
 
-    if("sk" === confLng) {
-        I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
-    } else if("en" === confLng) { 
-        I.amOnPage("/apps/message-board/skupina2/podskupina3.html?language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/message-board/skupina2/podskupina3.html?NO_WJTOOLBAR=true");
+            break;
+        case 'en':
+            I.amOnPage("/apps/message-board/skupina2/podskupina3.html?NO_WJTOOLBAR=true&language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/message-board/skupina2/podskupina3.html?NO_WJTOOLBAR=true&language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
+    }
+
+
+    I.waitForElement("#forumContentDiv");
+    Document.screenshot("/redactor/apps/forum/forum-list-main.png", 1200, 930);
+
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/message-board/skupina2/podskupina3.html?NO_WJTOOLBAR=true&pId=809");
+            break;
+        case 'en':
+            I.amOnPage("/apps/message-board/skupina2/podskupina3.html?NO_WJTOOLBAR=true&pId=809&language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/message-board/skupina2/podskupina3.html?NO_WJTOOLBAR=true&pId=809&language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
     I.waitForElement("#forumContentDiv");
-    Document.screenshot("/redactor/apps/forum/forum-list-board.png", 1200, 1100);
+    Document.screenshot("/redactor/apps/forum/forum-list-board.png", 1200, 650);
 
     if("sk" === confLng) {
-        I.amOnPage("/apps/message-board/skupina2/podskupina3.html?pId=809");
-    } else if("en" === confLng) { 
-        I.amOnPage("/apps/message-board/skupina2/podskupina3.html?pId=809&language=en");
+        I.amOnPage("/apps/message-board/skupina1/podskupina1.html?NO_WJTOOLBAR=true&pId=366");
+    } else if("en" === confLng) {
+        I.amOnPage("/apps/message-board/skupina1/podskupina1.html?NO_WJTOOLBAR=true&pId=366&language=en");
     }
 
     I.waitForElement("#forumContentDiv");
-    Document.screenshot("/redactor/apps/forum/forum-list-subBoard.png", 1200, 1100);
+    Document.screenshot("/redactor/apps/forum/forum-list-subBoard.png", 1200, 900);
 
     I.amOnPage("/apps/forum/admin/");
     DT.filter("subject", "diskusia testovací príspevok");

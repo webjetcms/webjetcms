@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.welcome;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -81,22 +82,18 @@ public class DashboardListener {
             model.addAttribute("overviewAdmins", JsonTools.objectToJSON(admins));
             dt.diff("After admins");
 
-            //zoznam todo poloziek
-            model.addAttribute("overviewTodo", new ToDoDB().getToDo(Tools.getUserId(request)));
-            dt.diff("After ToDo");
-
-            int size = 8;
+            int size = Constants.getInt("dashboardRecentSize");
 
             // posledne stranky
             List<DocDetails> recentPages = AdminTools.getMyRecentPages(user, size);
-            List<DocDetailsDto> recentPagesDto = recentPages.stream().map(p -> new DocDetailsDto(p))
+            List<DocDetailsDto> recentPagesDto = recentPages.stream().map(DocDetailsDto::new)
                     .collect(Collectors.toList());
             model.addAttribute("overviewRecentPages", JsonTools.objectToJSON(recentPagesDto));
             dt.diff("After recent pages");
 
             // zmenene stranky
             List<DocDetails> changedPages = AdminTools.getRecentPages(40, user);
-            List<DocDetailsDto> changedPagesDto = changedPages.stream().limit(size).map(p -> new DocDetailsDto(p))
+            List<DocDetailsDto> changedPagesDto = changedPages.stream().limit(size).map(DocDetailsDto::new)
                     .collect(Collectors.toList());
             model.addAttribute("overviewChangedPages", JsonTools.objectToJSON(changedPagesDto));
             dt.diff("After changed pages");
@@ -104,12 +101,12 @@ public class DashboardListener {
             // audit
             List<AdminlogBean> adminlog = Adminlog.getLastEvents(size);
             List<AuditDto> adminlogDto;
-            if (user.isEnabledItem("cmp_adminlog")) adminlogDto = adminlog.stream().map(p -> new AuditDto(p)).collect(Collectors.toList());
+            if (user.isEnabledItem("cmp_adminlog")) adminlogDto = adminlog.stream().map(AuditDto::new).collect(Collectors.toList());
             else adminlogDto = new ArrayList<>();
             model.addAttribute("overviewAdminlog", JsonTools.objectToJSON(adminlogDto));
             dt.diff("After adminlog");
 
-            // todo
+            // to do
             List<ToDoBean> todos = (new ToDoDB()).getToDo(user.getUserId());
             model.addAttribute("overviewTodo", JsonTools.objectToJSON(todos));
             dt.diff("After todo");
@@ -141,6 +138,19 @@ public class DashboardListener {
                         String message = prop.getText("system.javaVersionWarningText", ""+requiredJavaVersion, currentJavaVersion);
                         model.addAttribute("javaVersionWarningText", message);
                     }
+                }
+            }
+
+            //Warning to license expiration date coming in 2 months
+            Long expirationDate = Constants.getLong("licenseExpiryDate");
+            if(expirationDate > 0L) {
+                Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.MONTH, 2);
+                if(cal.getTimeInMillis() >= expirationDate)
+                {
+                    Prop prop = Prop.getInstance(request);
+                    String message = prop.getText("overview.license.expirationWarning", Tools.formatDate(expirationDate));
+                    model.addAttribute("licenceExpirationWarningText", message);
                 }
             }
 

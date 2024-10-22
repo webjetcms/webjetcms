@@ -59,7 +59,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L59">		String queryString = request.getQueryString();</span>
 <span class="fc bfc" id="L60" title="All 2 branches covered.">		if (queryString==null) queryString = &quot;&quot;;</span>
 <span class="pc bpc" id="L61" title="3 of 8 branches missed.">		if (path.contains(&quot;upload&quot;) || path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.action&quot;) || path.contains(&quot;stripes&quot;) ||</span>
-<span class="pc bpc" id="L62" title="3 of 6 branches missed.">			queryString.contains(&quot;__sfu=1&quot;) || path.contains(&quot;/admin/elfinder-connector/&quot;) || queryString.contains(&quot;__forceParse=1&quot;)) {</span>
+<span class="pc bpc" id="L62" title="2 of 6 branches missed.">			queryString.contains(&quot;__sfu=1&quot;) || path.contains(&quot;/admin/elfinder-connector/&quot;) || queryString.contains(&quot;__forceParse=1&quot;)) {</span>
 
 <span class="fc" id="L64">			boolean processUpload = true;</span>
 			//multiplefileupload.do aj ine Struts action sa spracovavaju napriamo
@@ -79,10 +79,10 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="pc bpc" id="L79" title="1 of 2 branches missed.">			if (processUpload)</span>
 			{
 <span class="fc" id="L81">				buildImpl(request, tempDir, maxPostSize, queryString);</span>
-<span class="pc bpc" id="L82" title="3 of 6 branches missed.">				if (Constants.getBoolean(&quot;alwaysStoreUploadedFileToRequest&quot;) || queryString.indexOf(&quot;__setf=1&quot;)!=-1 || path.contains(&quot;/admin/elfinder-connector/&quot;))</span>
+<span class="pc bpc" id="L82" title="2 of 6 branches missed.">				if (Constants.getBoolean(&quot;alwaysStoreUploadedFileToRequest&quot;) || queryString.indexOf(&quot;__setf=1&quot;)!=-1 || path.contains(&quot;/admin/elfinder-connector/&quot;))</span>
 				{
-<span class="nc" id="L84">					Logger.debug(MultipartWrapper.class, &quot;Storing files to request&quot;);</span>
-<span class="nc" id="L85">					request.setAttribute(&quot;MultipartWrapper.files&quot;, files);</span>
+<span class="fc" id="L84">					Logger.debug(MultipartWrapper.class, &quot;Storing files to request&quot;);</span>
+<span class="fc" id="L85">					request.setAttribute(&quot;MultipartWrapper.files&quot;, files);</span>
 				}
 			}
 		}
@@ -143,41 +143,41 @@ import sk.iway.iwcm.users.UsersDB;
             //default true, kedze nie vsade je CSRF token
 <span class="fc" id="L144">            boolean csrfOK = true;</span>
             //CSRF ochrana
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">            if (queryString.indexOf(&quot;__sfu=1&quot;)!=-1)</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (queryString.indexOf(&quot;__sfu=1&quot;)!=-1)</span>
             {
                 //ak nepride token, default je false
-<span class="nc" id="L149">                csrfOK = false;</span>
+<span class="fc" id="L149">                csrfOK = false;</span>
 
 				//skonvertuj queryString hodnoty do parametrov, nech sa to da pouzit standardizovane
-<span class="nc" id="L152">				String[] queryParamValues = Tools.getTokens(queryString, &quot;&amp;&quot;);</span>
-<span class="nc bnc" id="L153" title="All 2 branches missed.">				for (String paramValue : queryParamValues)</span>
+<span class="fc" id="L152">				String[] queryParamValues = Tools.getTokens(queryString, &quot;&amp;&quot;);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">				for (String paramValue : queryParamValues)</span>
 				{
-<span class="nc" id="L155">					int index = paramValue.indexOf(&quot;=&quot;);</span>
-<span class="nc bnc" id="L156" title="All 4 branches missed.">					if (index&gt;0 &amp;&amp; index&lt;paramValue.length())</span>
+<span class="fc" id="L155">					int index = paramValue.indexOf(&quot;=&quot;);</span>
+<span class="pc bpc" id="L156" title="2 of 4 branches missed.">					if (index&gt;0 &amp;&amp; index&lt;paramValue.length())</span>
 					{
-<span class="nc" id="L158">						String name = paramValue.substring(0, index);</span>
+<span class="fc" id="L158">						String name = paramValue.substring(0, index);</span>
 
-<span class="nc" id="L160">						List&lt;String&gt; values = params.get(name);</span>
-<span class="nc bnc" id="L161" title="All 2 branches missed.">						if(values==null) values = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L162">						values.add(paramValue.substring(index+1));</span>
+<span class="fc" id="L160">						List&lt;String&gt; values = params.get(name);</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">						if(values==null) values = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L162">						values.add(paramValue.substring(index+1));</span>
 
-<span class="nc" id="L164">						this.params.put(name, values);</span>
+<span class="fc" id="L164">						this.params.put(name, values);</span>
 					}
 				}
 
-<span class="nc" id="L168">				List&lt;String&gt; values = this.params.get(&quot;__token&quot;);</span>
-<span class="nc bnc" id="L169" title="All 4 branches missed.">                if (values!=null &amp;&amp; values.size()&gt;0)</span>
+<span class="fc" id="L168">				List&lt;String&gt; values = this.params.get(&quot;__token&quot;);</span>
+<span class="pc bpc" id="L169" title="2 of 4 branches missed.">                if (values!=null &amp;&amp; values.size()&gt;0)</span>
                 {
-<span class="nc" id="L171">						String token = values.get(0);</span>
+<span class="fc" id="L171">						String token = values.get(0);</span>
 
-<span class="nc bnc" id="L173" title="All 4 branches missed.">						if (request.getRequestURI().contains(&quot;/rest/datatables&quot;) || request.getParameter(&quot;csrfKeepToken&quot;)!=null)</span>
+<span class="pc bpc" id="L173" title="2 of 4 branches missed.">						if (request.getRequestURI().contains(&quot;/rest/datatables&quot;) || request.getParameter(&quot;csrfKeepToken&quot;)!=null)</span>
                   {
                      //datatables ma vynimku, token po nahrati suboru nemazeme, pretoze sa nemeni datatable save URL
 <span class="nc" id="L176">                     csrfOK = CSRF.verifyTokenAjax(request.getSession(), token);</span>
                   }
                   else
                   {
-<span class="nc" id="L180">                     csrfOK = CSRF.verifyTokenAndDeleteIt(request.getSession(), token);</span>
+<span class="fc" id="L180">                     csrfOK = CSRF.verifyTokenAndDeleteIt(request.getSession(), token);</span>
                   }
                 }
             }
@@ -197,8 +197,8 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L197">                            String key = fi.getFieldName();</span>
                             //toto je pre elfinder pre multiupload, vtedy subory odkladame do mapy pod rozumnymi nazvami a nie original field name
                             //cid sa posiela pri chunked uploade a vtedy mame nazvy ulozene inde
-<span class="pc bpc" id="L200" title="3 of 4 branches missed.">                            if (key.equalsIgnoreCase(&quot;upload[]&quot;) &amp;&amp; params.get(&quot;cid&quot;) == null) {</span>
-<span class="nc bnc" id="L201" title="All 2 branches missed.">                                key = Tools.isNotEmpty(directory) ? directory + &quot;/&quot; + fileName : fileName;</span>
+<span class="pc bpc" id="L200" title="1 of 4 branches missed.">                            if (key.equalsIgnoreCase(&quot;upload[]&quot;) &amp;&amp; params.get(&quot;cid&quot;) == null) {</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                                key = Tools.isNotEmpty(directory) ? directory + &quot;/&quot; + fileName : fileName;</span>
                             }
 <span class="fc" id="L203">                            Logger.debug(MultipartWrapper.class, &quot;Storing file &quot; + key);</span>
 <span class="fc" id="L204">                            files.put(key, fi);</span>
@@ -306,11 +306,11 @@ import sk.iway.iwcm.users.UsersDB;
 
 			// fix na docid v query stringu
 <span class="fc" id="L308">			String queryString = request.getQueryString();</span>
-<span class="pc bpc" id="L309" title="3 of 4 branches missed.">			if (queryString != null &amp;&amp; params.get(&quot;docid&quot;) == null)</span>
+<span class="pc bpc" id="L309" title="1 of 4 branches missed.">			if (queryString != null &amp;&amp; params.get(&quot;docid&quot;) == null)</span>
 			{
-<span class="nc" id="L311">				int i = queryString.indexOf(&quot;docid=&quot;);</span>
-<span class="nc" id="L312">				int j = queryString.indexOf('&amp;');</span>
-<span class="nc bnc" id="L313" title="All 4 branches missed.">				if (i != -1 &amp;&amp; j &gt; i)</span>
+<span class="fc" id="L311">				int i = queryString.indexOf(&quot;docid=&quot;);</span>
+<span class="fc" id="L312">				int j = queryString.indexOf('&amp;');</span>
+<span class="pc bpc" id="L313" title="3 of 4 branches missed.">				if (i != -1 &amp;&amp; j &gt; i)</span>
 				{
 <span class="nc" id="L315">					String value = queryString.substring(i + 6, j);</span>
 <span class="nc" id="L316">					List&lt;String&gt; values = new ArrayList&lt;&gt;();</span>
@@ -450,9 +450,9 @@ import sk.iway.iwcm.users.UsersDB;
 
 		@Override
 		public void delete() {
-<span class="nc" id="L453">			item.delete();</span>
+<span class="fc" id="L453">			item.delete();</span>
 
-<span class="nc" id="L455">		}</span>
+<span class="fc" id="L455">		}</span>
 
 		@Override
 		public String getFieldName() {
@@ -495,4 +495,4 @@ import sk.iway.iwcm.users.UsersDB;
    }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

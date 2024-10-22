@@ -39,6 +39,8 @@ import sk.iway.iwcm.system.context.ContextFilter;
 
 public class PdfTools {
 
+<span class="fc" id="L42">    private static String ORIGINAL_JAVA_VERSION = null;</span>
+
     private PdfTools() {
 
     }
@@ -54,380 +56,401 @@ public class PdfTools {
     {
         try
          {
-<span class="fc" id="L57">             DocDetails doc = DocDB.getInstance().getDoc(docId);</span>
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">             if (doc == null) return false;</span>
-<span class="nc" id="L59">             GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());</span>
-<span class="nc bnc" id="L60" title="All 2 branches missed.">             if (group != null)</span>
+<span class="fc" id="L59">             DocDetails doc = DocDB.getInstance().getDoc(docId);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">             if (doc == null) return false;</span>
+<span class="nc" id="L61">             GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">             if (group != null)</span>
              {
-<span class="nc bnc" id="L62" title="All 2 branches missed.">                if (Tools.isNotEmpty(group.getDomainName())) request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, group.getDomainName());</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                if (Tools.isNotEmpty(group.getDomainName())) request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, group.getDomainName());</span>
              }
 
-<span class="nc" id="L65">             String qs = request.getQueryString();</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">             if (Tools.isEmpty(qs)) qs = &quot;a=1&quot;;</span>
+<span class="nc" id="L67">             String qs = request.getQueryString();</span>
+<span class="nc bnc" id="L68" title="All 2 branches missed.">             if (Tools.isEmpty(qs)) qs = &quot;a=1&quot;;</span>
 
-<span class="nc" id="L68">             StringBuilder url = new StringBuilder(Tools.getBaseHrefLoopback(request)).append(&quot;/showdoc.do?docid=&quot;).append(docId).append(&quot;&amp;NO_WJTOOLBAR=true&amp;isPdfVersion=true&amp;&quot;).append(qs);</span>
+<span class="nc" id="L70">             StringBuilder url = new StringBuilder(Tools.getBaseHrefLoopback(request)).append(&quot;/showdoc.do?docid=&quot;).append(docId).append(&quot;&amp;NO_WJTOOLBAR=true&amp;isPdfVersion=true&amp;&quot;).append(qs);</span>
 
-<span class="nc bnc" id="L70" title="All 2 branches missed.">             if (request.getParameter(&quot;forward&quot;)==null) url.append(&quot;&amp;forceBrowserDetector=pdfprint&quot;);</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">             if (request.getParameter(&quot;forward&quot;)==null) url.append(&quot;&amp;forceBrowserDetector=pdfprint&quot;);</span>
 
              //http://testvubcms:8080/showdoc.do?isPdfVersion=true&amp;docid=2401&amp;forward=pdf_cennik.jsp&amp;date=04.01.2010&amp;forIntranet=true
 
-<span class="nc" id="L74">             String data = Tools.downloadUrl(url.toString(), SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L76">             String data = Tools.downloadUrl(url.toString(), SetCharacterEncodingFilter.getEncoding());</span>
 
-<span class="nc bnc" id="L76" title="All 2 branches missed.">             if (Tools.isEmpty(data)) return false;</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">             if (Tools.isEmpty(data)) return false;</span>
 
              //asi nastalo presmerovanie na https verziu, loopback nefunguje
-<span class="nc bnc" id="L79" title="All 2 branches missed.">             if (data.startsWith(&quot;&lt;html&gt;&lt;body&gt;\n&lt;a href='&quot;)) data = &quot;&quot;;</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">             if (data.startsWith(&quot;&lt;html&gt;&lt;body&gt;\n&lt;a href='&quot;)) data = &quot;&quot;;</span>
 
-<span class="nc" id="L81">             request.setAttribute(&quot;docId&quot;, Integer.toString(docId));</span>
-<span class="nc" id="L82">             renderHtmlCode(data, output, request);</span>
+<span class="nc" id="L83">             request.setAttribute(&quot;docId&quot;, Integer.toString(docId));</span>
+<span class="nc" id="L84">             renderHtmlCode(data, output, request);</span>
 
-<span class="nc" id="L84">             return true;</span>
+<span class="nc" id="L86">             return true;</span>
          }
-<span class="nc" id="L86">         catch (Exception e)</span>
+<span class="nc" id="L88">         catch (Exception e)</span>
          {
-<span class="nc" id="L88">             Logger.error(PdfTools.class, e);</span>
+<span class="nc" id="L90">             Logger.error(PdfTools.class, e);</span>
          }
 
-<span class="nc" id="L91">         return false;</span>
+<span class="nc" id="L93">         return false;</span>
     }
 
     public static void renderHtmlCode(String data, OutputStream output, HttpServletRequest request) throws IOException
     {
-<span class="nc" id="L96">        renderHtmlCode(data, output, request, null);</span>
-<span class="nc" id="L97">    }</span>
+<span class="nc" id="L98">        renderHtmlCode(data, output, request, null);</span>
+<span class="nc" id="L99">    }</span>
 
     public static void renderHtmlCode(String data, OutputStream output, HttpServletRequest request, Pd4mlOptions options) throws IOException
     {
-<span class="nc" id="L101">        renderHtmlCode(data, output, request, options, true);</span>
-<span class="nc" id="L102">    }</span>
+<span class="nc" id="L103">        renderHtmlCode(data, output, request, options, true);</span>
+<span class="nc" id="L104">    }</span>
 
     //ing formulare sa generuju 2x zasebou v case mensom ako 1s
     public static void renderHtmlCode(String data, OutputStream output, HttpServletRequest request, Pd4mlOptions options, boolean useSpamProtection) throws IOException
     {
-<span class="nc" id="L107">        Prop prop = Prop.getInstance(PageLng.getUserLng(request));</span>
+<span class="nc" id="L109">        Prop prop = Prop.getInstance(PageLng.getUserLng(request));</span>
 
-<span class="nc" id="L109">        String editorDomainName = null;</span>
-<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (request != null) editorDomainName = (String)request.getSession().getAttribute(&quot;preview.editorDomainName&quot;);</span>
+<span class="nc" id="L111">        String editorDomainName = null;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        if (request != null) editorDomainName = (String)request.getSession().getAttribute(&quot;preview.editorDomainName&quot;);</span>
 
-<span class="nc bnc" id="L112" title="All 6 branches missed.">        if (data == null || data.length()==0 || output == null)</span>
+<span class="nc bnc" id="L114" title="All 6 branches missed.">        if (data == null || data.length()==0 || output == null)</span>
         {
-<span class="nc" id="L114">            throw new IllegalArgumentException(prop.getText(&quot;html2pdf.error.nodata&quot;));</span>
+<span class="nc" id="L116">            throw new IllegalArgumentException(prop.getText(&quot;html2pdf.error.nodata&quot;));</span>
         }
-<span class="nc bnc" id="L116" title="All 6 branches missed.">        if (useSpamProtection &amp;&amp; request != null &amp;&amp; !SpamProtection.canPost(&quot;HtmlToPdfAction&quot;, data, request))</span>
+<span class="nc bnc" id="L118" title="All 6 branches missed.">        if (useSpamProtection &amp;&amp; request != null &amp;&amp; !SpamProtection.canPost(&quot;HtmlToPdfAction&quot;, data, request))</span>
         {
-<span class="nc" id="L118">            throw new IllegalArgumentException(prop.getText(&quot;html2pdf.error.spam&quot;));</span>
+<span class="nc" id="L120">            throw new IllegalArgumentException(prop.getText(&quot;html2pdf.error.spam&quot;));</span>
         }
 
 
         //prehodime &lt;style&gt; @import &quot;nieco&quot; &lt;/style&gt; na &lt;link&gt; tag
         //a to tak, ze ich najprv najdeme...
-<span class="nc" id="L124">        Pattern styleImportPattern = Pattern.compile(&quot;&lt;style(\\s*[a-z]+=['\&quot;].*?['\&quot;]\\s*)&gt;\\s*@import\\s*['\&quot;](.*?)['\&quot;];\\s*&lt;/style&gt;&quot;);</span>
-<span class="nc" id="L125">        Matcher styleImportMatcher = styleImportPattern.matcher(data);</span>
+<span class="nc" id="L126">        Pattern styleImportPattern = Pattern.compile(&quot;&lt;style(\\s*[a-z]+=['\&quot;].*?['\&quot;]\\s*)&gt;\\s*@import\\s*['\&quot;](.*?)['\&quot;];\\s*&lt;/style&gt;&quot;);</span>
+<span class="nc" id="L127">        Matcher styleImportMatcher = styleImportPattern.matcher(data);</span>
         //pre kazdy takyto pattern
-<span class="nc bnc" id="L127" title="All 2 branches missed.">        while(styleImportMatcher.find())</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        while(styleImportMatcher.find())</span>
         {
             //skopiruj atributy do noveho &lt;link&gt; tagu
-<span class="nc" id="L130">            StringBuilder attributes = new StringBuilder();</span>
-<span class="nc bnc" id="L131" title="All 2 branches missed.">            for (int attributeIndex =1;attributeIndex&lt;styleImportMatcher.groupCount() ; attributeIndex++)</span>
-<span class="nc" id="L132">                attributes.append(styleImportMatcher.group(attributeIndex));</span>
+<span class="nc" id="L132">            StringBuilder attributes = new StringBuilder();</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">            for (int attributeIndex =1;attributeIndex&lt;styleImportMatcher.groupCount() ; attributeIndex++)</span>
+<span class="nc" id="L134">                attributes.append(styleImportMatcher.group(attributeIndex));</span>
             //a @import prehod na href=&quot;nieco&quot; tag
-<span class="nc" id="L134">            String href = styleImportMatcher.group( styleImportMatcher.groupCount() );</span>
-<span class="nc" id="L135">            data = styleImportMatcher.replaceAll(&quot;&lt;link href=\&quot;&quot;+href+&quot;\&quot; &quot;+attributes.toString()+&quot; rel=\&quot;stylesheet\&quot; /&gt;&quot;);</span>
-<span class="nc" id="L136">            styleImportMatcher.reset(data);</span>
-<span class="nc" id="L137">        }</span>
+<span class="nc" id="L136">            String href = styleImportMatcher.group( styleImportMatcher.groupCount() );</span>
+<span class="nc" id="L137">            data = styleImportMatcher.replaceAll(&quot;&lt;link href=\&quot;&quot;+href+&quot;\&quot; &quot;+attributes.toString()+&quot; rel=\&quot;stylesheet\&quot; /&gt;&quot;);</span>
+<span class="nc" id="L138">            styleImportMatcher.reset(data);</span>
+<span class="nc" id="L139">        }</span>
 
         //fixni ?v=XXXX&quot; parameter v obrazkoch
-<span class="nc" id="L140">        data = data.replaceAll(&quot;\\?v=\\d+\&quot;&quot;, &quot;\&quot;&quot;);</span>
-<span class="nc" id="L141">        data = data.replaceAll(&quot;\\?v=\\d+'&quot;, &quot;'&quot;);</span>
+<span class="nc" id="L142">        data = data.replaceAll(&quot;\\?v=\\d+\&quot;&quot;, &quot;\&quot;&quot;);</span>
+<span class="nc" id="L143">        data = data.replaceAll(&quot;\\?v=\\d+'&quot;, &quot;'&quot;);</span>
 
         //fixni cestu k obrazku pri pouziti externeho adresara
-<span class="nc bnc" id="L144" title="All 2 branches missed.">        if (FilePathTools.isExternalDir(&quot;/images/&quot;)) {</span>
-<span class="nc" id="L145">            String[] baseDirs = {&quot;/images/&quot;, &quot;/files/&quot;, &quot;/shared/&quot;};</span>
-<span class="nc bnc" id="L146" title="All 2 branches missed.">            for (String baseDir : baseDirs) {</span>
-<span class="nc" id="L147">                String realPath = Tools.getRealPath(baseDir);</span>
-<span class="nc" id="L148">                data = Tools.replace(data, &quot;src=\&quot;&quot;+baseDir, &quot;src=\&quot;&quot;+realPath);</span>
-<span class="nc" id="L149">                data = Tools.replace(data, &quot;src='&quot;+baseDir, &quot;src='&quot;+realPath);</span>
-<span class="nc" id="L150">                data = Tools.replace(data, &quot;url(&quot;+baseDir, &quot;url(&quot;+realPath);</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (FilePathTools.isExternalDir(&quot;/images/&quot;)) {</span>
+<span class="nc" id="L147">            String[] baseDirs = {&quot;/images/&quot;, &quot;/files/&quot;, &quot;/shared/&quot;};</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">            for (String baseDir : baseDirs) {</span>
+<span class="nc" id="L149">                String realPath = Tools.getRealPath(baseDir);</span>
+<span class="nc" id="L150">                data = Tools.replace(data, &quot;src=\&quot;&quot;+baseDir, &quot;src=\&quot;&quot;+realPath);</span>
+<span class="nc" id="L151">                data = Tools.replace(data, &quot;src='&quot;+baseDir, &quot;src='&quot;+realPath);</span>
+<span class="nc" id="L152">                data = Tools.replace(data, &quot;url(&quot;+baseDir, &quot;url(&quot;+realPath);</span>
             }
         }
 
-<span class="nc bnc" id="L154" title="All 4 branches missed.">        if (request!=null &amp;&amp; &quot;true&quot;.equals(request.getParameter(&quot;screen&quot;))==false)</span>
+<span class="nc bnc" id="L156" title="All 4 branches missed.">        if (request!=null &amp;&amp; &quot;true&quot;.equals(request.getParameter(&quot;screen&quot;))==false)</span>
         {
             //najdeme vsetky style, ktore nie su pre media=&quot;print&quot; a zakomentujeme ich
-<span class="nc" id="L157">             Pattern styleSheetPattern = Pattern.compile(&quot;&lt;link.*?/?&gt;&quot;, Pattern.CASE_INSENSITIVE);</span>
-<span class="nc" id="L158">             Matcher styleSheetMatcher = styleSheetPattern.matcher(data);</span>
-<span class="nc bnc" id="L159" title="All 2 branches missed.">             while (styleSheetMatcher.find())</span>
+<span class="nc" id="L159">             Pattern styleSheetPattern = Pattern.compile(&quot;&lt;link.*?/?&gt;&quot;, Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L160">             Matcher styleSheetMatcher = styleSheetPattern.matcher(data);</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">             while (styleSheetMatcher.find())</span>
              {
-<span class="nc bnc" id="L161" title="All 4 branches missed.">                 if (!styleSheetMatcher.group().contains(&quot;media=\&quot;print\&quot;&quot;) &amp;&amp; !styleSheetMatcher.group().contains(&quot;media=\&quot;all\&quot;&quot;))</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">                 if (!styleSheetMatcher.group().contains(&quot;media=\&quot;print\&quot;&quot;) &amp;&amp; !styleSheetMatcher.group().contains(&quot;media=\&quot;all\&quot;&quot;))</span>
                  {
-<span class="nc" id="L163">                    Logger.debug(PdfTools.class, &quot;HtmlToPdfConverter =&gt; replacing &quot; + styleSheetMatcher.group());</span>
-<span class="nc" id="L164">                     data = data.replace(styleSheetMatcher.group(), &quot;&lt;!--&quot; + styleSheetMatcher.group() + &quot;--&gt;&quot;);</span>
+<span class="nc" id="L165">                    Logger.debug(PdfTools.class, &quot;HtmlToPdfConverter =&gt; replacing &quot; + styleSheetMatcher.group());</span>
+<span class="nc" id="L166">                     data = data.replace(styleSheetMatcher.group(), &quot;&lt;!--&quot; + styleSheetMatcher.group() + &quot;--&gt;&quot;);</span>
                  }
              }
-<span class="nc" id="L167">             styleSheetMatcher = Pattern.compile(&quot;&lt;style.*?/?&gt;&quot;, Pattern.CASE_INSENSITIVE).matcher(data);</span>
-<span class="nc bnc" id="L168" title="All 2 branches missed.">             while (styleSheetMatcher.find())</span>
+<span class="nc" id="L169">             styleSheetMatcher = Pattern.compile(&quot;&lt;style.*?/?&gt;&quot;, Pattern.CASE_INSENSITIVE).matcher(data);</span>
+<span class="nc bnc" id="L170" title="All 2 branches missed.">             while (styleSheetMatcher.find())</span>
              {
-<span class="nc bnc" id="L170" title="All 4 branches missed.">                 if (!styleSheetMatcher.group().contains(&quot;media=\&quot;print\&quot;&quot;) &amp;&amp; !styleSheetMatcher.group().contains(&quot;media=\&quot;all\&quot;&quot;))</span>
+<span class="nc bnc" id="L172" title="All 4 branches missed.">                 if (!styleSheetMatcher.group().contains(&quot;media=\&quot;print\&quot;&quot;) &amp;&amp; !styleSheetMatcher.group().contains(&quot;media=\&quot;all\&quot;&quot;))</span>
                  {
-<span class="nc" id="L172">                    Logger.debug(PdfTools.class, &quot;HtmlToPdfConverter =&gt; replacing &quot; + styleSheetMatcher.group());</span>
-<span class="nc" id="L173">                     data = data.replace(styleSheetMatcher.group(), &quot;&lt;!--&quot; + styleSheetMatcher.group() + &quot;--&gt;&quot;);</span>
+<span class="nc" id="L174">                    Logger.debug(PdfTools.class, &quot;HtmlToPdfConverter =&gt; replacing &quot; + styleSheetMatcher.group());</span>
+<span class="nc" id="L175">                     data = data.replace(styleSheetMatcher.group(), &quot;&lt;!--&quot; + styleSheetMatcher.group() + &quot;--&gt;&quot;);</span>
                  }
              }
-<span class="nc" id="L176">             data = data.replaceAll(&quot;media=\&quot;print\&quot;&quot;, &quot;media=\&quot;screen\&quot;&quot;);</span>
+<span class="nc" id="L178">             data = data.replaceAll(&quot;media=\&quot;print\&quot;&quot;, &quot;media=\&quot;screen\&quot;&quot;);</span>
         }
-<span class="nc" id="L178">         data = data.replaceAll(&quot;media=\&quot;all\&quot;&quot;, &quot;media=\&quot;screen\&quot;&quot;);</span>
-<span class="nc" id="L179">         data = data.replaceAll(&quot;class=\&quot;printButton\&quot;&quot;, &quot;class=\&quot;printButton\&quot; style=\&quot;display:none;\&quot;&quot;);</span>
+<span class="nc" id="L180">         data = data.replaceAll(&quot;media=\&quot;all\&quot;&quot;, &quot;media=\&quot;screen\&quot;&quot;);</span>
+<span class="nc" id="L181">         data = data.replaceAll(&quot;class=\&quot;printButton\&quot;&quot;, &quot;class=\&quot;printButton\&quot; style=\&quot;display:none;\&quot;&quot;);</span>
 
-<span class="nc" id="L181">         PD4ML pd4ml = new PD4ML();</span>
+
+<span class="nc" id="L184">         fixJavaVersion();</span>
+<span class="nc" id="L185">         PD4ML pd4ml = new PD4ML();</span>
 
          //doplnena moznost pre zabezpecenie PDF dokumentu
-<span class="nc bnc" id="L184" title="All 4 branches missed.">         String password = (request != null &amp;&amp; request.getAttribute(&quot;pdfPassword&quot;) != null) ? (String)request.getAttribute(&quot;pdfPassword&quot;) : null;</span>
-<span class="nc bnc" id="L185" title="All 6 branches missed.">         Integer permissions = (request != null &amp;&amp; request.getAttribute(&quot;pdfPermissions&quot;) != null &amp;&amp; request.getAttribute(&quot;pdfPermissions&quot;) instanceof Integer) ? (Integer)request.getAttribute(&quot;pdfPermissions&quot;) : null;</span>
-<span class="nc bnc" id="L186" title="All 4 branches missed.">         if(Tools.isNotEmpty(password) || permissions != null)</span>
+<span class="nc bnc" id="L188" title="All 4 branches missed.">         String password = (request != null &amp;&amp; request.getAttribute(&quot;pdfPassword&quot;) != null) ? (String)request.getAttribute(&quot;pdfPassword&quot;) : null;</span>
+<span class="nc bnc" id="L189" title="All 6 branches missed.">         Integer permissions = (request != null &amp;&amp; request.getAttribute(&quot;pdfPermissions&quot;) != null &amp;&amp; request.getAttribute(&quot;pdfPermissions&quot;) instanceof Integer) ? (Integer)request.getAttribute(&quot;pdfPermissions&quot;) : null;</span>
+<span class="nc bnc" id="L190" title="All 4 branches missed.">         if(Tools.isNotEmpty(password) || permissions != null)</span>
          {
              //ak nezadavam svoje heslo, bude pristup bez hesla
-<span class="nc bnc" id="L189" title="All 2 branches missed.">             if(Tools.isEmpty(password)) password = &quot;empty&quot;;</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">             if(Tools.isEmpty(password)) password = &quot;empty&quot;;</span>
              //ak nie je definovane povolim vsetko
-<span class="nc bnc" id="L191" title="All 2 branches missed.">             if(permissions == null) permissions = 0xffffffff;</span>
-<span class="nc" id="L192">             pd4ml.setPermissions(password, permissions, true);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">             if(permissions == null) permissions = 0xffffffff;</span>
+<span class="nc" id="L196">             pd4ml.setPermissions(password, permissions, true);</span>
          }
 
-<span class="nc bnc" id="L195" title="All 4 branches missed.">         if (request != null &amp;&amp; request.getAttribute(&quot;htmlWidth&quot;) != null)	pd4ml.setHtmlWidth(Tools.getIntValue((String)request.getAttribute(&quot;htmlWidth&quot;), 1024));</span>
-<span class="nc bnc" id="L196" title="All 2 branches missed.">         else if (request != null)	pd4ml.setHtmlWidth(getIntValue(request.getParameter(&quot;width&quot;), 1024));</span>
-<span class="nc" id="L197">         else 	pd4ml.setHtmlWidth(1024);</span>
+<span class="nc bnc" id="L199" title="All 4 branches missed.">         if (request != null &amp;&amp; request.getAttribute(&quot;htmlWidth&quot;) != null)	pd4ml.setHtmlWidth(Tools.getIntValue((String)request.getAttribute(&quot;htmlWidth&quot;), 1024));</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">         else if (request != null)	pd4ml.setHtmlWidth(getIntValue(request.getParameter(&quot;width&quot;), 1024));</span>
+<span class="nc" id="L201">         else 	pd4ml.setHtmlWidth(1024);</span>
 
-<span class="nc" id="L199">         pd4ml.enableImgSplit(false);</span>
-<span class="nc" id="L200">         pd4ml.generateOutlines(true);</span>
-<span class="nc" id="L201">         pd4ml.enableDebugInfo();</span>
-<span class="nc" id="L202">         pd4ml.setAuthorName(Constants.getString(&quot;pdfAuthorName&quot;));</span>
-<span class="nc bnc" id="L203" title="All 4 branches missed.">         if (request != null &amp;&amp; isInteger(request.getParameter(&quot;insets&quot;)))</span>
+<span class="nc" id="L203">         pd4ml.enableImgSplit(false);</span>
+<span class="nc" id="L204">         pd4ml.generateOutlines(true);</span>
+<span class="nc" id="L205">         pd4ml.enableDebugInfo();</span>
+<span class="nc" id="L206">         pd4ml.setAuthorName(Constants.getString(&quot;pdfAuthorName&quot;));</span>
+<span class="nc bnc" id="L207" title="All 4 branches missed.">         if (request != null &amp;&amp; isInteger(request.getParameter(&quot;insets&quot;)))</span>
          {
-<span class="nc" id="L205">             int insets = getIntValue(request.getParameter(&quot;insets&quot;), 10);</span>
-<span class="nc" id="L206">             pd4ml.setPageInsets(new Insets(insets, insets, insets, insets));</span>
-<span class="nc" id="L207">         }</span>
-<span class="nc bnc" id="L208" title="All 2 branches missed.">         else if(request != null)</span>
+<span class="nc" id="L209">             int insets = getIntValue(request.getParameter(&quot;insets&quot;), 10);</span>
+<span class="nc" id="L210">             pd4ml.setPageInsets(new Insets(insets, insets, insets, insets));</span>
+<span class="nc" id="L211">         }</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">         else if(request != null)</span>
          {
-<span class="nc bnc" id="L210" title="All 2 branches missed.">             if(request.getAttribute(&quot;insets&quot;) != null)</span>
+<span class="nc bnc" id="L214" title="All 2 branches missed.">             if(request.getAttribute(&quot;insets&quot;) != null)</span>
              {
-<span class="nc" id="L212">                 int insets = getIntValue((String)request.getAttribute(&quot;insets&quot;), 0);</span>
-<span class="nc" id="L213">                 pd4ml.setPageInsets(new Insets(insets, insets, insets, insets));</span>
-<span class="nc" id="L214">             }</span>
-<span class="nc bnc" id="L215" title="All 4 branches missed.">             else if(request.getAttribute(&quot;inset-top&quot;) != null || request.getAttribute(&quot;inset-bottom&quot;) != null ||</span>
-<span class="nc bnc" id="L216" title="All 4 branches missed.">                       request.getAttribute(&quot;inset-left&quot;) != null || request.getAttribute(&quot;inset-right&quot;) != null)</span>
+<span class="nc" id="L216">                 int insets = getIntValue((String)request.getAttribute(&quot;insets&quot;), 0);</span>
+<span class="nc" id="L217">                 pd4ml.setPageInsets(new Insets(insets, insets, insets, insets));</span>
+<span class="nc" id="L218">             }</span>
+<span class="nc bnc" id="L219" title="All 4 branches missed.">             else if(request.getAttribute(&quot;inset-top&quot;) != null || request.getAttribute(&quot;inset-bottom&quot;) != null ||</span>
+<span class="nc bnc" id="L220" title="All 4 branches missed.">                       request.getAttribute(&quot;inset-left&quot;) != null || request.getAttribute(&quot;inset-right&quot;) != null)</span>
              {
-<span class="nc bnc" id="L218" title="All 2 branches missed.">                 int insertTop = request.getAttribute(&quot;inset-top&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-top&quot;), 0) : 0;</span>
-<span class="nc bnc" id="L219" title="All 2 branches missed.">                 int insertLeft = request.getAttribute(&quot;inset-left&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-left&quot;), 0) : 0;</span>
-<span class="nc bnc" id="L220" title="All 2 branches missed.">                 int insertBottom = request.getAttribute(&quot;inset-bottom&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-bottom&quot;), 0) : 0;</span>
-<span class="nc bnc" id="L221" title="All 2 branches missed.">                 int insertRight = request.getAttribute(&quot;inset-right&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-right&quot;), 0) : 0;</span>
-<span class="nc" id="L222">                 pd4ml.setPageInsets(new Insets(insertLeft, insertTop, insertBottom, insertRight));</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">                 int insertTop = request.getAttribute(&quot;inset-top&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-top&quot;), 0) : 0;</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                 int insertLeft = request.getAttribute(&quot;inset-left&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-left&quot;), 0) : 0;</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">                 int insertBottom = request.getAttribute(&quot;inset-bottom&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-bottom&quot;), 0) : 0;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">                 int insertRight = request.getAttribute(&quot;inset-right&quot;) != null ? Tools.getIntValue((String)request.getAttribute(&quot;inset-right&quot;), 0) : 0;</span>
+<span class="nc" id="L226">                 pd4ml.setPageInsets(new Insets(insertLeft, insertTop, insertBottom, insertRight));</span>
              }
          }
-<span class="nc" id="L225">         int x = PD4ML.A4.width;</span>
-<span class="nc" id="L226">         int y = PD4ML.A4.height;</span>
-<span class="nc bnc" id="L227" title="All 2 branches missed.">         if (request != null)</span>
+<span class="nc" id="L229">         int x = PD4ML.A4.width;</span>
+<span class="nc" id="L230">         int y = PD4ML.A4.height;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">         if (request != null)</span>
          {
-<span class="nc" id="L229">             x = getIntValue(request.getParameter(&quot;width&quot;), PD4ML.A4.width);</span>
-<span class="nc" id="L230">             y = getIntValue(request.getParameter(&quot;height&quot;), PD4ML.A4.height);</span>
-<span class="nc bnc" id="L231" title="All 2 branches missed.">             if(request.getAttribute(&quot;pageWidth&quot;) != null)</span>
-<span class="nc" id="L232">                x = Tools.getIntValue((Integer)request.getAttribute(&quot;pageWidth&quot;), PD4ML.A4.width);</span>
-<span class="nc bnc" id="L233" title="All 2 branches missed.">             if(request.getAttribute(&quot;pageHeight&quot;) != null)</span>
-<span class="nc" id="L234">                y = Tools.getIntValue((Integer)request.getAttribute(&quot;pageHeight&quot;), PD4ML.A4.height);</span>
+<span class="nc" id="L233">             x = getIntValue(request.getParameter(&quot;width&quot;), PD4ML.A4.width);</span>
+<span class="nc" id="L234">             y = getIntValue(request.getParameter(&quot;height&quot;), PD4ML.A4.height);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">             if(request.getAttribute(&quot;pageWidth&quot;) != null)</span>
+<span class="nc" id="L236">                x = Tools.getIntValue((Integer)request.getAttribute(&quot;pageWidth&quot;), PD4ML.A4.width);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">             if(request.getAttribute(&quot;pageHeight&quot;) != null)</span>
+<span class="nc" id="L238">                y = Tools.getIntValue((Integer)request.getAttribute(&quot;pageHeight&quot;), PD4ML.A4.height);</span>
          }
-<span class="nc" id="L236">         pd4ml.setPageSize(new Dimension(x, y));</span>
+<span class="nc" id="L240">         pd4ml.setPageSize(new Dimension(x, y));</span>
 
-<span class="nc" id="L238">         String conReadonlyDocIds = Constants.getString(&quot;htmlToPdfReadonlyDocIds&quot;);</span>
-<span class="nc" id="L239">         String docId = null;</span>
+<span class="nc" id="L242">         String conReadonlyDocIds = Constants.getString(&quot;htmlToPdfReadonlyDocIds&quot;);</span>
+<span class="nc" id="L243">         String docId = null;</span>
          //BUGFIX  9091
-<span class="nc bnc" id="L241" title="All 2 branches missed.">         if(request != null) docId =(String)request.getAttribute(&quot;docId&quot;);</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">         if(request != null) docId =(String)request.getAttribute(&quot;docId&quot;);</span>
 
          //nastavujem readonly pre zadane docIds
-<span class="nc bnc" id="L244" title="All 4 branches missed.">         if(Tools.isNotEmpty(conReadonlyDocIds) &amp;&amp; Tools.isNotEmpty(docId))</span>
+<span class="nc bnc" id="L248" title="All 4 branches missed.">         if(Tools.isNotEmpty(conReadonlyDocIds) &amp;&amp; Tools.isNotEmpty(docId))</span>
          {
-<span class="nc" id="L246">             Logger.debug(PdfTools.class, &quot;readonly docIds: &quot;+conReadonlyDocIds);</span>
-<span class="nc" id="L247">             conReadonlyDocIds = conReadonlyDocIds.replaceAll(&quot;;&quot;, &quot;+&quot;).replaceAll(&quot; &quot;, &quot;+&quot;);</span>
-<span class="nc" id="L248">             String[] readonlyDocIds = Tools.getTokens(conReadonlyDocIds, &quot;+&quot;, true);</span>
-<span class="nc bnc" id="L249" title="All 2 branches missed.">             for(String readOnlyDocId : readonlyDocIds)</span>
+<span class="nc" id="L250">             Logger.debug(PdfTools.class, &quot;readonly docIds: &quot;+conReadonlyDocIds);</span>
+<span class="nc" id="L251">             conReadonlyDocIds = conReadonlyDocIds.replaceAll(&quot;;&quot;, &quot;+&quot;).replaceAll(&quot; &quot;, &quot;+&quot;);</span>
+<span class="nc" id="L252">             String[] readonlyDocIds = Tools.getTokens(conReadonlyDocIds, &quot;+&quot;, true);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">             for(String readOnlyDocId : readonlyDocIds)</span>
              {
-<span class="nc bnc" id="L251" title="All 2 branches missed.">                 if(readOnlyDocId.equals(docId))</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">                 if(readOnlyDocId.equals(docId))</span>
                  {
-<span class="nc" id="L253">                     Logger.debug(PdfTools.class, &quot;nastavujem readonly pre docId: &quot;+docId);</span>
-<span class="nc" id="L254">                     pd4ml.setPermissions(&quot;empty&quot;, PD4Constants.AllowContentExtraction+PD4Constants.AllowModify, true);</span>
-<span class="nc" id="L255">                     break;</span>
+<span class="nc" id="L257">                     Logger.debug(PdfTools.class, &quot;nastavujem readonly pre docId: &quot;+docId);</span>
+<span class="nc" id="L258">                     pd4ml.setPermissions(&quot;empty&quot;, PD4Constants.AllowContentExtraction+PD4Constants.AllowModify, true);</span>
+<span class="nc" id="L259">                     break;</span>
                  }
              }
          }
 
-<span class="nc bnc" id="L260" title="All 2 branches missed.">         if (options != null )</span>
+<span class="nc bnc" id="L264" title="All 2 branches missed.">         if (options != null )</span>
          {
-<span class="nc bnc" id="L262" title="All 2 branches missed.">             if (options.isFitPageVertically())</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">             if (options.isFitPageVertically())</span>
              {
-<span class="nc" id="L264">                 pd4ml.fitPageVertically();</span>
+<span class="nc" id="L268">                 pd4ml.fitPageVertically();</span>
              }
-<span class="nc bnc" id="L266" title="All 2 branches missed.">             if (options.getHtmlWidth()&gt;0)</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">             if (options.getHtmlWidth()&gt;0)</span>
              {
-<span class="nc" id="L268">                 pd4ml.setHtmlWidth(options.getHtmlWidth());</span>
+<span class="nc" id="L272">                 pd4ml.setHtmlWidth(options.getHtmlWidth());</span>
              }
          }
 
-<span class="nc bnc" id="L272" title="All 2 branches missed.">         if (request != null)</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">         if (request != null)</span>
          {
-<span class="nc" id="L274">             String headerHtml = (String)request.getAttribute(&quot;pdfHeaderHtml&quot;);</span>
-<span class="nc bnc" id="L275" title="All 2 branches missed.">             if (Tools.isNotEmpty(headerHtml))</span>
+<span class="nc" id="L278">             String headerHtml = (String)request.getAttribute(&quot;pdfHeaderHtml&quot;);</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">             if (Tools.isNotEmpty(headerHtml))</span>
              {
-<span class="nc" id="L277">                 PD4PageMark header = new PD4PageMark();</span>
-<span class="nc" id="L278">                 header.setAreaHeight( Tools.getIntValue((String)request.getAttribute(&quot;pdfHeaderHeight&quot;), 30 ));</span>
-<span class="nc" id="L279">                 header.setHtmlTemplate( headerHtml );</span>
-<span class="nc" id="L280">                 pd4ml.setPageHeader( header );</span>
+<span class="nc" id="L281">                 PD4PageMark header = new PD4PageMark();</span>
+<span class="nc" id="L282">                 header.setAreaHeight( Tools.getIntValue((String)request.getAttribute(&quot;pdfHeaderHeight&quot;), 30 ));</span>
+<span class="nc" id="L283">                 header.setHtmlTemplate( headerHtml );</span>
+<span class="nc" id="L284">                 pd4ml.setPageHeader( header );</span>
              }
 
-<span class="nc" id="L283">             String footerHtml = (String)request.getAttribute(&quot;pdfFooterHtml&quot;);</span>
-<span class="nc bnc" id="L284" title="All 2 branches missed.">             if (Tools.isNotEmpty(footerHtml))</span>
+<span class="nc" id="L287">             String footerHtml = (String)request.getAttribute(&quot;pdfFooterHtml&quot;);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">             if (Tools.isNotEmpty(footerHtml))</span>
              {
-<span class="nc" id="L286">                 PD4PageMark footer = new PD4PageMark();</span>
-<span class="nc" id="L287">                 footer.setAreaHeight( Tools.getIntValue((String)request.getAttribute(&quot;pdfFooterHeight&quot;), -1 ) );</span>
-<span class="nc" id="L288">                 footer.setHtmlTemplate( footerHtml );</span>
-<span class="nc" id="L289">                 pd4ml.setPageFooter( footer );</span>
+<span class="nc" id="L290">                 PD4PageMark footer = new PD4PageMark();</span>
+<span class="nc" id="L291">                 footer.setAreaHeight( Tools.getIntValue((String)request.getAttribute(&quot;pdfFooterHeight&quot;), -1 ) );</span>
+<span class="nc" id="L292">                 footer.setHtmlTemplate( footerHtml );</span>
+<span class="nc" id="L293">                 pd4ml.setPageFooter( footer );</span>
              }
          }
 
-<span class="nc bnc" id="L293" title="All 2 branches missed.">         if (request != null) pd4ml.setSessionID(request.getSession().getId());</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">         if (request != null) pd4ml.setSessionID(request.getSession().getId());</span>
 
          URL base;
-<span class="nc" id="L296">         String pdfBaseUrl = Constants.getString(&quot;pdfBaseUrl&quot;);</span>
-<span class="nc bnc" id="L297" title="All 2 branches missed.">         if (&quot;NULL&quot;.equalsIgnoreCase(pdfBaseUrl))</span>
+<span class="nc" id="L300">         String pdfBaseUrl = Constants.getString(&quot;pdfBaseUrl&quot;);</span>
+<span class="nc bnc" id="L301" title="All 2 branches missed.">         if (&quot;NULL&quot;.equalsIgnoreCase(pdfBaseUrl))</span>
          {
              //v tomto pripade si PD4ML sam nacita obrazky z file systemu, potrebuje astaveny Context a Request
-<span class="nc" id="L300">             pd4ml.useServletContext(Constants.getServletContext());</span>
-<span class="nc bnc" id="L301" title="All 2 branches missed.">             if (request != null) pd4ml.useHttpRequest(request, null);</span>
+<span class="nc" id="L304">             pd4ml.useServletContext(Constants.getServletContext());</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">             if (request != null) pd4ml.useHttpRequest(request, null);</span>
 
-<span class="nc" id="L303">             base = null;</span>
+<span class="nc" id="L307">             base = null;</span>
 
-<span class="nc" id="L305">             String contextPath = &quot;&quot;;</span>
-<span class="nc bnc" id="L306" title="All 4 branches missed.">             if (request != null &amp;&amp; ContextFilter.isRunning(request))</span>
+<span class="nc" id="L309">             String contextPath = &quot;&quot;;</span>
+<span class="nc bnc" id="L310" title="All 4 branches missed.">             if (request != null &amp;&amp; ContextFilter.isRunning(request))</span>
              {
-<span class="nc" id="L308">                 contextPath = request.getContextPath();</span>
+<span class="nc" id="L312">                 contextPath = request.getContextPath();</span>
              }
 
              //pre dynamicke obrazky musime pridat HTTP loopback
-<span class="nc" id="L312">             data = Tools.replace(data, &quot;'&quot;+contextPath+&quot;/admin/statchart&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/admin/statchart&quot;);</span>
-<span class="nc" id="L313">             data = Tools.replace(data, &quot;\&quot;&quot;+contextPath+&quot;/admin/statchart&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/admin/statchart&quot;);</span>
+<span class="nc" id="L316">             data = Tools.replace(data, &quot;'&quot;+contextPath+&quot;/admin/statchart&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/admin/statchart&quot;);</span>
+<span class="nc" id="L317">             data = Tools.replace(data, &quot;\&quot;&quot;+contextPath+&quot;/admin/statchart&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/admin/statchart&quot;);</span>
 
-<span class="nc" id="L315">             data = Tools.replace(data, &quot;'&quot;+contextPath+&quot;/graph.do&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/graph.do&quot;);</span>
-<span class="nc" id="L316">             data = Tools.replace(data, &quot;\&quot;&quot;+contextPath+&quot;/graph.do&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/graph.do&quot;);</span>
+<span class="nc" id="L319">             data = Tools.replace(data, &quot;'&quot;+contextPath+&quot;/graph.do&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/graph.do&quot;);</span>
+<span class="nc" id="L320">             data = Tools.replace(data, &quot;\&quot;&quot;+contextPath+&quot;/graph.do&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/graph.do&quot;);</span>
 
-<span class="nc" id="L318">             data = Tools.replace(data, &quot;'&quot;+contextPath+&quot;/thumb/&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
-<span class="nc" id="L319">             data = Tools.replace(data, &quot;\&quot;&quot;+contextPath+&quot;/thumb/&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
-<span class="nc bnc" id="L320" title="All 4 branches missed.">             if (request != null &amp;&amp; ContextFilter.isRunning(request))</span>
+<span class="nc" id="L322">             data = Tools.replace(data, &quot;'&quot;+contextPath+&quot;/thumb/&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
+<span class="nc" id="L323">             data = Tools.replace(data, &quot;\&quot;&quot;+contextPath+&quot;/thumb/&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
+<span class="nc bnc" id="L324" title="All 4 branches missed.">             if (request != null &amp;&amp; ContextFilter.isRunning(request))</span>
              {
                  //toto je tu kvoli _printAsPdf=true kedy je HTML kod bez prefixov
-<span class="nc" id="L323">                 data = Tools.replace(data, &quot;'/thumb/&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
-<span class="nc" id="L324">                 data = Tools.replace(data, &quot;\&quot;/thumb/&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
+<span class="nc" id="L327">                 data = Tools.replace(data, &quot;'/thumb/&quot;, &quot;'&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
+<span class="nc" id="L328">                 data = Tools.replace(data, &quot;\&quot;/thumb/&quot;, &quot;\&quot;&quot;+Tools.getBaseHrefLoopback(request)+&quot;/thumb/&quot;);</span>
              }
 
-<span class="nc bnc" id="L327" title="All 4 branches missed.">             if (request != null &amp;&amp; ContextFilter.isRunning(request))</span>
+<span class="nc bnc" id="L331" title="All 4 branches missed.">             if (request != null &amp;&amp; ContextFilter.isRunning(request))</span>
              {
-<span class="nc" id="L329">                 data = Tools.replace(data, &quot;'&quot;+request.getContextPath()+&quot;/&quot;, &quot;'/&quot;);</span>
-<span class="nc" id="L330">                 data = Tools.replace(data, &quot;\&quot;&quot;+request.getContextPath()+&quot;/&quot;, &quot;\&quot;/&quot;);</span>
+<span class="nc" id="L333">                 data = Tools.replace(data, &quot;'&quot;+request.getContextPath()+&quot;/&quot;, &quot;'/&quot;);</span>
+<span class="nc" id="L334">                 data = Tools.replace(data, &quot;\&quot;&quot;+request.getContextPath()+&quot;/&quot;, &quot;\&quot;/&quot;);</span>
              }
-<span class="nc" id="L332">         }</span>
-<span class="nc bnc" id="L333" title="All 2 branches missed.">         else if (&quot;LOOPBACK&quot;.equalsIgnoreCase(pdfBaseUrl)) base = new URL(Tools.getBaseHrefLoopback(request));</span>
-<span class="nc" id="L334">         else base = new URL(pdfBaseUrl);</span>
+<span class="nc" id="L336">         }</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">         else if (&quot;LOOPBACK&quot;.equalsIgnoreCase(pdfBaseUrl)) base = new URL(Tools.getBaseHrefLoopback(request));</span>
+<span class="nc" id="L338">         else base = new URL(pdfBaseUrl);</span>
 
-<span class="nc bnc" id="L336" title="All 6 branches missed.">         if (base != null &amp;&amp; request!=null &amp;&amp; ContextFilter.isRunning(request))</span>
+<span class="nc bnc" id="L340" title="All 6 branches missed.">         if (base != null &amp;&amp; request!=null &amp;&amp; ContextFilter.isRunning(request))</span>
          {
              //pridaj ContextPath k HTML kodu
-<span class="nc" id="L339">             data = ContextFilter.addContextPath(request.getContextPath(), data);</span>
+<span class="nc" id="L343">             data = ContextFilter.addContextPath(request.getContextPath(), data);</span>
          }
          try
          {
-<span class="nc" id="L343">             String pdfFontDirectory = Constants.getString(&quot;pdfFontDirectory&quot;);</span>
-<span class="nc bnc" id="L344" title="All 2 branches missed.">             if (base != null) pdfFontDirectory = Tools.getRealPath(Tools.replace(pdfFontDirectory, &quot;file://&quot;, &quot;/&quot;));</span>
-<span class="nc bnc" id="L345" title="All 2 branches missed.">             IwcmFile pdfFontDirIwcmFile = new IwcmFile(base != null ? pdfFontDirectory : Tools.getRealPath(Tools.replace(pdfFontDirectory, &quot;file://&quot;, &quot;/&quot;)));</span>
-<span class="nc" id="L346">             Logger.debug(PdfTools.class, &quot;FONT PATH: &quot;+pdfFontDirectory);</span>
-<span class="nc bnc" id="L347" title="All 2 branches missed.">             if(pdfFontDirIwcmFile.exists() == false)</span>
-<span class="nc" id="L348">                 Logger.error(PdfTools.class, &quot;FONT PATH &quot;+pdfFontDirIwcmFile.getAbsolutePath()+&quot; neexistuje!!&quot;);</span>
+<span class="nc" id="L347">             String pdfFontDirectory = Constants.getString(&quot;pdfFontDirectory&quot;);</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">             if (base != null) pdfFontDirectory = Tools.getRealPath(Tools.replace(pdfFontDirectory, &quot;file://&quot;, &quot;/&quot;));</span>
+<span class="nc bnc" id="L349" title="All 2 branches missed.">             IwcmFile pdfFontDirIwcmFile = new IwcmFile(base != null ? pdfFontDirectory : Tools.getRealPath(Tools.replace(pdfFontDirectory, &quot;file://&quot;, &quot;/&quot;)));</span>
+<span class="nc" id="L350">             Logger.debug(PdfTools.class, &quot;FONT PATH: &quot;+pdfFontDirectory);</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">             if(pdfFontDirIwcmFile.exists() == false)</span>
+<span class="nc" id="L352">                 Logger.error(PdfTools.class, &quot;FONT PATH &quot;+pdfFontDirIwcmFile.getAbsolutePath()+&quot; neexistuje!!&quot;);</span>
 
              //pd4ml.useAdobeFontMetrics( true );
              //pd4ml.useTTF( Tools.getStringValue(Constants.getString(&quot;pdfFontDirectory&quot;), &quot;C:\\WINDOWS\\Fonts&quot;), true);
 
-<span class="nc" id="L353">             pd4ml.useTTF(pdfFontDirectory, true);</span>
+<span class="nc" id="L357">             pd4ml.useTTF(pdfFontDirectory, true);</span>
          }
-<span class="nc" id="L355">         catch (FileNotFoundException exc)</span>
+<span class="nc" id="L359">         catch (FileNotFoundException exc)</span>
          {
-<span class="nc" id="L357">            Logger.error(PdfTools.class, exc);</span>
+<span class="nc" id="L361">            Logger.error(PdfTools.class, exc);</span>
              //nic, iba nebude pouzivat default fonty
-<span class="nc" id="L359">         }</span>
+<span class="nc" id="L363">         }</span>
 
          //generovanie vo formate rtf
-<span class="nc bnc" id="L362" title="All 6 branches missed.">         if(request != null &amp;&amp; request.getParameter(&quot;renderAsRtf&quot;) != null &amp;&amp; request.getParameter(&quot;renderAsRtf&quot;).toLowerCase().equals(&quot;true&quot;) )</span>
+<span class="nc bnc" id="L366" title="All 6 branches missed.">         if(request != null &amp;&amp; request.getParameter(&quot;renderAsRtf&quot;) != null &amp;&amp; request.getParameter(&quot;renderAsRtf&quot;).toLowerCase().equals(&quot;true&quot;) )</span>
          {
-<span class="nc bnc" id="L364" title="All 4 branches missed.">             if(request.getParameter(&quot;imgQuality&quot;) != null &amp;&amp; request.getParameter(&quot;imgQuality&quot;).toLowerCase().equals(&quot;wmf&quot;))</span>
-<span class="nc" id="L365">                 pd4ml.outputFormat(PD4Constants.RTF_WMF);	//RTF_WMF - compatibility with WordPad WMF</span>
+<span class="nc bnc" id="L368" title="All 4 branches missed.">             if(request.getParameter(&quot;imgQuality&quot;) != null &amp;&amp; request.getParameter(&quot;imgQuality&quot;).toLowerCase().equals(&quot;wmf&quot;))</span>
+<span class="nc" id="L369">                 pd4ml.outputFormat(PD4Constants.RTF_WMF);	//RTF_WMF - compatibility with WordPad WMF</span>
              else
-<span class="nc" id="L367">                 pd4ml.outputFormat(PD4Constants.RTF);	//RTF -  original format (compatible with MS Word and few other editors)</span>
+<span class="nc" id="L371">                 pd4ml.outputFormat(PD4Constants.RTF);	//RTF -  original format (compatible with MS Word and few other editors)</span>
          }
 
 
          //nasledujuca funkcia je deprecated, a este k tomu zbytocna, pretoze je defaultne true
          //pd4ml.useAdobeFontMetrics(true);
-<span class="nc bnc" id="L373" title="All 2 branches missed.">         if (request!=null)</span>
+<span class="nc bnc" id="L377" title="All 2 branches missed.">         if (request!=null)</span>
          {
              //zisti, ci nemame renderovat na obrazky
-<span class="nc" id="L376">             boolean renderAsImages = false;</span>
-<span class="nc bnc" id="L377" title="All 4 branches missed.">             if(request.getAttribute(&quot;renderAsImages&quot;) != null &amp;&amp; request.getAttribute(&quot;renderAsImages&quot;) instanceof Boolean)</span>
-<span class="nc" id="L378">                 renderAsImages = (Boolean)request.getAttribute(&quot;renderAsImages&quot;);</span>
-<span class="nc" id="L379">             String imagesUrlwithPrefix = &quot;/files/pdf_as_image&quot;;</span>
-<span class="nc bnc" id="L380" title="All 2 branches missed.">             if(request.getAttribute(&quot;imagesUrlwithPrefix&quot;) != null)</span>
-<span class="nc" id="L381">                 imagesUrlwithPrefix = (String)request.getAttribute(&quot;imagesUrlwithPrefix&quot;);</span>
+<span class="nc" id="L380">             boolean renderAsImages = false;</span>
+<span class="nc bnc" id="L381" title="All 4 branches missed.">             if(request.getAttribute(&quot;renderAsImages&quot;) != null &amp;&amp; request.getAttribute(&quot;renderAsImages&quot;) instanceof Boolean)</span>
+<span class="nc" id="L382">                 renderAsImages = (Boolean)request.getAttribute(&quot;renderAsImages&quot;);</span>
+<span class="nc" id="L383">             String imagesUrlwithPrefix = &quot;/files/pdf_as_image&quot;;</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">             if(request.getAttribute(&quot;imagesUrlwithPrefix&quot;) != null)</span>
+<span class="nc" id="L385">                 imagesUrlwithPrefix = (String)request.getAttribute(&quot;imagesUrlwithPrefix&quot;);</span>
 
-<span class="nc bnc" id="L383" title="All 2 branches missed.">             if(!renderAsImages)</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">             if(!renderAsImages)</span>
              {
-<span class="nc bnc" id="L385" title="All 2 branches missed.">                 if (base == null)</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">                 if (base == null)</span>
                  {
-<span class="nc" id="L387">                     pd4ml.render(new StringReader(data),  output);</span>
+<span class="nc" id="L391">                    pd4ml.render(new StringReader(data),  output);</span>
                  }
-<span class="nc bnc" id="L389" title="All 4 branches missed.">                 else if (&quot;true&quot;.equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM)) &amp;&amp; &quot;true&quot;.equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM+&quot;No&quot;))==false)</span>
+<span class="nc bnc" id="L393" title="All 4 branches missed.">                 else if (&quot;true&quot;.equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM)) &amp;&amp; &quot;true&quot;.equals(request.getParameter(SetCharacterEncodingFilter.PDF_PRINT_PARAM+&quot;No&quot;))==false)</span>
                  {
-<span class="nc" id="L391">                     pd4ml.render(new StringReader(data),  output, base, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L395">                     pd4ml.render(new StringReader(data),  output, base, SetCharacterEncodingFilter.getEncoding());</span>
                  }
                  else
                  {
                      //pd4ml.render(new StringReader(data),  output, new URL(Tools.getBaseHrefLoopback(request)), SetCharacterEncodingFilter.encoding);
-<span class="nc" id="L396">                     pd4ml.render(new StringReader(data),  output, base, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L400">                     pd4ml.render(new StringReader(data),  output, base, SetCharacterEncodingFilter.getEncoding());</span>
                  }
              }
              else
              {
-<span class="nc bnc" id="L401" title="All 4 branches missed.">                 if(request.getAttribute(&quot;SetCharacterEncodingFilter&quot;) != null &amp;&amp; (Boolean)request.getAttribute(&quot;SetCharacterEncodingFilter&quot;))</span>
-<span class="nc" id="L402">                     pd4ml.overrideDocumentEncoding(SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc bnc" id="L405" title="All 4 branches missed.">                 if(request.getAttribute(&quot;SetCharacterEncodingFilter&quot;) != null &amp;&amp; (Boolean)request.getAttribute(&quot;SetCharacterEncodingFilter&quot;))</span>
+<span class="nc" id="L406">                     pd4ml.overrideDocumentEncoding(SetCharacterEncodingFilter.getEncoding());</span>
 
-<span class="nc" id="L404">                 BufferedImage[] biArray = pd4ml.renderAsImages(new StringReader(data), base, Tools.getIntValue((Integer)request.getAttribute(&quot;imageWidth&quot;), PD4ML.A4.width),  Tools.getIntValue((Integer)request.getAttribute(&quot;imageHeight&quot;), PD4ML.A4.height));</span>
+<span class="nc" id="L408">                 BufferedImage[] biArray = pd4ml.renderAsImages(new StringReader(data), base, Tools.getIntValue((Integer)request.getAttribute(&quot;imageWidth&quot;), PD4ML.A4.width),  Tools.getIntValue((Integer)request.getAttribute(&quot;imageHeight&quot;), PD4ML.A4.height));</span>
 
-<span class="nc" id="L406">                 String imgSuff = &quot;png&quot;;</span>
-<span class="nc bnc" id="L407" title="All 2 branches missed.">                 if(Tools.getParamAttribute(&quot;ImageSuffix&quot;, request)  != null)</span>
+<span class="nc" id="L410">                 String imgSuff = &quot;png&quot;;</span>
+<span class="nc bnc" id="L411" title="All 2 branches missed.">                 if(Tools.getParamAttribute(&quot;ImageSuffix&quot;, request)  != null)</span>
                  {
-<span class="nc" id="L409">                     String suffix = Tools.getParamAttribute(&quot;ImageSuffix&quot;, request).toLowerCase();</span>
-<span class="nc bnc" id="L410" title="All 2 branches missed.">                     if(suffix.equals(&quot;jpg&quot;))</span>
-<span class="nc" id="L411">                         imgSuff = &quot;jpg&quot;;</span>
+<span class="nc" id="L413">                     String suffix = Tools.getParamAttribute(&quot;ImageSuffix&quot;, request).toLowerCase();</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">                     if(suffix.equals(&quot;jpg&quot;))</span>
+<span class="nc" id="L415">                         imgSuff = &quot;jpg&quot;;</span>
 
-<span class="nc bnc" id="L413" title="All 2 branches missed.">                     if(suffix.equals(&quot;tiff&quot;))</span>
-<span class="nc" id="L414">                         imgSuff = &quot;tiff&quot;;</span>
+<span class="nc bnc" id="L417" title="All 2 branches missed.">                     if(suffix.equals(&quot;tiff&quot;))</span>
+<span class="nc" id="L418">                         imgSuff = &quot;tiff&quot;;</span>
                  }
 
-<span class="nc bnc" id="L417" title="All 2 branches missed.">                 for(int i = 0; i &lt; biArray.length; i++)</span>
+<span class="nc bnc" id="L421" title="All 2 branches missed.">                 for(int i = 0; i &lt; biArray.length; i++)</span>
                  {
-<span class="nc bnc" id="L419" title="All 2 branches missed.">                     IwcmFile dest = new IwcmFile(Tools.getRealPath(imagesUrlwithPrefix+(biArray.length &gt; 1 ? &quot;_&quot;+i : &quot;&quot;)+&quot;.&quot;+imgSuff));</span>
-<span class="nc" id="L420">                     ImageIO.write(biArray[i], imgSuff, new File(dest.getPath()));</span>
+<span class="nc bnc" id="L423" title="All 2 branches missed.">                     IwcmFile dest = new IwcmFile(Tools.getRealPath(imagesUrlwithPrefix+(biArray.length &gt; 1 ? &quot;_&quot;+i : &quot;&quot;)+&quot;.&quot;+imgSuff));</span>
+<span class="nc" id="L424">                     ImageIO.write(biArray[i], imgSuff, new File(dest.getPath()));</span>
                  }
              }
-<span class="nc" id="L423">         }</span>
+<span class="nc" id="L427">         }</span>
          else
          {
-<span class="nc" id="L426">             pd4ml.render(new StringReader(data), output);</span>
+<span class="nc" id="L430">             pd4ml.render(new StringReader(data), output);</span>
          }
 
+<span class="nc" id="L433">        revertOriginalJavaVersion();</span>
+
          //toto sa nam proste nejako straca...
-<span class="nc bnc" id="L430" title="All 4 branches missed.">         if (request != null &amp;&amp; Tools.isNotEmpty(editorDomainName)) request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, editorDomainName);</span>
-<span class="nc" id="L431">    }</span>
+<span class="nc bnc" id="L436" title="All 4 branches missed.">         if (request != null &amp;&amp; Tools.isNotEmpty(editorDomainName)) request.getSession().setAttribute(&quot;preview.editorDomainName&quot;, editorDomainName);</span>
+<span class="nc" id="L437">    }</span>
+
+    private static void fixJavaVersion() {
+<span class="nc bnc" id="L440" title="All 2 branches missed.">        if (ORIGINAL_JAVA_VERSION == null) {</span>
+<span class="nc" id="L441">            ORIGINAL_JAVA_VERSION = System.getProperty(&quot;java.version&quot;);</span>
+        }
+        //FIX pd4ml wrong Java version detection based on 2nd digit
+<span class="nc" id="L444">        String[] versions = Tools.getTokens(ORIGINAL_JAVA_VERSION, &quot;.&quot;);</span>
+        //replace second digit with number 8
+<span class="nc bnc" id="L446" title="All 2 branches missed.">        if (versions.length &gt; 1) {</span>
+<span class="nc" id="L447">            versions[1] = &quot;8&quot;;</span>
+<span class="nc" id="L448">            System.setProperty(&quot;java.version&quot;, Tools.join(versions, &quot;.&quot;));</span>
+        }
+<span class="nc" id="L450">    }</span>
+
+    private static void revertOriginalJavaVersion() {
+<span class="nc bnc" id="L453" title="All 2 branches missed.">        if (ORIGINAL_JAVA_VERSION != null) System.setProperty(&quot;java.version&quot;, ORIGINAL_JAVA_VERSION);</span>
+<span class="nc" id="L454">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

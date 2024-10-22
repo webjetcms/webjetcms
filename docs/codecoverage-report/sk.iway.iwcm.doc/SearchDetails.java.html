@@ -14,7 +14,7 @@ import sk.iway.iwcm.Tools;
  *@version      $Revision: 1.2 $
  *@created      $Date: 2003/11/03 17:25:29 $
  */
-<span class="nc" id="L17">public class SearchDetails extends DocDetails</span>
+<span class="fc" id="L17">public class SearchDetails extends DocDetails</span>
 {
    private String link;
    private String dataOriginal;
@@ -25,7 +25,7 @@ import sk.iway.iwcm.Tools;
     */
    public String getFileIconImg()
    {
-<span class="nc bnc" id="L28" title="All 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return &quot;&quot;;</span>
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return &quot;&quot;;</span>
 <span class="nc" id="L29">  		String icon = FileTools.getFileIcon(super.getExternalLink());</span>
 <span class="nc" id="L30">  		return &quot;&lt;img class='fileIcon' alt='' src='&quot;+icon+&quot;'/&gt; &quot;;</span>
    }
@@ -36,7 +36,7 @@ import sk.iway.iwcm.Tools;
     */
    public String getFileInfo()
    {
-<span class="nc bnc" id="L39" title="All 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return &quot;&quot;;</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return &quot;&quot;;</span>
 
 <span class="nc" id="L41">   	String fileSize = FileTools.getFileLength(getExternalLink(), false);</span>
 <span class="nc" id="L42">   	String ext = &quot;&quot;;</span>
@@ -60,12 +60,12 @@ import sk.iway.iwcm.Tools;
    @Override
    public String getTitle()
    {
-<span class="nc" id="L63">   	String fileInfo = getFileInfo();</span>
-<span class="nc bnc" id="L64" title="All 2 branches missed.">   	if (Tools.isNotEmpty(fileInfo))</span>
+<span class="fc" id="L63">   	String fileInfo = getFileInfo();</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">   	if (Tools.isNotEmpty(fileInfo))</span>
    	{
 <span class="nc" id="L66">   		fileInfo = &quot; &lt;span class='fileInfo'&gt;(&quot;+fileInfo+&quot;)&lt;/span&gt;&quot;;</span>
    	}
-<span class="nc" id="L68">   	return getFileIconImg()+getTitleHuman()+fileInfo;</span>
+<span class="fc" id="L68">   	return getFileIconImg()+getTitleHuman()+fileInfo;</span>
    }
 
    /**
@@ -83,8 +83,8 @@ import sk.iway.iwcm.Tools;
     */
    public String getTitleHuman()
    {
-<span class="nc" id="L86">   	String title = super.getTitle();</span>
-<span class="nc bnc" id="L87" title="All 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return title;</span>
+<span class="fc" id="L86">   	String title = super.getTitle();</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">   	if (getExternalLink().startsWith(&quot;/files/&quot;) == false) return title;</span>
 <span class="nc" id="L88">   	title = title.replace('_', ' ');</span>
 <span class="nc" id="L89">   	title = title.replace('-', ' ');</span>
    	try
@@ -139,8 +139,8 @@ import sk.iway.iwcm.Tools;
     */
    public void setLink(String link)
    {
-<span class="nc" id="L142">      this.link = link;</span>
-<span class="nc" id="L143">   }</span>
+<span class="fc" id="L142">      this.link = link;</span>
+<span class="fc" id="L143">   }</span>
 
    /**
     *  Gets the link attribute of the SearchDetails object
@@ -149,17 +149,17 @@ import sk.iway.iwcm.Tools;
     */
    public String getLink()
    {
-<span class="nc" id="L152">      return link;</span>
+<span class="fc" id="L152">      return link;</span>
    }
 
 	public String getDataOriginal()
 	{
-<span class="nc" id="L157">		return dataOriginal;</span>
+<span class="fc" id="L157">		return dataOriginal;</span>
 	}
 
 	public void setDataOriginal(String dataOriginal)
 	{
-<span class="nc" id="L162">		this.dataOriginal = dataOriginal;</span>
-<span class="nc" id="L163">	}</span>
+<span class="fc" id="L162">		this.dataOriginal = dataOriginal;</span>
+<span class="fc" id="L163">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

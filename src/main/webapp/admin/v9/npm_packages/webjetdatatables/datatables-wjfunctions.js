@@ -644,8 +644,7 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
             var regExSearch = "";
 
             //console.log("val1=", $(input).val(), " input=", input);
-            if ($(input).val() !== "") {
-
+            if (typeof $(input).val() != "undefined" && $(input).val() !== "") {
 
                 val = $(input).val();
 
@@ -779,4 +778,206 @@ export function getEmptyData(forceData=true) {
         "forceData": forceData
     }
     return emptyData;
+}
+
+/**
+ * Nastavi select/date pickre na DT hlavicke a vyvola jej pozicie podla DT (sirky stlpcov)
+ */
+export function fixDatatableHeaderInputs(tableInstance) {
+    var dataId = tableInstance.DATA.id;
+
+    //console.log("fixDatatableHeaderInputs, dataId=", dataId, " tableInstance=", tableInstance);
+
+    $('#' + dataId + '_wrapper select.filter-input').each(function(index, element) {
+        //console.log("testing select, this=", this);
+        let $this = $(this);
+
+        if ($this.hasClass("selectpickerbinded")) return;
+        $this.addClass("selectpickerbinded");
+
+        //console.log("Setting selectpicker ", this);
+        $this.selectpicker(tableInstance.EDITOR.DT_SELECTPICKER_OPTS);
+
+        //mozno sa len pridal do hlavicky, nastav optiony
+        //console.log("Aktualizujem optiony, this=", this.options.length);
+        if (this.options.length<1) {
+            let name = $this.data("dt-name");
+            //console.log("name=", name);
+            if (typeof name != "undefined" && name != null) {
+                dtWJ.updateFilterSelect(tableInstance.DATA, name);
+            }
+        }
+    });
+    $('#' + dataId + '_wrapper select.filter-input-prepend, #' + dataId + '_extfilter select.filter-input-prepend').each(function(index, element) {
+        let $this = $(this);
+        if ($this.hasClass("selectpickerbinded")) return;
+        $this.addClass("selectpickerbinded");
+
+        //console.log("Setting selectpicker ", this);
+        $this.selectpicker(tableInstance.EDITOR.DT_SELECTPICKER_OPTS_NOSEARCH);
+    });
+
+    $('#' + dataId + '_wrapper .datepicker, #' + dataId + '_extfilter .datepicker').each(function (key, dateInput) {
+        let $this = $(dateInput);
+        if ($this.hasClass("datepickerbinded")) return;
+        $this.addClass("datepickerbinded");
+
+        $this.on("change", function() {
+            if ($this.val() != "") $this.addClass("has-value");
+            else $this.removeClass("has-value");
+
+            tableInstance.columns.adjust();
+            tableInstance.fixedHeader.adjust();
+        });
+
+        //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
+        new $.fn.dataTable.Editor.DateTime($this, {
+            format: 'L',
+            momentLocale: window.userLng,
+            locale: window.userLng,
+            keyInput: false,
+            i18n: tableInstance.EDITOR.i18n.datetime,
+            onChange: function() {
+                $this.trigger("change");
+            }
+        });
+    });
+
+    $('#' + dataId + '_wrapper .datetimepicker, #' + dataId + '_extfilter .datetimepicker').each(function (key, dateInput) {
+        let $this = $(dateInput);
+        if ($this.hasClass("datepickerbinded")) return;
+        $this.addClass("datepickerbinded");
+
+        $this.on("change", function() {
+            //to prevent UI change with clicking on filter button
+            setTimeout(()=> {
+                if ($this.val() != "") $this.addClass("has-value");
+                else $this.removeClass("has-value");
+
+                tableInstance.columns.adjust();
+                tableInstance.fixedHeader.adjust();
+            }, 100);
+        });
+
+        //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
+        new $.fn.dataTable.Editor.DateTime($this, {
+            format: 'L HH:mm',
+            momentLocale: window.userLng,
+            locale: window.userLng,
+            keyInput: false,
+            i18n: tableInstance.EDITOR.i18n.datetime,
+            onChange: function() {
+                $this.trigger("change");
+            }
+        });
+    });
+
+    $('.timehmpicker').each(function (key, dateInput) {
+        let $this = $(dateInput);
+        if ($this.hasClass("datepickerbinded")) return;
+        $this.addClass("datepickerbinded");
+
+        $this.on("change", function() {
+            if ($this.val() != "") $this.addClass("has-value");
+            else $this.removeClass("has-value");
+
+            tableInstance.columns.adjust();
+            tableInstance.fixedHeader.adjust();
+        });
+
+        //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
+        new $.fn.dataTable.Editor.DateTime($this, {
+            format: 'HH:mm',
+            momentLocale: window.userLng,
+            locale: window.userLng,
+            keyInput: false,
+            i18n: tableInstance.EDITOR.i18n.datetime,
+            onChange: function() {
+                $this.trigger("change");
+            }
+        });
+    });
+
+    $('.timehmspicker').each(function (key, dateInput) {
+        let $this = $(dateInput);
+        if ($this.hasClass("datepickerbinded")) return;
+        $this.addClass("datepickerbinded");
+
+        $this.on("change", function() {
+            if ($this.val() != "") $this.addClass("has-value");
+            else $this.removeClass("has-value");
+
+            tableInstance.columns.adjust();
+            tableInstance.fixedHeader.adjust();
+        });
+
+        //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
+        new $.fn.dataTable.Editor.DateTime($this, {
+            format: 'HH:mm:ss',
+            momentLocale: window.userLng,
+            locale: window.userLng,
+            keyInput: false,
+            i18n: tableInstance.EDITOR.i18n.datetime,
+            onChange: function() {
+                $this.trigger("change");
+            }
+        });
+    });
+
+    tableInstance.columns.adjust();
+    tableInstance.fixedHeader.adjust();
+}
+
+/**
+* Aktualizuje select v hlavicke/editore, nastavi optiony podla posledneho ajax requestu
+* @param {*} fieldName
+* @returns
+*/
+export function updateFilterSelect(DATA, fieldName) {
+   var fieldNameSelector = fieldName;
+   if (fieldNameSelector.indexOf(".")!=-1) fieldNameSelector = fieldNameSelector.replace(/\./gi, "\\.");
+   var select = $("select.dt-filter-" + fieldNameSelector)[0];
+   var currentValue = $(select).val();
+   //console.log("updateFilterSelect, fieldNameSelector=", fieldNameSelector, " select=", select, "currentValue=", currentValue);
+
+   if (typeof select != "undefined") {
+       //zrus vsetky options
+       select.options.length = 0;
+       select.add(new Option("", ""));
+       //pridaj options podla DATA objektu
+       for (var index in DATA.columns) {
+           //console.log("index: ", index);
+           if (DATA.columns[index].data === fieldName) {
+               for (var optionIndex in DATA.columns[index].editor.options) {
+                   var dataOption = DATA.columns[index].editor.options[optionIndex];
+                   //prazdnu hodnotu sme pridali uz hore, preskoc
+                   if (optionIndex==0 && dataOption.label=="" && dataOption.value=="") continue;
+                   //console.log("option 2: ", dataOption);
+                   var option = new Option(dataOption.label, dataOption.value);
+                   if ("editorFields.statusIcons"===fieldName) {
+                       option.setAttribute("data-content", dataOption.label);
+                       //console.log("Set data attribute, option=", option);
+                   }
+                   select.add(option);
+               }
+               break;
+           }
+       }
+
+       if (currentValue != null) $(select).val(currentValue);
+
+       if (typeof $(select).data("selectpicker") !== "undefined") {
+           //console.log("Updating selectpicker 2");
+           $(select).selectpicker('refresh');
+       }
+   }
+
+   let dteSelect = $("#DTE_Field_"+fieldNameSelector);
+   //console.log("dteSelect=", dteSelect);
+   if (typeof dteSelect.data("selectpicker") !== "undefined") {
+       setTimeout(()=>{
+           //console.log("Updating selectpicker DTE timeout ", dteSelect);
+           dteSelect.selectpicker('refresh');
+       }, 100);
+   }
 }

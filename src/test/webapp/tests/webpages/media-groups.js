@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('media-groups-zakladne testy', async ({I, DataTables }) => {
+Scenario('media-groups-zakladne testy @baseTest', async ({I, DataTables }) => {
     I.amOnPage("/admin/v9/webpages/media-groups/");
     await DataTables.baseTest({
         dataTable: 'mediaGroupsTable',

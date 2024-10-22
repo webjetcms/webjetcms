@@ -251,9 +251,12 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.wait(1);
 
     I.dontSeeElement("NEULOŽENÝ");
+    DT.filter('recipientName', 'Lukáč');
     I.see("Filip Lukáč");
+    DT.filter('recipientName', 'Pavlík');
     I.see("Matej Pavlík");
 
+    DT.clearFilter('recipientName');
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.click(locate('label').withText('Bankári'));
     I.wait(0.5);
@@ -272,7 +275,11 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.dontSee("Matej Pavlík");
 
     I.see("VIP Klient");
-    I.see("Meno Priezvisko");
+    I.see("Obchodny Partner");
+
+    //Can't see Meno Priezvisko and TestUser Test, because they are not valid
+    I.dontSee("Meno Priezvisko");
+    I.dontSee("TestUser Test");
 
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.wait(1);
@@ -299,7 +306,9 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
 Scenario('BUG pocty prijemcov', ({I, DTE}) => {
 
     var entityName = entityNameOriginal+"-prijemcovia";
-    var pocetPrijemcovNewsletter = 3;
+    //It's 3 not 2 BUT one of them is invalid
+    var pocetPrijemcovNewsletter = 2;
+    // SOOO VianocnePozdravy got 3 emails. One is invalid, second is valid BUT is already in newsletter group, third is valid and only one not in newsletter group
     var pocetPrijemcovVianocnePozdravy = 1;
 
     /* CREATE TEST */
@@ -326,7 +335,7 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     //
     overPocetPrijemcov(I, entityName, pocetPrijemcovNewsletter);
 
-    //
+    // IN the end, number of recipients must be 3
     I.say("Pridam skupinu Vianocne pozdravy, overim pocet prijemcov");
     I.click(entityName);
     I.dtWaitForEditor("campaingsDataTable");
@@ -854,6 +863,8 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click("#pills-dt-campaingsDataTable-receivers-tab");
     I.see(name);
 
+    I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.btn.btn-sm.btn-outline-secondary.buttons-refresh');
+    DT.waitForLoader('#datatableFieldDTE_Field_recipientsTab_processing');
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-select-all") );
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-remove") );
     I.click("Zmazať", "div.DTE_Action_Remove");

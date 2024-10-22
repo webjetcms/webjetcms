@@ -84,11 +84,16 @@ public class DefaultTimeValueConverter implements AttributeConverter<Date, Date>
      */
     public static Date combineDateWithTime(Date date, Date time) {
         if(date == null || time == null)  return null;
+        return combineDateWithTime(date.getTime(), time.getTime());
+    }
+
+    public static Date combineDateWithTime(long date, long time) {
+        if(date < 0 || time < 0)  return null;
 
         Calendar dateInstance = Calendar.getInstance();
-        dateInstance.setTime(date);
+        dateInstance.setTimeInMillis(date);
         Calendar timeInstance = Calendar.getInstance();
-        timeInstance.setTime(time);
+        timeInstance.setTimeInMillis(time);
 
         //Move hh:mm:ss from time to date
         dateInstance.set(Calendar.HOUR_OF_DAY, timeInstance.get(Calendar.HOUR_OF_DAY));

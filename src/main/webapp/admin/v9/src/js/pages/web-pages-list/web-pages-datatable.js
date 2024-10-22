@@ -112,7 +112,7 @@ export class WebPagesDatatable {
         if (window.perexGroupsRenderAsSelect===true) {
             window.WJ.DataTable.mergeColumns(webpageColumns, {
                 name: "perexGroups",
-                renderFormat: "dt-format-select",
+                renderFormat: "dt-format-text",
                 "editor" : {
                     type : "select",
                     multiple: true,

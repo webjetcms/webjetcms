@@ -55,7 +55,6 @@ response.setHeader("Cache-Control","no-Cache");
 	<head>
 		<title>403</title>
 		<meta http-equiv="Content-type" content="text/html;charset=windows-1250">
-		<link rel="stylesheet" href="/css/page.css" type="text/css">
 	</head>
 	<body>
 	<!--

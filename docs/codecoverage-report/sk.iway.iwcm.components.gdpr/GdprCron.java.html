@@ -36,7 +36,7 @@ import sk.iway.iwcm.helpers.MailHelper;
             }
 
 <span class="fc bfc" id="L38" title="All 2 branches covered.">            if (argArray[0].equalsIgnoreCase(&quot;regexps&quot;)) {</span>
-<span class="fc" id="L39">                regexps = new ArrayList&lt;GdprRegExpBean&gt;();</span>
+<span class="fc" id="L39">                regexps = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L40" title="All 2 branches covered.">                for(String value:valuesArray)</span>
                 {
 <span class="fc" id="L42">                    regexps.add(new GdprRegExpBean(value));</span>
@@ -49,37 +49,36 @@ import sk.iway.iwcm.helpers.MailHelper;
 <span class="fc bfc" id="L49" title="All 2 branches covered.">                for (String value : valuesArray) {</span>
 <span class="fc" id="L50">                    modules.add(GdprModule.valueOf(value));</span>
                 }
-<span class="fc" id="L52">                continue;</span>
             }
         }
 
-<span class="fc" id="L56">        Logger.debug(GdprCron.class, &quot;Emails: &quot; + Tools.join(emails, &quot;, &quot;));</span>
-<span class="fc" id="L57">        Logger.debug(GdprCron.class, &quot;Regexps: &quot; + Tools.join(regexps, &quot;, &quot;));</span>
-<span class="fc" id="L58">        Logger.debug(GdprCron.class, &quot;Modules: &quot; + Tools.join(modules, &quot;, &quot;));</span>
+<span class="fc" id="L55">        Logger.debug(GdprCron.class, &quot;Emails: &quot; + Tools.join(emails, &quot;, &quot;));</span>
+<span class="fc" id="L56">        Logger.debug(GdprCron.class, &quot;Regexps: &quot; + Tools.join(regexps, &quot;, &quot;));</span>
+<span class="fc" id="L57">        Logger.debug(GdprCron.class, &quot;Modules: &quot; + Tools.join(modules, &quot;, &quot;));</span>
 
-<span class="fc" id="L60">        GdprSearch gdprSearch = new GdprSearch(regexps, modules);</span>
-<span class="fc" id="L61">        GdprResults results = gdprSearch.search(null);</span>
+<span class="fc" id="L59">        GdprSearch gdprSearch = new GdprSearch(regexps, modules);</span>
+<span class="fc" id="L60">        GdprResults results = gdprSearch.search(null);</span>
 
-<span class="fc" id="L63">        StringWriter message = new StringWriter();</span>
-<span class="fc" id="L64">        VelocityEngine ve = new VelocityEngine();</span>
-<span class="fc" id="L65">        VelocityContext vc = new VelocityContext();</span>
+<span class="fc" id="L62">        StringWriter message = new StringWriter();</span>
+<span class="fc" id="L63">        VelocityEngine ve = new VelocityEngine();</span>
+<span class="fc" id="L64">        VelocityContext vc = new VelocityContext();</span>
 
-<span class="fc" id="L67">        vc.put(&quot;results&quot;, results.getResults());</span>
+<span class="fc" id="L66">        vc.put(&quot;results&quot;, results.getResults());</span>
 
-<span class="fc" id="L69">        ve.init();</span>
-<span class="fc" id="L70">        ve.evaluate(vc, message, &quot;GdprCron evaluate&quot;, VelocityTools.upgradeTemplate(FileTools.readFileContent(&quot;/components/gdpr/admin_list_search_detail_velocity.jsp&quot;)));</span>
+<span class="fc" id="L68">        ve.init();</span>
+<span class="fc" id="L69">        ve.evaluate(vc, message, &quot;GdprCron evaluate&quot;, VelocityTools.upgradeTemplate(FileTools.readFileContent(&quot;/components/gdpr/admin_list_search_detail_velocity.jsp&quot;)));</span>
 
-<span class="fc" id="L72">        MailHelper mailer = new MailHelper();</span>
-<span class="fc" id="L73">        mailer.setFromEmail(Constants.getString(&quot;GdprCron.fromEmail&quot;, &quot;web@interway.sk&quot;));</span>
-<span class="fc" id="L74">        mailer.setFromName(Constants.getString(&quot;GdprCron.fromName&quot;, &quot;Interway&quot;));</span>
-<span class="fc" id="L75">        mailer.setMessage(message.toString());</span>
-<span class="fc" id="L76">        mailer.setSubject(Constants.getString(&quot;GdprCron.subject&quot;, &quot;GDPR Cron&quot;));</span>
+<span class="fc" id="L71">        MailHelper mailer = new MailHelper()</span>
+<span class="fc" id="L72">            .setFromEmail(Constants.getString(&quot;GdprCron.fromEmail&quot;, &quot;web@interway.sk&quot;))</span>
+<span class="fc" id="L73">            .setFromName(Constants.getString(&quot;GdprCron.fromName&quot;, &quot;WebJET CMS&quot;))</span>
+<span class="fc" id="L74">            .setMessage(message.toString())</span>
+<span class="fc" id="L75">            .setSubject(Constants.getString(&quot;GdprCron.subject&quot;, &quot;GDPR Cron&quot;));</span>
 
-<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        for (String email : emails) {</span>
-<span class="fc" id="L79">            mailer.addRecipient(email);</span>
-<span class="fc" id="L80">        }</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (String email : emails) {</span>
+<span class="fc" id="L78">            mailer.addRecipient(email);</span>
+<span class="fc" id="L79">        }</span>
 
-<span class="nc" id="L82">        mailer.send();</span>
-<span class="nc" id="L83">    }</span>
+<span class="fc" id="L81">        mailer.send();</span>
+<span class="fc" id="L82">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

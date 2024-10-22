@@ -1,10 +1,6 @@
-//import 'tui-color-picker/dist/tui-color-picker.css';
-//import 'tui-image-editor/dist/tui-image-editor.css';
-//import Editor from 'tui-image-editor';
-
-import 'tui-image-editor/node_modules/tui-color-picker/dist/tui-color-picker.css';
-import 'tui-image-editor/apps/image-editor/dist/tui-image-editor.css';
-import Editor from 'tui-image-editor/apps/image-editor/dist/tui-image-editor';
+ import 'tui-color-picker/dist/tui-color-picker.css';
+ import '@webjetcms/tui-image-editor/dist/tui-image-editor.css';
+ import Editor from '@webjetcms/tui-image-editor';
 
 export class ImageEditor extends Editor {
     //preklad: <iwcm:text key="components.gallery.tui-image-editor.Remove_White"/>

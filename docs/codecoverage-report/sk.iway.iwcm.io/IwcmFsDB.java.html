@@ -395,7 +395,7 @@ public class IwcmFsDB
 <span class="pc bpc" id="L395" title="1 of 4 branches missed.">		if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
 		{
 <span class="fc" id="L397">			String domainVirtualPath = FilePathTools.getVirtualPathHellper(realPath);</span>
-<span class="pc bpc" id="L398" title="1 of 2 branches missed.">			if (domainVirtualPath != null) return domainVirtualPath;</span>
+<span class="fc bfc" id="L398" title="All 2 branches covered.">			if (domainVirtualPath != null) return domainVirtualPath;</span>
 		}
 
 <span class="pc bpc" id="L401" title="1 of 4 branches missed.">		if (realPath == null || realPath.length() &lt; Tools.getRealPath(&quot;/&quot;).length())</span>
@@ -486,7 +486,7 @@ public class IwcmFsDB
 	 */
 	public static void writeFiletoDest(InputStream in, File file, int size,boolean closeInStream)
 	{
-<span class="nc bnc" id="L489" title="All 2 branches missed.">		if (useDBStorage(getVirtualPath(file.getPath())))</span>
+<span class="pc bpc" id="L489" title="1 of 2 branches missed.">		if (useDBStorage(getVirtualPath(file.getPath())))</span>
 		{
 <span class="nc" id="L491">			Logger.error(IwcmFsDB.class, &quot;writeFileToDest:&quot; + file.getPath());</span>
 <span class="nc" id="L492">			IwcmFile iwFile=new IwcmFile(file);</span>
@@ -569,52 +569,52 @@ public class IwcmFsDB
 		{
 			try
 			{
-<span class="nc" id="L572">				byte[] buffer = new byte[64000];</span>
-<span class="nc" id="L573">				int bytesRead = 0;</span>
+<span class="fc" id="L572">				byte[] buffer = new byte[64000];</span>
+<span class="fc" id="L573">				int bytesRead = 0;</span>
 				//fos by malo subor vytvorit, mal som ale hlasene, ze to u klienta hadzalo FileNot FoundException preto som pridal implicitne vytvorenie suboru a adresara
-<span class="nc bnc" id="L575" title="All 2 branches missed.">				if (file.getParentFile().exists()==false)</span>
+<span class="pc bpc" id="L575" title="1 of 2 branches missed.">				if (file.getParentFile().exists()==false)</span>
 				{
 <span class="nc" id="L577">					boolean created = file.getParentFile().mkdirs();</span>
 <span class="nc" id="L578">					Logger.debug(IwcmFsDB.class, &quot;Parent file doesn't exists, path=&quot;+file.getParentFile().getAbsolutePath()+&quot;, created=&quot;+created);</span>
 				}
-<span class="nc bnc" id="L580" title="All 2 branches missed.">				if (file.exists()==false)</span>
+<span class="pc bpc" id="L580" title="1 of 2 branches missed.">				if (file.exists()==false)</span>
 				{
-<span class="nc" id="L582">					boolean created = file.createNewFile();</span>
-<span class="nc" id="L583">					Logger.debug(IwcmFsDB.class, &quot;File doesn't exists, path=&quot;+file.getAbsolutePath()+&quot;, creating=&quot;+created);</span>
+<span class="fc" id="L582">					boolean created = file.createNewFile();</span>
+<span class="fc" id="L583">					Logger.debug(IwcmFsDB.class, &quot;File doesn't exists, path=&quot;+file.getAbsolutePath()+&quot;, creating=&quot;+created);</span>
 				}
-<span class="nc" id="L585">				FileOutputStream fos = new FileOutputStream(file);</span>
-<span class="nc bnc" id="L586" title="All 2 branches missed.">				while ((bytesRead = in.read(buffer, 0, buffer.length)) != -1)</span>
+<span class="fc" id="L585">				FileOutputStream fos = new FileOutputStream(file);</span>
+<span class="fc bfc" id="L586" title="All 2 branches covered.">				while ((bytesRead = in.read(buffer, 0, buffer.length)) != -1)</span>
 				{
-<span class="nc" id="L588">					fos.write(buffer, 0, bytesRead);</span>
+<span class="fc" id="L588">					fos.write(buffer, 0, bytesRead);</span>
 				}
-<span class="nc" id="L590">				fos.close();</span>
+<span class="fc" id="L590">				fos.close();</span>
 
 				//ulozim subor aj do historie
-<span class="nc" id="L593">				IwcmFsDB.saveFileHistory(new IwcmFile(file), false);</span>
+<span class="fc" id="L593">				IwcmFsDB.saveFileHistory(new IwcmFile(file), false);</span>
 			}
 <span class="nc" id="L595">			catch (Exception e)</span>
 			{
 <span class="nc" id="L597">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L598">			}</span>
+<span class="fc" id="L598">			}</span>
 		}
 		try
 		{
-<span class="nc bnc" id="L602" title="All 2 branches missed.">			if (closeInStream) //pouziva sa napr. pri rozbalovani zipu ked sa zapisuju na disk subory, a input stream musi zostat otvoreny</span>
+<span class="pc bpc" id="L602" title="1 of 2 branches missed.">			if (closeInStream) //pouziva sa napr. pri rozbalovani zipu ked sa zapisuju na disk subory, a input stream musi zostat otvoreny</span>
 			{
-<span class="nc" id="L604">			in.close();</span>
+<span class="fc" id="L604">			in.close();</span>
 			}
 		}
 <span class="nc" id="L607">		catch (Exception e)</span>
 		{
 <span class="nc" id="L609">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L610">		}</span>
+<span class="fc" id="L610">		}</span>
 
-<span class="nc" id="L612">	}</span>
+<span class="fc" id="L612">	}</span>
 
 	public static void writeFiletoDest(InputStream in, File file, int size)
 	{
-<span class="nc" id="L616">		writeFiletoDest(in, file, size,true);</span>
-<span class="nc" id="L617">	}</span>
+<span class="fc" id="L616">		writeFiletoDest(in, file, size,true);</span>
+<span class="fc" id="L617">	}</span>
 
 	public static void writeFileToDisk(InputStream in, File file, boolean closeInStream)
 	{
@@ -1246,49 +1246,55 @@ public class IwcmFsDB
 <span class="nc" id="L1246">				fhb.setChangeDate(new Date());</span>
 <span class="nc" id="L1247">				fhb.setFileUrl(virtualPath);</span>
 <span class="nc" id="L1248">				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc" id="L1249">				fhb.setUserId(rb.getUserId());</span>
-<span class="nc" id="L1250">				fhb.setDeleted(deleted);</span>
-<span class="nc" id="L1251">				fhb.setIpAddress(rb.getRemoteIP());</span>
-<span class="nc bnc" id="L1252" title="All 2 branches missed.">				if(!deleted)</span>
+<span class="nc bnc" id="L1249" title="All 2 branches missed.">				if (rb == null) {</span>
+<span class="nc" id="L1250">					rb = new RequestBean();</span>
+<span class="nc" id="L1251">					rb.setUserId(-1);</span>
+				}
+<span class="nc" id="L1253">				fhb.setUserId(rb.getUserId());</span>
+<span class="nc" id="L1254">				fhb.setDeleted(deleted);</span>
+<span class="nc" id="L1255">				fhb.setIpAddress(rb.getRemoteIP());</span>
+<span class="nc bnc" id="L1256" title="All 2 branches missed.">				if(!deleted)</span>
 				{
-<span class="nc" id="L1254">					fhb.setHistoryPath(fileHistory + getVirtualPath(file.getParent()) + &quot;/&quot;);</span>
+<span class="nc" id="L1258">					fhb.setHistoryPath(fileHistory + getVirtualPath(file.getParent()) + &quot;/&quot;);</span>
 				}
 				// zapisanie zaznamu do historie - tabulka file_history
-<span class="nc" id="L1257">				boolean saveOk = new FileHistoryDB().save(fhb);</span>
+<span class="nc" id="L1261">				boolean saveOk = new FileHistoryDB().save(fhb);</span>
+<span class="nc" id="L1262">				RequestBean.addAuditValue(&quot;fileHistoryId&quot;, String.valueOf(fhb.getId()));</span>
+<span class="nc" id="L1263">				RequestBean.addAuditValue(&quot;path&quot;, fhb.getFileUrl()+&quot;?fHistoryId=&quot;+fhb.getId());</span>
 
-<span class="nc bnc" id="L1259" title="All 2 branches missed.">				if (saveOk)</span>
+<span class="nc bnc" id="L1265" title="All 2 branches missed.">				if (saveOk)</span>
 				{
-<span class="nc bnc" id="L1261" title="All 2 branches missed.">					if(!deleted)	//subor kopirujem iba v pripade, ze ide o jeho vytvorenie a editaciu, nie zmazanie</span>
+<span class="nc bnc" id="L1267" title="All 2 branches missed.">					if(!deleted)	//subor kopirujem iba v pripade, ze ide o jeho vytvorenie a editaciu, nie zmazanie</span>
 					{
 						// ulozim kopiu suboru pod /WEB-INF/filehistory/ alebo cestu
 						// urcenu konstantou
-<span class="nc" id="L1265">						String historyPath = fhb.getHistoryPath() + fhb.getId();</span>
-<span class="nc" id="L1266">						IwcmFile dest = new IwcmFile(Tools.getRealPath(historyPath));</span>
-<span class="nc" id="L1267">						boolean copyOk = FileTools.copyFile(file, dest);</span>
-<span class="nc bnc" id="L1268" title="All 2 branches missed.">						if (copyOk)</span>
+<span class="nc" id="L1271">						String historyPath = fhb.getHistoryPath() + fhb.getId();</span>
+<span class="nc" id="L1272">						IwcmFile dest = new IwcmFile(Tools.getRealPath(historyPath));</span>
+<span class="nc" id="L1273">						boolean copyOk = FileTools.copyFile(file, dest);</span>
+<span class="nc bnc" id="L1274" title="All 2 branches missed.">						if (copyOk)</span>
 						{
-<span class="nc" id="L1270">							Logger.debug(IwcmFile.class,&quot;Prekopirovanie suboru &quot; + virtualPath + &quot; do &quot;</span>
+<span class="nc" id="L1276">							Logger.debug(IwcmFile.class,&quot;Prekopirovanie suboru &quot; + virtualPath + &quot; do &quot;</span>
 										+ historyPath + &quot; prebehlo uspesne!&quot;);
-<span class="nc" id="L1272">							return true;</span>
+<span class="nc" id="L1278">							return true;</span>
 						}
 						else
 						{
-<span class="nc" id="L1276">							Logger.debug(IwcmFile.class,&quot;Prekopirovanie suboru &quot; + virtualPath + &quot; do &quot;</span>
+<span class="nc" id="L1282">							Logger.debug(IwcmFile.class,&quot;Prekopirovanie suboru &quot; + virtualPath + &quot; do &quot;</span>
 										+ historyPath + &quot; nebolo uspesne!&quot;);
-<span class="nc" id="L1278">							return false;</span>
+<span class="nc" id="L1284">							return false;</span>
 						}
 					}
-<span class="nc" id="L1281">					return true;</span>
+<span class="nc" id="L1287">					return true;</span>
 				}
 				else
 				{
-<span class="nc" id="L1285">					Logger.debug(IwcmFile.class, &quot;Ukladanie zaznamu pre subor &quot; + virtualPath + &quot; sa nezdarilo!&quot;);</span>
-<span class="nc" id="L1286">					return false;</span>
+<span class="nc" id="L1291">					Logger.debug(IwcmFile.class, &quot;Ukladanie zaznamu pre subor &quot; + virtualPath + &quot; sa nezdarilo!&quot;);</span>
+<span class="nc" id="L1292">					return false;</span>
 				}
 			}
-<span class="nc" id="L1289">			else return false;	//ak je to subor z historie preskocim a vratim hodnotu false</span>
+<span class="nc" id="L1295">			else return false;	//ak je to subor z historie preskocim a vratim hodnotu false</span>
 		}
-<span class="fc" id="L1291">		else return false;	//ak sa subor uklada do dbStorage preskocim a vratim hodnotu false</span>
+<span class="fc" id="L1297">		else return false;	//ak sa subor uklada do dbStorage preskocim a vratim hodnotu false</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

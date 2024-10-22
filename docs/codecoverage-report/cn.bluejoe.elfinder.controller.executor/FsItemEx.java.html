@@ -26,11 +26,11 @@ public class FsItemEx
 <span class="fc" id="L26">	}</span>
 
 	public FsItemEx(FsItemEx parent, String name) throws IOException
-<span class="nc" id="L29">	{</span>
-<span class="nc" id="L30">		_v = parent._v;</span>
-<span class="nc" id="L31">		_s = parent._s;</span>
-<span class="nc" id="L32">		_f = _v.fromPath(_v.getPath(parent._f) + &quot;/&quot; + name);</span>
-<span class="nc" id="L33">	}</span>
+<span class="fc" id="L29">	{</span>
+<span class="fc" id="L30">		_v = parent._v;</span>
+<span class="fc" id="L31">		_s = parent._s;</span>
+<span class="fc" id="L32">		_f = _v.fromPath(_v.getPath(parent._f) + &quot;/&quot; + name);</span>
+<span class="fc" id="L33">	}</span>
 
 	public FsItemEx createChild(String name) throws IOException
 	{
@@ -44,18 +44,18 @@ public class FsItemEx
 
 	public void createFolder() throws IOException
 	{
-<span class="nc" id="L47">		_v.createFolder(_f);</span>
-<span class="nc" id="L48">	}</span>
+<span class="fc" id="L47">		_v.createFolder(_f);</span>
+<span class="fc" id="L48">	}</span>
 
 	public boolean delete() throws IOException
 	{
-<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (_v.isFolder(_f))</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">		if (_v.isFolder(_f))</span>
 		{
-<span class="nc" id="L54">			return _v.deleteFolder(_f);</span>
+<span class="fc" id="L54">			return _v.deleteFolder(_f);</span>
 		}
 		else
 		{
-<span class="nc" id="L58">			return _v.deleteFile(_f);</span>
+<span class="fc" id="L58">			return _v.deleteFile(_f);</span>
 		}
 	}
 
@@ -171,8 +171,8 @@ public class FsItemEx
 
 	public void renameTo(FsItemEx dst) throws IOException
 	{
-<span class="nc" id="L174">		_v.rename(_f, dst._f);</span>
-<span class="nc" id="L175">	}</span>
+<span class="fc" id="L174">		_v.rename(_f, dst._f);</span>
+<span class="fc" id="L175">	}</span>
 
 	/**
 	 * JEEFF / WEBJET pridany getter na service
@@ -198,4 +198,4 @@ public class FsItemEx
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

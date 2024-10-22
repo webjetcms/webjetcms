@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,57 +34,59 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 public class BannerStatRestController extends DatatableRestControllerV2&lt;BannerBean, Long&gt; {
 
     private final BannerRepository bannerRepository;
+    private static final String VIEWS = &quot;views&quot;;
+    private static final String CLICKS = &quot;clicks&quot;;
 
     @Autowired
     public BannerStatRestController(BannerRepository bannerRepository) {
-<span class="fc" id="L39">        super(bannerRepository);</span>
-<span class="fc" id="L40">        this.bannerRepository = bannerRepository;</span>
-<span class="fc" id="L41">    }</span>
+<span class="fc" id="L42">        super(bannerRepository);</span>
+<span class="fc" id="L43">        this.bannerRepository = bannerRepository;</span>
+<span class="fc" id="L44">    }</span>
 
     @Override
     public Page&lt;BannerBean&gt; getAllItems(Pageable pageable) {
 
-<span class="fc" id="L46">        int bannerId = Tools.getIntValue(getRequest().getParameter(&quot;bannerId&quot;), -1);</span>
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if(bannerId &gt; -1) {</span>
-<span class="nc" id="L48">            BannerBean bn = bannerRepository.findByIdAndDomainId(Long.valueOf(bannerId), CloudToolsForCore.getDomainId());</span>
-<span class="nc bnc" id="L49" title="All 2 branches missed.">            if(bn != null) bn.setNameLink(bn.getName());</span>
-<span class="nc" id="L50">            return new DatatablePageImpl&lt;&gt;(Arrays.asList(bn));</span>
+<span class="fc" id="L49">        int bannerId = Tools.getIntValue(getRequest().getParameter(&quot;bannerId&quot;), -1);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">        if(bannerId &gt; -1) {</span>
+<span class="nc" id="L51">            Optional&lt;BannerBean&gt; optBanner = bannerRepository.findFirstByIdAndDomainId(Long.valueOf(bannerId), CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">            if(optBanner.isPresent()) optBanner.get().setNameLink(optBanner.get().getName());</span>
+<span class="nc" id="L53">            return new DatatablePageImpl&lt;&gt;( Arrays.asList(optBanner.orElse(null)) );</span>
         }
 
-<span class="fc" id="L53">        return new DatatablePageImpl&lt;&gt;(getDataAndConvertIntoPageItems(null));</span>
+<span class="fc" id="L56">        return new DatatablePageImpl&lt;&gt;(getDataAndConvertIntoPageItems(null));</span>
     }
 
     @Override
     public Page&lt;BannerBean&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, BannerBean search) {
 
-<span class="fc" id="L59">        String dateRange = &quot;&quot;;</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">            if(entry.getKey().equalsIgnoreCase(&quot;searchDayDate&quot;)) {</span>
-<span class="fc" id="L62">                dateRange = entry.getValue();</span>
+<span class="fc" id="L62">        String dateRange = &quot;&quot;;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; entry : params.entrySet()) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            if(entry.getKey().equalsIgnoreCase(&quot;searchDayDate&quot;)) {</span>
+<span class="fc" id="L65">                dateRange = entry.getValue();</span>
             }
-<span class="fc" id="L64">        }</span>
+<span class="fc" id="L67">        }</span>
 
-<span class="fc" id="L66">        return new DatatablePageImpl&lt;&gt;(getDataAndConvertIntoPageItems(dateRange));</span>
+<span class="fc" id="L69">        return new DatatablePageImpl&lt;&gt;(getDataAndConvertIntoPageItems(dateRange));</span>
     }
 
     private List&lt;BannerBean&gt; getDataAndConvertIntoPageItems(String dateRange) {
         //Process date range param
-<span class="fc" id="L71">        Date[] date = StatService.processDateRangeString(dateRange);</span>
-<span class="fc" id="L72">        List&lt;BannerBean&gt; topBanners = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L73">        List&lt;Column&gt; columns = BannerDB.getTop10Banners(date[0], date[1], null);</span>
+<span class="fc" id="L74">        Date[] date = StatService.processDateRangeString(dateRange);</span>
+<span class="fc" id="L75">        List&lt;BannerBean&gt; topBanners = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L76">        List&lt;Column&gt; columns = BannerDB.getTop10Banners(date[0], date[1], null);</span>
 
-<span class="fc bfc" id="L75" title="All 2 branches covered.">        for(Column column : columns) {</span>
-<span class="fc" id="L76">            BannerBean bannerStat = new BannerBean();</span>
-<span class="fc" id="L77">            bannerStat.setId(Long.valueOf( column.getIntColumn1()));</span>
-<span class="fc" id="L78">            bannerStat.setBannerGroup(column.getColumn8());</span>
-<span class="fc" id="L79">            bannerStat.setBannerType(Integer.valueOf(column.getColumn9()));</span>
-<span class="fc" id="L80">            bannerStat.setStatViews(column.getIntColumn3());</span>
-<span class="fc" id="L81">            bannerStat.setStatClicks(column.getIntColumn4());</span>
-<span class="fc" id="L82">            bannerStat.setNameLink(column.getColumn3());</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for(Column column : columns) {</span>
+<span class="fc" id="L79">            BannerBean bannerStat = new BannerBean();</span>
+<span class="fc" id="L80">            bannerStat.setId(Long.valueOf( column.getIntColumn1()));</span>
+<span class="fc" id="L81">            bannerStat.setBannerGroup(column.getColumn8());</span>
+<span class="fc" id="L82">            bannerStat.setBannerType(Integer.valueOf(column.getColumn9()));</span>
+<span class="fc" id="L83">            bannerStat.setStatViews(column.getIntColumn3());</span>
+<span class="fc" id="L84">            bannerStat.setStatClicks(column.getIntColumn4());</span>
+<span class="fc" id="L85">            bannerStat.setNameLink(column.getColumn3());</span>
 
-<span class="fc" id="L84">            topBanners.add(bannerStat);</span>
-<span class="fc" id="L85">        }</span>
-<span class="fc" id="L86">        return topBanners;</span>
+<span class="fc" id="L87">            topBanners.add(bannerStat);</span>
+<span class="fc" id="L88">        }</span>
+<span class="fc" id="L89">        return topBanners;</span>
     }
 
     @RequestMapping(
@@ -94,19 +97,19 @@ public class BannerStatRestController extends DatatableRestControllerV2&lt;Banne
                 @RequestParam(&quot;dayDate&quot;) String stringRange,
                 @RequestParam(&quot;dataType&quot;) String dataType) {
 
-<span class="fc" id="L97">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L100">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
 
         Map&lt;String,  Map&lt;Date, Number&gt;&gt; data;
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        if(dataType.equals(&quot;views&quot;)) {</span>
-<span class="fc" id="L101">            data = BannerDB.getTop10BannersViewsTimeData(dateRangeArr[0], dateRangeArr[1], null);</span>
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        } else if(dataType.equals(&quot;clicks&quot;)) {</span>
-<span class="fc" id="L103">            data = BannerDB.getTop10BannersClicksTimeData(dateRangeArr[0], dateRangeArr[1], null);</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if(dataType.equals(VIEWS)) {</span>
+<span class="fc" id="L104">            data = BannerDB.getTop10BannersViewsTimeData(dateRangeArr[0], dateRangeArr[1], null);</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        } else if(dataType.equals(CLICKS)) {</span>
+<span class="fc" id="L106">            data = BannerDB.getTop10BannersClicksTimeData(dateRangeArr[0], dateRangeArr[1], null);</span>
         } else {
             //Invalid parameter
-<span class="nc" id="L106">            return null;</span>
+<span class="nc" id="L109">            return null;</span>
         }
 
-<span class="fc" id="L109">        return hashtableToLineChartData(data, dataType);</span>
+<span class="fc" id="L112">        return hashtableToLineChartData(data, dataType);</span>
     }
 
     @RequestMapping(
@@ -118,65 +121,64 @@ public class BannerStatRestController extends DatatableRestControllerV2&lt;Banne
                 @RequestParam(&quot;dayDate&quot;) String stringRange,
                 @RequestParam(&quot;dataType&quot;) String dataType) {
 
-<span class="fc" id="L121">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="fc" id="L124">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
 
         Map&lt;String,  Map&lt;Date, Number&gt;&gt; data;
-<span class="fc bfc" id="L124" title="All 2 branches covered.">        if(dataType.equals(&quot;views&quot;)) {</span>
-<span class="fc" id="L125">            data = BannerDB.getBannerStatViewsTimeData(dateRangeArr[0], dateRangeArr[1], bannerId);</span>
-<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        } else if(dataType.equals(&quot;clicks&quot;)) {</span>
-<span class="fc" id="L127">            data = BannerDB.getBannerStatClicksTimeData(dateRangeArr[0], dateRangeArr[1], bannerId);</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if(dataType.equals(VIEWS)) {</span>
+<span class="fc" id="L128">            data = BannerDB.getBannerStatViewsTimeData(dateRangeArr[0], dateRangeArr[1], bannerId);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        } else if(dataType.equals(CLICKS)) {</span>
+<span class="fc" id="L130">            data = BannerDB.getBannerStatClicksTimeData(dateRangeArr[0], dateRangeArr[1], bannerId);</span>
         } else {
             //Invalid parameter
-<span class="nc" id="L130">            return null;</span>
+<span class="nc" id="L133">            return null;</span>
         }
 
-<span class="fc" id="L133">        return hashtableToLineChartData(data, dataType);</span>
+<span class="fc" id="L136">        return hashtableToLineChartData(data, dataType);</span>
     }
 
     private Map&lt;String, List&lt;BannerBean&gt;&gt; hashtableToLineChartData(Map&lt;String,  Map&lt;Date, Number&gt;&gt; hashtable, String dataType) {
         //represent chart data
-<span class="fc" id="L138">        Map&lt;String, List&lt;BannerBean&gt;&gt; chartData = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L141">        Map&lt;String, List&lt;BannerBean&gt;&gt; chartData = new HashMap&lt;&gt;();</span>
 
         //setOfKeys represent baner adress
-<span class="fc" id="L141">        Set&lt;String&gt; setOfKeys = hashtable.keySet();</span>
+<span class="fc" id="L144">        Set&lt;String&gt; setOfKeys = hashtable.keySet();</span>
 
-<span class="fc bfc" id="L143" title="All 2 branches covered.">        for(String key : setOfKeys) {</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        for(String key : setOfKeys) {</span>
             //items is list of BannerBean values for one banner
-<span class="fc" id="L145">            List&lt;BannerBean&gt; items = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L146">            Map&lt;Date, Number&gt; dayViews = hashtable.get(key);</span>
+<span class="fc" id="L148">            List&lt;BannerBean&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L149">            Map&lt;Date, Number&gt; dayViews = hashtable.get(key);</span>
 
-<span class="fc bfc" id="L148" title="All 2 branches covered.">            if(dataType.equals(&quot;clicks&quot;)) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">            if(dataType.equals(CLICKS)) {</span>
                 //Clicks
-<span class="fc bfc" id="L150" title="All 2 branches covered.">                for (Map.Entry&lt;Date, Number&gt; entry : dayViews.entrySet()) {</span>
-<span class="fc" id="L151">                    BannerBean item = new BannerBean();</span>
-<span class="fc" id="L152">                    item.setNameLink(key);</span>
-<span class="fc" id="L153">                    item.setDayDate(entry.getKey());</span>
-<span class="fc" id="L154">                    item.setStatClicks(entry.getValue().intValue());</span>
-<span class="fc" id="L155">                    items.add(item);</span>
-<span class="fc" id="L156">                }</span>
-<span class="pc bpc" id="L157" title="1 of 2 branches missed.">            } else if(dataType.equals(&quot;views&quot;)) {</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">                for (Map.Entry&lt;Date, Number&gt; entry : dayViews.entrySet()) {</span>
+<span class="fc" id="L154">                    BannerBean item = new BannerBean();</span>
+<span class="fc" id="L155">                    item.setNameLink(key);</span>
+<span class="fc" id="L156">                    item.setDayDate(entry.getKey());</span>
+<span class="fc" id="L157">                    item.setStatClicks(entry.getValue().intValue());</span>
+<span class="fc" id="L158">                    items.add(item);</span>
+<span class="fc" id="L159">                }</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">            } else if(dataType.equals(VIEWS)) {</span>
                 //Views
-<span class="fc bfc" id="L159" title="All 2 branches covered.">                for (Map.Entry&lt;Date, Number&gt; entry : dayViews.entrySet()) {</span>
-<span class="fc" id="L160">                    BannerBean item = new BannerBean();</span>
-<span class="fc" id="L161">                    item.setNameLink(key);</span>
-<span class="fc" id="L162">                    item.setDayDate(entry.getKey());</span>
-<span class="fc" id="L163">                    item.setStatViews(entry.getValue().intValue());</span>
-<span class="fc" id="L164">                    items.add(item);</span>
-<span class="fc" id="L165">                }</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                for (Map.Entry&lt;Date, Number&gt; entry : dayViews.entrySet()) {</span>
+<span class="fc" id="L163">                    BannerBean item = new BannerBean();</span>
+<span class="fc" id="L164">                    item.setNameLink(key);</span>
+<span class="fc" id="L165">                    item.setDayDate(entry.getKey());</span>
+<span class="fc" id="L166">                    item.setStatViews(entry.getValue().intValue());</span>
+<span class="fc" id="L167">                    items.add(item);</span>
+<span class="fc" id="L168">                }</span>
             }
-<span class="fc" id="L167">            chartData.put(key, items);</span>
-<span class="fc" id="L168">        }</span>
-<span class="fc" id="L169">        return chartData;</span>
+<span class="fc" id="L170">            chartData.put(key, items);</span>
+<span class="fc" id="L171">        }</span>
+<span class="fc" id="L172">        return chartData;</span>
     }
 
     @RequestMapping(value=&quot;/banner-title&quot;, params={&quot;bannerId&quot;}, produces = &quot;text/plain;charset=UTF-8&quot;)
     @ResponseBody
     public String getDocTitle(@RequestParam(&quot;bannerId&quot;) long bannerId) {
 
-<span class="fc" id="L176">        BannerBean banner = bannerRepository.findByIdAndDomainId(bannerId, CloudToolsForCore.getDomainId());</span>
-<span class="pc bpc" id="L177" title="2 of 4 branches missed.">        if (banner != null &amp;&amp; Tools.isNotEmpty(banner.getName())) return banner.getName();</span>
-<span class="nc" id="L178">        else return &quot;Banner &quot;+bannerId;</span>
-
+<span class="fc" id="L179">        Optional&lt;BannerBean&gt; optBanner = bannerRepository.findFirstByIdAndDomainId(bannerId, CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L180" title="2 of 4 branches missed.">        if (optBanner.isPresent() &amp;&amp; Tools.isNotEmpty(optBanner.get().getName())) return optBanner.get().getName();</span>
+<span class="nc" id="L181">        else return &quot;Banner &quot; + bannerId;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

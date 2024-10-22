@@ -14,46 +14,52 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 import sk.iway.iwcm.users.UsersDB;
 
-<span class="nc" id="L19">public class RmCommandExecutor extends AbstractJsonCommandExecutor</span>
+<span class="fc" id="L20">public class RmCommandExecutor extends AbstractJsonCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
 			throws Exception
 	{
-<span class="nc" id="L25">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
-<span class="nc" id="L26">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L26">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+<span class="fc" id="L27">		Prop prop = Prop.getInstance(request);</span>
 		//String current = request.getParameter(&quot;current&quot;);
-<span class="nc" id="L28">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
-<span class="nc" id="L29">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="fc" id="L29">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L30">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
 
-<span class="nc" id="L31">		StringBuilder deniedFilenames = new StringBuilder();</span>
-<span class="nc bnc" id="L32" title="All 2 branches missed.">		for (String target : targets)</span>
+<span class="fc" id="L32">		StringBuilder deniedFilenames = new StringBuilder();</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">		for (String target : targets)</span>
 		{
 
-<span class="nc" id="L35">			FsItemEx ftgt = super.findItem(fsService, target);</span>
-<span class="nc" id="L36">			boolean deleted = false;</span>
-<span class="nc bnc" id="L37" title="All 4 branches missed.">			if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
+<span class="fc" id="L36">			FsItemEx ftgt = super.findItem(fsService, target);</span>
+<span class="fc" id="L37">			boolean deleted = false;</span>
+<span class="fc" id="L38">			boolean isFolder = ftgt.isFolder();</span>
+<span class="pc bpc" id="L39" title="2 of 4 branches missed.">			if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
 			{
-<span class="nc" id="L39">				deleted = ftgt.delete();</span>
-<span class="nc bnc" id="L40" title="All 2 branches missed.">				if (deleted)</span>
+<span class="fc" id="L41">				deleted = ftgt.delete();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">				if (deleted)</span>
 				{
-<span class="nc" id="L42">					removed.add(ftgt.getHash());</span>
+<span class="fc" id="L44">					removed.add(ftgt.getHash());</span>
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">					if(isFolder == true) {</span>
+<span class="fc" id="L47">						FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);</span>
+					}
 				}
 			}
 
-<span class="nc bnc" id="L46" title="All 2 branches missed.">			if (deleted == false)</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">			if (deleted == false)</span>
 			{
-<span class="nc bnc" id="L48" title="All 2 branches missed.">				if (!Tools.isEmpty(deniedFilenames)) deniedFilenames.append(&quot;, &quot;);</span>
-<span class="nc" id="L49">				deniedFilenames.append(ftgt.getName());</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">				if (!Tools.isEmpty(deniedFilenames)) deniedFilenames.append(&quot;, &quot;);</span>
+<span class="nc" id="L55">				deniedFilenames.append(ftgt.getName());</span>
 			}
 		}
 
-<span class="nc bnc" id="L53" title="All 2 branches missed.">		if (!Tools.isEmpty(deniedFilenames))</span>
-<span class="nc" id="L54">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rm.error&quot;, deniedFilenames.toString()));</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">		if (!Tools.isEmpty(deniedFilenames))</span>
+<span class="nc" id="L60">			json.put(&quot;error&quot;, prop.getText(&quot;components.elfinder.commands.rm.error&quot;, deniedFilenames.toString()));</span>
 
-<span class="nc" id="L56">		json.put(&quot;removed&quot;, removed.toArray());</span>
-<span class="nc" id="L57">	}</span>
+<span class="fc" id="L62">		json.put(&quot;removed&quot;, removed.toArray());</span>
+<span class="fc" id="L63">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

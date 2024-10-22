@@ -13,40 +13,40 @@ import sk.iway.iwcm.users.UsersDB;
 public class GdprUserNotify {
 
     //private Prop prop ;
-<span class="nc" id="L16">    private int currentUserId = -1;</span>
+<span class="fc" id="L16">    private int currentUserId = -1;</span>
     //private String gdprApproved = &quot;gdprApproved&quot;;
     String description;
-<span class="nc" id="L19">    int cacheInMinutes = 300;</span>
+<span class="fc" id="L19">    int cacheInMinutes = 300;</span>
     HttpServletRequest request;
 
     //private boolean approvedInCache = false;
 
-<span class="nc" id="L24">    public GdprUserNotify(HttpServletRequest request) {</span>
+<span class="fc" id="L24">    public GdprUserNotify(HttpServletRequest request) {</span>
         //this.prop =  Prop.getInstance(request);
-<span class="nc" id="L26">        UserDetails ud = UsersDB.getCurrentUser(request);</span>
-<span class="nc bnc" id="L27" title="All 2 branches missed.">        if(ud != null)</span>
-<span class="nc" id="L28">            currentUserId = ud.getUserId();</span>
+<span class="fc" id="L26">        UserDetails ud = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if(ud != null)</span>
+<span class="fc" id="L28">            currentUserId = ud.getUserId();</span>
 
-<span class="nc" id="L30">        description = &quot;Zobrazeny formular (&quot; + Tools.getParameter(request, &quot;formName&quot;)+&quot;)&quot;;</span>
-<span class="nc" id="L31">    }</span>
+<span class="fc" id="L30">        description = &quot;Zobrazeny formular (&quot; + Tools.getParameter(request, &quot;formName&quot;)+&quot;)&quot;;</span>
+<span class="fc" id="L31">    }</span>
 
     public static int[] getAdminlogType()
     {
-<span class="nc" id="L35">        int[] logTypes = new int[1];</span>
-<span class="nc" id="L36">        logTypes[0] = Adminlog.TYPE_FORM_VIEW;</span>
-<span class="nc" id="L37">        return logTypes;</span>
+<span class="fc" id="L35">        int[] logTypes = new int[1];</span>
+<span class="fc" id="L36">        logTypes[0] = Adminlog.TYPE_FORM_VIEW;</span>
+<span class="fc" id="L37">        return logTypes;</span>
     }
 
     public  boolean addNotify()
     {
-<span class="nc" id="L42">        Adminlog.add(Adminlog.TYPE_FORM_VIEW, currentUserId, description, -1, -1);</span>
-<span class="nc" id="L43">        return true;</span>
+<span class="fc" id="L42">        Adminlog.add(Adminlog.TYPE_FORM_VIEW, currentUserId, description, -1, -1);</span>
+<span class="fc" id="L43">        return true;</span>
     }
 
     public boolean hasUserGdprApproved()
     {
-<span class="nc" id="L48">        List&lt;AdminlogBean&gt; adminLogResults = Adminlog.searchAdminlog(getAdminlogType(), -1, -1, currentUserId, -1, -1, description, -1, -1, null, null);</span>
-<span class="nc bnc" id="L49" title="All 2 branches missed.">        if(adminLogResults.size() == 0)</span>
+<span class="fc" id="L48">        List&lt;AdminlogBean&gt; adminLogResults = Adminlog.searchAdminlog(getAdminlogType(), -1, -1, currentUserId, -1, -1, description, -1, -1, null, null);</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if(adminLogResults.size() == 0)</span>
         {
             // potrebujeme si preposlat aj parametre
 //            Enumeration e = request.getParameterNames();
@@ -68,7 +68,7 @@ public class GdprUserNotify {
                 window.location.href=&quot;/admin/welcome.jsp&quot;;
             &lt;/script&gt;
                */
-<span class="nc" id="L71">            return false;//Pokym nemame suhlas, nic nezobrazime</span>
+<span class="fc" id="L71">            return false;//Pokym nemame suhlas, nic nezobrazime</span>
         }
 <span class="nc" id="L73">        return true;</span>
     }
@@ -78,4 +78,4 @@ public class GdprUserNotify {
         return &quot;Adminlog.TYPE_FORM_VIEW.user.&quot;+currentUserId+&quot;.description.&quot;+description;
     }*/
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

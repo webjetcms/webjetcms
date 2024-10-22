@@ -189,7 +189,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = &quot;locationType&quot;, propOrder = {
     &quot;groundCoverAndPressureAndMaximumPrecipitation&quot;
 })
-<span class="nc" id="L192">public class LocationType {</span>
+<span class="fc" id="L192">public class LocationType {</span>
 
     @XmlElementRefs({
         @XmlElementRef(name = &quot;lowClouds&quot;, type = JAXBElement.class, required = false),
@@ -323,10 +323,10 @@ import javax.xml.bind.annotation.XmlType;
      * 
      */
     public List&lt;JAXBElement&lt;?&gt;&gt; getGroundCoverAndPressureAndMaximumPrecipitation() {
-<span class="nc bnc" id="L326" title="All 2 branches missed.">        if (groundCoverAndPressureAndMaximumPrecipitation == null) {</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (groundCoverAndPressureAndMaximumPrecipitation == null) {</span>
 <span class="nc" id="L327">            groundCoverAndPressureAndMaximumPrecipitation = new ArrayList&lt;JAXBElement&lt;?&gt;&gt;();</span>
         }
-<span class="nc" id="L329">        return this.groundCoverAndPressureAndMaximumPrecipitation;</span>
+<span class="fc" id="L329">        return this.groundCoverAndPressureAndMaximumPrecipitation;</span>
     }
 
     /**
@@ -836,7 +836,7 @@ import javax.xml.bind.annotation.XmlType;
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = &quot;&quot;)
-<span class="nc" id="L839">    public static class Symbol {</span>
+<span class="fc" id="L839">    public static class Symbol {</span>
 
         @XmlAttribute(name = &quot;id&quot;)
         protected String id;
@@ -854,7 +854,7 @@ import javax.xml.bind.annotation.XmlType;
          *     
          */
         public String getId() {
-<span class="nc" id="L857">            return id;</span>
+<span class="fc" id="L857">            return id;</span>
         }
 
         /**
@@ -902,7 +902,7 @@ import javax.xml.bind.annotation.XmlType;
          *     
          */
         public BigInteger getNumber() {
-<span class="nc" id="L905">            return number;</span>
+<span class="fc" id="L905">            return number;</span>
         }
 
         /**
@@ -1096,7 +1096,7 @@ import javax.xml.bind.annotation.XmlType;
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = &quot;&quot;)
-<span class="nc" id="L1099">    public static class WindDirection {</span>
+<span class="fc" id="L1099">    public static class WindDirection {</span>
 
         @XmlAttribute(name = &quot;deg&quot;, required = true)
         protected BigDecimal deg;
@@ -1180,4 +1180,4 @@ import javax.xml.bind.annotation.XmlType;
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

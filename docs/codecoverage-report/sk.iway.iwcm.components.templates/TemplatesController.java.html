@@ -12,79 +12,83 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.layout.LayoutService;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.template_groups.TemplateGroupsService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetailEditorFields;
 import sk.iway.iwcm.doc.TemplateDetails;
+import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
-import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
 
 @RestController
 @Datatable
 @RequestMapping(value = &quot;/admin/rest/templates/temps-list&quot;)
 @PreAuthorize(value = &quot;@WebjetSecurityService.hasPermission('menuTemplates')&quot;)
-public class TemplatesController extends DatatableRestControllerV2&lt;TemplateDetails, Long&gt; {
+public class TemplatesController extends DatatableRestControllerAvailableGroups&lt;TemplateDetails, Long&gt; {
 
     private final TemplateDetailsService templateDetailsService;
     private final TemplateGroupsService templateGroupsService;
 
     @Autowired
     public TemplatesController(TemplateDetailsService templateDetailsService, TemplateGroupsService templateGroupsService) {
-<span class="fc" id="L39">        super(null);</span>
-<span class="fc" id="L40">        this.templateDetailsService = templateDetailsService;</span>
-<span class="fc" id="L41">        this.templateGroupsService = templateGroupsService;</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L43">        super(null, &quot;tempId&quot;, &quot;availableGroups&quot;);</span>
+<span class="fc" id="L44">        this.templateDetailsService = templateDetailsService;</span>
+<span class="fc" id="L45">        this.templateGroupsService = templateGroupsService;</span>
+<span class="fc" id="L46">    }</span>
 
     @Override
     public Page&lt;TemplateDetails&gt; getAllItems(Pageable pageable) {
-<span class="fc" id="L46">        DatatablePageImpl&lt;TemplateDetails&gt; page = new DatatablePageImpl&lt;&gt;(templateDetailsService.getAllTemplateDetails(getUser()));</span>
-<span class="fc" id="L47">        LayoutService ls = new LayoutService(getRequest());</span>
-<span class="fc" id="L48">        WebpagesService ws = new WebpagesService(-1, getUser(), getProp(), getRequest());</span>
-<span class="fc" id="L49">        List&lt;DocDetails&gt; headerFooterDocs = ws.addEmptyDoc(ws.getHeaderList(false), -1);</span>
-<span class="fc" id="L50">        List&lt;DocDetails&gt; menuDocs = ws.addEmptyDoc(ws.getMenuList(false), -1);</span>
+<span class="fc" id="L50">        DatatablePageImpl&lt;TemplateDetails&gt; page = new DatatablePageImpl&lt;&gt;(templateDetailsService.getAllTemplateDetails(getUser()));</span>
+<span class="fc" id="L51">        LayoutService ls = new LayoutService(getRequest());</span>
+<span class="fc" id="L52">        WebpagesService ws = new WebpagesService(-1, getUser(), getProp(), getRequest());</span>
+<span class="fc" id="L53">        List&lt;DocDetails&gt; headerFooterDocs = ws.addEmptyDoc(ws.getHeaderList(false), -1);</span>
+<span class="fc" id="L54">        List&lt;DocDetails&gt; menuDocs = ws.addEmptyDoc(ws.getMenuList(false), -1);</span>
 
-<span class="fc" id="L52">        List&lt;DocDetails&gt; headerFooterMenuDocs = ws.getHeaderFooterMenuList(false);</span>
+<span class="fc" id="L56">        List&lt;DocDetails&gt; headerFooterMenuDocs = ws.getHeaderFooterMenuList(false);</span>
 
-<span class="fc bfc" id="L54" title="All 2 branches covered.">        for (TemplateDetails temp : page.getContent()) {</span>
-<span class="fc" id="L55">            checkDocInList(headerFooterDocs, temp.getHeaderDocId());</span>
-<span class="fc" id="L56">            checkDocInList(headerFooterDocs, temp.getFooterDocId());</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        for (TemplateDetails temp : page.getContent()) {</span>
+<span class="fc" id="L59">            checkDocInList(headerFooterDocs, temp.getHeaderDocId());</span>
+<span class="fc" id="L60">            checkDocInList(headerFooterDocs, temp.getFooterDocId());</span>
 
-<span class="fc" id="L58">            checkDocInList(menuDocs, temp.getMenuDocId());</span>
-<span class="fc" id="L59">            checkDocInList(menuDocs, temp.getRightMenuDocId());</span>
+<span class="fc" id="L62">            checkDocInList(menuDocs, temp.getMenuDocId());</span>
+<span class="fc" id="L63">            checkDocInList(menuDocs, temp.getRightMenuDocId());</span>
 
-<span class="fc" id="L61">            checkDocInList(headerFooterMenuDocs, temp.getObjectADocId());</span>
-<span class="fc" id="L62">            checkDocInList(headerFooterMenuDocs, temp.getObjectBDocId());</span>
-<span class="fc" id="L63">            checkDocInList(headerFooterMenuDocs, temp.getObjectCDocId());</span>
-<span class="fc" id="L64">            checkDocInList(headerFooterMenuDocs, temp.getObjectDDocId());</span>
+<span class="fc" id="L65">            checkDocInList(headerFooterMenuDocs, temp.getObjectADocId());</span>
+<span class="fc" id="L66">            checkDocInList(headerFooterMenuDocs, temp.getObjectBDocId());</span>
+<span class="fc" id="L67">            checkDocInList(headerFooterMenuDocs, temp.getObjectCDocId());</span>
+<span class="fc" id="L68">            checkDocInList(headerFooterMenuDocs, temp.getObjectDDocId());</span>
 
             //Init editor fields
-<span class="fc bfc" id="L67" title="All 2 branches covered.">            if(temp.getEditorFields() == null) temp.setEditorFields(new TemplateDetailEditorFields());</span>
-<span class="fc" id="L68">        }</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            if(temp.getEditorFields() == null) temp.setEditorFields(new TemplateDetailEditorFields());</span>
+<span class="fc" id="L72">        }</span>
 
-<span class="fc" id="L70">        page.addOption(&quot;editorFields.mergeToTempId&quot;, &quot;&quot;, &quot;-1&quot;, null);</span>
-<span class="fc" id="L71">        page.addOptions(&quot;editorFields.mergeToTempId&quot;, page.getContent(), &quot;tempName&quot;, &quot;tempId&quot;, false);</span>
+<span class="fc" id="L74">        page.addOption(&quot;editorFields.mergeToTempId&quot;, &quot;&quot;, &quot;-1&quot;, null);</span>
+<span class="fc" id="L75">        page.addOptions(&quot;editorFields.mergeToTempId&quot;, page.getContent(), &quot;tempName&quot;, &quot;tempId&quot;, false);</span>
 
-<span class="fc" id="L73">        page.addOptions(&quot;lng&quot;, ls.getLanguages(false, true), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L74">        page.addOptions(&quot;templatesGroupId&quot;, templateDetailsService.getTemplatesGroupBeans(), &quot;name&quot;, &quot;templatesGroupId&quot;, false);</span>
-<span class="fc" id="L75">        page.addOptions(&quot;headerDocId,footerDocId&quot;, headerFooterDocs, &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L76">        page.addOptions(&quot;menuDocId,rightMenuDocId&quot;, menuDocs, &quot;title&quot;, &quot;docId&quot;, false);</span>
-<span class="fc" id="L77">        page.addOptions(&quot;objectADocId,objectBDocId,objectCDocId,objectDDocId&quot;, ws.addEmptyDoc(headerFooterMenuDocs, -1), &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="fc" id="L77">        page.addOptions(&quot;lng&quot;, ls.getLanguages(false, true), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L78">        page.addOptions(&quot;templatesGroupId&quot;, templateGroupsService.getTemplateGroups(getUser()), &quot;name&quot;, &quot;templatesGroupId&quot;, false);</span>
+<span class="fc" id="L79">        page.addOptions(&quot;headerDocId,footerDocId&quot;, headerFooterDocs, &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="fc" id="L80">        page.addOptions(&quot;menuDocId,rightMenuDocId&quot;, menuDocs, &quot;title&quot;, &quot;docId&quot;, false);</span>
+<span class="fc" id="L81">        page.addOptions(&quot;objectADocId,objectBDocId,objectCDocId,objectDDocId&quot;, ws.addEmptyDoc(headerFooterMenuDocs, -1), &quot;title&quot;, &quot;docId&quot;, false);</span>
 
-<span class="fc" id="L79">        List&lt;LabelValueDetails&gt; inlineEditingModes = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L80">        inlineEditingModes.add(new LabelValueDetails(getProp().getText(&quot;template.inline_editing_mode.byTemplateGroup&quot;), &quot;&quot;));</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (LabelValueDetails lvd : templateGroupsService.getInlineEditors(getProp())) {</span>
-<span class="fc" id="L82">            String mode = lvd.getValue();</span>
-<span class="fc bfc" id="L83" title="All 2 branches covered.">            if (Tools.isEmpty(mode)) mode=&quot;default&quot;; //we must distinguish between byTemplateGroup and default</span>
-<span class="fc" id="L84">            inlineEditingModes.add(new LabelValueDetails(lvd.getLabel(), mode));</span>
-<span class="fc" id="L85">        }</span>
-<span class="fc" id="L86">        page.addOptions(&quot;inlineEditingMode&quot;, inlineEditingModes, &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L87">        return page;</span>
+<span class="fc" id="L83">        List&lt;LabelValueDetails&gt; inlineEditingModes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L84">        inlineEditingModes.add(new LabelValueDetails(getProp().getText(&quot;template.inline_editing_mode.byTemplateGroup&quot;), &quot;&quot;));</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        for (LabelValueDetails lvd : templateGroupsService.getInlineEditors(getProp())) {</span>
+<span class="fc" id="L86">            String mode = lvd.getValue();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">            if (Tools.isEmpty(mode)) mode=&quot;default&quot;; //we must distinguish between byTemplateGroup and default</span>
+<span class="fc" id="L88">            inlineEditingModes.add(new LabelValueDetails(lvd.getLabel(), mode));</span>
+<span class="fc" id="L89">        }</span>
+<span class="fc" id="L90">        page.addOptions(&quot;inlineEditingMode&quot;, inlineEditingModes, &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L91">        return page;</span>
     }
 
     /**
@@ -94,37 +98,37 @@ public class TemplatesController extends DatatableRestControllerV2&lt;TemplateDe
      */
     private void checkDocInList(List&lt;DocDetails&gt; list, int docId)
     {
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (docId&lt;1) return;</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (docId&lt;1) return;</span>
 
-<span class="fc" id="L99">        boolean docFound = false;</span>
-<span class="fc bfc" id="L100" title="All 2 branches covered.">        for (DocDetails doc : list)</span>
+<span class="fc" id="L103">        boolean docFound = false;</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (DocDetails doc : list)</span>
         {
-<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (doc.getDocId()==docId)</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (doc.getDocId()==docId)</span>
             {
-<span class="fc" id="L104">                docFound = true;</span>
-<span class="fc" id="L105">                break;</span>
+<span class="fc" id="L108">                docFound = true;</span>
+<span class="fc" id="L109">                break;</span>
             }
-<span class="fc" id="L107">        }</span>
+<span class="fc" id="L111">        }</span>
 
-<span class="fc bfc" id="L109" title="All 2 branches covered.">        if (docFound == false)</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (docFound == false)</span>
         {
-<span class="fc" id="L111">            DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (doc != null)</span>
+<span class="fc" id="L115">            DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">            if (doc != null)</span>
             {
-<span class="fc" id="L114">                list.add(0, doc);</span>
+<span class="fc" id="L118">                list.add(0, doc);</span>
             }
         }
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L121">    }</span>
 
     @Override
     public TemplateDetails insertItem(TemplateDetails templateDetails) {
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">        if (null == templateDetails) {</span>
-<span class="nc" id="L122">            throw new IllegalArgumentException(&quot;TemplateDetailsDto cannot be null.&quot;);</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (null == templateDetails) {</span>
+<span class="nc" id="L126">            throw new IllegalArgumentException(&quot;TemplateDetailsDto cannot be null.&quot;);</span>
         }
         //reload options in editor
-<span class="fc" id="L125">        setForceReload(true);</span>
+<span class="fc" id="L129">        setForceReload(true);</span>
 
-<span class="fc" id="L127">        return templateDetailsService.insertTemplateDetail(templateDetails);</span>
+<span class="fc" id="L131">        return templateDetailsService.insertTemplateDetail(templateDetails);</span>
     }
 
     //
@@ -132,30 +136,52 @@ public class TemplatesController extends DatatableRestControllerV2&lt;TemplateDe
     public TemplateDetails editItem(TemplateDetails templateDetails, long id) {
 
         //Check if we want merge templates
-<span class="fc" id="L135">        TemplateDetailEditorFields ef = templateDetails.getEditorFields();</span>
-<span class="pc bpc" id="L136" title="2 of 8 branches missed.">        if(id &gt; 0 &amp;&amp; ef != null &amp;&amp; ef.getMergeToTempId() &gt; 0 &amp;&amp; ef.isMergeTemplates()) {</span>
+<span class="fc" id="L139">        TemplateDetailEditorFields ef = templateDetails.getEditorFields();</span>
+<span class="pc bpc" id="L140" title="2 of 8 branches missed.">        if(id &gt; 0 &amp;&amp; ef != null &amp;&amp; ef.getMergeToTempId() &gt; 0 &amp;&amp; ef.isMergeTemplates()) {</span>
             //Check loop error
-<span class="fc bfc" id="L138" title="All 2 branches covered.">            if(id == ef.getMergeToTempId()) throw new IllegalArgumentException(getProp().getText(&quot;template.temps-list.loop_error&quot;));</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            if(id == ef.getMergeToTempId()) throw new IllegalArgumentException(getProp().getText(&quot;template.temps-list.loop_error&quot;));</span>
 
-<span class="fc" id="L140">            templateDetailsService.mergeTemplate(id, ef.getMergeToTempId());</span>
+<span class="fc" id="L144">            templateDetailsService.mergeTemplate(id, ef.getMergeToTempId());</span>
             //Refresh
-<span class="fc" id="L142">            setForceReload(true);</span>
-<span class="fc" id="L143">            return null;</span>
+<span class="fc" id="L146">            setForceReload(true);</span>
+<span class="fc" id="L147">            return null;</span>
         }
 
-<span class="fc" id="L146">        return templateDetailsService.editTemplateDetail(templateDetails, id);</span>
+<span class="fc" id="L150">        return templateDetailsService.editTemplateDetail(templateDetails, id);</span>
     }
 
     @Override
     public boolean deleteItem(TemplateDetails entity, long id) {
-<span class="fc" id="L151">        boolean deleted = templateDetailsService.deleteTemplateDetails(id);</span>
-<span class="fc" id="L152">        return deleted;</span>
+<span class="fc" id="L155">        boolean deleted = templateDetailsService.deleteTemplateDetails(id);</span>
+<span class="fc" id="L156">        return deleted;</span>
+    }
+
+    @Override
+    public void beforeSave(TemplateDetails entity) {
+        //in multiweb set at least root group as available group for template
+<span class="pc bpc" id="L162" title="5 of 6 branches missed.">        if (InitServlet.isTypeCloud() &amp;&amp; CloudToolsForCore.isControllerDomain()==false &amp;&amp; &quot;cloud&quot;.equals(Constants.getInstallName())==false) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">      	    if (Tools.isEmpty(entity.getAvailableGroups())) entity.setAvailableGroups(CloudToolsForCore.getRootGroupIds());</span>
+        }
+<span class="fc" id="L165">    }</span>
+
+    @Override
+    public TemplateDetails getOneItem(long id) {
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (id &lt; 1) return new TemplateDetails();</span>
+<span class="fc" id="L170">        TemplateDetails old = TemplatesDB.getInstance().getTemplate((int)id);</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">        if (old == null) return new TemplateDetails();</span>
+
+<span class="fc" id="L173">        List&lt;TemplateDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L174">        list.add(old);</span>
+<span class="fc" id="L175">        list = templateDetailsService.filterByCurrentDomainAndUser(getUser(), list);</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">        if (list.isEmpty()) return null;</span>
+
+<span class="fc" id="L178">        return old;</span>
     }
 
     @GetMapping(&quot;/autocomplete&quot;)
     public List&lt;String&gt; getAutocomplete(@RequestParam String term, @RequestParam(required = false, name=&quot;DTE_Field_templatesGroupId&quot;) Integer templatesGroupId, @RequestParam(required = false, name=&quot;DTE_Field_templateInstallName&quot;) String installName) {
-<span class="fc" id="L157">        List&lt;String&gt; forwards = templateDetailsService.getTemplateForwards(installName, templatesGroupId, term);</span>
-<span class="fc" id="L158">        return forwards;</span>
+<span class="fc" id="L183">        List&lt;String&gt; forwards = templateDetailsService.getTemplateForwards(installName, templatesGroupId, term);</span>
+<span class="fc" id="L184">        return forwards;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

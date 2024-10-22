@@ -18,49 +18,49 @@ import sk.iway.iwcm.system.annotations.WebjetComponent;
 
 
 @WebjetComponent(&quot;sk.iway.iwcm.components.form.DoubleOptInComponent&quot;)
-<span class="nc" id="L21">public class DoubleOptInComponent extends WebjetComponentAbstract {</span>
+<span class="fc" id="L21">public class DoubleOptInComponent extends WebjetComponentAbstract {</span>
 
-<span class="nc" id="L23">    public enum Status {</span>
-<span class="nc" id="L24">        SUCCESS,</span>
-<span class="nc" id="L25">        ALREADY_CONFIRMED,</span>
-<span class="nc" id="L26">        FAIL</span>
+<span class="fc" id="L23">    public enum Status {</span>
+<span class="fc" id="L24">        SUCCESS,</span>
+<span class="fc" id="L25">        ALREADY_CONFIRMED,</span>
+<span class="fc" id="L26">        FAIL</span>
     }
 
-<span class="nc" id="L29">    private final String VIEW = &quot;/components/form/double_opt_in&quot;;</span>
+<span class="fc" id="L29">    private final String VIEW = &quot;/components/form/double_opt_in&quot;;</span>
 
     @SuppressWarnings(&quot;unchecked&quot;)
     @DefaultHandler
     public String render(HttpServletRequest request, ModelMap model, int formId, String hash) {
 
-<span class="nc" id="L35">        Status status = Status.FAIL;</span>
-<span class="nc bnc" id="L36" title="All 4 branches missed.">        if (formId &gt; 0 &amp;&amp; Tools.isNotEmpty(hash)) {</span>
-<span class="nc" id="L37">            SimpleQuery simpleQuery = new SimpleQuery();</span>
-<span class="nc" id="L38">            List&lt;String&gt; list = simpleQuery.forList(&quot;SELECT * FROM forms WHERE id = ? AND double_optin_hash = ?&quot;, formId, hash);</span>
+<span class="fc" id="L35">        Status status = Status.FAIL;</span>
+<span class="pc bpc" id="L36" title="2 of 4 branches missed.">        if (formId &gt; 0 &amp;&amp; Tools.isNotEmpty(hash)) {</span>
+<span class="fc" id="L37">            SimpleQuery simpleQuery = new SimpleQuery();</span>
+<span class="fc" id="L38">            List&lt;String&gt; list = simpleQuery.forList(&quot;SELECT * FROM forms WHERE id = ? AND double_optin_hash = ?&quot;, formId, hash);</span>
 
-<span class="nc bnc" id="L40" title="All 2 branches missed.">            if (list.size() == 1) {</span>
-<span class="nc" id="L41">                list = simpleQuery.forList(&quot;SELECT * FROM forms WHERE id = ? AND double_optin_hash = ? AND double_optin_confirmation_date IS NOT NULL&quot;, formId, hash);</span>
-<span class="nc bnc" id="L42" title="All 2 branches missed.">                if (list.size() &gt; 0) {</span>
-<span class="nc" id="L43">                    status = Status.ALREADY_CONFIRMED;</span>
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">            if (list.size() == 1) {</span>
+<span class="fc" id="L41">                list = simpleQuery.forList(&quot;SELECT * FROM forms WHERE id = ? AND double_optin_hash = ? AND double_optin_confirmation_date IS NOT NULL&quot;, formId, hash);</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">                if (list.size() &gt; 0) {</span>
+<span class="fc" id="L43">                    status = Status.ALREADY_CONFIRMED;</span>
                 }
                 else {
-<span class="nc" id="L46">                    simpleQuery.execute(&quot;UPDATE forms SET double_optin_confirmation_date = ? WHERE id = ? AND double_optin_hash = ?&quot;, new Timestamp(new Date().getTime()), formId, hash);</span>
-<span class="nc" id="L47">                    status = Status.SUCCESS;</span>
-<span class="nc" id="L48">                    Adminlog.add(Adminlog.TYPE_FORMMAIL, Tools.getUserId(request), String.format(&quot;Double opt in success, formId: %d, hash: %s&quot;, formId, hash), formId, 0, new Timestamp(new Date().getTime()));</span>
+<span class="fc" id="L46">                    simpleQuery.execute(&quot;UPDATE forms SET double_optin_confirmation_date = ? WHERE id = ? AND double_optin_hash = ?&quot;, new Timestamp(new Date().getTime()), formId, hash);</span>
+<span class="fc" id="L47">                    status = Status.SUCCESS;</span>
+<span class="fc" id="L48">                    Adminlog.add(Adminlog.TYPE_FORMMAIL, Tools.getUserId(request), String.format(&quot;Double opt in success, formId: %d, hash: %s&quot;, formId, hash), formId, 0, new Timestamp(new Date().getTime()));</span>
                 }
             }
         }
 
-<span class="nc" id="L53">        Prop prop = Prop.getInstance(request);</span>
-<span class="nc" id="L54">        model.addAttribute(&quot;status&quot;, status);</span>
-<span class="nc" id="L55">        model.addAttribute(&quot;text&quot;, prop.getText(&quot;doubleoptin.confirm_text.&quot; + status.name().toLowerCase()));</span>
-<span class="nc" id="L56">        model.addAttribute(&quot;title&quot;, prop.getText(&quot;doubleoptin.confirm_title.&quot; + status.name().toLowerCase()));</span>
+<span class="fc" id="L53">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L54">        model.addAttribute(&quot;status&quot;, status);</span>
+<span class="fc" id="L55">        model.addAttribute(&quot;text&quot;, prop.getText(&quot;doubleoptin.confirm_text.&quot; + status.name().toLowerCase()));</span>
+<span class="fc" id="L56">        model.addAttribute(&quot;title&quot;, prop.getText(&quot;doubleoptin.confirm_title.&quot; + status.name().toLowerCase()));</span>
 
-<span class="nc" id="L58">        return VIEW;</span>
+<span class="fc" id="L58">        return VIEW;</span>
     }
 
     @Override
     public String getViewFolder() {
-<span class="nc" id="L63">        return null;</span>
+<span class="fc" id="L63">        return null;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

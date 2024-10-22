@@ -2,6 +2,7 @@ package sk.iway.iwcm.doc;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -11,12 +12,17 @@ import javax.persistence.Transient;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 @Entity
 @Table(name = "documents")
+@EntityListeners(AuditEntityListener.class)
+@EntityListenersType(Adminlog.TYPE_SAVEDOC)
 public class DocDetails extends DocBasic {
 
 	public DocDetails(){}

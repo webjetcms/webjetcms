@@ -219,44 +219,72 @@ public class SimpleQuery
 <span class="pc bpc" id="L219" title="1 of 2 branches missed.">		if (results.isEmpty()) return false;</span>
 <span class="pc bpc" id="L220" title="1 of 2 branches missed.">		if (results.get(0) == null)</span>
 <span class="nc" id="L221">			return false;</span>
-<span class="fc" id="L222">		return (Boolean)results.get(0);</span>
+
+<span class="fc" id="L223">		Object o = results.get(0);</span>
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">		if (o instanceof Boolean)</span>
+<span class="fc" id="L225">			return (Boolean)o;</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">		else if (o instanceof Number) {</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			return ((Number)o).intValue() == 1;</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">		} else if (o instanceof String) {</span>
+<span class="nc bnc" id="L229" title="All 4 branches missed.">			return &quot;true&quot;.equals(o) || &quot;1&quot;.equals(o);</span>
+		} else {
+<span class="nc" id="L231">			return false;</span>
+		}
+	}
+
+	@SuppressWarnings(&quot;unchecked&quot;)
+	public Boolean forBooleanWithNull(String sql, Object...parameters)
+	{
+<span class="fc" id="L238">		List&lt;Object&gt; results = forList(sql, parameters);</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">		if (results.isEmpty()) return null;</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">		if (results.get(0) == null) return null;</span>
+<span class="fc" id="L241">		Object o = results.get(0);</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">		if (o instanceof Boolean)</span>
+<span class="fc" id="L243">			return (Boolean)o;</span>
+<span class="nc bnc" id="L244" title="All 2 branches missed.">		else if (o instanceof Number) {</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">			return ((Number)o).intValue() == 1;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">		} else if (o instanceof String) {</span>
+<span class="nc bnc" id="L247" title="All 4 branches missed.">			return &quot;true&quot;.equals(o) || &quot;1&quot;.equals(o);</span>
+		} else {
+<span class="nc" id="L249">			return false;</span>
+		}
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;Integer&gt; forListInteger(String sql, Object... parameters)
 	{
-<span class="fc" id="L228">		return (List&lt;Integer&gt;)forList(sql, parameters);</span>
+<span class="fc" id="L256">		return (List&lt;Integer&gt;)forList(sql, parameters);</span>
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;Number&gt; forListNumber(String sql, Object... parameters)
 	{
-<span class="fc" id="L234">		return (List&lt;Number&gt;)forList(sql, parameters);</span>
+<span class="fc" id="L262">		return (List&lt;Number&gt;)forList(sql, parameters);</span>
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public List&lt;String&gt; forListString(String sql, Object... parameters)
 	{
-<span class="fc" id="L240">		return (List&lt;String&gt;)forList(sql, parameters);</span>
+<span class="fc" id="L268">		return (List&lt;String&gt;)forList(sql, parameters);</span>
 	}
 
 	@SuppressWarnings({&quot;rawtypes&quot;})
 	public List forList(String sql, Object... parameters)
 	{
-<span class="fc" id="L246">		String exceptionMessage = null;</span>
-<span class="fc" id="L247">		List&lt;Object&gt; toBeReturned = new ArrayList&lt;Object&gt;();</span>
-<span class="fc" id="L248">		Connection db_conn = null;</span>
-<span class="fc" id="L249">		PreparedStatement ps = null;</span>
-<span class="fc" id="L250">		ResultSet rs = null;</span>
-<span class="fc" id="L251">		String params = null;</span>
+<span class="fc" id="L274">		String exceptionMessage = null;</span>
+<span class="fc" id="L275">		List&lt;Object&gt; toBeReturned = new ArrayList&lt;Object&gt;();</span>
+<span class="fc" id="L276">		Connection db_conn = null;</span>
+<span class="fc" id="L277">		PreparedStatement ps = null;</span>
+<span class="fc" id="L278">		ResultSet rs = null;</span>
+<span class="fc" id="L279">		String params = null;</span>
 		try
 		{
-<span class="fc" id="L254">			db_conn = DBPool.getConnection(databaseName);</span>
-<span class="fc" id="L255">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L282">			db_conn = DBPool.getConnection(databaseName);</span>
+<span class="fc" id="L283">			ps = db_conn.prepareStatement(sql);</span>
 
-<span class="fc" id="L257">			params = bindParameters(ps, parameters);</span>
+<span class="fc" id="L285">			params = bindParameters(ps, parameters);</span>
 
-<span class="fc" id="L259">			rs = ps.executeQuery();</span>
+<span class="fc" id="L287">			rs = ps.executeQuery();</span>
 
 			/*
 			 * jeeff: niekedy robilo problem ked sa nepodarilo ziskat metadata, v zasade nas to tu nema co trapit
@@ -265,141 +293,141 @@ public class SimpleQuery
 				throw new IllegalArgumentException(&quot;Sql queries for more than one column&quot;);
 			*/
 
-<span class="fc bfc" id="L268" title="All 2 branches covered.">			while (rs.next())</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="fc" id="L270">				Object returnedObject = rs.getObject(1);</span>
-<span class="pc bpc" id="L271" title="1 of 2 branches missed.">				if(returnedObject instanceof net.sourceforge.jtds.jdbc.ClobImpl)</span>
+<span class="fc" id="L298">				Object returnedObject = rs.getObject(1);</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">				if(returnedObject instanceof net.sourceforge.jtds.jdbc.ClobImpl)</span>
 				{
-<span class="nc" id="L273">					returnedObject = rs.getString(1);</span>
+<span class="nc" id="L301">					returnedObject = rs.getString(1);</span>
 				}
-<span class="fc" id="L275">				toBeReturned.add(returnedObject);</span>
-<span class="fc" id="L276">			}</span>
+<span class="fc" id="L303">				toBeReturned.add(returnedObject);</span>
+<span class="fc" id="L304">			}</span>
 
-<span class="fc bfc" id="L278" title="All 2 branches covered.">			if (sql.indexOf(&quot;cluster_refresher&quot;)==-1)</span>
+<span class="fc bfc" id="L306" title="All 2 branches covered.">			if (sql.indexOf(&quot;cluster_refresher&quot;)==-1)</span>
 			{
-<span class="fc" id="L280">				Logger.debug(SimpleQuery.class, sql+params);</span>
+<span class="fc" id="L308">				Logger.debug(SimpleQuery.class, sql+params);</span>
 			}
-<span class="fc" id="L282">			rs.close();</span>
-<span class="fc" id="L283">			ps.close();</span>
-<span class="fc" id="L284">			db_conn.close();</span>
-<span class="fc" id="L285">			rs = null;</span>
-<span class="fc" id="L286">			ps = null;</span>
-<span class="fc" id="L287">			db_conn = null;</span>
-<span class="fc" id="L288">			return toBeReturned;</span>
+<span class="fc" id="L310">			rs.close();</span>
+<span class="fc" id="L311">			ps.close();</span>
+<span class="fc" id="L312">			db_conn.close();</span>
+<span class="fc" id="L313">			rs = null;</span>
+<span class="fc" id="L314">			ps = null;</span>
+<span class="fc" id="L315">			db_conn = null;</span>
+<span class="fc" id="L316">			return toBeReturned;</span>
 		}
-<span class="fc" id="L290">		catch (Exception ex)</span>
+<span class="fc" id="L318">		catch (Exception ex)</span>
 		{
-<span class="fc" id="L292">			exceptionMessage = ex.getMessage();</span>
-<span class="fc" id="L293">			IllegalStateException exception = new IllegalStateException(exceptionMessage);</span>
-<span class="fc" id="L294">			exception.initCause(ex);</span>
-<span class="fc" id="L295">			throw exception;</span>
+<span class="fc" id="L320">			exceptionMessage = ex.getMessage();</span>
+<span class="fc" id="L321">			IllegalStateException exception = new IllegalStateException(exceptionMessage);</span>
+<span class="fc" id="L322">			exception.initCause(ex);</span>
+<span class="fc" id="L323">			throw exception;</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L301" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L302">					rs.close();</span>
-<span class="fc bfc" id="L303" title="All 2 branches covered.">				if (ps != null)</span>
-<span class="fc" id="L304">					ps.close();</span>
-<span class="fc bfc" id="L305" title="All 2 branches covered.">				if (db_conn != null)</span>
-<span class="fc" id="L306">					db_conn.close();</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L330">					rs.close();</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">				if (ps != null)</span>
+<span class="fc" id="L332">					ps.close();</span>
+<span class="fc bfc" id="L333" title="All 2 branches covered.">				if (db_conn != null)</span>
+<span class="fc" id="L334">					db_conn.close();</span>
 			}
-<span class="nc" id="L308">			catch (Exception ex2)</span>
+<span class="nc" id="L336">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L310">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L311">			}</span>
+<span class="nc" id="L338">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L339">			}</span>
 		}
 	}
 
 	public boolean executeInTransaction(List&lt;String&gt; sqlCommands, List&lt;Object[]&gt; theirParameters)
 	{
-<span class="nc" id="L317">		String exceptionMessage = null;</span>
-<span class="nc bnc" id="L318" title="All 2 branches missed.">		if (sqlCommands.size() != theirParameters.size())</span>
-<span class="nc" id="L319">			throw new IllegalArgumentException(&quot;Cannot match sqlCommands to their parameters. Their sizes are not equal&quot;);</span>
+<span class="nc" id="L345">		String exceptionMessage = null;</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">		if (sqlCommands.size() != theirParameters.size())</span>
+<span class="nc" id="L347">			throw new IllegalArgumentException(&quot;Cannot match sqlCommands to their parameters. Their sizes are not equal&quot;);</span>
 
-<span class="nc" id="L321">		Connection db_conn = null;</span>
-<span class="nc" id="L322">		PreparedStatement ps = null;</span>
+<span class="nc" id="L349">		Connection db_conn = null;</span>
+<span class="nc" id="L350">		PreparedStatement ps = null;</span>
 		try
 		{
-<span class="nc" id="L325">			db_conn = DBPool.getConnection(databaseName);</span>
-<span class="nc" id="L326">			db_conn.setAutoCommit(false);</span>
+<span class="nc" id="L353">			db_conn = DBPool.getConnection(databaseName);</span>
+<span class="nc" id="L354">			db_conn.setAutoCommit(false);</span>
 
-<span class="nc bnc" id="L328" title="All 2 branches missed.">			for(int commandIndex = 0; commandIndex &lt; sqlCommands.size(); commandIndex++)</span>
+<span class="nc bnc" id="L356" title="All 2 branches missed.">			for(int commandIndex = 0; commandIndex &lt; sqlCommands.size(); commandIndex++)</span>
 			{
-<span class="nc" id="L330">				String sql = sqlCommands.get(commandIndex);</span>
-<span class="nc" id="L331">				ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L358">				String sql = sqlCommands.get(commandIndex);</span>
+<span class="nc" id="L359">				ps = db_conn.prepareStatement(sql);</span>
 
-<span class="nc" id="L333">				Object[] parameters = theirParameters.get(commandIndex);</span>
+<span class="nc" id="L361">				Object[] parameters = theirParameters.get(commandIndex);</span>
 
-<span class="nc bnc" id="L335" title="All 2 branches missed.">				if (parameters != null)</span>
+<span class="nc bnc" id="L363" title="All 2 branches missed.">				if (parameters != null)</span>
 				{
-<span class="nc" id="L337">					int parameterIndex = 1;</span>
-<span class="nc bnc" id="L338" title="All 2 branches missed.">					for (Object parameter : parameters)</span>
-<span class="nc" id="L339">						ps.setObject(parameterIndex++, parameter);</span>
+<span class="nc" id="L365">					int parameterIndex = 1;</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">					for (Object parameter : parameters)</span>
+<span class="nc" id="L367">						ps.setObject(parameterIndex++, parameter);</span>
 				}
 
-<span class="nc" id="L342">				ps.execute();</span>
-<span class="nc" id="L343">				ps.close();</span>
+<span class="nc" id="L370">				ps.execute();</span>
+<span class="nc" id="L371">				ps.close();</span>
 			}
 
-<span class="nc" id="L346">			db_conn.commit();</span>
-<span class="nc" id="L347">			db_conn.setAutoCommit(true);</span>
-<span class="nc" id="L348">			db_conn.close();</span>
-<span class="nc" id="L349">			db_conn = null;</span>
-<span class="nc" id="L350">			ps = null;</span>
-<span class="nc" id="L351">			return true;</span>
+<span class="nc" id="L374">			db_conn.commit();</span>
+<span class="nc" id="L375">			db_conn.setAutoCommit(true);</span>
+<span class="nc" id="L376">			db_conn.close();</span>
+<span class="nc" id="L377">			db_conn = null;</span>
+<span class="nc" id="L378">			ps = null;</span>
+<span class="nc" id="L379">			return true;</span>
 		}
-<span class="nc" id="L353">		catch (Exception ex)</span>
+<span class="nc" id="L381">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L355">			exceptionMessage = ex.getMessage();</span>
-<span class="nc" id="L356">			IllegalStateException exception = new IllegalStateException(exceptionMessage);</span>
-<span class="nc" id="L357">			exception.initCause(ex);</span>
-<span class="nc" id="L358">			throw exception;</span>
+<span class="nc" id="L383">			exceptionMessage = ex.getMessage();</span>
+<span class="nc" id="L384">			IllegalStateException exception = new IllegalStateException(exceptionMessage);</span>
+<span class="nc" id="L385">			exception.initCause(ex);</span>
+<span class="nc" id="L386">			throw exception;</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L364" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L365">					ps.close();</span>
-<span class="nc bnc" id="L366" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc bnc" id="L392" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L393">					ps.close();</span>
+<span class="nc bnc" id="L394" title="All 2 branches missed.">				if (db_conn != null)</span>
 				{
-<span class="nc" id="L368">					db_conn.rollback();</span>
-<span class="nc" id="L369">					db_conn.setAutoCommit(true);</span>
-<span class="nc" id="L370">					db_conn.close();</span>
+<span class="nc" id="L396">					db_conn.rollback();</span>
+<span class="nc" id="L397">					db_conn.setAutoCommit(true);</span>
+<span class="nc" id="L398">					db_conn.close();</span>
 				}
 			}
-<span class="nc" id="L373">			catch (Exception ex2)</span>
+<span class="nc" id="L401">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L375">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L376">			}</span>
+<span class="nc" id="L403">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L404">			}</span>
 		}
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public Date forDate(String sql, Object...parameters)
 	{
-<span class="fc" id="L383">		List&lt;Object&gt; results = forList(sql, parameters);</span>
-<span class="fc bfc" id="L384" title="All 2 branches covered.">		if (results.isEmpty()) return null;</span>
+<span class="fc" id="L411">		List&lt;Object&gt; results = forList(sql, parameters);</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">		if (results.isEmpty()) return null;</span>
 
-<span class="fc" id="L386">		Date result = null;</span>
+<span class="fc" id="L414">		Date result = null;</span>
 		try {
 			// toto vracalo v pripade MSSQL string vo formate 2020-03-23 20:00:00.0000000 co samozrejme neslo takto precastovat, takze som si tu dovolil mensiu upravu. suvisi s sk.iway.iwcm.system.UrlRedirectDB.getDateOfNextChange
-<span class="fc" id="L389">			result = (Date)results.get(0);</span>
-<span class="nc" id="L390">		} catch(java.lang.ClassCastException e) {</span>
-<span class="nc bnc" id="L391" title="All 2 branches missed.">			if(results.get(0) instanceof String) {</span>
+<span class="fc" id="L417">			result = (Date)results.get(0);</span>
+<span class="nc" id="L418">		} catch(java.lang.ClassCastException e) {</span>
+<span class="nc bnc" id="L419" title="All 2 branches missed.">			if(results.get(0) instanceof String) {</span>
 				//
-<span class="nc" id="L393">				DateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss.SSSSSSS&quot;);</span>
+<span class="nc" id="L421">				DateFormat df = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss.SSSSSSS&quot;);</span>
 				try {
-<span class="nc" id="L395">					result = df.parse((String) results.get(0));</span>
-<span class="nc" id="L396">				} catch(ParseException ex) {</span>
-<span class="nc" id="L397">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L398">				}</span>
+<span class="nc" id="L423">					result = df.parse((String) results.get(0));</span>
+<span class="nc" id="L424">				} catch(ParseException ex) {</span>
+<span class="nc" id="L425">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L426">				}</span>
 			}
-<span class="fc" id="L400">		}</span>
+<span class="fc" id="L428">		}</span>
 
-<span class="fc" id="L402">		return result;</span>
+<span class="fc" id="L430">		return result;</span>
 	}
 
 	/**
@@ -412,35 +440,35 @@ public class SimpleQuery
 	 */
 	public static String bindParameters(PreparedStatement ps, Object...parameters) throws SQLException
 	{
-<span class="fc" id="L415">		StringBuilder paramsLog = new StringBuilder(&quot; &quot;);</span>
+<span class="fc" id="L443">		StringBuilder paramsLog = new StringBuilder(&quot; &quot;);</span>
 
-<span class="fc" id="L417">		int parameterIndex = 1;</span>
-<span class="fc bfc" id="L418" title="All 2 branches covered.">		for (Object parameter : parameters)</span>
+<span class="fc" id="L445">		int parameterIndex = 1;</span>
+<span class="fc bfc" id="L446" title="All 2 branches covered.">		for (Object parameter : parameters)</span>
 		{
-<span class="fc bfc" id="L420" title="All 2 branches covered.">			if (parameter instanceof Date)</span>
+<span class="fc bfc" id="L448" title="All 2 branches covered.">			if (parameter instanceof Date)</span>
 			{
-<span class="fc" id="L422">				Date date = (Date)parameter;</span>
-<span class="fc" id="L423">				ps.setTimestamp(parameterIndex++, new Timestamp(date.getTime()));</span>
-<span class="fc" id="L424">			}</span>
-<span class="pc bpc" id="L425" title="1 of 2 branches missed.">			else if (parameter instanceof Calendar)</span>
+<span class="fc" id="L450">				Date date = (Date)parameter;</span>
+<span class="fc" id="L451">				ps.setTimestamp(parameterIndex++, new Timestamp(date.getTime()));</span>
+<span class="fc" id="L452">			}</span>
+<span class="pc bpc" id="L453" title="1 of 2 branches missed.">			else if (parameter instanceof Calendar)</span>
 			{
-<span class="nc" id="L427">				Calendar date = (Calendar) parameter;</span>
-<span class="nc" id="L428">				ps.setTimestamp(parameterIndex++, new Timestamp(date.getTime().getTime()));</span>
-<span class="nc" id="L429">			}</span>
+<span class="nc" id="L455">				Calendar date = (Calendar) parameter;</span>
+<span class="nc" id="L456">				ps.setTimestamp(parameterIndex++, new Timestamp(date.getTime().getTime()));</span>
+<span class="nc" id="L457">			}</span>
 			else
 			{
-<span class="fc" id="L432">				ps.setObject(parameterIndex++, parameter);</span>
+<span class="fc" id="L460">				ps.setObject(parameterIndex++, parameter);</span>
 			}
 
-<span class="pc bpc" id="L435" title="1 of 2 branches missed.">			if (Logger.isLevel(Logger.DEBUG))</span>
+<span class="pc bpc" id="L463" title="1 of 2 branches missed.">			if (Logger.isLevel(Logger.DEBUG))</span>
 			{
-<span class="fc bfc" id="L437" title="All 2 branches covered.">				if (paramsLog.length()&gt;1) paramsLog.append(&quot;, &quot;);</span>
-<span class="fc bfc" id="L438" title="All 2 branches covered.">				if (parameter == null) paramsLog.append(&quot;null&quot;);</span>
-<span class="fc" id="L439">				else paramsLog.append(String.valueOf(parameter));</span>
+<span class="fc bfc" id="L465" title="All 2 branches covered.">				if (paramsLog.length()&gt;1) paramsLog.append(&quot;, &quot;);</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">				if (parameter == null) paramsLog.append(&quot;null&quot;);</span>
+<span class="fc" id="L467">				else paramsLog.append(String.valueOf(parameter));</span>
 			}
 		}
 
-<span class="fc" id="L443">		return paramsLog.toString();</span>
+<span class="fc" id="L471">		return paramsLog.toString();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

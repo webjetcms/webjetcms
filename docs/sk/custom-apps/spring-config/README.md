@@ -1,10 +1,10 @@
 # Konfigurácia Spring
 
-Pred programovaním je potrebné nakonfigurovať načítanie Spring tried a repozitárov. Je potrebné vytvoriť súboru ```SpringConfig.java``` pre konfiguráciu Spring a ```JpaDBConfig.java``` pre konfiguráciu repozitárov. Vytvoríte ich v package ```sk.iway.INSTALL_NAME```, aby ich WebJET pri štarte načítal a inicializoval. Hodnotu ```INSTALL_NAME``` nahradíte hodnotou konf. premennej ```installName```.
+Pred programovaním je potrebné nakonfigurovať načítanie ```Spring``` tried a repozitárov. Je potrebné vytvoriť súboru ```SpringConfig.java``` pre konfiguráciu ```Spring``` a ```JpaDBConfig.java``` pre konfiguráciu repozitárov. Vytvoríte ich v package ```sk.iway.INSTALL_NAME```, aby ich WebJET pri štarte načítal a inicializoval. Hodnotu ```INSTALL_NAME``` nahradíte hodnotou konf. premennej ```installName```.
 
 ## Nastavenie Spring
 
-V triede ```SpringConfig``` je potrené nastaviť v anotácii ```@ComponentScan``` packages, ktoré obsahujú Spring triedy.
+V triede ```SpringConfig``` je potrené nastaviť v anotácii ```@ComponentScan``` packages, ktoré obsahujú ```Spring``` triedy.
 
 ```java
 package sk.iway.basecms;
@@ -24,7 +24,7 @@ public class SpringConfig {
 
 ## Nastavenie JPA
 
-V triede ```JpaDBConfig``` (technicky je jedno ako sa volá, musí byť ale v package, ktorý je nastavený v ```SpringConfig``` v sekcii ```@ComponentScan```) je podobne potrebné v anotácii ```@EnableJpaRepositories.basePackages``` nastaviť packages obsahujúce Spring DATA repozitáre. Do ```emf.setPackagesToScan``` je potrebné pridať packages obsahujúce JPA entity (zvyčajne sú to rovnaké packages).
+V triede ```JpaDBConfig``` (technicky je jedno ako sa volá, musí byť ale v package, ktorý je nastavený v ```SpringConfig``` v sekcii ```@ComponentScan```) je podobne potrebné v anotácii ```@EnableJpaRepositories.basePackages``` nastaviť packages obsahujúce ```Spring DATA``` repozitáre. Do ```emf.setPackagesToScan``` je potrebné pridať `packages` obsahujúce `JPA` entity (zvyčajne sú to rovnaké `packages`).
 
 ```java
 package sk.iway.basecms;
@@ -79,10 +79,13 @@ public class JpaDBConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         Logger.println(this, "loading basecms JpaDBConfig");
 
+        String dataSourceName = "iwcm";
+
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
-        emf.setDataSource(DBPool.getInstance().getDataSource("iwcm"));
+        emf.setDataSource(DBPool.getInstance().getDataSource(dataSourceName));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+        emf.setPersistenceUnitName(dataSourceName);
 
         // Zoznam packages ktore sa maju skenovat pre databazove entity/DAO !!
         emf.setPackagesToScan(

@@ -14,13 +14,13 @@ Aby sa aplikácia zobrazila v zozname je potrebné aby jej trieda mala anotáciu
 
 ```java
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 public class DemoComponent extends WebjetComponentAbstract {
 	...
 }
 
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "ti ti-id", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 public class ContactApp extends WebjetComponentAbstract {
 	...
 }
@@ -30,10 +30,11 @@ Anotácia má nasledovné parametre:
 
 - ```nameKey``` - prekladový kľúč **mena aplikácie** (v príkladoch je priamo text, odporúčame ale použiť prekladový kľúč), napr. ```components.DemoComponent.title```.
 - ```descKey``` - prekladový kľúč **opisu aplikácie**, ak nie je zadaný hľadá sa prekladový kľúč zadaný ako ```nameKey.desc``` (ak ```nameKey``` končí na ```.title``` nahradí sa ```.title``` za ```.desc```).
-- ```imagePath``` - cesta k obrázku **ikony** aplikácie. Môže sa jednať o súbor, alebo môže byť zadaná CSS trieda pre ikonu [FontAwesome](https://fontawesome.com/v5/search?s=solid%2Cbrands) ako ```fa fa-meno-ikony```.
+- ```imagePath``` - cesta k obrázku **ikony** aplikácie. Môže sa jednať o súbor, alebo môže byť zadaná CSS trieda pre ikonu [TablerIcons](https://tabler.io/icons) ako ```ti ti-meno-ikony```.
 - ```galleryImages``` - čiarkou oddelený zoznam obrázkov, ktoré sa zobrazia v opise aplikácie, napr. ```/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png```.
 - ```domainName``` - ak máte multi doménovú inštaláciu môžete obmedziť zobrazenie aplikácie len na zadanú doménu. Môžete zadať viac domén oddelených čiarkou.
 - ```commonSettings``` - parameter určujúci, či sa v editore aplikácie zobrazí karta Zobrazenie pre spoločné nastavenia. Prednastavená hodnota je `true`, čiže karta sa bude zobrazovať.
+- ```custom``` - nastavte na `true` pre vaše zákaznícke aplikácie. Automaticky sa nastaví podľa toho, či sa nachádza v package `sk.iway.iwcm`. Zákaznícke aplikácie sú v zozname aplikácií na začiatku zoznamu.
 
 ![](democomponent-desc.png)
 
@@ -48,7 +49,7 @@ Aplikácie s package začínajúcim na ```sk.iway.iwcm``` sú umiestnené na kon
 
 Ak chcete umiestniť aplikáciu aj do promo zoznamu (v hornej časti) upravte konf. premennú ```appstorePromo```, ktorá obsahuje zoznam kľúčov promo aplikácií.
 
-**Upozornenie:** aplikácia je do stránky vložená ako `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)`, ak sa v stránke nachádza viac krát, je trieda znova použitá a jej atribúty a premenné sú zachované počas vykonania HTTP požiadavky.
+!>**Upozornenie:** aplikácia je do stránky vložená ako `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)`, ak sa v stránke nachádza viac krát, je trieda znova použitá a jej atribúty a premenné sú zachované počas vykonania HTTP požiadavky.
 
 ## Parametre aplikácie
 
@@ -57,7 +58,7 @@ Každá aplikácia môže mať nastaviteľné parametre. Tie sú definované pri
 ```java
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 public class DemoComponent extends WebjetComponentAbstract {
 
 	private String stringField;
@@ -100,7 +101,7 @@ import java.util.Date;
 import java.util.List;
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 @Getter
 @Setter
 public class DemoComponent extends WebjetComponentAbstract {
@@ -156,6 +157,16 @@ public class DemoComponent extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimple", tab = "json", className = "dt-tree-dir-simple")
     private String dirSimple;
+
+    //select folder with root set to /images/gallery
+    @DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-dir-simple", title="components.gallery.dir", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")
+            }
+        )
+    })
+    private String dir = "/images/gallery";
 
 
 
@@ -285,7 +296,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  * @see sk.iway.iwcm.system.spring.services.WebjetSecurityService
  */
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "ti ti-id", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {
@@ -397,6 +408,157 @@ public class ContactApp extends WebjetComponentAbstract {
 }
 ```
 
+## Inicializácia dát
+
+Ak potrebujete pri otvorení aplikácie vykonať kód pre inicializáciu hodnôt môžete implementovať metódu `initAppEditor(ComponentRequest componentRequest, HttpServletRequest request)`, v ktorej môžete nastaviť iniciálne hodnoty alebo vykonať iný kód. V objekte `ComponentRequest` sa nachádzajú informácie o aktuálnej web stránke.
+
+```java
+    @Override
+    public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+        String uploadSubdir = UploadFileTools.getPageUploadSubDir(componentRequest.getDocId(), componentRequest.getGroupId(), componentRequest.getPageTitle(), "/images/gallery");
+        IwcmFile uploadDirFile = new IwcmFile(Tools.getRealPath(uploadSubdir));
+        if ("/images/gallery".equals(dir)) {
+            if (uploadDirFile.exists() == false) {
+                boolean created = uploadDirFile.mkdirs();
+                if (created) dir = uploadSubdir;
+            } else {
+                dir = uploadSubdir;
+            }
+        }
+    }
+```
+
+## Nastavenie výberových polí
+
+Pre dynamicky tvorené výberové polia môžete implementovať metódu `getAppOptions(ComponentRequest componentRequest, HttpServletRequest request)` ktorá nastaví `options` objekt REST odpovede. Ten sa prenesie do datatabuľky a nastaví možnosti pre výberové polia, alebo zoznam zaškrtávacích polí.
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
+@WebjetAppStore(nameKey = "components.gallery.title", descKey = "components.gallery.desc", itemKey="menuGallery", imagePath = "/components/gallery/editoricon.png", galleryImages = "/components/gallery/", componentPath = "/components/gallery/gallery.jsp")
+@Getter
+@Setter
+public class GalleryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.gallery.visual_style")
+    private String style;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "basic", title="components.news.perexGroup", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.tab.filter"),
+                @DataTableColumnEditorAttr(key = "unselectedValue", value = "")
+            }
+        )
+    })
+	private Integer[] perexGroup;
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        //add options for style
+        List<OptionDto> styleOptions = new ArrayList<>();
+        Prop prop = Prop.getInstance(request);
+
+		styleOptions.add(new OptionDto(prop.getText("components.gallery.visual_style.prettyPhoto"), "prettyPhoto", null));
+		styleOptions.add(new OptionDto(prop.getText("components.gallery.visual_style.photoSwipe"), "photoSwipe", null));
+
+		//add all JSP files from the custom gallery folder
+		IwcmFile[] files = new IwcmFile(Tools.getRealPath("/components/" + Constants.getInstallName() + "/gallery/")).listFiles();
+		for (IwcmFile f : files)
+		{
+			if (f.getName().startsWith("gallery-")==false) continue;
+			if (f.getName().contains("-prettyPhoto.jsp") || f.getName().contains("-photoSwipe.jsp")) continue;
+
+			try
+			{
+				String name = f.getName().substring("gallery-".length(), f.getName().length()-4);
+                addPair(name, styleOptions, prop);
+			}
+			catch (Exception e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
+		}
+
+		//check if the current style is in the list
+		if (Tools.isNotEmpty(getStyle()))
+		{
+			boolean found = false;
+			for (OptionDto option : styleOptions)
+			{
+				if (option.getValue().equals(getStyle())) found = true;
+			}
+			if (found == false)
+			{
+				addPair(getStyle(), styleOptions, prop);
+			}
+		}
+
+        options.put("style", styleOptions);
+
+        //add perex groups
+        List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups(componentRequest.getGroupId());
+        List<OptionDto> perexGroupOptions = new ArrayList<>();
+        for (PerexGroupBean pg : perexGroups) {
+            perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), ""+pg.getPerexGroupId(), null));
+        }
+        options.put("perexGroup", perexGroupOptions);
+
+        return options;
+    }
+
+    /**
+     * Try to translate the name of the style and add it to the list of options
+     * @param name
+     * @param styleOptions
+     * @param prop
+     */
+    private void addPair(String name, List<OptionDto> styleOptions, Prop prop)
+	{
+		String desc = prop.getText("components.gallery.visual_style."+name);
+		if (desc.startsWith("components.gallery")) desc = name;
+
+		styleOptions.add(new OptionDto(desc, name, null));
+	}
+}
+```
+
+## Karty
+
+Ak potrebujete polia rozdeliť do viacerých kariet je možné ich definovať anotáciou `@DataTableTabs`, môžete aj využiť typ poľa `IFRAME` pre jednoduché vloženie inej stránky, napr. zoznamu fotografií v galérii:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
+@WebjetAppStore(nameKey = "components.gallery.title", descKey = "components.gallery.desc", itemKey="menuGallery", imagePath = "/components/gallery/editoricon.png", galleryImages = "/components/gallery/", componentPath = "/components/gallery/gallery.jsp")
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "componentIframe", title = "components.gallery.images")
+})
+@Getter
+@Setter
+public class GalleryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.gallery.visual_style")
+    private String style;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", className = "dt-tree-dir-simple", title="components.gallery.dir", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")
+            }
+        )
+    })
+    private String dir = "/images/gallery";
+
+    ...
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframe", title="&nbsp;")
+    private String iframe  = "/admin/v9/apps/gallery/?dir={dir}";
+
+}
+```
+
 ## Karta Zobrazenie
 
 Karta Zobrazenie pre spoločné nastavenia, sa predvolene zobrazí každej aplikácií, ak to u danej aplikácie nie je nastavené inak ( [viac informácií tu](#parametre-aplikácie) ).
@@ -406,6 +568,8 @@ Karta Zobrazenie pre spoločné nastavenia, sa predvolene zobrazí každej aplik
 Karta obsahuje parametre:
 - Zobrazenie na zariadeniach, slúžiaci na nastavenie [podmieneného zobrazenia aplikácia](#podmienené-zobrazenie-aplikácie).
 - Čas vyrovnávacej pamäte (minúty), slúži na nastavenie doby v minútach, po akú má byť inicializovaná aplikácia uložená vo vyrovnávacej pamäti.
+
+Ak v Spring aplikácii kartu nechcete zobraziť nastavte atribút `commonSettings=false` v anotácii `@WebjetAppStore`.
 
 ### Podmienené zobrazenie aplikácie
 

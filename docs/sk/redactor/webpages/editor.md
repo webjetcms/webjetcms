@@ -76,7 +76,7 @@ Pri zmene URL adresy stránky sa automaticky vytvorí presmerovanie v aplikácii
 
 V karte Základne je pole Poznámka redaktora. Zadaný text sa zobrazí v hornej časti editora ako upozornenie pre všetkých redaktorov/administrátorov pri editácii danej web stránky. Jedná sa o interný atribút, ktorý sa nezobrazuje vo verejnej časti web sídla. Poznámka sa neukladá do histórie stránky, je vždy aktualizovaná zadanou/aktuálnou hodnotou.
 
-Umožňuje zobrazovať informácie ako: ```Pozor, na stránku vedie odkaz z VOP, nikdy nemeňte adresu stránky```.
+Umožňuje zobrazovať informácie ako: **Upozornenie: na stránku vedie odkaz z VOP, nikdy nemeňte adresu stránky**.
 
 ## Správa viacerých domén
 
@@ -140,10 +140,23 @@ V karte Perex môžete nastaviť platnosť zobrazenia stránky, alebo nastaviť 
 
 ![](editor/tab-perex.png)
 
-Polia Začiatok, Koniec a Dátum konania sa zvyčajne používajú len pri novinkách, tlačových správach, udalostiach a konferenciách. Pole Začiatok a Koniec majú však aj špeciálnu funkciu v prípade, ak chcete načasovať publikovanie alebo zrušenie stránky od  istého časového okamihu v budúcnosti. Táto funkcia je aktivovaná po zaškrtnutí políčka "Zverejniť stránku po tomto dátume", resp. "Odverejniť stránku po tomto dátume". Hodnotu polí Začiatok a Koniec je nutné vyplniť pre všetky udalosti a konferencie v kalendári udalostí. Pre novinky stačí zadať dátum začiatku.
+Polia **Dátum začiatku**, **Dátum konca** a **Dátum konania** sa zvyčajne používajú len pri novinkách, tlačových správach, udalostiach a konferenciách. Pole **Dátum začiatku** a **Dátum konca** majú však aj špeciálnu funkciu v prípade, ak chcete načasovať publikovanie alebo zrušenie stránky od istého časového okamihu v budúcnosti. Táto funkcia je aktivovaná po zaškrtnutí políčka **Zverejniť stránku po tomto dátume**, resp. **Odverejniť stránku po tomto dátume**. Hodnotu polí **Dátum začiatku** a **Dátum konca** je nutné vyplniť pre všetky udalosti a konferencie v kalendári udalostí. Pre novinky stačí zadať dátum začiatku.
 
 Perex (Anotácia) obsahuje stručný popis, čoho sa stránka týka. Nemal by byť dlhší ako cca 160 znakov. Perex sa používa hlavne pri písaní noviniek, tlačových správ, udalostí a konferencií, kde predstavuje krátky popis k článku, ktorý je zobrazený v zozname správ.
-Obrázok môžete zadefinovať cez ikonku, ktorá sa nachádza za políčkom Obrázok
+
+Obrázok môžete zadefinovať cez ikonku, ktorá sa nachádza za políčkom **Obrázok**.
+
+### Publikovanie web stránky
+
+Ak ste si načasovali publikovanie web stránky a chcete byť o tomto publikovaní ako **autor stránky** informovaný, stačí nastaviť konfiguračnú premennú ```webpagesNotifyAutorOnPublish```. Prednastavená hodnota je **true**, čiže vždy po publikovaní novej verzie web stránky sa jej autorovi odošle nasledujúci informačný email.
+
+![](editor/publish-email-notification.png)
+
+Koniec emailu obsahuje odkaz na stránku, kde môžete skontrolovať novú verziu stránky. Ak si tieto informačné emaily neželáte, musíte nastaviť hodnotu konfiguračnej premennej ```webpagesNotifyAutorOnPublish``` na **false**.
+
+Tato akcia sa [Audituje](../../sysadmin/audit/README.md) kde typ auditu je ```SAVEDOC``` a opis auditovanej akcie obsahuje informáciu ```publishStatus: Webpage was published```, vďaka čomu viete akcie publikovania jednoducho nájsť.
+
+![](editor/publish-audit-logs.png)
 
 ## Karta média
 
@@ -161,7 +174,7 @@ V poli Náhľadový obrázok je možné odkazu nastaviť vhodný náhľadový ob
 
 Usporiadanie definuje poradie odkazov. Médiá priradené do rôznych skupín sa navzájom neovplyvňujú. Čísla poradia môžu byť aj rovnaké, v takom prípade zoradí systém odkazy podľa abecedy.
 
-**Upozornenie:** novo pridané médium sa na web stránke začne zobrazovať až po uložení web stránky. Viete tak v prípade potreby časovať pridanie média spolu s web stránkou, ak stránke nastavíte oneskorené publikovanie.
+!>**Upozornenie:** novo pridané médium sa na web stránke začne zobrazovať až po uložení web stránky. Viete tak v prípade potreby časovať pridanie média spolu s web stránkou, ak stránke nastavíte oneskorené publikovanie.
 
 ## Karta voliteľné polia
 

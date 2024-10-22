@@ -64,9 +64,12 @@ Scenario('Hiding/showing spring based app based on device', ({I}) => {
     I.waitForElement(locate("h1").withText("Podmienene zobrazenie"));
     I.dontSeeElement( locate("span").withText("Verzia pre PC") );
     I.seeElement( locate("span").withText("Verzia pre Tablet a Telefon") );
+
+    //reset back to PC version
+    I.amOnPage("/apps/podmienene-zobrazenie/?forceBrowserDetector=pc");
 });
 
-Scenario("Device type checkbox save", ({I, DTE, Document}) => {
+Scenario("Device type checkbox save ", ({I, DTE, Document}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=80009");
     DTE.waitForEditor();
 
@@ -126,6 +129,7 @@ Scenario("Cache", async ({I}) => {
 
     //
     I.say("Date must be changed after refresh for admin - not cached");
+    I.wait(1);
     I.amOnPage("/apps/spring-app/cache-test.html?NO_WJTOOLBAR=true");
     I.waitForElement("p.currentDate", 10);
     I.dontSee(date, "p.currentDate");
@@ -135,10 +139,10 @@ Scenario("Cache", async ({I}) => {
     I.amOnPage("/apps/spring-app/cache-test.html");
     I.waitForElement("p.currentDate", 10);
     var date = await I.grabTextFrom("p.currentDate");
-    I.wait(5);
 
     //
     I.say("Date must be same after refresh - cached");
+    I.wait(5);
     I.amOnPage("/apps/spring-app/cache-test.html");
     I.waitForElement("p.currentDate", 10);
     I.seeTextEquals(date, "p.currentDate");

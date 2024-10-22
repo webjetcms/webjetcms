@@ -76,13 +76,25 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.filebrowser",
     "sk.iway.iwcm.components.forum.rest",
     "sk.iway.iwcm.components.seo.rest",
-    "sk.iway.iwcm.setup",
     "sk.iway.iwcm.doc.clone_structure",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.xls",
     "sk.iway.iwcm.components.restaurant_menu.rest",
     "sk.iway.iwcm.components.quiz.rest",
-    "sk.iway.iwcm.components.blog.rest"
+    "sk.iway.iwcm.components.blog.rest",
+    "sk.iway.iwcm.components.appcookiebar",
+    "sk.iway.iwcm.components.appdocsembed",
+    "sk.iway.iwcm.components.appfacebookcomments",
+    "sk.iway.iwcm.components.appfacebooklike",
+    "sk.iway.iwcm.components.appsmartsupp",
+    "sk.iway.iwcm.components.apphtmlembed",
+    "sk.iway.iwcm.components.appvyhladavanie",
+    "sk.iway.iwcm.components.contentblock",
+    "sk.iway.iwcm.components.sendlink",
+    "sk.iway.iwcm.components.gdpr",
+    "sk.iway.iwcm.components.sitebrowser"
+
+
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
@@ -122,7 +134,10 @@ public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
     @Override
     public void configureSecurity(HttpSecurity http) throws Exception {
-        //pridaj filter na prihlasovanie cez ApiToken
+        //add logon filter using API token
         http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);
+
+        //add SetCharacterEncodingFilter for setting RequestBean and other system stuff, must be after ApiTokenAuthFilter because it needs logged user
+        http.addFilterAfter(new sk.iway.iwcm.SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);
     }
 }

@@ -71,7 +71,7 @@ HTML kód je rozdelený do viacerých súborov pre možnosť vloženia spoločn�
 
 #### ** html-attributes.jsp **
 ```html
-lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" data-browser-version="${ninja.userAgent.browserVersion}" data-device-type="${ninja.userAgent.deviceType}" data-device-os="${ninja.userAgent.deviceOS}"
+lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" data-browser-version="${ninja.userAgent.browserVersion}" data-device-type="${ninja.userAgent.deviceType}" data-device-os="${ninja.userAgent.deviceOS}" data-ab-variant="${ninja.abVariant}"
 ```
 
 #### ** header.jsp **

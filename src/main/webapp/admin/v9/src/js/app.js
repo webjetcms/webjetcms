@@ -81,6 +81,9 @@ import '@babel/polyfill';
 import 'bootstrap';
 import '../scss/ninja.scss';
 
+//extra css file for inline editing
+import(/* webpackChunkName: "inline" */ '../scss/inline.scss');
+
 const bootstrap = (window.bootstrap = require('bootstrap'));
 
 //na zaklade https://github.com/snapappointments/bootstrap-select/issues/2505 importovane priamo js a nie dist/js mozno po prechode do stable to bude OK
@@ -151,7 +154,9 @@ const initAmcharts = () => {
         window.WebjetTheme = module.WebjetTheme
 
         //Add licence
-        window.am5.addLicense('CH112792597');
+        if (typeof window.am5license === "string" && window.am5license != null && window.am5license.length > 5) {
+            window.am5.addLicense(window.am5license);
+        }
 
         setTimeout(()=>{
             //Add event dispache

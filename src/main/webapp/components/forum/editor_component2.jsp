@@ -40,6 +40,9 @@ GroupDetails baseGroupDetails = groupsDB.getGroup(Tools.getIntValue(session.getA
 int pageSize = Tools.getIntValue(request.getParameter("pageSize"),10);
 int pageLinksNum = Tools.getIntValue(request.getParameter("pageLinksNum"),10);
 String sortAscending = request.getParameter("sortAscending") != null ? request.getParameter("sortAscending") : "true";
+
+boolean notifyPageAuthor = request.getParameter("notifyPageAuthor") != null ? true : false;
+
 boolean useDelTimeLimit = false;
 int delMinutes = 0;
 ForumSortBy sortTopicsBy = ForumSortBy.valueOf(Tools.getStringValue(request.getParameter("sortTopicsBy"), ForumSortBy.LastPost.getColumnName()));
@@ -65,7 +68,7 @@ if(structure != null)
 	request.setAttribute("forumCreated","true");
 	//najprv vytvori hlavne forum v hlavnej skupine
 	GroupDetails actualGroup = baseGroupDetails;
-	baseData = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\"><div class=\"column-content\">!INCLUDE(/components/forum/forum_mb.jsp, type=topics, pageSize="+pageSize+", pageLinksNum="+pageLinksNum+", useDelTimeLimit="+useDelTimeLimit+", delMinutes="+delMinutes+", showSearchBox=true"+ ", sortTopicsBy="+sortTopicsBy+", sortAscending="+sortAscending+",rootGroup=false)!</div></div></div></div></section>";
+	baseData = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\"><div class=\"column-content\">!INCLUDE(/components/forum/forum_mb.jsp, type=topics, pageSize="+pageSize+", pageLinksNum="+pageLinksNum+", useDelTimeLimit="+useDelTimeLimit+", delMinutes="+delMinutes+", showSearchBox=true"+ ", sortTopicsBy="+sortTopicsBy+", sortAscending="+sortAscending+",notifyPageAuthor="+notifyPageAuthor+",rootGroup=false)!</div></div></div></div></section>";
 
 	//toto vlozime na konci priamo ako kod do stranky
 	//if(docDB.getDocByGroup(actualGroup.getGroupId()).size() == 0)//ak uz neexistuje root stranka tak ju vytvor
@@ -130,6 +133,7 @@ function Ok()
 <form name="textForm" action="editor_component2.jsp">
 <logic:present parameter="useDelTimeLimit" >
 <input type="hidden" name="useDelTimeLimit" value="true">
+<input type="hidden" name="notifyPageAuthor" value="<%=notifyPageAuthor%>">
 <input type="hidden" name="delMinutes" value="<%=Tools.getIntValue(request.getParameter("delMinutes"),10)%>">
 </logic:present>
 

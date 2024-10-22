@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.reservation.jpa;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -9,11 +10,18 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -39,6 +47,7 @@ public class ReservationEntity implements Serializable {
     private Long id;
 
     @Column(name = "name")
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title="components.reservation.reservation_list.name",
@@ -48,6 +57,7 @@ public class ReservationEntity implements Serializable {
     private String name;
 
     @Column(name = "surname")
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title="components.reservation.reservation_list.surname",
@@ -57,6 +67,7 @@ public class ReservationEntity implements Serializable {
     private String surname;
 
     @Column(name = "email")
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="components.reservation.reservation_list.email",
@@ -72,10 +83,11 @@ public class ReservationEntity implements Serializable {
         sortAfter = "editorFields.selectedReservation"
     )
     @Column(name = "reservation_object_id")
-    private Integer reservationObjectId;
+    private Long reservationObjectId;
 
     @Column(name = "date_from")
     @Temporal(TemporalType.TIMESTAMP)
+    @NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="components.reservation.reservation_list.date_from2",
@@ -85,6 +97,7 @@ public class ReservationEntity implements Serializable {
 
     @Column(name = "date_to")
     @Temporal(TemporalType.TIMESTAMP)
+    @NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="components.reservation.reservation_list.date_to2",
@@ -132,10 +145,38 @@ public class ReservationEntity implements Serializable {
     @Size(max = 60)
     private String hashValue;
 
+    @Column(name = "price")
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = "dt-format-number--decimal",
+        title="components.reservation.reservations.price",
+        tab = "basic",
+        sortAfter = "editorFields.reservationTimeTo",
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") }
+            )
+        }
+    )
+    private BigDecimal price;
+
     @Column(name = "domain_id")
     private Integer domainId;
 
+    @Column(name = "user_id")
+    private Integer userId;
+
     @Transient
     @DataTableColumnNested
-    private ReservationEditorFields editorFields = null;
+    private transient ReservationEditorFields editorFields = null;
+
+    @ManyToOne
+    @JsonBackReference(value="reservationObjectForReservation")
+    @JoinColumn(name="reservation_object_id", insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private ReservationObjectEntity reservationObjectForReservation;
+
+    public String getReservationObjectName() {
+        return reservationObjectForReservation != null ? reservationObjectForReservation.getName() : "";
+    }
 }

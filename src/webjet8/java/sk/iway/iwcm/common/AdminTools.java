@@ -97,10 +97,10 @@ public class AdminTools {
 
             db_conn = DBPool.getConnection();
             if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) {
-                ps = db_conn.prepareStatement(sql+" LIMIT "+(maxSize*3));
+                ps = db_conn.prepareStatement(sql+" LIMIT "+(maxSize*10));
             } else {
                 ps = db_conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-                ps.setFetchSize(maxSize * 3);
+                ps.setFetchSize(maxSize * 10);
             }
             ps.setInt(1, userId);
             rs = ps.executeQuery();
@@ -211,7 +211,7 @@ public class AdminTools {
         try
         {
             db_conn = DBPool.getConnection();
-            ps = db_conn.prepareStatement("select * from file_fat where virtual_path=? order by last_modified desc");
+            ps = db_conn.prepareStatement("SELECT * FROM file_fat WHERE virtual_path=? ORDER BY last_modified DESC"); //NOSONAR
             ps.setString(1, virtualPath);
             rs = ps.executeQuery();
             while (rs.next())

@@ -96,18 +96,31 @@ Scenario('zobrazenie stranok @singlethread', async ({I, DT}) => {
     I.see(bvariantText);
 
     //nageneruj nejaku statistiku
-    let counter = Math.floor(Math.random() * 10) + 10;
+    let counter = Math.floor(Math.random() * 10) + 25;
+    let acounter = 0;
+    let bcounter = 0;
     for (let i=0; i<counter; i++) {
         I.clearCookie("wjabtesting");
         I.amOnPage("/test-stavov/ab-testovanie/");
         cookie = await I.grabCookie("wjabtesting");
         I.say(i+". AB test variant: "+cookie.value);
+        if (cookie.value == "a") acounter++;
+        else if (cookie.value == "b") bcounter++;
+
+        if (acounter > 0 && bcounter > 0) break;
+
+        //prevent 429 too many requests
+        I.wait(0.5);
     }
+
+    I.say("Verify there was A variant and also B variant");
+    I.assertAbove(acounter, 0, "There was no A variant");
+    I.assertAbove(bcounter, 0, "There was no B variant");
 
     I.closeCurrentTab();
 });
 
-Scenario('zmazanie stranok @singlethread', ({I, DT}) => {
+Scenario('zmazanie stranok @singlethread ', ({I, DT}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=30452");
     DT.waitForLoader();
     DT.filter("title", pageTitle);
@@ -172,4 +185,50 @@ Scenario('Test abtesting config page', ({ I, DT, DTE }) => {
     I.dontSeeElement("button.buttons-celledit");
     I.dontSeeElement("button.buttons-import");
     I.dontSeeElement("button.buttons-duplicate");
+});
+
+Scenario('Test ab variant detection', async ({ I, Document }) => {
+    //We MUST be logout - b version is not going show to logged user
+    I.logout();
+
+    I.say("For not logged user URL with abtestvariant is not allowed")
+    I.amOnPage("/investicie/abtestvariantb.html?id=1");
+    I.waitForText("Chyba 404 - požadovaná stránka neexistuje");
+
+    I.say("Check, that it is A variant - data-ab-variant value in tag");
+    const url = "/investicie/";
+    const userAgentHeader = "Mozilla/5.0 (Linux; Android 6.0.1; Nexus 5X Build/MMB29P) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/W.X.Y.Z Mobile Safari/537.36 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+    for (var i=0; i<10; i++) {
+        let response = await I.sendGetRequest(url+"?v="+i,
+            {
+                'User-Agent': userAgentHeader+" v"+i,
+                'x-auth-token': '',
+                'Cookies': 'xxx=aaa'
+            }
+        );
+        let data = response.data.substring(0, 200);
+        I.assertContain(data, 'data-ab-variant="a"');
+        I.assertContain(data, 'data-browser-name="googlebot"');
+        I.wait(0.2);
+    }
+
+    I.say("Check, that it is B variant - data-ab-variant value in tag");
+    I.relogin("admin");
+    I.amOnPage("/investicie/abtestvariantb.html?id=2");
+    I.waitForText("PRODUKTOVÁ STRÁNKA, KTORÁ JE AKO SAMOSTATNÁ", 10);
+    I.waitForElement('html[data-ab-variant=b]', 5);
+
+    //
+    I.say("Set conf ABTestingAllowVariantUrl=true");
+    Document.setConfigValue("ABTestingAllowVariantUrl", "true");
+    I.logout();
+    I.amOnPage("/investicie/abtestvariantb.html?id=3");
+    I.waitForText("PRODUKTOVÁ STRÁNKA, KTORÁ JE AKO SAMOSTATNÁ", 10);
+    I.waitForElement('html[data-ab-variant=b]', 5);
+    I.relogin("admin");
+    Document.setConfigValue("ABTestingAllowVariantUrl", "false");
+});
+
+Scenario('Test ab variant detection-revert config', ({ I, Document }) => {
+    Document.setConfigValue("ABTestingAllowVariantUrl", "false");
 });

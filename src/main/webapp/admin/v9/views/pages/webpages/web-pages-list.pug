@@ -132,6 +132,8 @@ block content
                         initialData: webpagesInitialJson,
                         columns: webpageColumns,
                         idAutoOpener: false,
+                        customFieldsUpdateColumns: true,
+                        customFieldsUpdateColumnsPreserveVisibility: true,
                         onEdit: function(TABLE, row, dataAfterFetch, dataBeforeFetch) {
                             //console.log("onEdit, TABLE=", TABLE, "row=", row, "id=", row[0].id);
 
@@ -696,6 +698,10 @@ block content
                                     showRecoverPages = true;
                                 }
                             }
+
+                            $("#datatableInit_wrapper .dt-header-row button.buttons-create").hide();
+                        } else {
+                            $("#datatableInit_wrapper .dt-header-row button.buttons-create").show();
                         }
 
                         if (showRecoverGroup) {

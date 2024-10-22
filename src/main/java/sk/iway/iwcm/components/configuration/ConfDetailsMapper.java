@@ -29,7 +29,7 @@ public class ConfDetailsMapper {
 
     ConfDetailsDto entityToDto(ConfDetails cd) {
         ConfDetailsDto dto = new ConfDetailsDto();
-        NullAwareBeanUtils.copyProperties(cd, dto);
+        if (cd != null) NullAwareBeanUtils.copyProperties(cd, dto);
         return dto;
     }
 

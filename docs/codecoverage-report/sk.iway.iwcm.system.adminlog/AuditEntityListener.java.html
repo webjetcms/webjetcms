@@ -9,14 +9,19 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.DataSource;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
 
 import javax.persistence.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
@@ -30,74 +35,74 @@ import java.util.stream.Stream;
  * viac je v dokumentacii v auditing.md
  * ticket: #46891
  */
-<span class="fc" id="L33">public class AuditEntityListener {</span>
+<span class="fc" id="L38">public class AuditEntityListener {</span>
 
     private HashMap&lt;Long, String&gt; preUpdateChanges;
 
     @PrePersist
     public void prePersist(Object entity) {
         //log.debug(&quot;prePersist&quot;);
-<span class="fc" id="L40">    }</span>
+<span class="fc" id="L45">    }</span>
 
     @PreUpdate
     public void preUpdate(Object entity) {
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
         try {
-<span class="fc" id="L46">            saveChanges(entity);</span>
-<span class="nc" id="L47">        } catch (Exception ex) {</span>
-<span class="nc" id="L48">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L49">        }</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L51">            saveChanges(entity);</span>
+<span class="nc" id="L52">        } catch (Exception ex) {</span>
+<span class="nc" id="L53">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L54">        }</span>
+<span class="fc" id="L55">    }</span>
 
     @PreRemove
     public void preRemove(Object entity) {
         //log.debug(&quot;preRemove: &quot; + getId(entity));
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L60">    }</span>
 
     @PostPersist
     public void postPersist(Object entity) {
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
         try {
             //log.debug(&quot;postPersist&quot;);
-<span class="fc" id="L62">            String changes = getChangedProperties(entity, false);</span>
-<span class="fc" id="L63">            Number id = getId(entity);</span>
-<span class="fc" id="L64">            Adminlog.add(getType(entity), &quot;CREATE:\n&quot; + changes, id.intValue(), -1);</span>
-<span class="nc" id="L65">        } catch (Exception ex) {</span>
-<span class="nc" id="L66">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L67">        }</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L67">            String changes = getChangedProperties(entity, false);</span>
+<span class="fc" id="L68">            Number id = getId(entity);</span>
+<span class="fc" id="L69">            Adminlog.add(getType(entity), &quot;CREATE:\n&quot; + changes, id.intValue(), -1);</span>
+<span class="nc" id="L70">        } catch (Exception ex) {</span>
+<span class="nc" id="L71">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L72">        }</span>
+<span class="fc" id="L73">    }</span>
 
     @PostUpdate
     public void postUpdate(Object entity) {
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
         try {
-<span class="fc" id="L74">            Logger.debug(getClass(), &quot;postUpdate&quot;);</span>
-<span class="fc" id="L75">            String changes = getAndClearSavedChanges(entity);</span>
-<span class="fc" id="L76">            Number id = getId(entity);</span>
-<span class="fc" id="L77">            Logger.debug(getClass(), &quot;postUpdate: id: &quot; + id + &quot;, changeds: &quot; + changes);</span>
-<span class="fc" id="L78">            Adminlog.add(getType(entity), &quot;UPDATE:\nid: &quot; + id.longValue() + &quot;\n&quot; + changes, id.intValue(), -1);</span>
-<span class="nc" id="L79">        } catch (Exception ex) {</span>
-<span class="nc" id="L80">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L81">        }</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L79">            Logger.debug(getClass(), &quot;postUpdate&quot;);</span>
+<span class="fc" id="L80">            String changes = getAndClearSavedChanges(entity);</span>
+<span class="fc" id="L81">            Number id = getId(entity);</span>
+<span class="fc" id="L82">            Logger.debug(getClass(), &quot;postUpdate: id: &quot; + id + &quot;, changeds: &quot; + changes);</span>
+<span class="fc" id="L83">            Adminlog.add(getType(entity), &quot;UPDATE:\nid: &quot; + id.longValue() + &quot;\n&quot; + changes, id.intValue(), -1);</span>
+<span class="nc" id="L84">        } catch (Exception ex) {</span>
+<span class="nc" id="L85">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L86">        }</span>
+<span class="fc" id="L87">    }</span>
 
     @PostRemove
     public void postRemove(Object entity) {
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (isDisabled(entity)) return;</span>
         try {
             //log.debug(&quot;postRemove&quot;);
-<span class="fc" id="L89">            Number id = getId(entity);</span>
-<span class="fc" id="L90">            String changes = getChangedProperties(entity, false);</span>
-<span class="fc" id="L91">            Adminlog.add(getType(entity), &quot;DELETE:\nid: &quot; + id.longValue() +  &quot;\n&quot; + changes, id.intValue(), -1);</span>
-<span class="nc" id="L92">        } catch (Exception ex) {</span>
-<span class="nc" id="L93">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L94">        }</span>
-<span class="fc" id="L95">    }</span>
+<span class="fc" id="L94">            Number id = getId(entity);</span>
+<span class="fc" id="L95">            String changes = getChangedProperties(entity, false);</span>
+<span class="fc" id="L96">            Adminlog.add(getType(entity), &quot;DELETE:\nid: &quot; + id.longValue() +  &quot;\n&quot; + changes, id.intValue(), -1);</span>
+<span class="nc" id="L97">        } catch (Exception ex) {</span>
+<span class="nc" id="L98">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L99">        }</span>
+<span class="fc" id="L100">    }</span>
 
     @PostLoad
     public void postLoad(Object entity) {
         //nothing here
-<span class="fc" id="L100">    }</span>
+<span class="fc" id="L105">    }</span>
 
     /**
      * Overi, ci pre danu entitu je povoleny auditing
@@ -105,14 +110,14 @@ import java.util.stream.Stream;
      * @return
      */
     private boolean isDisabled(Object entity) {
-<span class="fc" id="L108">        String auditJpaDisabledEntities = Constants.getString(&quot;auditJpaDisabledEntities&quot;);</span>
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (&quot;*&quot;.equals(auditJpaDisabledEntities)) return true;</span>
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">        if (Tools.isEmpty(auditJpaDisabledEntities)) return false;</span>
+<span class="fc" id="L113">        String auditJpaDisabledEntities = Constants.getString(&quot;auditJpaDisabledEntities&quot;);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (&quot;*&quot;.equals(auditJpaDisabledEntities)) return true;</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (Tools.isEmpty(auditJpaDisabledEntities)) return false;</span>
 
-<span class="nc" id="L112">        String fqdn = entity.getClass().getName();</span>
-<span class="nc bnc" id="L113" title="All 2 branches missed.">        if (auditJpaDisabledEntities.contains(fqdn)) return true;</span>
+<span class="nc" id="L117">        String fqdn = entity.getClass().getName();</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">        if (auditJpaDisabledEntities.contains(fqdn)) return true;</span>
 
-<span class="nc" id="L115">        return false;</span>
+<span class="nc" id="L120">        return false;</span>
     }
 
     /**
@@ -121,13 +126,13 @@ import java.util.stream.Stream;
      * @return
      */
     private int getType(Object entity) {
-<span class="fc" id="L124">        int result = Adminlog.TYPE_CLIENT_SPECIFIC;</span>
-<span class="fc" id="L125">        EntityListenersType annotation = AnnotationUtils.findAnnotation(entity.getClass(), EntityListenersType.class);</span>
-<span class="pc bpc" id="L126" title="2 of 4 branches missed.">        if (annotation != null &amp;&amp; annotation.value() &gt; 0) {</span>
-<span class="fc" id="L127">            result = annotation.value();</span>
+<span class="fc" id="L129">        int result = Adminlog.TYPE_CLIENT_SPECIFIC;</span>
+<span class="fc" id="L130">        EntityListenersType annotation = AnnotationUtils.findAnnotation(entity.getClass(), EntityListenersType.class);</span>
+<span class="pc bpc" id="L131" title="2 of 4 branches missed.">        if (annotation != null &amp;&amp; annotation.value() &gt; 0) {</span>
+<span class="fc" id="L132">            result = annotation.value();</span>
         }
 
-<span class="fc" id="L130">        return result;</span>
+<span class="fc" id="L135">        return result;</span>
     }
 
     /**
@@ -137,30 +142,30 @@ import java.util.stream.Stream;
      */
     private Number getId(Object entity) {
         try {
-<span class="fc" id="L140">            BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);</span>
-<span class="fc" id="L141">            Object id = entityWrapper.getPropertyValue(&quot;id&quot;);</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">            if (id instanceof Number) return (Number)id;</span>
-<span class="nc" id="L143">            return 0;</span>
-<span class="fc" id="L144">        } catch (NotReadablePropertyException ex) {</span>
+<span class="fc" id="L145">            BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L146">            Object id = entityWrapper.getPropertyValue(&quot;id&quot;);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">            if (id instanceof Number) return (Number)id;</span>
+<span class="nc" id="L148">            return 0;</span>
+<span class="fc" id="L149">        } catch (NotReadablePropertyException ex) {</span>
             //neexistuje property s menom id
         }
 
         //skus najst property podla anotacie @Id
         try {
-<span class="fc" id="L150">            Field[] declaredFields = getDeclaredFieldsTwoLevels(entity.getClass());</span>
-<span class="pc bpc" id="L151" title="1 of 2 branches missed.">            for (Field declaredField : declaredFields) {</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">                if (declaredField.isAnnotationPresent(Id.class)) {</span>
-<span class="fc" id="L153">                    BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);</span>
-<span class="fc" id="L154">                    Object id = entityWrapper.getPropertyValue(declaredField.getName());</span>
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">                    if (id instanceof Number) return (Number)id;</span>
+<span class="fc" id="L155">            Field[] declaredFields = getDeclaredFieldsTwoLevels(entity.getClass());</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">            for (Field declaredField : declaredFields) {</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                if (declaredField.isAnnotationPresent(Id.class)) {</span>
+<span class="fc" id="L158">                    BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L159">                    Object id = entityWrapper.getPropertyValue(declaredField.getName());</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">                    if (id instanceof Number) return (Number)id;</span>
                 }
             }
-<span class="nc" id="L158">        } catch (Exception ex) {</span>
-<span class="nc" id="L159">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L160">        }</span>
+<span class="nc" id="L163">        } catch (Exception ex) {</span>
+<span class="nc" id="L164">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L165">        }</span>
 
         //lepsie vratit 0 ako Exception, aspon sa zaaudituje nieco
-<span class="nc" id="L163">        return 0;</span>
+<span class="nc" id="L168">        return 0;</span>
     }
 
 
@@ -171,71 +176,116 @@ import java.util.stream.Stream;
      * @return
      */
     private String getChangedProperties(Object entity, boolean compareToDb) {
-<span class="fc" id="L174">        BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L179">        BeanWrapperImpl entityWrapper = new BeanWrapperImpl(entity);</span>
 
-<span class="fc" id="L176">        Number id = getId(entity);</span>
-<span class="fc" id="L177">        StringBuilder log = new StringBuilder();</span>
+<span class="fc" id="L181">        Number id = getId(entity);</span>
+<span class="fc" id="L182">        StringBuilder log = new StringBuilder();</span>
 
-<span class="fc" id="L179">        List&lt;String&gt; auditHideProperties = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;auditHideProperties&quot;, &quot;&quot;), &quot;,&quot;));</span>
+        //add auditValues from RequestBean
+<span class="fc" id="L185">        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if (requestBean != null) {</span>
+<span class="fc" id="L187">            log.append(Adminlog.getRequestBeanAuditLog(requestBean));</span>
+        }
 
-<span class="fc" id="L181">        Object dbEntity = null;</span>
-<span class="pc bpc" id="L182" title="2 of 6 branches missed.">        if (compareToDb &amp;&amp; id != null &amp;&amp; id.longValue() &gt; 0) {</span>
+<span class="fc" id="L190">        List&lt;String&gt; auditHideProperties = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;auditHideProperties&quot;, &quot;&quot;), &quot;,&quot;));</span>
+
+<span class="fc" id="L192">        Object dbEntity = null;</span>
+<span class="pc bpc" id="L193" title="2 of 6 branches missed.">        if (compareToDb &amp;&amp; id != null &amp;&amp; id.longValue() &gt; 0) {</span>
             try {
                 //musime otvotit novy entitymanager aby sme ziskali aktualne data v DB
-<span class="fc" id="L185">                String dbName = &quot;iwcm&quot;;</span>
-<span class="fc" id="L186">                Class&lt;?&gt; clazz = entity.getClass();</span>
-<span class="pc bpc" id="L187" title="1 of 2 branches missed.">                if (clazz.isAnnotationPresent(DataSource.class)) {</span>
+<span class="fc" id="L196">                String dbName = &quot;iwcm&quot;;</span>
+<span class="fc" id="L197">                Class&lt;?&gt; clazz = entity.getClass();</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                if (clazz.isAnnotationPresent(DataSource.class)) {</span>
 
-<span class="nc" id="L189">                    Annotation annotation = clazz.getAnnotation(DataSource.class);</span>
-<span class="nc" id="L190">                    DataSource dataSource = (DataSource) annotation;</span>
-<span class="nc" id="L191">                    dbName = dataSource.name();</span>
+<span class="nc" id="L200">                    Annotation annotation = clazz.getAnnotation(DataSource.class);</span>
+<span class="nc" id="L201">                    DataSource dataSource = (DataSource) annotation;</span>
+<span class="nc" id="L202">                    dbName = dataSource.name();</span>
                 }
-<span class="fc" id="L193">                EntityManagerFactory factory = DBPool.getEntityManagerFactory(dbName);</span>
+<span class="fc" id="L204">                EntityManagerFactory factory = DBPool.getEntityManagerFactory(dbName);</span>
                 //factory.getProperties().put(&quot;eclipselink.session.customizer&quot;, &quot;sk.iway.webjet.v9.JpaSessionCustomizer&quot;);
 
-<span class="fc" id="L196">                JpaEntityManager em = JpaHelper.getEntityManager(factory.createEntityManager());</span>
-<span class="fc" id="L197">                dbEntity = em.find(entity.getClass(), id);</span>
-<span class="fc" id="L198">                em.close();</span>
-<span class="nc" id="L199">            } catch (Exception ex) {</span>
-<span class="nc" id="L200">                sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L201">            }</span>
+<span class="fc" id="L207">                JpaEntityManager em = JpaHelper.getEntityManager(factory.createEntityManager());</span>
+<span class="fc" id="L208">                dbEntity = em.find(entity.getClass(), id);</span>
+<span class="fc" id="L209">                em.close();</span>
+<span class="nc" id="L210">            } catch (Exception ex) {</span>
+<span class="nc" id="L211">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L212">            }</span>
         }
 
-<span class="fc" id="L204">        BeanWrapperImpl dbEntityWrapper = null;</span>
-<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (dbEntity!=null) dbEntityWrapper = new BeanWrapperImpl(dbEntity);</span>
+<span class="fc" id="L215">        BeanWrapperImpl dbEntityWrapper = null;</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">        if (dbEntity!=null) dbEntityWrapper = new BeanWrapperImpl(dbEntity);</span>
 
-<span class="fc" id="L207">        Field[] declaredFields = getDeclaredFieldsTwoLevels(entity.getClass());</span>
-<span class="fc bfc" id="L208" title="All 2 branches covered.">        for (Field declaredField : declaredFields) {</span>
+<span class="fc" id="L218">        Field[] declaredFields = getDeclaredFieldsTwoLevels(entity.getClass());</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        for (Field declaredField : declaredFields) {</span>
             try {
-<span class="fc" id="L210">                String name = declaredField.getName();</span>
-<span class="fc bfc" id="L211" title="All 2 branches covered.">                if (&quot;serialVersionUID&quot;.equals(name)) continue;</span>
-<span class="fc" id="L212">                String entityValue = shrinkValue(String.valueOf(entityWrapper.getPropertyValue(name)));</span>
-<span class="fc" id="L213">                String dbEntityValue = null;</span>
-<span class="fc bfc" id="L214" title="All 2 branches covered.">                if (dbEntityWrapper!=null) dbEntityValue = shrinkValue(String.valueOf(dbEntityWrapper.getPropertyValue(name)));</span>
+<span class="fc" id="L221">                String name = declaredField.getName();</span>
+<span class="fc bfc" id="L222" title="All 2 branches covered.">                if (&quot;serialVersionUID&quot;.equals(name)) continue;</span>
+<span class="pc bpc" id="L223" title="1 of 4 branches missed.">                if (&quot;dataAsc&quot;.equals(name) || &quot;data_asc&quot;.equals(name)) continue;</span>
+
+<span class="fc" id="L225">                String entityValue = getStringValue(entityWrapper.getPropertyValue(name), name);</span>
+<span class="fc" id="L226">                String dbEntityValue = null;</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">                if (dbEntityWrapper!=null) dbEntityValue = getStringValue(dbEntityWrapper.getPropertyValue(name), name);</span>
 
                 //key mame kvoli TranslationKeys
-<span class="pc bpc" id="L217" title="1 of 6 branches missed.">                if (compareToDb==false || !entityValue.equals(dbEntityValue) || &quot;key&quot;.equals(name)) {</span>
+<span class="pc bpc" id="L230" title="1 of 6 branches missed.">                if (compareToDb==false || !entityValue.equals(dbEntityValue) || &quot;key&quot;.equals(name)) {</span>
                     // Tu by sme to este vedeli vylepsit, pretoze z anotacii aj vieme ziskat pekne meno ako sa pouziva v datatabulke.
-<span class="fc" id="L219">                    Column annotation = AnnotationUtils.getAnnotation(declaredField, Column.class);</span>
-<span class="fc bfc" id="L220" title="All 2 branches covered.">                    String columnName = annotation != null ? annotation.name() : name;</span>
+<span class="fc" id="L232">                    Column annotation = AnnotationUtils.getAnnotation(declaredField, Column.class);</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                    String columnName = annotation != null ? annotation.name() : name;</span>
                     String value;
-<span class="fc bfc" id="L222" title="All 2 branches covered.">                    if (dbEntity!=null) value = dbEntityValue + &quot; -&gt; &quot; + entityValue;</span>
-<span class="fc" id="L223">                    else value = entityValue;</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">                    if (dbEntity!=null) value = dbEntityValue + &quot; -&gt; &quot; + entityValue;</span>
+<span class="fc" id="L236">                    else value = entityValue;</span>
 
-<span class="pc bpc" id="L225" title="1 of 4 branches missed.">                    if (auditHideProperties.contains(name) || auditHideProperties.contains(columnName)) {</span>
-<span class="fc" id="L226">                        value = &quot;*****&quot;;</span>
+<span class="fc bfc" id="L238" title="All 4 branches covered.">                    if (auditHideProperties.contains(name) || auditHideProperties.contains(columnName)) {</span>
+<span class="fc" id="L239">                        value = &quot;*****&quot;;</span>
                     }
 
-<span class="fc bfc" id="L229" title="All 2 branches covered.">                    if (log.length()&gt;0) log.append(&quot;\n&quot;);</span>
+<span class="fc bfc" id="L242" title="All 2 branches covered.">                    if (log.length()&gt;0) log.append(&quot;\n&quot;);</span>
 
-<span class="fc" id="L231">                    log.append(columnName).append(&quot;: &quot;);</span>
-<span class="fc" id="L232">                    log.append(value);</span>
+<span class="fc" id="L244">                    log.append(columnName).append(&quot;: &quot;);</span>
+<span class="fc" id="L245">                    log.append(value);</span>
                 }
-<span class="fc" id="L234">            } catch (Exception ex) {</span>
+<span class="fc" id="L247">            } catch (Exception ex) {</span>
                 //sk.iway.iwcm.Logger.error(ex);
-<span class="fc" id="L236">            }</span>
+<span class="fc" id="L249">            }</span>
         }
-<span class="fc" id="L238">        return log.toString();</span>
+<span class="fc" id="L251">        return log.toString();</span>
+    }
+
+    /**
+     * Format Object propertyValue to String representation
+     * @param entityPropertyValue
+     * @return
+     */
+    private String getStringValue(Object entityPropertyValue, String name) {
+<span class="fc" id="L260">        String entityValue = null;</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">        if (entityPropertyValue == null) {</span>
+<span class="fc" id="L262">            entityValue = &quot;null&quot;;</span>
+        } else {
+<span class="fc bfc" id="L264" title="All 2 branches covered.">            if (entityPropertyValue.getClass().isArray()) {</span>
+<span class="fc" id="L265">                Object[] array = (Object[]) entityPropertyValue;</span>
+<span class="fc" id="L266">                StringBuilder builder = new StringBuilder();</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">                for (Object o : array) {</span>
+<span class="fc bfc" id="L268" title="All 2 branches covered.">                    if (builder.isEmpty()==false) builder.append(&quot;,&quot;);</span>
+
+<span class="pc bpc" id="L270" title="2 of 4 branches missed.">                    if (name.equals(&quot;perexGroups&quot;) &amp;&amp; o instanceof Integer) {</span>
+<span class="fc" id="L271">                        Integer i = (Integer) o;</span>
+<span class="fc" id="L272">                        PerexGroupBean pgb = DocDB.getInstance().getPerexGroup(i, null);</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">                        if (pgb.getPerexGroupId()&gt;0) builder.append(pgb.getPerexGroupNameId());</span>
+<span class="nc" id="L274">                        else builder.append(i);</span>
+<span class="fc" id="L275">                    } else {</span>
+<span class="nc" id="L276">                        builder.append(String.valueOf(o));</span>
+                    }
+                }
+<span class="fc" id="L279">                entityValue = builder.toString();</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">            } else if (entityPropertyValue instanceof Date) {</span>
+<span class="fc" id="L281">                entityValue = Tools.formatDateTimeSeconds((Date) entityPropertyValue);</span>
+<span class="fc bfc" id="L282" title="All 4 branches covered.">            } else if (entityPropertyValue instanceof Long &amp;&amp; name.contains(&quot;date&quot;)) {</span>
+<span class="fc" id="L283">                entityValue = Tools.formatDateTimeSeconds((Long) entityPropertyValue);</span>
+            } else {
+<span class="fc" id="L285">                entityValue = shrinkValue(String.valueOf(entityPropertyValue));</span>
+            }
+        }
+<span class="fc" id="L288">        return shrinkValue(entityValue);</span>
     }
 
     /**
@@ -244,10 +294,10 @@ import java.util.stream.Stream;
      * @return
      */
     private String shrinkValue(String value) {
-<span class="fc" id="L247">        int maxLength = Constants.getInt(&quot;auditMaxChangeLength&quot;, 100);</span>
-<span class="pc bpc" id="L248" title="1 of 4 branches missed.">        if (value == null || &quot;null&quot;.equals(value)) return &quot;&quot;;</span>
-<span class="fc bfc" id="L249" title="All 2 branches covered.">        if (value.length()&gt;maxLength) value = value.substring(0, maxLength-1)+&quot;...&quot;;</span>
-<span class="fc" id="L250">        return value;</span>
+<span class="pc bpc" id="L297" title="1 of 4 branches missed.">        if (value == null || &quot;null&quot;.equals(value)) return &quot;null&quot;;</span>
+<span class="fc" id="L298">        int maxLength = Constants.getInt(&quot;auditMaxChangeLength&quot;, 100);</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (value.length()&gt;maxLength) value = value.substring(0, maxLength-1)+&quot;...&quot;;</span>
+<span class="fc" id="L300">        return value;</span>
     }
 
     /**
@@ -256,15 +306,15 @@ import java.util.stream.Stream;
      * @param entity - aktualna entita, ktoru ideme ukladat
      */
     private void saveChanges(Object entity) {
-<span class="fc" id="L259">        Number id = getId(entity);</span>
-<span class="pc bpc" id="L260" title="1 of 2 branches missed.">        if (id.longValue() &gt; 0) {</span>
-<span class="fc" id="L261">            String changes = getChangedProperties(entity, true);</span>
-<span class="fc bfc" id="L262" title="All 2 branches covered.">            if (preUpdateChanges == null) {</span>
-<span class="fc" id="L263">                preUpdateChanges = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L309">        Number id = getId(entity);</span>
+<span class="pc bpc" id="L310" title="1 of 2 branches missed.">        if (id.longValue() &gt; 0) {</span>
+<span class="fc" id="L311">            String changes = getChangedProperties(entity, true);</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">            if (preUpdateChanges == null) {</span>
+<span class="fc" id="L313">                preUpdateChanges = new HashMap&lt;&gt;();</span>
             }
-<span class="fc" id="L265">            preUpdateChanges.put(id.longValue(), changes);</span>
+<span class="fc" id="L315">            preUpdateChanges.put(id.longValue(), changes);</span>
         }
-<span class="fc" id="L267">    }</span>
+<span class="fc" id="L317">    }</span>
 
     /**
      * Vrati ulozeny zoznam zmien z hashmapy a zmaze ho z hashmapy (aby sa zbytocne nezaplnala pamat)
@@ -272,15 +322,15 @@ import java.util.stream.Stream;
      * @return
      */
     private String getAndClearSavedChanges(Object entity) {
-<span class="fc" id="L275">        Number id = getId(entity);</span>
-<span class="pc bpc" id="L276" title="2 of 4 branches missed.">        if (id.longValue() &gt; 0 &amp;&amp; preUpdateChanges != null) {</span>
-<span class="fc" id="L277">            String changes = preUpdateChanges.get(id.longValue());</span>
-<span class="pc bpc" id="L278" title="1 of 2 branches missed.">            if (changes!=null) {</span>
-<span class="fc" id="L279">                preUpdateChanges.remove(id);</span>
-<span class="fc" id="L280">                return changes;</span>
+<span class="fc" id="L325">        Number id = getId(entity);</span>
+<span class="pc bpc" id="L326" title="2 of 4 branches missed.">        if (id.longValue() &gt; 0 &amp;&amp; preUpdateChanges != null) {</span>
+<span class="fc" id="L327">            String changes = preUpdateChanges.get(id.longValue());</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">            if (changes!=null) {</span>
+<span class="fc" id="L329">                preUpdateChanges.remove(id);</span>
+<span class="fc" id="L330">                return changes;</span>
             }
         }
-<span class="nc" id="L283">        return &quot;&quot;;</span>
+<span class="nc" id="L333">        return &quot;&quot;;</span>
     }
 
     /**
@@ -290,12 +340,12 @@ import java.util.stream.Stream;
      */
     public static Field[] getDeclaredFieldsTwoLevels(Class&lt;?&gt; o) {
         Field[] declaredFields;
-<span class="pc bpc" id="L293" title="1 of 2 branches missed.">        if(o.getSuperclass() != null) {</span>
-<span class="fc" id="L294">            declaredFields = Stream.concat(Arrays.stream(o.getDeclaredFields()), Arrays.stream(o.getSuperclass().getDeclaredFields())).toArray(Field[]::new);</span>
+<span class="pc bpc" id="L343" title="1 of 2 branches missed.">        if(o.getSuperclass() != null) {</span>
+<span class="fc" id="L344">            declaredFields = Stream.concat(Arrays.stream(o.getDeclaredFields()), Arrays.stream(o.getSuperclass().getDeclaredFields())).toArray(Field[]::new);</span>
         } else {
-<span class="nc" id="L296">            declaredFields = o.getDeclaredFields();</span>
+<span class="nc" id="L346">            declaredFields = o.getDeclaredFields();</span>
         }
-<span class="fc" id="L298">        return declaredFields;</span>
+<span class="fc" id="L348">        return declaredFields;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

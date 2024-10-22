@@ -15,20 +15,16 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('zakladne testy', async ({I, DataTables}) => {
+Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/inquiry/admin/");
     await DataTables.baseTest({
         dataTable: 'inquiryDataTable',
         perms: 'menuInquiry',
         createSteps: function(I, options) {
-        },
-        editSteps: function(I, options) {
-        },
-        editSearchSteps: function(I, options) {
-        },
-        beforeDeleteSteps: function(I, options) {
-            //I.wait(20);
-        },
+            I.click("#pills-dt-inquiryDataTable-advanced-tab");
+            I.fillField("#DTE_Field_questionGroup", "autotest");
+            I.click("#pills-dt-inquiryDataTable-basic-tab");
+        }
     });
 });
 

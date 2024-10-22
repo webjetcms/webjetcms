@@ -44,11 +44,19 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
     I.click("td.dt-select-td.sorting_1");
     I.click("button.buttons-remove");
     
-    if("sk" === I.getConfLng()) {
-        I.click("Zmazať", "div.DTE_Action_Remove");
-    } else if("en" === I.getConfLng()) { 
-        I.click("Delete", "div.DTE_Action_Remove");
-    }
+    switch (I.getConfLng()) {
+        case "sk":
+            I.click("Zmazať", "div.DTE_Action_Remove");
+            break;
+        case "en":
+            I.click("Delete", "div.DTE_Action_Remove");
+            break;
+        case "cs":
+            I.click("Smazat", "div.DTE_Action_Remove");
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
+    }    
 
     I.wait(1);
 

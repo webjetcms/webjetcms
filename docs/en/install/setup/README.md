@@ -241,7 +241,7 @@ DROP TABLE stat_doc;
 DROP TABLE stat_views;
 ```
 
-Close the tab in which you have the conversion. In the original window, go to [Users -\&gt; List of users](http://localhost/admin/v9/users/user-list/), using the left menu navigation.
+Close the tab in which you have the conversion. In the original window, go to [Users -> List of users](http://localhost/admin/v9/users/user-list/), using the left menu navigation.
 
 ![](./users.png)
 

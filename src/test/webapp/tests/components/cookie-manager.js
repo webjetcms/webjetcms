@@ -6,7 +6,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('cookie-manager-zakladne testy', async ({I, DataTables}) => {
+Scenario('cookie-manager-zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/gdpr/admin/");
     await DataTables.baseTest({
         dataTable: 'cookiesDataTable',

@@ -50,7 +50,7 @@ npm install
 
 ## Udalosti
 
-**POZOR:** v JavaScript kóde nie je možné využívať udalosť ```$(document).ready```, pretože najskôr musí byť inicializované úložisko prekladových kľúčov. Implementovali sme vlastnú funkciu ```window.domReady.add``` v knižnici [ready](../libraries/ready-extender.md), ktorá je vykonaná až po inicializácii úložiska prekladových kľúčov.
+!>**Upozornenie:** v JavaScript kóde nie je možné využívať udalosť ```$(document).ready```, pretože najskôr musí byť inicializované úložisko prekladových kľúčov. Implementovali sme vlastnú funkciu ```window.domReady.add``` v knižnici [ready](../libraries/ready-extender.md), ktorá je vykonaná až po inicializácii úložiska prekladových kľúčov.
 
 ```javascript
 window.domReady.add(function () {

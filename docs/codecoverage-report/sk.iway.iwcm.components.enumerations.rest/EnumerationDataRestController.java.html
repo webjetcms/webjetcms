@@ -8,11 +8,13 @@ import java.util.Map;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataEditorFields;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataRepository;
@@ -39,172 +42,200 @@ public class EnumerationDataRestController extends DatatableRestControllerV2&lt;
     private final EnumerationDataRepository enumerationDataRepository;
     private final EnumerationTypeRepository enumerationTypeRepository;
 
+    private static final String ENUMERATION_TYPE_ID = &quot;enumerationTypeId&quot;;
+
     @Autowired
     public EnumerationDataRestController(EnumerationDataRepository enumerationDataRepository, EnumerationTypeRepository enumerationTypeRepository) {
-<span class="fc" id="L44">        super(enumerationDataRepository);</span>
-<span class="fc" id="L45">        this.enumerationDataRepository = enumerationDataRepository;</span>
-<span class="fc" id="L46">        this.enumerationTypeRepository = enumerationTypeRepository;</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L49">        super(enumerationDataRepository);</span>
+<span class="fc" id="L50">        this.enumerationDataRepository = enumerationDataRepository;</span>
+<span class="fc" id="L51">        this.enumerationTypeRepository = enumerationTypeRepository;</span>
+<span class="fc" id="L52">    }</span>
 
     private EnumerationTypeBean getActualSelectedType() {
         EnumerationTypeBean actualSelectedType;
-<span class="fc" id="L51">        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(&quot;enumerationTypeId&quot;), -1);</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if(enumerationTypeId == -1) {</span>
-<span class="nc" id="L53">            actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(false);</span>
-        } else {
-<span class="fc" id="L55">            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);</span>
-        }
-<span class="fc" id="L57">        return actualSelectedType;</span>
+<span class="fc" id="L56">        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);</span>
+
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if(enumerationTypeId == -1) actualSelectedType = enumerationTypeRepository.findFirstByHiddenOrderById(false);</span>
+<span class="fc" id="L59">        else actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);</span>
+
+<span class="fc" id="L61">        return actualSelectedType;</span>
     }
 
     @Override
     public Page&lt;EnumerationDataBean&gt; getAllItems(Pageable pageable) {
-
-<span class="fc" id="L63">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
+<span class="fc" id="L66">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
         DatatablePageImpl&lt;EnumerationDataBean&gt; page;
 
-<span class="fc" id="L66">        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(&quot;enumerationTypeId&quot;), -1);</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if(enumerationTypeId == -1) {</span>
+<span class="fc" id="L69">        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);</span>
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if(enumerationTypeId == -1) {</span>
             //In FE, first  enumTypes is selected by default, soo get this default enumTypes and return its values
-<span class="nc bnc" id="L69" title="All 2 branches missed.">            if (actualSelectedType!=null) page = new DatatablePageImpl&lt;&gt;(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));</span>
-<span class="nc" id="L70">            else page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (actualSelectedType != null) page = new DatatablePageImpl&lt;&gt;(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));</span>
+<span class="nc" id="L73">            else page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
         } else {
-<span class="fc" id="L72">            page = new DatatablePageImpl&lt;&gt;(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));</span>
-<span class="fc" id="L73">            actualSelectedType = enumerationTypeRepository.getNonHiddenByEnumId(enumerationTypeId, false);</span>
+<span class="fc" id="L75">            page = new DatatablePageImpl&lt;&gt;(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));</span>
         }
 
-<span class="fc" id="L76">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L78">        processFromEntity(page, ProcessItemAction.GETALL);</span>
 
-        //Enumeration type's - select options
-<span class="fc" id="L79">        List&lt;EnumerationTypeBean&gt; enumerationTypes = enumerationTypeRepository.findAll();</span>
-
-        //Mark deleted one
-<span class="fc bfc" id="L82" title="All 2 branches covered.">        for(EnumerationTypeBean enumType : enumerationTypes) {</span>
-<span class="fc bfc" id="L83" title="All 2 branches covered.">            if(enumType.isHidden()) {</span>
-<span class="fc" id="L84">                enumType.setTypeName(getProp().getText(&quot;enum_type.deleted_type_mark.js&quot;) + enumType.getTypeName());</span>
-            }
-<span class="fc" id="L86">        }</span>
-
-<span class="fc" id="L88">        page.addDefaultOption(&quot;editorFields.childEnumTypeId&quot;, &quot;&quot;, &quot;-1&quot;);</span>
-<span class="fc" id="L89">        page.addOptions(&quot;editorFields.childEnumTypeId&quot;, enumerationTypes, &quot;typeName&quot;, &quot;enumerationTypeId&quot;, false);</span>
-
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (actualSelectedType != null) {</span>
-            //Enumeration data's by enumeration type - select options
-<span class="fc" id="L93">            List&lt;EnumerationDataBean&gt; enumerationDatasByType = enumerationDataRepository.findAllByTypeId(actualSelectedType.getEnumerationTypeId());</span>
-
-            //Mark deleted one
-<span class="fc bfc" id="L96" title="All 2 branches covered.">            for(EnumerationDataBean enumData : enumerationDatasByType) {</span>
-<span class="fc bfc" id="L97" title="All 2 branches covered.">                if(enumData.isHidden()) {</span>
-<span class="fc" id="L98">                    enumData.setString1(getProp().getText(&quot;enum_type.deleted_type_mark.js&quot;) + enumData.getString1());</span>
-                }
-<span class="fc" id="L100">            }</span>
-
-<span class="fc" id="L102">            page.addDefaultOption(&quot;editorFields.parentEnumDataId&quot;, &quot;-&quot;, &quot;-1&quot;);</span>
-<span class="fc" id="L103">            page.addOptions(&quot;editorFields.parentEnumDataId&quot;, enumerationDatasByType, &quot;string1&quot;, &quot;enumerationDataId&quot;, false);</span>
-        }
-
-<span class="fc" id="L106">        return page;</span>
+<span class="fc" id="L80">        return page;</span>
     }
 
     @Override
     public EnumerationDataBean getOneItem(long id) {
         EnumerationDataBean entity;
 
-<span class="fc bfc" id="L113" title="All 2 branches covered.">        if(id == -1) entity = new EnumerationDataBean();</span>
-<span class="fc" id="L114">        else entity = enumerationDataRepository.getNonHiddenByEnumId(Integer.valueOf(id+&quot;&quot;), false);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if(id == -1) entity = new EnumerationDataBean();</span>
+<span class="fc" id="L88">        else entity = enumerationDataRepository.getNonHiddenByEnumId(id, false);</span>
 
-<span class="fc" id="L116">        processFromEntity(entity, ProcessItemAction.GETONE);</span>
+<span class="fc" id="L90">        processFromEntity(entity, ProcessItemAction.GETONE, 1);</span>
 
-<span class="fc" id="L118">        return entity;</span>
+<span class="fc" id="L92">        return entity;</span>
     }
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;EnumerationDataBean&gt; root, CriteriaBuilder builder) {
         //Only hidden = false records (non soft deleted)
-<span class="fc" id="L124">        predicates.add(builder.isFalse(root.get(&quot;hidden&quot;)));</span>
+<span class="fc" id="L98">        predicates.add(builder.isFalse(root.get(&quot;hidden&quot;)));</span>
 
-<span class="fc" id="L126">        int typeId = Tools.getIntValue(params.get(&quot;enumerationTypeId&quot;), -1);</span>
-<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if(typeId &gt; 0) {</span>
-<span class="fc" id="L128">            predicates.add(builder.equal(root.get(&quot;typeId&quot;), Integer.valueOf(typeId)));</span>
+<span class="fc" id="L100">        int typeId = Tools.getIntValue(params.get(ENUMERATION_TYPE_ID), -1);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        if(typeId &gt; 0) {</span>
+<span class="fc" id="L102">            predicates.add(builder.equal(root.get(&quot;typeId&quot;), Integer.valueOf(typeId)));</span>
         }
 
         //vyhladaj podla searchUserFullName
-<span class="fc" id="L132">        super.addSpecSearch(params, predicates, root, builder);</span>
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L106">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L107">    }</span>
 
     @Override
     public void beforeSave(EnumerationDataBean entity) {
-<span class="fc" id="L137">        processToEntity(entity, ProcessItemAction.EDIT);</span>
-<span class="fc" id="L138">    }</span>
+<span class="fc" id="L111">        processToEntity(entity, ProcessItemAction.EDIT);</span>
+<span class="fc" id="L112">    }</span>
 
     @Override
-    public EnumerationDataBean processFromEntity(EnumerationDataBean entity, ProcessItemAction action) {
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (entity == null) entity = new EnumerationDataBean();</span>
-<span class="fc" id="L143">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
+    public EnumerationDataBean processFromEntity(EnumerationDataBean entity, ProcessItemAction action, int rowCount) {
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (entity == null) entity = new EnumerationDataBean();</span>
+<span class="fc" id="L117">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
 
-        //If EnnumerationType is not set, we cant set editor fields
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if(actualSelectedType == null) return entity;</span>
-
-<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if(entity.getEditorFields() == null) {</span>
-<span class="fc" id="L149">            EnumerationDataEditorFields edef = new EnumerationDataEditorFields();</span>
-<span class="fc" id="L150">            edef.fromEnumerationData(entity, actualSelectedType);</span>
+        //If action is CREATE - Set sort priority
+<span class="pc bpc" id="L120" title="1 of 4 branches missed.">        if(entity.getId() == null || entity.getId() == -1) {</span>
+<span class="fc" id="L121">            Integer maxSortPriority = enumerationDataRepository.findMaxSortPriorityByTypeId(getActualSelectedType().getEnumerationTypeId()).orElse(0);</span>
+<span class="fc" id="L122">            entity.setSortPriority(maxSortPriority + 1);</span>
         }
-<span class="fc" id="L152">        return entity;</span>
+
+        //If EnumerationType is not set, we cant set editor fields
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">        if(actualSelectedType == null) return entity;</span>
+
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if(entity.getEditorFields() == null) {</span>
+<span class="fc" id="L129">            EnumerationDataEditorFields edef = new EnumerationDataEditorFields();</span>
+
+            //If get all data, prepare custom FIELDS only once
+<span class="fc bfc" id="L132" title="All 2 branches covered.">            edef.fromEnumerationData(entity, actualSelectedType, rowCount == 1, getProp());</span>
+        }
+
+<span class="fc" id="L135">        return entity;</span>
     }
 
     @Override
     public EnumerationDataBean processToEntity(EnumerationDataBean entity, ProcessItemAction action) {
-<span class="fc" id="L157">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
-        //If EnnumerationType is not set, we cant check duplicity so we cant transfer data from editor fields to bean
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if(actualSelectedType == null) return entity;</span>
+<span class="fc" id="L140">        EnumerationTypeBean actualSelectedType = getActualSelectedType();</span>
+        //If EnumerationType is not set, we cant check duplicity so we cant transfer data from editor fields to bean
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if(actualSelectedType == null) return entity;</span>
 
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if(entity != null) {</span>
-<span class="fc" id="L162">            EnumerationDataEditorFields edef = entity.getEditorFields();</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if(entity != null) {</span>
+<span class="fc" id="L145">            EnumerationDataEditorFields edef = entity.getEditorFields();</span>
 
             //If for some reason editorFields is null, return entity
-<span class="pc bpc" id="L165" title="1 of 2 branches missed.">            if(edef == null) return entity;</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">            if(edef == null) return entity;</span>
 
-<span class="fc" id="L167">            edef.toEnumerationData(entity, actualSelectedType, enumerationTypeRepository, enumerationDataRepository, getProp());</span>
+<span class="fc" id="L150">            edef.toEnumerationData(entity, actualSelectedType, enumerationTypeRepository, enumerationDataRepository, getProp());</span>
         }
-<span class="fc" id="L169">        return entity;</span>
+<span class="fc" id="L152">        return entity;</span>
     }
 
     //Inset and Edit must be here !!
     //There is no bonus logic but it fix bug with wrong PK type (dont ask me why)
     @Override
     public EnumerationDataBean insertItem(EnumerationDataBean entity) {
-<span class="fc" id="L176">        enumerationDataRepository.save(entity);</span>
-<span class="fc" id="L177">        return entity;</span>
+<span class="fc" id="L159">        enumerationDataRepository.save(entity);</span>
+<span class="fc" id="L160">        return entity;</span>
     }
 
     @Override
     public EnumerationDataBean editItem(EnumerationDataBean entity, long id) {
-<span class="fc" id="L182">        enumerationDataRepository.save(entity);</span>
-<span class="fc" id="L183">        return entity;</span>
+<span class="fc" id="L165">        enumerationDataRepository.save(entity);</span>
+<span class="fc" id="L166">        return entity;</span>
     }
 
     @RequestMapping(value=&quot;/enum-types&quot;)
     public Map&lt;Integer, String&gt; getEnumerationTypes() {
-<span class="fc" id="L188">        HashMap&lt;Integer, String&gt; enumTypesMap = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L189">        List&lt;EnumerationTypeBean&gt; enumTypeList = enumerationTypeRepository.getAllNonHiddenOrderedById(false);</span>
+<span class="fc" id="L171">        HashMap&lt;Integer, String&gt; enumTypesMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L172">        List&lt;EnumerationTypeBean&gt; enumTypeList = enumerationTypeRepository.getAllNonHiddenOrderedById(false);</span>
 
-<span class="fc bfc" id="L191" title="All 2 branches covered.">        for(EnumerationTypeBean enumType : enumTypeList)</span>
-<span class="fc" id="L192">            enumTypesMap.put(enumType.getEnumerationTypeId(), enumType.getTypeName());</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        for(EnumerationTypeBean enumType : enumTypeList)</span>
+<span class="fc" id="L175">            enumTypesMap.put(enumType.getEnumerationTypeId(), enumType.getTypeName());</span>
 
-<span class="fc" id="L194">        return enumTypesMap;</span>
+<span class="fc" id="L177">        return enumTypesMap;</span>
     }
 
-    @RequestMapping( value=&quot;/enum-type&quot;, params={&quot;enumerationTypeId&quot;})
-    public EnumerationTypeBean getEnumerationType(@RequestParam(&quot;enumerationTypeId&quot;) Integer enumTypeId) {
-<span class="fc" id="L199">        return enumerationTypeRepository.getNonHiddenByEnumId(enumTypeId, false);</span>
+    @RequestMapping( value=&quot;/enum-type&quot;, params={ENUMERATION_TYPE_ID})
+    public EnumerationTypeBean getEnumerationType(@RequestParam(ENUMERATION_TYPE_ID) Integer enumTypeId) {
+<span class="fc" id="L182">        return enumerationTypeRepository.getNonHiddenByEnumId(enumTypeId, false);</span>
     }
 
     @Override
     public boolean deleteItem(EnumerationDataBean entity, long id) {
-<span class="fc" id="L204">        enumerationDataRepository.deleteEnumDataById(entity.getEnumerationDataId(), true);</span>
-<span class="fc" id="L205">        Adminlog.add(Adminlog.TYPE_UPDATEDB, &quot;DELETE/HIDE:\nid: &quot;+id+&quot;\nstring1: &quot;+entity.getString1(), (int)id, -1);</span>
-<span class="fc" id="L206">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
-<span class="fc" id="L207">        return true;</span>
+<span class="fc" id="L187">        enumerationDataRepository.deleteEnumDataById(entity.getId(), true);</span>
+<span class="fc" id="L188">        Adminlog.add(Adminlog.TYPE_UPDATEDB, &quot;DELETE/HIDE:\nid: &quot;+id+&quot;\nstring1: &quot;+entity.getString1(), (int)id, -1);</span>
+<span class="fc" id="L189">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="fc" id="L190">        return true;</span>
+    }
+
+    @GetMapping(&quot;/autocomplete-parent&quot;)
+    public List&lt;String&gt; getAutocomplete(@RequestParam String term, @RequestParam(&quot;DTE_Field_typeId&quot;) Integer typeId, @RequestParam(&quot;DTE_Field_string1&quot;) String name) {
+<span class="fc" id="L195">        return EnumerationService.getEnumDataAutocomplete(term, typeId, name, getProp());</span>
+    }
+
+    @GetMapping(&quot;/autocomplete-child&quot;)
+    public List&lt;String&gt; getAutocomplete(@RequestParam String term) {
+<span class="fc" id="L200">        return EnumerationService.getEnumTypeAutocomplete(term, getProp());</span>
+    }
+
+    @Override
+    public Map&lt;Long, EnumerationDataBean&gt; preImportDataEdit(HttpServletRequest request, Map&lt;Long, EnumerationDataBean&gt; data, String importMode) {
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        if(&quot;update&quot;.equals(importMode) == true) {</span>
+<span class="fc" id="L206">            int enumerationTypeId = Tools.getIntValue(request.getParameter(ENUMERATION_TYPE_ID), -1);</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">            if(enumerationTypeId == -1) return data;</span>
+
+            // Get all data ids for this DEST enumeration
+<span class="fc" id="L210">            Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L211">            String cacheKey = &quot;sk.iway.iwcm.components.enumerations-&quot; + enumerationTypeId + &quot;-&quot; + CloudToolsForCore.getDomainId();</span>
+
+            @SuppressWarnings(&quot;unchecked&quot;)
+<span class="fc" id="L214">            List&lt;Long&gt; dataIds = cache.getObject(cacheKey, List.class);</span>
+
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">            if(dataIds == null) {</span>
+<span class="fc" id="L217">                dataIds = enumerationDataRepository.getAllDataIdsByTypeId(enumerationTypeId).orElse(null);</span>
+<span class="fc" id="L218">                cache.setObject(cacheKey, dataIds, 10); //Set for 10 minutes</span>
+            } else {
+                //refresh object  -&gt; so it will be in cache for another 10 minutes (not gonna expire in middle of import)
+<span class="nc" id="L221">                cache.setObject(cacheKey, dataIds, 10); //Set for 10 minutes</span>
+            }
+
+            // DEST enumeration have no data so do INSERT
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            if(dataIds == null) {</span>
+<span class="nc" id="L226">                data.forEach((key, value) -&gt; value.setId(-1L));</span>
+<span class="nc" id="L227">                return data;</span>
+            }
+
+            // Check every ID from source data, if belongs to DESC enumeration
+<span class="fc" id="L231">            final List&lt;Long&gt; finalDataIds = dataIds;</span>
+<span class="fc" id="L232">            data.forEach((key, value) -&gt; {</span>
+                //It's value from another enumeration (probably) so do INSERT instead of UPDATE
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">                if(finalDataIds.contains(value.getId()) == false) value.setId(-1L);</span>
+<span class="fc" id="L235">            });</span>
+        }
+
+<span class="fc" id="L238">        return data;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

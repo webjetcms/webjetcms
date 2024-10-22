@@ -1,10 +1,15 @@
 package sk.iway.iwcm.components.cronjob;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
@@ -14,7 +19,6 @@ import sk.iway.iwcm.system.cron.CronDB;
 import sk.iway.iwcm.system.cron.CronFacade;
 import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.datatable.Datatable;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
@@ -55,7 +59,9 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
 
     @Override
     public CronTask getOneItem(long id) {
-        return CronDB.getById(id);
+        if (id < 1) return new CronTask();
+        CronTask task = CronDB.getById(id);
+        return task;
     }
 
     @Override
@@ -74,9 +80,23 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
     }
 
     @Override
-    public void getOptions(DatatablePageImpl<CronTask> page) {
-        page.addOption("clusterNode", "all", "all", false);
-        page.addOptions("clusterNode", ClusterDB.getClusterNodeNamesExpandedAuto(), null, null, false);
+    public void afterSave(CronTask entity, CronTask saved) {
+        //restart cron
+        ClusterDB.addRefresh(CronFacade.class);
+		CronFacade.getInstance(true);
+    }
+
+    @Override
+    public void afterDelete(CronTask entity, long id) {
+        afterSave(entity, null);
+    }
+
+    @GetMapping("/nodes")
+    public List<String> getNodes(@RequestParam String term) {
+        List<String> nodes = new ArrayList<>();
+        nodes.add("all");
+        nodes.addAll(ClusterDB.getClusterNodeNamesExpandedAuto());
+        return nodes;
     }
 
 }

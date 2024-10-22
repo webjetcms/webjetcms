@@ -34,120 +34,119 @@ import sk.iway.iwcm.i18n.Prop;
 
 <span class="fc" id="L35">	private static SqlExecutionTimeMonitor sqlMonitor = new SqlExecutionTimeMonitor();</span>
 
-<span class="fc" id="L37">	protected Map&lt;String, ExecutionEntry&gt; executionDurations = new ConcurrentHashMap&lt;String, ExecutionEntry&gt;();</span>
-
+<span class="fc" id="L37">	protected Map&lt;String, ExecutionEntry&gt; executionDurations = new ConcurrentHashMap&lt;&gt;();</span>
 
 	public static void recordSqlExecution(String sql, long timeTaken)
 	{
-<span class="fc" id="L42">		sqlMonitor.addExecutionRecord(sql, timeTaken, timeTaken);</span>
-<span class="fc" id="L43">	}</span>
+<span class="fc" id="L41">		sqlMonitor.addExecutionRecord(sql, timeTaken, timeTaken);</span>
+<span class="fc" id="L42">	}</span>
 
 	public static void recordDocumentExecution(String uri, long timeTaken, long memoryDifference)
 	{
-<span class="fc" id="L47">		documentsMonitor.addExecutionRecord(uri, timeTaken, memoryDifference);</span>
-<span class="fc" id="L48">	}</span>
+<span class="fc" id="L46">		documentsMonitor.addExecutionRecord(uri, timeTaken, memoryDifference);</span>
+<span class="fc" id="L47">	}</span>
 
 	public static void recordComponentExecution(String component, long timeTaken, long memoryDifference)
 	{
-<span class="fc" id="L52">		componentsMonitor.addExecutionRecord(component, timeTaken, memoryDifference);</span>
-<span class="fc" id="L53">	}</span>
+<span class="fc" id="L51">		componentsMonitor.addExecutionRecord(component, timeTaken, memoryDifference);</span>
+<span class="fc" id="L52">	}</span>
 
 	public static void recordComponentExecutionFromCache(String component, long timeTaken)
 	{
-<span class="nc" id="L57">		componentsMonitor.addCacheRecord(component, timeTaken, -1);</span>
-<span class="nc" id="L58">	}</span>
+<span class="nc" id="L56">		componentsMonitor.addCacheRecord(component, timeTaken, -1);</span>
+<span class="nc" id="L57">	}</span>
 
 	public static void resetDocumentMeasurements()
 	{
-<span class="fc" id="L62">		documentsMonitor.reset();</span>
-<span class="fc" id="L63">	}</span>
+<span class="fc" id="L61">		documentsMonitor.reset();</span>
+<span class="fc" id="L62">	}</span>
 
 	public static void resetComponentMeasurements()
 	{
-<span class="fc" id="L67">		componentsMonitor.reset();</span>
-<span class="fc" id="L68">	}</span>
+<span class="fc" id="L66">		componentsMonitor.reset();</span>
+<span class="fc" id="L67">	}</span>
 
 	public static void resetSqlMeasurements()
 	{
-<span class="fc" id="L72">		sqlMonitor.reset();</span>
-<span class="fc" id="L73">	}</span>
+<span class="fc" id="L71">		sqlMonitor.reset();</span>
+<span class="fc" id="L72">	}</span>
 
 	public static List&lt;ExecutionEntry&gt; statsForComponents()
 	{
-<span class="fc" id="L77">		return componentsMonitor.generateStats();</span>
+<span class="fc" id="L76">		return componentsMonitor.generateStats();</span>
 	}
 
 	public static List&lt;ExecutionEntry&gt; statsForDocuments()
 	{
-<span class="fc" id="L82">		return documentsMonitor.generateStats();</span>
+<span class="fc" id="L81">		return documentsMonitor.generateStats();</span>
 	}
 
 	public static List&lt;ExecutionEntry&gt; statsForSqls()
 	{
-<span class="fc" id="L87">		return sqlMonitor.generateStats();</span>
+<span class="fc" id="L86">		return sqlMonitor.generateStats();</span>
 	}
 
 	public void reset()
 	{
-<span class="fc" id="L92">		executionDurations = new ConcurrentHashMap&lt;String, ExecutionEntry&gt;();</span>
-<span class="fc" id="L93">	}</span>
+<span class="fc" id="L91">		executionDurations = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L92">	}</span>
 
 	public void addExecutionRecord(String name, long timeTaken, long memoryDifference)
 	{
-<span class="pc bpc" id="L97" title="2 of 4 branches missed.">		if (!Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;) || name==null)</span>
-<span class="nc" id="L98">			return;</span>
+<span class="pc bpc" id="L96" title="2 of 4 branches missed.">		if (!Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;) || name==null)</span>
+<span class="nc" id="L97">			return;</span>
 
-<span class="fc" id="L100">		synchronized (executionDurations)</span>
+<span class="fc" id="L99">		synchronized (executionDurations)</span>
 		{
-<span class="fc" id="L102">			ExecutionEntry record = getRecord(name);</span>
-<span class="fc" id="L103">			record.setNumberOfHits(record.getNumberOfHits() + 1);</span>
-<span class="fc" id="L104">			record.setTotalTimeOfExecutions(record.getTotalTimeOfExecutions() + timeTaken);</span>
+<span class="fc" id="L101">			ExecutionEntry entry = getRecord(name);</span>
+<span class="fc" id="L102">			entry.setNumberOfHits(entry.getNumberOfHits() + 1);</span>
+<span class="fc" id="L103">			entry.setTotalTimeOfExecutions(entry.getTotalTimeOfExecutions() + timeTaken);</span>
 
-<span class="fc bfc" id="L106" title="All 2 branches covered.">			if (record.getMaximumExecutionTime() &lt; timeTaken)</span>
-<span class="fc" id="L107">				record.setMaximumExecutionTime(timeTaken);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">			if (entry.getMaximumExecutionTime() &lt; timeTaken)</span>
+<span class="fc" id="L106">				entry.setMaximumExecutionTime(timeTaken);</span>
 
-<span class="fc bfc" id="L109" title="All 2 branches covered.">			if (record.getMinimumExecutionTime() &gt; timeTaken)</span>
-<span class="fc" id="L110">				record.setMinimumExecutionTime(timeTaken);</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">			if (entry.getMinimumExecutionTime() &gt; timeTaken)</span>
+<span class="fc" id="L109">				entry.setMinimumExecutionTime(timeTaken);</span>
 
-<span class="fc bfc" id="L112" title="All 2 branches covered.">			if (memoryDifference &gt; 0) {</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">			if (memoryDifference &gt; 0) {</span>
 
-<span class="fc" id="L114">				record.setTotalMemoryConsumed(record.getTotalMemoryConsumed() + memoryDifference);</span>
+<span class="fc" id="L113">				entry.setTotalMemoryConsumed(entry.getTotalMemoryConsumed() + memoryDifference);</span>
 
-<span class="fc" id="L116">				record.setValidMemoryMeasurements(record.getValidMemoryMeasurements() + 1);</span>
+<span class="fc" id="L115">				entry.setValidMemoryMeasurements(entry.getValidMemoryMeasurements() + 1);</span>
 
-<span class="fc bfc" id="L118" title="All 2 branches covered.">				if (memoryDifference &gt; record.getMemoryConsumptionPeek())</span>
-<span class="fc" id="L119">					record.setMemoryConsumptionPeek(memoryDifference);</span>
+<span class="fc bfc" id="L117" title="All 2 branches covered.">				if (memoryDifference &gt; entry.getMemoryConsumptionPeek())</span>
+<span class="fc" id="L118">					entry.setMemoryConsumptionPeek(memoryDifference);</span>
 			}
-<span class="fc" id="L121">		}</span>
-<span class="fc" id="L122">	}</span>
+<span class="fc" id="L120">		}</span>
+<span class="fc" id="L121">	}</span>
 
 	protected ExecutionEntry getRecord(String name)
 	{
-		ExecutionEntry record;
-<span class="fc" id="L127">		name = generateEntryKeyFrom(name);</span>
+		ExecutionEntry entry;
+<span class="fc" id="L126">		name = generateEntryKeyFrom(name);</span>
 
-<span class="fc" id="L129">		synchronized (executionDurations)</span>
+<span class="fc" id="L128">		synchronized (executionDurations)</span>
 		{
-<span class="fc bfc" id="L131" title="All 2 branches covered.">			if (executionDurations.containsKey(name))</span>
-<span class="fc" id="L132">				record = executionDurations.get(name);</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">			if (executionDurations.containsKey(name))</span>
+<span class="fc" id="L131">				entry = executionDurations.get(name);</span>
 			else
-<span class="fc" id="L134">				record = new ExecutionEntry(name);</span>
+<span class="fc" id="L133">				entry = new ExecutionEntry(name);</span>
 
-<span class="fc" id="L136">			executionDurations.put(name, record);</span>
-<span class="fc" id="L137">		}</span>
-<span class="fc" id="L138">		return record;</span>
+<span class="fc" id="L135">			executionDurations.put(name, entry);</span>
+<span class="fc" id="L136">		}</span>
+<span class="fc" id="L137">		return entry;</span>
 	}
 
 	protected abstract String generateEntryKeyFrom(String name);
 
 	public List&lt;ExecutionEntry&gt; generateStats()
 	{
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">		if (!Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;))</span>
-<span class="nc" id="L146">			throw new IllegalStateException(Prop.getInstance().getText(&quot;components.monitoring.not_enabled&quot;));</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">		if (!Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;))</span>
+<span class="nc" id="L145">			throw new IllegalStateException(Prop.getInstance().getText(&quot;components.monitoring.not_enabled&quot;));</span>
 
-<span class="fc" id="L148">		List&lt;ExecutionEntry&gt; stats = new ArrayList&lt;ExecutionEntry&gt;(executionDurations.values());</span>
-<span class="fc" id="L149">		Collections.sort(stats);</span>
-<span class="fc" id="L150">		return stats;</span>
+<span class="fc" id="L147">		List&lt;ExecutionEntry&gt; stats = new ArrayList&lt;&gt;(executionDurations.values());</span>
+<span class="fc" id="L148">		Collections.sort(stats);</span>
+<span class="fc" id="L149">		return stats;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

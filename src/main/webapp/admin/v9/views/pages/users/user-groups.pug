@@ -42,7 +42,7 @@ block content
                 action: function (e, dt, node) {
                     userGroupsDataTable.executeAction("addGroupToAllUsers", true, "[[\#{user.admin.addGroupToAll_prompt}]]", "");
                 },
-                className: 'btn-success',
+                className: 'btn-success buttons-addGroupToAll',
                 init: function ( dt, node, config ) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },
@@ -59,7 +59,7 @@ block content
                 action: function (e, dt, node) {
                     userGroupsDataTable.executeAction("removeGroupFromAllUsers", true, "[[\#{user.admin.removeGroupFromAll_prompt}]]", "");
                 },
-                className: 'btn btn-danger',
+                className: 'btn btn-danger buttons-removeGroupFromAll',
                 init: function ( dt, node, config ) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },
@@ -76,7 +76,7 @@ block content
                 action: function (e, dt, node) {
                     userGroupsDataTable.executeAction("deleteAllUsersOfThisGroup", true, "[[\#{user.admin.removeUsersFromGroup_prompt}]]", "");
                 },
-                className: 'btn btn-danger buttons-divider',
+                className: 'btn btn-danger buttons-divider buttons-removeUsersFromGroup',
                 init: function ( dt, node, config ) {
                     $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                 },

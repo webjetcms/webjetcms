@@ -1,6 +1,6 @@
 # Externý filter
 
-Externý filter je špeciálny druh filtra, ktorý využívajú sekcie ```Štatistika``` a ```SEO```. Údaje je možné v hornej časti pod nadpisom stránky filtrovať podľa nižšie uvedených možností. Tento filter pracuje inak, ako v ostatných datatabuľkách. V hornej časti pri nadpise je hlavný filter, ktorý filtruje načítanie dát zo servera. Následne v datatabuľkách je možné filtrovať v zobrazených dátach podľa ďalších stĺpcov, filtrovanie sa ale už deje len nad dátami načítanými podľa hlavného filtra.
+Externý filter je špeciálny druh filtra, ktorý využívajú sekcie **Štatistika** a **SEO**. Údaje je možné v hornej časti pod nadpisom stránky filtrovať podľa nižšie uvedených možností. Tento filter pracuje inak, ako v ostatných datatabuľkách. V hornej časti pri nadpise je hlavný filter, ktorý filtruje načítanie dát zo servera. Následne v datatabuľkách je možné filtrovať v zobrazených dátach podľa ďalších stĺpcov, filtrovanie sa ale už deje len nad dátami načítanými podľa hlavného filtra.
 
 ![](ext-filter-1.png)
 
@@ -10,7 +10,7 @@ Takýto prípad môžete vidieť na nasledujúcom obrázku, kde externý filter 
 
 ![](ext-filter-2.png)
 
-> Nastavené údaje si hlavný filter v hornej časti **pamätá v prehliadači pokiaľ ho nezatvoríte**. Ak teda nastavíte obdobie od-do môžete prechádzať cez jednotlivé časti sekcií ```Štatistika``` a ```SEO```, pričom všetky externé filtre obsahujúce filtrovanie podľa obdobia sa automaticky nastavia podľa Vami zadanej hodnoty. Dáta sú v takomto prípade automaticky filtrované pri načítaní zo servera. To isté platí aj pre filtrovanie pomocou priečinka atď.
+> Nastavené údaje si hlavný filter v hornej časti **pamätá v prehliadači pokiaľ ho nezatvoríte**. Ak teda nastavíte obdobie od-do môžete prechádzať cez jednotlivé časti sekcií **Štatistika** a **SEO**, pričom všetky externé filtre obsahujúce filtrovanie podľa obdobia sa automaticky nastavia podľa Vami zadanej hodnoty. Dáta sú v takomto prípade automaticky filtrované pri načítaní zo servera. To isté platí aj pre filtrovanie pomocou priečinka atď.
 
 ## Filter dátumu
 
@@ -37,7 +37,7 @@ Ak je zadaná iba časť "od", zobrazí sa návštevnosť od zadaného dátumu d
 
 ## Zobraziť z priečinka
 
-Môžete filtrovať dáta len pre určitý priečinok, napr. pri jazykových mutáciách, alebo produktových mikro stránkach. Predstaviť si pod tým môžeme návštevnosť u štatistiky. Možnosť ```Všetky (zo všetkých domén)``` je prednastavená hodnota a zobrazí dáta bez ohľadu na priečinok a doménu, čo v prípade Štatistiky reprezentuje **kompletnú návštevnosť**.
+Môžete filtrovať dáta len pre určitý priečinok, napr. pri jazykových mutáciách, alebo produktových mikro stránkach. Predstaviť si pod tým môžeme návštevnosť u štatistiky. Možnosť **Všetky (zo všetkých domén)** je prednastavená hodnota a zobrazí dáta bez ohľadu na priečinok a doménu, čo v prípade Štatistiky reprezentuje **kompletnú návštevnosť**.
 
 ![](stats-domainSelect.png)
 
@@ -53,9 +53,9 @@ V situácií ak chcete používateľovi umožniť zobraziť **kompletnú návšt
 
 ## Filter web stránok
 
-Filtrovanie web stránok (napr. v sekcii Vyhľadávače) umožňuje vybrať konkrétnu web stránku zo zvoleného priečinka. Ak žiaden priečinok nie je zvolený (filtrovanie priečinka ma zvolenú hodnotu ```Všetky (zo všetkých domén)```), nie je zobrazená žiadna web stránka k výberu.
+Filtrovanie web stránok (napr. v sekcii Vyhľadávače) umožňuje vybrať konkrétnu web stránku zo zvoleného priečinka. Ak žiaden priečinok nie je zvolený (filtrovanie priečinka ma zvolenú hodnotu **Všetky (zo všetkých domén)**), nie je zobrazená žiadna web stránka k výberu.
 
-Prednastavená možnosť je ```Všetky web stránky``` a zobrazí dáta všetkých web stránok, ktoré vyhovujú ostatným parametrom.
+Prednastavená možnosť je **Všetky web stránky** a zobrazí dáta všetkých web stránok, ktoré vyhovujú ostatným parametrom.
 
 ![](ext-filter-webPageSelect.png)
 
@@ -73,7 +73,7 @@ V tejto sekcií je filtrovanie využité napr. na špecifikovanie vyhľadávača
 
 Ponúkané vyhľadávače k filtrovaniu sú závislé od zvoleného časového rozsahu, zvoleného priečinka a filtrovanej web stránky.
 
-Prednastavená možnosť je ```Všetky vyhľadávače``` a zobrazí dáta všetkých vyhľadávačov.
+Prednastavená možnosť je **Všetky vyhľadávače** a zobrazí dáta všetkých vyhľadávačov.
 
 ![](ext-filter-searchEngineSelect.png)
 

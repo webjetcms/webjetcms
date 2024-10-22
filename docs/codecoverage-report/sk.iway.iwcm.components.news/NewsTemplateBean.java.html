@@ -198,7 +198,7 @@ public class NewsTemplateBean
 
 <span class="fc" id="L199">		String imagePath = &quot;&quot;;</span>
 
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">		for (String extension : extensions) {</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">		for (String extension : extensions) {</span>
 <span class="fc" id="L202">			String path = IMAGE_PATH + &quot;/&quot; + keyShort + &quot;.&quot; + extension;</span>
 <span class="fc" id="L203">			IwcmFile imageFile = new IwcmFile(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path, getRequest())));</span>
 
@@ -208,8 +208,8 @@ public class NewsTemplateBean
 			}
 <span class="fc" id="L209">		}</span>
 
-<span class="pc bpc" id="L211" title="1 of 2 branches missed.">		if (Tools.isEmpty(imagePath)) {</span>
-<span class="nc" id="L212">			imagePath = IMAGE_PATH + &quot;/placeholder-380-200.png&quot;;</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">		if (Tools.isEmpty(imagePath)) {</span>
+<span class="fc" id="L212">			imagePath = IMAGE_PATH + &quot;/placeholder-380-200.png&quot;;</span>
 		}
 
 
@@ -327,4 +327,4 @@ public class NewsTemplateBean
 <span class="nc" id="L327">		this.pagingPositionKey = pagingPositionKey;</span>
 <span class="nc" id="L328">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

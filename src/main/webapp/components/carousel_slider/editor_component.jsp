@@ -21,9 +21,7 @@
 	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
-		String lng = PageLng.getUserLng(request);
-		pageContext.setAttribute("lng", lng);
-		Prop prop = Prop.getInstance(lng);
+		Prop prop = Prop.getInstance(request);
 		request.setAttribute("cmpName", "carousel_slider");
 		request.setAttribute("iconLink",
 				"/components/carousel_slider/editoricon.png");
@@ -143,18 +141,18 @@
 		        classes: "editorLeft"
 		    },
 		    title: {
-		        title: "Nadpis",
+		        title: '<iwcm:text key="editor.create_table.caption" />',
 		        type: "text",
 		        classes: "editorRight",
 		    },
 		    description: {
-		        title: "Podnadpis",
+		        title: '<iwcm:text key="editor.subtitle" />',
 		        type: "textArea",
 		        classes: "editorRight"
 		    },
 		    redirectUrl: {
-		        title: "Po kliknutí zobraziť inú stránku (presmerovať)",
-		        description: "Zadajte adresu stránky, alebo kliknite na ikonu na konci riadku pre jej výber",
+		        title: "<iwcm:text key="components.news.redirectAfterClick"/>",
+        		description: "<iwcm:text key="components.news.redirectLinkHelp"/>",
 		        type: "conditionalText",
 		        classes: "editorRight"
 		    }

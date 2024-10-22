@@ -88,12 +88,16 @@ public class CookieManagerRestController extends DatatableRestControllerV2&lt;Co
 
 <span class="fc bfc" id="L89" title="All 2 branches covered.">        if(id != -1) {</span>
 <span class="fc" id="L90">            entity = cookieMangerDB.getById((int) id);</span>
-<span class="fc" id="L91">            setTranslationKeysIntoEntity(entity, prop);</span>
-        } else {
-<span class="fc" id="L93">            entity = new CookieManagerBean();</span>
+<span class="fc" id="L91">            int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            if(entity.getDomainId() != domainId) {</span>
+<span class="fc" id="L93">                return null;</span>
+            }
+<span class="fc" id="L95">            setTranslationKeysIntoEntity(entity, prop);</span>
+<span class="fc" id="L96">        } else {</span>
+<span class="fc" id="L97">            entity = new CookieManagerBean();</span>
         }
 
-<span class="fc" id="L96">        return entity;</span>
+<span class="fc" id="L100">        return entity;</span>
     }
 
     /**
@@ -103,31 +107,31 @@ public class CookieManagerRestController extends DatatableRestControllerV2&lt;Co
     @Override
     public CookieManagerBean insertItem(CookieManagerBean entity) {
 
-<span class="fc" id="L106">        CookieManagerDB cookieMangerDB = new CookieManagerDB();</span>
+<span class="fc" id="L110">        CookieManagerDB cookieMangerDB = new CookieManagerDB();</span>
 
-<span class="fc" id="L108">        createEditTranslationKeysFromEntity(entity);</span>
+<span class="fc" id="L112">        createEditTranslationKeysFromEntity(entity);</span>
 
-<span class="fc" id="L110">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L114">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
 
         //Temporaly save values
-<span class="fc" id="L113">        String provider = entity.getProvider();</span>
-<span class="fc" id="L114">        String purpouse = entity.getPurpouse();</span>
-<span class="fc" id="L115">        String validity = entity.getValidity();</span>
+<span class="fc" id="L117">        String provider = entity.getProvider();</span>
+<span class="fc" id="L118">        String purpouse = entity.getPurpouse();</span>
+<span class="fc" id="L119">        String validity = entity.getValidity();</span>
 
         //Set key values to NULL
-<span class="fc" id="L118">        entity.setProvider(null);</span>
-<span class="fc" id="L119">        entity.setPurpouse(null);</span>
-<span class="fc" id="L120">        entity.setValidity(null);</span>
+<span class="fc" id="L122">        entity.setProvider(null);</span>
+<span class="fc" id="L123">        entity.setPurpouse(null);</span>
+<span class="fc" id="L124">        entity.setValidity(null);</span>
 
         //Validity, provider and purpouse are set as NULL (we dont want save them to table)
-<span class="fc" id="L123">        cookieMangerDB.save(entity);</span>
+<span class="fc" id="L127">        cookieMangerDB.save(entity);</span>
 
         //Set validity, provider and purpouse back to entity (to return) from temporal variables
-<span class="fc" id="L126">        entity.setProvider(provider);</span>
-<span class="fc" id="L127">        entity.setPurpouse(purpouse);</span>
-<span class="fc" id="L128">        entity.setValidity(validity);</span>
+<span class="fc" id="L130">        entity.setProvider(provider);</span>
+<span class="fc" id="L131">        entity.setPurpouse(purpouse);</span>
+<span class="fc" id="L132">        entity.setValidity(validity);</span>
 
-<span class="fc" id="L130">        return entity;</span>
+<span class="fc" id="L134">        return entity;</span>
     }
 
     /**
@@ -137,111 +141,111 @@ public class CookieManagerRestController extends DatatableRestControllerV2&lt;Co
     @Override
     public CookieManagerBean editItem(CookieManagerBean entity, long id) {
 
-<span class="fc" id="L140">        CookieManagerDB cookieMangerDB = new CookieManagerDB();</span>
+<span class="fc" id="L144">        CookieManagerDB cookieMangerDB = new CookieManagerDB();</span>
 
-<span class="fc" id="L142">        createEditTranslationKeysFromEntity(entity);</span>
+<span class="fc" id="L146">        createEditTranslationKeysFromEntity(entity);</span>
 
-<span class="fc" id="L144">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L148">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
 
         //Temporaly save values
-<span class="fc" id="L147">        String provider = entity.getProvider();</span>
-<span class="fc" id="L148">        String purpouse = entity.getPurpouse();</span>
-<span class="fc" id="L149">        String validity = entity.getValidity();</span>
+<span class="fc" id="L151">        String provider = entity.getProvider();</span>
+<span class="fc" id="L152">        String purpouse = entity.getPurpouse();</span>
+<span class="fc" id="L153">        String validity = entity.getValidity();</span>
 
         //Set key values to NULL
-<span class="fc" id="L152">        entity.setProvider(null);</span>
-<span class="fc" id="L153">        entity.setPurpouse(null);</span>
-<span class="fc" id="L154">        entity.setValidity(null);</span>
+<span class="fc" id="L156">        entity.setProvider(null);</span>
+<span class="fc" id="L157">        entity.setPurpouse(null);</span>
+<span class="fc" id="L158">        entity.setValidity(null);</span>
 
         //Validity, provider and purpouse are set as NULL (we dont want save them to table)
-<span class="fc" id="L157">        cookieMangerDB.save(entity);</span>
+<span class="fc" id="L161">        cookieMangerDB.save(entity);</span>
 
         //Set validity, provider and purpouse back to entity (to return) from temporal variables
-<span class="fc" id="L160">        entity.setProvider(provider);</span>
-<span class="fc" id="L161">        entity.setPurpouse(purpouse);</span>
-<span class="fc" id="L162">        entity.setValidity(validity);</span>
+<span class="fc" id="L164">        entity.setProvider(provider);</span>
+<span class="fc" id="L165">        entity.setPurpouse(purpouse);</span>
+<span class="fc" id="L166">        entity.setValidity(validity);</span>
 
-<span class="fc" id="L164">        return entity;</span>
+<span class="fc" id="L168">        return entity;</span>
     }
 
     void setTranslationKeysIntoEntity(CookieManagerBean entity, Prop prop) {
-<span class="fc" id="L168">        String providerKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.provider&quot;;</span>
-<span class="fc" id="L169">        String purpouseKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.purpouse&quot;;</span>
-<span class="fc" id="L170">        String validityKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.validity&quot;;</span>
+<span class="fc" id="L172">        String providerKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.provider&quot;;</span>
+<span class="fc" id="L173">        String purpouseKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.purpouse&quot;;</span>
+<span class="fc" id="L174">        String validityKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.validity&quot;;</span>
 
-<span class="fc" id="L172">        String text = prop.getText(providerKey);</span>
-<span class="fc" id="L173">        entity.setProvider(text);</span>
+<span class="fc" id="L176">        String text = prop.getText(providerKey);</span>
+<span class="fc" id="L177">        entity.setProvider(text);</span>
 
-<span class="fc" id="L175">        text = prop.getText(purpouseKey);</span>
-<span class="fc" id="L176">        entity.setPurpouse(text);</span>
+<span class="fc" id="L179">        text = prop.getText(purpouseKey);</span>
+<span class="fc" id="L180">        entity.setPurpouse(text);</span>
 
-<span class="fc" id="L178">        text = prop.getText(validityKey);</span>
-<span class="fc" id="L179">        entity.setValidity(text);</span>
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L182">        text = prop.getText(validityKey);</span>
+<span class="fc" id="L183">        entity.setValidity(text);</span>
+<span class="fc" id="L184">    }</span>
 
     void createEditTranslationKeysFromEntity(CookieManagerBean entity) {
 
-<span class="fc" id="L184">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
-<span class="fc" id="L185">        TranslationKeyEntity translationKeyEntity = new TranslationKeyEntity();</span>
-<span class="fc" id="L186">        String prefix = null;</span>
+<span class="fc" id="L188">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L189">        TranslationKeyEntity translationKeyEntity = new TranslationKeyEntity();</span>
+<span class="fc" id="L190">        String prefix = null;</span>
 
-<span class="fc" id="L188">        String language = getRequest().getParameter(&quot;breadcrumbLanguage&quot;);</span>
-<span class="fc" id="L189">        translationKeyEntity.setLng(language);</span>
+<span class="fc" id="L192">        String language = getRequest().getParameter(&quot;breadcrumbLanguage&quot;);</span>
+<span class="fc" id="L193">        translationKeyEntity.setLng(language);</span>
 
         String providerKey;
         String purpouseKey;
         String validityKey;
 
-<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if(Constants.getBoolean(&quot;constantsAliasSearch&quot;)) {</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">        if(Constants.getBoolean(&quot;constantsAliasSearch&quot;)) {</span>
 
-<span class="nc" id="L197">            RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc" id="L201">            RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
 
-<span class="nc bnc" id="L199" title="All 4 branches missed.">            if(requestBean!=null &amp;&amp; Tools.isNotEmpty(requestBean.getDomain())) {</span>
+<span class="nc bnc" id="L203" title="All 4 branches missed.">            if(requestBean!=null &amp;&amp; Tools.isNotEmpty(requestBean.getDomain())) {</span>
 
-<span class="nc" id="L201">                prefix = MultiDomainFilter.getDomainAlias(requestBean.getDomain());</span>
+<span class="nc" id="L205">                prefix = MultiDomainFilter.getDomainAlias(requestBean.getDomain());</span>
             }
         }
 
-<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(prefix)) {</span>
-<span class="nc" id="L206">            providerKey = prefix + &quot;-&quot; + &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.provider&quot;;</span>
-<span class="nc" id="L207">            purpouseKey = prefix + &quot;-&quot; + &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.purpouse&quot;;</span>
-<span class="nc" id="L208">            validityKey = prefix + &quot;-&quot; + &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.validity&quot;;</span>
+<span class="pc bpc" id="L209" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(prefix)) {</span>
+<span class="nc" id="L210">            providerKey = prefix + &quot;-&quot; + &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.provider&quot;;</span>
+<span class="nc" id="L211">            purpouseKey = prefix + &quot;-&quot; + &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.purpouse&quot;;</span>
+<span class="nc" id="L212">            validityKey = prefix + &quot;-&quot; + &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.validity&quot;;</span>
         } else {
-<span class="fc" id="L210">            providerKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.provider&quot;;</span>
-<span class="fc" id="L211">            purpouseKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.purpouse&quot;;</span>
-<span class="fc" id="L212">            validityKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.validity&quot;;</span>
+<span class="fc" id="L214">            providerKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.provider&quot;;</span>
+<span class="fc" id="L215">            purpouseKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.purpouse&quot;;</span>
+<span class="fc" id="L216">            validityKey = &quot;components.gdpr.cookies.&quot; + entity.getCookieName() + &quot;.validity&quot;;</span>
         }
 
         //Provider Key
-<span class="fc" id="L216">        translationKeyEntity.setKey(providerKey);</span>
-<span class="fc" id="L217">        translationKeyEntity.setValue(entity.getProvider());</span>
-<span class="fc" id="L218">        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, false);</span>
+<span class="fc" id="L220">        translationKeyEntity.setKey(providerKey);</span>
+<span class="fc" id="L221">        translationKeyEntity.setValue(entity.getProvider());</span>
+<span class="fc" id="L222">        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, false);</span>
 
         //Purpouse key
-<span class="fc" id="L221">        translationKeyEntity.setKey(purpouseKey);</span>
-<span class="fc" id="L222">        translationKeyEntity.setValue(entity.getPurpouse());</span>
-<span class="fc" id="L223">        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, false);</span>
+<span class="fc" id="L225">        translationKeyEntity.setKey(purpouseKey);</span>
+<span class="fc" id="L226">        translationKeyEntity.setValue(entity.getPurpouse());</span>
+<span class="fc" id="L227">        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, false);</span>
 
         //Validity key
-<span class="fc" id="L226">        translationKeyEntity.setKey(validityKey);</span>
-<span class="fc" id="L227">        translationKeyEntity.setValue(entity.getValidity());</span>
-<span class="fc" id="L228">        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, true);</span>
-<span class="fc" id="L229">    }</span>
+<span class="fc" id="L230">        translationKeyEntity.setKey(validityKey);</span>
+<span class="fc" id="L231">        translationKeyEntity.setValue(entity.getValidity());</span>
+<span class="fc" id="L232">        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, true);</span>
+<span class="fc" id="L233">    }</span>
 
     @Override
     public void beforeSave(CookieManagerBean entity) {
-<span class="fc" id="L233">        entity.setSaveDate(new Date(Tools.getNow()));</span>
-<span class="fc" id="L234">        entity.setUserId(getUser().getUserId());</span>
-<span class="fc" id="L235">    }</span>
+<span class="fc" id="L237">        entity.setSaveDate(new Date(Tools.getNow()));</span>
+<span class="fc" id="L238">        entity.setUserId(getUser().getUserId());</span>
+<span class="fc" id="L239">    }</span>
 
     @Override
     public boolean deleteItem(CookieManagerBean entity, long id) {
 
-<span class="fc" id="L240">        CookieManagerDB cookieMangerDB = new CookieManagerDB();</span>
+<span class="fc" id="L244">        CookieManagerDB cookieMangerDB = new CookieManagerDB();</span>
 
-<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if(cookieMangerDB.delete(entity)) return true;</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">        if(cookieMangerDB.delete(entity)) return true;</span>
 
-<span class="nc" id="L244">        return false;</span>
+<span class="nc" id="L248">        return false;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

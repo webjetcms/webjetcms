@@ -720,7 +720,7 @@ public class WebpagesService {
 	 * @param request
 	 * @return
 	 */
-    public static DocBasic processFromEntity(DocBasic entity, ProcessItemAction action,  HttpServletRequest request) {
+    public static DocBasic processFromEntity(DocBasic entity, ProcessItemAction action,  HttpServletRequest request, boolean addFields) {
 
         int groupId = Tools.getIntValue(request.getParameter("groupId"), Constants.getInt("rootGroupId"));
 
@@ -762,7 +762,7 @@ public class WebpagesService {
             DocEditorFields def = entity.getEditorFields();
 			if (def == null) def = new DocEditorFields();
 			boolean loadSubQueries = ProcessItemAction.GETONE.equals(action);
-			def.fromDocDetails(entity, loadSubQueries);
+			def.fromDocDetails(entity, loadSubQueries, addFields);
 			entity.setEditorFields(def);
         }
         return entity;
@@ -945,8 +945,10 @@ public class WebpagesService {
 			pageImpl.addOptions("editorFields.attrGroup", options.getDocAtrDefRepository().findDistinctGroups(CloudToolsForCore.getDomainId()) , "", "", false);
 		}
 
+		boolean addFields = true;
         for (DocDetails entity : pageImpl.getContent()) {
-			WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, options.getRequest());
+			WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, options.getRequest(), addFields);
+			addFields = false;
 		}
 
         return pageImpl;

@@ -3,6 +3,7 @@ package sk.iway.iwcm;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,11 +32,18 @@ public class IwcmRequest extends HttpServletRequestWrapper
 {
 	//private final HttpServletRequest original;
 	private Map<String, String[]> changedParameterValues = new HashMap<>();
+	private Locale forcedLocale = null;
 
 	public IwcmRequest(HttpServletRequest original)
 	{
 		//this.original = original;
 		super(original);
+
+		String lng = PageLng.getUserLng(original);
+		String[] isoLocale = Tools.getTokens(PageLng.getUserLngIso(lng), "-");
+		if (isoLocale.length == 2) {
+			setLocale(new java.util.Locale(isoLocale[0], isoLocale[1]));
+		}
 	}
 
 	@Override
@@ -70,7 +78,7 @@ public class IwcmRequest extends HttpServletRequestWrapper
 
 		//musime to prekopirovat do noveho pola, inak sa nam pri kazdom volani getParameterValues zduplikuje ResponseUtils.filter
 		String[] valuesFiltered = new String[values.length];
-		if (values.length>0)
+		if (values!=null && values.length>0)
 		{
 			for (int i=0; i<values.length; i++)
 			{
@@ -124,5 +132,16 @@ public class IwcmRequest extends HttpServletRequestWrapper
 		return attr(key) != null;
 	}
 
+	public void setLocale(Locale locale) {
+		this.forcedLocale = locale;
+	}
+
+	@Override
+	public Locale getLocale() {
+		if (forcedLocale != null) {
+			return forcedLocale;
+		}
+		return super.getLocale();
+	}
 
 }

@@ -75,7 +75,7 @@ Banner typu video obsahuje v karte Nastavenia nasledovnú možnosť:
 
 Banner typu obrázok obsahuje v karte Nastavenia nasledovné možnosti:
 
-- Adresa web stránky na ktorej sa banner zobrazí - **POZOR** obsahový banner sa nezobrazuje na základe skupiny, ale na základe zhody zobrazenej web stránky s adresou zadanou v tomto poli. Viete tak nastavovať zobrazenie bannerov podľa URL adries stránok.
+- Adresa web stránky na ktorej sa banner zobrazí - **Upozornenie:** obsahový banner sa nezobrazuje na základe skupiny, ale na základe zhody zobrazenej web stránky s adresou zadanou v tomto poli. Viete tak nastavovať zobrazenie bannerov podľa URL adries stránok.
 - Linka presmerovania - adresa na ktorú sa presmeruje po kliknutí na tlačidlo v banneri (napr. ```/sk/produkty/```).
 - Odkaz na obrázok - adresa obrázku bannera (napr. ```/images/banner.jpg```).
 - Odkaz na obrázok pre mobilné zariadenia - adresa obrázku bannera pre mobilné zariadenia (napr. ```/images/banner-lores.jpg```). Tento obrázok sa použije pre rozlíšenie užšie ako 760 bodov.
@@ -83,11 +83,11 @@ Banner typu obrázok obsahuje v karte Nastavenia nasledovné možnosti:
 - Sekundárny nadpis - pod nadpis v banneri (môže zostať prázdny).
 - Popisný text - doplnkový text pod nadpismi (môže zostať prázdny).
 
-Ak ```Odkaz na obrázok``` alebo ```Odkaz na obrázok pre mobilné zariadenia``` obsahuje umiestnenie **MP4 súboru alebo adresu YouTube videa** zobrazí sa v pozadí video prehrávač. Hodnota pre mobilné zariadenia sa použije v prípade detekcie telefónu na serveri podľa hodnoty `User-Agent` obsahujúci hodnotu `iphone` alebo `mobile` pre Android.
+Ak **Odkaz na obrázok** alebo **Odkaz na obrázok pre mobilné zariadenia** obsahuje umiestnenie **MP4 súboru alebo adresu YouTube videa** zobrazí sa v pozadí video prehrávač. Hodnota pre mobilné zariadenia sa použije v prípade detekcie telefónu na serveri podľa hodnoty `User-Agent` obsahujúci hodnotu `iphone` alebo `mobile` pre Android.
 
 Podmienené zobrazenie podľa URL parametra (kampaňový banner):
 
-- Hodnota URL parametra pre priame zobrazenie - pre reklamné kampane je možné nastaviť pole ```Hodnota URL parametra pre priame zobrazenie```. Tu je možné zadať kód (napr. ```webjetcms```) a následne sa banner vždy zobrazí ak je zhoda parametra v URL. Ak teda máte k jednej stránke priradených viacero bannerov viete ich presne zobrazovať podľa zdroja reklamnej kampane (napr. podľa zdrojových stránok, alebo odkazu z emailu, alebo reklamnej kampane na Facebooku).
+- Hodnota URL parametra pre priame zobrazenie - pre reklamné kampane je možné nastaviť pole **Hodnota URL parametra pre priame zobrazenie**. Tu je možné zadať kód (napr. ```webjetcms```) a následne sa banner vždy zobrazí ak je zhoda parametra v URL. Ak teda máte k jednej stránke priradených viacero bannerov viete ich presne zobrazovať podľa zdroja reklamnej kampane (napr. podľa zdrojových stránok, alebo odkazu z emailu, alebo reklamnej kampane na Facebooku).
 - Banner bude dostupný ako - zobrazuje vám náhľad adresy pre zobrazenie banneru. Meno parametra (predvolene ```utm_campaign```) je možné nastaviť v konf. premennej ```bannerCampaignParamName```.
 - Zobrazovať iba pri zadanom URL parametri - ak je zvolené banner sa nebude štandardne zobrazovať (napr. ak je nastavené náhodné zobrazenie bannera), ale zobrazí sa len keď je v URL zadaný parameter. Použite keď máte napr. upravený banner, ktorý chcete zobraziť jedine ak príde návštevník z emailovej kampane (napr. s akciou na zvýhodnený nákup platný len pre emailovú kampaň).
 
@@ -136,7 +136,7 @@ Pri vkladaní banneru do stránky máte možnosť špecifikovať typ zariadenia 
 
 Upozornenie: zariadenie sa deteguje na serveri podľa HTTP hlavičky `User-Agent`. Telefón sa deteguje pri nájdení výrazu `iphone` alebo `mobile` pri detekcii výrazu `android`. Tablet ako `ipad||tablet||kindle` alebo ak obsahuje `android` a neobsahuje `mobile`.
 
-V editore web stránky v náhľade sa zobrazí banner nezávisle od nastaveného typu zariadenia, pre ktoré sú určené. Dôvodom je aby ste mali celkový prehľad o použitých banneroch. Príklad je na nasledujúcom obrázku, kde vidíme editor stránky s 2 bannermi. Prvý je nastavený výhradne pre ```Desktop```  ten druhý pre kombináciu ```Telefón a Tablet```. Obe sa však v editore zobrazujú.
+V editore web stránky v náhľade sa zobrazí banner nezávisle od nastaveného typu zariadenia, pre ktoré sú určené. Dôvodom je aby ste mali celkový prehľad o použitých banneroch. Príklad je na nasledujúcom obrázku, kde vidíme editor stránky s 2 bannermi. Prvý je nastavený výhradne pre **Desktop**  ten druhý pre kombináciu **Telefón a Tablet**. Obe sa však v editore zobrazujú.
 
 V náhľade je pre takýto prípad zobrazená textová informácia **Zobrazenie na zariadeniach: XXX** podľa zvolených zariadení. Text sa nezobrazí, ak sú zvolené všetky typy zariadení.
 

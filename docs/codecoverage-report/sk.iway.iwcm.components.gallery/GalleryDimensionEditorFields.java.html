@@ -4,23 +4,23 @@ import java.io.Serializable;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 @Getter
 @Setter
-<span class="fc" id="L13">public class GalleryDimensionEditorFields implements Serializable{</span>
+<span class="fc" id="L14">public class GalleryDimensionEditorFields implements Serializable{</span>
 
-<span class="fc" id="L15">    @DataTableColumn(</span>
-        renderFormat = &quot;dt-format-checkbox&quot;,
-        title = &quot;[[#{}]]&quot;,
+<span class="fc" id="L16">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;&amp;nbsp;&quot;,
         visible = false,
         sortAfter = &quot;resizeMode&quot;,
+        tab = &quot;sizes&quot;,
         editor = {
             @DataTableColumnEditor(
-                type = &quot;checkbox&quot;,
-                tab = &quot;sizes&quot;,
                 options = {
                     @DataTableColumnEditorAttr(key = &quot;components.gallery.regenerate.all&quot;, value = &quot;true&quot;)
                 },
@@ -31,14 +31,13 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     private boolean regenerateImages = false;
 
 <span class="fc" id="L33">    @DataTableColumn(</span>
-        renderFormat = &quot;dt-format-checkbox&quot;,
-        title = &quot;[[#{}]]&quot;,
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;&amp;nbsp;&quot;,
         visible = false,
         sortAfter = &quot;editorFields.regenerateImages&quot;,
+        tab = &quot;sizes&quot;,
         editor = {
             @DataTableColumnEditor(
-                type = &quot;checkbox&quot;,
-                tab = &quot;sizes&quot;,
                 options = {
                     @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;)
                 }
@@ -47,5 +46,39 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     )
     private boolean forceResizeModeToSubgroups = false;
 
+
+<span class="fc" id="L50">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;&amp;nbsp;&quot;,
+        visible = false,
+        sortAfter = &quot;watermarkSaturation&quot;,
+        tab = &quot;watermark&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;components.gallery.regenerate.all&quot;, value = &quot;true&quot;)
+                },
+                message = &quot;components.gallery.regenerate.all.title&quot;
+            )
+        }
+    )
+    private boolean regenerateWatermark = false;
+
+<span class="fc" id="L67">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;&amp;nbsp;&quot;,
+        visible = false,
+        sortAfter = &quot;editorFields.regenerateWatermark&quot;,
+        tab = &quot;watermark&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = &quot;editor.apply_for_all_sub_folders&quot;, value = &quot;true&quot;)
+                }
+            )
+        }
+    )
+    private boolean forceWatermarkToSubgroups = false;
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

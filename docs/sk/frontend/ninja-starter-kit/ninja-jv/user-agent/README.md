@@ -9,7 +9,7 @@
 | ${ninja.userAgent.deviceOS} | *String* | Názov operačného systému |
 
 ## Názov prehliadača *String*
-Názov prehliadača (vždy malímy písmenamy) zistený z userAgenta: `msie / chrome / safari / firefox`.
+Názov prehliadača (vždy malými písmenami) zistený z userAgenta: `msie / chrome / safari / firefox`.
 
 ```java
 ${ninja.userAgent.browserName}

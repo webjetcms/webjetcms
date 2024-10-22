@@ -24,7 +24,7 @@
             "port": 1521,
             "driver": "Oracle",
             "name": "WEBJET2022_WEB",
-            "database": "pdb19c.dev",
+            "database": "pdb19c",
             "username": "WEBJET2022_WEB",
             "password": "************"
         },
@@ -43,8 +43,16 @@
         "InterWay",
         "iway",
         "iwcm",
+        "konštruktor",
+        "prelínajúce",
+        "Schvaľovateľ",
         "Servlet",
+        "viactémová",
+        "viactémovej",
         "WebJET"
     ],
     "gitPrefix.pattern": ".*/(\\d+)-.*",
+    "coverage-gutters.coverageBaseDir": "docs/codecoverage-report/",
+    "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
+    "terminal.integrated.shellIntegration.enabled": false
 }

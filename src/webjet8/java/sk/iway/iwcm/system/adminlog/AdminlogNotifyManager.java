@@ -28,6 +28,8 @@ import sk.iway.iwcm.system.audit.jpa.AuditNotifyEntity;
  */
 public class AdminlogNotifyManager
 {
+	private static final String CACKE_KEY_PREFIX = "AdminlogNotifyEmails.type";
+
 	protected AdminlogNotifyManager() {
 		//utility class
 	}
@@ -59,12 +61,13 @@ public class AdminlogNotifyManager
 		if (requestBean.getRemoteHost() != null)
 			text.append(prop.getText(("components.adminlog.domain"))).append(' ').append(requestBean.getRemoteHost()).append('\n');
 
-		String descIntToLower = DB.internationalToEnglish(description.toLowerCase());
+		String descIntToLower = fixCrLf(DB.internationalToEnglish(description.toLowerCase()));
 		for(AuditNotifyEntity anb : notifyBeans)
 		{
 			//ak sa ma poslat email len ak obsahuje nejaky text
-			if(Tools.isNotEmpty(anb.getText()))
-				if(!descIntToLower.contains(DB.internationalToEnglish(anb.getText().toLowerCase()))) continue;
+			if(Tools.isNotEmpty(anb.getText())) {
+				if(!descIntToLower.contains(fixCrLf(DB.internationalToEnglish(anb.getText().toLowerCase())))) continue;
+			}
 
 			SendMail.sendCapturingException(prop.getText("components.adminlog.senderEmail.name"), anb.getEmail(), anb.getEmail(), null, null, null, subject, text.toString(), null, null, true, writeToAuditLog);
 		}
@@ -73,17 +76,25 @@ public class AdminlogNotifyManager
 	}
 
 	/**
+	 * Fix CRLF in text between windows and linux/macos
+	 * @param text
+	 * @return
+	 */
+	private static String fixCrLf(String text) {
+		return text.replace("\r\n", "\n").replace("\r", "\n");
+	}
+
+	/**
  	 * Vyselektuje vsetky e-maily, na ktore je potrebne poslat notifikaciu o zaznamenanom adminlogu
  	 * @param logType typ adminlogu, ktory sa pridal do DB a chceme na nho poslat notifikacie
  	 * @return List naplneny e-mailami, na ktore sa posle notifikacna sprava
  	 */
-	private static synchronized List<AuditNotifyEntity> getNotifyEmails(int logType)
+	public static List<AuditNotifyEntity> getNotifyEmails(int logType)
 	{
-
-		String CACHE_KEY = "AdminlogNotifyEmails.type"+logType;
+		String cacheKey = CACKE_KEY_PREFIX+logType;
 		Cache c = Cache.getInstance();
 		@SuppressWarnings("unchecked")
-		List<AuditNotifyEntity> notifyBeans = (List<AuditNotifyEntity>)c.getObject(CACHE_KEY);
+		List<AuditNotifyEntity> notifyBeans = (List<AuditNotifyEntity>)c.getObject(cacheKey);
 
 		if (notifyBeans != null) return notifyBeans;
 
@@ -95,8 +106,8 @@ public class AdminlogNotifyManager
 
 		try
 		{
-			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM adminlog_notify WHERE adminlog_type = ?");
+			db_conn = DBPool.getConnectionReadUncommited();
+			ps = db_conn.prepareStatement("SELECT * FROM adminlog_notify WHERE adminlog_type = ?"); //NOSONAR
 
 			ps.setInt(1, logType);
 
@@ -139,8 +150,17 @@ public class AdminlogNotifyManager
 			}
 		}
 
-		c.setObjectSeconds(CACHE_KEY, notifyBeans, 60*60);
+		c.setObjectSeconds(cacheKey, notifyBeans, 60*60);
 
 		return notifyBeans;
+	}
+
+	/**
+	 * Clear cache after eg. update of table adminlog_notify
+	 */
+	public static void clearCache()
+	{
+		Cache c = Cache.getInstance();
+		c.removeObjectStartsWithName(CACKE_KEY_PREFIX);
 	}
 }

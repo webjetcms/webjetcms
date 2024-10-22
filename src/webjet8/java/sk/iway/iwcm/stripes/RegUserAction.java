@@ -566,7 +566,7 @@ public class RegUserAction extends WebJETActionBean
 
 		PageParams pageParams = new PageParams(getRequest());
 
-		//toto tu musi byt, inak asi expirovala session
+		//toto tu musi byt, inak asi exspirovala session
 		if (pageParams.hasParameter("groupIds")==false)
 		{
 			errors.add("sessionExpired", new SimpleError(prop.getText("pageparams.session_expired")));

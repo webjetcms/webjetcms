@@ -47,4 +47,4 @@ Skupina médií môže mať nastavené obmedzenie pre zobrazenie skupiny len v u
 
 Všetky Média záznamy sú filtrované podľa práve zvolenej domény.
 
-V prípade záznamov z ```Správa všetkých médií``` je parameter mena tabuľky nastavovaný na hodnotu **documents** automaticky na pozadí. Pe identifikáciu či ide o volanie datatabuľky práve z tejto sekcie zabezpečuje url parameter ```isCalledFromTable=true```.
+V prípade záznamov z **Správa všetkých médií** je parameter mena tabuľky nastavovaný na hodnotu **documents** automaticky na pozadí. Pre identifikáciu či ide o volanie datatabuľky práve z tejto sekcie zabezpečuje url parameter ```isCalledFromTable=true```.

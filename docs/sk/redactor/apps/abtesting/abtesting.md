@@ -7,7 +7,7 @@ Aplikácia AB testovanie Vám poskytuje prehľad o AB stránkach a správu prís
 
 ## Zoznam AB stránok
 
-Sekcia AB Testovanie -> Zoznam AB stránok ponúka zoznam stránok, ktoré majú vytvorenú B variantu. Tieto stránky nie je možné akokoľvek upravovať, pridávať či mazať.
+Sekcia Zoznam AB stránok ponúka zoznam stránok, ktoré majú vytvorenú B variantu. Tieto stránky nie je možné akokoľvek upravovať, pridávať či mazať.
 
 ![](ab_test_page_list.png)
 
@@ -17,7 +17,7 @@ K dispozícií máte možnosť zobrazenie stránky aj zobrazenie Štatistiky str
 
 ## Konfigurácia
 
-Sekcia AB Testovanie -> Konfigurácia Vám umožňuje prehľad a úpravu príslušných konfiguračných premenných pre AB testovanie.
+Sekcia Konfigurácia Vám umožňuje prehľad a úpravu príslušných konfiguračných premenných pre AB testovanie.
 
 ![](ab_test_config_page.png)
 
@@ -32,3 +32,4 @@ Samotná úprava týchto konfiguračný premenných je okresaná iba na úpravu 
 - ```ABTestingName``` (predvolene ```abtestvariant```) - názov, ktorý sa pridáva do URL adresy B verzie stránky na jej odlíšenie - používa sa aj na dohľadanie B verzie stránky
 - ```ABTestingCookieName``` (predvolene ```wjabtesting```) - meno ```cookie``` použitej pre zapamätanie si verzie testu pri ```split``` testoch - ak sa pri zobrazení rozhodne pre B variantu, zapamätá sa v ```cookie``` s týmto názvom a podľa toho sa ďalej budú poskytovať B verzie stránok
 - ```ABTestingCookieDays``` (predvolene ```30```) - počet dní zapamätania si zvolenej verzie pri AB testovaní - čas exspirácie cookie
+- ```ABTestingAllowVariantUrl``` (predvolene `false`) - nastavením na `true` povolí priame zobrazenie variantnej URL adresy aj ne-administrátorom, napr. volanie `/investicie/abtestvariantb.html`.

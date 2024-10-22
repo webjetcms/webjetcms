@@ -1,21 +1,21 @@
 <template>
     <section>
-        <div v-if="click.indexOf('dt-tree-group-array-scheduler')!=-1" class="dt-tree-container">
+        <div v-if="click.indexOf('dt-tree-group-array-scheduler')!=-1" class="dt-tree-container dt-tree-group-array-scheduler">
             <div class="form-group"
             v-for="(item, index) in data" v-bind:grp="item" v-bind:index="index" v-bind:key="item.scheduleId">
-                <Item v-bind:grp="item" :data-table-name="dataTableName" :data-table="dataTable" v-bind:index="index" :click="click" :id-key="idKey" :data="data" @remove-item="onRemoveItem"/>
+                <Item v-bind:grp="item" :data-table-name="dataTableName" :data-table="dataTable" v-bind:index="index" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"/>
             </div>
         </div>
-        <div v-if="click.indexOf('dt-tree-page')!=-1" class="dt-tree-container">
+        <div v-if="click.indexOf('dt-tree-page')!=-1" class="dt-tree-container dt-tree-page">
             <div class="form-group"
             v-for="(item, index) in data" v-bind:grp="item" v-bind:index="index" v-bind:key="item.docId">
-                <Item v-bind:grp="item" :data-table-name="dataTableName" :data-table="dataTable" v-bind:index="index" :click="click" :id-key="idKey" :data="data" @remove-item="onRemoveItem"/>
+                <Item v-bind:grp="item" :data-table-name="dataTableName" :data-table="dataTable" v-bind:index="index" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"/>
             </div>
         </div>
-        <div v-if="click.indexOf('dt-tree-group-array-scheduler')==-1 && click.indexOf('dt-tree-page')==-1" class="dt-tree-container">
+        <div v-if="click.indexOf('dt-tree-group-array-scheduler')==-1 && click.indexOf('dt-tree-page')==-1" class="dt-tree-container dt-tree-other">
             <div class="form-group"
             v-for="(item, index) in data" v-bind:grp="item" v-bind:index="index" v-bind:key="item.groupId">
-                <Item v-bind:grp="item" :data-table-name="dataTableName" :data-table="dataTable" v-bind:index="index" :click="click" :id-key="idKey" :data="data" @remove-item="onRemoveItem"/>
+                <Item v-bind:grp="item" :data-table-name="dataTableName" :data-table="dataTable" v-bind:index="index" :click="click" :id-key="idKey" :data="data" :attr="attr" @remove-item="onRemoveItem"/>
             </div>
         </div>
         <div v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-dir-array')==0 || click.indexOf('dt-tree-universal-array')==0" v-bind:class="{'dt-tree-container-no-margin-top': data.length<1}" class="form-group row">
@@ -71,6 +71,13 @@
 
             if (this.$props.attr != null) {
                 if (typeof(this.$props.attr["data-dt-json-addbutton"])!=undefined) this.addButtonText=this.$props.attr["data-dt-json-addbutton"];
+            }
+            if (this.click.indexOf("dt-tree-dir-simple")!=-1) {
+                //remove diabled element on input
+                var that = this;
+                setTimeout(function() {
+                    window.$("#"+that.idKey).parent().find("div.dt-tree-container .input-group input").removeAttr("disabled");
+                }, 100);
             }
         },
         methods: {

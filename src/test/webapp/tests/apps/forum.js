@@ -38,7 +38,6 @@ Scenario('Test of filtration by current user group/page permissions', async ({I,
 });
 
 Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => {
-
     I.relogin('tester_forum');
 
     I.amOnPage("/apps/forum/admin/");
@@ -50,31 +49,33 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     I.see(subject + "_1");
 
     //if test fail it can be soft deleted, undelete it
-    await I.clickIfVisible(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
+    await I.clickIfVisible(locate('td .ti.ti-trash'));
     DT.waitForLoader();
 
-    I.dontSeeElement(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
+    I.waitForInvisible(locate('td .ti.ti-trash'), 10);
 
     //Delete forum (soft delete)
     I.clickCss(".buttons-select-all");
     I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("forumDataTable");
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForModalClose("forumDataTable_modal");
+    I.wait(0.2);
     DT.waitForLoader();
 
     //See forum, BUT see allso recover button
     I.see(subject + "_1");
-    I.seeElement(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
+    I.waitForVisible(locate('td .ti.ti-trash'), 10);
 
     //Recover deleted forum
-    I.forceClick(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
+    I.forceClick(locate('td .ti.ti-trash'));
     DT.waitForLoader();
     I.wait(1);
 
     //Check, we see forum but dont see button to recover, because forum was recored succefull
     I.see(subject + "_1");
-    I.dontSeeElement(locate('//*[@id="391"]/td[2]/div/a[2]/i'));
+    I.waitForInvisible(locate('td .ti.ti-trash'), 10);
 
     /* Additional test of recover button (not in datatable but above table) */
         DT.filter("subject", subject + "_2");
@@ -91,7 +92,7 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
         I.wait(1);
 
         I.see(subject + "_2");
-        I.seeElement(locate('//*[@id="392"]/td[2]/div/a[2]/i'));
+        I.waitForVisible(locate('td .ti.ti-trash'), 10);
 
         //Use other recover button
         I.clickCss(".buttons-select-all");
@@ -99,7 +100,7 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
         I.wait(1);
 
         I.see(subject + "_2");
-        I.dontSeeElement(locate('//*[@id="392"]/td[2]/div/a[2]/i'));
+        I.waitForInvisible(locate('td .ti.ti-trash'), 10);
 
     I.logout();
 });
@@ -269,4 +270,166 @@ Scenario("basic table tests", async ({I, DT, DTE}) => {
     DT.filter("docDetails", "podskupina3");
     I.dontSee("/Aplikácie/Diskusia/Diskusia", "#forumDataTable td.dt-tree-page a");
     I.see("/Aplikácie/Message Board/Skupina2/podskupina3", "#forumDataTable td.dt-tree-page a");
+});
+
+
+Scenario("sending notifications to email", async ({I, DTE, TempMail, Document}) => {
+    I.relogin('admin');
+    Document.setConfigValue('spamProtectionTimeout', 1);
+    var random = I.getRandomText();
+    var subject = "Test notifikácia "+random;
+    var test_body = "Toto je testovaci prispevok. "+random;
+
+    I.relogin('tester_forum1');
+
+    I.say('Creating a new post')
+    I.amOnPage("/apps/diskusia/?NO_WJTOOLBAR=true");
+    I.click("Nový príspevok");
+    I.waitForElement("#forum");
+    I.see("Poslať notifikáciu pri odpovedi na príspevok");
+    I.waitForElement(".cleditorMain", 10);
+    I.fillField("subject", subject);
+    I.dontSeeCheckboxIsChecked('#sendAnswerNotif1');
+    I.checkOption('#sendAnswerNotif1');
+    DTE.fillCleditor("#forum", test_body);
+    I.clickCss("div.ui-dialog button.btn.btn-primary");
+    I.waitForText("Príspevok je uložený", 10);
+    I.see("Príspevok je uložený");
+
+    I.say('Checking if the dialog is hidden');
+    I.waitForInvisible("div.ui-dialog");
+    I.dontSee("div.ui-dialog");
+    I.dontSee("Poslať notifikáciu pri odpovedi na príspevok");
+
+    I.say('Checking if post is visible');
+    I.waitForText(subject, 10);
+    I.see(subject);
+    I.see(test_body);
+
+    I.say('Creating own response to a new post');
+    I.click(locate('.media-body').withText(subject).find('a').withText('[Odpovedať]'));
+    I.waitForElement(".cleditorMain", 10);
+    DTE.fillCleditor("#forum", "Toto je VLASTNA odpoved na testovaci prispevok. "+random);
+    I.clickCss("div.ui-dialog button.btn.btn-primary");
+    I.waitForText("Príspevok je uložený", 10);
+    I.dontSee('Prekročili ste limit, pri ktorom sa považujete za autora spamu.');
+    I.wait(0.5);
+    I.waitForText("Toto je VLASTNA odpoved na testovaci prispevok. "+random, 10)
+
+    I.say('Checking if the dialog was NOT received');
+    TempMail.login('webjetcms1');
+    if (!await TempMail.isInboxEmpty()){
+        TempMail.openLatestEmail();
+        I.dontSee(subject);
+    }
+
+    I.say('Creating a response to a new post');
+    I.relogin('tester_forum2');
+    I.amOnPage("/apps/diskusia/?NO_WJTOOLBAR=true");
+    I.click(locate('.media-body').withText(subject).find('a').withText('[Odpovedať]'));
+    DTE.fillCleditor("#forum", "Toto je odpoved na testovaci prispevok. "+random);
+    I.clickCss("div.ui-dialog button.btn.btn-primary");
+
+    I.say('Checking if the dialog was received');
+    TempMail.login('webjetcms1');
+    TempMail.openLatestEmail();
+    I.see('Do diskusie bola pridaná odpoveď na váš príspevok');
+    I.see(subject);
+    TempMail.deleteCurrentEmail();
+
+});
+
+Scenario("restore changes", ({I, Document}) => {
+    I.relogin('admin');
+    Document.setConfigValue('spamProtectionTimeout', 30);
+});
+
+
+Scenario("image attachment verification", async ({I, DTE, Document}) => {
+    var random = I.getRandomText();
+    var test_body = "Toto je testovaci prispevok imagetest "+random;
+    var test_forum = 'image test' + random;
+
+    I.relogin('admin');
+    I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
+    I.wait(1);
+    I.clickCss('.btn-forum-new-topic');
+    I.waitForElement("div.ui-dialog", 10);
+    I.waitForElement(".cleditorMain", 10);
+    I.wait(2);
+    I.fillField('#subject', test_forum);
+    DTE.fillCleditor("#forum", test_body);
+    I.clickCss("div.ui-dialog button.btn.btn-primary");
+    //I.waitForText("Príspevok je uložený", 10, "div.ui-dialog");
+    I.waitForInvisible("div.ui-dialog");
+    I.wait(2);
+    I.waitForElement(locate('a').withText(test_forum), 20);
+    I.amOnPage("/apps/message-board/skupina2/podskupina3.html");
+
+    I.click(locate('a').withText(test_forum));
+    I.clickCss('.btn.btn-default');
+    I.switchToNextTab();
+
+    I.attachFile('input', 'tests/apps/penguin.jpg');
+    I.click('input[type="submit"][value="Odoslať"]');
+    I.switchToNextTab();
+
+    I.wait(5);
+    I.clickCss('li img[src="/components/_common/mime/jpg.gif"] + a');
+    const imageUrl = await I.grabCurrentUrl();
+    Document.compareScreenshotElement("img", "autotest-penguin.png", null,null, 5);
+
+    I.say('Waiting for files update');
+    I.wait(4);
+
+    I.say('Deleting uploaded file');
+
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy9hcHBzL2ZvcnVt');
+    I.waitForElement("#nav-iwcm_1_L2ltYWdlcy9hcHBzL2ZvcnVt.elfinder-navbar-expanded", 10);
+    I.wait(1);
+
+    const imageSelector = '.elfinder-cwd-filename[title*="penguin.jpg"]';
+    let numVisible;
+    do {
+        numVisible = await I.grabNumberOfVisibleElements(imageSelector);
+        I.say("Number of visible elements: " + numVisible);
+        if (numVisible) {
+            I.waitForVisible(imageSelector);
+            I.clickCss(imageSelector);
+            I.pressKey('Delete');
+            I.clickCss('.elfinder-confirm-accept');
+            I.waitForInvisible(imageSelector, 10);
+        }
+    } while (numVisible);
+
+    let response = await I.sendGetRequest(imageUrl + '?_disableCache=true');
+    //console.log(response);
+    I.assertEqual(response.status, 404, "Image was NOT deleted");
+});
+
+Scenario("Verification of special actions", async ({I, DT, DTE, Document}) => {
+    I.relogin('tester_forum');
+
+    I.amOnPage("/apps/diskusia/");
+    I.see(subject + "_1", 'h4.media-heading');
+
+    I.amOnPage("/apps/forum/admin/");
+    DT.filter("subject", subject + "_1");
+    DT.filter("question", question + " 1");
+
+    I.clickCss(".buttons-select-all");
+    I.clickCss('.reject-forum');
+
+    I.amOnPage("/apps/diskusia/");
+    I.dontSee(subject + "_1", 'h4.media-heading');
+
+    I.amOnPage("/apps/forum/admin/");
+    DT.filter("subject", subject + "_1");
+    DT.filter("question", question + " 1");
+
+    I.clickCss(".buttons-select-all");
+    I.clickCss('.approve-forum');
+
+    I.amOnPage("/apps/diskusia/");
+    I.see(subject + "_1", 'h4.media-heading');
 });

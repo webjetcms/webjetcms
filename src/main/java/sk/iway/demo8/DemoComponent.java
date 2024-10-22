@@ -59,6 +59,12 @@ public class DemoComponent extends WebjetComponentAbstract {
 	@DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "date", tab = "advanced")
     private Date date;
 
+	@DataTableColumn(inputType = DataTableColumnType.BASE64, title = "Base64 textarea", tab = "advanced")
+    private String base64textarea;
+
+	@DataTableColumn(inputType = DataTableColumnType.TEXT, title = "Base64 text", tab = "advanced", className = "dt-style-base64")
+    private String base64text;
+
 
 
 	@DataTableColumn(inputType = DataTableColumnType.JSON, title = "groupDetails", tab = "json", className = "dt-tree-group")
@@ -75,6 +81,12 @@ public class DemoComponent extends WebjetComponentAbstract {
 
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimple", tab = "json", className = "dt-tree-dir-simple")
     private String dirSimple;
+
+	@DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "Types", title = "HEX Color empty")
+	private String colorEmpty = "";
+
+	@DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "Types", title = "HEX Color with alpha")
+	private String colorAlpha = "#FF0000";
 
 	@DefaultHandler
 	public String render(Model model)

@@ -73,7 +73,7 @@ script.
                 title: "Nazov suboru",
                 renderFormat: "dt-format-text",
                 renderFormatLinkTemplate: "javascript:;",
-                renderFormatPrefix: '<i class="far fa-pencil"></i> ',
+                renderFormatPrefix: '<i class="ti ti-pencil"></i> ',
                 className: "dt-row-edit",
 
                 editor: {
@@ -163,11 +163,13 @@ Minimálna konfigurácia:
 - ```lastExportColumnName``` ak je zadané zobrazí v exportnom dialógu možnosť exportovať zatiaľ neexportované údaje (používa sa vo formulároch). Hodnota reprezentuje meno stĺpca, ktorý sa pridáva ako ```NULL``` podmienka do výberu dát (je potrebné korektne implementovať v REST službe).
 - ```byIdExportColumnName``` ak je zadané v exportnom dialógu povolí export podľa zvolených riadkov. Hodnota je meno stĺpca v databáze s ID hodnotou (typicky id, používa sa vo formulároch). Filtrovanie je potrebné implementovať ako ```predicates.add(root.get("id").in(idsList));``` v REST službe.
 - ```editorButtons``` pole tlačidiel, ktoré sa zobrazia v editore. Príklad ```editorButtons: [ {title: "Uložiť", action: function() { this.submit(); } }, { title: ...} ]```. Využíva API pre Datatables Editor.
+- ```createButtons``` pole tlačidiel pre pridanie nového záznamu, formát rovnaký ako pre `editorButtons`.
 - ```keyboardSave {boolean}``` - nastavením na hodnotu ```false``` deaktivujete možnosť uložiť záznam v editore klávesovou skratkou ```CTRL+S/CMS+S```.
 - ```stateSave {boolean}``` - nastavením na hodnotu ```false``` deaktivujete možnosť pamätania si poradia stĺpcov a usporiadania tabuľky v prehliadači.
 - ```customFieldsUpdateColumns {boolean}``` - nastavením na hodnotu ```true``` sa pri získaní [voliteľných polí](../datatables-editor/customfields.md) aktualizujú aj názvy stĺpcov v tabuľke a v nastavení zobrazených stĺpcov (predvolene pri hodnote ```false``` sa názvy voliteľných polia aktualizujú len v editore).
 - `customFieldsUpdateColumnsPreserveVisibility {boolean}` - nastavením na hodnotu `true` sa pre používateľa zachová nastavenie zobrazenia stĺpcov pre režim `customFieldsUpdateColumns`. Je možné použiť len v prípade, kedy pre datatabuľku nie sú menené stĺpce počas zobrazenia. Napr. v sekcii Prekladové kľúče sa dáta nemenia, je možné nastaviť na `true`, ale v sekcii Číselníky sa menia aj stĺpce pri zmene číselníka, tam táto možnosť nie je použiteľná.
 - ```autoHeight {boolean}``` - predvolene tabuľka počíta svoju výšku aby maximálne využila priestor okna. Nastavením na hodnotu ```false``` bude mať tabuľka výšku podľa obsahu (počtu riadkov).
+- ```editorLocking {boolean}``` - predvolene tabuľka volá službu notifikácie pri editácii rovnakého záznamu viacerými používateľmi, ak je toto neželané nastavte na hodnotu `false`.
 
 ```javascript
 let columns = [
@@ -186,7 +188,7 @@ let columns = [
 
         renderFormatLinkTemplate:   "javascript:;",
                                      "/temps-list.html"
-        renderFormatPrefix: '<i class="far fa-pencil"></i> ',
+        renderFormatPrefix: '<i class="ti ti-pencil"></i> ',
         renderHideValue: false, //TODO ???
         render: function ( data, type, row ) {
             //console.log("data", data, "type", type, "row", row);
@@ -313,6 +315,7 @@ export function getSearchCriteria() {
 - ```dt-format-number, dt-format-percentage``` - zobrazenie čísla
 - ```dt-format-number--decimal, dt-format-percentage--decimal```
 - ```dt-format-number--text``` - zobrazí zaokrúhlené číslo, pri vyššom čísle vypíše v textovej podobe, napr. ```10 tis.``` namiesto ```10000```
+- ```dt-format-filesize``` - formátovanie veľkosti súboru ako `10,24 kB`
 - ```dt-format-date, dt-format-date-time, dt-format-date--text, dt-format-date-time--text``` - dátum/čas, filter zobrazí od-do
 - ```dt-format-link``` - zobrazí text ako odkaz, možnosť použiť ```renderFormatLinkTemplate```
 - ```dt-format-image``` - zobrazí malý náhľad obrázku a odkaz na jeho plné zobrazenie, pod obrázkom je text linky na obrázok.
@@ -371,7 +374,7 @@ galleryTable.button().add(buttonCounter++, {
 });
 
 galleryTable.button().add(buttonCounter++, {
-    text: '<i class="far fa-th-list"></i>',
+    text: '<i class="ti ti-list-details"></i>',
     action: function (e, dt, node) {
         console.log("btn, e=",e,"dt=",dt,"node=",node);
         //ziskaj data selectnuteho riadku
@@ -425,7 +428,7 @@ Na serveri sa v REST službe vykoná volanie ```/action/rotate``` implementovan�
 cacheObjectsTable.button().add(3, {
     extends: 'remove',
     editor: cacheObjectsTable.EDITOR,
-    text: '<i class="far fa-camera"></i>',
+    text: '<i class="ti ti-camera"></i>',
     action: function (e, dt, node) {
         cacheObjectsTable.executeAction("deletePictureCache", true, "[[\#{components.data.deleting.imgcache.areYouSure}]]", "[[\#{components.data.deleting.imgcache.areYouSureNote}]]");
     },
@@ -443,7 +446,7 @@ Tlačidlo aj s kontrolou, že je zvolený nejaký riadok (v init option):
 galleryTable.button().add(buttonCounter++, {
     extends: 'remove',
     editor: galleryTable.EDITOR,
-    text: '<i class="far fa-retweet"></i>',
+    text: '<i class="ti ti-repeat"></i>',
     action: function (e, dt, node) {
         //console.log("Rotate, e=",e," dt=",dt," node=",node);
         galleryTable.executeAction("rotate");
@@ -493,7 +496,7 @@ if (webpagesDatatable.hasPermission("create")) {
 }
 ```
 
-**UPOZORNENIE:** nespoliehajte sa len na kontrolu práv na frontende, práva je potrebné kontrolovať aj v REST službe alebo v service triede. Využiť môžete metódy [beforeSave alebo beforeDelete](restcontroller.md#zabránenie-zmazania--editácie-záznamu).
+!>**Upozornenie:** nespoliehajte sa len na kontrolu práv na frontende, práva je potrebné kontrolovať aj v REST službe alebo v service triede. Využiť môžete metódy [beforeSave alebo beforeDelete](restcontroller.md#zabránenie-zmazania--editácie-záznamu).
 
 ## Štýlovanie riadku
 
@@ -556,12 +559,12 @@ public class DocEditorFields extends BaseEditorFields {
         hiddenEditor = true, hidden = false, visible = true, sortAfter = "id", className = "allow-html", orderable = false,
         editor = { @DataTableColumnEditor(
             options = {
-                @DataTableColumnEditorAttr(key = "<i class=\"fas fa-globe\"></i> [[#{webpages.icons.showInMenu}]]", value = "showInMenu:true"),
-                @DataTableColumnEditorAttr(key = "<i class=\"far fa-globe\"></i> [[#{webpages.icons.notShowInMenu}]]", value = "showInMenu:false"),
-                @DataTableColumnEditorAttr(key = "<i class=\"fas fa-lock\"></i> [[#{webpages.icons.onlyForLogged}]]", value = "passwordProtected:notEmpty"),
+                @DataTableColumnEditorAttr(key = "<i class=\"ti ti-map-pin\"></i> [[#{webpages.icons.showInMenu}]]", value = "showInMenu:true"),
+                @DataTableColumnEditorAttr(key = "<i class=\"ti ti-map-pin-off\"></i> [[#{webpages.icons.notShowInMenu}]]", value = "showInMenu:false"),
+                @DataTableColumnEditorAttr(key = "<i class=\"ti ti-lock-filled\"></i> [[#{webpages.icons.onlyForLogged}]]", value = "passwordProtected:notEmpty"),
                 @DataTableColumnEditorAttr(key = "<span style=\"color: #FF4B58\">[[#{webpages.icons.disabled}]]</span>", value = "available:false"),
-                @DataTableColumnEditorAttr(key = "<i class=\"fas fa-external-link-alt\"></i> [[#{webpages.icons.externalLink}]]", value = "externalLink:notEmpty"),
-                @DataTableColumnEditorAttr(key = "<i class=\"fas fa-eye-slash\"></i> [[#{webpages.icons.notSearchable}]]", value = "searchable:false")
+                @DataTableColumnEditorAttr(key = "<i class=\"ti ti-external-link\"></i> [[#{webpages.icons.externalLink}]]", value = "externalLink:notEmpty"),
+                @DataTableColumnEditorAttr(key = "<i class=\"ti ti-eye\"></i> [[#{webpages.icons.notSearchable}]]", value = "searchable:false")
             }
         )}
     )
@@ -569,11 +572,11 @@ public class DocEditorFields extends BaseEditorFields {
 
     public void fromDocDetails(DocBasic doc, boolean loadSubQueries) {
         //ikony
-        if (doc.isShowInMenu()) addStatusIcon("fas fa-globe");
-        else addStatusIcon("fal fa-globe");
-        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon("fas fa-external-link-alt");
-        if (doc.isSearchable()==false) addStatusIcon("fas fa-eye-slash");
-        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon("fas fa-lock");
+        if (doc.isShowInMenu()) addStatusIcon("ti ti-map-pin");
+        else addStatusIcon("ti ti-map-pin-off");
+        if (Tools.isNotEmpty(doc.getExternalLink())) addStatusIcon("ti ti-external-link");
+        if (doc.isSearchable()==false) addStatusIcon("ti ti-eye-off");
+        if (Tools.isNotEmpty(doc.getPasswordProtected())) addStatusIcon("ti ti-lock-filled");
     }
 
     public getStatusIcons() {
@@ -596,7 +599,7 @@ ak potrebujete programovo niečo co stavových ikon doplniť (v prípade web str
             //v history je otocene docid a historyid
             link = "/showdoc.do?docid="+doc.getId()+"&historyId="+doc.getDocId();
         }
-        iconsHtml.append("<a href=\""+link+"\" target=\"_blank\" title=\""+ResponseUtils.filter(prop.getText("history.showPage"))+"\"><i class=\"far fa-eye\"></i></a> ");
+        iconsHtml.append("<a href=\""+link+"\" target=\"_blank\" title=\""+ResponseUtils.filter(prop.getText("history.showPage"))+"\"><i class=\"ti ti-eye\"></i></a> ");
 
         iconsHtml.append(getStatusIconsHtml());
         statusIcons = iconsHtml.toString();
@@ -627,7 +630,7 @@ V columns definícii je možné nastaviť požadované právo pre zobrazenie dan
     },
     renderFormat: "dt-format-text",
     renderFormatLinkTemplate: "javascript:;",
-    renderFormatPrefix: '<i class="far fa-pencil"></i> ',
+    renderFormatPrefix: '<i class="ti ti-pencil"></i> ',
     className: "dt-row-edit",
     perms: "multiDomain" //stĺpec sa zobrazí len ak používateľ má právo multiDomain
 },
@@ -673,7 +676,7 @@ div#dateDependentEntriesTable_extfilter
         div.col-auto.dt-extfilter.dt-extfilter-from
 ```
 
-**POZOR:** v elemente pre vyhľadávacie pole je CSS trieda ```.dt-extfilter``` aj ```.dt-extfilter-FIELD```, je potrebné použiť obe. Podľa CSS triedy ```.dt-extfilter``` sa vyhľadá element po kliknutí na lupu, v data atribúte ```data-column-index``` je uložené poradové číslo stĺpca.
+!>**Upozornenie:** v elemente pre vyhľadávacie pole je CSS trieda ```.dt-extfilter``` aj ```.dt-extfilter-FIELD```, je potrebné použiť obe. Podľa CSS triedy ```.dt-extfilter``` sa vyhľadá element po kliknutí na lupu, v data atribúte ```data-column-index``` je uložené poradové číslo stĺpca.
 
 Ak chcete presunúť filter do hlavičky stránky, môžete ho jednoducho presunúť pomocou jQuery ako je v [database-delete.pug](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
 

@@ -2,15 +2,6 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd" id="WebApp_ID" version="3.0">
 
   <filter>
-    <filter-name>Set Character Encoding</filter-name>
-    <filter-class>sk.iway.iwcm.SetCharacterEncodingFilter</filter-class>
-    <init-param>
-     <param-name>encoding</param-name>
-     <param-value>utf-8</param-value>
-    </init-param>
-  </filter>
-
-  <filter>
     <filter-name>Virtual Path Filter</filter-name>
     <filter-class>sk.iway.iwcm.PathFilter</filter-class>
   </filter>
@@ -28,11 +19,6 @@
 
   <filter-mapping>
      <filter-name>ContextFilter</filter-name>
-     <url-pattern>/*</url-pattern>
-  </filter-mapping>
-
-  <filter-mapping>
-     <filter-name>Set Character Encoding</filter-name>
      <url-pattern>/*</url-pattern>
   </filter-mapping>
 

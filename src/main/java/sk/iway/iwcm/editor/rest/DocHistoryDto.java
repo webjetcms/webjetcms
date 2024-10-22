@@ -12,10 +12,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class DocHistoryDto {
 
-    @DataTableColumn(inputType = DataTableColumnType.ID, renderFormat = "dt-format-selector", title = "editor.cell.id")
+    @DataTableColumn(inputType = DataTableColumnType.ID, title = "editor.cell.id")
     private Long id; //historyId
 
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.forum.docid", visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.forum.docid", visible = false, renderFormat = "dt-format-selector") //render nuber without spaces
     private int docId;
 
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = "history.date")

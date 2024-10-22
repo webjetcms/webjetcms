@@ -36,8 +36,8 @@ Folders will be displayed in the tree structure:
 When using domain aliases (conf. variable set `multiDomainAlias:www.domena.com=ALIAS`), the folder is displayed/opened by default `/images/ALIAS/gallery`. For backward compatibility, other gallery folders (e.g. `/images/gallery`), but those that contain the domain alias of another domain in the folder name will not be displayed.
 
 Folders have the following icons:
-- <i class="fas fa-folder" role="presentation" /> full folder icon = standard folder, has gallery dimensions set
-- <i class="far fa-folder" role="presentation" /> empty folder icon = folder does not have gallery dimensions set, typically it is `{PRIECINOK}`, see above.
+- <i class="ti ti-folder-filled" role="presentation"></i> full folder icon = standard folder, has gallery dimensions set
+- <i class="ti ti-folder" role="presentation"></i> empty folder icon = folder does not have gallery dimensions set, typically it is `{PRIECINOK}`, see above.
 
 ### Photo management
 

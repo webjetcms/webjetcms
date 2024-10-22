@@ -5,7 +5,7 @@ Before(({ I, login }) => {
 });
 
 // Plus overenie pridania adresara
-Scenario('Export dat zakladne testy', async ({I, DataTables}) => {
+Scenario('Export dat zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/export-dat/admin/");
     await DataTables.baseTest({
         dataTable: 'exportDatDataTable',

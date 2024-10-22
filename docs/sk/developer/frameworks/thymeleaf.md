@@ -16,7 +16,7 @@
   - [Select box](#select-box)
   - [Spájanie reťazcov](#spájanie-reťazcov)
   - [Podmienené zobrazenie tagu](#podmienené-zobrazenie-tagu)
-  - [Získanie objektu z Constants](#získanie-objektu-z-constants)
+  - [Získanie objektu z `Constants`](#získanie-objektu-z-constants)
   - [Kontrola práv](#kontrola-práv)
   - [Overenie práva](#overenie-práva)
   - [Chyba TemplateProcessingException: Only variable expressions returning numbers or booleans are allowed in this context](#chyba-templateprocessingexception-only-variable-expressions-returning-numbers-or-booleans-are-allowed-in-this-context)
@@ -90,7 +90,7 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
-**POZOR**: všimnite si kontrolu práv volaním ```user.isEnabledItem("menuWebpages")```, dáta sú vkladané priamo do stránky a obchádzajú kontrolu práv REST služieb. Kontroly práv musíte teda zabezpečiť implicitne. Ako predvolená hodnota sa do objektu ```webpagesInitialJson``` vloží reťazec ```null```, keďže priamo do modelu nie je možné nastaviť ```null``` objekt. Reťazec sa ale pri vložení do pug súboru korektne vloží ako ```null``` hodnota, nepadne spracovanie HTML kódu a použije sa REST volanie (keďže hodnota ```initialData``` objektu bude ```null```).
+!>**Upozornenie:** všimnite si kontrolu práv volaním ```user.isEnabledItem("menuWebpages")```, dáta sú vkladané priamo do stránky a obchádzajú kontrolu práv REST služieb. Kontroly práv musíte teda zabezpečiť implicitne. Ako predvolená hodnota sa do objektu ```webpagesInitialJson``` vloží reťazec ```null```, keďže priamo do modelu nie je možné nastaviť ```null``` objekt. Reťazec sa ale pri vložení do pug súboru korektne vloží ako ```null``` hodnota, nepadne spracovanie HTML kódu a použije sa REST volanie (keďže hodnota ```initialData``` objektu bude ```null```).
 
 ## LayoutService
 
@@ -177,7 +177,7 @@ String lng = Prop.getLng(request, false); //ziska jazyk aktualne zobrazenej web 
 Prop.getInstance(lng); //ziska prop objekt zadaneho jazyka
 ```
 
-Poznámka: vkladanie textov z WebJET CMS do Spring zabezpečuje trieda `WebjetMessageSource.java`.
+Poznámka: vkladanie textov z WebJET CMS do `Spring` zabezpečuje trieda `WebjetMessageSource.java`.
 
 ## Select box
 
@@ -200,7 +200,7 @@ okrem toho je možné použiť aj ```Literal substitutions``` https://www.thymel
 <span data-th-text="|Welcome to our application, ${layout.user.fullName}!|">
 ```
 
-POZOR: ak vám vyhodí chybu typu: ```Could not parse as expression: "aitem--open md-large-menu"```, je to kvôli ```__```. To je špeciálna značka pre pre-procesor:
+!>**Upozornenie:** ak vám vyhodí chybu typu: ```Could not parse as expression: "aitem--open md-large-menu"```, je to kvôli ```__```. To je špeciálna značka pre pre-procesor:
 
 https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#preprocessing
 
@@ -215,10 +215,10 @@ div(data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ?
 ```data-th-if``` zabezpečí zobrazenie ```tagu``` jedine pri splnení zadanej podmienky
 
 ```javascript
-i(data-th-if="${!subMenuItem.childrens.empty}" class="fas fa-chevron-down")
+i(data-th-if="${!subMenuItem.childrens.empty}" class="ti ti-chevron-down")
 ```
 
-## Získanie objektu z Constants
+## Získanie objektu z `Constants`
 
 ```javascript
 a(data-th-href="${layout.getConstant('adminLogoffLink')}")
@@ -249,7 +249,7 @@ Pre overenie práva je možné použiť volanie ```${layout.hasPermission('cmp_f
 ```javascript
 li(data-th-if="${layout.hasPermission('cmp_form')}")
     a.dropdown-item(data-th-data-userid="${layout.user.userId}" onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
-        i.far.fa-key
+        i.ti.ti-key
         <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
 ```
 

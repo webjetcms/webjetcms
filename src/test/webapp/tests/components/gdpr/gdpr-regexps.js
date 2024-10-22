@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('gdpr-regexps-zakladne testy', async ({I, DataTables }) => {
+Scenario('gdpr-regexps-zakladne testy @baseTest', async ({I, DataTables }) => {
     //start in new fresh tab
     I.openNewTab();
     //close other tabs if there are left any open from previous tests

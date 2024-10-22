@@ -111,7 +111,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
-		return processFromEntity(saved, ProcessItemAction.CREATE);
+		return processFromEntity(saved, ProcessItemAction.CREATE, 1);
 	}
 
 	/**
@@ -139,7 +139,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy
-		return processFromEntity(saved, ProcessItemAction.EDIT);
+		return processFromEntity(saved, ProcessItemAction.EDIT, 1);
 	}
 
 	/**
@@ -178,8 +178,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		Query query = entityManager.createQuery(raq);
 		List<T> list = query.getResultList();
+		int rowCount = 1;
 		for (T entity : list) {
-			processFromEntity(entity, ProcessItemAction.FIND);
+			processFromEntity(entity, ProcessItemAction.FIND, rowCount);
+			rowCount++;
 		}
 		return list;
 	}
@@ -206,6 +208,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * @throws InvocationTargetException
 	 */
 	private List<T> editItemByColumn(T entity, String updateByColumn) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+		beforeSave(entity);
+
 		// ziskame list entit, ktore obsahuju v stlpci updateByColumn rovnaku hodnotu ako entita
 		String idColumnName = getIdColumnName(entity);
 		if ("id".equalsIgnoreCase(updateByColumn) && idColumnName!=null) updateByColumn = idColumnName;
@@ -223,6 +227,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				//failsafe
 			}
 			T processed = insertItem(entity);
+			afterSave(entity, processed);
 			return Arrays.asList(processed);
 		}
 
@@ -255,9 +260,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 			}
 
+			beforeSave(entity);
 			checkItemPermsThrows(entity, id);
 
 			T saved = editItem(entity, id);
+
 			afterSave(entity, saved);
 
 			savedList.add(saved);
@@ -288,7 +295,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						repo.delete(fromRepo);
 					}
 				}
-				afterDelete(entity, id);
 				return true;
 			} catch (Exception e) {
 				Logger.error(DatatableRestControllerV2.class, e);
@@ -319,7 +325,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				result = byId.get();
 			}
 		}
-		return processFromEntity(result, ProcessItemAction.GETONE);
+		return processFromEntity(result, ProcessItemAction.GETONE, 1);
 	}
 
 	/**
@@ -405,8 +411,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
+		int rowCount = 1;
 		for (T entity : page.getContent()) {
-			processFromEntity(entity, action);
+			processFromEntity(entity, action, rowCount);
+			rowCount++;
 		}
 	}
 
@@ -422,9 +430,22 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
+		int rowCount = 1;
 		for (T entity : entities) {
-			processFromEntity(entity, action);
+			processFromEntity(entity, action, rowCount);
+			rowCount++;
 		}
+	}
+
+	/**
+	 * Vykona upravy v entite pred vratenim cez REST rozhranie
+	 * napr. vyvola potrebne editorFields nastavenia (from entity to editorFields)
+	 * @param entity
+	 * @param action - typ zmeny - create,edit,getall...
+	 * @param rowCount - cislo riadka v tabulke
+	 */
+	public T processFromEntity(T entity, ProcessItemAction action, int rowCount) {
+		return processFromEntity(entity, action);
 	}
 
 	/**
@@ -537,8 +558,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//pri exporte potrebujeme vsetky data z editorFields, takze sa tvarime ako rezim GETONE
 		if (isExporting()) action = ProcessItemAction.GETONE;
 
+		int rowCount = 1;
 		for (T entity : page.getContent()) {
-			processFromEntity(entity, action);
+			processFromEntity(entity, action, rowCount);
+			rowCount++;
 		}
 
 		return page;
@@ -1038,6 +1061,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
+	 * Edit import data. For example, set id to -1 if you want to change update to create.
+	 *
+	 * @param request
+	 * @param data
+	 * @param importMode
+	 * @return
+	 */
+	public Map<Long, T> preImportDataEdit(HttpServletRequest request, Map<Long, T> data, String importMode) {
+		return data;
+	}
+
+	/**
 	 * Ulozenie zaznamu do DB vo formate posielanom Datatables Editor, moze naraz zapisat viac zaznamov
 	 */
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
@@ -1075,6 +1110,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		String importMode = datatableRequest.getImportMode();
 		getThreadData().setImportMode(importMode);
+
+		if(isImporting == true) datatableRequest.setData( preImportDataEdit(request, datatableRequest.getData(), importMode) );
 
 		int rowCounter = 0;
 		if (isImporting && lastImportedRow!=null) rowCounter = lastImportedRow.intValue();
@@ -1195,14 +1232,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					}
 				}
 
-				beforeSave(entity);
-				checkItemPermsThrows(entity, id);
-
 				try {
 					ResponseEntity<T> re = add(entity); //This method throws ConstraintViolationException
 					response.add(re.getBody());
-
-					afterSave(entity, re.getBody());
 
 					if (isDuplicate) afterDuplicate(entity, id);
 				} catch (ConstraintViolationException ex) {
@@ -1212,8 +1244,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				}
 
 			} else if (datatableRequest.isUpdate()) {
-				beforeSave(entity);
-				checkItemPermsThrows(entity, id);
 
 				ResponseEntity<T> re=null;
 				// Ak updatujeme na zaklade stlpca v DB
@@ -1230,14 +1260,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					re = edit(id, entity);
 					response.add(re.getBody());
 				}
-
-				if (re != null) afterSave(entity, re.getBody());
-
 			} else if (datatableRequest.isDelete()) {
+
+				ResponseEntity<Map<String, Object>> re = delete(id, entity);
+
 				//delete(id, datatableRequest.getData().get(id));
-				checkItemPermsThrows(entity, id);
-				boolean deleted = deleteItem(datatableRequest.getData().get(id), id);
-				if (deleted == false) {
+				Map<String, Object> body = re.getBody();
+				if (body == null || body.get("result") == null || body.get("result").equals(Boolean.TRUE)==false) {
 					throwError("editor.delete_error");
 				}
 			}
@@ -1337,6 +1366,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/add")
 	public ResponseEntity<T> add(@Valid @RequestBody T entity) {
+		beforeSave(entity);
+
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
 
@@ -1347,6 +1378,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		} else {
 			checkItemPermsThrows(entity, -1L);
 			T newT = this.insertItem(entity);
+			afterSave(entity, newT);
 			return new ResponseEntity<>(newT, null, HttpStatus.CREATED);
 		}
 	}
@@ -1354,6 +1386,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@PostMapping("/edit/{id}")
 	public ResponseEntity<T> edit(@PathVariable("id") long id, @Valid @RequestBody T entity) {
+		beforeSave(entity);
+
 		// validacia
 		Set<ConstraintViolation<T>> violations = validator.validate(entity);
 		if (!violations.isEmpty()) {
@@ -1361,20 +1395,26 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		} else {
 			checkItemPermsThrows(entity, id);
 			T one = this.editItem(entity, id);
+			afterSave(entity, one);
 			return ResponseEntity.ok(one);
 		}
 	}
 
 	@PreAuthorize(value = "@WebjetSecurityService.checkAccessAllowedOnController(this)")
 	@DeleteMapping("/{id}")
-	@SuppressWarnings("rawtypes")
-	public ResponseEntity delete(@PathVariable("id") long id, @RequestBody T entity) {
+	public ResponseEntity<Map<String, Object>> delete(@PathVariable("id") long id, @RequestBody T entity) {
 		clearThreadData();
 		Map<String, Object> result = new HashMap<>();
 		checkItemPermsThrows(entity, id);
 
-		boolean deleted = this.deleteItem(entity, id);
+		boolean deleted = false;
+		if (beforeDelete(entity)) {
+			deleted = this.deleteItem(entity, id);
+		}
 		result.put("result", deleted);
+		if (deleted) {
+			afterDelete(entity, id);
+		}
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
@@ -1749,5 +1789,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		}
 
 		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, (String[]) null);
+	}
+
+	public void setValidator(Validator validator) {
+		this.validator = validator;
+	}
+
+	public void setRequest(HttpServletRequest request) {
+		this.request = request;
 	}
 }

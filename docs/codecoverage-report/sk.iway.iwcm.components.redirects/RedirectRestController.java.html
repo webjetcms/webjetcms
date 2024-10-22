@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.RedirectsRepository;
 import sk.iway.iwcm.system.UrlRedirectBean;
@@ -32,39 +33,52 @@ public class RedirectRestController extends DatatableRestControllerV2&lt;UrlRedi
 
     @Autowired
     public RedirectRestController(RedirectsRepository redirectsRepository) {
-<span class="fc" id="L35">        super(redirectsRepository);</span>
-<span class="fc" id="L36">    }</span>
+<span class="fc" id="L36">        super(redirectsRepository);</span>
+<span class="fc" id="L37">    }</span>
 
     @Override
     public Page&lt;UrlRedirectBean&gt; getAllItems(Pageable pageable) {
         //Redirect this throu spec search
-<span class="fc" id="L41">        DatatablePageImpl&lt;UrlRedirectBean&gt; page = new DatatablePageImpl&lt;&gt;(getAllItemsIncludeSpecSearch(new UrlRedirectBean(), pageable));</span>
-<span class="fc" id="L42">        return page;</span>
+<span class="fc" id="L42">        DatatablePageImpl&lt;UrlRedirectBean&gt; page = new DatatablePageImpl&lt;&gt;(getAllItemsIncludeSpecSearch(new UrlRedirectBean(), pageable));</span>
+<span class="fc" id="L43">        return page;</span>
+    }
+
+    @Override
+    public UrlRedirectBean getOneItem(long id) {
+<span class="fc" id="L48">        UrlRedirectBean item = super.getOneItem(id);</span>
+<span class="pc bpc" id="L49" title="3 of 8 branches missed.">        if(Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; item != null &amp;&amp; item.getId()&gt;0 &amp;&amp; item.getDomainName()!=null) {</span>
+            //verify domainName
+<span class="fc" id="L51">            String domainName = CloudToolsForCore.getDomainName();</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">            if (Tools.isNotEmpty(item.getDomainName()) &amp;&amp; domainName.equals(item.getDomainName())==false) {</span>
+<span class="fc" id="L53">                return null;</span>
+            }
+        }
+<span class="fc" id="L56">        return item;</span>
     }
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;UrlRedirectBean&gt; root, CriteriaBuilder builder) {
 
-<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if(Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if(Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
             //Domain name is (equal to actual domain name) or (null)
-<span class="fc" id="L50">            predicates.add(</span>
-<span class="fc" id="L51">                builder.or(</span>
-<span class="fc" id="L52">                    builder.equal(root.get(&quot;domainName&quot;), CloudToolsForCore.getDomainName()),</span>
-<span class="fc" id="L53">                    builder.or(builder.isNull(root.get(&quot;domainName&quot;)), builder.equal(root.get(&quot;domainName&quot;), &quot;&quot;))</span>
+<span class="fc" id="L64">            predicates.add(</span>
+<span class="fc" id="L65">                builder.or(</span>
+<span class="fc" id="L66">                    builder.equal(root.get(&quot;domainName&quot;), CloudToolsForCore.getDomainName()),</span>
+<span class="fc" id="L67">                    builder.or(builder.isNull(root.get(&quot;domainName&quot;)), builder.equal(root.get(&quot;domainName&quot;), &quot;&quot;))</span>
                 )
             );
         }
 
-<span class="fc" id="L58">        super.addSpecSearch(params, predicates, root, builder);</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L72">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L73">    }</span>
 
     @Override
     public void beforeSave(UrlRedirectBean entity) {
         //nastav datum ulozenia
-<span class="fc" id="L64">        entity.setInsertDate(new Date());</span>
+<span class="fc" id="L78">        entity.setInsertDate(new Date());</span>
 
         //ak nebol zadany kod presmerovania, nastav na predvoleny kod 301
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (entity.getRedirectCode() == null) entity.setRedirectCode(301);</span>
-<span class="fc" id="L68">    }</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (entity.getRedirectCode() == null) entity.setRedirectCode(301);</span>
+<span class="fc" id="L82">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

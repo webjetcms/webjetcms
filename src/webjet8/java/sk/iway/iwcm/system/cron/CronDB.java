@@ -95,11 +95,11 @@ public class CronDB
 		CronTask task = getById(id);
 		if (task != null)
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "Zmazana uloha na pozadi, "+id+" "+task.getTask()+" "+task.getParams(), id.intValue(), -1);
+			Adminlog.add(Adminlog.TYPE_CRON, Adminlog.getChangelogDelete(task.getId(), task), id.intValue(), -1);
 		}
 		else
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "Zmazana uloha na pozadi, "+id, id.intValue(), -1);
+			Adminlog.add(Adminlog.TYPE_CRON, "DELETE: \nid:"+id, id.intValue(), -1);
 		}
 
 		new SimpleQuery().execute("DELETE FROM crontab WHERE id = ?", id);
@@ -107,7 +107,7 @@ public class CronDB
 
 	public static CronTask save(CronTask task)
 	{
-		Adminlog.add(Adminlog.TYPE_CRON, "Upravena uloha na pozadi, "+task.getId()+" "+task.getTask()+" "+task.getParams(), task.getId().intValue(), -1);
+		CronTask old = getById(task.getId());
 
 		if (task.getId() < 0)
 			new SimpleQuery().execute(SQL_INSERT, task.getTaskName(), task.getSeconds(), task.getMinutes(), task.getHours(), task.getDaysOfMonth(), task.getMonths(),
@@ -120,7 +120,12 @@ public class CronDB
 		if (id == null || id.longValue()<1) {
 			id = Long.valueOf((new SimpleQuery()).forLong(SQL_MAX_VALUE));
 		}
-		return getById(id);
+
+		CronTask saved = getById(id);
+
+		Adminlog.add(Adminlog.TYPE_CRON, Adminlog.getChangelog(saved.getId(), saved, old), saved.getId().intValue(), -1);
+
+		return saved;
 	}
 
 }

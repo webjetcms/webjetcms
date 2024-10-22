@@ -155,7 +155,7 @@ public interface RedirectsRepository extends JpaRepository<UrlRedirectBean, Long
 }
 ```
 
-I recommend having the repository and the JPA bean in the same package. In order for WebJET to initialize the JPA repository you need to add the package to [sk.iway.webjet.v9.JpaDBConfig.java](../../../src/main/java/sk/iway/webjet/v9/JpaDBConfig.java) to the annotation `@EnableJpaRepositories`, **and at the same time to**, `emf.setPackagesToScan`. The JPA bean itself is initialized when WebJET starts, if you have it in a different package than ak.iway.iwcm.components or sk.iway.iwcm.system and the JPA is not working add a new variable in the WebJET administration in Settings-\&gt;Configuration called `jpaAddPackages` and the package value of your JPA beans.
+I recommend having the repository and the JPA bean in the same package. In order for WebJET to initialize the JPA repository you need to add the package to [sk.iway.webjet.v9.JpaDBConfig.java](../../../src/main/java/sk/iway/webjet/v9/JpaDBConfig.java) to the annotation `@EnableJpaRepositories`, **and at the same time to**, `emf.setPackagesToScan`. The JPA bean itself is initialized when WebJET starts, if you have it in a different package than ak.iway.iwcm.components or sk.iway.iwcm.system and the JPA is not working add a new variable in the WebJET administration in Settings->Configuration called `jpaAddPackages` and the package value of your JPA beans.
 
 ## Rest service
 

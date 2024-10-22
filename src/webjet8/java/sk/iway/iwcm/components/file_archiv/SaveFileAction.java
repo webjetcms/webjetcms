@@ -146,12 +146,16 @@ public class SaveFileAction extends WebJETActionBean
 		}
 
 		String dateStamp = null;
+		String fileName = fileBean.getFileName();
 
 		FileArchivatorBean fabOld = FileArchivatorDB.getInstance().getById(oldId);
-		if(fabOld != null)
+		if(fabOld != null) {
 			dateStamp = FileArchivatorKit.getDateStampAsString(fabOld.getDateInsert());
+			//if we are updating existing file, we want to keep the original file name
+			fileName = fabOld.getFileName();
+		}
 
-		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileBean.getFileName(), getFileDirPath(), dateStamp);
+		String uniqueFileName = FileArchivatorKit.getUniqueFileName(fileName, getFileDirPath(), dateStamp);
 		String fileUrl = "/"+getFileDirPath()+uniqueFileName;
 		String realPath = Tools.getRealPath(fileUrl);
 		IwcmFile f = new IwcmFile(realPath);
@@ -159,8 +163,9 @@ public class SaveFileAction extends WebJETActionBean
 		{
 			IwcmFsDB.writeFiletoDest(fileBean.getInputStream(),new File(f.getAbsolutePath()),Tools.safeLongToInt(fileBean.getSize()));
 			boolean result = setFilePropertiesAfterUploadReplace(getFileDirPath(), uniqueFileName);
-			if(result)
-				 Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload (file archiv), path="+fileUrl, -1, -1);
+			if(result) {
+				 Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "File upload (file archiv), path="+fileUrl, -1, -1);
+			}
 
 			return result;
 		}
@@ -193,7 +198,7 @@ public class SaveFileAction extends WebJETActionBean
 	{
 		if(replace)
 		{
-			if(!FileArchivatorKit.setFilePropertiesAfterUploadReplace(dirPath, fileName, oldId, getFileArchivatorBean(dirPath, fileName), getRequest()))
+			if(!FileArchivatorKit.setFilePropertiesAfterUploadReplace(getFileArchivatorBean(dirPath, fileName), oldId, getRequest()))
 			{
 				Logger.debug(SaveFileAction.class, "AfterUploadError (replace) !!! Property: "+fileName+","+oldId+","+getUserId()+","+fab.getVirtualFileName()+","+fab.getValidFrom()+","+fab.getValidTo());
 				setError("components.file_archiv.upload.after_save_error",getRequest());
@@ -211,6 +216,12 @@ public class SaveFileAction extends WebJETActionBean
 		return true;
 	}
 
+	/**
+	 * Returns UPDATE FAB from UI with new file path and file name
+	 * @param dirPath
+	 * @param fileName
+	 * @return
+	 */
 	private FileArchivatorBean getFileArchivatorBean(String dirPath, String fileName)
 	{
 		//uz sa musim tvarit ako novy subor
@@ -434,7 +445,7 @@ public class SaveFileAction extends WebJETActionBean
 			IwcmFsDB.writeFiletoDest(fileBean.getInputStream(),new File(f.getAbsolutePath()),Tools.safeLongToInt(fileBean.getSize()));
 			boolean result = setFileAttributesAfterSave(getFileDirPath(),fabOld.getFileName());
 			if(result)
-				 Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, "File upload (file archiv), path="+fileUrl, -1, -1);
+				 Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "File upload (file archiv), path="+fileUrl, -1, -1);
 
 			return result;
 		}

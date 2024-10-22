@@ -33,6 +33,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -86,7 +87,7 @@ public class OfflineService {
 
 		response.setContentType("text/html; charset="+SetCharacterEncodingFilter.selectEncoding(request));
 		PrintWriter out = response.getWriter();
-		out.println("<html><head><LINK rel='stylesheet' href='/admin/css/style.css'><META http-equiv='Content-Type' content='text/html; charset=windows-1250'></head><body>");
+		out.println("<html><head><LINK rel='stylesheet' href='/admin/css/style.css'></head><body>");
 		out.println("<h3>"+prop.getText("admin.offline.generating_html_please_wait")+"</h3>");
 		out.flush();
 		for (int i=0; i<100; i++)
@@ -689,8 +690,6 @@ public class OfflineService {
 						link = link.substring(0, link.indexOf('#'));
 					}
 
-					//TODO: osetri RND parameter
-
 					boolean isLinkDirect = false;
 					//otestuj, ci to nie je linka na nejaku skratenu cestu
 					DocDB docDB = DocDB.getInstance();
@@ -1117,7 +1116,7 @@ public class OfflineService {
 
 		String data = null;
 
-		HttpClient client = HttpClientBuilder.create().build();
+		HttpClient client = HttpClientBuilder.create().setSSLContext(Tools.doNotVerifyCertificates(null)).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
 
 		Logger.println(OfflineAction.class,basePath);
 		String name;

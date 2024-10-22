@@ -184,7 +184,7 @@ public class DocEditorFields extends BaseEditorFields {
      * Nastavi hodnoty atributov z DocDetails objektu
      * @param doc
      */
-    public void fromDocDetails(DocBasic doc, boolean loadSubQueries) {
+    public void fromDocDetails(DocBasic doc, boolean loadSubQueries, boolean addFields) {
         DocDB docDB = DocDB.getInstance();
         GroupsDB groupsDB = GroupsDB.getInstance();
         GroupDetails group = groupsDB.getGroup(doc.getGroupId());
@@ -246,11 +246,25 @@ public class DocEditorFields extends BaseEditorFields {
             DocNoteBean note = DocNoteDB.getInstance().getDocNote(doc.getDocId(), -1);
             if (note != null && Tools.isNotEmpty(note.getNote())) redactorNote = note.getNote();
 
+            if (doc instanceof DocDetails) {
+                styleComboList = EditorService.getCssListJson(doc);
+            }
+        }
+
+        if(addFields == true) {
             //definicia volnych poli
-            if (doc.getTempId() > 0)
+            int tempId = doc.getTempId();
+            if (loadSubQueries==false) {
+                //getAllItems = we will use template from group, not from the doc
+                GroupDetails docGroup = doc.getGroup();
+                if (docGroup != null) {
+                    tempId = doc.getGroup().getTempId();
+                }
+            }
+            if (tempId > 0)
             {
                 //nastavenie prefixu klucov podla skupiny sablon
-                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
+                TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);
                 if (temp != null && temp.getTemplatesGroupId()!=null && temp.getTemplatesGroupId().longValue() > 0) {
                     TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());
                     if (tgb != null && Tools.isNotEmpty(tgb.getKeyPrefix())) {
@@ -262,13 +276,9 @@ public class DocEditorFields extends BaseEditorFields {
                     }
                 }
 
-                RequestBean.addTextKeyPrefix("temp-"+doc.getTempId(), false);
+                RequestBean.addTextKeyPrefix("temp-"+tempId, false);
             }
             fieldsDefinition = getFields(doc, "editor", 'T');
-
-            if (doc instanceof DocDetails) {
-                styleComboList = EditorService.getCssListJson(doc);
-            }
         }
 
         //TODO: do DB modelu pridat

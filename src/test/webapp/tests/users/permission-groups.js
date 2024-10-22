@@ -4,7 +4,7 @@ Before(({ I, login }) => {
      login('admin');
 });
 
-Scenario('permission-groups', async ({I, DataTables }) => {
+Scenario('permission-groups @baseTest', async ({I, DataTables }) => {
     I.amOnPage("/admin/v9/users/permission-groups/");
     await DataTables.baseTest({
         dataTable: 'permissionGroupsDataTable',

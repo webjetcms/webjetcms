@@ -6,6 +6,8 @@ In the event types configuration, you set the event types into which the event c
 
 Warning: do not use the character in the event type name `,` or `+`.
 
-In addition to the event type name, you can also set the approver. If it is specified, after creating a new event in the given type, the event does not start appearing immediately on the web page, but waits for its approval by the selected approver.
+# Approval
+
+In addition to the event type name, it is possible to [also set the approver](../non-approved-events/README.md). If specified, when a new event is created in a given type, the event does not start to appear immediately on the web page, but waits for approval by the selected approver.
 
 ![](editor.png)

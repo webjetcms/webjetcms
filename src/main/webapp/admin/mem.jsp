@@ -1,7 +1,7 @@
 <%@page import="sk.iway.iwcm.database.SimpleQuery"%>
 <%@ page contentType="text/html" import="java.util.*,java.io.*,sk.iway.iwcm.*" %>
 <%@page import="sk.iway.iwcm.stat.SessionHolder"%>
-<%@page import="org.apache.commons.dbcp.ConfigurableDataSource"%><%!
+<%@page import="sk.iway.iwcm.system.dbpool.ConfigurableDataSource"%><%!
 
 
 
@@ -41,10 +41,6 @@ body
         try {
             ds = (ConfigurableDataSource) DBPool.getInstance().getDataSource("iwcm");
             out.println("DBPool active: <b>" + ds.getNumActive() + "</b> idle=" + ds.getNumIdle() + "<br>");
-            ds.setLogWriter(new PrintWriter(System.out));
-            if (Tools.getRequestParameter(request, "printTrace") != null) {
-                ds.printStackTraces();
-            }
         }
         catch (Exception ex) {}
 

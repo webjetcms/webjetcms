@@ -38,6 +38,12 @@ public class AuditRestController extends DatatableRestControllerV2<AuditLogEntit
 	}
 
 	@Override
+	public AuditLogEntity insertItem(AuditLogEntity entity) {
+		throwError("datatables.error.recordIsNotEditable");
+        return null;
+	}
+
+	@Override
 	public AuditLogEntity editItem(AuditLogEntity entity, long logId) {
 		throwError("datatables.error.recordIsNotEditable");
         return null;

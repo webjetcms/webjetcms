@@ -49,7 +49,7 @@ import sk.iway.iwcm.users.UsersDB;
         try {
 <span class="fc" id="L50">            Identity user = UsersDB.getCurrentUser(request);</span>
 
-<span class="pc bpc" id="L52" title="1 of 4 branches missed.">            if (errors.isEmpty() &amp;&amp; user != null) {</span>
+<span class="fc bfc" id="L52" title="All 4 branches covered.">            if (errors.isEmpty() &amp;&amp; user != null) {</span>
 
 <span class="fc" id="L54">                PathFilter.setNginxProxyMode(request, response);</span>
 
@@ -96,7 +96,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L96">                StringBuilder url = new StringBuilder(&quot;/showdoc.do?docid=&quot;).append(docId.intValue());</span>
 <span class="fc" id="L97">                boolean useRedirect = false;</span>
 
-<span class="pc bpc" id="L99" title="1 of 4 branches missed.">                if (errors.isEmpty() &amp;&amp; user != null) {</span>
+<span class="fc bfc" id="L99" title="All 4 branches covered.">                if (errors.isEmpty() &amp;&amp; user != null) {</span>
 <span class="fc" id="L100">                    String succesUrl = request.getParameter(&quot;successUrl&quot;);</span>
 <span class="pc bpc" id="L101" title="1 of 2 branches missed.">                    if (request.getAttribute(&quot;successUrl&quot;)!=null){</span>
 <span class="nc" id="L102">                        succesUrl = request.getAttribute(&quot;successUrl&quot;).toString();</span>
@@ -131,8 +131,8 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc bfc" id="L131" title="All 6 branches covered.">                    if (&quot;docid&quot;.equals(name) || &quot;docId&quot;.equals(name) || &quot;username&quot;.equals(name) ||</span>
 <span class="fc bfc" id="L132" title="All 4 branches covered.">                        &quot;password&quot;.equals(name) || &quot;doShowdocAction&quot;.equals(name) ||</span>
 <span class="pc bpc" id="L133" title="1 of 4 branches missed.">                        &quot;emailLogon&quot;.equals(name) || &quot;successUrl&quot;.equals(name) ||</span>
-<span class="pc bpc" id="L134" title="3 of 4 branches missed.">                        &quot;origDocId&quot;.equals(name) || &quot;tryNormalLogon&quot;.equals(name) ||</span>
-<span class="nc bnc" id="L135" title="All 4 branches missed.">                        &quot;newPassword&quot;.equals(name) || &quot;retypeNewPassword&quot;.equals(name) ||</span>
+<span class="pc bpc" id="L134" title="1 of 4 branches missed.">                        &quot;origDocId&quot;.equals(name) || &quot;tryNormalLogon&quot;.equals(name) ||</span>
+<span class="pc bpc" id="L135" title="1 of 4 branches missed.">                        &quot;newPassword&quot;.equals(name) || &quot;retypeNewPassword&quot;.equals(name) ||</span>
 <span class="nc bnc" id="L136" title="All 2 branches missed.">                        &quot;org.apache.struts.taglib.html.TOKEN&quot;.equals(name)) continue;</span>
 
 <span class="nc" id="L138">					String values[] = request.getParameterValues(name);</span>
@@ -169,4 +169,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L169">    }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -34,7 +34,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('templates-zakladne testy', async ({ I, DataTables }) => {
+Scenario('templates-zakladne testy @baseTest', async ({ I, DataTables }) => {
     I.see("Skupina šablón");
     await DataTables.baseTest(testOptions);
 });

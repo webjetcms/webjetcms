@@ -146,7 +146,7 @@ function deletePage(I, DT, DTE) {
     I.clickCss("#datatableInit_wrapper button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#datatableInit_wrapper");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 20, "#datatableInit_wrapper");
 }
 
 Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE }) => {

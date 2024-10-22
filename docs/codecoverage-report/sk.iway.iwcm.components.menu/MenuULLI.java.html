@@ -86,13 +86,13 @@ public class MenuULLI
 <span class="fc" id="L86">			doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
 		}
 
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">		if (request.getAttribute(&quot;ulLiOpenAllItems&quot;) != null)</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">		if (request.getAttribute(&quot;ulLiOpenAllItems&quot;) != null)</span>
 		{
-<span class="nc" id="L91">			openAllItems = true;</span>
+<span class="fc" id="L91">			openAllItems = true;</span>
 		}
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">		if (request.getAttribute(&quot;ulLiGenerateEmptySpan&quot;) != null)</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		if (request.getAttribute(&quot;ulLiGenerateEmptySpan&quot;) != null)</span>
 		{
-<span class="nc" id="L95">			generateEmptySpan = true;</span>
+<span class="fc" id="L95">			generateEmptySpan = true;</span>
 		}
 <span class="pc bpc" id="L97" title="1 of 2 branches missed.">		if (request.getAttribute(&quot;ulLiSpanCharacters&quot;)!=null)</span>
 		{
@@ -188,7 +188,7 @@ public class MenuULLI
 <span class="fc" id="L188">		StringBuilder out = new StringBuilder();</span>
 <span class="fc" id="L189">		StringBuilder outDocs = new StringBuilder();</span>
 
-<span class="pc bpc" id="L191" title="1 of 4 branches missed.">		if (maxLevel &gt; 0 &amp;&amp; level &gt; maxLevel) return(out.toString());</span>
+<span class="fc bfc" id="L191" title="All 4 branches covered.">		if (maxLevel &gt; 0 &amp;&amp; level &gt; maxLevel) return(out.toString());</span>
 
 <span class="fc" id="L193">		boolean display = false;</span>
 		String styleClassDir;
@@ -226,7 +226,7 @@ public class MenuULLI
 <span class="nc" id="L226">			return(&quot;&quot;);</span>
 		}
 
-<span class="pc bpc" id="L229" title="1 of 2 branches missed.">		if (level == 1)</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">		if (level == 1)</span>
 		{
 			//Logger.println(MenuULLI.class, &quot;SOm level 1&quot;);
 		}
@@ -244,7 +244,7 @@ public class MenuULLI
 <span class="pc bpc" id="L244" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(aClasses)) aClasses = aClasses + &quot; &quot;;</span>
 
 		//tu si plnime outDoc, aby sme vedeli nastavit hasNoChild pre grupu
-<span class="pc bpc" id="L247" title="9 of 14 branches missed.">		if ( (level==1 || ( groupTable != null &amp;&amp; groupTable.containsKey(Integer.valueOf(rootGroup))) || openAllItems) &amp;&amp; rootGroupDetails.getMenuType(request.getSession()) == GroupDetails.MENU_TYPE_NORMAL &amp;&amp; rootGroupDetails.isInternal()==false &amp;&amp; pageParams.getBooleanValue(&quot;onlyFolders&quot;, false)==false)</span>
+<span class="pc bpc" id="L247" title="3 of 14 branches missed.">		if ( (level==1 || ( groupTable != null &amp;&amp; groupTable.containsKey(Integer.valueOf(rootGroup))) || openAllItems) &amp;&amp; rootGroupDetails.getMenuType(request.getSession()) == GroupDetails.MENU_TYPE_NORMAL &amp;&amp; rootGroupDetails.isInternal()==false &amp;&amp; pageParams.getBooleanValue(&quot;onlyFolders&quot;, false)==false)</span>
 		{
 <span class="fc bfc" id="L249" title="All 2 branches covered.">			for (DocDetails doc : docDB.getBasicDocDetailsByGroup(rootGroup, DocDB.ORDER_PRIORITY))</span>
 			{
@@ -255,12 +255,12 @@ public class MenuULLI
 <span class="fc" id="L255">				else isProtected = &quot;&quot;;</span>
 
 <span class="pc bpc" id="L257" title="1 of 2 branches missed.">				if (&quot;none&quot;.equals(classes)) styleClassDoc = &quot;&quot;;</span>
-<span class="pc bpc" id="L258" title="1 of 2 branches missed.">				else if (&quot;basic&quot;.equals(classes))</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">				else if (&quot;basic&quot;.equals(classes))</span>
 				{
 <span class="fc bfc" id="L260" title="All 2 branches covered.">					if (Tools.isNotEmpty(isProtected)) styleClassDoc = &quot; class=\&quot;&quot; + isProtected.trim() + &quot;\&quot;&quot;;</span>
 <span class="fc" id="L261">					else styleClassDoc = &quot;&quot;;</span>
 				} else
-<span class="nc" id="L263">					styleClassDoc = &quot; class=\&quot;menuULDocClose page&quot; + doc.getDocId() + &quot; ulLiLevel&quot; + level + isProtected + &quot;\&quot;&quot;;</span>
+<span class="fc" id="L263">					styleClassDoc = &quot; class=\&quot;menuULDocClose page&quot; + doc.getDocId() + &quot; ulLiLevel&quot; + level + isProtected + &quot;\&quot;&quot;;</span>
 				//Logger.println(MenuULLI.class,&quot;test: &quot; + doc.getDocId()+&quot; &quot;+doc.getTitle());
 <span class="pc bpc" id="L265" title="2 of 8 branches missed.">				if (doc.isAvailable() &amp;&amp; isShowIn(doc, isSitemap, request) &amp;&amp; (doc.getDocId() != rootGroupDetails.getDefaultDocId() || rootGroupDetails.getHtmlHead().indexOf(&quot;&lt;DEFAULTPAGESUBMENU&quot;) != -1))</span>
 				{
@@ -381,12 +381,12 @@ public class MenuULLI
 
 		try
 		{
-<span class="pc bpc" id="L384" title="4 of 8 branches missed.">			if (level==1 &amp;&amp; Tools.isNotEmpty(rootUlId) &amp;&amp; !&quot;bootstrap&quot;.equals(classes) &amp;&amp; !&quot;basic&quot;.equals(classes)) out.append(spacer).append(&quot;&lt;ul id=\&quot;&quot;).append(rootUlId).append(&quot;\&quot;&gt;\n&quot;);</span>
-<span class="pc bpc" id="L385" title="5 of 6 branches missed.">			else if(level&gt;1 &amp;&amp; &quot;bootstrap&quot;.equals(classes) &amp;&amp; maxLevel!=1) out.append(spacer).append(&quot;&lt;ul class=\&quot;dropdown-menu\&quot; aria-labelledby=\&quot;navbarDropdown&quot;+rootGroupDetails.getGroupId()+&quot;\&quot;&gt;\n&quot;);</span>
-<span class="pc bpc" id="L386" title="2 of 4 branches missed.">			else if(level==1 &amp;&amp; &quot;bootstrap&quot;.equals(classes)) out.append(spacer).append(&quot;&lt;ul class=\&quot;&quot;+bootstrapUlClasses+&quot;\&quot;&gt;\n&quot;);</span>
-<span class="pc bpc" id="L387" title="2 of 4 branches missed.">			else if(level==1 &amp;&amp; &quot;basic&quot;.equals(classes)) out.append(spacer).append(&quot;&lt;ul id=\&quot;&quot;+rootUlId+&quot;\&quot; class=\&quot;&quot;+customUlClasses+&quot;\&quot;&gt;\n&quot;);</span>
+<span class="pc bpc" id="L384" title="2 of 8 branches missed.">			if (level==1 &amp;&amp; Tools.isNotEmpty(rootUlId) &amp;&amp; !&quot;bootstrap&quot;.equals(classes) &amp;&amp; !&quot;basic&quot;.equals(classes)) out.append(spacer).append(&quot;&lt;ul id=\&quot;&quot;).append(rootUlId).append(&quot;\&quot;&gt;\n&quot;);</span>
+<span class="pc bpc" id="L385" title="3 of 6 branches missed.">			else if(level&gt;1 &amp;&amp; &quot;bootstrap&quot;.equals(classes) &amp;&amp; maxLevel!=1) out.append(spacer).append(&quot;&lt;ul class=\&quot;dropdown-menu\&quot; aria-labelledby=\&quot;navbarDropdown&quot;+rootGroupDetails.getGroupId()+&quot;\&quot;&gt;\n&quot;);</span>
+<span class="pc bpc" id="L386" title="1 of 4 branches missed.">			else if(level==1 &amp;&amp; &quot;bootstrap&quot;.equals(classes)) out.append(spacer).append(&quot;&lt;ul class=\&quot;&quot;+bootstrapUlClasses+&quot;\&quot;&gt;\n&quot;);</span>
+<span class="pc bpc" id="L387" title="1 of 4 branches missed.">			else if(level==1 &amp;&amp; &quot;basic&quot;.equals(classes)) out.append(spacer).append(&quot;&lt;ul id=\&quot;&quot;+rootUlId+&quot;\&quot; class=\&quot;&quot;+customUlClasses+&quot;\&quot;&gt;\n&quot;);</span>
 
-<span class="nc" id="L389">			else out.append(spacer).append(&quot;&lt;ul&gt;\n&quot;);</span>
+<span class="fc" id="L389">			else out.append(spacer).append(&quot;&lt;ul&gt;\n&quot;);</span>
 
 			String sTmp;
 
@@ -417,19 +417,19 @@ public class MenuULLI
 
 <span class="fc bfc" id="L418" title="All 2 branches covered.">					if (groupTable != null)</span>
 					{
-<span class="pc bpc" id="L420" title="1 of 4 branches missed.">						if (groupTable.containsKey(Integer.valueOf(rootGroup)) || rootGroup == startRootGroup)</span>
+<span class="fc bfc" id="L420" title="All 4 branches covered.">						if (groupTable.containsKey(Integer.valueOf(rootGroup)) || rootGroup == startRootGroup)</span>
 						{
 							//if (&quot;homeDir&quot;.equals(groupTable.get(Integer.valueOf(group.getGroupId()))))
 <span class="fc" id="L423">							display = true;</span>
 						}
 						else
 						{
-<span class="nc" id="L427">							display = false;</span>
+<span class="fc" id="L427">							display = false;</span>
 						}
 					}
-<span class="pc bpc" id="L430" title="1 of 2 branches missed.">					if (openAllItems)</span>
+<span class="fc bfc" id="L430" title="All 2 branches covered.">					if (openAllItems)</span>
 					{
-<span class="nc" id="L432">						display = true;</span>
+<span class="fc" id="L432">						display = true;</span>
 					}
 
 					//ak default stranka adresara nie je available adresar nezobrazme
@@ -510,12 +510,12 @@ public class MenuULLI
 						else
 						{
 <span class="pc bpc" id="L512" title="1 of 2 branches missed.">							if (&quot;none&quot;.equals(classes)) styleClassDir = &quot;&quot;;</span>
-<span class="pc bpc" id="L513" title="3 of 4 branches missed.">						   else if (&quot;basic&quot;.equals(classes) || &quot;bootstrap&quot;.equals(classes))</span>
+<span class="pc bpc" id="L513" title="1 of 4 branches missed.">						   else if (&quot;basic&quot;.equals(classes) || &quot;bootstrap&quot;.equals(classes))</span>
 						   {
 <span class="fc bfc" id="L515" title="All 2 branches covered.">						   	if (Tools.isNotEmpty(isProtected)) styleClassDir = &quot; class=\&quot;&quot;+liClasses+bootstrapDropdownClass+isProtected.trim()+liAddClass+&quot;\&quot;&quot;;</span>
 <span class="fc" id="L516">						   	else styleClassDir = generateClassParam(liClasses+bootstrapDropdownClass+liAddClass, true);</span>
 						   }
-<span class="nc" id="L518">						   else styleClassDir = &quot; class=\&quot;menuULDirClose group&quot;+group.getGroupId()+&quot; ulLiLevel&quot;+level+hasNoChild+isProtected+liAddClass+&quot;\&quot;&quot;;</span>
+<span class="fc" id="L518">						   else styleClassDir = &quot; class=\&quot;menuULDirClose group&quot;+group.getGroupId()+&quot; ulLiLevel&quot;+level+hasNoChild+isProtected+liAddClass+&quot;\&quot;&quot;;</span>
 						}
 
 <span class="fc" id="L521">						navbarName = group.getNavbarName();</span>
@@ -569,9 +569,9 @@ public class MenuULLI
 <span class="fc" id="L569">						int menuIncludePerexLevel  = pageParams.getIntValue(&quot;menuIncludePerexLevel&quot;, 0);</span>
 
 <span class="fc" id="L571">						boolean hasMenuInfoDirName = false;</span>
-<span class="pc bpc" id="L572" title="2 of 4 branches missed.">						if (menuInfoDirNames != null &amp;&amp; menuInfoDirNames.length &gt; 0) {</span>
-<span class="nc bnc" id="L573" title="All 2 branches missed.">							for (String menuInfoDirName : menuInfoDirNames) {</span>
-<span class="nc bnc" id="L574" title="All 6 branches missed.">								if (Tools.isNotEmpty(menuInfoDirName) &amp;&amp; menuInfoDirName.equals(navbarName) &amp;&amp; group.getDefaultDocId() &gt; 0) {</span>
+<span class="pc bpc" id="L572" title="1 of 4 branches missed.">						if (menuInfoDirNames != null &amp;&amp; menuInfoDirNames.length &gt; 0) {</span>
+<span class="fc bfc" id="L573" title="All 2 branches covered.">							for (String menuInfoDirName : menuInfoDirNames) {</span>
+<span class="pc bpc" id="L574" title="4 of 6 branches missed.">								if (Tools.isNotEmpty(menuInfoDirName) &amp;&amp; menuInfoDirName.equals(navbarName) &amp;&amp; group.getDefaultDocId() &gt; 0) {</span>
 <span class="nc" id="L575">									DocDetails dd = docDB.getDoc(group.getDefaultDocId());</span>
 <span class="nc bnc" id="L576" title="All 2 branches missed.">									if (dd != null) {</span>
 <span class="nc" id="L577">										out.append(spacerLi).append(&quot;&lt;li class=\&quot;&quot;).append(styleClassDir).append(&quot; menu-info-li&quot;).append(&quot;\&quot;&gt;&quot;);</span>
@@ -591,14 +591,14 @@ public class MenuULLI
 <span class="pc bpc" id="L591" title="3 of 4 branches missed.">							if (&quot;bootstrap&quot;.equals(classes) &amp;&amp; Tools.isNotEmpty(bootstrapDropdownToggle)) out.append(&quot;id=\&quot;navbarDropdown&quot;+group.getGroupId()+&quot;\&quot; role=\&quot;button\&quot; data-bs-toggle=\&quot;dropdown\&quot; aria-expanded=\&quot;false\&quot;&quot;);</span>
 <span class="pc bpc" id="L592" title="1 of 2 branches missed.">							out.append(&quot;href=\&quot;&quot;).append(docDB.getDocLink(group.getDefaultDocId(), request)).append('\&quot;').append(aParam).append(isExternalLink ? &quot; target=\&quot;_blank\&quot;&quot; : &quot;&quot;).append('&gt;');</span>
 
-<span class="pc bpc" id="L594" title="1 of 2 branches missed.">							if (generateEmptySpan) {</span>
-<span class="nc" id="L595">								String spanChar = &quot;&quot;;</span>
-<span class="nc bnc" id="L596" title="All 2 branches missed.">								if (spanCharacters.length &gt; 0) {</span>
+<span class="fc bfc" id="L594" title="All 2 branches covered.">							if (generateEmptySpan) {</span>
+<span class="fc" id="L595">								String spanChar = &quot;&quot;;</span>
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">								if (spanCharacters.length &gt; 0) {</span>
 <span class="nc" id="L597">									int index = level;</span>
 <span class="nc bnc" id="L598" title="All 2 branches missed.">									if (index &gt; spanCharacters.length) index = spanCharacters.length;</span>
 <span class="nc" id="L599">									spanChar = spanCharacters[index - 1];</span>
 								}
-<span class="nc" id="L601">								out.append(&quot;&lt;span&gt;&quot;).append(spanChar).append(&quot;&lt;/span&gt;&quot;);</span>
+<span class="fc" id="L601">								out.append(&quot;&lt;span&gt;&quot;).append(spanChar).append(&quot;&lt;/span&gt;&quot;);</span>
 							}
 <span class="pc bpc" id="L603" title="3 of 4 branches missed.">							if (itemMaxLen &gt; 0 &amp;&amp; itemMaxLen &lt; navbarName.length()) {</span>
 <span class="nc" id="L604">								navbarName = navbarName.substring(0, itemMaxLen);</span>
@@ -606,20 +606,20 @@ public class MenuULLI
 <span class="fc" id="L606">							navbarName = ResponseUtils.filter(navbarName);</span>
 <span class="fc" id="L607">							navbarName = Tools.convertToHtmlTags(navbarName);</span>
 
-<span class="pc bpc" id="L609" title="3 of 4 branches missed.">							if (menuIncludePerex &amp;&amp; level &gt;= menuIncludePerexLevel) {</span>
-<span class="nc" id="L610">								DocDetails dd = docDB.getDoc(group.getDefaultDocId());</span>
+<span class="pc bpc" id="L609" title="1 of 4 branches missed.">							if (menuIncludePerex &amp;&amp; level &gt;= menuIncludePerexLevel) {</span>
+<span class="fc" id="L610">								DocDetails dd = docDB.getDoc(group.getDefaultDocId());</span>
 
-<span class="nc" id="L612">								out.append(&quot;&lt;span class=\&quot;title\&quot;&gt;&quot;)</span>
-<span class="nc" id="L613">										.append(navbarName)</span>
-<span class="nc" id="L614">										.append(&quot;&lt;/span&gt;&quot;)</span>
-<span class="nc" id="L615">										.append(&quot;&lt;span class=\&quot;perex\&quot;&gt;&quot;);</span>
+<span class="fc" id="L612">								out.append(&quot;&lt;span class=\&quot;title\&quot;&gt;&quot;)</span>
+<span class="fc" id="L613">										.append(navbarName)</span>
+<span class="fc" id="L614">										.append(&quot;&lt;/span&gt;&quot;)</span>
+<span class="fc" id="L615">										.append(&quot;&lt;span class=\&quot;perex\&quot;&gt;&quot;);</span>
 
-<span class="nc bnc" id="L617" title="All 2 branches missed.">								if (dd != null) {</span>
-<span class="nc" id="L618">									out.append(dd.getPerex());</span>
+<span class="pc bpc" id="L617" title="1 of 2 branches missed.">								if (dd != null) {</span>
+<span class="fc" id="L618">									out.append(dd.getPerex());</span>
 								}
 
-<span class="nc" id="L621">								out.append(&quot;&lt;/span&gt;&quot;);</span>
-<span class="nc" id="L622">							} else {</span>
+<span class="fc" id="L621">								out.append(&quot;&lt;/span&gt;&quot;);</span>
+<span class="fc" id="L622">							} else {</span>
 <span class="fc" id="L623">								out.append(navbarName);</span>
 							}
 
@@ -636,12 +636,12 @@ public class MenuULLI
 <span class="fc" id="L636">				}</span>
 			}
 
-<span class="pc bpc" id="L639" title="8 of 12 branches missed.">			if ( (level==1 || ( groupTable != null &amp;&amp; groupTable.containsKey(Integer.valueOf(rootGroup))) || openAllItems) &amp;&amp; rootGroupDetails.getMenuType(request.getSession()) == GroupDetails.MENU_TYPE_NORMAL &amp;&amp; rootGroupDetails.isInternal()==false)</span>
+<span class="pc bpc" id="L639" title="2 of 12 branches missed.">			if ( (level==1 || ( groupTable != null &amp;&amp; groupTable.containsKey(Integer.valueOf(rootGroup))) || openAllItems) &amp;&amp; rootGroupDetails.getMenuType(request.getSession()) == GroupDetails.MENU_TYPE_NORMAL &amp;&amp; rootGroupDetails.isInternal()==false)</span>
 			{
 <span class="fc" id="L641">				out.append(outDocs);</span>
 			}
 
-<span class="pc bpc" id="L644" title="2 of 4 branches missed.">			if (level==1 &amp;&amp; minLiItems&gt;0)</span>
+<span class="pc bpc" id="L644" title="1 of 4 branches missed.">			if (level==1 &amp;&amp; minLiItems&gt;0)</span>
 			{
 				//spocitaj pocet li poloziek
 <span class="nc" id="L647">				int liCounter = 0;</span>
@@ -699,7 +699,7 @@ public class MenuULLI
 		{
 <span class="fc bfc" id="L700" title="All 2 branches covered.">			for (DocDetails doc : docDB.getBasicDocDetailsByGroup(rootGroup.getGroupId(), -1))</span>
 			{
-<span class="fc bfc" id="L702" title="All 6 branches covered.">			   if (doc.isAvailable() &amp;&amp; isShowIn(doc, isSitemap, request) &amp;&amp; doc.getDocId() != rootGroup.getDefaultDocId())</span>
+<span class="pc bpc" id="L702" title="1 of 6 branches missed.">			   if (doc.isAvailable() &amp;&amp; isShowIn(doc, isSitemap, request) &amp;&amp; doc.getDocId() != rootGroup.getDefaultDocId())</span>
 			   {
 <span class="fc" id="L704">			   	return(true);</span>
 			   }
@@ -758,4 +758,4 @@ public class MenuULLI
 <span class="nc" id="L758">		return out.toString();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

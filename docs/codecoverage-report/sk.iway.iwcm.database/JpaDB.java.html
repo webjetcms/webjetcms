@@ -388,7 +388,7 @@ public class JpaDB&lt;T extends ActiveRecordBase&gt;
 			@Override
 			public Expression applyTo(Expression object)
 			{
-<span class="pc bpc" id="L391" title="1 of 2 branches missed.">				return Tools.isEmpty(substring) ? null : object.getField(property).containsSubstring(substring);</span>
+<span class="fc bfc" id="L391" title="All 2 branches covered.">				return Tools.isEmpty(substring) ? null : object.getField(property).containsSubstring(substring);</span>
 			}
 
 		};
@@ -540,4 +540,4 @@ public class JpaDB&lt;T extends ActiveRecordBase&gt;
 <span class="fc" id="L540">		return list;</span>
   }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

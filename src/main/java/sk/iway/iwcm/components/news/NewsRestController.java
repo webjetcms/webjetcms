@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -23,6 +25,7 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Rest controller for app news, there are only support methods,
@@ -46,12 +49,12 @@ public class NewsRestController {
             PageParams pp = new PageParams(include);
             int[] groupIds = Tools.getTokensInt(pp.getValue("groupIds", null), ",+");
             String append = pp.getBooleanValue("expandGroupIds", false) ? "*" : "";
-            ids = "";
+            StringBuilder includeIds = new StringBuilder();
             for (int groupId : groupIds) {
-                if (Tools.isNotEmpty(ids)) ids+=",";
-                ids+=groupId+append;
-
+                if (includeIds.isEmpty()==false) includeIds.append(",");
+                includeIds.append(""+groupId).append(append);
             }
+            ids = includeIds.toString();
             list.add(new LabelValue(ids, ids));
         } else {
             GroupsDB groupsDB = GroupsDB.getInstance();
@@ -110,8 +113,20 @@ public class NewsRestController {
             }
         }
 
-        return list;
+        //Filter folder's by PERM'S
+        Identity currentUser = UsersDB.getCurrentUser(request);
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        int[] editableGroups = Tools.getTokensInt(currentUser.getEditableGroups(true), ",");
+        int[] editablePages = Tools.getTokensInt(currentUser.getEditablePages(), ",");
 
+        if(editableGroups.length < 1) {
+            if(editablePages.length < 1) return list;
+            else return new ArrayList<>();
+        } else {
+            int[] expandedEditableGroups = groupsDB.expandGroupIdsToChilds(editableGroups, true);
+            return list.stream()
+                    .filter(group -> Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))
+                    .collect(Collectors.toList());
+        }
     }
-
 }

@@ -3,6 +3,7 @@
 import net.sourceforge.stripes.mock.MockHttpServletResponse;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.abtesting.ABTesting;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.i18n.Prop;
@@ -33,185 +34,185 @@ public class Ninja {
     private Properties config;
 
     //patter a matcher pre nahradu nbsp za spojkou, su staticke, aby sa znovapouzili
-<span class="fc" id="L36">    private static Pattern nbspPattern = null;</span>
-<span class="fc" id="L37">    private static String nbspReplacement = null;</span>
+<span class="fc" id="L37">    private static Pattern nbspPattern = null;</span>
+<span class="fc" id="L38">    private static String nbspReplacement = null;</span>
 
-<span class="fc" id="L39">    public Ninja(HttpServletRequest request) {</span>
-<span class="fc" id="L40">        this.request = request;</span>
-<span class="fc" id="L41">        loadConfigProperties();</span>
+<span class="fc" id="L40">    public Ninja(HttpServletRequest request) {</span>
+<span class="fc" id="L41">        this.request = request;</span>
+<span class="fc" id="L42">        loadConfigProperties();</span>
 
-<span class="fc" id="L43">        this.page = new Page(this);</span>
-<span class="fc" id="L44">        this.temp = new Temp(this);</span>
-<span class="fc" id="L45">        this.webjet = new Webjet(this);</span>
-<span class="fc" id="L46">        this.userAgent = new UserAgent(this);</span>
+<span class="fc" id="L44">        this.page = new Page(this);</span>
+<span class="fc" id="L45">        this.temp = new Temp(this);</span>
+<span class="fc" id="L46">        this.webjet = new Webjet(this);</span>
+<span class="fc" id="L47">        this.userAgent = new UserAgent(this);</span>
 
-<span class="fc" id="L48">        setDefaultValues();</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L49">        setDefaultValues();</span>
+<span class="fc" id="L50">    }</span>
 
     private void setDefaultValues() {
-<span class="fc" id="L52">        String lng = PageLng.getUserLng(request);</span>
-<span class="fc" id="L53">        this.prop = Prop.getInstance(lng);</span>
-<span class="fc" id="L54">        this.allowNinjaDebug = getAllowNinjaDebug();</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L53">        String lng = PageLng.getUserLng(request);</span>
+<span class="fc" id="L54">        this.prop = Prop.getInstance(lng);</span>
+<span class="fc" id="L55">        this.allowNinjaDebug = getAllowNinjaDebug();</span>
+<span class="fc" id="L56">    }</span>
 
     public static void includeNinja(HttpServletRequest req) {
-<span class="fc" id="L58">        req.setAttribute(&quot;ninja&quot;, new Ninja(req));</span>
-<span class="fc" id="L59">    }</span>
+<span class="fc" id="L59">        req.setAttribute(&quot;ninja&quot;, new Ninja(req));</span>
+<span class="fc" id="L60">    }</span>
 
     /*private String getBasePath() {
         return temp.getBasePath();
     }*/
 
     public boolean getDebug() {
-<span class="fc" id="L66">        return allowNinjaDebug;</span>
+<span class="fc" id="L67">        return allowNinjaDebug;</span>
     }
 
     private boolean getAllowNinjaDebug() {
-<span class="pc bpc" id="L70" title="1 of 2 branches missed.">        if (request.getParameter(&quot;ninjaDebug&quot;) != null) {</span>
-<span class="nc" id="L71">            return Tools.getBooleanValue(request.getParameter(&quot;ninjaDebug&quot;), false);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (request.getParameter(&quot;ninjaDebug&quot;) != null) {</span>
+<span class="nc" id="L72">            return Tools.getBooleanValue(request.getParameter(&quot;ninjaDebug&quot;), false);</span>
         }
 
-<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (request.getAttribute(&quot;ninjaDebug&quot;) != null) {</span>
-<span class="nc" id="L75">            return Tools.getBooleanValue((String) request.getAttribute(&quot;ninjaDebug&quot;), false);</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (request.getAttribute(&quot;ninjaDebug&quot;) != null) {</span>
+<span class="nc" id="L76">            return Tools.getBooleanValue((String) request.getAttribute(&quot;ninjaDebug&quot;), false);</span>
         }
 
-<span class="fc" id="L78">        return Tools.getBooleanValue(getConfig(&quot;ninjaDebug&quot;, &quot;false&quot;), false);</span>
+<span class="fc" id="L79">        return Tools.getBooleanValue(getConfig(&quot;ninjaDebug&quot;, &quot;false&quot;), false);</span>
     }
 
     public String getConfig(String label) {
-<span class="fc" id="L82">        return getConfig(label, null);</span>
+<span class="fc" id="L83">        return getConfig(label, null);</span>
     }
 
     public String getConfig(String label, String defaultValue) {
-<span class="fc" id="L86">        Object value = getOption(label);</span>
+<span class="fc" id="L87">        Object value = getOption(label);</span>
 
-<span class="pc bpc" id="L88" title="1 of 4 branches missed.">        if (value != null &amp;&amp; value.getClass().isAssignableFrom(String.class)) {</span>
-<span class="fc" id="L89">            return (String) value;</span>
+<span class="pc bpc" id="L89" title="1 of 4 branches missed.">        if (value != null &amp;&amp; value.getClass().isAssignableFrom(String.class)) {</span>
+<span class="fc" id="L90">            return (String) value;</span>
         }
 
-<span class="fc" id="L92">        return defaultValue;</span>
+<span class="fc" id="L93">        return defaultValue;</span>
     }
 
     private Object getOption(String label) {
-<span class="fc" id="L96">        Object value = null;</span>
-<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (request.getParameter(label) != null) {</span>
-<span class="nc" id="L98">            value = request.getParameter(label);</span>
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        } else if (request.getAttribute(label) != null) {</span>
-<span class="nc" id="L100">            value = request.getAttribute(label);</span>
-<span class="pc bpc" id="L101" title="1 of 4 branches missed.">        } else if (config != null &amp;&amp; config.containsKey(label)) {</span>
-<span class="fc" id="L102">            value = config.get(label);</span>
+<span class="fc" id="L97">        Object value = null;</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (request.getParameter(label) != null) {</span>
+<span class="nc" id="L99">            value = request.getParameter(label);</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        } else if (request.getAttribute(label) != null) {</span>
+<span class="nc" id="L101">            value = request.getAttribute(label);</span>
+<span class="pc bpc" id="L102" title="1 of 4 branches missed.">        } else if (config != null &amp;&amp; config.containsKey(label)) {</span>
+<span class="fc" id="L103">            value = config.get(label);</span>
         }
 
-<span class="fc" id="L105">        return value;</span>
+<span class="fc" id="L106">        return value;</span>
     }
 
     private Optional&lt;UserDetails&gt; getUser() {
-<span class="fc" id="L109">        HttpSession session = request.getSession();</span>
+<span class="fc" id="L110">        HttpSession session = request.getSession();</span>
 
-<span class="fc" id="L111">        return Optional.ofNullable((Identity) session.getAttribute(Constants.USER_KEY));</span>
+<span class="fc" id="L112">        return Optional.ofNullable((Identity) session.getAttribute(Constants.USER_KEY));</span>
     }
 
 
     public Page getPage() {
-<span class="fc" id="L116">        return page;</span>
+<span class="fc" id="L117">        return page;</span>
     }
 
     public Webjet getWebjet() {
-<span class="fc" id="L120">        return webjet;</span>
+<span class="fc" id="L121">        return webjet;</span>
     }
 
     public UserAgent getUserAgent() {
-<span class="fc" id="L124">        return userAgent;</span>
+<span class="fc" id="L125">        return userAgent;</span>
     }
 
     public Temp getTemp() {
-<span class="fc" id="L128">        return temp;</span>
+<span class="fc" id="L129">        return temp;</span>
     }
 
     public HttpServletRequest getRequest() {
-<span class="fc" id="L132">        return request;</span>
+<span class="fc" id="L133">        return request;</span>
     }
 
     public void setRequest(HttpServletRequest request) {
-<span class="nc" id="L136">        this.request = request;</span>
-<span class="nc" id="L137">    }</span>
+<span class="nc" id="L137">        this.request = request;</span>
+<span class="nc" id="L138">    }</span>
 
     public Prop getProp() {
-<span class="fc" id="L140">        return prop;</span>
+<span class="fc" id="L141">        return prop;</span>
     }
 
     public Properties getConfig() {
-<span class="fc" id="L144">        return config;</span>
+<span class="fc" id="L145">        return config;</span>
     }
 
     private void loadConfigProperties() {
-<span class="fc" id="L148">        Cache c = Cache.getInstance();</span>
-<span class="fc" id="L149">        TemplatesGroupBean tempGroup = (TemplatesGroupBean)request.getAttribute(&quot;templatesGroupDetails&quot;);</span>
-<span class="fc" id="L150">        String path = &quot;&quot;;</span>
-<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (tempGroup != null) {</span>
-<span class="fc" id="L152">            String templateFolderName = tempGroup.getDirectory();</span>
-<span class="pc bpc" id="L153" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(templateFolderName) &amp;&amp; !(&quot;/&quot;.equals(templateFolderName))) {</span>
-<span class="fc" id="L154">                path = &quot;/templates/&quot;+templateFolderName+&quot;/&quot;;</span>
+<span class="fc" id="L149">        Cache c = Cache.getInstance();</span>
+<span class="fc" id="L150">        TemplatesGroupBean tempGroup = (TemplatesGroupBean)request.getAttribute(&quot;templatesGroupDetails&quot;);</span>
+<span class="fc" id="L151">        String path = &quot;&quot;;</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (tempGroup != null) {</span>
+<span class="fc" id="L153">            String templateFolderName = tempGroup.getDirectory();</span>
+<span class="pc bpc" id="L154" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(templateFolderName) &amp;&amp; !(&quot;/&quot;.equals(templateFolderName))) {</span>
+<span class="fc" id="L155">                path = &quot;/templates/&quot;+templateFolderName+&quot;/&quot;; //NOSONAR</span>
             }
         }
 
-<span class="fc" id="L158">        config = c.getObject(&quot;configProperties.&quot; + path, Properties.class);</span>
+<span class="fc" id="L159">        config = c.getObject(&quot;configProperties.&quot; + path, Properties.class);</span>
 
-<span class="fc" id="L160">        Optional&lt;UserDetails&gt; userOptional = getUser();</span>
-<span class="pc bpc" id="L161" title="1 of 6 branches missed.">        if (userOptional.filter(u -&gt; !u.isAdmin()).isPresent() &amp;&amp; config != null) {</span>
-<span class="fc" id="L162">            Logger.debug(Ninja.class, &quot;Vratiam config properties z cache&quot;);</span>
-<span class="fc" id="L163">            return;</span>
+<span class="fc" id="L161">        Optional&lt;UserDetails&gt; userOptional = getUser();</span>
+<span class="pc bpc" id="L162" title="1 of 6 branches missed.">        if (userOptional.filter(u -&gt; !u.isAdmin()).isPresent() &amp;&amp; config != null) {</span>
+<span class="fc" id="L163">            Logger.debug(Ninja.class, &quot;Vratiam config properties z cache&quot;);</span>
+<span class="fc" id="L164">            return;</span>
         }
 
-<span class="fc" id="L166">        config = new Properties();</span>
+<span class="fc" id="L167">        config = new Properties();</span>
 
-<span class="fc" id="L168">        File file = new File(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path+&quot;config.properties&quot;, getRequest())));</span>
-<span class="fc bfc" id="L169" title="All 2 branches covered.">        if (!file.exists()) {</span>
-<span class="fc" id="L170">            return;</span>
+<span class="fc" id="L169">        File file = new File(Tools.getRealPath(WriteTagToolsForCore.getCustomPage(path+&quot;config.properties&quot;, getRequest())));</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">        if (!file.exists()) {</span>
+<span class="fc" id="L171">            return;</span>
         }
 
-<span class="fc" id="L173">        try (InputStream input = new FileInputStream(file)) {</span>
-<span class="fc" id="L174">            config.load(input);</span>
-<span class="fc" id="L175">            c.setObject(&quot;configProperties.&quot; + path, config, 60 * 24);</span>
-<span class="nc" id="L176">        } catch (IOException ex) {</span>
-<span class="nc" id="L177">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L178">        }</span>
-<span class="fc" id="L179">    }</span>
+<span class="fc" id="L174">        try (InputStream input = new FileInputStream(file)) {</span>
+<span class="fc" id="L175">            config.load(input);</span>
+<span class="fc" id="L176">            c.setObject(&quot;configProperties.&quot; + path, config, 60 * 24);</span>
+<span class="nc" id="L177">        } catch (IOException ex) {</span>
+<span class="nc" id="L178">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L179">        }</span>
+<span class="fc" id="L180">    }</span>
 
     public DocDetails getDoc() {
-<span class="fc" id="L182">        return (DocDetails) getRequest().getAttribute(&quot;docDetails&quot;);</span>
+<span class="fc" id="L183">        return (DocDetails) getRequest().getAttribute(&quot;docDetails&quot;);</span>
     }
 
     /* =========== Nahrada medzery za nbsp za spojkou ============= */
     private static void initNbspReplacement() {
-<span class="nc" id="L187">        String ninjaNbspReplaceRegex[] = Tools.getTokens(Constants.getString(&quot;ninjaNbspReplaceRegex&quot;), &quot;\n&quot;);</span>
-<span class="nc bnc" id="L188" title="All 4 branches missed.">        if (ninjaNbspReplaceRegex!=null &amp;&amp; ninjaNbspReplaceRegex.length==2) {</span>
-<span class="nc" id="L189">            nbspPattern = Pattern.compile(ninjaNbspReplaceRegex[0], Pattern.CASE_INSENSITIVE);</span>
-<span class="nc" id="L190">            nbspReplacement = ninjaNbspReplaceRegex[1];</span>
+<span class="nc" id="L188">        String[] ninjaNbspReplaceRegex = Tools.getTokens(Constants.getString(&quot;ninjaNbspReplaceRegex&quot;), &quot;\n&quot;);</span>
+<span class="nc bnc" id="L189" title="All 4 branches missed.">        if (ninjaNbspReplaceRegex!=null &amp;&amp; ninjaNbspReplaceRegex.length==2) {</span>
+<span class="nc" id="L190">            nbspPattern = Pattern.compile(ninjaNbspReplaceRegex[0], Pattern.CASE_INSENSITIVE);</span>
+<span class="nc" id="L191">            nbspReplacement = ninjaNbspReplaceRegex[1];</span>
         }
-<span class="nc" id="L192">    }</span>
+<span class="nc" id="L193">    }</span>
 
     private static Pattern getNbsPattern() {
-<span class="nc bnc" id="L195" title="All 2 branches missed.">        if (nbspPattern == null) {</span>
-<span class="nc" id="L196">            initNbspReplacement();</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">        if (nbspPattern == null) {</span>
+<span class="nc" id="L197">            initNbspReplacement();</span>
         }
-<span class="nc" id="L198">        return nbspPattern;</span>
+<span class="nc" id="L199">        return nbspPattern;</span>
     }
 
     private static String getNbspReplacement() {
-<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (nbspReplacement == null) {</span>
-<span class="nc" id="L203">            initNbspReplacement();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (nbspReplacement == null) {</span>
+<span class="nc" id="L204">            initNbspReplacement();</span>
         }
-<span class="nc" id="L205">        return nbspReplacement;</span>
+<span class="nc" id="L206">        return nbspReplacement;</span>
     }
 
     /**
      * Vycisti static objekty po zmene konf. premennej
      */
     public static void resetNbspReplaceRegex() {
-<span class="nc" id="L212">        nbspPattern = null;</span>
-<span class="nc" id="L213">        nbspReplacement = null;</span>
-<span class="nc" id="L214">    }</span>
+<span class="nc" id="L213">        nbspPattern = null;</span>
+<span class="nc" id="L214">        nbspReplacement = null;</span>
+<span class="nc" id="L215">    }</span>
 
     /**
      * Nahradi v texte medzeru za spojkou za entitu &amp;nbsp; (napr fero a marek -&gt; fero a&amp;nbsp;marek )
@@ -220,15 +221,15 @@ public class Ninja {
      */
     public String replaceNbspSingleChar(String text) {
         try {
-<span class="nc" id="L223">            Matcher matcher = getNbsPattern().matcher(text);</span>
-<span class="nc" id="L224">            String replaced = matcher.replaceAll(getNbspReplacement());</span>
-<span class="nc" id="L225">            return replaced;</span>
+<span class="nc" id="L224">            Matcher matcher = getNbsPattern().matcher(text);</span>
+<span class="nc" id="L225">            String replaced = matcher.replaceAll(getNbspReplacement());</span>
+<span class="nc" id="L226">            return replaced;</span>
         }
-<span class="nc" id="L227">        catch (Exception ex) {</span>
-<span class="nc" id="L228">            Logger.error(Ninja.class, ex);</span>
+<span class="nc" id="L228">        catch (Exception ex) {</span>
+<span class="nc" id="L229">            Logger.error(Ninja.class, ex);</span>
         }
 
-<span class="nc" id="L231">        return text;</span>
+<span class="nc" id="L232">        return text;</span>
     }
 
     /**
@@ -242,14 +243,14 @@ public class Ninja {
             component = (String) request.getAttribute(component);
         }*/
 
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        if (component == null) {</span>
-<span class="nc" id="L246">            return &quot;&quot;;</span>
+<span class="pc bpc" id="L246" title="1 of 2 branches missed.">        if (component == null) {</span>
+<span class="nc" id="L247">            return &quot;&quot;;</span>
         }
 
-<span class="fc" id="L249">        String includeFileName = &quot;/components/_common/thymeleaf/write.jsp&quot;;</span>
-<span class="fc" id="L250">        request.setAttribute(&quot;thymeleaf_write_name&quot;, component);</span>
+<span class="fc" id="L250">        String includeFileName = &quot;/components/_common/thymeleaf/write.jsp&quot;; //NOSONAR</span>
+<span class="fc" id="L251">        request.setAttribute(&quot;thymeleaf_write_name&quot;, component);</span>
 
-<span class="fc" id="L252">        return executeJsp(includeFileName);</span>
+<span class="fc" id="L253">        return executeJsp(includeFileName);</span>
     }
 
     /**
@@ -258,21 +259,39 @@ public class Ninja {
      * @return
      */
     public String executeJsp(String includeFileName) {
-<span class="fc" id="L261">        MockHttpServletResponse response = new MockHttpServletResponse();</span>
-<span class="fc" id="L262">        WJResponseWrapper respWrapper = new WJResponseWrapper(response, request);</span>
+<span class="fc" id="L262">        MockHttpServletResponse response = new MockHttpServletResponse();</span>
+<span class="fc" id="L263">        WJResponseWrapper respWrapper = new WJResponseWrapper(response, request);</span>
 
         try {
-<span class="fc" id="L265">            request.getRequestDispatcher(includeFileName).include(request, respWrapper);</span>
-<span class="nc" id="L266">        } catch (ServletException | IOException e) {</span>
-<span class="nc" id="L267">            Logger.error(Ninja.class, e);</span>
-<span class="fc" id="L268">        }</span>
+<span class="fc" id="L266">            request.getRequestDispatcher(includeFileName).include(request, respWrapper);</span>
+<span class="nc" id="L267">        } catch (ServletException | IOException e) {</span>
+<span class="nc" id="L268">            Logger.error(Ninja.class, e);</span>
+<span class="fc" id="L269">        }</span>
 
-<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        if (Tools.isEmpty(respWrapper.redirectURL))</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">        if (Tools.isEmpty(respWrapper.redirectURL))</span>
         {
-<span class="fc" id="L272">            return respWrapper.strWriter.getBuffer().toString();</span>
+<span class="fc" id="L273">            return respWrapper.strWriter.getBuffer().toString();</span>
         }
 
-<span class="nc" id="L275">        return &quot;&quot;;</span>
+<span class="nc" id="L276">        return &quot;&quot;;</span>
+    }
+
+    /**
+     * Get AB variant from request attribute or from URL
+     * @return - a or b depending on the ABTesing variant
+     */
+    public String getAbVariant() {
+
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if(request == null) return &quot;a&quot;;</span>
+
+<span class="fc" id="L287">        String variant = (String)request.getAttribute(&quot;ABTestingVariant&quot;);</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">        if (variant == null) {</span>
+<span class="pc bpc" id="L289" title="2 of 4 branches missed.">            if (page != null &amp;&amp; page.getDoc() != null) {</span>
+<span class="fc" id="L290">                return ABTesting.getVariantFromUrl(page.getDoc().getVirtualPath());</span>
+            }
+        }
+
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        return variant == null ? &quot;a&quot; : variant;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

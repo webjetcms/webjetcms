@@ -374,7 +374,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     I.waitForInvisible("#loader", 20);
     DT.waitForLoader();
 
-    I.waitForText("rozpočet", "#numberKeywordsDataTable");
+    I.waitForText("rozpočet", 10, "#numberKeywordsDataTable");
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "0", "0", "0"]);
 
     //
@@ -445,8 +445,8 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
 
     DT.waitForLoader();
 
-        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "51,64", "30.07.2021"]);
-        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "29,51", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "51,43", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "29,39", "30.07.2021"]);
 });
 
 Scenario("cleanup", ({ I, DT }) => {

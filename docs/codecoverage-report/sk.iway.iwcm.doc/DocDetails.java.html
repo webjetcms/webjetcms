@@ -2,6 +2,7 @@
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -11,15 +12,20 @@ import javax.persistence.Transient;
 
 import org.apache.commons.beanutils.BeanUtils;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 @Entity
 @Table(name = &quot;documents&quot;)
+@EntityListeners(AuditEntityListener.class)
+@EntityListenersType(Adminlog.TYPE_SAVEDOC)
 public class DocDetails extends DocBasic {
 
-<span class="fc" id="L22">	public DocDetails(){}</span>
+<span class="fc" id="L28">	public DocDetails(){}</span>
 
 	/**
 	 * Konstruktor z cesty, napr. /Newsletter/Testovaci newsletter
@@ -27,50 +33,50 @@ public class DocDetails extends DocBasic {
 	 * @param path
 	 */
 	public DocDetails(String path) {
-<span class="fc" id="L30">		this(DocDetails.getCreateDoc(path));</span>
-<span class="fc" id="L31">	}</span>
+<span class="fc" id="L36">		this(DocDetails.getCreateDoc(path));</span>
+<span class="fc" id="L37">	}</span>
 
 	private static DocDetails getCreateDoc(String path) {
 
 		//check if path is number, then return doc with this id
 		try {
-<span class="nc" id="L37">			int id = Integer.parseInt(path);</span>
-<span class="nc" id="L38">			return DocDB.getInstance().getDoc(id);</span>
-<span class="fc" id="L39">		} catch (Exception e) {</span>
+<span class="nc" id="L43">			int id = Integer.parseInt(path);</span>
+<span class="nc" id="L44">			return DocDB.getInstance().getDoc(id);</span>
+<span class="fc" id="L45">		} catch (Exception e) {</span>
 			//not a number, continue
 		}
 
-<span class="pc bpc" id="L43" title="1 of 2 branches missed.">		if (path.contains(&quot;/&quot;)==false) {</span>
-<span class="nc" id="L44">			return null;</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if (path.contains(&quot;/&quot;)==false) {</span>
+<span class="nc" id="L50">			return null;</span>
 		}
 
-<span class="fc" id="L47">		return DocDB.getInstance().getCreateDoc(path);</span>
+<span class="fc" id="L53">		return DocDB.getInstance().getCreateDoc(path);</span>
 	}
 
 	/**
 	 * skopiruje do seba doc copyFrom
 	 * @param copyFrom
 	 */
-<span class="fc" id="L54">	public DocDetails(DocDetails copyFrom) {</span>
+<span class="fc" id="L60">	public DocDetails(DocDetails copyFrom) {</span>
 		try
 		{
-<span class="pc bpc" id="L57" title="1 of 2 branches missed.">			if (copyFrom != null) BeanUtils.copyProperties(this, copyFrom);</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">			if (copyFrom != null) BeanUtils.copyProperties(this, copyFrom);</span>
 		}
-<span class="nc" id="L59">		catch (Exception ex)</span>
+<span class="nc" id="L65">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L61">			Logger.error(DocDetails.class, ex);</span>
-<span class="fc" id="L62">		}</span>
-<span class="fc" id="L63">	}</span>
+<span class="nc" id="L67">			Logger.error(DocDetails.class, ex);</span>
+<span class="fc" id="L68">		}</span>
+<span class="fc" id="L69">	}</span>
 
 	@PrePersist
     public void prePersist() {
         //log.debug(&quot;prePersist&quot;);
 		//Logger.debug(getClass(), &quot;prePersist, id1&quot;+id);
-<span class="pc bpc" id="L69" title="2 of 6 branches missed.">		if (id != null &amp;&amp; (id.intValue()==0 || id.intValue()==-1)) {</span>
-<span class="fc" id="L70">			id = null;</span>
+<span class="pc bpc" id="L75" title="2 of 6 branches missed.">		if (id != null &amp;&amp; (id.intValue()==0 || id.intValue()==-1)) {</span>
+<span class="fc" id="L76">			id = null;</span>
 			//Logger.debug(getClass(), &quot;prePersist, id2=&quot;+id);
 		}
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L79">    }</span>
 
 	@Id
 	@Column(name = &quot;doc_id&quot;)
@@ -90,38 +96,38 @@ public class DocDetails extends DocBasic {
 	@Override
 	public Long getId()
 	{
-<span class="fc bfc" id="L93" title="All 4 branches covered.">		if (this.id != null &amp;&amp; this.id.longValue()&lt;1) return null;</span>
-<span class="fc" id="L94">		return this.id;</span>
+<span class="fc bfc" id="L99" title="All 4 branches covered.">		if (this.id != null &amp;&amp; this.id.longValue()&lt;1) return null;</span>
+<span class="fc" id="L100">		return this.id;</span>
 	}
 
 	@Override
 	public void setId(Long id)
 	{
-<span class="fc" id="L100">		this.id = id;</span>
-<span class="fc" id="L101">	}</span>
+<span class="fc" id="L106">		this.id = id;</span>
+<span class="fc" id="L107">	}</span>
 
 	@Override
 	public int getDocId()
 	{
-<span class="fc bfc" id="L106" title="All 2 branches covered.">		if(this.id == null) return 0;</span>
-<span class="fc" id="L107">		return this.id.intValue();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">		if(this.id == null) return 0;</span>
+<span class="fc" id="L113">		return this.id.intValue();</span>
 	}
 
 	@Override
 	public void setDocId(int newDocId)
 	{
-<span class="fc" id="L113">		this.id = Long.valueOf(newDocId);</span>
-<span class="fc" id="L114">	}</span>
+<span class="fc" id="L119">		this.id = Long.valueOf(newDocId);</span>
+<span class="fc" id="L120">	}</span>
 
 	public void setDocId(Long newDocId)
 	{
-<span class="fc" id="L118">		this.id = newDocId;</span>
-<span class="fc" id="L119">	}</span>
+<span class="fc" id="L124">		this.id = newDocId;</span>
+<span class="fc" id="L125">	}</span>
 
 	//atributy potrebne pre spatnu kompatibilitu pre history tabulku, neukladaju sa
-<span class="fc" id="L122">	@Transient</span>
+<span class="fc" id="L128">	@Transient</span>
 	private boolean publicable = false;
-<span class="fc" id="L124">	@Transient</span>
+<span class="fc" id="L130">	@Transient</span>
 	private boolean historyActual = false;
 	@Transient
 	private String historyApproveDate;
@@ -140,101 +146,101 @@ public class DocDetails extends DocBasic {
 
 	//*************** GETTER/SETTERS AUTO GENERATED *****************************/
 	public Integer getRootGroupL1() {
-<span class="fc" id="L143">		return rootGroupL1;</span>
+<span class="fc" id="L149">		return rootGroupL1;</span>
 	}
 
 	public void setRootGroupL1(Integer rootGroupL1) {
-<span class="fc" id="L147">		this.rootGroupL1 = rootGroupL1;</span>
-<span class="fc" id="L148">	}</span>
+<span class="fc" id="L153">		this.rootGroupL1 = rootGroupL1;</span>
+<span class="fc" id="L154">	}</span>
 
 	public Integer getRootGroupL2() {
-<span class="fc" id="L151">		return rootGroupL2;</span>
+<span class="fc" id="L157">		return rootGroupL2;</span>
 	}
 
 	public void setRootGroupL2(Integer rootGroupL2) {
-<span class="fc" id="L155">		this.rootGroupL2 = rootGroupL2;</span>
-<span class="fc" id="L156">	}</span>
+<span class="fc" id="L161">		this.rootGroupL2 = rootGroupL2;</span>
+<span class="fc" id="L162">	}</span>
 
 	public Integer getRootGroupL3() {
-<span class="fc" id="L159">		return rootGroupL3;</span>
+<span class="fc" id="L165">		return rootGroupL3;</span>
 	}
 
 	public void setRootGroupL3(Integer rootGroupL3) {
-<span class="fc" id="L163">		this.rootGroupL3 = rootGroupL3;</span>
-<span class="fc" id="L164">	}</span>
+<span class="fc" id="L169">		this.rootGroupL3 = rootGroupL3;</span>
+<span class="fc" id="L170">	}</span>
 
 	public boolean isHistoryActual() {
-<span class="fc" id="L167">		return historyActual;</span>
+<span class="fc" id="L173">		return historyActual;</span>
 	}
 
 	public void setHistoryActual(boolean historyActual) {
-<span class="fc" id="L171">		this.historyActual = historyActual;</span>
-<span class="fc" id="L172">	}</span>
+<span class="fc" id="L177">		this.historyActual = historyActual;</span>
+<span class="fc" id="L178">	}</span>
 
 	public String getHistoryApproveDate() {
-<span class="fc" id="L175">		return historyApproveDate;</span>
+<span class="fc" id="L181">		return historyApproveDate;</span>
 	}
 
 	public void setHistoryApproveDate(String historyApproveDate) {
-<span class="fc" id="L179">		this.historyApproveDate = historyApproveDate;</span>
-<span class="fc" id="L180">	}</span>
+<span class="fc" id="L185">		this.historyApproveDate = historyApproveDate;</span>
+<span class="fc" id="L186">	}</span>
 
 	public String getHistoryApprovedByName() {
-<span class="fc" id="L183">		return historyApprovedByName;</span>
+<span class="fc" id="L189">		return historyApprovedByName;</span>
 	}
 
 	public void setHistoryApprovedByName(String historyApprovedByName) {
-<span class="fc" id="L187">		this.historyApprovedByName = historyApprovedByName;</span>
-<span class="fc" id="L188">	}</span>
+<span class="fc" id="L193">		this.historyApprovedByName = historyApprovedByName;</span>
+<span class="fc" id="L194">	}</span>
 
 	public String getHistoryDisapprovedByName() {
-<span class="fc" id="L191">		return historyDisapprovedByName;</span>
+<span class="fc" id="L197">		return historyDisapprovedByName;</span>
 	}
 
 	public void setHistoryDisapprovedByName(String historyDisapprovedByName) {
-<span class="fc" id="L195">		this.historyDisapprovedByName = historyDisapprovedByName;</span>
-<span class="fc" id="L196">	}</span>
+<span class="fc" id="L201">		this.historyDisapprovedByName = historyDisapprovedByName;</span>
+<span class="fc" id="L202">	}</span>
 
 	public String getHistorySaveDate() {
-<span class="fc" id="L199">		return historySaveDate;</span>
+<span class="fc" id="L205">		return historySaveDate;</span>
 	}
 
 	public void setHistorySaveDate(String historySaveDate) {
-<span class="fc" id="L203">		this.historySaveDate = historySaveDate;</span>
-<span class="fc" id="L204">	}</span>
+<span class="fc" id="L209">		this.historySaveDate = historySaveDate;</span>
+<span class="fc" id="L210">	}</span>
 
 	public int getHistoryId() {
-<span class="fc" id="L207">		return historyId;</span>
+<span class="fc" id="L213">		return historyId;</span>
 	}
 
 	public void setHistoryId(int historyId) {
-<span class="fc" id="L211">		this.historyId = historyId;</span>
-<span class="fc" id="L212">	}</span>
+<span class="fc" id="L217">		this.historyId = historyId;</span>
+<span class="fc" id="L218">	}</span>
 
 	public int getHistoryApprovedBy() {
-<span class="fc" id="L215">		return historyApprovedBy;</span>
+<span class="fc" id="L221">		return historyApprovedBy;</span>
 	}
 
 	public void setHistoryApprovedBy(int historyApprovedBy) {
-<span class="fc" id="L219">		this.historyApprovedBy = historyApprovedBy;</span>
-<span class="fc" id="L220">	}</span>
+<span class="fc" id="L225">		this.historyApprovedBy = historyApprovedBy;</span>
+<span class="fc" id="L226">	}</span>
 
 	public int getHistoryDisapprovedBy() {
-<span class="fc" id="L223">		return historyDisapprovedBy;</span>
+<span class="fc" id="L229">		return historyDisapprovedBy;</span>
 	}
 
 	public void setHistoryDisapprovedBy(int historyDisapprovedBy) {
-<span class="fc" id="L227">		this.historyDisapprovedBy = historyDisapprovedBy;</span>
-<span class="fc" id="L228">	}</span>
+<span class="fc" id="L233">		this.historyDisapprovedBy = historyDisapprovedBy;</span>
+<span class="fc" id="L234">	}</span>
 
 	public boolean isPublicable()
 	{
-<span class="fc" id="L232">		return publicable;</span>
+<span class="fc" id="L238">		return publicable;</span>
 	}
 
 	public void setPublicable(boolean publicable) {
-<span class="fc" id="L236">		this.publicable = publicable;</span>
-<span class="fc" id="L237">	}</span>
+<span class="fc" id="L242">		this.publicable = publicable;</span>
+<span class="fc" id="L243">	}</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

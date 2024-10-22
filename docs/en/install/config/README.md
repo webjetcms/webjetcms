@@ -50,7 +50,7 @@ The value is truncated to the first 16 characters. If the variable is `clusterHo
 
 If you have a stable configuration of running nodes/`nodes` set the conf. variable:
 - `clusterNames=node1,node2,node3` - comma separated list of nodes from 1 to N
-You need to externally define individual nodes `ID` node, you can't do it via Settings-\&gt;Configuration, because all nodes would have the same name.
+You need to externally define individual nodes `ID` node, you can't do it via Settings->Configuration, because all nodes would have the same name.
 
 It is recommended to set the value via the parameter `-DwebjetNodeId=1`, or otherwise via [external configuration](../external-configuration.md).
 

@@ -126,7 +126,7 @@ Scenario('spring - nastavenie parametra', ({ I, DTE }) => {
     I.see("stringField: "+stringField);
 });
 
-function testCookieComponent(I) {
+function testCookieComponent(I, DTE) {
 
     //prepni sa do okna
     I.switchTo();
@@ -135,7 +135,7 @@ function testCookieComponent(I) {
 
     //nastav hodnotu
     I.wait(2);
-    I.fillField("#cookie_title", cookieTitle);
+    DTE.fillField("cookie_title", cookieTitle);
 
     I.switchTo();
     I.clickCss("a.cke_dialog_ui_button_ok");
@@ -164,7 +164,7 @@ function testCookieComponent(I) {
     I.wait(4);
     I.switchTo("#editorComponent");
     I.wait(4);
-    I.seeInField("#cookie_title", cookieTitle);
+    DTE.seeInField("cookie_title", cookieTitle);
 
 }
 
@@ -206,7 +206,7 @@ Scenario('jsp - zoznam aplikacii', ({ I, DTE, Browser }) => {
     I.click("Vložiť do stránky");
     I.wait(6);
 
-    testCookieComponent(I);
+    testCookieComponent(I, DTE);
 });
 
 Scenario('jsp - cookies lista nastavenie parametra', ({ I, DTE, Browser }) => {
@@ -221,7 +221,7 @@ Scenario('jsp - cookies lista nastavenie parametra', ({ I, DTE, Browser }) => {
     I.wait(6);
     if (Browser.isFirefox()) I.wait(3);
 
-    testCookieComponent(I);
+    testCookieComponent(I, DTE);
 
     //zrus okno a uloz stranku
     I.switchTo();
@@ -235,4 +235,19 @@ Scenario('jsp - cookies lista nastavenie parametra', ({ I, DTE, Browser }) => {
 
     //vrat do povodneho stavu
 
+});
+
+Scenario('reset text', ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=25210");
+    DTE.waitForEditor();
+    I.wait(3);
+
+    Document.editorComponentOpen();
+    I.fillField("#DTE_Field_cookie_title", "Používanie cookies");
+    I.fillField("#DTE_Field_cookie_text", "");
+    Document.editorComponentOk();
+
+    //zrus okno a uloz stranku
+    I.switchTo();
+    DTE.save();
 });

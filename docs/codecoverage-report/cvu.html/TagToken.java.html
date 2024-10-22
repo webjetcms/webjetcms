@@ -564,29 +564,33 @@ public class TagToken {
 <span class="fc bfc" id="L564" title="All 2 branches covered.">	         if (cssType==null) cssType = name;</span>
 <span class="pc bpc" id="L565" title="1 of 2 branches missed.">	         if (cssType!=null)</span>
 	         {
-<span class="fc" id="L567">					ret = &quot;&lt;span class='form-control emailInput-&quot;+cssType.toLowerCase()+&quot;'&quot;;</span>
-<span class="fc bfc" id="L568" title="All 2 branches covered.">					if (&quot;textarea&quot;.equalsIgnoreCase(cssType)) ret += &quot; style='height: auto;'&quot;;</span>
-<span class="fc" id="L569">					ret += &quot;&gt;&quot;;</span>
+<span class="fc" id="L567">					String htmlClasses = getAttribute(&quot;class&quot;);</span>
+
+<span class="fc" id="L569">					ret = &quot;&lt;span class='form-control emailInput-&quot;+cssType.toLowerCase();</span>
+<span class="pc bpc" id="L570" title="1 of 4 branches missed.">					if (htmlClasses!=null &amp;&amp; htmlClasses.contains(&quot;formsimple-wysiwyg&quot;)) ret += &quot; formsimple-wysiwyg&quot;;</span>
+<span class="fc" id="L571">					ret += &quot;'&quot;;</span>
+<span class="fc bfc" id="L572" title="All 2 branches covered.">					if (&quot;textarea&quot;.equalsIgnoreCase(cssType)) ret += &quot; style='height: auto;'&quot;;</span>
+<span class="fc" id="L573">					ret += &quot;&gt;&quot;;</span>
 	         }
 
-<span class="fc" id="L572">	         String myName = getAttribute(&quot;name&quot;);</span>
-<span class="pc bpc" id="L573" title="1 of 2 branches missed.">	         if (Tools.isEmpty(myName)) myName = getAttribute(&quot;id&quot;);</span>
+<span class="fc" id="L576">	         String myName = getAttribute(&quot;name&quot;);</span>
+<span class="pc bpc" id="L577" title="1 of 2 branches missed.">	         if (Tools.isEmpty(myName)) myName = getAttribute(&quot;id&quot;);</span>
 
-<span class="fc" id="L575">	         ret += &quot;!&quot; + myName + &quot;!&quot;;</span>
-<span class="pc bpc" id="L576" title="1 of 2 branches missed.">	         if (cssType!=null)</span>
+<span class="fc" id="L579">	         ret += &quot;!&quot; + myName + &quot;!&quot;;</span>
+<span class="pc bpc" id="L580" title="1 of 2 branches missed.">	         if (cssType!=null)</span>
 	         {
-<span class="fc" id="L578">	            ret += &quot;&lt;/span&gt;&quot;;</span>
+<span class="fc" id="L582">	            ret += &quot;&lt;/span&gt;&quot;;</span>
 	         }
-<span class="fc" id="L580">	         return(ret);</span>
+<span class="fc" id="L584">	         return(ret);</span>
 	      }
 
-<span class="fc" id="L583">	      ret = &quot;&lt;&quot; + line + &quot;&gt;&quot;;</span>
-<span class="fc" id="L584">	      return(ret);</span>
+<span class="fc" id="L587">	      ret = &quot;&lt;&quot; + line + &quot;&gt;&quot;;</span>
+<span class="fc" id="L588">	      return(ret);</span>
 		}
-<span class="nc" id="L586">   	catch (Exception ex)</span>
+<span class="nc" id="L590">   	catch (Exception ex)</span>
 		{
-<span class="nc" id="L588">   		sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L589">   		return(&quot;ERROR: &quot; + ex.getMessage());</span>
+<span class="nc" id="L592">   		sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L593">   		return(&quot;ERROR: &quot; + ex.getMessage());</span>
 		}
    }
 
@@ -597,27 +601,27 @@ public class TagToken {
     */
    private static String normalizeValue(String value)
    {
-<span class="pc bpc" id="L600" title="1 of 2 branches missed.">   	if (value == null) return value;</span>
+<span class="pc bpc" id="L604" title="1 of 2 branches missed.">   	if (value == null) return value;</span>
    	//nbsp tam pridava uprava nerozdelovania spojok
-<span class="fc" id="L602">   	value = Tools.replace(value, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
-<span class="fc" id="L603">  	 	value = Tools.replace(value, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
-<span class="fc" id="L604">  	 	value = value.trim();</span>
-<span class="fc" id="L605">   	return value;</span>
+<span class="fc" id="L606">   	value = Tools.replace(value, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+<span class="fc" id="L607">  	 	value = Tools.replace(value, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
+<span class="fc" id="L608">  	 	value = value.trim();</span>
+<span class="fc" id="L609">   	return value;</span>
    }
 
    public String getFormField()
    {
-<span class="fc bfc" id="L610" title="All 2 branches covered.">      if (isSkip()) return(null);</span>
+<span class="fc bfc" id="L614" title="All 2 branches covered.">      if (isSkip()) return(null);</span>
 
-<span class="fc" id="L612">      String ret = formTag.get(name);</span>
-<span class="fc bfc" id="L613" title="All 2 branches covered.">      if (ret!=null)</span>
+<span class="fc" id="L616">      String ret = formTag.get(name);</span>
+<span class="fc bfc" id="L617" title="All 2 branches covered.">      if (ret!=null)</span>
       {
-<span class="fc" id="L615">      	String myName = getAttribute(&quot;name&quot;);</span>
-<span class="pc bpc" id="L616" title="1 of 2 branches missed.">         if (Tools.isEmpty(myName)) myName = getAttribute(&quot;id&quot;);</span>
-<span class="fc" id="L617">         return(myName);</span>
+<span class="fc" id="L619">      	String myName = getAttribute(&quot;name&quot;);</span>
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">         if (Tools.isEmpty(myName)) myName = getAttribute(&quot;id&quot;);</span>
+<span class="fc" id="L621">         return(myName);</span>
       }
 
-<span class="fc" id="L620">      return(null);</span>
+<span class="fc" id="L624">      return(null);</span>
    }
    /**
     * vrati meno tagu, na ktory cakame, alebo null, ak sme ho prave nasli
@@ -627,25 +631,25 @@ public class TagToken {
    public String getSkipToTag(String skipToTag)
    {
       //ak uz na nieco cakame
-<span class="fc bfc" id="L630" title="All 2 branches covered.">      if (skipToTag!=null)</span>
+<span class="fc bfc" id="L634" title="All 2 branches covered.">      if (skipToTag!=null)</span>
       {
-<span class="pc bpc" id="L632" title="2 of 4 branches missed.">         if (end &amp;&amp; name.equals(skipToTag))</span>
+<span class="pc bpc" id="L636" title="2 of 4 branches missed.">         if (end &amp;&amp; name.equals(skipToTag))</span>
          {
             //ak sme cakali na tento tag, tak uz cakat netreba
-<span class="fc" id="L635">            return(null);</span>
+<span class="fc" id="L639">            return(null);</span>
          }
          else
          {
-<span class="nc" id="L639">            return(skipToTag);</span>
+<span class="nc" id="L643">            return(skipToTag);</span>
          }
       }
 
-<span class="fc" id="L643">      String ret = skipTag.get(name.toLowerCase());</span>
-<span class="fc bfc" id="L644" title="All 2 branches covered.">      if (ret!=null)</span>
+<span class="fc" id="L647">      String ret = skipTag.get(name.toLowerCase());</span>
+<span class="fc bfc" id="L648" title="All 2 branches covered.">      if (ret!=null)</span>
       {
-<span class="pc bpc" id="L646" title="3 of 4 branches missed.">         if (&quot;always&quot;.equals(ret) || isSkip()) return(name);</span>
+<span class="pc bpc" id="L650" title="3 of 4 branches missed.">         if (&quot;always&quot;.equals(ret) || isSkip()) return(name);</span>
       }
-<span class="fc" id="L648">      return(null);</span>
+<span class="fc" id="L652">      return(null);</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

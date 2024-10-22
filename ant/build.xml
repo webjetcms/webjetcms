@@ -24,13 +24,14 @@
     <!-- there server id in the Maven settings.xml -->
     <property name="ossrh-server-id" value="ossrh" />
 
-    <target name="update-version">
+    <target name="update-version" depends="define-artifact-properties">
         <propertyfile comment="Build Information"
                     file="${root}/../../src/main/webapp/WEB-INF/build.properties">
             <entry key="build.date"
                 type="date"
                 pattern="dd.MM.yyyy H:mm:ss"
                 value="now"/>
+            <entry key="major.number" type="string" value="${artifact.version}" />
             <entry key="minor.number" type="int" operation="+" value="1" pattern="000"/>
         </propertyfile>
     </target>
@@ -38,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2024.18" />
+        <property name="artifact.version" value="2024.40" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -46,6 +47,13 @@
         <property name="nexus.url" value="*********" />
         <property name="nexus.user" value="iw-webjet-dev" />
         <property name="nexus.password" value="*********" />
+
+        <echo message="Artifact group: ${artifact.group}"/>
+        <echo message="Artifact name: ${artifact.name}"/>
+        <echo message="Artifact version: ${artifact.version}"/>
+        <echo message="Artifact type: ${artifact.type}"/>
+        <echo message="Artifact dir: ${artifact.dir}"/>
+        <echo message="Artifact pom: ${artifact.pom}"/>
     </target>
 
     <defaultexcludes add="**/prepros-6.config"/>
@@ -86,12 +94,20 @@
 
         <unzip src="${wardir}${projectname}.war" dest="${outdir}">
             <patternset>
-                <exclude name="components/aceintegration/**"/>
                 <exclude name="files/**"/>
                 <exclude name="images/**"/>
+                <exclude name="html/**"/>
                 <exclude name="META-INF/**"/>
                 <exclude name="templates/**"/>
                 <exclude name="static-files/**"/>
+                <exclude name="wjerrorpages/**"/>
+                <exclude name="WEB-INF/libfilehistory/**"/>
+                <exclude name="WEB-INF/lucene_index/cz/**"/>
+                <exclude name="WEB-INF/lucene_index/en/**"/>
+                <exclude name="WEB-INF/lucene_index/esp/**"/>
+                <exclude name="WEB-INF/lucene_index/sk/**"/>
+                <exclude name="WEB-INF/update/**"/>
+                <exclude name="WEB-INF/formfiles/**"/>
 
                 <exclude name="**/pug/**"/>
                 <exclude name="**/admin/v9/views/**"/>
@@ -99,11 +115,12 @@
                 <exclude name="**/*.zip"/>
 
                 <!-- example code -->
-                <exclude name="**/sk/iway/demo8/**"/>
+                <exclude name="**/sk/iway/aceintegration/**"/>
                 <exclude name="**/sk/iway/basecms/**"/>
+                <exclude name="**/sk/iway/demo8/**"/>
                 <exclude name="**/apps/basecms/**"/>
                 <exclude name="**/apps/contact/**"/>
-
+                <exclude name="**/components/aceintegration/**"/>
             </patternset>
         </unzip>
 
@@ -153,7 +170,6 @@
                 <include name="text*.properties"/>
             </zipfileset>
             <zipfileset dir="${root}/WebContent/WEB-INF" prefix="META-INF/resources/WEB-INF">
-                <include name="app.tld"/>
                 <include name="iway.tld"/>
                 <include name="iwcm.tld"/>
                 <include name="vue.tld"/>
@@ -288,6 +304,7 @@
         </copy>
         <copy todir="${finalwar}/WEB-INF/classes/sk/iway/" overwrite="true">
             <fileset dir="${root}/WebContent/WEB-INF/classes/sk/iway">
+                <include name="aceintegration/**"/>
                 <include name="basecms/**"/>
                 <include name="demo8/**"/>
             </fileset>
@@ -356,10 +373,13 @@
                 <exclude name="**/components/sharepoint/**"/>
 
                 <!-- example code -->
-                <exclude name="**/sk/iway/demo8/**"/>
+                <exclude name="**/sk/iway/aceintegration/**"/>
                 <exclude name="**/sk/iway/basecms/**"/>
+                <exclude name="**/sk/iway/demo8/**"/>
                 <exclude name="**/apps/basecms/**"/>
                 <exclude name="**/apps/contact/**"/>
+                <exclude name="**/components/aceintegration/**"/>
+                <exclude name="**/wjerrorpages/**"/>
             </zipfileset>
             <zipfileset dir="src/main/resources/META-INF/" prefix="WEB-INF/classes/META-INF">
                 <include name="persistence-webjet.xml"/>
@@ -435,10 +455,6 @@
             <pom file="${artifact.pom}" />
 
         </artifact:deploy>
-
-        <antcall target="createUpdateZip"/>
-        <antcall target="createUpdateZipJar"/>
-
     </target>
 
     <target name="fixSrc" description="Fix for VS Code source files - there is problem with annotation in VS Code, so we must revert changes before deployment">

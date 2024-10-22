@@ -102,7 +102,7 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 
 		try
 		{
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">			for (Indexed i : indexeds)</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">			for (Indexed i : indexeds)</span>
 			{
 
 <span class="fc" id="L108">				IndexWriterConfig config = new IndexWriterConfig(Version.LUCENE_31, AnalyzerFactory.getAnalyzer(Version.LUCENE_31,i.language()));</span>
@@ -121,48 +121,48 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 <span class="fc" id="L121">					config.setOpenMode(OpenMode.CREATE_OR_APPEND);</span>
 				}
 <span class="fc" id="L123">				config.setRAMBufferSizeMB(64.0);</span>
-<span class="nc" id="L124">				writer = new IndexWriter(getIndexDirectory(i.language()), config);</span>
+<span class="fc" id="L124">				writer = new IndexWriter(getIndexDirectory(i.language()), config);</span>
 
 
-<span class="nc bnc" id="L127" title="All 2 branches missed.">				if (indexed != null)</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">				if (indexed != null)</span>
 				{
-<span class="nc" id="L129">					log(FulltextSearch.class, &quot;Deleting index data, type=&quot;+indexed.name(), log);</span>
-<span class="nc" id="L130">					writer.deleteDocuments(new Term(&quot;type&quot;,indexed.name()));</span>
-<span class="nc" id="L131">					writer.commit();</span>
+<span class="fc" id="L129">					log(FulltextSearch.class, &quot;Deleting index data, type=&quot;+indexed.name(), log);</span>
+<span class="fc" id="L130">					writer.deleteDocuments(new Term(&quot;type&quot;,indexed.name()));</span>
+<span class="fc" id="L131">					writer.commit();</span>
 				}
-<span class="nc" id="L133">				ComplexQuery query = new ComplexQuery().setSql(i.sql());</span>
-<span class="nc" id="L134">				query.setStreamingResultSet(true);</span>
-<span class="nc" id="L135">				int count = i.numberOfDocuments();</span>
+<span class="fc" id="L133">				ComplexQuery query = new ComplexQuery().setSql(i.sql());</span>
+<span class="fc" id="L134">				query.setStreamingResultSet(true);</span>
+<span class="fc" id="L135">				int count = i.numberOfDocuments();</span>
 
-<span class="nc" id="L137">				final CountDownLatch latch = new CountDownLatch(count);</span>
+<span class="fc" id="L137">				final CountDownLatch latch = new CountDownLatch(count);</span>
 
-<span class="nc" id="L139">				i.setCallback(new Indexed.Callback()</span>
-<span class="nc" id="L140">				{</span>
+<span class="fc" id="L139">				i.setCallback(new Indexed.Callback()</span>
+<span class="fc" id="L140">				{</span>
 					@Override
 					public void call()
 					{
-<span class="nc" id="L144">						Logger.debug(FulltextSearch.class, &quot;count down call&quot;);</span>
-<span class="nc" id="L145">						latch.countDown();</span>
-<span class="nc" id="L146">					}</span>
+<span class="fc" id="L144">						Logger.debug(FulltextSearch.class, &quot;count down call&quot;);</span>
+<span class="fc" id="L145">						latch.countDown();</span>
+<span class="fc" id="L146">					}</span>
 				});
 
-<span class="nc" id="L149">				log(FulltextSearch.class, &quot;Indexing &quot; + count + &quot; documents.&quot;, log);</span>
-<span class="nc" id="L150">				query.list(i.mapper(writer, log));</span>
-<span class="nc" id="L151">				latch.await();</span>
-<span class="nc" id="L152">				writer.commit();</span>
-<span class="nc" id="L153">				log(FulltextSearch.class, &quot;Optimizing index.&quot;, log);</span>
-<span class="nc" id="L154">				writer.optimize();</span>
-<span class="nc" id="L155">				log(FulltextSearch.class, &quot;Closing index.&quot;, log);</span>
-<span class="nc" id="L156">				writer.close();</span>
-<span class="nc" id="L157">				writer = null;</span>
-<span class="nc" id="L158">				i.close();</span>
-<span class="nc" id="L159">			}</span>
+<span class="fc" id="L149">				log(FulltextSearch.class, &quot;Indexing &quot; + count + &quot; documents.&quot;, log);</span>
+<span class="fc" id="L150">				query.list(i.mapper(writer, log));</span>
+<span class="fc" id="L151">				latch.await();</span>
+<span class="fc" id="L152">				writer.commit();</span>
+<span class="fc" id="L153">				log(FulltextSearch.class, &quot;Optimizing index.&quot;, log);</span>
+<span class="fc" id="L154">				writer.optimize();</span>
+<span class="fc" id="L155">				log(FulltextSearch.class, &quot;Closing index.&quot;, log);</span>
+<span class="fc" id="L156">				writer.close();</span>
+<span class="fc" id="L157">				writer = null;</span>
+<span class="fc" id="L158">				i.close();</span>
+<span class="fc" id="L159">			}</span>
 		}
-<span class="fc" id="L161">		catch (Exception e)</span>
+<span class="nc" id="L161">		catch (Exception e)</span>
 		{
-<span class="fc" id="L163">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L164">			log(FulltextSearch.class, &quot;ERROR: &quot;+e.getMessage(), log);</span>
-<span class="nc" id="L165">		}</span>
+<span class="nc" id="L163">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L164">			log(FulltextSearch.class, &quot;ERROR: &quot;+e.getMessage(), log);</span>
+<span class="fc" id="L165">		}</span>
 
 <span class="pc bpc" id="L167" title="1 of 2 branches missed.">		if (writer != null)</span>
 		{
@@ -184,13 +184,13 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 	public static synchronized Directory getIndexDirectory(String language) throws IOException
 	{
 <span class="fc" id="L186">		SimpleFSDirectory directory = (SimpleFSDirectory) Cache.getInstance().getObject(&quot;FulltextSearch.getIndexDirectory.&quot; + language);</span>
-<span class="pc bpc" id="L187" title="1 of 2 branches missed.">		if (directory == null)</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">		if (directory == null)</span>
 		{
 			File indexDirectory;
 <span class="fc" id="L190">			indexDirectory = new File(LuceneUtils.LUCENE_INDEX,language);</span>
 <span class="pc bpc" id="L191" title="1 of 2 branches missed.">			if (!indexDirectory.exists())</span>
 			{
-<span class="fc" id="L193">				indexDirectory.mkdirs();</span>
+<span class="nc" id="L193">				indexDirectory.mkdirs();</span>
 			}
 <span class="fc" id="L195">			directory = new SimpleFSDirectory(indexDirectory);</span>
 <span class="fc" id="L196">			Cache.getInstance().setObject(&quot;FulltextSearch.getIndexDirectory.&quot; + language, directory, 5);</span>
@@ -255,9 +255,9 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 	public static synchronized Set&lt;String&gt; stopwords(String language)
 	{
 <span class="fc" id="L257">		Set&lt;String&gt; fromCache = (Set&lt;String&gt;) Cache.getInstance().getObject(&quot;FulltextSearch.stopwords.&quot; + language);</span>
-<span class="pc bpc" id="L258" title="1 of 2 branches missed.">		if (fromCache != null)</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">		if (fromCache != null)</span>
 		{
-<span class="nc" id="L260">			return fromCache;</span>
+<span class="fc" id="L260">			return fromCache;</span>
 		}
 <span class="fc" id="L262">		List&lt;String&gt; stopwords = new SimpleQuery().forList(&quot;select word from stopword where language = ? &quot;, language);</span>
 <span class="fc" id="L263">		Set&lt;String&gt; result = new HashSet&lt;&gt;(stopwords);</span>
@@ -340,12 +340,13 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 				}
 <span class="nc" id="L341">				count++;</span>
 <span class="nc" id="L342">			}</span>
-<span class="nc" id="L343">			cdb.finish();</span>
+<span class="nc" id="L343">			scanner.close();</span>
+<span class="nc" id="L344">			cdb.finish();</span>
 		}
-<span class="nc" id="L345">		catch (IOException e1)</span>
+<span class="nc" id="L346">		catch (IOException e1)</span>
 		{
-<span class="nc" id="L347">			sk.iway.iwcm.Logger.error(e1);</span>
-<span class="nc" id="L348">		}</span>
-<span class="nc" id="L349">	}</span>
+<span class="nc" id="L348">			sk.iway.iwcm.Logger.error(e1);</span>
+<span class="nc" id="L349">		}</span>
+<span class="nc" id="L350">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

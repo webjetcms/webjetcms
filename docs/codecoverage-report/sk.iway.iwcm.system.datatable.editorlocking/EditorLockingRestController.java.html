@@ -33,7 +33,7 @@ import sk.iway.iwcm.users.UsersDB;
 
     //nazov cachce objektu v pamäti
     private static final String CACHE_PREFIX = &quot;editor.locking&quot;;
-    //dlžka expiracie v minutach, pre dany cache objekt
+    //dlžka exspiracie v minutach, pre dany cache objekt
     private static final int CACHE_EXPIRE_MINUTES = 2;
 
     /**
@@ -63,7 +63,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc bfc" id="L63" title="All 2 branches covered.">                if(editAction.getEntityId() == entityId &amp;&amp;</span>
 <span class="fc bfc" id="L64" title="All 2 branches covered.">                    editAction.getUserId() == userId) {</span>
 <span class="fc" id="L65">                        actionExist = true;</span>
-                        //Aktualizuj poslednu zmenu (musi byť aktualizovana PRED odstranenim editActions, ktore expirovali)
+                        //Aktualizuj poslednu zmenu (musi byť aktualizovana PRED odstranenim editActions, ktore exspirovali)
 <span class="fc" id="L67">                        editAction.setLastChange(new Date());</span>
 <span class="fc" id="L68">                        break;</span>
                     }
@@ -75,7 +75,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L75">                editorLockingBeanList.add(getNewEditRecord(entityId, userId));</span>
             }
 
-            //Odstran editActions, ktore expirovali
+            //Odstran editActions, ktore exspirovali
 <span class="fc" id="L79">            removeExpiredEditActions(editorLockingBeanList);</span>
 
             //Vrať list ostatnych použivateľov, ktory upravuju rovnaky zaznam v rovnakej tabuľke (ako aktualny poživateľ)
@@ -131,12 +131,12 @@ import sk.iway.iwcm.users.UsersDB;
     }
 
     /**
-	 * Prejdi zadany list (List&lt;EditorLockingBean&gt;), a dostran z neho EditorLockingBean objekty, ktore už expirovali.
+	 * Prejdi zadany list (List&lt;EditorLockingBean&gt;), a dostran z neho EditorLockingBean objekty, ktore už exspirovali.
 	 *
 	 * @param entityId
 	 * @param tableUniqueId
      * @param request
-	 * @return list (List&lt;EditorLockingBean&gt;) s objektami, ktore ešte neexpirovali
+	 * @return list (List&lt;EditorLockingBean&gt;) s objektami, ktore ešte neexspirovali
 	 */
     private void removeExpiredEditActions(List&lt;EditorLockingBean&gt; editorLockingBeanList) {
         //Aktualny datum a čas v millisekundach
@@ -150,7 +150,7 @@ import sk.iway.iwcm.users.UsersDB;
             //Dokedy validne
 <span class="fc" id="L151">            long validUntil = editAction.getLastChange().getTime() + (60000 * CACHE_EXPIRE_MINUTES);</span>
 
-            //Ak editAction expirovala, odstraň ju
+            //Ak editAction exspirovala, odstraň ju
 <span class="fc bfc" id="L154" title="All 2 branches covered.">            if(now &gt;= validUntil) {</span>
 <span class="fc" id="L155">                i.remove();</span>
             }
@@ -194,10 +194,10 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L194">            editorLockingBeanList = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L195">            cache.setObject(cacheKey, editorLockingBeanList, CACHE_EXPIRE_MINUTES+5);</span>
         } else {
-            //musime ho v cache obnovit, aby neexpiroval
+            //musime ho v cache obnovit, aby neexspiroval
 <span class="fc" id="L198">            cache.setObjectExpiryTime(cacheKey, Tools.getNow() + ((CACHE_EXPIRE_MINUTES+5)*60*1000));</span>
         }
 <span class="fc" id="L200">        return editorLockingBeanList;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

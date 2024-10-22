@@ -130,7 +130,7 @@ public class BannerDB
 <span class="fc" id="L130">		ReadAllQuery dbQuery = new ReadAllQuery(BannerBean.class, builder);</span>
 
 <span class="fc" id="L132">		Expression expr = null;</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(groups))</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">		if (Tools.isNotEmpty(groups))</span>
 		{
 <span class="fc" id="L135">			groups = DB.removeSlashes(groups);</span>
 <span class="fc" id="L136">			StringTokenizer st = new StringTokenizer(groups, &quot;,+&quot;);</span>
@@ -143,8 +143,8 @@ public class BannerDB
 
 		}
 
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">		if(expr == null)</span>
-<span class="nc" id="L147">			expr = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">		if(expr == null)</span>
+<span class="fc" id="L147">			expr = builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId());</span>
 		else
 <span class="fc" id="L149">			expr = expr.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
 
@@ -856,13 +856,13 @@ public class BannerDB
 
 <span class="fc" id="L857">		String[] bannerUrls = Tools.getTokens(bannerLocation, &quot;,&quot;);</span>
 <span class="fc" id="L858">		boolean isBannerForUrl = false;</span>
-<span class="pc bpc" id="L859" title="1 of 2 branches missed.">		for (String bannerUrl : bannerUrls)</span>
+<span class="fc bfc" id="L859" title="All 2 branches covered.">		for (String bannerUrl : bannerUrls)</span>
 		{
 			//moznost zadat znak * alebo /zaciatok/url-adresy/* do pola Adresa umiestnenia bannera. Pri zadani znaku * sa banner bude zobrazovat na lubovolnej stranke, pri zadani /zaciatok/url-adresy/* na strankach s URL adresou zacinajucou na zadany vyraz.
-<span class="pc bpc" id="L862" title="7 of 8 branches missed.">			if (url.equals(bannerUrl) || &quot;*&quot;.equals(bannerUrl) || (bannerUrl.endsWith(&quot;/*&quot;) &amp;&amp; url.startsWith(bannerUrl.substring(0, bannerUrl.length()-1))))</span>
+<span class="pc bpc" id="L862" title="4 of 8 branches missed.">			if (url.equals(bannerUrl) || &quot;*&quot;.equals(bannerUrl) || (bannerUrl.endsWith(&quot;/*&quot;) &amp;&amp; url.startsWith(bannerUrl.substring(0, bannerUrl.length()-1))))</span>
 <span class="fc" id="L863">				isBannerForUrl = true;</span>
 
-<span class="pc bpc" id="L865" title="1 of 2 branches missed.">			if(isBannerForUrl) break;</span>
+<span class="fc bfc" id="L865" title="All 2 branches covered.">			if(isBannerForUrl) break;</span>
 		}
 <span class="fc" id="L867">		return isBannerForUrl;</span>
 	}
@@ -1915,7 +1915,7 @@ public class BannerDB
 	}
 
 	/**
-	 * Zistuje platnost baneru, ci je aktivny, banerovu expiraciu, ci nieje prekoreceny pocet zobrazeni
+	 * Zistuje platnost baneru, ci je aktivny, banerovu exspiraciu, ci nieje prekoreceny pocet zobrazeni
 	 * @param banner
 	 * @return
 	 */
@@ -1991,7 +1991,7 @@ public class BannerDB
 <span class="nc" id="L1991">							continue;</span>
 						}
 
-<span class="pc bpc" id="L1994" title="1 of 2 branches missed.">						if(isBannerForUrl(banner, url))</span>
+<span class="fc bfc" id="L1994" title="All 2 branches covered.">						if(isBannerForUrl(banner, url))</span>
 <span class="fc" id="L1995">							result.add(banner);</span>
 					}
 					else
@@ -2135,4 +2135,4 @@ public class BannerDB
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

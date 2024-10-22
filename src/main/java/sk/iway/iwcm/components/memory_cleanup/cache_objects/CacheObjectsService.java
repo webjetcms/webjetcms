@@ -80,6 +80,9 @@ public class CacheObjectsService {
             DB.resetHtmlAllowedFields();
             CombineTag.setVersion(now);
 
+            //Clear all spam protection maps
+            SpamProtection.clearAll();
+
             Adminlog.add(Adminlog.TYPE_DATA_DELETING, "Deleting cache ALL", -1, -1);
         } catch (Exception e) {
             Logger.error(CacheObjectsService.class, "Error deleting all cache objects. Error message: " + e.getMessage());

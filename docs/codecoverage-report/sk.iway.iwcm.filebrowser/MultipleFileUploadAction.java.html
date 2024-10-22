@@ -31,6 +31,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.editor.UploadFileAction;
@@ -70,7 +71,7 @@ import sk.iway.upload.UploadedFile;
 		urlPatterns = {&quot;/admin/multiplefileupload.do&quot;}
 
 )
-<span class="nc" id="L73">public class MultipleFileUploadAction extends HttpServlet</span>
+<span class="nc" id="L74">public class MultipleFileUploadAction extends HttpServlet</span>
 {
 
 	private static final long serialVersionUID = 1L;
@@ -78,99 +79,99 @@ import sk.iway.upload.UploadedFile;
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-<span class="nc" id="L81">		execute(request,response); //NOSONAR</span>
-<span class="nc" id="L82">	}</span>
+<span class="nc" id="L82">		execute(request,response); //NOSONAR</span>
+<span class="nc" id="L83">	}</span>
 
 	public void execute(
 			HttpServletRequest request,
 			HttpServletResponse response)
 			throws IOException, ServletException {
-<span class="nc" id="L88">		Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
+<span class="nc" id="L89">		Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
 
-<span class="nc" id="L90">		DiskMultiPartRequestHandler multipartHandler = new DiskMultiPartRequestHandler();</span>
+<span class="nc" id="L91">		DiskMultiPartRequestHandler multipartHandler = new DiskMultiPartRequestHandler();</span>
 		try
 		{
-<span class="nc" id="L93">			request = multipartHandler.handleRequest(request);</span>
+<span class="nc" id="L94">			request = multipartHandler.handleRequest(request);</span>
 		}
-<span class="nc" id="L95">		catch (Exception e)</span>
+<span class="nc" id="L96">		catch (Exception e)</span>
 		{
-<span class="nc" id="L97">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L98">		}</span>
+<span class="nc" id="L98">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L99">		}</span>
 
-<span class="nc" id="L100">		Logger.debugAllHeaders(request);</span>
-<span class="nc" id="L101">		Logger.debugAllParameters(request);</span>
+<span class="nc" id="L101">		Logger.debugAllHeaders(request);</span>
+<span class="nc" id="L102">		Logger.debugAllParameters(request);</span>
 
-<span class="nc" id="L103">		PrintWriter out = response.getWriter();</span>
-<span class="nc" id="L104">		boolean returnJson = Tools.getBooleanValue(Tools.getParameter(request, &quot;returnJson&quot;), false);</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">		if (returnJson) {</span>
-<span class="nc" id="L106">			response.setContentType(&quot;application/json; charset=UTF-8&quot;);</span>
+<span class="nc" id="L104">		PrintWriter out = response.getWriter();</span>
+<span class="nc" id="L105">		boolean returnJson = Tools.getBooleanValue(Tools.getParameter(request, &quot;returnJson&quot;), false);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">		if (returnJson) {</span>
+<span class="nc" id="L107">			response.setContentType(&quot;application/json; charset=UTF-8&quot;);</span>
 		}
 
 		/*
 		 * fbrowser - upload suborov v zalozke subory
 		 * gallery - upload suborov v galerii
 		 */
-<span class="nc" id="L113">		String typeOfUpload = &quot;fbrowser&quot;;</span>
-<span class="nc bnc" id="L114" title="All 2 branches missed.">		if(request.getParameter(&quot;type&quot;) != null)</span>
+<span class="nc" id="L114">		String typeOfUpload = &quot;fbrowser&quot;;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">		if(request.getParameter(&quot;type&quot;) != null)</span>
 		{
-<span class="nc" id="L116">			typeOfUpload = request.getParameter(&quot;type&quot;);</span>
+<span class="nc" id="L117">			typeOfUpload = request.getParameter(&quot;type&quot;);</span>
 		}
 
-<span class="nc" id="L119">        UserDetails user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L120">        UserDetails user = UsersDB.getCurrentUser(request);</span>
 
-<span class="nc" id="L121">		boolean ipCorrect = false;</span>
+<span class="nc" id="L122">		boolean ipCorrect = false;</span>
 
-<span class="nc bnc" id="L123" title="All 2 branches missed.">		if (user == null)</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">		if (user == null)</span>
 		{
             //session a prihlaseny uzivatel sa musi ziskavat cez session holder, kvoli Flash session bugu
-<span class="nc" id="L126">            SessionHolder sh = SessionHolder.getInstance();</span>
-<span class="nc" id="L127">            String sessionId = request.getParameter(&quot;sessionId&quot;);</span>
-<span class="nc" id="L128">            Logger.debug(MultipleFileUploadAction.class, &quot;sessionId=&quot; + sessionId + &quot; sh=&quot; + sh);</span>
-<span class="nc bnc" id="L129" title="All 4 branches missed.">            if (sh == null || Tools.isEmpty(sessionId)) {</span>
-<span class="nc" id="L130">				out.println(getMessage(request, false, &quot;Security Error&quot;));</span>
-<span class="nc" id="L131">                return ;</span>
+<span class="nc" id="L127">            SessionHolder sh = SessionHolder.getInstance();</span>
+<span class="nc" id="L128">            String sessionId = request.getParameter(&quot;sessionId&quot;);</span>
+<span class="nc" id="L129">            Logger.debug(MultipleFileUploadAction.class, &quot;sessionId=&quot; + sessionId + &quot; sh=&quot; + sh);</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">            if (sh == null || Tools.isEmpty(sessionId)) {</span>
+<span class="nc" id="L131">				out.println(getMessage(request, false, &quot;Security Error&quot;));</span>
+<span class="nc" id="L132">                return ;</span>
             }
-<span class="nc" id="L133">            SessionDetails sd = sh.get(sessionId);</span>
-<span class="nc bnc" id="L134" title="All 2 branches missed.">            if (sd == null) {</span>
-<span class="nc" id="L135">				out.println(getMessage(request, false, &quot;Security Error&quot;));</span>
-<span class="nc" id="L136">                return ;</span>
+<span class="nc" id="L134">            SessionDetails sd = sh.get(sessionId);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">            if (sd == null) {</span>
+<span class="nc" id="L136">				out.println(getMessage(request, false, &quot;Security Error&quot;));</span>
+<span class="nc" id="L137">                return ;</span>
             }
-<span class="nc" id="L138">            user = UsersDB.getUser(sd.getLoggedUserId());</span>
+<span class="nc" id="L139">            user = UsersDB.getUser(sd.getLoggedUserId());</span>
 
-<span class="nc" id="L140">            ipCorrect = Tools.getRemoteIP(request).equals(sd.getRemoteAddr());</span>
+<span class="nc" id="L141">            ipCorrect = Tools.getRemoteIP(request).equals(sd.getRemoteAddr());</span>
             //kvoli TB ktorej sa meni IP adresa pocas prihlasenia kvoli dvojitej proxy
-<span class="nc bnc" id="L142" title="All 4 branches missed.">            if (ipCorrect == false &amp;&amp; Constants.getBoolean(&quot;sessionStealingCheck&quot;)==false) ipCorrect = true;</span>
-<span class="nc" id="L143">        }</span>
+<span class="nc bnc" id="L143" title="All 4 branches missed.">            if (ipCorrect == false &amp;&amp; Constants.getBoolean(&quot;sessionStealingCheck&quot;)==false) ipCorrect = true;</span>
+<span class="nc" id="L144">        }</span>
         else {
-<span class="nc" id="L145">            ipCorrect = true;</span>
+<span class="nc" id="L146">            ipCorrect = true;</span>
         }
 
-<span class="nc bnc" id="L148" title="All 2 branches missed.">		String[] allowUploadGroupIds = Tools.isNotEmpty(Constants.getString(&quot;galleryAllowUploadGroupIds&quot;)) ? Tools.getTokens(Constants.getString(&quot;galleryAllowUploadGroupIds&quot;), &quot;,&quot;) : null;</span>
-<span class="nc" id="L149">		String dir = Tools.getStringValue(Tools.getParameter(request, &quot;dir&quot;), &quot;&quot;);</span>
-<span class="nc bnc" id="L150" title="All 6 branches missed.">		if (user == null || user.isAdmin() == false || ipCorrect == false)</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		String[] allowUploadGroupIds = Tools.isNotEmpty(Constants.getString(&quot;galleryAllowUploadGroupIds&quot;)) ? Tools.getTokens(Constants.getString(&quot;galleryAllowUploadGroupIds&quot;), &quot;,&quot;) : null;</span>
+<span class="nc" id="L150">		String dir = Tools.getStringValue(Tools.getParameter(request, &quot;dir&quot;), &quot;&quot;);</span>
+<span class="nc bnc" id="L151" title="All 6 branches missed.">		if (user == null || user.isAdmin() == false || ipCorrect == false)</span>
 		{
-<span class="nc bnc" id="L152" title="All 2 branches missed.">			if (isAllowedUploadForUserGroup(user, dir)) {</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">			if (isAllowedUploadForUserGroup(user, dir)) {</span>
 
 			}
-<span class="nc bnc" id="L155" title="All 2 branches missed.">			else if (&quot;true&quot;.equals(request.getAttribute(&quot;allowUpload&quot;)))</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			else if (&quot;true&quot;.equals(request.getAttribute(&quot;allowUpload&quot;)))</span>
 			{
 
 			}
-<span class="nc bnc" id="L159" title="All 6 branches missed.">			else if (user != null &amp;&amp; &quot;gallery&quot;.equals(typeOfUpload) &amp;&amp; Tools.containsOneItem(Tools.getTokens(user.getUserGroupsIds(), &quot;,&quot;),allowUploadGroupIds))</span>
+<span class="nc bnc" id="L160" title="All 6 branches missed.">			else if (user != null &amp;&amp; &quot;gallery&quot;.equals(typeOfUpload) &amp;&amp; Tools.containsOneItem(Tools.getTokens(user.getUserGroupsIds(), &quot;,&quot;),allowUploadGroupIds))</span>
 			{
 
 			}
 			else
 			{
-<span class="nc" id="L165">				Logger.debug(MultipleFileUploadAction.class, &quot;user is not allowed to upload - remoteIp=&quot;+Tools.getRemoteIP(request));</span>
-<span class="nc" id="L166">				out.println(getMessage(request, false, &quot;Security Error&quot;));</span>
-<span class="nc" id="L167">				return ;</span>
+<span class="nc" id="L166">				Logger.debug(MultipleFileUploadAction.class, &quot;user is not allowed to upload - remoteIp=&quot;+Tools.getRemoteIP(request));</span>
+<span class="nc" id="L167">				out.println(getMessage(request, false, &quot;Security Error&quot;));</span>
+<span class="nc" id="L168">				return ;</span>
 			}
 		}
 
 		//nastavim userId do RequestBean-u
-<span class="nc" id="L172">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L173" title="All 2 branches missed.">		if (user != null) rb.setUserId(user.getUserId());</span>
+<span class="nc" id="L173">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">		if (user != null) rb.setUserId(user.getUserId());</span>
 
 		//sprav upload
 		UploadedFile formFile;
@@ -178,123 +179,123 @@ import sk.iway.upload.UploadedFile;
 		try
 		{
 			//ziskam si adresar z parametru
-<span class="nc bnc" id="L181" title="All 2 branches missed.">			if(Tools.isEmpty(dir))</span>
+<span class="nc bnc" id="L182" title="All 2 branches missed.">			if(Tools.isEmpty(dir))</span>
 			{
-<span class="nc" id="L183">				Logger.debug(MultipleFileUploadAction.class, &quot;dir is empty&quot;);</span>
-<span class="nc" id="L184">				out.println(getMessage(request, false, &quot;Upload error&quot;));</span>
-<span class="nc" id="L185">				return ;</span>
+<span class="nc" id="L184">				Logger.debug(MultipleFileUploadAction.class, &quot;dir is empty&quot;);</span>
+<span class="nc" id="L185">				out.println(getMessage(request, false, &quot;Upload error&quot;));</span>
+<span class="nc" id="L186">				return ;</span>
 			}
 
-<span class="nc bnc" id="L188" title="All 4 branches missed.">			if (ContextFilter.isRunning(request) &amp;&amp; dir.startsWith(request.getContextPath()))</span>
+<span class="nc bnc" id="L189" title="All 4 branches missed.">			if (ContextFilter.isRunning(request) &amp;&amp; dir.startsWith(request.getContextPath()))</span>
 			{
-<span class="nc" id="L190">				dir = ContextFilter.removeContextPath(request.getContextPath(), dir);</span>
+<span class="nc" id="L191">				dir = ContextFilter.removeContextPath(request.getContextPath(), dir);</span>
 			}
 
-<span class="nc bnc" id="L193" title="All 4 branches missed.">			if (Tools.isNotEmpty(dir) &amp;&amp; GalleryDB.isGalleryFolder(dir)) typeOfUpload = &quot;gallery&quot;;</span>
+<span class="nc bnc" id="L194" title="All 4 branches missed.">			if (Tools.isNotEmpty(dir) &amp;&amp; GalleryDB.isGalleryFolder(dir)) typeOfUpload = &quot;gallery&quot;;</span>
 
-<span class="nc" id="L195">			Logger.debug(MultipleFileUploadAction.class, &quot;Type of upload: &quot;+typeOfUpload);</span>
+<span class="nc" id="L196">			Logger.debug(MultipleFileUploadAction.class, &quot;Type of upload: &quot;+typeOfUpload);</span>
 
-<span class="nc" id="L197">			String fileNameFallback = null;</span>
+<span class="nc" id="L198">			String fileNameFallback = null;</span>
 
 
-<span class="nc" id="L200">			Map&lt;String, UploadedFile&gt; files = multipartHandler.getFileElements();</span>
-<span class="nc" id="L201">			Set&lt;Map.Entry&lt;String, UploadedFile&gt;&gt; set = files.entrySet();</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">			for (Map.Entry&lt;String,UploadedFile&gt; me : set)</span>
+<span class="nc" id="L201">			Map&lt;String, UploadedFile&gt; files = multipartHandler.getFileElements();</span>
+<span class="nc" id="L202">			Set&lt;Map.Entry&lt;String, UploadedFile&gt;&gt; set = files.entrySet();</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">			for (Map.Entry&lt;String,UploadedFile&gt; me : set)</span>
 			{
-<span class="nc" id="L204">				formFile = files.get(me.getKey());</span>
-<span class="nc" id="L205">				cleanMetadata(formFile);</span>
-<span class="nc" id="L206">				Logger.debug(MultipleFileUploadAction.class, &quot;formFile=&quot;+formFile);</span>
-<span class="nc bnc" id="L207" title="All 4 branches missed.">				if (formFile != null &amp;&amp; formFile.getFileSize() &gt; 0)</span>
+<span class="nc" id="L205">				formFile = files.get(me.getKey());</span>
+<span class="nc" id="L206">				cleanMetadata(formFile);</span>
+<span class="nc" id="L207">				Logger.debug(MultipleFileUploadAction.class, &quot;formFile=&quot;+formFile);</span>
+<span class="nc bnc" id="L208" title="All 4 branches missed.">				if (formFile != null &amp;&amp; formFile.getFileSize() &gt; 0)</span>
 				{
-<span class="nc" id="L209">					Logger.debug(MultipleFileUploadAction.class, &quot;fileSize=&quot;+formFile.getFileSize());</span>
+<span class="nc" id="L210">					Logger.debug(MultipleFileUploadAction.class, &quot;fileSize=&quot;+formFile.getFileSize());</span>
 
-<span class="nc bnc" id="L211" title="All 2 branches missed.">					if(&quot;fbrowser&quot;.equals(typeOfUpload))</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">					if(&quot;fbrowser&quot;.equals(typeOfUpload))</span>
 					{
 						//kontroluje limity pre velkost a typy suborov
-<span class="nc bnc" id="L214" title="All 2 branches missed.">						if(UploadFileAction.isFileAllowed(formFile, new Identity(user), &quot;file&quot;, request) == false)</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">						if(UploadFileAction.isFileAllowed(formFile, new Identity(user), &quot;file&quot;, request) == false)</span>
 						{
-<span class="nc bnc" id="L216" title="All 2 branches missed.">							if(request.getAttribute(&quot;permissionDenied&quot;) != null)</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">							if(request.getAttribute(&quot;permissionDenied&quot;) != null)</span>
 							{
-<span class="nc bnc" id="L218" title="All 2 branches missed.">								if(&quot;fileSize&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">								if(&quot;fileSize&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
 								{
-<span class="nc" id="L220">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR: File exceeds&quot;);</span>
-<span class="nc" id="L221">									out.println(getMessage(request, false, &quot;File exceeds&quot;));</span>
+<span class="nc" id="L221">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR: File exceeds&quot;);</span>
+<span class="nc" id="L222">									out.println(getMessage(request, false, &quot;File exceeds&quot;));</span>
 								}
-<span class="nc bnc" id="L223" title="All 2 branches missed.">								else if(&quot;fileType&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">								else if(&quot;fileType&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
 								{
-<span class="nc" id="L225">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR: Invalid filetype&quot;);</span>
-<span class="nc" id="L226">									out.println(getMessage(request, false, &quot;Invalid filetype&quot;));</span>
+<span class="nc" id="L226">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR: Invalid filetype&quot;);</span>
+<span class="nc" id="L227">									out.println(getMessage(request, false, &quot;Invalid filetype&quot;));</span>
 								}
 							}
 						}
 						else
 						{
 							//retrieve the file name
-<span class="nc" id="L233">							String fileName = formFile.getFileName().trim();</span>
+<span class="nc" id="L234">							String fileName = formFile.getFileName().trim();</span>
 							//Logger.println(this,&quot;we have a file name=&quot;+fileName+&quot; content type=&quot;+file.getContentType());
-<span class="nc" id="L235">							Logger.debug(MultipleFileUploadAction.class, &quot;file name=&quot;+fileName);</span>
+<span class="nc" id="L236">							Logger.debug(MultipleFileUploadAction.class, &quot;file name=&quot;+fileName);</span>
 
-<span class="nc bnc" id="L237" title="All 4 branches missed.">							if (fileName != null &amp;&amp; fileName.length() &gt; 1)</span>
+<span class="nc bnc" id="L238" title="All 4 branches missed.">							if (fileName != null &amp;&amp; fileName.length() &gt; 1)</span>
 							{
-<span class="nc bnc" id="L239" title="All 4 branches missed.">								if (dir.startsWith(&quot;/files&quot;) || dir.startsWith(&quot;/images&quot;))</span>
+<span class="nc bnc" id="L240" title="All 4 branches missed.">								if (dir.startsWith(&quot;/files&quot;) || dir.startsWith(&quot;/images&quot;))</span>
 								{
-<span class="nc" id="L241">									fileName = DB.internationalToEnglish(fileName);</span>
-<span class="nc" id="L242">									fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
+<span class="nc" id="L242">									fileName = DB.internationalToEnglish(fileName);</span>
+<span class="nc" id="L243">									fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
 								}
 
-<span class="nc" id="L245">								String realPath = null;</span>
+<span class="nc" id="L246">								String realPath = null;</span>
 
-<span class="nc" id="L247">								realPath = Tools.getRealPath(dir) + File.separatorChar + fileName;</span>
+<span class="nc" id="L248">								realPath = Tools.getRealPath(dir) + File.separatorChar + fileName;</span>
 
-<span class="nc" id="L249">								Logger.debug(MultipleFileUploadAction.class, &quot;realPath=&quot;+realPath);</span>
+<span class="nc" id="L250">								Logger.debug(MultipleFileUploadAction.class, &quot;realPath=&quot;+realPath);</span>
 
-<span class="nc bnc" id="L251" title="All 2 branches missed.">								if (realPath != null)</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">								if (realPath != null)</span>
 								{
-<span class="nc" id="L253">									IwcmFile f = new IwcmFile(realPath);</span>
+<span class="nc" id="L254">									IwcmFile f = new IwcmFile(realPath);</span>
 
-<span class="nc" id="L255">									IwcmFsDB.writeFiletoDest(formFile.getInputStream(), new File(f.getPath()), formFile.getFileSize());</span>
+<span class="nc" id="L256">									IwcmFsDB.writeFiletoDest(formFile.getInputStream(), new File(f.getPath()), formFile.getFileSize());</span>
 
-<span class="nc" id="L257">									Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;Multiple file upload, file=&quot;+dir+&quot;/&quot;+fileName, -1, -1);</span>
+<span class="nc" id="L258">									Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;Multiple file upload, file=&quot;+dir+&quot;/&quot;+fileName, -1, -1);</span>
 
 									//ak je treba, aplikujem vodotlac na obrazky
-<span class="nc" id="L260">									GalleryDB.applyWatermarkOnUpload(f);</span>
+<span class="nc" id="L261">									GalleryDB.applyWatermarkOnUpload(f);</span>
 
 									//zmaz temp subor
-<span class="nc" id="L263">									formFile.destroy();</span>
+<span class="nc" id="L264">									formFile.destroy();</span>
 									//ak existuje adresar files, treba indexovat
-<span class="nc bnc" id="L265" title="All 2 branches missed.">									if (FileIndexer.isFileIndexerConfigured())</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">									if (FileIndexer.isFileIndexerConfigured())</span>
 									{
-<span class="nc" id="L267">										List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L268">										List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
 										//musim dat do session prihlaseneho uzivatela, kvoli flash session bug
-<span class="nc bnc" id="L269" title="All 2 branches missed.">										boolean userInSessionExists = request.getSession().getAttribute(Constants.USER_KEY) != null;</span>
-<span class="nc bnc" id="L270" title="All 2 branches missed.">										if (userInSessionExists==false) LogonTools.setUserToSession(request.getSession(), new Identity(user));</span>
-<span class="nc" id="L271">										FileIndexer.indexFile(dir + &quot;/&quot; + fileName, indexedFiles, request);</span>
-<span class="nc bnc" id="L272" title="All 2 branches missed.">										if (userInSessionExists==false) request.getSession().removeAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L270" title="All 2 branches missed.">										boolean userInSessionExists = request.getSession().getAttribute(Constants.USER_KEY) != null;</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">										if (userInSessionExists==false) LogonTools.setUserToSession(request.getSession(), new Identity(user));</span>
+<span class="nc" id="L272">										FileIndexerTools.indexFile(dir + &quot;/&quot; + fileName, indexedFiles, request);</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">										if (userInSessionExists==false) request.getSession().removeAttribute(Constants.USER_KEY);</span>
 									}
 									//MetadataCleaner.removeMetadata(f);
 								}
 
-<span class="nc" id="L277">								out.println(getMessageForFile(request, true, dir, fileName));</span>
-<span class="nc bnc" id="L278" title="All 2 branches missed.">								if (fileNameFallback==null) fileNameFallback = fileName;</span>
+<span class="nc" id="L278">								out.println(getMessageForFile(request, true, dir, fileName));</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">								if (fileNameFallback==null) fileNameFallback = fileName;</span>
 							}
 						}
 					}
-<span class="nc bnc" id="L282" title="All 2 branches missed.">					if(&quot;gallery&quot;.equals(typeOfUpload))</span>
+<span class="nc bnc" id="L283" title="All 2 branches missed.">					if(&quot;gallery&quot;.equals(typeOfUpload))</span>
 					{
 						//kontroluje limity pre velkost a typy suborov
-<span class="nc bnc" id="L285" title="All 2 branches missed.">						if(UploadFileAction.isFileAllowed(formFile, new Identity(user), &quot;image&quot;, request) == false)</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">						if(UploadFileAction.isFileAllowed(formFile, new Identity(user), &quot;image&quot;, request) == false)</span>
 						{
-<span class="nc bnc" id="L287" title="All 2 branches missed.">							if(request.getAttribute(&quot;permissionDenied&quot;) != null)</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">							if(request.getAttribute(&quot;permissionDenied&quot;) != null)</span>
 							{
-<span class="nc bnc" id="L289" title="All 2 branches missed.">								if(&quot;fileSize&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">								if(&quot;fileSize&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
 								{
-<span class="nc" id="L291">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR (gallery): File exceeds&quot;);</span>
-<span class="nc" id="L292">									out.println(getMessage(request, false, &quot;File exceeds&quot;));</span>
+<span class="nc" id="L292">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR (gallery): File exceeds&quot;);</span>
+<span class="nc" id="L293">									out.println(getMessage(request, false, &quot;File exceeds&quot;));</span>
 								}
-<span class="nc bnc" id="L294" title="All 2 branches missed.">								else if(&quot;fileType&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">								else if(&quot;fileType&quot;.equals(request.getAttribute(&quot;permissionDenied&quot;)))</span>
 								{
-<span class="nc" id="L296">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR (gallery): Invalid filetype&quot;);</span>
-<span class="nc" id="L297">									out.println(getMessage(request, false, &quot;Invalid filetype&quot;));</span>
+<span class="nc" id="L297">									Logger.debug(MultipleFileUploadAction.class, &quot;ERROR (gallery): Invalid filetype&quot;);</span>
+<span class="nc" id="L298">									out.println(getMessage(request, false, &quot;Invalid filetype&quot;));</span>
 								}
 							}
 						}
@@ -302,197 +303,197 @@ import sk.iway.upload.UploadedFile;
 						{
 
 							//retrieve the file name
-<span class="nc" id="L305">							String fileName = formFile.getFileName().trim();</span>
+<span class="nc" id="L306">							String fileName = formFile.getFileName().trim();</span>
 							//Logger.println(this,&quot;we have a file name=&quot;+fileName+&quot; content type=&quot;+file.getContentType());
 
-<span class="nc" id="L308">							Logger.debug(MultipleFileUploadAction.class, &quot;file name (gallery)=&quot;+fileName);</span>
+<span class="nc" id="L309">							Logger.debug(MultipleFileUploadAction.class, &quot;file name (gallery)=&quot;+fileName);</span>
 
-<span class="nc bnc" id="L310" title="All 4 branches missed.">							if (fileName != null &amp;&amp; fileName.length() &gt; 1)</span>
+<span class="nc bnc" id="L311" title="All 4 branches missed.">							if (fileName != null &amp;&amp; fileName.length() &gt; 1)</span>
 							{
-<span class="nc" id="L312">								fileName = DB.internationalToEnglish(fileName);</span>
-<span class="nc" id="L313">								fileName = DocTools.removeChars(fileName);</span>
+<span class="nc" id="L313">								fileName = DB.internationalToEnglish(fileName);</span>
+<span class="nc" id="L314">								fileName = DocTools.removeChars(fileName);</span>
 
-<span class="nc" id="L315">								BufferedInputStream buffReader = new BufferedInputStream(formFile.getInputStream());</span>
-<span class="nc" id="L316">								String realPath = null;</span>
+<span class="nc" id="L316">								BufferedInputStream buffReader = new BufferedInputStream(formFile.getInputStream());</span>
+<span class="nc" id="L317">								String realPath = null;</span>
 
-<span class="nc" id="L318">								Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
-<span class="nc" id="L319">								Dimension[] dims = GalleryDB.getDimension(dir);</span>
+<span class="nc" id="L319">								Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+<span class="nc" id="L320">								Dimension[] dims = GalleryDB.getDimension(dir);</span>
 
-<span class="nc" id="L321">								String fNameLC = fileName.toLowerCase();</span>
+<span class="nc" id="L322">								String fNameLC = fileName.toLowerCase();</span>
 								//ak sa jedna o obrazok
-<span class="nc bnc" id="L323" title="All 10 branches missed.">								if (fNameLC.endsWith(&quot;.jpg&quot;) || fNameLC.endsWith(&quot;.jpeg&quot;) || fNameLC.endsWith(&quot;.gif&quot;) || fNameLC.endsWith(&quot;.png&quot;) || VideoConvert.isVideoFile(fNameLC))</span>
+<span class="nc bnc" id="L324" title="All 10 branches missed.">								if (fNameLC.endsWith(&quot;.jpg&quot;) || fNameLC.endsWith(&quot;.jpeg&quot;) || fNameLC.endsWith(&quot;.gif&quot;) || fNameLC.endsWith(&quot;.png&quot;) || VideoConvert.isVideoFile(fNameLC))</span>
 								{
-<span class="nc bnc" id="L325" title="All 2 branches missed.">									fileName = fNameLC.endsWith(&quot;.jpeg&quot;)?fileName.substring(0, fileName.lastIndexOf(&quot;.&quot;))+&quot;.jpg&quot;:fileName;</span>
-<span class="nc" id="L326">									realPath = Tools.getRealPath(dir+&quot;/&quot;+fileName); //NOSONAR</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">									fileName = fNameLC.endsWith(&quot;.jpeg&quot;)?fileName.substring(0, fileName.lastIndexOf(&quot;.&quot;))+&quot;.jpg&quot;:fileName;</span>
+<span class="nc" id="L327">									realPath = Tools.getRealPath(dir+&quot;/&quot;+fileName); //NOSONAR</span>
 
-<span class="nc" id="L328">									Logger.debug(MultipleFileUploadAction.class, &quot;realPath=&quot;+realPath);</span>
+<span class="nc" id="L329">									Logger.debug(MultipleFileUploadAction.class, &quot;realPath=&quot;+realPath);</span>
 
-<span class="nc bnc" id="L330" title="All 2 branches missed.">									if (realPath != null)</span>
+<span class="nc bnc" id="L331" title="All 2 branches missed.">									if (realPath != null)</span>
 									{
-<span class="nc" id="L332">										IwcmFile f = new IwcmFile(realPath);</span>
+<span class="nc" id="L333">										IwcmFile f = new IwcmFile(realPath);</span>
 
 										//odstranime metadata este pred dalsim spracovanim suborov v galerii
 										//MetadataCleaner.removeMetadata(f);
 
-<span class="nc" id="L337">										IwcmFsDB.writeFiletoDest(formFile.getInputStream(), new File(f.getPath()),formFile.getFileSize());</span>
+<span class="nc" id="L338">										IwcmFsDB.writeFiletoDest(formFile.getInputStream(), new File(f.getPath()),formFile.getFileSize());</span>
 
-<span class="nc" id="L339">										Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;Multiple file upload, file=&quot;+dir+&quot;/&quot;+fileName, -1, -1);</span>
+<span class="nc" id="L340">										Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;Multiple file upload, file=&quot;+dir+&quot;/&quot;+fileName, -1, -1);</span>
 
 										//ak je treba, aplikujem vodotlac na obrazky
-<span class="nc" id="L342">										GalleryDB.applyWatermarkOnUpload(f);</span>
+<span class="nc" id="L343">										GalleryDB.applyWatermarkOnUpload(f);</span>
 
 										//zmaz temp subor
-<span class="nc" id="L345">										formFile.destroy();</span>
+<span class="nc" id="L346">										formFile.destroy();</span>
 
-<span class="nc bnc" id="L347" title="All 2 branches missed.">										if (VideoConvert.isVideoFile(fNameLC))</span>
+<span class="nc bnc" id="L348" title="All 2 branches missed.">										if (VideoConvert.isVideoFile(fNameLC))</span>
 										{
-<span class="nc" id="L349">											UploadFileForm my_form = new UploadFileForm();</span>
-<span class="nc" id="L350">											my_form.setBitRate(768);</span>
-<span class="nc" id="L351">											my_form.setVideoWidth(Constants.getInt(&quot;defaultVideoWidth&quot;));</span>
-<span class="nc" id="L352">											my_form.setVideoHeight(Constants.getInt(&quot;defaultVideoHeight&quot;));</span>
-<span class="nc" id="L353">											my_form.setKeepOriginalVideo(false);</span>
+<span class="nc" id="L350">											UploadFileForm my_form = new UploadFileForm();</span>
+<span class="nc" id="L351">											my_form.setBitRate(768);</span>
+<span class="nc" id="L352">											my_form.setVideoWidth(Constants.getInt(&quot;defaultVideoWidth&quot;));</span>
+<span class="nc" id="L353">											my_form.setVideoHeight(Constants.getInt(&quot;defaultVideoHeight&quot;));</span>
+<span class="nc" id="L354">											my_form.setKeepOriginalVideo(false);</span>
 
-<span class="nc" id="L355">											String fileURL = dir+&quot;/&quot;+fileName;</span>
-<span class="nc" id="L356">											fileURL = VideoConvert.convert(my_form, fileURL, request);</span>
-<span class="nc" id="L357">										}</span>
+<span class="nc" id="L356">											String fileURL = dir+&quot;/&quot;+fileName;</span>
+<span class="nc" id="L357">											fileURL = VideoConvert.convert(my_form, fileURL, request);</span>
+<span class="nc" id="L358">										}</span>
 										else
 										{
 											// ak je to povolene, pokusime sa skonvertovat CMYK obrazok na RGB
-<span class="nc" id="L361">											ImageTools.convertCmykToRgb(f.getPath());</span>
+<span class="nc" id="L362">											ImageTools.convertCmykToRgb(f.getPath());</span>
 
 											//ak je to JPG obrazok, skusime ziskat datum vytvorenia fotografie na zaklade EXIF metadat
-<span class="nc" id="L364">											Date dateCreated = GalleryDB.getExifDateOriginal(f);</span>
+<span class="nc" id="L365">											Date dateCreated = GalleryDB.getExifDateOriginal(f);</span>
 
 											//ak existuje zmaz subor o_nazov, lebo by sa to znova updatlo zo stareho
-<span class="nc" id="L367">											IwcmFile origFile = new IwcmFile(Tools.getRealPath(dir+&quot;/o_&quot;+fileName));</span>
-<span class="nc bnc" id="L368" title="All 2 branches missed.">											if (origFile.exists())</span>
+<span class="nc" id="L368">											IwcmFile origFile = new IwcmFile(Tools.getRealPath(dir+&quot;/o_&quot;+fileName));</span>
+<span class="nc bnc" id="L369" title="All 2 branches missed.">											if (origFile.exists())</span>
 											{
-<span class="nc" id="L370">												origFile.delete();</span>
+<span class="nc" id="L371">												origFile.delete();</span>
 											}
 											//resize
-<span class="nc" id="L373">											GalleryDB.resizePictureImpl(dims, realPath, out, prop, GalleryDB.getResizeMode(dir));</span>
+<span class="nc" id="L374">											GalleryDB.resizePictureImpl(dims, realPath, out, prop, GalleryDB.getResizeMode(dir));</span>
 
-<span class="nc bnc" id="L375" title="All 4 branches missed.">											if(Tools.isNotEmpty(request.getParameter(&quot;item&quot;)) &amp;&amp; user != null)</span>
-<span class="nc" id="L376">												GalleryDB.updateImageItem(-1, request.getParameter(&quot;item&quot;), user.getFullName(), dir, fileName, PageLng.getUserLng(request));</span>
+<span class="nc bnc" id="L376" title="All 4 branches missed.">											if(Tools.isNotEmpty(request.getParameter(&quot;item&quot;)) &amp;&amp; user != null)</span>
+<span class="nc" id="L377">												GalleryDB.updateImageItem(-1, request.getParameter(&quot;item&quot;), user.getFullName(), dir, fileName, PageLng.getUserLng(request));</span>
 
 											//zapise datum vytvorenia fotografie (ak vieme ziskat)
-<span class="nc bnc" id="L379" title="All 2 branches missed.">											if(dateCreated != null)</span>
-<span class="nc" id="L380">												GalleryDB.setUploadDateImage(dir, fileName, dateCreated.getTime());</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">											if(dateCreated != null)</span>
+<span class="nc" id="L381">												GalleryDB.setUploadDateImage(dir, fileName, dateCreated.getTime());</span>
 										}
 									}
 								}
-<span class="nc" id="L384">								buffReader.close();</span>
-<span class="nc" id="L385">								out.println(getMessageForFile(request, false, dir, fileName));</span>
-<span class="nc bnc" id="L386" title="All 2 branches missed.">								if (fileNameFallback==null) fileNameFallback = fileName;</span>
+<span class="nc" id="L385">								buffReader.close();</span>
+<span class="nc" id="L386">								out.println(getMessageForFile(request, false, dir, fileName));</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">								if (fileNameFallback==null) fileNameFallback = fileName;</span>
 							}
 						}
 					}
 				}
-<span class="nc" id="L391">			}</span>
+<span class="nc" id="L392">			}</span>
 
-<span class="nc bnc" id="L393" title="All 4 branches missed.">			if (fileNameFallback!=null &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;fallback&quot;)))</span>
+<span class="nc bnc" id="L394" title="All 4 branches missed.">			if (fileNameFallback!=null &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;fallback&quot;)))</span>
 			{
-<span class="nc" id="L395">				String type=&quot;image&quot;;</span>
-<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (dir.startsWith(&quot;/files&quot;)) type=&quot;file&quot;;</span>
+<span class="nc" id="L396">				String type=&quot;image&quot;;</span>
+<span class="nc bnc" id="L397" title="All 2 branches missed.">				if (dir.startsWith(&quot;/files&quot;)) type=&quot;file&quot;;</span>
 
-<span class="nc" id="L398">				out.print(&quot;&lt;script type='text/javascript'&gt;window.location.href=\&quot;/admin/dir.do?type=&quot;+type+&quot;&amp;selectLink=&quot;+Tools.URLEncode(fileNameFallback)+&quot;\&quot;;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L399">				out.print(&quot;&lt;script type='text/javascript'&gt;window.location.href=\&quot;/admin/dir.do?type=&quot;+type+&quot;&amp;selectLink=&quot;+Tools.URLEncode(fileNameFallback)+&quot;\&quot;;&lt;/script&gt;&quot;);</span>
 			}
 		}
-<span class="nc" id="L401">		catch (Exception e)</span>
+<span class="nc" id="L402">		catch (Exception e)</span>
 		{
-<span class="nc" id="L403">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L404">			out.println(getMessage(request, false, &quot;Upload error&quot;));</span>
-<span class="nc" id="L405">		}</span>
+<span class="nc" id="L404">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L405">			out.println(getMessage(request, false, &quot;Upload error&quot;));</span>
+<span class="nc" id="L406">		}</span>
 
-<span class="nc" id="L407">		out.close();</span>
-<span class="nc" id="L408">	}</span>
+<span class="nc" id="L408">		out.close();</span>
+<span class="nc" id="L409">	}</span>
 
 	public static void cleanMetadata(UploadedFile uploadedFile)
 	{
 //		String fileName = formFile.get
-<span class="nc" id="L413">		String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
-<span class="nc bnc" id="L414" title="All 4 branches missed.">		if (Tools.isNotEmpty(metadataRemoverCommand) &amp;&amp; uploadedFile != null)</span>
+<span class="nc" id="L414">		String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
+<span class="nc bnc" id="L415" title="All 4 branches missed.">		if (Tools.isNotEmpty(metadataRemoverCommand) &amp;&amp; uploadedFile != null)</span>
 		{
 			try
 			{
-<span class="nc" id="L418">				File tempFile = File.createTempFile(&quot;upload&quot;, uploadedFile.getFileName());</span>
-<span class="nc" id="L419">				IwcmFile tempIwcm = new IwcmFile(tempFile);</span>
-<span class="nc" id="L420">				IwcmFsDB.writeFiletoDest(uploadedFile.getInputStream(), tempFile, 0);</span>
-<span class="nc" id="L421">				MetadataCleaner.removeMetadata(tempIwcm);</span>
-<span class="nc" id="L422">				uploadedFile.setLocalFile(tempIwcm);</span>
-<span class="nc" id="L423">			} catch (IOException e)</span>
+<span class="nc" id="L419">				File tempFile = File.createTempFile(&quot;upload&quot;, uploadedFile.getFileName());</span>
+<span class="nc" id="L420">				IwcmFile tempIwcm = new IwcmFile(tempFile);</span>
+<span class="nc" id="L421">				IwcmFsDB.writeFiletoDest(uploadedFile.getInputStream(), tempFile, 0);</span>
+<span class="nc" id="L422">				MetadataCleaner.removeMetadata(tempIwcm);</span>
+<span class="nc" id="L423">				uploadedFile.setLocalFile(tempIwcm);</span>
+<span class="nc" id="L424">			} catch (IOException e)</span>
 			{
-<span class="nc" id="L425">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L426">			}</span>
+<span class="nc" id="L426">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L427">			}</span>
 		}
 
-<span class="nc" id="L429">	}</span>
+<span class="nc" id="L430">	}</span>
 
 	private String getMessageForFile(HttpServletRequest request, boolean result, String dir, String fileName) {
-<span class="nc" id="L432">		boolean returnJson = Tools.getBooleanValue(Tools.getParameter(request, &quot;returnJson&quot;), false);</span>
-<span class="nc bnc" id="L433" title="All 2 branches missed.">		if (!returnJson) {</span>
-<span class="nc" id="L434">			return &quot;OK&quot;;</span>
+<span class="nc" id="L433">		boolean returnJson = Tools.getBooleanValue(Tools.getParameter(request, &quot;returnJson&quot;), false);</span>
+<span class="nc bnc" id="L434" title="All 2 branches missed.">		if (!returnJson) {</span>
+<span class="nc" id="L435">			return &quot;OK&quot;;</span>
 		}
 
-<span class="nc" id="L437">		Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L438">		map.put(&quot;result&quot;, result);</span>
-<span class="nc" id="L439">		map.put(&quot;dir&quot;, dir);</span>
-<span class="nc" id="L440">		map.put(&quot;fileName&quot;, fileName);</span>
+<span class="nc" id="L438">		Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L439">		map.put(&quot;result&quot;, result);</span>
+<span class="nc" id="L440">		map.put(&quot;dir&quot;, dir);</span>
+<span class="nc" id="L441">		map.put(&quot;fileName&quot;, fileName);</span>
 
-<span class="nc" id="L442">		return new JSONObject(map).toString();</span>
+<span class="nc" id="L443">		return new JSONObject(map).toString();</span>
 	}
 
 	private String getMessage(HttpServletRequest request, boolean result, String message) {
-<span class="nc" id="L446">		boolean returnJson = Tools.getBooleanValue(Tools.getParameter(request, &quot;returnJson&quot;), false);</span>
-<span class="nc bnc" id="L447" title="All 2 branches missed.">		if (!returnJson) {</span>
-<span class="nc" id="L448">			return message;</span>
+<span class="nc" id="L447">		boolean returnJson = Tools.getBooleanValue(Tools.getParameter(request, &quot;returnJson&quot;), false);</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">		if (!returnJson) {</span>
+<span class="nc" id="L449">			return message;</span>
 		}
 
-<span class="nc" id="L451">		Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
-<span class="nc" id="L452">		map.put(&quot;result&quot;, result);</span>
-<span class="nc" id="L453">		map.put(&quot;message&quot;, message);</span>
+<span class="nc" id="L452">		Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L453">		map.put(&quot;result&quot;, result);</span>
+<span class="nc" id="L454">		map.put(&quot;message&quot;, message);</span>
 
-<span class="nc" id="L455">		return new JSONObject(map).toString();</span>
+<span class="nc" id="L456">		return new JSONObject(map).toString();</span>
 	}
 
 	private boolean isAllowedUploadForUserGroup(UserDetails user, String dir) {
-<span class="nc" id="L459">		List&lt;String&gt; allowed = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;allowUploadToDirUserGroupId&quot;, &quot;&quot;), &quot;,&quot;));</span>
+<span class="nc" id="L460">		List&lt;String&gt; allowed = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;allowUploadToDirUserGroupId&quot;, &quot;&quot;), &quot;,&quot;));</span>
 		// format url:userGroupId napr. /files/project:25,/files/project2:26
-<span class="nc bnc" id="L461" title="All 4 branches missed.">		if (allowed == null || allowed.isEmpty()) {</span>
-<span class="nc" id="L462">			return false;</span>
+<span class="nc bnc" id="L462" title="All 4 branches missed.">		if (allowed == null || allowed.isEmpty()) {</span>
+<span class="nc" id="L463">			return false;</span>
 		}
 
-<span class="nc" id="L465">		List&lt;Integer&gt; userGroupIds = UserGroupsDB.getInstance().getUserGroupIdsList(user.getUserGroupsIds(), UserGroupDetails.TYPE_PERMS);</span>
-<span class="nc bnc" id="L466" title="All 2 branches missed.">		for (Integer userGroupId : userGroupIds) {</span>
-<span class="nc bnc" id="L467" title="All 2 branches missed.">			if (allowed.stream().anyMatch(a -&gt;{</span>
-<span class="nc" id="L468">				String[] arr = Tools.getTokens(a, &quot;:&quot;);</span>
+<span class="nc" id="L466">		List&lt;Integer&gt; userGroupIds = UserGroupsDB.getInstance().getUserGroupIdsList(user.getUserGroupsIds(), UserGroupDetails.TYPE_PERMS);</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">		for (Integer userGroupId : userGroupIds) {</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">			if (allowed.stream().anyMatch(a -&gt;{</span>
+<span class="nc" id="L469">				String[] arr = Tools.getTokens(a, &quot;:&quot;);</span>
 
-<span class="nc bnc" id="L470" title="All 2 branches missed.">				if (arr.length == 2) {</span>
-<span class="nc" id="L471">					String path = arr[0];</span>
-<span class="nc" id="L472">					boolean pathEndsWithStar = path.endsWith(&quot;*&quot;);</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">				if (arr.length == 2) {</span>
+<span class="nc" id="L472">					String path = arr[0];</span>
+<span class="nc" id="L473">					boolean pathEndsWithStar = path.endsWith(&quot;*&quot;);</span>
 
-<span class="nc bnc" id="L474" title="All 2 branches missed.">					if (pathEndsWithStar) {</span>
-<span class="nc" id="L475">						path = Tools.replace(path, &quot;*&quot;, &quot;&quot;);</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">					if (pathEndsWithStar) {</span>
+<span class="nc" id="L476">						path = Tools.replace(path, &quot;*&quot;, &quot;&quot;);</span>
 					}
 
-<span class="nc bnc" id="L478" title="All 2 branches missed.">					if (!path.endsWith(&quot;/&quot;)) {</span>
-<span class="nc" id="L479">						path += &quot;/&quot;; //NOSONAR</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">					if (!path.endsWith(&quot;/&quot;)) {</span>
+<span class="nc" id="L480">						path += &quot;/&quot;; //NOSONAR</span>
 					}
 
-<span class="nc bnc" id="L482" title="All 2 branches missed.">					boolean dirOk = pathEndsWithStar ? dir.startsWith(path) : dir.equalsIgnoreCase(path);</span>
-<span class="nc" id="L483">					int pathUserGroupId = Tools.getIntValue(arr[1], 0);</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">					boolean dirOk = pathEndsWithStar ? dir.startsWith(path) : dir.equalsIgnoreCase(path);</span>
+<span class="nc" id="L484">					int pathUserGroupId = Tools.getIntValue(arr[1], 0);</span>
 
-<span class="nc bnc" id="L485" title="All 4 branches missed.">					return dirOk &amp;&amp; pathUserGroupId == userGroupId;</span>
+<span class="nc bnc" id="L486" title="All 4 branches missed.">					return dirOk &amp;&amp; pathUserGroupId == userGroupId;</span>
 				}
 
-<span class="nc" id="L488">				return false;</span>
+<span class="nc" id="L489">				return false;</span>
 			})) {
-<span class="nc" id="L490">				Logger.debug(MultipleFileUploadAction.class, String.format(&quot;Allowed upload for dir: %s and userGroupId: %d&quot;, dir, userGroupId));</span>
-<span class="nc" id="L491">				return true;</span>
+<span class="nc" id="L491">				Logger.debug(MultipleFileUploadAction.class, String.format(&quot;Allowed upload for dir: %s and userGroupId: %d&quot;, dir, userGroupId));</span>
+<span class="nc" id="L492">				return true;</span>
 			}
-<span class="nc" id="L493">		}</span>
+<span class="nc" id="L494">		}</span>
 
-<span class="nc" id="L495">		return false;</span>
+<span class="nc" id="L496">		return false;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

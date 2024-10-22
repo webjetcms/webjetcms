@@ -22,6 +22,7 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
     //editor
     Document.screenshotAppEditor(10, "/redactor/apps/news/editor-dialog.png", function(Document, I, DT, DTE) {
         I.click("#tabLink2");
+        I.scrollTo("div[data-key='news.template.news01']");
         Document.screenshot("/redactor/apps/news/editor-dialog-templates.png");
 
         I.click("#tabLink3");
@@ -36,7 +37,6 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
         I.click("#tabLink1");
     }, 1280, 800);
 
-    //zobrazenie galerie
     I.amOnPage("/zo-sveta-financii/?NO_WJTOOLBAR");
     Document.screenshot("/redactor/apps/news/news.png");
 });

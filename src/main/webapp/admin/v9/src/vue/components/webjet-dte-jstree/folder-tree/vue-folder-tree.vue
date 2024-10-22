@@ -5,7 +5,7 @@
                 <i class="ti ti-circle-x"></i>
             </a>
             <div class="jsTree-wrapper">
-                <div id="jsTree" data-rest-url="/admin/rest/groups/tree?click=aaa" data-rest-param-name="id" :data-group-id="groupId"></div>
+                <div id="jsTree" data-rest-url="/admin/rest/groups/tree?click=aaa" data-rest-param-name="id" :data-group-id="groupId" data-rest-root="-1"></div>
             </div>
         </div>
     </section>
@@ -28,11 +28,15 @@
         },
 
         mounted() {
-            //console.log("mounted", $("#jsTree").attr("data-rest-url"), "attr=", this.$props.attr, "click=", this.click);
+            //console.log("mounted", $("#jsTree").attr("data-rest-url"), "attr=", this.$props.attr, "click=", this.click, "props=", this.$props);
             let restEndpoint = "/admin/rest/groups/tree";
             if (this.click.indexOf("dt-tree-dir")==0) restEndpoint = "/admin/rest/elfinder/tree";
             if (this.$props.attr != null && typeof this.$props.attr["data-dt-field-dt-url"] != "undefined") restEndpoint = this.$props.attr["data-dt-field-dt-url"];
             $("#jsTree").attr("data-rest-url", restEndpoint+"?click="+this.click);
+            //set root if defined
+            if (this.$props.attr != null && typeof this.$props.attr["data-dt-field-root"] != "undefined") {
+                $("#jsTree").attr("data-rest-root", this.$props.attr["data-dt-field-root"]);
+            }
             //console.log("mounted 2", $("#jsTree").attr("data-rest-url"));
             this.jsTree = new WebjetJsTree('jsTree');
         },

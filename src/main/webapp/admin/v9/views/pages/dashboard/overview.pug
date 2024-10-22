@@ -27,6 +27,12 @@ block content
                 i.ti.ti-alert-triangle &nbsp;
                 span(data-th-text="${javaVersionWarningText}") Required java version is below 17
 
+    div(data-th-if="${licenceExpirationWarningText!=null}").row.mt-3
+        div.col
+            .alert.alert-warning.mb-0.license-expiration-warning
+                i.ti.ti-license &nbsp;
+                span(data-th-utext="${licenceExpirationWarningText}") Your license will expiry soon.
+
     div(data-th-if="${amazonSesWarningText!=null}").row.mt-3
         div.col
             div.alert.alert-danger.mb-0

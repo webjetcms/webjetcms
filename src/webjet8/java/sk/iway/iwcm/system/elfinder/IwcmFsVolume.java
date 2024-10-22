@@ -3,7 +3,6 @@ package sk.iway.iwcm.system.elfinder;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,9 +44,9 @@ public class IwcmFsVolume implements FsVolume
 {
 	public static final String VOLUME_ID_ACTUAL_PAGE = "iwcm_fs_ap_volume";
 
-	protected String _name;
+	protected String _name; //NOSONAR
 
-	protected IwcmFile _rootDir;
+	protected IwcmFile _rootDir; //NOSONAR
 
 	public IwcmFsVolume(String name, String rootUrl)
 	{
@@ -77,9 +76,9 @@ public class IwcmFsVolume implements FsVolume
 			file.createNewFile();
 
 			//kvoli FSDB musime do suboru nieco zapisat
-			byte buf[] = new byte[0];
+			byte[] buf = new byte[0];
 			ByteArrayInputStream bis = new ByteArrayInputStream(buf);
-			IwcmFsDB.writeFiletoDest((InputStream) bis, new File(file.getAbsolutePath()), 0, true);
+			IwcmFsDB.writeFiletoDest(bis, new File(file.getAbsolutePath()), 0, true);
 
 			Adminlog.add(Adminlog.TYPE_FILE_CREATE, "elfinder createFile, path=" + file.getVirtualPath(), -1, -1);
 		}
@@ -115,7 +114,7 @@ public class IwcmFsVolume implements FsVolume
 		if (!file.isDirectory() && canWrite(file))
 		{
 			deleted = file.delete();
-			//@TODO: zmaz z indexu (ak existuje)
+			//zmaz z indexu (ak existuje)
 			String virtualPath = file.getVirtualPath();
 			if (virtualPath.startsWith("/files"))
 			{
@@ -355,7 +354,7 @@ public class IwcmFsVolume implements FsVolume
 	@Override
 	public FsItem[] listChildren(FsItem fsi)
 	{
-		List<FsItem> list = new ArrayList<FsItem>();
+		List<FsItem> list = new ArrayList<>();
 
 		IwcmFile fsiFile = asFile(fsi);
 
@@ -375,7 +374,7 @@ public class IwcmFsVolume implements FsVolume
 		if (user!=null)
 		{
 			String path = fsiFile.getVirtualPath();
-			if (path.endsWith("/")==false) path = path+"/";
+			if (path.endsWith("/")==false) path = path+"/"; //NOSONAR
 
 			List<IwcmFile> writableFolders = user.getWritableFoldersList();
 			String fbrowserAlwaysShowFolders = Constants.getStringExecuteMacro("fbrowserAlwaysShowFolders");
@@ -490,10 +489,27 @@ public class IwcmFsVolume implements FsVolume
 	/**
 	 * Ak je pre domenu definovany alias suborov vrati /alias pre jednoduche vlozenie do cesty
 	 * @return
+	 * @deprecated use AdminTools.getDomainNameFileAliasAppend()
 	 */
 	@Deprecated
 	public static String getDomainNameFileAliasAppend()
 	{
 		return AdminTools.getDomainNameFileAliasAppend();
+	}
+
+	/**
+	 * For files/dir in /files and /images directories, remove diacritics and convert to lowercase
+	 * @param name
+	 * @param fsi
+	 * @return
+	 * @throws IOException
+	 */
+	public static String removeSpecialChars(String name, FsItemEx fsi) throws IOException {
+		if (fsi.getPath().startsWith("/files") || fsi.getPath().startsWith("/images"))
+		{
+			name = DB.internationalToEnglish(name);
+			name = DocTools.removeCharsDir(name, true).toLowerCase();
+		}
+		return name;
 	}
 }

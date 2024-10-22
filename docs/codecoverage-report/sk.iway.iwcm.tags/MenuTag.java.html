@@ -130,7 +130,7 @@ import sk.iway.iwcm.users.UsersDB;
 	{
 		//v name robime OR
 <span class="fc" id="L132">		StringTokenizer st = new StringTokenizer(perms, &quot;|&quot;);</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		while (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
 		{
 <span class="fc" id="L135">			String perm = st.nextToken();</span>
 <span class="pc bpc" id="L136" title="1 of 2 branches missed.">			if (Tools.isEmpty(perm)) continue;</span>
@@ -148,13 +148,13 @@ import sk.iway.iwcm.users.UsersDB;
 				{
 <span class="nc" id="L149">				}</span>
 			}
-<span class="pc bpc" id="L151" title="4 of 6 branches missed.">			else if ((user.isAdmin() || UsersDB.checkUserPerms(user, &quot;admin|editableGroupsNotEmpty&quot;)) &amp;&amp; user.isEnabledItem(perm.trim()))</span>
+<span class="pc bpc" id="L151" title="3 of 6 branches missed.">			else if ((user.isAdmin() || UsersDB.checkUserPerms(user, &quot;admin|editableGroupsNotEmpty&quot;)) &amp;&amp; user.isEnabledItem(perm.trim()))</span>
 			{
 <span class="fc" id="L153">				return true;</span>
 			}
-<span class="nc" id="L155">		}</span>
+<span class="fc" id="L155">		}</span>
 
-<span class="nc" id="L157">		return false;</span>
+<span class="fc" id="L157">		return false;</span>
 	}
 
 
@@ -197,4 +197,4 @@ import sk.iway.iwcm.users.UsersDB;
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

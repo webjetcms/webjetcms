@@ -1924,9 +1924,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setFieldC(String fieldC) {
-<span class="pc bpc" id="L1927" title="1 of 2 branches missed.">		if (isEmpty(fieldC)) return;</span>
-<span class="nc" id="L1928">		this.fieldC = fieldC;</span>
-<span class="nc" id="L1929">	}</span>
+<span class="fc bfc" id="L1927" title="All 2 branches covered.">		if (isEmpty(fieldC)) return;</span>
+<span class="fc" id="L1928">		this.fieldC = fieldC;</span>
+<span class="fc" id="L1929">	}</span>
 
 	public String getFieldD() {
 <span class="fc bfc" id="L1932" title="All 2 branches covered.">		if(fieldD == null) return &quot;&quot;;</span>
@@ -2054,9 +2054,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setFieldP(String fieldP) {
-<span class="pc bpc" id="L2057" title="1 of 2 branches missed.">		if (isEmpty(fieldP)) return;</span>
-<span class="nc" id="L2058">		this.fieldP = fieldP;</span>
-<span class="nc" id="L2059">	}</span>
+<span class="fc bfc" id="L2057" title="All 2 branches covered.">		if (isEmpty(fieldP)) return;</span>
+<span class="fc" id="L2058">		this.fieldP = fieldP;</span>
+<span class="fc" id="L2059">	}</span>
 
 	public String getFieldQ() {
 <span class="fc bfc" id="L2062" title="All 2 branches covered.">		if(fieldQ == null) return &quot;&quot;;</span>
@@ -2297,114 +2297,117 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setDataAsc(String dataAsc) {
-<span class="fc bfc" id="L2300" title="All 2 branches covered.">		if (isEmpty(dataAsc)) return;</span>
-<span class="fc" id="L2301">		this.dataAsc = dataAsc;</span>
-<span class="fc" id="L2302">	}</span>
+<span class="fc bfc" id="L2300" title="All 2 branches covered.">		if (isEmpty(dataAsc)) {</span>
+<span class="pc bpc" id="L2301" title="1 of 2 branches missed.">			if (this.dataAsc == null) this.dataAsc = &quot;&quot;;</span>
+<span class="fc" id="L2302">			return;</span>
+		}
+<span class="fc" id="L2304">		this.dataAsc = dataAsc;</span>
+<span class="fc" id="L2305">	}</span>
 
 	public Boolean getUrlInheritGroup() {
-<span class="fc" id="L2305">		return urlInheritGroup;</span>
+<span class="fc" id="L2308">		return urlInheritGroup;</span>
 	}
 
 	public void setUrlInheritGroup(Boolean urlInheritGroup) {
-<span class="fc" id="L2309">		this.urlInheritGroup = urlInheritGroup;</span>
-<span class="fc" id="L2310">	}</span>
+<span class="fc" id="L2312">		this.urlInheritGroup = urlInheritGroup;</span>
+<span class="fc" id="L2313">	}</span>
 
 	public Boolean getGenerateUrlFromTitle() {
-<span class="fc" id="L2313">		return generateUrlFromTitle;</span>
+<span class="fc" id="L2316">		return generateUrlFromTitle;</span>
 	}
 
 	public void setGenerateUrlFromTitle(Boolean generateUrlFromTitle) {
-<span class="fc" id="L2317">		this.generateUrlFromTitle = generateUrlFromTitle;</span>
-<span class="fc" id="L2318">	}</span>
+<span class="fc" id="L2320">		this.generateUrlFromTitle = generateUrlFromTitle;</span>
+<span class="fc" id="L2321">	}</span>
 
 	public String getEditorVirtualPath() {
-<span class="fc" id="L2321">		return editorVirtualPath;</span>
+<span class="fc" id="L2324">		return editorVirtualPath;</span>
 	}
 
 	public void setEditorVirtualPath(String editorVirtualPath) {
-<span class="fc" id="L2325">		this.editorVirtualPath = editorVirtualPath;</span>
-<span class="fc" id="L2326">	}</span>
+<span class="fc" id="L2328">		this.editorVirtualPath = editorVirtualPath;</span>
+<span class="fc" id="L2329">	}</span>
 
 	//Doplnene volne polia - ticket 54205 - prav cast
 	public int getTempFieldADocId() {
-<span class="fc" id="L2330">		return tempFieldADocId;</span>
+<span class="fc" id="L2333">		return tempFieldADocId;</span>
 	}
 
 	public void setTempFieldADocId(int tempFieldADocId) {
-<span class="fc" id="L2334">		this.tempFieldADocId = tempFieldADocId;</span>
-<span class="fc" id="L2335">	}</span>
+<span class="fc" id="L2337">		this.tempFieldADocId = tempFieldADocId;</span>
+<span class="fc" id="L2338">	}</span>
 
 	public int getTempFieldBDocId() {
-<span class="fc" id="L2338">		return tempFieldBDocId;</span>
+<span class="fc" id="L2341">		return tempFieldBDocId;</span>
 	}
 
 	public void setTempFieldBDocId(int tempFieldBDocId) {
-<span class="fc" id="L2342">		this.tempFieldBDocId = tempFieldBDocId;</span>
-<span class="fc" id="L2343">	}</span>
+<span class="fc" id="L2345">		this.tempFieldBDocId = tempFieldBDocId;</span>
+<span class="fc" id="L2346">	}</span>
 
 	public int getTempFieldCDocId() {
-<span class="fc" id="L2346">		return tempFieldCDocId;</span>
+<span class="fc" id="L2349">		return tempFieldCDocId;</span>
 	}
 
 	public void setTempFieldCDocId(int tempFieldCDocId) {
-<span class="fc" id="L2350">		this.tempFieldCDocId = tempFieldCDocId;</span>
-<span class="fc" id="L2351">	}</span>
+<span class="fc" id="L2353">		this.tempFieldCDocId = tempFieldCDocId;</span>
+<span class="fc" id="L2354">	}</span>
 
 	public int getTempFieldDDocId() {
-<span class="fc" id="L2354">		return tempFieldDDocId;</span>
+<span class="fc" id="L2357">		return tempFieldDDocId;</span>
 	}
 
 	public void setTempFieldDDocId(int tempFieldDDocId) {
-<span class="fc" id="L2358">		this.tempFieldDDocId = tempFieldDDocId;</span>
-<span class="fc" id="L2359">	}</span>
+<span class="fc" id="L2361">		this.tempFieldDDocId = tempFieldDDocId;</span>
+<span class="fc" id="L2362">	}</span>
 
 	//Doplnene volne polia - ticket 54205 - druha cast
 
 	//Not logged user
 	public void setShowInMenu(boolean showInMenu) {
-<span class="fc" id="L2365">		this.showInMenu = showInMenu;</span>
-<span class="fc" id="L2366">	}</span>
+<span class="fc" id="L2368">		this.showInMenu = showInMenu;</span>
+<span class="fc" id="L2369">	}</span>
 
 	public Boolean getShowInNavbar() {
-<span class="fc" id="L2369">		return showInNavbar;</span>
+<span class="fc" id="L2372">		return showInNavbar;</span>
 	}
 
 	public void setShowInNavbar(Boolean showInNavbar) {
-<span class="fc" id="L2373">		this.showInNavbar = showInNavbar;</span>
-<span class="fc" id="L2374">	}</span>
+<span class="fc" id="L2376">		this.showInNavbar = showInNavbar;</span>
+<span class="fc" id="L2377">	}</span>
 
 	public Boolean getShowInSitemap() {
-<span class="fc" id="L2377">		return showInSitemap;</span>
+<span class="fc" id="L2380">		return showInSitemap;</span>
 	}
 
 	public void setShowInSitemap(Boolean showInSitemap) {
-<span class="fc" id="L2381">		this.showInSitemap = showInSitemap;</span>
-<span class="fc" id="L2382">	}</span>
+<span class="fc" id="L2384">		this.showInSitemap = showInSitemap;</span>
+<span class="fc" id="L2385">	}</span>
 
 	//Logged user
 	public Boolean getLoggedShowInMenu() {
-<span class="fc" id="L2386">		return loggedShowInMenu;</span>
+<span class="fc" id="L2389">		return loggedShowInMenu;</span>
 	}
 
 	public void setLoggedShowInMenu(Boolean loggedShowInMenu) {
-<span class="fc" id="L2390">		this.loggedShowInMenu = loggedShowInMenu;</span>
-<span class="fc" id="L2391">	}</span>
+<span class="fc" id="L2393">		this.loggedShowInMenu = loggedShowInMenu;</span>
+<span class="fc" id="L2394">	}</span>
 
 	public Boolean getLoggedShowInNavbar() {
-<span class="fc" id="L2394">		return loggedShowInNavbar;</span>
+<span class="fc" id="L2397">		return loggedShowInNavbar;</span>
 	}
 
 	public void setLoggedShowInNavbar(Boolean loggedShowInNavbar) {
-<span class="fc" id="L2398">		this.loggedShowInNavbar = loggedShowInNavbar;</span>
-<span class="fc" id="L2399">	}</span>
+<span class="fc" id="L2401">		this.loggedShowInNavbar = loggedShowInNavbar;</span>
+<span class="fc" id="L2402">	}</span>
 
 	public Boolean getLoggedShowInSitemap() {
-<span class="fc" id="L2402">		return loggedShowInSitemap;</span>
+<span class="fc" id="L2405">		return loggedShowInSitemap;</span>
 	}
 
 	public void setLoggedShowInSitemap(Boolean loggedShowInSitemap) {
-<span class="fc" id="L2406">		this.loggedShowInSitemap = loggedShowInSitemap;</span>
-<span class="fc" id="L2407">	}</span>
+<span class="fc" id="L2409">		this.loggedShowInSitemap = loggedShowInSitemap;</span>
+<span class="fc" id="L2410">	}</span>
 
 	/**
 	 * Vrati true, ak sa polozka ma zobrazit v menu (automaticky detekuje, ci je prihlaseny pouzivatel, alebo nie)
@@ -2412,11 +2415,11 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * @return
 	 */
 	public boolean isShowInMenu(HttpServletRequest request) {
-<span class="fc" id="L2415">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L2416" title="1 of 4 branches missed.">		if(user == null || loggedShowInMenu == null){</span>
-<span class="fc" id="L2417">			return showInMenu;</span>
+<span class="fc" id="L2418">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L2419" title="All 4 branches covered.">		if(user == null || loggedShowInMenu == null){</span>
+<span class="fc" id="L2420">			return showInMenu;</span>
 		}
-<span class="nc" id="L2419">		return loggedShowInMenu;</span>
+<span class="fc" id="L2422">		return loggedShowInMenu;</span>
 	}
 
 	/**
@@ -2425,13 +2428,13 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * @return
 	 */
 	public boolean isShowInNavbar(HttpServletRequest request) {
-<span class="fc" id="L2428">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="fc bfc" id="L2429" title="All 4 branches covered.">		if(user == null || loggedShowInNavbar==null) {</span>
-<span class="fc bfc" id="L2430" title="All 2 branches covered.">			if(showInNavbar == null) return isShowInMenu();</span>
-<span class="fc" id="L2431">			return showInNavbar;</span>
+<span class="fc" id="L2431">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L2432" title="All 4 branches covered.">		if(user == null || loggedShowInNavbar==null) {</span>
+<span class="fc bfc" id="L2433" title="All 2 branches covered.">			if(showInNavbar == null) return isShowInMenu();</span>
+<span class="fc" id="L2434">			return showInNavbar;</span>
 		}
 
-<span class="fc" id="L2434">		return loggedShowInNavbar;</span>
+<span class="fc" id="L2437">		return loggedShowInNavbar;</span>
 	}
 
 	/**
@@ -2440,18 +2443,18 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * @return
 	 */
 	public boolean isShowInSitemap(HttpServletRequest request) {
-<span class="fc" id="L2443">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L2444" title="1 of 4 branches missed.">		if(user == null || loggedShowInSitemap==null) {</span>
-<span class="fc bfc" id="L2445" title="All 2 branches covered.">			if(showInSitemap == null) return showInMenu;</span>
-<span class="fc" id="L2446">			return showInSitemap;</span>
+<span class="fc" id="L2446">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L2447" title="All 4 branches covered.">		if(user == null || loggedShowInSitemap==null) {</span>
+<span class="fc bfc" id="L2448" title="All 2 branches covered.">			if(showInSitemap == null) return showInMenu;</span>
+<span class="fc" id="L2449">			return showInSitemap;</span>
 		}
 
-<span class="fc" id="L2449">		return loggedShowInSitemap;</span>
+<span class="fc" id="L2452">		return loggedShowInSitemap;</span>
 	}
 
 	@Override
 	public String toString() {
-<span class="fc" id="L2454">		return getFullPath()+&quot;, ID =&gt; &quot;+getDocId();</span>
+<span class="fc" id="L2457">		return getFullPath()+&quot;, ID =&gt; &quot;+getDocId();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

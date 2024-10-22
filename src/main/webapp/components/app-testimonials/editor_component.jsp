@@ -110,18 +110,18 @@ var editorItemFields = {
         classes: "editorLeft"
     },
     title: {
-        title: "Meno",
+        title: "<iwcm:text key="editor.app-testimonials.name"/>",
         type: "text",
         classes: "editorRight",
     },
     description: {
-        title: "Text",
+        title: "<iwcm:text key="editor.app-testimonials.text"/>",
         type: "textArea",
         classes: "editorRight"
     },
     redirectUrl: {
-        title: "Po kliknutí zobraziť inú stránku (presmerovať)",
-        description: "Zadajte adresu stránky, alebo kliknite na ikonu na konci riadku pre jej výber",
+        title: "<iwcm:text key="components.news.redirectAfterClick"/>",
+        description: "<iwcm:text key="components.news.redirectLinkHelp"/>",
         type: "conditionalText",
         classes: "editorRight"
     }

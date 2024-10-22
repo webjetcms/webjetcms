@@ -215,6 +215,6 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 - Datatables - added support `LocalDate/LocalDateTime` for data fields, added attribute `alwaysCopyProperties` to `DatatableColumn` for the copy option when editing from [of an existing record](developer/datatables-editor/datatable-columns.md).
 - Users - supplemented usage documentation `afterSaveInterceptor` At [user registration](custom-apps/apps/user/README.md) and the option to not send a standard welcome email by overriding the method `shouldSendUserWelcomeEmail` (#54953-28).
 
-<img class="meme" title="meme" src="_media/meme/2023-52.jpg" />
+![meme](_media/meme/2023-52.jpg)
 
 [Full list of changes \&gt;\&gt;](CHANGELOG-2023.md)

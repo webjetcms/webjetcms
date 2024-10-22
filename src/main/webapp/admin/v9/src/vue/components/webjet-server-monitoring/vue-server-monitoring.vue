@@ -56,7 +56,7 @@
                 monitoringData: Object,
                 chartData: Object,
                 firstTableItems: ['serverRuntime', 'serverActualTime', 'serverStartTime', 'remoteIP', 'serverIP', 'serverContry', 'serverLanguage', 'dbActive', 'dbIdle', 'serverCpus', 'cacheItems', 'sessionsTotal', 'sessionsList'],
-                secondTableItems: ['swJavaVendor', 'swRuntime', 'swVmName', 'swJavaVersion', 'swVmVersion', 'swServerName', 'swServerOs', 'swServerOsVersion']
+                secondTableItems: ['swJavaVendor', 'swRuntime', 'swVmName', 'swJavaVersion', 'swVmVersion', 'swServerName', 'swServerOs', 'swServerOsVersion', 'licenseExpirationDate']
             }
         },
         components: {

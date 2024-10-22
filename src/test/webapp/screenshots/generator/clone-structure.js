@@ -28,8 +28,7 @@ Before(({ I, login }) => {
 
 Scenario("Structure clone screenshots", async ({ I, Document })  => {
     I.amOnPage("/components/clone_structure/clone_structure.jsp");
-    I.resizeWindow(600, 500); //Need to by first resize and than screenshot)
-    Document.screenshot("/redactor/apps/clone-structure/clone_structure.png");
+    Document.screenshot("/redactor/apps/clone-structure/clone_structure.png", 750, 500);
     //I.click("#dialogCentralRow > div > form > table > tbody > tr:nth-child(1) > td:nth-child(2) > input.button50");
     //Document.screenshot("/redactor/apps/clone-structure/clone_structure_2.png");
 });
@@ -68,11 +67,20 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
         DT.waitForLoader();
 
-        if("sk" === confLng) {
-            createGroup(I, DTE, srcGroupName, "Slovenský", true);
-        } else if("en" === confLng) {
-            createGroup(I, DTE, srcGroupName, "Slovak", true);
+        switch (confLng) {
+            case 'sk':
+                createGroup(I, DTE, srcGroupName, "Slovenský", true);
+                break;
+            case 'en':
+                createGroup(I, DTE, srcGroupName, "Slovak", true);
+                break;
+            case 'cs':
+                createGroup(I, DTE, srcGroupName, "Slovensky", true);
+                break;
+            default:
+                throw new Error(`Unsupported language code: ${confLng}`);
         }
+        
 
         I.jstreeClick(srcGroupName);
         //Save groupID
@@ -92,26 +100,42 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
         //
         I.say("Create sub group");
 
-        if("sk" === confLng) {
-            createGroup(I, DTE, srcGroupChildName, "Slovenský", false);
-        } else if("en" === confLng) {
-            createGroup(I, DTE, srcGroupChildName, "Slovak", false);
+        switch (confLng) {
+            case 'sk':
+                createGroup(I, DTE, srcGroupChildName, "Slovenský", false);
+                break;
+            case 'en':
+                createGroup(I, DTE, srcGroupChildName, "Slovak", false);
+                break;
+            case 'cs':
+                createGroup(I, DTE, srcGroupChildName, "Slovensky", true);
+                break;
+            default:
+                throw new Error(`Unsupported language code: ${confLng}`);
         }
-
+        
         I.jstreeClick(srcGroupChildName);
         await fillDocBody(I, DTE, doc_b_sk);
 
     //
     I.say("Preparing dest folder");
 
-        if("sk" === confLng) {
+    switch (confLng) {
+        case 'sk':
             createGroup(I, DTE, destGroupName, "Anglický", true);
-        } else if("en" === confLng) {
+            break;
+        case 'en':
             createGroup(I, DTE, destGroupName, "English", true);
-        }
-        
-        I.click( locate("a.jstree-anchor").withText(destGroupName) );
-        const destGroupId = await I.grabValueFrom('#tree-folder-id');
+            break;
+        case 'cs':
+            createGroup(I, DTE, destGroupName, "Česky", true);
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
+    }
+
+    I.click( locate("a.jstree-anchor").withText(destGroupName) );
+    const destGroupId = await I.grabValueFrom('#tree-folder-id');
 
     //
     I.say("Perform cloning");
@@ -149,11 +173,19 @@ Scenario('delete data', ({ I, DTE }) => {
         I.click(delete_button);
         DTE.waitForEditor("groups-datatable");
 
-        if("sk" === confLng) {
-            I.click("Zmazať", "div.DTE_Action_Remove");
-        } else if("en" === confLng) { 
-            I.click("Delete", "div.DTE_Action_Remove");
-        };
+        switch (confLng) {
+            case 'sk':
+                I.click("Zmazať", "div.DTE_Action_Remove");
+                break;
+            case 'en':
+                I.click("Delete", "div.DTE_Action_Remove");
+                break;
+            case 'cs':
+                I.click("Smazat", "div.DTE_Action_Remove");
+                break;
+            default:
+                throw new Error(`Unsupported language code: ${confLng}`);
+        }
 
         DTE.waitForLoader();
         //Check that both folders are gone
@@ -164,10 +196,19 @@ Scenario('delete data', ({ I, DTE }) => {
         I.click(delete_button);
         DTE.waitForEditor("groups-datatable");
 
-        if("sk" === confLng) {
-            I.click("Zmazať", "div.DTE_Action_Remove");
-        } else if("en" === confLng) { 
-            I.click("Delete", "div.DTE_Action_Remove");
+
+        switch (confLng) {
+            case 'sk':
+                I.click("Zmazať", "div.DTE_Action_Remove");
+                break;
+            case 'en':
+                I.click("Delete", "div.DTE_Action_Remove");
+                break;
+            case 'cs':
+                I.click("Smazat", "div.DTE_Action_Remove");
+                break;
+            default:
+                throw new Error(`Unsupported language code: ${confLng}`);
         }
 
         //Check that both folders are gone

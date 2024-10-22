@@ -19,7 +19,6 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.RowSetDynaClass;
-import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.struts.util.ResponseUtils;
 
 import oracle.jdbc.driver.OracleConnection;
@@ -41,10 +40,10 @@ import sk.iway.iwcm.doc.GroupsDB;
  *@modified     $Date: 2004/03/23 20:50:49 $
  */
 @SuppressWarnings({&quot;deprecation&quot;, &quot;java:S1118&quot;})
-<span class="fc" id="L44">public class DB</span>
+<span class="fc" id="L43">public class DB</span>
 {
 	//zoznam stlpcov ktore mozu obsahovat HTML kod
-<span class="fc" id="L47">	private static Set&lt;String&gt; htmlAllowedFields = null;</span>
+<span class="fc" id="L46">	private static Set&lt;String&gt; htmlAllowedFields = null;</span>
 
 	/**
 	 * Overi, ci je mozne v danom DB stlpci pouzit HTML kod, ak nie, tak sa pri citani rovno escapnu specialne znaky
@@ -55,36 +54,36 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static boolean isHtmlAllowed(String fieldName)
 	{
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">		if (fieldName==null) return false;</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (fieldName.contains(&quot;html&quot;)) return true;</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">		if (fieldName.contains(&quot;data&quot;)) return true;</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">		if (fieldName==null) return false;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">		if (fieldName.contains(&quot;html&quot;)) return true;</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		if (fieldName.contains(&quot;data&quot;)) return true;</span>
 		//fotogaleria
-<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (fieldName.contains(&quot;_description_&quot;)) return true;</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">		if (fieldName.startsWith(&quot;field_&quot;)) return true;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">		if (fieldName.contains(&quot;_description_&quot;)) return true;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">		if (fieldName.startsWith(&quot;field_&quot;)) return true;</span>
 
-<span class="fc bfc" id="L65" title="All 2 branches covered.">		if (htmlAllowedFields == null)</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">		if (htmlAllowedFields == null)</span>
 		{
 			//systemove stlpce
-<span class="fc" id="L68">			String[] fields = Tools.getTokens(Constants.getString(&quot;xssHtmlAllowedFieldsSystem&quot;), &quot;,&quot;, true);</span>
-<span class="fc" id="L69">			Set&lt;String&gt; fieldsSet = new HashSet&lt;&gt;(Arrays.asList(fields));</span>
+<span class="fc" id="L67">			String[] fields = Tools.getTokens(Constants.getString(&quot;xssHtmlAllowedFieldsSystem&quot;), &quot;,&quot;, true);</span>
+<span class="fc" id="L68">			Set&lt;String&gt; fieldsSet = new HashSet&lt;&gt;(Arrays.asList(fields));</span>
 			//zakaznicke stlpce
-<span class="fc" id="L71">			fields = Tools.getTokens(Constants.getString(&quot;xssHtmlAllowedFields&quot;), &quot;,&quot;, true);</span>
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">			for (String field : fields) {</span>
-<span class="nc bnc" id="L73" title="All 2 branches missed.">				if (fieldsSet.contains(field)) continue;</span>
-<span class="nc" id="L74">				fieldsSet.add(field);</span>
+<span class="fc" id="L70">			fields = Tools.getTokens(Constants.getString(&quot;xssHtmlAllowedFields&quot;), &quot;,&quot;, true);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">			for (String field : fields) {</span>
+<span class="nc bnc" id="L72" title="All 2 branches missed.">				if (fieldsSet.contains(field)) continue;</span>
+<span class="nc" id="L73">				fieldsSet.add(field);</span>
 			}
-<span class="fc" id="L76">			htmlAllowedFields = fieldsSet;</span>
+<span class="fc" id="L75">			htmlAllowedFields = fieldsSet;</span>
 		}
 
-<span class="fc bfc" id="L79" title="All 2 branches covered.">		if (htmlAllowedFields.contains(fieldName)) return true;</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">		if (htmlAllowedFields.contains(fieldName)) return true;</span>
 
-<span class="fc" id="L81">		return false;</span>
+<span class="fc" id="L80">		return false;</span>
 	}
 
 	public static void resetHtmlAllowedFields()
 	{
-<span class="fc" id="L86">		htmlAllowedFields = null;</span>
-<span class="fc" id="L87">	}</span>
+<span class="fc" id="L85">		htmlAllowedFields = null;</span>
+<span class="fc" id="L86">	}</span>
 
 
 	/**
@@ -97,11 +96,11 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getDbString(java.sql.ResultSet db_result, String fieldName, boolean filter) throws SQLException
 	{
-<span class="fc" id="L100">		String ret = getDbStringImpl(db_result, fieldName);</span>
+<span class="fc" id="L99">		String ret = getDbStringImpl(db_result, fieldName);</span>
 
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">		if (filter) return filterHtml(ret);</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">		if (filter) return filterHtml(ret);</span>
 
-<span class="fc" id="L104">		return ret;</span>
+<span class="fc" id="L103">		return ret;</span>
 	}
 
 	/**
@@ -114,21 +113,21 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getDbString(java.sql.ResultSet db_result, String fieldName) throws SQLException
 	{
-<span class="fc" id="L117">		String data = null;</span>
+<span class="fc" id="L116">		String data = null;</span>
 
-<span class="fc" id="L119">		data = getDbStringImpl(db_result, fieldName);</span>
+<span class="fc" id="L118">		data = getDbStringImpl(db_result, fieldName);</span>
 
-<span class="fc bfc" id="L121" title="All 2 branches covered.">		if (isHtmlAllowed(fieldName)==false)</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">		if (isHtmlAllowed(fieldName)==false)</span>
 		{
-<span class="pc bpc" id="L123" title="1 of 4 branches missed.">			if (data.contains(&quot;&lt;&quot;) || data.contains(&quot;&gt;&quot;))</span>
+<span class="pc bpc" id="L122" title="1 of 4 branches missed.">			if (data.contains(&quot;&lt;&quot;) || data.contains(&quot;&gt;&quot;))</span>
 			{
-<span class="fc" id="L125">				data = filterHtml(data);</span>
+<span class="fc" id="L124">				data = filterHtml(data);</span>
 			}
 		}
 
 		//ak su sifrovane skus desifrovat
-<span class="fc" id="L130">		data = CryptoFactory.decrypt(data);</span>
-<span class="fc" id="L131">		return (data);</span>
+<span class="fc" id="L129">		data = CryptoFactory.decrypt(data);</span>
+<span class="fc" id="L130">		return (data);</span>
 	}
 
 	/**
@@ -138,35 +137,35 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String filterHtml(String data)
 	{
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">		if (data == null) return null;</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">		if (data == null) return null;</span>
 
-<span class="fc bfc" id="L143" title="All 4 branches covered.">		if (data.contains(&quot;&lt;&quot;) || data.contains(&quot;&gt;&quot;))</span>
+<span class="fc bfc" id="L142" title="All 4 branches covered.">		if (data.contains(&quot;&lt;&quot;) || data.contains(&quot;&gt;&quot;))</span>
 		{
-<span class="fc" id="L145">			return ResponseUtils.filter(data);</span>
+<span class="fc" id="L144">			return ResponseUtils.filter(data);</span>
 		}
-<span class="fc" id="L147">		return data;</span>
+<span class="fc" id="L146">		return data;</span>
 	}
 
 	private static String getDbStringImpl(java.sql.ResultSet db_result, String fieldName) throws SQLException
 	{
-<span class="fc" id="L152">		String data = null;</span>
+<span class="fc" id="L151">		String data = null;</span>
 
-<span class="fc" id="L154">		data = db_result.getString(fieldName);</span>
+<span class="fc" id="L153">		data = db_result.getString(fieldName);</span>
 
-<span class="fc bfc" id="L156" title="All 4 branches covered.">		if (data != null &amp;&amp; data.length()&gt;0)</span>
+<span class="fc bfc" id="L155" title="All 4 branches covered.">		if (data != null &amp;&amp; data.length()&gt;0)</span>
 		{
 			//ochrana pred vykonanim prikazu v Exceli
-<span class="fc bfc" id="L159" title="All 2 branches covered.">			if (data.length()&gt;5)</span>
+<span class="fc bfc" id="L158" title="All 2 branches covered.">			if (data.length()&gt;5)</span>
 			{
-<span class="fc" id="L161">				String retLC = data.substring(0, 4).toLowerCase();</span>
-<span class="pc bpc" id="L162" title="1 of 2 branches missed.">				if (retLC.toLowerCase().startsWith(&quot;=cmd&quot;)) data = &quot;-&quot; + data.substring(1);</span>
+<span class="fc" id="L160">				String retLC = data.substring(0, 4).toLowerCase();</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">				if (retLC.toLowerCase().startsWith(&quot;=cmd&quot;)) data = &quot;-&quot; + data.substring(1);</span>
 			}
 
-<span class="fc" id="L165">			return (data.trim());</span>
+<span class="fc" id="L164">			return (data.trim());</span>
 		}
 		else
 		{
-<span class="fc" id="L169">			return (&quot;&quot;);</span>
+<span class="fc" id="L168">			return (&quot;&quot;);</span>
 		}
 	}
 
@@ -181,26 +180,26 @@ import sk.iway.iwcm.doc.GroupsDB;
 	{
 		try
 		{
-<span class="fc" id="L184">			java.sql.Timestamp data = rs.getTimestamp(fieldName);</span>
-<span class="fc bfc" id="L185" title="All 2 branches covered.">			if (data != null)</span>
+<span class="fc" id="L183">			java.sql.Timestamp data = rs.getTimestamp(fieldName);</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">			if (data != null)</span>
 			{
-<span class="fc" id="L187">				return (data.getTime());</span>
+<span class="fc" id="L186">				return (data.getTime());</span>
 			}
 		}
-<span class="nc" id="L190">		catch (SQLException ex)</span>
+<span class="nc" id="L189">		catch (SQLException ex)</span>
 		{
 
-<span class="fc" id="L193">		}</span>
-<span class="fc" id="L194">		return (0);</span>
+<span class="fc" id="L192">		}</span>
+<span class="fc" id="L193">		return (0);</span>
 	}
 
 	public static Timestamp getDbTimestamp(long time)
 	{
-<span class="fc bfc" id="L199" title="All 2 branches covered.">		if (time == 0)</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">		if (time == 0)</span>
 		{
-<span class="fc" id="L201">			return(null);</span>
+<span class="nc" id="L200">			return(null);</span>
 		}
-<span class="fc" id="L203">		return(new Timestamp(time));</span>
+<span class="fc" id="L202">		return(new Timestamp(time));</span>
 	}
 
 	/**
@@ -215,34 +214,34 @@ import sk.iway.iwcm.doc.GroupsDB;
 	{
 		try
 		{
-<span class="fc bfc" id="L218" title="All 2 branches covered.">			if (db_result.getDate(fieldName) != null)</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">			if (db_result.getDate(fieldName) != null)</span>
 			{
-<span class="fc" id="L220">				java.sql.Date dbDate = db_result.getDate(fieldName);</span>
-<span class="fc" id="L221">				java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
-<span class="fc" id="L222">				return (formatter.format(dbDate));</span>
+<span class="fc" id="L219">				java.sql.Date dbDate = db_result.getDate(fieldName);</span>
+<span class="fc" id="L220">				java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="fc" id="L221">				return (formatter.format(dbDate));</span>
 			}
 		}
-<span class="nc" id="L225">		catch (Exception ex)</span>
+<span class="nc" id="L224">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L227">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L228">		}</span>
-<span class="fc" id="L229">		return(&quot;&quot;);</span>
+<span class="nc" id="L226">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L227">		}</span>
+<span class="fc" id="L228">		return(&quot;&quot;);</span>
 	}
 
 	public static Date getDate(java.sql.ResultSet db_result, String fieldName) throws SQLException
 	{
 		try
 		{
-<span class="fc bfc" id="L236" title="All 2 branches covered.">			if (db_result.getDate(fieldName) != null)</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">			if (db_result.getDate(fieldName) != null)</span>
 			{
-<span class="fc" id="L238">				return new Date(db_result.getTimestamp(fieldName).getTime());</span>
+<span class="fc" id="L237">				return new Date(db_result.getTimestamp(fieldName).getTime());</span>
 			}
 		}
-<span class="nc" id="L241">		catch (Exception ex)</span>
+<span class="nc" id="L240">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L243">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L244">		}</span>
-<span class="fc" id="L245">		return null;</span>
+<span class="nc" id="L242">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L243">		}</span>
+<span class="fc" id="L244">		return null;</span>
 	}
 
 	/**
@@ -255,15 +254,15 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getDbTime(java.sql.ResultSet db_result, String fieldName) throws Exception
 	{
-<span class="nc bnc" id="L258" title="All 2 branches missed.">		if (db_result.getDate(fieldName) != null)</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">		if (db_result.getDate(fieldName) != null)</span>
 		{
-<span class="nc" id="L260">			java.sql.Timestamp dbDate = db_result.getTimestamp(fieldName);</span>
-<span class="nc" id="L261">			java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
-<span class="nc" id="L262">			return (formatter.format(dbDate));</span>
+<span class="nc" id="L259">			java.sql.Timestamp dbDate = db_result.getTimestamp(fieldName);</span>
+<span class="nc" id="L260">			java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
+<span class="nc" id="L261">			return (formatter.format(dbDate));</span>
 		}
 		else
 		{
-<span class="nc" id="L266">			return (&quot;&quot;);</span>
+<span class="nc" id="L265">			return (&quot;&quot;);</span>
 		}
 	}
 
@@ -277,7 +276,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getDbDateTime(java.sql.ResultSet db_result, String fieldName) throws SQLException
 	{
-<span class="fc" id="L280">		return (getDbDateTime(db_result, fieldName, &quot;iwcm&quot;));</span>
+<span class="fc" id="L279">		return (getDbDateTime(db_result, fieldName, &quot;iwcm&quot;));</span>
 	}
 
 	/**
@@ -291,62 +290,62 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getDbDateTime(java.sql.ResultSet db_result, String fieldName, String serverName) throws SQLException
 	{
-<span class="fc" id="L294">		String ret = &quot;&quot;;</span>
+<span class="fc" id="L293">		String ret = &quot;&quot;;</span>
 
 		try
 		{
-<span class="fc bfc" id="L298" title="All 2 branches covered.">			if (db_result.getTimestamp(fieldName) != null)</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">			if (db_result.getTimestamp(fieldName) != null)</span>
 			{
-<span class="fc" id="L300">				java.sql.Timestamp dbDate = db_result.getTimestamp(fieldName);</span>
-<span class="fc" id="L301">				java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateTimeFormat&quot;));</span>
-<span class="fc" id="L302">				ret =  formatter.format(dbDate);</span>
+<span class="fc" id="L299">				java.sql.Timestamp dbDate = db_result.getTimestamp(fieldName);</span>
+<span class="fc" id="L300">				java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateTimeFormat&quot;));</span>
+<span class="fc" id="L301">				ret =  formatter.format(dbDate);</span>
 			}
 		}
-<span class="nc" id="L305">		catch (SQLException ex)</span>
+<span class="nc" id="L304">		catch (SQLException ex)</span>
 		{
-<span class="nc" id="L307">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L308">		}</span>
-<span class="fc" id="L309">		return (ret);</span>
+<span class="nc" id="L306">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L307">		}</span>
+<span class="fc" id="L308">		return (ret);</span>
 	}
 
 
 	public static long getTimestamp(String date, String time, String serverName)
 	{
-<span class="nc" id="L315">		return(getTimestamp(date, time));</span>
+<span class="nc" id="L314">		return(getTimestamp(date, time));</span>
 	}
 
 	public static long getTimestamp(String dateTime)
 	{
-<span class="fc" id="L320">		long timestamp = 0;</span>
+<span class="fc" id="L319">		long timestamp = 0;</span>
 		try
 		{
-<span class="fc bfc" id="L323" title="All 2 branches covered.">			if (Tools.isNotEmpty(dateTime))</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">			if (Tools.isNotEmpty(dateTime))</span>
 			{
 				//ak je datum vo formate 1. 5. 2005 14:30
-<span class="fc" id="L326">				dateTime = Tools.replace(dateTime, &quot;. &quot;, &quot;.&quot;);</span>
+<span class="fc" id="L325">				dateTime = Tools.replace(dateTime, &quot;. &quot;, &quot;.&quot;);</span>
 
 				//ak je to zadane ako 26112009 uprav na lepsi format
-<span class="pc bpc" id="L329" title="1 of 4 branches missed.">				if (dateTime.length()==8 &amp;&amp; dateTime.indexOf('.')==-1)</span>
+<span class="pc bpc" id="L328" title="3 of 4 branches missed.">				if (dateTime.length()==8 &amp;&amp; dateTime.indexOf('.')==-1)</span>
 				{
-<span class="nc" id="L331">					dateTime = dateTime.substring(0, 2)+&quot;.&quot;+dateTime.substring(2,4)+&quot;.&quot;+dateTime.substring(4);</span>
+<span class="nc" id="L330">					dateTime = dateTime.substring(0, 2)+&quot;.&quot;+dateTime.substring(2,4)+&quot;.&quot;+dateTime.substring(4);</span>
 				}
 
-<span class="fc" id="L334">				StringTokenizer st = new StringTokenizer(dateTime);</span>
-<span class="pc bpc" id="L335" title="2 of 4 branches missed.">				if(st.hasMoreTokens() &amp;&amp; st.countTokens() == 4)</span>
+<span class="fc" id="L333">				StringTokenizer st = new StringTokenizer(dateTime);</span>
+<span class="pc bpc" id="L334" title="2 of 4 branches missed.">				if(st.hasMoreTokens() &amp;&amp; st.countTokens() == 4)</span>
 				{
-<span class="nc" id="L337">					timestamp = DB.getTimestamp(st.nextToken()+&quot;.&quot;+st.nextToken()+&quot;.&quot;+st.nextToken(), st.nextToken());</span>
+<span class="nc" id="L336">					timestamp = DB.getTimestamp(st.nextToken()+&quot;.&quot;+st.nextToken()+&quot;.&quot;+st.nextToken(), st.nextToken());</span>
 				}
-<span class="pc bpc" id="L339" title="2 of 4 branches missed.">				else if(st.hasMoreTokens() &amp;&amp; st.countTokens() == 3)</span>
+<span class="pc bpc" id="L338" title="2 of 4 branches missed.">				else if(st.hasMoreTokens() &amp;&amp; st.countTokens() == 3)</span>
 				{
-<span class="nc" id="L341">					timestamp = DB.getTimestamp(st.nextToken()+&quot;.&quot;+st.nextToken()+&quot;.&quot;+st.nextToken(), &quot;0:00&quot;);</span>
+<span class="nc" id="L340">					timestamp = DB.getTimestamp(st.nextToken()+&quot;.&quot;+st.nextToken()+&quot;.&quot;+st.nextToken(), &quot;0:00&quot;);</span>
 				}
-<span class="pc bpc" id="L343" title="1 of 4 branches missed.">				else if(st.hasMoreTokens() &amp;&amp; st.countTokens() == 2)</span>
+<span class="pc bpc" id="L342" title="1 of 4 branches missed.">				else if(st.hasMoreTokens() &amp;&amp; st.countTokens() == 2)</span>
 				{
-<span class="fc" id="L345">					timestamp = DB.getTimestamp(st.nextToken(), st.nextToken());</span>
+<span class="fc" id="L344">					timestamp = DB.getTimestamp(st.nextToken(), st.nextToken());</span>
 				}
-<span class="pc bpc" id="L347" title="2 of 4 branches missed.">				else if (st.hasMoreTokens() &amp;&amp; st.countTokens() == 1)</span>
+<span class="pc bpc" id="L346" title="2 of 4 branches missed.">				else if (st.hasMoreTokens() &amp;&amp; st.countTokens() == 1)</span>
 				{
-<span class="fc" id="L349">					timestamp = DB.getTimestamp(st.nextToken(), &quot;0:00&quot;);</span>
+<span class="fc" id="L348">					timestamp = DB.getTimestamp(st.nextToken(), &quot;0:00&quot;);</span>
 				}
 
 
@@ -355,11 +354,11 @@ import sk.iway.iwcm.doc.GroupsDB;
 				//Logger.println(this,&quot;Timestamp: &quot; +cal.getTime());
 			}
 		}
-<span class="nc" id="L358">		catch (Exception ex)</span>
+<span class="nc" id="L357">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L360">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L361">		}</span>
-<span class="fc" id="L362">		return timestamp;</span>
+<span class="nc" id="L359">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L360">		}</span>
+<span class="fc" id="L361">		return timestamp;</span>
 	}
 
 
@@ -372,18 +371,18 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static long getTimestamp(String date, String time)
 	{
-<span class="fc bfc" id="L375" title="All 2 branches covered.">		if (Tools.isEmpty(date))</span>
+<span class="fc bfc" id="L374" title="All 2 branches covered.">		if (Tools.isEmpty(date))</span>
 		{
-<span class="fc" id="L377">			return (0);</span>
+<span class="fc" id="L376">			return (0);</span>
 		}
 
-<span class="pc bpc" id="L380" title="1 of 2 branches missed.">		if (Tools.isEmpty(time))</span>
+<span class="pc bpc" id="L379" title="1 of 2 branches missed.">		if (Tools.isEmpty(time))</span>
 		{
-<span class="nc" id="L382">			time = &quot;00:00:00&quot;;</span>
+<span class="nc" id="L381">			time = &quot;00:00:00&quot;;</span>
 		}
 
-<span class="fc" id="L385">		Calendar tmpCalendar = Calendar.getInstance();</span>
-<span class="fc" id="L386">		tmpCalendar.clear();</span>
+<span class="fc" id="L384">		Calendar tmpCalendar = Calendar.getInstance();</span>
+<span class="fc" id="L385">		tmpCalendar.clear();</span>
 		int day;
 		int month;
 		int year;
@@ -392,147 +391,147 @@ import sk.iway.iwcm.doc.GroupsDB;
 		int second;
 
 		//try to parse date
-<span class="fc" id="L395">		date = date.trim();</span>
-<span class="fc" id="L396">		date = date.replace('/', '.');</span>
-<span class="fc" id="L397">		date = date.replace(' ', '.');</span>
-<span class="fc" id="L398">		date = date.replace('-', '.');</span>
-<span class="fc" id="L399">		date = date.replace(',', '.');</span>
+<span class="fc" id="L394">		date = date.trim();</span>
+<span class="fc" id="L395">		date = date.replace('/', '.');</span>
+<span class="fc" id="L396">		date = date.replace(' ', '.');</span>
+<span class="fc" id="L397">		date = date.replace('-', '.');</span>
+<span class="fc" id="L398">		date = date.replace(',', '.');</span>
 
 		//ak je to zadane ako 26112009 uprav na lepsi format
-<span class="pc bpc" id="L402" title="1 of 4 branches missed.">		if (date.length()==8 &amp;&amp; date.indexOf('.')==-1)</span>
+<span class="pc bpc" id="L401" title="3 of 4 branches missed.">		if (date.length()==8 &amp;&amp; date.indexOf('.')==-1)</span>
 		{
-<span class="nc" id="L404">			date = date.substring(0, 2)+&quot;.&quot;+date.substring(2,4)+&quot;.&quot;+date.substring(4);</span>
+<span class="nc" id="L403">			date = date.substring(0, 2)+&quot;.&quot;+date.substring(2,4)+&quot;.&quot;+date.substring(4);</span>
 		}
 
-<span class="fc" id="L407">		boolean usFormat = false;</span>
-<span class="pc bpc" id="L408" title="1 of 2 branches missed.">		if (Constants.getString(&quot;dateFormat&quot;).equalsIgnoreCase(&quot;mm-dd-yyyy&quot;))</span>
+<span class="fc" id="L406">		boolean usFormat = false;</span>
+<span class="pc bpc" id="L407" title="1 of 2 branches missed.">		if (Constants.getString(&quot;dateFormat&quot;).equalsIgnoreCase(&quot;mm-dd-yyyy&quot;))</span>
 		{
-<span class="nc" id="L410">			usFormat = true;</span>
+<span class="nc" id="L409">			usFormat = true;</span>
 		}
 
-<span class="fc" id="L413">		StringTokenizer st = new StringTokenizer(date, &quot;.&quot;);</span>
-<span class="pc bpc" id="L414" title="1 of 2 branches missed.">		if (st.hasMoreTokens())</span>
+<span class="fc" id="L412">		StringTokenizer st = new StringTokenizer(date, &quot;.&quot;);</span>
+<span class="pc bpc" id="L413" title="1 of 2 branches missed.">		if (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L418">				day = Integer.parseInt(st.nextToken());</span>
-<span class="pc bpc" id="L419" title="1 of 2 branches missed.">				if (usFormat)</span>
+<span class="fc" id="L417">				day = Integer.parseInt(st.nextToken());</span>
+<span class="pc bpc" id="L418" title="1 of 2 branches missed.">				if (usFormat)</span>
 				{
-<span class="nc" id="L421">					tmpCalendar.set(Calendar.MONTH, day - 1);</span>
+<span class="nc" id="L420">					tmpCalendar.set(Calendar.MONTH, day - 1);</span>
 				}
 				else
 				{
-<span class="fc" id="L425">					tmpCalendar.set(Calendar.DAY_OF_MONTH, day);</span>
+<span class="fc" id="L424">					tmpCalendar.set(Calendar.DAY_OF_MONTH, day);</span>
 				}
 			}
-<span class="fc" id="L428">			catch (Exception ex)</span>
+<span class="fc" id="L427">			catch (Exception ex)</span>
 			{
-<span class="fc" id="L430">			}</span>
+<span class="fc" id="L429">			}</span>
 		}
-<span class="fc bfc" id="L432" title="All 2 branches covered.">		if (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L431" title="All 2 branches covered.">		if (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L436">				month = Integer.parseInt(st.nextToken());</span>
-<span class="pc bpc" id="L437" title="1 of 2 branches missed.">				if (usFormat)</span>
+<span class="fc" id="L435">				month = Integer.parseInt(st.nextToken());</span>
+<span class="pc bpc" id="L436" title="1 of 2 branches missed.">				if (usFormat)</span>
 				{
-<span class="nc" id="L439">					tmpCalendar.set(Calendar.DAY_OF_MONTH, month);</span>
+<span class="nc" id="L438">					tmpCalendar.set(Calendar.DAY_OF_MONTH, month);</span>
 				}
 				else
 				{
 					//if you dont know why, RTFM
-<span class="fc" id="L444">					month = month - 1;</span>
-<span class="fc" id="L445">					tmpCalendar.set(Calendar.MONTH, month);</span>
+<span class="fc" id="L443">					month = month - 1;</span>
+<span class="fc" id="L444">					tmpCalendar.set(Calendar.MONTH, month);</span>
 				}
 			}
-<span class="nc" id="L448">			catch (Exception ex)</span>
+<span class="nc" id="L447">			catch (Exception ex)</span>
 			{
-<span class="fc" id="L450">			}</span>
+<span class="fc" id="L449">			}</span>
 		}
-<span class="fc bfc" id="L452" title="All 2 branches covered.">		if (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">		if (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L456">				year = Integer.parseInt(st.nextToken());</span>
-<span class="pc bpc" id="L457" title="1 of 2 branches missed.">				if (year &lt; 20)</span>
+<span class="fc" id="L455">				year = Integer.parseInt(st.nextToken());</span>
+<span class="pc bpc" id="L456" title="1 of 2 branches missed.">				if (year &lt; 20)</span>
 				{
-<span class="nc" id="L459">					year = 2000 + year;</span>
+<span class="nc" id="L458">					year = 2000 + year;</span>
 				}
-<span class="fc" id="L461">				tmpCalendar.set(Calendar.YEAR, year);</span>
+<span class="fc" id="L460">				tmpCalendar.set(Calendar.YEAR, year);</span>
 			}
-<span class="nc" id="L463">			catch (Exception ex)</span>
+<span class="nc" id="L462">			catch (Exception ex)</span>
 			{
-<span class="fc" id="L465">			}</span>
+<span class="fc" id="L464">			}</span>
 		}
 
-<span class="fc" id="L468">		time = time.trim();</span>
-<span class="pc bpc" id="L469" title="1 of 2 branches missed.">		if (time.length() &lt; 3)</span>
+<span class="fc" id="L467">		time = time.trim();</span>
+<span class="pc bpc" id="L468" title="1 of 2 branches missed.">		if (time.length() &lt; 3)</span>
 		{
-<span class="nc" id="L471">			time = &quot;00:00:00&quot;;</span>
+<span class="nc" id="L470">			time = &quot;00:00:00&quot;;</span>
 		}
-<span class="fc" id="L473">		time = time.replace('.', ':');</span>
-<span class="fc" id="L474">		time = time.replace(',', ':');</span>
-<span class="fc" id="L475">		time = time.replace(' ', ':');</span>
-<span class="fc" id="L476">		time = time.replace('-', ':');</span>
+<span class="fc" id="L472">		time = time.replace('.', ':');</span>
+<span class="fc" id="L473">		time = time.replace(',', ':');</span>
+<span class="fc" id="L474">		time = time.replace(' ', ':');</span>
+<span class="fc" id="L475">		time = time.replace('-', ':');</span>
 
-<span class="fc" id="L478">		st = new StringTokenizer(time, &quot;:&quot;);</span>
-<span class="pc bpc" id="L479" title="1 of 2 branches missed.">		if (st.hasMoreTokens())</span>
+<span class="fc" id="L477">		st = new StringTokenizer(time, &quot;:&quot;);</span>
+<span class="pc bpc" id="L478" title="1 of 2 branches missed.">		if (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L483">				hour = Integer.parseInt(st.nextToken());</span>
-<span class="fc" id="L484">				tmpCalendar.set(Calendar.HOUR_OF_DAY, hour);</span>
+<span class="fc" id="L482">				hour = Integer.parseInt(st.nextToken());</span>
+<span class="fc" id="L483">				tmpCalendar.set(Calendar.HOUR_OF_DAY, hour);</span>
 			}
-<span class="nc" id="L486">			catch (Exception ex)</span>
+<span class="nc" id="L485">			catch (Exception ex)</span>
 			{
-<span class="fc" id="L488">			}</span>
+<span class="fc" id="L487">			}</span>
 		}
-<span class="pc bpc" id="L490" title="1 of 2 branches missed.">		if (st.hasMoreTokens())</span>
+<span class="pc bpc" id="L489" title="1 of 2 branches missed.">		if (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L494">				minute = Integer.parseInt(st.nextToken());</span>
-<span class="fc" id="L495">				tmpCalendar.set(Calendar.MINUTE, minute);</span>
-<span class="fc bfc" id="L496" title="All 2 branches covered.">				if (minute &gt; 30)</span>
+<span class="fc" id="L493">				minute = Integer.parseInt(st.nextToken());</span>
+<span class="fc" id="L494">				tmpCalendar.set(Calendar.MINUTE, minute);</span>
+<span class="fc bfc" id="L495" title="All 2 branches covered.">				if (minute &gt; 30)</span>
 				{
-<span class="fc" id="L498">					tmpCalendar.set(Calendar.SECOND, 59);</span>
-<span class="fc" id="L499">					tmpCalendar.set(Calendar.MILLISECOND, 999);</span>
+<span class="fc" id="L497">					tmpCalendar.set(Calendar.SECOND, 59);</span>
+<span class="fc" id="L498">					tmpCalendar.set(Calendar.MILLISECOND, 999);</span>
 				}
 				else
 				{
-<span class="fc" id="L503">					tmpCalendar.set(Calendar.SECOND, 0);</span>
-<span class="fc" id="L504">					tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L502">					tmpCalendar.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L503">					tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
 				}
 			}
-<span class="nc" id="L507">			catch (Exception ex)</span>
+<span class="nc" id="L506">			catch (Exception ex)</span>
 			{
-<span class="fc" id="L509">			}</span>
+<span class="fc" id="L508">			}</span>
 		}
-<span class="fc bfc" id="L511" title="All 2 branches covered.">		if (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">		if (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L515">				second = Integer.parseInt(st.nextToken());</span>
-<span class="fc" id="L516">				tmpCalendar.set(Calendar.SECOND, second);</span>
-<span class="fc bfc" id="L517" title="All 2 branches covered.">				if (second &gt; 30)</span>
+<span class="fc" id="L514">				second = Integer.parseInt(st.nextToken());</span>
+<span class="fc" id="L515">				tmpCalendar.set(Calendar.SECOND, second);</span>
+<span class="fc bfc" id="L516" title="All 2 branches covered.">				if (second &gt; 30)</span>
 				{
-<span class="fc" id="L519">					tmpCalendar.set(Calendar.MILLISECOND, 999);</span>
+<span class="fc" id="L518">					tmpCalendar.set(Calendar.MILLISECOND, 999);</span>
 				}
 				else
 				{
-<span class="fc" id="L523">					tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L522">					tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
 				}
 			}
-<span class="nc" id="L526">			catch (Exception ex)</span>
+<span class="nc" id="L525">			catch (Exception ex)</span>
 			{
-<span class="pc" id="L528">			}</span>
+<span class="pc" id="L527">			}</span>
 		}
 		else
 		{
-<span class="fc" id="L532">			tmpCalendar.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L531">			tmpCalendar.set(Calendar.SECOND, 0);</span>
 		}
-<span class="fc" id="L534">		tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
-<span class="fc" id="L535">		return (tmpCalendar.getTime().getTime());</span>
+<span class="fc" id="L533">		tmpCalendar.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L534">		return (tmpCalendar.getTime().getTime());</span>
 	}
 
 	private static final String TAB00C0 =
@@ -548,7 +547,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 					&quot;OoOoRrRrRrSsSsSs&quot; +
 					&quot;SsTtTtTtUuUuUuUu&quot; +
 					&quot;UuUuWwYyYZzZzZzF&quot;;
-<span class="fc" id="L551">	private static final String[] TAB00C1 = &quot;A,B,V,G,D,E,Zh,Z,I,J,K,L,M,N,O,P,R,S,T,U,F,H,C,Ch,Sh,Shh,\&quot;\&quot;,Y,'',Je,Ju,Ja,a,b,v,g,d,e,zh,z,i,j,k,l,m,n,o,p,r,s,t,u,f,h,c,ch,sh,shh,\&quot;,y,',je,ju,ja,eh,jo&quot;.split(&quot;,&quot;);</span>
+<span class="fc" id="L550">	private static final String[] TAB00C1 = &quot;A,B,V,G,D,E,Zh,Z,I,J,K,L,M,N,O,P,R,S,T,U,F,H,C,Ch,Sh,Shh,\&quot;\&quot;,Y,'',Je,Ju,Ja,a,b,v,g,d,e,zh,z,i,j,k,l,m,n,o,p,r,s,t,u,f,h,c,ch,sh,shh,\&quot;,y,',je,ju,ja,eh,jo&quot;.split(&quot;,&quot;);</span>
 
 	/**
 	 *  prekoduje diakritiku a azbuku do cisteho ascii
@@ -558,34 +557,34 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String internationalToEnglish(String source)
 	{
-<span class="pc bpc" id="L561" title="1 of 2 branches missed.">		if (source == null)</span>
+<span class="pc bpc" id="L560" title="1 of 2 branches missed.">		if (source == null)</span>
 		{
 			//pozor, toto sa casto pouziva, nesmie to vratit null
-<span class="nc" id="L564">			return (&quot;&quot;);</span>
+<span class="nc" id="L563">			return (&quot;&quot;);</span>
 		}
 
-<span class="fc" id="L567">		char[] vysl = new char[source.length()*2];</span>
+<span class="fc" id="L566">		char[] vysl = new char[source.length()*2];</span>
 		char one;
-<span class="fc" id="L569">		int k = 0;</span>
-<span class="fc bfc" id="L570" title="All 2 branches covered.">		for (int i = 0; i &lt; source.length(); i++)</span>
+<span class="fc" id="L568">		int k = 0;</span>
+<span class="fc bfc" id="L569" title="All 2 branches covered.">		for (int i = 0; i &lt; source.length(); i++)</span>
 		{
-<span class="fc" id="L572">			one = source.charAt(i);</span>
-<span class="fc bfc" id="L573" title="All 6 branches covered.">			if (one &gt;= '\u00c0' &amp; one &lt;= '\u017f') //NOSONAR</span>
+<span class="fc" id="L571">			one = source.charAt(i);</span>
+<span class="fc bfc" id="L572" title="All 6 branches covered.">			if (one &gt;= '\u00c0' &amp; one &lt;= '\u017f') //NOSONAR</span>
 			{
-<span class="fc" id="L575">				one = TAB00C0.charAt(one - '\u00c0');</span>
+<span class="fc" id="L574">				one = TAB00C0.charAt(one - '\u00c0');</span>
 			}
-<span class="pc bpc" id="L577" title="1 of 6 branches missed.">			if(one &gt;= '\u0410' &amp; one &lt;= '\u0451') //NOSONAR azbuka</span>
+<span class="pc bpc" id="L576" title="1 of 6 branches missed.">			if(one &gt;= '\u0410' &amp; one &lt;= '\u0451') //NOSONAR azbuka</span>
 			{
-<span class="nc" id="L579">				String tmp = TAB00C1[(one - '\u0410')];</span>
-<span class="nc bnc" id="L580" title="All 2 branches missed.">				for (int j = 0; j &lt; tmp.length(); j++)</span>
+<span class="nc" id="L578">				String tmp = TAB00C1[(one - '\u0410')];</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">				for (int j = 0; j &lt; tmp.length(); j++)</span>
 				{
-<span class="nc" id="L582">					vysl[k++] = tmp.charAt(j);</span>
+<span class="nc" id="L581">					vysl[k++] = tmp.charAt(j);</span>
 				}
-<span class="nc" id="L584">				continue;</span>
+<span class="nc" id="L583">				continue;</span>
 			}
-<span class="fc" id="L586">			vysl[k++] = one;</span>
+<span class="fc" id="L585">			vysl[k++] = one;</span>
 		}
-<span class="fc" id="L588">		return new String(vysl).trim();</span>
+<span class="fc" id="L587">		return new String(vysl).trim();</span>
 	}
 
 	/**
@@ -600,7 +599,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 	@Deprecated
 	public static String replace(String src, String oldStr, String newStr)
 	{
-<span class="fc" id="L603">		return(Tools.replace(src, oldStr, newStr));</span>
+<span class="fc" id="L602">		return(Tools.replace(src, oldStr, newStr));</span>
 	}
 
 	/**
@@ -613,24 +612,20 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static void setClob(java.sql.PreparedStatement ps, int pos, String data) throws Exception
 	{
-<span class="pc bpc" id="L616" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+<span class="pc bpc" id="L615" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
 		{
 			//ps.setString(pos, &quot;&amp;nbsp;&quot;);
-<span class="nc bnc" id="L619" title="All 2 branches missed.">			if(data!=null)</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">			if(data!=null)</span>
 			{
 
 				try
 				{
-<span class="nc" id="L624">					Connection db_conn = ps.getConnection();</span>
+<span class="nc" id="L623">					Connection db_conn = ps.getConnection();</span>
 
-<span class="nc" id="L626">					Connection nativeConn = null;</span>
-<span class="nc bnc" id="L627" title="All 2 branches missed.">					if (db_conn instanceof DelegatingConnection)</span>
+<span class="nc" id="L625">					Connection nativeConn = null;</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">					if (db_conn instanceof OracleConnection)</span>
 					{
-<span class="nc" id="L629">						nativeConn = ((DelegatingConnection)db_conn).getInnermostDelegate();</span>
-					}
-<span class="nc bnc" id="L631" title="All 2 branches missed.">					else if (db_conn instanceof OracleConnection)</span>
-					{
-<span class="nc" id="L633">						nativeConn = db_conn;</span>
+<span class="nc" id="L628">						nativeConn = db_conn;</span>
 					}
 					//toto treba pre JBoss odkomentovat, ja v libkach nemam WrappedConnection
 				   /*
@@ -639,48 +634,46 @@ import sk.iway.iwcm.doc.GroupsDB;
 					nativeConn = ((WrappedConnection)db_conn).getUnderlyingConnection();
 				   }
 				   */
-<span class="nc bnc" id="L642" title="All 2 branches missed.">					if (nativeConn != null)</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">					if (nativeConn != null)</span>
 					{
-<span class="nc" id="L644">						Connection nativeCon = ((DelegatingConnection) db_conn).getInnermostDelegate();</span>
-
-<span class="nc" id="L646">						CLOB tempClob = CLOB.createTemporary(nativeCon, true, CLOB.DURATION_SESSION);</span>
+<span class="nc" id="L639">						CLOB tempClob = CLOB.createTemporary(nativeConn, true, CLOB.DURATION_SESSION);</span>
 						// Open the temporary CLOB in readwrite mode to enable writing
-<span class="nc" id="L648">						tempClob.open(CLOB.MODE_READWRITE);</span>
+<span class="nc" id="L641">						tempClob.open(CLOB.MODE_READWRITE);</span>
 						// Get the output stream to write
-<span class="nc" id="L650">						Writer tempClobWriter = tempClob.getCharacterOutputStream();</span>
+<span class="nc" id="L643">						Writer tempClobWriter = tempClob.getCharacterOutputStream();</span>
 						// Write the data into the temporary CLOB
-<span class="nc" id="L652">						tempClobWriter.write(data);</span>
+<span class="nc" id="L645">						tempClobWriter.write(data);</span>
 						// Flush and close the stream
-<span class="nc" id="L654">						tempClobWriter.flush();</span>
-<span class="nc" id="L655">						tempClobWriter.close();</span>
+<span class="nc" id="L647">						tempClobWriter.flush();</span>
+<span class="nc" id="L648">						tempClobWriter.close();</span>
 						// Close the temporary CLOB
-<span class="nc" id="L657">						tempClob.close();</span>
-<span class="nc" id="L658">						ps.setObject(pos, tempClob);</span>
-<span class="nc" id="L659">					}</span>
+<span class="nc" id="L650">						tempClob.close();</span>
+<span class="nc" id="L651">						ps.setObject(pos, tempClob);</span>
+<span class="nc" id="L652">					}</span>
 					else
 					{
-<span class="nc" id="L662">						ps.setString(pos, data);</span>
+<span class="nc" id="L655">						ps.setString(pos, data);</span>
 					}
 				}
-<span class="nc" id="L665">				catch (Exception e)</span>
+<span class="nc" id="L658">				catch (Exception e)</span>
 				{
-<span class="nc" id="L667">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L668">				}</span>
+<span class="nc" id="L660">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L661">				}</span>
 
 				//StringReader reader = new StringReader(data);
 				//ps.setCharacterStream(pos, reader, data.length());
 			}
 			else
 			{
-<span class="nc" id="L675">				ps.setNull(pos, java.sql.Types.CLOB);</span>
+<span class="nc" id="L668">				ps.setNull(pos, java.sql.Types.CLOB);</span>
 			}
 
 		}
 		else
 		{
-<span class="fc" id="L681">			ps.setString(pos, data);</span>
+<span class="fc" id="L674">			ps.setString(pos, data);</span>
 		}
-<span class="fc" id="L683">	}</span>
+<span class="fc" id="L676">	}</span>
 
 	/**
 	 *  Nastavi hodnotu do Clobu (pre Oracle)
@@ -708,10 +701,10 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String removeSlashes(String sqlParam)
 	{
-<span class="pc bpc" id="L711" title="1 of 2 branches missed.">		if (sqlParam == null) return(sqlParam);</span>
+<span class="pc bpc" id="L704" title="1 of 2 branches missed.">		if (sqlParam == null) return(sqlParam);</span>
 
-<span class="fc" id="L713">		sqlParam = sqlParam.replace('\'', ' ');</span>
-<span class="fc" id="L714">		return (sqlParam);</span>
+<span class="fc" id="L706">		sqlParam = sqlParam.replace('\'', ' ');</span>
+<span class="fc" id="L707">		return (sqlParam);</span>
 	}
 
 	/**
@@ -723,34 +716,34 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String dumpResultSet(ResultSet rs) throws SQLException
 	{
-<span class="nc" id="L726">		StringBuilder buf = new StringBuilder();</span>
-<span class="nc bnc" id="L727" title="All 2 branches missed.">		if (rs != null)</span>
+<span class="nc" id="L719">		StringBuilder buf = new StringBuilder();</span>
+<span class="nc bnc" id="L720" title="All 2 branches missed.">		if (rs != null)</span>
 		{
-<span class="nc" id="L729">			ResultSetMetaData rsmd = rs.getMetaData();</span>
-<span class="nc" id="L730">			int columnCount = rsmd.getColumnCount() + 1;</span>
-<span class="nc bnc" id="L731" title="All 2 branches missed.">			for (int i = 1; i &lt; columnCount; i++)</span>
+<span class="nc" id="L722">			ResultSetMetaData rsmd = rs.getMetaData();</span>
+<span class="nc" id="L723">			int columnCount = rsmd.getColumnCount() + 1;</span>
+<span class="nc bnc" id="L724" title="All 2 branches missed.">			for (int i = 1; i &lt; columnCount; i++)</span>
 			{
-<span class="nc" id="L733">				buf.append(rsmd.getColumnLabel(i));</span>
-<span class="nc" id="L734">				buf.append(&quot;  &quot;);</span>
+<span class="nc" id="L726">				buf.append(rsmd.getColumnLabel(i));</span>
+<span class="nc" id="L727">				buf.append(&quot;  &quot;);</span>
 			}
-<span class="nc" id="L736">			buf.append(&quot;\n===========================================\n&quot;);</span>
+<span class="nc" id="L729">			buf.append(&quot;\n===========================================\n&quot;);</span>
 
-<span class="nc bnc" id="L738" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc bnc" id="L740" title="All 2 branches missed.">				for (int i = 1; i &lt; columnCount; i++)</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">				for (int i = 1; i &lt; columnCount; i++)</span>
 				{
-<span class="nc" id="L742">					buf.append(rs.getObject(i));</span>
-<span class="nc" id="L743">					buf.append(&quot;  &quot;);</span>
+<span class="nc" id="L735">					buf.append(rs.getObject(i));</span>
+<span class="nc" id="L736">					buf.append(&quot;  &quot;);</span>
 				}
-<span class="nc" id="L745">				buf.append('\n');</span>
+<span class="nc" id="L738">				buf.append('\n');</span>
 			}
 		}
-<span class="nc" id="L748">		return buf.toString();</span>
+<span class="nc" id="L741">		return buf.toString();</span>
 	}
 
 	public static String getFullName(ResultSet rs) throws Exception
 	{
-<span class="fc" id="L753">		return(DB.getFullName(rs, &quot;u_title&quot;));</span>
+<span class="fc" id="L746">		return(DB.getFullName(rs, &quot;u_title&quot;));</span>
 	}
 
 	/**
@@ -761,25 +754,25 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getFullName(ResultSet rs, String titleName) throws Exception
 	{
-<span class="fc" id="L764">		StringBuilder ret = new StringBuilder();</span>
-<span class="fc" id="L765">		String title = getDbString(rs, titleName);</span>
-<span class="fc" id="L766">		String firstName = getDbString(rs, &quot;first_name&quot;);</span>
-<span class="fc" id="L767">		String lastName = getDbString(rs, &quot;last_name&quot;);</span>
+<span class="fc" id="L757">		StringBuilder ret = new StringBuilder();</span>
+<span class="fc" id="L758">		String title = getDbString(rs, titleName);</span>
+<span class="fc" id="L759">		String firstName = getDbString(rs, &quot;first_name&quot;);</span>
+<span class="fc" id="L760">		String lastName = getDbString(rs, &quot;last_name&quot;);</span>
 
-<span class="pc bpc" id="L769" title="2 of 4 branches missed.">		if (title != null &amp;&amp; title.length()&gt;0)</span>
+<span class="pc bpc" id="L762" title="2 of 4 branches missed.">		if (title != null &amp;&amp; title.length()&gt;0)</span>
 		{
-<span class="nc" id="L771">			ret.append(title).append(' ');</span>
+<span class="nc" id="L764">			ret.append(title).append(' ');</span>
 		}
-<span class="pc bpc" id="L773" title="2 of 4 branches missed.">		if (firstName != null &amp;&amp; firstName.length()&gt;0)</span>
+<span class="pc bpc" id="L766" title="2 of 4 branches missed.">		if (firstName != null &amp;&amp; firstName.length()&gt;0)</span>
 		{
-<span class="fc" id="L775">			ret.append(firstName).append(' ');</span>
+<span class="fc" id="L768">			ret.append(firstName).append(' ');</span>
 		}
-<span class="pc bpc" id="L777" title="2 of 4 branches missed.">		if (lastName != null &amp;&amp; lastName.length()&gt;0)</span>
+<span class="pc bpc" id="L770" title="2 of 4 branches missed.">		if (lastName != null &amp;&amp; lastName.length()&gt;0)</span>
 		{
-<span class="fc" id="L779">			ret.append(lastName).append(' ');</span>
+<span class="fc" id="L772">			ret.append(lastName).append(' ');</span>
 		}
 
-<span class="fc" id="L782">		return(ret.toString().trim());</span>
+<span class="fc" id="L775">		return(ret.toString().trim());</span>
 	}
 
 	/**
@@ -790,17 +783,17 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String prepareString(String s, int maxLen)
 	{
-<span class="fc bfc" id="L793" title="All 2 branches covered.">		if (s==null)</span>
+<span class="fc bfc" id="L786" title="All 2 branches covered.">		if (s==null)</span>
 		{
-<span class="fc" id="L795">			return(s);</span>
+<span class="fc" id="L788">			return(s);</span>
 		}
 
-<span class="fc bfc" id="L798" title="All 2 branches covered.">		if (s.length() &gt; maxLen)</span>
+<span class="fc bfc" id="L791" title="All 2 branches covered.">		if (s.length() &gt; maxLen)</span>
 		{
-<span class="fc" id="L800">			s = s.substring(0, maxLen-1);</span>
+<span class="fc" id="L793">			s = s.substring(0, maxLen-1);</span>
 		}
 
-<span class="fc" id="L803">		return(s);</span>
+<span class="fc" id="L796">		return(s);</span>
 	}
 
 	/**
@@ -810,158 +803,158 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static List&lt;DynaBean&gt; getDynaList(String sql)
 	{
-<span class="nc" id="L813">		return(getDynaList(sql, null, null));</span>
+<span class="nc" id="L806">		return(getDynaList(sql, null, null));</span>
 	}
 
 	public static List&lt;DynaBean&gt; getDynaList(String sql, List&lt;?&gt; params)
 	{
-<span class="nc" id="L818">		return getDynaList(sql, params, null);</span>
+<span class="nc" id="L811">		return getDynaList(sql, params, null);</span>
 	}
 
 	public static List&lt;DynaBean&gt; getDynaList(String sql, List&lt;?&gt; params, String dbName)
 	{
 		try
 		{
-<span class="nc" id="L825">			Logger.debug(DB.class, &quot;getting dynaList, query: &quot; + sql);</span>
-<span class="nc bnc" id="L826" title="All 2 branches missed.">			Connection db_conn = Tools.isNotEmpty(dbName) ? DBPool.getConnection(dbName) : DBPool.getConnection();</span>
-<span class="nc bnc" id="L827" title="All 2 branches missed.">			if (db_conn != null)</span>
+<span class="nc" id="L818">			Logger.debug(DB.class, &quot;getting dynaList, query: &quot; + sql);</span>
+<span class="nc bnc" id="L819" title="All 2 branches missed.">			Connection db_conn = Tools.isNotEmpty(dbName) ? DBPool.getConnection(dbName) : DBPool.getConnection();</span>
+<span class="nc bnc" id="L820" title="All 2 branches missed.">			if (db_conn != null)</span>
 				try
 				{
-<span class="nc" id="L830">					PreparedStatement ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L823">					PreparedStatement ps = db_conn.prepareStatement(sql);</span>
 					try
 					{
-<span class="nc bnc" id="L833" title="All 4 branches missed.">						if (params != null &amp;&amp; params.size()&gt;0)</span>
+<span class="nc bnc" id="L826" title="All 4 branches missed.">						if (params != null &amp;&amp; params.size()&gt;0)</span>
 						{
-<span class="nc" id="L835">							int size = params.size();</span>
+<span class="nc" id="L828">							int size = params.size();</span>
 							int i;
 							Object o;
-<span class="nc bnc" id="L838" title="All 2 branches missed.">							for (i=1; i&lt;=size; i++)</span>
+<span class="nc bnc" id="L831" title="All 2 branches missed.">							for (i=1; i&lt;=size; i++)</span>
 							{
-<span class="nc" id="L840">								o = params.get(i-1);</span>
-<span class="nc bnc" id="L841" title="All 2 branches missed.">								if (o instanceof String)</span>
+<span class="nc" id="L833">								o = params.get(i-1);</span>
+<span class="nc bnc" id="L834" title="All 2 branches missed.">								if (o instanceof String)</span>
 								{
-<span class="nc" id="L843">									ps.setString(i, (String)o);</span>
+<span class="nc" id="L836">									ps.setString(i, (String)o);</span>
 								}
-<span class="nc bnc" id="L845" title="All 2 branches missed.">								else if (o instanceof Integer)</span>
+<span class="nc bnc" id="L838" title="All 2 branches missed.">								else if (o instanceof Integer)</span>
 								{
-<span class="nc" id="L847">									ps.setInt(i, ((Integer)o).intValue());</span>
+<span class="nc" id="L840">									ps.setInt(i, ((Integer)o).intValue());</span>
 								}
-<span class="nc bnc" id="L849" title="All 2 branches missed.">								else if (o instanceof Double)</span>
+<span class="nc bnc" id="L842" title="All 2 branches missed.">								else if (o instanceof Double)</span>
 								{
-<span class="nc" id="L851">									ps.setDouble(i, ((Double)o).doubleValue());</span>
+<span class="nc" id="L844">									ps.setDouble(i, ((Double)o).doubleValue());</span>
 								}
-<span class="nc bnc" id="L853" title="All 2 branches missed.">								else if (o instanceof Float)</span>
+<span class="nc bnc" id="L846" title="All 2 branches missed.">								else if (o instanceof Float)</span>
 								{
-<span class="nc" id="L855">									ps.setFloat(i, ((Float)o).floatValue());</span>
+<span class="nc" id="L848">									ps.setFloat(i, ((Float)o).floatValue());</span>
 								}
-<span class="nc bnc" id="L857" title="All 2 branches missed.">								else if (o instanceof Long)</span>
+<span class="nc bnc" id="L850" title="All 2 branches missed.">								else if (o instanceof Long)</span>
 								{
-<span class="nc" id="L859">									ps.setLong(i, ((Long)o).longValue());</span>
+<span class="nc" id="L852">									ps.setLong(i, ((Long)o).longValue());</span>
 								}
-<span class="nc bnc" id="L861" title="All 2 branches missed.">								else if (o instanceof Boolean)</span>
+<span class="nc bnc" id="L854" title="All 2 branches missed.">								else if (o instanceof Boolean)</span>
 								{
-<span class="nc" id="L863">									ps.setBoolean(i, ((Boolean)o).booleanValue());</span>
+<span class="nc" id="L856">									ps.setBoolean(i, ((Boolean)o).booleanValue());</span>
 								}
-<span class="nc bnc" id="L865" title="All 2 branches missed.">								else if (o instanceof Timestamp)</span>
+<span class="nc bnc" id="L858" title="All 2 branches missed.">								else if (o instanceof Timestamp)</span>
 								{
-<span class="nc" id="L867">									ps.setTimestamp(i, (Timestamp)o);</span>
+<span class="nc" id="L860">									ps.setTimestamp(i, (Timestamp)o);</span>
 								}
-<span class="nc bnc" id="L869" title="All 2 branches missed.">								else if (o instanceof java.sql.Date)</span>
+<span class="nc bnc" id="L862" title="All 2 branches missed.">								else if (o instanceof java.sql.Date)</span>
 								{
-<span class="nc" id="L871">									ps.setDate(i, (java.sql.Date)o);</span>
+<span class="nc" id="L864">									ps.setDate(i, (java.sql.Date)o);</span>
 								}
 								else
 								{
-<span class="nc" id="L875">									ps.setObject(i, o);</span>
+<span class="nc" id="L868">									ps.setObject(i, o);</span>
 								}
 							}
 						}
-<span class="nc" id="L879">						ResultSet rs = ps.executeQuery();</span>
+<span class="nc" id="L872">						ResultSet rs = ps.executeQuery();</span>
 						try
 						{
-<span class="nc" id="L882">							RowSetDynaClass rsdc = null;</span>
-<span class="nc" id="L883">							rsdc=new IwcmRowSetDynaClass(rs);</span>
-<span class="nc" id="L884">							Logger.debug(DB.class, &quot;dynaBenas found: &quot; + rsdc.getRows().size());</span>
-<span class="nc" id="L885">							return rsdc.getRows();</span>
+<span class="nc" id="L875">							RowSetDynaClass rsdc = null;</span>
+<span class="nc" id="L876">							rsdc=new IwcmRowSetDynaClass(rs);</span>
+<span class="nc" id="L877">							Logger.debug(DB.class, &quot;dynaBenas found: &quot; + rsdc.getRows().size());</span>
+<span class="nc" id="L878">							return rsdc.getRows();</span>
 						}
-<span class="nc" id="L887">						finally { rs.close(); }</span>
+<span class="nc" id="L880">						finally { rs.close(); }</span>
 					}
-<span class="nc" id="L889">					finally { ps.close(); }</span>
+<span class="nc" id="L882">					finally { ps.close(); }</span>
 				}
-<span class="nc" id="L891">				finally { db_conn.close(); }</span>
+<span class="nc" id="L884">				finally { db_conn.close(); }</span>
 		}
-<span class="nc" id="L893">		catch (Exception ex)</span>
+<span class="nc" id="L886">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L895">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L896">		}</span>
-<span class="nc" id="L897">		return(new ArrayList&lt;DynaBean&gt;());</span>
+<span class="nc" id="L888">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L889">		}</span>
+<span class="nc" id="L890">		return(new ArrayList&lt;DynaBean&gt;());</span>
 	}
 
 	public static int getIntValue(Object o, int defaultValue)
 	{
-<span class="nc" id="L902">		int ret = defaultValue;</span>
-<span class="nc bnc" id="L903" title="All 2 branches missed.">		if (o instanceof Integer)</span>
+<span class="nc" id="L895">		int ret = defaultValue;</span>
+<span class="nc bnc" id="L896" title="All 2 branches missed.">		if (o instanceof Integer)</span>
 		{
-<span class="nc" id="L905">			ret = ((Integer)o).intValue();</span>
+<span class="nc" id="L898">			ret = ((Integer)o).intValue();</span>
 		}
-<span class="nc bnc" id="L907" title="All 2 branches missed.">		else if (o instanceof Long)</span>
+<span class="nc bnc" id="L900" title="All 2 branches missed.">		else if (o instanceof Long)</span>
 		{
-<span class="nc" id="L909">			ret = (int)((Long)o).longValue();</span>
+<span class="nc" id="L902">			ret = (int)((Long)o).longValue();</span>
 		}
 
-<span class="nc" id="L912">		return(ret);</span>
+<span class="nc" id="L905">		return(ret);</span>
 	}
 
 	public static long getLongValue(Object o, long defaultValue)
 	{
-<span class="nc" id="L917">		long ret = defaultValue;</span>
-<span class="nc bnc" id="L918" title="All 2 branches missed.">		if (o instanceof Integer)</span>
+<span class="nc" id="L910">		long ret = defaultValue;</span>
+<span class="nc bnc" id="L911" title="All 2 branches missed.">		if (o instanceof Integer)</span>
 		{
-<span class="nc" id="L920">			ret = ((Integer)o).intValue();</span>
+<span class="nc" id="L913">			ret = ((Integer)o).intValue();</span>
 		}
-<span class="nc bnc" id="L922" title="All 2 branches missed.">		else if (o instanceof Long)</span>
+<span class="nc bnc" id="L915" title="All 2 branches missed.">		else if (o instanceof Long)</span>
 		{
-<span class="nc" id="L924">			ret = ((Long)o).longValue();</span>
+<span class="nc" id="L917">			ret = ((Long)o).longValue();</span>
 		}
 
-<span class="nc" id="L927">		return(ret);</span>
+<span class="nc" id="L920">		return(ret);</span>
 	}
 
 
 	public static void execute(String sql, Object... arguments)
 	{
-<span class="fc" id="L933">		new SimpleQuery().execute(sql, arguments);</span>
-<span class="fc" id="L934">	}</span>
+<span class="fc" id="L926">		new SimpleQuery().execute(sql, arguments);</span>
+<span class="fc" id="L927">	}</span>
 
 	public static int queryForInt(String sql, Object... parameters)
 	{
-<span class="fc" id="L938">		return new SimpleQuery().forInt(sql, parameters);</span>
+<span class="fc" id="L931">		return new SimpleQuery().forInt(sql, parameters);</span>
 	}
 
 	public static long queryForLong(String sql, Object... parameters)
 	{
-<span class="nc" id="L943">		return new SimpleQuery().forLong(sql, parameters);</span>
+<span class="nc" id="L936">		return new SimpleQuery().forLong(sql, parameters);</span>
 	}
 
 	public static String queryForString(String sql, Object... parameters)
 	{
-<span class="nc" id="L948">		return new SimpleQuery().forString(sql, parameters);</span>
+<span class="nc" id="L941">		return new SimpleQuery().forString(sql, parameters);</span>
 	}
 
 	public static double queryForDouble(String sql, Object... parameters)
 	{
-<span class="nc" id="L953">		return new SimpleQuery().forDouble(sql, parameters);</span>
+<span class="nc" id="L946">		return new SimpleQuery().forDouble(sql, parameters);</span>
 	}
 
 	public static BigDecimal queryForBigDecimal(String sql, Object...parameters)
 	{
-<span class="nc" id="L958">		return new SimpleQuery().forBigDecimal(sql, parameters);</span>
+<span class="nc" id="L951">		return new SimpleQuery().forBigDecimal(sql, parameters);</span>
 	}
 
 	@SuppressWarnings(&quot;rawtypes&quot;)
 	public static List queryForList(String sql, Object... parameters)
 	{
-<span class="fc" id="L964">		return new SimpleQuery().forList(sql, parameters);</span>
+<span class="fc" id="L957">		return new SimpleQuery().forList(sql, parameters);</span>
 	}
 
 	/**
@@ -971,7 +964,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getOnlyNumbersIn(String ids)
 	{
-<span class="fc" id="L974">		return getOnlyNumbersIn(ids,false);</span>
+<span class="fc" id="L967">		return getOnlyNumbersIn(ids,false);</span>
 	}
 
 	/**
@@ -983,46 +976,46 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static String getOnlyNumbersIn(String ids, boolean checkGroups)
 	{
-<span class="fc" id="L986">		StringTokenizer st = new StringTokenizer (ids, &quot;,&quot;);</span>
-<span class="fc" id="L987">		StringBuilder ret = new StringBuilder();</span>
-<span class="fc" id="L988">		GroupDetails group = null;</span>
-<span class="fc" id="L989">		String domain = CloudToolsForCore.getDomainName();</span>
-<span class="fc bfc" id="L990" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
+<span class="fc" id="L979">		StringTokenizer st = new StringTokenizer (ids, &quot;,&quot;);</span>
+<span class="fc" id="L980">		StringBuilder ret = new StringBuilder();</span>
+<span class="fc" id="L981">		GroupDetails group = null;</span>
+<span class="fc" id="L982">		String domain = CloudToolsForCore.getDomainName();</span>
+<span class="fc bfc" id="L983" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
 		{
 			try
 			{
-<span class="fc" id="L994">				String sid = st.nextToken();</span>
-<span class="fc" id="L995">				sid = sid.replace('(', ' ');</span>
-<span class="fc" id="L996">				sid = sid.replace(')', ')');</span>
-<span class="fc" id="L997">				sid = sid.trim();</span>
-<span class="fc" id="L998">				int id = Integer.parseInt(sid);</span>
-<span class="pc bpc" id="L999" title="1 of 4 branches missed.">				if(checkGroups &amp;&amp; InitServlet.isTypeCloud())</span>
+<span class="fc" id="L987">				String sid = st.nextToken();</span>
+<span class="fc" id="L988">				sid = sid.replace('(', ' ');</span>
+<span class="fc" id="L989">				sid = sid.replace(')', ')');</span>
+<span class="fc" id="L990">				sid = sid.trim();</span>
+<span class="fc" id="L991">				int id = Integer.parseInt(sid);</span>
+<span class="pc bpc" id="L992" title="1 of 4 branches missed.">				if(checkGroups &amp;&amp; InitServlet.isTypeCloud())</span>
 				{
-<span class="nc" id="L1001">					group = GroupsDB.getInstance().getGroup(id);</span>
-<span class="nc bnc" id="L1002" title="All 2 branches missed.">					if(group != null)</span>
+<span class="nc" id="L994">					group = GroupsDB.getInstance().getGroup(id);</span>
+<span class="nc bnc" id="L995" title="All 2 branches missed.">					if(group != null)</span>
 					{
-<span class="nc bnc" id="L1004" title="All 2 branches missed.">						if(group.getDomainName().equalsIgnoreCase(domain))</span>
+<span class="nc bnc" id="L997" title="All 2 branches missed.">						if(group.getDomainName().equalsIgnoreCase(domain))</span>
 						{
-<span class="nc bnc" id="L1006" title="All 2 branches missed.">							if (ret.length()==0) ret = new StringBuilder(String.valueOf(id));</span>
-<span class="nc" id="L1007">							else ret.append(',').append(id);</span>
+<span class="nc bnc" id="L999" title="All 2 branches missed.">							if (ret.length()==0) ret = new StringBuilder(String.valueOf(id));</span>
+<span class="nc" id="L1000">							else ret.append(',').append(id);</span>
 						}
 					}
 				}
 				else
 				{
-<span class="fc bfc" id="L1013" title="All 2 branches covered.">					if (ret.length()==0) ret = new StringBuilder(String.valueOf(id));</span>
-<span class="fc" id="L1014">					else ret.append(',').append(id);</span>
+<span class="fc bfc" id="L1006" title="All 2 branches covered.">					if (ret.length()==0) ret = new StringBuilder(String.valueOf(id));</span>
+<span class="fc" id="L1007">					else ret.append(',').append(id);</span>
 				}
 
 
 			}
-<span class="nc" id="L1019">			catch (Exception ex)</span>
+<span class="nc" id="L1012">			catch (Exception ex)</span>
 			{
 
-<span class="pc" id="L1022">			}</span>
+<span class="pc" id="L1015">			}</span>
 		}
 
-<span class="fc" id="L1025">		return ret.toString();</span>
+<span class="fc" id="L1018">		return ret.toString();</span>
 	}
 
 
@@ -1034,15 +1027,15 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static long getTimestampNotBeforeYear(long timestamp, int year)
 	{
-<span class="nc" id="L1037">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L1038">		cal.setTimeInMillis(timestamp);</span>
+<span class="nc" id="L1030">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1031">		cal.setTimeInMillis(timestamp);</span>
 
-<span class="nc bnc" id="L1040" title="All 2 branches missed.">		if (cal.get(Calendar.YEAR)&lt;year)</span>
+<span class="nc bnc" id="L1033" title="All 2 branches missed.">		if (cal.get(Calendar.YEAR)&lt;year)</span>
 		{
-<span class="nc" id="L1042">			cal.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L1035">			cal.set(Calendar.YEAR, year);</span>
 		}
 
-<span class="nc" id="L1045">		return cal.getTimeInMillis();</span>
+<span class="nc" id="L1038">		return cal.getTimeInMillis();</span>
 	}
 
 	/**
@@ -1053,15 +1046,15 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static long getTimestampNotAfterYear(long timestamp, int year)
 	{
-<span class="nc" id="L1056">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L1057">		cal.setTimeInMillis(timestamp);</span>
+<span class="nc" id="L1049">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1050">		cal.setTimeInMillis(timestamp);</span>
 
-<span class="nc bnc" id="L1059" title="All 2 branches missed.">		if (cal.get(Calendar.YEAR)&gt;year)</span>
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">		if (cal.get(Calendar.YEAR)&gt;year)</span>
 		{
-<span class="nc" id="L1061">			cal.set(Calendar.YEAR, year);</span>
+<span class="nc" id="L1054">			cal.set(Calendar.YEAR, year);</span>
 		}
 
-<span class="nc" id="L1064">		return cal.getTimeInMillis();</span>
+<span class="nc" id="L1057">		return cal.getTimeInMillis();</span>
 	}
 
 	/**
@@ -1073,8 +1066,8 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 */
 	public static long getTimestampNotBeforeAfterYear(long timestamp, int yearFrom, int yearTo)
 	{
-<span class="nc" id="L1076">		timestamp = getTimestampNotBeforeYear(timestamp, yearFrom);</span>
-<span class="nc" id="L1077">		return getTimestampNotAfterYear(timestamp, yearTo);</span>
+<span class="nc" id="L1069">		timestamp = getTimestampNotBeforeYear(timestamp, yearFrom);</span>
+<span class="nc" id="L1070">		return getTimestampNotAfterYear(timestamp, yearTo);</span>
 	}
 
 	/**
@@ -1087,7 +1080,7 @@ import sk.iway.iwcm.doc.GroupsDB;
 	@Deprecated
 	public static String filterEscaped(String escapedString)
 	{
-<span class="nc" id="L1090">		return filterHtml(escapedString);</span>
+<span class="nc" id="L1083">		return filterHtml(escapedString);</span>
 	}
 
 
@@ -1099,8 +1092,8 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 * @throws SQLException
 	 */
 	public static Integer getInteger(ResultSet rs, String colName) throws SQLException {
-<span class="fc" id="L1102">		int nValue = rs.getInt(colName);</span>
-<span class="fc bfc" id="L1103" title="All 2 branches covered.">		return rs.wasNull() ? null : nValue;</span>
+<span class="fc" id="L1095">		int nValue = rs.getInt(colName);</span>
+<span class="fc bfc" id="L1096" title="All 2 branches covered.">		return rs.wasNull() ? null : nValue;</span>
   	}
 
 	/**
@@ -1111,8 +1104,8 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 * @throws SQLException
 	 */
 	public static Boolean getBoolean(ResultSet rs, String colName) throws SQLException {
-<span class="fc" id="L1114">		boolean nValue = rs.getBoolean(colName);</span>
-<span class="fc bfc" id="L1115" title="All 2 branches covered.">		return rs.wasNull() ? null : nValue;</span>
+<span class="fc" id="L1107">		boolean nValue = rs.getBoolean(colName);</span>
+<span class="fc bfc" id="L1108" title="All 2 branches covered.">		return rs.wasNull() ? null : nValue;</span>
 	}
 
 	/**
@@ -1121,10 +1114,10 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 * @return
 	 */
 	public static String getBooleanSql(boolean b) {
-<span class="pc bpc" id="L1124" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="nc bnc" id="L1125" title="All 2 branches missed.">			return b ? &quot;true&quot; : &quot;false&quot;;</span>
+<span class="pc bpc" id="L1117" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
+<span class="nc bnc" id="L1118" title="All 2 branches missed.">			return b ? &quot;true&quot; : &quot;false&quot;;</span>
 		}
-<span class="fc bfc" id="L1127" title="All 2 branches covered.">		return b ? &quot;1&quot; : &quot;0&quot;;</span>
+<span class="fc bfc" id="L1120" title="All 2 branches covered.">		return b ? &quot;1&quot; : &quot;0&quot;;</span>
 	}
 
 	/**
@@ -1133,13 +1126,13 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 * @return
 	 */
 	public static String fixAiCiCol(String column) {
-<span class="pc bpc" id="L1136" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
-<span class="nc" id="L1137">			return &quot;lower(&quot; + column + &quot;)&quot;;</span>
+<span class="pc bpc" id="L1129" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
+<span class="nc" id="L1130">			return &quot;lower(&quot; + column + &quot;)&quot;;</span>
 		}
-<span class="pc bpc" id="L1139" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="nc" id="L1140">			return &quot;lower(unaccent(&quot; + column + &quot;))&quot;;</span>
+<span class="pc bpc" id="L1132" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
+<span class="nc" id="L1133">			return &quot;lower(unaccent(&quot; + column + &quot;))&quot;;</span>
 		}
-<span class="fc" id="L1142">		return column;</span>
+<span class="fc" id="L1135">		return column;</span>
 	}
 
 	/**
@@ -1148,13 +1141,13 @@ import sk.iway.iwcm.doc.GroupsDB;
 	 * @return
 	 */
 	public static String fixAiCiValue(String value) {
-<span class="pc bpc" id="L1151" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
-<span class="nc" id="L1152">			return value.toLowerCase();</span>
+<span class="pc bpc" id="L1144" title="1 of 2 branches missed.">		if (Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
+<span class="nc" id="L1145">			return value.toLowerCase();</span>
 		}
-<span class="pc bpc" id="L1154" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="nc" id="L1155">			return DB.internationalToEnglish(value).toLowerCase();</span>
+<span class="pc bpc" id="L1147" title="1 of 2 branches missed.">		else if (Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
+<span class="nc" id="L1148">			return DB.internationalToEnglish(value).toLowerCase();</span>
 		}
-<span class="fc" id="L1157">		return value;</span>
+<span class="fc" id="L1150">		return value;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

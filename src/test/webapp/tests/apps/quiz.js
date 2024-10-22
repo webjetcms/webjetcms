@@ -63,7 +63,7 @@ Scenario("Test dotaznika typu Spravna Odpoved", async ({ I }) => {
     checkAnswer(I, 7, 2, ".wrong");
 });
 
-Scenario('Dotaznik zakladne testy', async ({I, DataTables}) => {
+Scenario('Dotaznik zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/quiz/admin/");
     await DataTables.baseTest({
         dataTable: 'quizDataTable',
@@ -304,14 +304,14 @@ Scenario("Test quiz stat sekcie", async ({ I, DT }) => {
     I.seeElement(locate("span.statPageTitle").withText("Rated_quiz"));
     I.seeElement("div.dt-extfilter-dayDate");
 
-    I.say("Set date  and check values");
+    I.say("Set date  and check values first");
     I.fillField({css: "input.dt-filter-to-dayDate"}, "20.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
     DT.checkTableRow("quizStatDataTable", 1, ["Kruh je", "", "61", "13", "82,43", "5,93", "8,00"]);
     DT.checkTableRow("quizStatDataTable", 2, ["Úsečka je", "", "61", "13", "82,43", "2,95", "5,00"]);
     DT.checkTableRow("quizStatDataTable", 3, ["Čo je toto", "/images/gallery/test/dsc04082.jpeg", "12", "62", "16,22", "0,16", "1,00"]);
 
-    I.say("Set date  and check values");
+    I.say("Set date  and check values second");
     I.fillField({css: "input.dt-filter-from-dayDate"}, "18.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
     DT.checkTableRow("quizStatDataTable", 1, ["Kruh je", "", "56", "11", "83,58", "6,04", "8,00"]);
@@ -338,14 +338,14 @@ Scenario("Test quiz stat sekcie", async ({ I, DT }) => {
     I.seeElement(locate("span.statPageTitle").withText("Answer_quiz"));
     I.seeElement("div.dt-extfilter-dayDate");
 
-    I.say("Set date  and check values");
+    I.say("Set date  and check values third");
     I.fillField({css: "input.dt-filter-to-dayDate"}, "20.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
     DT.checkTableRow("quizStatDataTable", 1, ["Aké zviera je na obrázku", "/images/gallery/test/koala.jpg", "45", "17", "72,58"]);
     DT.checkTableRow("quizStatDataTable", 2, ["Na obrázku vidíme", "/images/gallery/test/penguins.jpg", "25", "37", "40,32"]);
     DT.checkTableRow("quizStatDataTable", 3, ["Čo je to", "/images/gallery/test/desert.jpg", "19", "43", "30,65"]);
 
-    I.say("Set date  and check values");
+    I.say("Set date  and check values fourth");
     I.fillField({css: "input.dt-filter-from-dayDate"}, "17.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
     DT.checkTableRow("quizStatDataTable", 1, ["Aké zviera je na obrázku", "/images/gallery/test/koala.jpg", "42", "16", "72,41"]);

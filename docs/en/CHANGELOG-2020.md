@@ -58,7 +58,7 @@ JavaScript object is available `window.currentUser`. Added VUE filters for date 
 - documentation for insertion completed [HTML code without escaping](developer/frameworks/thymeleaf.md#základny-výpis-textu--atribútu) in Thymeleaf
 - supplemented documentation for [date and time formatting](developer/frameworks/vue.md#formátovanie-dátumu-a-času) in Vue
 
-<img class="meme" title="meme" src="_media/meme/2020-53.jpg" />
+![meme](_media/meme/2020-53.jpg)
 
 ## 2020.51
 
@@ -76,7 +76,7 @@ If aggregation was not performed, the browser would likely fall on the amount of
 - #50053 [Charts] - added basic documentation for the library [amcharts](developer/frameworks/amcharts.md).
 - #50053 [Charts] - v `app.js` added asynchronous initialization of the amcharts library by calling `window.initAmcharts()`.
 
-<img class="meme" title="meme" src="_media/meme/2020-51.jpg" />
+![meme](_media/meme/2020-51.jpg)
 
 ## 2020.50
 
@@ -173,7 +173,7 @@ Import:
 
 ## 2020.42
 
-> Version 2020.42 introduces in particular [automatic auditing of JPA entities](developer/backend/auditing.md). A simple annotation ensures that audit trails are created for each entity manipulation. The audit record also contains a list of changed attributes (in the form old value -\&gt; new value), or a list of all attributes when the entity is created and deleted.
+> Version 2020.42 introduces in particular [automatic auditing of JPA entities](developer/backend/auditing.md). A simple annotation ensures that audit trails are created for each entity manipulation. The audit record also contains a list of changed attributes (in the form old value -> new value), or a list of all attributes when the entity is created and deleted.
 >
 > We have extended and documented the JSON array capabilities for [adding directories and web pages](developer/datatables-editor/field-json.md) in datatables.
 >

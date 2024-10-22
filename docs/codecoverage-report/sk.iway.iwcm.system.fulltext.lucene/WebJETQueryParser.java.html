@@ -25,21 +25,21 @@ import sk.iway.iwcm.Tools;
  */
 public class WebJETQueryParser extends QueryParser
 {
-<span class="nc" id="L28">	private static String numericFields[] = {&quot;author_id&quot;, &quot;group_id&quot;, &quot;temp_id&quot;, &quot;sort_priority&quot;, &quot;password_protected&quot;};</span>
+<span class="fc" id="L28">	private static String numericFields[] = {&quot;author_id&quot;, &quot;group_id&quot;, &quot;temp_id&quot;, &quot;sort_priority&quot;, &quot;password_protected&quot;};</span>
 	
 	private boolean isNumericField(String name)
 	{
-<span class="nc bnc" id="L32" title="All 2 branches missed.">		for (String field : numericFields)</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">		for (String field : numericFields)</span>
 		{
-<span class="nc bnc" id="L34" title="All 2 branches missed.">			if (field.equals(name)) return true;</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">			if (field.equals(name)) return true;</span>
 		}
-<span class="nc" id="L36">		return false;</span>
+<span class="fc" id="L36">		return false;</span>
 	}
 
 	public WebJETQueryParser(Version matchVersion, String f, Analyzer a)
 	{
-<span class="nc" id="L41">		super(matchVersion, f, a);</span>
-<span class="nc" id="L42">	}</span>
+<span class="fc" id="L41">		super(matchVersion, f, a);</span>
+<span class="fc" id="L42">	}</span>
 
 	@Override
 	public org.apache.lucene.search.Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException 
@@ -58,16 +58,16 @@ public class WebJETQueryParser extends QueryParser
 	@Override
 	protected org.apache.lucene.search.Query getFieldQuery(String field, String queryText, boolean quoted) throws ParseException
 	{
-<span class="nc" id="L61">		org.apache.lucene.search.Query superQuery = super.getFieldQuery(field, queryText, quoted);</span>
+<span class="fc" id="L61">		org.apache.lucene.search.Query superQuery = super.getFieldQuery(field, queryText, quoted);</span>
 		
-<span class="nc bnc" id="L63" title="All 2 branches missed.">		if (isNumericField(field))</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">		if (isNumericField(field))</span>
 		{
 <span class="nc" id="L65">			Logger.debug(WebJETQueryParser.class, &quot;Som numeric field: &quot;+field+&quot; text=&quot;+queryText);			</span>
 <span class="nc" id="L66">			superQuery = new TermQuery(new org.apache.lucene.index.Term(field, NumericUtils.intToPrefixCoded(Tools.getIntValue(queryText, 0))));</span>
 		}
 		
-<span class="nc" id="L69">		return superQuery;</span>
+<span class="fc" id="L69">		return superQuery;</span>
 	}
 	
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -14,9 +14,9 @@ import sk.iway.iwcm.io.IwcmFile;
     {
 <span class="fc" id="L15">        String image = getImagePathPrefix(&quot;s_&quot;, fullPath);</span>
 <span class="fc" id="L16">        IwcmFile f = new IwcmFile(Tools.getRealPath(image));</span>
-<span class="pc bpc" id="L17" title="1 of 2 branches missed.">        if (f.exists())</span>
+<span class="fc bfc" id="L17" title="All 2 branches covered.">        if (f.exists())</span>
         {
-<span class="nc" id="L19">            return (image);</span>
+<span class="fc" id="L19">            return (image);</span>
         }
 <span class="fc" id="L21">        return (fullPath);</span>
     }
@@ -75,4 +75,4 @@ import sk.iway.iwcm.io.IwcmFile;
 <span class="fc" id="L75">        return (path + file);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

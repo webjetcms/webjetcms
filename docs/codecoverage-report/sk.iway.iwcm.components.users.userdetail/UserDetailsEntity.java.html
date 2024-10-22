@@ -5,6 +5,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -36,9 +38,21 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_USER_EDIT)
 public class UserDetailsEntity extends UserDetailsBasic {
 
-<span class="fc" id="L39">    public UserDetailsEntity(){</span>
+<span class="fc" id="L41">    public UserDetailsEntity(){</span>
         //
-<span class="fc" id="L41">    }</span>
+<span class="fc" id="L43">    }</span>
+
+    @PrePersist
+    public void prePersist() {
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        if (this.getDomainId()==null) {</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            if (UserDetailsService.isUsersSplitByDomain()) {</span>
+                //in multiweb we must set current domainId
+<span class="fc" id="L50">                this.setDomainId(CloudToolsForCore.getDomainId());</span>
+            } else {
+<span class="fc" id="L52">                this.setDomainId(1);</span>
+            }
+        }
+<span class="fc" id="L55">    }</span>
 
     /*PERSONAL INFO - Access*/
 
@@ -241,7 +255,8 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @JsonIgnore
     private String passwordSalt;
 
-//    private int domainId;
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
 
     //@Column(name = &quot;mobile_device&quot;)
     //private String mobileDevice;
@@ -256,10 +271,10 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @Transient //toto nechceme citat z DB
     private String apiKey;
 
-<span class="fc" id="L259">    @Transient</span>
+<span class="fc" id="L274">    @Transient</span>
     @DataTableColumnNested
     @Valid
 	private UserDetailsEditorFields editorFields = null;
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

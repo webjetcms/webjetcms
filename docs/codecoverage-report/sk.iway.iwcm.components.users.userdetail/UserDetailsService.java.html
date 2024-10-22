@@ -1,10 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserDetailsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.users.userdetail</a> &gt; <span class="el_source">UserDetailsService.java</span></div><h1>UserDetailsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.users.userdetail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Errors;
 
 import sk.iway.Password;
-import sk.iway.iwcm.*;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SendMail;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.LogonTools;
@@ -13,19 +29,19 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.users.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.users.AuthorizeAction;
+import sk.iway.iwcm.users.PasswordSecurity;
+import sk.iway.iwcm.users.PasswordsHistoryBean;
+import sk.iway.iwcm.users.PasswordsHistoryDB;
+import sk.iway.iwcm.users.PermissionGroupBean;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
 
 @Service
-<span class="fc" id="L28">public class UserDetailsService {</span>
+<span class="fc" id="L44">public class UserDetailsService {</span>
 
     /**
      * Metoda vykona kroky nastavujuce dodatocne udaje po ulozeni hlavnej entity
@@ -34,206 +50,250 @@ import javax.servlet.http.HttpServletRequest;
      * @return
      */
     public boolean afterSave(UserDetailsEntity entity, UserDetailsEntity saved) {
-<span class="fc" id="L37">        Integer userId = saved.getId().intValue();</span>
+<span class="fc" id="L53">        Integer userId = saved.getId().intValue();</span>
 
-<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        if (entity.getEditorFields() != null) {</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (entity.getEditorFields() != null) {</span>
 
             //Get userPerGroup from DB as &quot;oldUserPermGroups&quot;
-<span class="fc" id="L42">            List&lt;PermissionGroupBean&gt; oldUserPermGroups = UserGroupsDB.getPermissionGroupsFor(userId);</span>
+<span class="fc" id="L58">            List&lt;PermissionGroupBean&gt; oldUserPermGroups = UserGroupsDB.getPermissionGroupsFor(userId);</span>
 
             //Get userPermGroup ids from editor as &quot;newUserPermGroupIds&quot;
-<span class="fc" id="L45">            Integer[] newUserPermGroupIds = entity.getEditorFields().getPermGroups();</span>
-<span class="pc bpc" id="L46" title="1 of 2 branches missed.">            if (newUserPermGroupIds == null) newUserPermGroupIds = new Integer[0];</span>
+<span class="fc" id="L61">            Integer[] newUserPermGroupIds = entity.getEditorFields().getPermGroups();</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">            if (newUserPermGroupIds == null) newUserPermGroupIds = new Integer[0];</span>
 
             /*
                 Loop oldUserPermGroup and compare if this perm group id is inside newUserPermGroupId.
                 If yes, this user permmission group can stay in DB (beacuase is actual).
                 If no, call deleteUserFromPermissionGroup from UsersDB and delete this permGroup for this user.
             */
-<span class="fc bfc" id="L53" title="All 2 branches covered.">            for(PermissionGroupBean oldUserPermGroup : oldUserPermGroups) {</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">            for(PermissionGroupBean oldUserPermGroup : oldUserPermGroups) {</span>
 
-<span class="fc" id="L55">                boolean deletePerm = true;</span>
+<span class="fc" id="L71">                boolean deletePerm = true;</span>
 
-<span class="fc bfc" id="L57" title="All 2 branches covered.">                for(Integer newUserPermGroupId : newUserPermGroupIds) {</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">                    if(newUserPermGroupId != null) {</span>
-<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                        if(oldUserPermGroup.getUserPermGroupId() == newUserPermGroupId) {</span>
-<span class="fc" id="L60">                            deletePerm = false;</span>
-<span class="fc" id="L61">                            break;</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">                for(Integer newUserPermGroupId : newUserPermGroupIds) {</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">                    if(newUserPermGroupId != null) {</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                        if(oldUserPermGroup.getUserPermGroupId() == newUserPermGroupId) {</span>
+<span class="fc" id="L76">                            deletePerm = false;</span>
+<span class="fc" id="L77">                            break;</span>
                         }
                     }
                 }
 
-<span class="fc bfc" id="L66" title="All 2 branches covered.">                if(deletePerm) {</span>
-<span class="fc" id="L67">                    UsersDB.deleteUserFromPermissionGroup(userId, oldUserPermGroup.getUserPermGroupId());</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">                if(deletePerm) {</span>
+<span class="fc" id="L83">                    UsersDB.deleteUserFromPermissionGroup(userId, oldUserPermGroup.getUserPermGroupId());</span>
                 }
-<span class="fc" id="L69">            }</span>
+<span class="fc" id="L85">            }</span>
 
             /*
                 Loop newUserPermGroupId and compare if this id is inside one of oldUserPermGroup values.
                 If yes, userPermGroup already exist in DB so we dont need any action.
                 If no, we need add this new userPermGroup into DB by calling addUserToPermissionGroup from UserDB to add this permGroup for this user.
             */
-<span class="fc bfc" id="L76" title="All 2 branches covered.">            for(Integer newUserPermGroupId : newUserPermGroupIds) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">            for(Integer newUserPermGroupId : newUserPermGroupIds) {</span>
 
-<span class="fc bfc" id="L78" title="All 2 branches covered.">                if (newUserPermGroupId==null) continue;</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">                if (newUserPermGroupId==null) continue;</span>
 
-<span class="fc" id="L80">                boolean addPerm = true;</span>
+<span class="fc" id="L96">                boolean addPerm = true;</span>
 
-<span class="fc bfc" id="L82" title="All 2 branches covered.">                for(PermissionGroupBean oldUserPermGroup : oldUserPermGroups) {</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                for(PermissionGroupBean oldUserPermGroup : oldUserPermGroups) {</span>
 
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">                    if(newUserPermGroupId == oldUserPermGroup.getUserPermGroupId()) {</span>
-<span class="fc" id="L85">                        addPerm = false;</span>
-<span class="fc" id="L86">                        break;</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">                    if(newUserPermGroupId == oldUserPermGroup.getUserPermGroupId()) {</span>
+<span class="fc" id="L101">                        addPerm = false;</span>
+<span class="fc" id="L102">                        break;</span>
                     }
-<span class="nc" id="L88">                }</span>
+<span class="nc" id="L104">                }</span>
 
-<span class="pc bpc" id="L90" title="1 of 4 branches missed.">                if(addPerm &amp;&amp; newUserPermGroupId != null) {</span>
-<span class="fc" id="L91">                    UsersDB.addUserToPermissionGroup(userId, newUserPermGroupId);</span>
+<span class="pc bpc" id="L106" title="1 of 4 branches missed.">                if(addPerm &amp;&amp; newUserPermGroupId != null) {</span>
+<span class="fc" id="L107">                    UsersDB.addUserToPermissionGroup(userId, newUserPermGroupId);</span>
                 }
             }
 
             //Get enabled items, find disabled items and update user_disabled_items table
-<span class="fc bfc" id="L96" title="All 2 branches covered.">            List&lt;JsTreeItem&gt; allModuleItems = MenuService.getAllPermissions().stream().filter(item -&gt; item.getId().endsWith(&quot;-leaf&quot;)==false).collect(Collectors.toList());</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            List&lt;JsTreeItem&gt; allModuleItems = MenuService.getAllPermissions().stream().filter(item -&gt; item.getId().endsWith(&quot;-leaf&quot;)==false).collect(Collectors.toList());</span>
 
-<span class="fc" id="L98">            Identity user = new Identity(UsersDB.getUser(userId));</span>
-<span class="fc" id="L99">            UsersDB.loadDisabledItemsFromDB(user, false);</span>
+<span class="fc" id="L114">            Identity user = new Identity(UsersDB.getUser(userId));</span>
+<span class="fc" id="L115">            UsersDB.loadDisabledItemsFromDB(user, false);</span>
 
-<span class="fc" id="L101">            Set&lt;String&gt; disabledItemsKeys = user.getDisabledItemsTable().keySet();</span>
+<span class="fc" id="L117">            Set&lt;String&gt; disabledItemsKeys = user.getDisabledItemsTable().keySet();</span>
 
-<span class="fc" id="L103">            String[] newEnabledItems = entity.getEditorFields().getEnabledItems();</span>
+<span class="fc" id="L119">            String[] newEnabledItems = entity.getEditorFields().getEnabledItems();</span>
 
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if(newEnabledItems != null) {</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if(newEnabledItems != null) {</span>
 
                 //Loop new enabled items and compare them with allready disabled items in DB
                 //If equals is true enable this item using UsersDB.enableItem
-<span class="fc bfc" id="L109" title="All 2 branches covered.">                for(String newEnabledItem : newEnabledItems) {</span>
-<span class="fc" id="L110">                    newEnabledItem = MenuService.removePermsIdPrefix(newEnabledItem);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">                for(String newEnabledItem : newEnabledItems) {</span>
+<span class="fc" id="L126">                    newEnabledItem = MenuService.removePermsIdPrefix(newEnabledItem);</span>
 
-<span class="fc" id="L112">                    boolean isDisabled = false;</span>
-<span class="fc bfc" id="L113" title="All 2 branches covered.">                    for(String disabledItemKey : disabledItemsKeys) {</span>
-<span class="pc bpc" id="L114" title="1 of 2 branches missed.">                        if(disabledItemKey.equals(newEnabledItem)) {</span>
-<span class="nc" id="L115">                            isDisabled = true;</span>
-<span class="nc" id="L116">                            break;</span>
+<span class="fc" id="L128">                    boolean isDisabled = false;</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">                    for(String disabledItemKey : disabledItemsKeys) {</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">                        if(disabledItemKey.equals(newEnabledItem)) {</span>
+<span class="fc" id="L131">                            isDisabled = true;</span>
+<span class="fc" id="L132">                            break;</span>
                         }
-<span class="fc" id="L118">                    }</span>
+<span class="fc" id="L134">                    }</span>
 
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">                    if(isDisabled) UsersDB.enableItem(userId, newEnabledItem);</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                    if(isDisabled) UsersDB.enableItem(userId, newEnabledItem);</span>
                 }
 
                 //Loop all existed items
-<span class="fc bfc" id="L124" title="All 2 branches covered.">                for(JsTreeItem moduleInfo : allModuleItems) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                for(JsTreeItem moduleInfo : allModuleItems) {</span>
 
                     //Get item key
-<span class="fc" id="L127">                    String actualControledItem = MenuService.removePermsIdPrefix(moduleInfo.getId());</span>
+<span class="fc" id="L143">                    String actualControledItem = MenuService.removePermsIdPrefix(moduleInfo.getId());</span>
 
-<span class="fc" id="L129">                    boolean isEnabled = false;</span>
+<span class="fc" id="L145">                    boolean isEnabled = false;</span>
 
                     //Loop all enabled items and find if is actualControledItem enabled
-<span class="fc bfc" id="L132" title="All 2 branches covered.">                    for(String enabledItem : newEnabledItems) {</span>
-<span class="fc" id="L133">                        enabledItem = MenuService.removePermsIdPrefix(enabledItem);</span>
-<span class="fc bfc" id="L134" title="All 2 branches covered.">                        if(actualControledItem.equals(enabledItem)) {</span>
-<span class="fc" id="L135">                            isEnabled = true;</span>
-<span class="fc" id="L136">                            break;</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                    for(String enabledItem : newEnabledItems) {</span>
+<span class="fc" id="L149">                        enabledItem = MenuService.removePermsIdPrefix(enabledItem);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                        if(actualControledItem.equals(enabledItem)) {</span>
+<span class="fc" id="L151">                            isEnabled = true;</span>
+<span class="fc" id="L152">                            break;</span>
                         }
                     }
 
                     //actualControledItem is not enabled
-<span class="fc bfc" id="L141" title="All 2 branches covered.">                    if(!isEnabled) {</span>
-<span class="fc" id="L142">                        boolean isAllreadyDisabledInDB = false;</span>
+<span class="fc bfc" id="L157" title="All 2 branches covered.">                    if(!isEnabled) {</span>
+<span class="fc" id="L158">                        boolean isAllreadyDisabledInDB = false;</span>
 
                         //Loop all old disabled items and find if is actualControledItem allready disabled in DB
-<span class="fc bfc" id="L145" title="All 2 branches covered.">                        for(String disabledItem : disabledItemsKeys) {</span>
-<span class="fc bfc" id="L146" title="All 2 branches covered.">                            if(actualControledItem.equals(disabledItem)) {</span>
-<span class="fc" id="L147">                                isAllreadyDisabledInDB = true;</span>
-<span class="fc" id="L148">                                break;</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                        for(String disabledItem : disabledItemsKeys) {</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                            if(actualControledItem.equals(disabledItem)) {</span>
+<span class="fc" id="L163">                                isAllreadyDisabledInDB = true;</span>
+<span class="fc" id="L164">                                break;</span>
                             }
-<span class="fc" id="L150">                        }</span>
+<span class="fc" id="L166">                        }</span>
 
                         //So if actualControledItem is not set as Enabled but, its not Disabled in DB call UsersDB.disableItem
-<span class="fc bfc" id="L153" title="All 2 branches covered.">                        if(!isAllreadyDisabledInDB) UsersDB.disableItem(userId, actualControledItem);</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">                        if(!isAllreadyDisabledInDB) UsersDB.disableItem(userId, actualControledItem);</span>
                     }
-<span class="fc" id="L155">                }</span>
+<span class="fc" id="L171">                }</span>
             }
-<span class="fc" id="L157">            fixEditorMiniEdit(userId);</span>
+<span class="fc" id="L173">            fixEditorMiniEdit(userId);</span>
         }
 
-<span class="fc" id="L160">        boolean saveok = savePassword(entity.getPassword(), userId);</span>
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">        if (saveok==false) return false;</span>
+        //entity.getId is null for new users, saved ID is in userId parameter
+<span class="pc bpc" id="L177" title="1 of 4 branches missed.">        if (entity.getId()==null || entity.getId()&lt;1) {</span>
+<span class="pc bpc" id="L178" title="2 of 4 branches missed.">            if (Tools.isEmpty(entity.getPassword()) || UserTools.PASS_UNCHANGED.equals(entity.getPassword())) {</span>
+                //set random password for new users
+<span class="fc" id="L180">                entity.setPassword(Password.generatePassword(10));</span>
+            }
+        }
 
-<span class="pc bpc" id="L163" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(entity.getApiKey()) &amp;&amp; entity.getApiKey().equals(UserTools.PASS_UNCHANGED)==false) {</span>
-<span class="nc" id="L164">            String apiKey = null;</span>
+<span class="fc" id="L184">        boolean saveok = savePassword(entity.getPassword(), userId);</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if (saveok==false) return false;</span>
+
+<span class="pc bpc" id="L187" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(entity.getApiKey()) &amp;&amp; entity.getApiKey().equals(UserTools.PASS_UNCHANGED)==false) {</span>
+<span class="nc" id="L188">            String apiKey = null;</span>
             //ak obsahuje len znak - chceme ho zmazat
-<span class="nc bnc" id="L166" title="All 2 branches missed.">            if (&quot;-&quot;.equals(entity.getApiKey())) {</span>
-<span class="nc" id="L167">                apiKey = &quot;&quot;;</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">            if (&quot;-&quot;.equals(entity.getApiKey())) {</span>
+<span class="nc" id="L191">                apiKey = &quot;&quot;;</span>
             } else {
                 //zahashuj token v databaze
-<span class="nc" id="L170">                String salt = PasswordSecurity.generateSalt();</span>
-<span class="nc" id="L171">                String tokenHashed = PasswordSecurity.calculateHash(entity.getApiKey(), salt);</span>
+<span class="nc" id="L194">                String salt = PasswordSecurity.generateSalt();</span>
+<span class="nc" id="L195">                String tokenHashed = PasswordSecurity.calculateHash(entity.getApiKey(), salt);</span>
 
-<span class="nc" id="L173">                apiKey = salt+&quot;|&quot;+tokenHashed;</span>
+<span class="nc" id="L197">                apiKey = salt+&quot;|&quot;+tokenHashed;</span>
             }
 
-<span class="nc bnc" id="L176" title="All 2 branches missed.">            if (apiKey != null) (new SimpleQuery()).execute(&quot;UPDATE users SET api_key=? WHERE user_id=?&quot;, apiKey, entity.getId());</span>
+<span class="nc bnc" id="L200" title="All 2 branches missed.">            if (apiKey != null) (new SimpleQuery()).execute(&quot;UPDATE users SET api_key=? WHERE user_id=?&quot;, apiKey, entity.getId());</span>
         }
 
-<span class="fc" id="L179">        return true;</span>
+<span class="fc" id="L203">        return true;</span>
     }
 
-    public static boolean savePassword(String password, int userId) {
-<span class="pc bpc" id="L183" title="2 of 6 branches missed.">        if (Tools.isNotEmpty(password) &amp;&amp; password.equals(UserTools.PASS_UNCHANGED)==false &amp;&amp; userId&gt;0) {</span>
-            //ulozit heslo
-<span class="fc" id="L185">            Logger.debug(UserDetailsService.class, &quot;Heslo je zmenene, ukladam&quot;);</span>
-
-<span class="fc" id="L187">            UserDetails user = UsersDB.getUser(userId);</span>
-<span class="pc bpc" id="L188" title="1 of 2 branches missed.">            if (user != null) {</span>
-                try {
-
-<span class="fc" id="L191">                    String salt = &quot;&quot;;</span>
-<span class="fc" id="L192">                    String hash = &quot;&quot;;</span>
-<span class="fc" id="L193">                    sk.iway.Password pass = new sk.iway.Password();</span>
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                    if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
-                    {
-<span class="fc" id="L196">                        salt = PasswordSecurity.generateSalt();</span>
-<span class="fc" id="L197">                        hash = PasswordSecurity.calculateHash(password, salt);</span>
-                    }
-                    else
-                    {
-<span class="nc" id="L201">                        hash = pass.encrypt(password);</span>
-                    }
-
-<span class="fc" id="L204">                    PasswordsHistoryBean.insertAndSaveNew(userId, hash, salt);</span>
-
-                    //uloz do DB
-<span class="fc" id="L207">                    (new SimpleQuery()).execute(&quot;UPDATE users SET password=?, password_salt=? WHERE user_id=?&quot;, hash, salt, userId);</span>
-
-                    //zaauditovat zmenu hesla
-<span class="fc" id="L210">                    Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId, &quot;SaveUserAction - user (&quot;+user.getLogin()+&quot;) successfully changed password&quot;, -1, -1);</span>
-
-<span class="nc" id="L212">                } catch (Exception ex) {</span>
-<span class="nc" id="L213">                    Logger.error(UserDetailsService.class, ex);</span>
-<span class="nc" id="L214">                    return false;</span>
-<span class="fc" id="L215">                }</span>
+    public static boolean savePassword(UserDetailsBasic entity, int userId) {
+        //entity.getId is null for new users, saved ID is in userId parameter
+<span class="nc bnc" id="L208" title="All 4 branches missed.">        if (entity.getId()==null || entity.getId()&lt;1) {</span>
+<span class="nc bnc" id="L209" title="All 4 branches missed.">            if (Tools.isEmpty(entity.getPassword()) || UserTools.PASS_UNCHANGED.equals(entity.getPassword())) {</span>
+                //set random password for new users
+<span class="nc" id="L211">                entity.setPassword(Password.generatePassword(10));</span>
             }
         }
-<span class="fc" id="L218">        return true;</span>
+<span class="nc" id="L214">        return savePassword(entity.getPassword(), userId);</span>
+    }
+
+    /**
+     * Set user password to database, also set PasswordHistory
+     * @param userId - ID of user
+     * @param password - new PLAIN TEXT password or UserTools.PASS_UNCHANGED if password is not changed
+     * @return
+     */
+    @SuppressWarnings(&quot;java:S1871&quot;)
+    public static boolean savePassword(String password, int userId) {
+
+<span class="pc bpc" id="L226" title="2 of 6 branches missed.">        if (Tools.isNotEmpty(password) &amp;&amp; password.equals(UserTools.PASS_UNCHANGED)==false &amp;&amp; userId&gt;0) {</span>
+
+<span class="fc" id="L228">            String currentHash = (new SimpleQuery()).forString(&quot;SELECT password FROM users WHERE user_id=?&quot;, userId);</span>
+<span class="pc bpc" id="L229" title="3 of 4 branches missed.">            if (password.startsWith(&quot;bcrypt:$2a$12&quot;) &amp;&amp; password.length()&gt;64) {</span>
+                //it's allready bcrypt hash, skip save
+<span class="nc" id="L231">                return true;</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">            } else if (password.length()==128) {</span>
+                //it's old password hash
+<span class="nc" id="L234">                return true;</span>
+<span class="pc bpc" id="L235" title="2 of 6 branches missed.">            } else if (currentHash != null &amp;&amp; Tools.isNotEmpty(currentHash) &amp;&amp; currentHash.equals(password)) {</span>
+                //it's allready current hash/password, skip save
+<span class="nc" id="L237">                return true;</span>
+            }
+
+            //ulozit heslo
+<span class="fc" id="L241">            Logger.debug(UserDetailsService.class, &quot;Heslo je zmenene, ukladam&quot;);</span>
+
+<span class="fc" id="L243">            UserDetails user = UsersDB.getUser(userId);</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">            if (user != null) {</span>
+                try {
+
+<span class="fc" id="L247">                String salt = &quot;&quot;;</span>
+<span class="fc" id="L248">                String hash = &quot;&quot;;</span>
+<span class="fc" id="L249">                sk.iway.Password pass = new sk.iway.Password();</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+                {
+<span class="fc" id="L252">                    salt = PasswordSecurity.generateSalt();</span>
+<span class="fc" id="L253">                    hash = PasswordSecurity.calculateHash(password, salt);</span>
+                }
+                else
+                {
+<span class="nc" id="L257">                    hash = pass.encrypt(password);</span>
+                }
+
+<span class="fc" id="L260">                PasswordsHistoryBean.insertAndSaveNew(userId, hash, salt);</span>
+
+                //uloz do DB
+<span class="fc" id="L263">                (new SimpleQuery()).execute(&quot;UPDATE users SET password=?, password_salt=? WHERE user_id=?&quot;, hash, salt, userId);</span>
+
+<span class="fc" id="L265">                String login = (new SimpleQuery()).forString(&quot;SELECT login FROM users WHERE user_id=?&quot;, userId);</span>
+                //zaauditovat zmenu hesla
+<span class="fc" id="L267">                Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId, &quot;SaveUserAction - user (&quot;+login+&quot;) successfully changed password&quot;, -1, -1);</span>
+
+                //invalidate other user sessions
+<span class="fc" id="L270">                SessionHolder.getInstance().invalidateOtherUserSessions(userId);</span>
+
+<span class="nc" id="L272">                } catch (Exception ex) {</span>
+<span class="nc" id="L273">                    Logger.error(UserDetailsService.class, ex);</span>
+<span class="nc" id="L274">                    return false;</span>
+<span class="fc" id="L275">                }</span>
+            }
+        }
+<span class="fc" id="L278">        return true;</span>
     }
 
     private static void fixEditorMiniEdit(int userId) {
-<span class="fc" id="L222">        String permName = &quot;editorFullMenu&quot;;</span>
+<span class="fc" id="L282">        String permName = &quot;editorFullMenu&quot;;</span>
         //zisti, ci ma zakazane editorFullMenu
-<span class="fc" id="L224">        int editorFullMenuCount = new SimpleQuery().forInt(&quot;SELECT COUNT(*) FROM user_disabled_items WHERE user_id=? AND item_name=?&quot;, userId, permName);</span>
+<span class="fc" id="L284">        int editorFullMenuCount = new SimpleQuery().forInt(&quot;SELECT COUNT(*) FROM user_disabled_items WHERE user_id=? AND item_name=?&quot;, userId, permName);</span>
 
         //najskor zmazeme a ak treba potom insertneme
-<span class="fc" id="L227">        UsersDB.enableItem(userId, &quot;editorMiniEdit&quot;);</span>
+<span class="fc" id="L287">        UsersDB.enableItem(userId, &quot;editorMiniEdit&quot;);</span>
 
-<span class="fc bfc" id="L229" title="All 2 branches covered.">        if (editorFullMenuCount==0) {</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        if (editorFullMenuCount==0) {</span>
             //pravo plnej editacie NIE je zakazane (cize je zaskrtnute), takze musime insertnut editorMiniEdit
-<span class="fc" id="L231">            UsersDB.disableItem(userId, &quot;editorMiniEdit&quot;);</span>
+<span class="fc" id="L291">            UsersDB.disableItem(userId, &quot;editorMiniEdit&quot;);</span>
         }
 
         //zmaz z DB toto pravo, nema to tam co robit
-<span class="fc" id="L235">        UsersDB.enableItem(userId, permName);</span>
-<span class="fc" id="L236">    }</span>
+<span class="fc" id="L295">        UsersDB.enableItem(userId, permName);</span>
+<span class="fc" id="L296">    }</span>
 
     /**
      * Zo zadaneho pola ID pouzivatelov vytvori samostatne pole pre skupiny pouzivatelov a emailov
@@ -241,27 +301,27 @@ import javax.servlet.http.HttpServletRequest;
      * @return - zoznam prav, v get(0) su prava a v get(1) emaily
      */
     public static List&lt;Integer[]&gt; splitGroupsToPermsAndEmails(int[] userGroupsIds) {
-<span class="fc" id="L244">        List&lt;Integer&gt; permissionsList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L245">        List&lt;Integer&gt; emailsList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L246">        UserGroupsDB ugdb = UserGroupsDB.getInstance();</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">        for(int userGroupId : userGroupsIds) {</span>
-<span class="fc" id="L248">            UserGroupDetails ug = ugdb.getUserGroup(userGroupId);</span>
-<span class="pc bpc" id="L249" title="1 of 2 branches missed.">            if (ug == null) continue;</span>
+<span class="fc" id="L304">        List&lt;Integer&gt; permissionsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L305">        List&lt;Integer&gt; emailsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L306">        UserGroupsDB ugdb = UserGroupsDB.getInstance();</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        for(int userGroupId : userGroupsIds) {</span>
+<span class="fc" id="L308">            UserGroupDetails ug = ugdb.getUserGroup(userGroupId);</span>
+<span class="pc bpc" id="L309" title="1 of 2 branches missed.">            if (ug == null) continue;</span>
 
-<span class="fc" id="L251">            Integer id = Integer.valueOf(userGroupId);</span>
+<span class="fc" id="L311">            Integer id = Integer.valueOf(userGroupId);</span>
 
-<span class="fc bfc" id="L253" title="All 2 branches covered.">            if (ug.getUserGroupType()==UserGroupDetails.TYPE_EMAIL) {</span>
-<span class="pc bpc" id="L254" title="1 of 2 branches missed.">                if (emailsList.contains(id)==false) emailsList.add(id);</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">            if (ug.getUserGroupType()==UserGroupDetails.TYPE_EMAIL) {</span>
+<span class="pc bpc" id="L314" title="1 of 2 branches missed.">                if (emailsList.contains(id)==false) emailsList.add(id);</span>
             } else {
-<span class="pc bpc" id="L256" title="1 of 2 branches missed.">                if (permissionsList.contains(id)==false) permissionsList.add(id);</span>
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">                if (permissionsList.contains(id)==false) permissionsList.add(id);</span>
             }
         }
 
-<span class="fc" id="L260">        List&lt;Integer[]&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L261">        ret.add(permissionsList.toArray(new Integer[0]));</span>
-<span class="fc" id="L262">        ret.add(emailsList.toArray(new Integer[0]));</span>
+<span class="fc" id="L320">        List&lt;Integer[]&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L321">        ret.add(permissionsList.toArray(new Integer[0]));</span>
+<span class="fc" id="L322">        ret.add(emailsList.toArray(new Integer[0]));</span>
 
-<span class="fc" id="L264">        return ret;</span>
+<span class="fc" id="L324">        return ret;</span>
     }
 
     /**
@@ -271,31 +331,31 @@ import javax.servlet.http.HttpServletRequest;
      * @return - null, ak nie je ziadna skupina zvolena
      */
     public static String getUserGroupIds(Integer[] permisions, Integer[] emails) {
-<span class="fc" id="L274">        StringBuilder userGroupIds = new StringBuilder();</span>
+<span class="fc" id="L334">        StringBuilder userGroupIds = new StringBuilder();</span>
         //Get selected permisions user group ids and add them to string
-<span class="pc bpc" id="L276" title="1 of 2 branches missed.">        if(permisions != null) {</span>
-<span class="fc bfc" id="L277" title="All 2 branches covered.">            for(Integer id : permisions) {</span>
-<span class="fc bfc" id="L278" title="All 2 branches covered.">                if(id != null) {</span>
-<span class="fc bfc" id="L279" title="All 2 branches covered.">                    if (userGroupIds.length()&gt;0) userGroupIds.append(&quot;,&quot;);</span>
-<span class="fc" id="L280">                    userGroupIds.append(String.valueOf(id));</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if(permisions != null) {</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">            for(Integer id : permisions) {</span>
+<span class="fc bfc" id="L338" title="All 2 branches covered.">                if(id != null) {</span>
+<span class="fc bfc" id="L339" title="All 2 branches covered.">                    if (userGroupIds.length()&gt;0) userGroupIds.append(&quot;,&quot;);</span>
+<span class="fc" id="L340">                    userGroupIds.append(String.valueOf(id));</span>
                 }
             }
         }
 
         //Get selected eMails user group ids and add them to string
-<span class="pc bpc" id="L286" title="1 of 2 branches missed.">        if(emails != null) {</span>
-<span class="fc bfc" id="L287" title="All 2 branches covered.">            for(Integer id : emails) {</span>
-<span class="fc bfc" id="L288" title="All 2 branches covered.">                if(id != null) {</span>
-<span class="fc bfc" id="L289" title="All 2 branches covered.">                    if (userGroupIds.length()&gt;0) userGroupIds.append(&quot;,&quot;);</span>
-<span class="fc" id="L290">                    userGroupIds.append(String.valueOf(id));</span>
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        if(emails != null) {</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">            for(Integer id : emails) {</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">                if(id != null) {</span>
+<span class="fc bfc" id="L349" title="All 2 branches covered.">                    if (userGroupIds.length()&gt;0) userGroupIds.append(&quot;,&quot;);</span>
+<span class="fc" id="L350">                    userGroupIds.append(String.valueOf(id));</span>
                 }
             }
         }
 
-<span class="fc" id="L295">        String str = userGroupIds.toString();</span>
-<span class="pc bpc" id="L296" title="1 of 4 branches missed.">        if (Tools.isEmpty(str) || &quot;,&quot;.equals(str)) return null;</span>
+<span class="fc" id="L355">        String str = userGroupIds.toString();</span>
+<span class="pc bpc" id="L356" title="1 of 4 branches missed.">        if (Tools.isEmpty(str) || &quot;,&quot;.equals(str)) return null;</span>
 
-<span class="fc" id="L298">        return str;</span>
+<span class="fc" id="L358">        return str;</span>
     }
 
     /**
@@ -304,13 +364,13 @@ import javax.servlet.http.HttpServletRequest;
      * @param userId
      */
     public void setBeforeSaveUserGroups(UserDetailsEntity entity) {
-<span class="fc" id="L307">        Long  userId = entity.getId();</span>
+<span class="fc" id="L367">        Long  userId = entity.getId();</span>
 
         //Get Actual value from DB
-<span class="fc" id="L310">        String oldValue = (new SimpleQuery()).forString(&quot;SELECT user_groups FROM users WHERE user_id=?&quot;, userId);</span>
+<span class="fc" id="L370">        String oldValue = (new SimpleQuery()).forString(&quot;SELECT user_groups FROM users WHERE user_id=?&quot;, userId);</span>
 
-<span class="fc" id="L312">        entity.getEditorFields().setBeforeSaveUserGroupIds(oldValue);</span>
-<span class="fc" id="L313">    }</span>
+<span class="fc" id="L372">        entity.getEditorFields().setBeforeSaveUserGroupIds(oldValue);</span>
+<span class="fc" id="L373">    }</span>
 
     /**
      * Check if user was added into new userGroup. If yes and other terms are fulfilled, send email for every userGroup (that was added to user) that has set docId.
@@ -322,64 +382,64 @@ import javax.servlet.http.HttpServletRequest;
     public void sendUserGroupsEmails(UserDetailsEntity user, UserDetailsEntity userBeforeSave, Identity admin, HttpServletRequest request) {
 
         //This Feature must be allowed
-<span class="pc bpc" id="L325" title="2 of 6 branches missed.">        if(userBeforeSave == null || userBeforeSave.getEditorFields()==null || !userBeforeSave.getEditorFields().isSendAllUserGroupsEmails()) return;</span>
+<span class="pc bpc" id="L385" title="2 of 6 branches missed.">        if(userBeforeSave == null || userBeforeSave.getEditorFields()==null || !userBeforeSave.getEditorFields().isSendAllUserGroupsEmails()) return;</span>
 
-<span class="fc" id="L327">        String oldSelectedValues = userBeforeSave.getEditorFields().getBeforeSaveUserGroupIds();</span>
+<span class="fc" id="L387">        String oldSelectedValues = userBeforeSave.getEditorFields().getBeforeSaveUserGroupIds();</span>
 
         //User must be authorized
-<span class="pc bpc" id="L330" title="2 of 4 branches missed.">        if(user == null || !user.getAuthorized()) return;</span>
+<span class="pc bpc" id="L390" title="2 of 4 branches missed.">        if(user == null || !user.getAuthorized()) return;</span>
 
         //We need selected userGroups
-<span class="pc bpc" id="L333" title="3 of 6 branches missed.">        if(user.getEditorFields() == null || user.getEditorFields().getPermisions() == null || user.getEditorFields().getPermisions().length &lt; 1) return;</span>
+<span class="pc bpc" id="L393" title="3 of 6 branches missed.">        if(user.getEditorFields() == null || user.getEditorFields().getPermisions() == null || user.getEditorFields().getPermisions().length &lt; 1) return;</span>
 
         //User email must by valid
-<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if(!Tools.isEmail(user.getEmail())) return;</span>
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">        if(!Tools.isEmail(user.getEmail())) return;</span>
 
-<span class="fc" id="L338">        List&lt;Integer&gt; newAddedUserGrousps = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L339" title="1 of 2 branches missed.">        if(user.getId() &lt; 0) {</span>
+<span class="fc" id="L398">        List&lt;Integer&gt; newAddedUserGrousps = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L399" title="1 of 2 branches missed.">        if(user.getId() &lt; 0) {</span>
             //New user, all user's groups are new, for this user
-<span class="nc" id="L341">            newAddedUserGrousps = Arrays.asList( user.getEditorFields().getPermisions() );</span>
+<span class="nc" id="L401">            newAddedUserGrousps = Arrays.asList( user.getEditorFields().getPermisions() );</span>
         } else {
             //Obtain old selected user groups from session
             //String oldSelectedValues = getUserGroupsFromSession(session, user.getId());
 
-<span class="pc bpc" id="L346" title="1 of 2 branches missed.">            if(Tools.isEmpty(oldSelectedValues)) {</span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">            if(Tools.isEmpty(oldSelectedValues)) {</span>
                 //There are no old values, all user's groups are new, for this user
-<span class="fc" id="L348">                newAddedUserGrousps = Arrays.asList( user.getEditorFields().getPermisions() );</span>
+<span class="fc" id="L408">                newAddedUserGrousps = Arrays.asList( user.getEditorFields().getPermisions() );</span>
             } else {
                 //Take old oldSelectedValues -&gt; convert tham from string to int[] -&gt; split them to perms and emails -&gt; return only perms
-<span class="nc" id="L351">                List&lt;Integer&gt; oldUserGroups = Arrays.asList( splitGroupsToPermsAndEmails( Tools.getTokensInt(oldSelectedValues, &quot;,&quot;) ).get(0) );</span>
+<span class="nc" id="L411">                List&lt;Integer&gt; oldUserGroups = Arrays.asList( splitGroupsToPermsAndEmails( Tools.getTokensInt(oldSelectedValues, &quot;,&quot;) ).get(0) );</span>
 
-<span class="nc bnc" id="L353" title="All 2 branches missed.">                for(Integer userGroupId : user.getEditorFields().getPermisions()) {</span>
-<span class="nc bnc" id="L354" title="All 2 branches missed.">                    if(!oldUserGroups.contains(userGroupId)) {</span>
-<span class="nc" id="L355">                        newAddedUserGrousps.add(userGroupId);</span>
+<span class="nc bnc" id="L413" title="All 2 branches missed.">                for(Integer userGroupId : user.getEditorFields().getPermisions()) {</span>
+<span class="nc bnc" id="L414" title="All 2 branches missed.">                    if(!oldUserGroups.contains(userGroupId)) {</span>
+<span class="nc" id="L415">                        newAddedUserGrousps.add(userGroupId);</span>
                     }
                 }
             }
         }
 
         //Nothing is selected (there is only 1 default value null)
-<span class="pc bpc" id="L362" title="2 of 4 branches missed.">        if(newAddedUserGrousps.size() == 1 &amp;&amp; newAddedUserGrousps.get(0) == null) return;</span>
+<span class="pc bpc" id="L422" title="2 of 4 branches missed.">        if(newAddedUserGrousps.size() == 1 &amp;&amp; newAddedUserGrousps.get(0) == null) return;</span>
 
         try {
-<span class="fc" id="L365">            UserGroupsDB ugDB = UserGroupsDB.getInstance();</span>
-<span class="fc" id="L366">            DocDB docDB = DocDB.getInstance();</span>
-<span class="fc bfc" id="L367" title="All 2 branches covered.">            for(Integer userGroupId : newAddedUserGrousps) {</span>
-<span class="fc" id="L368">                UserGroupDetails userGroup = ugDB.getUserGroup(userGroupId);</span>
-<span class="pc bpc" id="L369" title="2 of 4 branches missed.">                if(userGroup != null &amp;&amp; userGroup.getEmailDocId() &gt; 0) {</span>
-<span class="fc" id="L370">                    DocDetails docDetails = docDB.getDoc(userGroup.getEmailDocId());</span>
+<span class="fc" id="L425">            UserGroupsDB ugDB = UserGroupsDB.getInstance();</span>
+<span class="fc" id="L426">            DocDB docDB = DocDB.getInstance();</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">            for(Integer userGroupId : newAddedUserGrousps) {</span>
+<span class="fc" id="L428">                UserGroupDetails userGroup = ugDB.getUserGroup(userGroupId);</span>
+<span class="pc bpc" id="L429" title="2 of 4 branches missed.">                if(userGroup != null &amp;&amp; userGroup.getEmailDocId() &gt; 0) {</span>
+<span class="fc" id="L430">                    DocDetails docDetails = docDB.getDoc(userGroup.getEmailDocId());</span>
 
-<span class="fc" id="L372">                    String body = docDetails.getData();</span>
-<span class="fc" id="L373">                    body = AuthorizeAction.updateEmailText(body, UserDetailsEntityMapper.INSTANCE.userDetailsEntityToUserDetails(user), null, request);</span>
+<span class="fc" id="L432">                    String body = docDetails.getData();</span>
+<span class="fc" id="L433">                    body = AuthorizeAction.updateEmailText(body, UserDetailsEntityMapper.INSTANCE.userDetailsEntityToUserDetails(user), null, request);</span>
 
 
-<span class="fc" id="L376">                    SendMail.send(admin.getFullName(), admin.getEmail(), user.getEmail(), docDetails.getTitle(), body);</span>
+<span class="fc" id="L436">                    SendMail.send(admin.getFullName(), admin.getEmail(), user.getEmail(), docDetails.getTitle(), body);</span>
                 }
-<span class="fc" id="L378">            }</span>
-<span class="nc" id="L379">        } catch(Exception ex) {</span>
-<span class="nc" id="L380">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L381">        }</span>
-<span class="fc" id="L382">    }</span>
+<span class="fc" id="L438">            }</span>
+<span class="nc" id="L439">        } catch(Exception ex) {</span>
+<span class="nc" id="L440">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L441">        }</span>
+<span class="fc" id="L442">    }</span>
 
     /**
      * Update currently logged user, if it's same as saved user
@@ -388,69 +448,69 @@ import javax.servlet.http.HttpServletRequest;
      * @param request
      */
     public boolean updateSelf(UserDetailsBasic form, Identity user, HttpServletRequest request) {
-<span class="fc bfc" id="L391" title="All 2 branches covered.">        if (form.getId().intValue() != user.getUserId()) return false;</span>
+<span class="fc bfc" id="L451" title="All 2 branches covered.">        if (form.getId().intValue() != user.getUserId()) return false;</span>
 
-<span class="fc" id="L393">        user.setTitle(form.getTitle());</span>
-<span class="fc" id="L394">        user.setFirstName(form.getFirstName());</span>
-<span class="fc" id="L395">        user.setLastName(form.getLastName());</span>
-
-
-
-<span class="fc" id="L399">        user.setCompany(form.getCompany());</span>
-<span class="fc" id="L400">        user.setAdress(form.getAddress());</span>
-<span class="fc" id="L401">        user.setPSC(form.getPsc());</span>
-<span class="fc" id="L402">        user.setCountry(form.getCountry());</span>
-<span class="fc" id="L403">        user.setPhone(form.getPhone());</span>
-
-<span class="fc" id="L405">        user.setCity(form.getCity());</span>
-
-<span class="fc" id="L407">        user.setDateOfBirth(Tools.formatDate(form.getDateOfBirth()));</span>
-<span class="fc" id="L408">        user.setSexMale(form.getSexMale().booleanValue());</span>
-<span class="fc" id="L409">        user.setPhoto(form.getPhoto());</span>
-<span class="fc" id="L410">        user.setSignature(form.getSignature());</span>
+<span class="fc" id="L453">        user.setTitle(form.getTitle());</span>
+<span class="fc" id="L454">        user.setFirstName(form.getFirstName());</span>
+<span class="fc" id="L455">        user.setLastName(form.getLastName());</span>
 
 
-<span class="fc bfc" id="L413" title="All 2 branches covered.">        if (form instanceof UserDetailsEntity) {</span>
-<span class="fc" id="L414">            UserDetailsEntity form2 = (UserDetailsEntity)form;</span>
 
-<span class="fc" id="L416">            user.setEmail(form2.getEmail());</span>
-<span class="fc" id="L417">            user.setLoginName(form2.getLogin());</span>
+<span class="fc" id="L459">        user.setCompany(form.getCompany());</span>
+<span class="fc" id="L460">        user.setAdress(form.getAddress());</span>
+<span class="fc" id="L461">        user.setPSC(form.getPsc());</span>
+<span class="fc" id="L462">        user.setCountry(form.getCountry());</span>
+<span class="fc" id="L463">        user.setPhone(form.getPhone());</span>
 
-<span class="fc" id="L419">            user.setAuthorized(form2.getAuthorized().booleanValue());</span>
+<span class="fc" id="L465">        user.setCity(form.getCity());</span>
 
-<span class="fc" id="L421">            user.setAdmin(form2.getAdmin().booleanValue());</span>
-<span class="fc" id="L422">            user.setUserGroupsIds(form2.getUserGroupsIds());</span>
+<span class="fc" id="L467">        user.setDateOfBirth(Tools.formatDate(form.getDateOfBirth()));</span>
+<span class="fc" id="L468">        user.setSexMale(form.getSexMale().booleanValue());</span>
+<span class="fc" id="L469">        user.setPhoto(form.getPhoto());</span>
+<span class="fc" id="L470">        user.setSignature(form.getSignature());</span>
 
-<span class="pc bpc" id="L424" title="1 of 2 branches missed.">            if (user.isEnabledItem(&quot;users.edit_admins&quot;))</span>
+
+<span class="fc bfc" id="L473" title="All 2 branches covered.">        if (form instanceof UserDetailsEntity) {</span>
+<span class="fc" id="L474">            UserDetailsEntity form2 = (UserDetailsEntity)form;</span>
+
+<span class="fc" id="L476">            user.setEmail(form2.getEmail());</span>
+<span class="fc" id="L477">            user.setLoginName(form2.getLogin());</span>
+
+<span class="fc" id="L479">            user.setAuthorized(form2.getAuthorized().booleanValue());</span>
+
+<span class="fc" id="L481">            user.setAdmin(form2.getAdmin().booleanValue());</span>
+<span class="fc" id="L482">            user.setUserGroupsIds(form2.getUserGroupsIds());</span>
+
+<span class="pc bpc" id="L484" title="1 of 2 branches missed.">            if (user.isEnabledItem(&quot;users.edit_admins&quot;))</span>
             {
-<span class="fc" id="L426">                user.setEditableGroups(form2.getEditableGroups());</span>
-<span class="fc" id="L427">                user.setEditablePages(form2.getEditablePages());</span>
-<span class="fc" id="L428">                user.setWritableFolders(form2.getWritableFolders());</span>
+<span class="fc" id="L486">                user.setEditableGroups(form2.getEditableGroups());</span>
+<span class="fc" id="L487">                user.setEditablePages(form2.getEditablePages());</span>
+<span class="fc" id="L488">                user.setWritableFolders(form2.getWritableFolders());</span>
             }
 
-<span class="fc" id="L431">            user.setFieldA(form2.getFieldA());</span>
-<span class="fc" id="L432">            user.setFieldB(form2.getFieldB());</span>
-<span class="fc" id="L433">            user.setFieldC(form2.getFieldC());</span>
-<span class="fc" id="L434">            user.setFieldD(form2.getFieldD());</span>
-<span class="fc" id="L435">            user.setFieldE(form2.getFieldE());</span>
+<span class="fc" id="L491">            user.setFieldA(form2.getFieldA());</span>
+<span class="fc" id="L492">            user.setFieldB(form2.getFieldB());</span>
+<span class="fc" id="L493">            user.setFieldC(form2.getFieldC());</span>
+<span class="fc" id="L494">            user.setFieldD(form2.getFieldD());</span>
+<span class="fc" id="L495">            user.setFieldE(form2.getFieldE());</span>
 
-<span class="fc" id="L437">            user.setPosition(form2.getPosition());</span>
-<span class="fc" id="L438">            user.setParentId(form2.getParentId());</span>
+<span class="fc" id="L497">            user.setPosition(form2.getPosition());</span>
+<span class="fc" id="L498">            user.setParentId(form2.getParentId());</span>
 
-<span class="fc" id="L440">            user.setDisabledItemsTable(new Hashtable&lt;&gt;());</span>
+<span class="fc" id="L500">            user.setDisabledItemsTable(new Hashtable&lt;&gt;());</span>
 
-<span class="pc bpc" id="L442" title="1 of 2 branches missed.">        } else if (form instanceof UserDetailsSelfEntity) {</span>
-<span class="fc" id="L443">            UserDetailsSelfEntity form2 = (UserDetailsSelfEntity)form;</span>
+<span class="pc bpc" id="L502" title="1 of 2 branches missed.">        } else if (form instanceof UserDetailsSelfEntity) {</span>
+<span class="fc" id="L503">            UserDetailsSelfEntity form2 = (UserDetailsSelfEntity)form;</span>
 
-<span class="fc" id="L445">            user.setEmail(form2.getEmail());</span>
+<span class="fc" id="L505">            user.setEmail(form2.getEmail());</span>
         }
 
-<span class="fc" id="L448">        LogonTools.setUserPerms(user);</span>
-<span class="fc" id="L449">        UsersDB.setDisabledItems(user);</span>
+<span class="fc" id="L508">        LogonTools.setUserPerms(user);</span>
+<span class="fc" id="L509">        UsersDB.setDisabledItems(user);</span>
 
-<span class="fc" id="L451">        LogonTools.setUserToSession(request.getSession(), user);</span>
+<span class="fc" id="L511">        LogonTools.setUserToSession(request.getSession(), user);</span>
 
-<span class="fc" id="L453">        return true;</span>
+<span class="fc" id="L513">        return true;</span>
     }
 
     /**
@@ -462,43 +522,106 @@ import javax.servlet.http.HttpServletRequest;
      * @param errors
      */
     public void validatePassword(UserDetailsBasic entity, boolean allowWeakPassword, boolean admin, Prop prop, Errors errors) {
-<span class="fc bfc" id="L465" title="All 4 branches covered.">        if (UserTools.PASS_UNCHANGED.equals(entity.getPassword())==false &amp;&amp; allowWeakPassword==false) {</span>
+<span class="fc bfc" id="L525" title="All 4 branches covered.">        if (UserTools.PASS_UNCHANGED.equals(entity.getPassword())==false &amp;&amp; allowWeakPassword==false) {</span>
             //kontrola, ci je heslo validne a splna kriteria
 
-<span class="fc" id="L468">            String password = entity.getPassword();</span>
-<span class="fc" id="L469">            int userId = -1;</span>
-<span class="pc bpc" id="L470" title="1 of 2 branches missed.">            if (entity.getId()!=null) userId = entity.getId().intValue();</span>
+<span class="fc" id="L528">            String password = entity.getPassword();</span>
+<span class="fc" id="L529">            int userId = -1;</span>
+<span class="fc bfc" id="L530" title="All 2 branches covered.">            if (entity.getId()!=null) userId = entity.getId().intValue();</span>
 
-<span class="fc" id="L472">            String constStr = &quot;&quot;;</span>
-<span class="fc bfc" id="L473" title="All 2 branches covered.">            if(admin)</span>
+<span class="fc" id="L532">            String constStr = &quot;&quot;;</span>
+<span class="fc bfc" id="L533" title="All 2 branches covered.">            if(admin)</span>
             {
-<span class="fc" id="L475">                constStr = &quot;Admin&quot;;</span>
+<span class="fc" id="L535">                constStr = &quot;Admin&quot;;</span>
             }
 
-<span class="fc" id="L478">            int dlzkaHesla = Constants.getInt(&quot;password&quot;+constStr+&quot;MinLength&quot;);</span>
-<span class="fc" id="L479">            int pocetZnakov = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfSpecialSigns&quot;);</span>
-<span class="fc" id="L480">            int pocetVelkychPismen = Constants.getInt(&quot;password&quot;+constStr+&quot;MinUpperCaseLetters&quot;);</span>
-<span class="fc" id="L481">            int pocetCisel = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfDigits&quot;);</span>
+<span class="fc" id="L538">            int dlzkaHesla = Constants.getInt(&quot;password&quot;+constStr+&quot;MinLength&quot;);</span>
+<span class="fc" id="L539">            int pocetZnakov = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfSpecialSigns&quot;);</span>
+<span class="fc" id="L540">            int pocetVelkychPismen = Constants.getInt(&quot;password&quot;+constStr+&quot;MinUpperCaseLetters&quot;);</span>
+<span class="fc" id="L541">            int pocetCisel = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfDigits&quot;);</span>
 
-<span class="fc bfc" id="L483" title="All 2 branches covered.">            if(Password.checkPassword(false, password, admin, userId, null, null)==false)</span>
+<span class="fc bfc" id="L543" title="All 2 branches covered.">            if(Password.checkPassword(false, password, admin, userId, null, null)==false)</span>
             {
-<span class="fc" id="L485">                String errorText = prop.getText(&quot;useredit.change_password.nesplna_nastavenia&quot;)+&quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L486" title="1 of 2 branches missed.">                if(dlzkaHesla &gt; 0)</span>
-<span class="fc" id="L487">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.min_length&quot;, String.valueOf(dlzkaHesla))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L488" title="1 of 2 branches missed.">                if(pocetVelkychPismen &gt; 0)</span>
-<span class="nc" id="L489">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_upper_case&quot;, String.valueOf(pocetVelkychPismen))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L490" title="1 of 2 branches missed.">                if(pocetCisel &gt; 0)</span>
-<span class="nc" id="L491">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_digits&quot;, String.valueOf(pocetCisel))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L492" title="1 of 2 branches missed.">                if(pocetZnakov &gt; 0)</span>
-<span class="nc" id="L493">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_special_sign&quot;, String.valueOf(pocetZnakov))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L494" title="1 of 2 branches missed.">                if(PasswordsHistoryDB.getInstance().existsPassword(password, userId))</span>
-<span class="nc" id="L495">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.used_in_history&quot;)+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L545">                String errorText = prop.getText(&quot;useredit.change_password.nesplna_nastavenia&quot;)+&quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L546" title="1 of 2 branches missed.">                if(dlzkaHesla &gt; 0)</span>
+<span class="fc" id="L547">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.min_length&quot;, String.valueOf(dlzkaHesla))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L548" title="1 of 2 branches missed.">                if(pocetVelkychPismen &gt; 0)</span>
+<span class="nc" id="L549">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_upper_case&quot;, String.valueOf(pocetVelkychPismen))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L550" title="1 of 2 branches missed.">                if(pocetCisel &gt; 0)</span>
+<span class="nc" id="L551">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_digits&quot;, String.valueOf(pocetCisel))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L552" title="1 of 2 branches missed.">                if(pocetZnakov &gt; 0)</span>
+<span class="nc" id="L553">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_special_sign&quot;, String.valueOf(pocetZnakov))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L554" title="1 of 2 branches missed.">                if(PasswordsHistoryDB.getInstance().existsPassword(password, userId))</span>
+<span class="nc" id="L555">                    errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.used_in_history&quot;)+&quot;.&lt;br/&gt;&quot;;</span>
 
-<span class="fc" id="L497">                errors.rejectValue(&quot;errorField.password&quot;, null, errorText);</span>
+<span class="fc" id="L557">                errors.rejectValue(&quot;errorField.password&quot;, &quot;403&quot;, errorText);</span>
             }
-<span class="pc bpc" id="L499" title="1 of 2 branches missed.">        } else if (Tools.isEmpty(entity.getPassword())) {</span>
-<span class="nc" id="L500">            errors.rejectValue(&quot;errorField.password&quot;, null, prop.getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="pc bpc" id="L559" title="1 of 2 branches missed.">        } else if (Tools.isEmpty(entity.getPassword())) {</span>
+<span class="nc" id="L560">            errors.rejectValue(&quot;errorField.password&quot;, &quot;403&quot;, prop.getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
         }
-<span class="fc" id="L502">    }</span>
+<span class="fc" id="L562">    }</span>
+
+    /**
+     * Normally users are global for all domains.
+     * - they are split in MultiWeb installation
+     * - or when conf usersSplitByDomain is set to true (mainly for autotest purposes)
+     */
+    public static boolean isUsersSplitByDomain() {
+<span class="pc bpc" id="L570" title="1 of 4 branches missed.">        return Constants.getBoolean(&quot;usersSplitByDomain&quot;) || InitServlet.isTypeCloud();</span>
+    }
+
+    /*
+     * Check if user is authorized AND can login
+     * @param userDetails
+     * @return true if user is disabled
+     */
+    public static boolean isUserDisabled(UserDetails userDetails) {
+<span class="pc bpc" id="L579" title="1 of 2 branches missed.">        if(userDetails == null) return false;</span>
+
+        //isAuthorized ?
+<span class="fc bfc" id="L582" title="All 2 branches covered.">        if(userDetails.isAuthorized() == false) return false;</span>
+
+        //can user login ?
+<span class="fc" id="L585">        long startL = 0;</span>
+<span class="fc" id="L586">        long endL = Long.MAX_VALUE;</span>
+
+<span class="fc bfc" id="L588" title="All 2 branches covered.">        if (Tools.isEmpty(userDetails.getAllowLoginStart()) == false) {</span>
+<span class="fc" id="L589">            Date start = Tools.getDateFromString(userDetails.getAllowLoginStart(), &quot;dd.MM.yyyy&quot;);</span>
+<span class="fc" id="L590">            startL = start.getTime();</span>
+        }
+
+<span class="fc bfc" id="L593" title="All 2 branches covered.">        if (Tools.isEmpty(userDetails.getAllowLoginEnd()) == false) {</span>
+<span class="fc" id="L594">            Date end = Tools.getDateFromString(userDetails.getAllowLoginEnd(), &quot;dd.MM.yyyy&quot;);</span>
+<span class="fc" id="L595">            endL = end.getTime()+(60*60*24 * 1000);</span>
+        }
+
+<span class="fc" id="L598">        long now = Tools.getNow();</span>
+
+<span class="pc bpc" id="L600" title="1 of 4 branches missed.">        if (now &lt; startL || now &gt; endL) return true;</span>
+<span class="fc" id="L601">        return false;</span>
+    }
+
+    /**
+     * Check if user is authorized AND can login
+     * @param userDetails
+     * @return true if user is disabled
+     */
+    public static boolean isUserDisabled(UserDetailsEntity userDetails) {
+<span class="pc bpc" id="L610" title="1 of 2 branches missed.">        if(userDetails == null) return true;</span>
+
+        //isAuthorized ?
+<span class="fc bfc" id="L613" title="All 2 branches covered.">        if(Boolean.FALSE.equals(userDetails.getAuthorized())) return true;</span>
+
+        //can user login ?
+<span class="fc" id="L616">        long startL = 0;</span>
+<span class="fc" id="L617">        long endL = Long.MAX_VALUE;</span>
+<span class="fc bfc" id="L618" title="All 2 branches covered.">        if (userDetails.getAllowLoginStart() != null) startL = userDetails.getAllowLoginStart().getTime();</span>
+<span class="fc bfc" id="L619" title="All 2 branches covered.">        if (userDetails.getAllowLoginEnd() != null) endL = userDetails.getAllowLoginEnd().getTime()+(60*60*24 * 1000);</span>
+<span class="fc" id="L620">        long now = Tools.getNow();</span>
+
+<span class="pc bpc" id="L622" title="1 of 4 branches missed.">        if (now &lt; startL || now &gt; endL) return true;</span>
+
+<span class="fc" id="L624">        return false;</span>
+    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

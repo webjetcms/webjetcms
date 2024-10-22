@@ -40,7 +40,7 @@ public class FileCache implements CacheListener
 	{
 		if (IwcmFsDB.useDBStorage()) return IwcmFsDB.getFatIdTable().get(virtualPath);
 
-		//aby nam to samo expirovalo po zmene datumu
+		//aby nam to samo exspirovalo po zmene datumu
 		IwcmFile f = new IwcmFile(Tools.getRealPath(virtualPath));
 		return f.lastModified();
 	}

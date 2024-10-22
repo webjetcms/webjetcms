@@ -63,10 +63,10 @@ import sk.iway.iwcm.users.UsersDB;
 
 <span class="fc" id="L64">        JSONObject output = new JSONObject();</span>
 
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (name == null) {</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">		if (name == null) {</span>
 			//dropzone.js kompatibilita
-<span class="nc" id="L68">			Part filePart = request.getPart(&quot;file&quot;);</span>
-<span class="nc" id="L69">			name = filePart.getSubmittedFileName();</span>
+<span class="fc" id="L68">			Part filePart = request.getPart(&quot;file&quot;);</span>
+<span class="fc" id="L69">			name = filePart.getSubmittedFileName();</span>
         }
 
 <span class="pc bpc" id="L72" title="5 of 8 branches missed.">        if (destinationFolder!=null &amp;&amp; (destinationFolder.startsWith(&quot;/files&quot;) || destinationFolder.startsWith(&quot;/images&quot;) || destinationFolder.startsWith(&quot;/shared&quot;))) {</span>
@@ -88,9 +88,9 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="pc bpc" id="L88" title="2 of 4 branches missed.">        if (user == null || user.isAdmin()==false) {</span>
 <span class="nc" id="L89">            errorKey = &quot;admin.logon.timeoutTitle&quot;;</span>
         }
-<span class="pc bpc" id="L91" title="3 of 6 branches missed.">        else if (Tools.isNotEmpty(destinationFolder) &amp;&amp; &quot;/files/protected/feedback-form/&quot;.equals(destinationFolder)==false &amp;&amp; user.isFolderWritable(destinationFolder)==false) {</span>
+<span class="pc bpc" id="L91" title="2 of 6 branches missed.">        else if (Tools.isNotEmpty(destinationFolder) &amp;&amp; &quot;/files/protected/feedback-form/&quot;.equals(destinationFolder)==false &amp;&amp; user.isFolderWritable(destinationFolder)==false) {</span>
             // /files/protected/feedback-form/ je natvrdo povolene, aby bolo mozne nahrat subory k feedback-form
-<span class="nc" id="L93">            errorKey = &quot;admin.upload_iframe.wrong_upload_dir&quot;;</span>
+<span class="fc" id="L93">            errorKey = &quot;admin.upload_iframe.wrong_upload_dir&quot;;</span>
         }
 <span class="pc bpc" id="L95" title="1 of 2 branches missed.">        else if (UploadFileTools.isFileAllowed(uploadType, name, fileSize, user, request)==false) {</span>
 <span class="nc" id="L96">            errorKey = &quot;components.forum.new.upload_not_allowed_filetype&quot;;</span>
@@ -104,16 +104,16 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L104">            errorKey = &quot;admin.upload_iframe.wrong_upload_dir&quot;;</span>
         }
 
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">		if (errorKey != null) {</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">		if (errorKey != null) {</span>
 			try {
-<span class="nc" id="L109">				Prop prop = Prop.getInstance();</span>
-<span class="nc" id="L110">				output.put(&quot;error&quot;, prop.getText(errorKey));</span>
-<span class="nc" id="L111">				output.put(&quot;file&quot;, name);</span>
-<span class="nc" id="L112">				output.put(&quot;success&quot;, false);</span>
+<span class="fc" id="L109">				Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L110">				output.put(&quot;error&quot;, prop.getText(errorKey));</span>
+<span class="fc" id="L111">				output.put(&quot;file&quot;, name);</span>
+<span class="fc" id="L112">				output.put(&quot;success&quot;, false);</span>
 			}
 <span class="nc" id="L114">			catch (JSONException e) {</span>
 <span class="nc" id="L115">                Logger.error(AdminUploadServlet.class, e);</span>
-<span class="nc" id="L116">			}</span>
+<span class="pc" id="L116">			}</span>
 		}
         else {
 <span class="fc" id="L119">            int chunk = Tools.getIntValue(request.getParameter(&quot;chunk&quot;), 0);</span>
@@ -191,7 +191,7 @@ import sk.iway.iwcm.users.UsersDB;
                         //over, ci subor v destinacii existuje
 <span class="fc" id="L192">                        destinationVirtualPath = destinationFolder + name;</span>
 <span class="fc" id="L193">                        outputFile = new IwcmFile(Tools.getRealPath(destinationVirtualPath));</span>
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">                        if (outputFile.exists()) {</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">                        if (outputFile.exists()) {</span>
 
 <span class="pc bpc" id="L196" title="1 of 2 branches missed.">                            if (&quot;keepboth&quot;.equals(overwriteMode)) {</span>
                                 //ziskaj meno noveho suboru
@@ -211,7 +211,7 @@ import sk.iway.iwcm.users.UsersDB;
                         }
 
                         //ak subor neexistuje mozeme ho rovno zapisat
-<span class="pc bpc" id="L214" title="2 of 4 branches missed.">                        if (destinationFileExists==false || &quot;overwrite&quot;.equals(overwriteMode)) {</span>
+<span class="pc bpc" id="L214" title="1 of 4 branches missed.">                        if (destinationFileExists==false || &quot;overwrite&quot;.equals(overwriteMode)) {</span>
 <span class="fc" id="L215">                            fos = new IwcmOutputStream(outputFile);</span>
 <span class="fc" id="L216">                            destinationFileExists = false;</span>
                         } else {
@@ -236,7 +236,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L236">                    }</span>
 <span class="fc" id="L237">                    fos.close();</span>
 
-<span class="pc bpc" id="L239" title="1 of 2 branches missed.">                    if (isBase64) {</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">                    if (isBase64) {</span>
 <span class="fc" id="L240">                        decodeBase64File(outputFile);</span>
                     }
 
@@ -361,7 +361,7 @@ import sk.iway.iwcm.users.UsersDB;
 
                 //skonvertuj PNG na JPG/format povodneho obrazku
 <span class="fc" id="L363">                String extension = FileTools.getFileExtension(f.getName());</span>
-<span class="pc bpc" id="L364" title="1 of 2 branches missed.">                if (&quot;png&quot;.equals(extension)==false) {</span>
+<span class="fc bfc" id="L364" title="All 2 branches covered.">                if (&quot;png&quot;.equals(extension)==false) {</span>
 <span class="fc" id="L365">                    IwcmInputStream iwStream =  new IwcmInputStream(f);</span>
 <span class="fc" id="L366">					BufferedImage pngImage = ImageIO.read(iwStream);</span>
 <span class="fc" id="L367">                    iwStream.close();</span>
@@ -422,4 +422,4 @@ import sk.iway.iwcm.users.UsersDB;
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogLevelsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.audit.rest</a> &gt; <span class="el_source">LogLevelsService.java</span></div><h1>LogLevelsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.audit.rest;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.audit.jpa.LogLevelBean;
+import sk.iway.iwcm.system.audit.jpa.LogFileBean;
+
+/**
+ * Service to handle log levels for packages.
+ * They are saved in Constants.logLevel for main level and
+ * Constants.logLevels for packages (one package per line).
+ * Also can be saved into DB for persistent settings.
+ */
+public class LogLevelsService {
+
+    public static final String LOG_LEVELS = &quot;logLevels&quot;;
+    public static final String MAIN_LOG_LEVEL = &quot;logLevel&quot;;
+
+    private LogLevelsService() {
+        //utility class
+    }
+
+    private static final String getLogLevelString(String mainLogLevelPackage, boolean withMainLogLevel) {
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        if(withMainLogLevel == true) {</span>
+            //Default log level + others
+<span class="fc" id="L32">            return mainLogLevelPackage + &quot;=&quot; + Constants.getString(MAIN_LOG_LEVEL) + &quot;\n&quot; + Constants.getString(LOG_LEVELS);</span>
+        } else {
+            //Only others
+<span class="fc" id="L35">            return Constants.getString(LOG_LEVELS);</span>
+        }
+    }
+
+    public static final List&lt;LogLevelBean&gt; getLogLevelData(String mainLogLevelPackage) {
+<span class="fc" id="L40">        String logLevelsString = getLogLevelString(mainLogLevelPackage, true);</span>
+<span class="fc" id="L41">        List&lt;LogLevelBean&gt; logLevelData = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(logLevelsString)) {</span>
+<span class="fc" id="L43">            Long id = 1L;</span>
+<span class="fc" id="L44">            String[] logLevelArray = Tools.getTokens(logLevelsString, &quot;\n&quot;);</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            for(String logLevel : logLevelArray) {</span>
+<span class="fc" id="L46">                String[] logLevelValues = logLevel.split(&quot;=&quot;);</span>
+<span class="fc" id="L47">                logLevelData.add(</span>
+<span class="fc" id="L48">                    new LogLevelBean(id++, logLevelValues[0], logLevelValues[1])</span>
+                );
+            }
+        }
+<span class="fc" id="L52">        return logLevelData;</span>
+    }
+
+    private static final LogLevelBean handleMainLogLevel(LogLevelBean mainLogLevel, LogLevelBean defaultMainLogLevel) {
+        //This package (main log level) can have only two states DEBUG or NORMAL
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        if(mainLogLevel.getLogLevel().equals(&quot;DEBUG&quot;) || mainLogLevel.getLogLevel().equals(&quot;NORMAL&quot;)) {</span>
+            //DO edit
+<span class="nc" id="L59">            Constants.setString(MAIN_LOG_LEVEL, mainLogLevel.getLogLevel().toLowerCase());</span>
+<span class="nc" id="L60">            return mainLogLevel;</span>
+        } else {
+            //Do not update, return old correct value
+<span class="nc" id="L63">            return defaultMainLogLevel;</span>
+        }
+    }
+
+    public static final LogLevelBean editItem(LogLevelBean entity, long id, String mainLogLevelPackage) {
+<span class="fc" id="L68">        List&lt;LogLevelBean&gt; logLevelData = getLogLevelData(mainLogLevelPackage);</span>
+<span class="fc" id="L69">        String logLevelsString = getLogLevelString(mainLogLevelPackage, false);</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if(entity.getPackageName().equals(mainLogLevelPackage)) {</span>
+<span class="nc" id="L72">            return handleMainLogLevel(entity, logLevelData.get(0));</span>
+        }
+
+        //it's not main log level -  start with 1 so we skip MAIN_LOG_LEVEL
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        for(int i = 1; i &lt; logLevelData.size(); i++) {</span>
+<span class="fc" id="L77">            LogLevelBean logLevel = logLevelData.get(i);</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if(logLevel.getId() == id) {</span>
+<span class="fc" id="L79">                logLevelsString = logLevelsString.replace(logLevel.getFullLog(), entity.getFullLog());</span>
+<span class="fc" id="L80">                Constants.setString(LOG_LEVELS, logLevelsString);</span>
+<span class="fc" id="L81">                return entity;</span>
+            }
+        }
+<span class="nc" id="L84">        return null;</span>
+    }
+
+    public static final LogLevelBean insertItem(LogLevelBean entity, String mainLogLevelPackage) {
+<span class="fc" id="L88">        List&lt;LogLevelBean&gt; logLevelData = getLogLevelData(mainLogLevelPackage);</span>
+<span class="fc" id="L89">        String logLevelsString = getLogLevelString(mainLogLevelPackage, false);</span>
+
+<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if(entity.getPackageName().equals(mainLogLevelPackage)) {</span>
+<span class="nc" id="L92">            return handleMainLogLevel(entity, logLevelData.get(0));</span>
+        }
+
+<span class="fc" id="L95">        LogLevelBean exists = null;</span>
+        //it's not main log level -  start with 1 so we skip MAIN_LOG_LEVEL
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        for(int i = 1; i &lt; logLevelData.size(); i++) {</span>
+<span class="fc" id="L98">            LogLevelBean logLevel = logLevelData.get(i);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if(logLevel.getPackageName().equals(entity.getPackageName())) {</span>
+<span class="fc" id="L100">                exists = logLevel;</span>
+<span class="fc" id="L101">                break;</span>
+            }
+        }
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        if(exists == null) {</span>
+            //CREATE action
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">            if(Tools.isEmpty(logLevelsString) == true) {</span>
+<span class="nc" id="L107">                Constants.setString(LOG_LEVELS, entity.getFullLog());</span>
+            } else {
+<span class="fc" id="L109">                Constants.setString(LOG_LEVELS, logLevelsString + &quot;\n&quot; + entity.getFullLog());</span>
+            }
+<span class="fc" id="L111">            entity.setId( Long.valueOf(logLevelData.size() + 1L) );</span>
+        } else {
+            //Package name is already in use - it's EDIT
+<span class="fc" id="L114">            logLevelsString = logLevelsString.replace(exists.getFullLog(), entity.getFullLog());</span>
+<span class="fc" id="L115">            Constants.setString(LOG_LEVELS, logLevelsString);</span>
+<span class="fc" id="L116">            entity.setId( exists.getId() );</span>
+        }
+<span class="fc" id="L118">        return entity;</span>
+    }
+
+    public static final boolean deleteItem(LogLevelBean entity, long id, String mainLogLevelPackage) {
+<span class="fc" id="L122">        boolean isFirst = true;</span>
+<span class="fc" id="L123">        StringBuilder logLevelsString = new StringBuilder(&quot;&quot;);</span>
+
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if(entity.getPackageName().equals(mainLogLevelPackage)) {</span>
+            //Do not delete main log level
+<span class="fc" id="L127">            return false;</span>
+        }
+
+<span class="fc" id="L130">        List&lt;LogLevelBean&gt; logLevelData = getLogLevelData(mainLogLevelPackage);</span>
+        //it's not main log level -  start with 1 so we skip MAIN_LOG_LEVEL
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        for(int i = 1; i &lt; logLevelData.size(); i++) {</span>
+<span class="fc" id="L133">            LogLevelBean logLevel = logLevelData.get(i);</span>
+            //Do not add the one for deletion - ONLY if this is not a main log level
+<span class="pc bpc" id="L135" title="1 of 4 branches missed.">            if(logLevel.getPackageName().equals(entity.getPackageName()) == true &amp;&amp; logLevel.getPackageName().equals(mainLogLevelPackage) == false) break;</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">            if(isFirst) {</span>
+<span class="fc" id="L137">                logLevelsString.append(logLevel.getFullLog());</span>
+<span class="fc" id="L138">                isFirst = false;</span>
+            } else {
+<span class="nc" id="L140">                logLevelsString.append(&quot;\n&quot;).append(logLevel.getFullLog());</span>
+            }
+        }
+<span class="fc" id="L143">        Constants.setString(LOG_LEVELS, logLevelsString.toString());</span>
+<span class="fc" id="L144">        return true;</span>
+    }
+
+    public static final void afterSave(LogLevelBean entity, String mainLogLevelPackage) {
+<span class="fc bfc" id="L148" title="All 2 branches covered.">        if(entity.isSaveIntoDB() == true) {</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">            if(entity.getPackageName().equals(mainLogLevelPackage)) {</span>
+                //MAIN log level
+<span class="nc" id="L151">                ConfDB.setName(MAIN_LOG_LEVEL, entity.getLogLevel());</span>
+            } else {
+<span class="fc" id="L153">                ConfDB.setName(LOG_LEVELS, getLogLevelString(mainLogLevelPackage, false));</span>
+            }
+        } else {
+            //apply log levels to current logger
+<span class="fc" id="L157">            Logger.setWJLogLevel(Constants.getString(MAIN_LOG_LEVEL));</span>
+<span class="fc" id="L158">            Logger.setWJLogLevels(Logger.getLogLevelsMap(Constants.getString(LOG_LEVELS)));</span>
+        }
+<span class="fc" id="L160">    }</span>
+
+    public static final List&lt;LogFileBean&gt; getLogFiles() {
+<span class="fc" id="L163">        File logDir = new File(System.getProperty(&quot;catalina.base&quot;),&quot;logs&quot;);</span>
+<span class="fc" id="L164">        File[] files = logDir.listFiles();</span>
+<span class="fc" id="L165">        List&lt;LogFileBean&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (files != null) {</span>
+<span class="fc" id="L167">            long id = 1L;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">            for (File file : files) {</span>
+<span class="fc" id="L169">                result.add(new LogFileBean(file, id++));</span>
+            }
+        }
+<span class="fc" id="L172">        return result;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

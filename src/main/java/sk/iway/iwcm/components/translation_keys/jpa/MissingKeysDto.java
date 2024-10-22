@@ -21,7 +21,7 @@ public class MissingKeysDto {
         this.urlAddress = urlAddress;
     }
 
-    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID")
+    @DataTableColumn(inputType = DataTableColumnType.ID, title = "ID", filter = false)
     Long id;
 
     @DataTableColumn(inputType = DataTableColumnType.OPEN_EDITOR, title = "user.admin.key", className = "show-html")

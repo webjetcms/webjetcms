@@ -85,7 +85,7 @@ Added option [multiple choice selection box](frontend/webpages/customfields/READ
 
 **Deployment**
 
-Modified deployment to artifactory server. Do `ant/build.xml` added task `createUpdateZip`which creates and uploads to the license server an update in the format used for the transition to `gradle` version. It is thus easy to update older WebJET installations in the classic way via the Control Panel-\&gt;WebJET Update menu (#54225).
+Modified deployment to artifactory server. Do `ant/build.xml` added task `createUpdateZip`which creates and uploads to the license server an update in the format used for the transition to `gradle` version. It is thus easy to update older WebJET installations in the classic way via the Control Panel->WebJET Update menu (#54225).
 
 Modified and compared archives against the old version 8 to include all necessary files. Added missing fonts for the library `pd4ml` for generating PDF files.
 
@@ -130,7 +130,7 @@ Please note: due to the large number of changes in the spring libraries, it will
 - Fixed filter display on page title in server monitoring and GDPR application.
 - Fixed marking all rows in client pagination - only the current page (#54281) is marked.
 
-<img class="meme" title="meme" src="_media/meme/2021-52.jpg" />
+![meme](_media/meme/2021-52.jpg)
 
 ## 2021.47
 
@@ -192,7 +192,7 @@ Please note: due to the large number of changes in the spring libraries, it will
 
 - Fixed cache updating `TemplatesDB` when saving the page in the local (domain) System directory.
 
-<img class="meme" title="meme" src="_media/meme/2021-47.jpg" />
+![meme](_media/meme/2021-47.jpg)
 
 ## 2021.45
 
@@ -282,7 +282,7 @@ We have modified the build process for the new version artifacts. In this versio
 - Documentation created on the possibility of use [inheritance in entities](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
 - Documentation created for use [inheritance in JPA entities](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
 
-<img class="meme" title="meme" src="_media/meme/2021-45.jpg" />
+![meme](_media/meme/2021-45.jpg)
 
 ## 2021.40
 
@@ -419,7 +419,7 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 
 - Datatables - fixed setting of optional fields in newly created record.
 
-<img class="meme" title="meme" src="_media/meme/2021-40.jpg" />
+![meme](_media/meme/2021-40.jpg)
 
 ## 2021.26
 
@@ -485,7 +485,7 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 - Server monitoring - corrected default chart range to the value of the last 14 days.
 - Datatable - corrected highlighting of selected rows after saving, if received data contains CSS row style setting - CSS style will be preserved `selected` Also `highlight`.
 
-<img class="meme" title="meme" src="_media/meme/2021-24.jpg" />
+![meme](_media/meme/2021-24.jpg)
 
 ## 2021.20
 
@@ -522,7 +522,7 @@ We have prepared documentation with information on [settings of optional fields]
 - Translation keys - added key change invocation in the internal cache and in the cluster cache.
 - Translation keys - added check and test for the right Text editing - view all texts.
 
-<img class="meme" title="meme" src="_media/meme/2021-20.jpg" />
+![meme](_media/meme/2021-20.jpg)
 
 ## 2021.18
 
@@ -568,7 +568,7 @@ We have prepared documentation with information on [settings of optional fields]
 - Text editing - corrected search in customer projects.
 - Datatables - fixed display of dial data in custom column list view (#53653).
 
-<img class="meme" title="meme" src="_media/meme/2021-18.jpg" />
+![meme](_media/meme/2021-18.jpg)
 
 ## 2021.13
 
@@ -658,7 +658,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Fixed display of template list when adding/editing web page directory. Templates are now displayed conditionally according to the set directories (the original version displayed all templates everywhere).
 - Fixed distribution version for other projects (Spring DATA repositories, missing files, updated dependency libraries).
 
-<img class="meme" title="meme" src="_media/meme/2021-13.jpg" />
+![meme](_media/meme/2021-13.jpg)
 
 ## 2021.12
 
@@ -703,7 +703,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Nested datatable - added call `deselect` before loading new data of the nested datatable, to set the buttons correctly (deactivate them if they require the selected row).
 - Corrected call `TABLE.hideButton` - hide buttons only in the given table, not in all tables (added restriction on table ID when searching for buttons in DOM tree).
 
-<img class="meme" title="meme" src="_media/meme/2021-11.jpg" />
+![meme](_media/meme/2021-11.jpg)
 
 ## 2021.10
 
@@ -720,7 +720,7 @@ The whole translation system for JavaScript files is implemented as a library an
 
 - Added tests for web page content (add table, find and replace, insert image, step back, insert special character).
 
-<img class="meme" title="meme" src="_media/meme/2021-10.jpg" />
+![meme](_media/meme/2021-10.jpg)
 
 ## 2021.8
 
@@ -777,7 +777,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Modal window - fixed click event settings for modal window called via `WJ.openIframeModal`. Since the modal window is used for different addresses of the embedded iframe it is necessary to dynamically set the function after the click. The original version did not change it after setting it and after closing the dialog and opening a new one, the original `click` Action. This e.g. caused the setting of the line from `elfinder` data field into multiple fields in the editor.
 - Menu - corrected display of menu and active item when calling `/admin/v9/` addresses without a slash at the end. URLs of menu items normalized with a slash at the end.
 
-<img class="meme" title="meme" src="_media/meme/2021-08.jpg" />
+![meme](_media/meme/2021-08.jpg)
 
 ## 2021.7
 
@@ -843,7 +843,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Configuration - fixed error when adding and then editing a configuration variable (#53137)
 - Web pages - fixed functionality of switching domains in the administration header
 
-<img class="meme" title="meme" src="_media/meme/2021-07.jpg" />
+![meme](_media/meme/2021-07.jpg)
 
 ## 2021.5
 
@@ -876,7 +876,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Datatables - error messages from previous save (#52639) are no longer displayed when opening the dialog.
 - Datatables - corrected display of the message Do you really want to delete this entry? in editing (after undelete) (#52639).
 
-<img class="meme" title="meme" src="_media/meme/2021-05.jpg" />
+![meme](_media/meme/2021-05.jpg)
 
 ## 2021.4
 
@@ -916,7 +916,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Web pages - delete directories containing the : character in the name
 - Datatables - corrected display of datatable settings (display of selection menu without cropping and position)
 
-<img class="meme" title="meme" src="_media/meme/2021-04.jpg" />
+![meme](_media/meme/2021-04.jpg)
 
 ## 2021.2
 
@@ -957,7 +957,7 @@ We refactored the code in index.js and moved the definition of the json and data
 - datatables editor - fixed CSS styles setting to `multi checkboxoch` (overthrow `custom-switch`). Originally the CSS was only set when the window was first opened, but when changing `options` values (e.g. when moving to another directory) are regenerated and displayed as standard checkboxes instead of sliders. The setting is now made each time the editor window is opened. (#52609)
 - datatables editor - fixed a bug where the backdrop of the dialog remained displayed after closing the window (occurred in the situation open editor window, cancel, open folder window, cancel, reopen editor window, cancel - backdrop remained open). Added call `$("div.modal-backdrop").hide();` when you close the editor window. (#52609)
 
-<img class="meme" title="meme" src="_media/meme/2021-02.jpg" />
+![meme](_media/meme/2021-02.jpg)
 
 ## 2021.1
 
@@ -999,7 +999,7 @@ Added TODO entries to the directory edit dialog (in addition to history and sche
 - documentation on the possibility of [triggering an error message](developer/datatables/restcontroller.md#validácia--povinné-polia) when editing an item (method `throwError`)
 - supplemented documentation for
 
-<img class="meme" title="meme" src="_media/meme/2021-01.jpg" />
+![meme](_media/meme/2021-01.jpg)
 
 ## 2021.0
 
@@ -1028,4 +1028,4 @@ First draft of the splash screen added. So far it includes a list of logged in a
 - [](developer/jstree/README.md#spôsob-použitia-ikon) a [](developer/datatables/README.md#štýlovanie-riadku-a-ikony)
 - [npm](developer/frameworks/README.md#npm)
 
-<img class="meme" title="meme" src="_media/meme/2021-00.jpg" />
+![meme](_media/meme/2021-00.jpg)

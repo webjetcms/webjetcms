@@ -215,7 +215,7 @@ function Ok()
 			+ ", archiv=" + archiv
 			+ ", asc=" + asc
 			+ ", order=" + order
-			+ ", open=" + open
+			+ ",open=" + open
 			+ ", active=" + active
 			+ ", showOnlySelected=" + showOnlySelected
 			+ ", globalIds=" + globalIds + ")!");
@@ -393,12 +393,13 @@ function odoberGlobal(id)
 					<select name="order" id="orderId">
 						<option value="reference"><iwcm:text key="components.file_archiv.reference"/></option>
 						<option value="priority"><iwcm:text key="components.news.ORDER_PRIORITY"/></option>
+						<option value="orderId"><iwcm:text key="components.file_archiv.order"/></option>
 						<option value="time"><iwcm:text key="components.file_archiv.time_order"/></option>
 						<option value="virtual_file_name"><iwcm:text key="components.file_archiv.order.virtual_file_name"/></option>
 					</select>
 				</td>
 			</tr>
-			<tr>
+			<tr style="display: none;">
 				<td><label for="openCheckboxId"><iwcm:text key="components.file_archiv.entry_pre_opened"/> :</label></td>
 				<td>
 					<input id="openCheckboxId" type="checkbox" name="open" value="true" onclick="showHideOpen()" <%if (open)out.print("checked='checked'");%> />

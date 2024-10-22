@@ -1,4 +1,4 @@
-# 'Store' rozširujúca trieda *Storage `localStorage, sessionStorage`
+# `Store` rozširujúca trieda Storage `localStorage, sessionStorage`
 
 Trieda `Store` upravuje funkcionalitu natívneho
 [Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage). _[Presmeruje na oficiálnu dokumentáciu]_
@@ -8,7 +8,7 @@ Trieda `Store` upravuje funkcionalitu natívneho
 Jedná sa o wrapper, ktorý umožňuje priamo ukladať do `Storage` dáta rôznych typov `[number, string, object, array, boolean, null, undefined, ...]` s ošetrením proti nežiadúcemu padnutiu aplikácie pri nesprávnom vstupe.
 Vstupy sú automaticky konvertované do formátu `JSON`.
 
-**Upozornenie:** Nie je možné ukladať `HTMLElementy`, `NodeListy` a `funkcie`.
+!>**Upozornenie:** Nie je možné ukladať `HTMLElementy`, `NodeListy` a `funkcie`.
 
 V systéme **WebJET** sa nepoužíva globálne. Je potrebné si inštanciu tejto triedu vždy vytvoriť vrámci svojej novej triedy alebo knižnice.
 
@@ -45,28 +45,28 @@ const valueVar = store.getItem('key');
 ### Detailný popis funkcií
 
 #### getItem()
-[getItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem) _[Presmeruje na oficiálnu dokumentáciu]_
+[getItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem). _[Presmeruje na oficiálnu dokumentáciu]_
 
 **Popis rozšírenia:** Výstup tejto metódy bude automaticky konvertovaný z formátu `JSON` do pôvodného vstupného formátu, takže odpadá nutnosť výstupy pretypovať späť do pôvodnej formy.
 Ak neexistuje zadaný kľúč alebo pod zadaným kľúčom neexistujú dáta, metóda vráti `null`
 
 ---
 #### setItem()
-[setItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem) _[Presmeruje na oficiálnu dokumentáciu]_
+[setItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem). _[Presmeruje na oficiálnu dokumentáciu]_
 
 **Popis rozšírenia:** Vstupné dáta tejto metódy budú automaticky konvertované do formátu `JSON`. Ak je vstup nevalidný, bude uložená hodnota `null`
 
 ---
 #### removeItem()
-[removeItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/removeItem) _[Presmeruje na oficiálnu dokumentáciu]_
+[removeItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/removeItem). _[Presmeruje na oficiálnu dokumentáciu]_
 
 ---
 #### clear()
-[clear()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/clear) _[Presmeruje na oficiálnu dokumentáciu]_
+[clear()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/clear). _[Presmeruje na oficiálnu dokumentáciu]_
 
 ---
 #### key()
-[key()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/key) _[Presmeruje na oficiálnu dokumentáciu]_
+[key()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/key). _[Presmeruje na oficiálnu dokumentáciu]_
 
 ---
 

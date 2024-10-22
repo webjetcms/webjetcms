@@ -21,10 +21,12 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
@@ -66,340 +68,340 @@ public class GroupsRestController extends DatatableRestControllerV2&lt;GroupDeta
     private EditorFacade editorFacade;
 
     public GroupsRestController(GroupSchedulerDtoRepository groupSchedulerDtoRepository, TranslationKeyRepository translationKeyRepository, EditorFacade editorFacade) {
-<span class="fc" id="L69">        super(null);</span>
-<span class="fc" id="L70">        this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;</span>
-<span class="fc" id="L71">        this.translationKeyRepository = translationKeyRepository;</span>
-<span class="fc" id="L72">        this.editorFacade = editorFacade;</span>
-<span class="fc" id="L73">    }</span>
+<span class="fc" id="L71">        super(null);</span>
+<span class="fc" id="L72">        this.groupSchedulerDtoRepository = groupSchedulerDtoRepository;</span>
+<span class="fc" id="L73">        this.translationKeyRepository = translationKeyRepository;</span>
+<span class="fc" id="L74">        this.editorFacade = editorFacade;</span>
+<span class="fc" id="L75">    }</span>
 
     @Override
     public Page&lt;GroupDetails&gt; getAllItems(Pageable pageable) {
 
-<span class="fc" id="L78">        int userGroupId = Tools.getIntValue(getRequest().getParameter(&quot;userGroupId&quot;), -1);</span>
-<span class="fc" id="L79">        int tempId = Tools.getIntValue(getRequest().getParameter(&quot;tempId&quot;), -1);</span>
-<span class="fc" id="L80">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), 0);</span>
+<span class="fc" id="L80">        int userGroupId = Tools.getIntValue(getRequest().getParameter(&quot;userGroupId&quot;), -1);</span>
+<span class="fc" id="L81">        int tempId = Tools.getIntValue(getRequest().getParameter(&quot;tempId&quot;), -1);</span>
+<span class="fc" id="L82">        int groupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), 0);</span>
 
-<span class="fc bfc" id="L82" title="All 2 branches covered.">        if(userGroupId != -1) {</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if(userGroupId != -1) {</span>
             //chceme vratit adresare podla zadaneho ID skupiny pouzivatelov, pouziva sa na zoznam adresarov s danou skupinou
-<span class="fc" id="L84">            DatatablePageImpl&lt;GroupDetails&gt; page = getAllItemsByUserGroupId(groupId, getRequest(), userGroupId);</span>
-<span class="fc" id="L85">            return page;</span>
+<span class="fc" id="L86">            DatatablePageImpl&lt;GroupDetails&gt; page = getAllItemsByUserGroupId(groupId, getRequest(), userGroupId);</span>
+<span class="fc" id="L87">            return page;</span>
         }
 
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if(tempId != -1) {</span>
+<span class="pc bpc" id="L90" title="1 of 2 branches missed.">        if(tempId != -1) {</span>
             //Return Groups that are using this template (by template id)
-<span class="nc" id="L90">            DatatablePageImpl&lt;GroupDetails&gt; page = getAllItemsByTempId(groupId, getRequest(), tempId);</span>
-<span class="nc" id="L91">            return page;</span>
+<span class="nc" id="L92">            DatatablePageImpl&lt;GroupDetails&gt; page = getAllItemsByTempId(groupId, getRequest(), tempId);</span>
+<span class="nc" id="L93">            return page;</span>
         }
 
-<span class="fc" id="L94">        DatatablePageImpl&lt;GroupDetails&gt; page = getAllItems(groupId, getRequest());</span>
+<span class="fc" id="L96">        DatatablePageImpl&lt;GroupDetails&gt; page = getAllItems(groupId, getRequest());</span>
 
-<span class="fc" id="L96">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L98">        processFromEntity(page, ProcessItemAction.GETALL);</span>
 
-<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (page == null) {</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (page == null) {</span>
             //throwError(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;);
-<span class="fc" id="L100">            page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
+<span class="fc" id="L102">            page = new DatatablePageImpl&lt;&gt;(new ArrayList&lt;&gt;());</span>
         }
 
-<span class="fc" id="L103">        return page;</span>
+<span class="fc" id="L105">        return page;</span>
     }
 
     public static DatatablePageImpl&lt;GroupDetails&gt; getAllItemsByUserGroupId(int groupId, HttpServletRequest request, int userGroupId) {
-<span class="fc" id="L107">        Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L108">        WebpagesService ws = new WebpagesService(groupId, user, Prop.getInstance(request), request);</span>
+<span class="fc" id="L109">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L110">        WebpagesService ws = new WebpagesService(groupId, user, Prop.getInstance(request), request);</span>
 
-<span class="fc" id="L110">        DatatablePageImpl&lt;GroupDetails&gt; page = new DatatablePageImpl&lt;&gt;(ws.getGroupsByPasswordProtected(userGroupId));</span>
-<span class="fc" id="L111">        return page;</span>
+<span class="fc" id="L112">        DatatablePageImpl&lt;GroupDetails&gt; page = new DatatablePageImpl&lt;&gt;(ws.getGroupsByPasswordProtected(userGroupId));</span>
+<span class="fc" id="L113">        return page;</span>
     }
 
     public static DatatablePageImpl&lt;GroupDetails&gt; getAllItemsByTempId(int groupId, HttpServletRequest request, int tempId) {
-<span class="nc" id="L115">        Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="nc" id="L116">        WebpagesService ws = new WebpagesService(groupId, user, Prop.getInstance(request), request);</span>
+<span class="nc" id="L117">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L118">        WebpagesService ws = new WebpagesService(groupId, user, Prop.getInstance(request), request);</span>
 
-<span class="nc" id="L118">        DatatablePageImpl&lt;GroupDetails&gt; page = new DatatablePageImpl&lt;&gt;(ws.getGroupsByTemplateId(tempId));</span>
-<span class="nc" id="L119">        return page;</span>
+<span class="nc" id="L120">        DatatablePageImpl&lt;GroupDetails&gt; page = new DatatablePageImpl&lt;&gt;(ws.getGroupsByTemplateId(tempId));</span>
+<span class="nc" id="L121">        return page;</span>
     }
 
     public static DatatablePageImpl&lt;GroupDetails&gt; getAllItems(int groupId, HttpServletRequest request) {
 
-<span class="fc" id="L124">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L126">        Identity user = UsersDB.getCurrentUser(request);</span>
 
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (GroupsDB.isGroupEditable(user, groupId)==false) return null;</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        if (GroupsDB.isGroupEditable(user, groupId)==false) return null;</span>
 
-<span class="fc" id="L128">        WebpagesService ws = new WebpagesService(groupId, user, Prop.getInstance(request), request);</span>
-<span class="fc" id="L129">        List&lt;GroupDetails&gt; result = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L130">        WebpagesService ws = new WebpagesService(groupId, user, Prop.getInstance(request), request);</span>
+<span class="fc" id="L131">        List&lt;GroupDetails&gt; result = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L131">        GroupDetails group = ws.getGroup();</span>
-<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (group != null)</span>
-<span class="fc" id="L133">            result.add(group);</span>
+<span class="fc" id="L133">        GroupDetails group = ws.getGroup();</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (group != null)</span>
+<span class="fc" id="L135">            result.add(group);</span>
 
-<span class="fc bfc" id="L135" title="All 2 branches covered.">        if (groupId &gt; 0) {</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">        if (groupId &gt; 0) {</span>
             //ziskaj aj podadresare
-<span class="fc" id="L137">            List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(groupId);</span>
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">            if (subGroups != null) result.addAll(subGroups);</span>
+<span class="fc" id="L139">            List&lt;GroupDetails&gt; subGroups = GroupsDB.getInstance().getGroups(groupId);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">            if (subGroups != null) result.addAll(subGroups);</span>
         }
 
-<span class="fc" id="L141">        DatatablePageImpl&lt;GroupDetails&gt; page = new DatatablePageImpl&lt;&gt;(result);</span>
+<span class="fc" id="L143">        DatatablePageImpl&lt;GroupDetails&gt; page = new DatatablePageImpl&lt;&gt;(result);</span>
 
-<span class="fc" id="L143">        addOptions(page, ws, user, group, request);</span>
+<span class="fc" id="L145">        addOptions(page, ws, user, group, request);</span>
 
-<span class="fc" id="L145">        return page;</span>
+<span class="fc" id="L147">        return page;</span>
     }
 
     public static void addOptions(DatatablePageImpl&lt;GroupDetails&gt; page, WebpagesService ws, Identity user, GroupDetails group, HttpServletRequest request) {
-<span class="fc" id="L149">        page.addOptions(&quot;lng&quot;, ws.getOptionsLanguages(request), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L150">        page.addOptions(&quot;internal&quot;, ws.getOptionsInternal(), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L151">        page.addOptions(&quot;tempId&quot;, ws.getOptionsTemplates(user, group), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L152">        page.addOptions(&quot;newPageDocIdTemplate&quot;, ws.getOptionsNewPageHTMLCode(), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L153">        page.addOptions(&quot;showInNavbar&quot;, ws.getOptionsNavbar(false), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L154">        page.addOptions(&quot;loggedShowInNavbar&quot;, ws.getOptionsNavbar(true), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L155">        page.addOptions(&quot;showInSitemap&quot;, ws.getOptionsSitemap(false), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L156">        page.addOptions(&quot;loggedShowInSitemap&quot;, ws.getOptionsSitemap(true), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L157">        page.addOptions(&quot;menuType&quot;, ws.getMenuType(false), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L158">        page.addOptions(&quot;loggedMenuType&quot;, ws.getMenuType(true), &quot;label&quot;, &quot;value&quot;, false);</span>
-<span class="fc" id="L159">        page.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L160">        page.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L161">    }</span>
+<span class="fc" id="L151">        page.addOptions(&quot;lng&quot;, ws.getOptionsLanguages(request), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L152">        page.addOptions(&quot;internal&quot;, ws.getOptionsInternal(), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L153">        page.addOptions(&quot;tempId&quot;, ws.getOptionsTemplates(user, group), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L154">        page.addOptions(&quot;newPageDocIdTemplate&quot;, ws.getOptionsNewPageHTMLCode(), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L155">        page.addOptions(&quot;showInNavbar&quot;, ws.getOptionsNavbar(false), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L156">        page.addOptions(&quot;loggedShowInNavbar&quot;, ws.getOptionsNavbar(true), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L157">        page.addOptions(&quot;showInSitemap&quot;, ws.getOptionsSitemap(false), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L158">        page.addOptions(&quot;loggedShowInSitemap&quot;, ws.getOptionsSitemap(true), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L159">        page.addOptions(&quot;menuType&quot;, ws.getMenuType(false), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L160">        page.addOptions(&quot;loggedMenuType&quot;, ws.getMenuType(true), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L161">        page.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L162">        page.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L163">    }</span>
 
     @Override
     public GroupDetails getOneItem(long id) {
-<span class="fc" id="L165">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L167">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
 
-<span class="fc" id="L167">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L168">        GroupDetails group = null;</span>
-<span class="fc" id="L169">        int schedulerId = Tools.getIntValue(getRequest().getParameter(&quot;schedulerId&quot;), -1);</span>
+<span class="fc" id="L169">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L170">        GroupDetails group = null;</span>
+<span class="fc" id="L171">        int schedulerId = Tools.getIntValue(getRequest().getParameter(&quot;schedulerId&quot;), -1);</span>
 
         // Create new group
-<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (id == -1) {</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (id == -1) {</span>
             // Get groupID from new group is made (it's parentGroupId)
-<span class="fc" id="L174">            int parentGroupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), 0);</span>
+<span class="fc" id="L176">            int parentGroupId = Tools.getIntValue(getRequest().getParameter(&quot;groupId&quot;), 0);</span>
 
-<span class="pc bpc" id="L176" title="1 of 2 branches missed.">            if (GroupsDB.isGroupEditable(user, parentGroupId)==false) return null;</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">            if (GroupsDB.isGroupEditable(user, parentGroupId)==false) return null;</span>
 
-<span class="fc" id="L178">            group = groupsDB.getNewGroupDetails(&quot;&quot;, parentGroupId);</span>
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">            if (id&lt;1) {</span>
-<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
-<span class="fc" id="L181">                    group.setDomainName(DocDB.getDomain(getRequest()));</span>
+<span class="fc" id="L180">            group = groupsDB.getNewGroupDetails(&quot;&quot;, parentGroupId);</span>
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">            if (id&lt;1) {</span>
+<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+<span class="fc" id="L183">                    group.setDomainName(DocDB.getDomain(getRequest()));</span>
                 } else {
-<span class="nc" id="L183">                    group.setDomainName(&quot;&quot;); //inak by tu bolo www..sk</span>
+<span class="nc" id="L185">                    group.setDomainName(&quot;&quot;); //inak by tu bolo www..sk</span>
                 }
             }
 
-<span class="fc" id="L187">        } else {</span>
-<span class="pc bpc" id="L188" title="1 of 2 branches missed.">            if(schedulerId &gt; 0) {</span>
-<span class="nc" id="L189">                Optional&lt;GroupSchedulerDto&gt; dto = groupSchedulerDtoRepository.findById((long) schedulerId);</span>
-<span class="nc bnc" id="L190" title="All 2 branches missed.">                if (dto.isPresent()) group = fromGroupSchedulerDtoToGroupDetail(dto.get());</span>
-<span class="nc" id="L191">            } else {</span>
+<span class="fc" id="L189">        } else {</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">            if(schedulerId &gt; 0) {</span>
+<span class="nc" id="L191">                Optional&lt;GroupSchedulerDto&gt; dto = groupSchedulerDtoRepository.findById((long) schedulerId);</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">                if (dto.isPresent()) group = fromGroupSchedulerDtoToGroupDetail(dto.get());</span>
+<span class="nc" id="L193">            } else {</span>
                 // Edit exist group
-<span class="fc" id="L193">                group = groupsDB.getGroup((int) id);</span>
+<span class="fc" id="L195">                group = groupsDB.getGroup((int) id);</span>
             }
         }
-<span class="fc" id="L196">        GroupEditorField gef = new GroupEditorField();</span>
-<span class="fc" id="L197">        group = gef.fromGroupDetails(group);</span>
+<span class="fc" id="L198">        GroupEditorField gef = new GroupEditorField();</span>
+<span class="fc" id="L199">        group = gef.fromGroupDetails(group);</span>
 
-<span class="fc bfc" id="L199" title="All 4 branches covered.">        if (group.getGroupId()&gt;0 &amp;&amp; GroupsDB.isGroupEditable(user, group.getGroupId())==false) {</span>
-<span class="nc" id="L200">            throwError(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;);</span>
+<span class="fc bfc" id="L201" title="All 4 branches covered.">        if (group.getGroupId()&gt;0 &amp;&amp; GroupsDB.isGroupEditable(user, group.getGroupId())==false) {</span>
+<span class="nc" id="L202">            throwError(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;);</span>
         }
 
-<span class="fc" id="L203">        return group;</span>
+<span class="fc" id="L205">        return group;</span>
     }
 
     public GroupDetails fromGroupSchedulerDtoToGroupDetail(GroupSchedulerDto dto) {
-<span class="nc" id="L207">        GroupDetails oldGroupRecord = new GroupDetails();</span>
+<span class="nc" id="L209">        GroupDetails oldGroupRecord = new GroupDetails();</span>
 
-<span class="nc" id="L209">        oldGroupRecord.setGroupId(dto.getGroupId());</span>
-<span class="nc" id="L210">        oldGroupRecord.setGroupName(dto.getGroupName());</span>
-<span class="nc" id="L211">        oldGroupRecord.setNavbar(dto.getNavbar());</span>
-<span class="nc" id="L212">        oldGroupRecord.setUrlDirName(dto.getUrlDirName());</span>
-<span class="nc" id="L213">        oldGroupRecord.setDomainName(dto.getDomainName());</span>
-<span class="nc" id="L214">        oldGroupRecord.setDefaultDocId(dto.getDefaultDocId());</span>
-<span class="nc" id="L215">        oldGroupRecord.setInternal(dto.getInternal());</span>
-<span class="nc" id="L216">        oldGroupRecord.setSortPriority(dto.getSortPriority());</span>
-<span class="nc" id="L217">        oldGroupRecord.setTempId(dto.getTempId());</span>
-<span class="nc" id="L218">        oldGroupRecord.setForceTheUseOfGroupTemplate(dto.getForceGroupTemplate());</span>
-<span class="nc" id="L219">        oldGroupRecord.setLng(dto.getLng());</span>
-<span class="nc" id="L220">        oldGroupRecord.setNewPageDocIdTemplate(dto.getNewPageDocidTemplate());</span>
-<span class="nc" id="L221">        oldGroupRecord.setHtmlHead(dto.getHtmlHead());</span>
-<span class="nc" id="L222">        oldGroupRecord.setFieldA(dto.getFieldA());</span>
-<span class="nc" id="L223">        oldGroupRecord.setFieldB(dto.getFieldB());</span>
-<span class="nc" id="L224">        oldGroupRecord.setFieldC(dto.getFieldC());</span>
-<span class="nc" id="L225">        oldGroupRecord.setFieldD(dto.getFieldD());</span>
-<span class="nc" id="L226">        oldGroupRecord.setMenuType(dto.getMenuType());</span>
+<span class="nc" id="L211">        oldGroupRecord.setGroupId(dto.getGroupId());</span>
+<span class="nc" id="L212">        oldGroupRecord.setGroupName(dto.getGroupName());</span>
+<span class="nc" id="L213">        oldGroupRecord.setNavbar(dto.getNavbar());</span>
+<span class="nc" id="L214">        oldGroupRecord.setUrlDirName(dto.getUrlDirName());</span>
+<span class="nc" id="L215">        oldGroupRecord.setDomainName(dto.getDomainName());</span>
+<span class="nc" id="L216">        oldGroupRecord.setDefaultDocId(dto.getDefaultDocId());</span>
+<span class="nc" id="L217">        oldGroupRecord.setInternal(dto.getInternal());</span>
+<span class="nc" id="L218">        oldGroupRecord.setSortPriority(dto.getSortPriority());</span>
+<span class="nc" id="L219">        oldGroupRecord.setTempId(dto.getTempId());</span>
+<span class="nc" id="L220">        oldGroupRecord.setForceTheUseOfGroupTemplate(dto.getForceGroupTemplate());</span>
+<span class="nc" id="L221">        oldGroupRecord.setLng(dto.getLng());</span>
+<span class="nc" id="L222">        oldGroupRecord.setNewPageDocIdTemplate(dto.getNewPageDocidTemplate());</span>
+<span class="nc" id="L223">        oldGroupRecord.setHtmlHead(dto.getHtmlHead());</span>
+<span class="nc" id="L224">        oldGroupRecord.setFieldA(dto.getFieldA());</span>
+<span class="nc" id="L225">        oldGroupRecord.setFieldB(dto.getFieldB());</span>
+<span class="nc" id="L226">        oldGroupRecord.setFieldC(dto.getFieldC());</span>
+<span class="nc" id="L227">        oldGroupRecord.setFieldD(dto.getFieldD());</span>
+<span class="nc" id="L228">        oldGroupRecord.setMenuType(dto.getMenuType());</span>
         //oldGroupRecord.setNotLoggedNavbar(dto.);
-<span class="nc" id="L228">        oldGroupRecord.setLoggedMenuType(dto.getLoggedMenuType());</span>
+<span class="nc" id="L230">        oldGroupRecord.setLoggedMenuType(dto.getLoggedMenuType());</span>
         //oldGroupRecord.setLoggedNavbar(dto.);
         //oldGroupRecord.setLoggedSitemap(dto.);
-<span class="nc" id="L231">        oldGroupRecord.setPasswordProtected(dto.getPasswordProtected());</span>
-<span class="nc" id="L232">        oldGroupRecord.setParentGroupId(dto.getParentGroupId());</span>
+<span class="nc" id="L233">        oldGroupRecord.setPasswordProtected(dto.getPasswordProtected());</span>
+<span class="nc" id="L234">        oldGroupRecord.setParentGroupId(dto.getParentGroupId());</span>
         //oldGroupRecord.setFullPath(dto.);
 
         //Pridane atributy - ticket 54205
-<span class="nc" id="L236">        oldGroupRecord.setShowInNavbar(dto.getShowInNavbar());</span>
-<span class="nc" id="L237">        oldGroupRecord.setShowInSitemap(dto.getShowInSitemap());</span>
-<span class="nc" id="L238">        oldGroupRecord.setLoggedShowInNavbar(dto.getLoggedShowInNavbar());</span>
-<span class="nc" id="L239">        oldGroupRecord.setLoggedShowInSitemap(dto.getLoggedShowInSitemap());</span>
+<span class="nc" id="L238">        oldGroupRecord.setShowInNavbar(dto.getShowInNavbar());</span>
+<span class="nc" id="L239">        oldGroupRecord.setShowInSitemap(dto.getShowInSitemap());</span>
+<span class="nc" id="L240">        oldGroupRecord.setLoggedShowInNavbar(dto.getLoggedShowInNavbar());</span>
+<span class="nc" id="L241">        oldGroupRecord.setLoggedShowInSitemap(dto.getLoggedShowInSitemap());</span>
 
-<span class="nc" id="L241">        return oldGroupRecord;</span>
+<span class="nc" id="L243">        return oldGroupRecord;</span>
     }
 
     @Override
     public GroupDetails insertItem(GroupDetails entity) {
-<span class="fc" id="L246">        return editItem(entity, 0);</span>
+<span class="fc" id="L248">        return editItem(entity, 0);</span>
     }
 
     @Override
     public void beforeDuplicate(GroupDetails entity) {
-<span class="nc" id="L251">        entity.setDefaultDocId(-1);</span>
-<span class="nc" id="L252">        entity.getEditorFields().getDefaultDocDetails().setDocId(0);</span>
-<span class="nc" id="L253">    }</span>
+<span class="nc" id="L253">        entity.setDefaultDocId(-1);</span>
+<span class="nc" id="L254">        entity.getEditorFields().getDefaultDocDetails().setDocId(0);</span>
+<span class="nc" id="L255">    }</span>
 
     @Override
     public GroupDetails editItem(GroupDetails entity, long id) {
-<span class="fc" id="L257">        entity.getEditorFields().toGroupDetails(entity);</span>
-<span class="fc" id="L258">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L259">        Identity user = getUser();</span>
-<span class="fc" id="L260">        List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L261" title="All 2 branches covered.">        if (!this.canModifyThisGroup(entity, user, &quot;editDir&quot;, errors)) {</span>
-<span class="nc" id="L262">            throwError(errors);</span>
-<span class="nc" id="L263">            return entity;</span>
+<span class="fc" id="L259">        entity.getEditorFields().toGroupDetails(entity);</span>
+<span class="fc" id="L260">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L261">        Identity user = getUser();</span>
+<span class="fc" id="L262">        List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (!this.canModifyThisGroup(entity, user, &quot;editDir&quot;, errors)) {</span>
+<span class="nc" id="L264">            throwError(errors);</span>
+<span class="nc" id="L265">            return entity;</span>
         }
 
-<span class="fc" id="L266">        GroupDetails groupDetails = groupsDB.getGroup(entity.getGroupId());</span>
-<span class="fc" id="L267">        GroupDetails oldGroupDetails = null;</span>
+<span class="fc" id="L268">        GroupDetails groupDetails = groupsDB.getGroup(entity.getGroupId());</span>
+<span class="fc" id="L269">        GroupDetails oldGroupDetails = null;</span>
         try {
-<span class="fc bfc" id="L269" title="All 2 branches covered.">            if (groupDetails != null) {</span>
-<span class="fc" id="L270">                oldGroupDetails = (GroupDetails) groupDetails.clone();</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">            if (groupDetails != null) {</span>
+<span class="fc" id="L272">                oldGroupDetails = (GroupDetails) groupDetails.clone();</span>
             }
-<span class="nc" id="L272">        } catch (CloneNotSupportedException e) {</span>
-<span class="nc" id="L273">            Logger.error(GroupsRestController.class, e);</span>
-<span class="fc" id="L274">        }</span>
-<span class="fc bfc" id="L275" title="All 2 branches covered.">        if (groupDetails == null) {</span>
-<span class="fc" id="L276">            groupDetails = new GroupDetails();</span>
+<span class="nc" id="L274">        } catch (CloneNotSupportedException e) {</span>
+<span class="nc" id="L275">            Logger.error(GroupsRestController.class, e);</span>
+<span class="fc" id="L276">        }</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">        if (groupDetails == null) {</span>
+<span class="fc" id="L278">            groupDetails = new GroupDetails();</span>
         }
 
-<span class="fc" id="L279">        String systemGroupIds = null;</span>
-<span class="pc bpc" id="L280" title="1 of 2 branches missed.">        if (entity.getEditorFields().isForceDomainNameChange()) {</span>
+<span class="fc" id="L281">        String systemGroupIds = null;</span>
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">        if (entity.getEditorFields().isForceDomainNameChange()) {</span>
             //we must read system group here before DB update and domain name change in requestBean
-<span class="nc bnc" id="L282" title="All 2 branches missed.">            if (Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
-<span class="nc" id="L283">                GroupDetails system = groupsDB.getLocalSystemGroup();</span>
-<span class="nc bnc" id="L284" title="All 8 branches missed.">                if (system != null &amp;&amp; Tools.isNotEmpty(system.getDomainName()) &amp;&amp; oldGroupDetails != null &amp;&amp; system.getDomainName().equalsIgnoreCase(oldGroupDetails.getDomainName())) {</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">            if (Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
+<span class="nc" id="L285">                GroupDetails system = groupsDB.getLocalSystemGroup();</span>
+<span class="nc bnc" id="L286" title="All 8 branches missed.">                if (system != null &amp;&amp; Tools.isNotEmpty(system.getDomainName()) &amp;&amp; oldGroupDetails != null &amp;&amp; system.getDomainName().equalsIgnoreCase(oldGroupDetails.getDomainName())) {</span>
                     //read systemGroupIds for later use
-<span class="nc" id="L286">                    systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());</span>
+<span class="nc" id="L288">                    systemGroupIds = groupsDB.getSubgroupsIds(system.getGroupId());</span>
                 }
             }
         }
 
-<span class="fc" id="L291">        boolean forceReload = false;</span>
-<span class="fc" id="L292">        boolean forceReloadNewDomainName = false;</span>
-<span class="fc" id="L293">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="pc bpc" id="L294" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(entity.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true) {</span>
+<span class="fc" id="L293">        boolean forceReload = false;</span>
+<span class="fc" id="L294">        boolean forceReloadNewDomainName = false;</span>
+<span class="fc" id="L295">        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L296" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(entity.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true) {</span>
             //nastav do RequestBeanu domenu nastavenu v entite
-<span class="pc bpc" id="L296" title="1 of 2 branches missed.">            if (rb.getDomain().equalsIgnoreCase(entity.getDomainName())==false) {</span>
-<span class="nc" id="L297">                rb.setDomain(entity.getDomainName());</span>
-<span class="nc" id="L298">                forceReloadNewDomainName = true;</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            if (rb.getDomain().equalsIgnoreCase(entity.getDomainName())==false) {</span>
+<span class="nc" id="L299">                rb.setDomain(entity.getDomainName());</span>
+<span class="nc" id="L300">                forceReloadNewDomainName = true;</span>
             }
         }
 
-<span class="fc" id="L302">        boolean isScheduledForPublication = false;</span>
-<span class="fc bfc" id="L303" title="All 2 branches covered.">        boolean isEdit = entity.getGroupId() &gt; 0;</span>
-<span class="pc bpc" id="L304" title="5 of 6 branches missed.">        if (entity.getEditorFields().isPublishPlan() &amp;&amp; isEdit &amp;&amp; entity.getEditorFields().getPublishDate() != null</span>
-<span class="nc bnc" id="L305" title="All 2 branches missed.">                &amp;&amp; entity.getEditorFields().getPublishDate().getTime() &gt; Tools.getNow()) {</span>
-<span class="nc" id="L306">            isScheduledForPublication = true;</span>
+<span class="fc" id="L304">        boolean isScheduledForPublication = false;</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">        boolean isEdit = entity.getGroupId() &gt; 0;</span>
+<span class="pc bpc" id="L306" title="5 of 6 branches missed.">        if (entity.getEditorFields().isPublishPlan() &amp;&amp; isEdit &amp;&amp; entity.getEditorFields().getPublishDate() != null</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">                &amp;&amp; entity.getEditorFields().getPublishDate().getTime() &gt; Tools.getNow()) {</span>
+<span class="nc" id="L308">            isScheduledForPublication = true;</span>
             try {
                 //groupDetails musime naklonovat lebo je z cache a pre futureSchedule ho nemozeme zmenit
-<span class="nc" id="L309">                groupDetails = (GroupDetails) groupDetails.clone();</span>
-<span class="nc" id="L310">            } catch (CloneNotSupportedException e) {</span>
-<span class="nc" id="L311">                Logger.error(GroupsRestController.class, e);</span>
-<span class="nc" id="L312">            }</span>
+<span class="nc" id="L311">                groupDetails = (GroupDetails) groupDetails.clone();</span>
+<span class="nc" id="L312">            } catch (CloneNotSupportedException e) {</span>
+<span class="nc" id="L313">                Logger.error(GroupsRestController.class, e);</span>
+<span class="nc" id="L314">            }</span>
         }
 
         //aby sa nam do entity dokopirovali chybajuce property
-<span class="fc" id="L316">        String[] alwaysCopyProperties = {&quot;showInNavbar&quot;, &quot;showInSitemap&quot;, &quot;loggedShowInNavbar&quot;, &quot;loggedShowInSitemap&quot;};</span>
-<span class="fc" id="L317">        NullAwareBeanUtils.copyProperties(entity, groupDetails, Arrays.asList(alwaysCopyProperties), (String[]) null);</span>
-<span class="fc" id="L318">        entity.getEditorFields().toGroupDetails(groupDetails);</span>
+<span class="fc" id="L318">        String[] alwaysCopyProperties = {&quot;showInNavbar&quot;, &quot;showInSitemap&quot;, &quot;loggedShowInNavbar&quot;, &quot;loggedShowInSitemap&quot;};</span>
+<span class="fc" id="L319">        NullAwareBeanUtils.copyProperties(entity, groupDetails, Arrays.asList(alwaysCopyProperties), (String[]) null);</span>
+<span class="fc" id="L320">        entity.getEditorFields().toGroupDetails(groupDetails);</span>
 
-<span class="pc bpc" id="L320" title="1 of 2 branches missed.">        if (isScheduledForPublication) {</span>
+<span class="pc bpc" id="L322" title="1 of 2 branches missed.">        if (isScheduledForPublication) {</span>
             // musime spravit kopiu GroupDetails aby sme si neprepisali cachovany/aktualny zaznam
-<span class="nc" id="L322">            scheduleFutureUpdate(groupDetails, user);</span>
-<span class="nc" id="L323">            return entity;</span>
+<span class="nc" id="L324">            scheduleFutureUpdate(groupDetails, user);</span>
+<span class="nc" id="L325">            return entity;</span>
         }
 
-<span class="fc" id="L326">        boolean saved = groupsDB.save(groupDetails);</span>
-<span class="pc bpc" id="L327" title="1 of 2 branches missed.">        if (!saved) {</span>
-<span class="nc" id="L328">            throwError(&quot;datatables.error.system.js&quot;);</span>
-<span class="nc" id="L329">            return entity;</span>
+<span class="fc" id="L328">        boolean saved = groupsDB.save(groupDetails);</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">        if (!saved) {</span>
+<span class="nc" id="L330">            throwError(&quot;datatables.error.system.js&quot;);</span>
+<span class="nc" id="L331">            return entity;</span>
         }
-<span class="fc" id="L331">        entity.setGroupId(groupDetails.getGroupId());</span>
+<span class="fc" id="L333">        entity.setGroupId(groupDetails.getGroupId());</span>
 
-<span class="fc bfc" id="L333" title="All 2 branches covered.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) setForceReload(true);</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">        if (RequestBean.getAttribute(&quot;forceReloadTree&quot;)!=null) setForceReload(true);</span>
 
-<span class="fc" id="L335">        boolean docsRefresh = false;</span>
-<span class="fc" id="L336">        boolean refreshGroupsDB = false;</span>
+<span class="fc" id="L337">        boolean docsRefresh = false;</span>
+<span class="fc" id="L338">        boolean refreshGroupsDB = false;</span>
         // ak editujem musim checknut subpriecinky
-<span class="fc bfc" id="L338" title="All 2 branches covered.">        if (!isEdit) {</span>
-<span class="pc bpc" id="L339" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;groupCreateBlankWebpageAfterCreate&quot;)) {</span>
-<span class="fc" id="L340">                editorFacade.createEmptyWebPage(groupDetails, null, true);</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        if (!isEdit) {</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;groupCreateBlankWebpageAfterCreate&quot;)) {</span>
+<span class="fc" id="L342">                editorFacade.createEmptyWebPage(groupDetails, null, true);</span>
             }
         }
 
-<span class="fc" id="L344">        int groupId = entity.getGroupId();</span>
-<span class="fc bfc" id="L345" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLngToSubFolders()) {</span>
-<span class="fc" id="L346">            groupsDB.setLngToSubGroups(groupId, entity.getLng());</span>
-<span class="fc" id="L347">            refreshGroupsDB = true;</span>
+<span class="fc" id="L346">        int groupId = entity.getGroupId();</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLngToSubFolders()) {</span>
+<span class="fc" id="L348">            groupsDB.setLngToSubGroups(groupId, entity.getLng());</span>
+<span class="fc" id="L349">            refreshGroupsDB = true;</span>
         }
 
-<span class="fc bfc" id="L350" title="All 2 branches covered.">        if (entity.getEditorFields().isPasswordProtectedSubFolders()) {</span>
-<span class="fc" id="L351">            groupsDB.setPermissionToSubgroups(groupId, groupDetails.getPasswordProtected());</span>
-<span class="fc" id="L352">            refreshGroupsDB = true;</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">        if (entity.getEditorFields().isPasswordProtectedSubFolders()) {</span>
+<span class="fc" id="L353">            groupsDB.setPermissionToSubgroups(groupId, groupDetails.getPasswordProtected());</span>
+<span class="fc" id="L354">            refreshGroupsDB = true;</span>
         }
 
-<span class="fc bfc" id="L355" title="All 2 branches covered.">        if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {</span>
-<span class="fc" id="L356">            groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());</span>
-<span class="fc" id="L357">            groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());</span>
-<span class="fc" id="L358">            refreshGroupsDB = true;</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">        if (entity.getEditorFields().isForceTemplateToSubgroupsAndPages()) {</span>
+<span class="fc" id="L358">            groupsDB.setTemplateToSubgroups(groupId, groupDetails.getTempId());</span>
+<span class="fc" id="L359">            groupsDB.setTemplateToSubpages(groupId, groupDetails.getTempId());</span>
+<span class="fc" id="L360">            refreshGroupsDB = true;</span>
         }
 
-<span class="fc bfc" id="L361" title="All 2 branches covered.">        if (refreshGroupsDB) {</span>
-<span class="fc" id="L362">            groupsDB = GroupsDB.getInstance(true);</span>
+<span class="fc bfc" id="L363" title="All 2 branches covered.">        if (refreshGroupsDB) {</span>
+<span class="fc" id="L364">            groupsDB = GroupsDB.getInstance(true);</span>
         }
 
-<span class="pc bpc" id="L365" title="1 of 2 branches missed.">        if (entity.getEditorFields().isForceUrlDirNameChange()) {</span>
-<span class="nc" id="L366">            WebpagesService.regenerateUrl(groupId, user, getRequest(), false);</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">        if (entity.getEditorFields().isForceUrlDirNameChange()) {</span>
+<span class="nc" id="L368">            WebpagesService.regenerateUrl(groupId, user, getRequest(), false);</span>
         }
 
-<span class="fc" id="L369">        WebpagesService ws = new WebpagesService(groupId, UsersDB.getCurrentUser(getRequest()), getProp(), getRequest());</span>
-<span class="fc bfc" id="L370" title="All 2 branches covered.">        if (entity.getEditorFields().isForceMenuTypeSubfolders()) {</span>
-<span class="fc" id="L371">            ws.setAttributeToSubgroups(groupId, &quot;menu_type&quot;, entity.getMenuType());</span>
-<span class="fc" id="L372">            forceReload = true;</span>
+<span class="fc" id="L371">        WebpagesService ws = new WebpagesService(groupId, UsersDB.getCurrentUser(getRequest()), getProp(), getRequest());</span>
+<span class="fc bfc" id="L372" title="All 2 branches covered.">        if (entity.getEditorFields().isForceMenuTypeSubfolders()) {</span>
+<span class="fc" id="L373">            ws.setAttributeToSubgroups(groupId, &quot;menu_type&quot;, entity.getMenuType());</span>
+<span class="fc" id="L374">            forceReload = true;</span>
         }
-<span class="fc bfc" id="L374" title="All 2 branches covered.">        if (entity.getEditorFields().isForceNavbarSubfolders()) {</span>
-<span class="fc" id="L375">            ws.setAttributeToSubgroups(groupId, &quot;show_in_navbar&quot;, entity.getShowInNavbar());</span>
-<span class="fc" id="L376">            forceReload = true;</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        if (entity.getEditorFields().isForceNavbarSubfolders()) {</span>
+<span class="fc" id="L377">            ws.setAttributeToSubgroups(groupId, &quot;show_in_navbar&quot;, entity.getShowInNavbar());</span>
+<span class="fc" id="L378">            forceReload = true;</span>
         }
-<span class="fc bfc" id="L378" title="All 2 branches covered.">        if (entity.getEditorFields().isForceSitemapSubfolders()) {</span>
-<span class="fc" id="L379">            ws.setAttributeToSubgroups(groupId, &quot;show_in_sitemap&quot;, entity.getShowInSitemap());</span>
-<span class="fc" id="L380">            forceReload = true;</span>
+<span class="fc bfc" id="L380" title="All 2 branches covered.">        if (entity.getEditorFields().isForceSitemapSubfolders()) {</span>
+<span class="fc" id="L381">            ws.setAttributeToSubgroups(groupId, &quot;show_in_sitemap&quot;, entity.getShowInSitemap());</span>
+<span class="fc" id="L382">            forceReload = true;</span>
         }
-<span class="fc bfc" id="L382" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLoggedMenuTypeSubfolders()) {</span>
-<span class="fc" id="L383">            ws.setAttributeToSubgroups(groupId, &quot;logged_menu_type&quot;, entity.getLoggedMenuType());</span>
-<span class="fc" id="L384">            forceReload = true;</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLoggedMenuTypeSubfolders()) {</span>
+<span class="fc" id="L385">            ws.setAttributeToSubgroups(groupId, &quot;logged_menu_type&quot;, entity.getLoggedMenuType());</span>
+<span class="fc" id="L386">            forceReload = true;</span>
         }
-<span class="fc bfc" id="L386" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLoggedNavbarSubfolders()) {</span>
-<span class="fc" id="L387">            ws.setAttributeToSubgroups(groupId, &quot;logged_show_in_navbar&quot;, entity.getLoggedShowInNavbar());</span>
-<span class="fc" id="L388">            forceReload = true;</span>
+<span class="fc bfc" id="L388" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLoggedNavbarSubfolders()) {</span>
+<span class="fc" id="L389">            ws.setAttributeToSubgroups(groupId, &quot;logged_show_in_navbar&quot;, entity.getLoggedShowInNavbar());</span>
+<span class="fc" id="L390">            forceReload = true;</span>
         }
-<span class="fc bfc" id="L390" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLoggedSitemapSubfolders()) {</span>
-<span class="fc" id="L391">            ws.setAttributeToSubgroups(groupId, &quot;logged_show_in_sitemap&quot;, entity.getLoggedShowInSitemap());</span>
-<span class="fc" id="L392">            forceReload = true;</span>
-        }
-
-<span class="fc bfc" id="L395" title="All 2 branches covered.">        if (entity.getEditorFields().isForceInternalToSubgroups()) {</span>
-<span class="fc" id="L396">            ws.setAttributeToSubgroups(groupId, &quot;internal&quot;, groupDetails.isInternal());</span>
-<span class="fc" id="L397">            forceReload = true;</span>
+<span class="fc bfc" id="L392" title="All 2 branches covered.">        if (entity.getEditorFields().isForceLoggedSitemapSubfolders()) {</span>
+<span class="fc" id="L393">            ws.setAttributeToSubgroups(groupId, &quot;logged_show_in_sitemap&quot;, entity.getLoggedShowInSitemap());</span>
+<span class="fc" id="L394">            forceReload = true;</span>
         }
 
-<span class="pc bpc" id="L400" title="1 of 2 branches missed.">        if (entity.getEditorFields().isForcePriorityRecalculation()) {</span>
-<span class="nc" id="L401">            groupsDB.regenerateSortPriority(groupId);</span>
-<span class="nc" id="L402">            forceReload = true;</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">        if (entity.getEditorFields().isForceInternalToSubgroups()) {</span>
+<span class="fc" id="L398">            ws.setAttributeToSubgroups(groupId, &quot;internal&quot;, groupDetails.isInternal());</span>
+<span class="fc" id="L399">            forceReload = true;</span>
+        }
+
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">        if (entity.getEditorFields().isForcePriorityRecalculation()) {</span>
+<span class="nc" id="L403">            groupsDB.regenerateSortPriority(groupId);</span>
+<span class="nc" id="L404">            forceReload = true;</span>
         }
 
         /*
@@ -409,307 +411,320 @@ public class GroupsRestController extends DatatableRestControllerV2&lt;GroupDeta
             docsRefresh = true;
         }*/
 
-<span class="fc bfc" id="L412" title="All 2 branches covered.">        if(entity.getEditorFields().isPasswordProtectedSubFolders()) {</span>
-<span class="fc" id="L413">            ws.setAttributeToSubgroups(groupId, &quot;password_protected&quot;, entity.getPasswordProtected());</span>
-<span class="fc" id="L414">            forceReload = true;</span>
+<span class="fc bfc" id="L414" title="All 2 branches covered.">        if(entity.getEditorFields().isPasswordProtectedSubFolders()) {</span>
+<span class="fc" id="L415">            ws.setAttributeToSubgroups(groupId, &quot;password_protected&quot;, entity.getPasswordProtected());</span>
+<span class="fc" id="L416">            forceReload = true;</span>
         }
-<span class="fc bfc" id="L416" title="All 2 branches covered.">        if (entity.getEditorFields().isForceNewPageDocIdTemplateSubFolders()) {</span>
-<span class="fc" id="L417">            ws.setAttributeToSubgroups(groupId, &quot;new_page_docid_template&quot;, entity.getNewPageDocIdTemplate());</span>
-<span class="fc" id="L418">            forceReload = true;</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        if (entity.getEditorFields().isForceNewPageDocIdTemplateSubFolders()) {</span>
+<span class="fc" id="L419">            ws.setAttributeToSubgroups(groupId, &quot;new_page_docid_template&quot;, entity.getNewPageDocIdTemplate());</span>
+<span class="fc" id="L420">            forceReload = true;</span>
         }
 
-<span class="fc" id="L421">        int parGroupId = entity.getParentGroupId();</span>
-<span class="pc bpc" id="L422" title="3 of 8 branches missed.">        if ((parGroupId &lt; 1 || Constants.getBoolean(&quot;multiDomainEnableNested&quot;)) &amp;&amp; Tools.isNotEmpty(entity.getDomainName()) &amp;&amp; entity.getEditorFields().isForceDomainNameChange())</span>
+<span class="fc" id="L423">        int parGroupId = entity.getParentGroupId();</span>
+<span class="pc bpc" id="L424" title="3 of 8 branches missed.">        if ((parGroupId &lt; 1 || Constants.getBoolean(&quot;multiDomainEnableNested&quot;)) &amp;&amp; Tools.isNotEmpty(entity.getDomainName()) &amp;&amp; entity.getEditorFields().isForceDomainNameChange())</span>
         {
-<span class="nc bnc" id="L424" title="All 2 branches missed.">            if(parGroupId &lt; 1) {</span>
-<span class="nc" id="L425">                docsRefresh = true;</span>
+<span class="nc bnc" id="L426" title="All 2 branches missed.">            if(parGroupId &lt; 1) {</span>
+<span class="nc" id="L427">                docsRefresh = true;</span>
             }
 
-<span class="nc" id="L428">            String groupIds = groupsDB.getSubgroupsIds(entity.getGroupId());</span>
+<span class="nc" id="L430">            String groupIds = groupsDB.getSubgroupsIds(entity.getGroupId());</span>
 
-<span class="nc" id="L430">            Adminlog.add(Adminlog.TYPE_GROUP, &quot;Force domain to subgroups: &quot; + groupIds, entity.getGroupId(), entity.getTempId());</span>
+<span class="nc" id="L432">            Adminlog.add(Adminlog.TYPE_GROUP, &quot;Force domain to subgroups: &quot; + groupIds, entity.getGroupId(), entity.getTempId());</span>
 
             //updatni groups
-<span class="nc" id="L433">            new SimpleQuery().execute(&quot;UPDATE groups SET domain_name=? WHERE group_id IN (&quot;+groupIds+&quot;)&quot;,entity.getDomainName());</span>
+<span class="nc" id="L435">            new SimpleQuery().execute(&quot;UPDATE groups SET domain_name=? WHERE group_id IN (&quot;+groupIds+&quot;)&quot;,entity.getDomainName());</span>
 
-<span class="nc bnc" id="L435" title="All 2 branches missed.">            if (systemGroupIds!=null) {</span>
-<span class="nc" id="L436">                Adminlog.add(Adminlog.TYPE_GROUP, &quot;Force domain to system subgroups: &quot; + systemGroupIds, -1, -1);</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">            if (systemGroupIds!=null) {</span>
+<span class="nc" id="L438">                Adminlog.add(Adminlog.TYPE_GROUP, &quot;Force domain to system subgroups: &quot; + systemGroupIds, -1, -1);</span>
 
                 //updatni groups
-<span class="nc" id="L439">                new SimpleQuery().execute(&quot;UPDATE groups SET domain_name=? WHERE group_id IN (&quot;+systemGroupIds+&quot;)&quot;, entity.getDomainName());</span>
+<span class="nc" id="L441">                new SimpleQuery().execute(&quot;UPDATE groups SET domain_name=? WHERE group_id IN (&quot;+systemGroupIds+&quot;)&quot;, entity.getDomainName());</span>
             }
 
             //aktualizuj presmerovania
-<span class="nc bnc" id="L443" title="All 6 branches missed.">            if (oldGroupDetails!=null &amp;&amp; Tools.isNotEmpty(oldGroupDetails.getDomainName()) &amp;&amp; !entity.getDomainName().equals(oldGroupDetails.getDomainName()))</span>
+<span class="nc bnc" id="L445" title="All 6 branches missed.">            if (oldGroupDetails!=null &amp;&amp; Tools.isNotEmpty(oldGroupDetails.getDomainName()) &amp;&amp; !entity.getDomainName().equals(oldGroupDetails.getDomainName()))</span>
             {
-<span class="nc" id="L445">                new SimpleQuery().execute(&quot;UPDATE url_redirect SET domain_name=? WHERE domain_name=?&quot;,entity.getDomainName(), oldGroupDetails.getDomainName());</span>
+<span class="nc" id="L447">                new SimpleQuery().execute(&quot;UPDATE url_redirect SET domain_name=? WHERE domain_name=?&quot;,entity.getDomainName(), oldGroupDetails.getDomainName());</span>
                 //toto sa vykona pri zmene domeny, treba spravit update aj tooltipov
-<span class="nc" id="L447">                new SimpleQuery().execute(&quot;UPDATE dictionary SET domain=? WHERE domain=?&quot;,entity.getDomainName(),oldGroupDetails.getDomainName());</span>
+<span class="nc" id="L449">                new SimpleQuery().execute(&quot;UPDATE dictionary SET domain=? WHERE domain=?&quot;,entity.getDomainName(),oldGroupDetails.getDomainName());</span>
             }
 
-<span class="nc bnc" id="L450" title="All 10 branches missed.">            if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;cloudStaticFilesDir&quot;)) &amp;&amp; oldGroupDetails != null &amp;&amp; Tools.isNotEmpty(oldGroupDetails.getDomainName()) &amp;&amp; Tools.isNotEmpty(entity.getDomainName()))</span>
+<span class="nc bnc" id="L452" title="All 10 branches missed.">            if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;cloudStaticFilesDir&quot;)) &amp;&amp; oldGroupDetails != null &amp;&amp; Tools.isNotEmpty(oldGroupDetails.getDomainName()) &amp;&amp; Tools.isNotEmpty(entity.getDomainName()))</span>
             {
                 //premenuj adresar s domenovymi subormi (statickymi)
-<span class="nc" id="L453">                IwcmFile oldDir = new IwcmFile(FilePathTools.getDomainBaseFolder(oldGroupDetails.getDomainName()));</span>
-<span class="nc bnc" id="L454" title="All 2 branches missed.">                if (oldDir.exists()) {</span>
-<span class="nc" id="L455">                    IwcmFile newDir = new IwcmFile(FilePathTools.getDomainBaseFolder(entity.getDomainName()));</span>
+<span class="nc" id="L455">                IwcmFile oldDir = new IwcmFile(FilePathTools.getDomainBaseFolder(oldGroupDetails.getDomainName()));</span>
+<span class="nc bnc" id="L456" title="All 2 branches missed.">                if (oldDir.exists()) {</span>
+<span class="nc" id="L457">                    IwcmFile newDir = new IwcmFile(FilePathTools.getDomainBaseFolder(entity.getDomainName()));</span>
 
-<span class="nc bnc" id="L457" title="All 2 branches missed.">                    if (!oldDir.getAbsolutePath().equals(newDir.getAbsolutePath()))</span>
+<span class="nc bnc" id="L459" title="All 2 branches missed.">                    if (!oldDir.getAbsolutePath().equals(newDir.getAbsolutePath()))</span>
                     {
-<span class="nc" id="L459">                        Adminlog.add(Adminlog.TYPE_GROUP, &quot;Changed domain, old domain: '&quot;+oldGroupDetails.getDomainName()+&quot;', new domain: '&quot;+entity.getDomainName()+&quot;', files from &quot;+oldDir.getAbsolutePath()+&quot; to &quot;+newDir.getAbsolutePath(), 0, 0);</span>
+<span class="nc" id="L461">                        Adminlog.add(Adminlog.TYPE_GROUP, &quot;Changed domain, old domain: '&quot;+oldGroupDetails.getDomainName()+&quot;', new domain: '&quot;+entity.getDomainName()+&quot;', files from &quot;+oldDir.getAbsolutePath()+&quot; to &quot;+newDir.getAbsolutePath(), 0, 0);</span>
 
                         //toto mozno nezbehne, kedze je to v roznych adresaroch, bude potrebne spravit move
-<span class="nc" id="L462">                        boolean renamed = oldDir.renameTo(newDir);</span>
-<span class="nc bnc" id="L463" title="All 2 branches missed.">                        if (!renamed) {</span>
-<span class="nc" id="L464">                            boolean created = newDir.mkdirs();</span>
-<span class="nc bnc" id="L465" title="All 2 branches missed.">                            if (!created) {</span>
-<span class="nc" id="L466">                                Logger.debug(GroupsRestController.class, &quot;Can't create direcotry &quot;+newDir.getAbsolutePath());</span>
+<span class="nc" id="L464">                        boolean renamed = oldDir.renameTo(newDir);</span>
+<span class="nc bnc" id="L465" title="All 2 branches missed.">                        if (!renamed) {</span>
+<span class="nc" id="L466">                            boolean created = newDir.mkdirs();</span>
+<span class="nc bnc" id="L467" title="All 2 branches missed.">                            if (!created) {</span>
+<span class="nc" id="L468">                                Logger.debug(GroupsRestController.class, &quot;Can't create direcotry &quot;+newDir.getAbsolutePath());</span>
                             }
 
                             try {
-<span class="nc" id="L470">                                FileTools.copyDirectory(oldDir, newDir);</span>
-<span class="nc" id="L471">                                FileTools.deleteDirTree(oldDir);</span>
-<span class="nc" id="L472">                            } catch (Exception e) {</span>
-<span class="nc" id="L473">                                Logger.error(GroupsRestController.class, e);</span>
-<span class="nc" id="L474">                            }</span>
+<span class="nc" id="L472">                                FileTools.copyDirectory(oldDir, newDir);</span>
+<span class="nc" id="L473">                                FileTools.deleteDirTree(oldDir);</span>
+<span class="nc" id="L474">                            } catch (Exception e) {</span>
+<span class="nc" id="L475">                                Logger.error(GroupsRestController.class, e);</span>
+<span class="nc" id="L476">                            }</span>
                         }
                     }
                 }
             }
 
             //mame zmeny v domene, je najlepsie refreshnut celu GroupsDB
-<span class="nc" id="L481">            groupsDB = GroupsDB.getInstance(true);</span>
+<span class="nc" id="L483">            groupsDB = GroupsDB.getInstance(true);</span>
 
-<span class="nc bnc" id="L483" title="All 4 branches missed.">            if (Constants.isConstantsAliasSearch() &amp;&amp; oldGroupDetails != null) {</span>
+<span class="nc bnc" id="L485" title="All 4 branches missed.">            if (Constants.isConstantsAliasSearch() &amp;&amp; oldGroupDetails != null) {</span>
                 //premenovat konf. premenne s domenovym prefixom
-<span class="nc" id="L485">                List&lt;ConfDetails&gt; confList = ConfDB.getConfig(oldGroupDetails.getDomainName());</span>
-<span class="nc bnc" id="L486" title="All 2 branches missed.">                for (ConfDetails conf : confList) {</span>
-<span class="nc" id="L487">                    String name = Tools.replace(conf.getName(), oldGroupDetails.getDomainName(), entity.getDomainName());</span>
-<span class="nc" id="L488">                    ConfDB.setName(name, conf.getValue());</span>
-<span class="nc" id="L489">                    ConfDB.deleteName(conf.getName());</span>
-<span class="nc" id="L490">                }</span>
+<span class="nc" id="L487">                List&lt;ConfDetails&gt; confList = ConfDB.getConfig(oldGroupDetails.getDomainName());</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">                for (ConfDetails conf : confList) {</span>
+<span class="nc" id="L489">                    String name = Tools.replace(conf.getName(), oldGroupDetails.getDomainName(), entity.getDomainName());</span>
+<span class="nc" id="L490">                    ConfDB.setName(name, conf.getValue());</span>
+<span class="nc" id="L491">                    ConfDB.deleteName(conf.getName());</span>
+<span class="nc" id="L492">                }</span>
 
                 //premenovat prekladove texty s domenovym prefixom
-<span class="nc" id="L493">                List&lt;TranslationKeyEntity&gt; props = translationKeyRepository.findAllByKeyStartsWith(oldGroupDetails.getDomainName());</span>
-<span class="nc bnc" id="L494" title="All 2 branches missed.">                for (TranslationKeyEntity prop : props) {</span>
-<span class="nc" id="L495">                    String key = Tools.replace(prop.getKey(), oldGroupDetails.getDomainName(), entity.getDomainName());</span>
+<span class="nc" id="L495">                List&lt;TranslationKeyEntity&gt; props = translationKeyRepository.findAllByKeyStartsWith(oldGroupDetails.getDomainName());</span>
+<span class="nc bnc" id="L496" title="All 2 branches missed.">                for (TranslationKeyEntity prop : props) {</span>
+<span class="nc" id="L497">                    String key = Tools.replace(prop.getKey(), oldGroupDetails.getDomainName(), entity.getDomainName());</span>
                     try {
-<span class="nc" id="L497">                        prop.setKey(key);</span>
-<span class="nc" id="L498">                        translationKeyRepository.save(prop);</span>
-<span class="nc" id="L499">                    } catch (Exception ex) {</span>
+<span class="nc" id="L499">                        prop.setKey(key);</span>
+<span class="nc" id="L500">                        translationKeyRepository.save(prop);</span>
+<span class="nc" id="L501">                    } catch (Exception ex) {</span>
                         //mozno uz existuje
-<span class="nc" id="L501">                    }</span>
-<span class="nc" id="L502">                }</span>
-<span class="nc bnc" id="L503" title="All 2 branches missed.">                if (props.size()&gt;0) {</span>
-<span class="nc" id="L504">                    Prop.getInstance(true);</span>
+<span class="nc" id="L503">                    }</span>
+<span class="nc" id="L504">                }</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">                if (props.size()&gt;0) {</span>
+<span class="nc" id="L506">                    Prop.getInstance(true);</span>
                 }
             }
 
-<span class="nc" id="L508">            getRequest().getSession().setAttribute(&quot;preview.editorDomainName&quot;, entity.getDomainName());</span>
-<span class="nc" id="L509">            setForceReload(true);</span>
+<span class="nc" id="L510">            getRequest().getSession().setAttribute(&quot;preview.editorDomainName&quot;, entity.getDomainName());</span>
+<span class="nc" id="L511">            setForceReload(true);</span>
         }
 
         //toto sa deje len ak nie je zmena domeny, lebo to inak zblble a vytvori duplicitne (vidi este stary rb.getDomainName())
         //ak sa jedna o korenovy adresar a je zapnuty local system group a este neexistuje System adresar, tak ho vytvor
-<span class="pc bpc" id="L514" title="2 of 6 branches missed.">        if (entity.getParentGroupId()&lt;1 &amp;&amp; Tools.isNotEmpty(entity.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
-<span class="fc" id="L515">            GroupDetails localSystem = groupsDB.getLocalSystemGroup();</span>
-<span class="pc bpc" id="L516" title="1 of 2 branches missed.">            if (localSystem == null) {</span>
-<span class="nc" id="L517">                localSystem = new GroupDetails();</span>
-<span class="nc" id="L518">                localSystem.setGroupName(&quot;System&quot;);</span>
-<span class="nc" id="L519">                localSystem.setNavbarName(&quot;System&quot;);</span>
-<span class="nc" id="L520">                localSystem.setParentGroupId(0);</span>
-<span class="nc" id="L521">                localSystem.setInternal(true);</span>
-<span class="nc" id="L522">                localSystem.setUrlDirName(&quot;system&quot;);</span>
-<span class="nc" id="L523">                localSystem.setDomainName(entity.getDomainName());</span>
-<span class="nc" id="L524">                localSystem.setTempId(entity.getTempId());</span>
-<span class="nc" id="L525">                localSystem.setSortPriority(1000);</span>
-<span class="nc" id="L526">                localSystem.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);</span>
-<span class="nc" id="L527">                localSystem.setLoggedMenuType(-1);</span>
-<span class="nc" id="L528">                groupsDB.save(localSystem);</span>
-<span class="nc" id="L529">                groupsDB = GroupsDB.getInstance(true);</span>
+<span class="pc bpc" id="L516" title="2 of 6 branches missed.">        if (entity.getParentGroupId()&lt;1 &amp;&amp; Tools.isNotEmpty(entity.getDomainName()) &amp;&amp; Constants.getBoolean(&quot;templatesUseDomainLocalSystemFolder&quot;)) {</span>
+<span class="fc" id="L517">            GroupDetails localSystem = groupsDB.getLocalSystemGroup();</span>
+<span class="pc bpc" id="L518" title="1 of 2 branches missed.">            if (localSystem == null) {</span>
+<span class="nc" id="L519">                localSystem = new GroupDetails();</span>
+<span class="nc" id="L520">                localSystem.setGroupName(&quot;System&quot;);</span>
+<span class="nc" id="L521">                localSystem.setNavbarName(&quot;System&quot;);</span>
+<span class="nc" id="L522">                localSystem.setParentGroupId(0);</span>
+<span class="nc" id="L523">                localSystem.setInternal(true);</span>
+<span class="nc" id="L524">                localSystem.setUrlDirName(&quot;system&quot;);</span>
+<span class="nc" id="L525">                localSystem.setDomainName(entity.getDomainName());</span>
+<span class="nc" id="L526">                localSystem.setTempId(entity.getTempId());</span>
+<span class="nc" id="L527">                localSystem.setSortPriority(1000);</span>
+<span class="nc" id="L528">                localSystem.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);</span>
+<span class="nc" id="L529">                localSystem.setLoggedMenuType(-1);</span>
+<span class="nc" id="L530">                groupsDB.save(localSystem);</span>
+<span class="nc" id="L531">                groupsDB = GroupsDB.getInstance(true);</span>
 
-<span class="nc" id="L531">                DocDetails ef = null;</span>
-<span class="nc bnc" id="L532" title="All 2 branches missed.">                if (Constants.getBoolean(&quot;groupCreateBlankWebpageAfterCreate&quot;))</span>
+<span class="nc" id="L533">                DocDetails ef = null;</span>
+<span class="nc bnc" id="L534" title="All 2 branches missed.">                if (Constants.getBoolean(&quot;groupCreateBlankWebpageAfterCreate&quot;))</span>
                 {
-<span class="nc" id="L534">                    ef = editorFacade.createEmptyWebPage(localSystem, null, false);</span>
+<span class="nc" id="L536">                    ef = editorFacade.createEmptyWebPage(localSystem, null, false);</span>
                 }
 
                 //vytvor podadresare Hlavicky, Paticky, Menu
-<span class="nc" id="L538">                Prop prop = getProp();</span>
-<span class="nc" id="L539">                String[] keys = {&quot;groupslist.system.header&quot;, &quot;groupslist.system.footer&quot;, &quot;groupslist.system.menu&quot;};</span>
-<span class="nc" id="L540">                int sortPriority = 0;</span>
-<span class="nc bnc" id="L541" title="All 2 branches missed.">                for (String key : keys) {</span>
-<span class="nc" id="L542">                    String name = prop.getText(key);</span>
+<span class="nc" id="L540">                Prop prop = getProp();</span>
+<span class="nc" id="L541">                String[] keys = {&quot;groupslist.system.header&quot;, &quot;groupslist.system.footer&quot;, &quot;groupslist.system.menu&quot;};</span>
+<span class="nc" id="L542">                int sortPriority = 0;</span>
+<span class="nc bnc" id="L543" title="All 2 branches missed.">                for (String key : keys) {</span>
+<span class="nc" id="L544">                    String name = prop.getText(key);</span>
 
-<span class="nc" id="L544">                    sortPriority+=10;</span>
+<span class="nc" id="L546">                    sortPriority+=10;</span>
                     //vytvor podadresare
-<span class="nc" id="L546">                    GroupDetails subgroup = new GroupDetails();</span>
-<span class="nc" id="L547">                    subgroup.setGroupName(name);</span>
-<span class="nc" id="L548">                    subgroup.setNavbarName(name);</span>
-<span class="nc" id="L549">                    subgroup.setParentGroupId(localSystem.getGroupId());</span>
-<span class="nc" id="L550">                    subgroup.setInternal(true);</span>
-<span class="nc" id="L551">                    subgroup.setUrlDirName(DocTools.removeChars(name, true));</span>
-<span class="nc" id="L552">                    subgroup.setDomainName(entity.getDomainName());</span>
-<span class="nc" id="L553">                    subgroup.setTempId(entity.getTempId());</span>
-<span class="nc" id="L554">                    subgroup.setSortPriority(sortPriority);</span>
-<span class="nc" id="L555">                    subgroup.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);</span>
-<span class="nc" id="L556">                    subgroup.setLoggedMenuType(-1);</span>
+<span class="nc" id="L548">                    GroupDetails subgroup = new GroupDetails();</span>
+<span class="nc" id="L549">                    subgroup.setGroupName(name);</span>
+<span class="nc" id="L550">                    subgroup.setNavbarName(name);</span>
+<span class="nc" id="L551">                    subgroup.setParentGroupId(localSystem.getGroupId());</span>
+<span class="nc" id="L552">                    subgroup.setInternal(true);</span>
+<span class="nc" id="L553">                    subgroup.setUrlDirName(DocTools.removeChars(name, true));</span>
+<span class="nc" id="L554">                    subgroup.setDomainName(entity.getDomainName());</span>
+<span class="nc" id="L555">                    subgroup.setTempId(entity.getTempId());</span>
+<span class="nc" id="L556">                    subgroup.setSortPriority(sortPriority);</span>
+<span class="nc" id="L557">                    subgroup.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);</span>
+<span class="nc" id="L558">                    subgroup.setLoggedMenuType(-1);</span>
                     //ako hlavnu nastav System priecinok, pretoze hlavicky/paticky stranky maju zvycajne ine meno
-<span class="nc bnc" id="L558" title="All 2 branches missed.">                    if (ef != null) subgroup.setDefaultDocId(ef.getDocId());</span>
-<span class="nc" id="L559">                    groupsDB.save(subgroup);</span>
+<span class="nc bnc" id="L560" title="All 2 branches missed.">                    if (ef != null) subgroup.setDefaultDocId(ef.getDocId());</span>
+<span class="nc" id="L561">                    groupsDB.save(subgroup);</span>
 
-<span class="nc bnc" id="L561" title="All 2 branches missed.">                    if (ef != null) {</span>
-<span class="nc" id="L562">                        editorFacade.createEmptyWebPage(subgroup, prop.getText(key+&quot;.pagetitle&quot;), true);</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">                    if (ef != null) {</span>
+<span class="nc" id="L564">                        editorFacade.createEmptyWebPage(subgroup, prop.getText(key+&quot;.pagetitle&quot;), true);</span>
                     }
                 }
-<span class="nc" id="L565">                groupsDB = GroupsDB.getInstance(true);</span>
+<span class="nc" id="L567">                groupsDB = GroupsDB.getInstance(true);</span>
             }
         }
 
-<span class="pc bpc" id="L569" title="1 of 2 branches missed.">        if (docsRefresh) {</span>
-<span class="nc" id="L570">            DocDB.getInstance(true);</span>
-<span class="nc" id="L571">            setForceReload(true);</span>
+<span class="pc bpc" id="L571" title="1 of 2 branches missed.">        if (docsRefresh) {</span>
+<span class="nc" id="L572">            DocDB.getInstance(true);</span>
+<span class="nc" id="L573">            setForceReload(true);</span>
         }
 
-<span class="pc bpc" id="L574" title="1 of 2 branches missed.">        if (forceReloadNewDomainName) {</span>
+<span class="pc bpc" id="L576" title="1 of 2 branches missed.">        if (forceReloadNewDomainName) {</span>
             //novo vytvorena domena, potrebujeme vyvolat reload stranky
             //fejkneme to cez atribut forceDomainNameChange, na ktory uz pocuvame v pug subore
-<span class="nc" id="L577">            entity.getEditorFields().setForceDomainNameChange(true);</span>
-<span class="nc" id="L578">            setForceReload(true);</span>
+<span class="nc" id="L579">            entity.getEditorFields().setForceDomainNameChange(true);</span>
+<span class="nc" id="L580">            setForceReload(true);</span>
         }
 
-<span class="fc bfc" id="L581" title="All 2 branches covered.">        if (oldGroupDetails!=null) {</span>
-<span class="fc bfc" id="L582" title="All 2 branches covered.">            if (oldGroupDetails.getDefaultDocId()!=entity.getDefaultDocId()) forceReload = true;</span>
+<span class="fc bfc" id="L583" title="All 2 branches covered.">        if (oldGroupDetails!=null) {</span>
+<span class="fc bfc" id="L584" title="All 2 branches covered.">            if (oldGroupDetails.getDefaultDocId()!=entity.getDefaultDocId()) forceReload = true;</span>
         }
-<span class="fc bfc" id="L584" title="All 2 branches covered.">        if (forceReload) {</span>
-<span class="fc" id="L585">            setForceReload(true);</span>
+<span class="fc bfc" id="L586" title="All 2 branches covered.">        if (forceReload) {</span>
+<span class="fc" id="L587">            setForceReload(true);</span>
         }
 
-<span class="fc" id="L588">        return entity;</span>
+<span class="fc" id="L590">        return entity;</span>
     }
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, GroupDetails&gt; target, Identity user, Errors errors, Long id, GroupDetails entity) {
 
-<span class="fc bfc" id="L594" title="All 4 branches covered.">        if (entity.getGroupId()&gt;0 &amp;&amp; GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {</span>
-<span class="nc" id="L595">            errors.rejectValue(&quot;errorField.editorFields.groupId&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
+<span class="fc bfc" id="L596" title="All 4 branches covered.">        if (entity.getGroupId()&gt;0 &amp;&amp; GroupsDB.isGroupEditable(user, entity.getGroupId())==false) {</span>
+<span class="nc" id="L597">            errors.rejectValue(&quot;errorField.editorFields.groupId&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
+<span class="nc" id="L598">            return;</span>
         }
 
-<span class="fc bfc" id="L598" title="All 2 branches covered.">        if (&quot;remove&quot;.equals(target.getAction())) return;</span>
+<span class="fc" id="L601">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="pc bpc" id="L600" title="2 of 4 branches missed.">        if (entity.getEditorFields()!=null &amp;&amp; entity.getEditorFields().getParentGroupDetails()!=null) {</span>
-<span class="pc bpc" id="L601" title="1 of 2 branches missed.">            if (GroupsDB.isGroupEditable(user, entity.getEditorFields().getParentGroupDetails().getGroupId())==false) {</span>
-<span class="nc" id="L602">                errors.rejectValue(&quot;errorField.editorFields.parentGroupDetails&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
+<span class="pc bpc" id="L603" title="3 of 4 branches missed.">        if (InitServlet.isTypeCloud() &amp;&amp; entity.getGroupId()&gt;0)</span>
+		{
+			//kontrola prav
+<span class="nc" id="L606">			GroupDetails oldGroup = groupsDB.getGroup(entity.getGroupId());</span>
+<span class="nc bnc" id="L607" title="All 4 branches missed.">			if (oldGroup == null || oldGroup.getDomainName().equals(CloudToolsForCore.getDomainName())==false)</span>
+			{
+<span class="nc" id="L609">				errors.rejectValue(&quot;errorField.domainName&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
+<span class="nc" id="L610">                return;</span>
+			}
+		}
+
+<span class="fc bfc" id="L614" title="All 2 branches covered.">        if (&quot;remove&quot;.equals(target.getAction())) return;</span>
+
+<span class="pc bpc" id="L616" title="2 of 4 branches missed.">        if (entity.getEditorFields()!=null &amp;&amp; entity.getEditorFields().getParentGroupDetails()!=null) {</span>
+<span class="pc bpc" id="L617" title="1 of 2 branches missed.">            if (GroupsDB.isGroupEditable(user, entity.getEditorFields().getParentGroupDetails().getGroupId())==false) {</span>
+<span class="nc" id="L618">                errors.rejectValue(&quot;errorField.editorFields.parentGroupDetails&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;user.rights.no_folder_rights&quot;));</span>
             }
         }
 
-<span class="fc" id="L606">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L607">        int groupId = entity.getGroupId();</span>
-<span class="fc" id="L608">        int newParentGroupId = entity.getEditorFields().getParentGroupDetails().getGroupId();</span>
+<span class="fc" id="L622">        int groupId = entity.getGroupId();</span>
+<span class="fc" id="L623">        int newParentGroupId = entity.getEditorFields().getParentGroupDetails().getGroupId();</span>
 
         //Chcek if is parentGroup ID valid
-<span class="fc bfc" id="L611" title="All 2 branches covered.">        if(groupId == newParentGroupId) {</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">        if(groupId == newParentGroupId) {</span>
             //ParentGroup can't be same group as requesting group
-<span class="fc" id="L613">            errors.rejectValue(&quot;errorField.editorFields.parentGroupDetails&quot;, &quot;403&quot;, Prop.getInstance(request).getText(&quot;editor.parent_group_error_same_folder&quot;));</span>
+<span class="fc" id="L628">            errors.rejectValue(&quot;errorField.editorFields.parentGroupDetails&quot;, &quot;403&quot;, Prop.getInstance(request).getText(&quot;editor.parent_group_error_same_folder&quot;));</span>
         } else {
-<span class="fc" id="L615">            int failsafe = 0;</span>
-<span class="pc bpc" id="L616" title="1 of 2 branches missed.">            while(failsafe++&lt;50) {</span>
-<span class="fc" id="L617">                GroupDetails tmpParent = groupsDB.getGroup(newParentGroupId);</span>
-<span class="fc bfc" id="L618" title="All 2 branches covered.">                if(tmpParent != null) {</span>
-<span class="fc bfc" id="L619" title="All 2 branches covered.">                    if(groupId == tmpParent.getGroupId()) {</span>
+<span class="fc" id="L630">            int failsafe = 0;</span>
+<span class="pc bpc" id="L631" title="1 of 2 branches missed.">            while(failsafe++&lt;50) {</span>
+<span class="fc" id="L632">                GroupDetails tmpParent = groupsDB.getGroup(newParentGroupId);</span>
+<span class="fc bfc" id="L633" title="All 2 branches covered.">                if(tmpParent != null) {</span>
+<span class="fc bfc" id="L634" title="All 2 branches covered.">                    if(groupId == tmpParent.getGroupId()) {</span>
                         //ParentGroup can't be child group of requesting group
-<span class="fc" id="L621">                        errors.rejectValue(&quot;errorField.editorFields.parentGroupDetails&quot;, &quot;403&quot;, Prop.getInstance(request).getText(&quot;editor.parent_group_error_child_folder&quot;));</span>
-<span class="fc" id="L622">                        break;</span>
+<span class="fc" id="L636">                        errors.rejectValue(&quot;errorField.editorFields.parentGroupDetails&quot;, &quot;403&quot;, Prop.getInstance(request).getText(&quot;editor.parent_group_error_child_folder&quot;));</span>
+<span class="fc" id="L637">                        break;</span>
                     } else {
-<span class="fc" id="L624">                        newParentGroupId = tmpParent.getParentGroupId();</span>
+<span class="fc" id="L639">                        newParentGroupId = tmpParent.getParentGroupId();</span>
                     }
                 } else {
                     break;
                 }
-<span class="fc" id="L629">            }</span>
+<span class="fc" id="L644">            }</span>
         }
-<span class="fc" id="L631">    }</span>
+<span class="fc" id="L646">    }</span>
 
     @Override
     public boolean deleteItem(GroupDetails entity, long id) {
-<span class="fc" id="L635">        List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L636" title="All 2 branches covered.">        if (!this.canModifyThisGroup(entity, getUser(), &quot;editDir&quot;, errors)) {</span>
-<span class="nc" id="L637">            throwError(errors);</span>
-<span class="nc" id="L638">            return false;</span>
+<span class="fc" id="L650">        List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L651" title="All 2 branches covered.">        if (!this.canModifyThisGroup(entity, getUser(), &quot;editDir&quot;, errors)) {</span>
+<span class="nc" id="L652">            throwError(errors);</span>
+<span class="nc" id="L653">            return false;</span>
         }
-<span class="pc bpc" id="L640" title="1 of 2 branches missed.">        if (entity==null) return false;</span>
+<span class="pc bpc" id="L655" title="1 of 2 branches missed.">        if (entity==null) return false;</span>
 
-<span class="fc" id="L642">        return GroupsDB.deleteGroup(entity.getGroupId(), getRequest());</span>
+<span class="fc" id="L657">        return GroupsDB.deleteGroup(entity.getGroupId(), getRequest());</span>
     }
 
     private boolean canModifyThisGroup(GroupDetails groupDetails, Identity user, String editPermName, List&lt;String&gt; errors) {
-<span class="pc bpc" id="L646" title="1 of 2 branches missed.">        if (groupDetails == null)</span>
-<span class="nc" id="L647">            return true;</span>
+<span class="pc bpc" id="L661" title="1 of 2 branches missed.">        if (groupDetails == null)</span>
+<span class="nc" id="L662">            return true;</span>
 
-<span class="fc" id="L649">        int groupIdCheck = groupDetails.getGroupId();</span>
-<span class="fc bfc" id="L650" title="All 2 branches covered.">        if (groupIdCheck&lt;1) {</span>
-<span class="fc bfc" id="L651" title="All 2 branches covered.">            if (user.isDisabledItem(&quot;addSubdir&quot;)) {</span>
-<span class="fc" id="L652">                errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
-<span class="fc" id="L653">                return false;</span>
+<span class="fc" id="L664">        int groupIdCheck = groupDetails.getGroupId();</span>
+<span class="fc bfc" id="L665" title="All 2 branches covered.">        if (groupIdCheck&lt;1) {</span>
+<span class="fc bfc" id="L666" title="All 2 branches covered.">            if (user.isDisabledItem(&quot;addSubdir&quot;)) {</span>
+<span class="fc" id="L667">                errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
+<span class="fc" id="L668">                return false;</span>
             }
-<span class="fc" id="L655">            groupIdCheck = groupDetails.getParentGroupId();</span>
+<span class="fc" id="L670">            groupIdCheck = groupDetails.getParentGroupId();</span>
         } else {
-<span class="fc bfc" id="L657" title="All 2 branches covered.">            if (user.isDisabledItem(editPermName)) {</span>
-<span class="fc" id="L658">                errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
-<span class="fc" id="L659">                return false;</span>
+<span class="fc bfc" id="L672" title="All 2 branches covered.">            if (user.isDisabledItem(editPermName)) {</span>
+<span class="fc" id="L673">                errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
+<span class="fc" id="L674">                return false;</span>
             }
         }
 
-<span class="fc" id="L663">        boolean canModify = true;</span>
+<span class="fc" id="L678">        boolean canModify = true;</span>
 
-<span class="fc bfc" id="L665" title="All 4 branches covered.">        if (groupDetails.getGroupId()&lt;1 &amp;&amp; groupDetails.getParentGroupId()&lt;1) {</span>
+<span class="fc bfc" id="L680" title="All 4 branches covered.">        if (groupDetails.getGroupId()&lt;1 &amp;&amp; groupDetails.getParentGroupId()&lt;1) {</span>
             //je to novy zaznam ukladany do root adresara
-<span class="pc bpc" id="L667" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
+<span class="pc bpc" id="L682" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
                 //ak ma povolene len niektore adresare nemoze pridat nic do root adresara
-<span class="nc" id="L669">                errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;, groupDetails.getGroupName()));</span>
-<span class="nc" id="L670">                canModify = false;</span>
+<span class="nc" id="L684">                errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;, groupDetails.getGroupName()));</span>
+<span class="nc" id="L685">                canModify = false;</span>
             }
         }
 
-<span class="pc bpc" id="L674" title="1 of 2 branches missed.">        if (GroupsDB.isGroupEditable(user, groupIdCheck)==false) {</span>
-<span class="nc" id="L675">            errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
-<span class="nc" id="L676">            canModify = false;</span>
+<span class="pc bpc" id="L689" title="1 of 2 branches missed.">        if (GroupsDB.isGroupEditable(user, groupIdCheck)==false) {</span>
+<span class="nc" id="L690">            errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
+<span class="nc" id="L691">            canModify = false;</span>
         }
 
-<span class="fc bfc" id="L679" title="All 2 branches covered.">        if (groupDetails.getGroupId()&gt;0) {</span>
+<span class="fc bfc" id="L694" title="All 2 branches covered.">        if (groupDetails.getGroupId()&gt;0) {</span>
             //ak nastala zmena parent adresara over aj prava na parent adresar
-<span class="fc" id="L681">            int parentGroupId = groupDetails.getParentGroupId();</span>
-<span class="fc" id="L682">            GroupDetails oldGroup = GroupsDB.getInstance().getGroup(groupDetails.getGroupId());</span>
-<span class="pc bpc" id="L683" title="1 of 4 branches missed.">            if (oldGroup != null &amp;&amp; parentGroupId!=oldGroup.getParentGroupId())</span>
+<span class="fc" id="L696">            int parentGroupId = groupDetails.getParentGroupId();</span>
+<span class="fc" id="L697">            GroupDetails oldGroup = GroupsDB.getInstance().getGroup(groupDetails.getGroupId());</span>
+<span class="pc bpc" id="L698" title="1 of 4 branches missed.">            if (oldGroup != null &amp;&amp; parentGroupId!=oldGroup.getParentGroupId())</span>
             {
-<span class="fc" id="L685">                boolean isEditable = GroupsDB.isGroupEditable(user, parentGroupId);</span>
+<span class="fc" id="L700">                boolean isEditable = GroupsDB.isGroupEditable(user, parentGroupId);</span>
                 //ak je vybraty root tak musis mat prazdne povolene adresare
-<span class="pc bpc" id="L687" title="3 of 4 branches missed.">                if (parentGroupId &lt; 1 &amp;&amp; Tools.isNotEmpty(user.getEditableGroups())) isEditable = false;</span>
-<span class="pc bpc" id="L688" title="1 of 2 branches missed.">                if (isEditable == false) {</span>
-<span class="nc" id="L689">                    errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
-<span class="nc" id="L690">                    canModify = false;</span>
+<span class="pc bpc" id="L702" title="3 of 4 branches missed.">                if (parentGroupId &lt; 1 &amp;&amp; Tools.isNotEmpty(user.getEditableGroups())) isEditable = false;</span>
+<span class="pc bpc" id="L703" title="1 of 2 branches missed.">                if (isEditable == false) {</span>
+<span class="nc" id="L704">                    errors.add(getProp().getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
+<span class="nc" id="L705">                    canModify = false;</span>
                 }
             }
         }
 
-<span class="pc bpc" id="L695" title="2 of 4 branches missed.">        if (canModify==true &amp;&amp; isSystemFolderManipulation(groupDetails.getGroupId())) {</span>
+<span class="pc bpc" id="L710" title="2 of 4 branches missed.">        if (canModify==true &amp;&amp; isSystemFolderManipulation(groupDetails.getGroupId())) {</span>
             // len administrator s user_id = 1 moze editovat systemove adresare
-<span class="nc bnc" id="L697" title="All 2 branches missed.">            if (user.getUserId() != 1) {</span>
-<span class="nc" id="L698">                errors.add(getProp().getText(&quot;grouptree.this_folder_cant_be_changed&quot;, groupDetails.getGroupName()));</span>
-<span class="nc" id="L699">                canModify = false;</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">            if (user.getUserId() != 1) {</span>
+<span class="nc" id="L713">                errors.add(getProp().getText(&quot;grouptree.this_folder_cant_be_changed&quot;, groupDetails.getGroupName()));</span>
+<span class="nc" id="L714">                canModify = false;</span>
             }
         }
-<span class="fc" id="L702">        return canModify;</span>
+<span class="fc" id="L717">        return canModify;</span>
     }
 
     private boolean isSystemFolderManipulation(int groupId) {
-<span class="fc" id="L706">        List&lt;String&gt; forbiddenGroups = Arrays.asList(&quot;/system&quot;);</span>
-<span class="fc" id="L707">        String pathToGroup = DB.internationalToEnglish(GroupsDB.getInstance().getGroupNamePath(groupId).toLowerCase());</span>
-<span class="pc bpc" id="L708" title="1 of 2 branches missed.">        if (forbiddenGroups.contains(pathToGroup)) return true;</span>
-<span class="fc" id="L709">        int localSystemGroup = GroupsDB.getInstance().getLocalSystemGroupId();</span>
-<span class="pc bpc" id="L710" title="2 of 4 branches missed.">        if (localSystemGroup&gt;0 &amp;&amp; groupId == localSystemGroup) return true;</span>
+<span class="fc" id="L721">        List&lt;String&gt; forbiddenGroups = Arrays.asList(&quot;/system&quot;);</span>
+<span class="fc" id="L722">        String pathToGroup = DB.internationalToEnglish(GroupsDB.getInstance().getGroupNamePath(groupId).toLowerCase());</span>
+<span class="pc bpc" id="L723" title="1 of 2 branches missed.">        if (forbiddenGroups.contains(pathToGroup)) return true;</span>
+<span class="fc" id="L724">        int localSystemGroup = GroupsDB.getInstance().getLocalSystemGroupId();</span>
+<span class="pc bpc" id="L725" title="2 of 4 branches missed.">        if (localSystemGroup&gt;0 &amp;&amp; groupId == localSystemGroup) return true;</span>
 
-<span class="fc" id="L712">        return false;</span>
+<span class="fc" id="L727">        return false;</span>
     }
 
     /**
@@ -719,19 +734,19 @@ public class GroupsRestController extends DatatableRestControllerV2&lt;GroupDeta
      */
     private void scheduleFutureUpdate(GroupDetails group, Identity user)
     {
-<span class="nc" id="L722">        Date date = group.getEditorFields().getPublishDate();</span>
-<span class="nc bnc" id="L723" title="All 2 branches missed.">        if (date.before(new Date())) {</span>
-<span class="nc" id="L724">            return;</span>
+<span class="nc" id="L737">        Date date = group.getEditorFields().getPublishDate();</span>
+<span class="nc bnc" id="L738" title="All 2 branches missed.">        if (date.before(new Date())) {</span>
+<span class="nc" id="L739">            return;</span>
         }
 
-<span class="nc" id="L727">        int userId = -1;</span>
-<span class="nc bnc" id="L728" title="All 2 branches missed.">        if(user != null) {</span>
-<span class="nc" id="L729">            userId = user.getUserId();</span>
+<span class="nc" id="L742">        int userId = -1;</span>
+<span class="nc bnc" id="L743" title="All 2 branches missed.">        if(user != null) {</span>
+<span class="nc" id="L744">            userId = user.getUserId();</span>
         }
 
-<span class="nc" id="L732">        boolean saved = GroupPublisher.addRecord(group, date, userId);</span>
-<span class="nc bnc" id="L733" title="All 2 branches missed.">        if (saved==false) throwError(&quot;datatables.error.system.js&quot;);</span>
-<span class="nc" id="L734">    }</span>
+<span class="nc" id="L747">        boolean saved = GroupPublisher.addRecord(group, date, userId);</span>
+<span class="nc bnc" id="L748" title="All 2 branches missed.">        if (saved==false) throwError(&quot;datatables.error.system.js&quot;);</span>
+<span class="nc" id="L749">    }</span>
 
     /*@Override
     public boolean checkAccessAllowed(HttpServletRequest request) {
@@ -751,42 +766,52 @@ public class GroupsRestController extends DatatableRestControllerV2&lt;GroupDeta
      */
     @RequestMapping(path=&quot;/parents/{id}&quot;)
     public ParentGroupsResult parentGroups(@PathVariable(&quot;id&quot;) int groupId) {
-<span class="fc" id="L754">        ParentGroupsResult result = new ParentGroupsResult();</span>
+<span class="fc" id="L769">        ParentGroupsResult result = new ParentGroupsResult();</span>
 
-<span class="pc bpc" id="L756" title="3 of 4 branches missed.">        if (GroupsDB.isGroupEditable(getUser(), groupId) || GroupsDB.isGroupViewable(getUser(), groupId)) {</span>
-<span class="fc" id="L757">            List&lt;GroupDetails&gt; parentGroups = GroupsDB.getInstance().getParentGroups(groupId);</span>
-<span class="fc" id="L758">            result.setParentGroups(GroupsDB.getInstance().getGroup(groupId), parentGroups);</span>
+<span class="pc bpc" id="L771" title="3 of 4 branches missed.">        if (GroupsDB.isGroupEditable(getUser(), groupId) || GroupsDB.isGroupViewable(getUser(), groupId)) {</span>
+<span class="fc" id="L772">            List&lt;GroupDetails&gt; parentGroups = GroupsDB.getInstance().getParentGroups(groupId);</span>
+<span class="fc" id="L773">            result.setParentGroups(GroupsDB.getInstance().getGroup(groupId), parentGroups);</span>
         }
 
-<span class="fc" id="L761">        return result;</span>
+<span class="fc" id="L776">        return result;</span>
     }
 
     @Override
     public GroupDetails processFromEntity(GroupDetails group, ProcessItemAction action) {
-<span class="fc" id="L766">        GroupEditorField gef = new GroupEditorField();</span>
-<span class="fc" id="L767">        group = gef.fromGroupDetails(group);</span>
-<span class="pc bpc" id="L768" title="1 of 2 branches missed.">        if (gef.getParentGroupDetails() == null) {</span>
+<span class="fc" id="L781">        GroupEditorField gef = new GroupEditorField();</span>
+<span class="fc" id="L782">        group = gef.fromGroupDetails(group);</span>
+<span class="pc bpc" id="L783" title="1 of 2 branches missed.">        if (gef.getParentGroupDetails() == null) {</span>
             // If we create new directori or update directory under root we need to set
             // empty parentGroupDetails
-<span class="nc" id="L771">            GroupDetails rootParentGroupDetails = new GroupDetails();</span>
-<span class="nc" id="L772">            rootParentGroupDetails.setParentGroupId(0);</span>
-<span class="nc" id="L773">            rootParentGroupDetails.setGroupName(&quot;/&quot;);</span>
-<span class="nc" id="L774">            gef.setParentGroupDetails(rootParentGroupDetails);</span>
+<span class="nc" id="L786">            GroupDetails rootParentGroupDetails = new GroupDetails();</span>
+<span class="nc" id="L787">            rootParentGroupDetails.setParentGroupId(0);</span>
+<span class="nc" id="L788">            rootParentGroupDetails.setGroupName(&quot;/&quot;);</span>
+<span class="nc" id="L789">            gef.setParentGroupDetails(rootParentGroupDetails);</span>
         }
-<span class="fc" id="L776">        return group;</span>
+<span class="fc" id="L791">        return group;</span>
     }
 
     @Override
     public boolean processAction(GroupDetails entity, String action) {
-<span class="pc bpc" id="L781" title="2 of 4 branches missed.">        if (&quot;recoverGroup&quot;.equals(action) &amp;&amp; entity != null) {</span>
-<span class="fc" id="L782">            boolean status = editorFacade.recoverGroupFromTrash(entity, getUser());</span>
-<span class="fc" id="L783">            addNotify(editorFacade.getNotify());</span>
+<span class="pc bpc" id="L796" title="2 of 4 branches missed.">        if (&quot;recoverGroup&quot;.equals(action) &amp;&amp; entity != null) {</span>
+<span class="fc" id="L797">            boolean status = editorFacade.recoverGroupFromTrash(entity, getUser());</span>
+<span class="fc" id="L798">            addNotify(editorFacade.getNotify());</span>
             //we must clear it to prevent duplicate notifications on multiple groups recovery
-<span class="fc" id="L785">            editorFacade.clearNotify();</span>
-<span class="fc" id="L786">            setForceReload(true);</span>
-<span class="fc" id="L787">            return status;</span>
+<span class="fc" id="L800">            editorFacade.clearNotify();</span>
+<span class="fc" id="L801">            setForceReload(true);</span>
+<span class="fc" id="L802">            return status;</span>
         }
-<span class="nc" id="L789">        return false;</span>
+<span class="nc" id="L804">        return false;</span>
     }
+
+    @Override
+    public boolean checkItemPerms(GroupDetails entity, Long id) {
+<span class="pc bpc" id="L809" title="3 of 4 branches missed.">        if (InitServlet.isTypeCloud() &amp;&amp; entity.getGroupId()&gt;0) {</span>
+<span class="nc" id="L810">            GroupDetails old = GroupsDB.getInstance().getGroup(entity.getGroupId());</span>
+<span class="nc bnc" id="L811" title="All 4 branches missed.">            if (old != null &amp;&amp; GroupsDB.isGroupEditable(getUser(), old.getGroupId())==false) return false;</span>
+        }
+<span class="fc" id="L813">        return true;</span>
+    }
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

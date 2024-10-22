@@ -19,7 +19,7 @@ if ("sk" != language) {
   //Different language detected, selecting language
   if("en" == language) {
     loginButtonText = "Login";
-  } else if("cz" == language) {
+  } else if("cs" == language) {
     loginButtonText = "Přihlásit se";
   }
 }
@@ -99,7 +99,10 @@ exports.config = {
     DataTables: './pages/DataTables.js',
     Document: './pages/Document.js',
     DT: './pages/DT.js',
-    DTE: './pages/DTE.js'
+    DTE: './pages/DTE.js',
+    TempMail: './pages/TempMail.js',
+    Apps: './pages/Apps.js',
+    i18n: './pages/i18n.js'
   },
   bootstrap: null,
   mocha: {
@@ -138,7 +141,7 @@ exports.config = {
               //Different language detected, selecting language
               if("en" == language) {
                 I.selectOption("language", "English");
-              } else if("cz" == language) {
+              } else if("cs" == language) {
                 I.selectOption("language", "Česky");
               }
             }
@@ -147,18 +150,18 @@ exports.config = {
             I.fillField("username", "tester");
             I.fillField("password", secret("*********"));
             I.forceClick(loginButtonText);
-            I.waitForText("Tester Playwright", 30);
+            I.waitForText("Tester Playwright", 30, "button.js-profile-toggler");
           },
           check: (I) => {
             I.say("checking logged user");
-            I.see("Tester Playwright");
+            I.see("Tester Playwright", "button.js-profile-toggler");
             //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
             I.wjSetDefaultWindowSize();
           },
           restore: (I) => {
             I.say("restoring logged user");
             I.amOnPage('/admin/');
-            I.see("Tester Playwright");
+            I.see("Tester Playwright", "button.js-profile-toggler");
           }
         }
       }

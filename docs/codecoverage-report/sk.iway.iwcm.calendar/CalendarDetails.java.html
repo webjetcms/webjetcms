@@ -16,7 +16,7 @@ import sk.iway.iwcm.Constants;
  *@created      Utorok, 2002, február 19
  *@modified     $Date: 2004/02/17 21:37:28 $
  */
-<span class="nc" id="L19">public class CalendarDetails</span>
+<span class="fc" id="L19">public class CalendarDetails</span>
 {
 	private int calendarId;
 	private String title;
@@ -25,8 +25,8 @@ import sk.iway.iwcm.Constants;
 	private int typeId;
 	private long l_from, l_to;
 
-<span class="nc" id="L28">	private SimpleDateFormat formatter = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
-<span class="nc" id="L29">	private int bgColorIndex=0;</span>
+<span class="fc" id="L28">	private SimpleDateFormat formatter = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="fc" id="L29">	private int bgColorIndex=0;</span>
 	private String type;
 	private String timeRange;
 	private String area;
@@ -67,8 +67,8 @@ import sk.iway.iwcm.Constants;
 	 */
 	public void setCalendarId(int calendarId)
 	{
-<span class="nc" id="L70">		this.calendarId = calendarId;</span>
-<span class="nc" id="L71">	}</span>
+<span class="fc" id="L70">		this.calendarId = calendarId;</span>
+<span class="fc" id="L71">	}</span>
 
 	/**
 	 *  Sets the title attribute of the CalendarDetails object
@@ -77,8 +77,8 @@ import sk.iway.iwcm.Constants;
 	 */
 	public void setTitle(String title)
 	{
-<span class="nc" id="L80">		this.title = title;</span>
-<span class="nc" id="L81">	}</span>
+<span class="fc" id="L80">		this.title = title;</span>
+<span class="fc" id="L81">	}</span>
 
 	/**
 	 *  Gets the title attribute of the CalendarDetails object
@@ -87,7 +87,7 @@ import sk.iway.iwcm.Constants;
 	 */
 	public String getTitle()
 	{
-<span class="nc" id="L90">		return title;</span>
+<span class="fc" id="L90">		return title;</span>
 	}
 
 	/**
@@ -97,9 +97,9 @@ import sk.iway.iwcm.Constants;
 	 */
 	public void setFrom(java.sql.Timestamp from)
 	{
-<span class="nc" id="L100">		this.from = from;</span>
-<span class="nc" id="L101">		l_from=from.getTime();</span>
-<span class="nc" id="L102">	}</span>
+<span class="fc" id="L100">		this.from = from;</span>
+<span class="fc" id="L101">		l_from=from.getTime();</span>
+<span class="fc" id="L102">	}</span>
 
 	/**
 	 *  Gets the from attribute of the CalendarDetails object
@@ -113,12 +113,12 @@ import sk.iway.iwcm.Constants;
 
 	public long getFromLong()
 	{
-<span class="nc" id="L116">		return(l_from);</span>
+<span class="fc" id="L116">		return(l_from);</span>
 	}
 
 	public String getFromString()
 	{
-<span class="nc" id="L121">		return(formatter.format(new Date(l_from)));</span>
+<span class="fc" id="L121">		return(formatter.format(new Date(l_from)));</span>
 	}
 
 	/**
@@ -128,9 +128,9 @@ import sk.iway.iwcm.Constants;
 	 */
 	public void setTo(java.sql.Timestamp to)
 	{
-<span class="nc" id="L131">		this.to = to;</span>
-<span class="nc" id="L132">		l_to = to.getTime();</span>
-<span class="nc" id="L133">	}</span>
+<span class="fc" id="L131">		this.to = to;</span>
+<span class="fc" id="L132">		l_to = to.getTime();</span>
+<span class="fc" id="L133">	}</span>
 
 	/**
 	 *  Gets the to attribute of the CalendarDetails object
@@ -144,12 +144,12 @@ import sk.iway.iwcm.Constants;
 
 	public long getToLong()
 	{
-<span class="nc" id="L147">		return(l_to);</span>
+<span class="fc" id="L147">		return(l_to);</span>
 	}
 
 	public String getToString()
 	{
-<span class="nc" id="L152">		return(formatter.format(new Date(l_to)));</span>
+<span class="fc" id="L152">		return(formatter.format(new Date(l_to)));</span>
 	}
 
 	/**
@@ -159,8 +159,8 @@ import sk.iway.iwcm.Constants;
 	 */
 	public void setTypeId(int typeId)
 	{
-<span class="nc" id="L162">	 this.typeId = typeId;</span>
-<span class="nc" id="L163">	}</span>
+<span class="fc" id="L162">	 this.typeId = typeId;</span>
+<span class="fc" id="L163">	}</span>
 
 	/**
 	 *  Gets the type attribute of the CalendarDetails object
@@ -189,138 +189,138 @@ import sk.iway.iwcm.Constants;
 	}
 	public String getType()
 	{
-<span class="nc" id="L192">		return type;</span>
+<span class="fc" id="L192">		return type;</span>
 	}
 	public void setType(String type)
 	{
-<span class="nc" id="L196">		this.type = type;</span>
-<span class="nc" id="L197">	}</span>
+<span class="fc" id="L196">		this.type = type;</span>
+<span class="fc" id="L197">	}</span>
 	public String getTimeRange()
 	{
 <span class="nc" id="L200">		return timeRange;</span>
 	}
 	public void setTimeRange(String timeRange)
 	{
-<span class="nc" id="L204">		this.timeRange = timeRange;</span>
-<span class="nc" id="L205">	}</span>
+<span class="fc" id="L204">		this.timeRange = timeRange;</span>
+<span class="fc" id="L205">	}</span>
 	public String getArea()
 	{
 <span class="nc" id="L208">		return area;</span>
 	}
 	public void setArea(String area)
 	{
-<span class="nc" id="L212">		this.area = area;</span>
-<span class="nc" id="L213">	}</span>
+<span class="fc" id="L212">		this.area = area;</span>
+<span class="fc" id="L213">	}</span>
 	public String getCity()
 	{
 <span class="nc" id="L216">		return city;</span>
 	}
 	public void setCity(String city)
 	{
-<span class="nc" id="L220">		this.city = city;</span>
-<span class="nc" id="L221">	}</span>
+<span class="fc" id="L220">		this.city = city;</span>
+<span class="fc" id="L221">	}</span>
 	public String getAddress()
 	{
 <span class="nc" id="L224">		return address;</span>
 	}
 	public void setAddress(String address)
 	{
-<span class="nc" id="L228">		this.address = address;</span>
-<span class="nc" id="L229">	}</span>
+<span class="fc" id="L228">		this.address = address;</span>
+<span class="fc" id="L229">	}</span>
   public String getDescription() {
-<span class="nc" id="L231">	 return description;</span>
+<span class="fc" id="L231">	 return description;</span>
   }
   public void setDescription(String description) {
-<span class="nc" id="L234">	 this.description = description;</span>
-<span class="nc" id="L235">  }</span>
+<span class="fc" id="L234">	 this.description = description;</span>
+<span class="fc" id="L235">  }</span>
 	public String getInfo1()
 	{
 <span class="nc" id="L238">		return info1;</span>
 	}
 	public void setInfo1(String info1)
 	{
-<span class="nc" id="L242">		this.info1 = info1;</span>
-<span class="nc" id="L243">	}</span>
+<span class="fc" id="L242">		this.info1 = info1;</span>
+<span class="fc" id="L243">	}</span>
 	public String getInfo2()
 	{
 <span class="nc" id="L246">		return info2;</span>
 	}
 	public void setInfo2(String info2)
 	{
-<span class="nc" id="L250">		this.info2 = info2;</span>
-<span class="nc" id="L251">	}</span>
+<span class="fc" id="L250">		this.info2 = info2;</span>
+<span class="fc" id="L251">	}</span>
 	public String getInfo3()
 	{
 <span class="nc" id="L254">		return info3;</span>
 	}
 	public void setInfo3(String info3)
 	{
-<span class="nc" id="L258">		this.info3 = info3;</span>
-<span class="nc" id="L259">	}</span>
+<span class="fc" id="L258">		this.info3 = info3;</span>
+<span class="fc" id="L259">	}</span>
 	public String getInfo4()
 	{
 <span class="nc" id="L262">		return info4;</span>
 	}
 	public void setInfo4(String info4)
 	{
-<span class="nc" id="L266">		this.info4 = info4;</span>
-<span class="nc" id="L267">	}</span>
+<span class="fc" id="L266">		this.info4 = info4;</span>
+<span class="fc" id="L267">	}</span>
 	public String getInfo5()
 	{
 <span class="nc" id="L270">		return info5;</span>
 	}
 	public void setInfo5(String info5)
 	{
-<span class="nc" id="L274">		this.info5 = info5;</span>
-<span class="nc" id="L275">	}</span>
+<span class="fc" id="L274">		this.info5 = info5;</span>
+<span class="fc" id="L275">	}</span>
 	public int getNotifyHoursBefore()
 	{
 <span class="nc" id="L278">		return notifyHoursBefore;</span>
 	}
 	public void setNotifyHoursBefore(int notifyHoursBefore)
 	{
-<span class="nc" id="L282">		this.notifyHoursBefore = notifyHoursBefore;</span>
-<span class="nc" id="L283">	}</span>
+<span class="fc" id="L282">		this.notifyHoursBefore = notifyHoursBefore;</span>
+<span class="fc" id="L283">	}</span>
 	public String getNotifyEmails()
 	{
 <span class="nc" id="L286">		return notifyEmails;</span>
 	}
 	public void setNotifyEmails(String notifyEmails)
 	{
-<span class="nc" id="L290">		this.notifyEmails = notifyEmails;</span>
-<span class="nc" id="L291">	}</span>
+<span class="fc" id="L290">		this.notifyEmails = notifyEmails;</span>
+<span class="fc" id="L291">	}</span>
 	public String getNotifySender()
 	{
 <span class="nc" id="L294">		return notifySender;</span>
 	}
 	public void setNotifySender(String notifySender)
 	{
-<span class="nc" id="L298">		this.notifySender = notifySender;</span>
-<span class="nc" id="L299">	}</span>
+<span class="fc" id="L298">		this.notifySender = notifySender;</span>
+<span class="fc" id="L299">	}</span>
 	public String getNotifyIntrotext()
 	{
 <span class="nc" id="L302">		return notifyIntrotext;</span>
 	}
 	public void setNotifyIntrotext(String notifyIntrotext)
 	{
-<span class="nc" id="L306">		this.notifyIntrotext = notifyIntrotext;</span>
-<span class="nc" id="L307">	}</span>
+<span class="fc" id="L306">		this.notifyIntrotext = notifyIntrotext;</span>
+<span class="fc" id="L307">	}</span>
 	public boolean isNotifySendSMS()
 	{
 <span class="nc" id="L310">		return notifySendSMS;</span>
 	}
 	public void setNotifySendSMS(boolean notifySendSMS)
 	{
-<span class="nc" id="L314">		this.notifySendSMS = notifySendSMS;</span>
-<span class="nc" id="L315">	}</span>
+<span class="fc" id="L314">		this.notifySendSMS = notifySendSMS;</span>
+<span class="fc" id="L315">	}</span>
 	public String getLng()
 	{
 <span class="nc" id="L318">		return lng;</span>
 	}
 	public void setLng(String lng)
 	{
-<span class="nc" id="L322">		this.lng = lng;</span>
-<span class="nc" id="L323">	}</span>
+<span class="fc" id="L322">		this.lng = lng;</span>
+<span class="fc" id="L323">	}</span>
 
 	public int getCreatorId()
 	{
@@ -329,8 +329,8 @@ import sk.iway.iwcm.Constants;
 
 	public void setCreatorId(int creatorId)
 	{
-<span class="nc" id="L332">		this.creatorId = creatorId;</span>
-<span class="nc" id="L333">	}</span>
+<span class="fc" id="L332">		this.creatorId = creatorId;</span>
+<span class="fc" id="L333">	}</span>
 
 	public int getApprove()
 	{
@@ -339,8 +339,8 @@ import sk.iway.iwcm.Constants;
 
 	public void setApprove(int approve)
 	{
-<span class="nc" id="L342">		this.approve = approve;</span>
-<span class="nc" id="L343">	}</span>
+<span class="fc" id="L342">		this.approve = approve;</span>
+<span class="fc" id="L343">	}</span>
 
 	public boolean isSuggest()
 	{
@@ -349,8 +349,8 @@ import sk.iway.iwcm.Constants;
 
 	public void setSuggest(boolean suggest)
 	{
-<span class="nc" id="L352">		this.suggest = suggest;</span>
-<span class="nc" id="L353">	}</span>
+<span class="fc" id="L352">		this.suggest = suggest;</span>
+<span class="fc" id="L353">	}</span>
 
 	public String getHashString() {
 <span class="nc" id="L356">		return hashString;</span>
@@ -369,4 +369,4 @@ import sk.iway.iwcm.Constants;
 <span class="nc" id="L369">	}</span>
 	
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

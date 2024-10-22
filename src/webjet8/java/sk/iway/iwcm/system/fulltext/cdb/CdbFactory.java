@@ -4,8 +4,6 @@ import java.io.File;
 
 import io.github.duckasteroid.cdb.Cdb;
 
-import org.apache.commons.pool.PoolableObjectFactory;
-
 import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
 
 /**
@@ -19,34 +17,19 @@ import sk.iway.iwcm.system.fulltext.lucene.LuceneUtils;
  *@created      Date: 17.5.2011 10:27:51
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-@SuppressWarnings("rawtypes")
-public class CdbFactory implements PoolableObjectFactory
+public class CdbFactory
 {
 	public enum Type {
-		Lemmas,Synonyms
+		LEMMAS,SYNONYMS
 	}
-
 
 	private String language;
 	private Type type;
 
-	/**
-	 *
-	 */
 	public CdbFactory(String language,Type type)
 	{
 		this.language = language;
 		this.type = type;
-	}
-
-	public boolean validateObject(Object obj)
-	{
-		return false;
-	}
-
-	public void passivateObject(Object obj) throws Exception
-	{
-		//
 	}
 
 	public Object makeObject() throws Exception
@@ -59,11 +42,6 @@ public class CdbFactory implements PoolableObjectFactory
 	{
 		Cdb cdb = (Cdb) obj;
 		cdb.close();
-	}
-
-	public void activateObject(Object obj) throws Exception
-	{
-		//
 	}
 
 }

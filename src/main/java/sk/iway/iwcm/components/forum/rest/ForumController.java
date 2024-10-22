@@ -30,7 +30,7 @@ public class ForumController {
     @PostMapping("/saveForumFile")
     public String saveForumFile(@RequestParam("uploadedFile") CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
         try {
-            return DocForumService.uploadForumFile(uploadFile, request, response);
+            return DocForumService.uploadForumFile(uploadFile, request);
         } catch(Exception e) {
            sk.iway.iwcm.Logger.error(e);
         }

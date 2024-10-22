@@ -1,0 +1,89 @@
+ <div class="sidebar-section">Programátor systému WebJET CMS</div>
+
+- [:point\_left: Zpět na úvod](/?back)
+- Instalace a uvedení do provozu
+  - [Instalace a uvedení do provozu](/developer/install/README.md)
+  - [Development Containers](/developer/install/devcontainers/README.md)
+- Použité frameworky
+  - [Použité frameworky](/developer/frameworks/README.md)
+  - [Bootstrap](/developer/frameworks/bootstrap.md)
+  - [PugJS](/developer/frameworks/pugjs.md)
+  - [Thymeleaf](/developer/frameworks/thymeleaf.md)
+  - [Vue.js](/developer/frameworks/vue.md)
+  - [Spring DATA + REST](/developer/frameworks/spring.md)
+  - [Funkce WebJET v jazyce JavaScript](/developer/frameworks/webjetjs.md)
+  - [Přechod ze systému Struts na Spring](/developer/frameworks/struts/README.md)
+  - Grafy přes amcharts
+    - [Grafy přes amcharts](/developer/frameworks/amcharts.md)
+    - [Backend](/developer/frameworks/charts/backend/README.md)
+    - [Frontend](/developer/frameworks/charts/frontend/README.md)
+    - [Běžné funkce JS](/developer/frameworks/charts/frontend/statjs.md)
+  - [Překlady v souborech JavaScript](/developer/frameworks/jstranslate.md)
+  - [jsTree](/developer/jstree/README.md)
+  - Použité knihovny
+    - [Nástroje](/developer/libraries/tools.md)
+    - [Obchod](/developer/libraries/store.md)
+    - [StorageHandler](/developer/libraries/storage-handler.md)
+    - [Translator](/developer/libraries/translator.md)
+    - [ReadyExtender](/developer/libraries/ready-extender.md)
+    - JsTree rozšiřuje
+      - [jsTreeDocumentOpener](/developer/libraries/js-tree-document-opener.md)
+      - [jsTreeFolderOpener](/developer/libraries/js-tree-folder-opener.md)
+    - DataTables rozšiřuje
+      - [CellVisibilityService](/developer/libraries/cell-visibility-service.md)
+      - [DatatableOpener](/developer/libraries/datatable-opener.md)
+    - [Kvalita hesel](/developer/libraries/password-strength.md)
+- Datové tabulky
+  - [Datové tabulky](/developer/datatables/README.md)
+  - [Možnosti konfigurace objektu sloupců pomocí anotace JAVA](/developer/datatables-editor/datatable-columns.md)
+  - [REST Controller](/developer/datatables/restcontroller.md)
+  - [Export a import](/developer/datatables/export-import.md)
+  - [Oddělení dat domény](/developer/datatables/domainid.md)
+- Editor datových tabulek
+  - [Editor datových tabulek](/developer/datatables-editor/README.md)
+  - [Typy polí pro editor](/developer/datatables-editor/standard-fields.md)
+  - [Přidání pole adresářů a webových stránek](/developer/datatables-editor/field-json.md)
+  - [Vnořené datové pole v editoru](/developer/datatables-editor/field-datatable.md)
+  - [Vyhledávač polí/výběr souborů](/developer/datatables-editor/field-elfinder.md)
+  - [Pole jstree - stromová struktura](/developer/datatables-editor/field-jstree.md)
+  - [Výběrové pole s úpravami](/developer/datatables-editor/field-select-editable.md)
+  - [Automatické dokončování](/developer/datatables-editor/autocomplete.md)
+  - [Úprava buňky](/developer/datatables-editor/bubble.md)
+  - [Volitelná pole](/developer/datatables-editor/customfields.md)
+  - [Oznámení](/developer/datatables-editor/notify.md)
+  - [Oznámení o konfliktu](/developer/datatables-editor/editor-locking.md)
+- Testování
+  - [Testování](/developer/testing/README.md)
+  - [Automatické testování DataTables](/developer/testing/datatable.md)
+  - [DataTables - testování importu](/developer/testing/datatable-import.md)
+  - [Generování snímků obrazovky dokumentace](/developer/testing/screenshots.md)
+  - [Reporty přes Allure](/developer/testing/allure.md)
+  - [Pokrytí kódu](/developer/testing/codecoverage.md)
+  - [Souběžné provádění testů](/developer/testing/parallel.md)
+- [Překlad dokumentace](/developer/documentation-translate/README.md)
+- Ukázka kódu
+  - [Aplikace PugJS](/developer/frameworks/example.md)
+- Backend
+  - [Backend](/developer/backend/README.md)
+  - [Audit](/developer/backend/auditing.md)
+  - [Zabezpečení](/developer/backend/security.md)
+  - [JPA](/developer/backend/jpa.md)
+  - [Mapování objektů DTO](/developer/backend/mapstruct.md)
+  - [Události](/developer/backend/events.md)
+- Aplikace a moduly
+  - Webové stránky
+    - [Frontend](/developer/apps/webpages/README.md)
+    - [Backend API](/developer/apps/webpages/api.md)
+    - [Page Builder](/developer/apps/webpages/pagebuilder.md)
+  - [Zrcadlení struktury](/developer/apps/docmirroring.md)
+  - [Seznam uživatelů](/developer/apps/users/README.md)
+- Řešení problémů
+  - [Možné chyby](/developer/troubles/README.md)
+- Požadavky na vývoj
+  - [Práce se systémem Git/Gitlab](/developer/guidelines/gitlab.md)
+  - [Definice slova Hotovo](/developer/guidelines/definition-of-done.md)
+  - [Terminologie pojmů/výrazů](/developer/guidelines/terms.md)
+- Deployment
+  - [Verze deploymentu v arfifactory/maven](/developer/install/deployment.md)
+- JavaDoc
+  - [WebJET CMS](/javadoc/index.html)

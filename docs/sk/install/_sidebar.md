@@ -9,6 +9,7 @@
 - Konfigurácia
   - [Základná konfigurácia](/install/config/README.md)
   - [Externá konfigurácia](/install/external-configuration.md)
+  - [Spam ochrana](/install/config/spam-protection.md)
 - Migrácia
   - [Migrácia medzi prostrediami](/install/migrate-dev-prod.md)
 - MultiWeb

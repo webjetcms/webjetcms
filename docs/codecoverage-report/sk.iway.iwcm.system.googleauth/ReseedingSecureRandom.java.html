@@ -26,7 +26,7 @@ class ReseedingSecureRandom {
     private static final int MAX_OPERATIONS = 1_000_000;
     private final String provider;
     private final String algorithm;
-<span class="nc" id="L29">    private final AtomicInteger count = new AtomicInteger(0);</span>
+<span class="pc" id="L29">    private final AtomicInteger count = new AtomicInteger(0);</span>
     private SecureRandom secureRandom;
 
     @SuppressWarnings(&quot;UnusedDeclaration&quot;)
@@ -49,29 +49,29 @@ class ReseedingSecureRandom {
 <span class="nc" id="L49">        buildSecureRandom();</span>
 <span class="nc" id="L50">    }</span>
 
-<span class="nc" id="L52">    ReseedingSecureRandom(String algorithm, String provider) {</span>
-<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (algorithm == null) {</span>
+<span class="fc" id="L52">    ReseedingSecureRandom(String algorithm, String provider) {</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">        if (algorithm == null) {</span>
 <span class="nc" id="L54">            throw new IllegalArgumentException(&quot;Algorithm cannot be null.&quot;);</span>
         }
 
-<span class="nc bnc" id="L57" title="All 2 branches missed.">        if (provider == null) {</span>
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (provider == null) {</span>
 <span class="nc" id="L58">            throw new IllegalArgumentException(&quot;Provider cannot be null.&quot;);</span>
         }
 
-<span class="nc" id="L61">        this.algorithm = algorithm;</span>
-<span class="nc" id="L62">        this.provider = provider;</span>
+<span class="fc" id="L61">        this.algorithm = algorithm;</span>
+<span class="fc" id="L62">        this.provider = provider;</span>
 
-<span class="nc" id="L64">        buildSecureRandom();</span>
-<span class="nc" id="L65">    }</span>
+<span class="fc" id="L64">        buildSecureRandom();</span>
+<span class="fc" id="L65">    }</span>
 
     private void buildSecureRandom() {
         try {
-<span class="nc bnc" id="L69" title="All 4 branches missed.">            if (this.algorithm == null &amp;&amp; this.provider == null) {</span>
+<span class="pc bpc" id="L69" title="3 of 4 branches missed.">            if (this.algorithm == null &amp;&amp; this.provider == null) {</span>
 <span class="nc" id="L70">                this.secureRandom = new SecureRandom();</span>
-<span class="nc bnc" id="L71" title="All 2 branches missed.">            } else if (this.provider == null) {</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            } else if (this.provider == null) {</span>
 <span class="nc" id="L72">                this.secureRandom = SecureRandom.getInstance(this.algorithm);</span>
             } else {
-<span class="nc" id="L74">                this.secureRandom = SecureRandom.getInstance(this.algorithm, this.provider);</span>
+<span class="fc" id="L74">                this.secureRandom = SecureRandom.getInstance(this.algorithm, this.provider);</span>
             }
 <span class="nc" id="L76">        } catch (NoSuchAlgorithmException e) {</span>
 <span class="nc" id="L77">            throw new GoogleAuthenticatorException(</span>
@@ -91,11 +91,11 @@ class ReseedingSecureRandom {
                             GoogleAuthenticator.RNG_ALGORITHM_PROVIDER
                     ), e
             );
-<span class="nc" id="L94">        }</span>
-<span class="nc" id="L95">    }</span>
+<span class="fc" id="L94">        }</span>
+<span class="fc" id="L95">    }</span>
 
     void nextBytes(byte[] bytes) {
-<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (count.incrementAndGet() &gt; MAX_OPERATIONS) {</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (count.incrementAndGet() &gt; MAX_OPERATIONS) {</span>
 <span class="nc" id="L99">            synchronized (this) {</span>
 <span class="nc bnc" id="L100" title="All 2 branches missed.">                if (count.get() &gt; MAX_OPERATIONS) {</span>
 <span class="nc" id="L101">                    buildSecureRandom();</span>
@@ -104,7 +104,7 @@ class ReseedingSecureRandom {
 <span class="nc" id="L104">            }</span>
         }
 
-<span class="nc" id="L107">        this.secureRandom.nextBytes(bytes);</span>
-<span class="nc" id="L108">    }</span>
+<span class="fc" id="L107">        this.secureRandom.nextBytes(bytes);</span>
+<span class="fc" id="L108">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

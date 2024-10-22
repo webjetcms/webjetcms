@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
     @ResponseBody
     public void indexFileOrFolder(@RequestParam(required = false) String file, @RequestParam(required = false) String dir, HttpServletRequest request, HttpServletResponse response) {
         try {
-<span class="fc" id="L20">            FileIndexer.indexFileOrFolder(file, dir, request, response);</span>
+<span class="nc" id="L20">            FileIndexer.indexFileOrFolder(file, dir, request, response);</span>
 <span class="nc" id="L21">        } catch(Exception e) {</span>
 <span class="nc" id="L22">            sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L23">        }</span>
-<span class="fc" id="L24">    }</span>
+<span class="nc" id="L23">        }</span>
+<span class="nc" id="L24">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

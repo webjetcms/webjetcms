@@ -31,34 +31,38 @@ public class DocumentsJsTreeItem extends JsTreeItem {
         }
 
 <span class="fc bfc" id="L33" title="All 2 branches covered.">        if (Tools.isNotEmpty(docDetails.getExternalLink())) {</span>
-<span class="fc" id="L34">            addTextIcon(&quot;fas fa-external-link-alt&quot;);</span>
+<span class="fc" id="L34">            addTextIcon(&quot;ti ti-external-link&quot;);</span>
         }
 
 <span class="fc bfc" id="L37" title="All 2 branches covered.">        if (!docDetails.isSearchable()) {</span>
-<span class="fc" id="L38">            addTextIcon(&quot;fas fa-eye-slash&quot;);</span>
+<span class="fc" id="L38">            addTextIcon(&quot;ti ti-eye-off&quot;);</span>
         }
 
 <span class="fc bfc" id="L41" title="All 2 branches covered.">        if (Tools.isNotEmpty(docDetails.getPasswordProtected())) {</span>
-<span class="fc" id="L42">            addTextIcon(&quot;fas fa-lock&quot;);</span>
+<span class="fc" id="L42">            addTextIcon(&quot;ti ti-lock&quot;);</span>
         }
 
-<span class="fc" id="L45">        String faPrefix = &quot;fas&quot;;</span>
-<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (docDetails.isShowInMenu()==false) faPrefix = &quot;fal&quot;;</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (docDetails.getDocId()==groupDefaultDocId) addLiClass(&quot;is-default-page&quot;);</span>
+<span class="fc" id="L45">        String icon = &quot;article&quot;;</span>
+<span class="fc" id="L46">        String suffix = &quot;-filled&quot;;</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        if (docDetails.isShowInMenu()==false) suffix = &quot;&quot;;</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (docDetails.getDocId()==groupDefaultDocId) {</span>
+<span class="fc" id="L49">            addLiClass(&quot;is-default-page&quot;);</span>
+<span class="fc" id="L50">            icon = &quot;star&quot;;</span>
+        }
 
-<span class="fc" id="L49">        return faPrefix+&quot; fa-globe&quot;;</span>
+<span class="fc" id="L53">        return &quot;ti ti-&quot;+icon+suffix;</span>
     }
 
     private JsTreeItemState getStatePrivate() {
-<span class="fc" id="L53">        return new JsTreeItemState();</span>
+<span class="fc" id="L57">        return new JsTreeItemState();</span>
     }
 
     public DocDetails getDocDetails() {
-<span class="fc" id="L57">        return docDetails;</span>
+<span class="fc" id="L61">        return docDetails;</span>
     }
 
     public void setDocDetails(DocDetails docDetails) {
-<span class="nc" id="L61">        this.docDetails = docDetails;</span>
-<span class="nc" id="L62">    }</span>
+<span class="nc" id="L65">        this.docDetails = docDetails;</span>
+<span class="nc" id="L66">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

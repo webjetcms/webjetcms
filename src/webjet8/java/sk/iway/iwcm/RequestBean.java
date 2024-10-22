@@ -46,6 +46,7 @@ public class RequestBean
 	private Map<String, String[]> parameters = new HashMap<>();
 	private String headerOrigin;
 	private List<String> allowedParameters = new LinkedList<>();
+	private Map<String, String[]> auditValues = new HashMap<>();
 
 	private List<String> errors;
 
@@ -273,6 +274,46 @@ public class RequestBean
 			Map<String, String[]> parameters = requestBean.getAllParameters();
 			parameters.put(key, value);
 			requestBean.setParameters(parameters);
+		}
+	}
+
+	public Map<String, String[]> getAuditValues(boolean createIfNull) {
+		if (createIfNull && auditValues == null) {
+			auditValues = new LinkedHashMap<>();
+		}
+		return auditValues;
+	}
+
+	/**
+	 * Add audit value for use with AuditEntityListener
+	 * @param key
+	 * @param value
+	 */
+	public static void addAuditValue(String key, String value) {
+		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (requestBean != null) {
+			Map<String, String[]> auditValues = requestBean.getAuditValues(true);
+			String[] val = auditValues.get(key);
+			if (val != null) {
+				List<String> strings = new ArrayList<>(Arrays.asList(val));
+				strings.add(value);
+				val = strings.toArray(new String[0]);
+			}
+			else {
+				val = new String[]{value};
+			}
+
+			auditValues.put(key, val);
+		}
+	}
+
+	public static void removeAuditValue(String key) {
+		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+		if (requestBean != null) {
+			Map<String, String[]> auditValues = requestBean.getAuditValues(false);
+			if (auditValues != null) {
+				auditValues.remove(key);
+			}
 		}
 	}
 

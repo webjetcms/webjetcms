@@ -876,8 +876,8 @@ public class PathFilter implements Filter
 				}
 			}
 
-			//posielaj admin/v9/dist/ adresar ako utf-8
-			if (path.startsWith("/admin/v9/dist") && (path.endsWith(".js") || path.endsWith(".css")))
+			//posielaj admin/v9/dist/ alebo /admin/elFinder adresar ako utf-8
+			if ((path.startsWith("/admin/v9/dist") || path.startsWith("/admin/elFinder")) && (path.endsWith(".js") || path.endsWith(".css")))
 			{
 				IwcmFile f = new IwcmFile(Tools.getRealPath(path));
 				if (f.exists() && f.canRead())
@@ -907,6 +907,22 @@ public class PathFilter implements Filter
 			{
 				if (path.endsWith(".woff2")) res.setHeader("Content-Type", "font/woff2");
 				else res.setHeader("Content-Type", "font/woff");
+			}
+
+			//disable direct call to abtesting variant URL eg. /investicie/abtestvariantb.html for NON admin users
+			if (path.contains(Constants.getString("ABTestingName")))
+			{
+				if (Constants.getBoolean("ABTestingAllowVariantUrl")==false) {
+					if (user == null || user.isAdmin()==false) {
+						Logger.debug(PathFilter.class, "ABTesting direct call, not allowed for non admin, forwarding to 404.jsp");
+						res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+						forwardSafely("/404.jsp", req, res);
+						return;
+					}
+				} else {
+					//prefer URL variant instead of cookie value
+					req.setAttribute("ABTestingPrefferVariantUrl", "true");
+				}
 			}
 
 			//accessDocId je docId web stranky, ktoru sa zobrazuje, ku ktorej sa pristupuje z verejnej casti sidla, nie admin cast
@@ -1654,7 +1670,7 @@ public class PathFilter implements Filter
 		try
 		{
 			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM dirprop");
+			ps = db_conn.prepareStatement("SELECT * FROM dirprop"); //NOSONAR
 			rs = ps.executeQuery();
 			EditForm ef;
 			String passProtected;

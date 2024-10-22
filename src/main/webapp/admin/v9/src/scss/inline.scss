@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+//TABLER
+$ti-font-path: "~@tabler/icons-webfont/dist/fonts";
+$ti-font-name-filled: "tabler-icons-filled";
+
+//special CSS file build into dist/css/vendor-inline.style.css for use in inline editor
+@import "~@tabler/icons-webfont/dist/tabler-icons-filled";
+@import "~@tabler/icons-webfont/dist/tabler-icons";
+
+@import "5-modules/md-dt-ckeditor";

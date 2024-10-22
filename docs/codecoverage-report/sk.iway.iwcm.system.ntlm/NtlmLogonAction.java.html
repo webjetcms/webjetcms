@@ -220,7 +220,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L220">			user = new UserDetails();</span>
 <span class="nc" id="L221">			user.setUserId(-1);</span>
 <span class="nc" id="L222">			user.setLogin(loginName);</span>
-<span class="nc" id="L223">			user.setPasswordPlain(Password.generatePassword(10));</span>
+<span class="nc" id="L223">			user.setPassword(Password.generatePassword(10));</span>
 		}
 
 <span class="nc" id="L226">		doLdapQuery(user);</span>
@@ -320,7 +320,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc bnc" id="L320" title="All 2 branches missed.">		if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
 		{
 <span class="nc" id="L322">			password = user.getLogin();</span>
-<span class="nc" id="L323">			user.setPasswordPlain(password);</span>
+<span class="nc" id="L323">			user.setPassword(password);</span>
 <span class="nc" id="L324">			Logger.debug(NtlmLogonAction.class, &quot;NtlmLogonAction - Pass use hash, nastavujem na &quot;+user.getLogin());</span>
 		}
 
@@ -597,7 +597,7 @@ import sk.iway.iwcm.users.UsersDB;
 
 <span class="nc bnc" id="L598" title="All 2 branches missed.">			if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
 			{
-<span class="nc" id="L600">				user.setPasswordPlain(user.getLogin());</span>
+<span class="nc" id="L600">				user.setPassword(user.getLogin());</span>
 			}
 
 	     }
@@ -1065,4 +1065,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L1065">		return escapedString.toString();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

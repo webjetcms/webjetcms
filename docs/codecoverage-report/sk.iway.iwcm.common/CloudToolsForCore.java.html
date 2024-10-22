@@ -63,7 +63,7 @@ public class CloudToolsForCore {
 <span class="fc" id="L63">            domain = rb.getDomain();</span>
 
             //pre niektore adresare musime vratiti default domain, napr. /images/gallery/user/
-<span class="pc bpc" id="L66" title="2 of 4 branches missed.">            if(Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;domainIdFixedUrls&quot;))</span>
+<span class="pc bpc" id="L66" title="1 of 4 branches missed.">            if(Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;domainIdFixedUrls&quot;))</span>
 <span class="fc bfc" id="L67" title="All 2 branches covered.">                    &amp;&amp; rb.isUserAdmin())</span>
             {
 <span class="fc bfc" id="L69" title="All 2 branches covered.">                if (DocTools.isXssStrictUrlException(rb.getUrl(), &quot;domainIdFixedUrls&quot;) ||</span>
@@ -282,106 +282,106 @@ public class CloudToolsForCore {
      */
     public static void setPermissions(Identity user, RequestBean rb)
     {
-<span class="nc" id="L285">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L286">        List&lt;GroupDetails&gt; rootGroups = groupsDB.getGroups(0);</span>
-
-<span class="nc" id="L288">        user.setEditablePages(&quot;&quot;);</span>
-<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="nc" id="L285">        user.setEditablePages(&quot;&quot;);</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
         {
-<span class="nc" id="L291">            user.setEditableGroups(&quot;&quot;);</span>
+<span class="nc" id="L288">            user.setEditableGroups(&quot;&quot;);</span>
         }
-<span class="nc bnc" id="L293" title="All 2 branches missed.">        else if (Tools.isNotEmpty(user.getEditableGroups()))</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">        else if (Tools.isNotEmpty(user.getEditableGroups()))</span>
         {
-<span class="nc" id="L295">            user.setEditableGroups(filterGroupIds(user.getEditableGroups()));</span>
+<span class="nc" id="L292">            user.setEditableGroups(filterGroupIds(user.getEditableGroups()));</span>
         }
 
-<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (Tools.isEmpty(user.getEditableGroups()))</span>
-        {
-<span class="nc bnc" id="L300" title="All 2 branches missed.">            for (GroupDetails g : rootGroups)</span>
-            {
-<span class="nc bnc" id="L302" title="All 2 branches missed.">                if (g.getDomainName().equalsIgnoreCase(rb.getDomain()))</span>
-                {
-<span class="nc" id="L304">                    user.setEditableGroups(String.valueOf(g.getGroupId()));</span>
-                }
-<span class="nc" id="L306">            }</span>
-        }
+<span class="nc" id="L295">        String defaultFolders = &quot;/images/*\n/files/*&quot;;</span>
 
-<span class="nc" id="L309">        String defaultFolders = &quot;/images/*\n/files/*&quot;;</span>
-
-<span class="nc" id="L311">        user.setWritableFolders(filterWritableFolders(user.getWritableFolders()));</span>
-<span class="nc bnc" id="L312" title="All 2 branches missed.">        if (Tools.isEmpty(user.getWritableFolders()))</span>
+<span class="nc" id="L297">        user.setWritableFolders(filterWritableFolders(user.getWritableFolders()));</span>
+<span class="nc bnc" id="L298" title="All 2 branches missed.">        if (Tools.isEmpty(user.getWritableFolders()))</span>
         {
 
-<span class="nc" id="L315">            String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
-<span class="nc bnc" id="L316" title="All 4 branches missed.">            if (&quot;cloud&quot;.equals(Constants.getInstallName())==false &amp;&amp; Tools.isNotEmpty(domainAlias))</span>
+<span class="nc" id="L301">            String domainAlias = MultiDomainFilter.getDomainAlias(CloudToolsForCore.getDomainName());</span>
+<span class="nc bnc" id="L302" title="All 4 branches missed.">            if (&quot;cloud&quot;.equals(Constants.getInstallName())==false &amp;&amp; Tools.isNotEmpty(domainAlias))</span>
             {
                 //pre multiweb pridame tieto adresare ak ma domena domainAlias
-<span class="nc" id="L319">                defaultFolders += &quot;\n/components/&quot;+domainAlias+&quot;/*\n/templates/&quot;+domainAlias+&quot;/*&quot;;</span>
+<span class="nc" id="L305">                defaultFolders += &quot;\n/components/&quot;+domainAlias+&quot;/*\n/templates/&quot;+domainAlias+&quot;/*&quot;;</span>
             }
 
-<span class="nc" id="L322">            user.setWritableFolders(defaultFolders);</span>
+<span class="nc" id="L308">            user.setWritableFolders(defaultFolders);</span>
         }
 
         //vytvor adresare (ak neexistuju)
-<span class="nc" id="L326">        IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/images/&quot;));</span>
-<span class="nc bnc" id="L327" title="All 2 branches missed.">        if (f.exists()==false) f.mkdirs();</span>
+<span class="nc" id="L312">        IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/images/&quot;));</span>
+<span class="nc bnc" id="L313" title="All 2 branches missed.">        if (f.exists()==false) f.mkdirs();</span>
 
-<span class="nc" id="L329">        f = new IwcmFile(Tools.getRealPath(&quot;/files/&quot;));</span>
-<span class="nc bnc" id="L330" title="All 2 branches missed.">        if (f.exists()==false) f.mkdirs();</span>
+<span class="nc" id="L315">        f = new IwcmFile(Tools.getRealPath(&quot;/files/&quot;));</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">        if (f.exists()==false) f.mkdirs();</span>
 
         //nastav prava na moduly
-<span class="nc bnc" id="L333" title="All 2 branches missed.">        if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">        if (&quot;cloud&quot;.equals(Constants.getInstallName()))</span>
         {
             //nastav disabled items
-<span class="nc" id="L336">            Map&lt;String, String&gt; disabledItemsTable = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L337">            user.setDisabledItemsTable(disabledItemsTable);</span>
-<span class="nc" id="L338">            user.addDisabledItem(&quot;menuSync&quot;);</span>
+<span class="nc" id="L322">            Map&lt;String, String&gt; disabledItemsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L323">            user.setDisabledItemsTable(disabledItemsTable);</span>
+<span class="nc" id="L324">            user.addDisabledItem(&quot;menuSync&quot;);</span>
 
-<span class="nc" id="L340">            user.addDisabledItem(&quot;menuConfig&quot;);</span>
-<span class="nc" id="L341">            user.addDisabledItem(&quot;modUpdate&quot;);</span>
-<span class="nc" id="L342">            user.addDisabledItem(&quot;cmp_adminlog&quot;);</span>
-<span class="nc" id="L343">            user.addDisabledItem(&quot;edit_text&quot;);</span>
-<span class="nc" id="L344">            user.addDisabledItem(&quot;cmp_data_deleting&quot;);</span>
-<span class="nc" id="L345">            user.addDisabledItem(&quot;cmp_server_monitoring&quot;);</span>
-<span class="nc" id="L346">            user.addDisabledItem(&quot;cmp_redirects&quot;);</span>
-<span class="nc" id="L347">            user.addDisabledItem(&quot;modRestart&quot;);</span>
-<span class="nc" id="L348">            user.addDisabledItem(&quot;cmp_crontab&quot;);</span>
-<span class="nc" id="L349">            user.addDisabledItem(&quot;make_zip_archive&quot;);</span>
-<span class="nc" id="L350">            user.addDisabledItem(&quot;cmp_attributes&quot;);</span>
-<span class="nc" id="L351">            user.addDisabledItem(&quot;export_offline&quot;);</span>
-<span class="nc" id="L352">            user.addDisabledItem(&quot;cmp_clone_structure&quot;);</span>
+<span class="nc" id="L326">            user.addDisabledItem(&quot;menuConfig&quot;);</span>
+<span class="nc" id="L327">            user.addDisabledItem(&quot;modUpdate&quot;);</span>
+<span class="nc" id="L328">            user.addDisabledItem(&quot;cmp_adminlog&quot;);</span>
+<span class="nc" id="L329">            user.addDisabledItem(&quot;edit_text&quot;);</span>
+<span class="nc" id="L330">            user.addDisabledItem(&quot;cmp_data_deleting&quot;);</span>
+<span class="nc" id="L331">            user.addDisabledItem(&quot;cmp_server_monitoring&quot;);</span>
+<span class="nc" id="L332">            user.addDisabledItem(&quot;cmp_redirects&quot;);</span>
+<span class="nc" id="L333">            user.addDisabledItem(&quot;modRestart&quot;);</span>
+<span class="nc" id="L334">            user.addDisabledItem(&quot;cmp_crontab&quot;);</span>
+<span class="nc" id="L335">            user.addDisabledItem(&quot;make_zip_archive&quot;);</span>
+<span class="nc" id="L336">            user.addDisabledItem(&quot;cmp_attributes&quot;);</span>
+<span class="nc" id="L337">            user.addDisabledItem(&quot;export_offline&quot;);</span>
+<span class="nc" id="L338">            user.addDisabledItem(&quot;cmp_clone_structure&quot;);</span>
 
-<span class="nc" id="L354">            user.addDisabledItem(&quot;menuGDPRregexp&quot;);</span>
-<span class="nc" id="L355">            user.addDisabledItem(&quot;menuGDPRDelete&quot;);</span>
-<span class="nc" id="L356">        }</span>
+<span class="nc" id="L340">            user.addDisabledItem(&quot;menuGDPRregexp&quot;);</span>
+<span class="nc" id="L341">            user.addDisabledItem(&quot;menuGDPRDelete&quot;);</span>
+
+<span class="nc" id="L343">            user.addDisabledItem(&quot;menu.users&quot;);</span>
+<span class="nc" id="L344">            user.addDisabledItem(&quot;user.admin.userGroups&quot;);</span>
+<span class="nc" id="L345">            user.addDisabledItem(&quot;users.perm_groups&quot;);</span>
+<span class="nc" id="L346">            user.addDisabledItem(&quot;menu.fbrowser&quot;);</span>
+<span class="nc" id="L347">            user.addDisabledItem(&quot;menu.templates&quot;);</span>
+<span class="nc" id="L348">        }</span>
         else
         {
-<span class="nc bnc" id="L359" title="All 6 branches missed.">            if (CloudToolsForCore.getDomainId()==1 &amp;&amp; (user.getEmail().indexOf(&quot;@interway.sk&quot;)!=-1 || user.getEmail().indexOf(&quot;@webactive.cz&quot;)!=-1))</span>
+<span class="nc bnc" id="L351" title="All 2 branches missed.">            if (isControllerDomain())</span>
             {
                 //prvemu hostu a iway || webactive user povolime niektore systemove moduly
             }
             else
             {
-<span class="nc" id="L365">                user.addDisabledItem(&quot;menuConfig&quot;);</span>
-<span class="nc" id="L366">                user.addDisabledItem(&quot;modUpdate&quot;);</span>
-<span class="nc" id="L367">                user.addDisabledItem(&quot;cmp_adminlog&quot;);</span>
-<span class="nc" id="L368">                user.addDisabledItem(&quot;edit_text&quot;);</span>
-<span class="nc" id="L369">                user.addDisabledItem(&quot;cmp_data_deleting&quot;);</span>
-<span class="nc" id="L370">                user.addDisabledItem(&quot;cmp_server_monitoring&quot;);</span>
+<span class="nc" id="L357">                user.addDisabledItem(&quot;menuConfig&quot;);</span>
+<span class="nc" id="L358">                user.addDisabledItem(&quot;modUpdate&quot;);</span>
+<span class="nc" id="L359">                user.addDisabledItem(&quot;cmp_adminlog&quot;);</span>
+<span class="nc" id="L360">                user.addDisabledItem(&quot;edit_text&quot;);</span>
+<span class="nc" id="L361">                user.addDisabledItem(&quot;cmp_data_deleting&quot;);</span>
+<span class="nc" id="L362">                user.addDisabledItem(&quot;cmp_server_monitoring&quot;);</span>
                 //uz je povolene user.addDisabledItem(&quot;cmp_redirects&quot;);
-<span class="nc" id="L372">                user.addDisabledItem(&quot;modRestart&quot;);</span>
-<span class="nc" id="L373">                user.addDisabledItem(&quot;cmp_crontab&quot;);</span>
+<span class="nc" id="L364">                user.addDisabledItem(&quot;modRestart&quot;);</span>
+<span class="nc" id="L365">                user.addDisabledItem(&quot;cmp_crontab&quot;);</span>
 
-<span class="nc" id="L375">                user.addDisabledItem(&quot;menuGDPRregexp&quot;);</span>
-<span class="nc" id="L376">                user.addDisabledItem(&quot;menuGDPRDelete&quot;);</span>
+<span class="nc" id="L367">                user.addDisabledItem(&quot;menuGDPRregexp&quot;);</span>
+<span class="nc" id="L368">                user.addDisabledItem(&quot;menuGDPRDelete&quot;);</span>
+
+                //domain limits allow only for first domain
+<span class="nc" id="L371">                user.addDisabledItem(&quot;cmp_dmail_domainlimits&quot;);</span>
+<span class="nc" id="L372">                user.addDisabledItem(&quot;cmp_response-header&quot;);</span>
+<span class="nc" id="L373">                user.addDisabledItem(&quot;cmp_adminlog_logging&quot;);</span>
+<span class="nc" id="L374">                user.addDisabledItem(&quot;cmp_in-memory-logging&quot;);</span>
+
+<span class="nc" id="L376">                user.addDisabledItem(&quot;user.admin.userGroups&quot;);</span>
+<span class="nc" id="L377">                user.addDisabledItem(&quot;users.perm_groups&quot;);</span>
             }
 
-<span class="nc" id="L379">            user.addDisabledItem(&quot;make_zip_archive&quot;);</span>
-<span class="nc" id="L380">            user.addDisabledItem(&quot;cmp_attributes&quot;);</span>
-<span class="nc" id="L381">            user.addDisabledItem(&quot;export_offline&quot;);</span>
-<span class="nc" id="L382">            user.addDisabledItem(&quot;cmp_clone_structure&quot;);</span>
-            //statistika uz je v multiwebe dostupna
-            //user.addDisabledItem(&quot;cmp_stat&quot;);
+<span class="nc" id="L380">            user.addDisabledItem(&quot;make_zip_archive&quot;);</span>
+<span class="nc" id="L381">            user.addDisabledItem(&quot;cmp_attributes&quot;);</span>
+<span class="nc" id="L382">            user.addDisabledItem(&quot;export_offline&quot;);</span>
+<span class="nc" id="L383">            user.addDisabledItem(&quot;cmp_clone_structure&quot;);</span>
+<span class="nc" id="L384">            user.addDisabledItem(&quot;cmp_stat_seeallgroups&quot;);</span>
 
 <span class="nc" id="L386">            String specialPerms = Constants.getString(&quot;multiwebSpecialPerms-&quot;+user.getUserId());</span>
 <span class="nc bnc" id="L387" title="All 2 branches missed.">            if (Tools.isNotEmpty(specialPerms))</span>
@@ -397,15 +397,24 @@ public class CloudToolsForCore {
 <span class="nc" id="L397">    }</span>
 
     /**
+     * In MultiWeb returns true for the first domain (controller) with more permissions
+     * @return
+     */
+    public static boolean isControllerDomain() {
+<span class="nc bnc" id="L404" title="All 2 branches missed.">        if (InitServlet.isTypeCloud() == false) return false;</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">        return CloudToolsForCore.getDomainId() == 1;</span>
+    }
+
+    /**
      * Ziska korenove ID adresara aktualne nastavenej domeny
      * @param request
      * @return
      */
     public static int getRootGroupId(HttpServletRequest request)
 	{
-<span class="pc bpc" id="L406" title="1 of 2 branches missed.">		if (InitServlet.isTypeCloud()) return CloudToolsForCore.getDomainId();</span>
+<span class="pc bpc" id="L415" title="1 of 2 branches missed.">		if (InitServlet.isTypeCloud()) return CloudToolsForCore.getDomainId();</span>
 		//aby nam to fungovalo aj na sablonovom WebJETe
-<span class="fc" id="L408">		return GroupsDB.getDomainId(DocDB.getDomain(request));</span>
+<span class="fc" id="L417">		return GroupsDB.getDomainId(DocDB.getDomain(request));</span>
 	}
 
     /**
@@ -415,13 +424,13 @@ public class CloudToolsForCore {
 	 */
 	public static String getValue(String param)
 	{
-<span class="nc" id="L418">		int rootGroupId = CloudToolsForCore.getDomainId();</span>
-<span class="nc bnc" id="L419" title="All 2 branches missed.">		if (rootGroupId &lt; 1) return null;</span>
+<span class="nc" id="L427">		int rootGroupId = CloudToolsForCore.getDomainId();</span>
+<span class="nc bnc" id="L428" title="All 2 branches missed.">		if (rootGroupId &lt; 1) return null;</span>
 
-<span class="nc" id="L421">		GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
-<span class="nc bnc" id="L422" title="All 2 branches missed.">		if (rootGroup == null) return null;</span>
+<span class="nc" id="L430">		GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+<span class="nc bnc" id="L431" title="All 2 branches missed.">		if (rootGroup == null) return null;</span>
 
-<span class="nc" id="L424">		return getValue(rootGroup.getFieldC(), param);</span>
+<span class="nc" id="L433">		return getValue(rootGroup.getFieldC(), param);</span>
 	}
 
 	/**
@@ -432,7 +441,7 @@ public class CloudToolsForCore {
 	 */
 	public static String getValue(String data, String param)
 	{
-<span class="nc" id="L435">		return StringUtils.substringBetween(data, param+&quot;=&quot;, &quot;;&quot;);</span>
+<span class="nc" id="L444">		return StringUtils.substringBetween(data, param+&quot;=&quot;, &quot;;&quot;);</span>
 	}
 
     /**
@@ -442,23 +451,23 @@ public class CloudToolsForCore {
 	 */
 	public static DocDetails isPossibleToChangeDoc(int docId)
 	{
-<span class="pc bpc" id="L445" title="3 of 4 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; docId&gt;0)</span>
+<span class="pc bpc" id="L454" title="3 of 4 branches missed.">		if (&quot;cloud&quot;.equals(Constants.getInstallName()) &amp;&amp; docId&gt;0)</span>
 		{
-<span class="nc" id="L447">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L448">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L456">			GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L457">			DocDB docDB = DocDB.getInstance();</span>
 
-<span class="nc" id="L450">			DocDetails existing = docDB.getBasicDocDetails(docId, false);</span>
-<span class="nc bnc" id="L451" title="All 6 branches missed.">			if (existing != null &amp;&amp;  ( existing.getTitle().equals(&quot;Header&quot;) || existing.getTitle().equals(&quot;Footer&quot;) ))</span>
+<span class="nc" id="L459">			DocDetails existing = docDB.getBasicDocDetails(docId, false);</span>
+<span class="nc bnc" id="L460" title="All 6 branches missed.">			if (existing != null &amp;&amp;  ( existing.getTitle().equals(&quot;Header&quot;) || existing.getTitle().equals(&quot;Footer&quot;) ))</span>
 			{
-<span class="nc" id="L453">				GroupDetails existingParentGroup = groupsDB.getGroup(existing.getGroupId());</span>
-<span class="nc bnc" id="L454" title="All 4 branches missed.">				if (existingParentGroup != null &amp;&amp; existingParentGroup.getGroupName().equals(&quot;System&quot;))</span>
+<span class="nc" id="L462">				GroupDetails existingParentGroup = groupsDB.getGroup(existing.getGroupId());</span>
+<span class="nc bnc" id="L463" title="All 4 branches missed.">				if (existingParentGroup != null &amp;&amp; existingParentGroup.getGroupName().equals(&quot;System&quot;))</span>
 				{
 					//nemozeme menit title ani groupid
-<span class="nc" id="L457">					return existing;</span>
+<span class="nc" id="L466">					return existing;</span>
 				}
 			}
 		}
-<span class="fc" id="L461">		return null;</span>
+<span class="fc" id="L470">		return null;</span>
 	}
 
     /**
@@ -469,16 +478,16 @@ public class CloudToolsForCore {
 	 */
 	public static boolean isInternalIp(HttpServletRequest request)
 	{
-<span class="nc" id="L472">		String remoteIp = Tools.getRemoteIP(request);</span>
-<span class="nc" id="L473">		StringTokenizer ips = new StringTokenizer(Constants.getString(&quot;cloudCloneAllowedIps&quot;),&quot;,&quot;);</span>
-<span class="nc bnc" id="L474" title="All 2 branches missed.">		while(ips.hasMoreTokens())</span>
+<span class="nc" id="L481">		String remoteIp = Tools.getRemoteIP(request);</span>
+<span class="nc" id="L482">		StringTokenizer ips = new StringTokenizer(Constants.getString(&quot;cloudCloneAllowedIps&quot;),&quot;,&quot;);</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">		while(ips.hasMoreTokens())</span>
 		{
-<span class="nc bnc" id="L476" title="All 2 branches missed.">			if(remoteIp.startsWith(ips.nextToken()))</span>
+<span class="nc bnc" id="L485" title="All 2 branches missed.">			if(remoteIp.startsWith(ips.nextToken()))</span>
 			{
-<span class="nc" id="L478">				return true;</span>
+<span class="nc" id="L487">				return true;</span>
 			}
 		}
-<span class="nc" id="L481">		return false;</span>
+<span class="nc" id="L490">		return false;</span>
 	}
 
     /**
@@ -490,17 +499,17 @@ public class CloudToolsForCore {
 	 */
 	public static UserDetails getAdmin()
 	{
-<span class="nc" id="L493">		List&lt;UserDetails&gt; admins = UsersDB.getAdmins();</span>
-<span class="nc bnc" id="L494" title="All 2 branches missed.">		if (admins!=null)</span>
+<span class="nc" id="L502">		List&lt;UserDetails&gt; admins = UsersDB.getAdmins();</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">		if (admins!=null)</span>
 		{
-<span class="nc bnc" id="L496" title="All 2 branches missed.">			if (admins.size()&gt;0)</span>
+<span class="nc bnc" id="L505" title="All 2 branches missed.">			if (admins.size()&gt;0)</span>
 			{
 				//return UsersDB.getUser(min(admins, on(UserDetails.class).getUserId()));
-<span class="nc" id="L499">                Optional&lt;UserDetails&gt; admin = admins.stream().min(Comparator.comparing(UserDetails::getUserId));</span>
-<span class="nc bnc" id="L500" title="All 2 branches missed.">                if (admin.isPresent()) return admin.get();</span>
+<span class="nc" id="L508">                Optional&lt;UserDetails&gt; admin = admins.stream().min(Comparator.comparing(UserDetails::getUserId));</span>
+<span class="nc bnc" id="L509" title="All 2 branches missed.">                if (admin.isPresent()) return admin.get();</span>
 			}
 		}
-<span class="nc" id="L503">		return null;</span>
+<span class="nc" id="L512">		return null;</span>
 	}
 
     /**
@@ -512,34 +521,34 @@ public class CloudToolsForCore {
 	 */
 	public static String translate(String lng, String text)
 	{
-<span class="nc" id="L515">		String htmlCode = text;</span>
-<span class="nc" id="L516">		Prop prop = Prop.getInstance(lng);</span>
+<span class="nc" id="L524">		String htmlCode = text;</span>
+<span class="nc" id="L525">		Prop prop = Prop.getInstance(lng);</span>
 
-<span class="nc bnc" id="L518" title="All 2 branches missed.">		if(text.indexOf(CLOUD_TEXT_KEY_PREFIX) == -1)</span>
+<span class="nc bnc" id="L527" title="All 2 branches missed.">		if(text.indexOf(CLOUD_TEXT_KEY_PREFIX) == -1)</span>
 		{
-<span class="nc" id="L520">			StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L529">			StringBuilder sb = new StringBuilder();</span>
 
-<span class="nc" id="L522">			int startIdx = 0;</span>
+<span class="nc" id="L531">			int startIdx = 0;</span>
 			//lepsie ako vymenovat vsetky mozne konce kluca, radsej dame len povolene znaky v kluci a akykolvek iny ho ukonci
-<span class="nc" id="L524">			Matcher matcher = CLOUD_TEXT_PATTERN.matcher(text);</span>
+<span class="nc" id="L533">			Matcher matcher = CLOUD_TEXT_PATTERN.matcher(text);</span>
 			//hladame od konca posledneho najdeneho kluca
-<span class="nc bnc" id="L526" title="All 2 branches missed.">			while(matcher.find(startIdx))</span>
+<span class="nc bnc" id="L535" title="All 2 branches missed.">			while(matcher.find(startIdx))</span>
 			{
 				//v group mam key
-<span class="nc" id="L529">				sb.append(text.substring(startIdx, matcher.start()));</span>
-<span class="nc" id="L530">				sb.append(prop.getText(matcher.group()));</span>
-<span class="nc" id="L531">				startIdx = matcher.end();</span>
+<span class="nc" id="L538">				sb.append(text.substring(startIdx, matcher.start()));</span>
+<span class="nc" id="L539">				sb.append(prop.getText(matcher.group()));</span>
+<span class="nc" id="L540">				startIdx = matcher.end();</span>
 			}
 			//doplnime zvysok
-<span class="nc bnc" id="L534" title="All 2 branches missed.">			if(startIdx &lt; text.length())</span>
-<span class="nc" id="L535">				sb.append(text.substring(startIdx, text.length()));</span>
+<span class="nc bnc" id="L543" title="All 2 branches missed.">			if(startIdx &lt; text.length())</span>
+<span class="nc" id="L544">				sb.append(text.substring(startIdx, text.length()));</span>
 
-<span class="nc" id="L537">			htmlCode = sb.toString();</span>
+<span class="nc" id="L546">			htmlCode = sb.toString();</span>
 		}
 
-<span class="nc bnc" id="L540" title="All 4 branches missed.">		if (&quot;en&quot;.equals(lng) || Tools.isEmpty(lng)) return text;</span>
+<span class="nc bnc" id="L549" title="All 4 branches missed.">		if (&quot;en&quot;.equals(lng) || Tools.isEmpty(lng)) return text;</span>
 
-<span class="nc" id="L542">		return translateText(htmlCode, prop);</span>
+<span class="nc" id="L551">		return translateText(htmlCode, prop);</span>
 	}
 
 	/**
@@ -551,15 +560,15 @@ public class CloudToolsForCore {
 	 */
 	public static EditorForm translate(String lng, EditorForm ef, GroupDetails localGroup)
 	{
-<span class="nc bnc" id="L554" title="All 2 branches missed.">		if(ef == null) throw new IllegalArgumentException(&quot;EditorForm cant be null&quot;);</span>
-<span class="nc bnc" id="L555" title="All 2 branches missed.">		if (localGroup.getFullPath().indexOf(&quot;/System&quot;)==-1) ef.setTitle(translate(lng, ef.getTitle()));</span>
-<span class="nc" id="L556">		ef.setData(translate(lng, ef.getData()));</span>
-<span class="nc bnc" id="L557" title="All 4 branches missed.">		if(Tools.isNotEmpty(ef.getVirtualPath()) &amp;&amp; !ef.getVirtualPath().equals(&quot;/&quot;))</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">		if(ef == null) throw new IllegalArgumentException(&quot;EditorForm cant be null&quot;);</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">		if (localGroup.getFullPath().indexOf(&quot;/System&quot;)==-1) ef.setTitle(translate(lng, ef.getTitle()));</span>
+<span class="nc" id="L565">		ef.setData(translate(lng, ef.getData()));</span>
+<span class="nc bnc" id="L566" title="All 4 branches missed.">		if(Tools.isNotEmpty(ef.getVirtualPath()) &amp;&amp; !ef.getVirtualPath().equals(&quot;/&quot;))</span>
 		{
 			//path sa nam potom vytvori podla nazvu stranky uz v danom jazyku... eh, teda snad :)
-<span class="nc" id="L560">			ef.setVirtualPath(&quot;&quot;);</span>
+<span class="nc" id="L569">			ef.setVirtualPath(&quot;&quot;);</span>
 		}
-<span class="nc" id="L562">		return ef;</span>
+<span class="nc" id="L571">		return ef;</span>
 	}
 
     /**
@@ -572,31 +581,31 @@ public class CloudToolsForCore {
 	{
 		//DebugTimer dt = new DebugTimer(&quot;CloudToolsForCore.translateText&quot;);
 
-<span class="nc" id="L575">		Map&lt;String, String&gt; textyToAdd = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L576">		extractTexts(htmlCode, textyToAdd, null);</span>
+<span class="nc" id="L584">		Map&lt;String, String&gt; textyToAdd = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L585">		extractTexts(htmlCode, textyToAdd, null);</span>
 
 		//dt.diff(&quot;Extracted&quot;);
 
-<span class="nc" id="L580">		Set&lt;Map.Entry&lt;String, String&gt;&gt; entrySet = textyToAdd.entrySet();</span>
-<span class="nc bnc" id="L581" title="All 2 branches missed.">		for (Entry&lt;String, String&gt; entry : entrySet)</span>
+<span class="nc" id="L589">		Set&lt;Map.Entry&lt;String, String&gt;&gt; entrySet = textyToAdd.entrySet();</span>
+<span class="nc bnc" id="L590" title="All 2 branches missed.">		for (Entry&lt;String, String&gt; entry : entrySet)</span>
 		{
-<span class="nc" id="L583">			String key = entry.getKey();</span>
-<span class="nc" id="L584">			String translated = prop.getText(entry.getKey());</span>
+<span class="nc" id="L592">			String key = entry.getKey();</span>
+<span class="nc" id="L593">			String translated = prop.getText(entry.getKey());</span>
 
-<span class="nc bnc" id="L586" title="All 2 branches missed.">			if (key.equals(translated)==false)</span>
+<span class="nc bnc" id="L595" title="All 2 branches missed.">			if (key.equals(translated)==false)</span>
 			{
-<span class="nc" id="L588">				Logger.debug(CloudToolsForCore.class, &quot;Translating, key=&quot;+key+&quot; text=&quot;+translated+&quot; value=&quot;+entry.getValue());</span>
-<span class="nc" id="L589">				htmlCode = Tools.replace(htmlCode, entry.getValue(), translated);</span>
+<span class="nc" id="L597">				Logger.debug(CloudToolsForCore.class, &quot;Translating, key=&quot;+key+&quot; text=&quot;+translated+&quot; value=&quot;+entry.getValue());</span>
+<span class="nc" id="L598">				htmlCode = Tools.replace(htmlCode, entry.getValue(), translated);</span>
 			}
-<span class="nc" id="L591">		}</span>
+<span class="nc" id="L600">		}</span>
 
 		//quickfix
-<span class="nc" id="L594">		htmlCode = Tools.replace(htmlCode, &quot;inlineComponentTlačítko&quot;, &quot;inlineComponentButton&quot;);</span>
-<span class="nc" id="L595">		htmlCode = Tools.replace(htmlCode, &quot;showKontakts&quot;, &quot;showContacts&quot;);</span>
+<span class="nc" id="L603">		htmlCode = Tools.replace(htmlCode, &quot;inlineComponentTlačítko&quot;, &quot;inlineComponentButton&quot;);</span>
+<span class="nc" id="L604">		htmlCode = Tools.replace(htmlCode, &quot;showKontakts&quot;, &quot;showContacts&quot;);</span>
 
 		//dt.diff(&quot;done&quot;);
 
-<span class="nc" id="L599">		return htmlCode;</span>
+<span class="nc" id="L608">		return htmlCode;</span>
 	}
 
     /**
@@ -607,36 +616,36 @@ public class CloudToolsForCore {
 	 */
 	public static void extractTexts(String htmlCode, Map&lt;String, String&gt; textyToAdd, Prop prop)
 	{
-<span class="nc" id="L610">		HTMLTokenizer htmlTokenizer = new HTMLTokenizer(Tools.replace(htmlCode, &quot;/&gt;&quot;, &quot;&gt;&quot;).toCharArray());</span>
+<span class="nc" id="L619">		HTMLTokenizer htmlTokenizer = new HTMLTokenizer(Tools.replace(htmlCode, &quot;/&gt;&quot;, &quot;&gt;&quot;).toCharArray());</span>
 		@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L612">		Enumeration&lt;Object&gt; e = htmlTokenizer.getTokens();</span>
+<span class="nc" id="L621">		Enumeration&lt;Object&gt; e = htmlTokenizer.getTokens();</span>
 		Object o;
 
-<span class="nc" id="L615">		boolean wasHtmlText = false;</span>
+<span class="nc" id="L624">		boolean wasHtmlText = false;</span>
 
-<span class="nc bnc" id="L617" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+<span class="nc bnc" id="L626" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
 		{
-<span class="nc" id="L619">			wasHtmlText = true;</span>
+<span class="nc" id="L628">			wasHtmlText = true;</span>
 
-<span class="nc" id="L621">			o = e.nextElement();</span>
-<span class="nc bnc" id="L622" title="All 2 branches missed.">			if (o instanceof TagToken)</span>
+<span class="nc" id="L630">			o = e.nextElement();</span>
+<span class="nc bnc" id="L631" title="All 2 branches missed.">			if (o instanceof TagToken)</span>
 			{
 				//tagToken = (TagToken) o;
 				//System.out.println(&quot;TAG=&quot;+tagToken.getName()+&quot; &quot;+tagToken.isEndTag());
 			}
 			else
 			{
-<span class="nc" id="L629">				String text = o.toString();</span>
-<span class="nc" id="L630">				extractTextAddToList(text, textyToAdd, prop);</span>
-<span class="nc" id="L631">			}</span>
+<span class="nc" id="L638">				String text = o.toString();</span>
+<span class="nc" id="L639">				extractTextAddToList(text, textyToAdd, prop);</span>
+<span class="nc" id="L640">			}</span>
 		}
 
-<span class="nc bnc" id="L634" title="All 2 branches missed.">		if (wasHtmlText == false)</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">		if (wasHtmlText == false)</span>
 		{
 			//nebol to HTML content ale len napr. nadpis
-<span class="nc" id="L637">			extractTextAddToList(htmlCode, textyToAdd, prop);</span>
+<span class="nc" id="L646">			extractTextAddToList(htmlCode, textyToAdd, prop);</span>
 		}
-<span class="nc" id="L639">	}</span>
+<span class="nc" id="L648">	}</span>
 
     /**
 	 * Prida najdeny text do listu na dalsie pouzitie
@@ -646,25 +655,25 @@ public class CloudToolsForCore {
 	 */
 	private static void extractTextAddToList(String text, Map&lt;String, String&gt; textyToAdd, Prop prop)
 	{
-<span class="nc bnc" id="L649" title="All 8 branches missed.">		if (Tools.isNotEmpty(text) &amp;&amp; text.length()&gt;2 &amp;&amp; text.indexOf(&quot;!INCLUDE&quot;)==-1 &amp;&amp; text.startsWith(&quot;@import&quot;)==false)</span>
+<span class="nc bnc" id="L658" title="All 8 branches missed.">		if (Tools.isNotEmpty(text) &amp;&amp; text.length()&gt;2 &amp;&amp; text.indexOf(&quot;!INCLUDE&quot;)==-1 &amp;&amp; text.startsWith(&quot;@import&quot;)==false)</span>
 		{
-<span class="nc" id="L651">			String key = getTextKey(text);</span>
+<span class="nc" id="L660">			String key = getTextKey(text);</span>
 			//Logger.debug(CloudToolsForCore.class, &quot;Text=&quot;+text+&quot; key=&quot;+key);
-<span class="nc bnc" id="L653" title="All 6 branches missed.">			if ((prop==null || prop.getText(key).equals(key)) &amp;&amp; textyToAdd.containsKey(key)==false)</span>
+<span class="nc bnc" id="L662" title="All 6 branches missed.">			if ((prop==null || prop.getText(key).equals(key)) &amp;&amp; textyToAdd.containsKey(key)==false)</span>
 			{
 				//Logger.debug(CloudToolsForCore.class, &quot;++++adding: &quot;+key+&quot;=&quot;+text);
-<span class="nc" id="L656">				textyToAdd.put(key, text);</span>
+<span class="nc" id="L665">				textyToAdd.put(key, text);</span>
 			}
 		}
-<span class="nc" id="L659">	}</span>
+<span class="nc" id="L668">	}</span>
 
     private static String getTextKey(String text)
 	{
-<span class="nc" id="L663">		text = DocTools.removeCharsDir(text, false);</span>
-<span class="nc" id="L664">		text = text.replace('/', '-');</span>
-<span class="nc" id="L665">		text = text.trim();</span>
+<span class="nc" id="L672">		text = DocTools.removeCharsDir(text, false);</span>
+<span class="nc" id="L673">		text = text.replace('/', '-');</span>
+<span class="nc" id="L674">		text = text.trim();</span>
 
-<span class="nc" id="L667">		return &quot;&lt;cloud.template.&quot;+text+&quot;&gt;&quot;;</span>
+<span class="nc" id="L676">		return &quot;&lt;cloud.template.&quot;+text+&quot;&gt;&quot;;</span>
 	}
 
     /**
@@ -674,23 +683,23 @@ public class CloudToolsForCore {
 	 */
 	public static boolean hasShop(HttpServletRequest request)
 	{
-<span class="fc" id="L677">		int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
-<span class="fc" id="L678">		String CACHE_KEY = &quot;sk.iway.cloud.hasShop-&quot;+rootGroupId;</span>
-<span class="fc" id="L679">		Cache c = Cache.getInstance();</span>
-<span class="fc" id="L680">		Boolean hasShop = (Boolean)c.getObject(CACHE_KEY);</span>
-<span class="fc bfc" id="L681" title="All 2 branches covered.">		if (hasShop != null) return hasShop.booleanValue();</span>
+<span class="fc" id="L686">		int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
+<span class="fc" id="L687">		String CACHE_KEY = &quot;sk.iway.cloud.hasShop-&quot;+rootGroupId;</span>
+<span class="fc" id="L688">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L689">		Boolean hasShop = (Boolean)c.getObject(CACHE_KEY);</span>
+<span class="fc bfc" id="L690" title="All 2 branches covered.">		if (hasShop != null) return hasShop.booleanValue();</span>
 
 		//vyhladajme stranky pre nas web v ktorom sa nachadza include products.jsp
-<span class="fc" id="L684">		String sqlQuery = &quot;SELECT count(doc_id) FROM documents WHERE doc_id&gt;0 &quot;+StatDB.getRootGroupWhere(&quot;group_id&quot;, rootGroupId)+&quot; AND data LIKE '%/components/basket/%'&quot;;</span>
+<span class="fc" id="L693">		String sqlQuery = &quot;SELECT count(doc_id) FROM documents WHERE doc_id&gt;0 &quot;+StatDB.getRootGroupWhere(&quot;group_id&quot;, rootGroupId)+&quot; AND data LIKE '%/components/basket/%'&quot;;</span>
 		//System.out.println(&quot;---------------&gt; &quot; + CloudToolsForCore.getRootGroupId(request));
 		//System.out.println(sqlQuery);
-<span class="fc" id="L687">		int records = (new SimpleQuery()).forInt(sqlQuery);</span>
-<span class="pc bpc" id="L688" title="1 of 2 branches missed.">		if (records &gt; 0) hasShop = Boolean.TRUE;</span>
-<span class="fc" id="L689">		else hasShop = Boolean.FALSE;</span>
+<span class="fc" id="L696">		int records = (new SimpleQuery()).forInt(sqlQuery);</span>
+<span class="pc bpc" id="L697" title="1 of 2 branches missed.">		if (records &gt; 0) hasShop = Boolean.TRUE;</span>
+<span class="fc" id="L698">		else hasShop = Boolean.FALSE;</span>
 
-<span class="fc" id="L691">		c.setObjectSeconds(CACHE_KEY, hasShop, 5*60, true);</span>
+<span class="fc" id="L700">		c.setObjectSeconds(CACHE_KEY, hasShop, 5*60, true);</span>
 
-<span class="fc" id="L693">		return hasShop.booleanValue();</span>
+<span class="fc" id="L702">		return hasShop.booleanValue();</span>
 	}
 
     /**
@@ -700,11 +709,11 @@ public class CloudToolsForCore {
 	 */
 	public static boolean isGroupFromMyDomain(int groupId)
 	{
-<span class="nc" id="L703">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L704">		GroupDetails group = groupsDB.getGroup(groupId);</span>
-<span class="nc bnc" id="L705" title="All 4 branches missed.">		if (group != null &amp;&amp; group.getDomainName().equals(CloudToolsForCore.getDomainName())) return true;</span>
+<span class="nc" id="L712">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L713">		GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="nc bnc" id="L714" title="All 4 branches missed.">		if (group != null &amp;&amp; group.getDomainName().equals(CloudToolsForCore.getDomainName())) return true;</span>
 
-<span class="nc" id="L707">		return false;</span>
+<span class="nc" id="L716">		return false;</span>
 	}
 
     /**
@@ -714,17 +723,17 @@ public class CloudToolsForCore {
 	 */
 	public static String getRootTempName(HttpServletRequest request)
 	{
-<span class="nc" id="L717">		TemplateDetails rootTemp = getRootTemp(request);</span>
+<span class="nc" id="L726">		TemplateDetails rootTemp = getRootTemp(request);</span>
 		//if (rootTemp != null) return rootTemp.getTempName();
-<span class="nc bnc" id="L719" title="All 2 branches missed.">		if (rootTemp != null)</span>
+<span class="nc bnc" id="L728" title="All 2 branches missed.">		if (rootTemp != null)</span>
 		{
-<span class="nc bnc" id="L721" title="All 4 branches missed.">			if(rootTemp.getTempName().lastIndexOf(&quot;-&quot;) &lt; rootTemp.getTempName().length() &amp;&amp; rootTemp.getTempName().lastIndexOf(&quot;-&quot;) &gt; 0)</span>
-<span class="nc" id="L722">				return rootTemp.getTempName().substring(0,rootTemp.getTempName().lastIndexOf(&quot;-&quot;));</span>
-<span class="nc" id="L723">			return rootTemp.getTempName();</span>
+<span class="nc bnc" id="L730" title="All 4 branches missed.">			if(rootTemp.getTempName().lastIndexOf(&quot;-&quot;) &lt; rootTemp.getTempName().length() &amp;&amp; rootTemp.getTempName().lastIndexOf(&quot;-&quot;) &gt; 0)</span>
+<span class="nc" id="L731">				return rootTemp.getTempName().substring(0,rootTemp.getTempName().lastIndexOf(&quot;-&quot;));</span>
+<span class="nc" id="L732">			return rootTemp.getTempName();</span>
 		}
 
-<span class="nc" id="L726">		Logger.debug(CloudToolsForCore.class, &quot;You are not in Cloud, returning \&quot;unknown\&quot; name of template &quot;);</span>
-<span class="nc" id="L727">		return &quot;unknown&quot;;</span>
+<span class="nc" id="L735">		Logger.debug(CloudToolsForCore.class, &quot;You are not in Cloud, returning \&quot;unknown\&quot; name of template &quot;);</span>
+<span class="nc" id="L736">		return &quot;unknown&quot;;</span>
 	}
 
     /**
@@ -734,14 +743,14 @@ public class CloudToolsForCore {
 	 */
 	public static TemplateDetails getRootTemp(HttpServletRequest request)
 	{
-<span class="nc" id="L737">		int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
-<span class="nc" id="L738">		GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
-<span class="nc bnc" id="L739" title="All 2 branches missed.">		if (rootGroup != null)</span>
+<span class="nc" id="L746">		int rootGroupId = CloudToolsForCore.getRootGroupId(request);</span>
+<span class="nc" id="L747">		GroupDetails rootGroup = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+<span class="nc bnc" id="L748" title="All 2 branches missed.">		if (rootGroup != null)</span>
 		{
-<span class="nc" id="L741">			TemplateDetails rootTemp = TemplatesDB.getInstance().getTemplate(rootGroup.getTempId());</span>
-<span class="nc" id="L742">			return rootTemp;</span>
+<span class="nc" id="L750">			TemplateDetails rootTemp = TemplatesDB.getInstance().getTemplate(rootGroup.getTempId());</span>
+<span class="nc" id="L751">			return rootTemp;</span>
 		}
-<span class="nc" id="L744">		return null;</span>
+<span class="nc" id="L753">		return null;</span>
 	}
 
     /**
@@ -751,11 +760,11 @@ public class CloudToolsForCore {
 	 */
 	public static String getRootTempJsp(HttpServletRequest request)
 	{
-<span class="nc" id="L754">		String templateJsp = &quot;&quot;;</span>
-<span class="nc" id="L755">		TemplateDetails rootTemp = CloudToolsForCore.getRootTemp(request);</span>
-<span class="nc bnc" id="L756" title="All 4 branches missed.">		if (rootTemp != null &amp;&amp; rootTemp.getForward()!=null) templateJsp = rootTemp.getForward();</span>
+<span class="nc" id="L763">		String templateJsp = &quot;&quot;;</span>
+<span class="nc" id="L764">		TemplateDetails rootTemp = CloudToolsForCore.getRootTemp(request);</span>
+<span class="nc bnc" id="L765" title="All 4 branches missed.">		if (rootTemp != null &amp;&amp; rootTemp.getForward()!=null) templateJsp = rootTemp.getForward();</span>
 
-<span class="nc" id="L758">		return templateJsp;</span>
+<span class="nc" id="L767">		return templateJsp;</span>
 	}
 
     /**
@@ -765,11 +774,11 @@ public class CloudToolsForCore {
 	 */
 	public static boolean isBootstrap(HttpServletRequest request)
 	{
-<span class="nc" id="L768">		String templateJsp = getRootTempJsp(request);</span>
+<span class="nc" id="L777">		String templateJsp = getRootTempJsp(request);</span>
 
-<span class="nc bnc" id="L770" title="All 4 branches missed.">		if (templateJsp.indexOf(&quot;bootstrap&quot;)!=-1 || templateJsp.indexOf(&quot;ublocks&quot;)!=-1) return true;</span>
+<span class="nc bnc" id="L779" title="All 4 branches missed.">		if (templateJsp.indexOf(&quot;bootstrap&quot;)!=-1 || templateJsp.indexOf(&quot;ublocks&quot;)!=-1) return true;</span>
 
-<span class="nc" id="L772">		return false;</span>
+<span class="nc" id="L781">		return false;</span>
 	}
 
     /**
@@ -778,8 +787,46 @@ public class CloudToolsForCore {
      */
     public static String getSupportEmail()
 	{
-<span class="nc" id="L781">		return Constants.getString(&quot;cloudSupportEmail&quot;);</span>
+<span class="nc" id="L790">		return Constants.getString(&quot;cloudSupportEmail&quot;);</span>
 	}
+
+    /**
+     * Returns ID of root groups for current domain, eg. 10,15
+     * @return
+     */
+    public static String getRootGroupIds() {
+<span class="nc" id="L798">        List&lt;GroupDetails&gt; rootGroups = GroupsDB.getRootGroups();</span>
+<span class="nc" id="L799">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L800">        String domain = CloudToolsForCore.getDomainName();</span>
+<span class="nc bnc" id="L801" title="All 2 branches missed.">        for (GroupDetails group : rootGroups) {</span>
+<span class="nc bnc" id="L802" title="All 2 branches missed.">            if (domain.equals(group.getDomainName())) {</span>
+<span class="nc bnc" id="L803" title="All 2 branches missed.">                if (sb.isEmpty()==false) sb.append(&quot;,&quot;);</span>
+<span class="nc" id="L804">                sb.append(group.getGroupId());</span>
+            }
+<span class="nc" id="L806">        }</span>
+        //safety check
+<span class="nc bnc" id="L808" title="All 2 branches missed.">        if (sb.isEmpty()) sb.append(Integer.MAX_VALUE);</span>
+<span class="nc" id="L809">        return sb.toString();</span>
+    }
+
+    /**
+     * In MultiWeb for null/-1 groupId returns domainId
+     * @param rootGroupId
+     * @return
+     */
+    public static Integer fixRootGroupId(Integer rootGroupId) {
+<span class="pc bpc" id="L818" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) {</span>
+<span class="nc bnc" id="L819" title="All 4 branches missed.">            if (rootGroupId==null || rootGroupId&lt;1) {</span>
+<span class="nc" id="L820">                return CloudToolsForCore.getDomainId();</span>
+            } else {
+<span class="nc" id="L822">                GroupDetails group = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+<span class="nc bnc" id="L823" title="All 4 branches missed.">                if (group==null || group.getDomainName().equals(CloudToolsForCore.getDomainName())==false) {</span>
+<span class="nc" id="L824">                    return CloudToolsForCore.getDomainId();</span>
+                }
+            }
+        }
+<span class="fc" id="L828">        return rootGroupId;</span>
+    }
 }
 
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

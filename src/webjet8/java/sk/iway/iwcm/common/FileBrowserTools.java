@@ -65,6 +65,8 @@ public class FileBrowserTools {
         {
             return(false);
         }
+        //in html folder we have valid files with name showdoc.dodocid=1234.html, allow this
+        name = name.replace("showdoc.dodocid=" , "");
 
         //	kontrola zakazanych znakov v adrese
         name = name.toLowerCase();

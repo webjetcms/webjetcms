@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DomainRedirectDB.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.domainRedirects</a> &gt; <span class="el_source">DomainRedirectDB.java</span></div><h1>DomainRedirectDB.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.domainRedirects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,12 +41,12 @@ public class DomainRedirectDB
 	private static final String ALIAS_CACHE_KEY = &quot;sk.iway.iwcm.components.domainRedirects.DomainRedirectDB.serverNameAlias&quot;;
 
 	private static DomainRedirectDB instance;
-<span class="fc" id="L43">	private static final Object classLock = DomainRedirectDB.class;</span>
-<span class="fc" id="L44">	private Map&lt;String,DomainRedirectBean&gt; redirTable = null;</span>
+<span class="fc" id="L44">	private static final Object classLock = DomainRedirectDB.class;</span>
+<span class="fc" id="L45">	private Map&lt;String,DomainRedirectBean&gt; redirTable = null;</span>
 
 	public static DomainRedirectDB getInstance()
 	{
-<span class="fc" id="L48">		return getInstance(false);</span>
+<span class="fc" id="L49">		return getInstance(false);</span>
 	}
 
 	/**
@@ -55,160 +56,165 @@ public class DomainRedirectDB
 	 */
 	public static DomainRedirectDB getInstance(boolean forceRefresh)
 	{
-<span class="fc" id="L58">		synchronized (classLock)</span>
+<span class="fc" id="L59">		synchronized (classLock)</span>
 		{
-<span class="fc bfc" id="L60" title="All 4 branches covered.">			if (instance == null || forceRefresh)</span>
+<span class="fc bfc" id="L61" title="All 4 branches covered.">			if (instance == null || forceRefresh)</span>
 			{
-<span class="fc" id="L62">				instance = new DomainRedirectDB();</span>
+<span class="fc" id="L63">				instance = new DomainRedirectDB();</span>
 			}
-<span class="fc" id="L64">			return instance;</span>
+<span class="fc" id="L65">			return instance;</span>
 		}
 	}
 
 	private void refreshTable()
 	{
-<span class="fc" id="L70">		redirTable = getRedirectTable();</span>
-<span class="fc" id="L71">	}</span>
+<span class="fc" id="L71">		redirTable = getRedirectTable();</span>
+<span class="fc" id="L72">	}</span>
 
 	public boolean containsDomain(String domain)
 	{
-<span class="fc" id="L75">		return redirTable.containsKey(domain);</span>
+<span class="fc" id="L76">		return redirTable.containsKey(domain);</span>
 	}
 
 	public DomainRedirectBean getRedirect(String domain)
 	{
-<span class="fc" id="L80">		return redirTable.get(domain);</span>
+<span class="fc" id="L81">		return redirTable.get(domain);</span>
 	}
 
 	/**
 	 * Private konstruktor
 	 */
 	private DomainRedirectDB()
-<span class="fc" id="L87">	{</span>
-<span class="fc" id="L88">		Logger.debug(DomainRedirectDB.class, &quot;DomainRedirectDB.constructor&quot;);</span>
-<span class="fc" id="L89">		refreshTable();</span>
+<span class="fc" id="L88">	{</span>
+<span class="fc" id="L89">		Logger.debug(DomainRedirectDB.class, &quot;DomainRedirectDB.constructor&quot;);</span>
+<span class="fc" id="L90">		refreshTable();</span>
 
-<span class="fc" id="L91">		ClusterDB.addRefresh(DomainRedirectDB.class);</span>
-<span class="fc" id="L92">	}</span>
+<span class="fc" id="L92">		ClusterDB.addRefresh(DomainRedirectDB.class);</span>
+<span class="fc" id="L93">	}</span>
 
 	public static List&lt;DomainRedirectBean&gt; getAllRedirects() {
 
-<span class="fc" id="L96">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="fc" id="L97">		ReadAllQuery q = new ReadAllQuery(DomainRedirectBean.class);</span>
-<span class="fc" id="L98">		return JpaDB.getResultList(em.createQuery(q));</span>
+		try {
+<span class="fc" id="L98">			JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L99">			ReadAllQuery q = new ReadAllQuery(DomainRedirectBean.class);</span>
+<span class="fc" id="L100">			return JpaDB.getResultList(em.createQuery(q));</span>
+<span class="nc" id="L101">		} catch (Exception ex) {</span>
+<span class="nc" id="L102">			Logger.error(DomainRedirectDB.class, ex);</span>
+<span class="nc" id="L103">			return new ArrayList&lt;&gt;();</span>
+		}
 	}
 
 
 	public static DomainRedirectBean getRedirect(Integer id) {
-<span class="nc" id="L103">		return JpaTools.getEclipseLinkEntityManager().find(DomainRedirectBean.class, id);</span>
+<span class="nc" id="L109">		return JpaTools.getEclipseLinkEntityManager().find(DomainRedirectBean.class, id);</span>
 	}
 
 
 	public static DomainRedirectBean update(DomainRedirectBean redir)
 	{
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, &quot;Update domain redirect, from=&quot;+redir.getRedirectFrom()+&quot; to=&quot;+redir.getRedirectTo()+&quot; data=&quot;+redir.toString(), redir.getRedirectId(), -1);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, &quot;Update domain redirect, from=&quot;+redir.getRedirectFrom()+&quot; to=&quot;+redir.getRedirectTo()+&quot; data=&quot;+redir.toString(), redir.getRedirectId(), -1);</span>
 
-<span class="fc" id="L111">		DomainRedirectBean modified =  null;</span>
-<span class="fc" id="L112">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="fc" id="L113">		em.getTransaction().begin();</span>
-<span class="fc" id="L114">		modified = em.merge(redir);</span>
-<span class="fc" id="L115">		em.getTransaction().commit();</span>
-<span class="fc" id="L116">		em.close();</span>
-<span class="fc" id="L117">		getInstance(true);</span>
-<span class="fc" id="L118">		return modified;</span>
+<span class="fc" id="L117">		DomainRedirectBean modified =  null;</span>
+<span class="fc" id="L118">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L119">		em.getTransaction().begin();</span>
+<span class="fc" id="L120">		modified = em.merge(redir);</span>
+<span class="fc" id="L121">		em.getTransaction().commit();</span>
+<span class="fc" id="L122">		em.close();</span>
+<span class="fc" id="L123">		getInstance(true);</span>
+<span class="fc" id="L124">		return modified;</span>
 
 	}
 
 
 	public static void insert(DomainRedirectBean redir)
 	{
-<span class="pc bpc" id="L125" title="1 of 2 branches missed.">		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_CREATE, &quot;New domain redirect, from=&quot;+redir.getRedirectFrom()+&quot; to=&quot;+redir.getRedirectTo()+&quot; data=&quot;+redir.toString(), -1, -1);</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_CREATE, &quot;New domain redirect, from=&quot;+redir.getRedirectFrom()+&quot; to=&quot;+redir.getRedirectTo()+&quot; data=&quot;+redir.toString(), -1, -1);</span>
 
-<span class="fc" id="L127">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="fc" id="L128">		em.getTransaction().begin();</span>
-<span class="fc" id="L129">		em.persist(redir);</span>
-<span class="fc" id="L130">		em.getTransaction().commit();</span>
-<span class="fc" id="L131">		em.close();</span>
-<span class="fc" id="L132">		getInstance(true);</span>
-<span class="fc" id="L133">	}</span>
+<span class="fc" id="L133">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L134">		em.getTransaction().begin();</span>
+<span class="fc" id="L135">		em.persist(redir);</span>
+<span class="fc" id="L136">		em.getTransaction().commit();</span>
+<span class="fc" id="L137">		em.close();</span>
+<span class="fc" id="L138">		getInstance(true);</span>
+<span class="fc" id="L139">	}</span>
 
 	public static void delete(Integer id)
 	{
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">		if (id != null)  Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, &quot;Delete domain redirect, id=&quot;+id, -1, -1);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">		if (id != null)  Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, &quot;Delete domain redirect, id=&quot;+id, -1, -1);</span>
 
-<span class="fc" id="L139">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="fc" id="L140">		em.getTransaction().begin();</span>
-<span class="fc" id="L141">		DomainRedirectBean redir = em.find(DomainRedirectBean.class, id);</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">		if(redir == null)</span>
+<span class="fc" id="L145">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L146">		em.getTransaction().begin();</span>
+<span class="fc" id="L147">		DomainRedirectBean redir = em.find(DomainRedirectBean.class, id);</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">		if(redir == null)</span>
 		{
-<span class="nc" id="L144">		   Logger.debug(DomainRedirectDB.class, &quot;object for deletion, ID: &quot;+ id + &quot;doesn't exist!&quot;);</span>
+<span class="nc" id="L150">		   Logger.debug(DomainRedirectDB.class, &quot;object for deletion, ID: &quot;+ id + &quot;doesn't exist!&quot;);</span>
 			//throw new IllegalArgumentException(&quot;Redirect object for deletion, ID:&quot; + id + &quot;doesn't exist&quot;);
 		}
 		else
 		{
-<span class="fc" id="L149">			em.remove(redir);</span>
-<span class="fc" id="L150">			em.getTransaction().commit();</span>
-<span class="fc" id="L151">			em.close();</span>
+<span class="fc" id="L155">			em.remove(redir);</span>
+<span class="fc" id="L156">			em.getTransaction().commit();</span>
+<span class="fc" id="L157">			em.close();</span>
 		}
-<span class="fc" id="L153">		getInstance(true);</span>
-<span class="fc" id="L154">	}</span>
+<span class="fc" id="L159">		getInstance(true);</span>
+<span class="fc" id="L160">	}</span>
 
 	public static boolean delete(DomainRedirectBean redir)
 	{
-<span class="nc bnc" id="L158" title="All 2 branches missed.">		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, &quot;Delete domain redirect, from=&quot;+redir.getRedirectFrom()+&quot; to=&quot;+redir.getRedirectTo()+&quot; data=&quot;+redir.toString(), -1, -1);</span>
+<span class="nc bnc" id="L164" title="All 2 branches missed.">		if (redir != null) Adminlog.add(Adminlog.TYPE_REDIRECT_DELETE, &quot;Delete domain redirect, from=&quot;+redir.getRedirectFrom()+&quot; to=&quot;+redir.getRedirectTo()+&quot; data=&quot;+redir.toString(), -1, -1);</span>
 
-<span class="nc" id="L160">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L161">		em.getTransaction().begin();</span>
-<span class="nc bnc" id="L162" title="All 2 branches missed.">		if(redir == null)</span>
+<span class="nc" id="L166">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L167">		em.getTransaction().begin();</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">		if(redir == null)</span>
 		{
-<span class="nc" id="L164">			 Logger.debug(DomainRedirectDB.class, &quot;object for deletion doesn't exist!&quot;);</span>
-<span class="nc" id="L165">			return false;</span>
+<span class="nc" id="L170">			 Logger.debug(DomainRedirectDB.class, &quot;object for deletion doesn't exist!&quot;);</span>
+<span class="nc" id="L171">			return false;</span>
 		}
-<span class="nc" id="L167">		em.remove(redir);</span>
-<span class="nc" id="L168">		em.getTransaction().commit();</span>
-<span class="nc" id="L169">		em.close();</span>
-<span class="nc" id="L170">		getInstance(true);</span>
-<span class="nc" id="L171">		return true;</span>
+<span class="nc" id="L173">		em.remove(redir);</span>
+<span class="nc" id="L174">		em.getTransaction().commit();</span>
+<span class="nc" id="L175">		em.close();</span>
+<span class="nc" id="L176">		getInstance(true);</span>
+<span class="nc" id="L177">		return true;</span>
 
 	}
 
 
 	public static DomainRedirectBean getRedirectBySourceDomain(String sourceDomain) {
-<span class="nc" id="L177">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L183">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
 
-<span class="nc" id="L179">		ExpressionBuilder builder = new ExpressionBuilder();</span>
-<span class="nc" id="L180">		Expression expr = builder.get(&quot;redirectFrom&quot;).equal(sourceDomain);</span>
-<span class="nc" id="L181">		ReadQuery query = new ReadObjectQuery(DomainRedirectBean.class, expr);</span>
+<span class="nc" id="L185">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L186">		Expression expr = builder.get(&quot;redirectFrom&quot;).equal(sourceDomain);</span>
+<span class="nc" id="L187">		ReadQuery query = new ReadObjectQuery(DomainRedirectBean.class, expr);</span>
 
-<span class="nc" id="L183">		em.getTransaction().begin();</span>
-<span class="nc" id="L184">		Query q = em.createQuery(query);</span>
+<span class="nc" id="L189">		em.getTransaction().begin();</span>
+<span class="nc" id="L190">		Query q = em.createQuery(query);</span>
 
-<span class="nc" id="L186">		return (DomainRedirectBean)q.getSingleResult();</span>
+<span class="nc" id="L192">		return (DomainRedirectBean)q.getSingleResult();</span>
 
 
 	}
 
 	public static List&lt;DomainRedirectBean&gt; getRedirectByDestDomain(String toDomain)
 	{
-<span class="nc" id="L193">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L199">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
 
-<span class="nc" id="L195">		ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="nc" id="L201">		ExpressionBuilder builder = new ExpressionBuilder();</span>
 
-<span class="nc" id="L197">		String domainVariants[] = new String[3];</span>
-<span class="nc" id="L198">		domainVariants[0] = toDomain;</span>
-<span class="nc" id="L199">		domainVariants[1] = &quot;http://&quot;+toDomain;</span>
-<span class="nc" id="L200">		domainVariants[2] = &quot;https://&quot;+toDomain;</span>
+<span class="nc" id="L203">		String domainVariants[] = new String[3];</span>
+<span class="nc" id="L204">		domainVariants[0] = toDomain;</span>
+<span class="nc" id="L205">		domainVariants[1] = &quot;http://&quot;+toDomain;</span>
+<span class="nc" id="L206">		domainVariants[2] = &quot;https://&quot;+toDomain;</span>
 
-<span class="nc" id="L202">		Expression expr = builder.get(&quot;redirectTo&quot;).in(domainVariants);</span>
-<span class="nc" id="L203">		expr = expr.or(builder.get(&quot;redirectTo&quot;).like(toDomain+&quot;/%&quot;));</span>
-<span class="nc" id="L204">		expr = expr.or(builder.get(&quot;redirectTo&quot;).like(&quot;%//&quot;+toDomain+&quot;/%&quot;));</span>
+<span class="nc" id="L208">		Expression expr = builder.get(&quot;redirectTo&quot;).in(domainVariants);</span>
+<span class="nc" id="L209">		expr = expr.or(builder.get(&quot;redirectTo&quot;).like(toDomain+&quot;/%&quot;));</span>
+<span class="nc" id="L210">		expr = expr.or(builder.get(&quot;redirectTo&quot;).like(&quot;%//&quot;+toDomain+&quot;/%&quot;));</span>
 
-<span class="nc" id="L206">		ReadQuery query = new ReadAllQuery(DomainRedirectBean.class, expr);</span>
+<span class="nc" id="L212">		ReadQuery query = new ReadAllQuery(DomainRedirectBean.class, expr);</span>
 
-<span class="nc" id="L208">		em.getTransaction().begin();</span>
-<span class="nc" id="L209">		Query q = em.createQuery(query);</span>
+<span class="nc" id="L214">		em.getTransaction().begin();</span>
+<span class="nc" id="L215">		Query q = em.createQuery(query);</span>
 
-<span class="nc" id="L211">		return JpaDB.getResultList(q);</span>
+<span class="nc" id="L217">		return JpaDB.getResultList(q);</span>
 	}
 
 	/**
@@ -217,23 +223,23 @@ public class DomainRedirectDB
 	 * if there are no entries in DB, returns empty map
 	 */
 	public static Map&lt;String, DomainRedirectBean&gt; getRedirectTable() {
-<span class="fc" id="L220">		Map&lt;String,DomainRedirectBean&gt; map = new HashMap&lt;String, DomainRedirectBean&gt;();</span>
-<span class="fc bfc" id="L221" title="All 2 branches covered.">		for (DomainRedirectBean tmp : getAllRedirects())</span>
+<span class="fc" id="L226">		Map&lt;String,DomainRedirectBean&gt; map = new HashMap&lt;String, DomainRedirectBean&gt;();</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">		for (DomainRedirectBean tmp : getAllRedirects())</span>
 		{
-<span class="fc bfc" id="L223" title="All 2 branches covered.">			if(tmp.getActive())</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">			if(tmp.getActive())</span>
 			{
-<span class="fc bfc" id="L225" title="All 2 branches covered.">				if(&quot;http&quot;.equals(tmp.getProtocol()))</span>
-<span class="fc" id="L226">					map.put(addProtocol(tmp.getRedirectFrom(), false), tmp);</span>
-<span class="fc bfc" id="L227" title="All 2 branches covered.">				else if(&quot;https&quot;.equals(tmp.getProtocol()))</span>
-<span class="fc" id="L228">					map.put(addProtocol(tmp.getRedirectFrom(), true), tmp);</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">				if(&quot;http&quot;.equals(tmp.getProtocol()))</span>
+<span class="fc" id="L232">					map.put(addProtocol(tmp.getRedirectFrom(), false), tmp);</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">				else if(&quot;https&quot;.equals(tmp.getProtocol()))</span>
+<span class="fc" id="L234">					map.put(addProtocol(tmp.getRedirectFrom(), true), tmp);</span>
 				else
 				{
-<span class="fc" id="L231">					map.put(addProtocol(tmp.getRedirectFrom(), true), tmp);</span>
-<span class="fc" id="L232">					map.put(addProtocol(tmp.getRedirectFrom(), false), tmp);</span>
+<span class="fc" id="L237">					map.put(addProtocol(tmp.getRedirectFrom(), true), tmp);</span>
+<span class="fc" id="L238">					map.put(addProtocol(tmp.getRedirectFrom(), false), tmp);</span>
 				}
 			}
-<span class="fc" id="L235">		}</span>
-<span class="fc" id="L236">		return map;</span>
+<span class="fc" id="L241">		}</span>
+<span class="fc" id="L242">		return map;</span>
 	}
 
 	/**
@@ -247,53 +253,53 @@ public class DomainRedirectDB
 	{
 		try
 		{
-<span class="fc" id="L250">			DomainRedirectDB drdb = DomainRedirectDB.getInstance();</span>
+<span class="fc" id="L256">			DomainRedirectDB drdb = DomainRedirectDB.getInstance();</span>
 
-<span class="pc bpc" id="L252" title="1 of 2 branches missed.">	    	if(drdb.containsDomain(addProtocol(domain, isSecure))==false) return null;</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">	    	if(drdb.containsDomain(addProtocol(domain, isSecure))==false) return null;</span>
 
-<span class="fc" id="L254">	    	DomainRedirectBean redirect = drdb.getRedirect(addProtocol(domain, isSecure));</span>
+<span class="fc" id="L260">	    	DomainRedirectBean redirect = drdb.getRedirect(addProtocol(domain, isSecure));</span>
 
-<span class="pc bpc" id="L256" title="1 of 2 branches missed.">	    	if (&quot;alias&quot;.equals(redirect.getProtocol())) return null;</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">	    	if (&quot;alias&quot;.equals(redirect.getProtocol())) return null;</span>
 
-<span class="nc bnc" id="L258" title="All 8 branches missed.">	    	if((isSecure &amp;&amp; &quot;http&quot;.equals(redirect.getProtocol())) || (!isSecure &amp;&amp; &quot;https&quot;.equals(redirect.getProtocol())))</span>
-<span class="nc" id="L259">	    		return null;</span>
+<span class="nc bnc" id="L264" title="All 8 branches missed.">	    	if((isSecure &amp;&amp; &quot;http&quot;.equals(redirect.getProtocol())) || (!isSecure &amp;&amp; &quot;https&quot;.equals(redirect.getProtocol())))</span>
+<span class="nc" id="L265">	    		return null;</span>
 
 			//ak sa jedna o dmail, tak nepresmerovavam na https
-<span class="nc bnc" id="L262" title="All 6 branches missed.">			if(&quot;http&quot;.equals(redirect.getProtocol()) &amp;&amp; Tools.isNotEmpty(params) &amp;&amp; params.contains(&quot;&amp;isDmail=true&quot;))</span>
-<span class="nc" id="L263">				return null;</span>
+<span class="nc bnc" id="L268" title="All 6 branches missed.">			if(&quot;http&quot;.equals(redirect.getProtocol()) &amp;&amp; Tools.isNotEmpty(params) &amp;&amp; params.contains(&quot;&amp;isDmail=true&quot;))</span>
+<span class="nc" id="L269">				return null;</span>
 
-<span class="nc" id="L265">			Logger.debug(DomainRedirectDB.class, &quot;redirect needed from &quot; + domain + &quot; to redirectId: &quot; + redirect);</span>
+<span class="nc" id="L271">			Logger.debug(DomainRedirectDB.class, &quot;redirect needed from &quot; + domain + &quot; to redirectId: &quot; + redirect);</span>
 
-<span class="nc" id="L267">			StringBuilder result = new StringBuilder();</span>
+<span class="nc" id="L273">			StringBuilder result = new StringBuilder();</span>
 
-<span class="nc bnc" id="L269" title="All 2 branches missed.">			if (redirect.getRedirectTo().startsWith(&quot;http&quot;)==false) result.append(&quot;http://&quot;);</span>
-<span class="nc" id="L270">			result.append(redirect.getRedirectTo());</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">			if (redirect.getRedirectTo().startsWith(&quot;http&quot;)==false) result.append(&quot;http://&quot;);</span>
+<span class="nc" id="L276">			result.append(redirect.getRedirectTo());</span>
 
-<span class="nc bnc" id="L272" title="All 4 branches missed.">			if(!(path ==  null || path.equals(&quot;&quot;)))</span>
+<span class="nc bnc" id="L278" title="All 4 branches missed.">			if(!(path ==  null || path.equals(&quot;&quot;)))</span>
 			{
-<span class="nc bnc" id="L274" title="All 2 branches missed.">	 			if(redirect.isRedirectPath()){</span>
-<span class="nc bnc" id="L275" title="All 4 branches missed.">	 				if(domain.charAt(domain.length() -1) != '/' &amp;&amp; path.charAt(0) != '/')</span>
-<span class="nc" id="L276">	 					result.append('/');</span>
-<span class="nc" id="L277">	 				result.append(path);</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">	 			if(redirect.isRedirectPath()){</span>
+<span class="nc bnc" id="L281" title="All 4 branches missed.">	 				if(domain.charAt(domain.length() -1) != '/' &amp;&amp; path.charAt(0) != '/')</span>
+<span class="nc" id="L282">	 					result.append('/');</span>
+<span class="nc" id="L283">	 				result.append(path);</span>
 	 			}
 			}
-<span class="nc bnc" id="L280" title="All 4 branches missed.">			if(!(params ==  null || params.equals(&quot;&quot;)))</span>
+<span class="nc bnc" id="L286" title="All 4 branches missed.">			if(!(params ==  null || params.equals(&quot;&quot;)))</span>
 			{
-<span class="nc bnc" id="L282" title="All 2 branches missed.">	 			if(redirect.getRedirectParams()){</span>
-<span class="nc bnc" id="L283" title="All 2 branches missed.">	 				if(params.charAt(0) != '?')</span>
-<span class="nc" id="L284">	 					result.append('?');</span>
-<span class="nc" id="L285">	 				result.append(params);</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">	 			if(redirect.getRedirectParams()){</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">	 				if(params.charAt(0) != '?')</span>
+<span class="nc" id="L290">	 					result.append('?');</span>
+<span class="nc" id="L291">	 				result.append(params);</span>
 	 			}
 			}
-<span class="nc" id="L288">			Logger.debug(DomainRedirectDB.class, &quot;result: &quot; + result);</span>
+<span class="nc" id="L294">			Logger.debug(DomainRedirectDB.class, &quot;result: &quot; + result);</span>
 
-<span class="nc" id="L290">			return result.toString();</span>
+<span class="nc" id="L296">			return result.toString();</span>
 		}
-<span class="nc" id="L292">		catch (Exception e)</span>
+<span class="nc" id="L298">		catch (Exception e)</span>
 		{
-<span class="nc" id="L294">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L300">			sk.iway.iwcm.Logger.error(e);</span>
 		}
-<span class="nc" id="L296">		return null;</span>
+<span class="nc" id="L302">		return null;</span>
 	}
 
 	/**
@@ -305,15 +311,15 @@ public class DomainRedirectDB
 	 */
 	private static String addProtocol(String domain, boolean isSecure)
 	{
-<span class="pc bpc" id="L308" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(domain))</span>
+<span class="pc bpc" id="L314" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(domain))</span>
 		{
-<span class="fc bfc" id="L310" title="All 2 branches covered.">			if(isSecure)</span>
-<span class="fc" id="L311">				return &quot;https://&quot;+domain;</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">			if(isSecure)</span>
+<span class="fc" id="L317">				return &quot;https://&quot;+domain;</span>
 			else
-<span class="fc" id="L313">				return &quot;http://&quot;+domain;</span>
+<span class="fc" id="L319">				return &quot;http://&quot;+domain;</span>
 		}
 		else
-<span class="nc" id="L316">			return domain;</span>
+<span class="nc" id="L322">			return domain;</span>
 	}
 
 	/**
@@ -326,40 +332,40 @@ public class DomainRedirectDB
 		{
 			//domenovy alias
 			//chova sa to tak, ze navonok (v prehliadaci) kame domenu napr. neweb.iway.sk ale interne to WebJET vidi ako www.neweb.sk
-<span class="pc bpc" id="L329" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
 			{
-<span class="fc" id="L331">				Cache c = Cache.getInstance();</span>
+<span class="fc" id="L337">				Cache c = Cache.getInstance();</span>
 
 				@SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L334">				HashMap&lt;String, String&gt; aliasesTable = (HashMap&lt;String, String&gt;) c.getObject(ALIAS_CACHE_KEY);</span>
+<span class="fc" id="L340">				HashMap&lt;String, String&gt; aliasesTable = (HashMap&lt;String, String&gt;) c.getObject(ALIAS_CACHE_KEY);</span>
 
-<span class="fc bfc" id="L336" title="All 2 branches covered.">				if (aliasesTable == null)</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">				if (aliasesTable == null)</span>
 				{
-<span class="fc" id="L338">					aliasesTable = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L344">					aliasesTable = new HashMap&lt;&gt;();</span>
 					//aliasy su evidovane v presmerovani domen s protokolom alias
-<span class="fc" id="L340">					List&lt;DomainRedirectBean&gt; redirects = DomainRedirectDB.getAllRedirects();</span>
-<span class="fc bfc" id="L341" title="All 2 branches covered.">					for (DomainRedirectBean r : redirects)</span>
+<span class="fc" id="L346">					List&lt;DomainRedirectBean&gt; redirects = DomainRedirectDB.getAllRedirects();</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">					for (DomainRedirectBean r : redirects)</span>
 					{
-<span class="pc bpc" id="L343" title="1 of 4 branches missed.">						if (&quot;alias&quot;.equals(r.getProtocol()) &amp;&amp; r.getActive() == true)</span>
+<span class="pc bpc" id="L349" title="1 of 4 branches missed.">						if (&quot;alias&quot;.equals(r.getProtocol()) &amp;&amp; r.getActive() == true)</span>
 						{
-<span class="fc" id="L345">							aliasesTable.put(r.getRedirectFrom(), r.getRedirectTo());</span>
+<span class="fc" id="L351">							aliasesTable.put(r.getRedirectFrom(), r.getRedirectTo());</span>
 						}
-<span class="fc" id="L347">					}</span>
+<span class="fc" id="L353">					}</span>
 
-<span class="fc" id="L349">					c.setObject(ALIAS_CACHE_KEY, aliasesTable, 10);</span>
+<span class="fc" id="L355">					c.setObject(ALIAS_CACHE_KEY, aliasesTable, 10);</span>
 				}
 
-<span class="pc bpc" id="L352" title="1 of 2 branches missed.">				if (aliasesTable.size() &gt; 0)</span>
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">				if (aliasesTable.size() &gt; 0)</span>
 				{
-<span class="fc" id="L354">					String alias = aliasesTable.get(aliasedDomainName);</span>
-<span class="pc bpc" id="L355" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(alias)) return alias;</span>
+<span class="fc" id="L360">					String alias = aliasesTable.get(aliasedDomainName);</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(alias)) return alias;</span>
 				}
 			}
-<span class="nc" id="L358">		} catch (Exception ex)</span>
+<span class="nc" id="L364">		} catch (Exception ex)</span>
 		{
-<span class="nc" id="L360">			Logger.error(Tools.class, ex);</span>
-<span class="nc" id="L361">		}</span>
-<span class="nc" id="L362">		return null;</span>
+<span class="nc" id="L366">			Logger.error(Tools.class, ex);</span>
+<span class="nc" id="L367">		}</span>
+<span class="nc" id="L368">		return null;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -23,8 +23,8 @@
         });
 
         var tabs = [
-            { id: 'main', title: '[[#{datatable.tab.basic}]]', selected: true},
-            { id: 'advanced', title: '[[#{datatable.tab.advanced}]]' },
+            { id: 'main', title: '[[#{components.forum.post}]]', selected: true},
+            { id: 'advanced', title: '[[#{apps.forum.show_administration}]]' },
         ];
 
         forumDataTable = WJ.DataTable({
@@ -78,7 +78,7 @@
             init: function ( dt, node, config ) {
                 $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
             },
-            className: 'btn btn-outline-secondary',
+            className: 'btn btn-outline-secondary show-forum',
             attr: {
                 'title': '[[#{app.forum.show_forum}]]',
                 'data-toggle': 'tooltip'
@@ -93,7 +93,7 @@
             init: function ( dt, node, config ) {
                 $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
             },
-            className: 'btn btn-outline-secondary',
+            className: 'btn btn-outline-secondary recover-forum',
             attr: {
                 'title': '[[#{components.banner.recover}]]',
                 'data-toggle': 'tooltip'
@@ -108,7 +108,7 @@
             init: function ( dt, node, config ) {
                 $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
             },
-            className: 'btn btn-success',
+            className: 'btn btn-success approve-forum',
             attr: {
                 'title': '[[#{components.forum.button.confirm}]]',
                 'data-toggle': 'tooltip'
@@ -123,7 +123,7 @@
             init: function ( dt, node, config ) {
                 $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
             },
-            className: 'btn btn-danger buttons-divider',
+            className: 'btn btn-danger buttons-divider reject-forum',
             attr: {
                 'title': '[[#{components.forum.button.not_confirm}]]',
                 'data-toggle': 'tooltip'

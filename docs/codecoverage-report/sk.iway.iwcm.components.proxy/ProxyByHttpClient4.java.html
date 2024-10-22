@@ -283,18 +283,18 @@ public class ProxyByHttpClient4
 
 
 <span class="fc" id="L285">				Principal principal = req.getUserPrincipal();</span>
-<span class="pc bpc" id="L286" title="2 of 4 branches missed.">				if (principal != null &amp;&amp; Tools.isNotEmpty(principal.getName()))</span>
+<span class="pc bpc" id="L286" title="3 of 4 branches missed.">				if (principal != null &amp;&amp; Tools.isNotEmpty(principal.getName()))</span>
 				{
-<span class="fc" id="L288">					Logger.debug(ProxyByHttpClient4.class, &quot;header: AUTH_USER_CMS: &quot; + principal.getName());</span>
-<span class="fc" id="L289">					method.addHeader(&quot;AUTH_USER_CMS&quot;, principal.getName());</span>
+<span class="nc" id="L288">					Logger.debug(ProxyByHttpClient4.class, &quot;header: AUTH_USER_CMS: &quot; + principal.getName());</span>
+<span class="nc" id="L289">					method.addHeader(&quot;AUTH_USER_CMS&quot;, principal.getName());</span>
 				}
 				else
 				{
-<span class="nc" id="L293">					Identity user = UsersDB.getCurrentUser(req);</span>
-<span class="nc bnc" id="L294" title="All 2 branches missed.">					if (user != null)</span>
+<span class="fc" id="L293">					Identity user = UsersDB.getCurrentUser(req);</span>
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">					if (user != null)</span>
 					{
-<span class="nc" id="L296">						Logger.debug(ProxyByHttpClient4.class, &quot;header: AUTH_USER_CMS: &quot; + user.getLogin());</span>
-<span class="nc" id="L297">						method.addHeader(&quot;AUTH_USER_CMS&quot;, user.getLogin());</span>
+<span class="fc" id="L296">						Logger.debug(ProxyByHttpClient4.class, &quot;header: AUTH_USER_CMS: &quot; + user.getLogin());</span>
+<span class="fc" id="L297">						method.addHeader(&quot;AUTH_USER_CMS&quot;, user.getLogin());</span>
 					}
 				}
 			}
@@ -521,4 +521,4 @@ public class ProxyByHttpClient4
 <span class="fc" id="L521">		Logger.debug(ProxyByHttpClient4.class, &quot;REQUEST KONIEC-------------------------&quot;);</span>
 <span class="fc" id="L522">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

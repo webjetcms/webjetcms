@@ -77,33 +77,33 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private static void getFilesFromDir(String mainDir, ServletContext servletContext, ZipOutputStream zipOut, JspWriter printWriter, String outFileName)
 	{
-<span class="nc" id="L80">		byte[] buf = new byte[BUFFER];</span>
+<span class="fc" id="L80">		byte[] buf = new byte[BUFFER];</span>
 		FileInputStream in;
 		int nameIndex;
-<span class="nc" id="L83">		int scrollIndex = 0;</span>
+<span class="fc" id="L83">		int scrollIndex = 0;</span>
 
-<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (mainDir.endsWith(&quot;/&quot;))</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (mainDir.endsWith(&quot;/&quot;))</span>
 		{
 <span class="nc" id="L87">			mainDir = mainDir.substring(0, mainDir.length()-1);</span>
 		}
 		//Logger.println(this,&quot;mainDir: &quot;+mainDir);
 
-<span class="nc" id="L91">		String realPath = Tools.getRealPath(mainDir);</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">		if (realPath != null)</span>
+<span class="fc" id="L91">		String realPath = Tools.getRealPath(mainDir);</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">		if (realPath != null)</span>
 		{
-<span class="nc" id="L94">			File file = new File(realPath);</span>
+<span class="fc" id="L94">			File file = new File(realPath);</span>
 			int size;
 			int i;
 			try
 			{
-<span class="nc bnc" id="L99" title="All 2 branches missed.">				if (file.isDirectory())</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">				if (file.isDirectory())</span>
 				{
-<span class="nc" id="L101">					File[] files = file.listFiles();</span>
-<span class="nc" id="L102">					size = files.length;</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">					for (i=0; i&lt;size; i++)</span>
+<span class="fc" id="L101">					File[] files = file.listFiles();</span>
+<span class="fc" id="L102">					size = files.length;</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">					for (i=0; i&lt;size; i++)</span>
 					{
-<span class="nc" id="L105">						file = files[i];</span>
-<span class="nc bnc" id="L106" title="All 2 branches missed.">						if (file.isDirectory())</span>
+<span class="fc" id="L105">						file = files[i];</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">						if (file.isDirectory())</span>
 						{
 <span class="nc bnc" id="L108" title="All 2 branches missed.">							if (!file.getName().equalsIgnoreCase(&quot;cvs&quot;))</span>
 							{
@@ -112,37 +112,37 @@ import sk.iway.iwcm.users.UsersDB;
 						}
 						else
 						{
-<span class="nc" id="L115">							 nameIndex = file.getName().indexOf(DocTools.removeChars(Constants.getInstallName())+&quot;-&quot;);</span>
+<span class="fc" id="L115">							 nameIndex = file.getName().indexOf(DocTools.removeChars(Constants.getInstallName())+&quot;-&quot;);</span>
 
-<span class="nc bnc" id="L117" title="All 6 branches missed.">							if (file.getName().toLowerCase().indexOf(&quot;.cvsignore&quot;) == -1 &amp;&amp; !(nameIndex != -1 &amp;&amp; file.getName().toLowerCase().endsWith(&quot;.zip&quot;)))</span>
+<span class="pc bpc" id="L117" title="4 of 6 branches missed.">							if (file.getName().toLowerCase().indexOf(&quot;.cvsignore&quot;) == -1 &amp;&amp; !(nameIndex != -1 &amp;&amp; file.getName().toLowerCase().endsWith(&quot;.zip&quot;)))</span>
 							{
-<span class="nc bnc" id="L119" title="All 2 branches missed.">								if (printWriter != null)</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">								if (printWriter != null)</span>
 								{
-<span class="nc" id="L121">									printWriter.println(&quot;Adding file: &quot; + mainDir + &quot;/&quot; + file.getName() + &quot;&lt;br&gt;&quot;);</span>
-<span class="nc bnc" id="L122" title="All 2 branches missed.">									if (scrollIndex &gt;= 15)</span>
+<span class="fc" id="L121">									printWriter.println(&quot;Adding file: &quot; + mainDir + &quot;/&quot; + file.getName() + &quot;&lt;br&gt;&quot;);</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">									if (scrollIndex &gt;= 15)</span>
 									{
 <span class="nc" id="L124">										printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
 <span class="nc" id="L125">										scrollIndex = 0;</span>
 									}
-<span class="nc" id="L127">									printWriter.flush();</span>
-<span class="nc" id="L128">									scrollIndex++;</span>
+<span class="fc" id="L127">									printWriter.flush();</span>
+<span class="fc" id="L128">									scrollIndex++;</span>
 								}
-<span class="nc" id="L130">								in = new FileInputStream(realPath + File.separatorChar + file.getName());</span>
+<span class="fc" id="L130">								in = new FileInputStream(realPath + File.separatorChar + file.getName());</span>
 								try
 								{
 									//Add ZIP entry to output stream.
-<span class="nc" id="L134">									zipOut.putNextEntry(new ZipEntry(mainDir + &quot;/&quot; + file.getName()));</span>
+<span class="fc" id="L134">									zipOut.putNextEntry(new ZipEntry(mainDir + &quot;/&quot; + file.getName()));</span>
 
 					            // Transfer bytes from the file to the ZIP file
 					            int len;
-<span class="nc bnc" id="L138" title="All 2 branches missed.">					            while ((len = in.read(buf)) &gt; 0)</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">					            while ((len = in.read(buf)) &gt; 0)</span>
 					            {
-<span class="nc" id="L140">					            	zipOut.write(buf, 0, len);</span>
+<span class="fc" id="L140">					            	zipOut.write(buf, 0, len);</span>
 					            }
 					            // Complete the entry
-<span class="nc" id="L143">					            zipOut.closeEntry();</span>
+<span class="fc" id="L143">					            zipOut.closeEntry();</span>
 								}
-<span class="nc" id="L145">								finally { in.close(); }</span>
+<span class="fc" id="L145">								finally { in.close(); }</span>
 							}
 						}
 					}
@@ -151,9 +151,9 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L151">			catch (Exception e)</span>
 			{
 <span class="nc" id="L153">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L154">			}</span>
+<span class="fc" id="L154">			}</span>
 		}
-<span class="nc" id="L156">	}</span>
+<span class="fc" id="L156">	}</span>
 
 
 	/**
@@ -166,86 +166,86 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public static void makeZipArchive(HttpServletRequest request, ServletContext servletContext, String mainDirs, String zipDirPath, JspWriter printWriter) throws IOException {
 
-<span class="nc bnc" id="L169" title="All 2 branches missed.">		if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Archiving...&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="pc bpc" id="L169" title="1 of 2 branches missed.">		if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Archiving...&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
 
-<span class="nc bnc" id="L171" title="All 4 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(zipDirPath) || FileBrowserTools.hasForbiddenSymbol(mainDirs)) {</span>
+<span class="pc bpc" id="L171" title="2 of 4 branches missed.">		if (FileBrowserTools.hasForbiddenSymbol(zipDirPath) || FileBrowserTools.hasForbiddenSymbol(mainDirs)) {</span>
 <span class="nc bnc" id="L172" title="All 2 branches missed.">			if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Forbidden symbol in path!&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
 <span class="nc" id="L173">			return;</span>
 		}
 
-<span class="nc" id="L176">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="nc bnc" id="L177" title="All 6 branches missed.">		if (user == null || user.isAdmin() || user.isFolderWritable(zipDirPath)==false) {</span>
+<span class="fc" id="L176">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L177" title="3 of 6 branches missed.">		if (user == null || user.isAdmin()==false || user.isFolderWritable(zipDirPath)==false) {</span>
 <span class="nc bnc" id="L178" title="All 2 branches missed.">			if (printWriter != null) printWriter.println(&quot;&lt;b&gt;Access denied!&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
 <span class="nc" id="L179">			return;</span>
 		}
 
-<span class="nc" id="L182">		double time = 0;</span>
-<span class="nc" id="L183">		String[] archiveDirs = { &quot;/&quot; };</span>
+<span class="fc" id="L182">		double time = 0;</span>
+<span class="fc" id="L183">		String[] archiveDirs = { &quot;/&quot; };</span>
 		// String outFilename;
 		String zipFilePath;
-<span class="nc" id="L186">		Prop prop = null;</span>
+<span class="fc" id="L186">		Prop prop = null;</span>
 
 		try {
-<span class="nc bnc" id="L189" title="All 2 branches missed.">			if (Tools.isEmpty(zipDirPath)) {</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">			if (Tools.isEmpty(zipDirPath)) {</span>
 <span class="nc" id="L190">				zipDirPath = &quot;/files/protected-backup/&quot;; // NOSONAR</span>
 			}
 
-<span class="nc" id="L193">			SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
-<span class="nc" id="L194">			SimpleDateFormat timeFormat = new SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
-<span class="nc" id="L195">			long dateTime = Tools.getNow();</span>
+<span class="fc" id="L193">			SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="fc" id="L194">			SimpleDateFormat timeFormat = new SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
+<span class="fc" id="L195">			long dateTime = Tools.getNow();</span>
 			// poskladam nazov suboru
-<span class="nc" id="L197">			String fileName = Constants.getInstallName() + &quot;-&quot; + dateFormat.format(new Timestamp(dateTime)) + &quot;-&quot;</span>
-<span class="nc" id="L198">					+ timeFormat.format(new Timestamp(dateTime)) + &quot;.zip&quot;;</span>
+<span class="fc" id="L197">			String fileName = Constants.getInstallName() + &quot;-&quot; + dateFormat.format(new Timestamp(dateTime)) + &quot;-&quot;</span>
+<span class="fc" id="L198">					+ timeFormat.format(new Timestamp(dateTime)) + &quot;.zip&quot;;</span>
 
 			// z nazvu suburu vyhodim zakazane znaky
-<span class="nc" id="L201">			fileName = DocTools.removeChars(fileName);</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">			if (!zipDirPath.startsWith(&quot;/&quot;))</span>
+<span class="fc" id="L201">			fileName = DocTools.removeChars(fileName);</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">			if (!zipDirPath.startsWith(&quot;/&quot;))</span>
 <span class="nc" id="L203">				zipDirPath = &quot;/&quot; + zipDirPath; // NOSONAR</span>
-<span class="nc bnc" id="L204" title="All 2 branches missed.">			if (!zipDirPath.endsWith(&quot;/&quot;))</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">			if (!zipDirPath.endsWith(&quot;/&quot;))</span>
 <span class="nc" id="L205">				zipDirPath = zipDirPath + &quot;/&quot;; // NOSONAR</span>
 
 			// poskladam cestu archivu
-<span class="nc" id="L208">			zipFilePath = zipDirPath + fileName;</span>
+<span class="fc" id="L208">			zipFilePath = zipDirPath + fileName;</span>
 
-<span class="nc bnc" id="L210" title="All 2 branches missed.">			if (Tools.isNotEmpty(mainDirs)) {</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(mainDirs)) {</span>
 				// rozparsujeme si adresare, ktore sa budu archivovat
-<span class="nc" id="L212">				archiveDirs = RelatedPagesDB.getTokens(mainDirs, &quot;,&quot;);</span>
+<span class="fc" id="L212">				archiveDirs = RelatedPagesDB.getTokens(mainDirs, &quot;,&quot;);</span>
 			}
 
-<span class="nc" id="L215">			Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;ZIP archive, zip=&quot; + zipFilePath + &quot; dir=&quot; +  Tools.join(archiveDirs, &quot;,&quot;), -1, -1);</span>
+<span class="fc" id="L215">			Adminlog.add(Adminlog.TYPE_FILE_CREATE, &quot;ZIP archive, zip=&quot; + zipFilePath + &quot; dir=&quot; +  Tools.join(archiveDirs, &quot;,&quot;), -1, -1);</span>
 
 			// vytvorime si ZIP file
-<span class="nc bnc" id="L218" title="All 2 branches missed.">			if (servletContext != null) {</span>
-<span class="nc" id="L219">				File outFile = new File(Tools.getRealPath(zipFilePath));</span>
-<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (outFile.getParentFile().exists() == false) {</span>
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">			if (servletContext != null) {</span>
+<span class="fc" id="L219">				File outFile = new File(Tools.getRealPath(zipFilePath));</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">				if (outFile.getParentFile().exists() == false) {</span>
 <span class="nc bnc" id="L221" title="All 4 branches missed.">					if (!outFile.getParentFile().mkdirs() &amp;&amp; printWriter != null) {</span>
 <span class="nc" id="L222">						printWriter.println(&quot;&lt;br&gt;&lt;b&gt;Unable to create dirs: &quot; + zipFilePath + &quot;&lt;/b&gt;&quot;);</span>
 <span class="nc" id="L223">						return;</span>
 					}
 				}
-<span class="nc" id="L226">				ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outFile));</span>
+<span class="fc" id="L226">				ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outFile));</span>
 
 				// zmeriame cas operacie
-<span class="nc" id="L229">				time = Tools.getNow();</span>
+<span class="fc" id="L229">				time = Tools.getNow();</span>
 
 				// iterujeme po adresaroch a pridavame subory do ZIP-archivu
-<span class="nc bnc" id="L232" title="All 2 branches missed.">				for (int i = 0; i &lt; archiveDirs.length; i++) {</span>
-<span class="nc" id="L233">					getFilesFromDir(archiveDirs[i], servletContext, zipOut, printWriter, fileName);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">				for (int i = 0; i &lt; archiveDirs.length; i++) {</span>
+<span class="fc" id="L233">					getFilesFromDir(archiveDirs[i], servletContext, zipOut, printWriter, fileName);</span>
 				}
 
 				// uzavretie ZIP suboru
-<span class="nc" id="L237">				zipOut.close();</span>
-<span class="nc" id="L238">				time = (Tools.getNow() - time) / 1000D;</span>
-<span class="nc bnc" id="L239" title="All 2 branches missed.">				if (request != null) {</span>
-<span class="nc" id="L240">					prop = Prop.getInstance(servletContext, request);</span>
+<span class="fc" id="L237">				zipOut.close();</span>
+<span class="fc" id="L238">				time = (Tools.getNow() - time) / 1000D;</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">				if (request != null) {</span>
+<span class="fc" id="L240">					prop = Prop.getInstance(servletContext, request);</span>
 				}
 			}
-<span class="nc bnc" id="L243" title="All 2 branches missed.">			if (prop != null) {</span>
-<span class="nc bnc" id="L244" title="All 2 branches missed.">				if (printWriter != null)</span>
-<span class="nc" id="L245">					printWriter.println(&quot;&lt;br&gt;&lt;b&gt;&quot; + prop.getText(&quot;admin.archive.done&quot;) + &quot;!&lt;br&gt;&quot;</span>
-<span class="nc" id="L246">							+ prop.getText(&quot;admin.archive.elapsed_time&quot;) + &quot;: &quot; + time + &quot; sec&lt;/b&gt;&quot;);</span>
-<span class="nc bnc" id="L247" title="All 2 branches missed.">				if (printWriter != null)</span>
-<span class="nc" id="L248">					printWriter.println(&quot;&lt;br&gt;&quot; + prop.getText(&quot;admin.archive.archive_filename&quot;) + &quot;: &lt;b&gt;&lt;a href='&quot;</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">			if (prop != null) {</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">				if (printWriter != null)</span>
+<span class="fc" id="L245">					printWriter.println(&quot;&lt;br&gt;&lt;b&gt;&quot; + prop.getText(&quot;admin.archive.done&quot;) + &quot;!&lt;br&gt;&quot;</span>
+<span class="fc" id="L246">							+ prop.getText(&quot;admin.archive.elapsed_time&quot;) + &quot;: &quot; + time + &quot; sec&lt;/b&gt;&quot;);</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">				if (printWriter != null)</span>
+<span class="fc" id="L248">					printWriter.println(&quot;&lt;br&gt;&quot; + prop.getText(&quot;admin.archive.archive_filename&quot;) + &quot;: &lt;b&gt;&lt;a href='&quot;</span>
 							+ zipFilePath + &quot;' target='_blank'&gt;&quot; + zipFilePath + &quot;&lt;/a&gt;&lt;/b&gt;&quot;);
 			} else {
 <span class="nc bnc" id="L251" title="All 2 branches missed.">				if (printWriter != null)</span>
@@ -256,7 +256,7 @@ import sk.iway.iwcm.users.UsersDB;
 			}
 <span class="nc" id="L257">		} catch (Exception e) {</span>
 <span class="nc" id="L258">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L259">		}</span>
-<span class="nc" id="L260">	}</span>
+<span class="fc" id="L259">		}</span>
+<span class="fc" id="L260">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

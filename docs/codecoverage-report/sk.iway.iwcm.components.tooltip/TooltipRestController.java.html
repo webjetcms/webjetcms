@@ -59,71 +59,78 @@ public class TooltipRestController extends DatatableRestControllerV2&lt;Dictiona
 
         //If id isnt -1 return exist entity
 <span class="fc bfc" id="L61" title="All 2 branches covered.">        if(id != -1) {</span>
-<span class="fc" id="L62">            return DictionaryDB.getDictionary((int)id);</span>
+<span class="fc" id="L62">            DictionaryBean bean = DictionaryDB.getDictionary((int)id);</span>
+<span class="pc bpc" id="L63" title="2 of 4 branches missed.">            if(InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true) {</span>
+<span class="fc" id="L64">                String domain = CloudToolsForCore.getDomainName();</span>
+<span class="pc bpc" id="L65" title="1 of 4 branches missed.">                if (bean != null &amp;&amp; domain.equals(bean.getDomain())==false) {</span>
+<span class="fc" id="L66">                    return null;</span>
+                }
+            }
+<span class="fc" id="L69">            return bean;</span>
         }
 
         //Create new empty entity DictionaryBean
-<span class="fc" id="L66">        DictionaryBean entity = new DictionaryBean();</span>
+<span class="fc" id="L73">        DictionaryBean entity = new DictionaryBean();</span>
         //Set dictionary group (in table we show entyties with value dictionaryGroups = &quot;tooltip&quot;)
-<span class="fc" id="L68">        entity.setDictionaryGroup(&quot;tooltip&quot;);</span>
+<span class="fc" id="L75">        entity.setDictionaryGroup(&quot;tooltip&quot;);</span>
 
         //Set curent domain as default
-<span class="fc" id="L71">        String currentDomain = CloudToolsForCore.getDomainName();</span>
-<span class="fc" id="L72">        entity.setDomain(currentDomain);</span>
+<span class="fc" id="L78">        String currentDomain = CloudToolsForCore.getDomainName();</span>
+<span class="fc" id="L79">        entity.setDomain(currentDomain);</span>
 
-<span class="fc" id="L74">        return entity;</span>
+<span class="fc" id="L81">        return entity;</span>
     }
 
     @Override
     public DictionaryBean insertItem(DictionaryBean entity) {
 
-<span class="fc" id="L80">        return saveDictionaryBean(entity);</span>
+<span class="fc" id="L87">        return saveDictionaryBean(entity);</span>
     }
 
     @Override
     public boolean deleteItem(DictionaryBean entity, long id) {
 
-<span class="fc" id="L86">        Logger.debug(TooltipRestController.class, &quot;SAVE, id=&quot;+id);</span>
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (entity == null) return true;</span>
+<span class="fc" id="L93">        Logger.debug(TooltipRestController.class, &quot;SAVE, id=&quot;+id);</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (entity == null) return true;</span>
 
         //Try delete not null entity
-<span class="fc" id="L90">		boolean deleteOK = DictionaryDB.deleteDictionary(entity.getDictionaryId());</span>
+<span class="fc" id="L97">		boolean deleteOK = DictionaryDB.deleteDictionary(entity.getDictionaryId());</span>
 
         //If deleteOK == false, entity delete failed, set request atrribute errorText and return false
-<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (deleteOK == false) {</span>
-<span class="nc" id="L94">			Prop prop = Prop.getInstance(getRequest());</span>
-<span class="nc" id="L95">			getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;admin.conf_editor.update_alert&quot;));</span>
-<span class="nc" id="L96">            return false;</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        if (deleteOK == false) {</span>
+<span class="nc" id="L101">			Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L102">			getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;admin.conf_editor.update_alert&quot;));</span>
+<span class="nc" id="L103">            return false;</span>
 		}
 
-<span class="fc" id="L99">        return true;</span>
+<span class="fc" id="L106">        return true;</span>
     }
 
     @Override
     public DictionaryBean editItem(DictionaryBean entity, long id) {
 
-<span class="fc" id="L105">        return saveDictionaryBean(entity);</span>
+<span class="fc" id="L112">        return saveDictionaryBean(entity);</span>
     }
 
     DictionaryBean saveDictionaryBean(DictionaryBean entity) {
-<span class="fc" id="L109">        Logger.debug(TooltipRestController.class, &quot;SAVE&quot;);</span>
+<span class="fc" id="L116">        Logger.debug(TooltipRestController.class, &quot;SAVE&quot;);</span>
 
-<span class="fc" id="L111">		String name = entity.getName();</span>
-<span class="fc" id="L112">		name = Tools.replace(name, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
-<span class="fc" id="L113">		name = Tools.replace(name, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
-<span class="fc" id="L114">		entity.setName(name);</span>
+<span class="fc" id="L118">		String name = entity.getName();</span>
+<span class="fc" id="L119">		name = Tools.replace(name, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+<span class="fc" id="L120">		name = Tools.replace(name, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
+<span class="fc" id="L121">		entity.setName(name);</span>
 
         //Try save entity
-<span class="fc" id="L117">        boolean saveOK = DictionaryDB.saveTooltip(entity);</span>
+<span class="fc" id="L124">        boolean saveOK = DictionaryDB.saveTooltip(entity);</span>
 
         //If saveOK == false, entity saving failed, set request atrribute errorText and return null
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (saveOK == false) {</span>
-<span class="nc" id="L121">            Prop prop = Prop.getInstance(getRequest());</span>
-<span class="nc" id="L122">			getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;admin.conf_editor.update_alert&quot;));</span>
-<span class="nc" id="L123">            return null;</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">        if (saveOK == false) {</span>
+<span class="nc" id="L128">            Prop prop = Prop.getInstance(getRequest());</span>
+<span class="nc" id="L129">			getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;admin.conf_editor.update_alert&quot;));</span>
+<span class="nc" id="L130">            return null;</span>
         }
 
-<span class="fc" id="L126">        return entity;</span>
+<span class="fc" id="L133">        return entity;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

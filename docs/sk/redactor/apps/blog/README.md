@@ -1,12 +1,12 @@
 # Zoznam článkov
 
-Aplikácia Blog -> Zoznam článkov obsahuje zoznam všetkých článkov, práve prihláseného používateľa typu blogger. Umožňuje mu upravovať štruktúru svojho blogu pridávaním ďalších sekcií (pod-priečinkov) a vytvárať/upravovať/duplikovať/mazať články.
+Aplikácia Zoznam článkov obsahuje zoznam všetkých článkov, práve prihláseného používateľa typu blogger. Umožňuje mu upravovať štruktúru svojho blogu pridávaním ďalších sekcií (pod-priečinkov) a vytvárať/upravovať/duplikovať/mazať články.
 
 Výsledkom aplikácie je zobrazenie článkov na web stránke, pričom články sú umiestnené do kategórií/sekcií.
 
 ![](blog-news-list.png)
 
-**Upozornenie:** táto aplikácia sa zobrazí práve prihlásenému používateľovi, iba ak spĺňa jednu z nasledujúcich podmienok:
+!>**Upozornenie:** táto aplikácia sa zobrazí práve prihlásenému používateľovi, iba ak spĺňa jednu z nasledujúcich podmienok:
 
 - Práve prihlásený používateľ je takzvaný **bloger**. Inak povedané, používateľ musí mať právo Blog a taktiež musí patriť do skupiny používateľov Blog. Takýto používateľ môže vytvárať nové blog príspevky a nové sekcie vrámci jeho blogu.
 - Práve prihlásený používateľ je takzvaný **administrátor blogerov**, ktorý je admin, musí mať právo Blog aj Správa blogerov a nemal by patriť do skupiny používateľov Blog. Takýto používateľ vytvára nových blogerov (používateľov), vie zmazať existujúceho blogera a prípadne vykonať úpravu v texte ľubovoľného blogera.
@@ -20,9 +20,9 @@ Poznáme teda dva typy používateľov:
 
 ## Filtrovanie podľa priečinka
 
-Stránka obsahuje v ľavom hornom rohu externý filter na sekcie (pod-priečinky), ktorý umožňuje filtrovanie zobrazených článkov iba pre zvolenú sekciu blogu (priečinok). Prednastavená hodnota ``Všetky sekcie`` ![](groupFilter_defaultValue.png ":no-zoom"), zobrazí všetky články zo všetkých sekcií (pod-priečinkov).
+Stránka obsahuje v ľavom hornom rohu externý filter na sekcie (pod-priečinky), ktorý umožňuje filtrovanie zobrazených článkov iba pre zvolenú sekciu blogu (priečinok). Prednastavená hodnota **Všetky sekcie**, zobrazí všetky články zo všetkých sekcií (pod-priečinkov).
 
-Samotný výber sekcií je zoradený ako stromová štruktúra, kde hlbšie vnorené sekcie sú nižšie. Používateľ vidí celú cestu k sekcii, a hlavný priečinok má rovnaký názov ako jeho ``prihlasovacie meno (login)``, čo v príklade na obrázku je `bloggerPerm`.
+Samotný výber sekcií je zoradený ako stromová štruktúra, kde hlbšie vnorené sekcie sú nižšie. Používateľ vidí celú cestu k sekcii, a hlavný priečinok má rovnaký názov ako jeho **prihlasovacie meno (login)**, čo v príklade na obrázku je `bloggerPerm`.
 
 ![](groupFilter_allValues.png)
 
@@ -32,9 +32,9 @@ Nový článok vytvoríte pomocou tlačidla ![](add_article.png ":no-zoom"). Pr�
 
 ![](editor-text.png)
 
-Pri novom článku je zaradenie v stromovej štruktúre prednastavené podľa hodnoty v externom filtri sekcií (napr /Aplikácie/Blog/bloggerPerm).
+Pri novom článku je zaradenie v stromovej štruktúre prednastavené podľa hodnoty v externom filtri sekcií (napr. /Aplikácie/Blog/bloggerPerm).
 
-**Upozornenie:** ak sa pokúsite vytvoriť nový článok bez zvolenia sekcie v externom filtri (pri jeho hodnote ``Všetky sekcie``) nastaví sa sekcia Nezaradené, alebo prvý priečinok na ktorý ma bloger práva. Sekciu môžete zmeniť v editore v karte Základné nastavením hodnoty Nadradený priečinok.
+!>**Upozornenie:** ak sa pokúsite vytvoriť nový článok bez zvolenia sekcie v externom filtri (pri jeho hodnote **Všetky sekcie**) nastaví sa sekcia Nezaradené, alebo prvý priečinok na ktorý ma bloger práva. Sekciu môžete zmeniť v editore v karte Základné nastavením hodnoty Nadradený priečinok.
 
 V zozname článkov sa zobrazí nadpis článku. Ak chcete v zozname zobraziť aj krátky úvod zadajte ho v editore článku v karte Perex do poľa Anotácia. Odporúčame zadať aj ilustračný obrázok do poľa Obrázok v karte Perex.
 

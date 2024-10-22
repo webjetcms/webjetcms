@@ -1,8 +1,6 @@
 Feature('apps.usrlogon');
 
 var randomText = null;
-var tempMailAddress = "webjetcms@fexpost.com";
-var tempMailPin = "264583092304377";
 let userName = "autotestApproveUser_";
 let password;
 let firstName = "firstName_";
@@ -63,8 +61,8 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
 
     loginIN(I, defaultPassword, false);
     I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");
-    I.say("Cakam 10 sekund na expirovanie zablokovanej IP adresy");
-    //je potrebne cakat 10 sekund na expirovanie zleho hesla
+    I.say("Cakam 10 sekund na exspirovanie zablokovanej IP adresy");
+    //je potrebne cakat 10 sekund na exspirovanie zleho hesla
     I.wait(10);
 
     loginIN(I, defaultPassword, true);
@@ -81,7 +79,7 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
         I.wait(10);
     }
 
-    I.say("Cakam 60 sekund na expirovanie zablokovanej IP adresy");
+    I.say("Cakam 60 sekund na exspirovanie zablokovanej IP adresy");
     I.wait(10);
     loginIN(I, defaultPassword, true, false);
     I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");
@@ -175,6 +173,19 @@ Scenario('odhlasenie 4 @singlethread', ({ I }) => {
     I.amOnPage('/logoff.do');
 });
 
+function setPassword(userId, newPassword, I, DTE) {
+    I.say("setPassword, userId="+userId);
+    I.relogin("tester");
+    I.amOnPage("/admin/v9/users/user-list/?id="+userId);
+    DTE.waitForEditor();
+    DTE.fillField("password", secret(newPassword));
+    I.checkOption("#DTE_Field_editorFields-allowWeakPassword_0");
+    DTE.save();
+    I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty", "div.DTE_Form_Error");
+    I.dontSeeElement("#datatableInit_modal");
+    I.logout();
+}
+
 Scenario('change passowrd by user @singlethread', ({ I, DT, DTE }) => {
 
     //password set by admin, used to edit profile
@@ -183,16 +194,7 @@ Scenario('change passowrd by user @singlethread', ({ I, DT, DTE }) => {
     var password2 = "Pas!23.2."+randomText;
 
     //
-    I.say("reset password");
-    I.relogin("tester");
-    I.amOnPage("/admin/v9/users/user-list/?id=4");
-    DTE.waitForEditor();
-    DTE.fillField("password", secret(password1));
-    DTE.save();
-    I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty", "div.DTE_Form_Error");
-    I.dontSeeElement("#datatableInit_modal");
-
-    I.logout();
+    setPassword(4, password1, I, DTE);
 
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
 
@@ -246,4 +248,31 @@ Scenario('change passowrd by user @singlethread', ({ I, DT, DTE }) => {
 Scenario('odhlasenie 5 @singlethread', ({ I }) => {
     //I.clickIfVisible("a.js-logout-toggler");
     I.amOnPage('/logoff.do');
+});
+
+Scenario('user with no access to this user group @singlethread', ({ I }) => {
+    I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+    I.fillField("username", "tester2");
+    I.fillField("password", secret("*********"));
+    I.click(".login-submit");
+    I.waitForText("Nemáte dostatočné práva pre prístup do tejto sekcie.", 10);
+    I.dontSee("nespĺňa bezpečnostné nastavenia aplikácie");
+});
+
+Scenario('user with weak password @singlethread', ({ I, DTE }) => {
+    var weakPassword = "heslo";
+    var password = "Pas!23.3."+randomText;
+    //set weak password for user user_slabeheslo
+    setPassword(1158, weakPassword, I, DTE);
+    I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+    I.fillField("username", "user_slabeheslo");
+    I.fillField("password", secret(weakPassword));
+    I.click(".login-submit");
+
+    I.waitForText("Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie, alebo mu vypršala platnosť", 10);
+    I.fillField("#oldpass", weakPassword);
+    I.fillField("#newpass", password);
+    I.fillField("#retypepass", password);
+    I.click(".buttonLogon");
+    I.waitForText("tento text sa zobrazí len prihlásenému používateľovi", 10);
 });

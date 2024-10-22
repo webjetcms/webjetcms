@@ -8,12 +8,11 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.beanutils.BeanUtils;
-
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 
@@ -144,6 +143,7 @@ public class Adminlog
 	public static final int TYPE_SEO = 310;
 	public static final int TYPE_RESTAURANT_MENU = 311;
 	public static final int TYPE_QUIZ = 312;
+	public static final int TYPE_FILE_ARCHIVE = 313;
 
 	/*
 	public static final int TYPE_HEAT_MAP_CLEAN = 940;
@@ -382,6 +382,11 @@ public class Adminlog
 			}
 		}
 
+		//add auditValues from RequestBean
+        if (requestBean != null) {
+            description = description + getRequestBeanAuditLog(requestBean);
+        }
+
 
 		boolean writeToAuditLog = true;
 
@@ -542,24 +547,46 @@ public class Adminlog
 	}
 
 	/**
+	 * Returns changelog text for given object
+	 * @param id - ID of object OR NULL/-1 if new object
+	 * @param newObj - changed object
+	 * @param originalObj - original object allready saved in DB or NULL if new object
+	 * @return
+	 */
+	public static String getChangelog(Long id, Object newObj, Object originalObj) {
+		String changes = Adminlog.getPojoZmeny(newObj, originalObj);
+		String title = "CREATE:";
+		if (originalObj != null)
+		{
+			title = "UPDATE:";
+		}
+		return title + "\nid: " + id + "\n" + changes;
+	}
+
+	/**
+	 * Returns changelog text for DELETE of given object (prints all properties)
+	 * @param id
+	 * @param obj
+	 * @return
+	 */
+	public static String getChangelogDelete(Long id, Object obj) {
+		String changes = Adminlog.getPojoZmeny(obj, null);
+		String title = "DELETE:";
+		return title + "\nid: " + id + "\n" + changes;
+	}
+
+	/**
 	 * Vrati zoznam zmenenych atributov POJO objektu
 	 * @param o1
 	 * @param o1Original
 	 * @return
 	 */
-	public static String getPojoZmeny(Object o1, Object o1Original)
+	public static String getPojoZmeny(Object newObj, Object originalObj)
 	{
-		Map<String, String> properties = new HashMap<>();
-		try
-		{
-			BeanUtils.populate(o1, properties);
-		}
-		catch (Exception ex)
-		{
-
-		}
-
-		return null;
+        if(newObj == null)
+            return "Bez zmeny";
+        BeanDiff diff = new BeanDiff().setNew(newObj).setOriginal(originalObj);
+        return new BeanDiffPrinter(diff).toString();
 	}
 
 	public static List<AdminlogBean> searchAdminlog(int[] logTypes, int logTypeFrom, int logTypeTo, int userId, long createdFrom, long createdTo, String description, int subId1, int subId2, String ip, String hostname)
@@ -807,5 +834,39 @@ public class Adminlog
 	 */
 	public static Integer[] getTypes() {
 		return TYPY_ARRAY;
+	}
+
+	/**
+	 * Format RequestBean.auditValues to String
+	 * @param requestBean
+	 * @return
+	 */
+	public static String getRequestBeanAuditLog(RequestBean requestBean) {
+		//add auditValues from RequestBean
+		StringBuilder log = new StringBuilder();
+        if (requestBean != null) {
+            Map<String, String[]> auditValues = requestBean.getAuditValues(false);
+            if (auditValues != null && auditValues.size() > 0) {
+                for (Map.Entry<String, String[]> entry : auditValues.entrySet()) {
+                    String key = entry.getKey();
+                    String[] values = entry.getValue();
+                    if (values != null && values.length > 0) {
+                        if (log.length() > 0) log.append("\n");
+                        log.append(key).append(": ");
+                        for (int i = 0; i < values.length; i++) {
+                            if (i > 0) log.append(", ");
+                            log.append(values[i]);
+                        }
+                    }
+                }
+				if (log.length() > 0) {
+					log.insert(0, '\n');
+					log.append("\n");
+				}
+
+                auditValues.clear();
+            }
+        }
+		return log.toString();
 	}
 }

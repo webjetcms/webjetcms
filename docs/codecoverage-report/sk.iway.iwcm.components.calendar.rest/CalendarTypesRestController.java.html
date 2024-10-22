@@ -59,26 +59,27 @@ public class CalendarTypesRestController extends DatatableRestControllerV2&lt;Ca
 <span class="fc bfc" id="L59" title="All 2 branches covered.">        if(id == -1) {</span>
 <span class="fc" id="L60">            entity = new CalendarTypesEntity();</span>
 <span class="fc" id="L61">            entity.setApproverId(-1);</span>
-        } else
-<span class="fc" id="L63">            entity = calendarTypesRepository.findByIdAndDomainId(id, CloudToolsForCore.getDomainId());</span>
+        } else {
+<span class="fc" id="L63">            entity = calendarTypesRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);</span>
+        }
 
-<span class="fc" id="L65">        return entity;</span>
+<span class="fc" id="L66">        return entity;</span>
     }
 
 	@Override
 	public void beforeSave(CalendarTypesEntity entity) {
         //Set domain id, not null
-<span class="pc bpc" id="L71" title="1 of 4 branches missed.">        if(entity.getId() == null || entity.getId() == -1)</span>
-<span class="fc" id="L72">            entity.setDomainId(CloudToolsForCore.getDomainId());</span>
-<span class="fc" id="L73">	}</span>
+<span class="pc bpc" id="L72" title="1 of 4 branches missed.">        if(entity.getId() == null || entity.getId() == -1)</span>
+<span class="fc" id="L73">            entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L74">	}</span>
 
     @Override
     public void afterSave(CalendarTypesEntity entity, CalendarTypesEntity saved) {
-<span class="fc" id="L77">        Cache c = Cache.getInstance();</span>
-<span class="fc" id="L78">        String cacheKey = &quot;sk.iway.iwcm.calendar.EventTypeDB.domain=&quot; + CloudToolsForCore.getDomainId();</span>
-<span class="fc" id="L79">        c.removeObject(cacheKey);</span>
-<span class="fc" id="L80">    }</span>
+<span class="fc" id="L78">        Cache c = Cache.getInstance();</span>
+<span class="fc" id="L79">        String cacheKey = &quot;sk.iway.iwcm.calendar.EventTypeDB.domain=&quot; + CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L80">        c.removeObject(cacheKey);</span>
+<span class="fc" id="L81">    }</span>
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

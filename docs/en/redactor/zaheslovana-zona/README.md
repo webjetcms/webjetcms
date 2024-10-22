@@ -33,7 +33,7 @@ You can use the Logged In User application to insert fields into the email text 
 
 WebJET will display a standard login dialog if you are accessing a password-protected site. However, you can create and use a special page with appropriate text and design for login.
 
-Create a new page (it doesn't matter where it is, it can be either in the main directory or in the directory you want to password protect) and insert the Login User-\&gt;Login Form application into the page. The name of the page is also arbitrary. Thus, the content of the page will be the code `!INCLUDE(/components/user/logon.jsp)!`which represents the registration form.
+Create a new page (it doesn't matter where it is, it can be either in the main directory or in the directory you want to password protect) and insert the Login User->Login Form application into the page. The name of the page is also arbitrary. Thus, the content of the page will be the code `!INCLUDE(/components/user/logon.jsp)!`which represents the registration form.
 
 ![](docs-login.png)
 
@@ -41,7 +41,7 @@ Save the page and make a note of its ID. You can add some more explanatory text 
 
 ## Registration page
 
-If you want visitors to have the option to register, create a page and insert the Logged in User-\&gt;Registration Form application into it. The content of the page will then be the code `!INCLUDE(/components/user/newuser.jsp, ...)!` which represents the registration form.
+If you want visitors to have the option to register, create a page and insert the Logged in User->Registration Form application into it. The content of the page will then be the code `!INCLUDE(/components/user/newuser.jsp, ...)!` which represents the registration form.
 
 ![](docs-register-1.png)
 
@@ -58,7 +58,7 @@ When editing the registration form, you can set the form's sleeping behavior in 
 
 For proper functioning it is necessary to define pages or folders that should be accessible only after entering the password. If you password a folder, all pages in that folder will be passworded. However, this does not apply to subfolders and pages within subfolders.
 
-Click on WEB Pages-\&gt;List of web pages and navigate to the folder you want to password protect. Click on Edit Folder and there in the Access tab, select the groups for which the folder should be accessible.
+Click on WEB Pages->List of web pages and navigate to the folder you want to password protect. Click on Edit Folder and there in the Access tab, select the groups for which the folder should be accessible.
 
 ![](set-user-groups.png)
 
@@ -125,5 +125,5 @@ Approval of user registration (approval of adding to a user group) is done in th
 
 Approval can be done:
 - using the button ![](user-list-page-approve_1.png ":no-zoom") in the toolbar, where users in the highlighted rows will be approved. After this approval, the user will be able to log in to the passworded section and will also receive a successful registration email containing the user's login name.
-- using the button ![](user-list-page-approve_2.png ":no-zoom")
-**Warning:** If the user group requires approval but does not have add/remove from the group enabled by the user, the parameter **Requires approval****Require email address confirmation**.
+- using the button ![](user-list-page-approve_2.png ":no-zoom") in the toolbar, where users in the highlighted rows and their password will be changed to a randomly generated one. After this verification, the user will be able to log into the passworded section and will also receive a successful registration email containing the user's login name and the newly GENERATED password.
+**Warning:** If the user group requires approval but does not have add/remove from the group enabled by the user, the parameter **Requires approval** will be ignored even if it is selected and the type of approval will take place depending on the value of the parameter **Require email address confirmation**.

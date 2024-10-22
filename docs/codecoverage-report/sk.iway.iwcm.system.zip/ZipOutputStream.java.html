@@ -41,27 +41,27 @@ import java.util.zip.ZipException;
  */
 public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStream implements sk.iway.iwcm.system.zip.ZipConstants {
     private ZipEntry entry;
-<span class="nc" id="L44">    private Vector&lt;ZipEntry&gt; entries = new Vector&lt;&gt;();</span>
-<span class="nc" id="L45">    private Map&lt;String, ZipEntry&gt; names = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L46">    private CRC32 crc = new CRC32();</span>
+<span class="fc" id="L44">    private Vector&lt;ZipEntry&gt; entries = new Vector&lt;&gt;();</span>
+<span class="fc" id="L45">    private Map&lt;String, ZipEntry&gt; names = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L46">    private CRC32 crc = new CRC32();</span>
     private long written;
-<span class="nc" id="L48">    private long locoff = 0;</span>
+<span class="fc" id="L48">    private long locoff = 0;</span>
     private String comment;
-<span class="nc" id="L50">    private int method = DEFLATED;</span>
+<span class="fc" id="L50">    private int method = DEFLATED;</span>
     private boolean finished;
 
-<span class="nc" id="L53">    private boolean closed = false;</span>
+<span class="fc" id="L53">    private boolean closed = false;</span>
 
     /**
      * Check to make sure that this stream has not been closed
      */
     private void ensureOpen() throws IOException
 	 {
-<span class="nc bnc" id="L60" title="All 2 branches missed.">    	if (closed)</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">    	if (closed)</span>
     	{
 <span class="nc" id="L62">    		throw new IOException(&quot;Stream closed&quot;);</span>
       }
-<span class="nc" id="L64">    }</span>
+<span class="fc" id="L64">    }</span>
     /**
      * Compression method for uncompressed (STORED) entries.
      */
@@ -78,9 +78,9 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
      */
     public ZipOutputStream(OutputStream out)
     {
-<span class="nc" id="L81">    	super(out, new Deflater(Deflater.DEFAULT_COMPRESSION, true));</span>
-<span class="nc" id="L82">      usesDefaultDeflater = true;</span>
-<span class="nc" id="L83">    }</span>
+<span class="fc" id="L81">    	super(out, new Deflater(Deflater.DEFAULT_COMPRESSION, true));</span>
+<span class="fc" id="L82">      usesDefaultDeflater = true;</span>
+<span class="fc" id="L83">    }</span>
 
     /**
      * Sets the ZIP file comment.
@@ -137,27 +137,27 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
      */
     public void putNextEntry(ZipEntry e) throws IOException
 	 {
-<span class="nc" id="L140">    	ensureOpen();</span>
-<span class="nc bnc" id="L141" title="All 2 branches missed.">    	if (entry != null)</span>
+<span class="fc" id="L140">    	ensureOpen();</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">    	if (entry != null)</span>
     	{
 <span class="nc" id="L143">    		closeEntry();	// close previous entry</span>
 		}
-<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (e.time == -1)</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">		if (e.time == -1)</span>
 		{
-<span class="nc" id="L147">		    e.setTime(System.currentTimeMillis());</span>
+<span class="fc" id="L147">		    e.setTime(System.currentTimeMillis());</span>
 		}
-<span class="nc bnc" id="L149" title="All 2 branches missed.">		if (e.method == -1)</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">		if (e.method == -1)</span>
 		{
-<span class="nc" id="L151">		    e.method = method;	// use default method</span>
+<span class="fc" id="L151">		    e.method = method;	// use default method</span>
 		}
-<span class="nc bnc" id="L153" title="All 3 branches missed.">		switch (e.method)</span>
+<span class="pc bpc" id="L153" title="2 of 3 branches missed.">		switch (e.method)</span>
 		{
 			case DEFLATED:
-<span class="nc bnc" id="L156" title="All 6 branches missed.">					if (e.size == -1 || e.csize == -1 || e.crc == -1)</span>
+<span class="pc bpc" id="L156" title="5 of 6 branches missed.">					if (e.size == -1 || e.csize == -1 || e.crc == -1)</span>
 					{
 						// store size, compressed size, and crc-32 in data descriptor
 						// immediately following the compressed entry data
-<span class="nc" id="L160">						e.flag = 8;</span>
+<span class="fc" id="L160">						e.flag = 8;</span>
 				   }
 <span class="nc bnc" id="L162" title="All 6 branches missed.">					else if (e.size != -1 &amp;&amp; e.csize != -1 &amp;&amp; e.crc != -1)</span>
 					{
@@ -168,8 +168,8 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 					{
 <span class="nc" id="L169">						throw new ZipException(&quot;DEFLATED entry missing size, compressed size, or crc-32&quot;);</span>
 				   }
-<span class="nc" id="L171">				   e.version = 20;</span>
-<span class="nc" id="L172">				   break;</span>
+<span class="fc" id="L171">				   e.version = 20;</span>
+<span class="fc" id="L172">				   break;</span>
 
 			case STORED:
 				    // compressed size, uncompressed size, and crc-32 must all be
@@ -198,16 +198,16 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 <span class="nc" id="L198">			    	throw new ZipException(&quot;unsupported compression method&quot;);</span>
 		}
 
-<span class="nc" id="L201">		e.offset = written;</span>
-<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (names.put(e.name, e) != null)</span>
+<span class="fc" id="L201">		e.offset = written;</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">		if (names.put(e.name, e) != null)</span>
 		{
 <span class="nc" id="L204">		    throw new ZipException(&quot;duplicate entry: &quot; + e.name);</span>
 		}
 
-<span class="nc" id="L207">	   writeLOC(e);</span>
-<span class="nc" id="L208">		entries.addElement(e);</span>
-<span class="nc" id="L209">		entry = e;</span>
-<span class="nc" id="L210">    }</span>
+<span class="fc" id="L207">	   writeLOC(e);</span>
+<span class="fc" id="L208">		entries.addElement(e);</span>
+<span class="fc" id="L209">		entry = e;</span>
+<span class="fc" id="L210">    }</span>
 
     /**
      * Closes the current ZIP entry and positions the stream for writing
@@ -217,19 +217,19 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
      */
     public void closeEntry() throws IOException
 	 {
-<span class="nc" id="L220">    	ensureOpen();</span>
-<span class="nc" id="L221">    	ZipEntry e = entry;</span>
-<span class="nc bnc" id="L222" title="All 2 branches missed.">    	if (e != null)</span>
+<span class="fc" id="L220">    	ensureOpen();</span>
+<span class="fc" id="L221">    	ZipEntry e = entry;</span>
+<span class="pc bpc" id="L222" title="1 of 2 branches missed.">    	if (e != null)</span>
     	{
-<span class="nc bnc" id="L224" title="All 3 branches missed.">		    switch (e.method)</span>
+<span class="pc bpc" id="L224" title="2 of 3 branches missed.">		    switch (e.method)</span>
 			 {
 			    case DEFLATED:
-<span class="nc" id="L227">				    	def.finish();</span>
-<span class="nc bnc" id="L228" title="All 2 branches missed.">				    	while (!def.finished())</span>
+<span class="fc" id="L227">				    	def.finish();</span>
+<span class="fc bfc" id="L228" title="All 2 branches covered.">				    	while (!def.finished())</span>
 				    	{
-<span class="nc" id="L230">					    deflate();</span>
+<span class="fc" id="L230">					    deflate();</span>
 						}
-<span class="nc bnc" id="L232" title="All 2 branches missed.">						if ((e.flag &amp; 8) == 0)</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">						if ((e.flag &amp; 8) == 0)</span>
 						{
 							// verify size, compressed size, and crc-32 settings
 <span class="nc bnc" id="L235" title="All 2 branches missed.">						   if (e.size != def.getTotalIn())</span>
@@ -247,14 +247,14 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 						}
 						else
 						{
-<span class="nc" id="L250">						    e.size = def.getTotalIn();</span>
-<span class="nc" id="L251">						    e.csize = def.getTotalOut();</span>
-<span class="nc" id="L252">						    e.crc = crc.getValue();</span>
-<span class="nc" id="L253">						    writeEXT(e);</span>
+<span class="fc" id="L250">						    e.size = def.getTotalIn();</span>
+<span class="fc" id="L251">						    e.csize = def.getTotalOut();</span>
+<span class="fc" id="L252">						    e.crc = crc.getValue();</span>
+<span class="fc" id="L253">						    writeEXT(e);</span>
 						}
-<span class="nc" id="L255">						def.reset();</span>
-<span class="nc" id="L256">						written += e.csize;</span>
-<span class="nc" id="L257">						break;</span>
+<span class="fc" id="L255">						def.reset();</span>
+<span class="fc" id="L256">						written += e.csize;</span>
+<span class="fc" id="L257">						break;</span>
 
 			    case STORED:
 						// we already know that both e.size and e.csize are the same
@@ -271,10 +271,10 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 			    default:
 <span class="nc" id="L272">			    		throw new InternalError(&quot;invalid compression method&quot;);</span>
 		    }
-<span class="nc" id="L274">		    crc.reset();</span>
-<span class="nc" id="L275">		    entry = null;</span>
+<span class="fc" id="L274">		    crc.reset();</span>
+<span class="fc" id="L275">		    entry = null;</span>
     	}
-<span class="nc" id="L277">    }</span>
+<span class="fc" id="L277">    }</span>
 
     /**
      * Writes an array of bytes to the current ZIP entry data. This method
@@ -288,25 +288,25 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
     @Override
 	public synchronized void write(byte[] b, int off, int len) throws IOException
 	 {
-<span class="nc" id="L291">    	ensureOpen();</span>
-<span class="nc bnc" id="L292" title="All 6 branches missed.">      if (off &lt; 0 || len &lt; 0 || off &gt; b.length - len)</span>
+<span class="fc" id="L291">    	ensureOpen();</span>
+<span class="pc bpc" id="L292" title="3 of 6 branches missed.">      if (off &lt; 0 || len &lt; 0 || off &gt; b.length - len)</span>
       {
 <span class="nc" id="L294">      	throw new IndexOutOfBoundsException();</span>
       }
-<span class="nc bnc" id="L296" title="All 2 branches missed.">      else if (len == 0)</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">      else if (len == 0)</span>
       {
 <span class="nc" id="L298">      	return;</span>
       }
 
-<span class="nc bnc" id="L301" title="All 2 branches missed.">		if (entry == null)</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">		if (entry == null)</span>
 		{
 <span class="nc" id="L303">			throw new ZipException(&quot;no current ZIP entry&quot;);</span>
 		}
-<span class="nc bnc" id="L305" title="All 3 branches missed.">		switch (entry.method)</span>
+<span class="pc bpc" id="L305" title="2 of 3 branches missed.">		switch (entry.method)</span>
 		{
 			case DEFLATED:
-<span class="nc" id="L308">			    super.write(b, off, len);</span>
-<span class="nc" id="L309">			    break;</span>
+<span class="fc" id="L308">			    super.write(b, off, len);</span>
+<span class="fc" id="L309">			    break;</span>
 
 			case STORED:
 <span class="nc" id="L312">			    written += len;</span>
@@ -320,8 +320,8 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 			default:
 <span class="nc" id="L321">			    throw new InternalError(&quot;invalid compression method&quot;);</span>
 		}
-<span class="nc" id="L323">		crc.update(b, off, len);</span>
-<span class="nc" id="L324">    }</span>
+<span class="fc" id="L323">		crc.update(b, off, len);</span>
+<span class="fc" id="L324">    }</span>
 
     /**
      * Finishes writing the contents of the ZIP output stream without closing
@@ -333,31 +333,31 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
     @Override
 	public void finish() throws IOException
 	 {
-<span class="nc" id="L336">    	ensureOpen();</span>
-<span class="nc bnc" id="L337" title="All 2 branches missed.">    	if (finished)</span>
+<span class="fc" id="L336">    	ensureOpen();</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">    	if (finished)</span>
     	{
 <span class="nc" id="L339">    		return;</span>
     	}
-<span class="nc bnc" id="L341" title="All 2 branches missed.">		if (entry != null)</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		if (entry != null)</span>
 		{
 <span class="nc" id="L343">		    closeEntry();</span>
 		}
-<span class="nc bnc" id="L345" title="All 2 branches missed.">		if (entries.size() &lt; 1)</span>
+<span class="pc bpc" id="L345" title="1 of 2 branches missed.">		if (entries.size() &lt; 1)</span>
 		{
 <span class="nc" id="L347">			throw new ZipException(&quot;ZIP file must have at least one entry&quot;);</span>
 		}
 
 		// write central directory
-<span class="nc" id="L351">		long off = written;</span>
-<span class="nc" id="L352">		Enumeration&lt;ZipEntry&gt; e = entries.elements();</span>
-<span class="nc bnc" id="L353" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+<span class="fc" id="L351">		long off = written;</span>
+<span class="fc" id="L352">		Enumeration&lt;ZipEntry&gt; e = entries.elements();</span>
+<span class="fc bfc" id="L353" title="All 2 branches covered.">		while (e.hasMoreElements())</span>
 		{
-<span class="nc" id="L355">			writeCEN(e.nextElement());</span>
+<span class="fc" id="L355">			writeCEN(e.nextElement());</span>
 		}
 
-<span class="nc" id="L358">		writeEND(off, written - off);</span>
-<span class="nc" id="L359">		finished = true;</span>
-<span class="nc" id="L360">    }</span>
+<span class="fc" id="L358">		writeEND(off, written - off);</span>
+<span class="fc" id="L359">		finished = true;</span>
+<span class="fc" id="L360">    }</span>
 
     /**
      * Closes the ZIP output stream as well as the stream being filtered.
@@ -367,31 +367,31 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
     @Override
 	public void close() throws IOException
 	 {
-<span class="nc bnc" id="L370" title="All 2 branches missed.">    	if (!closed)</span>
+<span class="pc bpc" id="L370" title="1 of 2 branches missed.">    	if (!closed)</span>
     	{
-<span class="nc" id="L372">    		super.close();</span>
-<span class="nc" id="L373">         closed = true;</span>
+<span class="fc" id="L372">    		super.close();</span>
+<span class="fc" id="L373">         closed = true;</span>
     	}
-<span class="nc" id="L375">    }</span>
+<span class="fc" id="L375">    }</span>
 
     /*
      * Writes local file (LOC) header for specified entry.
      */
     private void writeLOC(ZipEntry e) throws IOException
 	 {
-<span class="nc" id="L382">			writeInt(LOCSIG);	    // LOC header signature</span>
-<span class="nc" id="L383">			writeShort(e.version);      // version needed to extract</span>
-<span class="nc" id="L384">			writeShort(e.flag);         // general purpose bit flag</span>
-<span class="nc" id="L385">			writeShort(e.method);       // compression method</span>
-<span class="nc" id="L386">			writeInt(e.time);           // last modification time</span>
+<span class="fc" id="L382">			writeInt(LOCSIG);	    // LOC header signature</span>
+<span class="fc" id="L383">			writeShort(e.version);      // version needed to extract</span>
+<span class="fc" id="L384">			writeShort(e.flag);         // general purpose bit flag</span>
+<span class="fc" id="L385">			writeShort(e.method);       // compression method</span>
+<span class="fc" id="L386">			writeInt(e.time);           // last modification time</span>
 
-<span class="nc bnc" id="L388" title="All 2 branches missed.">			if ((e.flag &amp; 8) == 8)</span>
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">			if ((e.flag &amp; 8) == 8)</span>
 			{
 			    // store size, uncompressed size, and crc-32 in data descriptor
 			    // immediately following compressed entry data
-<span class="nc" id="L392">			    writeInt(0);</span>
-<span class="nc" id="L393">			    writeInt(0);</span>
-<span class="nc" id="L394">			    writeInt(0);</span>
+<span class="fc" id="L392">			    writeInt(0);</span>
+<span class="fc" id="L393">			    writeInt(0);</span>
+<span class="fc" id="L394">			    writeInt(0);</span>
 			}
 			else
 			{
@@ -401,28 +401,28 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 			}
 
 			//byte[] nameBytes = getUTF8Bytes(e.name);
-<span class="nc" id="L404">			byte[] nameBytes = e.name.getBytes(&quot;Cp852&quot;);</span>
+<span class="fc" id="L404">			byte[] nameBytes = e.name.getBytes(&quot;Cp852&quot;);</span>
 
-<span class="nc" id="L406">			writeShort(nameBytes.length);</span>
-<span class="nc bnc" id="L407" title="All 2 branches missed.">			writeShort(e.extra != null ? e.extra.length : 0);</span>
-<span class="nc" id="L408">			writeBytes(nameBytes, 0, nameBytes.length);</span>
-<span class="nc bnc" id="L409" title="All 2 branches missed.">			if (e.extra != null)</span>
+<span class="fc" id="L406">			writeShort(nameBytes.length);</span>
+<span class="pc bpc" id="L407" title="1 of 2 branches missed.">			writeShort(e.extra != null ? e.extra.length : 0);</span>
+<span class="fc" id="L408">			writeBytes(nameBytes, 0, nameBytes.length);</span>
+<span class="pc bpc" id="L409" title="1 of 2 branches missed.">			if (e.extra != null)</span>
 			{
 <span class="nc" id="L411">			    writeBytes(e.extra, 0, e.extra.length);</span>
 			}
-<span class="nc" id="L413">			locoff = written;</span>
-<span class="nc" id="L414">    }</span>
+<span class="fc" id="L413">			locoff = written;</span>
+<span class="fc" id="L414">    }</span>
 
     /*
      * Writes extra data descriptor (EXT) for specified entry.
      */
     private void writeEXT(ZipEntry e) throws IOException
 	 {
-<span class="nc" id="L421">		writeInt(EXTSIG);	    // EXT header signature</span>
-<span class="nc" id="L422">		writeInt(e.crc);	    // crc-32</span>
-<span class="nc" id="L423">		writeInt(e.csize);	    // compressed size</span>
-<span class="nc" id="L424">		writeInt(e.size);	    // uncompressed size</span>
-<span class="nc" id="L425">    }</span>
+<span class="fc" id="L421">		writeInt(EXTSIG);	    // EXT header signature</span>
+<span class="fc" id="L422">		writeInt(e.crc);	    // crc-32</span>
+<span class="fc" id="L423">		writeInt(e.csize);	    // compressed size</span>
+<span class="fc" id="L424">		writeInt(e.size);	    // uncompressed size</span>
+<span class="fc" id="L425">    }</span>
 
     /*
      * Write central directory (CEN) header for specified entry.
@@ -430,23 +430,23 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
      */
     private void writeCEN(ZipEntry e) throws IOException
 	 {
-<span class="nc" id="L433">		writeInt(CENSIG);	    // CEN header signature</span>
-<span class="nc" id="L434">		writeShort(e.version);	    // version made by</span>
-<span class="nc" id="L435">		writeShort(e.version);	    // version needed to extract</span>
-<span class="nc" id="L436">		writeShort(e.flag);	    // general purpose bit flag</span>
-<span class="nc" id="L437">		writeShort(e.method);	    // compression method</span>
-<span class="nc" id="L438">		writeInt(e.time);	    // last modification time</span>
-<span class="nc" id="L439">		writeInt(e.crc);	    // crc-32</span>
-<span class="nc" id="L440">		writeInt(e.csize);	    // compressed size</span>
-<span class="nc" id="L441">		writeInt(e.size);	    // uncompressed size</span>
+<span class="fc" id="L433">		writeInt(CENSIG);	    // CEN header signature</span>
+<span class="fc" id="L434">		writeShort(e.version);	    // version made by</span>
+<span class="fc" id="L435">		writeShort(e.version);	    // version needed to extract</span>
+<span class="fc" id="L436">		writeShort(e.flag);	    // general purpose bit flag</span>
+<span class="fc" id="L437">		writeShort(e.method);	    // compression method</span>
+<span class="fc" id="L438">		writeInt(e.time);	    // last modification time</span>
+<span class="fc" id="L439">		writeInt(e.crc);	    // crc-32</span>
+<span class="fc" id="L440">		writeInt(e.csize);	    // compressed size</span>
+<span class="fc" id="L441">		writeInt(e.size);	    // uncompressed size</span>
 
 		//byte[] nameBytes = getUTF8Bytes(e.name);
-<span class="nc" id="L444">		byte[] nameBytes = e.name.getBytes(&quot;Cp852&quot;);</span>
+<span class="fc" id="L444">		byte[] nameBytes = e.name.getBytes(&quot;Cp852&quot;);</span>
 
-<span class="nc" id="L446">		writeShort(nameBytes.length);</span>
-<span class="nc bnc" id="L447" title="All 2 branches missed.">		writeShort(e.extra != null ? e.extra.length : 0);</span>
+<span class="fc" id="L446">		writeShort(nameBytes.length);</span>
+<span class="pc bpc" id="L447" title="1 of 2 branches missed.">		writeShort(e.extra != null ? e.extra.length : 0);</span>
 		byte[] commentBytes;
-<span class="nc bnc" id="L449" title="All 2 branches missed.">		if (e.comment != null)</span>
+<span class="pc bpc" id="L449" title="1 of 2 branches missed.">		if (e.comment != null)</span>
 		{
 		    //commentBytes = getUTF8Bytes(e.comment);
 <span class="nc" id="L452">			commentBytes = e.comment.getBytes(&quot;Cp852&quot;);</span>
@@ -454,38 +454,38 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 		}
 		else
 		{
-<span class="nc" id="L457">			commentBytes = null;</span>
-<span class="nc" id="L458">		   writeShort(0);</span>
+<span class="fc" id="L457">			commentBytes = null;</span>
+<span class="fc" id="L458">		   writeShort(0);</span>
 		}
-<span class="nc" id="L460">		writeShort(0);		    // starting disk number</span>
-<span class="nc" id="L461">		writeShort(0);		    // internal file attributes (unused)</span>
-<span class="nc" id="L462">		writeInt(0);		    // external file attributes (unused)</span>
-<span class="nc" id="L463">		writeInt(e.offset);	    // relative offset of local header</span>
-<span class="nc" id="L464">		writeBytes(nameBytes, 0, nameBytes.length);</span>
+<span class="fc" id="L460">		writeShort(0);		    // starting disk number</span>
+<span class="fc" id="L461">		writeShort(0);		    // internal file attributes (unused)</span>
+<span class="fc" id="L462">		writeInt(0);		    // external file attributes (unused)</span>
+<span class="fc" id="L463">		writeInt(e.offset);	    // relative offset of local header</span>
+<span class="fc" id="L464">		writeBytes(nameBytes, 0, nameBytes.length);</span>
 
-<span class="nc bnc" id="L466" title="All 2 branches missed.">		if (e.extra != null)</span>
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">		if (e.extra != null)</span>
 		{
 <span class="nc" id="L468">		    writeBytes(e.extra, 0, e.extra.length);</span>
 		}
-<span class="nc bnc" id="L470" title="All 2 branches missed.">		if (commentBytes != null)</span>
+<span class="pc bpc" id="L470" title="1 of 2 branches missed.">		if (commentBytes != null)</span>
 		{
 <span class="nc" id="L472">		    writeBytes(commentBytes, 0, commentBytes.length);</span>
 		}
-<span class="nc" id="L474">    }</span>
+<span class="fc" id="L474">    }</span>
 
     /*
      * Writes end of central directory (END) header.
      */
     private void writeEND(long off, long len) throws IOException
 	 {
-<span class="nc" id="L481">		writeInt(ENDSIG);	    // END record signature</span>
-<span class="nc" id="L482">		writeShort(0);		    // number of this disk</span>
-<span class="nc" id="L483">		writeShort(0);		    // central directory start disk</span>
-<span class="nc" id="L484">		writeShort(entries.size()); // number of directory entries on disk</span>
-<span class="nc" id="L485">		writeShort(entries.size()); // total number of directory entries</span>
-<span class="nc" id="L486">		writeInt(len);		    // length of central directory</span>
-<span class="nc" id="L487">		writeInt(off);		    // offset of central directory</span>
-<span class="nc bnc" id="L488" title="All 2 branches missed.">		if (comment != null)</span>
+<span class="fc" id="L481">		writeInt(ENDSIG);	    // END record signature</span>
+<span class="fc" id="L482">		writeShort(0);		    // number of this disk</span>
+<span class="fc" id="L483">		writeShort(0);		    // central directory start disk</span>
+<span class="fc" id="L484">		writeShort(entries.size()); // number of directory entries on disk</span>
+<span class="fc" id="L485">		writeShort(entries.size()); // total number of directory entries</span>
+<span class="fc" id="L486">		writeInt(len);		    // length of central directory</span>
+<span class="fc" id="L487">		writeInt(off);		    // offset of central directory</span>
+<span class="pc bpc" id="L488" title="1 of 2 branches missed.">		if (comment != null)</span>
 		{	 // zip file comment
 		    //byte[] b = getUTF8Bytes(comment);
 <span class="nc" id="L491">			byte[] b = comment.getBytes(&quot;Cp852&quot;);</span>
@@ -494,42 +494,42 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 <span class="nc" id="L494">		}</span>
 		else
 		{
-<span class="nc" id="L497">		   writeShort(0);</span>
+<span class="fc" id="L497">		   writeShort(0);</span>
 		}
-<span class="nc" id="L499">    }</span>
+<span class="fc" id="L499">    }</span>
 
     /*
      * Writes a 16-bit short to the output stream in little-endian byte order.
      */
     private void writeShort(int v) throws IOException
 	 {
-<span class="nc" id="L506">		OutputStream out = this.out;</span>
-<span class="nc" id="L507">		out.write((v &gt;&gt;&gt; 0) &amp; 0xff);</span>
-<span class="nc" id="L508">		out.write((v &gt;&gt;&gt; 8) &amp; 0xff);</span>
-<span class="nc" id="L509">		written += 2;</span>
-<span class="nc" id="L510">    }</span>
+<span class="fc" id="L506">		OutputStream out = this.out;</span>
+<span class="fc" id="L507">		out.write((v &gt;&gt;&gt; 0) &amp; 0xff);</span>
+<span class="fc" id="L508">		out.write((v &gt;&gt;&gt; 8) &amp; 0xff);</span>
+<span class="fc" id="L509">		written += 2;</span>
+<span class="fc" id="L510">    }</span>
 
     /*
      * Writes a 32-bit int to the output stream in little-endian byte order.
      */
     private void writeInt(long v) throws IOException
 	 {
-<span class="nc" id="L517">		OutputStream out = this.out;</span>
-<span class="nc" id="L518">		out.write((int)((v &gt;&gt;&gt;  0) &amp; 0xff));</span>
-<span class="nc" id="L519">		out.write((int)((v &gt;&gt;&gt;  8) &amp; 0xff));</span>
-<span class="nc" id="L520">		out.write((int)((v &gt;&gt;&gt; 16) &amp; 0xff));</span>
-<span class="nc" id="L521">		out.write((int)((v &gt;&gt;&gt; 24) &amp; 0xff));</span>
-<span class="nc" id="L522">		written += 4;</span>
-<span class="nc" id="L523">    }</span>
+<span class="fc" id="L517">		OutputStream out = this.out;</span>
+<span class="fc" id="L518">		out.write((int)((v &gt;&gt;&gt;  0) &amp; 0xff));</span>
+<span class="fc" id="L519">		out.write((int)((v &gt;&gt;&gt;  8) &amp; 0xff));</span>
+<span class="fc" id="L520">		out.write((int)((v &gt;&gt;&gt; 16) &amp; 0xff));</span>
+<span class="fc" id="L521">		out.write((int)((v &gt;&gt;&gt; 24) &amp; 0xff));</span>
+<span class="fc" id="L522">		written += 4;</span>
+<span class="fc" id="L523">    }</span>
 
     /*
      * Writes an array of bytes to the output stream.
      */
     private void writeBytes(byte[] b, int off, int len) throws IOException
 	 {
-<span class="nc" id="L530">		super.out.write(b, off, len);</span>
-<span class="nc" id="L531">		written += len;</span>
-<span class="nc" id="L532">    }</span>
+<span class="fc" id="L530">		super.out.write(b, off, len);</span>
+<span class="fc" id="L531">		written += len;</span>
+<span class="fc" id="L532">    }</span>
 
     /*
      * Returns the length of String's UTF8 encoding.
@@ -609,4 +609,4 @@ public class ZipOutputStream extends sk.iway.iwcm.system.zip.DeflaterOutputStrea
 		return b;
     }*/
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

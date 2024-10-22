@@ -1,5 +1,5 @@
 <% sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html"); %>
-<%@ page pageEncoding="utf-8" import="java.io.*, sk.iway.iwcm.system.*, sk.iway.iwcm.i18n.*" %>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.io.*, sk.iway.iwcm.system.*, sk.iway.iwcm.i18n.*,sk.iway.iwcm.FileTools" %>
 <%@ page import="sk.iway.iwcm.Tools" %>
 
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
@@ -7,7 +7,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<iwcm:checkLogon admin="true" perms="menuFbrowser"/>
+<iwcm:checkLogon admin="true" perms="make_zip_archive"/>
 <%
 	Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);
 
@@ -20,11 +20,11 @@
 %>
 
 <jsp:include page="/admin/layout_top_dialog.jsp" />
-<div class="tab-pane toggle_content">
-	<div class="tab-page" id="tabMenu1" style="display: block; min-height: 400px; min-width: 800px;">
+
+<div class="padding10">
 
 <%
-	File[] dirList = null;
+	IwcmFile[] dirList = null;
 	if (Tools.getRequestParameter(request, "zipArchivePath") != null)
 	{
 		String zipArchivePath = Tools.getRequestParameter(request, "zipArchivePath");
@@ -36,13 +36,14 @@
 	else
 	{
 		String realPath = sk.iway.iwcm.Tools.getRealPath("/");
-		File file = new File(realPath);
-		dirList = file.listFiles();
+		IwcmFile file = new IwcmFile(realPath);
+		dirList = FileTools.sortFilesByName(file.listFiles());
 	}
 %>
 
 <logic:present parameter="zipArchivePath" >
    <script type="text/javascript">
+   		window.scrollBy(0,10000);
 		function Ok()
 		{
 			window.close();
@@ -84,7 +85,7 @@
 							</script>
 							<tr>
 								<td></td>
-								<td><input type="checkbox" name="dir_<%=index%>" id="dir_<%=index%>Id" value="<%=Tools.escapeHtml(dirList[i].getName())%>" checked="checked" />
+								<td><input type="checkbox" name="dir_<%=index%>" id="dir_<%=index%>Id" value="<%=Tools.escapeHtml(dirList[i].getName())%>"/>
 								<label for="dir_<%=index%>Id"><%=Tools.escapeHtml(dirList[i].getName())%></label></td>
 								<% index++; %>
 							</tr>
@@ -98,7 +99,7 @@
 	</form>
 
 	<script type="text/javascript">
-		document.pathForm.zipArchivePath.value = "/files/protected-backup/";
+		document.pathForm.zipArchivePath.value = "/files/protected/backup/";
 		var str = "";
 		for (var i = 0; i < archiveDirs.length; i++)
 			str += archiveDirs[i]+", ";
@@ -120,15 +121,9 @@
 			document.pathForm.archiveDirs.value = dirs;
 			return (true);
 		}
-		window.resizeTo(600, 580);
 	</script>
 </logic:notPresent>
 
-<script type="text/javascript">
-	window.scrollBy(0,10000);
-</script>
-
-	</div>
 </div>
 
 <jsp:include page="/admin/layout_bottom_dialog.jsp" />

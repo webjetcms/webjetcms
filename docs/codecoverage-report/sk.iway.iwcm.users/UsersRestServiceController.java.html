@@ -4,6 +4,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,57 +12,69 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
+import sk.iway.iwcm.system.stripes.CSRF;
 
 @RestController
-<span class="fc" id="L19">public class UsersRestServiceController {</span>
+public class UsersRestServiceController {
+
+    private final UserDetailsRepository userDetailsRepository;
+
+    @Autowired
+<span class="fc" id="L28">    public UsersRestServiceController(UserDetailsRepository userDetailsRepository) {</span>
+<span class="fc" id="L29">        this.userDetailsRepository = userDetailsRepository;</span>
+<span class="fc" id="L30">    }</span>
 
     /* Vrati Key voci ktoremu sa overi token zadany uzivatelom*/
     @GetMapping(path={&quot;/admin/users/2factorauthNew&quot;})
     public String getGauthNew( HttpServletRequest request )
     {
         //System.out.println(&quot;___________________________________&quot;);
-<span class="nc" id="L26">        UserDetails user = UsersDB.getCurrentUser(request.getSession());</span>
-<span class="nc" id="L27">        GoogleAuthenticator gAuth = new GoogleAuthenticator();</span>
-<span class="nc" id="L28">        final GoogleAuthenticatorKey key = gAuth.createCredentials();</span>
-<span class="nc" id="L29">        int scratchCode = key.getScratchCodes().get(0);</span>
-<span class="nc" id="L30">        String jsonString = null;</span>
+<span class="fc" id="L37">        UserDetails user = UsersDB.getCurrentUser(request.getSession());</span>
+<span class="fc" id="L38">        GoogleAuthenticator gAuth = new GoogleAuthenticator();</span>
+<span class="fc" id="L39">        final GoogleAuthenticatorKey key = gAuth.createCredentials();</span>
+<span class="fc" id="L40">        int scratchCode = key.getScratchCodes().get(0);</span>
+<span class="fc" id="L41">        String jsonString = null;</span>
         try {
-<span class="nc" id="L32">            jsonString = new JSONObject()</span>
-<span class="nc" id="L33">                    .put(&quot;secret&quot;, key.getKey())</span>
-<span class="nc" id="L34">                    .put(&quot;url&quot;, GoogleAuthenticatorQRGenerator.getOtpAuthURL(&quot;WebJET &quot;+ Constants.getInstallName() + &quot; (&quot; + Tools.getServerName(request)+&quot;)&quot;, user.getLogin(),key))</span>
-<span class="nc" id="L35">                    .put(&quot;scratch&quot;, scratchCode).toString();</span>
-<span class="nc" id="L36">        } catch (JSONException e) {</span>
-<span class="nc" id="L37">            sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L38">        }</span>
+<span class="fc" id="L43">            jsonString = new JSONObject()</span>
+<span class="fc" id="L44">                    .put(&quot;secret&quot;, key.getKey())</span>
+<span class="fc" id="L45">                    .put(&quot;url&quot;, GoogleAuthenticatorQRGenerator.getOtpAuthURL(&quot;WebJET &quot;+ Constants.getInstallName() + &quot; (&quot; + Tools.getServerName(request)+&quot;)&quot;, user.getLogin(),key))</span>
+<span class="fc" id="L46">                    .put(&quot;scratch&quot;, scratchCode).toString();</span>
+<span class="nc" id="L47">        } catch (JSONException e) {</span>
+<span class="nc" id="L48">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L49">        }</span>
         //System.out.println(jsonString);
-<span class="nc" id="L40">        return jsonString;</span>
+<span class="fc" id="L51">        return jsonString;</span>
     }
 
     /* Vrati Key voci ktoremu sa overi token zadany uzivatelom*/
     @GetMapping(path={&quot;/admin/users/2factorauth&quot;})
     public String getGauth( HttpServletRequest request )
     {
-        //TODO: nie som si isty, ci je dobre nejako takto verejne ukazovat 2FA token, predpokladam, ze ked niekto ziska token vie k nemu generovat kody
-<span class="nc" id="L48">        UserDetails user = UsersDB.getCurrentUser(request.getSession());</span>
-<span class="nc" id="L49">        return user.getMobileDevice();</span>
+<span class="fc" id="L58">        UserDetails user = UsersDB.getCurrentUser(request.getSession());</span>
+<span class="fc" id="L59">        String currentCode = new SimpleQuery().forString(&quot;SELECT mobile_device FROM users WHERE user_id = ?&quot;, user.getUserId());</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(currentCode)) return &quot;true&quot;;</span>
+<span class="fc" id="L61">        return &quot;&quot;;</span>
     }
 
     /* Nastavi / vynyluje key MobileDevice usera*/
     @PostMapping(path={&quot;/admin/users/2factorauth&quot;})
-    public void setGauth( @RequestParam(value=&quot;secret&quot;, defaultValue=&quot;&quot;) String secret, HttpServletRequest request )
+    public String setGauth( @RequestParam(value=&quot;secret&quot;, defaultValue=&quot;&quot;) String secret, HttpServletRequest request )
     {
-        //TODO: toto je cele zle, lebo ak ma user zapnutu 2FA tak zavolanim tohto URL ju moze utocnik vymazat/nastavit ako potrebuje
-<span class="nc" id="L57">        UserDetails user = UsersDB.getCurrentUser(request.getSession());</span>
+        //toto je cele zle, lebo ak ma user zapnutu 2FA tak zavolanim tohto URL ju moze utocnik vymazat/nastavit ako potrebuje
+<span class="fc" id="L69">        UserDetails user = UsersDB.getCurrentUser(request.getSession());</span>
 
-<span class="nc bnc" id="L59" title="All 2 branches missed.">        if (Tools.isEmpty(secret) )</span>
-<span class="nc" id="L60">            user.setMobileDevice(null);</span>
-        else
-<span class="nc" id="L62">            user.setMobileDevice(secret);</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (CSRF.verifyTokenAndDeleteIt(request) == false) {</span>
+<span class="nc" id="L72">            return &quot;CSRF token is not valid&quot;;</span>
+        }
 
-<span class="nc" id="L64">        UsersDB.saveUser(user);</span>
-<span class="nc" id="L65">    }</span>
+<span class="fc" id="L75">        userDetailsRepository.updateMobileDeviceByUserId((long)user.getUserId(), secret);</span>
+
+<span class="fc" id="L77">        return &quot;&quot;;</span>
+    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

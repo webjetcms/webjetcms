@@ -1,8 +1,8 @@
-# Form easily
+# Form Simple
 
 The form app is easy to use for simple form creation. The advantage is the simplicity of creating the form by simply inserting prepared input fields with the possibility of entering a different field name, indicating the obligation to fill in and setting the text of the explanatory note (`tooltip`). The author of the form does not have to deal with the output HTML format, it is prepared according to the web design for each type of input fields.
 
-## Style and settings
+## Basic
 
 The following values need to be set for the form.
 
@@ -12,10 +12,9 @@ The following values need to be set for the form.
 - Text at the beginning of the email - text that is added to the email before the form fields.
 - Text at the end of the email - text that is added to the email after the form fields.
 - Send email as unformatted text - if checked the email is sent as unformatted text version (in field name: value format), otherwise it is sent as formatted HTML text as it is displayed on the web page.
-- Encryption key - if you want to encrypt the form values, you can enter an encryption key.
 - Add technical information - if checked, technical information (page name, page address, date and time of sending, browser information) will also be added to the email.
 
-![](editor-dialog.png)
+![](editor-dialog-basic.png)
 
 By default, the form fields are displayed one below the other:
 
@@ -24,6 +23,26 @@ By default, the form fields are displayed one below the other:
 By selecting Row View, fields can be displayed side-by-side in a row. To create a new row, insert a field in the form `Nový riadok`:
 
 ![](formsimple-rowview.png)
+
+## Advanced
+
+The advanced tab contains advanced settings for settings that are not required.
+
+- Encryption key - if you want to encrypt the form values, you can enter an encryption key.
+- Recipient of the email copy - a comma-separated list of email addresses to which a copy of the email should be sent.
+- Invisible recipients - a comma-separated list of email addresses to which a hidden copy of the email should be sent.
+- Subject - the subject of the email. If it is not filled in automatically it will be used according to the web page.
+- Redirect after filling - url address to be redirected to after saving the form. If it is not specified it redirects to the original page.
+- Redirect after error - url address to redirect to if the form fails to submit. If not specified, the same value is used as it should **Redirection after completion**.
+- Redirect method - the type of redirect after the form is processed.
+	- If the value is not specified, the form is processed and then redirection to the specified page with the set send status parameter (e.g. formSend=true) is performed.
+	- Value `forward` means that an internal redirect is performed to the destination page. The target page can then access the identical parameters as the form and perform an additional action. Since this is an internal redirect, the value will remain in the browser's address bar `/formmail.do`.
+	- Value `addParams` performs a redirect to the destination page with the addition of individual parameters to the URL. In this case, the browser performs the redirection and the address of the destination page remains in the address bar. However, since the parameters are added to the URL, the number of parameters is limited by the length of the URL, which is 2048 characters by default.
+- Doc id of page with email version - doc id of page with email version. The system needs the page to be able to generate the email version. If the value none is specified, the determination of the web page for email is not used. If the value is not specified at all, the value specified by the parameter `useFormDocId`. The value is useful if you have one contact form embedded in all pages, e.g. in the footer. When generating an email, the code of the page itself is used as the code, but the form is not located in it. This way you can tell it to use a different page for the email.
+- Doc id of notification for user - if set to docId value of some web page, then after successful saving of the form, an email with the text of the web page is sent to the visitor's email (from the email / email field). This can be, for example, a thank you for filling out the form, or further instructions on how to proceed.
+- Interceptor before sending the email - the value is the name of the class that **must implement the interface `AfterSendInterceptor`**. After the email is sent, the code from this class is executed.
+
+![](editor-dialog-advanced.png)
 
 ## Items
 
@@ -48,7 +67,7 @@ For **Selection list - select** it is also possible to enter different text for 
 
 The HTML code for displaying fields and form is defined in Settings-Edit Text. Text keys have a prefix `components.formsimple.`.
 
-![](formsimple.png)
+![](formsimple-wysiwyg.png)
 
 The basic form code is in the keys:
 - `components.formsimple.form.start` - HTML code for the beginning of the form (opening form tag)
@@ -66,28 +85,37 @@ You define individual items via keys:
 Example:
 
 ```html
-//najjednoduchsi typ pola components.formsimple.label.meno=Meno components.formsimple.input.meno=
-<div class="form-group"><label for="${id}">${label}${tooltip}</label> <input class="${classes}form-control" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}" type="text" maxlength="20" />${cs-error}</div>
+//najjednoduchsi typ pola
+components.formsimple.label.meno=Meno
+components.formsimple.input.meno=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <input class="${classes}form-control" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}" type="text" maxlength="20" />${cs-error}</div>
 
-//pole, ktoremu sa nezobrazi moznost zadat ze sa jedna o povinne pole (moznost .hide) components.formsimple.label.popiska=Popiska (info text) components.formsimple.input.popiska=
-<div class="form-group"><label for="${id}">${label}${tooltip}</label></div>
-components.formsimple.hide.popiska=required //ukazka pouzitia nadpisu nad vyberovym polom, hodnota .firstTimeHeading sa zobrazi len pred prvym polom components.formsimple.label.radio=Výberové pole components.formsimple.input.radio=
-<div class="form-check"><input class="${classes}form-check-input" data-name="${labelSanitized}" id="${id}" name="${id}" type="radio" value="${value}" /> <label for="${id}" class="form-check-label">${value}${tooltip}</label> ${cs-error}</div>
-components.formsimple.firstTimeHeading.radio=
-<div class="form-group mt-3 mb-0"><label class="first-time">${label}</label></div>
-components.formsimple.hide.radio=placeholder //ukazka pouzitia ${iterable} pre vypis zoznamu vyberovych poli. Z pola Hodnota sa vytvori zoznam, ako oddelovac sa hlada znak | ak sa nenajde pouzije sa , a ak sa ani ta nenajde pouzije sa ako oddelovac medzera //v kluci components.formsimple.iterable.radiogroup sa definuje HTML kod opakovaneho zaznamu, ten sa vlozi na miesto ${iterable} components.formsimple.label.radiogroup=Skupina výberových polí components.formsimple.input.radiogroup=
-<div class="form-group"><label for="${id}">${label}${tooltip}</label>${iterable} ${cs-error}</div>
-components.formsimple.iterable.radiogroup=
-<div class="form-check"><input class="${classes}form-check-input" data-name="${labelSanitized}" id="${id}-${counter}" name="${id}" placeholder="${placeholder}" type="radio" value="${value}" /> <label for="${id}-${counter}" class="form-check-label">${value}</label></div>
-components.formsimple.hide.radiogroup=placeholder //ukazka pouzitie ${iterable} pre vypis SELECT pola components.formsimple.label.select=Výberový zoznam - select components.formsimple.input.select=
-<div class="form-group">
-	<label for="${id}">${label}${tooltip}</label
-><select name="${id}" id="${id}" class="form-control form-select">
-		${iterable}</select
->${cs-error}
-</div>
-components.formsimple.iterable.select=
-<option value="${value}">${value-label}</option>
+//pole, ktoremu sa nezobrazi moznost zadat ze sa jedna o povinne pole (moznost .hide)
+components.formsimple.label.popiska=Popiska (info text)
+components.formsimple.input.popiska=<div class="form-group"><label for="${id}">${label}${tooltip}</label></div>
+components.formsimple.hide.popiska=required
+
+//ukazka pouzitia nadpisu nad vyberovym polom, hodnota .firstTimeHeading sa zobrazi len pred prvym polom
+components.formsimple.label.radio=Výberové pole
+components.formsimple.input.radio=<div class="form-check"><input class="${classes}form-check-input" data-name="${labelSanitized}" id="${id}" name="${id}" type="radio" value="${value}"/> <label for="${id}" class="form-check-label">${value}${tooltip}</label> ${cs-error}</div>
+components.formsimple.firstTimeHeading.radio=<div class="form-group mt-3 mb-0"><label class="first-time">${label}</label></div>
+components.formsimple.hide.radio=placeholder
+
+//ukazka pouzitia ${iterable} pre vypis zoznamu vyberovych poli. Z pola Hodnota sa vytvori zoznam, ako oddelovac sa hlada znak | ak sa nenajde pouzije sa , a ak sa ani ta nenajde pouzije sa ako oddelovac medzera
+//v kluci components.formsimple.iterable.radiogroup sa definuje HTML kod opakovaneho zaznamu, ten sa vlozi na miesto ${iterable}
+components.formsimple.label.radiogroup=Skupina výberových polí
+components.formsimple.input.radiogroup=<div class="form-group"><label for="${id}">${label}${tooltip}</label>${iterable} ${cs-error}</div>
+components.formsimple.iterable.radiogroup=<div class="form-check"><input class="${classes}form-check-input" data-name="${labelSanitized}" id="${id}-${counter}" name="${id}" placeholder="${placeholder}" type="radio" value="${value}"/> <label for="${id}-${counter}" class="form-check-label">${value}</label></div>
+components.formsimple.hide.radiogroup=placeholder
+
+//ukazka pouzitie ${iterable} pre vypis SELECT pola
+components.formsimple.label.select=Výberový zoznam - select
+components.formsimple.input.select=<div class="form-group"><label for="${id}">${label}${tooltip}</label><select name="${id}" id="${id}" class="form-control form-select">${iterable} </select>${cs-error}</div>
+components.formsimple.iterable.select=<option value="${value}">${value-label}</option>
+
+//example of wysiwyg/cleditor - it must contains class ending formsimple-wysiwyg to render cleditor on page
+components.formsimple.label.wysiwyg=Formátované textové pole
+components.formsimple.input.wysiwyg=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <textarea class="${classes}form-control formsimple-wysiwyg" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}">${value}</textarea>${cs-error}</div>
+components.formsimple.hide.wysiwyg=placeholder
 ```
 
 The following tags can be used in the code and will be replaced when the form is displayed:

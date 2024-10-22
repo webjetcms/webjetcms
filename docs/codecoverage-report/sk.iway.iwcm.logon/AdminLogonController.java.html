@@ -10,7 +10,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -29,6 +28,8 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -41,6 +42,7 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.users.PasswordSecurity;
+import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -67,52 +69,102 @@ public class AdminLogonController {
     private static final String TWOFA_PASSWORD_FORM = &quot;/admin/skins/webjet8/logon-spring-2fa&quot;;
     private static final String LICENSE = &quot;/wjerrorpages/setup/license&quot;;
 
-    @SuppressWarnings(&quot;unused&quot;)
-    private final AuthenticationManager authenticationManager;
+    private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
-<span class="fc" id="L74">    public AdminLogonController(AuthenticationManager authenticationManager) {</span>
-<span class="fc" id="L75">        this.authenticationManager = authenticationManager;</span>
-<span class="fc" id="L76">    }</span>
+<span class="fc" id="L75">    public AdminLogonController(UserDetailsRepository userDetailsRepository) {</span>
+<span class="fc" id="L76">        this.userDetailsRepository = userDetailsRepository;</span>
+<span class="fc" id="L77">    }</span>
 
+    /**
+     * This method is used from email link to change password
+     * @param request
+     * @param session
+     * @return
+     */
+    @GetMapping(&quot;logon/changePassword&quot;)
+    public String showChangePasswordForm(ModelMap model, HttpServletRequest request, HttpSession session) {
+<span class="fc" id="L87">        UserForm userForm = UserChangePasswordService.getPreparedUserForm(request, model);</span>
+
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if(userForm == null) {</span>
+<span class="fc" id="L90">            model.addAttribute(&quot;userForm&quot;, new UserForm());</span>
+<span class="fc" id="L91">            return LOGON_FORM;</span>
+        }
+
+<span class="fc" id="L94">        model.addAttribute(&quot;userForm&quot;, userForm);</span>
+<span class="fc" id="L95">        return CHANGE_PASSWORD_FORM;</span>
+    }
 
     @PostMapping(&quot;logon/changePassword&quot;)
     public String edit(@ModelAttribute(&quot;userForm&quot;) UserForm userForm, ModelMap model, HttpServletRequest request, HttpServletResponse response, HttpSession session) {
-<span class="fc" id="L81">        Identity user = (Identity)session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;);</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (user == null) {</span>
-            // zaskodnik tu nema co robit
-<span class="nc" id="L84">            return LOGON_FORM;</span>
+
+<span class="fc" id="L101">        Identity user = null;</span>
+<span class="fc" id="L102">        String selectedLoginFromSelect = userForm.getSelectedLogin();</span>
+<span class="fc" id="L103">        String changePasswordAuth = userForm.getAuth();</span>
+
+        // This is special
+        //  -&gt; can contain only 1 login value when reseting password via login
+        //  -&gt; when reseting password via email, it can contain multiple login's separeted by UserChangePasswordService.LOGINS_SEPARATOR
+<span class="fc" id="L108">        String login = userForm.getLogin();</span>
+
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (Tools.isNotEmpty(changePasswordAuth)) {</span>
+            // Verify selected login and in one shoot it will verify changePasswordAuth
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if(UserChangePasswordService.verifyLoginValue(login, selectedLoginFromSelect, changePasswordAuth, request) == true)</span>
+<span class="fc" id="L113">                user = new Identity( UsersDB.getUser(selectedLoginFromSelect) );</span>
+        } else {
+<span class="fc" id="L115">            user = (Identity)session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;);</span>
         }
-<span class="fc" id="L86">        Prop prop = Prop.getInstance(request.getServletContext(), request);</span>
-<span class="fc" id="L87">        model.addAttribute(&quot;userForm&quot;, userForm);</span>
+
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if (user == null) {</span>
+            // zaskodnik tu nema co robit
+<span class="nc" id="L120">            return LOGON_FORM;</span>
+        }
+<span class="fc" id="L122">        Prop prop = Prop.getInstance(request.getServletContext(), request);</span>
+
+<span class="fc" id="L124">        model.addAttribute(&quot;userForm&quot;, userForm);</span>
 
         // je tam daco a je to rovnake?
-<span class="pc bpc" id="L90" title="2 of 6 branches missed.">        if(Tools.isEmpty(userForm.getNewPassword()) || Tools.isEmpty(userForm.getRetypeNewPassword()) || !(userForm.getNewPassword().equals(userForm.getRetypeNewPassword()))) {</span>
-<span class="fc" id="L91">            model.addAttribute(&quot;errors&quot;, prop.getText(&quot;logon.change_password.password_not_match&quot;));</span>
-<span class="fc" id="L92">            return CHANGE_PASSWORD_FORM;</span>
+<span class="pc bpc" id="L127" title="2 of 6 branches missed.">        if(Tools.isEmpty(userForm.getNewPassword()) || Tools.isEmpty(userForm.getRetypeNewPassword()) || !(userForm.getNewPassword().equals(userForm.getRetypeNewPassword()))) {</span>
+<span class="fc" id="L128">            model.addAttribute(&quot;errors&quot;, prop.getText(&quot;logon.change_password.password_not_match&quot;));</span>
+<span class="fc" id="L129">            return CHANGE_PASSWORD_FORM;</span>
         }
 
-<span class="pc bpc" id="L95" title="3 of 6 branches missed.">        if (Constants.getBoolean(&quot;passwordUseHash&quot;) &amp;&amp; user.getPassword().equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), user.getSalt())) || user.getPassword().equals(userForm.getNewPassword())) {</span>
+<span class="pc bpc" id="L132" title="3 of 6 branches missed.">        if (Constants.getBoolean(&quot;passwordUseHash&quot;) &amp;&amp; user.getPassword().equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), userDetailsRepository.getPasswordSaltByUserId((long)user.getUserId()))) || user.getPassword().equals(userForm.getNewPassword())) {</span>
             // povodne heslo je rovnake ako nove heslo
-<span class="nc" id="L97">            model.addAttribute(&quot;errors&quot;, prop.getText(&quot;logon.change_password.old_password_match_new&quot;));</span>
-<span class="nc" id="L98">            return CHANGE_PASSWORD_FORM;</span>
-<span class="fc bfc" id="L99" title="All 2 branches covered.">        } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, null)){</span>
-<span class="fc" id="L100">            user.setPasswordPlain(userForm.getNewPassword());</span>
-            //UsersDB.saveUser(user);
-<span class="fc" id="L102">            UserDetailsService.savePassword(userForm.getNewPassword(), user.getUserId());</span>
-<span class="fc" id="L103">            Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), &quot;UsrLogonAction - user (&quot;+user.getLogin()+&quot;) successfully changed password&quot;, -1, -1);</span>
-<span class="fc" id="L104">            session.removeAttribute(Constants.USER_KEY+&quot;_changepassword&quot;);</span>
-<span class="fc" id="L105">            LogonTools.setUserToSession(session, user);</span>
-<span class="fc" id="L106">            this.determineLanguage(session, request, response);</span>
-<span class="fc" id="L107">            this.determineDefaultWebPagesDirectory(user, session);</span>
-<span class="fc" id="L108">            this.checkForNewHelp(session, user);</span>
-<span class="fc" id="L109">            this.determineRootWebPageDirectory(session, user);</span>
-<span class="fc" id="L110">            String forwardAfterToken = (String)session.getAttribute(&quot;adminAfterLogonRedirect&quot;);</span>
-<span class="pc bpc" id="L111" title="1 of 2 branches missed.">            if (Tools.isEmpty(forwardAfterToken))</span>
-<span class="fc" id="L112">                return &quot;redirect:/admin/v9/&quot;;</span>
-<span class="nc" id="L113">            return &quot;redirect:&quot; + forwardAfterToken;</span>
+<span class="nc" id="L134">            model.addAttribute(&quot;errors&quot;, prop.getText(&quot;logon.change_password.old_password_match_new&quot;));</span>
+<span class="nc" id="L135">            return CHANGE_PASSWORD_FORM;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, null)){</span>
+<span class="fc" id="L137">            user.setPassword(userForm.getNewPassword());</span>
+<span class="fc" id="L138">            UserDetailsService.savePassword(userForm.getNewPassword(), user.getUserId());</span>
+
+<span class="fc" id="L140">            Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), &quot;UsrLogonAction - user (&quot; + user.getLogin() + &quot;) successfully changed password&quot;, -1, -1);</span>
+
+            //During password change action, user is obtained via login, not via session
+<span class="fc bfc" id="L143" title="All 2 branches covered.">            if(Tools.isEmpty(changePasswordAuth) == true) {</span>
+<span class="fc" id="L144">                session.removeAttribute(Constants.USER_KEY+&quot;_changepassword&quot;);</span>
+<span class="fc" id="L145">                LogonTools.setUserToSession(session, user);</span>
+            }
+
+<span class="fc" id="L148">            this.determineLanguage(session, request, response);</span>
+<span class="fc" id="L149">            this.determineDefaultWebPagesDirectory(user, session);</span>
+<span class="fc" id="L150">            this.checkForNewHelp(session, user);</span>
+<span class="fc" id="L151">            this.determineRootWebPageDirectory(session, user);</span>
+
+<span class="fc bfc" id="L153" title="All 2 branches covered.">            if (Tools.isNotEmpty(changePasswordAuth)) {</span>
+                // Delete admin log - so change password action will no longer be available
+<span class="fc" id="L155">                UserChangePasswordService.deleteChangePasswordAdminlogBean(login, changePasswordAuth);</span>
+
+                // Redirect to login page where they can test new password
+                // - with changePasswordActionSuccess parameter
+<span class="fc" id="L159">                return &quot;redirect:/admin/logon/?act=changePasswordActionSuccess&quot;;</span>
+            } else {
+<span class="fc" id="L161">                String forwardAfterToken = (String)session.getAttribute(&quot;adminAfterLogonRedirect&quot;);</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">                if (Tools.isEmpty(forwardAfterToken))</span>
+<span class="fc" id="L163">                    return &quot;redirect:/admin/v9/&quot;;</span>
+<span class="nc" id="L164">                return &quot;redirect:&quot; + forwardAfterToken;</span>
+            }
         } else {
-<span class="fc" id="L115">            return CHANGE_PASSWORD_FORM;</span>
+<span class="fc" id="L167">            return CHANGE_PASSWORD_FORM;</span>
         }
     }
 
@@ -120,160 +172,161 @@ public class AdminLogonController {
     @PostMapping(&quot;logon.struts&quot;)
     //presmerovanie stareho Struts volania /admin/logon.do na novy form
     public String logonDoRedirect() {
-<span class="fc" id="L123">        return &quot;redirect:/admin/logon/&quot;;</span>
+<span class="fc" id="L175">        return &quot;redirect:/admin/logon/&quot;;</span>
     }
 
     @GetMapping(&quot;logon/&quot;)
     public String showForm(UserForm userForm, HttpServletRequest request, HttpSession session)
     {
-<span class="fc" id="L129">        Identity user = UsersDB.getCurrentUser(session);</span>
-<span class="fc bfc" id="L130" title="All 4 branches covered.">        if (user != null &amp;&amp; user.isAdmin())</span>
+<span class="fc" id="L181">        Identity user = UsersDB.getCurrentUser(session);</span>
+<span class="pc bpc" id="L182" title="1 of 4 branches missed.">        if (user != null &amp;&amp; user.isAdmin())</span>
         {
             //user je uz prihlaseny, preforwardnime ho na /admin/
-<span class="fc" id="L133">            return &quot;redirect:/admin/v9/&quot;;</span>
+<span class="nc" id="L185">            return &quot;redirect:/admin/v9/&quot;;</span>
         }
 
         //--------------Prihlasenie prebieha cez NTLM, nema sa co prihlasovat cez formularik-----------
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (AuthenticationFilter.weTrustIIS())</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">        if (AuthenticationFilter.weTrustIIS())</span>
         {
-<span class="nc" id="L139">            return &quot;redirect:&quot;+ AuthenticationFilter.getForbiddenURL();</span>
+<span class="nc" id="L191">            return &quot;redirect:&quot;+ AuthenticationFilter.getForbiddenURL();</span>
         }
 
-<span class="pc bpc" id="L142" title="1 of 6 branches missed.">        if  (request.getParameter(&quot;language&quot;)==null &amp;&amp; request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG)==null &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;defaultLanguage&quot;)))</span>
+<span class="pc bpc" id="L194" title="1 of 6 branches missed.">        if  (request.getParameter(&quot;language&quot;)==null &amp;&amp; request.getSession().getAttribute(Prop.SESSION_I18N_PROP_LNG)==null &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;defaultLanguage&quot;)))</span>
         {
-<span class="nc" id="L144">            request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="nc" id="L196">            request.getSession().setAttribute(Prop.SESSION_I18N_PROP_LNG, Constants.getString(&quot;defaultLanguage&quot;));</span>
         }
 
-<span class="fc" id="L147">        String adminHost = Constants.getString(&quot;multiDomainAdminHost&quot;);</span>
+<span class="fc" id="L199">        String adminHost = Constants.getString(&quot;multiDomainAdminHost&quot;);</span>
 //out.println(&quot;adminHost=&quot;+adminHost+&quot; domain=&quot;+DocDB.getDomain(request));
 
-<span class="fc" id="L150">        String serverName = Tools.getServerName(request);</span>
-<span class="pc bpc" id="L151" title="7 of 8 branches missed.">        if ((&quot;iwcm.interway.sk&quot;.equals(request.getServerName())==false &amp;&amp; &quot;localhost&quot;.equals(request.getServerName())==false) &amp;&amp; Tools.isNotEmpty(adminHost) &amp;&amp; (&quot;,&quot;+adminHost+&quot;,&quot;).indexOf(&quot;,&quot;+serverName+&quot;,&quot;)==-1)</span>
+<span class="fc" id="L202">        String serverName = Tools.getServerName(request);</span>
+<span class="pc bpc" id="L203" title="7 of 8 branches missed.">        if ((&quot;iwcm.interway.sk&quot;.equals(request.getServerName())==false &amp;&amp; &quot;localhost&quot;.equals(request.getServerName())==false) &amp;&amp; Tools.isNotEmpty(adminHost) &amp;&amp; (&quot;,&quot;+adminHost+&quot;,&quot;).indexOf(&quot;,&quot;+serverName+&quot;,&quot;)==-1)</span>
         {
-<span class="nc bnc" id="L153" title="All 2 branches missed.">            if (Constants.getBoolean(&quot;adminLogonShowSimpleErrorMessage&quot;))</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">            if (Constants.getBoolean(&quot;adminLogonShowSimpleErrorMessage&quot;))</span>
             {
-<span class="nc" id="L155">                return &quot;/404.jsp&quot;;</span>
+<span class="nc" id="L207">                return &quot;/404.jsp&quot;;</span>
             }
             else
             {
-<span class="nc" id="L159">                String[] hosts = Tools.getTokens(adminHost, &quot;,&quot;);</span>
-<span class="nc" id="L160">                return &quot;redirect:&quot;+request.getScheme()+&quot;://&quot;+hosts[0]+&quot;/admin/&quot;;</span>
+<span class="nc" id="L211">                String[] hosts = Tools.getTokens(adminHost, &quot;,&quot;);</span>
+<span class="nc" id="L212">                return &quot;redirect:&quot;+request.getScheme()+&quot;://&quot;+hosts[0]+&quot;/admin/&quot;;</span>
             }
         }
 
-<span class="pc bpc" id="L164" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(Constants.getString(&quot;defaultLanguage&quot;))) userForm.setLanguage(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(Constants.getString(&quot;defaultLanguage&quot;))) userForm.setLanguage(Constants.getString(&quot;defaultLanguage&quot;));</span>
 
-<span class="fc" id="L166">        String language = request.getParameter(&quot;language&quot;);</span>
-<span class="pc bpc" id="L167" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(language) &amp;&amp; language.length()==2)</span>
+<span class="fc" id="L218">        String language = request.getParameter(&quot;language&quot;);</span>
+<span class="pc bpc" id="L219" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(language) &amp;&amp; language.length()==2)</span>
         {
-<span class="fc" id="L169">            userForm.setLanguage(language);</span>
+<span class="fc" id="L221">            userForm.setLanguage(language);</span>
         }
 
-<span class="fc" id="L172">        LogonTools.saveAfterLogonRedirect(request);</span>
+<span class="fc" id="L224">        LogonTools.saveAfterLogonRedirect(request);</span>
 
-<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if(request.getParameter(&quot;loginName&quot;) != null)</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if(request.getParameter(&quot;loginName&quot;) != null)</span>
         {
-<span class="nc" id="L176">            String loginName = request.getParameter(&quot;loginName&quot;);</span>
-<span class="nc" id="L177">            UsersDB.sendPassword(request,loginName);</span>
+<span class="fc" id="L228">            String loginName = request.getParameter(&quot;loginName&quot;);</span>
+<span class="fc" id="L229">            request.setAttribute(UsersDB.IS_ADMIN_SECTION_KEY, true);</span>
+<span class="fc" id="L230">            UserChangePasswordService.sendPassword(request,loginName);</span>
         }
 
-<span class="fc" id="L180">        return LOGON_FORM;</span>
+<span class="fc" id="L233">        return LOGON_FORM;</span>
     }
 
     @PostMapping(&quot;logon/&quot;)
     public String submit(@ModelAttribute(&quot;userForm&quot;) UserForm userForm, BindingResult result, ModelMap model, HttpServletRequest request, HttpServletResponse response) {
-<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if (InitServlet.verify(request) == false)</span>
-<span class="nc" id="L186">            return SpringUrlMapping.redirect(LICENSE);</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">        if (InitServlet.verify(request) == false)</span>
+<span class="nc" id="L239">            return SpringUrlMapping.redirect(LICENSE);</span>
 
         //session fixation ochrana
-<span class="fc" id="L189">        LogonTools.invalidateSessionOnFirstPost(request);</span>
-<span class="fc" id="L190">        HttpSession session = request.getSession();</span>
+<span class="fc" id="L242">        LogonTools.invalidateSessionOnFirstPost(request);</span>
+<span class="fc" id="L243">        HttpSession session = request.getSession();</span>
 
-<span class="fc" id="L192">        Prop prop = Prop.getInstance(request.getServletContext(), request);</span>
+<span class="fc" id="L245">        Prop prop = Prop.getInstance(request.getServletContext(), request);</span>
 
-<span class="fc" id="L194">        String twoFaRedirect = verify2FaKey(request);</span>
-<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;</span>
+<span class="fc" id="L247">        String twoFaRedirect = verify2FaKey(request);</span>
+<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;</span>
 
-<span class="fc" id="L197">        Identity user = new Identity();</span>
-<span class="fc" id="L198">        Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
-<span class="fc" id="L199">        LogonTools.logon(userForm.getUsername(), userForm.getPassword(), user, errors, request, prop);</span>
+<span class="fc" id="L250">        Identity user = new Identity();</span>
+<span class="fc" id="L251">        Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L252">        LogonTools.logon(userForm.getUsername(), userForm.getPassword(), user, errors, request, prop);</span>
 
-<span class="fc bfc" id="L201" title="All 2 branches covered.">        if (errors.get(&quot;ERROR_KEY&quot;)!=null) {</span>
-<span class="fc" id="L202">            Logger.error(this,&quot;su nejake chyby v logovacom formulari&quot;);</span>
-<span class="fc" id="L203">            model.addAttribute(&quot;errors&quot;, errors.get(&quot;ERROR_KEY&quot;));</span>
-<span class="fc" id="L204">            return LOGON_FORM;</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">        if (errors.get(&quot;ERROR_KEY&quot;)!=null) {</span>
+<span class="fc" id="L255">            Logger.error(this,&quot;su nejake chyby v logovacom formulari&quot;);</span>
+<span class="fc" id="L256">            model.addAttribute(&quot;errors&quot;, errors.get(&quot;ERROR_KEY&quot;));</span>
+<span class="fc" id="L257">            return LOGON_FORM;</span>
         }
 
         // Save our logged-in userForm in the session
-<span class="fc" id="L208">        user.setLoginName(userForm.getUsername());</span>
-<span class="fc" id="L209">        user.setValid(true);</span>
+<span class="fc" id="L261">        user.setLoginName(userForm.getUsername());</span>
+<span class="fc" id="L262">        user.setValid(true);</span>
 
         // pouzivatel je prihlaseny
-<span class="fc" id="L212">        LogonTools.setUserToSession(session, user);</span>
+<span class="fc" id="L265">        LogonTools.setUserToSession(session, user);</span>
 
-<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (!(Password.checkPassword(true, userForm.getPassword(), user.isAdmin(), user.getUserId(), session, null))) {</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (!(Password.checkPassword(true, userForm.getPassword(), user.isAdmin(), user.getUserId(), session, null))) {</span>
             // ma slabe heslo
-<span class="fc" id="L216">            session.removeAttribute(Constants.USER_KEY);</span>
-<span class="fc" id="L217">            session.setAttribute(Constants.USER_KEY+&quot;_changepassword&quot;, user);</span>
-<span class="fc" id="L218">            userForm.setPassword(userForm.getPassword().replace(&quot;.&quot;, &quot;*&quot;)); // bezpecny placeholder</span>
-<span class="fc" id="L219">            model.addAttribute(&quot;userForm&quot;, userForm);</span>
-<span class="fc" id="L220">            model.addAttribute(&quot;isAdmin&quot;, user.isAdmin());</span>
-<span class="fc" id="L221">            return CHANGE_PASSWORD_FORM;</span>
+<span class="fc" id="L269">            session.removeAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L270">            session.setAttribute(Constants.USER_KEY+&quot;_changepassword&quot;, user);</span>
+<span class="fc" id="L271">            userForm.setPassword(userForm.getPassword().replace(&quot;.&quot;, &quot;*&quot;)); // bezpecny placeholder</span>
+<span class="fc" id="L272">            model.addAttribute(&quot;userForm&quot;, userForm);</span>
+<span class="fc" id="L273">            model.addAttribute(&quot;isAdmin&quot;, user.isAdmin());</span>
+<span class="fc" id="L274">            return CHANGE_PASSWORD_FORM;</span>
         }
 
-<span class="fc" id="L224">		twoFaRedirect = set2FaAuthForm(user, request);</span>
-<span class="fc bfc" id="L225" title="All 2 branches covered.">        if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;</span>
+<span class="fc" id="L277">		twoFaRedirect = set2FaAuthForm(user, request);</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">        if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;</span>
 
 
-<span class="fc" id="L228">        this.determineLanguage(session, request, response);</span>
-<span class="fc" id="L229">        this.determineDefaultWebPagesDirectory(user, session);</span>
-<span class="fc" id="L230">        this.checkForNewHelp(session, user);</span>
-<span class="fc" id="L231">        this.determineRootWebPageDirectory(session, user);</span>
-<span class="fc" id="L232">        StatDB.addAdmin(request);</span>
+<span class="fc" id="L281">        this.determineLanguage(session, request, response);</span>
+<span class="fc" id="L282">        this.determineDefaultWebPagesDirectory(user, session);</span>
+<span class="fc" id="L283">        this.checkForNewHelp(session, user);</span>
+<span class="fc" id="L284">        this.determineRootWebPageDirectory(session, user);</span>
+<span class="fc" id="L285">        StatDB.addAdmin(request);</span>
 
-<span class="fc" id="L234">        String adminAfterLogonRedirect = (String)session.getAttribute(&quot;adminAfterLogonRedirect&quot;);</span>
-<span class="fc bfc" id="L235" title="All 2 branches covered.">        if (Tools.isNotEmpty(adminAfterLogonRedirect)) {</span>
-<span class="pc bpc" id="L236" title="5 of 6 branches missed.">            if (adminAfterLogonRedirect.startsWith(&quot;/admin/v9/&quot;) || (adminAfterLogonRedirect.startsWith(&quot;/apps/&quot;) &amp;&amp; adminAfterLogonRedirect.contains(&quot;/admin/&quot;))) {</span>
-<span class="fc" id="L237">                return &quot;redirect:&quot; + adminAfterLogonRedirect;</span>
+<span class="fc" id="L287">        String adminAfterLogonRedirect = (String)session.getAttribute(&quot;adminAfterLogonRedirect&quot;);</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">        if (Tools.isNotEmpty(adminAfterLogonRedirect)) {</span>
+<span class="pc bpc" id="L289" title="5 of 6 branches missed.">            if (adminAfterLogonRedirect.startsWith(&quot;/admin/v9/&quot;) || (adminAfterLogonRedirect.startsWith(&quot;/apps/&quot;) &amp;&amp; adminAfterLogonRedirect.contains(&quot;/admin/&quot;))) {</span>
+<span class="fc" id="L290">                return &quot;redirect:&quot; + adminAfterLogonRedirect;</span>
             }
         }
 
-<span class="fc" id="L241">        return &quot;redirect:/admin/v9/&quot;;</span>
+<span class="fc" id="L294">        return &quot;redirect:/admin/v9/&quot;;</span>
     }
 
 
 
     private void determineLanguage(HttpSession session, HttpServletRequest request, HttpServletResponse response) {
-<span class="fc" id="L247">        String lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
-<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        if (Tools.isEmpty(lng)) lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
-<span class="fc" id="L249">        PageLng.setUserLng(request, response, lng);</span>
-<span class="fc" id="L250">        session.setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
-<span class="fc" id="L251">    }</span>
+<span class="fc" id="L300">        String lng = ResponseUtils.filter(request.getParameter(&quot;language&quot;));</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">        if (Tools.isEmpty(lng)) lng = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="fc" id="L302">        PageLng.setUserLng(request, response, lng);</span>
+<span class="fc" id="L303">        session.setAttribute(Prop.SESSION_I18N_PROP_LNG, lng);</span>
+<span class="fc" id="L304">    }</span>
 
     private void determineDefaultWebPagesDirectory(Identity user, HttpSession session) {
         //nastav predvoleny adresar na Moje Stranky
-<span class="pc bpc" id="L255" title="2 of 6 branches missed.">        if (user.getEditablePages()!=null &amp;&amp; user.getEditablePages().length()&gt;0 &amp;&amp; user.isDisabledItem(&quot;menuUsers&quot;))</span>
-<span class="fc" id="L256">            session.setAttribute(Constants.SESSION_GROUP_ID, Constants.getInt(&quot;systemPagesMyPages&quot;));</span>
+<span class="pc bpc" id="L308" title="1 of 6 branches missed.">        if (user.getEditablePages()!=null &amp;&amp; user.getEditablePages().length()&gt;0 &amp;&amp; user.isDisabledItem(&quot;menuUsers&quot;))</span>
+<span class="fc" id="L309">            session.setAttribute(Constants.SESSION_GROUP_ID, Constants.getInt(&quot;systemPagesMyPages&quot;));</span>
 
         //nastav predvoleny adresar Na Schalenie
-<span class="fc" id="L259">        DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L260">        List&lt;DocDetails&gt; docsToApprove = docDB.getDocsForApprove(user.getUserId());</span>
-<span class="pc bpc" id="L261" title="1 of 4 branches missed.">        if (docsToApprove!=null &amp;&amp; docsToApprove.size()&gt;0)</span>
-<span class="fc" id="L262">            session.setAttribute(Constants.SESSION_GROUP_ID, Integer.toString(Constants.getInt(&quot;systemPagesDocsToApprove&quot;)));</span>
-<span class="fc" id="L263">    }</span>
+<span class="fc" id="L312">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L313">        List&lt;DocDetails&gt; docsToApprove = docDB.getDocsForApprove(user.getUserId());</span>
+<span class="pc bpc" id="L314" title="1 of 4 branches missed.">        if (docsToApprove!=null &amp;&amp; docsToApprove.size()&gt;0)</span>
+<span class="fc" id="L315">            session.setAttribute(Constants.SESSION_GROUP_ID, Integer.toString(Constants.getInt(&quot;systemPagesDocsToApprove&quot;)));</span>
+<span class="fc" id="L316">    }</span>
 
 
     private void determineRootWebPageDirectory(HttpSession session, Identity user) {
-<span class="fc bfc" id="L267" title="All 2 branches covered.">        if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
+<span class="fc bfc" id="L320" title="All 2 branches covered.">        if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
             //prestav v session default host na prvy z editable groups
-<span class="fc" id="L269">            int groupId = getUserFirstEditableGroup(user);</span>
-<span class="pc bpc" id="L270" title="1 of 2 branches missed.">            if (groupId &gt; 0)</span>
-<span class="fc" id="L271">                setSessionGroup(groupId, session);</span>
-<span class="pc bpc" id="L272" title="1 of 2 branches missed.">        } else if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) {</span>
-<span class="fc" id="L273">            int groupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
-<span class="fc" id="L274">            setSessionGroup(groupId, session);</span>
+<span class="fc" id="L322">            int groupId = getUserFirstEditableGroup(user);</span>
+<span class="pc bpc" id="L323" title="1 of 2 branches missed.">            if (groupId &gt; 0)</span>
+<span class="fc" id="L324">                setSessionGroup(groupId, session);</span>
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        } else if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) {</span>
+<span class="fc" id="L326">            int groupId = Constants.getInt(&quot;rootGroupId&quot;);</span>
+<span class="fc" id="L327">            setSessionGroup(groupId, session);</span>
         }
-<span class="fc" id="L276">    }</span>
+<span class="fc" id="L329">    }</span>
 
     private void checkForNewHelp(HttpSession session, Identity user) {
         //ziskaj datum posledneho prihlasenia a datum najnovsej novinky
@@ -334,7 +387,7 @@ public class AdminLogonController {
         {
             Logger.error(AdminLogonController.class, e);
         }*/
-<span class="fc" id="L337">    }</span>
+<span class="fc" id="L390">    }</span>
 
     /**
      * Nastavi session ID adresara web stranok a preview domenu
@@ -343,14 +396,14 @@ public class AdminLogonController {
      */
     private static void setSessionGroup(int groupId, HttpSession session)
     {
-<span class="fc" id="L346">        session.setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));</span>
+<span class="fc" id="L399">        session.setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));</span>
 
-<span class="fc" id="L348">        GroupDetails root = GroupsDB.getInstance().getGroup(groupId);</span>
-<span class="pc bpc" id="L349" title="1 of 4 branches missed.">        if (root != null &amp;&amp; Tools.isNotEmpty(root.getDomainName()))</span>
+<span class="fc" id="L401">        GroupDetails root = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="pc bpc" id="L402" title="1 of 4 branches missed.">        if (root != null &amp;&amp; Tools.isNotEmpty(root.getDomainName()))</span>
         {
-<span class="fc" id="L351">            session.setAttribute(&quot;preview.editorDomainName&quot;, root.getDomainName());</span>
+<span class="fc" id="L404">            session.setAttribute(&quot;preview.editorDomainName&quot;, root.getDomainName());</span>
         }
-<span class="fc" id="L353">    }</span>
+<span class="fc" id="L406">    }</span>
 
     /**
      * Overi odoslanu hodnotu 2FA cisla, ak je nespravna vrati linku na formular, inak presmerovanie do administracie
@@ -359,42 +412,52 @@ public class AdminLogonController {
      * @return
      */
     private static String verify2FaKey(HttpServletRequest request) {
-<span class="fc" id="L362">        HttpSession session = request.getSession();</span>
-<span class="pc bpc" id="L363" title="1 of 2 branches missed.">        if (session.getAttribute(&quot;token&quot;)!=null)</span>
+<span class="fc" id="L415">        HttpSession session = request.getSession();</span>
+<span class="fc bfc" id="L416" title="All 2 branches covered.">        if (session.getAttribute(&quot;token&quot;)!=null)</span>
 		{
 			//ocakava sa token
-<span class="nc" id="L366">			String generatedToken = (String)session.getAttribute(&quot;token&quot;);</span>
+<span class="fc" id="L419">			String generatedToken = (String)session.getAttribute(&quot;token&quot;);</span>
 
 			try{
 
-<span class="nc" id="L370">				String insertedCodeString = request.getParameter(&quot;token&quot;);</span>
-<span class="nc" id="L371">				int insertedCode = Integer.parseInt(insertedCodeString);</span>
+<span class="fc" id="L423">				String insertedCodeString = request.getParameter(&quot;token&quot;);</span>
+<span class="fc" id="L424">				int insertedCode = Integer.parseInt(insertedCodeString);</span>
 
-<span class="nc" id="L373">				GoogleAuthenticator gAuth = new GoogleAuthenticator();</span>
+<span class="fc" id="L426">				GoogleAuthenticator gAuth = new GoogleAuthenticator();</span>
 
-<span class="nc" id="L375">				int generatedCode = gAuth.getTotpPassword(generatedToken);</span>
+<span class="fc" id="L428">				int generatedCode = gAuth.getTotpPassword(generatedToken);</span>
 
-<span class="nc" id="L377">				Logger.debug(AdminLogonController.class,&quot;userToken : &quot; + insertedCode + &quot;\n token : &quot;+gAuth.getTotpPassword(generatedToken)+ &quot;\n code : &quot;+generatedCode );</span>
+<span class="fc" id="L430">				Logger.debug(AdminLogonController.class,&quot;userToken : &quot; + insertedCode + &quot;\n token : &quot;+gAuth.getTotpPassword(generatedToken)+ &quot;\n code : &quot;+generatedCode );</span>
 
-<span class="nc bnc" id="L379" title="All 2 branches missed.">				if (insertedCode == generatedCode)</span>
+<span class="fc bfc" id="L432" title="All 2 branches covered.">				if (insertedCode == generatedCode)</span>
 				{
-<span class="nc" id="L381">					session.removeAttribute(&quot;token&quot;);</span>
-<span class="nc" id="L382">					Identity sessionUserAfterToken = (Identity)session.getAttribute(&quot;adminUser_waitingForToken&quot;);</span>
-<span class="nc" id="L383">					session.removeAttribute(&quot;adminUser_waitingForToken&quot;);</span>
-<span class="nc bnc" id="L384" title="All 2 branches missed.">					if (sessionUserAfterToken!=null) LogonTools.setUserToSession(session, sessionUserAfterToken);</span>
+<span class="fc" id="L434">                    String token = (String)session.getAttribute(&quot;token&quot;);</span>
+<span class="fc" id="L435">					session.removeAttribute(&quot;token&quot;);</span>
+<span class="fc" id="L436">					Identity sessionUserAfterToken = (Identity)session.getAttribute(&quot;adminUser_waitingForToken&quot;);</span>
+<span class="fc" id="L437">					session.removeAttribute(&quot;adminUser_waitingForToken&quot;);</span>
+<span class="pc bpc" id="L438" title="1 of 2 branches missed.">					if (sessionUserAfterToken!=null) {</span>
+<span class="fc" id="L439">                        LogonTools.setUserToSession(session, sessionUserAfterToken);</span>
 
-<span class="nc" id="L386">					return &quot;redirect:/admin/v9/&quot;;</span>
+                        //set user code
+<span class="fc" id="L442">                        String currentCode = new SimpleQuery().forString(&quot;SELECT mobile_device FROM users WHERE user_id = ?&quot;, sessionUserAfterToken.getUserId());</span>
+<span class="pc bpc" id="L443" title="2 of 4 branches missed.">                        if (Tools.isNotEmpty(token) &amp;&amp; Tools.isEmpty(currentCode)) {</span>
+<span class="nc" id="L444">                            new SimpleQuery().execute(&quot;UPDATE users SET mobile_device = ? WHERE user_id = ?&quot;, token, sessionUserAfterToken.getUserId());</span>
+<span class="nc" id="L445">                            sessionUserAfterToken.setMobileDevice(currentCode);</span>
+                        }
+                    }
+
+<span class="fc" id="L449">					return &quot;redirect:/admin/v9/&quot;;</span>
 				}
 
-<span class="nc" id="L389">			}catch (NumberFormatException e){</span>
+<span class="nc" id="L452">			}catch (NumberFormatException e){</span>
                 //asi nebolo zadane cislo, cize kod je zly
-<span class="nc" id="L391">			}</span>
+<span class="fc" id="L454">			}</span>
 			//ak nie znova vrat logon
-<span class="nc" id="L393">			request.setAttribute(&quot;errors&quot;, &quot;wrongCode&quot;);</span>
+<span class="fc" id="L456">			request.setAttribute(&quot;errors&quot;, &quot;wrongCode&quot;);</span>
 			//wrongCode
-<span class="nc" id="L395">			return TWOFA_PASSWORD_FORM;</span>
+<span class="fc" id="L458">			return TWOFA_PASSWORD_FORM;</span>
 		}
-<span class="fc" id="L397">        return null;</span>
+<span class="fc" id="L460">        return null;</span>
     }
 
     /**
@@ -405,48 +468,50 @@ public class AdminLogonController {
      */
     private String set2FaAuthForm(Identity user, HttpServletRequest request) {
 
-        //ak je aktivovana dvojfaktorova autentifikacia a user ma nastaveny devicekey
-<span class="pc bpc" id="L409" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(user.getMobileDevice()) || Constants.getBoolean(&quot;isGoogleAuthRequiredForAdmin&quot;) ) {</span>
-<span class="fc" id="L410">            HttpSession session = request.getSession();</span>
+<span class="fc" id="L471">        String mobileDevice = userDetailsRepository.getMobileDeviceByUserId((long)user.getUserId());</span>
 
-<span class="pc bpc" id="L412" title="1 of 2 branches missed.">            if (Tools.isEmpty(user.getMobileDevice())) {  // - je forced gauth ^ cfg premennou</span>
-<span class="nc" id="L413">                GoogleAuthenticator gAuth = new GoogleAuthenticator();</span>
-<span class="nc" id="L414">                final GoogleAuthenticatorKey key = gAuth.createCredentials();</span>
-<span class="nc" id="L415">                session.setAttribute(&quot;token&quot;, key.getKey());	// hodime si do session novo vygenerovane credentials</span>
-<span class="nc" id="L416">                session.setAttribute(&quot;QRURL&quot;, GoogleAuthenticatorQRGenerator.getOtpAuthURL(&quot;WebJET &quot; + Constants.getInstallName() + &quot; (&quot; + Tools.getServerName(request) + &quot;)&quot;, user.getLogin(), key));</span>
-<span class="nc" id="L417">                session.setAttribute(&quot;scratchcode&quot;, key.getScratchCodes().get(0).toString());</span>
-<span class="nc" id="L418">            }else{</span>
-<span class="fc" id="L419">                session.setAttribute(&quot;token&quot;, user.getMobileDevice());</span>
+        //ak je aktivovana dvojfaktorova autentifikacia a user ma nastaveny devicekey
+<span class="pc bpc" id="L474" title="1 of 4 branches missed.">        if (Tools.isNotEmpty(mobileDevice) || Constants.getBoolean(&quot;isGoogleAuthRequiredForAdmin&quot;) ) {</span>
+<span class="fc" id="L475">            HttpSession session = request.getSession();</span>
+
+<span class="pc bpc" id="L477" title="1 of 4 branches missed.">            if (Tools.isEmpty(mobileDevice) || mobileDevice.length()&lt;5) {  // - je forced gauth ^ cfg premennou</span>
+<span class="fc" id="L478">                GoogleAuthenticator gAuth = new GoogleAuthenticator();</span>
+<span class="fc" id="L479">                final GoogleAuthenticatorKey key = gAuth.createCredentials();</span>
+<span class="fc" id="L480">                session.setAttribute(&quot;token&quot;, key.getKey());	// hodime si do session novo vygenerovane credentials</span>
+<span class="fc" id="L481">                session.setAttribute(&quot;QRURL&quot;, GoogleAuthenticatorQRGenerator.getOtpAuthURL(&quot;WebJET &quot; + Constants.getInstallName() + &quot; (&quot; + Tools.getServerName(request) + &quot;)&quot;, user.getLogin(), key));</span>
+<span class="fc" id="L482">                session.setAttribute(&quot;scratchcode&quot;, key.getScratchCodes().get(0).toString());</span>
+<span class="fc" id="L483">            }else{</span>
+<span class="fc" id="L484">                session.setAttribute(&quot;token&quot;, mobileDevice);</span>
             }
 
             // Google Authenticator
             //String token = RandomStringUtils.random(4, false, true);
-            //sendToken(user.getMobileDevice(), token);
-<span class="fc" id="L425">            session.setAttribute(&quot;adminUser_waitingForToken&quot;, user);</span>
-<span class="fc" id="L426">            session.removeAttribute(Constants.USER_KEY);</span>
-            //Logger.debug(LogonAction.class, &quot;LogonAction dualFactorToken: &quot;+user.getMobileDevice());
+            //sendToken(mobileDevice, token);
+<span class="fc" id="L490">            session.setAttribute(&quot;adminUser_waitingForToken&quot;, user);</span>
+<span class="fc" id="L491">            session.removeAttribute(Constants.USER_KEY);</span>
+            //Logger.debug(LogonAction.class, &quot;LogonAction dualFactorToken: &quot;+mobileDevice);
             // zobraz naspat admin
-<span class="fc" id="L429">            return TWOFA_PASSWORD_FORM;</span>
+<span class="fc" id="L494">            return TWOFA_PASSWORD_FORM;</span>
 
         }
 
-<span class="fc" id="L433">        return null;</span>
+<span class="fc" id="L498">        return null;</span>
     }
 
     public static int getUserFirstEditableGroup(Identity user)
 	{
-<span class="fc" id="L438">		int[] editableGroups = Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;);</span>
-<span class="pc bpc" id="L439" title="2 of 4 branches missed.">		if (editableGroups!=null &amp;&amp; editableGroups.length&gt;0)</span>
+<span class="fc" id="L503">		int[] editableGroups = Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;);</span>
+<span class="pc bpc" id="L504" title="2 of 4 branches missed.">		if (editableGroups!=null &amp;&amp; editableGroups.length&gt;0)</span>
 		{
-<span class="pc bpc" id="L441" title="1 of 2 branches missed.">			for (int groupId : editableGroups)</span>
+<span class="pc bpc" id="L506" title="1 of 2 branches missed.">			for (int groupId : editableGroups)</span>
 			{
-<span class="pc bpc" id="L443" title="1 of 2 branches missed.">				if (groupId &gt; 0)</span>
+<span class="pc bpc" id="L508" title="1 of 2 branches missed.">				if (groupId &gt; 0)</span>
 				{
-<span class="fc" id="L445">					return groupId;</span>
+<span class="fc" id="L510">					return groupId;</span>
 				}
 			}
 		}
-<span class="nc" id="L449">		return -1;</span>
+<span class="nc" id="L514">		return -1;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

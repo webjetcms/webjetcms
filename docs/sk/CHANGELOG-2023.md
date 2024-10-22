@@ -216,7 +216,7 @@ Vylepšený proces [aktualizácie WebJET CMS](sysadmin/update/README.md), prenes
 - Datatabuľky - pridaná podpora `LocalDate/LocalDateTime` pre dátové polia, pridaný atribút `alwaysCopyProperties` do `DatatableColumn` pre možnosť kopírovania pri editácii z [existujúceho záznamu](developer/datatables-editor/datatable-columns.md).
 - Používatelia - doplnená dokumentácia k použitiu `afterSaveInterceptor` pri [registrácii používateľa](custom-apps/apps/user/README.md) a možnosť neposlať štandardný uvítací email prepísaním metódy `shouldSendUserWelcomeEmail` (#54953-28).
 
-<img class="meme" title="meme" src="_media/meme/2023-52.jpg"/>
+![meme](_media/meme/2023-52.jpg ":no-zoom")
 
 ## 2023.40
 
@@ -346,7 +346,7 @@ Nová aplikácia [HTTP hlavičky](admin/settings/response-header/README.md) v se
 - Celá sekcia SEO prerobená do nového dizajnu (#55537).
 - Doplnená dokumentácia o [SEO sekcii](redactor/apps/seo/README.md).
 
-![](redactor/apps/seo/stat-searchEngines-page.png)
+![](redactor/apps/seo/seo-admin-page.png)
 
 ### Novinky
 
@@ -528,7 +528,7 @@ Sekcia **Chýbajúce kľúče** prerobená do nového dizajnu. Doplnená inform�
 - Vytvorená dokumentácia pre [prechod zo Struts do Spring](developer/frameworks/struts/README.md)
 - Upravené spracovania nahratia/`upload` súboru. Pre URL adresy `path.contains("spring") || path.contains("rest") || path.startsWith("/admin/v9/") || queryString.contains("__sfu=0")` sa nepoužije starý `MultipartWrapper.getFileParameterValue(key)` ale štandardný Spring `MultipartFile`.
 
-<img class="meme" title="meme" src="_media/meme/2023-40.jpg"/>
+![meme](_media/meme/2023-40.jpg ":no-zoom")
 
 ## 2023.18
 
@@ -753,7 +753,7 @@ Doplnené vlastnosti:
 - Vytvorená dokumentácia k [rozšíreniu existujúcich Spring DATA repozitárov](custom-apps/spring/repository-extend.md) vo vašom projekte (#UCMWS-14).
 - Doplnená možnosť [rozšírenia dialógov](developer/datatables/export-import.md#špeciálny-typ-exportu) pre špeciálny import a export údajov z datatabuľky (#54513-11,MR360).
 
-<img class="meme" title="meme" src="_media/meme/2023-18.jpg"/>
+![meme](_media/meme/2023-18.jpg ":no-zoom")
 
 ## 2023.0
 

@@ -4,11 +4,11 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.apache.commons.dbcp.ConfigurableDataSource;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +18,7 @@ import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
 import sk.iway.iwcm.system.monitoring.CpuInfo;
 
 /**
@@ -74,6 +75,7 @@ public class MonitoringActualBean {
     private String swServerName;
     private String swServerOs;
     private String swServerOsVersion;
+    private String licenseExpirationDate; 
 
     public MonitoringActualBean() {
         /** volne miesto na disku **/
@@ -159,5 +161,11 @@ public class MonitoringActualBean {
         swServerName = Constants.getServletContext().getServerInfo();
         swServerOs = props.getProperty("os.name");
         swServerOsVersion = props.getProperty("os.version");
+
+        Long licenseExpirationTimeInMillis =  Constants.getLong("licenseExpiryDate");
+        if(licenseExpirationTimeInMillis != null && licenseExpirationTimeInMillis > 0L)
+        {
+            licenseExpirationDate = Tools.formatDate(new Date(licenseExpirationTimeInMillis), "dd.MM.yyyy");
+        }
     }
 }

@@ -29,8 +29,9 @@ Podporované sú nasledovné atribúty, povinné je len ```data-ac-url```:
 - `data-ac-params` - zoznam selektorov polí, ktorých hodnoty sa pridajú do URL adresy volania REST služby, napr. `#DTE_Field_templateInstallName,#DTE_Field_templatesGroupId`.
 - ```data-ac-select``` - pri nastavení na ```true``` sa autocomplete správa podobne ako výberové pole - po kliknutí myšou do vstupného poľa sú načítané a zobrazené všetky možnosti.
 - ```data-ac-collision``` - umiestnenie načítaných možností voči vstupnému poľu. Predvolene ```flipfit``` pre automatické umiestnenie, pre možnosť ```select``` je prednastavené na ```none``` pre striktné umiestnenie pod vstupné pole.
+- ```data-ac-render-item-fn``` - názov funkcie, ktorá špecificky vygeneruje prvok zoznamu dát
 
-Príklad REST služby vracajúcej údaje je v [ConfigurationController.getAutocomplete](../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), implementácia je jednoduchá - na základe zadaného ```term``` parametra vráti zoznam ```List<String>``` vyhovujúcich záznamov:
+Príklad REST služby vracajúcej údaje je v [ConfigurationController.getAutocomplete](../../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), implementácia je jednoduchá - na základe zadaného ```term``` parametra vráti zoznam ```List<String>``` vyhovujúcich záznamov:
 
 ```java
 @GetMapping("/autocomplete")
@@ -46,7 +47,7 @@ Keďže na backende sa typicky používa LIKE vyhľadávanie je možné zadať d
 
 ## Použitie mimo datatabuľky
 
-```Autocompleter``` je možné využiť aj mimo datatabuľky jednoducho jednoduchým nastavením ```data-ac``` atribútov a CSS triedy ```autocomplete```. Inicializácia je automaticky aktivovaná v [app-init.js](../../../src/main/webapp/admin/v9/src/js/app-init.js) na všetky ```input``` elementy s CSS triedou ```autocomplete```. Príklad:
+```Autocompleter``` je možné využiť aj mimo datatabuľky jednoducho jednoduchým nastavením ```data-ac``` atribútov a CSS triedy ```autocomplete```. Inicializácia je automaticky aktivovaná v [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) na všetky ```input``` elementy s CSS triedou ```autocomplete```. Príklad:
 
 ```html
 <div id="docIdInputWrapper" class="col-auto col-pk-input">
@@ -57,7 +58,7 @@ Keďže na backende sa typicky používa LIKE vyhľadávanie je možné zadať d
 
 ## Poznámky k implementácii
 
-Autocomplete používa [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) funkcie. Interne je zapuzdrený do JavaScript triedy [AutoCompleter](../../../src/main/webapp/admin/v9/src/js/autocompleter.js). Tá je upravená z pôvodnej verzie vo WebJET 8, spätne by mala byť kompatibilná (je možné použiť aj URL adresy pôvodných autocomplete služieb vo WebJET 8).
+Autocomplete používa [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) funkcie. Interne je zapuzdrený do JavaScript triedy [AutoCompleter](../../../../src/main/webapp/admin/v9/src/js/autocompleter.js). Tá je upravená z pôvodnej verzie vo WebJET 8, spätne by mala byť kompatibilná (je možné použiť aj URL adresy pôvodných autocomplete služieb vo WebJET 8).
 
 Doplnená je funkcia ```autobind()```, ktorá prevezme nastavenie z data atribútov zadaného input elementu. Inicializácia autocomplete je implementovaná v index.js v kóde:
 
@@ -72,3 +73,38 @@ $('#'+DATA.id+'_modal input.form-control[data-ac-url]').each(function() {
 pričom ako vidno ```div.DTE_Field``` elementu sa aj nastaví CSS trieda ```dt-autocomplete``` pre možnosť budúceho štýlovania elementu.
 
 Funkcia nastavená cez ```click``` parameter sa volá s oneskorením 100ms, aby sa najskôr nastavila hodnota v poli, ktorú je následne možné získať a použiť.
+
+## Špeciálne generovanie prvkov zoznamu
+
+Pomocou parametra ```data-ac-render-item-fn``` sa dá nastaviť názov funkcie, ktorá špecificky vygeneruje prvok do zoznamu dát. Aby to fungovalo musí byť splnené :
+- vygenerovaný prvok musí byť ```li``` element (to čo je v ňom je už na vás)
+- tento vygenerovaný element musí byť vložený do listu ```ul```
+- zadaná funkcia v ```data-ac-render-item-fn``` musí byť zadefinovaná pomocou ```window``` a musí mať vstupné parametre ```ul``` a ```item```
+
+Príklad vlastnej funkcie
+
+```java
+    @DataTableColumnEditorAttr(key = "data-ac-render-item-fn", value = "disableDeletedEnum")
+```
+
+príklad implementácie takejto funkcie
+
+```js
+//Don't forget to add fn into windows AND use correct input params
+window.disableDeletedEnum = function(ul, item) {
+    var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
+    if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "" && item.label.startsWith(deletedPrefix)) {
+        //Special element generation - with added "disabled" class
+        return $("<li>")
+            .append($("<div>").append(item.label))
+            .appendTo(ul).addClass("disabled");
+    }
+
+    //Classic element generation
+    return $("<li>")
+        .append($("<div>").append(item.label))
+        .appendTo(ul);
+}
+```
+
+V tomto príklade sme pri splnení podmienky pridali elementu triedu ```disabled```. Autocomplete sme nastavili tak, že dáta (prvky) označené triedou ```disabled``` sa farebne zvýraznia a nie je možné ich zvoliť.

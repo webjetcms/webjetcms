@@ -35,12 +35,12 @@ public class PageLng
 <span class="fc" id="L35">         String actualCookieValue = Tools.getCookieValue(request.getCookies(), &quot;lng&quot;, null);</span>
 <span class="fc" id="L36">         String lng = setLng;</span>
 
-<span class="pc bpc" id="L38" title="3 of 4 branches missed.">         if (request.getAttribute(&quot;is404&quot;) != null &amp;&amp; Tools.isNotEmpty(actualCookieValue))</span>
+<span class="pc bpc" id="L38" title="1 of 4 branches missed.">         if (request.getAttribute(&quot;is404&quot;) != null &amp;&amp; Tools.isNotEmpty(actualCookieValue))</span>
          {
             //som 404 stranka, nesmiem zmenit jazyk, pretoze potom na session nastavi iny jazyk ako je v cookie
             //napr. pri volani components/_common/ninja.min.css.map sa nastavi SK jazyk, pretoze to nie je /en/404.html
             //zachovame teda cookie hdonotu a nezmenime ho
-<span class="nc" id="L43">            lng = actualCookieValue;</span>
+<span class="fc" id="L43">            lng = actualCookieValue;</span>
          }
 
 <span class="fc bfc" id="L46" title="All 2 branches covered.">         if (response != null)</span>
@@ -204,4 +204,4 @@ public class PageLng
 <span class="fc" id="L204">      return(lng);</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

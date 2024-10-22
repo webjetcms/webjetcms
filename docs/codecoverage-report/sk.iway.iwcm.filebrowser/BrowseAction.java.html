@@ -152,9 +152,9 @@ public class BrowseAction
 <span class="fc" id="L152">					image = &quot;/components/_common/mime/folder.gif&quot;;</span>
 
 					//	testni ci je password protected
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">					if (PathFilter.isPasswordProtected(fdb.getPath(), request)!=null)</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">					if (PathFilter.isPasswordProtected(fdb.getPath(), request)!=null)</span>
 					{
-<span class="nc" id="L157">						image = &quot;/components/_common/mime/folder_protected.gif&quot;;</span>
+<span class="fc" id="L157">						image = &quot;/components/_common/mime/folder_protected.gif&quot;;</span>
 					}
 
 <span class="fc" id="L160">					fdb.setIcon(image);</span>
@@ -174,13 +174,13 @@ public class BrowseAction
 <span class="fc" id="L174">						ext = arrayfile[i].getName().substring(arrayfile[i].getName().lastIndexOf('.') + 1, arrayfile[i].getName().length()).toLowerCase();</span>
 <span class="fc" id="L175">						ext = ext.trim().toLowerCase();</span>
 <span class="fc" id="L176">						IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;));</span>
-<span class="pc bpc" id="L177" title="1 of 2 branches missed.">						if (f.exists())</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">						if (f.exists())</span>
 						{
 <span class="fc" id="L179">							image = &quot;/components/_common/mime/&quot; + ext + &quot;.gif&quot;;</span>
 						}
 						else
 						{
-<span class="nc" id="L183">							image = &quot;/components/_common/mime/default.gif&quot;;</span>
+<span class="fc" id="L183">							image = &quot;/components/_common/mime/default.gif&quot;;</span>
 						}
 					}
 <span class="nc" id="L186">					catch (Exception ex)</span>
@@ -299,7 +299,7 @@ public class BrowseAction
 
 		try
 		{
-<span class="pc bpc" id="L302" title="2 of 4 branches missed.">			if (rootDir.length() &gt; 1 &amp;&amp; rootDir.endsWith(&quot;/&quot;))	rootDir = rootDir.substring(0, rootDir.length()-1);</span>
+<span class="pc bpc" id="L302" title="1 of 4 branches missed.">			if (rootDir.length() &gt; 1 &amp;&amp; rootDir.endsWith(&quot;/&quot;))	rootDir = rootDir.substring(0, rootDir.length()-1);</span>
 <span class="pc bpc" id="L303" title="1 of 2 branches missed.">			if (!rootDir.startsWith(&quot;/&quot;))	rootDir = &quot;/&quot;+rootDir;</span>
 
 			//Logger.println(this,&quot;webroot: &quot;+webroot);
@@ -342,7 +342,7 @@ public class BrowseAction
 <span class="fc" id="L342">					BrowseAction.fillLists(rootDir, dirList, fileList, true, false, null, request);</span>
 
 					//nastavenie cesty do session pre inline editaciu komponent
-<span class="pc bpc" id="L345" title="1 of 2 branches missed.">					if (user != null) request.getSession().setAttribute(&quot;fbrowse.lastDir&quot;, rootDir);</span>
+<span class="fc bfc" id="L345" title="All 2 branches covered.">					if (user != null) request.getSession().setAttribute(&quot;fbrowse.lastDir&quot;, rootDir);</span>
 				}
 			}
 		}
@@ -391,7 +391,7 @@ public class BrowseAction
 		}
 <span class="fc" id="L392">		Identity user = (Identity)req.getSession().getAttribute(Constants.USER_KEY);</span>
 <span class="fc" id="L393">		EditForm ef = PathFilter.isPasswordProtected(dir, req);</span>
-<span class="pc bpc" id="L394" title="3 of 4 branches missed.">		if (ef != null &amp;&amp; ef.isAccessibleFor(user)==false)</span>
+<span class="pc bpc" id="L394" title="1 of 4 branches missed.">		if (ef != null &amp;&amp; ef.isAccessibleFor(user)==false)</span>
 		{
 <span class="nc" id="L396">			boolean isAccesible = false;</span>
 <span class="nc bnc" id="L397" title="All 2 branches missed.">			if (user != null)</span>
@@ -451,4 +451,4 @@ public class BrowseAction
 <span class="nc" id="L451">		return allFilesList;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

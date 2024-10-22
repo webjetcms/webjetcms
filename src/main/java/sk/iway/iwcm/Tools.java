@@ -30,14 +30,15 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.stat.StatDB;
+import sk.iway.iwcm.users.UsersDB;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.PageContext;
 import javax.swing.*;
@@ -46,11 +47,11 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.security.Principal;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.text.*;
 import java.util.List;
@@ -1631,31 +1632,46 @@ public class Tools
 	/**
 	 * Nastavi neverifikaciu certifikatov pre SSL spojenie
 	 */
-	public static void doNotVerifyCertificates(String host)
+	@SuppressWarnings({"java:S4830", "java:S1186"})
+	public static SSLContext doNotVerifyCertificates(String host)
 	{
+		SSLContext sc = null;
 		try
 		{
 			// Create a trust manager that does not validate certificate chains
-			TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager()
+			TrustManager[] trustAllCerts = new TrustManager[]{new X509ExtendedTrustManager()
 			{
 				@Override
-				public void checkClientTrusted(X509Certificate[] certs, String authType) throws CertificateException //NOSONAR
-				{
-					//
+				public X509Certificate[] getAcceptedIssuers() {
+					return new X509Certificate[]{};
 				}
+
 				@Override
-				public void checkServerTrusted(X509Certificate[] certs, String authType) //NOSONAR
-				{
-					//
+				public void checkClientTrusted(X509Certificate[] chain, String authType) {
 				}
+
 				@Override
-				public X509Certificate[] getAcceptedIssuers()
-				{
-					return null;
+				public void checkServerTrusted(X509Certificate[] chain, String authType) {
+				}
+
+				@Override
+				public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {
+				}
+
+				@Override
+				public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {
+				}
+
+				@Override
+				public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
+				}
+
+				@Override
+				public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
 				}
 			}};
 			// Install the all-trusting trust manager
-			SSLContext sc = SSLContext.getInstance("SSL"); //NOSONAR
+			sc = SSLContext.getInstance("SSL"); //NOSONAR
 			sc.init(null, trustAllCerts, null);
 			HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
 
@@ -1685,6 +1701,7 @@ public class Tools
 		{
 			sk.iway.iwcm.Logger.error(ex);
 		}
+		return sc;
 	}
 
 	/**
@@ -2002,8 +2019,7 @@ public class Tools
 	public static int getUserId(HttpServletRequest request)
 	{
 		int userId = -1;
-		HttpSession session = request.getSession();
-		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);
+		Identity user = UsersDB.getCurrentUser(request);
 		if (user != null) userId = user.getUserId();
 		return(userId);
 	}
@@ -2027,6 +2043,23 @@ public class Tools
 		}
 		return false;
 	}
+
+	/**
+	 * Otestuje, ci pole arrOne obsahuje two
+	 * @param arrOne
+	 * @param arrTwo
+	 * @return
+	 */
+	public static boolean containsOneItem(int[] arrOne, int two)
+    {
+        if (arrOne==null || arrOne.length==0) return false;
+
+        for (int one : arrOne)
+        {
+           if (one==two) return true;
+        }
+        return false;
+    }
 
 	/**
 	 * Otestuje, ci pole arrOne obsahuje aspon jeden prvok z pola arrTwo
@@ -3132,4 +3165,42 @@ public class Tools
 
         return springContext.getBean(name, clazz);
     }
+
+	/**
+	 * Returns true if b IS NOT NULL and value is TRUE
+	 * @param b
+	 * @return
+	 */
+	public static boolean isTrue(Boolean b) {
+		return Boolean.TRUE.equals(b);
+	}
+
+	/**
+	 * Returns true if b IS NOT NULL and is FALSE
+	 * @param b
+	 * @return
+	 */
+	public static boolean isFalse(Boolean b) {
+		return Boolean.FALSE.equals(b);
+	}
+
+	/**
+	 * Decode base64 encoded string
+	 * @param encoded
+	 * @return
+	 */
+	public static String base64Decode(String encoded) {
+		if (Tools.isEmpty(encoded)) return "";
+		return new String(Base64.getDecoder().decode(encoded));
+	}
+
+	/**
+	 * Encode string to base64
+	 * @param text
+	 * @return
+	 */
+	public static String base64Encode(String text) {
+		if (Tools.isEmpty(text)) return "";
+		return Base64.getEncoder().encodeToString(text.getBytes());
+	}
 }

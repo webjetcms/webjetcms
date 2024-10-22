@@ -84,7 +84,7 @@ public class ConfigurationService {
             ConfDB.setNamePrepared(confDetailsDto.getName(), confDetailsDto.getValue(), confDetailsDto.getDatePrepared());
         }
 
-        ClusterDB.addRefresh("sk.iway.iwcm.system.ConfDB-" + confDetailsDto.getName());
+        if (ConfDB.isOnlyLocalConfig(confDetailsDto.getName())==false) ClusterDB.addRefresh("sk.iway.iwcm.system.ConfDB-" + confDetailsDto.getName());
 
         //musime vratit aktualne nastavenu hodnotu, pretoze sa mohla dat sifrovat, alebo je v buducnosti
         ConfDetails actual = ConfDB.getVariable(confDetailsDto.getName());

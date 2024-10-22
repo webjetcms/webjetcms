@@ -35,7 +35,7 @@ public class PermissionGroupRestController extends DatatableRestControllerV2&lt;
 <span class="fc bfc" id="L35" title="All 2 branches covered.">            if (entity == null) entity = new PermissionGroupBean();</span>
         }
 
-<span class="pc bpc" id="L38" title="1 of 4 branches missed.">        if(entity != null &amp;&amp; entity.getEditorFields() == null) {</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if(entity != null) {</span>
 <span class="fc" id="L39">            PermissionGroupEditorFields pgef = new PermissionGroupEditorFields();</span>
 <span class="fc" id="L40">            pgef.fromPermissionGroupBean(entity, loadSubQueries, getRequest());</span>
 <span class="fc" id="L41">            entity.setEditorFields(pgef);</span>
@@ -45,13 +45,12 @@ public class PermissionGroupRestController extends DatatableRestControllerV2&lt;
 
     @Override
     public PermissionGroupBean processToEntity(PermissionGroupBean entity, ProcessItemAction action) {
-
-<span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if(entity != null) {</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if(entity != null) {</span>
             //Call toUserDetailsEntity to set new entity values from EditorFields
-<span class="fc" id="L51">            PermissionGroupEditorFields pgef = new PermissionGroupEditorFields();</span>
-<span class="fc" id="L52">            pgef.toPermissionGroupBean(entity);</span>
+<span class="fc" id="L50">            PermissionGroupEditorFields pgef = new PermissionGroupEditorFields();</span>
+<span class="fc" id="L51">            pgef.toPermissionGroupBean(entity);</span>
         }
-<span class="fc" id="L54">        return entity;</span>
+<span class="fc" id="L53">        return entity;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

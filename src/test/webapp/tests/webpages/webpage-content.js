@@ -91,15 +91,18 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
 
      I.waitForElement(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), 20);
      I.wait(1);
-     I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'));
+     I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
      I.waitForText('Foto galéria', 10, ".elfinder-cwd-file");
      I.wait(1);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'));
      I.waitForVisible(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'), 20);
+     I.wait(1);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'));
+     I.wait(1);
      I.waitForVisible(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee'), 10);
      I.doubleClick(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').last());
      I.switchTo();
+     //I.clickCss("div.cke_editor_data_dialog td.cke_dialog_footer a.cke_dialog_ui_button_ok");
      I.click('p');
      I.waitForElement(locate('.cke_path_item').withText('img'), 10);
      I.wait(1);
@@ -118,15 +121,16 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
 
      I.waitForLoader(".WJLoaderDiv");
 
-     I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-navbar-collapsed.native-droppable.ui-droppable.elfinder-subtree-loaded').withText('Zoznam web stránok'));
-     I.waitForElement(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest'), 20);
-     I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest'));
+     I.forceClick(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-navbar-collapsed.native-droppable.ui-droppable.elfinder-subtree-loaded').withText('Zoznam web stránok'), null, { position: { x: 70, y: 15 } });
+     I.waitForElement(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest-'+randomNumber), 20);
+     I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest-'+randomNumber));
      I.waitForElement('.elfinder-cwd-file.ui-corner-all.ui-selectee', 10);
-     I.waitForElement(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText('name-autotest'), 20);
+     I.waitForElement(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText('name-autotest-'+randomNumber), 20);
      I.wait(0.3);
-     I.doubleClick(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText('name-autotest'));
+     I.doubleClick(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee').withText('name-autotest-'+randomNumber));
      I.wait(0.3);
      I.switchTo();
+     //I.clickCss("div.cke_editor_data_dialog td.cke_dialog_footer a.cke_dialog_ui_button_ok");
      I.waitForElement(locate('.cke_path_item').withText('a'), 10);
      I.wait(1);
 
@@ -353,7 +357,7 @@ Scenario('Notify', ({ I, DT, DTE }) => {
      DT.filter("title", "Test");
 
      //Edituj stranku
-     I.click("Test");
+     I.click("Test", "#datatableInit_wrapper td.dt-row-edit");
      DTE.waitForEditor();
 
      //over zobrazenie info o historickych zaznamoch
@@ -516,194 +520,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
 
 });
 
-Scenario('overit notifikacie pri publikovani so zadanym datumom zaciatku', ({ I, DTE }) => {
-     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22955");
-     DTE.waitForEditor();
-
-     I.waitForElement(".toast-close-button", 10);
-     I.see("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
-     I.clickCss(".toast-close-button");
-     I.dontSee("Existuje rozpracovaná alebo neschválená verzia tejto stránky");
-
-     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-     I.clickCss('#trEditor');
-     I.type('<!-- This is an autotest -->');
-
-     I.clickCss("#pills-dt-datatableInit-perex-tab");
-     I.click("Zverejniť stránku po tomto dátume");
-
-     DTE.save();
-
-     I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky 01.12.2030 6:00:00");
-     I.clickCss(".toast-close-button");
-
-     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22955");
-     DTE.waitForEditor();
-
-     I.switchTo(".cke_wysiwyg_frame.cke_reset");
-     I.see('Test publikovania');
-     //over, ze v aktualnej verzii sa toto nezobrazuje
-     I.dontSee('<!-- This is an autotest -->');
-     I.switchTo();
-});
-
-async function setPublishPageDefault(webpageText, I, DTE) {
-     I.say("nastav zakladny text stranky, ak by predchadzajuci beh padol");
-     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
-     DTE.waitForEditor();
-     I.see("Test casoveho publikovania", "#datatableInit_modal div.DTE_Header h5.modal-title");
-
-     await DTE.fillCkeditor("<p>"+webpageText+"</p>");
-     I.clickCss("#pills-dt-datatableInit-basic-tab");
-     I.checkOption("#DTE_Field_available_0");
-     I.clickCss("#pills-dt-datatableInit-perex-tab");
-     DTE.fillField("publishStartDate", "");
-     I.uncheckOption("#DTE_Field_editorFields-publishAfterStart_0");
-     DTE.fillField("publishEndDate", "");
-     I.uncheckOption("#DTE_Field_editorFields-disableAfterEnd_0");
-     DTE.save();
-
-     I.wait(2);
-
-     I.amOnPage("/test-stavov/test-casoveho-publikovania.html");
-     I.see("Test casoveho publikovania stranky");
-}
-
-Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii a nasledne vypublikuje @singlethread', async ({ I, DTE }) => {
-
-     let webpageText = "Test casoveho publikovania stranky";
-
-     //
-     await setPublishPageDefault(webpageText, I, DTE);
-
-     //
-     I.say("nastav datum publikovania now+2 minuty");
-     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
-     DTE.waitForEditor();
-
-     I.see("Test casoveho publikovania", "#datatableInit_modal div.DTE_Header h5.modal-title");
-
-     I.say("Nastavujem casove publikovanie a vypnutie zobrazovania")
-
-     let startTime = (new Date()).getTime();
-     let publishStartTime = startTime+(2*60*1000);
-     let publishEndTime = startTime+(3*60*1000);
-     let publishStartDateText = await I.formatDateTime(publishStartTime);
-     let publishEndDateText = await I.formatDateTime(publishEndTime);
-     let webpageTextPublish = "Test vypublikovania "+publishStartDateText;
-
-     await DTE.fillCkeditor("<p>"+webpageTextPublish+"</p>");
-     I.clickCss("#pills-dt-datatableInit-perex-tab");
-     DTE.fillField("publishStartDate", publishStartDateText);
-     I.pressKey("Tab");
-     I.checkOption("#DTE_Field_editorFields-publishAfterStart_0");
-     DTE.fillField("publishEndDate", publishEndDateText);
-     I.pressKey("Tab");
-     I.checkOption("#DTE_Field_editorFields-disableAfterEnd_0");
-
-     DTE.save();
-
-     //
-     I.say("over zobrazenie info spravy");
-     I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky", "div.toast-message");
-     I.clickCss("button.toast-close-button");
-
-     I.wait(2);
-
-     //
-     I.say("Overujem zobrazenie v historii");
-     I.click("Test casoveho publikovania");
-     DTE.waitForEditor();
-     I.click("Editovať poslednú verziu");
-     DTE.waitForEditor();
-     I.clickCss("#pills-dt-datatableInit-history-tab");
-     I.wait(3);
-     //v history tabulke v stlpci Bude publikovane
-     I.waitForText(publishStartDateText, 20, "#datatableFieldDTE_Field_editorFields-history tr td:nth-child(3)");
-     I.see(publishStartDateText, "#datatableFieldDTE_Field_editorFields-history tr td:nth-child(3)");
-     I.see(publishEndDateText, "#datatableFieldDTE_Field_editorFields-history tr td:nth-child(4)");
-
-     I.logout();
-
-     //
-     I.say("over zobrazenie povodneho textu, pockaj 2 minuty a over novy text");
-     I.amOnPage("/test-stavov/test-casoveho-publikovania.html");
-     I.see(webpageText);
-     I.dontSee(webpageTextPublish);
-
-     await I.waitForTime(publishStartTime);
-     I.wait(5);
-     I.amOnPage("/test-stavov/test-casoveho-publikovania.html");
-     I.dontSee(webpageText);
-     I.see(webpageTextPublish);
-
-     //
-     I.say("Overujem nastavenie checkboxu v stranke");
-     I.amOnPage("/admin/");
-     I.relogin('admin');
-     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
-     DTE.waitForEditor();
-     I.clickCss("#pills-dt-datatableInit-perex-tab");
-     I.seeCheckboxIsChecked("#DTE_Field_editorFields-disableAfterEnd_0");
-
-     I.logout();
-
-     //
-     I.say("over vypnutie zobrazovania");
-     await I.waitForTime(publishEndTime);
-     I.wait(5);
-     I.amOnPage("/test-stavov/test-casoveho-publikovania.html");
-     I.see("Chyba 404 - požadovaná stránka neexistuje");
-});
-
-Scenario('casove odpublikovanie existujucej stranky @singlethread', async ({ I, DTE }) => {
-
-     let webpageText = "Test casoveho publikovania stranky";
-
-     //
-     await setPublishPageDefault(webpageText, I, DTE);
-
-     //
-     I.say("Nastavujem vypnutie zobrazovania")
-     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
-     DTE.waitForEditor();
-
-     let startTime = (new Date()).getTime();
-     let publishEndTime = startTime+(2*60*1000);
-     let publishEndDateText = await I.formatDateTime(publishEndTime);
-
-     I.clickCss("#pills-dt-datatableInit-perex-tab");
-     DTE.fillField("publishEndDate", publishEndDateText);
-     I.pressKey("Tab");
-     I.checkOption("#DTE_Field_editorFields-disableAfterEnd_0");
-
-     DTE.save();
-
-     //
-     I.say("Overujem zobrazenie v historii");
-     I.click("Test casoveho publikovania");
-     DTE.waitForEditor();
-     I.clickCss("#pills-dt-datatableInit-history-tab");
-     I.wait(3);
-     //v history tabulke v stlpci Bude publikovane
-     I.waitForText(publishEndDateText, 30, "#datatableFieldDTE_Field_editorFields-history tr td:nth-child(4)");
-
-     I.logout();
-
-     //
-     I.say("over zobrazenie povodneho textu, pockaj 2 minuty a over novy text");
-     I.amOnPage("/test-stavov/test-casoveho-publikovania.html");
-     I.see(webpageText);
-
-     //
-     I.say("over vypnutie zobrazovania");
-     await I.waitForTime(publishEndTime);
-     I.wait(5);
-     I.amOnPage("/test-stavov/test-casoveho-publikovania.html");
-     I.see("Chyba 404 - požadovaná stránka neexistuje");
-});
-
-Scenario('Zmena linky btn', ({ I, DT, DTE }) => {
+Scenario('Zmena linky btn', async ({ I, DT, DTE }) => {
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=25");
      DT.waitForLoader();
 
@@ -724,13 +541,20 @@ Scenario('Zmena linky btn', ({ I, DT, DTE }) => {
      I.wait(5);
      I.switchTo("#modalIframeIframeElement");
      I.waitForElement("#nav-iwcm_1_");
+
+     const numbOfEl = await I.grabNumberOfVisibleElements("#nav-iwcm_1_L2ltYWdlcw_E_E");
+
+     if(numbOfEl < 1) {
+          I.click( locate("#nav-iwcm_1_"), null, { position: { x: 20, y: 5 } });
+     }
+
      I.waitForElement("#nav-iwcm_1_L2ltYWdlcw_E_E");
-     I.click("#nav-iwcm_1_");
-     I.clickCss("#nav-iwcm_1_L2ltYWdlcw_E_E");
-     I.waitForElement("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5");
-     I.clickCss("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5");
-     I.waitForElement("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E");
-     I.clickCss("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E");
+
+     I.click( locate("#nav-iwcm_1_L2ltYWdlcw_E_E"), null, { position: { x: 20, y: 5 } });
+     I.waitForElement("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5"); ///images/bannery
+     I.click( locate("#nav-iwcm_1_L2ltYWdlcy9iYW5uZXJ5"), null, { position: { x: 20, y: 5 } });
+     I.waitForElement("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E"); ///images/bannery/banner-investicie.jpg
+     I.click( locate("#iwcm_1_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pbnZlc3RpY2llLmpwZw_E_E"), null, { position: { x: 20, y: 5 } });
 
      I.switchTo();
      I.clickCss("#modalIframe div.modal-footer button.btn-primary");

@@ -41,9 +41,18 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Table(name=&quot;url_redirect&quot;)
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_REDIRECT_UPDATE)
-<span class="fc" id="L44">public class UrlRedirectBean extends ActiveRecordRepository implements Serializable</span>
+public class UrlRedirectBean extends ActiveRecordRepository implements Serializable
 {
 	private static final long serialVersionUID = -1L;
+
+<span class="fc" id="L48">	public UrlRedirectBean() {}</span>
+
+<span class="fc" id="L50">	public UrlRedirectBean(String oldUrl, String newUrl, Integer redirectCode, String domainName) {</span>
+<span class="fc" id="L51">		this.oldUrl = oldUrl;</span>
+<span class="fc" id="L52">		this.newUrl = newUrl;</span>
+<span class="fc" id="L53">		this.redirectCode = redirectCode;</span>
+<span class="fc" id="L54">		this.domainName = domainName;</span>
+<span class="fc" id="L55">	}</span>
 
 	@Id
 	@GeneratedValue(generator=&quot;WJGen_url_redirect&quot;)
@@ -126,86 +135,86 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 	Date publishDate;
 
 	public Long getUrlRedirectId() {
-<span class="fc" id="L129">		return urlRedirectId;</span>
+<span class="fc" id="L138">		return urlRedirectId;</span>
 	}
 
 	public void setUrlRedirectId(Long urlRedirectId) {
-<span class="fc" id="L133">		this.urlRedirectId = urlRedirectId;</span>
-<span class="fc" id="L134">	}</span>
+<span class="fc" id="L142">		this.urlRedirectId = urlRedirectId;</span>
+<span class="fc" id="L143">	}</span>
 
 	public Date getInsertDate()
 	{
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">		return insertDate == null ? null : (Date) insertDate.clone();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		return insertDate == null ? null : (Date) insertDate.clone();</span>
 	}
 
 	public void setInsertDate(Date insertDate)
 	{
-<span class="fc bfc" id="L143" title="All 2 branches covered.">		this.insertDate = insertDate == null ? null : (Date) insertDate.clone();</span>
-<span class="fc" id="L144">	}</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">		this.insertDate = insertDate == null ? null : (Date) insertDate.clone();</span>
+<span class="fc" id="L153">	}</span>
 
 	public String getOldUrl()
 	{
-<span class="fc" id="L148">		return oldUrl;</span>
+<span class="fc" id="L157">		return oldUrl;</span>
 	}
 
 	public void setOldUrl(String oldUrl)
 	{
-<span class="fc" id="L153">		this.oldUrl = oldUrl;</span>
-<span class="fc" id="L154">	}</span>
+<span class="fc" id="L162">		this.oldUrl = oldUrl;</span>
+<span class="fc" id="L163">	}</span>
 
 	public Integer getRedirectCode()
 	{
-<span class="fc" id="L158">		return redirectCode;</span>
+<span class="fc" id="L167">		return redirectCode;</span>
 	}
 
 	public void setRedirectCode(Integer redirectCode)
 	{
-<span class="fc" id="L163">		this.redirectCode = redirectCode;</span>
-<span class="fc" id="L164">	}</span>
+<span class="fc" id="L172">		this.redirectCode = redirectCode;</span>
+<span class="fc" id="L173">	}</span>
 
 	public String getDomainName()
 	{
-<span class="fc" id="L168">		return domainName;</span>
+<span class="fc" id="L177">		return domainName;</span>
 	}
 
 	public void setDomainName(String domainName)
 	{
-<span class="fc" id="L173">		this.domainName = domainName;</span>
-<span class="fc" id="L174">	}</span>
+<span class="fc" id="L182">		this.domainName = domainName;</span>
+<span class="fc" id="L183">	}</span>
 
 	public String getNewUrl()
 	{
-<span class="fc" id="L178">		return newUrl;</span>
+<span class="fc" id="L187">		return newUrl;</span>
 	}
 
 	public void setNewUrl(String newUrl)
 	{
-<span class="fc" id="L183">		this.newUrl = newUrl;</span>
-<span class="fc" id="L184">	}</span>
+<span class="fc" id="L192">		this.newUrl = newUrl;</span>
+<span class="fc" id="L193">	}</span>
 
 	@Override
 	public Long getId()
 	{
-<span class="fc" id="L189">		return getUrlRedirectId();</span>
+<span class="fc" id="L198">		return getUrlRedirectId();</span>
 	}
 
 	@Override
 	public void setId(Long id)
 	{
-<span class="fc" id="L195">		setUrlRedirectId(id);</span>
-<span class="fc" id="L196">	}</span>
+<span class="fc" id="L204">		setUrlRedirectId(id);</span>
+<span class="fc" id="L205">	}</span>
 
 	public Date getPublishDate() {
-<span class="fc" id="L199">		return publishDate;</span>
+<span class="fc" id="L208">		return publishDate;</span>
 	}
 
 	public void setPublishDate(Date publishDate) {
-<span class="fc" id="L203">		this.publishDate = publishDate;</span>
-<span class="fc" id="L204">	}</span>
+<span class="fc" id="L212">		this.publishDate = publishDate;</span>
+<span class="fc" id="L213">	}</span>
 
 	@JsonIgnore
 	public String getPublishTime() {
-<span class="fc" id="L208">		return Tools.formatTime(this.getPublishDate());</span>
+<span class="fc" id="L217">		return Tools.formatTime(this.getPublishDate());</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

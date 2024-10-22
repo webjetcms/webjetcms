@@ -10,7 +10,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('zakladne testy', async ({I, DataTables}) => {
+Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/proxy/admin/");
     await DataTables.baseTest({
         dataTable: 'proxyDataTable',

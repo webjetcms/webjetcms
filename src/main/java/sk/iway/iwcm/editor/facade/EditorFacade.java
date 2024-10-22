@@ -133,7 +133,7 @@ public class EditorFacade {
 		//vrat aktualny zaznam z DB
 		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);
 		DocEditorFields def = new DocEditorFields();
-		def.fromDocDetails(savedCopy, true);
+		def.fromDocDetails(savedCopy, true, true);
 		savedCopy.setEditorFields(def);
 		savedCopy.setHistoryId(historyId);
 
@@ -206,6 +206,11 @@ public class EditorFacade {
 		}
 
 		GroupDetails group = groupsDB.getGroup(groupId);
+		if (group == null) {
+			//in multithread enviroment sometimes group is not yet loaded, try to reload
+			groupsDB = GroupsDB.getInstance(true);
+			group = groupsDB.getGroup(groupId);
+		}
 		//lebo pre zadane docId group ignorujeme (moze to byt 999997)
 		if (docId < 0 && group == null) return null;
 

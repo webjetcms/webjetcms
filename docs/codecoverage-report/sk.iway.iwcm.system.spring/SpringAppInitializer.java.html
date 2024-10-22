@@ -1,141 +1,144 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpringAppInitializer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.spring</a> &gt; <span class="el_source">SpringAppInitializer.java</span></div><h1>SpringAppInitializer.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.spring;
 
 import org.springframework.web.WebApplicationInitializer;
+import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
-import sk.iway.iwcm.*;
-import sk.iway.iwcm.system.ConfDB;
 
+import sk.iway.iwcm.*;
+
+import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration.Dynamic;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-<span class="fc" id="L20">public class SpringAppInitializer implements WebApplicationInitializer</span>
+<span class="fc" id="L21">public class SpringAppInitializer implements WebApplicationInitializer</span>
 {
-	public static String installName;
-	public static String logInstallName;
-<span class="fc" id="L24">	private List&lt;String&gt; customConfigs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L23">	private List&lt;String&gt; customConfigs = new ArrayList&lt;&gt;();</span>
 
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException
 	{
-<span class="fc" id="L29">		Logger.println(this,&quot;SPRING: inicializujem&quot;);</span>
-<span class="fc" id="L30">		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();</span>
-<span class="fc" id="L31">		customConfigs.add(&quot;sk.iway.iwcm.system.spring.BaseSpringConfig&quot;);</span>
+<span class="fc" id="L28">		boolean initialized = InitServlet.initializeWebJET(servletContext);</span>
+<span class="fc" id="L29">		String installName = Constants.getInstallName();</span>
 
-<span class="fc" id="L33">		String contextDbName = servletContext.getInitParameter(&quot;webjetDbname&quot;);</span>
-<span class="fc" id="L34">		Logger.debug(getClass(),&quot;SPRING: contextDbName=&quot;+contextDbName);</span>
-<span class="fc" id="L35">		InitServlet.setContextDbName(contextDbName);</span>
-		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
-<span class="fc" id="L37">		Constants.setServletContext(servletContext);</span>
+<span class="fc" id="L31">		Logger.println(this,&quot;SPRING: onStartup&quot;);</span>
+<span class="fc" id="L32">		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();</span>
+<span class="fc" id="L33">		customConfigs.add(&quot;sk.iway.iwcm.system.spring.BaseSpringConfig&quot;);</span>
 
-<span class="fc" id="L39">		String installName = getConstant(&quot;installName&quot;);</span>
-<span class="pc bpc" id="L40" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(installName)) {</span>
-<span class="fc" id="L41">			customConfigs.add(&quot;sk.iway.&quot; + installName + &quot;.SpringConfig&quot;);</span>
-<span class="fc" id="L42">			SpringAppInitializer.installName = installName;</span>
-<span class="fc" id="L43">            Constants.setInstallName(installName);</span>
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">		if (initialized) {</span>
+<span class="fc" id="L36">			String contextDbName = servletContext.getInitParameter(&quot;webjetDbname&quot;);</span>
+<span class="fc" id="L37">			Logger.debug(getClass(),&quot;SPRING: contextDbName=&quot;+contextDbName);</span>
+<span class="fc" id="L38">			InitServlet.setContextDbName(contextDbName);</span>
+
+<span class="pc bpc" id="L40" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(installName)) {</span>
+<span class="fc" id="L41">				customConfigs.add(&quot;sk.iway.&quot; + installName + &quot;.SpringConfig&quot;);</span>
+<span class="fc" id="L42">				Constants.setInstallName(installName);</span>
+			}
+
+<span class="fc" id="L45">			String logInstallName = Constants.getLogInstallName();</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(logInstallName)) {</span>
+<span class="nc" id="L47">				String logClassName = &quot;sk.iway.&quot; + logInstallName + &quot;.LogSpringConfig&quot;;</span>
+				//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
+				try {
+<span class="nc" id="L50">					Class.forName(logClassName);</span>
+<span class="nc" id="L51">					customConfigs.add(logClassName);</span>
+<span class="nc" id="L52">				} catch (ClassNotFoundException e) {</span>
+					//nenasiel sa LogSpringConfig, skusime teda pridat po starom
+<span class="nc" id="L54">					customConfigs.add(&quot;sk.iway.&quot; + logInstallName + &quot;.SpringConfig&quot;);</span>
+<span class="nc" id="L55">				}</span>
+
+			}
+
+			//WebJET 9/2021
+<span class="fc" id="L60">			customConfigs.add(&quot;sk.iway.webjet.v9.V9SpringConfig&quot;);</span>
 		}
 
-<span class="fc" id="L46">		String logInstallName = getConstant(&quot;logInstallName&quot;);</span>
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(logInstallName)) {</span>
-<span class="nc" id="L48">			SpringAppInitializer.logInstallName = logInstallName;</span>
+<span class="fc" id="L63">		ctx.setServletContext(servletContext);</span>
 
-<span class="nc" id="L50">			String logClassName = &quot;sk.iway.&quot; + logInstallName + &quot;.LogSpringConfig&quot;;</span>
-			//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
-			try {
-<span class="nc" id="L53">				Class.forName(logClassName);</span>
-<span class="nc" id="L54">				customConfigs.add(logClassName);</span>
-<span class="nc" id="L55">			} catch (ClassNotFoundException e) {</span>
-				//nenasiel sa LogSpringConfig, skusime teda pridat po starom
-<span class="nc" id="L57">				customConfigs.add(&quot;sk.iway.&quot; + logInstallName + &quot;.SpringConfig&quot;);</span>
-<span class="nc" id="L58">			}</span>
+<span class="fc" id="L65">		Dynamic dynamic = servletContext.addServlet(&quot;springDispatcher&quot;, new DispatcherServlet(ctx));</span>
+<span class="fc" id="L66">		dynamic.addMapping(&quot;/&quot;);</span>
+<span class="fc" id="L67">		dynamic.setLoadOnStartup(1);</span>
 
-		}
+<span class="fc" id="L69">		CharacterEncodingFilter filter = new CharacterEncodingFilter();</span>
+<span class="fc" id="L70">		filter.setEncoding(Constants.getString(&quot;defaultEncoding&quot;));</span>
+<span class="fc" id="L71">		servletContext.addFilter(&quot;SpringEncodingFilter&quot;, filter).addMappingForUrlPatterns(null, false, &quot;/*&quot;);</span>
 
-		//ak sme Tomcat 7 nemozeme mat spring komponenty (ma staru verziu el), musime inicializovat takto
-<span class="fc" id="L63">		Logger.println(this,&quot;ServerInfo: &quot;+servletContext.getServerInfo());</span>
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if (servletContext.getServerInfo().contains(&quot;Tomcat/7&quot;))</span>
-		{
-<span class="nc" id="L66">			customConfigs.add(&quot;sk.iway.tomcat7.Tomcat7SpringConfig&quot;);</span>
-		}
-
-		//WebJET 8
-		//customConfigs.add(&quot;sk.iway.webjet.v8.SpringConfig&quot;);
-
-		//WebJET 9/2021
-<span class="fc" id="L73">		customConfigs.add(&quot;sk.iway.webjet.v9.V9SpringConfig&quot;);</span>
-
-<span class="fc" id="L75">		ctx.setServletContext(servletContext);</span>
-
-<span class="fc" id="L77">		Dynamic dynamic = servletContext.addServlet(&quot;springDispatcher&quot;, new DispatcherServlet(ctx));</span>
-<span class="fc" id="L78">		dynamic.addMapping(&quot;/&quot;);</span>
-<span class="fc" id="L79">		dynamic.setLoadOnStartup(1);</span>
-
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">		if (Tools.isEmpty(installName)) {</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">		if (initialized == false) {</span>
 			//WebJET is not initialized - there is no DB connection, allow only setup
-<span class="nc" id="L83">			customConfigs.clear();</span>
-<span class="nc" id="L84">			addScanPackagesInit(ctx);</span>
+<span class="nc" id="L75">			customConfigs.clear();</span>
+<span class="nc" id="L76">			addScanPackagesInit(ctx);</span>
 		} else {
-<span class="fc" id="L86">			loadConfigs(ctx);</span>
-<span class="fc" id="L87">			servletContext.addListener(RequestContextListener.class);</span>
-<span class="fc" id="L88">			addScanPackages(ctx);</span>
+<span class="fc" id="L78">			loadConfigs(ctx);</span>
+<span class="fc" id="L79">			servletContext.addListener(RequestContextListener.class);</span>
+<span class="fc" id="L80">			addScanPackages(ctx);</span>
+<span class="fc" id="L81">			servletContext.addListener(new ContextLoaderListener(ctx));</span>
 		}
 
-<span class="fc" id="L91">		servletContext.setAttribute(&quot;springContext&quot;, ctx);</span>
-<span class="fc" id="L92">	}</span>
+<span class="fc" id="L84">		servletContext.setAttribute(&quot;springContext&quot;, ctx);</span>
+
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">		if (initialized) {</span>
+			// spring security filter
+<span class="fc" id="L88">			final DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy(&quot;springSecurityFilterChain&quot;);</span>
+<span class="fc" id="L89">			final FilterRegistration.Dynamic addedFilter = servletContext.addFilter(&quot;springSecurityFilterChain&quot;, springSecurityFilterChain);</span>
+<span class="fc" id="L90">			addedFilter.addMappingForUrlPatterns(null, false, &quot;/*&quot;);</span>
+<span class="fc" id="L91">		} else {</span>
+			//it is normally initialized in V9SpringConfig, but we need to add it here for setup/bad db connection
+<span class="nc" id="L93">			servletContext.addFilter(&quot;failedSetCharacterEncodingFilter&quot;, new SetCharacterEncodingFilter()).addMappingForUrlPatterns(null, false, &quot;/*&quot;);</span>
+		}
+<span class="fc" id="L95">	}</span>
 
 	private void loadConfigs(AnnotationConfigWebApplicationContext ctx) {
 		// filtrovanie neexistujucich tried
-<span class="fc" id="L96">		List&lt;String&gt; customConfigsLocal = customConfigs.stream().filter(c-&gt; {</span>
+<span class="fc" id="L99">		List&lt;String&gt; customConfigsLocal = customConfigs.stream().filter(c-&gt; {</span>
 			try {
-<span class="pc bpc" id="L98" title="1 of 2 branches missed.">				return Class.forName(c) != null;</span>
-<span class="fc" id="L99">			} catch (ClassNotFoundException e) {</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">				return Class.forName(c) != null;</span>
+<span class="nc" id="L102">			} catch (ClassNotFoundException e) {</span>
 				//sk.iway.iwcm.Logger.error(e);
-<span class="fc" id="L101">				Logger.println(this, &quot;SPRING: NEnasiel som custom config (1) pre &quot; + c);</span>
+<span class="nc" id="L104">				Logger.println(this, &quot;SPRING: NOT found custom config (1) &quot; + c);</span>
 			}
-<span class="fc" id="L103">			return false;</span>
-<span class="fc" id="L104">		}).collect(Collectors.toList());</span>
-<span class="fc" id="L105">		Class&lt;?&gt;[] objectArray = new Class[customConfigsLocal.size()];</span>
+<span class="nc" id="L106">			return false;</span>
+<span class="fc" id="L107">		}).collect(Collectors.toList());</span>
+<span class="fc" id="L108">		Class&lt;?&gt;[] objectArray = new Class[customConfigsLocal.size()];</span>
 
 		// naplnenie pola tried
-<span class="fc bfc" id="L108" title="All 2 branches covered.">		for (int i = 0; i &lt; customConfigsLocal.size(); i++) {</span>
-<span class="fc" id="L109">			String customConfig = customConfigsLocal.get(i);</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">		for (int i = 0; i &lt; customConfigsLocal.size(); i++) {</span>
+<span class="fc" id="L112">			String customConfig = customConfigsLocal.get(i);</span>
 			try {
-<span class="fc" id="L111">				Class&lt;?&gt; aClass = Class.forName(customConfig);</span>
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">				if (aClass != null) {</span>
-<span class="fc" id="L113">					objectArray[i] = aClass;</span>
-<span class="fc" id="L114">					Logger.println(this, &quot;SPRING: nasiel som custom config &quot; + customConfig);</span>
+<span class="fc" id="L114">				Class&lt;?&gt; aClass = Class.forName(customConfig);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">				if (aClass != null) {</span>
+<span class="fc" id="L116">					objectArray[i] = aClass;</span>
+<span class="fc" id="L117">					Logger.println(this, &quot;SPRING: found custom config &quot; + customConfig);</span>
 				}
 				else {
-<span class="nc" id="L117">					Logger.println(this, &quot;SPRING: NEnasiel som custom config (2) pre &quot; + customConfig);</span>
+<span class="nc" id="L120">					Logger.println(this, &quot;SPRING: NOT found custom config (2) &quot; + customConfig);</span>
 				}
-<span class="nc" id="L119">			} catch (Exception e) {</span>
+<span class="nc" id="L122">			} catch (Exception e) {</span>
 				// config class asi neexistuje.
-<span class="nc" id="L121">				Logger.println(this, &quot;SPRING: NEnasiel som custom config (3) pre &quot; + customConfig);</span>
-<span class="fc" id="L122">			}</span>
+<span class="nc" id="L124">				Logger.println(this, &quot;SPRING: found custom config (3) &quot; + customConfig);</span>
+<span class="fc" id="L125">			}</span>
 
 		}
-<span class="fc" id="L125">		ctx.register(objectArray);</span>
-<span class="fc" id="L126">	}</span>
+<span class="fc" id="L128">		ctx.register(objectArray);</span>
+<span class="fc" id="L129">	}</span>
 
 	private void addScanPackages(AnnotationConfigWebApplicationContext ctx) {
-<span class="fc" id="L129">		List&lt;String&gt; packages = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L130">		packages.add(&quot;sk.iway.iwcm.calendar&quot;);</span>
-<span class="fc" id="L131">		packages.add(&quot;sk.iway.iwcm.system.spring&quot;);</span>
-<span class="fc" id="L132">		packages.add(&quot;sk.iway.iwcm.users&quot;);</span>
-<span class="fc" id="L133">		packages.add(&quot;sk.iway.iwcm.rest&quot;);</span>
-<span class="fc" id="L134">		packages.add(&quot;sk.iway.iwcm.components&quot;);</span>
+<span class="fc" id="L132">		List&lt;String&gt; packages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L133">		packages.add(&quot;sk.iway.iwcm.calendar&quot;);</span>
+<span class="fc" id="L134">		packages.add(&quot;sk.iway.iwcm.system.spring&quot;);</span>
 <span class="fc" id="L135">		packages.add(&quot;sk.iway.iwcm.users&quot;);</span>
-<span class="fc" id="L136">		packages.add(&quot;sk.iway.iwcm.components&quot;);</span>
-<span class="fc" id="L137">		packages.add(&quot;sk.iway.iwcm.editor&quot;);</span>
-<span class="fc" id="L138">		packages.add(&quot;sk.iway.iwcm.admin&quot;);</span>
+<span class="fc" id="L136">		packages.add(&quot;sk.iway.iwcm.rest&quot;);</span>
+<span class="fc" id="L137">		packages.add(&quot;sk.iway.iwcm.components&quot;);</span>
+<span class="fc" id="L138">		packages.add(&quot;sk.iway.iwcm.users&quot;);</span>
+<span class="fc" id="L139">		packages.add(&quot;sk.iway.iwcm.components&quot;);</span>
+<span class="fc" id="L140">		packages.add(&quot;sk.iway.iwcm.editor&quot;);</span>
+<span class="fc" id="L141">		packages.add(&quot;sk.iway.iwcm.admin&quot;);</span>
 		/* vyhladava rekurzivne
 		packages.add(&quot;sk.iway.iwcm.components.events&quot;);
 		packages.add(&quot;sk.iway.iwcm.components.quiz&quot;);
@@ -144,86 +147,33 @@ import java.util.stream.Collectors;
 		packages.add(&quot;sk.iway.iwcm.components.inzercia&quot;);
 		packages.add(&quot;sk.iway.iwcm.components.restaurant_menu&quot;);
 		*/
-<span class="fc" id="L147">		packages.add(&quot;sk.iway.iwcm.doc.templates&quot;);</span>
-<span class="fc" id="L148">		packages.add(&quot;sk.iway.iwcm.system.datatables&quot;);</span>
-<span class="fc" id="L149">		packages.add(&quot;sk.iway.iwcm.logon&quot;);</span>
-<span class="fc" id="L150">		packages.add(&quot;sk.iway.iwcm.doc.groups&quot;);</span>
-<span class="fc" id="L151">		packages.add(&quot;sk.iway.iwcm.grideditor&quot;);</span>
+<span class="fc" id="L150">		packages.add(&quot;sk.iway.iwcm.doc.templates&quot;);</span>
+<span class="fc" id="L151">		packages.add(&quot;sk.iway.iwcm.system.datatables&quot;);</span>
+<span class="fc" id="L152">		packages.add(&quot;sk.iway.iwcm.logon&quot;);</span>
+<span class="fc" id="L153">		packages.add(&quot;sk.iway.iwcm.doc.groups&quot;);</span>
+<span class="fc" id="L154">		packages.add(&quot;sk.iway.iwcm.grideditor&quot;);</span>
 		//packages.add(&quot;sk.iway.intranet.dms&quot;);
-<span class="fc" id="L153">		packages.add(&quot;sk.iway.iwcm.localconf&quot;);</span>
+<span class="fc" id="L156">		packages.add(&quot;sk.iway.iwcm.localconf&quot;);</span>
 
-<span class="fc" id="L155">		String addPackages = getConstant(&quot;springAddPackages&quot;);</span>
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(addPackages)) {</span>
-<span class="fc" id="L157">			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, &quot;,&quot;)));</span>
+<span class="fc" id="L158">		String addPackages = Constants.getString(&quot;springAddPackages&quot;);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(addPackages)) {</span>
+<span class="fc" id="L160">			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, &quot;,&quot;)));</span>
 		}
 
-<span class="fc" id="L160">		Logger.println(getClass(), String.format(&quot;Spring scan packages: %s&quot;, Tools.join(packages, &quot;, &quot;)));</span>
-<span class="fc" id="L161">		ctx.scan(packages.toArray(new String[packages.size()]));</span>
-<span class="fc" id="L162">	}</span>
+<span class="fc" id="L163">		Logger.println(getClass(), String.format(&quot;Spring scan packages: %s&quot;, Tools.join(packages, &quot;, &quot;)));</span>
+<span class="fc" id="L164">		ctx.scan(packages.toArray(new String[packages.size()]));</span>
+<span class="fc" id="L165">	}</span>
 
 	/**
 	 * Packages for setup
 	 * @param ctx
 	 */
 	private void addScanPackagesInit(AnnotationConfigWebApplicationContext ctx) {
-<span class="nc" id="L169">		List&lt;String&gt; packages = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L170">		packages.add(&quot;sk.iway.iwcm.system.spring&quot;);</span>
-<span class="nc" id="L171">		packages.add(&quot;sk.iway.iwcm.setup&quot;);</span>
-<span class="nc" id="L172">		Logger.println(getClass(), String.format(&quot;Spring scan packages: %s&quot;, Tools.join(packages, &quot;, &quot;)));</span>
-<span class="nc" id="L173">		ctx.scan(packages.toArray(new String[packages.size()]));</span>
-<span class="nc" id="L174">	}</span>
-
-	public static String getInstallName() {
-<span class="nc bnc" id="L177" title="All 2 branches missed.">		if (installName == null) {</span>
-<span class="nc" id="L178">			installName = getConstant(&quot;installName&quot;);</span>
-		}
-
-<span class="nc" id="L181">		return installName;</span>
-	}
-
-	public static String getLogInstallName() {
-<span class="nc bnc" id="L185" title="All 2 branches missed.">		if (logInstallName == null) {</span>
-<span class="nc" id="L186">			logInstallName = getConstant(&quot;logInstallName&quot;);</span>
-		}
-
-<span class="nc" id="L189">		return logInstallName;</span>
-	}
-
-	private static String getConstant(String name) {
-<span class="fc" id="L193">		String value = null;</span>
-		try
-		{
-<span class="fc" id="L196">			Connection dbConn = DBPool.getConnection(&quot;iwcm&quot;);</span>
-
-<span class="fc" id="L198">			Logger.println(SpringAppInitializer.class, &quot;Getting &quot; + name + &quot; from table &quot;+ConfDB.CONF_TABLE_NAME);</span>
-<span class="fc" id="L199">			PreparedStatement ps = dbConn.prepareStatement(&quot;SELECT value FROM &quot; + ConfDB.CONF_TABLE_NAME + &quot; WHERE name=?&quot;);</span>
-<span class="fc" id="L200">			ps.setString(1, name);</span>
-			try
-			{
-<span class="fc" id="L203">				ResultSet rs = ps.executeQuery();</span>
-				try
-				{
-<span class="fc bfc" id="L206" title="All 2 branches covered.">					if (rs.next())</span>
-					{
-<span class="fc" id="L208">						value = DB.getDbString(rs, &quot;value&quot;);</span>
-					}
-				}
-				finally
-				{
-<span class="fc" id="L213">					rs.close();</span>
-				}
-			} finally
-			{
-<span class="fc" id="L217">				ps.close();</span>
-<span class="fc" id="L218">				dbConn.close();</span>
-			}
-		}
-<span class="nc" id="L221">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L223">			sk.iway.iwcm.Logger.error(SpringAppInitializer.class, ex.getMessage());</span>
-<span class="fc" id="L224">		}</span>
-
-<span class="fc" id="L226">		return (value);</span>
-	}
+<span class="nc" id="L172">		List&lt;String&gt; packages = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L173">		packages.add(&quot;sk.iway.iwcm.system.spring&quot;);</span>
+<span class="nc" id="L174">		packages.add(&quot;sk.iway.iwcm.setup&quot;);</span>
+<span class="nc" id="L175">		Logger.println(getClass(), String.format(&quot;Spring scan packages: %s&quot;, Tools.join(packages, &quot;, &quot;)));</span>
+<span class="nc" id="L176">		ctx.scan(packages.toArray(new String[packages.size()]));</span>
+<span class="nc" id="L177">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

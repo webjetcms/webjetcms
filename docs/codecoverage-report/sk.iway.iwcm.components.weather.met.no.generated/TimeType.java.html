@@ -49,7 +49,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 @XmlType(name = &quot;timeType&quot;, propOrder = {
     &quot;location&quot;
 })
-<span class="nc" id="L52">public class TimeType {</span>
+<span class="fc" id="L52">public class TimeType {</span>
 
     @XmlElement(required = true)
     protected List&lt;LocationType&gt; location;
@@ -85,10 +85,10 @@ import javax.xml.datatype.XMLGregorianCalendar;
      * 
      */
     public List&lt;LocationType&gt; getLocation() {
-<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (location == null) {</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (location == null) {</span>
 <span class="nc" id="L89">            location = new ArrayList&lt;LocationType&gt;();</span>
         }
-<span class="nc" id="L91">        return this.location;</span>
+<span class="fc" id="L91">        return this.location;</span>
     }
 
     /**
@@ -100,7 +100,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
      *     
      */
     public XMLGregorianCalendar getFrom() {
-<span class="nc" id="L103">        return from;</span>
+<span class="fc" id="L103">        return from;</span>
     }
 
     /**
@@ -124,7 +124,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
      *     
      */
     public XMLGregorianCalendar getTo() {
-<span class="nc" id="L127">        return to;</span>
+<span class="fc" id="L127">        return to;</span>
     }
 
     /**
@@ -164,4 +164,4 @@ import javax.xml.datatype.XMLGregorianCalendar;
 <span class="nc" id="L164">    }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

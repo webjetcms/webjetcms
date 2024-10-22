@@ -446,10 +446,10 @@ import net.sourceforge.stripes.validation.ValidationErrors;
 <span class="fc" id="L446">		String binding = getActionBeanUrlBinding();</span>
 <span class="fc" id="L447">		HttpServletRequest request = (HttpServletRequest) getPageContext().getRequest();</span>
 <span class="fc" id="L448">		ActionBean bean = (ActionBean) request.getAttribute(binding);</span>
-<span class="pc bpc" id="L449" title="1 of 2 branches missed.">		if (bean == null) {</span>
-<span class="nc" id="L450">			HttpSession session = request.getSession(false);</span>
-<span class="nc bnc" id="L451" title="All 2 branches missed.">			if (session != null)</span>
-<span class="nc" id="L452">				bean = (ActionBean) session.getAttribute(binding);</span>
+<span class="fc bfc" id="L449" title="All 2 branches covered.">		if (bean == null) {</span>
+<span class="fc" id="L450">			HttpSession session = request.getSession(false);</span>
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">			if (session != null)</span>
+<span class="fc" id="L452">				bean = (ActionBean) session.getAttribute(binding);</span>
 		}
 <span class="fc" id="L454">		return bean;</span>
 	}
@@ -463,10 +463,10 @@ import net.sourceforge.stripes.validation.ValidationErrors;
    protected boolean isWizard() {
 <span class="fc" id="L464">       ActionBean bean = getActionBean();</span>
 <span class="fc" id="L465">       Class&lt;? extends ActionBean&gt; clazz = null;</span>
-<span class="pc bpc" id="L466" title="1 of 2 branches missed.">       if (bean == null) {</span>
-<span class="nc" id="L467">           clazz = getActionBeanClass();</span>
+<span class="fc bfc" id="L466" title="All 2 branches covered.">       if (bean == null) {</span>
+<span class="fc" id="L467">           clazz = getActionBeanClass();</span>
 
-<span class="nc bnc" id="L469" title="All 2 branches missed.">           if (clazz == null) {</span>
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">           if (clazz == null) {</span>
 <span class="nc" id="L470">               log.error(&quot;Could not locate an ActionBean that was bound to the URL [&quot;,</span>
                          this.actionWithoutContext, &quot;]. Without an ActionBean class Stripes &quot;,
                          &quot;cannot determine whether the ActionBean is a wizard or not. &quot;,
@@ -599,4 +599,4 @@ import net.sourceforge.stripes.validation.ValidationErrors;
 <span class="nc" id="L599">       return response.encodeURL(action);</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

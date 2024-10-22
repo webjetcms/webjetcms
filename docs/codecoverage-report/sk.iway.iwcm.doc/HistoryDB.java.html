@@ -193,7 +193,7 @@ public class HistoryDB extends DB
 <span class="fc" id="L193">					doc.setRequireSsl(rs.getBoolean(&quot;require_ssl&quot;));</span>
 
 
-<span class="pc bpc" id="L196" title="4 of 6 branches missed.">					if ((doc.getHistoryApprovedBy()&gt;0 &amp;&amp; doc.getAuthorId()!=doc.getHistoryApprovedBy()) || doc.getHistoryDisapprovedBy()&gt;0) {</span>
+<span class="pc bpc" id="L196" title="2 of 6 branches missed.">					if ((doc.getHistoryApprovedBy()&gt;0 &amp;&amp; doc.getAuthorId()!=doc.getHistoryApprovedBy()) || doc.getHistoryDisapprovedBy()&gt;0) {</span>
 <span class="nc bnc" id="L197" title="All 2 branches missed.">						if (doc.getHistoryApprovedBy()&gt;0)</span>
 						{
 <span class="nc" id="L199">							userDetails = UsersDB.getUser(doc.getHistoryApprovedBy());</span>
@@ -318,33 +318,33 @@ public class HistoryDB extends DB
 					is empty so this approver will not receive redundant email about approving page.
 					This chnage in logic was made in ApproveService.loadApproveTables ifn, at the end
 				*/
-<span class="pc bpc" id="L321" title="1 of 4 branches missed.">				if(doc.getHistoryApprovedBy() &gt; 0 &amp;&amp; doc.getAuthorId() == doc.getHistoryApprovedBy()) {</span>
+<span class="fc bfc" id="L321" title="All 4 branches covered.">				if(doc.getHistoryApprovedBy() &gt; 0 &amp;&amp; doc.getAuthorId() == doc.getHistoryApprovedBy()) {</span>
 <span class="fc" id="L322">					UserDetails approver = UsersDB.getUser(doc.getHistoryApprovedBy());</span>
 <span class="pc bpc" id="L323" title="1 of 2 branches missed.">					if (approver != null) doc.setHistoryApprovedByName(approver.getFullName());</span>
 				}
 
-<span class="pc bpc" id="L326" title="1 of 4 branches missed.">				if ((doc.getHistoryApprovedBy() &gt; 0 &amp;&amp; doc.getAuthorId()!=doc.getHistoryApprovedBy()))</span>
+<span class="fc bfc" id="L326" title="All 4 branches covered.">				if ((doc.getHistoryApprovedBy() &gt; 0 &amp;&amp; doc.getAuthorId()!=doc.getHistoryApprovedBy()))</span>
 				{
-<span class="nc" id="L328">					UserDetails approver = UsersDB.getUserCached(doc.getHistoryApprovedBy());</span>
-<span class="nc bnc" id="L329" title="All 2 branches missed.">					if (approver != null)</span>
+<span class="fc" id="L328">					UserDetails approver = UsersDB.getUserCached(doc.getHistoryApprovedBy());</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">					if (approver != null)</span>
 					{
-<span class="nc" id="L331">						doc.setHistoryApprovedByName(approver.getFullName());</span>
+<span class="fc" id="L331">						doc.setHistoryApprovedByName(approver.getFullName());</span>
 					} else {
 <span class="nc" id="L333">						doc.setHistoryApprovedByName(prop.getText(&quot;editor.history.not_existing_user&quot;));</span>
 					}
 				}
 
-<span class="pc bpc" id="L337" title="1 of 2 branches missed.">				if (doc.getHistoryDisapprovedBy() &gt; 0)</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">				if (doc.getHistoryDisapprovedBy() &gt; 0)</span>
 				{
-<span class="nc" id="L339">					UserDetails approver = UsersDB.getUserCached(doc.getHistoryDisapprovedBy());</span>
-<span class="nc bnc" id="L340" title="All 2 branches missed.">					if (approver != null)</span>
+<span class="fc" id="L339">					UserDetails approver = UsersDB.getUserCached(doc.getHistoryDisapprovedBy());</span>
+<span class="pc bpc" id="L340" title="1 of 2 branches missed.">					if (approver != null)</span>
 					{
-<span class="nc" id="L342">						doc.setHistoryDisapprovedByName(approver.getFullName());</span>
+<span class="fc" id="L342">						doc.setHistoryDisapprovedByName(approver.getFullName());</span>
 					} else {
 <span class="nc" id="L344">						doc.setHistoryDisapprovedByName(prop.getText(&quot;editor.history.not_existing_user&quot;));</span>
 					}
 
-<span class="nc" id="L347">					doc.setHistoryApprovedByName(&quot;&quot;);</span>
+<span class="fc" id="L347">					doc.setHistoryApprovedByName(&quot;&quot;);</span>
 				}
 <span class="fc" id="L349">			}</span>
 
@@ -392,4 +392,4 @@ public class HistoryDB extends DB
 <span class="nc" id="L392">		return false;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

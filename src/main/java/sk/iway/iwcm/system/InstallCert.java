@@ -101,8 +101,8 @@ public class InstallCert {
 			for (int i = 0; i < chain.length; i++)
 			{
 				X509Certificate cert = chain[i];
-				out.append(" " + (i + 1) + " Subject " + cert.getSubjectDN()+"\n");
-				out.append("   Issuer  " + cert.getIssuerDN()+"\n");
+				out.append(" " + (i + 1) + " Subject " + cert.getSubjectX500Principal()+"\n");
+				out.append("   Issuer  " + cert.getIssuerX500Principal()+"\n");
 				sha1.update(cert.getEncoded());
 				out.append("   sha1    " + toHexString(sha1.digest())+"\n");
 				md5.update(cert.getEncoded());

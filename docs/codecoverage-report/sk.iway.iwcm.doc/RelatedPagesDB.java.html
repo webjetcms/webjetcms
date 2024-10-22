@@ -36,7 +36,7 @@ public class RelatedPagesDB
 
 	public static List&lt;DocDetails&gt; getRelatedPagesByGroups(String perexGroupIds, String rootGroupIds, int actualDocId)
 	{
-<span class="nc" id="L39">		return getRelatedPagesByGroups(perexGroupIds, rootGroupIds, actualDocId, true);</span>
+<span class="fc" id="L39">		return getRelatedPagesByGroups(perexGroupIds, rootGroupIds, actualDocId, true);</span>
 	}
 
 	/**
@@ -51,73 +51,73 @@ public class RelatedPagesDB
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public static List&lt;DocDetails&gt; getRelatedPagesByGroups(String perexGroupIds, String rootGroupIds, int actualDocId, boolean checkDuplicity)
 	{
-<span class="nc" id="L54">		DebugTimer dt = new DebugTimer(&quot;getRelatedPagesByGroups&quot;);</span>
-<span class="nc" id="L55">		dt.diff(&quot;   params: &quot;+perexGroupIds+&quot;, &quot;+rootGroupIds+&quot;, &quot;+actualDocId);</span>
+<span class="fc" id="L54">		DebugTimer dt = new DebugTimer(&quot;getRelatedPagesByGroups&quot;);</span>
+<span class="fc" id="L55">		dt.diff(&quot;   params: &quot;+perexGroupIds+&quot;, &quot;+rootGroupIds+&quot;, &quot;+actualDocId);</span>
 
 
-<span class="nc" id="L58">		List&lt;DocDetails&gt; ret = null;</span>
-<span class="nc" id="L59">		Cache c = Cache.getInstance();</span>
-<span class="nc" id="L60">		String cacheKey = &quot;RelatedPagesDB-getByGroup-&quot;+perexGroupIds+&quot;-&quot;+rootGroupIds;</span>
-<span class="nc" id="L61">		int cacheInMinutes = Constants.getInt(&quot;RelatedPagesDBCacheMinutes&quot;);</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (cacheInMinutes &gt; 0)</span>
+<span class="fc" id="L58">		List&lt;DocDetails&gt; ret = null;</span>
+<span class="fc" id="L59">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L60">		String cacheKey = &quot;RelatedPagesDB-getByGroup-&quot;+perexGroupIds+&quot;-&quot;+rootGroupIds;</span>
+<span class="fc" id="L61">		int cacheInMinutes = Constants.getInt(&quot;RelatedPagesDBCacheMinutes&quot;);</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (cacheInMinutes &gt; 0)</span>
 		{
-<span class="nc" id="L64">			ret = (List&lt;DocDetails&gt;)c.getObject(cacheKey);</span>
+<span class="fc" id="L64">			ret = (List&lt;DocDetails&gt;)c.getObject(cacheKey);</span>
 
-<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (ret != null)</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">			if (ret != null)</span>
 			{
-<span class="nc" id="L68">				dt.diff(&quot;returning from cache&quot;);</span>
-<span class="nc" id="L69">				return(filterRelatetedPagesDoc(ret, actualDocId));</span>
+<span class="fc" id="L68">				dt.diff(&quot;returning from cache&quot;);</span>
+<span class="fc" id="L69">				return(filterRelatetedPagesDoc(ret, actualDocId));</span>
 			}
 
 		}
 
-<span class="nc" id="L74">		boolean perexGroupUseJoin = Constants.getBoolean(&quot;perexGroupUseJoin&quot;);</span>
-<span class="nc" id="L75">		String[] rGroups = null;</span>
-<span class="nc" id="L76">		List&lt;DocDetails&gt; relatedPages = null;</span>
-<span class="nc" id="L77">		ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L74">		boolean perexGroupUseJoin = Constants.getBoolean(&quot;perexGroupUseJoin&quot;);</span>
+<span class="fc" id="L75">		String[] rGroups = null;</span>
+<span class="fc" id="L76">		List&lt;DocDetails&gt; relatedPages = null;</span>
+<span class="fc" id="L77">		ret = new ArrayList&lt;&gt;();</span>
 		int rGroupId;
 		boolean found;
 
 		try
 		{
 			//Logger.println(this,&quot;perexGroupName: &quot;+perexGroupName+&quot;\trootGroupIds: &quot;+rootGroupIds+&quot;\tparentDocId: &quot;+parentDocId);
-<span class="nc bnc" id="L84" title="All 2 branches missed.">			if (Tools.isNotEmpty(perexGroupIds))</span>
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(perexGroupIds))</span>
 			{
-<span class="nc bnc" id="L86" title="All 2 branches missed.">				if(perexGroupUseJoin == false)</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">				if(perexGroupUseJoin == false)</span>
 				{
-<span class="nc" id="L88">					relatedPages = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L89">					String[] groupNames = getTokens(perexGroupIds, &quot;,&quot;);</span>
+<span class="fc" id="L88">					relatedPages = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L89">					String[] groupNames = getTokens(perexGroupIds, &quot;,&quot;);</span>
 					int perexGroupId;
-<span class="nc bnc" id="L91" title="All 2 branches missed.">					for (int j=0; j&lt;groupNames.length; j++)</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">					for (int j=0; j&lt;groupNames.length; j++)</span>
 					{
-<span class="nc" id="L93">						perexGroupId = Tools.getIntValue(groupNames[j], -1);</span>
-<span class="nc" id="L94">						dt.diff(&quot; getting related pages: &quot;+j+&quot;/&quot;+groupNames.length);</span>
-<span class="nc bnc" id="L95" title="All 2 branches missed.">						if(perexGroupId &gt; 0) relatedPages.addAll(getRelatedPages(String.valueOf(perexGroupId), false, checkDuplicity));</span>
+<span class="fc" id="L93">						perexGroupId = Tools.getIntValue(groupNames[j], -1);</span>
+<span class="fc" id="L94">						dt.diff(&quot; getting related pages: &quot;+j+&quot;/&quot;+groupNames.length);</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">						if(perexGroupId &gt; 0) relatedPages.addAll(getRelatedPages(String.valueOf(perexGroupId), false, checkDuplicity));</span>
 					}
-<span class="nc" id="L97">				}</span>
+<span class="fc" id="L97">				}</span>
 				else
 				{
 <span class="nc" id="L100">					dt.diff(&quot; getting related pages for perex groups: &quot;+perexGroupIds);</span>
 <span class="nc" id="L101">					relatedPages = getRelatedPages(perexGroupIds, true, checkDuplicity);</span>
 				}
 
-<span class="nc bnc" id="L104" title="All 2 branches missed.">				if (Tools.isNotEmpty(rootGroupIds)) rGroups = getTokens(rootGroupIds, &quot;,&quot;);</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">				for (DocDetails docDet : relatedPages)</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(rootGroupIds)) rGroups = getTokens(rootGroupIds, &quot;,&quot;);</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">				for (DocDetails docDet : relatedPages)</span>
 				{
 
 					//pre ziskane docId testujem, ci s nachadza v ziadanom priecinku
-<span class="nc bnc" id="L109" title="All 2 branches missed.">					if (docDet != null)</span>
+<span class="pc bpc" id="L109" title="1 of 2 branches missed.">					if (docDet != null)</span>
 					{
-<span class="nc" id="L111">						found = false;</span>
+<span class="fc" id="L111">						found = false;</span>
 
-<span class="nc bnc" id="L113" title="All 2 branches missed.">						if (rGroups != null)</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">						if (rGroups != null)</span>
 						{
-<span class="nc bnc" id="L115" title="All 2 branches missed.">							for (int k=0; k&lt;rGroups.length; k++)</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">							for (int k=0; k&lt;rGroups.length; k++)</span>
 							{
-<span class="nc" id="L117">								rGroupId = Tools.getIntValue(rGroups[k], -1);</span>
-<span class="nc bnc" id="L118" title="All 2 branches missed.">								if (rGroupId == docDet.getGroupId())</span>
+<span class="fc" id="L117">								rGroupId = Tools.getIntValue(rGroups[k], -1);</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">								if (rGroupId == docDet.getGroupId())</span>
 								{
-<span class="nc" id="L120">									found = true;</span>
+<span class="fc" id="L120">									found = true;</span>
 									//Logger.println(this,&quot;--- preslo DocID: &quot;+docDetails.getDocId()+&quot;  RootGroup: &quot;+rGroupId+&quot; parentDocId: &quot;+parentDocId);
 								}
 							}
@@ -127,35 +127,35 @@ public class RelatedPagesDB
 <span class="nc" id="L127">							found = true;</span>
 						}
 
-<span class="nc bnc" id="L130" title="All 2 branches missed.">						if (found)</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">						if (found)</span>
 						{
-<span class="nc" id="L132">							ret.add(docDet);</span>
+<span class="fc" id="L132">							ret.add(docDet);</span>
 							//Logger.println(this,&quot;ret size: &quot;+ret.size());
 						}
 					}
-<span class="nc" id="L136">				}</span>
+<span class="fc" id="L136">				}</span>
 
-<span class="nc" id="L138">				dt.diff(&quot;  size:&quot;+ret.size());</span>
+<span class="fc" id="L138">				dt.diff(&quot;  size:&quot;+ret.size());</span>
 
-<span class="nc bnc" id="L140" title="All 2 branches missed.">				if (ret.isEmpty() == false)</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">				if (ret.isEmpty() == false)</span>
 				{
 					//Logger.println(this,&quot;---\nnot sorted - ret.size: &quot;+ret.size());
 					//usortuj to podla datumu - v poradi od najnovsieho
-<span class="nc" id="L144">					Collections.sort(ret,</span>
+<span class="fc" id="L144">					Collections.sort(ret,</span>
 						new Comparator&lt;DocDetails&gt;()
-<span class="nc" id="L146">						{</span>
+<span class="fc" id="L146">						{</span>
 						@Override
 							public int compare(DocDetails d1, DocDetails d2)
 							{
 								int result;
-<span class="nc bnc" id="L151" title="All 2 branches missed.">								if (d1.getPublishStart() &gt; d2.getPublishStart())</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">								if (d1.getPublishStart() &gt; d2.getPublishStart())</span>
 <span class="nc" id="L152">									result = -1;</span>
 								else
-<span class="nc bnc" id="L154" title="All 2 branches missed.">									if (d1.getPublishStart() == d2.getPublishStart())</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">									if (d1.getPublishStart() == d2.getPublishStart())</span>
 <span class="nc" id="L155">										result = 0;</span>
 									else
-<span class="nc" id="L157">										result = 1;</span>
-<span class="nc" id="L158">								return (result);</span>
+<span class="fc" id="L157">										result = 1;</span>
+<span class="fc" id="L158">								return (result);</span>
 							}
 						});
 					//Logger.println(this,&quot;sorted - ret.size: &quot;+ret.size());
@@ -166,17 +166,17 @@ public class RelatedPagesDB
 <span class="nc" id="L166">		catch (Exception e)</span>
 		{
 <span class="nc" id="L168">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L169">		}</span>
+<span class="fc" id="L169">		}</span>
 
-<span class="nc bnc" id="L171" title="All 2 branches missed.">		if (cacheInMinutes &gt; 0)</span>
+<span class="pc bpc" id="L171" title="1 of 2 branches missed.">		if (cacheInMinutes &gt; 0)</span>
 		{
-<span class="nc" id="L173">			c.setObject(cacheKey, ret, cacheInMinutes);</span>
+<span class="fc" id="L173">			c.setObject(cacheKey, ret, cacheInMinutes);</span>
 		}
 
-<span class="nc" id="L176">		ret = filterRelatetedPagesDoc(ret, actualDocId);</span>
-<span class="nc" id="L177">		dt.diff(&quot;done, size: &quot;+ret.size());</span>
+<span class="fc" id="L176">		ret = filterRelatetedPagesDoc(ret, actualDocId);</span>
+<span class="fc" id="L177">		dt.diff(&quot;done, size: &quot;+ret.size());</span>
 
-<span class="nc" id="L179">		return(ret);</span>
+<span class="fc" id="L179">		return(ret);</span>
 	}
 
 	/**
@@ -187,14 +187,14 @@ public class RelatedPagesDB
 	 */
 	private static List&lt;DocDetails&gt; filterRelatetedPagesDoc(List&lt;DocDetails&gt; relatedPages, int docId)
 	{
-<span class="nc" id="L190">		List&lt;DocDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L190">		List&lt;DocDetails&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="nc bnc" id="L192" title="All 2 branches missed.">		for (DocDetails doc : relatedPages)</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">		for (DocDetails doc : relatedPages)</span>
 		{
-<span class="nc bnc" id="L194" title="All 2 branches missed.">			if (doc.getDocId()!=docId) ret.add(doc);</span>
-<span class="nc" id="L195">		}</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">			if (doc.getDocId()!=docId) ret.add(doc);</span>
+<span class="fc" id="L195">		}</span>
 
-<span class="nc" id="L197">		return ret;</span>
+<span class="fc" id="L197">		return ret;</span>
 	}
 
 	/**
@@ -278,35 +278,35 @@ public class RelatedPagesDB
 	 */
 	private static List&lt;DocDetails&gt; getRelatedPages(String perexGroupIds, boolean perexGroupUseJoin, boolean checkDuplicity)
 	{
-<span class="nc" id="L281">		DebugTimer dt = new DebugTimer(&quot;getRelatedPages(&quot;+perexGroupIds+&quot;)&quot;);</span>
+<span class="fc" id="L281">		DebugTimer dt = new DebugTimer(&quot;getRelatedPages(&quot;+perexGroupIds+&quot;)&quot;);</span>
 
-<span class="nc bnc" id="L283" title="All 2 branches missed.">		List&lt;Integer&gt; docIdList = checkDuplicity ? new ArrayList&lt;&gt;() : null;</span>
-<span class="nc" id="L284">		List&lt;DocDetails&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">		List&lt;Integer&gt; docIdList = checkDuplicity ? new ArrayList&lt;&gt;() : null;</span>
+<span class="fc" id="L284">		List&lt;DocDetails&gt; ret = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L286">		Connection db_conn = null;</span>
-<span class="nc" id="L287">		PreparedStatement ps = null;</span>
-<span class="nc" id="L288">		ResultSet rs = null;</span>
+<span class="fc" id="L286">		Connection db_conn = null;</span>
+<span class="fc" id="L287">		PreparedStatement ps = null;</span>
+<span class="fc" id="L288">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc bnc" id="L291" title="All 2 branches missed.">			if (Tools.isNotEmpty(perexGroupIds))</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(perexGroupIds))</span>
 			{
-<span class="nc" id="L293">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L293">				db_conn = DBPool.getConnection();</span>
 
-<span class="nc bnc" id="L295" title="All 2 branches missed.">				if(perexGroupUseJoin == false)</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">				if(perexGroupUseJoin == false)</span>
 				{
-<span class="nc" id="L297">					String sql = &quot;SELECT &quot;;</span>
-<span class="nc bnc" id="L298" title="All 2 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MSSQL) sql += &quot; TOP &quot;+Constants.getInt(&quot;relatedPagesMaxSize&quot;)+&quot; &quot;;</span>
-<span class="nc" id="L299">					sql += DocDB.getDocumentFieldsNodata()+&quot; FROM documents d WHERE d.available=&quot;+DB.getBooleanSql(true)+&quot; AND d.perex_group LIKE ? ORDER BY d.publish_start DESC&quot;;</span>
-<span class="nc bnc" id="L300" title="All 4 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL)</span>
+<span class="fc" id="L297">					String sql = &quot;SELECT &quot;;</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MSSQL) sql += &quot; TOP &quot;+Constants.getInt(&quot;relatedPagesMaxSize&quot;)+&quot; &quot;;</span>
+<span class="fc" id="L299">					sql += DocDB.getDocumentFieldsNodata()+&quot; FROM documents d WHERE d.available=&quot;+DB.getBooleanSql(true)+&quot; AND d.perex_group LIKE ? ORDER BY d.publish_start DESC&quot;;</span>
+<span class="pc bpc" id="L300" title="3 of 4 branches missed.">					if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL)</span>
 					{
-<span class="nc" id="L302">						sql = Tools.replace(sql, &quot;d.doc_id&quot;, &quot;DISTINCT d.doc_id&quot;);</span>
-<span class="nc" id="L303">						sql += &quot; LIMIT &quot;+Constants.getInt(&quot;relatedPagesMaxSize&quot;);</span>
+<span class="fc" id="L302">						sql = Tools.replace(sql, &quot;d.doc_id&quot;, &quot;DISTINCT d.doc_id&quot;);</span>
+<span class="fc" id="L303">						sql += &quot; LIMIT &quot;+Constants.getInt(&quot;relatedPagesMaxSize&quot;);</span>
 					}
 
-<span class="nc" id="L306">					ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L307">					ps.setString(1, &quot;%,&quot; +perexGroupIds+ &quot;,%&quot;);</span>
-<span class="nc" id="L308">					rs = ps.executeQuery();</span>
-<span class="nc" id="L309">				}</span>
+<span class="fc" id="L306">					ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L307">					ps.setString(1, &quot;%,&quot; +perexGroupIds+ &quot;,%&quot;);</span>
+<span class="fc" id="L308">					rs = ps.executeQuery();</span>
+<span class="fc" id="L309">				}</span>
 				else
 				{
 <span class="nc" id="L312">					String groupNamesIn = &quot;&quot;;</span>
@@ -331,59 +331,59 @@ public class RelatedPagesDB
 					}
 				}
 
-<span class="nc" id="L334">				dt.diff(&quot;   execute done&quot;);</span>
+<span class="fc" id="L334">				dt.diff(&quot;   execute done&quot;);</span>
 
-<span class="nc" id="L336">				List&lt;DocDetails&gt; docsFromDB = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L337" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="fc" id="L336">				List&lt;DocDetails&gt; docsFromDB = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">				if (rs != null)</span>
 				{
-<span class="nc bnc" id="L339" title="All 2 branches missed.">					while(rs.next())</span>
+<span class="fc bfc" id="L339" title="All 2 branches covered.">					while(rs.next())</span>
 					{
-<span class="nc" id="L341">						DocDetails docDet = new DocDetails();</span>
-<span class="nc" id="L342">						DocDB.getDocDetails(rs, docDet, true, true);</span>
+<span class="fc" id="L341">						DocDetails docDet = new DocDetails();</span>
+<span class="fc" id="L342">						DocDB.getDocDetails(rs, docDet, true, true);</span>
 
 						//Logger.println(RelatedPagesDB.class,&quot;related: &quot; +docDet.getDocId());
 
-<span class="nc" id="L346">						docsFromDB.add(docDet);</span>
-<span class="nc" id="L347">					}</span>
+<span class="fc" id="L346">						docsFromDB.add(docDet);</span>
+<span class="fc" id="L347">					}</span>
 
-<span class="nc" id="L349">					dt.diff(&quot;   rs done, size=&quot;+ret.size());</span>
+<span class="fc" id="L349">					dt.diff(&quot;   rs done, size=&quot;+ret.size());</span>
 
-<span class="nc" id="L351">					rs.close();</span>
+<span class="fc" id="L351">					rs.close();</span>
 				}
-<span class="nc bnc" id="L353" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
-<span class="nc" id="L354">				db_conn.close();</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="fc" id="L354">				db_conn.close();</span>
 
 				//jeeff: upravene na takyto dvojity cyklus pretoze pri checkDuplicity sa vola MultigroupMappingDB kde je potrebne dalsie DB spojenie a nastava nam deadlock
-<span class="nc bnc" id="L357" title="All 2 branches missed.">				for (DocDetails docDet : docsFromDB)</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">				for (DocDetails docDet : docsFromDB)</span>
 				{
 					//docDet = DocDB.getDocDetails(rs, false);
-<span class="nc bnc" id="L360" title="All 4 branches missed.">					if(checkDuplicity &amp;&amp; docIdList != null)</span>
+<span class="pc bpc" id="L360" title="2 of 4 branches missed.">					if(checkDuplicity &amp;&amp; docIdList != null)</span>
 					{
-<span class="nc bnc" id="L362" title="All 2 branches missed.">						if(docIdList.contains(Integer.valueOf(docDet.getDocId()))) continue;</span>
+<span class="pc bpc" id="L362" title="1 of 2 branches missed.">						if(docIdList.contains(Integer.valueOf(docDet.getDocId()))) continue;</span>
 
-<span class="nc" id="L364">						int masterId = MultigroupMappingDB.getMasterDocId(docDet.getDocId());</span>
-<span class="nc bnc" id="L365" title="All 2 branches missed.">						List&lt;MultigroupMapping&gt; slavesId = MultigroupMappingDB.getSlaveMappings(masterId &gt; 0 ? masterId : docDet.getDocId());</span>
+<span class="fc" id="L364">						int masterId = MultigroupMappingDB.getMasterDocId(docDet.getDocId());</span>
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">						List&lt;MultigroupMapping&gt; slavesId = MultigroupMappingDB.getSlaveMappings(masterId &gt; 0 ? masterId : docDet.getDocId());</span>
 
-<span class="nc bnc" id="L367" title="All 2 branches missed.">						if(masterId &gt; 0)</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">						if(masterId &gt; 0)</span>
 <span class="nc" id="L368">							docIdList.add(Integer.valueOf(masterId));</span>
-<span class="nc bnc" id="L369" title="All 4 branches missed.">						if(slavesId != null &amp;&amp; slavesId.isEmpty()==false)</span>
+<span class="pc bpc" id="L369" title="2 of 4 branches missed.">						if(slavesId != null &amp;&amp; slavesId.isEmpty()==false)</span>
 <span class="nc bnc" id="L370" title="All 2 branches missed.">							for(MultigroupMapping mm : slavesId)</span>
 <span class="nc" id="L371">								docIdList.add(Integer.valueOf(mm.getDocId()));</span>
-<span class="nc bnc" id="L372" title="All 4 branches missed.">						if(masterId &lt; 1 || docIdList.isEmpty())</span>
-<span class="nc" id="L373">							docIdList.add(Integer.valueOf(docDet.getDocId()));</span>
+<span class="pc bpc" id="L372" title="3 of 4 branches missed.">						if(masterId &lt; 1 || docIdList.isEmpty())</span>
+<span class="fc" id="L373">							docIdList.add(Integer.valueOf(docDet.getDocId()));</span>
 
-<span class="nc" id="L375">						ret.add(docDet);</span>
-<span class="nc" id="L376">					}</span>
+<span class="fc" id="L375">						ret.add(docDet);</span>
+<span class="fc" id="L376">					}</span>
 					else
 					{
 <span class="nc" id="L379">						ret.add(docDet);</span>
 					}
-<span class="nc" id="L381">				}</span>
+<span class="fc" id="L381">				}</span>
 			}
 
-<span class="nc" id="L384">			rs = null;</span>
-<span class="nc" id="L385">			ps = null;</span>
-<span class="nc" id="L386">			db_conn = null;</span>
+<span class="fc" id="L384">			rs = null;</span>
+<span class="fc" id="L385">			ps = null;</span>
+<span class="fc" id="L386">			db_conn = null;</span>
 		}
 <span class="nc" id="L388">		catch (Exception ex)</span>
 		{
@@ -393,22 +393,22 @@ public class RelatedPagesDB
 		{
 			try
 			{
-<span class="nc bnc" id="L396" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">				if (rs != null)</span>
 <span class="nc" id="L397">					rs.close();</span>
-<span class="nc bnc" id="L398" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="pc bpc" id="L398" title="1 of 2 branches missed.">				if (ps != null)</span>
 <span class="nc" id="L399">					ps.close();</span>
-<span class="nc bnc" id="L400" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">				if (db_conn != null)</span>
 <span class="nc" id="L401">					db_conn.close();</span>
 			}
 <span class="nc" id="L403">			catch (Exception ex2)</span>
 			{
 <span class="nc" id="L405">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L406">			}</span>
+<span class="fc" id="L406">			}</span>
 		}
 
-<span class="nc" id="L409">		dt.diff(&quot;done&quot;);</span>
+<span class="fc" id="L409">		dt.diff(&quot;done&quot;);</span>
 
-<span class="nc" id="L411">		return (ret);</span>
+<span class="fc" id="L411">		return (ret);</span>
 
 	}
 
@@ -421,26 +421,26 @@ public class RelatedPagesDB
 	 */
 	public static String[] getTokens(String groups, String delimiter)
 	{
-<span class="nc" id="L424">		String[] ret = new String[0];</span>
+<span class="fc" id="L424">		String[] ret = new String[0];</span>
 		StringTokenizer st;
-<span class="nc" id="L426">		int i = 0;</span>
+<span class="fc" id="L426">		int i = 0;</span>
 		try
 		{
-<span class="nc bnc" id="L429" title="All 2 branches missed.">			if (Tools.isNotEmpty(groups))</span>
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(groups))</span>
 			{
-<span class="nc" id="L431">				st = new StringTokenizer(groups, delimiter);</span>
-<span class="nc" id="L432">				ret = new String[st.countTokens()];</span>
-<span class="nc bnc" id="L433" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="fc" id="L431">				st = new StringTokenizer(groups, delimiter);</span>
+<span class="fc" id="L432">				ret = new String[st.countTokens()];</span>
+<span class="fc bfc" id="L433" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L435">					ret[i++] = st.nextToken().trim();</span>
+<span class="fc" id="L435">					ret[i++] = st.nextToken().trim();</span>
 				}
 			}
 		}
 <span class="nc" id="L439">		catch (Exception e)</span>
 		{
 <span class="nc" id="L441">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L442">		}</span>
-<span class="nc" id="L443">		return(ret);</span>
+<span class="fc" id="L442">		}</span>
+<span class="fc" id="L443">		return(ret);</span>
 
 	}
 
@@ -449,4 +449,4 @@ public class RelatedPagesDB
 
 }
 
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

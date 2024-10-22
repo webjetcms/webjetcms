@@ -190,7 +190,7 @@ Aplikácia rezervácie a zoznam rezervačných objektov prerobené do nového vi
 
 - Doplnená funkcia ```WJ.confirm``` pre [získanie hodnoty](developer/frameworks/webjetjs.md#získanie-hodnoty) (#54701).
 
-<img class="meme" title="meme" src="_media/meme/2022-52.jpg"/>
+![meme](_media/meme/2022-52.jpg ":no-zoom")
 
 ## 2022.40
 
@@ -479,7 +479,7 @@ Aplikácia prerobená do nového vizuálu. Pridaná možnosť nastavenia začiat
 - Hromadný email - opravené prvotné nastavenie príjemcov, počet príjemcov a odoslaných emailov pri uložení kampane, ne-odstránenie emailov ak je používateľ v zvolenej aj odstránenej skupine (#39751-44).
 - Datatabuľka - opravené vyhľadávanie po zmene poradia stĺpcov (#43144).
 
-<img class="meme" title="meme" src="_media/meme/2022-40.jpg"/>
+![meme](_media/meme/2022-40.jpg ":no-zoom")
 
 ## 2022.18
 
@@ -694,7 +694,7 @@ Aplikácia todo, ktorá zatiaľ nebola implementovaná sa zatiaľ na úvodnej st
 - Web stránky - opravená chyba ukladania značiek (perex skupín) (#53805).
 - Média - opravené zobrazenie aplikácie Média v zozname aplikácií v editore stránok (#54381).
 
-<img class="meme" title="meme" src="_media/meme/2022-18.jpg"/>
+![meme](_media/meme/2022-18.jpg ":no-zoom")
 
 ## 2022.0
 
@@ -704,10 +704,10 @@ Aplikácia todo, ktorá zatiaľ nebola implementovaná sa zatiaľ na úvodnej st
 
 - Aktualizované verzie Java knižníc na novšie verzie, aktualizovaný základný WebJET CMS na verziu 8.9.
 - Pridaný nástroj [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html) spúšťaný príkazom ```gradlew dependencyCheckAnalyze``` pre kontrolu zraniteľností v použitých Java a JavaScript knižniciach.
-- POZOR: zmena logovania z ```log4j``` na ```logback```. Po aktualizácii overte, že sa úspešne zmazali súbory ```commons-logging-1.1.jar, log4j.jar, slf4j-api-1.5.3.jar``` (aktualizované na verziu 1.7.33), ```slf4j-jcl-1.5.3.jar``` z adresára ```/WEB-INF/lib```.
+- **Upozornenie:** zmena logovania z ```log4j``` na ```logback```. Po aktualizácii overte, že sa úspešne zmazali súbory ```commons-logging-1.1.jar, log4j.jar, slf4j-api-1.5.3.jar``` (aktualizované na verziu 1.7.33), ```slf4j-jcl-1.5.3.jar``` z adresára ```/WEB-INF/lib```.
 - Email / SMTP - pridaná možnosť nastaviť verziu ```TLS``` pre odosielanie emailov (pripojenie na SMTP server). Nastavuje sa cez konf. premennú ```smtpTLSVersion```, predvolene nastavené na ```TLSv1.2```.
 - Súbory - zrušená funkcia konverzia z Word formátu do PDF (online služba, ktorú sme používali už nefunguje).
-- POZOR: odstránená stará knižnica ```commons-httpclient-3.1```, API ```Tools.downloadUrl(String basePath, HttpServletRequest req)``` upravené na použitie v4 knižnice, zrušené metódy ```Tools.proxyUrl```. V aplikácií Proxy zrušená možnosť použitia ```ProxyByHttpClient``` (existujúce verzie použijú ```ProxyByHttpClient4```). Odporúčame použiť knižnicu ```Apache HttpClient Fluent API``` pre špecifické HTTP spojenia (príklady https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
+- **Upozornenie:** odstránená stará knižnica ```commons-httpclient-3.1```, API ```Tools.downloadUrl(String basePath, HttpServletRequest req)``` upravené na použitie v4 knižnice, zrušené metódy ```Tools.proxyUrl```. V aplikácií Proxy zrušená možnosť použitia ```ProxyByHttpClient``` (existujúce verzie použijú ```ProxyByHttpClient4```). Odporúčame použiť knižnicu ```Apache HttpClient Fluent API``` pre špecifické HTTP spojenia (príklady https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
 - Aktualizovaná sada knižníc ```jQuery UI``` z 1.8.23 na 1.13.1.
 - Foto galéria - aktualizovaná knižnica ```jquery.prettyPhoto```, opravená funkčnosť s jQuery v3.
 - Zmazané nepoužívané/staré verzie jQuery knižnice, aktualizovaný ```moment.js, jquery-ui.min.js, jquery-ui.css, handlebars.min.js```.
@@ -715,7 +715,7 @@ Aplikácia todo, ktorá zatiaľ nebola implementovaná sa zatiaľ na úvodnej st
 - Aktualizovaná knižnica ```velocity``` z 1.7 na 2.3, ```velocity-tools``` z 2.0 na 3.1 a ```commons-lang3``` z 3.3.2 na 3.12
 - Aktualizovaná knižnica ```jsoup``` z 1.7.2 na 1.14.3, ```socialauth``` z 4.12 na 4.15 + ```openid4java``` z 0.9.5 na 0.9.6, ```snakeyaml``` z 1.12 na 1.30 ```http-client, http-core``` z 4.5.6 na 4.5.13, ```http-mime``` zmazané (nie je potrebné), ```commons-codec``` z 1.6 na 1.11
 - Aktualizovaná knižnica ```standard.jar``` a ```jstl.jar``` z verzie 1.1.2 na 1.2.5 (nahradením za ```taglibs-standard-spec``` a ```taglibs-standard-impl```)
-- POZOR: aktualizovaný ```Apache POI``` z 3.14-beta1 na 5.2.0, má zmenené API, zoznam typických zmien na http://docs.webjetcms.sk/v8/#/back-end/apache-poi/, pridané ```commons-math```, ```log4j-api```, ```log4j-to-slf4j-2.17.1```, ```SparseBitSet-1.2```.
+- **Upozornenie:** aktualizovaný ```Apache POI``` z 3.14-beta1 na 5.2.0, má zmenené API, zoznam typických zmien na http://docs.webjetcms.sk/v8/#/back-end/apache-poi/, pridané ```commons-math```, ```log4j-api```, ```log4j-to-slf4j-2.17.1```, ```SparseBitSet-1.2```.
 - Aktualizovaný ```commons-collection4``` z 4.1 na 4.4, ```commons-compress``` z 1.10 na 1.21, ```commons-io``` z 2.6 na 2.11, ```pdfbox``` a ```fontbox``` z 2.0.2 na 2.0.25, ```xmlbeans``` z 2.6.0 na 5.0.3
 - Aktualizovaný ```springfox/swagger``` z 2.6.1 na 3.0.0, ```commons-upload``` z 1.3.3 na 1.4
 - Aktualizovaný ```Spring``` z 5.1.1.RELEASE na 5.3.15, aktualizovaný ```spring-data``` z 2.1.1 na 2.6.1
@@ -723,7 +723,7 @@ Aplikácia todo, ktorá zatiaľ nebola implementovaná sa zatiaľ na úvodnej st
 - Aktualizovaná knižnica ```jackson-annotations, jackson-core, jackson-databind``` z 2.0.7 na 2.13.1
 - ```Apache Struts``` - zaplátané zraniteľnosti ```CVE-2014-0114, CVE-2016-1181, CVE-2016-1182, CVE-2015-0899``` podľa https://github.com/bingcai/struts-mini/commit/df4da55bc2b0c3c1f4687a61c49458dfbde0e3c3 a https://github.com/tkhanateconsysdotcom/struts1-forever/commit/eda3a79907ed8fcb0387a0496d0cb14332f250e8
 - Zmazaná knižnica ```itext```, ktorá má neopravené zraniteľnosti a nová verzia je komerčná. Zrušená možnosť exportu PDF v ```DisplayTag``` a exportu formuláru do PDF (```/formtopdf.do```), ak potrebujete v projekte je potrebné si knižnicu ```itext``` manuálne pridať s rizikom možnej zraniteľnosti
-- POZOR: aktualizované knižnice ```bcprov-jdk5on-154.jar``` na 1.70, ```common-beanutils-1.9.2.jar``` na 1.9.4, ```tink-1.2.2.jar``` na 1.6.1, skontrolujte adresár ```WEB-INF/lib``` po aktualizácii či sa korektné zmazali staré verzie.
+- **Upozornenie:** aktualizované knižnice ```bcprov-jdk5on-154.jar``` na 1.70, ```common-beanutils-1.9.2.jar``` na 1.9.4, ```tink-1.2.2.jar``` na 1.6.1, skontrolujte adresár ```WEB-INF/lib``` po aktualizácii či sa korektné zmazali staré verzie.
 - REST - dokumentácie k REST službám ```swagger``` aktualizovaná na verziu 4.2.1 a presunutá na URL adresu ```/admin/swagger-ui/index.html``` (potrebná autorizácia admin kontom a zároveň zapnutá konf. premenná ```swaggerEnabled``` na true). Z gradle projektov je potrebné zmazať ```implementation("sk.iway:webjet:${webjetVersion}:swagger-ui")```.
 - Administrácia aktualizovaná na ```Bootstrap``` verzie 4.6.1
 
@@ -737,4 +737,4 @@ Aplikácia todo, ktorá zatiaľ nebola implementovaná sa zatiaľ na úvodnej st
 - Galéria - opravené zobrazenie v karte Oblasť záujmu.
 - Datatabuľky - nahratie súboru - opravené nastavenie stavu nahrávania po skončení (chybne zostalo zobrazené točiace koleso).
 
-<img class="meme" title="meme" src="_media/meme/2022-0.jpg"/>
+![meme](_media/meme/2022-0.jpg ":no-zoom")

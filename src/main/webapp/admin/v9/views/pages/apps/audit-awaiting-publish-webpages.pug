@@ -19,10 +19,11 @@ block content
             window.importWebPagesDatatable().then(module => {
                 //add column visibility
                 window.WJ.DataTable.mergeColumns(webpageColumns, { name: "fullPath", visible: true });
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "docId", visible: true });
 
                 let wpdInstance = new module.WebPagesDatatable({
                     url:  WJ.urlAddParam(url, "auditVersion", true),
-                    columns:  ChartTools.filterColumns(["id", "title", "publishStartDate", "publishEndDate", "fullPath"], webpageColumns), //Filter only columns we want to show
+                    columns:  ChartTools.filterColumns(["id", "docId", "title", "publishStartDate", "publishEndDate", "fullPath"], webpageColumns), //Filter only columns we want to show
                     id: "awaitingPublishWebpagesDataTable",
                     serverSide: false
                 });

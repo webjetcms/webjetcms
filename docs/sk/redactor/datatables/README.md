@@ -12,7 +12,7 @@ Oproti vyššie uvedenému videu má štandardná datatabuľka nové vlastnosti.
 
 ### Zobrazenie názvu v hlavičke okna
 
-Pri editácii existujúcej položky (ak sa edituje jeden záznam) sa v hlavičke dialógového okna editora zobrazuje názov editovanej položky (na ukážke text ```Produktová stránka```) namiesto všeobecného textu ```Upraviť```.
+Pri editácii existujúcej položky (ak sa edituje jeden záznam) sa v hlavičke dialógového okna editora zobrazuje názov editovanej položky (na ukážke text **Produktová stránka**) namiesto všeobecného textu **Upraviť**.
 
 ![](dt-header-title.png)
 
@@ -22,23 +22,23 @@ Podobne pri potvrdení zmazania sa zobrazí zoznam označených položiek pre po
 
 ### Možnosť presúvať okno
 
-Okno editora je možné presúvať (ak napr. potrebujete vidieť informáciu na stránke prekrytú oknom). Stačí keď v oblasti hlavičky začnete okno ťahať (ako štandardné okno vo windows).
+Okno editora je možné presúvať (ak napr. potrebujete vidieť informáciu na stránke prekrytú oknom). Stačí keď v oblasti hlavičky začnete okno ťahať (ako štandardné okno vo ```Windows```).
 
 ### Pamätanie usporiadania
 
 Ak tabuľke zmeníte spôsob usporiadania (kliknutím na názov stĺpca) tabuľka si bude tento spôsob usporiadania pamätať vo vašom prehliadači. Keď sa vrátite znova na danú časť bude tabuľka usporiadaná podľa vašej preferencie.
 
-Kliknutím na ikonu <i class="far fa-wrench" role="presentation"></i>, následne na nastavenie Zobrazenie stĺpcov a následne na tlačidlo Obnoviť sa tabuľka nastaví do základnej podoby vrátane usporiadania.
+Kliknutím na ikonu <i class="ti ti-adjustments-horizontal" role="presentation"></i>, následne na nastavenie Zobrazenie stĺpcov a následne na tlačidlo Obnoviť sa tabuľka nastaví do základnej podoby vrátane usporiadania.
 
 ### Zmena poradia stĺpcov
 
 V tabuľke môžete presúvať stĺpce a meniť tak ich poradie podľa vašich potrieb. Stačí keď chytíte hlavičku (názov) stĺpca a začnete ho ťahať vľavo, alebo vpravo. Poradie stĺpcov sa zapamätá v prehliadači a keď sa znova vrátite na danú časť bude poradie stĺpcov zachované.
 
-Kliknutím na ikonu <i class="far fa-wrench" role="presentation"></i>, následne na nastavenie Zobrazenie stĺpcov a následne na tlačidlo Obnoviť sa tabuľka nastaví do základnej podoby vrátane poradia stĺpcov.
+Kliknutím na ikonu <i class="ti ti-adjustments-horizontal" role="presentation"></i>, následne na nastavenie Zobrazenie stĺpcov a následne na tlačidlo Obnoviť sa tabuľka nastaví do základnej podoby vrátane poradia stĺpcov.
 
 ## Nastavenie zobrazenia stĺpcov
 
-Kliknutím na tlačidlo <i class="far fa-wrench" role="presentation"></i> nastavenia sa zobrazí možnosť nastavenia zobrazenia stĺpcov a počtu zobrazených záznamov na jednej strane.
+Kliknutím na tlačidlo <i class="ti ti-adjustments-horizontal" role="presentation"></i> nastavenia sa zobrazí možnosť nastavenia zobrazenia stĺpcov a počtu zobrazených záznamov na jednej strane.
 
 Vo väčšine tabuliek sa štandardne zobrazujú všetky stĺpce, niektoré ako tabuľka v zozname web stránok ale obsahuje veľmi veľa stĺpcov, preto sú štandardne zobrazené len tie základné. Kliknutím na možnosť **Zobrazenie stĺpcov** sa otvorí dialógové okno, v ktorom môžete **zvoliť, ktoré stĺpce chcete zobraziť**. Ľubovoľne ich označíte a po kliknutí na **Uložiť**, sa zvolené stĺpce vo **vašom prehliadači zapamätajú**. Aj po obnovení stránky sa zobrazia zvolené stĺpce.
 
@@ -52,11 +52,11 @@ V okne sa zobrazujú nasledovné stĺpce:
 
 V nastavení zobrazenia stĺpcov je aj tlačidlo **Obnoviť**, ktoré obnoví **predvolené nastavenie zoznamu stĺpcov**. Okrem toho tam máme aj tlačidlá **Zobraziť všetky** a **Skryť všetky**, ktoré jedným kliknutím zapnú alebo vypnú zobrazenie všetkých stĺpcov.
 
-**Upozornenie:** čím viac stĺpcov si necháte zobraziť, tým dlhšie bude trvať vášmu počítaču zobrazenie tabuľky.
+!>**Upozornenie:** čím viac stĺpcov si necháte zobraziť, tým dlhšie bude trvať vášmu počítaču zobrazenie tabuľky.
 
 ## Počet záznamov na strane
 
-Kliknutím na tlačidlo <i class="far fa-wrench" role="presentation"></i> nastavenia sa zobrazí možnosť nastavenia počtu záznamov na strane.
+Kliknutím na tlačidlo <i class="ti ti-adjustments-horizontal" role="presentation"></i> nastavenia sa zobrazí možnosť nastavenia počtu záznamov na strane.
 
 Aby okno obsahovalo ideálny počet riadkov tabuľky je vypočítaná jeho veľkosť a prednastavená hodnota podľa tohto výpočtu. V nastavení počtu záznamov sa zobrazí ako prvá možnosť Automaticky (X) kde X je vypočítaný počet riadkov podľa výšky okna.
 

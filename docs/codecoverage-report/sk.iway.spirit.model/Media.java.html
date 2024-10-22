@@ -377,12 +377,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 	@JsonIgnore
 	public String getGroupsToString(){
 <span class="fc" id="L379">		String groupsString = &quot;&quot;;</span>
-<span class="pc bpc" id="L380" title="2 of 4 branches missed.">		if (groups==null || groups.size()&lt;1) return groupsString;</span>
+<span class="pc bpc" id="L380" title="1 of 4 branches missed.">		if (groups==null || groups.size()&lt;1) return groupsString;</span>
 <span class="fc bfc" id="L381" title="All 2 branches covered.">		for(int groupIt=0; groupIt&lt;groups.size();groupIt++ ){</span>
 <span class="fc" id="L382">			MediaGroupBean group = groups.get(groupIt);</span>
 <span class="fc" id="L383">			groupsString+=group.getMediaGroupName();</span>
-<span class="fc bfc" id="L384" title="All 2 branches covered.">			if(groupIt != groups.size()-1){</span>
-<span class="fc" id="L385">				groupsString+=&quot;, &quot;;</span>
+<span class="pc bpc" id="L384" title="1 of 2 branches missed.">			if(groupIt != groups.size()-1){</span>
+<span class="nc" id="L385">				groupsString+=&quot;, &quot;;</span>
 			}
 		}
 <span class="fc" id="L388">		return groupsString;</span>
@@ -419,7 +419,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 	//Set entity domain id
 	@PrePersist
 	public void prePersist() {
-<span class="pc bpc" id="L422" title="1 of 2 branches missed.">		if(domainId == null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc bfc" id="L422" title="All 2 branches covered.">		if(domainId == null) domainId = CloudToolsForCore.getDomainId();</span>
 <span class="fc" id="L423">	}</span>
 
 	public Integer getDomainId() {
@@ -483,4 +483,4 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
 
 
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

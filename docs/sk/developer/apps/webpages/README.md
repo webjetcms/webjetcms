@@ -39,7 +39,7 @@ Komplikovaná úprava je v spôsobe načítania údajov z histórie do editora. 
 
 ```javascript
 historyTable.button().add(buttonCounter++, {
-    text: '<i class="far fa-pencil"></i>',
+    text: '<i class="ti ti-pencil"></i>',
     action: function (e, dt, node) {
         //console.log("btn, e=",e,"dt=",dt,"node=",node);
         //ziskaj data selectnuteho riadku
@@ -186,7 +186,7 @@ Vstupné pole na zadanie ```docid``` v stránke je implementované priamo vo [we
 
 Na vstupné pole je napojený ```autocomplete``` vyhľadávanie podľa názvu stránky alebo jej URL adresy nastavením ```data-ac``` atribútov.
 
-POZOR: aktuálna implementácia nedokáže otvoriť web stránku na druhej strane zoznamu web stránok (keďže ju nenájde v zozname). Tiež ak je zadané ```docid``` v adresári Systém alebo Kôš a tento list nie je aktuálne zobrazený, tiež nedokáže adresár zobraziť.
+!>**Upozornenie:** aktuálna implementácia nedokáže otvoriť web stránku na druhej strane zoznamu web stránok (keďže ju nenájde v zozname). Tiež ak je zadané ```docid``` v adresári Systém alebo Kôš a tento list nie je aktuálne zobrazený, tiež nedokáže adresár zobraziť.
 
 ## Zobrazenie karty Naposledy upravené
 

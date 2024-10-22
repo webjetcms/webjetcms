@@ -875,3 +875,10 @@ div.wj-control-line img.userImage {
         height: 176px;
     }
 }
+
+.cke_dialog_body label {
+    border-width: 0px !important;
+}
+.cke_dialog_body i.wj-action-icon img[src='/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/icons/link.png'] {
+    margin-top: 16px !important;
+}

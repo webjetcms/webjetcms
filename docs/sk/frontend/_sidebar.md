@@ -44,4 +44,8 @@
   - [Ukážkové šablóny](/frontend/examples/README.md)
   - [Bare šablóna](/frontend/examples/template-bare/README.md)
   - [Creative šablóna](/frontend/examples/templates-creative/README.md)
+- Generovanie obrázkov
+  - [Thumb servlet](/frontend/thumb-servlet/README.md)
+  - [Bod záujmu](/frontend/thumb-servlet/interest-point.md)
+
 

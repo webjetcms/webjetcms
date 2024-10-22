@@ -125,17 +125,17 @@ public class WebApproveRestController extends DatatableRestControllerV2&lt;DocHi
 <span class="fc" id="L125">    }</span>
 
     @Override
-    public DocHistory processFromEntity(DocHistory entity, ProcessItemAction action) {
+    public DocHistory processFromEntity(DocHistory entity, ProcessItemAction action, int rowCount) {
         //otoc nastavenie docId a historyId, lebo tak to pozaduje DT
 <span class="fc" id="L130">        int docId = entity.getDocId();</span>
 <span class="fc" id="L131">        entity.setDocId(entity.getHistoryId());</span>
 <span class="fc" id="L132">        entity.setHistoryId(docId);</span>
 
-<span class="fc" id="L134">        WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, getRequest());</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, getRequest(), rowCount == 1);</span>
 
 <span class="fc" id="L136">        return entity;</span>
     }
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

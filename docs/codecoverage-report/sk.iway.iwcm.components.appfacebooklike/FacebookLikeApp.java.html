@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FacebookLikeApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.appfacebooklike</a> &gt; <span class="el_source">FacebookLikeApp.java</span></div><h1>FacebookLikeApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.appfacebooklike;
+
+import javax.validation.constraints.Min;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.appfacebooklike.FacebookLikeApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.app-facebook_like.title&quot;, 
+    descKey = &quot;components.app-facebook_like.desc&quot;, 
+    itemKey = &quot;cmp_app-facebook_like&quot;, 
+    imagePath = &quot;/components/app-facebook_like/editoricon.png&quot;, 
+    galleryImages = &quot;/components/app-facebook_like/&quot;, 
+    componentPath = &quot;/components/app-facebook_like/facebook_like.jsp&quot;
+)
+@Getter
+@Setter
+<span class="fc" id="L26">public class FacebookLikeApp extends WebjetComponentAbstract {</span>
+
+<span class="fc" id="L28">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.RADIO,
+        title=&quot;components.app-facebook_like.lajkovat_popis&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(
+                        key = &quot;components.app-facebook_like.lajkovat_cely_web&quot;,
+                        value = &quot;lajkovat_cely_web&quot;),
+                    @DataTableColumnEditorAttr(
+                        key = &quot;components.app-facebook_like.lajkovat_aktualne&quot;,
+                        value = &quot;lajkovat_aktualne&quot;)
+                }
+            )
+        }
+    )
+    private String dataHrefLike = &quot;lajkovat_cely_web&quot;;
+
+<span class="fc" id="L47">    @Min(0)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;components.app-facebook_like.width&quot;,
+        tab = &quot;basic&quot;
+    )
+<span class="fc" id="L53">    private Integer widthLike = 980;</span>
+
+<span class="fc" id="L55">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.RADIO,
+        title = &quot;components.app-facebook_like.layout&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(
+                        key = &quot;components.app-facebook_like.layout.standard&quot;,
+                        value = &quot;standard&quot;),
+                    @DataTableColumnEditorAttr(
+                        key = &quot;components.app-facebook_like.layout.button_count&quot;,
+                        value = &quot;button_count&quot;)
+                }
+            )
+        }
+    )
+    private String layoutLikeButton = &quot;standard&quot;;
+
+<span class="fc" id="L74">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.RADIO,
+        title = &quot;components.app-facebook_like.actionType&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(
+                        key = &quot;components.app-facebook_like.actionType.like&quot;,
+                        value = &quot;like&quot;),
+                    @DataTableColumnEditorAttr(
+                        key = &quot;components.app-facebook_like.actionType.recommend&quot;,
+                        value = &quot;recommend&quot;)
+                }
+            )
+        }
+    )
+    private String actionLikeButton = &quot;like&quot;;
+
+
+
+
+
+
+    
+
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

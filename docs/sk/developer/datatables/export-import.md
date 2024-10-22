@@ -86,9 +86,9 @@ Po nájdení zhodujúcich záznamov v databáze je potrebné modifikovať ID st�
 
 V jednoduchosti celý kód vyhľadá existujúci záznam v databáze a importovanej entite nastaví ```id``` hodnotu na hodnotu nájdeného záznamu.
 
-> UPOZORNENIE: pri implementácii sme identifikovali problém, že pre triedy anotované cez Lombook nie je možné používať ```BeanUtils.setProperty``` ani ```BeanUtils.copyProperties```. Je potrebné použiť ```BeanWrapperImpl``` a ```NullAwareBeanUtils.copyProperties```.
+> **Upozornenie:** pri implementácii sme identifikovali problém, že pre triedy anotované cez Lombook nie je možné používať ```BeanUtils.setProperty``` ani ```BeanUtils.copyProperties```. Je potrebné použiť ```BeanWrapperImpl``` a ```NullAwareBeanUtils.copyProperties```.
 
-> UPOZORNENIE: importovať je technicky možné aj len niektoré stĺpce, nepredpokladajte teda, že import bude vždy obsahovať všetky dáta. Inak vám budú nastávať chyby typu ```NullPointerException```. Zvlášť v ```editorFields.toEntity``` je potrebné kontrolovať ```null``` hodnoty na atribútoch, aby ich prenos nepadal.
+> **Upozornenie:** importovať je technicky možné aj len niektoré stĺpce, nepredpokladajte teda, že import bude vždy obsahovať všetky dáta. Inak vám budú nastávať chyby typu ```NullPointerException```. Zvlášť v ```editorFields.toEntity``` je potrebné kontrolovať ```null``` hodnoty na atribútoch, aby ich prenos nepadal.
 
 ### Podporované anotácie
 

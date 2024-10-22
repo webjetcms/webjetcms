@@ -92,7 +92,7 @@ module.exports = function () {
         if("en" == language) {
           this.selectOption("language", "English");
           helper = "Help";
-        } else if("cz" == language) {
+        } else if("cs" == language) {
           this.selectOption("language", "Česky");
           helper = "Nápověda";
         }
@@ -113,7 +113,7 @@ module.exports = function () {
       var userLng = "sk";
       moment.updateLocale(userLng, { invalidDate: "" });
       moment.locale(userLng);
-      let randomText = moment(startDate).format("YYYY-MM-DD-HHmmss");
+      let randomText = moment(startDate).format("YY-MM-DD-HHmmss");
       randomText += "-" + Math.floor(Math.random() * 1000);
       return randomText;
     },
@@ -331,9 +331,17 @@ module.exports = function () {
 
     //vo vlastnostiach adresaru nastavi parent adresar na korenovy
     groupSetRootParent() {
-      let rootgroupName = "Koreňový priečinok";
-      if("en" === this.getConfLng()) {
-        rootgroupName = "Root folder";
+      let rootgroupName;
+      switch (this.getConfLng()) {
+          case 'en':
+              rootgroupName = "Root folder";
+              break;
+          case 'cs':
+              rootgroupName = "Kořenový adresář";
+              break;
+          default:
+              rootgroupName = "Koreňový priečinok";
+              break;
       }
 
       this.clickCss('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'); // zmena na korenovy adresar

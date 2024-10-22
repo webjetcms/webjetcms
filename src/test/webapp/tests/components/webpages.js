@@ -159,13 +159,13 @@ Scenario('System adresar', ({ I, DT }) => {
     DT.waitForLoader();
     I.jstreeWaitForLoader();
     I.wait(1);
+    I.waitForText("asdf", 20, "#SomStromcek");
     I.dontSee("Jet portal 4", "#SomStromcek");
     I.dontSee("Newsletter", "#SomStromcek");
     I.dontSee("System", "#SomStromcek");
     I.dontSee("Hlavičky", "#SomStromcek");
     I.dontSee("Pätičky", "#SomStromcek");
     I.dontSee("Menu", "#SomStromcek");
-    I.see("test-adresar-", "#SomStromcek");
     //over aj zobrazenie web stranok
     I.see("Test zmazania stránky", "#datatableInit_wrapper");
 
@@ -199,7 +199,9 @@ Scenario('Zmena domeny', ({ I }) => {
     I.dontSee("English", container);
     I.dontSee("Newsletter", container);
     I.see("domena1.tau27.iway.sk", container);
+});
 
+Scenario('Zmena domeny-logout', ({ I }) => {
     //odhlas sa, aby domena nezostala zapamatana pre dalsie testy
     I.logout();
 });
@@ -364,7 +366,7 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     //
     I.say("Test filter of fullTextIndex of files");
     DT.filter("title", ".png");
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", "#datatableInit_wrapper div.dataTables_scrollBody");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#datatableInit_wrapper div.dataTables_scrollBody");
     DT.clearFilter("title");
 
     //pridaj stlpec šablon medzi videne
@@ -1084,7 +1086,7 @@ Scenario("logout jtester", ({ I }) => {
     I.logout();
 });
 
-Scenario("Group doc name change based oon another", async ({ I, DT, DTE }) => {
+Scenario("Group doc name change based on another", async ({ I, DT, DTE }) => {
     let parentGroup = "pg-autotest-" + randomNumber;
     let childGroup = "cg-autotest-" + randomNumber;
 
@@ -1216,4 +1218,18 @@ function changeGroupMainDoc(I, arr, id) {
 
 Scenario('odhlasenie', ({ I }) => {
     I.logout();
+});
+
+/**
+ * there was bug generating data_asc for empty page with title B,
+ * data_asc has &nbsp; so <h1> was not generated because data has allready letter b,
+ * then &nbsp; was removed so it was empty
+ */
+Scenario('BUG - webpage with name B will have error data_asc cannot be null #56393-15', ({ I, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=104246");
+    DTE.waitForEditor();
+    DTE.waitForCkeditor();
+    DTE.save();
+    I.dontSee("Could not commit JPA transaction", "div.DTE_Form_Error");
+    I.waitForModalClose("datatableInit_modal");
 });

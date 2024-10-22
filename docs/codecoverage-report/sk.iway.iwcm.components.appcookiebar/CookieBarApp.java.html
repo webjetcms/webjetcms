@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CookieBarApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.appcookiebar</a> &gt; <span class="el_source">CookieBarApp.java</span></div><h1>CookieBarApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.appcookiebar;
+
+import javax.validation.constraints.Min;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.appcookiebar.CookieBarApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.app-cookiebar.title&quot;,
+    descKey = &quot;components.app-cookiebar.desc&quot;,
+    itemKey= &quot;cmp_app-cookiebar&quot;,
+    imagePath = &quot;/components/app-cookiebar/editoricon.png&quot;,
+    galleryImages = &quot;/components/app-cookiebar/&quot;,
+    componentPath = &quot;/components/app-cookiebar/cookiebar.jsp&quot;
+)
+@Getter
+@Setter
+<span class="fc" id="L26">public class CookieBarApp extends WebjetComponentAbstract {</span>
+
+<span class="fc" id="L28">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.BOOLEAN,
+        tab = &quot;basic&quot;,
+        title=&quot;components.app-cookiebar.cookiebar_title&quot;)
+    private boolean checkbox_title = true;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.app-cookiebar.titleText&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = &quot;placeholder&quot;,
+                    value = &quot;components.app-cookiebar.cookie_title&quot;)
+            }
+        )
+    })
+    private String cookie_title;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        tab = &quot;basic&quot;,
+        title=&quot;components.app-cookiebar.text&quot;,
+        className = &quot;wrap&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = &quot;placeholder&quot;,
+                    value = &quot;components.app-cookiebar.cookie_text&quot;)
+            }
+        )
+    })
+    private String cookie_text;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.app-cookiebar.buttonTextAccept&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = &quot;placeholder&quot;,
+                    value = &quot;components.app-cookiebar.cookie_ButtonText&quot;)
+            }
+        )
+    })
+    private String cookie_ButtonText;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.app-cookiebar.buttonTextDecline&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = &quot;placeholder&quot;,
+                    value = &quot;components.app-cookiebar.cookie_ButtonTextDecline&quot;)
+            }
+        )
+    })
+    private String cookie_ButtonTextDecline;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        tab = &quot;basic&quot;,
+        title=&quot;components.app-cookiebar.showLink&quot;)
+    private boolean showLink;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.COLOR,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.background&quot;)
+    private String color_background;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.COLOR,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.titleColor&quot;)
+    private String color_title;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.COLOR,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.textColor&quot;)
+    private String color_text;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.COLOR,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.buttonColor&quot;)
+    private String color_button;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.COLOR,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.buttonTextColor&quot;)
+    private String color_buttonText;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.position&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(
+                    key = &quot;components.app-cookiebar.position.top&quot;,
+                    value = &quot;top&quot;),
+                @DataTableColumnEditorAttr(
+                    key = &quot;components.app-cookiebar.position.bottom&quot;,
+                    value = &quot;bottom&quot;)
+            }
+        )
+    })
+    private String position;
+
+<span class="fc" id="L149">    @Min(0)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.padding-top&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = &quot;placeholder&quot;,
+                    value = &quot;components.app-cookiebar.cookie_title&quot;)
+            }
+        )
+    })
+    private int padding_top = 25;
+
+<span class="fc" id="L165">    @Min(0)</span>
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;style&quot;,
+        title=&quot;components.app-cookiebar.padding-bottom&quot;)
+    private int padding_bottom = 25;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

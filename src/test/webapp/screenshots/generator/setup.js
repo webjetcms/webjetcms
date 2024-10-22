@@ -27,26 +27,34 @@ Scenario('Setup action', ({I, Document}) => {
 
     Document.screenshot("/install/setup/setup.png", 660, 520);
 
-    if("sk" === confLng) {
-        I.amOnPage("/wjerrorpages/setup/setup");
-    } else {
-        I.amOnPage("/wjerrorpages/setup/setup?language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/wjerrorpages/setup/setup");
+            break;
+        case 'en':
+            I.amOnPage("/wjerrorpages/setup/setup?language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/wjerrorpages/setup/setup?language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
-   
-    I.say("Refreshni obrazovku a zadaj licencne cislo");
-    pause();
+
+    I.say("We dont set license key - start as free version");
 
     I.click("#btnOk");
 
     if("sk" === confLng) {
         I.waitForText("WebJET je nakonfigurovaný", 300);
-    } else {
+    } else if("en" === confLng){
         I.waitForText("WebJET successfully configured", 300);
+    } else if("cs" === confLng){
+        I.waitForText("WebJET je nakonfigurován");
     }
 
     Document.screenshot("/install/setup/setup-saved.png", 660, 180);
 
-    pause();
 });
 
 Scenario('First login/password change /and others', ({I, DTE, Document}) => {
@@ -57,11 +65,19 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
     I.amOnPage("/admin/logon/");
 
-    if("sk" !== confLng) {
-        if("en" === confLng) {
+    switch (confLng) {
+        case 'en':
             I.selectOption("language", "English");
-        }
+            break;
+        case 'cs':
+            I.selectOption("language", "Česky");
+            break;
+        case 'sk':
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
+
 
     I.fillField("#username", "admin");
     I.fillField("#password", "heslo");
@@ -100,12 +116,19 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
 Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
-    if("sk" === confLng) { 
-        I.amOnPage("/wjerrorpages/setup/license");
-    } else if("en" === confLng) {
-        I.amOnPage("/wjerrorpages/setup/license?language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/wjerrorpages/setup/license");
+            break;
+        case 'en':
+            I.amOnPage("/wjerrorpages/setup/license?language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/wjerrorpages/setup/license?language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
-
     Document.screenshot("/install/license/license.png");
 
     I.fillField("#username", "admin");
@@ -115,11 +138,38 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
 
     I.click("#btnOk");
 
-    if("sk" === confLng) {
-        I.waitForText("Licencia úspešne zmenená.", 10);
-    } else {
-        I.waitForText("License successfully changed.", 10);
+    switch (confLng) {
+        case 'sk':
+            I.waitForText("Licencia úspešne zmenená.", 10);
+            break;
+        case 'en':
+            I.waitForText("License successfully changed.", 10);
+            break;
+        case 'cs':
+            I.waitForText("Licence byla úspěšně změněna.", 10);
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
+
     Document.screenshot("/install/license/license-saved.png");
+});
+
+Scenario('License expiration notification test', ({I, login, Document}) => {
+    login("admin");
+
+    let actualDate = new Date();
+    let monthMillis = 30 * 24 * 60 * 60 * 1000;
+
+    I.say("Set license expiration date to 1 month from now");
+    Document.setConfigValue("licenseExpiryDate", actualDate.getTime() - monthMillis);
+
+    I.amOnPage("/admin/v9/");
+    I.waitForElement(".license-expiration-warning", 5);
+
+    Document.screenshot("/install/license/license-expiration-notification.png", 1200, 300);
+
+    I.say("Set license expiration date to value 0");
+    Document.setConfigValue("licenseExpiryDate", 0);
 });

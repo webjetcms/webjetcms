@@ -4,6 +4,9 @@
 $ti-font-path: "~@tabler/icons-webfont/dist/fonts";
 $ti-font-name-filled: "tabler-icons-filled";
 
+//font
+$admin-font-family: "Asap", sans-serif;
+
 $input-btn-focus-width: 0;
 
 $white: #fff;
@@ -152,11 +155,14 @@ $input-disabled-border-color: $input-border-color;
 @import "4-layout/ly-content";
 @import "4-layout/ly-container";
 
+@import "4-layout/ly-iframe";
+
 //MODULES
 @import "5-modules/md-amcharts";
 @import "5-modules/md-breadcrumb";
 @import "5-modules/md-navigation";
 @import "5-modules/md-browser-support";
+@import "5-modules/md-color-picker";
 @import "5-modules/md-debug-info";
 @import "5-modules/md-search";
 @import "5-modules/md-sitemap";
@@ -169,11 +175,14 @@ $input-disabled-border-color: $input-border-color;
 
 @import "5-modules/md-dt-upload";
 @import "5-modules/md-toastr";
+@import "5-modules/md-tui-image-editor";
 @import "5-modules/md-dt-ckeditor";
 
 @import "5-modules/md-ui-autocomplete";
 @import "5-modules/md-server-monitoring-table";
 @import "5-modules/md-page-builder";
+
+@import "5-modules/md-elfinder";
 
 //PAGES
 @import "6-pages/pg-homepage";

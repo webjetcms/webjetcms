@@ -413,7 +413,7 @@ public class IwcmDocGroupFsVolume implements FsVolume
 		Identity user = UsersDB.getCurrentUser(request);
 		if (user == null || user.isAdmin()==false) return new FsItem[0];
 
-		List<FsItem> list = new ArrayList<FsItem>();
+		List<FsItem> list = new ArrayList<>();
 
 		IwcmDocGroupItem item = asDocGroup(fsi);
 
@@ -425,7 +425,7 @@ public class IwcmDocGroupFsVolume implements FsVolume
 
 			if (item.getGroupId()==0)
 			{
-				subGroups = new ArrayList<GroupDetails>();
+				subGroups = new ArrayList<>();
 				List<GroupDetails> subGroupsAll = GroupsDB.getInstance().getRootGroups(user.getEditableGroups());
 				for (GroupDetails group : subGroupsAll)
 				{
@@ -434,6 +434,9 @@ public class IwcmDocGroupFsVolume implements FsVolume
 						String currentDomain = CloudToolsForCore.getDomainName();
 						if (Tools.isNotEmpty(currentDomain) && currentDomain.equals(group.getDomainName())==false) continue;
 					}
+
+					//skip full text index folders
+					if ("images".equalsIgnoreCase(group.getGroupName()) || "files".equalsIgnoreCase(group.getGroupName())) continue;
 
 					if (group.getParentGroupId()>0)
 					{
@@ -455,12 +458,10 @@ public class IwcmDocGroupFsVolume implements FsVolume
 
 			for (GroupDetails group : subGroups)
 			{
-				if (group.getParentGroupId() < 1)
+				//skip full text index folders
+				if ("images".equalsIgnoreCase(group.getGroupName()) || "files".equalsIgnoreCase(group.getGroupName()))
 				{
-					if ("images".equalsIgnoreCase(group.getGroupName()) || "files".equalsIgnoreCase(group.getGroupName()))
-					{
-						continue;
-					}
+					continue;
 				}
 
 				list.add(new IwcmDocGroupItem(this, group));

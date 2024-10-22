@@ -8,8 +8,13 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +26,7 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESERVATION_TIMES)
-<span class="fc" id="L24">public class ReservationObjectTimesEntity implements Serializable {</span>
+<span class="fc" id="L29">public class ReservationObjectTimesEntity implements Serializable {</span>
     
     @Id
     @GeneratedValue(generator = &quot;WJGen_reservation_object_times&quot;)
@@ -30,7 +35,7 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
     private Long id;
 
     @Column(name = &quot;object_id&quot;)
-    private Integer objectId;
+    private Long objectId;
 
     @Column(name = &quot;cas_od&quot;)
     private Date timeFrom;
@@ -43,5 +48,11 @@ import sk.iway.iwcm.system.adminlog.EntityListenersType;
 
     @Column(name = &quot;domain_id&quot;)
     private Integer domainId;
+
+    @ManyToOne
+	@JsonBackReference(value=&quot;reservationObjectForTime&quot;)
+	@JoinColumn(name=&quot;object_id&quot;, insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private ReservationObjectEntity reservationObjectForTime;
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

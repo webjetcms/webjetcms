@@ -13,7 +13,7 @@ Scenario('zobrazenie v mape stranok', ({ I }) => {
     I.dontSee("Stránka sa nezobrazí v mape sránok podľa menu", "div.sitemaptest");
 });
 
-Scenario('zobrazenie sitemap.xml', ({ I, Browser }) => {
+function testSitemap(I, Browser) {
     if (Browser.isFirefox()) {
         I.say("Firefox, skipping test");
         return;
@@ -23,4 +23,18 @@ Scenario('zobrazenie sitemap.xml', ({ I, Browser }) => {
     I.see('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
     I.see('/apps/spring-app/kontakty/');
     I.dontSee('/admin/');
+
+    //check pages
+    I.see("/apps/mapa-stranok/podadresar-1/stranka-zobrazi-mape-sranok.html");
+    I.dontSee("/apps/mapa-stranok/podadresar-1/stranka-nezobrazi-mape-sranok.html");
+    I.see("/apps/mapa-stranok/podadresar-1/stranka-zobrazi-mape-sranok-podla-menu.html");
+    I.dontSee("/apps/mapa-stranok/podadresar-1/stranka-nezobrazi-mape-sranok-podla-menu.html");
+    I.see("/apps/mapa-stranok/podadresar-2/");
+    I.see("/apps/mapa-stranok/podadresar-2/pod-podadresar-1/");
+}
+
+Scenario('zobrazenie sitemap.xml', ({ I, Browser }) => {
+    testSitemap(I, Browser);
+    I.logout();
+    testSitemap(I, Browser);
 });

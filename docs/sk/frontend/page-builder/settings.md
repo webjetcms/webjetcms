@@ -69,7 +69,7 @@ Korektná štruktúra html kódu, nad ktorou sa dokáže Page Builder inicializo
 
 Štýlovanie je odporúčané len na ```section```, ```container``` a ```column content```, pretože len tieto elementy si vie používateľ upraviť pomocou Page Builder.
 
-**POZOR:** v ```column``` elementoch nie je povolené použiť priamo text, je potrebné použiť minimálne P element.
+!>**Upozornenie:** v ```column``` elementoch nie je povolené použiť priamo text, je potrebné použiť minimálne P element.
 Naviac z dôvodu možnosti nastavenia odsadení (```margin/padding```) v rámci ```column``` elementu je obsah elementu po otvorení v Page Builder-i obalený do DIV elementu s CSS triedou ```column-content```.
 
 Čiže z kódu:
@@ -92,7 +92,7 @@ vznikne po inicializácii Page Builder kód:
 
 ## Štýlovanie elementov
 
-### SECTION (modrá farba)
+### `SECTION` (modrá farba)
 
 Inicializácia pri použití elementu: ```<section>```.
 
@@ -104,7 +104,7 @@ Inicializácia pri použití elementu: ```<section>```.
 
 Nastavením CSS triedy ```pb-not-section``` sa element **nebude považovať za section* element.
 
-### CONTAINER (červená farba)
+### `CONTAINER` (červená farba)
 
 Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-container```. Nastavením CSS triedy ```pb-not-container``` sa element **nebude považovať za kontajner** aj keď má CSS triedu ```container```.
 
@@ -114,11 +114,11 @@ Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-cont
 <div class="container pb-style-container-group-26"></div>
 ```
 
-### ROW
+### `ROW`
 
 ```<div class="row">``` sa momentálne nedá editovať pomocou Page Builder, je použitý z dôvodu bootstrap kompatibility.
 
-### COLUMN (zelená farba)
+### `COLUMN` (zelená farba)
 
 Inicializácia pri použití triedy: ```col-``` ALEBO ```pb-col-``` (ak DIV element nie je štandardný bootstrap ```col-```). Akceptované sú aj hodnoty ```pb-col``` a ```pb-col-auto``` - ak element obsahuje tieto CSS štýly, tak v nástrojovej lište sa nezobrazí ikona nastavenia šírky stĺpca.
 

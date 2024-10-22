@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MenuApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.menu</a> &gt; <span class="el_source">MenuApp.java</span></div><h1>MenuApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.menu;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.menu.MenuApp&quot;)
+@WebjetAppStore(
+    nameKey = &quot;components.menu.title&quot;,
+    descKey = &quot;components.menu.desc&quot;,
+    itemKey = &quot;cmp_menu&quot;,
+    imagePath = &quot;/components/menu/editoricon.png&quot;,
+    galleryImages = &quot;/components/menu/&quot;,
+    componentPath = &quot;/components/menu/menu_ul_li.jsp&quot;
+)
+@Getter
+@Setter
+<span class="fc" id="L25">public class MenuApp extends WebjetComponentAbstract {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.STATIC_TEXT,
+        tab = &quot;basic&quot;,
+        title=&quot;components.menu.menu_help_menu&quot;
+    )
+    private String explain;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.JSON,
+        title=&quot;stat_settings.group_id&quot;,
+        tab = &quot;basic&quot;,
+        sortAfter = &quot;externalLink&quot;,
+        className = &quot;dt-tree-group&quot;
+    )
+    private GroupDetails rootGroupId;
+
+<span class="fc" id="L43">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;basic&quot;,
+        title=&quot;components.menu.start_offset&quot;)
+    private int startOffset = 0;
+
+<span class="fc" id="L49">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.NUMBER,
+        tab = &quot;basic&quot;,
+        title=&quot;components.menu.max_level&quot;)
+    private int maxLevel = -1;
+
+<span class="fc" id="L55">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.SELECT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.menu.class_type&quot;,
+        editor = {
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;components.menu.class_type.none&quot;, value = &quot;none&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.menu.class_type.basic&quot;, value = &quot;basic&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.menu.class_type.full&quot;, value = &quot;full&quot;),
+                @DataTableColumnEditorAttr(key = &quot;components.menu.class_type.bootstrap&quot;, value = &quot;bootstrap&quot;)
+            }
+        )
+    })
+    private String classes = &quot;basic&quot;;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;components.menu.generate_empty_span&quot;,
+        tab = &quot;advanced&quot;
+    )
+    private Boolean generateEmptySpan;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;components.menu.open_all_items&quot;,
+        tab = &quot;advanced&quot;
+    )
+    private Boolean openAllItems;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;components.menu.only_set_variables&quot;,
+        tab = &quot;advanced&quot;
+    )
+    private Boolean onlySetVariables;
+
+<span class="fc" id="L92">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.menu.root_ul_id&quot;
+    )
+    private String rootUlId = &quot;menu&quot;;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.menu.menu_info_dir_name&quot;
+    )
+    private String menuInfoDirName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = &quot;components.menu.menu_include_perex&quot;,
+        tab = &quot;advanced&quot;
+    )
+    private Boolean menuIncludePerex;
+
+<span class="fc" id="L113">    @DataTableColumn(</span>
+        inputType = DataTableColumnType.TEXT,
+        tab = &quot;advanced&quot;,
+        title=&quot;components.menu.menu_include_perex_level&quot;
+    )
+<span class="fc" id="L118">    private Integer menuIncludePerexLevel = 1;</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ThymeleafAdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.admin</a> &gt; <span class="el_source">ThymeleafAdminController.java</span></div><h1>ThymeleafAdminController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.admin;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -47,7 +45,7 @@ import java.util.List;
  */
 @Controller
 @PreAuthorize(&quot;@WebjetSecurityService.isAdmin()&quot;)
-<span class="fc" id="L50">public class ThymeleafAdminController {</span>
+<span class="fc" id="L48">public class ThymeleafAdminController {</span>
 
    /**
     *
@@ -67,29 +65,29 @@ import java.util.List;
          final HttpServletRequest request) {
 
       // /admin/v9/ == zobraz dashboard
-<span class="fc bfc" id="L70" title="All 2 branches covered.">      if (Tools.isEmpty(page)) {</span>
-<span class="fc" id="L71">         page = &quot;dashboard&quot;;</span>
-<span class="fc" id="L72">         subpage = &quot;overview&quot;;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">      if (Tools.isEmpty(page)) {</span>
+<span class="fc" id="L69">         page = &quot;dashboard&quot;;</span>
+<span class="fc" id="L70">         subpage = &quot;overview&quot;;</span>
       }
 
-<span class="pc bpc" id="L75" title="1 of 2 branches missed.">      if (Tools.isEmpty(subpage))</span>
-<span class="nc" id="L76">         subpage = &quot;index&quot;;</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">      if (Tools.isEmpty(subpage))</span>
+<span class="nc" id="L74">         subpage = &quot;index&quot;;</span>
 
       // @TODO: nepotrebujeme sem nejaku kontrolu URL parametrov?
-<span class="fc" id="L79">      String forward = &quot;admin/v9/dist/views/&quot; + page + &quot;/&quot; + subpage;</span>
+<span class="fc" id="L77">      String forward = &quot;admin/v9/dist/views/&quot; + page + &quot;/&quot; + subpage;</span>
 
-<span class="fc" id="L81">      Logger.debug(ThymeleafAdminController.class, &quot;Thymeleaf forward=&quot; + forward);</span>
+<span class="fc" id="L79">      Logger.debug(ThymeleafAdminController.class, &quot;Thymeleaf forward=&quot; + forward);</span>
 
-<span class="fc" id="L83">      removePermissionFromCurrentUser(request);</span>
-<span class="fc" id="L84">      fireEvent(page, subpage, model, redirectAttributes, request);</span>
-<span class="fc" id="L85">      setLayout(model, request);</span>
+<span class="fc" id="L81">      removePermissionFromCurrentUser(request);</span>
+<span class="fc" id="L82">      fireEvent(page, subpage, model, redirectAttributes, request);</span>
+<span class="fc" id="L83">      setLayout(model, request);</span>
 
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">      if (model.containsKey(&quot;redirect&quot;)) {</span>
-<span class="nc" id="L88">         return new ModelAndView(&quot;redirect:&quot; + model.get(&quot;redirect&quot;));</span>
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">      if (model.containsKey(&quot;redirect&quot;)) {</span>
+<span class="nc" id="L86">         return new ModelAndView(&quot;redirect:&quot; + model.get(&quot;redirect&quot;));</span>
       }
 
-<span class="fc" id="L91">      forward = checkPerms(forward, forward, request);</span>
-<span class="fc" id="L92">      return new ModelAndView(forward);</span>
+<span class="fc" id="L89">      forward = checkPerms(forward, forward, request);</span>
+<span class="fc" id="L90">      return new ModelAndView(forward);</span>
    }
 
    @PostMapping(path = { &quot;/admin/v9/{page}/&quot;, &quot;/admin/v9/{page}/{subpage:[^.]*}&quot; }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
@@ -100,9 +98,9 @@ import java.util.List;
          final RedirectAttributes redirectAttributes,
          final HttpServletRequest request) {
 
-<span class="fc" id="L103">         Logger.debug(ThymeleafAdminController.class, &quot;post loaded admin: {}&quot;, page);</span>
+<span class="fc" id="L101">         Logger.debug(ThymeleafAdminController.class, &quot;post loaded admin: {}&quot;, page);</span>
 
-<span class="fc" id="L105">         return defaultHandler(page, subpage, allParams, model, redirectAttributes, request);</span>
+<span class="fc" id="L103">         return defaultHandler(page, subpage, allParams, model, redirectAttributes, request);</span>
    }
 
    /**
@@ -124,40 +122,40 @@ import java.util.List;
            final RedirectAttributes redirectAttributes,
            final HttpServletRequest request)
    {
-<span class="fc" id="L127">      String originalPath = &quot;/apps/&quot;+app+&quot;/admin/&quot;;</span>
-<span class="pc bpc" id="L128" title="1 of 4 branches missed.">      if (Tools.isNotEmpty(subpage) &amp;&amp; &quot;index.html&quot;.equals(subpage)==false) originalPath += subpage+&quot;/&quot;;</span>
+<span class="fc" id="L125">      String originalPath = &quot;/apps/&quot;+app+&quot;/admin/&quot;;</span>
+<span class="pc bpc" id="L126" title="1 of 4 branches missed.">      if (Tools.isNotEmpty(subpage) &amp;&amp; &quot;index.html&quot;.equals(subpage)==false) originalPath += subpage+&quot;/&quot;;</span>
 
       //spring zrazu prazdne subpage vracia ako index.html
-<span class="pc bpc" id="L131" title="1 of 4 branches missed.">      if (Tools.isEmpty(subpage) || &quot;index.html&quot;.equals(subpage))</span>
-<span class="fc" id="L132">         subpage = &quot;index&quot;;</span>
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">      if (Tools.isEmpty(subpage) || &quot;index.html&quot;.equals(subpage))</span>
+<span class="fc" id="L130">         subpage = &quot;index&quot;;</span>
 
-<span class="fc" id="L134">      String forward = &quot;admin/v9/dist/views/apps/default&quot;;</span>
+<span class="fc" id="L132">      String forward = &quot;admin/v9/dist/views/apps/default&quot;;</span>
 
-<span class="fc" id="L136">      final String appIncludePath = &quot;apps/&quot;+app+&quot;/admin/&quot;+subpage+&quot;.html&quot;;</span>
+<span class="fc" id="L134">      final String appIncludePath = &quot;apps/&quot;+app+&quot;/admin/&quot;+subpage+&quot;.html&quot;;</span>
       //kontrola, ci zadana cesta existuje
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">      if (FileTools.isFile(&quot;/&quot;+appIncludePath) == false) {</span>
-<span class="nc" id="L139">         throw new ResponseStatusException(HttpStatus.NOT_FOUND);</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">      if (FileTools.isFile(&quot;/&quot;+appIncludePath) == false) {</span>
+<span class="nc" id="L137">         throw new ResponseStatusException(HttpStatus.NOT_FOUND);</span>
       }
-<span class="fc" id="L141">      model.addAttribute(&quot;appIncludePath&quot;, appIncludePath);</span>
+<span class="fc" id="L139">      model.addAttribute(&quot;appIncludePath&quot;, appIncludePath);</span>
 
-<span class="fc" id="L143">      Logger.debug(ThymeleafAdminController.class, &quot;Thymeleaf APP forward=&quot; + forward + &quot; appIncludePath=&quot; + appIncludePath);</span>
+<span class="fc" id="L141">      Logger.debug(ThymeleafAdminController.class, &quot;Thymeleaf APP forward=&quot; + forward + &quot; appIncludePath=&quot; + appIncludePath);</span>
 
       //check if there is index.js file to include as script element
-<span class="fc" id="L146">      String jsFilePath = &quot;/apps/&quot;+app+&quot;/admin/&quot;+app+&quot;.js&quot;;</span>
-<span class="fc bfc" id="L147" title="All 2 branches covered.">      if (FileTools.isFile(jsFilePath)) {</span>
-<span class="fc" id="L148">         model.addAttribute(&quot;appIncludePathJs&quot;, jsFilePath);</span>
+<span class="fc" id="L144">      String jsFilePath = &quot;/apps/&quot;+app+&quot;/admin/&quot;+app+&quot;.js&quot;;</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">      if (FileTools.isFile(jsFilePath)) {</span>
+<span class="fc" id="L146">         model.addAttribute(&quot;appIncludePathJs&quot;, jsFilePath);</span>
       }
 
-<span class="fc" id="L151">      removePermissionFromCurrentUser(request);</span>
-<span class="fc" id="L152">      fireEvent(app, subpage, model, redirectAttributes, request);</span>
-<span class="fc" id="L153">      setLayout(model, request);</span>
+<span class="fc" id="L149">      removePermissionFromCurrentUser(request);</span>
+<span class="fc" id="L150">      fireEvent(app, subpage, model, redirectAttributes, request);</span>
+<span class="fc" id="L151">      setLayout(model, request);</span>
 
-<span class="fc bfc" id="L155" title="All 2 branches covered.">      if (model.containsKey(&quot;redirect&quot;)) {</span>
-<span class="fc" id="L156">         return new ModelAndView(&quot;redirect:&quot; + model.get(&quot;redirect&quot;));</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">      if (model.containsKey(&quot;redirect&quot;)) {</span>
+<span class="fc" id="L154">         return new ModelAndView(&quot;redirect:&quot; + model.get(&quot;redirect&quot;));</span>
       }
 
-<span class="fc" id="L159">      forward = checkPerms(forward, originalPath, request);</span>
-<span class="fc" id="L160">      return new ModelAndView(forward);</span>
+<span class="fc" id="L157">      forward = checkPerms(forward, originalPath, request);</span>
+<span class="fc" id="L158">      return new ModelAndView(forward);</span>
    }
 
    @PostMapping(path = { &quot;/apps/{app}/admin/&quot;, &quot;/apps/{app}/admin/index.html&quot;, &quot;/apps/{app}/admin/{subpage:[^.]+}&quot; }, consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
@@ -168,9 +166,9 @@ import java.util.List;
            final ModelMap model,
            final RedirectAttributes redirectAttributes,
            final HttpServletRequest request) {
-<span class="fc" id="L171">      Logger.debug(ThymeleafAdminController.class, &quot;post loaded: {}&quot;, app);</span>
+<span class="fc" id="L169">      Logger.debug(ThymeleafAdminController.class, &quot;post loaded: {}&quot;, app);</span>
 
-<span class="fc" id="L173">      return appHandler(app, subpage, model, redirectAttributes, request);</span>
+<span class="fc" id="L171">      return appHandler(app, subpage, model, redirectAttributes, request);</span>
    }
 
    /**
@@ -182,14 +180,14 @@ import java.util.List;
     */
    private void fireEvent(String page, String subpage, ModelMap model, RedirectAttributes redirectAttributes, HttpServletRequest request) {
       //event vyvolame pred layoutService, keby event nieco v layoute menil (napr. domenu)
-<span class="fc bfc" id="L185" title="All 2 branches covered.">      if (&quot;apps&quot;.equals(page)) {</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">      if (&quot;apps&quot;.equals(page)) {</span>
          //pre napr. /admin/v9/apps/gallery nastavime podobne ako pre /apps/admin/gallery/
-<span class="fc" id="L187">         page = subpage;</span>
-<span class="fc" id="L188">         subpage = &quot;index&quot;;</span>
+<span class="fc" id="L185">         page = subpage;</span>
+<span class="fc" id="L186">         subpage = &quot;index&quot;;</span>
       }
-<span class="fc" id="L190">      ThymeleafEvent event = new ThymeleafEvent(page, subpage, model, redirectAttributes, request);</span>
-<span class="fc" id="L191">      (new WebjetEvent&lt;&gt;(event, WebjetEventType.ON_START)).publishEvent();</span>
-<span class="fc" id="L192">   }</span>
+<span class="fc" id="L188">      ThymeleafEvent event = new ThymeleafEvent(page, subpage, model, redirectAttributes, request);</span>
+<span class="fc" id="L189">      (new WebjetEvent&lt;&gt;(event, WebjetEventType.ON_START)).publishEvent();</span>
+<span class="fc" id="L190">   }</span>
 
    /**
     * Nastavi LayoutService pre generovanie hlavicky/menu
@@ -197,85 +195,80 @@ import java.util.List;
     * @param request HttpServletRequest
     */
    private void setLayout(ModelMap model, HttpServletRequest request) {
-<span class="fc" id="L200">      final LayoutService ls = new LayoutService(request);</span>
-<span class="fc" id="L201">      model.addAttribute(&quot;layout&quot;, ls.getLayoutBean());</span>
-<span class="fc" id="L202">      model.addAttribute(&quot;layoutService&quot;, ls);</span>
+<span class="fc" id="L198">      final LayoutService ls = new LayoutService(request);</span>
+<span class="fc" id="L199">      model.addAttribute(&quot;layout&quot;, ls.getLayoutBean());</span>
+<span class="fc" id="L200">      model.addAttribute(&quot;layoutService&quot;, ls);</span>
 
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">      if (&quot;true&quot;.equals(request.getParameter(&quot;userlngr&quot;))) {</span>
-<span class="nc" id="L205">         String lng = Prop.getLng(request, false);</span>
-<span class="nc" id="L206">         Prop.getInstance(Constants.getServletContext(), lng, true);</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">      if (&quot;true&quot;.equals(request.getParameter(&quot;userlngr&quot;))) {</span>
+<span class="nc" id="L203">         String lng = Prop.getLng(request, false);</span>
+<span class="nc" id="L204">         Prop.getInstance(Constants.getServletContext(), lng, true);</span>
       }
-<span class="fc" id="L208">   }</span>
+<span class="fc" id="L206">   }</span>
 
    private void removePermissionFromCurrentUser(HttpServletRequest request) {
-<span class="fc" id="L211">      String permission = request.getParameter(&quot;removePerm&quot;);</span>
-<span class="fc bfc" id="L212" title="All 2 branches covered.">      if (Tools.isNotEmpty(permission)) removePermissionFromCurrentUser(permission, request);</span>
-<span class="fc" id="L213">   }</span>
+<span class="fc" id="L209">      String permission = request.getParameter(&quot;removePerm&quot;);</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">      if (Tools.isNotEmpty(permission)) removePermissionFromCurrentUser(permission, request);</span>
+<span class="fc" id="L211">   }</span>
 
    private void removePermissionFromCurrentUser(String permissionString, HttpServletRequest request) {
-<span class="fc" id="L216">      Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L217" title="2 of 4 branches missed.">      if (user != null &amp;&amp; user.getLogin().startsWith(&quot;tester&quot;)) {</span>
+<span class="fc" id="L214">      Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L215" title="2 of 4 branches missed.">      if (user != null &amp;&amp; user.getLogin().startsWith(&quot;tester&quot;)) {</span>
 
-<span class="fc" id="L219">         String[] permsArr = Tools.getTokens(permissionString, &quot;,&quot;);</span>
-<span class="fc bfc" id="L220" title="All 2 branches covered.">         for(String permission : permsArr) {</span>
-<span class="fc" id="L221">            user.addDisabledItem(permission);</span>
+<span class="fc" id="L217">         String[] permsArr = Tools.getTokens(permissionString, &quot;,&quot;);</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">         for(String permission : permsArr) {</span>
+<span class="fc" id="L219">            user.addDisabledItem(permission);</span>
          }
-<span class="fc" id="L223">         LogonTools.setUserToSession(request.getSession(), user);</span>
+<span class="fc" id="L221">         LogonTools.setUserToSession(request.getSession(), user);</span>
 
          //setUserToSession nepomohlo, musime hacknut
          try
          {
                //prihlasenie pre SPRING / REST
                //RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-<span class="pc bpc" id="L230" title="1 of 2 branches missed.">               if (Constants.getServletContext().getAttribute(&quot;springContext&quot;)!=null)</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">               if (Constants.getServletContext().getAttribute(&quot;springContext&quot;)!=null)</span>
                {
-<span class="fc" id="L232">                  ApplicationContext context = (ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;);</span>
-<span class="fc" id="L233">                  AuthenticationManager authenticationManager = context.getBean(&quot;authenticationManagerBean&quot;, AuthenticationManager.class);</span>
-<span class="pc bpc" id="L234" title="1 of 2 branches missed.">                  if (authenticationManager != null)</span>
-                  {
-<span class="fc" id="L236">                     Authentication authentication = WebjetAuthentificationProvider.authenticate(user);</span>
-<span class="fc" id="L237">                     List&lt;GrantedAuthority&gt; grantedAuths = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L230">                  Authentication authentication = WebjetAuthentificationProvider.authenticate(user);</span>
+<span class="fc" id="L231">                  List&lt;GrantedAuthority&gt; grantedAuths = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L239" title="All 2 branches covered.">                     for (GrantedAuthority ga : authentication.getAuthorities()) {</span>
-<span class="pc bpc" id="L240" title="1 of 2 branches missed.">                        if (ga instanceof SimpleGrantedAuthority) {</span>
-<span class="fc" id="L241">                           SimpleGrantedAuthority sig = (SimpleGrantedAuthority)ga;</span>
+<span class="fc bfc" id="L233" title="All 2 branches covered.">                  for (GrantedAuthority ga : authentication.getAuthorities()) {</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">                     if (ga instanceof SimpleGrantedAuthority) {</span>
+<span class="fc" id="L235">                        SimpleGrantedAuthority sig = (SimpleGrantedAuthority)ga;</span>
 
-<span class="fc" id="L243">                           boolean remove = false;</span>
-<span class="fc bfc" id="L244" title="All 2 branches covered.">                           for(String permission : permsArr) {</span>
-<span class="fc" id="L245">                              String itemKey = WebjetSecurityService.normalizeUserGroupName(permission);</span>
-<span class="fc" id="L246">                              String name = &quot;ROLE_Permission_&quot; + itemKey;</span>
-<span class="fc bfc" id="L247" title="All 2 branches covered.">                              if (sig.getAuthority().equals(name)) {</span>
-<span class="fc" id="L248">                                 Logger.debug(ThymeleafAdminController.class, &quot;Removing SPRING perm &quot;+name);</span>
-<span class="fc" id="L249">                                 remove = true;</span>
-                              }
-                           }
-
-<span class="fc bfc" id="L253" title="All 2 branches covered.">                           if (remove == false) {</span>
-<span class="fc" id="L254">                              grantedAuths.add(ga);</span>
+<span class="fc" id="L237">                        boolean remove = false;</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">                        for(String permission : permsArr) {</span>
+<span class="fc" id="L239">                           String itemKey = WebjetSecurityService.normalizeUserGroupName(permission);</span>
+<span class="fc" id="L240">                           String name = &quot;ROLE_Permission_&quot; + itemKey;</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">                           if (sig.getAuthority().equals(name)) {</span>
+<span class="fc" id="L242">                              Logger.debug(ThymeleafAdminController.class, &quot;Removing SPRING perm &quot;+name);</span>
+<span class="fc" id="L243">                              remove = true;</span>
                            }
                         }
-<span class="fc" id="L257">                     }</span>
 
-<span class="fc" id="L259">                     Authentication auth = new UsernamePasswordAuthenticationToken(</span>
-<span class="fc" id="L260">                        user.getLogin(),</span>
-                        &quot;password&quot;,
-                        grantedAuths);
-<span class="fc" id="L263">                     SecurityContextHolder.getContext().setAuthentication(auth);</span>
-                  }
+<span class="fc bfc" id="L247" title="All 2 branches covered.">                        if (remove == false) {</span>
+<span class="fc" id="L248">                           grantedAuths.add(ga);</span>
+                        }
+                     }
+<span class="fc" id="L251">                  }</span>
+
+<span class="fc" id="L253">                  Authentication auth = new UsernamePasswordAuthenticationToken(</span>
+<span class="fc" id="L254">                     user.getLogin(),</span>
+                     &quot;password&quot;,
+                     grantedAuths);
+<span class="fc" id="L257">                  SecurityContextHolder.getContext().setAuthentication(auth);</span>
                }
          }
-<span class="nc" id="L267">         catch (Exception ex)</span>
+<span class="nc" id="L260">         catch (Exception ex)</span>
          {
-<span class="nc" id="L269">            Logger.error(ThymeleafAdminController.class, ex);</span>
-<span class="fc" id="L270">         }</span>
+<span class="nc" id="L262">            Logger.error(ThymeleafAdminController.class, ex);</span>
+<span class="fc" id="L263">         }</span>
 
          //este raz, lebo to zle nastavovalo
-<span class="fc" id="L273">         user = UsersDB.getCurrentUser(request);</span>
-<span class="fc bfc" id="L274" title="All 2 branches covered.">         for(String permission : permsArr) {</span>
-<span class="fc" id="L275">            user.addDisabledItem(permission);</span>
+<span class="fc" id="L266">         user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L267" title="All 2 branches covered.">         for(String permission : permsArr) {</span>
+<span class="fc" id="L268">            user.addDisabledItem(permission);</span>
          }
       }
-<span class="fc" id="L278">   }</span>
+<span class="fc" id="L271">   }</span>
 
    /**
     * Overi pravo na zobrazenie originalUrl, ak je povolene, vrati forward, inak /admin/403.jsp
@@ -285,15 +278,15 @@ import java.util.List;
     * @return
     */
    private String checkPerms(String forward, String originalUrl, HttpServletRequest request) {
-<span class="fc" id="L288">      String perms = MenuService.getPerms(originalUrl);</span>
-<span class="fc" id="L289">      Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L281">      String perms = MenuService.getPerms(originalUrl);</span>
+<span class="fc" id="L282">      Identity user = UsersDB.getCurrentUser(request);</span>
 
-<span class="fc bfc" id="L291" title="All 4 branches covered.">      if (Tools.isNotEmpty(perms) &amp;&amp; user.isDisabledItem(perms)) {</span>
-<span class="fc" id="L292">         Logger.debug(ThymeleafAdminController.class, &quot;====&gt; PERMS DENIED: perms=&quot;+perms+&quot; originalUrl=&quot;+originalUrl+&quot; forward=&quot;+forward);</span>
-<span class="fc" id="L293">         return &quot;redirect:/admin/403.jsp&quot;;</span>
+<span class="fc bfc" id="L284" title="All 4 branches covered.">      if (Tools.isNotEmpty(perms) &amp;&amp; user.isDisabledItem(perms)) {</span>
+<span class="fc" id="L285">         Logger.debug(ThymeleafAdminController.class, &quot;====&gt; PERMS DENIED: perms=&quot;+perms+&quot; originalUrl=&quot;+originalUrl+&quot; forward=&quot;+forward);</span>
+<span class="fc" id="L286">         return &quot;redirect:/admin/403.jsp&quot;;</span>
       }
 
-<span class="fc" id="L296">      return forward;</span>
+<span class="fc" id="L289">      return forward;</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

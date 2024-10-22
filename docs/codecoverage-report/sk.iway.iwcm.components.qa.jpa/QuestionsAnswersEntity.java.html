@@ -127,14 +127,13 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
     )
 	private String toEmail;
 
-	//This field is send as Email to receiver using QuestionAnswerService.sendAnswerEmail
-	@Transient
+	@Column(name = &quot;answer_to_email&quot;)
 	@DataTableColumn(
         inputType = DataTableColumnType.QUILL,
         title=&quot;[[#{qa.form.answer}]]&quot;,
-		hidden = true,
 		tab = &quot;answer&quot;
     )
+	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
 	private String answerToEmail;
 
 	@Column(name = &quot;allow_publish_on_web&quot;)
@@ -159,7 +158,6 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
     @DataTableColumn(
         inputType = DataTableColumnType.QUILL,
         title=&quot;[[#{qa.form.answerWeb}]]&quot;,
-		renderFormat = &quot;dt-format-text&quot;,
 		tab = &quot;answer&quot;
     )
 	@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
@@ -175,13 +173,13 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 	private Date questionDate;
 
 	//Column hold boolean information if answer for question is already add
-<span class="fc" id="L178">	@Transient</span>
+	@Transient
 	@DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
         title=&quot;[[#{components.qa.answer.exist}]]&quot;,
 		hiddenEditor = true
     )
-<span class="fc" id="L184">	private Boolean answerCheck = false;</span>
+	private Boolean answerCheck;
 
 	@Column(name = &quot;sort_priority&quot;)
 	@DataTableColumn(
@@ -255,16 +253,20 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
     )
 	private Integer domainId;
 
-<span class="fc" id="L258">	@Transient</span>
+<span class="fc" id="L256">	@Transient</span>
     @DataTableColumnNested
-	private QuestionsAnswersEditorFields editorFields = null;
+	private transient QuestionsAnswersEditorFields editorFields = null;
+
+	public Boolean getAnswerCheck() {
+<span class="fc" id="L261">		return isAnswerCheck();</span>
+	}
 
 	public Boolean isAnswerCheck() {
-<span class="pc bpc" id="L263" title="2 of 6 branches missed.">		if (Tools.isNotEmpty(getAnswer()) || Tools.isNotEmpty(getAnswerToEmail()) || Boolean.TRUE.equals(publishOnWeb) ){</span>
-<span class="fc" id="L264">			return Boolean.TRUE;</span>
+<span class="pc bpc" id="L265" title="3 of 8 branches missed.">		if (Tools.isNotEmpty(getAnswer()) || Tools.isNotEmpty(getAnswerToEmail()) || Boolean.TRUE.equals(publishOnWeb) || getAnswerDate() != null) {</span>
+<span class="fc" id="L266">			return Boolean.TRUE;</span>
 		}
-<span class="fc" id="L266">		return Boolean.FALSE;</span>
+<span class="fc" id="L268">		return Boolean.FALSE;</span>
 	}
 }
 
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

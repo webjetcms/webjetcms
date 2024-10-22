@@ -175,11 +175,7 @@ elFinder.prototype.commands.wjmetadata = function() {
 		var fileUrl = file.url;
         fileUrl = fileUrl.replace(/\/$/, "");
         filesRoot = filesRoot.replace(/\/$/, "");
-
- //       console.log('---');
-//        console.log(fileUrl);
-//        console.log(filesRoot);
-
+		
         return fileUrl === filesRoot;
     };
 

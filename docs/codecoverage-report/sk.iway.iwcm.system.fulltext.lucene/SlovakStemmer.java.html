@@ -20,20 +20,20 @@ import java.util.Map;
 public class SlovakStemmer {
 
 
-<span class="nc" id="L23">	private static List&lt;String []&gt; pripony = vytvorPripony();</span>
+<span class="fc" id="L23">	private static List&lt;String []&gt; pripony = vytvorPripony();</span>
 
-<span class="nc" id="L25">	private static String [] ei = new String[] {&quot;e&quot;, &quot;i&quot;, &quot;iam&quot;, &quot;iach&quot;, &quot;iami&quot;, &quot;í&quot;, &quot;ia&quot;, &quot;ie&quot;, &quot;iu&quot;, &quot;ím&quot;};</span>
+<span class="fc" id="L25">	private static String [] ei = new String[] {&quot;e&quot;, &quot;i&quot;, &quot;iam&quot;, &quot;iach&quot;, &quot;iami&quot;, &quot;í&quot;, &quot;ia&quot;, &quot;ie&quot;, &quot;iu&quot;, &quot;ím&quot;};</span>
 
-<span class="nc" id="L27">	private static HashMap&lt;String, String&gt; dtnl = vytvorDTNL();</span>
+<span class="fc" id="L27">	private static HashMap&lt;String, String&gt; dtnl = vytvorDTNL();</span>
 
-<span class="nc" id="L29">	private static HashMap&lt;String, String&gt; dlheKratke = vytvorDlheKratke();</span>
+<span class="fc" id="L29">	private static HashMap&lt;String, String&gt; dlheKratke = vytvorDlheKratke();</span>
 
-<span class="nc" id="L31">	private static String [] cudzieSlovaPredIa = new String[] {&quot;c&quot;, &quot;z&quot;, &quot;g&quot;};</span>
+<span class="fc" id="L31">	private static String [] cudzieSlovaPredIa = new String[] {&quot;c&quot;, &quot;z&quot;, &quot;g&quot;};</span>
 
-<span class="nc" id="L33">	private static String [] samohlasky = new String[] {&quot;a&quot;, &quot;á&quot;, &quot;ä&quot;, &quot;e&quot;, &quot;é&quot;,</span>
+<span class="fc" id="L33">	private static String [] samohlasky = new String[] {&quot;a&quot;, &quot;á&quot;, &quot;ä&quot;, &quot;e&quot;, &quot;é&quot;,</span>
 		&quot;i&quot;, &quot;í&quot;, &quot;o&quot;, &quot;ó&quot;, &quot;u&quot;, &quot;ú&quot;, &quot;y&quot;, &quot;ý&quot;, &quot;ô&quot;, &quot;ia&quot;, &quot;ie&quot;, &quot;iu&quot;};
 
-<span class="nc" id="L36">	private static String [] lr = new String [] {&quot;r&quot;, &quot;ŕ&quot;, &quot;l&quot;, &quot;ĺ&quot;};</span>
+<span class="fc" id="L36">	private static String [] lr = new String [] {&quot;r&quot;, &quot;ŕ&quot;, &quot;l&quot;, &quot;ĺ&quot;};</span>
 
 <span class="nc" id="L38">	protected SlovakStemmer() {</span>
 		//utility class
@@ -47,7 +47,7 @@ public class SlovakStemmer {
 	 */
 	public static String stem(String in) {
 
-<span class="nc" id="L50">		return zbavSaPripon(in);</span>
+<span class="fc" id="L50">		return zbavSaPripon(in);</span>
 
 	}
 
@@ -56,72 +56,72 @@ public class SlovakStemmer {
 
 	private static String zbavSaPripon(String in) {
 
-<span class="nc bnc" id="L59" title="All 2 branches missed.">		for(String [] prip : pripony) {</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">		for(String [] prip : pripony) {</span>
 
-<span class="nc bnc" id="L61" title="All 2 branches missed.">			for(String pripona : prip) {</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">			for(String pripona : prip) {</span>
 
 				//nasli sme priponu
-<span class="nc bnc" id="L64" title="All 2 branches missed.">				if(in.endsWith(pripona)) {</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">				if(in.endsWith(pripona)) {</span>
 
 					//detenele, ditinili
-<span class="nc bnc" id="L67" title="All 2 branches missed.">					if(ei(pripona)) {</span>
-<span class="nc" id="L68">						return zmenDTNL(odstranPriponu(in, pripona));</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">					if(ei(pripona)) {</span>
+<span class="fc" id="L68">						return zmenDTNL(odstranPriponu(in, pripona));</span>
 					}
 
 					//cudzie -cia, -gia...
-<span class="nc bnc" id="L72" title="All 2 branches missed.">					if(pripona.startsWith(&quot;i&quot;)) {</span>
-<span class="nc bnc" id="L73" title="All 2 branches missed.">						if(cudzie(in, pripona)) {</span>
-<span class="nc" id="L74">							return odstranPriponu(in, pripona).concat(&quot;i&quot;);</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">					if(pripona.startsWith(&quot;i&quot;)) {</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">						if(cudzie(in, pripona)) {</span>
+<span class="fc" id="L74">							return odstranPriponu(in, pripona).concat(&quot;i&quot;);</span>
 						}
 					}
 
 					//ci nepride k overstemmingu
-<span class="nc bnc" id="L79" title="All 2 branches missed.">					if(overstemming(in, pripona))</span>
-<span class="nc" id="L80">						return in;</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">					if(overstemming(in, pripona))</span>
+<span class="fc" id="L80">						return in;</span>
 
 					//inak odstranime priponu
-<span class="nc" id="L83">					return odstranPriponu(in, pripona);</span>
+<span class="fc" id="L83">					return odstranPriponu(in, pripona);</span>
 				}
 			}
-<span class="nc" id="L86">		}</span>
+<span class="fc" id="L86">		}</span>
 
 		//konci na er -&gt; peter, sveter....
-<span class="nc bnc" id="L89" title="All 2 branches missed.">		if(in.endsWith(&quot;er&quot;)) {</span>
-<span class="nc" id="L90">			return (odstranPriponu(in, &quot;er&quot;)).concat(&quot;r&quot;);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">		if(in.endsWith(&quot;er&quot;)) {</span>
+<span class="fc" id="L90">			return (odstranPriponu(in, &quot;er&quot;)).concat(&quot;r&quot;);</span>
 		}
 
 		//konci na ok -&gt; sviatok, odpadok....
-<span class="nc bnc" id="L94" title="All 2 branches missed.">		if(in.endsWith(&quot;ok&quot;)) {</span>
-<span class="nc" id="L95">			return (odstranPriponu(in, &quot;ok&quot;)).concat(&quot;k&quot;);</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">		if(in.endsWith(&quot;ok&quot;)) {</span>
+<span class="fc" id="L95">			return (odstranPriponu(in, &quot;ok&quot;)).concat(&quot;k&quot;);</span>
 		}
 
 		//konci na zen -&gt; podobizen, bielizen....
-<span class="nc bnc" id="L99" title="All 2 branches missed.">		if(in.endsWith(&quot;zeň&quot;)) {</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">		if(in.endsWith(&quot;zeň&quot;)) {</span>
 <span class="nc" id="L100">			return (odstranPriponu(in, &quot;eň&quot;)).concat(&quot;n&quot;);</span>
 		}
 
 		//konci na ol -&gt; kotol....
-<span class="nc bnc" id="L104" title="All 2 branches missed.">		if(in.endsWith(&quot;ol&quot;)) {</span>
-<span class="nc" id="L105">			return (odstranPriponu(in, &quot;ol&quot;)).concat(&quot;l&quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">		if(in.endsWith(&quot;ol&quot;)) {</span>
+<span class="fc" id="L105">			return (odstranPriponu(in, &quot;ol&quot;)).concat(&quot;l&quot;);</span>
 		}
 
 		//konci na ic -&gt; matematic (matematik, matematici)... (pracovnici vs slnecnic)
-<span class="nc bnc" id="L109" title="All 2 branches missed.">		if(in.endsWith(&quot;ic&quot;)) {</span>
-<span class="nc" id="L110">			return (odstranPriponu(in, &quot;c&quot;)).concat(&quot;k&quot;);</span>
+<span class="fc bfc" id="L109" title="All 2 branches covered.">		if(in.endsWith(&quot;ic&quot;)) {</span>
+<span class="fc" id="L110">			return (odstranPriponu(in, &quot;c&quot;)).concat(&quot;k&quot;);</span>
 		}
 
 		//konci na ec -&gt; tanec, obec....
-<span class="nc bnc" id="L114" title="All 2 branches missed.">		if(in.endsWith(&quot;ec&quot;)) {</span>
-<span class="nc" id="L115">			return (odstranPriponu(in, &quot;ec&quot;)).concat(&quot;c&quot;);</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if(in.endsWith(&quot;ec&quot;)) {</span>
+<span class="fc" id="L115">			return (odstranPriponu(in, &quot;ec&quot;)).concat(&quot;c&quot;);</span>
 		}
 
 		//konci na um -&gt; studium, stadium....
-<span class="nc bnc" id="L119" title="All 2 branches missed.">		if(in.endsWith(&quot;um&quot;)) {</span>
-<span class="nc" id="L120">			return (odstranPriponu(in, &quot;um&quot;));</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">		if(in.endsWith(&quot;um&quot;)) {</span>
+<span class="fc" id="L120">			return (odstranPriponu(in, &quot;um&quot;));</span>
 		}
 
 		//genitiv pluralu pre vzory zena, ulica, gazdina, mesto, srdce ???
-<span class="nc" id="L124">		return poriesGenitivPluralu(in);</span>
+<span class="fc" id="L124">		return poriesGenitivPluralu(in);</span>
 
 	}
 
@@ -131,19 +131,19 @@ public class SlovakStemmer {
 
 		//overstemming zrejme vtedy, ked nam ostane koren bez samohlasky / bez l/r v strede slova
 
-<span class="nc" id="L134">		String s = odstranPriponu(in, pripona);</span>
+<span class="fc" id="L134">		String s = odstranPriponu(in, pripona);</span>
 
-<span class="nc bnc" id="L136" title="All 2 branches missed.">		for(String samohlaska : samohlasky) {</span>
-<span class="nc bnc" id="L137" title="All 2 branches missed.">			if(s.contains(samohlaska))</span>
-<span class="nc" id="L138">				return false;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">		for(String samohlaska : samohlasky) {</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">			if(s.contains(samohlaska))</span>
+<span class="fc" id="L138">				return false;</span>
 		}
 
-<span class="nc bnc" id="L141" title="All 2 branches missed.">		for(String rl : lr) {</span>
-<span class="nc bnc" id="L142" title="All 4 branches missed.">			if(s.contains(rl) &amp;&amp; !s.endsWith(rl))</span>
-<span class="nc" id="L143">				return false;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">		for(String rl : lr) {</span>
+<span class="fc bfc" id="L142" title="All 4 branches covered.">			if(s.contains(rl) &amp;&amp; !s.endsWith(rl))</span>
+<span class="fc" id="L143">				return false;</span>
 		}
 
-<span class="nc" id="L146">		return true;</span>
+<span class="fc" id="L146">		return true;</span>
 	}
 
 
@@ -162,22 +162,22 @@ public class SlovakStemmer {
 
 		//v poslednej slabike musi byt dlha samohlaska / dlhe r/l
 
-<span class="nc bnc" id="L165" title="All 2 branches missed.">		for(Map.Entry&lt;String, String&gt; entry : dlheKratke.entrySet()) {</span>
-<span class="nc" id="L166">			String dlha = entry.getKey();</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">		for(Map.Entry&lt;String, String&gt; entry : dlheKratke.entrySet()) {</span>
+<span class="fc" id="L166">			String dlha = entry.getKey();</span>
 
-<span class="nc bnc" id="L168" title="All 2 branches missed.">			if(in.contains(dlha)) {</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">			if(in.contains(dlha)) {</span>
 
-<span class="nc bnc" id="L170" title="All 2 branches missed.">				if(poslednaSlabika(in, dlha)) {</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">				if(poslednaSlabika(in, dlha)) {</span>
 
-<span class="nc" id="L172">					in = nahradPosledne(in, dlha, entry.getValue());</span>
+<span class="fc" id="L172">					in = nahradPosledne(in, dlha, entry.getValue());</span>
 
-<span class="nc" id="L174">					break;</span>
+<span class="fc" id="L174">					break;</span>
 				}
 			}
 
-<span class="nc" id="L178">		}</span>
+<span class="fc" id="L178">		}</span>
 
-<span class="nc" id="L180">		return in;</span>
+<span class="fc" id="L180">		return in;</span>
 	}
 
 
@@ -189,18 +189,18 @@ public class SlovakStemmer {
 	 */
 	private static boolean poslednaSlabika(String s, String t) {
 
-<span class="nc" id="L192">		int pokial = s.lastIndexOf(t);</span>
-<span class="nc" id="L193">		String koniec = s.substring(pokial);</span>
-<span class="nc" id="L194">		koniec = koniec.substring(t.length());</span>
+<span class="fc" id="L192">		int pokial = s.lastIndexOf(t);</span>
+<span class="fc" id="L193">		String koniec = s.substring(pokial);</span>
+<span class="fc" id="L194">		koniec = koniec.substring(t.length());</span>
 
-<span class="nc bnc" id="L196" title="All 2 branches missed.">		for(String samohlaska : samohlasky) {</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">		for(String samohlaska : samohlasky) {</span>
 
-<span class="nc bnc" id="L198" title="All 2 branches missed.">			if(koniec.contains(samohlaska))</span>
-<span class="nc" id="L199">				return false;</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">			if(koniec.contains(samohlaska))</span>
+<span class="fc" id="L199">				return false;</span>
 
 		}
 
-<span class="nc" id="L203">		return true;</span>
+<span class="fc" id="L203">		return true;</span>
 	}
 
 
@@ -218,31 +218,31 @@ public class SlovakStemmer {
 	 */
 	private static String nahradPosledne(String s, String co, String cim) {
 
-<span class="nc" id="L221">		int pokial = s.lastIndexOf(co);</span>
+<span class="fc" id="L221">		int pokial = s.lastIndexOf(co);</span>
 
-<span class="nc" id="L223">		String koniec = s.substring(pokial);</span>
+<span class="fc" id="L223">		String koniec = s.substring(pokial);</span>
 
-<span class="nc" id="L225">		koniec = koniec.substring(co.length());</span>
+<span class="fc" id="L225">		koniec = koniec.substring(co.length());</span>
 
-<span class="nc" id="L227">		koniec = cim + koniec;</span>
+<span class="fc" id="L227">		koniec = cim + koniec;</span>
 
-<span class="nc" id="L229">		s = s.substring(0, pokial) + koniec;</span>
+<span class="fc" id="L229">		s = s.substring(0, pokial) + koniec;</span>
 
-<span class="nc" id="L231">		return s;</span>
+<span class="fc" id="L231">		return s;</span>
 	}
 
 
 
 	//problem - srdcia TODO
 	private static boolean cudzie(String in, String pripona) {
-<span class="nc" id="L238">		String s = odstranPriponu(in, pripona);</span>
+<span class="fc" id="L238">		String s = odstranPriponu(in, pripona);</span>
 
-<span class="nc bnc" id="L240" title="All 2 branches missed.">		for(String koncovka : cudzieSlovaPredIa) {</span>
-<span class="nc bnc" id="L241" title="All 2 branches missed.">			if(s.endsWith(koncovka))</span>
-<span class="nc" id="L242">				return true;</span>
+<span class="fc bfc" id="L240" title="All 2 branches covered.">		for(String koncovka : cudzieSlovaPredIa) {</span>
+<span class="fc bfc" id="L241" title="All 2 branches covered.">			if(s.endsWith(koncovka))</span>
+<span class="fc" id="L242">				return true;</span>
 		}
 
-<span class="nc" id="L245">		return false;</span>
+<span class="fc" id="L245">		return false;</span>
 	}
 
 
@@ -250,33 +250,33 @@ public class SlovakStemmer {
 
 	private static String odstranPriponu(String s, String p) {
 
-<span class="nc bnc" id="L253" title="All 2 branches missed.">		if(!s.endsWith(p))</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">		if(!s.endsWith(p))</span>
 <span class="nc" id="L254">			return s;</span>
 
-<span class="nc" id="L256">		return s.substring(0, s.length() - p.length());</span>
+<span class="fc" id="L256">		return s.substring(0, s.length() - p.length());</span>
 	}
 
 	//TODO problem - napr sused - sudedia vs. priatel - priatelia
 	private static boolean ei(String s1) {
-<span class="nc bnc" id="L261" title="All 2 branches missed.">		for(String s2 : ei) {</span>
-<span class="nc bnc" id="L262" title="All 2 branches missed.">			if(s1.equals(s2))</span>
-<span class="nc" id="L263">				return true;</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">		for(String s2 : ei) {</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">			if(s1.equals(s2))</span>
+<span class="fc" id="L263">				return true;</span>
 		}
-<span class="nc" id="L265">		return false;</span>
+<span class="fc" id="L265">		return false;</span>
 	}
 
 
 	private static String zmenDTNL(String in) {
 
-<span class="nc bnc" id="L271" title="All 2 branches missed.">		for(Map.Entry&lt;String, String&gt; entry : dtnl.entrySet()) {</span>
-<span class="nc" id="L272">			String tvrdy = entry.getKey();</span>
-<span class="nc bnc" id="L273" title="All 2 branches missed.">			if(in.endsWith(tvrdy)) {</span>
-<span class="nc" id="L274">				in = in.substring(0, in.length() - 1);</span>
-<span class="nc" id="L275">				in = in.concat(entry.getValue());</span>
+<span class="fc bfc" id="L271" title="All 2 branches covered.">		for(Map.Entry&lt;String, String&gt; entry : dtnl.entrySet()) {</span>
+<span class="fc" id="L272">			String tvrdy = entry.getKey();</span>
+<span class="fc bfc" id="L273" title="All 2 branches covered.">			if(in.endsWith(tvrdy)) {</span>
+<span class="fc" id="L274">				in = in.substring(0, in.length() - 1);</span>
+<span class="fc" id="L275">				in = in.concat(entry.getValue());</span>
 			}
-<span class="nc" id="L277">		}</span>
+<span class="fc" id="L277">		}</span>
 
-<span class="nc" id="L279">		return in;</span>
+<span class="fc" id="L279">		return in;</span>
 	}
 
 
@@ -297,24 +297,24 @@ public class SlovakStemmer {
 	 */
 	private static List&lt;String[]&gt; vytvorPripony() {
 
-<span class="nc" id="L300">		List&lt;String[]&gt; p = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L300">		List&lt;String[]&gt; p = new ArrayList&lt;&gt;();</span>
 
 		// od najdlhsich po najkratsie tak, ze ak je nejaka pripona obsiahnuta v inej, je kratsia
 
 		//najdlhsie (nie su v ziadnej inej obsiahnute)
-<span class="nc" id="L305">		p.add(new String[] {&quot;encami&quot;, &quot;atami&quot;, &quot;ätami&quot;, &quot;iami&quot;, &quot;ými&quot;, &quot;ovi&quot;, &quot;ati&quot;, &quot;äti&quot;,</span>
+<span class="fc" id="L305">		p.add(new String[] {&quot;encami&quot;, &quot;atami&quot;, &quot;ätami&quot;, &quot;iami&quot;, &quot;ými&quot;, &quot;ovi&quot;, &quot;ati&quot;, &quot;äti&quot;,</span>
 				&quot;eniec&quot;, &quot;ence&quot;, &quot;ie&quot;, &quot;aťom&quot;, &quot;äťom&quot;, &quot;encom&quot;, &quot;atám&quot;, &quot;ätám&quot;, &quot;iam&quot;, &quot;ím&quot;,
 				&quot;ým&quot;, &quot;encoch&quot;, &quot;atách&quot;, &quot;ätách&quot;, &quot;iach&quot;, &quot;ých&quot;, &quot;aťa&quot;, &quot;äťa&quot;, &quot;ovia&quot;, &quot;atá&quot;,
 				&quot;ätá&quot;, &quot;aťu&quot;, &quot;äťu&quot;, &quot;ému&quot;, &quot;iu&quot;, &quot;iou&quot;, &quot;ov&quot;, &quot;at&quot;, &quot;ät&quot;, &quot;ä&quot;, &quot;ého&quot;, &quot;ý&quot;,
 				&quot;y&quot;, &quot;ií&quot;, &quot;ej&quot;, &quot;ú&quot;, &quot;é&quot;});
 
-<span class="nc" id="L311">		p.add(new String[] {&quot;e&quot;, &quot;om&quot;, &quot;ami&quot;, &quot;ám&quot;, &quot;och&quot;, &quot;ach&quot;, &quot;ách&quot;, &quot;ia&quot;, &quot;á&quot;, &quot;ou&quot;, &quot;o&quot;, &quot;ii&quot;, &quot;í&quot;});</span>
+<span class="fc" id="L311">		p.add(new String[] {&quot;e&quot;, &quot;om&quot;, &quot;ami&quot;, &quot;ám&quot;, &quot;och&quot;, &quot;ach&quot;, &quot;ách&quot;, &quot;ia&quot;, &quot;á&quot;, &quot;ou&quot;, &quot;o&quot;, &quot;ii&quot;, &quot;í&quot;});</span>
 
-<span class="nc" id="L313">		p.add(new String[] {&quot;mi&quot;, &quot;a&quot;, &quot;u&quot;});</span>
+<span class="fc" id="L313">		p.add(new String[] {&quot;mi&quot;, &quot;a&quot;, &quot;u&quot;});</span>
 
-<span class="nc" id="L315">		p.add(new String[] {&quot;i&quot;});</span>
+<span class="fc" id="L315">		p.add(new String[] {&quot;i&quot;});</span>
 
-<span class="nc" id="L317">		return p;</span>
+<span class="fc" id="L317">		return p;</span>
 
 	}
 
@@ -325,17 +325,17 @@ public class SlovakStemmer {
 	 */
 	private static HashMap&lt;String, String&gt; vytvorDlheKratke() {
 
-<span class="nc" id="L328">		HashMap&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L328">		HashMap&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L330">		h.put(&quot;á&quot;, &quot;a&quot;);</span>
-<span class="nc" id="L331">		h.put(&quot;ie&quot;, &quot;e&quot;);</span>
-<span class="nc" id="L332">		h.put(&quot;ŕ&quot;, &quot;r&quot;);</span>
-<span class="nc" id="L333">		h.put(&quot;ĺ&quot;, &quot;l&quot;);</span>
-<span class="nc" id="L334">		h.put(&quot;í&quot;, &quot;i&quot;);</span>
-<span class="nc" id="L335">		h.put(&quot;ú&quot;, &quot;u&quot;);</span>
-<span class="nc" id="L336">		h.put(&quot;ô&quot;, &quot;o&quot;);</span>
+<span class="fc" id="L330">		h.put(&quot;á&quot;, &quot;a&quot;);</span>
+<span class="fc" id="L331">		h.put(&quot;ie&quot;, &quot;e&quot;);</span>
+<span class="fc" id="L332">		h.put(&quot;ŕ&quot;, &quot;r&quot;);</span>
+<span class="fc" id="L333">		h.put(&quot;ĺ&quot;, &quot;l&quot;);</span>
+<span class="fc" id="L334">		h.put(&quot;í&quot;, &quot;i&quot;);</span>
+<span class="fc" id="L335">		h.put(&quot;ú&quot;, &quot;u&quot;);</span>
+<span class="fc" id="L336">		h.put(&quot;ô&quot;, &quot;o&quot;);</span>
 
-<span class="nc" id="L338">		return h;</span>
+<span class="fc" id="L338">		return h;</span>
 	}
 
 
@@ -346,14 +346,14 @@ public class SlovakStemmer {
 	 */
 	private static HashMap&lt;String, String&gt; vytvorDTNL() {
 
-<span class="nc" id="L349">		HashMap&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L349">		HashMap&lt;String, String&gt; h = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L351">		h.put(&quot;d&quot;, &quot;ď&quot;);</span>
-<span class="nc" id="L352">		h.put(&quot;t&quot;, &quot;ť&quot;);</span>
-<span class="nc" id="L353">		h.put(&quot;n&quot;, &quot;ň&quot;);</span>
-<span class="nc" id="L354">		h.put(&quot;l&quot;, &quot;ľ&quot;);</span>
+<span class="fc" id="L351">		h.put(&quot;d&quot;, &quot;ď&quot;);</span>
+<span class="fc" id="L352">		h.put(&quot;t&quot;, &quot;ť&quot;);</span>
+<span class="fc" id="L353">		h.put(&quot;n&quot;, &quot;ň&quot;);</span>
+<span class="fc" id="L354">		h.put(&quot;l&quot;, &quot;ľ&quot;);</span>
 
-<span class="nc" id="L356">		return h;</span>
+<span class="fc" id="L356">		return h;</span>
 	}
 
 
@@ -362,4 +362,4 @@ public class SlovakStemmer {
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

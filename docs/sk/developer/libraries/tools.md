@@ -1,4 +1,4 @@
-# 'Tools'
+# `Tools`
 Balíček statických pomocných funkcií.
 
 `Verzia 1.1.0`, [Changelog](#changelog)
@@ -12,7 +12,7 @@ Balíček slúži ako malá knižnica, ktorá obsahuje statické funkcie ošetru
 import {Tools} from 'tools/tools';
 ```
 
-**Upornenie:** Balíček nie je implementovaný v systéme globálne, preto je potrebné pridať ho všade, kde sa používa.
+!>**Upozornenie:** Balíček nie je implementovaný v systéme globálne, preto je potrebné pridať ho všade, kde sa používa.
 
 Volanie funkcií sa zabezpečuje kdekoľvek vo **WebJET** Javascript súboroch alebo `<script>` html značkách za pomoci volania:
 ```javascript
@@ -39,9 +39,9 @@ Tools.funkcia(parametre);
 
 ---
 
-### System
+### Systém
 
-#### isDevMode()
+#### `isDevMode()`
 
 Overí, či sa nachádzame v developerskom prostredí.
 Ak áno, funkcia vráti **TRUE** ak nie tak vráti **FALSE**.
@@ -58,7 +58,8 @@ Tools.isDevMode();
 
 ---
 
-#### log()
+#### `log()`
+
 Vypisovanie logov v DEV prostredí. Alternatíva ku `console.log` ale nezobrazuje sa na produkcii.
 ```javascript
 /**
@@ -76,7 +77,8 @@ Tools.log(type, ...data);
 Tools.log('error', 'Nejaká error hláška', 'Alebo ďalší text');
 ```
 
-#### getUrlQuery()
+#### `getUrlQuery()`
+
 Vyparsuje z adresy GET query za otáznikom a vráti objekt s hodnotami `{kľúč : hodnota}`.
 Ošetruje aj query umiestnenú za #hash atribútom.
 ```javascript
@@ -92,7 +94,8 @@ Tools.getUrlQuery(fullDecode = false);
 ```
 ---
 
-#### updateUrlQuery()
+#### `updateUrlQuery()`
+
 Aktualizuje url search query vstupnými hodnotami.
 Ak sa v poli `excludeKeys` nachádzajú názvy kľúčov, tieto nebudú v aktualizácii pridané.
 Nastavenie prázdnej hodnoty pomocou ```queryValue``` spôsobí odstránenie parametra z URL adresy.
@@ -111,7 +114,8 @@ Tools.updateUrlQuery(queryKey, queryValue, excludeKeys = []);
 ```
 ---
 
-#### exec()
+#### `exec()`
+
 Ošetruje spustenie callbacku, aby sa zabránilo fatal erroru ak by nebol callback definovaný správne.
 ```javascript
 /**
@@ -128,7 +132,8 @@ Tools.exec(callback, ...args);
 
 ### String
 
-#### removeDiacritics()
+#### `removeDiacritics()`
+
 Nahradí zo vstupného textu všetky znaky s diakritikou za znaky anglickej abecedy.
 Zároveň máme k dispozícii voliteľný argument vloženia znaku alebo reťazca,
 ktorým budú vo vstupnom texte nahradené všetky medzery.
@@ -145,7 +150,8 @@ Tools.removeDiacritics(text, replaceSpaceWithChar = '');
 ```
 ---
 
-#### declension()
+#### `declension()`
+
 Skloňovanie slov na základe celého čísla. Funguje aj pri zadaní záporného čísla.
 ```javascript
 /**
@@ -178,7 +184,8 @@ Tools.declension(numberValue, declensionArray);
 ```
 ---
 
-#### multiReplace()
+#### `multiReplace()`
+
 Umožní nahradiť viac rôznych častí vstupného reťazca za definované hodnoty.
 ```javascript
 /**
@@ -203,7 +210,7 @@ Tools.multiReplace(str, mapObj, ignoreCaseSensitive = false);
 
 ### DOM
 
-#### getCssValue()
+#### `getCssValue()`
 
 ```javascript
 /**
@@ -221,7 +228,8 @@ Tools.getCssValue(element, propertyName);
 
 ---
 
-#### getNextHighestZIndex()
+#### `getNextHighestZIndex()`
+
 Ak potrebujeme pomocou Javascriptu nastaviť nejakému elementu úplne najvyšší dostupný `z-index`,
 tak si tento nový najvyšší môžeme zistiť zavolaním danej funkcie.
 ```javascript
@@ -238,7 +246,8 @@ Tools.getNextHighestZIndex(context = document);
 ---
 ### Test
 
-#### empty()
+#### `empty()`
+
 Otestuje zadanú vstupnú hodnotu, či je prázdna.
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou a ak je aspoň jedna prázdna, tak metóda vráti TRUE.
 ```javascript
@@ -300,7 +309,8 @@ Tools.empty(value);
 ```
 ---
 
-#### isNumeric()
+#### `isNumeric()`
+
 Overí, či je vstupná hodnota numerická. Či sa jedná o číslo, či už sa jedná o typ number alebo string.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -317,7 +327,8 @@ Tools.isNumeric(value);
 ```
 ---
 
-#### isArray()
+#### `isArray()`
+
 Otestuje, či je vstupná hodnota typu Array.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -334,7 +345,8 @@ Tools.isArray(value);
 ```
 ---
 
-#### isObject()
+#### `isObject()`
+
 Otestuje, či je vstupná hodnota typu Object.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -351,7 +363,8 @@ Tools.isObject(value);
 ```
 ---
 
-#### isNull()
+#### `isNull()`
+
 Otestuje, či je vstupná hodnota null.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -368,7 +381,8 @@ Tools.isNull(value);
 ```
 ---
 
-#### isJQuery()
+#### `isJQuery()`
+
 Otestuje, či je vstupná hodnota object jQuery.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -385,7 +399,8 @@ Tools.isJQuery(value);
 ```
 ---
 
-#### isString()
+#### `isString()`
+
 Otestuje, či je vstupná hodnota string.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -402,7 +417,8 @@ Tools.isString(value);
 ```
 ---
 
-#### isNumber()
+#### `isNumber()`
+
 Otestuje, či je vstupná hodnota number.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -419,7 +435,8 @@ Tools.isNumber(value);
 ```
 ---
 
-#### isBoolean()
+#### `isBoolean()`
+
 Otestuje, či je vstupná hodnota boolean.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -436,7 +453,8 @@ Tools.isBoolean(value);
 ```
 ---
 
-#### isFunction()
+#### `isFunction()`
+
 Otestuje, či je vstupná hodnota function.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -453,7 +471,8 @@ Tools.isFunction(value);
 ```
 ---
 
-#### isHTMLElement()
+#### `isHTMLElement()`
+
 Otestuje, či je vstupná hodnota HTMLElement.
 
 Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou.
@@ -469,7 +488,8 @@ Tools.isHTMLElement(value);
 ```
 ---
 
-#### elementExist()
+#### `elementExist()`
+
 Skontroluje, či existuje element na základe jeho css selektora.
 Ak neexistuje, tak metóda počúva a v prípade jeho vytvorenia zavolá `existCallback`.
 Na element sa čaká maximálne 25 sekúnd. Potom sa počúvanie preruší a zavolá sa `notExistCallback`

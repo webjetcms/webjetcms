@@ -12,6 +12,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
@@ -30,6 +31,10 @@ import sk.iway.iwcm.users.UsersDB;
 
 public class CloneStructureService {
 
+    private CloneStructureService() {
+        //Utility class
+    }
+
     /**
      * Check if "structureMirroringConfig" conf contain combination of entered id's.
      * If yes, this folder are allready set for mirroring -> do nothing.
@@ -43,14 +48,14 @@ public class CloneStructureService {
 		String mirroringConfig = Constants.getString("structureMirroringConfig");
 
 		if(mirroringConfig.isEmpty()==false) {
-			String lines[] = Tools.getTokens(mirroringConfig, "\n");
+			String[] lines = Tools.getTokens(mirroringConfig, "\n");
 			for(String line : lines) {
 				String stringIds = "";
 				int i = line.indexOf(":");
 
          		if (i > 0) stringIds = line.substring(0, i);
 
-				String ids[] = stringIds.split(",");
+				String[] ids = stringIds.split(",");
 
 				if(Tools.containsOneItem(ids, ""+srcGroupId)) {
                     //mapping is allready set
@@ -89,12 +94,15 @@ public class CloneStructureService {
             } else {
                 (new SimpleQuery()).execute("UPDATE groups SET sync_id=? WHERE group_id=?", syncId, group.getGroupId());
             }
+            group.setSyncId(syncId);
+            GroupDetails cached = GroupsDB.getInstance().getGroup(group.getGroupId());
+            if (cached != null) cached.setSyncId(syncId);
         }
         return syncId;
     }
 
     /**
-     * Check if GroupDetails entity contain's sync_id.
+     * Check if DocDetails entity contain's sync_id.
      * If yes -> do nothing.
      * If no -> generate new sync_id and set it into DB via SimpleQuery.
      *
@@ -105,6 +113,7 @@ public class CloneStructureService {
         if(syncId < 1) {
             syncId = PkeyGenerator.getNextValue("structuremirroring");
             (new SimpleQuery()).execute("UPDATE documents SET sync_id=? WHERE doc_id=?", syncId, doc.getDocId());
+            doc.setSyncId(syncId);
         }
         return syncId;
     }
@@ -122,12 +131,29 @@ public class CloneStructureService {
 		}
 	}
 
-	public static String cloneStructure(int srcGroupId, int destGroupId, boolean keepMirroring, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+    /**
+     * Clone structure of group and all subgroups and docs.
+     * @param srcGroupId - ID of source group
+     * @param destGroupId - ID of destination group
+     * @param keepMirroring - keep mirroring config after cloning
+     * @param keepVirtualPath - keep virtual path during cloning
+     * @param request
+     * @param response
+     * @return - String of HTML response
+     * @throws IOException
+     * @throws ServletException
+     */
+	public static String cloneStructure(int srcGroupId, int destGroupId, boolean keepMirroring, boolean keepVirtualPath, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 		String domainName = CloudToolsForCore.getDomainName();
         Prop prop = Prop.getInstance(request);
 
         //Check that id's and domain are present
         if(srcGroupId == -1 || destGroupId == -1 || domainName.isEmpty()) return null;
+
+        //save parameters to requestBean to use in services
+        RequestBean.addParameter("keepVirtualPath", ""+keepVirtualPath);
+        RequestBean.addParameter("srcGroupId", ""+srcGroupId);
+        RequestBean.addParameter("destGroupId", ""+destGroupId);
 
         int srcSyncId = GroupMirroringServiceV9.getSyncId(srcGroupId);
 

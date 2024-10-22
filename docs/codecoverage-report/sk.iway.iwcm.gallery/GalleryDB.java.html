@@ -924,27 +924,27 @@ public class GalleryDB
 	 */
 	public static int getTotalImagesInDir(String dir)
 	{
-<span class="nc" id="L927">		int ret = 0;</span>
+<span class="fc" id="L927">		int ret = 0;</span>
 		try
 		{
-<span class="nc" id="L930">			String realPath = Tools.getRealPath(dir);</span>
-<span class="nc" id="L931">			IwcmFile file = new IwcmFile(realPath);</span>
-<span class="nc" id="L932">			IwcmFile[] fileList = file.listFiles(new IwcmFileFilter()</span>
-<span class="nc" id="L933">			{</span>
+<span class="fc" id="L930">			String realPath = Tools.getRealPath(dir);</span>
+<span class="fc" id="L931">			IwcmFile file = new IwcmFile(realPath);</span>
+<span class="fc" id="L932">			IwcmFile[] fileList = file.listFiles(new IwcmFileFilter()</span>
+<span class="fc" id="L933">			{</span>
 				@Override
 				public boolean accept(IwcmFile pathname)
 				{
-<span class="nc bnc" id="L937" title="All 2 branches missed.">					return (isImageFast(pathname))</span>
-<span class="nc bnc" id="L938" title="All 4 branches missed.">								&amp;&amp; (pathname.getName().startsWith(&quot;o_&quot;)==false &amp;&amp; pathname.getName().startsWith(&quot;s_&quot;)==false);</span>
+<span class="pc bpc" id="L937" title="1 of 2 branches missed.">					return (isImageFast(pathname))</span>
+<span class="pc bpc" id="L938" title="1 of 4 branches missed.">								&amp;&amp; (pathname.getName().startsWith(&quot;o_&quot;)==false &amp;&amp; pathname.getName().startsWith(&quot;s_&quot;)==false);</span>
 				}
 			});
-<span class="nc" id="L941">			ret = fileList.length;</span>
+<span class="fc" id="L941">			ret = fileList.length;</span>
 		}
 <span class="nc" id="L943">		catch (Exception ex)</span>
 		{
 <span class="nc" id="L945">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L946">		}</span>
-<span class="nc" id="L947">		return (ret);</span>
+<span class="fc" id="L946">		}</span>
+<span class="fc" id="L947">		return (ret);</span>
 	}
 
 	/**
@@ -1143,7 +1143,7 @@ public class GalleryDB
 	 */
 	public static int getNewPriority(String dir)
 	{
-<span class="nc" id="L1146">		return getTotalImagesInDir(dir) * 10 +10;</span>
+<span class="fc" id="L1146">		return getTotalImagesInDir(dir) * 10 +10;</span>
 	}
 
 	/**
@@ -1189,8 +1189,8 @@ public class GalleryDB
 		try
 		{
 <span class="fc" id="L1191">			imageId = query.forInt(&quot;SELECT image_id FROM gallery WHERE image_path = ? AND image_name = ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);</span>
-<span class="pc bpc" id="L1192" title="1 of 2 branches missed.">			if (GalleryDB.getUploadDateImage(dir, name) == null)</span>
-<span class="nc" id="L1193">				GalleryDB.setUploadDateImage(dir, name, imageFile.lastModified());</span>
+<span class="fc bfc" id="L1192" title="All 2 branches covered.">			if (GalleryDB.getUploadDateImage(dir, name) == null)</span>
+<span class="fc" id="L1193">				GalleryDB.setUploadDateImage(dir, name, imageFile.lastModified());</span>
 
 		}
 <span class="nc" id="L1196">		catch (Exception e)</span>
@@ -1198,16 +1198,16 @@ public class GalleryDB
 <span class="nc bnc" id="L1198" title="All 2 branches missed.">			if (imageId &gt; 0)</span>
 <span class="nc" id="L1199">				return imageId;</span>
 <span class="fc" id="L1200">		}</span>
-<span class="pc bpc" id="L1201" title="1 of 2 branches missed.">		if (imageId &gt; 0)</span>
+<span class="fc bfc" id="L1201" title="All 2 branches covered.">		if (imageId &gt; 0)</span>
 <span class="fc" id="L1202">			return imageId;</span>
 
 
-<span class="nc" id="L1205">		int priority = getNewPriority(dir);</span>
+<span class="fc" id="L1205">		int priority = getNewPriority(dir);</span>
 
-<span class="nc" id="L1207">		query.execute(&quot;INSERT INTO gallery (image_path, image_name, upload_datetime, sort_priority, domain_id) VALUES(?, ?, ?, ?, ?)&quot;, dir, name, new Timestamp(Tools.getNow()),priority, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L1207">		query.execute(&quot;INSERT INTO gallery (image_path, image_name, upload_datetime, sort_priority, domain_id) VALUES(?, ?, ?, ?, ?)&quot;, dir, name, new Timestamp(Tools.getNow()),priority, CloudToolsForCore.getDomainId());</span>
 		try
 		{
-<span class="nc" id="L1210">			return query.forInt(&quot;SELECT image_id FROM gallery WHERE image_path = ? AND image_name = ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);</span>
+<span class="fc" id="L1210">			return query.forInt(&quot;SELECT image_id FROM gallery WHERE image_path = ? AND image_name = ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);</span>
 		}
 <span class="nc" id="L1212">		catch (Exception e)</span>
 		{
@@ -1973,9 +1973,9 @@ public class GalleryDB
 	 * @param out - vystupny objekt pre vypis sprav, moze byt NULL
 	 */
 	public static void resizePicturesInDirectory(String dir, boolean recursive, Prop prop, PrintWriter out) {
-<span class="nc" id="L1976">		String resizeMode = getResizeMode(dir, true);</span>
-<span class="nc" id="L1977">		resizePicturesInDirectory(dir, out, prop, resizeMode, recursive);</span>
-<span class="nc" id="L1978">	}</span>
+<span class="fc" id="L1976">		String resizeMode = getResizeMode(dir, true);</span>
+<span class="fc" id="L1977">		resizePicturesInDirectory(dir, out, prop, resizeMode, recursive);</span>
+<span class="fc" id="L1978">	}</span>
 
 	/**
 	 * Upravi velkost obrazkov v zadanom adresari podla zadaneho rezimu
@@ -1987,27 +1987,27 @@ public class GalleryDB
 	 */
 	private static void resizePicturesInDirectory(String dir, PrintWriter out, Prop prop, String resizeMode, boolean recursive)
 	{
-<span class="nc bnc" id="L1990" title="All 2 branches missed.">		if (null != out)</span>
+<span class="pc bpc" id="L1990" title="1 of 2 branches missed.">		if (null != out)</span>
 		{
 <span class="nc" id="L1992">			out.println(prop.getText(&quot;components.gallery.resizing_images_in&quot;, dir));</span>
 		}
-<span class="nc" id="L1994">		Dimension[] dims = getDimension(dir);</span>
-<span class="nc" id="L1995">		dir = Tools.replace(dir, &quot;/&quot;, File.separator);</span>
-<span class="nc" id="L1996">		IwcmFile directory = IwcmFile.fromVirtualPath(&quot;/&quot; + dir);</span>
-<span class="nc bnc" id="L1997" title="All 4 branches missed.">		if (directory.exists() &amp;&amp; directory.isDirectory())</span>
+<span class="fc" id="L1994">		Dimension[] dims = getDimension(dir);</span>
+<span class="fc" id="L1995">		dir = Tools.replace(dir, &quot;/&quot;, File.separator);</span>
+<span class="fc" id="L1996">		IwcmFile directory = IwcmFile.fromVirtualPath(&quot;/&quot; + dir);</span>
+<span class="pc bpc" id="L1997" title="2 of 4 branches missed.">		if (directory.exists() &amp;&amp; directory.isDirectory())</span>
 		{
-<span class="nc" id="L1999">			IwcmFile[] fileList = directory.listFiles();</span>
-<span class="nc bnc" id="L2000" title="All 2 branches missed.">			for (IwcmFile file : fileList)</span>
+<span class="fc" id="L1999">			IwcmFile[] fileList = directory.listFiles();</span>
+<span class="fc bfc" id="L2000" title="All 2 branches covered.">			for (IwcmFile file : fileList)</span>
 			{
-<span class="nc bnc" id="L2002" title="All 4 branches missed.">				if (recursive &amp;&amp; file.isDirectory())</span>
-<span class="nc" id="L2003">					resizePicturesInDirectory(file.getVirtualPath(), out, prop, resizeMode, recursive);</span>
-<span class="nc bnc" id="L2004" title="All 6 branches missed.">				if (file.isFile() &amp;&amp; !file.getName().startsWith(&quot;s_&quot;) &amp;&amp; !file.getName().startsWith(&quot;o_&quot;))</span>
+<span class="pc bpc" id="L2002" title="1 of 4 branches missed.">				if (recursive &amp;&amp; file.isDirectory())</span>
+<span class="fc" id="L2003">					resizePicturesInDirectory(file.getVirtualPath(), out, prop, resizeMode, recursive);</span>
+<span class="fc bfc" id="L2004" title="All 6 branches covered.">				if (file.isFile() &amp;&amp; !file.getName().startsWith(&quot;s_&quot;) &amp;&amp; !file.getName().startsWith(&quot;o_&quot;))</span>
 				{
-<span class="nc" id="L2006">					resizePictureImpl(dims, file.getAbsolutePath(), out, prop, resizeMode);</span>
+<span class="fc" id="L2006">					resizePictureImpl(dims, file.getAbsolutePath(), out, prop, resizeMode);</span>
 				}
 			}
 		}
-<span class="nc" id="L2010">	}</span>
+<span class="fc" id="L2010">	}</span>
 
 	/**
 	 * Skopiruje subor oldFilePath na newFilePath
@@ -2020,32 +2020,32 @@ public class GalleryDB
 	 */
 	public static boolean copyFile(String oldFilePath, String newFilePath)
 	{
-<span class="nc" id="L2023">		Logger.debug(GalleryDB.class, &quot;copyFile &quot; + oldFilePath + &quot;-&gt;&quot; + newFilePath);</span>
-<span class="nc bnc" id="L2024" title="All 2 branches missed.">		if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(oldFilePath)))</span>
+<span class="fc" id="L2023">		Logger.debug(GalleryDB.class, &quot;copyFile &quot; + oldFilePath + &quot;-&gt;&quot; + newFilePath);</span>
+<span class="pc bpc" id="L2024" title="1 of 2 branches missed.">		if (IwcmFsDB.useDBStorage(IwcmFsDB.getVirtualPath(oldFilePath)))</span>
 		{
 <span class="nc" id="L2026">			IwcmFsDB.copyTo(new IwcmFile(oldFilePath), new IwcmFile(newFilePath));</span>
 <span class="nc" id="L2027">			return true;</span>
 		}
 		try
 		{
-<span class="nc" id="L2031">			File newFile = new File(newFilePath);</span>
-<span class="nc" id="L2032">			File oldFile = new File(oldFilePath);</span>
-<span class="nc bnc" id="L2033" title="All 2 branches missed.">			if (newFile.exists()==false)</span>
+<span class="fc" id="L2031">			File newFile = new File(newFilePath);</span>
+<span class="fc" id="L2032">			File oldFile = new File(oldFilePath);</span>
+<span class="fc bfc" id="L2033" title="All 2 branches covered.">			if (newFile.exists()==false)</span>
 			{
-<span class="nc bnc" id="L2035" title="All 2 branches missed.">				if(newFile.createNewFile() == false) return false;</span>
+<span class="pc bpc" id="L2035" title="1 of 2 branches missed.">				if(newFile.createNewFile() == false) return false;</span>
 				//if(newFile.delete() == false) return false;
 			}
-<span class="nc" id="L2038">			FileInputStream inStream = new FileInputStream(oldFile);</span>
-<span class="nc" id="L2039">			FileOutputStream out = new FileOutputStream(newFile);</span>
+<span class="fc" id="L2038">			FileInputStream inStream = new FileInputStream(oldFile);</span>
+<span class="fc" id="L2039">			FileOutputStream out = new FileOutputStream(newFile);</span>
 			int c;
-<span class="nc" id="L2041">			byte[] buff = new byte[150000];</span>
-<span class="nc bnc" id="L2042" title="All 2 branches missed.">			while ((c = inStream.read(buff)) != -1)</span>
+<span class="fc" id="L2041">			byte[] buff = new byte[150000];</span>
+<span class="fc bfc" id="L2042" title="All 2 branches covered.">			while ((c = inStream.read(buff)) != -1)</span>
 			{
-<span class="nc" id="L2044">				out.write(buff, 0, c);</span>
+<span class="fc" id="L2044">				out.write(buff, 0, c);</span>
 			}
-<span class="nc" id="L2046">			out.close();</span>
-<span class="nc" id="L2047">			inStream.close();</span>
-<span class="nc" id="L2048">			return (true);</span>
+<span class="fc" id="L2046">			out.close();</span>
+<span class="fc" id="L2047">			inStream.close();</span>
+<span class="fc" id="L2048">			return (true);</span>
 		}
 <span class="nc" id="L2050">		catch (Exception ex)</span>
 		{
@@ -2087,7 +2087,7 @@ public class GalleryDB
 <span class="fc" id="L2087">				ps = db_conn.prepareStatement(&quot;SELECT * FROM gallery_dimension WHERE image_path=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
 <span class="fc" id="L2088">				ps.setString(1, normalizeDir(dir));</span>
 <span class="fc" id="L2089">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L2090" title="1 of 2 branches missed.">				if (rs.next())</span>
+<span class="fc bfc" id="L2090" title="All 2 branches covered.">				if (rs.next())</span>
 				{
 <span class="fc" id="L2092">					dim = new Dimension(rs.getInt(&quot;image_width&quot;), rs.getInt(&quot;image_height&quot;));</span>
 <span class="fc" id="L2093">					dimNormal = new Dimension(rs.getInt(&quot;normal_width&quot;), rs.getInt(&quot;normal_height&quot;));</span>
@@ -2108,16 +2108,16 @@ public class GalleryDB
 <span class="pc bpc" id="L2108" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
 <span class="pc" id="L2109">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 		}
-<span class="pc bpc" id="L2111" title="3 of 6 branches missed.">		if (recursive &amp;&amp; (dim == null || dimNormal == null))</span>
+<span class="pc bpc" id="L2111" title="2 of 6 branches missed.">		if (recursive &amp;&amp; (dim == null || dimNormal == null))</span>
 		{
-<span class="nc" id="L2113">			int index = dir.lastIndexOf('/');</span>
-<span class="nc bnc" id="L2114" title="All 2 branches missed.">			if (index &gt; 1)</span>
+<span class="fc" id="L2113">			int index = dir.lastIndexOf('/');</span>
+<span class="fc bfc" id="L2114" title="All 2 branches covered.">			if (index &gt; 1)</span>
 			{
-<span class="nc" id="L2116">				String parent = dir.substring(0, index);</span>
-<span class="nc" id="L2117">				Logger.debug(GalleryDB.class, &quot;Testujem gallery size parent: &quot; + parent);</span>
-<span class="nc" id="L2118">				return (getDimension(parent, recursive, returnDefault));</span>
+<span class="fc" id="L2116">				String parent = dir.substring(0, index);</span>
+<span class="fc" id="L2117">				Logger.debug(GalleryDB.class, &quot;Testujem gallery size parent: &quot; + parent);</span>
+<span class="fc" id="L2118">				return (getDimension(parent, recursive, returnDefault));</span>
 			}
-<span class="nc bnc" id="L2120" title="All 2 branches missed.">			else if (returnDefault)</span>
+<span class="pc bpc" id="L2120" title="1 of 2 branches missed.">			else if (returnDefault)</span>
 			{
 <span class="nc" id="L2122">				dim = new Dimension(160, 120);</span>
 <span class="nc" id="L2123">				dimNormal = new Dimension(750, 560);</span>
@@ -2144,7 +2144,7 @@ public class GalleryDB
 <span class="fc" id="L2144">				ps = db_conn.prepareStatement(&quot;SELECT * FROM gallery_dimension WHERE image_path=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
 <span class="fc" id="L2145">				ps.setString(1, normalizeDir(dir));</span>
 <span class="fc" id="L2146">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L2147" title="1 of 2 branches missed.">				if (rs.next())</span>
+<span class="fc bfc" id="L2147" title="All 2 branches covered.">				if (rs.next())</span>
 				{
 <span class="fc" id="L2149">					resizeMode = rs.getString(&quot;resize_mode&quot;);</span>
 				}
@@ -2164,14 +2164,14 @@ public class GalleryDB
 <span class="pc bpc" id="L2164" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
 <span class="pc" id="L2165">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 		}
-<span class="pc bpc" id="L2167" title="2 of 4 branches missed.">		if (recursive &amp;&amp; (Tools.isEmpty(resizeMode)))</span>
+<span class="pc bpc" id="L2167" title="1 of 4 branches missed.">		if (recursive &amp;&amp; (Tools.isEmpty(resizeMode)))</span>
 		{
-<span class="nc" id="L2169">			int index = dir.lastIndexOf('/');</span>
-<span class="nc bnc" id="L2170" title="All 2 branches missed.">			if (index &gt; 1)</span>
+<span class="fc" id="L2169">			int index = dir.lastIndexOf('/');</span>
+<span class="pc bpc" id="L2170" title="1 of 2 branches missed.">			if (index &gt; 1)</span>
 			{
-<span class="nc" id="L2172">				String parent = dir.substring(0, index);</span>
-<span class="nc" id="L2173">				Logger.debug(GalleryDB.class, &quot;Testujem gallery size parent: &quot; + parent);</span>
-<span class="nc" id="L2174">				return (getResizeMode(parent, recursive));</span>
+<span class="fc" id="L2172">				String parent = dir.substring(0, index);</span>
+<span class="fc" id="L2173">				Logger.debug(GalleryDB.class, &quot;Testujem gallery size parent: &quot; + parent);</span>
+<span class="fc" id="L2174">				return (getResizeMode(parent, recursive));</span>
 			}
 			else
 			{
@@ -2196,7 +2196,7 @@ public class GalleryDB
 <span class="fc" id="L2196">				ps = db_conn.prepareStatement(&quot;SELECT resize_mode FROM gallery_dimension WHERE image_path=?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true));</span>
 <span class="fc" id="L2197">				ps.setString(1, normalizeDir(dir));</span>
 <span class="fc" id="L2198">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L2199" title="1 of 2 branches missed.">				if (rs.next())</span>
+<span class="fc bfc" id="L2199" title="All 2 branches covered.">				if (rs.next())</span>
 				{
 <span class="fc" id="L2201">					ret = rs.getString(&quot;resize_mode&quot;);</span>
 				}
@@ -2282,7 +2282,7 @@ public class GalleryDB
 
 <span class="fc" id="L2283">		String imgNameLC = img.getName().toLowerCase();</span>
 
-<span class="pc bpc" id="L2285" title="2 of 6 branches missed.">		if (!imgNameLC.endsWith(&quot;.jpg&quot;) &amp;&amp; !imgNameLC.endsWith(&quot;.gif&quot;) &amp;&amp; !imgNameLC.endsWith(&quot;.png&quot;)</span>
+<span class="pc bpc" id="L2285" title="1 of 6 branches missed.">		if (!imgNameLC.endsWith(&quot;.jpg&quot;) &amp;&amp; !imgNameLC.endsWith(&quot;.gif&quot;) &amp;&amp; !imgNameLC.endsWith(&quot;.png&quot;)</span>
 <span class="pc bpc" id="L2286" title="1 of 2 branches missed.">					&amp;&amp; !imgNameLC.endsWith(&quot;.jpeg&quot;))</span>
 		{
 <span class="nc" id="L2288">			return (false);</span>
@@ -2305,10 +2305,10 @@ public class GalleryDB
 		{
 			// zisti ci mame original obrazok
 <span class="fc" id="L2307">			IwcmFile original = new IwcmFile(realPathOrig);</span>
-<span class="pc bpc" id="L2308" title="4 of 6 branches missed.">			if ((original.exists() == false || original.length()&lt;1) &amp;&amp; miniatures)</span>
+<span class="pc bpc" id="L2308" title="2 of 6 branches missed.">			if ((original.exists() == false || original.length()&lt;1) &amp;&amp; miniatures)</span>
 			{
 				// skopiruj ho
-<span class="nc" id="L2311">				copyFile(realPath, realPathOrig);</span>
+<span class="fc" id="L2311">				copyFile(realPath, realPathOrig);</span>
 			}
 <span class="pc bpc" id="L2313" title="5 of 6 branches missed.">			if (out != null &amp;&amp; prop != null &amp;&amp; miniatures)</span>
 			{
@@ -2316,10 +2316,10 @@ public class GalleryDB
 			}
 			// resizni
 <span class="fc" id="L2318">			int status = resizePicture(realPathOrig, realPath, dimNormal.getWidth(), dimNormal.getHeight(), resizeMode);</span>
-<span class="pc bpc" id="L2319" title="1 of 2 branches missed.">			if (status &gt; 0)</span>
+<span class="fc bfc" id="L2319" title="All 2 branches covered.">			if (status &gt; 0)</span>
 			{
-<span class="nc" id="L2321">				ret = false;</span>
-<span class="nc bnc" id="L2322" title="All 4 branches missed.">				if (out != null &amp;&amp; prop != null)</span>
+<span class="fc" id="L2321">				ret = false;</span>
+<span class="pc bpc" id="L2322" title="3 of 4 branches missed.">				if (out != null &amp;&amp; prop != null)</span>
 				{
 <span class="nc" id="L2324">					println(out, normal.getName() + &quot;: &lt;span class='error'&gt;&quot; + prop.getText(&quot;gallery.resizing.error_&quot; + status)</span>
 								+ &quot;&lt;/span&gt;&quot;);
@@ -2680,8 +2680,8 @@ public class GalleryDB
 <span class="nc" id="L2680">					return (-4);</span>
 				// BufferedImage originalImage = ImageIO.read(fOrigImg);
 <span class="fc" id="L2682">				IwcmFile fDestDir = (new IwcmFile(realPathSmall)).getParentFile();</span>
-<span class="pc bpc" id="L2683" title="1 of 2 branches missed.">				if (fDestDir.exists() == false)</span>
-<span class="nc" id="L2684">					fDestDir.mkdirs();</span>
+<span class="fc bfc" id="L2683" title="All 2 branches covered.">				if (fDestDir.exists() == false)</span>
+<span class="fc" id="L2684">					fDestDir.mkdirs();</span>
 <span class="fc" id="L2685">				int w = (int) width;</span>
 <span class="fc" id="L2686">				int h = (int) height;</span>
 				// u crop suradnice laveho horneho rohu
@@ -2691,20 +2691,20 @@ public class GalleryDB
 <span class="fc" id="L2691">				int pom_h = 0;</span>
 <span class="fc" id="L2692">				double pomer = (double) originalImage.getWidth() / (double) originalImage.getHeight();</span>
 <span class="fc" id="L2693">				boolean resizeAndCrop = false;</span>
-<span class="pc bpc" id="L2694" title="1 of 2 branches missed.">				if (&quot;A&quot;.equals(resizeMode))</span>
+<span class="fc bfc" id="L2694" title="All 2 branches covered.">				if (&quot;A&quot;.equals(resizeMode))</span>
 				{// presny rozmer
 				}
 <span class="fc bfc" id="L2697" title="All 2 branches covered.">				else if (&quot;C&quot;.equals(resizeMode))</span>
 				{
 					// crop
-<span class="pc bpc" id="L2700" title="2 of 4 branches missed.">					if (originalImage.getWidth() &gt; w &amp;&amp; originalImage.getHeight() &gt; h)</span>
+<span class="pc bpc" id="L2700" title="1 of 4 branches missed.">					if (originalImage.getWidth() &gt; w &amp;&amp; originalImage.getHeight() &gt; h)</span>
 					{
 						// zmensit a orezat
 <span class="fc" id="L2703">						pom_w = w;</span>
 <span class="fc" id="L2704">						pom_h = h;</span>
 <span class="fc" id="L2705">						resizeAndCrop = true;</span>
 <span class="fc" id="L2706">						h = (int) Math.round(w * 1 / pomer);</span>
-<span class="pc bpc" id="L2707" title="1 of 2 branches missed.">						if (h &lt; pom_h)</span>
+<span class="fc bfc" id="L2707" title="All 2 branches covered.">						if (h &lt; pom_h)</span>
 						{
 <span class="fc" id="L2709">							h = pom_h;</span>
 <span class="fc" id="L2710">							w = (int) Math.round(h * pomer);</span>
@@ -2715,18 +2715,18 @@ public class GalleryDB
 						else
 						{
 							// orezeme s vysky
-<span class="nc" id="L2718">							x = 0;</span>
-<span class="nc" id="L2719">							y = (h - pom_h) / 2;</span>
+<span class="fc" id="L2718">							x = 0;</span>
+<span class="fc" id="L2719">							y = (h - pom_h) / 2;</span>
 						}
 					}
-<span class="nc bnc" id="L2722" title="All 4 branches missed.">					else if (w &gt; originalImage.getWidth() &amp;&amp; h &lt;= originalImage.getHeight())</span>
+<span class="pc bpc" id="L2722" title="1 of 4 branches missed.">					else if (w &gt; originalImage.getWidth() &amp;&amp; h &lt;= originalImage.getHeight())</span>
 					{
 						// orezat z vysky
-<span class="nc" id="L2725">						x = 0;</span>
-<span class="nc" id="L2726">						w = originalImage.getWidth();</span>
-<span class="nc" id="L2727">						y = (originalImage.getHeight() - h) / 2;</span>
+<span class="fc" id="L2725">						x = 0;</span>
+<span class="fc" id="L2726">						w = originalImage.getWidth();</span>
+<span class="fc" id="L2727">						y = (originalImage.getHeight() - h) / 2;</span>
 					}
-<span class="nc bnc" id="L2729" title="All 4 branches missed.">					else if (w &lt;= originalImage.getWidth() &amp;&amp; h &gt; originalImage.getHeight())</span>
+<span class="pc bpc" id="L2729" title="3 of 4 branches missed.">					else if (w &lt;= originalImage.getWidth() &amp;&amp; h &gt; originalImage.getHeight())</span>
 					{
 						// orezat so sirky
 <span class="nc" id="L2732">						y = 0;</span>
@@ -2736,11 +2736,11 @@ public class GalleryDB
 					else
 					{
 
-<span class="nc" id="L2739">						copyFile(realPath, realPathSmall);</span>
+<span class="fc" id="L2739">						copyFile(realPath, realPathSmall);</span>
 						//convertCmykToRgb(realPathSmall);
-<span class="nc" id="L2741">						stripExif(realPathSmall);</span>
+<span class="fc" id="L2741">						stripExif(realPathSmall);</span>
 
-<span class="nc" id="L2743">						return (1);</span>
+<span class="fc" id="L2743">						return (1);</span>
 					}
 					/*
 					 * } else { w = originalImage.getWidth(); }
@@ -2812,7 +2812,7 @@ public class GalleryDB
 <span class="fc" id="L2812">				w = GalleryDBTools.limitMaxSize(w);</span>
 <span class="fc" id="L2813">				h = GalleryDBTools.limitMaxSize(h);</span>
 
-<span class="pc bpc" id="L2815" title="1 of 2 branches missed.">				if (fSmallImg.exists())</span>
+<span class="fc bfc" id="L2815" title="All 2 branches covered.">				if (fSmallImg.exists())</span>
 				{
 					//netreba, convert subor prepise fSmallImg.delete();
 				}
@@ -2830,7 +2830,7 @@ public class GalleryDB
 					}
 				}
 <span class="pc bpc" id="L2832" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(imageMagickDir)</span>
-<span class="pc bpc" id="L2833" title="1 of 4 branches missed.">							&amp;&amp; (originalImage.getWidth() &gt; 500 || originalImage.getHeight() &gt; 500 || Constants</span>
+<span class="fc bfc" id="L2833" title="All 4 branches covered.">							&amp;&amp; (originalImage.getWidth() &gt; 500 || originalImage.getHeight() &gt; 500 || Constants</span>
 <span class="pc bpc" id="L2834" title="2 of 4 branches missed.">										.getBoolean(&quot;galleryAlwaysUseImageMagick&quot;)) &amp;&amp; convertExists)</span>
 				{
 <span class="nc" id="L2836">					Logger.debug(GalleryDB.class, &quot;executing image magick: &quot; + imageMagickDir + File.separatorChar + runtimeFile);</span>
@@ -3060,7 +3060,7 @@ public class GalleryDB
 <span class="fc" id="L3060">					Image smallImage = null;</span>
 <span class="fc bfc" id="L3061" title="All 2 branches covered.">					if (&quot;C&quot;.equals(resizeMode))</span>
 					{// crop image
-<span class="pc bpc" id="L3063" title="1 of 2 branches missed.">						if (resizeAndCrop)</span>
+<span class="fc bfc" id="L3063" title="All 2 branches covered.">						if (resizeAndCrop)</span>
 						{// zmensit a orezat
 <span class="fc" id="L3065">							smallImage = originalBufferedImage.getScaledInstance(w, h, scaleType);</span>
 <span class="fc" id="L3066">							BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);</span>
@@ -3072,7 +3072,7 @@ public class GalleryDB
 <span class="fc" id="L3072">						}</span>
 						else
 						{// iba orezat
-<span class="nc" id="L3075">							smallImage = originalBufferedImage.getSubimage(x, y, w, h);</span>
+<span class="fc" id="L3075">							smallImage = originalBufferedImage.getSubimage(x, y, w, h);</span>
 						}
 					}
 					else
@@ -3095,9 +3095,9 @@ public class GalleryDB
 <span class="fc" id="L3095">						ImageWriter writer = null;</span>
 
 <span class="fc" id="L3097">						String format = &quot;jpg&quot;;</span>
-<span class="pc bpc" id="L3098" title="1 of 2 branches missed.">                        if (realPathLC.endsWith(&quot;.png&quot;))</span>
+<span class="fc bfc" id="L3098" title="All 2 branches covered.">                        if (realPathLC.endsWith(&quot;.png&quot;))</span>
                         {
-<span class="nc" id="L3100">                            format = &quot;png&quot;;</span>
+<span class="fc" id="L3100">                            format = &quot;png&quot;;</span>
                         }
                         else
                         {
@@ -3263,13 +3263,13 @@ public class GalleryDB
 	public static boolean isGalleryFolder(String galleryFolderUrl)
 	{
 <span class="fc" id="L3265">		galleryFolderUrl = galleryFolderUrl.replace('\\', '/');</span>
-<span class="pc bpc" id="L3266" title="1 of 2 branches missed.">		if (galleryFolderUrl.indexOf(&quot;/&quot; + Constants.getString(&quot;galleryDirName&quot;)) != -1)</span>
+<span class="fc bfc" id="L3266" title="All 2 branches covered.">		if (galleryFolderUrl.indexOf(&quot;/&quot; + Constants.getString(&quot;galleryDirName&quot;)) != -1)</span>
 <span class="fc" id="L3267">			return (true);</span>
 		// skus zistit, ci mame dany adresar v databaze
-<span class="nc" id="L3269">		Dimension[] dim = getDimension(galleryFolderUrl, true, false);</span>
-<span class="nc bnc" id="L3270" title="All 4 branches missed.">		if (dim[0] != null &amp;&amp; dim[1] != null)</span>
+<span class="fc" id="L3269">		Dimension[] dim = getDimension(galleryFolderUrl, true, false);</span>
+<span class="pc bpc" id="L3270" title="3 of 4 branches missed.">		if (dim[0] != null &amp;&amp; dim[1] != null)</span>
 <span class="nc" id="L3271">			return (true);</span>
-<span class="nc" id="L3272">		return (false);</span>
+<span class="fc" id="L3272">		return (false);</span>
 	}
 	/**
 	 * Increments send_count for image identified by imgPath
@@ -4206,8 +4206,8 @@ public class GalleryDB
 	{
 		try
 		{
-<span class="nc" id="L4209">			new SimpleQuery().execute(&quot;UPDATE gallery SET upload_datetime = ? WHERE image_path = ? AND image_name = ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true), new Timestamp(uploadDate), dir, name);</span>
-<span class="nc" id="L4210">			return true;</span>
+<span class="fc" id="L4209">			new SimpleQuery().execute(&quot;UPDATE gallery SET upload_datetime = ? WHERE image_path = ? AND image_name = ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true), new Timestamp(uploadDate), dir, name);</span>
+<span class="fc" id="L4210">			return true;</span>
 		}
 <span class="nc" id="L4212">		catch (Exception e)</span>
 		{
@@ -4257,7 +4257,7 @@ public class GalleryDB
 
 		try
 		{
-<span class="pc bpc" id="L4260" title="2 of 6 branches missed.">			if(file != null &amp;&amp; (file.getName().toLowerCase().endsWith(&quot;jpg&quot;) || file.getName().toLowerCase().endsWith(&quot;jpeg&quot;)))</span>
+<span class="pc bpc" id="L4260" title="1 of 6 branches missed.">			if(file != null &amp;&amp; (file.getName().toLowerCase().endsWith(&quot;jpg&quot;) || file.getName().toLowerCase().endsWith(&quot;jpeg&quot;)))</span>
 			{
 <span class="fc" id="L4262">				Metadata metadata = null;</span>
 <span class="pc bpc" id="L4263" title="1 of 2 branches missed.">				if(file != null)</span>
@@ -4498,7 +4498,7 @@ public class GalleryDB
 <span class="pc bpc" id="L4498" title="1 of 4 branches missed.">		if (Constants.getBoolean(&quot;galleryUseFastLoading&quot;)==false &amp;&amp; file.isFile()==false) return false;</span>
 
 <span class="fc" id="L4500">		String suffix = FileTools.getFileExtension(file.getName()).toLowerCase();</span>
-<span class="pc bpc" id="L4501" title="4 of 8 branches missed.">		if (&quot;png&quot;.equals(suffix) || &quot;jpg&quot;.equals(suffix) || &quot;jpeg&quot;.equals(suffix) || &quot;gif&quot;.equals(suffix))</span>
+<span class="pc bpc" id="L4501" title="3 of 8 branches missed.">		if (&quot;png&quot;.equals(suffix) || &quot;jpg&quot;.equals(suffix) || &quot;jpeg&quot;.equals(suffix) || &quot;gif&quot;.equals(suffix))</span>
 		{
 <span class="fc" id="L4503">			return true;</span>
 		}
@@ -4553,10 +4553,10 @@ public class GalleryDB
 <span class="fc" id="L4553">			Logger.debug(GalleryDB.class, &quot;Deleting gallery &quot; + path + &quot; ...&quot;);</span>
 <span class="fc" id="L4554">			Map&lt;String, GalleryBean&gt; beans = getGalleryBeanTable(path, &quot;_sk&quot;, true);</span>
 <span class="fc" id="L4555">			Logger.debug(GalleryDB.class, &quot;Deleting images...&quot;);</span>
-<span class="pc bpc" id="L4556" title="1 of 2 branches missed.">			for(GalleryBean b : beans.values())</span>
+<span class="fc bfc" id="L4556" title="All 2 branches covered.">			for(GalleryBean b : beans.values())</span>
 			{
-<span class="nc" id="L4558">				removeImage(b);</span>
-<span class="nc" id="L4559">			}</span>
+<span class="fc" id="L4558">				removeImage(b);</span>
+<span class="fc" id="L4559">			}</span>
 <span class="fc" id="L4560">			Logger.debug(GalleryDB.class, &quot;Deleted &quot; + beans.size() + &quot; images&quot;);</span>
 <span class="fc" id="L4561">			new SimpleQuery().execute(&quot;DELETE from gallery_dimension WHERE image_path LIKE ? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true), path+&quot;%&quot;);</span>
 			try{
@@ -4593,59 +4593,59 @@ public class GalleryDB
 	 */
 	private static void removeImage(GalleryBean b)
 	{
-<span class="nc" id="L4596">		java.sql.Connection db_conn = null;</span>
-<span class="nc" id="L4597">		java.sql.PreparedStatement ps = null;</span>
-<span class="nc" id="L4598">		IwcmFile file = null;</span>
-<span class="nc" id="L4599">		String sql = &quot;DELETE FROM gallery WHERE image_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
-<span class="nc" id="L4600">		String dir = b.getImagePath();</span>
-<span class="nc" id="L4601">		String name = b.getImageName();</span>
-<span class="nc" id="L4602">		int imageId = b.getImageId();</span>
-<span class="nc bnc" id="L4603" title="All 2 branches missed.">		if (dir.startsWith(&quot;/&quot;)==false) dir = &quot;/&quot;+dir;</span>
-<span class="nc bnc" id="L4604" title="All 2 branches missed.">		if (name.startsWith(&quot;/&quot;)) name = name.substring(1);</span>
+<span class="fc" id="L4596">		java.sql.Connection db_conn = null;</span>
+<span class="fc" id="L4597">		java.sql.PreparedStatement ps = null;</span>
+<span class="fc" id="L4598">		IwcmFile file = null;</span>
+<span class="fc" id="L4599">		String sql = &quot;DELETE FROM gallery WHERE image_id=? &quot;+CloudToolsForCore.getDomainIdSqlWhere(true);</span>
+<span class="fc" id="L4600">		String dir = b.getImagePath();</span>
+<span class="fc" id="L4601">		String name = b.getImageName();</span>
+<span class="fc" id="L4602">		int imageId = b.getImageId();</span>
+<span class="pc bpc" id="L4603" title="1 of 2 branches missed.">		if (dir.startsWith(&quot;/&quot;)==false) dir = &quot;/&quot;+dir;</span>
+<span class="pc bpc" id="L4604" title="1 of 2 branches missed.">		if (name.startsWith(&quot;/&quot;)) name = name.substring(1);</span>
 
-<span class="nc bnc" id="L4606" title="All 2 branches missed.">		if (imageId &lt; 1) imageId = getImageId(dir, name);</span>
+<span class="pc bpc" id="L4606" title="1 of 2 branches missed.">		if (imageId &lt; 1) imageId = getImageId(dir, name);</span>
 
-<span class="nc" id="L4608">		String path = Tools.getRealPath(dir);</span>
+<span class="fc" id="L4608">		String path = Tools.getRealPath(dir);</span>
 		try
 		{
-<span class="nc bnc" id="L4611" title="All 2 branches missed.">			if (imageId &gt; 0)</span>
+<span class="pc bpc" id="L4611" title="1 of 2 branches missed.">			if (imageId &gt; 0)</span>
 			{
-<span class="nc" id="L4613">				db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L4614">				ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L4615">				ps.setInt(1, imageId);</span>
-<span class="nc" id="L4616">				ps.execute();</span>
-<span class="nc" id="L4617">				ps.close();</span>
-<span class="nc" id="L4618">				db_conn.close();</span>
-<span class="nc" id="L4619">				ps = null;</span>
-<span class="nc" id="L4620">				db_conn = null;</span>
+<span class="fc" id="L4613">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L4614">				ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L4615">				ps.setInt(1, imageId);</span>
+<span class="fc" id="L4616">				ps.execute();</span>
+<span class="fc" id="L4617">				ps.close();</span>
+<span class="fc" id="L4618">				db_conn.close();</span>
+<span class="fc" id="L4619">				ps = null;</span>
+<span class="fc" id="L4620">				db_conn = null;</span>
 			}
-<span class="nc" id="L4622">			file = new IwcmFile(path + File.separator + name);</span>
-<span class="nc bnc" id="L4623" title="All 2 branches missed.">			if (file.exists())</span>
+<span class="fc" id="L4622">			file = new IwcmFile(path + File.separator + name);</span>
+<span class="pc bpc" id="L4623" title="1 of 2 branches missed.">			if (file.exists())</span>
 			{
-<span class="nc" id="L4625">				boolean ok = file.delete();</span>
-<span class="nc" id="L4626">				Logger.debug(GalleryDB.class, &quot;Deleting file=&quot;+file.getAbsolutePath()+&quot; ok=&quot;+ok);</span>
+<span class="fc" id="L4625">				boolean ok = file.delete();</span>
+<span class="fc" id="L4626">				Logger.debug(GalleryDB.class, &quot;Deleting file=&quot;+file.getAbsolutePath()+&quot; ok=&quot;+ok);</span>
 			}
-<span class="nc" id="L4628">			file = new IwcmFile(path + File.separator + &quot;s_&quot; + name);</span>
-<span class="nc bnc" id="L4629" title="All 2 branches missed.">			if (file.exists())</span>
+<span class="fc" id="L4628">			file = new IwcmFile(path + File.separator + &quot;s_&quot; + name);</span>
+<span class="pc bpc" id="L4629" title="1 of 2 branches missed.">			if (file.exists())</span>
 			{
-<span class="nc" id="L4631">				boolean ok = file.delete();</span>
-<span class="nc" id="L4632">				Logger.debug(GalleryDB.class, &quot;Deleting file=&quot;+file.getAbsolutePath()+&quot; ok=&quot;+ok);</span>
+<span class="fc" id="L4631">				boolean ok = file.delete();</span>
+<span class="fc" id="L4632">				Logger.debug(GalleryDB.class, &quot;Deleting file=&quot;+file.getAbsolutePath()+&quot; ok=&quot;+ok);</span>
 			}
-<span class="nc" id="L4634">			file = new IwcmFile(path + File.separator + &quot;o_&quot; + name);</span>
-<span class="nc bnc" id="L4635" title="All 2 branches missed.">			if (file.exists())</span>
+<span class="fc" id="L4634">			file = new IwcmFile(path + File.separator + &quot;o_&quot; + name);</span>
+<span class="pc bpc" id="L4635" title="1 of 2 branches missed.">			if (file.exists())</span>
 			{
-<span class="nc" id="L4637">				boolean ok = file.delete();</span>
-<span class="nc" id="L4638">				Logger.debug(GalleryDB.class, &quot;Deleting file=&quot;+file.getAbsolutePath()+&quot; ok=&quot;+ok);</span>
+<span class="fc" id="L4637">				boolean ok = file.delete();</span>
+<span class="fc" id="L4638">				Logger.debug(GalleryDB.class, &quot;Deleting file=&quot;+file.getAbsolutePath()+&quot; ok=&quot;+ok);</span>
 			}
 		}
 <span class="nc" id="L4641">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 		finally{
 			try{
-<span class="nc bnc" id="L4644" title="All 2 branches missed.">				if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L4645" title="All 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
-<span class="nc" id="L4646">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc bpc" id="L4644" title="1 of 2 branches missed.">				if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L4645" title="1 of 2 branches missed.">				if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L4646">			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 		}
-<span class="nc" id="L4648">	}</span>
+<span class="fc" id="L4648">	}</span>
 
 	/**
 	 * V databaze nastavi rozmer a rezim zmeny velkosti podadresarom podla nastaveneho adresara
@@ -4653,58 +4653,58 @@ public class GalleryDB
 	 * @param recursive
 	 */
 	public static void updateDirectoryDimToSubfolders(String dir) {
-<span class="nc" id="L4656">		Dimension[] dims = getDimension(dir, true);</span>
-<span class="nc" id="L4657">		String resizeMode = getResizeMode(dir, true);</span>
-<span class="nc" id="L4658">		updateDirectoryDim(dir, dims[0], dims[1], resizeMode, true);</span>
-<span class="nc" id="L4659">	}</span>
+<span class="fc" id="L4656">		Dimension[] dims = getDimension(dir, true);</span>
+<span class="fc" id="L4657">		String resizeMode = getResizeMode(dir, true);</span>
+<span class="fc" id="L4658">		updateDirectoryDim(dir, dims[0], dims[1], resizeMode, true);</span>
+<span class="fc" id="L4659">	}</span>
 
 	private static void updateDirectoryDim(String dir, Dimension dim, Dimension dimNormal, String resizeMode, boolean recursive)
 	{
-<span class="nc" id="L4663">		IwcmFile directory = IwcmFile.fromVirtualPath(&quot;/&quot; + dir);</span>
-<span class="nc bnc" id="L4664" title="All 4 branches missed.">		if (directory.exists() &amp;&amp; directory.isDirectory())</span>
+<span class="fc" id="L4663">		IwcmFile directory = IwcmFile.fromVirtualPath(&quot;/&quot; + dir);</span>
+<span class="pc bpc" id="L4664" title="2 of 4 branches missed.">		if (directory.exists() &amp;&amp; directory.isDirectory())</span>
 		{
-<span class="nc" id="L4666">			IwcmFile[] fileList = directory.listFiles();</span>
-<span class="nc bnc" id="L4667" title="All 2 branches missed.">			for (IwcmFile file : fileList)</span>
+<span class="fc" id="L4666">			IwcmFile[] fileList = directory.listFiles();</span>
+<span class="fc bfc" id="L4667" title="All 2 branches covered.">			for (IwcmFile file : fileList)</span>
 			{
-<span class="nc bnc" id="L4669" title="All 2 branches missed.">				if (file.isDirectory())</span>
+<span class="fc bfc" id="L4669" title="All 2 branches covered.">				if (file.isDirectory())</span>
 				{
-<span class="nc" id="L4671">					java.sql.Connection db_conn = null;</span>
-<span class="nc" id="L4672">					java.sql.PreparedStatement ps = null;</span>
+<span class="fc" id="L4671">					java.sql.Connection db_conn = null;</span>
+<span class="fc" id="L4672">					java.sql.PreparedStatement ps = null;</span>
 
 					try
 					{
-<span class="nc bnc" id="L4676" title="All 2 branches missed.">						if (!dir.equals(&quot;&quot;))</span>
+<span class="pc bpc" id="L4676" title="1 of 2 branches missed.">						if (!dir.equals(&quot;&quot;))</span>
 						{
-<span class="nc" id="L4678">							db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L4679">							ps = db_conn</span>
-<span class="nc" id="L4680">								.prepareStatement(&quot;UPDATE gallery_dimension SET image_width=?, image_height=?, normal_width=?, normal_height=?, resize_mode=? WHERE image_path=?&quot;);</span>
-<span class="nc" id="L4681">							ps.setInt(1, dim.width);</span>
-<span class="nc" id="L4682">							ps.setInt(2, dim.height);</span>
-<span class="nc" id="L4683">							ps.setInt(3, dimNormal.width);</span>
-<span class="nc" id="L4684">							ps.setInt(4, dimNormal.height);</span>
-<span class="nc" id="L4685">							ps.setString(5, resizeMode);</span>
-<span class="nc" id="L4686">							ps.setString(6, normalizeDir(file.getVirtualPath()));</span>
-<span class="nc" id="L4687">							ps.execute();</span>
-<span class="nc" id="L4688">							ps.close();</span>
-<span class="nc" id="L4689">							db_conn.close();</span>
-<span class="nc" id="L4690">							db_conn = null;</span>
-<span class="nc" id="L4691">							ps = null;</span>
+<span class="fc" id="L4678">							db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L4679">							ps = db_conn</span>
+<span class="fc" id="L4680">								.prepareStatement(&quot;UPDATE gallery_dimension SET image_width=?, image_height=?, normal_width=?, normal_height=?, resize_mode=? WHERE image_path=?&quot;);</span>
+<span class="fc" id="L4681">							ps.setInt(1, dim.width);</span>
+<span class="fc" id="L4682">							ps.setInt(2, dim.height);</span>
+<span class="fc" id="L4683">							ps.setInt(3, dimNormal.width);</span>
+<span class="fc" id="L4684">							ps.setInt(4, dimNormal.height);</span>
+<span class="fc" id="L4685">							ps.setString(5, resizeMode);</span>
+<span class="fc" id="L4686">							ps.setString(6, normalizeDir(file.getVirtualPath()));</span>
+<span class="fc" id="L4687">							ps.execute();</span>
+<span class="fc" id="L4688">							ps.close();</span>
+<span class="fc" id="L4689">							db_conn.close();</span>
+<span class="fc" id="L4690">							db_conn = null;</span>
+<span class="fc" id="L4691">							ps = null;</span>
 						}
 					}
 <span class="nc" id="L4694">					catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 					finally{
 						try{
-<span class="nc bnc" id="L4697" title="All 2 branches missed.">							if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L4698" title="All 2 branches missed.">							if (db_conn != null) db_conn.close();</span>
-<span class="nc" id="L4699">						}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc bpc" id="L4697" title="1 of 2 branches missed.">							if (ps != null) ps.close();</span>
+<span class="pc bpc" id="L4698" title="1 of 2 branches missed.">							if (db_conn != null) db_conn.close();</span>
+<span class="pc" id="L4699">						}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 					}
 
-<span class="nc bnc" id="L4702" title="All 2 branches missed.">					if(recursive)</span>
-<span class="nc" id="L4703">						updateDirectoryDim(normalizeDir(file.getVirtualPath()), dim, dimNormal, resizeMode, recursive);</span>
+<span class="pc bpc" id="L4702" title="1 of 2 branches missed.">					if(recursive)</span>
+<span class="fc" id="L4703">						updateDirectoryDim(normalizeDir(file.getVirtualPath()), dim, dimNormal, resizeMode, recursive);</span>
 				}
 			}
 		}
-<span class="nc" id="L4707">	}</span>
+<span class="fc" id="L4707">	}</span>
 
 	/**
 	 * aplikuje na &quot;obrazok&quot; vodotlac podla domeny
@@ -4767,4 +4767,4 @@ public class GalleryDB
 <span class="nc" id="L4767">		return GalleryDBTools.cropAndResize(from,cwidth,cheight,cleft,ctop,finalWidth,finalHeight,fillColor,exactFinalSize,to,imageQuality,ip);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -9,6 +9,7 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
@@ -16,6 +17,7 @@ import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -27,19 +29,25 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
 public class EmailsEntity extends ActiveRecordRepository implements Serializable {
 
-<span class="fc" id="L33">    public EmailsEntity() {}</span>
+<span class="fc" id="L35">    public EmailsEntity() {}</span>
 
-<span class="fc" id="L35">    public EmailsEntity(String recipientEmail) {</span>
-<span class="fc" id="L36">        this.recipientEmail = recipientEmail;</span>
-<span class="fc" id="L37">    }</span>
+<span class="fc" id="L37">    public EmailsEntity(String recipientEmail) {</span>
+<span class="fc" id="L38">        this.recipientEmail = recipientEmail;</span>
+<span class="fc" id="L39">    }</span>
 
-<span class="fc" id="L39">    public EmailsEntity(String recipientEmail, String recipientName) {</span>
-<span class="fc" id="L40">        this.recipientEmail = recipientEmail;</span>
-<span class="fc" id="L41">        this.recipientName = recipientName;</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L41">    public EmailsEntity(String recipientEmail, String recipientName) {</span>
+<span class="fc" id="L42">        this.recipientEmail = recipientEmail;</span>
+<span class="fc" id="L43">        this.recipientName = recipientName;</span>
+<span class="fc" id="L44">    }</span>
+
+    //Set entity domain id
+	@PrePersist
+	public void prePersist() {
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">		if(domainId == null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L50">	}</span>
 
     @Id
     @Column(name = &quot;email_id&quot;)
@@ -64,8 +72,19 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
             @DataTableColumnEditor( type = &quot;textarea&quot; )
         }
     )
-    @Size(max = 128)
     private String recipientEmail;
+
+    /**
+     * During recipients adding, this flag is used to skip wrong emails.
+     * Used in campaigns.
+     */
+    @Transient
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title=&quot;components.datatables.data.skip_wrong&quot;,
+        hidden = true
+    )
+    private boolean skipWrongEmails;
 
     @Column(name = &quot;sent_date&quot;)
     @DataTableColumn(
@@ -138,8 +157,11 @@ public class EmailsEntity extends ActiveRecordRepository implements Serializable
     @Column(name = &quot;send_at&quot;)
     private Date sendAt;
 
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
+
     public void setId(Long id) {
-<span class="fc" id="L142">		this. id = id;</span>
-<span class="fc" id="L143">	}</span>
+<span class="fc" id="L164">		this. id = id;</span>
+<span class="fc" id="L165">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

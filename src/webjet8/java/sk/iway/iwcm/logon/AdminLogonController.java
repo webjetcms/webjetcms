@@ -10,7 +10,6 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -43,6 +42,7 @@ import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.users.PasswordSecurity;
+import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -69,25 +69,58 @@ public class AdminLogonController {
     private static final String TWOFA_PASSWORD_FORM = "/admin/skins/webjet8/logon-spring-2fa";
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
-    @SuppressWarnings("unused")
-    private final AuthenticationManager authenticationManager;
     private final UserDetailsRepository userDetailsRepository;
 
     @Autowired
-    public AdminLogonController(AuthenticationManager authenticationManager, UserDetailsRepository userDetailsRepository) {
-        this.authenticationManager = authenticationManager;
+    public AdminLogonController(UserDetailsRepository userDetailsRepository) {
         this.userDetailsRepository = userDetailsRepository;
     }
 
+    /**
+     * This method is used from email link to change password
+     * @param request
+     * @param session
+     * @return
+     */
+    @GetMapping("logon/changePassword")
+    public String showChangePasswordForm(ModelMap model, HttpServletRequest request, HttpSession session) {
+        UserForm userForm = UserChangePasswordService.getPreparedUserForm(request, model);
+
+        if(userForm == null) {
+            model.addAttribute("userForm", new UserForm());
+            return LOGON_FORM;
+        }
+
+        model.addAttribute("userForm", userForm);
+        return CHANGE_PASSWORD_FORM;
+    }
 
     @PostMapping("logon/changePassword")
     public String edit(@ModelAttribute("userForm") UserForm userForm, ModelMap model, HttpServletRequest request, HttpServletResponse response, HttpSession session) {
-        Identity user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
+
+        Identity user = null;
+        String selectedLoginFromSelect = userForm.getSelectedLogin();
+        String changePasswordAuth = userForm.getAuth();
+
+        // This is special
+        //  -> can contain only 1 login value when reseting password via login
+        //  -> when reseting password via email, it can contain multiple login's separeted by UserChangePasswordService.LOGINS_SEPARATOR
+        String login = userForm.getLogin();
+
+        if (Tools.isNotEmpty(changePasswordAuth)) {
+            // Verify selected login and in one shoot it will verify changePasswordAuth
+            if(UserChangePasswordService.verifyLoginValue(login, selectedLoginFromSelect, changePasswordAuth, request) == true)
+                user = new Identity( UsersDB.getUser(selectedLoginFromSelect) );
+        } else {
+            user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
+        }
+
         if (user == null) {
             // zaskodnik tu nema co robit
             return LOGON_FORM;
         }
         Prop prop = Prop.getInstance(request.getServletContext(), request);
+
         model.addAttribute("userForm", userForm);
 
         // je tam daco a je to rovnake?
@@ -104,17 +137,32 @@ public class AdminLogonController {
             user.setPassword(userForm.getNewPassword());
             UserDetailsService.savePassword(userForm.getNewPassword(), user.getUserId());
 
-            Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "UsrLogonAction - user ("+user.getLogin()+") successfully changed password", -1, -1);
-            session.removeAttribute(Constants.USER_KEY+"_changepassword");
-            LogonTools.setUserToSession(session, user);
+            Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "UsrLogonAction - user (" + user.getLogin() + ") successfully changed password", -1, -1);
+
+            //During password change action, user is obtained via login, not via session
+            if(Tools.isEmpty(changePasswordAuth) == true) {
+                session.removeAttribute(Constants.USER_KEY+"_changepassword");
+                LogonTools.setUserToSession(session, user);
+            }
+
             this.determineLanguage(session, request, response);
             this.determineDefaultWebPagesDirectory(user, session);
             this.checkForNewHelp(session, user);
             this.determineRootWebPageDirectory(session, user);
-            String forwardAfterToken = (String)session.getAttribute("adminAfterLogonRedirect");
-            if (Tools.isEmpty(forwardAfterToken))
-                return "redirect:/admin/v9/";
-            return "redirect:" + forwardAfterToken;
+
+            if (Tools.isNotEmpty(changePasswordAuth)) {
+                // Delete admin log - so change password action will no longer be available
+                UserChangePasswordService.deleteChangePasswordAdminlogBean(login, changePasswordAuth);
+
+                // Redirect to login page where they can test new password
+                // - with changePasswordActionSuccess parameter
+                return "redirect:/admin/logon/?act=changePasswordActionSuccess";
+            } else {
+                String forwardAfterToken = (String)session.getAttribute("adminAfterLogonRedirect");
+                if (Tools.isEmpty(forwardAfterToken))
+                    return "redirect:/admin/v9/";
+                return "redirect:" + forwardAfterToken;
+            }
         } else {
             return CHANGE_PASSWORD_FORM;
         }
@@ -178,7 +226,8 @@ public class AdminLogonController {
         if(request.getParameter("loginName") != null)
         {
             String loginName = request.getParameter("loginName");
-            UsersDB.sendPassword(request,loginName);
+            request.setAttribute(UsersDB.IS_ADMIN_SECTION_KEY, true);
+            UserChangePasswordService.sendPassword(request,loginName);
         }
 
         return LOGON_FORM;

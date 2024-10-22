@@ -6,19 +6,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.system.datatable.Datatable;
-import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerAvailableGroups;
 import sk.iway.spirit.model.MediaGroupBean;
 
 @RestController
 @Datatable
 @RequestMapping(&quot;/admin/rest/media-group&quot;)
 @PreAuthorize(&quot;@WebjetSecurityService.hasPermission('editor_edit_media_group')&quot;)
-public class MediaGroupRestController extends DatatableRestControllerV2&lt;MediaGroupBean, Long&gt; {
+public class MediaGroupRestController extends DatatableRestControllerAvailableGroups&lt;MediaGroupBean, Long&gt; {
 
     @Autowired
     public MediaGroupRestController(MediaGroupRepository mediaGroupRepository) {
-<span class="fc" id="L20">        super(mediaGroupRepository);</span>
+<span class="fc" id="L20">        super(mediaGroupRepository, &quot;id&quot;, &quot;availableGroups&quot;);</span>
 <span class="fc" id="L21">    }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

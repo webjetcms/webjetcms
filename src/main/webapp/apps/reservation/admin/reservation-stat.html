@@ -1,0 +1,242 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.reservation.jpa.ReservationStatDTO")})]*/ '';
+</script>
+<script type="text/javascript">
+
+    var reservationStatDataTable;
+    var url = "/admin/rest/reservation/reservation-stat";
+    var areEventsBound = false;
+
+    //Times charts
+    let doublePieChartTimeObjects;
+    let doublePieChartTimeUsers;
+    //Days charts
+    let doublePieChartDayObjects;
+    let doublePieChartDayUsers;
+    //Line chart - using both
+    let lineChart;
+
+    WJ.breadcrumb({
+        id: "reservationStat",
+        tabs: [
+            {
+                url: '/apps/reservation/admin/',
+                title: '[[#{components.reservation.title}]]',
+                active: false
+            },
+            {
+                url: '/apps/reservation/admin/reservation-stat/',
+                title: '[[#{reservation.reservation_stat.title}]]',
+                active: true
+            },
+            {
+            url: '#dateRange',
+            title: '{filter}',
+            active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+
+        //Set actual month
+        let date = new Date();
+        $("#monthFilter").val( (date.getMonth() + 1) < 10 ? date.getFullYear() + "-0" + (date.getMonth() + 1) : date.getFullYear() + "-" + (date.getMonth() + 1));
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#reservationStatDataTable_extfilter").appendTo("#pills-dateRange-tab");
+        
+        reservationStatDataTable = WJ.DataTable({
+            url: WJ.urlUpdateParam(url, "reservation-type", $("#reservationType button.active").data("reservation-type")),
+            serverSide: false,
+            columns: columns,
+            id: "reservationStatDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            autoHeight: false
+        });
+        reservationStatDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate", "import"]);
+
+        //Create and set amcharts
+        window.initAmcharts().then(module => {
+            $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
+                doublePieChartTimeUsers = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.hours_user_chart.title}]]', "reservationStat-doublePieTimeUsers", result, "outer", "reservation.reservation_stat.hours_user_chart.label.js");
+                ChartTools.createAmchart(doublePieChartTimeUsers); 
+
+                $.ajax({url: getGraphUrl("pie", "objects"), success: function(result) {
+                    doublePieChartTimeObjects = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.hours_object_chart.title}]]', "reservationStat-doublePieTimeObjects", result, "inner", "reservation.reservation_stat.hours_object_chart.label.js");
+                    ChartTools.createAmchart(doublePieChartTimeObjects);
+
+                    $.ajax({url: getGraphUrl("line"), success: function(result) {
+                        lineChart = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["value"], [undefined]), "dayDate", '[[#{reservation.reservation_stat.hours_line_chart.title}]]', "reservationStat-lineDays", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Days);
+                        ChartTools.createAmchart(lineChart);
+
+                        //Do empty init for days charts - they are hidden now so dont need to load data
+                        doublePieChartDayUsers = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.days_user_chart.title}]]', "reservationStat-doublePieDayUsers", [], "outer", "reservation.reservation_stat.days_user_chart.label.js");
+                        ChartTools.createAmchart(doublePieChartDayUsers);
+                        doublePieChartDayObjects = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.days_object_chart.title}]]', "reservationStat-doublePieDayObjects", [], "inner", "reservation.reservation_stat.days_object_chart.label.js");
+                        ChartTools.createAmchart(doublePieChartDayObjects);
+
+                        WJ.hideLoader();
+                    }});
+                }});
+            }});
+        });
+
+        $("#reservationType button").on("click", function() {
+            $("#reservationType button").removeClass("active");
+            $(this).addClass("active");
+
+            getDataAndUpdateAmcharts();
+        });
+
+        $("#monthFilter").on("change", function() {
+            getDataAndUpdateAmcharts();
+        });
+
+        //Hide/show columns depending on selected reservation type
+        function changeColumnsVisibility() {
+            let reservationType = $("#reservationType button.active").data("reservation-type");
+            if("typeHours" === reservationType) {
+                reservationStatDataTable.column(5).visible(true);
+                reservationStatDataTable.column(6).visible(true);
+            } else if("typeDays" === reservationType) {
+                reservationStatDataTable.column(5).visible(false);
+                reservationStatDataTable.column(6).visible(false);
+            }
+        }
+
+        async function getDataAndUpdateAmcharts() {
+            var reservationType = $("#reservationType button.active").data("reservation-type");
+
+            WJ.showLoader();
+
+            if(reservationType == "typeDays") {
+                //Update day charts
+                await $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
+                    doublePieChartDayUsers.chartData =  result;
+                    ChartTools.updateChart(doublePieChartDayUsers);
+                }});
+
+                await $.ajax({url: getGraphUrl("pie", "objects"), success: function(result) {
+                    doublePieChartDayObjects.chartData =  result;
+                    ChartTools.updateChart(doublePieChartDayObjects);
+                }});
+
+                //hide time charts
+                $("#timeCharts").hide();
+
+                //show day charts
+                $("#dayCharts").show();
+
+            } else if(reservationType == "typeHours") {
+                //Update time charts
+                await $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
+                    doublePieChartTimeUsers.chartData =  result;
+                    ChartTools.updateChart(doublePieChartTimeUsers);
+                }});
+
+                await $.ajax({url: getGraphUrl("pie", "objects"), success: function(result) {
+                    doublePieChartTimeObjects.chartData =  result;
+                    ChartTools.updateChart(doublePieChartTimeObjects);
+                }});
+
+                //hide day charts
+                $("#dayCharts").hide();
+
+                //show time charts
+                $("#timeCharts").show();
+            }
+
+            await $.ajax({url: getGraphUrl("line"), success: function(result) {
+                //Update chart title depending on selected reservation type
+                if("typeHours" == reservationType) {
+                    lineChart.chartTitle = '[[#{reservation.reservation_stat.hours_line_chart.title}]]';
+                } else if("typeDays" == reservationType) {
+                    lineChart.chartTitle = '[[#{reservation.reservation_stat.days_line_chart.title}]]';
+                }
+
+                lineChart.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChart);
+            }});
+
+            WJ.hideLoader();
+
+            //add table filter params
+            reservationStatDataTable.ajax.url(WJ.urlUpdateParam(reservationStatDataTable.ajax.url(), "reservation-type", reservationType));
+            reservationStatDataTable.ajax.url(WJ.urlUpdateParam(reservationStatDataTable.ajax.url(), "search-date", $("#monthFilter").val()));
+
+            //reload table values
+            reservationStatDataTable.ajax.reload();
+
+            changeColumnsVisibility();
+        }
+
+        function getGraphUrl(type, wantedValue = "") {
+            let graphUrl = url;
+
+            if("pie" == type) {
+                graphUrl += "/pie-chart-data";
+            } else if("line" == type) {
+                graphUrl += "/line-chart-data";
+            }
+
+            //For all of them
+            graphUrl = WJ.urlUpdateParam(graphUrl, "reservation-type", $("#reservationType button.active").data("reservation-type"));
+            graphUrl = WJ.urlUpdateParam(graphUrl, "search-date", $("#monthFilter").val());
+
+            if("pie" == type) {
+                graphUrl += "&wanted-value=" + wantedValue;
+            }
+
+            return graphUrl;
+        }
+    });
+</script>
+
+<div id="reservationStatDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <input type="month" id="monthFilter" class="form-control form-control-sm"/>
+        </div>
+
+        <div class="col-auto">
+            <div class="btn-group btn-group-toggle" id="reservationType">
+                <button id="typeHours" class="btn btn-sm btn-outline-secondary active" data-toggle="tooltip" data-reservation-type="typeHours">[[#{reservation.reservation_stat.reservation_type.minutes_and_hours}]]</button>
+                <button id="typeDays" class="btn btn-sm btn-outline-secondary" data-toggle="tooltip" data-reservation-type="typeDays">[[#{reservation.reservation_stat.reservation_type.days}]]</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div class="container" style="display: contents">
+
+        <div id="timeCharts" class="row">
+            <div class="col-md">
+                <div id="reservationStat-doublePieTimeUsers" class="amcharts"></div>
+            </div>
+            <div class="col-md">
+                <div id="reservationStat-doublePieTimeObjects" class="amcharts"></div>
+            </div>
+        </div>
+
+        <div id="dayCharts" class="row" style="display: none;">
+            <div class="col-md">
+                <div id="reservationStat-doublePieDayUsers" class="amcharts"></div>
+            </div>
+            <div class="col-md">
+                <div id="reservationStat-doublePieDayObjects" class="amcharts"></div>
+            </div>
+        </div>
+
+        <div id="lineChart" class="row">
+            <div id="reservationStat-lineDays" class="amcharts"></div>
+        </div>
+
+    </div>
+</div>
+
+<table id="reservationStatDataTable" class="datatableInit table"></table>

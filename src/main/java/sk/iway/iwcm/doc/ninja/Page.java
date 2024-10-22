@@ -89,6 +89,17 @@ public class Page {
         return PathFilter.getOrigPath(ninja.getRequest());
     }
 
+    /**
+     * Returns URL address with Query String (if exists)
+     * @return
+     */
+    public String getUrlPathQString(){
+        String path = getUrlPath();
+        String qString = (String)ninja.getRequest().getAttribute("path_filter_query_string");
+        if (qString != null) path += "?" + qString;
+        return path;
+    }
+
     public Map<String, String[]> getUrlParameters() {
         Optional<HttpServletRequest> requestOptional = Optional.ofNullable(ninja.getRequest());
         return requestOptional.isPresent() ? requestOptional.get().getParameterMap() : Collections.emptyMap();

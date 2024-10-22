@@ -12,6 +12,8 @@
 
   <link rel="icon" type="image/x-icon" href="/assets/images/favicon-cms.ico">
 
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
   <style type="text/css">
     :root {
       --base-background-color: #13151B;
@@ -19,7 +21,7 @@
       --docsify-example-panels-document-width: 100%;
       --code-font-size: 12px;
       --heading-h3-margin: 14px 0 0 0;
-      --heading-h3-font-size: 16px;
+      --heading-h3-font-size: 20px;
       --heading-h6-font-size: 14px;
       --search-margin: 0 0 0 0;
       --sidebar-nav-margin: 0.5rem 0 0 0;
@@ -32,6 +34,8 @@
       --link-text-decoration: none;
       --link-text-decoration--hover: underline;
       --link-color: #0090fc;
+      --heading-h2-margin: 0.5rem 0 0 0;
+      --heading-h2-padding: 0px;
     }
 
     .sidebar-section {
@@ -107,6 +111,13 @@
     .markdown-section img[data-no-zoom] {
         display: inline-block;
         text-align: left;
+        padding-top: 0px;
+        padding-bottom: 0px;
+        vertical-align: middle;
+    }
+    .markdown-section img[alt=meme] {
+      display: block;
+      text-align: center;
     }
     .markdown-section img.medium-zoom-image {
       background: var(--code-theme-background);
@@ -133,6 +144,83 @@
     }
     input[type="checkbox"] {
       pointer-events: none;
+    }
+
+    /*WebJET CMS design for buttons and TI*/
+    .btn {
+      border-width: 0;
+      font-size: 14px;
+      outline: none !important;
+      background-image: none !important;
+      filter: none;
+      -webkit-box-shadow: none;
+      -moz-box-shadow: none;
+      box-shadow: none;
+      text-shadow: none;
+      color: #13151B !important;
+      border-radius: 6px;
+      margin-bottom: 2px;
+    }
+
+    .ti {
+      font-size: 1.1rem;
+    }
+
+    .btn-sm {
+      padding: 5px 9px 5px 9px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .btn-danger {
+      color: white;
+      background-color: #f3565d;
+      border-color: #f13e46;
+    }
+    .btn-danger:hover, .btn-danger:focus, .btn-danger:active, .btn-danger.active {
+      color: white;
+      background-color: #f03038;
+      border-color: #ec111b;
+    }
+
+    .btn-success {
+      color: white;
+      background-color: #45b6af;
+      border-color: #3ea49d;
+    }
+    .btn-success:hover, .btn-success:focus, .btn-success:active, .btn-success.active {
+      color: white;
+      background-color: #3a9893;
+      border-color: #307f7a;
+    }
+
+    .btn-warning {
+      color: white;
+      background-color: #dfba49;
+      border-color: #dbb233;
+    }
+    .btn-warning:hover, .btn-warning:focus, .btn-warning:active, .btn-warning.active {
+      color: white;
+      background-color: #d9ad26;
+      border-color: #bb9521;
+    }
+
+    .btn-duplicate {
+      background-color: rgb(191, 90, 242) !important;
+      border-color: rgb(191, 90, 242) !important;
+    }
+
+    .btn-outline-secondary {
+      color: #6c757d;
+      background-color: #fff;
+      border-color: #b3b8c7;
+      border-width: 1px
+    }
+
+    .btn-outline-secondary:hover {
+      color: #fff;
+      background-color: #6c757d;
+      border-color: #6c757d;
     }
 
   </style>
@@ -182,6 +270,13 @@
         '/': '/_404.md'
       },
       relativePath: false, //otherwise history routing will not work
+      tabs: {
+        persist: false,
+        sync: false,
+        theme: 'classic', // default
+        tabComments: true, // default
+        tabHeadings: true // default
+      },
       // complete configuration parameters
       /*search: {
         maxAge: 86400000, // Expiration time, the default one day
@@ -244,15 +339,22 @@
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.js"></script>
 
   <script>
-    var languages = ['sk', 'en'];
+    var languages = ['sk', 'en', 'cs'];
     //uprav link rendered pre WJ potreby
     document.addEventListener("DOMContentLoaded", function () {
       const originalRender = window.$docsify.markdown.renderer.link;
       window.$docsify.markdown.renderer.link = function(href, title, text) {
           //console.log("href=", href, "title=", title, "text=", text, "location=", window.location.href, "basePath=", basePath);
 
+          if (href.indexOf("/src/test/")!=-1 || href.indexOf("/src/main/")!=-1 || href.indexOf("/src/webjet8/")!=-1) {
+            var i = href.indexOf("/src/");
+            href = "https://github.com/webjetcms/webjetcms/tree/main"+href.substring(i);
+          }
+
           if (href.indexOf("http")==0) {
-            return originalRender(href, title, text);
+            var rendered = originalRender(href, title, text);
+            rendered = rendered.replace('href="', 'target="_blank" href="');
+            return rendered;
           }
 
           if (href.indexOf("/")) {
@@ -262,11 +364,14 @@
           }
 
           var lngPrefix = "/sk/";
-          if (window.location.href.indexOf("/en/")!=-1) {
+          if (window.location.href.indexOf("/en/") != -1) {
             lngPrefix = "/en/";
+          } else if (window.location.href.indexOf("/cs/") != -1) {
+            lngPrefix = "/cs/";
           }
+
           if (href.indexOf("http")!=0 && href.indexOf("..")!=0 && href.indexOf("#")!=0 && href.indexOf("//")!=0 && href.indexOf("/")!=-1) {
-            if (href.indexOf("/sk")!=0 && href.indexOf("/en")!=0) {
+            if (href.indexOf("/sk")!=0 && href.indexOf("/en")!=0 && href.indexOf("/cs")!=0) {
               href = lngPrefix + href;
               href = href.replace("//", "/");
             }
@@ -275,7 +380,7 @@
           //console.log("href=", href)
           for (var lang of languages) {
             if (href.indexOf("/"+lang+"/")==0) {
-              //append basePath if hraf starts with /sk/ or /en/
+              //append basePath if href starts with /sk/ or /en/
               href = basePath + href.substring(1);
             }
           }
@@ -342,6 +447,7 @@
 
     var cx = "340da4568aa0d44ca";
     if (window.location.href.indexOf("/en/")!=-1) cx = "44ede7df6984c4a20";
+    else if (window.location.href.indexOf("/cs/")!=-1) cx = "250b24ddabe5640e4";
 
     //append this before body end '<script async src="">
     var tag = document.createElement("script");
@@ -355,8 +461,10 @@
               ? navigator.languages[0]
               : (navigator.language || navigator.userLanguage);
 
+          //console.log("Redirecting to language: ", language, "basePath=", basePath, "pathname=", window.location.pathname);
+
           if (language.indexOf("sk")!=-1) window.location.href=basePath+"sk/";
-          else if (language.indexOf("cs")!=-1 || language.indexOf("cz")!=-1) window.location.href=basePath+"sk/";
+          else if (language.indexOf("cs")!=-1 || language.indexOf("cz")!=-1) window.location.href=basePath+"cs/";
           else window.location.href=basePath+"en/";
       } catch (e) {
           console.log(e);

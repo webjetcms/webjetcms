@@ -83,7 +83,9 @@ public class UploadFileTools {
             }
         }
 
-        path.append(groupsDB.getURLPath(groupId));
+        String urlPath = groupsDB.getURLPath(groupId);
+        //if the group has a virtual path, add it to the path
+        if ("--------------------------".equals(urlPath)==false) path.append(urlPath);
 
         if (path.length() == 0) {
             path.append("/");

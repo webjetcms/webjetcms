@@ -18,11 +18,18 @@ Scenario('monitoring - node based', ({ I, Document }) => {
 
     //
     Document.screenshot("/sysadmin/monitoring/sql.png", 700, 500);
-
-    if("en" === I.getConfLng()) { 
-        I.click(locate("button.dropdown-toggle.bootstrap-select").withAttr({ title: 'SW88 (Current node)' }));
-    } else { //default SK
-        I.click(locate("button.dropdown-toggle.bootstrap-select").withAttr({ title: 'SW88 (Aktuálny uzol)' }));
+    switch (I.getConfLng()) {
+        case "en":
+            I.click('//button[contains(@title, "Current node")]');
+            break;
+        case "sk":
+            I.click('//button[contains(@title, "Aktuálny uzol")]');
+            break;
+        case "cs":
+            I.click('//button[contains(@title, "Aktuální uzel")]');
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
     }
 
     //Select options

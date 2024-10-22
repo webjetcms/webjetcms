@@ -28,14 +28,14 @@ public class Page {
     }
 
     public String getSeoTitle() {
-<span class="nc" id="L31">        String seoTitle = &quot;&quot;;</span>
-<span class="nc bnc" id="L32" title="All 2 branches missed.">        if(doc != null) {</span>
-<span class="nc" id="L33">            seoTitle = doc.getFieldR();</span>
-<span class="nc bnc" id="L34" title="All 2 branches missed.">            if(Tools.isEmpty(seoTitle)){</span>
-<span class="nc" id="L35">                seoTitle = doc.getTitle();</span>
+<span class="fc" id="L31">        String seoTitle = &quot;&quot;;</span>
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if(doc != null) {</span>
+<span class="fc" id="L33">            seoTitle = doc.getFieldR();</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">            if(Tools.isEmpty(seoTitle)){</span>
+<span class="fc" id="L35">                seoTitle = doc.getTitle();</span>
             }
         }
-<span class="nc" id="L38">        return seoTitle;</span>
+<span class="fc" id="L38">        return seoTitle;</span>
     }
 
     public String getSeoDescription(){
@@ -50,23 +50,23 @@ public class Page {
     }
 
     public String getSeoImage(){
-<span class="nc" id="L53">        String seoImage = &quot;&quot;;</span>
-<span class="nc bnc" id="L54" title="All 2 branches missed.">        if(doc!=null){</span>
-<span class="nc" id="L55">            seoImage = doc.getFieldT();</span>
+<span class="fc" id="L53">        String seoImage = &quot;&quot;;</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if(doc!=null){</span>
+<span class="fc" id="L55">            seoImage = doc.getFieldT();</span>
             //skontroluj, ze obsahuje / a ., inak to nie je obrazok, ale nejaky text
-<span class="nc bnc" id="L57" title="All 4 branches missed.">            if (seoImage.contains(&quot;/&quot;)==false || seoImage.contains(&quot;.&quot;)==false) seoImage = &quot;&quot;;</span>
-<span class="nc bnc" id="L58" title="All 2 branches missed.">            if(Tools.isEmpty(seoImage)){</span>
-<span class="nc" id="L59">                seoImage = getStringValue(doc.getPerexImage(), ninja.getTemp().getBasePathImg() + ninja.getConfig(&quot;defaultSeoImage&quot;));</span>
+<span class="pc bpc" id="L57" title="3 of 4 branches missed.">            if (seoImage.contains(&quot;/&quot;)==false || seoImage.contains(&quot;.&quot;)==false) seoImage = &quot;&quot;;</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">            if(Tools.isEmpty(seoImage)){</span>
+<span class="fc" id="L59">                seoImage = getStringValue(doc.getPerexImage(), ninja.getTemp().getBasePathImg() + ninja.getConfig(&quot;defaultSeoImage&quot;));</span>
             }
         }
-<span class="nc" id="L62">        return seoImage;</span>
+<span class="fc" id="L62">        return seoImage;</span>
     }
 
     public String getStringValue(String value, String defaultValue)
     {
-<span class="nc" id="L67">        String ret = defaultValue;</span>
-<span class="nc bnc" id="L68" title="All 2 branches missed.">        if(Tools.isNotEmpty(value)) ret = value;</span>
-<span class="nc" id="L69">        return(ret);</span>
+<span class="fc" id="L67">        String ret = defaultValue;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if(Tools.isNotEmpty(value)) ret = value;</span>
+<span class="fc" id="L69">        return(ret);</span>
     }
 
     public String getRobots(){
@@ -89,21 +89,32 @@ public class Page {
 <span class="fc" id="L89">        return PathFilter.getOrigPath(ninja.getRequest());</span>
     }
 
+    /**
+     * Returns URL address with Query String (if exists)
+     * @return
+     */
+    public String getUrlPathQString(){
+<span class="fc" id="L97">        String path = getUrlPath();</span>
+<span class="fc" id="L98">        String qString = (String)ninja.getRequest().getAttribute(&quot;path_filter_query_string&quot;);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if (qString != null) path += &quot;?&quot; + qString;</span>
+<span class="fc" id="L100">        return path;</span>
+    }
+
     public Map&lt;String, String[]&gt; getUrlParameters() {
-<span class="nc" id="L93">        Optional&lt;HttpServletRequest&gt; requestOptional = Optional.ofNullable(ninja.getRequest());</span>
-<span class="nc bnc" id="L94" title="All 2 branches missed.">        return requestOptional.isPresent() ? requestOptional.get().getParameterMap() : Collections.emptyMap();</span>
+<span class="nc" id="L104">        Optional&lt;HttpServletRequest&gt; requestOptional = Optional.ofNullable(ninja.getRequest());</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        return requestOptional.isPresent() ? requestOptional.get().getParameterMap() : Collections.emptyMap();</span>
     }
 
     public String getTitle() {
-<span class="nc" id="L98">        return ninja.replaceNbspSingleChar(doc.getTitle());</span>
+<span class="nc" id="L109">        return ninja.replaceNbspSingleChar(doc.getTitle());</span>
     }
 
     public String getPerex() {
-<span class="nc" id="L102">        return ninja.replaceNbspSingleChar(doc.getPerex());</span>
+<span class="nc" id="L113">        return ninja.replaceNbspSingleChar(doc.getPerex());</span>
     }
 
     public String getPerexPlace() {
-<span class="nc" id="L106">        return ninja.replaceNbspSingleChar(doc.getPerexPlace());</span>
+<span class="nc" id="L117">        return ninja.replaceNbspSingleChar(doc.getPerexPlace());</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

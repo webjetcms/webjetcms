@@ -3,7 +3,9 @@
 //import Snow from 'quill/themes/snow';
 
 //https://www.npmjs.com/package/quill-html-edit-button
-import htmlEditButton from "quill-html-edit-button";
+//import htmlEditButton from "quill-html-edit-button";
+
+import { htmlEditButton } from "./quill.htmlEditButton";
 
 export function typeQuill() {
 
@@ -45,6 +47,29 @@ export function typeQuill() {
                 "modules/htmlEditButton": htmlEditButton
             });
 
+            // Define the matcher function
+            function removeStylesAndClasses(node, delta) {
+                //console.log("removeStylesAndClasses", node, "delta=", delta);
+
+                try {
+                    // Remove style and class attributes from the delta ops
+                    delta.ops.forEach(op => {
+                        if (op.attributes) {
+                            Object.keys(op.attributes).forEach(attr => {
+                                if (attr !== 'bold' && attr !== 'italic' && attr !== 'list' && attr !== 'link' && attr !== 'header' && attr !== 'div') {
+                                    //console.log("Delete attr", attr);
+                                    delete op.attributes[attr];
+                                }
+                            });
+                        }
+                    });
+                } catch (e) {
+                    console.log(e);
+                }
+
+                return delta;
+            }
+
             conf._quill = new Quill(input.find('.editor')[0], $.extend(true, {
                 theme: 'snow',
                 modules: {
@@ -55,9 +80,13 @@ export function typeQuill() {
                         cancelText: '<i class="ti ti-x"></i> '+WJ.translate("button.cancel"), // Text to display in the cancel button, default: Cancel
                         buttonHTML: "<i class='ti ti-code'></i> ", // Text to display in the toolbar button, default: <>
                         buttonTitle: WJ.translate("datatables.quill.htmlButton.tooltip.js"), // Text to display as the tooltip for the toolbar button, default: Show HTML source
+                        debug: false
                     }
                 }
             }, conf.opts));
+
+            // Add the matcher to the clipboard module
+            conf._quill.clipboard.addMatcher(Node.ELEMENT_NODE, removeStylesAndClasses);
 
             return input;
         },

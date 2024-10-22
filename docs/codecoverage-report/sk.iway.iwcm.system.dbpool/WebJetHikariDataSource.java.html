@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebJetHikariDataSource.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.dbpool</a> &gt; <span class="el_source">WebJetHikariDataSource.java</span></div><h1>WebJetHikariDataSource.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.dbpool;
+
+import com.zaxxer.hikari.HikariDataSource;
+
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
+
+/**
+ * https://github.com/brettwooldridge/HikariCP
+ */
+public class WebJetHikariDataSource implements ConfigurableDataSource {
+    HikariDataSource originalSource;
+
+    public WebJetHikariDataSource(HikariDataSource source)
+<span class="fc" id="L18">    {</span>
+<span class="fc" id="L19">        originalSource = source;</span>
+<span class="fc" id="L20">    }</span>
+
+    @Override
+    public void destroy() throws SQLException {
+<span class="fc" id="L24">        originalSource.close();</span>
+<span class="fc" id="L25">    }</span>
+
+    public void setConnectionProperty(String key, String value) {
+<span class="nc" id="L28">        originalSource.addDataSourceProperty(key, value);</span>
+<span class="nc" id="L29">    }</span>
+
+    @Override
+    public String getDriverClass() {
+<span class="nc" id="L33">        return originalSource.getDriverClassName();</span>
+    }
+
+    @Override
+    public String getUser() {
+<span class="nc" id="L38">        return originalSource.getUsername();</span>
+    }
+
+    @Override
+    public void setDriverClass(String driverClass) {
+<span class="fc" id="L43">        originalSource.setDriverClassName(driverClass);</span>
+<span class="fc" id="L44">    }</span>
+
+    @Override
+    public void setInitialPoolSize(int initialPoolSize) {
+<span class="fc" id="L48">        originalSource.setMinimumIdle(initialPoolSize);</span>
+<span class="fc" id="L49">    }</span>
+
+    public void setMinPoolSize(int minActive) {
+<span class="fc" id="L52">        originalSource.setMinimumIdle(minActive);</span>
+<span class="fc" id="L53">    }</span>
+
+    public void setMaxPoolSize(int maxPoolSize)
+    {
+<span class="fc" id="L57">        originalSource.setMaximumPoolSize(maxPoolSize);</span>
+<span class="fc" id="L58">    }</span>
+
+    @Override
+    public void setJdbcUrl(String jdbcUrl) {
+<span class="fc" id="L62">        originalSource.setJdbcUrl(jdbcUrl);</span>
+<span class="fc" id="L63">    }</span>
+
+    @Override
+    public void setMaxStatements(int maxStatements) {
+        // ???
+<span class="nc" id="L68">    }</span>
+
+    @Override
+    public void setPassword(String password) {
+<span class="fc" id="L72">        originalSource.setPassword(password);</span>
+<span class="fc" id="L73">    }</span>
+
+    @Override
+    public void setPreferredTestQuery(String preferredTestQuery) {
+<span class="fc" id="L77">        originalSource.setConnectionInitSql(preferredTestQuery);</span>
+        //documentation says do not set testSql, it will use JDBC4 isValid instead
+<span class="fc" id="L79">    }</span>
+
+    @Override
+    public void setUser(String user) {
+<span class="fc" id="L83">        originalSource.setUsername(user);</span>
+<span class="fc" id="L84">    }</span>
+
+    @Override
+    public int getNumActive() {
+<span class="fc" id="L88">        return originalSource.getHikariPoolMXBean().getActiveConnections();</span>
+    }
+
+    @Override
+    public int getNumIdle() {
+<span class="fc" id="L93">        return originalSource.getHikariPoolMXBean().getIdleConnections();</span>
+    }
+
+    @Override
+    public Connection getConnection() throws SQLException {
+<span class="fc" id="L98">        return originalSource.getConnection();</span>
+    }
+
+    @Override
+    public Connection getConnection(String username, String password) throws SQLException {
+<span class="nc" id="L103">        return originalSource.getConnection(username, password);</span>
+    }
+
+    @Override
+    public &lt;T&gt; T unwrap(Class&lt;T&gt; iface)
+    {
+        try {
+<span class="nc" id="L110">            return originalSource.unwrap(iface);</span>
+<span class="nc" id="L111">        } catch (SQLException e) {</span>
+<span class="nc" id="L112">            return null;</span>
+        }
+
+    }
+
+    @Override
+    public boolean isWrapperFor(Class&lt;?&gt; iface)
+    {
+        try {
+<span class="nc" id="L121">            return originalSource.isWrapperFor(iface);</span>
+<span class="nc" id="L122">        } catch (SQLException e) {</span>
+<span class="nc" id="L123">            return false;</span>
+        }
+    }
+
+    @Override
+    public PrintWriter getLogWriter() throws SQLException {
+<span class="nc" id="L129">        return originalSource.getLogWriter();</span>
+    }
+
+    @Override
+    public void setLogWriter(PrintWriter out) throws SQLException {
+<span class="nc" id="L134">        originalSource.setLogWriter(out);</span>
+<span class="nc" id="L135">    }</span>
+
+    @Override
+    public void setLoginTimeout(int seconds) throws SQLException {
+<span class="nc" id="L139">        originalSource.setLoginTimeout(seconds);</span>
+<span class="nc" id="L140">    }</span>
+
+    @Override
+    public int getLoginTimeout() throws SQLException {
+<span class="nc" id="L144">        return originalSource.getLoginTimeout();</span>
+    }
+
+    @Override
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+<span class="nc" id="L149">        return originalSource.getParentLogger();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -11,7 +11,7 @@
             tabs: [
                 {
                     url: '/apps/reservation/admin/',
-                    title: '[[#{components.reservation.reservation_list}]]',
+                    title: '[[#{components.reservation.title}]]',
                     active: false
                 },
                 {
@@ -22,7 +22,7 @@
             ]
         });
 
-        let url = "/admin/rest/reservation/reservation_object";
+        let url = "/admin/rest/reservation/reservation-object";
 
         var tabs = [
             { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
@@ -52,13 +52,21 @@
                 $("#DTE_Field_reservationForAllDay_0").on("change", function(e) {
                     //Set price disability depending on if we need set price for whole day
                     if(reservationObjectDataTable.EDITOR.field("reservationForAllDay").val()[0] == true) {
-                        reservationObjectDataTable.EDITOR.field("priceForDay").enable();
-                        reservationObjectDataTable.EDITOR.field("timeUnit").disable();
-                        reservationObjectDataTable.EDITOR.field("priceForHour").disable();
+                        reservationObjectDataTable.EDITOR.field("priceForDay").show();
+                        reservationObjectDataTable.EDITOR.field("timeUnit").hide();
+                        reservationObjectDataTable.EDITOR.field("priceForHour").hide();
+                        reservationObjectDataTable.EDITOR.field("reservationTimeFrom").hide();
+                        reservationObjectDataTable.EDITOR.field("reservationTimeTo").hide();
+                        $("#pills-dt-reservationObjectDataTable-chooseDays-tab").hide();
+                        $("div.form-group.row-headline").hide();
                     } else {
-                        reservationObjectDataTable.EDITOR.field("priceForDay").disable();
-                        reservationObjectDataTable.EDITOR.field("timeUnit").enable();
-                        reservationObjectDataTable.EDITOR.field("priceForHour").enable();
+                        reservationObjectDataTable.EDITOR.field("priceForDay").hide();
+                        reservationObjectDataTable.EDITOR.field("timeUnit").show();
+                        reservationObjectDataTable.EDITOR.field("priceForHour").show();
+                        reservationObjectDataTable.EDITOR.field("reservationTimeFrom").show();
+                        reservationObjectDataTable.EDITOR.field("reservationTimeTo").show();
+                        $("#pills-dt-reservationObjectDataTable-chooseDays-tab").show();
+                        $("div.form-group.row-headline").show();
                     }
                 });
 

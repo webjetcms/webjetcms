@@ -17,7 +17,7 @@ block content
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.domainRedirects.DomainRedirectBean')})];
 
             domainRedirectTable = WJ.DataTable({
-                url: '/admin/rest/settings/domain-redirect',
+                url: url,
                 columns: columns,
                 serverSide: false,
                 editorId: "redirectId",

@@ -21,6 +21,7 @@ import sk.iway.iwcm.components.domainRedirects.DomainRedirectDB;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
+import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.utils.Pair;
 
@@ -39,22 +40,22 @@ import sk.iway.iwcm.utils.Pair;
 public class Sender extends TimerTask
 {
 	private final Timer timer;
-<span class="fc" id="L42">	private static Random rand = new Random();</span>
+<span class="fc" id="L43">	private static Random rand = new Random();</span>
 
-<span class="fc" id="L44">	private boolean runActive = false;</span>
-<span class="fc" id="L45">	private int toSendCount = 0;</span>
+<span class="fc" id="L45">	private boolean runActive = false;</span>
+<span class="fc" id="L46">	private int toSendCount = 0;</span>
 
 
 	/**
 	 *  Description of the Field
 	 */
-<span class="fc" id="L51">	public static int MAX_RETRY_COUNT = 5;</span>
+<span class="fc" id="L52">	public static int MAX_RETRY_COUNT = 5; //NOSONAR</span>
 
 	/**
 	 *  Description of the Field
 	 */
 	public static final String CONTEXT_NAME = &quot;dmail_sender&quot;;
-<span class="fc" id="L57">	private boolean active = false;</span>
+<span class="fc" id="L58">	private boolean active = false;</span>
 
 
 	public static final String FROM_EMAIL_ID_KEY = &quot;sk.iway.iwcm.dmail.Sender.fromEmailId&quot;;
@@ -65,78 +66,78 @@ public class Sender extends TimerTask
 	 */
 	private int getFromEmailId()
 	{
-<span class="fc" id="L68">		Cache c = Cache.getInstance();</span>
-<span class="fc" id="L69">		Integer fromEmailId = (Integer)c.getObject(FROM_EMAIL_ID_KEY);</span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">		if (fromEmailId == null)</span>
+<span class="fc" id="L69">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L70">		Integer fromEmailId = (Integer)c.getObject(FROM_EMAIL_ID_KEY);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">		if (fromEmailId == null)</span>
 		{
-<span class="fc" id="L72">			Connection db_conn = null;</span>
-<span class="fc" id="L73">			PreparedStatement ps = null;</span>
-<span class="fc" id="L74">			ResultSet rs = null;</span>
+<span class="fc" id="L73">			Connection db_conn = null;</span>
+<span class="fc" id="L74">			PreparedStatement ps = null;</span>
+<span class="fc" id="L75">			ResultSet rs = null;</span>
 			try
 			{
-<span class="fc" id="L77">				db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L78">				ps = db_conn.prepareStatement(&quot;SELECT min(email_id) FROM emails WHERE sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=?&quot;);</span>
-<span class="fc" id="L79">				ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
-<span class="fc" id="L80">				ps.setBoolean(2, false);</span>
-<span class="fc" id="L81">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">				if (rs.next())</span>
+<span class="fc" id="L78">				db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L79">				ps = db_conn.prepareStatement(&quot;SELECT min(email_id) FROM emails WHERE sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=?&quot;);</span>
+<span class="fc" id="L80">				ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L81">				ps.setBoolean(2, false);</span>
+<span class="fc" id="L82">				rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="fc" id="L84">					fromEmailId = Integer.valueOf(rs.getInt(1)-1);</span>
-<span class="fc" id="L85">					Logger.debug(Sender.class, &quot;fromEmailId1=&quot;+fromEmailId);</span>
+<span class="fc" id="L85">					fromEmailId = Integer.valueOf(rs.getInt(1)-1);</span>
+<span class="fc" id="L86">					Logger.debug(Sender.class, &quot;fromEmailId1=&quot;+fromEmailId);</span>
 				}
-<span class="fc" id="L87">				rs.close();</span>
-<span class="fc" id="L88">				ps.close();</span>
+<span class="fc" id="L88">				rs.close();</span>
+<span class="fc" id="L89">				ps.close();</span>
 
-<span class="pc bpc" id="L90" title="2 of 4 branches missed.">				if (fromEmailId == null || fromEmailId.intValue() &lt; 0)</span>
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">				if (fromEmailId == null || fromEmailId.intValue() &lt; 0)</span>
 				{
 					//nie je nic neodoslane, takze pouzijeme maximalnu hodnotu
-<span class="fc" id="L93">					ps = db_conn.prepareStatement(&quot;SELECT max(email_id) FROM emails&quot;);</span>
-<span class="fc" id="L94">					rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">					if (rs.next())</span>
+<span class="fc" id="L94">					ps = db_conn.prepareStatement(&quot;SELECT max(email_id) FROM emails&quot;);</span>
+<span class="fc" id="L95">					rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">					if (rs.next())</span>
 					{
-<span class="fc" id="L97">						fromEmailId = Integer.valueOf(rs.getInt(1));</span>
-<span class="fc" id="L98">						Logger.debug(Sender.class, &quot;fromEmailId2=&quot;+fromEmailId);</span>
+<span class="fc" id="L98">						fromEmailId = Integer.valueOf(rs.getInt(1));</span>
+<span class="fc" id="L99">						Logger.debug(Sender.class, &quot;fromEmailId2=&quot;+fromEmailId);</span>
 					}
-<span class="fc" id="L100">					rs.close();</span>
-<span class="fc" id="L101">					ps.close();</span>
+<span class="fc" id="L101">					rs.close();</span>
+<span class="fc" id="L102">					ps.close();</span>
 				}
 
-<span class="fc" id="L104">				db_conn.close();</span>
-<span class="fc" id="L105">				rs = null;</span>
-<span class="fc" id="L106">				ps = null;</span>
-<span class="fc" id="L107">				db_conn = null;</span>
+<span class="fc" id="L105">				db_conn.close();</span>
+<span class="fc" id="L106">				rs = null;</span>
+<span class="fc" id="L107">				ps = null;</span>
+<span class="fc" id="L108">				db_conn = null;</span>
 			}
-<span class="nc" id="L109">			catch (Exception ex)</span>
+<span class="nc" id="L110">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L111">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L112">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">					if (rs != null)</span>
-<span class="nc" id="L118">						rs.close();</span>
-<span class="pc bpc" id="L119" title="1 of 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L120">						ps.close();</span>
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L122">						db_conn.close();</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc" id="L119">						rs.close();</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L121">						ps.close();</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L123">						db_conn.close();</span>
 				}
-<span class="nc" id="L124">				catch (Exception ex2)</span>
+<span class="nc" id="L125">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L126">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L127">				}</span>
+<span class="nc" id="L127">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L128">				}</span>
 			}
 
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">			if (fromEmailId == null)</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">			if (fromEmailId == null)</span>
 			{
-<span class="nc" id="L132">				fromEmailId = Integer.valueOf(0);</span>
+<span class="nc" id="L133">				fromEmailId = Integer.valueOf(0);</span>
 			}
 
-<span class="fc" id="L135">			Logger.debug(Sender.class, &quot;fromEmailId3=&quot;+fromEmailId);</span>
-<span class="fc" id="L136">			c.setObject(FROM_EMAIL_ID_KEY, fromEmailId, 5);</span>
+<span class="fc" id="L136">			Logger.debug(Sender.class, &quot;fromEmailId3=&quot;+fromEmailId);</span>
+<span class="fc" id="L137">			c.setObject(FROM_EMAIL_ID_KEY, fromEmailId, 5);</span>
 		}
 
-<span class="fc" id="L139">		return fromEmailId.intValue();</span>
+<span class="fc" id="L140">		return fromEmailId.intValue();</span>
 	}
 
 	/**
@@ -144,9 +145,9 @@ public class Sender extends TimerTask
 	 */
 	public static void resetSenderWait()
 	{
-<span class="fc" id="L147">		Cache c = Cache.getInstance();</span>
-<span class="fc" id="L148">		c.removeObject(FROM_EMAIL_ID_KEY);</span>
-<span class="fc" id="L149">	}</span>
+<span class="fc" id="L148">		Cache c = Cache.getInstance();</span>
+<span class="fc" id="L149">		c.removeObject(FROM_EMAIL_ID_KEY);</span>
+<span class="fc" id="L150">	}</span>
 
 	/**
 	 *  Gets the instance attribute of the Sender class
@@ -155,91 +156,91 @@ public class Sender extends TimerTask
 	 */
 	public static Sender getInstance()
 	{
-<span class="fc" id="L158">		Sender sender = null;</span>
+<span class="fc" id="L159">		Sender sender = null;</span>
 
-<span class="fc bfc" id="L160" title="All 2 branches covered.">		if (Constants.getServletContext().getAttribute(CONTEXT_NAME) != null)</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">		if (Constants.getServletContext().getAttribute(CONTEXT_NAME) != null)</span>
 		{
-<span class="fc" id="L162">			sender = (Sender) Constants.getServletContext().getAttribute(CONTEXT_NAME);</span>
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">			if (sender.isActive() == false)</span>
+<span class="fc" id="L163">			sender = (Sender) Constants.getServletContext().getAttribute(CONTEXT_NAME);</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">			if (sender.isActive() == false)</span>
 			{
-<span class="nc" id="L165">				Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
-<span class="nc" id="L166">				sender = null;</span>
+<span class="nc" id="L166">				Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
+<span class="nc" id="L167">				sender = null;</span>
 			}
 			else
 			{
-<span class="fc" id="L170">				Logger.debug(Sender.class,&quot;Sender je uz aktivny...&quot;);</span>
+<span class="fc" id="L171">				Logger.debug(Sender.class,&quot;Sender je uz aktivny...&quot;);</span>
 			}
 		}
 
-<span class="fc bfc" id="L174" title="All 2 branches covered.">		if (sender == null)</span>
+<span class="fc bfc" id="L175" title="All 2 branches covered.">		if (sender == null)</span>
 		{
-<span class="fc" id="L176">			sender = new Sender();</span>
-<span class="fc" id="L177">			Logger.debug(Sender.class,&quot;Sender.getInstance() - je null, schedulujem&quot;);</span>
+<span class="fc" id="L177">			sender = new Sender();</span>
+<span class="fc" id="L178">			Logger.debug(Sender.class,&quot;Sender.getInstance() - je null, schedulujem&quot;);</span>
 		}
 		else
 		{
-<span class="fc" id="L181">			Logger.debug(Sender.class,&quot;Sender.getInstance() - nie je null&quot;);</span>
+<span class="fc" id="L182">			Logger.debug(Sender.class,&quot;Sender.getInstance() - nie je null&quot;);</span>
 		}
 
-<span class="fc" id="L184">		return (sender);</span>
+<span class="fc" id="L185">		return (sender);</span>
 	}
 
 	/**
 	 *  Constructor for the Sender object
 	 */
 	public Sender()
-<span class="fc" id="L191">	{</span>
-<span class="fc" id="L192">		Logger.debug(this,&quot;Sender Constructor&quot;);</span>
-<span class="fc" id="L193">		setActive(true);</span>
+<span class="fc" id="L192">	{</span>
+<span class="fc" id="L193">		Logger.debug(this,&quot;Sender Constructor&quot;);</span>
+<span class="fc" id="L194">		setActive(true);</span>
 		//ziskaj pocet, kolko treba este poslat
-<span class="fc" id="L195">		Connection db_conn = null;</span>
-<span class="fc" id="L196">		PreparedStatement ps = null;</span>
-<span class="fc" id="L197">		ResultSet rs = null;</span>
+<span class="fc" id="L196">		Connection db_conn = null;</span>
+<span class="fc" id="L197">		PreparedStatement ps = null;</span>
+<span class="fc" id="L198">		ResultSet rs = null;</span>
 		try
 		{
 			//ziskaj udaje z db
-<span class="fc" id="L201">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L202">			ps = db_conn.prepareStatement(&quot;SELECT count(email_id) FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND retry&gt;=0 AND (send_at IS null OR send_at &lt;= ?) AND disabled=?&quot;);</span>
-<span class="fc" id="L203">			ps.setInt(1, getFromEmailId());</span>
-<span class="fc" id="L204">			ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
-<span class="fc" id="L205">			ps.setBoolean(3, false);</span>
-<span class="fc" id="L206">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L207" title="1 of 2 branches missed.">			if (rs.next())</span>
+<span class="fc" id="L202">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L203">			ps = db_conn.prepareStatement(&quot;SELECT count(email_id) FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND retry&gt;=0 AND (send_at IS null OR send_at &lt;= ?) AND disabled=?&quot;);</span>
+<span class="fc" id="L204">			ps.setInt(1, getFromEmailId());</span>
+<span class="fc" id="L205">			ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L206">			ps.setBoolean(3, false);</span>
+<span class="fc" id="L207">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L208" title="1 of 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="fc" id="L209">				toSendCount = rs.getInt(1);</span>
+<span class="fc" id="L210">				toSendCount = rs.getInt(1);</span>
 			}
-<span class="fc" id="L211">			rs.close();</span>
-<span class="fc" id="L212">			ps.close();</span>
-<span class="fc" id="L213">			db_conn.close();</span>
-<span class="fc" id="L214">			rs = null;</span>
-<span class="fc" id="L215">			ps = null;</span>
-<span class="fc" id="L216">			db_conn = null;</span>
+<span class="fc" id="L212">			rs.close();</span>
+<span class="fc" id="L213">			ps.close();</span>
+<span class="fc" id="L214">			db_conn.close();</span>
+<span class="fc" id="L215">			rs = null;</span>
+<span class="fc" id="L216">			ps = null;</span>
+<span class="fc" id="L217">			db_conn = null;</span>
 		}
-<span class="nc" id="L218">		catch (Exception ex)</span>
+<span class="nc" id="L219">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L220">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L221">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L226" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L227">					rs.close();</span>
-<span class="pc bpc" id="L228" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L229">					ps.close();</span>
-<span class="pc bpc" id="L230" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L231">					db_conn.close();</span>
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L228">					rs.close();</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L230">					ps.close();</span>
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L232">					db_conn.close();</span>
 			}
-<span class="nc" id="L233">			catch (Exception ex2)</span>
+<span class="nc" id="L234">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L235">			}</span>
+<span class="fc" id="L236">			}</span>
 		}
 
-<span class="fc" id="L238">		timer = new Timer(true);</span>
-<span class="fc" id="L239">		timer.schedule(this, 30000, Constants.getInt(&quot;dmailWaitTimeout&quot;));</span>
-<span class="fc" id="L240">		Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
-<span class="fc" id="L241">		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);</span>
-<span class="fc" id="L242">	}</span>
+<span class="fc" id="L239">		timer = new Timer(true);</span>
+<span class="fc" id="L240">		timer.schedule(this, 30000, Constants.getInt(&quot;dmailWaitTimeout&quot;));</span>
+<span class="fc" id="L241">		Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
+<span class="fc" id="L242">		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);</span>
+<span class="fc" id="L243">	}</span>
 
 	/**
 	 *  Main processing method for the Sender object
@@ -247,459 +248,478 @@ public class Sender extends TimerTask
 	@Override
 	public void run()
 	{
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(Constants.getString(&quot;useSMTPServer&quot;) ))</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">		if (&quot;false&quot;.equals(Constants.getString(&quot;useSMTPServer&quot;) ))</span>
 		{
-<span class="nc" id="L252">			return;</span>
+<span class="nc" id="L253">			return;</span>
 		}
 
-<span class="pc bpc" id="L255" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;disableDMailSender&quot;)) return;</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;disableDMailSender&quot;)) return;</span>
 
-<span class="fc" id="L257">		String senderRunOnNode = Constants.getString(&quot;senderRunOnNode&quot;);</span>
-<span class="pc bpc" id="L258" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(senderRunOnNode) &amp;&amp; (&quot;,&quot;+senderRunOnNode+&quot;,&quot;).indexOf(Constants.getString(&quot;clusterMyNodeName&quot;))==-1)</span>
+<span class="fc" id="L258">		String senderRunOnNode = Constants.getString(&quot;senderRunOnNode&quot;);</span>
+<span class="pc bpc" id="L259" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(senderRunOnNode) &amp;&amp; (&quot;,&quot;+senderRunOnNode+&quot;,&quot;).indexOf(Constants.getString(&quot;clusterMyNodeName&quot;))==-1)</span>
 		{
-<span class="nc" id="L260">			return;</span>
+<span class="nc" id="L261">			return;</span>
 		}
 
 		//Logger.println(this,&quot;counter=&quot; + counter);
-<span class="pc bpc" id="L264" title="1 of 2 branches missed.">		if (runActive)</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">		if (runActive)</span>
 		{
-<span class="nc" id="L266">			Logger.debug(this,&quot;Sender.run method is allready active, skipping&quot;);</span>
+<span class="nc" id="L267">			Logger.debug(this,&quot;Sender.run method is allready active, skipping&quot;);</span>
 		}
 
 		//Logger.debug(Sender.class, &quot;Sender.run - toSendCount=&quot;+toSendCount);
 
-<span class="fc" id="L271">		runActive = true;</span>
+<span class="fc" id="L272">		runActive = true;</span>
 
-<span class="fc" id="L273">		Sender.setMaxRetryCount(Constants.getInt(&quot;dmailMaxRetryCount&quot;));</span>
-<span class="fc" id="L274">		int sleepTime = Constants.getInt(&quot;dmailSleepTimeAfterException&quot;);</span>
+<span class="fc" id="L274">		Sender.setMaxRetryCount(Constants.getInt(&quot;dmailMaxRetryCount&quot;));</span>
+<span class="fc" id="L275">		int sleepTime = Constants.getInt(&quot;dmailSleepTimeAfterException&quot;);</span>
 
 		//Logger.println(this,&quot;counter=&quot; + counter);
-<span class="fc" id="L277">	   Connection db_conn = null;</span>
-<span class="fc" id="L278">		PreparedStatement ps = null;</span>
-<span class="fc" id="L279">		ResultSet rs = null;</span>
+<span class="fc" id="L278">	   Connection db_conn = null;</span>
+<span class="fc" id="L279">		PreparedStatement ps = null;</span>
+<span class="fc" id="L280">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L282">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L283">			db_conn = DBPool.getConnection();</span>
 
-<span class="pc bpc" id="L284" title="1 of 2 branches missed.">			if (toSendCount &lt; 0)</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">			if (toSendCount &lt; 0)</span>
 			{
 				//soudruzi z NDR nekde udelali chybu...
-<span class="nc" id="L287">				ps = db_conn.prepareStatement(&quot;SELECT count(email_id) FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND retry&gt;=0  AND disabled=?&quot;);</span>
-<span class="nc" id="L288">				ps.setInt(1, getFromEmailId());</span>
-<span class="nc" id="L289">				ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
-<span class="nc" id="L290">				ps.setBoolean(3, false);</span>
-<span class="nc" id="L291">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L292" title="All 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L288">				ps = db_conn.prepareStatement(&quot;SELECT count(email_id) FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND retry&gt;=0  AND disabled=?&quot;);</span>
+<span class="nc" id="L289">				ps.setInt(1, getFromEmailId());</span>
+<span class="nc" id="L290">				ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L291">				ps.setBoolean(3, false);</span>
+<span class="nc" id="L292">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="nc" id="L294">					toSendCount = rs.getInt(1);</span>
+<span class="nc" id="L295">					toSendCount = rs.getInt(1);</span>
 				}
-<span class="nc" id="L296">				rs.close();</span>
-<span class="nc" id="L297">				ps.close();</span>
-<span class="nc" id="L298">				rs = null;</span>
-<span class="nc" id="L299">				ps = null;</span>
+<span class="nc" id="L297">				rs.close();</span>
+<span class="nc" id="L298">				ps.close();</span>
+<span class="nc" id="L299">				rs = null;</span>
+<span class="nc" id="L300">				ps = null;</span>
 			}
 
 			//nacitaj si zoznam z DB
-<span class="fc" id="L303">			String sql = &quot;&quot;;</span>
-<span class="pc bpc" id="L304" title="1 of 2 branches missed.">			if(Constants.DB_TYPE == Constants.DB_MSSQL) sql = (&quot;SELECT TOP 50 * FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=? ORDER BY email_id ASC&quot;);</span>
-<span class="pc bpc" id="L305" title="3 of 4 branches missed.">			else if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) sql = (&quot;SELECT * FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=? ORDER BY email_id ASC LIMIT 50&quot;);</span>
-<span class="nc bnc" id="L306" title="All 2 branches missed.">			else if(Constants.DB_TYPE == Constants.DB_ORACLE) sql = (&quot;SELECT * FROM emails WHERE ROWNUM &lt;= 50 AND email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=? ORDER BY email_id ASC&quot;);</span>
-<span class="fc" id="L307">			ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L308">			ps.setInt(1, getFromEmailId());</span>
-<span class="fc" id="L309">			ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
-<span class="fc" id="L310">			ps.setBoolean(3, false);</span>
-<span class="fc" id="L311">			rs = ps.executeQuery();</span>
-<span class="fc" id="L312">			boolean hasResult = false;</span>
-<span class="fc" id="L313">			String recipientEmail = null;</span>
-<span class="fc" id="L314">			String recipientName = null;</span>
-<span class="fc" id="L315">			String senderName = null;</span>
-<span class="fc" id="L316">			String senderEmail = null;</span>
-<span class="fc" id="L317">			String replyTo = null;</span>
-<span class="fc" id="L318">			String ccEmail = null;</span>
-<span class="fc" id="L319">			String bccEmail = null;</span>
-<span class="fc" id="L320">			String subject = null;</span>
-<span class="fc" id="L321">			String url = null;</span>
-<span class="fc" id="L322">			String body = &quot;&quot;;</span>
-<span class="fc" id="L323">			String attachments = null;</span>
-<span class="fc" id="L324">			int retry = 0;</span>
-<span class="fc" id="L325">			int emailId = -1;</span>
-<span class="fc" id="L326">			int campainId = -1;</span>
-<span class="fc" id="L327">			int toSendCountLimited = toSendCount;</span>
-<span class="pc bpc" id="L328" title="1 of 2 branches missed.">			if (toSendCountLimited &gt; 50) toSendCountLimited = 50;</span>
-<span class="fc" id="L329">			int random = 0;</span>
-<span class="pc bpc" id="L330" title="1 of 2 branches missed.">			if (toSendCountLimited&gt;0) random = rand.nextInt(toSendCountLimited);</span>
-<span class="pc bpc" id="L331" title="1 of 2 branches missed.">			if (random &lt; 0) random = 0;</span>
-<span class="fc" id="L332">			int pocitadlo = 0;</span>
-<span class="pc bpc" id="L333" title="3 of 4 branches missed.">			while (rs.next() &amp;&amp; pocitadlo &lt;= random)</span>
+<span class="fc" id="L304">			String sql = &quot;&quot;;</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">			if(Constants.DB_TYPE == Constants.DB_MSSQL) sql = (&quot;SELECT TOP 50 * FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=? ORDER BY email_id ASC&quot;);</span>
+<span class="pc bpc" id="L306" title="3 of 4 branches missed.">			else if(Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) sql = (&quot;SELECT * FROM emails WHERE email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=? ORDER BY email_id ASC LIMIT 50&quot;);</span>
+<span class="nc bnc" id="L307" title="All 2 branches missed.">			else if(Constants.DB_TYPE == Constants.DB_ORACLE) sql = (&quot;SELECT * FROM emails WHERE ROWNUM &lt;= 50 AND email_id&gt;? AND sent_date IS NULL AND (send_at IS null OR send_at &lt;= ?) AND disabled=? ORDER BY email_id ASC&quot;);</span>
+<span class="fc" id="L308">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L309">			ps.setInt(1, getFromEmailId());</span>
+<span class="fc" id="L310">			ps.setTimestamp(2, new Timestamp(Tools.getNow()));</span>
+<span class="fc" id="L311">			ps.setBoolean(3, false);</span>
+<span class="fc" id="L312">			rs = ps.executeQuery();</span>
+<span class="fc" id="L313">			boolean hasResult = false;</span>
+<span class="fc" id="L314">			String recipientEmail = null;</span>
+<span class="fc" id="L315">			String recipientName = null;</span>
+<span class="fc" id="L316">			String senderName = null;</span>
+<span class="fc" id="L317">			String senderEmail = null;</span>
+<span class="fc" id="L318">			String replyTo = null;</span>
+<span class="fc" id="L319">			String ccEmail = null;</span>
+<span class="fc" id="L320">			String bccEmail = null;</span>
+<span class="fc" id="L321">			String subject = null;</span>
+<span class="fc" id="L322">			String url = null;</span>
+<span class="fc" id="L323">			String body = &quot;&quot;;</span>
+<span class="fc" id="L324">			String attachments = null;</span>
+<span class="fc" id="L325">			int retry = 0;</span>
+<span class="fc" id="L326">			int emailId = -1;</span>
+<span class="fc" id="L327">			int campainId = -1;</span>
+<span class="fc" id="L328">			int toSendCountLimited = toSendCount;</span>
+<span class="pc bpc" id="L329" title="1 of 2 branches missed.">			if (toSendCountLimited &gt; 50) toSendCountLimited = 50;</span>
+<span class="fc" id="L330">			int random = 0;</span>
+<span class="pc bpc" id="L331" title="1 of 2 branches missed.">			if (toSendCountLimited&gt;0) random = rand.nextInt(toSendCountLimited);</span>
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">			if (random &lt; 0) random = 0;</span>
+<span class="fc" id="L333">			int pocitadlo = 0;</span>
+<span class="pc bpc" id="L334" title="3 of 4 branches missed.">			while (rs.next() &amp;&amp; pocitadlo &lt;= random)</span>
          {
-<span class="nc bnc" id="L335" title="All 2 branches missed.">				if (DomainThrottle.getInstance().canSend(DomainThrottle.getDomainFromEmail(DB.getDbString(rs, &quot;recipient_email&quot;)))==false)</span>
+<span class="nc bnc" id="L336" title="All 2 branches missed.">				if (DomainThrottle.getInstance().canSend(DomainThrottle.getDomainFromEmail(DB.getDbString(rs, &quot;recipient_email&quot;)))==false)</span>
 				{
 					//ak na domenu nemozeme poslat email preskocime ho
-<span class="nc" id="L338">					continue;</span>
+<span class="nc" id="L339">					continue;</span>
 				}
 
-<span class="nc" id="L341">				hasResult = true;</span>
-<span class="nc" id="L342">				setActive(true);</span>
-<span class="nc" id="L343">				emailId = rs.getInt(&quot;email_id&quot;);</span>
-<span class="nc" id="L344">				recipientEmail = DB.getDbString(rs, &quot;recipient_email&quot;);</span>
-<span class="nc" id="L345">				replyTo = DB.getDbString(rs, &quot;reply_to&quot;);</span>
-<span class="nc" id="L346">				ccEmail = DB.getDbString(rs, &quot;cc_email&quot;);</span>
-<span class="nc" id="L347">				bccEmail = DB.getDbString(rs, &quot;bcc_email&quot;);</span>
-<span class="nc" id="L348">				recipientName = DB.getDbString(rs, &quot;recipient_name&quot;);</span>
-<span class="nc" id="L349">				senderName = DB.getDbString(rs, &quot;sender_name&quot;);</span>
-<span class="nc" id="L350">				senderEmail = DB.getDbString(rs, &quot;sender_email&quot;);</span>
-<span class="nc" id="L351">				subject = DB.getDbString(rs, &quot;subject&quot;);</span>
-<span class="nc" id="L352">				url = DB.getDbString(rs, &quot;url&quot;);</span>
-<span class="nc" id="L353">				body = DB.getDbString(rs, &quot;message&quot;);</span>
-<span class="nc" id="L354">				attachments = DB.getDbString(rs, &quot;attachments&quot;);</span>
-<span class="nc" id="L355">				retry = rs.getInt(&quot;retry&quot;);</span>
-<span class="nc" id="L356">				campainId = rs.getInt(&quot;campain_id&quot;);</span>
+<span class="nc" id="L342">				hasResult = true;</span>
+<span class="nc" id="L343">				setActive(true);</span>
+<span class="nc" id="L344">				emailId = rs.getInt(&quot;email_id&quot;);</span>
+<span class="nc" id="L345">				recipientEmail = DB.getDbString(rs, &quot;recipient_email&quot;);</span>
+<span class="nc" id="L346">				replyTo = DB.getDbString(rs, &quot;reply_to&quot;);</span>
+<span class="nc" id="L347">				ccEmail = DB.getDbString(rs, &quot;cc_email&quot;);</span>
+<span class="nc" id="L348">				bccEmail = DB.getDbString(rs, &quot;bcc_email&quot;);</span>
+<span class="nc" id="L349">				recipientName = DB.getDbString(rs, &quot;recipient_name&quot;);</span>
+<span class="nc" id="L350">				senderName = DB.getDbString(rs, &quot;sender_name&quot;);</span>
+<span class="nc" id="L351">				senderEmail = DB.getDbString(rs, &quot;sender_email&quot;);</span>
+<span class="nc" id="L352">				subject = DB.getDbString(rs, &quot;subject&quot;);</span>
+<span class="nc" id="L353">				url = DB.getDbString(rs, &quot;url&quot;);</span>
+<span class="nc" id="L354">				body = DB.getDbString(rs, &quot;message&quot;);</span>
+<span class="nc" id="L355">				attachments = DB.getDbString(rs, &quot;attachments&quot;);</span>
+<span class="nc" id="L356">				retry = rs.getInt(&quot;retry&quot;);</span>
+<span class="nc" id="L357">				campainId = rs.getInt(&quot;campain_id&quot;);</span>
 				//recipientUserId = rs.getInt(&quot;recipient_user_id&quot;);
 
-<span class="nc" id="L359">            pocitadlo++;</span>
+<span class="nc" id="L360">            pocitadlo++;</span>
 			}
-<span class="fc" id="L361">			rs.close();</span>
-<span class="fc" id="L362">			ps.close();</span>
-<span class="fc" id="L363">			rs = null;</span>
-<span class="fc" id="L364">			ps = null;</span>
+<span class="fc" id="L362">			rs.close();</span>
+<span class="fc" id="L363">			ps.close();</span>
+<span class="fc" id="L364">			rs = null;</span>
+<span class="fc" id="L365">			ps = null;</span>
 
 			//zatvorime, lebo moze posielanie, alebo url get na stranku trvat dlho a spojenie sa timeoutne
-<span class="fc" id="L367">			db_conn.close();</span>
-<span class="fc" id="L368">			db_conn = null;</span>
+<span class="fc" id="L368">			db_conn.close();</span>
+<span class="fc" id="L369">			db_conn = null;</span>
 
-<span class="pc bpc" id="L370" title="5 of 6 branches missed.">			if (emailId &gt; 0 &amp;&amp; recipientEmail != null &amp;&amp; DomainThrottle.getInstance().canSend(DomainThrottle.getDomainFromEmail(recipientEmail)))</span>
+<span class="pc bpc" id="L371" title="5 of 6 branches missed.">			if (emailId &gt; 0 &amp;&amp; recipientEmail != null &amp;&amp; DomainThrottle.getInstance().canSend(DomainThrottle.getDomainFromEmail(recipientEmail)))</span>
 			{
-<span class="nc bnc" id="L372" title="All 2 branches missed.">				if (retry &gt; MAX_RETRY_COUNT)</span>
+<span class="nc bnc" id="L373" title="All 2 branches missed.">				if (retry &gt; MAX_RETRY_COUNT)</span>
 				{
-<span class="nc" id="L374">					db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L375">					ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
-<span class="nc" id="L376">					ps.setInt(1, -1);</span>
-<span class="nc" id="L377">					ps.setTimestamp(2, new Timestamp((new java.util.Date()).getTime()));</span>
-<span class="nc" id="L378">					ps.setInt(3, emailId);</span>
-<span class="nc" id="L379">					ps.execute();</span>
-<span class="nc" id="L380">					ps.close();</span>
-<span class="nc" id="L381">					ps = null;</span>
-<span class="nc bnc" id="L382" title="All 2 branches missed.">					if (campainId &gt; 0)</span>
+<span class="nc" id="L375">					db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L376">					ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
+<span class="nc" id="L377">					ps.setInt(1, -1);</span>
+<span class="nc" id="L378">					ps.setTimestamp(2, new Timestamp((new java.util.Date()).getTime()));</span>
+<span class="nc" id="L379">					ps.setInt(3, emailId);</span>
+<span class="nc" id="L380">					ps.execute();</span>
+<span class="nc" id="L381">					ps.close();</span>
+<span class="nc" id="L382">					ps = null;</span>
+<span class="nc bnc" id="L383" title="All 2 branches missed.">					if (campainId &gt; 0)</span>
 					{
-<span class="nc" id="L384">						ps = db_conn.prepareStatement(&quot;UPDATE emails_campain SET count_of_sent_mails=count_of_sent_mails+1, last_sent_date=? WHERE emails_campain_id=?&quot;);</span>
-<span class="nc" id="L385">						ps.setTimestamp(1, new Timestamp((new java.util.Date()).getTime()));</span>
-<span class="nc" id="L386">						ps.setInt(2, campainId);</span>
-<span class="nc" id="L387">						ps.execute();</span>
-<span class="nc" id="L388">						ps.close();</span>
-<span class="nc" id="L389">						ps = null;</span>
+<span class="nc" id="L385">						ps = db_conn.prepareStatement(&quot;UPDATE emails_campain SET count_of_sent_mails=count_of_sent_mails+1, last_sent_date=? WHERE emails_campain_id=?&quot;);</span>
+<span class="nc" id="L386">						ps.setTimestamp(1, new Timestamp((new java.util.Date()).getTime()));</span>
+<span class="nc" id="L387">						ps.setInt(2, campainId);</span>
+<span class="nc" id="L388">						ps.execute();</span>
+<span class="nc" id="L389">						ps.close();</span>
+<span class="nc" id="L390">						ps = null;</span>
 					}
-<span class="nc" id="L391">					toSendCount--;</span>
-<span class="nc" id="L392">					db_conn.close();</span>
-<span class="nc" id="L393">					db_conn = null;</span>
+<span class="nc" id="L392">					toSendCount--;</span>
+<span class="nc" id="L393">					db_conn.close();</span>
+<span class="nc" id="L394">					db_conn = null;</span>
 				}
 				else
 				{
-<span class="nc" id="L397">               db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L398">               db_conn = DBPool.getConnection();</span>
                // poznac si, ze odosielame
-<span class="nc" id="L399">            	ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
-<span class="nc" id="L400">               ps.setInt(1, 98);</span>
-<span class="nc" id="L401">            	ps.setTimestamp(2, new Timestamp((new java.util.Date()).getTime()));</span>
-<span class="nc" id="L402">               ps.setInt(3, emailId);</span>
-<span class="nc" id="L403">               ps.execute();</span>
-<span class="nc" id="L404">               ps.close();</span>
-<span class="nc" id="L405">               db_conn.close();</span>
-<span class="nc" id="L406">      			ps = null;</span>
-<span class="nc" id="L407">      			db_conn = null;</span>
+<span class="nc" id="L400">            	ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
+<span class="nc" id="L401">               ps.setInt(1, 98);</span>
+<span class="nc" id="L402">            	ps.setTimestamp(2, new Timestamp((new java.util.Date()).getTime()));</span>
+<span class="nc" id="L403">               ps.setInt(3, emailId);</span>
+<span class="nc" id="L404">               ps.execute();</span>
+<span class="nc" id="L405">               ps.close();</span>
+<span class="nc" id="L406">               db_conn.close();</span>
+<span class="nc" id="L407">      			ps = null;</span>
+<span class="nc" id="L408">      			db_conn = null;</span>
 					//body = url;
 
-<span class="nc" id="L410">               url = Tools.replace(url, &quot;:80/&quot;, &quot;/&quot;);</span>
+<span class="nc" id="L411">               url = Tools.replace(url, &quot;:80/&quot;, &quot;/&quot;);</span>
                //toto uz nerobime, https je standard url = Tools.replace(url, &quot;https://&quot;, &quot;http://&quot;);
 
-<span class="nc bnc" id="L413" title="All 6 branches missed.">					if ((url.startsWith(&quot;http://&quot;) || url.startsWith(&quot;https://&quot;)) &amp;&amp; Tools.isEmpty(body))</span>
+<span class="nc bnc" id="L414" title="All 6 branches missed.">					if ((url.startsWith(&quot;http://&quot;) || url.startsWith(&quot;https://&quot;)) &amp;&amp; Tools.isEmpty(body))</span>
 					{
 						try
 						{
-<span class="nc" id="L417">							Logger.debug(Sender.class,&quot;DOWNLOADING: &quot; + Tools.natUrl(url));</span>
+<span class="nc" id="L418">							Logger.debug(Sender.class,&quot;DOWNLOADING: &quot; + Tools.natUrl(url));</span>
 
 							//nastav HASH
-<span class="nc" id="L420">							ShowDoc.setActualUserHash(Password.generateStringHash(10));</span>
+<span class="nc" id="L421">							ShowDoc.setActualUserHash(Password.generateStringHash(10));</span>
 
 							//body obsahuje URL adresu, ktoru je treba stiahnut
-<span class="nc" id="L423">							URLConnection conn = null;</span>
-<span class="nc" id="L424">							URL urlCon = new URL(Tools.natUrl(url));</span>
-<span class="nc" id="L425">							conn = urlCon.openConnection();</span>
-<span class="nc" id="L426">							conn.setAllowUserInteraction(false);</span>
-<span class="nc" id="L427">							conn.setDoInput(true);</span>
-<span class="nc" id="L428">							conn.setDoOutput(false);</span>
-<span class="nc" id="L429">							conn.setRequestProperty(&quot;dmail&quot;, ShowDoc.ACTUAL_USER_HASH);</span>
-<span class="nc" id="L430">							conn.connect();</span>
+<span class="nc" id="L424">							URLConnection conn = null;</span>
+<span class="nc" id="L425">							URL urlCon = new URL(Tools.natUrl(url));</span>
+<span class="nc" id="L426">							conn = urlCon.openConnection();</span>
+<span class="nc" id="L427">							conn.setAllowUserInteraction(false);</span>
+<span class="nc" id="L428">							conn.setDoInput(true);</span>
+<span class="nc" id="L429">							conn.setDoOutput(false);</span>
+<span class="nc" id="L430">							conn.setRequestProperty(&quot;dmail&quot;, ShowDoc.ACTUAL_USER_HASH);</span>
+<span class="nc" id="L431">							conn.connect();</span>
 
-<span class="nc" id="L432">							String encoding = conn.getHeaderField(&quot;Content-Type&quot;);</span>
-<span class="nc bnc" id="L433" title="All 4 branches missed.">							if (encoding==null || encoding.indexOf(&quot;charset=&quot;)==-1)</span>
+<span class="nc" id="L433">							String encoding = conn.getHeaderField(&quot;Content-Type&quot;);</span>
+<span class="nc bnc" id="L434" title="All 4 branches missed.">							if (encoding==null || encoding.indexOf(&quot;charset=&quot;)==-1)</span>
 							{
-<span class="nc" id="L435">								encoding = SetCharacterEncodingFilter.getEncoding();</span>
+<span class="nc" id="L436">								encoding = SetCharacterEncodingFilter.getEncoding();</span>
 							}
 							else
 							{
-<span class="nc" id="L439">								encoding = encoding.substring(encoding.indexOf(&quot;charset=&quot;)+8).trim();</span>
+<span class="nc" id="L440">								encoding = encoding.substring(encoding.indexOf(&quot;charset=&quot;)+8).trim();</span>
 							}
 
-<span class="nc" id="L442">							StringBuilder sb = new StringBuilder();</span>
-<span class="nc" id="L443">							BufferedInputStream is = new BufferedInputStream(conn.getInputStream());</span>
-<span class="nc" id="L444">							InputStreamReader in = new InputStreamReader(is, encoding);</span>
-<span class="nc" id="L445">							char buffer[] = new char[8000];</span>
-<span class="nc" id="L446">							int n = 0;</span>
+<span class="nc" id="L443">							StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L444">							BufferedInputStream is = new BufferedInputStream(conn.getInputStream());</span>
+<span class="nc" id="L445">							InputStreamReader in = new InputStreamReader(is, encoding);</span>
+<span class="nc" id="L446">							char[] buffer = new char[8000];</span>
+<span class="nc" id="L447">							int n = 0;</span>
 							while (true)
 							{
-<span class="nc" id="L449">								 n = in.read(buffer);</span>
-<span class="nc bnc" id="L450" title="All 2 branches missed.">								 if (n &lt; 1)</span>
-<span class="nc" id="L451">									  break;</span>
-<span class="nc" id="L452">								 sb.append(buffer, 0, n);</span>
+<span class="nc" id="L450">								 n = in.read(buffer);</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">								 if (n &lt; 1)</span>
+<span class="nc" id="L452">									  break;</span>
+<span class="nc" id="L453">								 sb.append(buffer, 0, n);</span>
 							}
-<span class="nc" id="L454">							in.close();</span>
-<span class="nc" id="L455">							body = sb.toString();</span>
+<span class="nc" id="L455">							in.close();</span>
+<span class="nc" id="L456">							body = sb.toString();</span>
 						}
-<span class="nc" id="L457">						catch (Exception ex)</span>
+<span class="nc" id="L458">						catch (Exception ex)</span>
 						{
-<span class="nc" id="L459">							body = null;</span>
-<span class="nc" id="L460">							sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L461">						}</span>
+<span class="nc" id="L460">							body = null;</span>
+<span class="nc" id="L461">							sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L462">						}</span>
 					}
 
-<span class="nc" id="L464">					boolean success = false;</span>
-<span class="nc bnc" id="L465" title="All 2 branches missed.">					if (Tools.isNotEmpty(body))</span>
+<span class="nc" id="L465">					boolean success = false;</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">					if (Tools.isNotEmpty(body))</span>
 					{
 						//ak by sa to tam nahodou este nachadzalo...
-<span class="nc" id="L468">						body = Tools.replace(body, &quot;!name!&quot;, recipientName);</span>
-<span class="nc" id="L469">						body = Tools.replace(body, &quot;!email!&quot;, recipientEmail);</span>
-<span class="nc" id="L470">						body = Tools.replace(body, &quot;!RECIPIENT_NAME!&quot;, recipientName);</span>
-<span class="nc" id="L471">						body = Tools.replace(body, &quot;!RECIPIENT_EMAIL!&quot;, recipientEmail);</span>
-<span class="nc" id="L472">						body = Tools.replace(body, &quot;!LOGGED_USER_EMAIL!&quot;, recipientEmail);</span>
-<span class="nc" id="L473">						body = Tools.replace(body, &quot;!LOGGED_USER_FIRSTNAME!&quot;, recipientName);</span>
-<span class="nc" id="L474">						body = Tools.replace(body, &quot;!LOGGED_USER_LASTNAME!&quot;, recipientName);</span>
-<span class="nc" id="L475">						body = Tools.replace(body, &quot;!EMAIL_ID!&quot;, String.valueOf(emailId));</span>
+<span class="nc" id="L469">						body = Tools.replace(body, &quot;!name!&quot;, recipientName);</span>
+<span class="nc" id="L470">						body = Tools.replace(body, &quot;!email!&quot;, recipientEmail);</span>
+<span class="nc" id="L471">						body = Tools.replace(body, &quot;!RECIPIENT_NAME!&quot;, recipientName);</span>
+<span class="nc" id="L472">						body = Tools.replace(body, &quot;!RECIPIENT_EMAIL!&quot;, recipientEmail);</span>
+<span class="nc" id="L473">						body = Tools.replace(body, &quot;!LOGGED_USER_EMAIL!&quot;, recipientEmail);</span>
+<span class="nc" id="L474">						body = Tools.replace(body, &quot;!LOGGED_USER_FIRSTNAME!&quot;, recipientName);</span>
+<span class="nc" id="L475">						body = Tools.replace(body, &quot;!LOGGED_USER_LASTNAME!&quot;, recipientName);</span>
+<span class="nc" id="L476">						body = Tools.replace(body, &quot;!EMAIL_ID!&quot;, String.valueOf(emailId));</span>
 
 						//ak mame body, v URL je cesta (http://www.server.sk/nieco.html), ziskajme baseHref (http://www.server.sk)
-<span class="nc" id="L478">						String baseHref = url;</span>
-<span class="nc" id="L479">						int index = url.indexOf('/', 10);</span>
-<span class="nc bnc" id="L480" title="All 2 branches missed.">						if (index != -1)</span>
+<span class="nc" id="L479">						String baseHref = url;</span>
+<span class="nc" id="L480">						int index = url.indexOf('/', 10);</span>
+<span class="nc bnc" id="L481" title="All 2 branches missed.">						if (index != -1)</span>
 						{
 							//dalo by sa to aj z urlCon, ale to neviem zistit contextPath
-<span class="nc" id="L483">							baseHref = url.substring(0, index);</span>
+<span class="nc" id="L484">							baseHref = url.substring(0, index);</span>
 						}
-<span class="nc bnc" id="L485" title="All 6 branches missed.">						if (body.contains(&quot;SENDER: DO NOT SEND THIS EMAIL&quot;) || body.contains(&quot;Chyba 404 - požadovaná stránka neexistuje&quot;) || body.contains(Prop.getInstance().getText(&quot;stat.error.404&quot;)))</span>
+<span class="nc bnc" id="L486" title="All 6 branches missed.">						if (body.contains(&quot;SENDER: DO NOT SEND THIS EMAIL&quot;) || body.contains(&quot;Chyba 404 - požadovaná stránka neexistuje&quot;) || body.contains(Prop.getInstance().getText(&quot;stat.error.404&quot;)))</span>
 						{
 							//pre automaticky generovane emaily (napr. zoznam zmien)
 							//ak obsahuje tento text, neposle sa to
-<span class="nc" id="L489">							Logger.debug(Sender.class,&quot;Obsahuje text SENDER: DO NOT SEND THIS EMAIL, alebo je to 404, preskakujem&quot;);</span>
-<span class="nc" id="L490">							success = true;</span>
+<span class="nc" id="L490">							Logger.debug(Sender.class,&quot;Obsahuje text SENDER: DO NOT SEND THIS EMAIL, alebo je to 404, preskakujem&quot;);</span>
+<span class="nc" id="L491">							success = true;</span>
 						}
 						else
 						{
 							//v pripade multiDomain s externym adresarom musime nafejkovat domenu pre ziskanie priloh z inych domen pri ziskavani cesty pomocou IwcmFile.fromVirtualPath(serverPath);
-<span class="nc" id="L495">							boolean fakingDomain = false;</span>
-<span class="nc bnc" id="L496" title="All 6 branches missed.">							if (Tools.isNotEmpty(Constants.getString(&quot;cloudStaticFilesDir&quot;)) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; url.startsWith(&quot;http&quot;))</span>
+<span class="nc" id="L496">							boolean fakingDomain = false;</span>
+<span class="nc bnc" id="L497" title="All 6 branches missed.">							if (Tools.isNotEmpty(Constants.getString(&quot;cloudStaticFilesDir&quot;)) &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; url.startsWith(&quot;http&quot;))</span>
 							{
 								//ziskanie domeny z baseHref
-<span class="nc" id="L499">								String baseHrefDomain = baseHref;</span>
-<span class="nc bnc" id="L500" title="All 2 branches missed.">								if (Tools.isNotEmpty(baseHrefDomain))</span>
+<span class="nc" id="L500">								String baseHrefDomain = baseHref;</span>
+<span class="nc bnc" id="L501" title="All 2 branches missed.">								if (Tools.isNotEmpty(baseHrefDomain))</span>
 								{
-<span class="nc" id="L502">									int urlColonAndTwoSlashes = baseHrefDomain.indexOf(&quot;://&quot;);</span>
-<span class="nc bnc" id="L503" title="All 2 branches missed.">									if (urlColonAndTwoSlashes &gt; 0)</span>
+<span class="nc" id="L503">									int urlColonAndTwoSlashes = baseHrefDomain.indexOf(&quot;://&quot;);</span>
+<span class="nc bnc" id="L504" title="All 2 branches missed.">									if (urlColonAndTwoSlashes &gt; 0)</span>
 									{
-<span class="nc" id="L505">										baseHrefDomain = baseHrefDomain.substring(urlColonAndTwoSlashes + 3);</span>
-<span class="nc" id="L506">										int urlPortColon = baseHrefDomain.indexOf(&quot;:&quot;);</span>
-<span class="nc bnc" id="L507" title="All 2 branches missed.">										if (urlPortColon &gt; 0)</span>
-<span class="nc" id="L508">											baseHrefDomain = baseHrefDomain.substring(0, urlPortColon);</span>
+<span class="nc" id="L506">										baseHrefDomain = baseHrefDomain.substring(urlColonAndTwoSlashes + 3);</span>
+<span class="nc" id="L507">										int urlPortColon = baseHrefDomain.indexOf(&quot;:&quot;);</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">										if (urlPortColon &gt; 0)</span>
+<span class="nc" id="L509">											baseHrefDomain = baseHrefDomain.substring(0, urlPortColon);</span>
 										else
 										{
-<span class="nc" id="L511">											int urlEndSlash = baseHrefDomain.indexOf(&quot;/&quot;);</span>
-<span class="nc bnc" id="L512" title="All 2 branches missed.">											if (urlEndSlash &gt; 0)</span>
-<span class="nc" id="L513">												baseHrefDomain = baseHrefDomain.substring(0, urlEndSlash);</span>
+<span class="nc" id="L512">											int urlEndSlash = baseHrefDomain.indexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">											if (urlEndSlash &gt; 0)</span>
+<span class="nc" id="L514">												baseHrefDomain = baseHrefDomain.substring(0, urlEndSlash);</span>
 										}
 									}
 
-<span class="nc" id="L517">									String domainName = DomainRedirectDB.getDomainFromAlias(baseHrefDomain);</span>
-<span class="nc bnc" id="L518" title="All 2 branches missed.">									if (Tools.isNotEmpty(domainName)) baseHrefDomain = domainName;</span>
+<span class="nc" id="L518">									String domainName = DomainRedirectDB.getDomainFromAlias(baseHrefDomain);</span>
+<span class="nc bnc" id="L519" title="All 2 branches missed.">									if (Tools.isNotEmpty(domainName)) baseHrefDomain = domainName;</span>
 
 									//kontrola, ci vo WJ taku domenu mame definovanu
-<span class="nc" id="L521">									boolean foundWjDomain = false;</span>
-<span class="nc" id="L522">									List&lt;String&gt; allWjDomains = GroupsDB.getInstance().getAllDomainsList();</span>
-<span class="nc bnc" id="L523" title="All 2 branches missed.">									for(String wjDomain : allWjDomains)</span>
+<span class="nc" id="L522">									boolean foundWjDomain = false;</span>
+<span class="nc" id="L523">									List&lt;String&gt; allWjDomains = GroupsDB.getInstance().getAllDomainsList();</span>
+<span class="nc bnc" id="L524" title="All 2 branches missed.">									for(String wjDomain : allWjDomains)</span>
 									{
-<span class="nc bnc" id="L525" title="All 2 branches missed.">										if(baseHrefDomain.equals(wjDomain))</span>
-<span class="nc" id="L526">											foundWjDomain = true;</span>
-<span class="nc" id="L527">									}</span>
+<span class="nc bnc" id="L526" title="All 2 branches missed.">										if(baseHrefDomain.equals(wjDomain))</span>
+<span class="nc" id="L527">											foundWjDomain = true;</span>
+<span class="nc" id="L528">									}</span>
 
 									//setnem fake domenu do RequestBean
-<span class="nc bnc" id="L530" title="All 4 branches missed.">									if (foundWjDomain &amp;&amp; Tools.isNotEmpty(baseHrefDomain))</span>
+<span class="nc bnc" id="L531" title="All 4 branches missed.">									if (foundWjDomain &amp;&amp; Tools.isNotEmpty(baseHrefDomain))</span>
 									{
-<span class="nc" id="L532">										MockHttpServletRequest request = new MockHttpServletRequest(null, &quot;/Sender&quot;);</span>
-<span class="nc" id="L533">										MockHttpSession session = new MockHttpSession(null);</span>
-<span class="nc" id="L534">										request.setSession(session);</span>
-<span class="nc" id="L535">										request.setServerName(&quot;&quot;);</span>
-<span class="nc" id="L536">										SetCharacterEncodingFilter.registerDataContext(request);</span>
-<span class="nc" id="L537">										RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc" id="L538">										Logger.debug(Sender.class, &quot;baseHrefDomain=&quot; + baseHrefDomain + &quot;, RequestBean=&quot; + rb);</span>
-<span class="nc bnc" id="L539" title="All 2 branches missed.">										if (rb != null) rb.setDomain(baseHrefDomain);</span>
-<span class="nc" id="L540">										fakingDomain = true;</span>
+<span class="nc" id="L533">										MockHttpServletRequest request = new MockHttpServletRequest(null, &quot;/Sender&quot;);</span>
+<span class="nc" id="L534">										MockHttpSession session = new MockHttpSession(null);</span>
+<span class="nc" id="L535">										request.setSession(session);</span>
+<span class="nc" id="L536">										request.setServerName(&quot;&quot;);</span>
+<span class="nc" id="L537">										SetCharacterEncodingFilter.registerDataContext(request);</span>
+<span class="nc" id="L538">										RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc" id="L539">										Logger.debug(Sender.class, &quot;baseHrefDomain=&quot; + baseHrefDomain + &quot;, RequestBean=&quot; + rb);</span>
+<span class="nc bnc" id="L540" title="All 2 branches missed.">										if (rb != null) rb.setDomain(baseHrefDomain);</span>
+<span class="nc" id="L541">										fakingDomain = true;</span>
 									}
 								}
 							}
 
 							//meranie pridavame len na stahovane texty (hromadny email) nie do mailov posielanych cez iny node clustra
-<span class="nc bnc" id="L546" title="All 2 branches missed.">							if (url.startsWith(&quot;http&quot;))</span>
+<span class="nc bnc" id="L547" title="All 2 branches missed.">							if (url.startsWith(&quot;http&quot;))</span>
 							{
 								//uprav linky - pridaj info pre statistiku kliknuti
-<span class="nc" id="L549">								body = addClickInfo(body, emailId, baseHref);</span>
-<span class="nc" id="L550">								body = addOpenTrackingImg(body, emailId);</span>
+<span class="nc" id="L550">								body = addClickInfo(body, emailId, baseHref);</span>
+<span class="nc" id="L551">								body = addOpenTrackingImg(body, emailId);</span>
 							}
 
-							//success = SendMail.send(senderName, senderEmail, recipientEmail, subject, body, attachments);
-<span class="nc" id="L554">							Pair&lt;Boolean, Exception&gt; result = SendMail.sendCapturingException(</span>
-								senderName, senderEmail, recipientEmail, replyTo, ccEmail, bccEmail, subject, body, baseHref, attachments, false, true
-							);
+<span class="nc" id="L554">							String dmailListUnsubscribeBaseHref = Constants.getString(&quot;dmailListUnsubscribeBaseHref&quot;, baseHref);</span>
+							//it must be httpS otherwise it will be ignored by Apple Mail and maybe other clients too
+<span class="nc" id="L556">							StringBuilder unsubscribedUrl = new StringBuilder(&quot;&lt;&quot;).append(Tools.replace(dmailListUnsubscribeBaseHref, &quot;http://&quot;, &quot;https://&quot;));</span>
+<span class="nc" id="L557">							String hash = getClickHash(emailId);</span>
+<span class="nc" id="L558">							unsubscribedUrl.append(&quot;/rest/dmail/unsubscribe?&quot;+Constants.getString(&quot;dmailStatParam&quot;)+&quot;=&quot;+hash);</span>
+<span class="nc" id="L559">							unsubscribedUrl.append(&quot;&gt;&quot;);</span>
+
+<span class="nc" id="L561">							Pair&lt;Boolean, Exception&gt; result = new MailHelper()</span>
+<span class="nc" id="L562">								.setFromName(senderName)</span>
+<span class="nc" id="L563">								.setFromEmail(senderEmail)</span>
+<span class="nc" id="L564">								.addRecipient(recipientEmail)</span>
+<span class="nc" id="L565">								.setReplyTo(replyTo)</span>
+<span class="nc" id="L566">								.setCcEmail(ccEmail)</span>
+<span class="nc" id="L567">								.setBccEmail(bccEmail)</span>
+<span class="nc" id="L568">								.setSubject(subject)</span>
+<span class="nc" id="L569">								.setMessage(body)</span>
+<span class="nc" id="L570">								.setBaseHref(baseHref)</span>
+<span class="nc" id="L571">								.setAttachments(attachments)</span>
+<span class="nc" id="L572">								.setSendLaterWhenException(false)</span>
+<span class="nc" id="L573">								.setWriteToAuditLog(true)</span>
+<span class="nc" id="L574">								.addHeader(&quot;List-Unsubscribe-Post&quot;, &quot;List-Unsubscribe=One-Click&quot;)</span>
+<span class="nc" id="L575">								.addHeader(&quot;List-Unsubscribe&quot;, unsubscribedUrl.toString())</span>
+<span class="nc" id="L576">								.sendCapturingException();</span>
 
 							//odregistrujem data context, ktory bol vytvoreny kvoli fejkovaniu domen
-<span class="nc bnc" id="L559" title="All 2 branches missed.">							if(fakingDomain) SetCharacterEncodingFilter.unRegisterDataContext();</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">							if(fakingDomain) SetCharacterEncodingFilter.unRegisterDataContext();</span>
 
-<span class="nc" id="L561">							DomainThrottle.getInstance().addEmail(DomainThrottle.getDomainFromEmail(recipientEmail), System.currentTimeMillis());</span>
-<span class="nc" id="L562">							success = result.first;</span>
+<span class="nc" id="L581">							DomainThrottle.getInstance().addEmail(DomainThrottle.getDomainFromEmail(recipientEmail), System.currentTimeMillis());</span>
+<span class="nc" id="L582">							success = result.first;</span>
 							//posielame email na zlu adresu, s tym nic nespravime ani na viacero pokusov
-<span class="nc bnc" id="L564" title="All 4 branches missed.">							if (!success &amp;&amp; result.second != null)</span>
+<span class="nc bnc" id="L584" title="All 4 branches missed.">							if (!success &amp;&amp; result.second != null)</span>
 							{
-<span class="nc" id="L566">								Logger.debug(Sender.class, &quot;Message: &quot;+result.second.getMessage());</span>
-<span class="nc" id="L567">								StringTokenizer st = new StringTokenizer(Constants.getString(&quot;dmailBadEmailSmtpReplyStatuses&quot;), &quot;,;&quot;);</span>
-<span class="nc bnc" id="L568" title="All 2 branches missed.">								while (st.hasMoreTokens())</span>
+<span class="nc" id="L586">								Logger.debug(Sender.class, &quot;Message: &quot;+result.second.getMessage());</span>
+<span class="nc" id="L587">								StringTokenizer st = new StringTokenizer(Constants.getString(&quot;dmailBadEmailSmtpReplyStatuses&quot;), &quot;,;&quot;);</span>
+<span class="nc bnc" id="L588" title="All 2 branches missed.">								while (st.hasMoreTokens())</span>
 								{
-<span class="nc" id="L570">									String status = st.nextToken().trim();</span>
-<span class="nc bnc" id="L571" title="All 2 branches missed.">									if (result.second.getMessage().contains(status))</span>
+<span class="nc" id="L590">									String status = st.nextToken().trim();</span>
+<span class="nc bnc" id="L591" title="All 2 branches missed.">									if (result.second.getMessage().contains(status))</span>
 									{
-<span class="nc" id="L573">										Logger.debug(Sender.class, &quot;Povazujem za success, server vratil &quot;+status);</span>
-<span class="nc" id="L574">										success = true;</span>
-<span class="nc" id="L575">										break;</span>
+<span class="nc" id="L593">										Logger.debug(Sender.class, &quot;Povazujem za success, server vratil &quot;+status);</span>
+<span class="nc" id="L594">										success = true;</span>
+<span class="nc" id="L595">										break;</span>
 									}
-<span class="nc" id="L577">								}</span>
+<span class="nc" id="L597">								}</span>
 							}
 						}
 					}
 
-<span class="nc" id="L582">					db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L602">					db_conn = DBPool.getConnection();</span>
 
-<span class="nc bnc" id="L584" title="All 2 branches missed.">					if (success)</span>
+<span class="nc bnc" id="L604" title="All 2 branches missed.">					if (success)</span>
 					{
-<span class="nc" id="L586">						long now = (new java.util.Date()).getTime();</span>
-<span class="nc" id="L587">						ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
-<span class="nc" id="L588">						ps.setInt(1, retry + 1);</span>
-<span class="nc" id="L589">						ps.setTimestamp(2, new Timestamp(now));</span>
-<span class="nc" id="L590">						ps.setInt(3, emailId);</span>
-<span class="nc" id="L591">						ps.execute();</span>
-<span class="nc" id="L592">						ps.close();</span>
-<span class="nc" id="L593">						ps = null;</span>
-<span class="nc bnc" id="L594" title="All 2 branches missed.">						if (campainId &gt; 0)</span>
+<span class="nc" id="L606">						long now = (new java.util.Date()).getTime();</span>
+<span class="nc" id="L607">						ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
+<span class="nc" id="L608">						ps.setInt(1, retry + 1);</span>
+<span class="nc" id="L609">						ps.setTimestamp(2, new Timestamp(now));</span>
+<span class="nc" id="L610">						ps.setInt(3, emailId);</span>
+<span class="nc" id="L611">						ps.execute();</span>
+<span class="nc" id="L612">						ps.close();</span>
+<span class="nc" id="L613">						ps = null;</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">						if (campainId &gt; 0)</span>
 						{
-<span class="nc" id="L596">							ps = db_conn.prepareStatement(&quot;UPDATE emails_campain SET count_of_sent_mails=count_of_sent_mails+1, last_sent_date=? WHERE emails_campain_id=?&quot;);</span>
-<span class="nc" id="L597">							ps.setTimestamp(1, new Timestamp(now));</span>
-<span class="nc" id="L598">							ps.setInt(2, campainId);</span>
-<span class="nc" id="L599">							ps.execute();</span>
-<span class="nc" id="L600">							ps.close();</span>
-<span class="nc" id="L601">							ps = null;</span>
+<span class="nc" id="L616">							ps = db_conn.prepareStatement(&quot;UPDATE emails_campain SET count_of_sent_mails=count_of_sent_mails+1, last_sent_date=? WHERE emails_campain_id=?&quot;);</span>
+<span class="nc" id="L617">							ps.setTimestamp(1, new Timestamp(now));</span>
+<span class="nc" id="L618">							ps.setInt(2, campainId);</span>
+<span class="nc" id="L619">							ps.execute();</span>
+<span class="nc" id="L620">							ps.close();</span>
+<span class="nc" id="L621">							ps = null;</span>
 						}
 
-<span class="nc" id="L604">						toSendCount--;</span>
-<span class="nc" id="L605">					}</span>
+<span class="nc" id="L624">						toSendCount--;</span>
+<span class="nc" id="L625">					}</span>
 					else
 					{
-<span class="nc" id="L608">						ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
-<span class="nc" id="L609">						ps.setInt(1, retry + 1);</span>
-<span class="nc" id="L610">						ps.setNull(2, Types.DATE);</span>
-<span class="nc" id="L611">						ps.setInt(3, emailId);</span>
-<span class="nc" id="L612">						ps.execute();</span>
-<span class="nc" id="L613">						ps.close();</span>
-<span class="nc" id="L614">						ps = null;</span>
+<span class="nc" id="L628">						ps = db_conn.prepareStatement(&quot;UPDATE emails SET retry=?, sent_date=? WHERE email_id=?&quot;);</span>
+<span class="nc" id="L629">						ps.setInt(1, retry + 1);</span>
+<span class="nc" id="L630">						ps.setNull(2, Types.DATE);</span>
+<span class="nc" id="L631">						ps.setInt(3, emailId);</span>
+<span class="nc" id="L632">						ps.execute();</span>
+<span class="nc" id="L633">						ps.close();</span>
+<span class="nc" id="L634">						ps = null;</span>
 					}
-<span class="nc" id="L616">					db_conn.close();</span>
-<span class="nc" id="L617">					db_conn = null;</span>
-<span class="nc bnc" id="L618" title="All 2 branches missed.">					if (!success)</span>
+<span class="nc" id="L636">					db_conn.close();</span>
+<span class="nc" id="L637">					db_conn = null;</span>
+<span class="nc bnc" id="L638" title="All 2 branches missed.">					if (!success)</span>
 					{
 						try
 						{
 
 
-<span class="nc" id="L624">							Logger.println(Sender.class,&quot;Sender: email from: &quot; + senderEmail + &quot; to: &quot; + recipientEmail);</span>
-<span class="nc" id="L625">							Logger.println(Sender.class, &quot;- nepodarilo sa odoslat email, zaspavam na &quot;+sleepTime);</span>
+<span class="nc" id="L644">							Logger.println(Sender.class,&quot;Sender: email from: &quot; + senderEmail + &quot; to: &quot; + recipientEmail);</span>
+<span class="nc" id="L645">							Logger.println(Sender.class, &quot;- nepodarilo sa odoslat email, zaspavam na &quot;+sleepTime);</span>
 							//pockajme, kym sa SMTP server spamata
-<span class="nc bnc" id="L627" title="All 2 branches missed.">							if (sleepTime &gt; 0) Thread.sleep(sleepTime);</span>
+<span class="nc bnc" id="L647" title="All 2 branches missed.">							if (sleepTime &gt; 0) Thread.sleep(sleepTime);</span>
 						}
-<span class="nc" id="L629">						catch (Exception e)</span>
+<span class="nc" id="L649">						catch (Exception e)</span>
 						{
-<span class="nc" id="L631">							sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L632">						}</span>
+<span class="nc" id="L651">							sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L652">						}</span>
 					}
 				}
 			}
 
-<span class="pc bpc" id="L637" title="1 of 2 branches missed.">			if (hasResult == false)</span>
+<span class="pc bpc" id="L657" title="1 of 2 branches missed.">			if (hasResult == false)</span>
 			{
 				//this.cancel();
 				//setActive(false);
 			}
 		}
-<span class="nc" id="L643">		catch (Exception ex)</span>
+<span class="nc" id="L663">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L645">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L665">			sk.iway.iwcm.Logger.error(ex);</span>
 			try
 			{
-<span class="nc" id="L648">				Logger.println(Sender.class, &quot;- nepodarilo sa odoslat email, zaspavam na 3x&quot;+sleepTime);</span>
-<span class="nc bnc" id="L649" title="All 2 branches missed.">				if (sleepTime &gt; 0) Thread.sleep(sleepTime*3);</span>
+<span class="nc" id="L668">				Logger.println(Sender.class, &quot;- nepodarilo sa odoslat email, zaspavam na 3x&quot;+sleepTime);</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">				if (sleepTime &gt; 0) Thread.sleep(sleepTime*3L);</span>
 			}
-<span class="nc" id="L651">			catch (Exception e)</span>
+<span class="nc" id="L671">			catch (Exception e)</span>
 			{
 
-<span class="nc" id="L654">			}</span>
+<span class="nc" id="L674">			}</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L660" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L661">					rs.close();</span>
-<span class="pc bpc" id="L662" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L663">					ps.close();</span>
-<span class="pc bpc" id="L664" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L665">					db_conn.close();</span>
+<span class="pc bpc" id="L680" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L681">					rs.close();</span>
+<span class="pc bpc" id="L682" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L683">					ps.close();</span>
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L685">					db_conn.close();</span>
 			}
-<span class="nc" id="L667">			catch (Exception ex2)</span>
+<span class="nc" id="L687">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L669">			}</span>
+<span class="fc" id="L689">			}</span>
 		}
-<span class="fc" id="L671">		runActive = false;</span>
-<span class="fc" id="L672">	}</span>
+<span class="fc" id="L691">		runActive = false;</span>
+<span class="fc" id="L692">	}</span>
 
 
 	private String addOpenTrackingImg(String body, int emailId)
 	{
-<span class="nc bnc" id="L677" title="All 4 branches missed.">		if(Tools.isEmpty(Constants.getString(&quot;dmailTrackopenGif&quot;)) || Constants.getString(&quot;dmailTrackopenGif&quot;).length()&lt;2)</span>
-<span class="nc" id="L678">			return body;</span>
-<span class="nc" id="L679">		Logger.debug(getClass(), &quot;Adding open tracking image&quot;);</span>
-<span class="nc bnc" id="L680" title="All 2 branches missed.">		if (emailId &lt; 1) return(body);</span>
-<span class="nc" id="L681">		String value = Integer.toString(emailId);</span>
-<span class="nc bnc" id="L682" title="All 2 branches missed.">		int endOfBody = body.indexOf(&quot;&lt;/body&gt;&quot;)==-1?body.indexOf(&quot;&lt;/body&gt;&quot;):body.indexOf(&quot;&lt;/body&gt;&quot;);</span>
-<span class="nc bnc" id="L683" title="All 2 branches missed.">		if(endOfBody != -1)</span>
+<span class="nc bnc" id="L697" title="All 4 branches missed.">		if(Tools.isEmpty(Constants.getString(&quot;dmailTrackopenGif&quot;)) || Constants.getString(&quot;dmailTrackopenGif&quot;).length()&lt;2)</span>
+<span class="nc" id="L698">			return body;</span>
+<span class="nc" id="L699">		Logger.debug(getClass(), &quot;Adding open tracking image&quot;);</span>
+<span class="nc bnc" id="L700" title="All 2 branches missed.">		if (emailId &lt; 1) return(body);</span>
+<span class="nc" id="L701">		String value = Integer.toString(emailId);</span>
+<span class="nc" id="L702">		int endOfBody = body.indexOf(&quot;&lt;/body&gt;&quot;);</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">		if(endOfBody != -1)</span>
 		{
-<span class="nc" id="L685">			String trackGif = Constants.getString(&quot;dmailTrackopenGif&quot;);</span>
-<span class="nc bnc" id="L686" title="All 4 branches missed.">			if (trackGif!=null &amp;&amp; trackGif.length()&gt;3)</span>
+<span class="nc" id="L705">			String trackGif = Constants.getString(&quot;dmailTrackopenGif&quot;);</span>
+<span class="nc bnc" id="L706" title="All 4 branches missed.">			if (trackGif!=null &amp;&amp; trackGif.length()&gt;3)</span>
 			{
-<span class="nc" id="L688">				body = new StringBuffer(body).insert(endOfBody, (&quot;&lt;img src=\&quot;&quot;+trackGif+&quot;?emailId=&quot;+value+&quot;\&quot; style=\&quot;display:none;\&quot; /&gt;&quot;).toCharArray()).toString();</span>
+<span class="nc" id="L708">				body = new StringBuffer(body).insert(endOfBody, (&quot;&lt;img src=\&quot;&quot;+trackGif+&quot;?emailId=&quot;+value+&quot;\&quot; style=\&quot;display:none;\&quot; /&gt;&quot;).toCharArray()).toString();</span>
 			}
 		}
-<span class="nc" id="L691">		return body;</span>
+<span class="nc" id="L711">		return body;</span>
 	}
 
 	public void cancelTask()
 	{
-<span class="fc" id="L696">		Logger.debug(Sender.class, &quot;destroying sender&quot;);</span>
+<span class="fc" id="L716">		Logger.debug(Sender.class, &quot;destroying sender&quot;);</span>
 
-<span class="pc bpc" id="L698" title="1 of 2 branches missed.">		if (timer != null) timer.cancel();</span>
-<span class="fc" id="L699">		this.cancel();</span>
-<span class="fc" id="L700">		setActive(false);</span>
-<span class="fc" id="L701">		Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
-<span class="fc" id="L702">	}</span>
+<span class="pc bpc" id="L718" title="1 of 2 branches missed.">		if (timer != null) timer.cancel();</span>
+<span class="fc" id="L719">		this.cancel();</span>
+<span class="fc" id="L720">		setActive(false);</span>
+<span class="fc" id="L721">		Constants.getServletContext().removeAttribute(CONTEXT_NAME);</span>
+<span class="fc" id="L722">	}</span>
 
 	/**
 	 *  Sets the active attribute of the Sender object
@@ -708,8 +728,8 @@ public class Sender extends TimerTask
 	 */
 	public void setActive(boolean active)
 	{
-<span class="fc" id="L711">		this.active = active;</span>
-<span class="fc" id="L712">	}</span>
+<span class="fc" id="L731">		this.active = active;</span>
+<span class="fc" id="L732">	}</span>
 
 	/**
 	 *  Gets the active attribute of the Sender object
@@ -718,12 +738,12 @@ public class Sender extends TimerTask
 	 */
 	public boolean isActive()
 	{
-<span class="fc" id="L721">		return active;</span>
+<span class="fc" id="L741">		return active;</span>
 	}
 	public int getToSendCount()
 	{
-<span class="pc bpc" id="L725" title="1 of 2 branches missed.">		if (toSendCount &lt; 0) toSendCount = 0;</span>
-<span class="fc" id="L726">		return toSendCount;</span>
+<span class="pc bpc" id="L745" title="1 of 2 branches missed.">		if (toSendCount &lt; 0) toSendCount = 0;</span>
+<span class="fc" id="L746">		return toSendCount;</span>
 	}
 
 	/**
@@ -733,49 +753,51 @@ public class Sender extends TimerTask
 	 */
 	public static String addClickInfo(String body, int emailId,String baseHref)
 	{
-<span class="nc bnc" id="L736" title="All 2 branches missed.">		if (emailId &lt; 1) return(body);</span>
+<span class="nc bnc" id="L756" title="All 2 branches missed.">		if (emailId &lt; 1) return(body);</span>
 
-<span class="nc" id="L738">		String value = getClickHash(emailId);</span>
-<span class="nc" id="L739">		String param = Constants.getString(&quot;dmailStatParam&quot;);</span>
+<span class="nc" id="L758">		String value = getClickHash(emailId);</span>
+<span class="nc" id="L759">		String param = Constants.getString(&quot;dmailStatParam&quot;);</span>
 
-<span class="nc bnc" id="L741" title="All 4 branches missed.">		if (Tools.isEmpty(param) || param.length()&lt;2) return body;</span>
+<span class="nc bnc" id="L761" title="All 4 branches missed.">		if (Tools.isEmpty(param) || param.length()&lt;2) return body;</span>
 
-<span class="nc" id="L743">		int failsafe = 500;</span>
-<span class="nc" id="L744">		int counter = 0;</span>
-		int start, end;
-		String oldLink, newLink;
-<span class="nc" id="L747">		start = body.indexOf(&quot;href=\&quot;&quot;);</span>
-<span class="nc bnc" id="L748" title="All 4 branches missed.">		while (counter &lt; failsafe &amp;&amp; start!=-1)</span>
+<span class="nc" id="L763">		int failsafe = 500;</span>
+<span class="nc" id="L764">		int counter = 0;</span>
+		int start;
+		int end;
+		String oldLink;
+		String newLink;
+<span class="nc" id="L769">		start = body.indexOf(&quot;href=\&quot;&quot;);</span>
+<span class="nc bnc" id="L770" title="All 4 branches missed.">		while (counter &lt; failsafe &amp;&amp; start!=-1)</span>
 		{
-<span class="nc" id="L750">			end = body.indexOf(&quot;\&quot;&quot;, start+6);</span>
-<span class="nc bnc" id="L751" title="All 2 branches missed.">			if (end &gt; start)</span>
+<span class="nc" id="L772">			end = body.indexOf(&quot;\&quot;&quot;, start+6);</span>
+<span class="nc bnc" id="L773" title="All 2 branches missed.">			if (end &gt; start)</span>
 			{
-<span class="nc" id="L753">				oldLink = body.substring(start+6, end);</span>
-<span class="nc bnc" id="L754" title="All 10 branches missed.">				if ( ( oldLink.trim().startsWith(&quot;http&quot;)==false || Constants.getBoolean(&quot;replaceExternalLinks&quot;))  &amp;&amp; oldLink.trim().startsWith(&quot;javascript&quot;)==false &amp;&amp; oldLink.trim().startsWith(&quot;mailto&quot;)==false  &amp;&amp; !oldLink.contains(baseHref))</span>
+<span class="nc" id="L775">				oldLink = body.substring(start+6, end);</span>
+<span class="nc bnc" id="L776" title="All 12 branches missed.">				if ( ( oldLink.trim().startsWith(&quot;http&quot;)==false || Constants.getBoolean(&quot;replaceExternalLinks&quot;))  &amp;&amp; oldLink.trim().startsWith(&quot;javascript&quot;)==false &amp;&amp; oldLink.trim().startsWith(&quot;mailto&quot;)==false  &amp;&amp; !oldLink.contains(baseHref) &amp;&amp; !oldLink.contains(&quot;/combine.jsp&quot;))</span>
 				{
-<span class="nc" id="L756">					newLink = baseHref;</span>
-<span class="nc bnc" id="L757" title="All 2 branches missed.">					if (oldLink.trim().startsWith(&quot;http&quot;))</span>
+<span class="nc" id="L778">					newLink = baseHref;</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">					if (oldLink.trim().startsWith(&quot;http&quot;))</span>
 					{
 						//ten &amp;amp; vraj robil v niektorych mail klientoch chyby, tiket 9576
-<span class="nc" id="L760">						newLink = Tools.addParameterToUrlNoAmp(baseHref, param, value);</span>
+<span class="nc" id="L782">						newLink = Tools.addParameterToUrlNoAmp(baseHref, param, value);</span>
 
-<span class="nc" id="L762">						Base64 b64 = new Base64();</span>
-<span class="nc" id="L763">						String base64encoded = new String(b64.encode(oldLink.getBytes()));</span>
-<span class="nc" id="L764">						base64encoded = Tools.replace(base64encoded, &quot;=&quot;, &quot;|&quot;);</span>
+<span class="nc" id="L784">						Base64 b64 = new Base64();</span>
+<span class="nc" id="L785">						String base64encoded = new String(b64.encode(oldLink.getBytes()));</span>
+<span class="nc" id="L786">						base64encoded = Tools.replace(base64encoded, &quot;=&quot;, &quot;|&quot;);</span>
 
-<span class="nc" id="L766">						newLink = Tools.addParameterToUrlNoAmp(newLink, &quot;extURL&quot;, base64encoded);</span>
-<span class="nc" id="L767">					}</span>
+<span class="nc" id="L788">						newLink = Tools.addParameterToUrlNoAmp(newLink, &quot;extURL&quot;, base64encoded);</span>
+<span class="nc" id="L789">					}</span>
 					else
 					{
-<span class="nc" id="L770">						newLink = Tools.addParameterToUrlNoAmp(oldLink, param, value);</span>
+<span class="nc" id="L792">						newLink = Tools.addParameterToUrlNoAmp(oldLink, param, value);</span>
 					}
-<span class="nc" id="L772">					body = Tools.replace(body, &quot;href=\&quot;&quot; + oldLink + &quot;\&quot;&quot;, &quot;href=\&quot;&quot; + newLink + &quot;\&quot;&quot;);</span>
+<span class="nc" id="L794">					body = Tools.replace(body, &quot;href=\&quot;&quot; + oldLink + &quot;\&quot;&quot;, &quot;href=\&quot;&quot; + newLink + &quot;\&quot;&quot;);</span>
 				}
 			}
-<span class="nc" id="L775">			start = body.indexOf(&quot;href=\&quot;&quot;, end);</span>
-<span class="nc" id="L776">			counter++;</span>
+<span class="nc" id="L797">			start = body.indexOf(&quot;href=\&quot;&quot;, end);</span>
+<span class="nc" id="L798">			counter++;</span>
 		}
-<span class="nc" id="L778">		return(body);</span>
+<span class="nc" id="L800">		return(body);</span>
 	}
 
 	/**
@@ -784,13 +806,13 @@ public class Sender extends TimerTask
 	 * @return
 	 */
 	private static String getClickHash(int emailId) {
-<span class="nc" id="L787">		String hash = (new SimpleQuery()).forString(&quot;SELECT click_hash FROM emails WHERE email_id=?&quot;, emailId);</span>
-<span class="nc bnc" id="L788" title="All 2 branches missed.">		if (Tools.isEmpty(hash)) {</span>
-<span class="nc" id="L789">			hash = String.valueOf(emailId) + Password.generateStringHash(16);</span>
+<span class="nc" id="L809">		String hash = (new SimpleQuery()).forString(&quot;SELECT click_hash FROM emails WHERE email_id=?&quot;, emailId);</span>
+<span class="nc bnc" id="L810" title="All 2 branches missed.">		if (Tools.isEmpty(hash)) {</span>
+<span class="nc" id="L811">			hash = String.valueOf(emailId) + Password.generateStringHash(16);</span>
 			//uloz ho do DB
-<span class="nc" id="L791">			(new SimpleQuery()).execute(&quot;UPDATE emails SET click_hash=? WHERE email_id=?&quot;, hash, emailId);</span>
+<span class="nc" id="L813">			(new SimpleQuery()).execute(&quot;UPDATE emails SET click_hash=? WHERE email_id=?&quot;, hash, emailId);</span>
 		}
-<span class="nc" id="L793">		return hash;</span>
+<span class="nc" id="L815">		return hash;</span>
 	}
 
 	/**
@@ -801,16 +823,16 @@ public class Sender extends TimerTask
 	public static int getEmailIdFromClickHash(String hash) {
 
 		//v starej verzii bol hash rovno ID emailu, takze testujeme click_hash alebo email_id ak je to cislo
-<span class="nc" id="L804">		int emailId = Tools.getIntValue(hash, 0);</span>
-<span class="nc" id="L805">		int dbEmailId = (new SimpleQuery()).forInt(&quot;SELECT email_id FROM emails WHERE click_hash=? OR (click_hash IS NULL AND email_id=?)&quot;, hash, Integer.valueOf(emailId));</span>
+<span class="fc" id="L826">		int emailId = Tools.getIntValue(hash, 0);</span>
+<span class="fc" id="L827">		int dbEmailId = (new SimpleQuery()).forInt(&quot;SELECT email_id FROM emails WHERE click_hash=? OR (click_hash IS NULL AND email_id=?)&quot;, hash, Integer.valueOf(emailId));</span>
 
-<span class="nc bnc" id="L807" title="All 2 branches missed.">		if (dbEmailId&gt;0) return dbEmailId;</span>
+<span class="pc bpc" id="L829" title="1 of 2 branches missed.">		if (dbEmailId&gt;0) return dbEmailId;</span>
 
-<span class="nc" id="L809">		return -1;</span>
+<span class="fc" id="L831">		return -1;</span>
 	}
 
 	public static void setMaxRetryCount(int count) {
-<span class="fc" id="L813">		Sender.MAX_RETRY_COUNT = count;</span>
-<span class="fc" id="L814">	}</span>
+<span class="fc" id="L835">		Sender.MAX_RETRY_COUNT = count;</span>
+<span class="fc" id="L836">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

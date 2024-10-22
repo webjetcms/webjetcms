@@ -101,8 +101,8 @@ import javax.net.ssl.X509TrustManager;
 <span class="nc bnc" id="L101" title="All 2 branches missed.">			for (int i = 0; i &lt; chain.length; i++)</span>
 			{
 <span class="nc" id="L103">				X509Certificate cert = chain[i];</span>
-<span class="nc" id="L104">				out.append(&quot; &quot; + (i + 1) + &quot; Subject &quot; + cert.getSubjectDN()+&quot;\n&quot;);</span>
-<span class="nc" id="L105">				out.append(&quot;   Issuer  &quot; + cert.getIssuerDN()+&quot;\n&quot;);</span>
+<span class="nc" id="L104">				out.append(&quot; &quot; + (i + 1) + &quot; Subject &quot; + cert.getSubjectX500Principal()+&quot;\n&quot;);</span>
+<span class="nc" id="L105">				out.append(&quot;   Issuer  &quot; + cert.getIssuerX500Principal()+&quot;\n&quot;);</span>
 <span class="nc" id="L106">				sha1.update(cert.getEncoded());</span>
 <span class="nc" id="L107">				out.append(&quot;   sha1    &quot; + toHexString(sha1.digest())+&quot;\n&quot;);</span>
 <span class="nc" id="L108">				md5.update(cert.getEncoded());</span>
@@ -179,4 +179,4 @@ import javax.net.ssl.X509TrustManager;
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

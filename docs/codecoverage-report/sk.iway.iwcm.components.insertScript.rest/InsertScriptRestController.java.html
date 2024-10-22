@@ -14,6 +14,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.insertScript.InsertScriptBean;
 import sk.iway.iwcm.components.insertScript.InsertScriptDB;
+import sk.iway.iwcm.components.insertScript.InsertScriptDocBean;
 import sk.iway.iwcm.components.insertScript.InsertScriptGroupBean;
 import sk.iway.iwcm.components.insertScript.InsertScriptRepository;
 import sk.iway.iwcm.i18n.Prop;
@@ -32,49 +33,64 @@ import java.util.List;
 public class InsertScriptRestController extends DatatableRestControllerV2&lt;InsertScriptBean, Long&gt; {
     @Autowired
     public InsertScriptRestController(InsertScriptRepository insertScriptRepository) {
-<span class="fc" id="L35">        super(insertScriptRepository);</span>
-<span class="fc" id="L36">    }</span>
+<span class="fc" id="L36">        super(insertScriptRepository);</span>
+<span class="fc" id="L37">    }</span>
 
     @Override
     public Page&lt;InsertScriptBean&gt; getAllItems(Pageable pageable) {
-<span class="fc" id="L40">        List&lt;InsertScriptBean&gt; listedBeans = InsertScriptDB.getInstance().getAll();</span>
-<span class="fc" id="L41">        DatatablePageImpl&lt;InsertScriptBean&gt; data = new DatatablePageImpl&lt;&gt;(listedBeans);</span>
+<span class="fc" id="L41">        List&lt;InsertScriptBean&gt; listedBeans = InsertScriptDB.getInstance().getAll();</span>
+<span class="fc" id="L42">        DatatablePageImpl&lt;InsertScriptBean&gt; data = new DatatablePageImpl&lt;&gt;(listedBeans);</span>
 
-<span class="fc" id="L43">        Prop prop = getProp();</span>
-<span class="fc" id="L44">        data.addOptions(&quot;cookieClass&quot;, getCookieClassifications(prop), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="fc" id="L44">        Prop prop = getProp();</span>
+<span class="fc" id="L45">        data.addOptions(&quot;cookieClass&quot;, getCookieClassifications(prop), &quot;label&quot;, &quot;value&quot;, false);</span>
 
-<span class="fc" id="L46">        return data;</span>
+<span class="fc" id="L47">        return data;</span>
     }
+
+    @Override
+    public void beforeDuplicate(InsertScriptBean entity) {
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (entity.getDocIds()!=null) {</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">            for(InsertScriptDocBean docBean : entity.getDocIds()) {</span>
+<span class="fc" id="L54">                docBean.setId(null);</span>
+<span class="fc" id="L55">            }</span>
+        }
+<span class="pc bpc" id="L57" title="1 of 2 branches missed.">        if (entity.getGroupIds() != null) {</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            for(InsertScriptGroupBean groupBean : entity.getGroupIds()) {</span>
+<span class="fc" id="L59">                groupBean.setId(null);</span>
+<span class="fc" id="L60">            }</span>
+        }
+<span class="fc" id="L62">        super.beforeDuplicate(entity);</span>
+<span class="fc" id="L63">    }</span>
 
     @Override
     public void beforeSave(InsertScriptBean entity) {
         //nastav datum ulozenia
-<span class="fc" id="L52">        entity.setSaveDate(new Date());</span>
+<span class="fc" id="L68">        entity.setSaveDate(new Date());</span>
 
         //nastav korektne domainId
-<span class="fc" id="L55">        int domainId = CloudToolsForCore.getDomainId();</span>
-<span class="fc" id="L56">        entity.setDomainId(domainId);</span>
+<span class="fc" id="L71">        int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L72">        entity.setDomainId(domainId);</span>
         //nastav aj na inner objekty
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (entity.getGroupIds()!=null) {</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">            for (InsertScriptGroupBean isg : entity.getGroupIds()) {</span>
-<span class="fc" id="L60">                isg.setDomainId(domainId);</span>
-<span class="fc" id="L61">            }</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (entity.getGroupIds()!=null) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            for (InsertScriptGroupBean isg : entity.getGroupIds()) {</span>
+<span class="fc" id="L76">                isg.setDomainId(domainId);</span>
+<span class="fc" id="L77">            }</span>
         }
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L79">    }</span>
 
     public static List&lt;LabelValueDetails&gt; getCookieClassifications(Prop prop) {
-<span class="fc" id="L66">        List&lt;LabelValueDetails&gt; options = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L67">        options.add(new LabelValueDetails(prop.getText(&quot;components.insert_script.insert_always&quot;), &quot;ALWAYS&quot;));</span>
+<span class="fc" id="L82">        List&lt;LabelValueDetails&gt; options = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L83">        options.add(new LabelValueDetails(prop.getText(&quot;components.insert_script.insert_always&quot;), &quot;ALWAYS&quot;));</span>
         //prebehni klasifikacie z konstant a pridaj
-<span class="fc" id="L69">        String[] classifications = Tools.getTokens(Constants.getString(&quot;gdprCookieClassifications&quot;), &quot;,&quot;);</span>
-<span class="fc bfc" id="L70" title="All 2 branches covered.">        for (String cls : classifications) {</span>
-<span class="fc" id="L71">            String labelKey = &quot;components.cookies.cookie_manager.classification.&quot;+cls;</span>
-<span class="fc" id="L72">            String label = prop.getText(labelKey);</span>
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">            if (label.equals(labelKey)) label = cls;</span>
+<span class="fc" id="L85">        String[] classifications = Tools.getTokens(Constants.getString(&quot;gdprCookieClassifications&quot;), &quot;,&quot;);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (String cls : classifications) {</span>
+<span class="fc" id="L87">            String labelKey = &quot;components.cookies.cookie_manager.classification.&quot;+cls;</span>
+<span class="fc" id="L88">            String label = prop.getText(labelKey);</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">            if (label.equals(labelKey)) label = cls;</span>
 
-<span class="fc" id="L75">            options.add(new LabelValueDetails(label, cls));</span>
+<span class="fc" id="L91">            options.add(new LabelValueDetails(label, cls));</span>
         }
-<span class="fc" id="L77">        return options;</span>
+<span class="fc" id="L93">        return options;</span>
     }
 
     /**
@@ -85,16 +101,16 @@ public class InsertScriptRestController extends DatatableRestControllerV2&lt;Ins
     @GetMapping(&quot;/positions&quot;)
     public List&lt;String&gt; getPositionAutocomplete(@RequestParam String term) {
 
-<span class="fc" id="L88">        List&lt;String&gt; ac = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L104">        List&lt;String&gt; ac = new ArrayList&lt;&gt;();</span>
 
         //Get all where group name is like %term%, and distict because its autocomplete list and we dont want duplicity
-<span class="fc" id="L91">        List&lt;InsertScriptBean&gt; groupNamesList =  ((InsertScriptRepository)getRepo()).findDistinctAllByPositionLikeAndDomainId(&quot;%&quot; + term + &quot;%&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L107">        List&lt;InsertScriptBean&gt; groupNamesList =  ((InsertScriptRepository)getRepo()).findDistinctAllByPositionLikeAndDomainId(&quot;%&quot; + term + &quot;%&quot;, CloudToolsForCore.getDomainId());</span>
 
         //Loop gained entities and add group name to autcomplete list &quot;ac&quot;
-<span class="fc bfc" id="L94" title="All 2 branches covered.">        for(InsertScriptBean entity : groupNamesList)</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (ac.contains(entity.getPosition()) == false) ac.add(entity.getPosition());</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        for(InsertScriptBean entity : groupNamesList)</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">            if (ac.contains(entity.getPosition()) == false) ac.add(entity.getPosition());</span>
 
-<span class="fc" id="L97">        return ac;</span>
+<span class="fc" id="L113">        return ac;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

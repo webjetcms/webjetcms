@@ -2,6 +2,7 @@ package sk.iway.iwcm.doc;
 
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TObjectIntHashMap;
+
 import org.apache.struts.util.ResponseUtils;
 import org.json.JSONObject;
 import sk.iway.iwcm.*;
@@ -31,8 +32,8 @@ import java.net.URI;
 import java.net.URL;
 import java.sql.*;
 import java.text.Collator;
-import java.util.Date;
 import java.util.*;
+import java.util.Date;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -49,6 +50,7 @@ import java.util.regex.Pattern;
  *@created      $Date: 2004/03/23 20:41:10 $
  *@modified     $Date: 2004/03/23 20:41:10 $
  */
+@SuppressWarnings({"java:S6905", "java:S1133", "java:S6909", "java:S6912"})
 public class DocDB extends DB
 {
 	/**
@@ -124,7 +126,6 @@ public class DocDB extends DB
 	 *  pole dokumentov cachovanych v pamati
 	 */
 	private Map<Integer, DocDetails> cachedDocs;
-	private List<PublicableForm> publicableDocs;
 
 	//tabulka pre skupiny perexov (zrychleny pristup)
 	private List<PerexGroupBean> perexGroups = null;
@@ -152,6 +153,9 @@ public class DocDB extends DB
 	 * mapa master-all_master_slaves stranok
 	 */
 	private Map<Integer, Integer[]> masterMappings = null;
+
+
+	private DocPublishService docPublishService = new DocPublishService();
 
 	/**
 	 * Zakladna instancia objektu
@@ -190,7 +194,8 @@ public class DocDB extends DB
 			DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 			if (myDocDB != null && myDocDB.urlsByUrlDomains!=null)
 			{
-				myDocDB.checkPublicable();
+				//Set publishable service and call checkPublishable
+				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -199,15 +204,10 @@ public class DocDB extends DB
 			if (force_refresh)
 			{
 				DocDB myDocDB = new DocDB(servletContext, serverName);
-				//	remove
-				//servletContext.removeAttribute(Constants.A_DOC_DB);
 				//save us to server space
 				servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
-				//zrus MilonicMenu v GroupsDB
-				//GroupsDB groupsDB = GroupsDB.getInstance();
-				//groupsDB.clearMilonicMenu();
-
+				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 			else
@@ -221,10 +221,8 @@ public class DocDB extends DB
 					//save us to server space
 					servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
-					//zrus MilonicMenu v GroupsDB
-					//GroupsDB groupsDB = GroupsDB.getInstance();
-					//groupsDB.clearMilonicMenu();
 				}
+				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -248,7 +246,6 @@ public class DocDB extends DB
 		//Logger.println(this,"DocDB: constructor");
 
 		cachedDocs = new Hashtable<>();
-		publicableDocs = new ArrayList<>();
 
 		forceRefreshMasterSlaveMappings();
 
@@ -262,13 +259,8 @@ public class DocDB extends DB
 			Logger.error(DocDB.class, ex);
 		}
 
-		/** @todo nacitanie stranok na publikovanie */
-
-		readPagesToPublic();
-		//checkPublicable();
 
 		loadUrls();
-		//readVirtualPaths();
 
 		ClusterDB.addRefresh(DocDB.class);
 
@@ -306,506 +298,12 @@ public class DocDB extends DB
 		return (start <= 0 || start <= rightNow) && (end <= 0 || end >= rightNow);
 	}
 
-	private void fillPublicableForm(PublicableForm pForm, ResultSet rs, boolean publicable) throws Exception
-	{
-		pForm.setDateCreated(DB.getDbTimestamp(rs, "date_created"));
-		pForm.setPublishStart(DB.getDbTimestamp(rs, "publish_start"));
-		pForm.setPublishEnd(DB.getDbTimestamp(rs, "publish_end"));
-		pForm.setAuthorId(rs.getInt("author_id"));
-		pForm.setSearchable(rs.getBoolean("searchable"));
-		pForm.setGroupId(rs.getInt("group_id"));
-		pForm.setAvailable(rs.getBoolean("available"));
-		pForm.setShowInMenu(rs.getBoolean("show_in_menu"));
-		pForm.setPasswordProtected(getDbString(rs, "password_protected"));
-
-		pForm.setCacheable(rs.getBoolean("cacheable"));
-		pForm.setExternalLink(getDbString(rs, "external_link"));
-		pForm.setVirtualPath(getDbString(rs, "virtual_path"));
-		pForm.setTempId(rs.getInt("temp_id"));
-		pForm.setTitle(getDbString(rs, "title"));
-		pForm.setNavbar(getDbString(rs, "navbar"));
-		pForm.setFileName(getDbString(rs, "file_name"));
-		pForm.setSortPriority(rs.getInt("sort_priority"));
-		pForm.setHeaderDocId(rs.getInt("header_doc_id"));
-		pForm.setFooterDocId(rs.getInt("footer_doc_id"));
-		pForm.setMenuDocId(rs.getInt("menu_doc_id"));
-		pForm.setRightMenuDocId(rs.getInt("right_menu_doc_id"));
-
-		pForm.setHtmlHead(getDbString(rs, "html_head"));
-		pForm.setHtmlData(getDbString(rs, "html_data"));
-		pForm.setPerexPlace(getDbString(rs, "perex_place"));
-		pForm.setPerexImage(getDbString(rs, "perex_image"));
-		pForm.setPerexGroupString(getDbString(rs, "perex_group"));
-
-		pForm.setDocId(rs.getInt("doc_id"));
-		pForm.setData(DB.getDbString(rs, "data"));
-		pForm.setData_asc(DB.getDbString(rs, "data_asc"));
-		pForm.setViews_total(rs.getInt("views_total"));
-		pForm.setViews_month(rs.getInt("views_month"));
-		pForm.setFile_change(rs.getTimestamp("file_change"));
-		pForm.setPublicable(publicable);
-		if (publicable) pForm.setHistoryId(rs.getInt("history_id"));
-
-		pForm.setEventDate(DB.getDbTimestamp(rs, "event_date"));
-
-		pForm.setFieldA(DB.getDbString(rs, "field_a"));
-		pForm.setFieldB(DB.getDbString(rs, "field_b"));
-		pForm.setFieldC(DB.getDbString(rs, "field_c"));
-		pForm.setFieldD(DB.getDbString(rs, "field_d"));
-		pForm.setFieldE(DB.getDbString(rs, "field_e"));
-		pForm.setFieldF(DB.getDbString(rs, "field_f"));
-
-		pForm.setFieldG(DB.getDbString(rs, "field_g"));
-		pForm.setFieldH(DB.getDbString(rs, "field_h"));
-		pForm.setFieldI(DB.getDbString(rs, "field_i"));
-		pForm.setFieldJ(DB.getDbString(rs, "field_j"));
-		pForm.setFieldK(DB.getDbString(rs, "field_k"));
-		pForm.setFieldL(DB.getDbString(rs, "field_l"));
-
-		pForm.setDisableAfterEnd(rs.getBoolean("disable_after_end"));
-
-		pForm.setFieldM(DB.getDbString(rs, "field_m"));
-		pForm.setFieldN(DB.getDbString(rs, "field_n"));
-		pForm.setFieldO(DB.getDbString(rs, "field_o"));
-		pForm.setFieldP(DB.getDbString(rs, "field_p"));
-		pForm.setFieldQ(DB.getDbString(rs, "field_q"));
-		pForm.setFieldR(DB.getDbString(rs, "field_r"));
-		pForm.setFieldS(DB.getDbString(rs, "field_s"));
-		pForm.setFieldT(DB.getDbString(rs, "field_t"));
-
-		pForm.setRequireSsl(rs.getBoolean("require_ssl"));
-	}
-
 	/**
-	 * @todo nacitanie stranok na publikovanie
+	 * nacitanie stranok na publikovanie
 	 */
 	public void readPagesToPublic()
 	{
-		DebugTimer dt = new DebugTimer("readPagesToPublic");
-
-		java.sql.Connection db_conn = null;
-		java.sql.PreparedStatement ps = null;
-		ResultSet rs = null;
-		PublicableForm pForm; // bean for saving data from documents_history especially publicable property
-
-		List<PublicableForm> newPublicableDocs = new ArrayList<>();
-
-		try
-		{
-			db_conn = DBPool.getConnection();
-			String sql = "SELECT * FROM documents_history WHERE publicable=?";
-			ps = db_conn.prepareStatement(sql);
-			ps.setBoolean(1, true);
-
-			dt.diff("executing sql="+sql);
-
-			rs = ps.executeQuery();
-
-			while (rs.next())
-			{
-				if (Tools.isNotEmpty(DB.getDbString(rs, "awaiting_approve")))
-				{
-					//tieto cakaju na schvalenie, nemozem vypublikovat
-					continue;
-				}
-
-				pForm = new PublicableForm();
-				fillPublicableForm(pForm, rs, true);
-
-				newPublicableDocs.add(pForm);
-			}
-			rs.close();
-			ps.close();
-
-			sql = "SELECT * FROM documents WHERE disable_after_end=?";
-			ps = db_conn.prepareStatement(sql);
-			ps.setBoolean(1, true);
-
-			dt.diff("executing sql="+sql);
-
-			rs = ps.executeQuery();
-			while (rs.next())
-			{
-				pForm = new PublicableForm();
-				fillPublicableForm(pForm, rs, false);
-
-				newPublicableDocs.add(pForm);
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			db_conn = null;
-			ps = null;
-			rs = null;
-
-			dt.diff("done");
-
-			publicableDocs = newPublicableDocs;
-		}
-		catch (Exception ex){Logger.error(DocDB.class, ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-	}
-
-	/**
-	 * @todo skontrolovat co treba a pripadne zmenit v DB
-	 */
-
-	private long lastPublicableCheck = 0;
-	public void checkPublicable()
-	{
-		//budeme kontrolovat len raz za 5 sekund
-		if (lastPublicableCheck + 5000 > System.currentTimeMillis())
-		{
-			return;
-		}
-		lastPublicableCheck = System.currentTimeMillis();
-
-		//Logger.println(this,"DocDB - checkPublicable");
-
-		/** @todo skontrolovat co treba a pripadne zmenit v DB */
-
-		try
-		{
-			List<PublicableForm> copyDHtoD = new ArrayList<>(); // specify which pForm-s to copy from documents_history to documents
-			List<PublicableForm> removeAfterEndList = new ArrayList<>();
-			int index = -1;
-			long now = Tools.getNow();
-			if (publicableDocs!=null && publicableDocs.size()>0)
-			{
-				index = -1;
-				for (PublicableForm pForm : publicableDocs)
-				{
-					index++;
-					if (pForm.isDone()) continue;
-
-					//Logger.println(this,now+" vs "+pForm.getPublishStart() + " = " + (now >= pForm.getPublishStart()));
-
-					if(pForm.isPublicable() && (pForm.getPublishStart()>0) && (now >= pForm.getPublishStart()))
-					{
-						copyDHtoD.add(pForm);
-						//aby sa nam to nasledne nevykonalo znova
-						pForm.setDone(true);
-						publicableDocs.set(index,pForm);
-					}
-					else if (pForm.isPublicable()==false && (pForm.getPublishEnd()>0) && (now >= pForm.getPublishEnd()))
-					{
-						removeAfterEndList.add(pForm);
-						//aby sa nam to nasledne nevykonalo znova
-						pForm.setDone(true);
-						publicableDocs.set(index,pForm);
-					}
-				}
-				if (copyDHtoD.size()>0)
-				{
-					copyDHistory(copyDHtoD);
-				}
-				if (removeAfterEndList.size()>0)
-				{
-					disableAfterEnd(removeAfterEndList);
-				}
-				/*
-				 * BHR: zbytocne aby sa zakazdym refreshovali sablony, aj ked to nie je potrebne
-				if (copyDHtoD.size()>0 || removeAfterEndList.size()>0)
-				{
-					TemplatesDB.getInstance(true);
-					//musime refreshnut aj docdb kvoli cache objektom
-					DocDB.getInstance(true);
-				}
-				*/
-			}
-		}
-		catch (RuntimeException ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-
-	}
-
-	/**
-	 * copy data from table documents_history to table documents
-	 */
-	private synchronized void copyDHistory(List<PublicableForm> copyDHtoD)
-	{
-		int h_id;
-		java.sql.Connection db_conn = null;
-		java.sql.PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		String sql ="UPDATE documents SET title=?, data=?, data_asc=?, external_link=?, navbar=?, date_created=?, " +
-				"publish_start=?, publish_end=?, author_id=?, group_id=?, temp_id=?, searchable=?, available=?, " +
-				"cacheable=?, sort_priority=?, header_doc_id=?, footer_doc_id=?, menu_doc_id=?, password_protected=?, "+
-				"html_head=?, html_data=?, perex_place=?, perex_image=?, perex_group=?, show_in_menu=?, event_date=?, "+
-				"right_menu_doc_id=?, field_a=?, field_b=?, field_c=?, field_d=?, field_e=?, field_f=?, " +
-				"field_g=?, field_h=?, field_i=?, field_j=?, field_k=?, field_l=?, disable_after_end=?, sync_status=1, " +
-				"field_m=?, field_n=?, field_o=?, field_p=?, field_q=?, field_r=?, field_s=?, field_t=?, require_ssl=?, file_name=?, " +
-				"root_group_l1=?, root_group_l2=?, root_group_l3=?, virtual_path=? " +
-				"WHERE doc_id=?";
-
-		if (!copyDHtoD.isEmpty())
-		{
-			try
-			{
-				db_conn = DBPool.getConnection(serverName);
-
-				Map<Integer, GroupDetails> allGroups = getAllGroups();
-				for (PublicableForm pForm : copyDHtoD) // bean for saving data from documents_history especially publicable property
-				{
-
-					Logger.debug(this,"Publishing from historyId: " + pForm.getHistoryId() + " docId: " + pForm.getDocId());
-
-					h_id = pForm.getHistoryId();
-
-					//zrus atribut actual=true
-					//je to haluz, ale takto na 2x je to nad mySQL rychlejsie
-					//skusal som aj indexy a nepomohlo...
-					ps = db_conn.prepareStatement("SELECT history_id, publicable FROM documents_history WHERE doc_id=?");
-					ps.setInt(1, pForm.getDocId());
-					StringBuilder historyIds = null;
-					rs = ps.executeQuery();
-					boolean publicable = false;
-					while (rs.next())
-					{
-						if (rs.getBoolean("publicable")) publicable = true;
-						if (historyIds == null)
-						{
-							historyIds = new StringBuilder(String.valueOf(rs.getInt("history_id")));
-						}
-						else
-						{
-							historyIds.append(',').append(rs.getInt("history_id"));
-						}
-					}
-					rs.close();
-					ps.close();
-
-					if (historyIds==null || publicable==false)
-					{
-						//asi sme cluster a uz to niekto aktualizoval
-						continue;
-					}
-
-					ps = db_conn.prepareStatement("UPDATE documents_history SET actual=?, sync_status=1 WHERE history_id IN ("+ getOnlyNumbersIn(historyIds.toString())+")");
-					ps.setBoolean(1, false);
-					ps.execute();
-					ps.close();
-
-					//updatni zaznam v history, zrus publicable a nastav actual
-					ps = db_conn.prepareStatement("UPDATE documents_history SET publicable=?, actual=?, approved_by=?, sync_status=1, available=? WHERE history_id=?");
-					ps.setBoolean(1, false);
-					ps.setBoolean(2, true);
-					ps.setInt(3, pForm.getAuthorId());
-					ps.setBoolean(4, true);
-					ps.setInt(5,h_id);
-					ps.execute();
-					ps.close();
-
-					DocDetails doc = getBasicDocDetails(pForm.getDocId(), false);
-					boolean isTrash = true;
-					if(doc != null)
-					{
-
-						// zisti ci sme v adresari /System/Trash (kos), ak ano, nepublikuj
-						String navbarNoHref = DB.internationalToEnglish(GroupsDB.getURLPathDomainGroup(allGroups, doc.getGroupId())[0]).toLowerCase();
-						//tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
-						Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-						String trashDirName = propSystem.getText("config.trash_dir");
-						if (navbarNoHref.startsWith(DB.internationalToEnglish(trashDirName).toLowerCase())==false)
-						{
-							isTrash = false;
-						}
-					}
-
-					if(isTrash == false)
-					{
-						//updatni tabulku documents
-						ps = db_conn.prepareStatement(sql);
-
-						ps.setString(1, pForm.getTitle());
-						DB.setClob(ps, 2, pForm.getData());
-						DB.setClob(ps, 3, pForm.getData_asc());
-						ps.setString(4, pForm.getExternalLink());
-						ps.setString(5, pForm.getNavbar());
-						Logger.println(this,"pForm.getPublishStart()="+pForm.getPublishStart());
-						ps.setTimestamp(6, DB.getDbTimestamp(pForm.getDateCreated()));
-						ps.setTimestamp(7, DB.getDbTimestamp(pForm.getPublishStart()));
-						ps.setTimestamp(8, DB.getDbTimestamp(pForm.getPublishEnd()));
-						ps.setInt(9, pForm.getAuthorId());
-						ps.setInt(10, pForm.getGroupId());
-						ps.setInt(11, pForm.getTempId());
-						ps.setBoolean(12, pForm.isSearchable());
-						//ps.setBoolean(13,  pForm.isAvailable());
-						ps.setBoolean(13,  true);
-						ps.setBoolean(14, pForm.isCacheable());
-						ps.setInt(15, pForm.getSortPriority());
-						ps.setInt(16, pForm.getHeaderDocId());
-						ps.setInt(17, pForm.getFooterDocId());
-						ps.setInt(18, pForm.getMenuDocId());
-						ps.setString(19, pForm.getPasswordProtected());
-						DB.setClob(ps, 20, pForm.getHtmlHead());
-						DB.setClob(ps, 21, pForm.getHtmlData());
-						ps.setString(22, pForm.getPerexPlace());
-						ps.setString(23, pForm.getPerexImage());
-						ps.setString(24, pForm.getPerexGroupIdsString(true));
-						ps.setBoolean(25, pForm.isShowInMenu());
-						ps.setTimestamp(26, DB.getDbTimestamp(pForm.getEventDate()));
-
-						ps.setInt(27, pForm.getRightMenuDocId());
-
-						ps.setString(28, pForm.getFieldA());
-						ps.setString(29, pForm.getFieldB());
-						ps.setString(30, pForm.getFieldC());
-						ps.setString(31, pForm.getFieldD());
-						ps.setString(32, pForm.getFieldE());
-						ps.setString(33, pForm.getFieldF());
-						ps.setString(34, pForm.getFieldG());
-						ps.setString(35, pForm.getFieldH());
-						ps.setString(36, pForm.getFieldI());
-						ps.setString(37, pForm.getFieldJ());
-						ps.setString(38, pForm.getFieldK());
-						ps.setString(39, pForm.getFieldL());
-
-						ps.setBoolean(40, pForm.isDisableAfterEnd());
-
-						ps.setString(41, pForm.getFieldM());
-						ps.setString(42, pForm.getFieldN());
-						ps.setString(43, pForm.getFieldO());
-						ps.setString(44, pForm.getFieldP());
-						ps.setString(45, pForm.getFieldQ());
-						ps.setString(46, pForm.getFieldR());
-						ps.setString(47, pForm.getFieldS());
-						ps.setString(48, pForm.getFieldT());
-
-						ps.setBoolean(49, pForm.isRequireSsl());
-
-						GroupsDB groupsDB = GroupsDB.getInstance();
-						GroupDetails group = groupsDB.getGroup(pForm.getGroupId());
-						String fileName = null;
-						if (group != null && group.isInternal()==false)
-						{
-							fileName = groupsDB.getGroupNamePath(pForm.getGroupId());
-						}
-						ps.setString(50, fileName);
-
-						DocDB.getRootGroupL(pForm.getGroupId(), ps, 51);
-
-						ps.setString(54, pForm.getVirtualPath());
-
-						ps.setInt(55, pForm.getDocId());
-
-						ps.execute();
-						ps.close();
-
-						// vypublikovanie slave clankov z historie (multikategorie)
-						DocDetails masterDocDetails = null;
-						for(Integer docId : MultigroupMappingDB.getSlaveDocIds(pForm.getDocId()))
-						{
-							if (masterDocDetails == null) masterDocDetails = getDoc(pForm.getDocId(), -1, false);
-							DocDetails slaveDoc = getBasicDocDetails(docId, false);
-							if (slaveDoc != null)
-							{
-								//teraz zmenme hodnoty pre master doc a ulozme do DB
-								masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());
-								masterDocDetails.setExternalLink(slaveDoc.getExternalLink());
-								masterDocDetails.setDocId(docId);
-								masterDocDetails.setGroupId(slaveDoc.getGroupId());
-								DocDB.saveDoc(masterDocDetails);
-							}
-
-						}
-						//DocDB.updateDataClob(db_conn, pForm.getDocId(), -1, pForm.getData(), pForm.getData_asc());;
-
-						//prekopirovanie poznamky pre redaktorov k stranke
-						DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, pForm.getHistoryId());
-						if(historyNote!=null)
-						{
-							DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(pForm.getDocId(), -1);
-							if(publishedNote==null)
-							{
-								publishedNote = new DocNoteBean();
-							}
-							publishedNote.setDocId(pForm.getDocId());
-							publishedNote.setHistoryId(-1);
-							publishedNote.setNote(historyNote.getNote());
-							publishedNote.setUserId(historyNote.getUserId());
-							publishedNote.setCreated(historyNote.getCreated());
-							publishedNote.save();
-						}
-					}
-
-					DocDB.getInstance().updateInternalCaches(pForm.getDocId());
-
-					//refresh sablony sa vykona iba ak je stranka v System adresari
-					if(pForm.getGroupId() == Constants.getInt("tempGroupId") || pForm.getGroupId() == Constants.getInt("menuGroupId") || pForm.getGroupId() == Constants.getInt("headerFooterGroupId"))
-					{
-						TemplatesDB.getInstance(true);
-					}
-				}
-				db_conn.close();
-				db_conn = null;
-				ps = null;
-				rs = null;
-			}
-			catch (Exception ex){Logger.error(DocDB.class, ex);}
-			finally{
-				try{
-					if (rs != null) rs.close();
-					if (ps != null) ps.close();
-					if (db_conn != null) db_conn.close();
-				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-			}
-		}
-	}
-
-	/**
-	 * Zneplatni dokumenty ktore maju nastavene atribut disable_after_end a ich cas vyprsal
-	 * @param disableAfterEndList
-	 */
-	private synchronized void disableAfterEnd(List<PublicableForm> disableAfterEndList)
-	{
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		try
-		{
-			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("UPDATE documents SET available=?, disable_after_end=? WHERE doc_id=?");
-
-			for (PublicableForm pForm : disableAfterEndList)
-			{
-				ps.setBoolean(1, false);
-				ps.setBoolean(2, false);
-				ps.setInt(3, pForm.getDocId());
-				ps.execute();
-			}
-
-			ps.close();
-			db_conn.close();
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			Logger.error(DocDB.class, ex);
-		}
-		finally
-		{
-			try
-			{
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-				//
-			}
-		}
+		docPublishService.refreshPagesToPublish();
 	}
 
 	/**
@@ -1488,7 +986,8 @@ public class DocDB extends DB
                     int rows = end - start;
                     limit = " LIMIT " + start + ", " + rows;
 					if (Constants.DB_TYPE==Constants.DB_PGSQL) limit = " OFFSET " + start + " LIMIT " + rows;
-                    start = 0;
+
+					start = 0;
                     end = rows + 1;
                     //?? je treba +1 ??
                 }
@@ -2934,7 +2433,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
 
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -2953,6 +2452,13 @@ public class DocDB extends DB
 				doc.setAvailable(rs.getBoolean("available"));
 				doc.setSearchable(rs.getBoolean("searchable"));
 				doc.setShowInMenu(rs.getBoolean("show_in_menu"));
+				doc.setShowInSitemap(DB.getBoolean(rs, "show_in_sitemap"));
+				doc.setShowInNavbar(DB.getBoolean(rs, "show_in_navbar"));
+
+				doc.setLoggedShowInMenu(DB.getBoolean(rs, "logged_show_in_menu"));
+				doc.setLoggedShowInSitemap(DB.getBoolean(rs, "logged_show_in_sitemap"));
+				doc.setLoggedShowInNavbar(DB.getBoolean(rs, "logged_show_in_navbar"));
+
 				doc.setSortPriority(rs.getInt("sort_priority"));
 				doc.setPasswordProtected(DB.getDbString(rs, "password_protected"));
 				doc.setTempId(rs.getInt("temp_id"));
@@ -3035,7 +2541,7 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu
+	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu, showInSitemap, showInNavbar, loggedShowIn...
 	 * @param docId - id stranky
 	 * @param doNotReturnNull - ak je nastavene na true, tak to vzdy vrati aspon prazdny objekt
 	 * @return
@@ -3285,6 +2791,7 @@ public class DocDB extends DB
 	{
 		String groupDiskPath = DB.internationalToEnglish(GroupsDB.getURLPathGroup(allGroups, groupId)).toLowerCase() + "/"; //NOSONAR
 		groupDiskPath = DocTools.removeCharsDir(groupDiskPath).toLowerCase();
+		groupDiskPath = Tools.replace(groupDiskPath, "//", "/");
 		return(groupDiskPath);
 	}
 
@@ -3453,7 +2960,13 @@ public class DocDB extends DB
 					}
 				}
 			}
-			if (alwaysIncludeHttpPrefix && url.startsWith("http")==false) url = Tools.getBaseHref(request)+url;
+			if (alwaysIncludeHttpPrefix && url.startsWith("http")==false) {
+				if (doc != null && Tools.isNotEmpty(doc.getFieldT())) {
+					url = "http://"+doc.getFieldT()+url;
+				} else {
+					url = Tools.getBaseHref(request)+url;
+				}
+			}
 
 			if (url.startsWith("/javascript:")) url = url.substring(1);
 
@@ -6281,8 +5794,8 @@ public class DocDB extends DB
 		updateRootGroupLevelValues(rootGroupId);
 	}
 
-	public List<PublicableForm> getPublicableDocs(){
-		return publicableDocs;
+	public List<DocBasic> getPublicableDocs(){
+		return docPublishService.getPublicableDocs();
 	}
 
 	public void forceRefreshMasterSlaveMappings()

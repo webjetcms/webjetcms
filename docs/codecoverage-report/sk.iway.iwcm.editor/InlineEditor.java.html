@@ -170,13 +170,13 @@ public class InlineEditor
 <span class="pc bpc" id="L170" title="2 of 4 branches missed.">		if (user != null &amp;&amp; InlineEditor.isInlineEditingEnabled(request))</span>
 		{
 <span class="fc" id="L172">			atrs.append(&quot; data-wjapp='&quot;).append(appName).append(&quot;' data-wjappkey='&quot;).append(doc.getDocId()).append(&quot;'&quot;);</span>
-<span class="pc bpc" id="L173" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(field))</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">			if (Tools.isNotEmpty(field))</span>
 			{
 <span class="fc" id="L175">				atrs.append(&quot; data-wjappfield='&quot;).append(field).append(&quot;'&quot;);</span>
 			}
-<span class="pc bpc" id="L177" title="1 of 2 branches missed.">			if (generateId)</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">			if (generateId)</span>
 			{
-<span class="nc" id="L179">				atrs.append(&quot; id='wjInline&quot;).append(getUniqueIdAttribute(request)).append(&quot;'&quot;);</span>
+<span class="fc" id="L179">				atrs.append(&quot; id='wjInline&quot;).append(getUniqueIdAttribute(request)).append(&quot;'&quot;);</span>
 			}
 		}
 
@@ -185,11 +185,11 @@ public class InlineEditor
 
 	private static int getUniqueIdAttribute(HttpServletRequest request)
 	{
-<span class="nc" id="L188">		Object numberAttribute = request.getAttribute(NUMBER_ATTRIBUTE);</span>
-<span class="nc bnc" id="L189" title="All 2 branches missed.">		int number = ((null == numberAttribute) ? 0 : ((Integer) numberAttribute).intValue()) + 1;</span>
-<span class="nc" id="L190">		request.setAttribute(NUMBER_ATTRIBUTE, Integer.valueOf(number));</span>
+<span class="fc" id="L188">		Object numberAttribute = request.getAttribute(NUMBER_ATTRIBUTE);</span>
+<span class="pc bpc" id="L189" title="1 of 2 branches missed.">		int number = ((null == numberAttribute) ? 0 : ((Integer) numberAttribute).intValue()) + 1;</span>
+<span class="fc" id="L190">		request.setAttribute(NUMBER_ATTRIBUTE, Integer.valueOf(number));</span>
 
-<span class="nc" id="L192">		return number;</span>
+<span class="fc" id="L192">		return number;</span>
 	}
 
 	public String getJson()
@@ -228,7 +228,7 @@ public class InlineEditor
 		}
 
 <span class="pc bpc" id="L230" title="1 of 2 branches missed.">		return (inlineEditingEnabled</span>
-<span class="pc bpc" id="L231" title="1 of 2 branches missed.">					&amp;&amp; request.getHeader(&quot;dmail&quot;)==null</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">					&amp;&amp; request.getHeader(&quot;dmail&quot;)==null</span>
 <span class="fc bfc" id="L232" title="All 2 branches covered.">					&amp;&amp; request.getParameter(&quot;NO_WJTOOLBAR&quot;)==null</span>
 <span class="pc bpc" id="L233" title="2 of 4 branches missed.">					&amp;&amp; request.getParameter(&quot;isDmail&quot;)==null</span>
 					&amp;&amp; !isHeatmapEnabled
@@ -275,4 +275,4 @@ public class InlineEditor
 <span class="fc" id="L275">        return mode;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

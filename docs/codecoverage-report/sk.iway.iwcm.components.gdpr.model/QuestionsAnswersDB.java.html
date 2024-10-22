@@ -76,11 +76,11 @@ public class QuestionsAnswersDB extends JpaDB&lt;QuestionsAnswersBean&gt; implem
 <span class="fc" id="L76">        }</span>
 <span class="fc" id="L77">        List&lt;GdprResult&gt; results = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L79" title="1 of 2 branches missed.">        for (QuestionsAnswersBean row : rows) {</span>
-<span class="nc" id="L80">            results.add(new GdprResult(row, regexps, request));</span>
-<span class="nc" id="L81">        }</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (QuestionsAnswersBean row : rows) {</span>
+<span class="fc" id="L80">            results.add(new GdprResult(row, regexps, request));</span>
+<span class="fc" id="L81">        }</span>
 
 <span class="fc" id="L83">        return results;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

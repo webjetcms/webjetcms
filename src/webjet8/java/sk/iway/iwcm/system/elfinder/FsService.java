@@ -168,10 +168,10 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 		{
 			_volumes = new FsVolume[4];
 
+			counter = addActualPageVolume(counter);
 			counter = addLibraryVolume(counter);
 			counter = addFsVolume(counter);
 			counter = addDocGroupVolume(counter);
-			counter = addActualPageVolume(counter);
 		}
 
 		//moze tam byt null, prepocitaj
@@ -463,7 +463,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	 */
 	private Collection<FsItemEx> findRecursively(FsItemFilter filter, FsItem root, boolean recursive, Set<String> duplicityCheck)
 	{
-		List<FsItemEx> results = new ArrayList<FsItemEx>();
+		List<FsItemEx> results = new ArrayList<>();
 		FsVolume vol = root.getVolume();
 		FsItem[] childrens = vol.listChildren(root);
 		for (int i=0; i<childrens.length; i++) {

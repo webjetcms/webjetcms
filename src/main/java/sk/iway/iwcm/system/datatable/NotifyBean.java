@@ -26,6 +26,10 @@ public class NotifyBean {
         ERROR
     }
 
+    public NotifyBean() {
+        //empty constructor
+    }
+
     public NotifyBean(String title, String text, NotifyType type) {
         this.title = title;
         setType(type);

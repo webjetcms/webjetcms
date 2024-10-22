@@ -3,10 +3,6 @@
 import static sk.iway.iwcm.Tools.firstNonNull;
 import static sk.iway.iwcm.Tools.isNotEmpty;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,74 +52,30 @@ public class UrlRedirectDB
 	public static final int OLD = 1;
 	public static final int OLD_EXACT = 3;
 	private static final String CACHED_REDIRECTS = &quot;UrlRedirectDB.CACHED_REDIRECTS&quot;;
-<span class="fc" id="L59">	private static String regExpCacheKey = &quot;regularExpressionsRedirects&quot;;</span>
-<span class="fc" id="L60">	private static String regExpPrefix = &quot;regexp:&quot;;</span>
+<span class="fc" id="L55">	private static String regExpCacheKey = &quot;regularExpressionsRedirects&quot;;</span>
+<span class="fc" id="L56">	private static String regExpPrefix = &quot;regexp:&quot;;</span>
 
 	private static final String TIMESTAMP_OF_LAST_RUN = &quot;UrlRedirectDB.TIMESTAMP_OF_LAST_RUN&quot;;
 	private static final String TIMESTAMP_OF_NEXT_RUN = &quot;UrlRedirectDB.TIMESTAMP_OF_NEXT_RUN&quot;;
 	private static final int TIMESTAMP_VALID_IN_MINUTES = 1440; // 24 hod
 
-<span class="fc" id="L66">	private static final Map&lt;String, String&gt; adminRedirects = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L62">	private static final Map&lt;String, String&gt; adminRedirects = new HashMap&lt;&gt;();</span>
 	static {
-<span class="fc" id="L68">		adminRedirects.put(&quot;/admin/editor.do&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
-<span class="fc" id="L69">		adminRedirects.put(&quot;/admin/editor&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
-<span class="fc" id="L70">		adminRedirects.put(&quot;/admin/webpages/&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
-<span class="fc" id="L71">		adminRedirects.put(&quot;/admin/listgroups.do&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
-<span class="fc" id="L72">		adminRedirects.put(&quot;/admin/photogallery.do&quot;, &quot;/admin/v9/apps/gallery/&quot;);</span>
-<span class="fc" id="L73">		adminRedirects.put(&quot;/components/gallery/admin_gallery_popup.jsp&quot;, &quot;/admin/v9/apps/image-editor/&quot;);</span>
-<span class="fc" id="L74">	}</span>
+<span class="fc" id="L64">		adminRedirects.put(&quot;/admin/editor.do&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
+<span class="fc" id="L65">		adminRedirects.put(&quot;/admin/editor&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
+<span class="fc" id="L66">		adminRedirects.put(&quot;/admin/webpages/&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
+<span class="fc" id="L67">		adminRedirects.put(&quot;/admin/listgroups.do&quot;, &quot;/admin/v9/webpages/web-pages-list/&quot;);</span>
+<span class="fc" id="L68">		adminRedirects.put(&quot;/admin/photogallery.do&quot;, &quot;/admin/v9/apps/gallery/&quot;);</span>
+<span class="fc" id="L69">		adminRedirects.put(&quot;/components/gallery/admin_gallery_popup.jsp&quot;, &quot;/admin/v9/apps/image-editor/&quot;);</span>
+<span class="fc" id="L70">	}</span>
 
-<span class="nc" id="L76">	protected UrlRedirectDB() {</span>
+<span class="nc" id="L72">	protected UrlRedirectDB() {</span>
 		//utility class
-<span class="nc" id="L78">	}</span>
+<span class="nc" id="L74">	}</span>
 
 	public static UrlRedirectBean getById(Long id)
 	{
-<span class="nc" id="L82">		return JpaTools.getEclipseLinkEntityManager().find(UrlRedirectBean.class, id);</span>
-	}
-
-
-	// @TODO: bude potrebovat upravit, teraz nezohladnuje datum a cas, pouziva sa v sk.iway.iwcm.system.RedirectImport.saveRow
-	public static UrlRedirectBean getByOldUrl(String oldUrl)
-	{
-<span class="nc" id="L89">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
-		try
-		{
-<span class="nc" id="L92">			Expression condition = new ExpressionBuilder(UrlRedirectBean.class).get(&quot;oldUrl&quot;).equal(oldUrl);</span>
-<span class="nc" id="L93">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, condition);</span>
-<span class="nc" id="L94">			manager.getTransaction().begin();</span>
-<span class="nc" id="L95">			query.addDescendingOrdering(&quot;urlRedirectId&quot;);</span>
-<span class="nc" id="L96">			Query q = manager.createQuery(query);</span>
-<span class="nc" id="L97">			List&lt;UrlRedirectBean&gt; resultList = JpaDB.getResultList(q);</span>
-<span class="nc bnc" id="L98" title="All 2 branches missed.">			return resultList.size() &gt; 0 ? resultList.get(0) : null;</span>
-<span class="nc" id="L99">		}catch (NoResultException e){</span>
-<span class="nc" id="L100">			return null;</span>
-		}finally{
-<span class="nc" id="L102">			manager.close();</span>
-		}
-	}
-
-	// @TODO: bude potrebovat upravit, teraz nezohladnuje datum a cas, pouziva sa v sk.iway.iwcm.system.RedirectImport.saveRow
-	public static UrlRedirectBean getByOldUrl(String oldUrl, String domain)
-	{
-<span class="nc" id="L109">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
-		try
-		{
-<span class="nc" id="L112">			ExpressionBuilder conditionBuilder = new ExpressionBuilder(UrlRedirectBean.class);</span>
-<span class="nc" id="L113">			Expression condition = conditionBuilder.get(&quot;oldUrl&quot;).equal(oldUrl);</span>
-<span class="nc" id="L114">			condition = condition.and(conditionBuilder.get(&quot;domainName&quot;).equal(domain));</span>
-<span class="nc" id="L115">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, condition);</span>
-
-<span class="nc" id="L117">			manager.getTransaction().begin();</span>
-<span class="nc" id="L118">			Query q = manager.createQuery(query);</span>
-<span class="nc" id="L119">			List&lt;UrlRedirectBean&gt; resultList = JpaDB.getResultList(q);</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">			return resultList.size() &gt; 0 ? resultList.get(0) : null;</span>
-<span class="nc" id="L121">		}catch (NoResultException e){</span>
-<span class="nc" id="L122">			manager.getTransaction().rollback();</span>
-<span class="nc" id="L123">			return null;</span>
-		}finally{
-<span class="nc" id="L125">			manager.close();</span>
-		}
+<span class="nc" id="L78">		return JpaTools.getEclipseLinkEntityManager().find(UrlRedirectBean.class, id);</span>
 	}
 
 	/**
@@ -134,26 +86,26 @@ public class UrlRedirectDB
 	 */
 	public static void addRedirect(String oldUrl, String newUrl, String domainName, int redirectCode)
 	{
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">		if(Constants.getBoolean(&quot;editorDisableAutomaticRedirect&quot;)) return;</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">		if(Constants.getBoolean(&quot;editorDisableAutomaticRedirect&quot;)) return;</span>
 
-<span class="pc bpc" id="L139" title="2 of 4 branches missed.">		if (Tools.isEmpty(oldUrl) || Tools.isEmpty(newUrl)) return;</span>
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">		if (Tools.isEmpty(oldUrl) || Tools.isEmpty(newUrl)) return;</span>
 
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">		if (oldUrl.equals(newUrl)) return;</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		if (oldUrl.equals(newUrl)) return;</span>
 		//odstran parametre
-<span class="fc" id="L143">		int i = oldUrl.indexOf('?');</span>
-<span class="pc bpc" id="L144" title="1 of 2 branches missed.">		if (i &gt; 0) oldUrl = oldUrl.substring(0, i);</span>
-<span class="fc" id="L145">		i = newUrl.indexOf('?');</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">		if (i &gt; 0) newUrl = newUrl.substring(0, i);</span>
+<span class="fc" id="L95">		int i = oldUrl.indexOf('?');</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">		if (i &gt; 0) oldUrl = oldUrl.substring(0, i);</span>
+<span class="fc" id="L97">		i = newUrl.indexOf('?');</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		if (i &gt; 0) newUrl = newUrl.substring(0, i);</span>
 
-<span class="fc" id="L148">		UrlRedirectBean urlRedirect = new UrlRedirectBean();</span>
-<span class="fc" id="L149">		urlRedirect.setOldUrl(oldUrl);</span>
-<span class="fc" id="L150">		urlRedirect.setNewUrl(newUrl);</span>
-<span class="pc bpc" id="L151" title="1 of 2 branches missed.">		if (domainName == null) domainName = &quot;&quot;;</span>
-<span class="fc" id="L152">		urlRedirect.setDomainName(domainName);</span>
-<span class="fc" id="L153">		urlRedirect.setRedirectCode(redirectCode);</span>
-<span class="fc" id="L154">		urlRedirect.setInsertDate(new Date());</span>
-<span class="fc" id="L155">		save(urlRedirect);</span>
-<span class="fc" id="L156">	}</span>
+<span class="fc" id="L100">		UrlRedirectBean urlRedirect = new UrlRedirectBean();</span>
+<span class="fc" id="L101">		urlRedirect.setOldUrl(oldUrl);</span>
+<span class="fc" id="L102">		urlRedirect.setNewUrl(newUrl);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (domainName == null) domainName = &quot;&quot;;</span>
+<span class="fc" id="L104">		urlRedirect.setDomainName(domainName);</span>
+<span class="fc" id="L105">		urlRedirect.setRedirectCode(redirectCode);</span>
+<span class="fc" id="L106">		urlRedirect.setInsertDate(new Date());</span>
+<span class="fc" id="L107">		save(urlRedirect);</span>
+<span class="fc" id="L108">	}</span>
 
 	/**
 	 * Ziska najnovsi redirect zadaneho URL, alebo null ak redirect neexistuje
@@ -162,240 +114,238 @@ public class UrlRedirectDB
 	 */
 	public static String getRedirect(String oldUrl, String domainName)
 	{
-<span class="fc" id="L165">		String redirectURL = adminRedirects.get(oldUrl);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">		if (redirectURL!=null) return redirectURL;</span>
+<span class="nc" id="L117">		UrlRedirectBean redirect = getRedirectBean(oldUrl, domainName);</span>
+<span class="nc bnc" id="L118" title="All 2 branches missed.">		if(redirect != null) return redirect.getNewUrl();</span>
+<span class="nc" id="L119">		return null;</span>
+	}
 
-<span class="fc" id="L168">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="pc bpc" id="L169" title="2 of 6 branches missed.">		if (rb!=null &amp;&amp; rb.isUserAdmin() &amp;&amp; Tools.isNotEmpty(oldUrl)) {</span>
-			//over ci sa nejedna o stare JSP
-<span class="fc" id="L171">			String v9link = MenuService.replaceV9MenuLink(oldUrl);</span>
-<span class="pc bpc" id="L172" title="2 of 4 branches missed.">			if (v9link!=null &amp;&amp; v9link.equals(oldUrl)==false) return v9link;</span>
+	/**
+	 * Get's newest redirect for oldUrl and domainName or returns NULL if doesn't exist
+	 * @param oldUrl
+	 * @param domainName
+	 * @return
+	 */
+	public static UrlRedirectBean getRedirectBean(String oldUrl, String domainName)
+	{
+		//redirect's of old admin pages, always have precedense
+<span class="fc" id="L131">		String redirectURL = adminRedirects.get(oldUrl);</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">		if (redirectURL!=null) {</span>
+<span class="fc" id="L133">			return new UrlRedirectBean(oldUrl, redirectURL, 302, &quot;&quot;);</span>
 		}
 
-<span class="pc bpc" id="L175" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true &amp;&amp; Tools.isNotEmpty(domainName))</span>
+<span class="fc" id="L136">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L137" title="2 of 6 branches missed.">		if (rb!=null &amp;&amp; rb.isUserAdmin() &amp;&amp; Tools.isNotEmpty(oldUrl)) {</span>
+			//redirect of old admin pages, always have precedense
+<span class="fc" id="L139">			String v9link = MenuService.replaceV9MenuLink(oldUrl);</span>
+<span class="pc bpc" id="L140" title="1 of 4 branches missed.">			if (v9link!=null &amp;&amp; v9link.equals(oldUrl)==false) return new UrlRedirectBean(oldUrl, v9link, 302, domainName);</span>
+		}
+
+		UrlRedirectBean redirectBean;
+<span class="pc bpc" id="L144" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true &amp;&amp; Tools.isNotEmpty(domainName))</span>
 		{
-<span class="fc" id="L177">			redirectURL = getRedirectImpl(oldUrl, domainName);</span>
-<span class="pc bpc" id="L178" title="1 of 2 branches missed.">			if (redirectURL != null) return redirectURL;</span>
+<span class="fc" id="L146">			redirectBean = getRedirectImpl(oldUrl, domainName);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">			if (redirectBean != null) return redirectBean;</span>
 			//stare WebJETy negenerovali / na konci adresara
-<span class="fc bfc" id="L180" title="All 2 branches covered.">			if (oldUrl.indexOf('^')==-1) redirectURL = getRedirectImpl(oldUrl+&quot;/&quot;, domainName);</span>
-<span class="pc bpc" id="L181" title="1 of 2 branches missed.">			if (redirectURL != null) return redirectURL;</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">			if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + &quot;/&quot;, domainName);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">			if (redirectBean != null) return redirectBean;</span>
 		}
 		else
 		{
 			//failsafe pre standardny WebJET - hladanie bez ohladu na domenu
-<span class="nc" id="L186">			redirectURL = getRedirectImpl(oldUrl, &quot;&quot;);</span>
-<span class="nc bnc" id="L187" title="All 2 branches missed.">			if (redirectURL != null) return redirectURL;</span>
+<span class="nc" id="L155">			redirectBean = getRedirectImpl(oldUrl, &quot;&quot;);</span>
+<span class="nc bnc" id="L156" title="All 2 branches missed.">			if (redirectBean != null) return redirectBean;</span>
 		}
 
 		//stare WebJETy negenerovali / na konci adresara
-<span class="fc bfc" id="L191" title="All 2 branches covered.">		if (oldUrl.indexOf('^')==-1) redirectURL = getRedirectImpl(oldUrl+&quot;/&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L192" title="1 of 2 branches missed.">		if (redirectURL != null) return redirectURL;</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">		if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + &quot;/&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L161" title="1 of 2 branches missed.">		if (redirectBean != null) return redirectBean;</span>
 
-<span class="fc bfc" id="L194" title="All 4 branches covered.">		if (oldUrl.endsWith(&quot;/&quot;)==false &amp;&amp; oldUrl.endsWith(&quot;.html&quot;)==false)</span>
+<span class="fc bfc" id="L163" title="All 4 branches covered.">		if (oldUrl.endsWith(&quot;/&quot;)==false &amp;&amp; oldUrl.endsWith(&quot;.html&quot;)==false)</span>
 		{
 			//skus najst stranku s / na konci (/produkty vs /produkty/)
-<span class="fc" id="L197">			DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L198">			String newUrl = oldUrl+&quot;/&quot;;</span>
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">			if (docDB.getDocIdFromURLImpl(newUrl, domainName)&gt;0)</span>
+<span class="fc" id="L166">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L167">			String newUrl = oldUrl+&quot;/&quot;;</span>
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">			if (docDB.getDocIdFromURLImpl(newUrl, domainName)&gt;0)</span>
 			{
-<span class="nc" id="L201">				return newUrl;</span>
+<span class="nc" id="L170">				return new UrlRedirectBean(oldUrl, newUrl, 302, domainName);</span>
 			}
 		}
 
-<span class="fc" id="L205">		return null;</span>
+<span class="fc" id="L174">		return null;</span>
 	}
 
 	public static int deleteOldRedirects() {
 
-<span class="nc" id="L210">		EntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L179">		EntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
 
 		// choose all unique redirect urls with more than one record
-<span class="nc" id="L213">		TypedQuery&lt;UrlRedirectBean&gt; query = em.createQuery(&quot;select redirect from UrlRedirectBean redirect where redirect.urlRedirectId in (select min(r.urlRedirectId) from UrlRedirectBean r group by r.oldUrl, r.domainName having count(r.urlRedirectId) &gt; 1)&quot;, UrlRedirectBean.class);</span>
-<span class="nc" id="L214">		em.getTransaction().begin();</span>
-<span class="nc" id="L215">		List&lt;UrlRedirectBean&gt; allRedirects = query.getResultList();</span>
-<span class="nc" id="L216">		em.getTransaction().commit();</span>
+<span class="nc" id="L182">		TypedQuery&lt;UrlRedirectBean&gt; query = em.createQuery(&quot;select redirect from UrlRedirectBean redirect where redirect.urlRedirectId in (select min(r.urlRedirectId) from UrlRedirectBean r group by r.oldUrl, r.domainName having count(r.urlRedirectId) &gt; 1)&quot;, UrlRedirectBean.class);</span>
+<span class="nc" id="L183">		em.getTransaction().begin();</span>
+<span class="nc" id="L184">		List&lt;UrlRedirectBean&gt; allRedirects = query.getResultList();</span>
+<span class="nc" id="L185">		em.getTransaction().commit();</span>
 
-<span class="nc" id="L218">		int affected = 0;</span>
+<span class="nc" id="L187">		int affected = 0;</span>
 
-<span class="nc bnc" id="L220" title="All 2 branches missed.">		for(UrlRedirectBean redirect : allRedirects) {</span>
-<span class="nc" id="L221">			List&lt;Long&gt; idsToRemove = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">		for(UrlRedirectBean redirect : allRedirects) {</span>
+<span class="nc" id="L190">			List&lt;Long&gt; idsToRemove = new ArrayList&lt;&gt;();</span>
 
 			try {
 				// search actual and older redirects for iterated redirect
-<span class="nc" id="L225">				List&lt;UrlRedirectBean&gt; redirects = search(redirect.oldUrl, OLD_EXACT, redirect.domainName);</span>
-<span class="nc bnc" id="L226" title="All 2 branches missed.">				if(redirects.size() &gt; 1) {</span>
+<span class="nc" id="L194">				List&lt;UrlRedirectBean&gt; redirects = search(redirect.oldUrl, OLD_EXACT, redirect.domainName);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">				if(redirects.size() &gt; 1) {</span>
 
 					// all found redirects except first are old
-<span class="nc" id="L229">					redirects.remove(0);</span>
+<span class="nc" id="L198">					redirects.remove(0);</span>
 
 					// map old redirects ids to list
-<span class="nc" id="L232">					idsToRemove = redirects.stream().map(i -&gt; i.getId()).collect(Collectors.toList());</span>
+<span class="nc" id="L201">					idsToRemove = redirects.stream().map(i -&gt; i.getId()).collect(Collectors.toList());</span>
 
 					// delete old redirects if exists
-<span class="nc bnc" id="L235" title="All 4 branches missed.">					if(idsToRemove != null &amp;&amp; idsToRemove.size() &gt; 0){</span>
-<span class="nc" id="L236">						affected++;</span>
+<span class="nc bnc" id="L204" title="All 4 branches missed.">					if(idsToRemove != null &amp;&amp; idsToRemove.size() &gt; 0){</span>
+<span class="nc" id="L205">						affected++;</span>
 
-<span class="nc" id="L238">						em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L239">						TypedQuery&lt;UrlRedirectBean&gt; q = em.createQuery(&quot;delete from UrlRedirectBean r where r.urlRedirectId in :ids&quot;, UrlRedirectBean.class);</span>
-<span class="nc" id="L240">						q.setParameter(&quot;ids&quot;, idsToRemove);</span>
+<span class="nc" id="L207">						em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L208">						TypedQuery&lt;UrlRedirectBean&gt; q = em.createQuery(&quot;delete from UrlRedirectBean r where r.urlRedirectId in :ids&quot;, UrlRedirectBean.class);</span>
+<span class="nc" id="L209">						q.setParameter(&quot;ids&quot;, idsToRemove);</span>
 
-<span class="nc" id="L242">						em.getTransaction().begin();</span>
-<span class="nc" id="L243">						q.executeUpdate();</span>
-<span class="nc" id="L244">						em.getTransaction().commit();</span>
+<span class="nc" id="L211">						em.getTransaction().begin();</span>
+<span class="nc" id="L212">						q.executeUpdate();</span>
+<span class="nc" id="L213">						em.getTransaction().commit();</span>
 					}
 				}
-<span class="nc" id="L247">			} catch(Exception e) {</span>
-<span class="nc" id="L248">				Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, &quot;CRON: deleteOldRedirects urlRedirectId[&quot; + redirect.getId() + &quot;], idsToRemove[&quot; + Tools.join(idsToRemove) + &quot;]&quot;, redirect.getId().intValue(), -1);</span>
-<span class="nc" id="L249">			}</span>
+<span class="nc" id="L216">			} catch(Exception e) {</span>
+<span class="nc" id="L217">				Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, &quot;CRON: deleteOldRedirects urlRedirectId[&quot; + redirect.getId() + &quot;], idsToRemove[&quot; + Tools.join(idsToRemove) + &quot;]&quot;, redirect.getId().intValue(), -1);</span>
+<span class="nc" id="L218">			}</span>
 
-<span class="nc" id="L251">		}</span>
+<span class="nc" id="L220">		}</span>
 
 		// clear old publish dates
-<span class="nc" id="L254">		em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L255">		TypedQuery&lt;UrlRedirectBean&gt; q = em.createQuery(&quot;update UrlRedirectBean r set r.publishDate = null where r.publishDate &lt;= :date&quot;, UrlRedirectBean.class);</span>
-<span class="nc" id="L256">		q.setParameter(&quot;date&quot;, new Date());</span>
+<span class="nc" id="L223">		em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L224">		TypedQuery&lt;UrlRedirectBean&gt; q = em.createQuery(&quot;update UrlRedirectBean r set r.publishDate = null where r.publishDate &lt;= :date&quot;, UrlRedirectBean.class);</span>
+<span class="nc" id="L225">		q.setParameter(&quot;date&quot;, new Date());</span>
 
-<span class="nc" id="L258">		em.getTransaction().begin();</span>
-<span class="nc" id="L259">		q.executeUpdate();</span>
-<span class="nc" id="L260">		em.getTransaction().commit();</span>
+<span class="nc" id="L227">		em.getTransaction().begin();</span>
+<span class="nc" id="L228">		q.executeUpdate();</span>
+<span class="nc" id="L229">		em.getTransaction().commit();</span>
 
 		// reload cache
 		try {
-<span class="nc bnc" id="L264" title="All 4 branches missed.">			if (Constants.getBoolean(&quot;cacheUrlRedirects&quot;) &amp;&amp; affected &gt; 0)</span>
+<span class="nc bnc" id="L233" title="All 4 branches missed.">			if (Constants.getBoolean(&quot;cacheUrlRedirects&quot;) &amp;&amp; affected &gt; 0)</span>
 			{
-<span class="nc" id="L266">				reloadCache();</span>
+<span class="nc" id="L235">				reloadCache();</span>
 			}
-<span class="nc" id="L268">		} catch(Exception e) {</span>
-<span class="nc" id="L269">			Logger.error(UrlRedirectDB.class, &quot;reloadCache failed&quot;, e);</span>
-<span class="nc" id="L270">			Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, &quot;CRON: deleteOldRedirects - reloadCache failed.&quot;, -1, -1);</span>
-<span class="nc" id="L271">		}</span>
+<span class="nc" id="L237">		} catch(Exception e) {</span>
+<span class="nc" id="L238">			Logger.error(UrlRedirectDB.class, &quot;reloadCache failed&quot;, e);</span>
+<span class="nc" id="L239">			Adminlog.add(Adminlog.TYPE_REDIRECT_UPDATE, &quot;CRON: deleteOldRedirects - reloadCache failed.&quot;, -1, -1);</span>
+<span class="nc" id="L240">		}</span>
 
 		// return count of affected urls
-<span class="nc" id="L274">		return affected;</span>
+<span class="nc" id="L243">		return affected;</span>
 	}
 
-	private static String getRedirectImpl(String oldUrl, String domainName)
+	private static UrlRedirectBean getRedirectImpl(String oldUrl, String domainName)
 	{
 		try
 		{
-<span class="pc bpc" id="L281" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
 			{
-<span class="nc" id="L283">				Cache c = Cache.getInstance();</span>
-<span class="nc" id="L284">				Long lastRun = c.getObject(TIMESTAMP_OF_LAST_RUN, Long.class);</span>
-<span class="nc" id="L285">				Long nextRun = c.getObject(TIMESTAMP_OF_NEXT_RUN, Long.class);</span>
-<span class="nc bnc" id="L286" title="All 6 branches missed.">				if (lastRun == null || nextRun == null || new Date().getTime() &gt;= nextRun)  {</span>
-<span class="nc" id="L287">					reloadCache();</span>
+<span class="nc" id="L252">				Cache c = Cache.getInstance();</span>
+<span class="nc" id="L253">				Long lastRun = c.getObject(TIMESTAMP_OF_LAST_RUN, Long.class);</span>
+<span class="nc" id="L254">				Long nextRun = c.getObject(TIMESTAMP_OF_NEXT_RUN, Long.class);</span>
+<span class="nc bnc" id="L255" title="All 6 branches missed.">				if (lastRun == null || nextRun == null || new Date().getTime() &gt;= nextRun)  {</span>
+<span class="nc" id="L256">					reloadCache();</span>
 				}
 
-<span class="nc" id="L290">				domainName = firstNonNull(domainName, &quot;&quot;);</span>
-<span class="nc" id="L291">				oldUrl = normalizeUrl(oldUrl);</span>
-<span class="nc" id="L292">				Map&lt;String, Map&lt;String,String&gt;&gt; redirects = getCachedRedirects();</span>
-<span class="nc bnc" id="L293" title="All 4 branches missed.">				if (redirects != null) return redirects.containsKey(domainName) ? redirects.get(domainName).get(oldUrl) : null;</span>
+<span class="nc" id="L259">				domainName = firstNonNull(domainName, &quot;&quot;);</span>
+<span class="nc" id="L260">				oldUrl = normalizeUrl(oldUrl);</span>
+<span class="nc" id="L261">				Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt; redirects = getCachedRedirects();</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">				if (redirects == null) return null;</span>
+<span class="nc" id="L263">				return redirects.get(domainName).get(oldUrl);</span>
 			}
 
-<span class="fc" id="L296">			String params = null;</span>
+<span class="fc" id="L266">			String params = null;</span>
 
-<span class="fc" id="L298">			int paramsIndex = oldUrl.indexOf('?');</span>
-<span class="pc bpc" id="L299" title="1 of 2 branches missed.">			if (paramsIndex &gt; 0)</span>
+<span class="fc" id="L268">			int paramsIndex = oldUrl.indexOf('?');</span>
+<span class="pc bpc" id="L269" title="1 of 2 branches missed.">			if (paramsIndex &gt; 0)</span>
 			{
-<span class="nc bnc" id="L301" title="All 2 branches missed.">				if (!oldUrl.endsWith(&quot;?&quot;))</span>
-<span class="nc" id="L302">					params = oldUrl.substring(paramsIndex+1);</span>
-<span class="nc" id="L303">				oldUrl = oldUrl.substring(0, paramsIndex);</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">				if (!oldUrl.endsWith(&quot;?&quot;))</span>
+<span class="nc" id="L272">					params = oldUrl.substring(paramsIndex+1);</span>
+<span class="nc" id="L273">				oldUrl = oldUrl.substring(0, paramsIndex);</span>
 			}
 
 			//aby sme dokazali spravit exact match z 404.jsp
-<span class="fc" id="L307">			oldUrl = Tools.replace(oldUrl, &quot;^&quot;, &quot;?&quot;);</span>
+<span class="fc" id="L277">			oldUrl = Tools.replace(oldUrl, &quot;^&quot;, &quot;?&quot;);</span>
 
-<span class="fc" id="L309">			List&lt;UrlRedirectBean&gt; redirects = search(oldUrl, OLD_EXACT, domainName);</span>
+<span class="fc" id="L279">			List&lt;UrlRedirectBean&gt; redirects = search(oldUrl, OLD_EXACT, domainName);</span>
 
-<span class="pc bpc" id="L311" title="2 of 4 branches missed.">			if (redirects!=null &amp;&amp; redirects.size() &gt; 0)</span>
+<span class="pc bpc" id="L281" title="1 of 4 branches missed.">			if (redirects!=null &amp;&amp; redirects.size() &gt; 0)</span>
 			{
-<span class="nc" id="L313">				UrlRedirectBean urlRedirect = redirects.get(0);</span>
-<span class="nc" id="L314">				StringBuilder newUrl = new StringBuilder(urlRedirect.getNewUrl());</span>
+<span class="fc" id="L283">				UrlRedirectBean urlRedirect = redirects.get(0);</span>
+<span class="fc" id="L284">				StringBuilder newUrl = new StringBuilder(urlRedirect.getNewUrl());</span>
 
-<span class="nc bnc" id="L316" title="All 2 branches missed.">				if (params != null) newUrl.append('?').append(params);</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">				if (params != null) newUrl.append('?').append(params);</span>
 
-<span class="nc" id="L318">				return(newUrl.toString());</span>
+<span class="fc" id="L288">				UrlRedirectBean redirect = new UrlRedirectBean(urlRedirect.getOldUrl(), newUrl.toString(), urlRedirect.getRedirectCode(), urlRedirect.getDomainName());</span>
+<span class="fc" id="L289">				return redirect;</span>
 			}
 
-<span class="fc" id="L321">			String regExpURL = regExpRedirect(oldUrl, domainName);</span>
-<span class="pc bpc" id="L322" title="1 of 2 branches missed.">			if (params != null)</span>
-<span class="nc" id="L323">				regExpURL += '?'+ params;</span>
-<span class="fc" id="L324">			return regExpURL;</span>
+<span class="fc" id="L292">			String regExpURL = regExpRedirect(oldUrl, domainName);</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">			if (regExpURL != null) {</span>
+<span class="pc bpc" id="L294" title="1 of 2 branches missed.">				if (params != null) regExpURL += '?'+ params;</span>
+<span class="fc" id="L295">				return new UrlRedirectBean(oldUrl, regExpURL, 302, domainName);</span>
+			}
 		}
-<span class="nc" id="L326">		catch (Exception e){</span>
-<span class="nc" id="L327">			sk.iway.iwcm.Logger.error(e);</span>
-		}
-<span class="nc" id="L329">		return(null);</span>
+<span class="nc" id="L298">		catch (Exception e){</span>
+<span class="nc" id="L299">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L300">		}</span>
+<span class="fc" id="L301">		return(null);</span>
 	}
 
+	private static synchronized Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt; reloadCache() {
+<span class="nc" id="L305">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L306">		c.setObject(TIMESTAMP_OF_LAST_RUN, new Date().getTime(), TIMESTAMP_VALID_IN_MINUTES);</span>
+<span class="nc" id="L307">		Date date = getDateOfNextChange();</span>
+<span class="nc" id="L308">		c.setObject(TIMESTAMP_OF_NEXT_RUN, date.getTime(), TIMESTAMP_VALID_IN_MINUTES);</span>
 
-	private static synchronized Map&lt;String, Map&lt;String,String&gt;&gt; reloadCache()
-	{
-<span class="nc" id="L335">		Cache c = Cache.getInstance();</span>
-<span class="nc" id="L336">		c.setObject(TIMESTAMP_OF_LAST_RUN, new Date().getTime(), TIMESTAMP_VALID_IN_MINUTES);</span>
-<span class="nc" id="L337">		Date date = getDateOfNextChange();</span>
-<span class="nc" id="L338">		c.setObject(TIMESTAMP_OF_NEXT_RUN, date.getTime(), TIMESTAMP_VALID_IN_MINUTES);</span>
+<span class="nc" id="L310">		Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt; redirects = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L340">		Map&lt;String, Map&lt;String,String&gt;&gt; redirects = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L312">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
+		try {
+<span class="nc" id="L314">			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get(&quot;publish_date&quot;).lessThanEqual( new java.sql.Time(new Date().getTime()) );</span>
+<span class="nc" id="L315">			conditions = conditions.or( new ExpressionBuilder().get(&quot;publish_date&quot;).isNull() );</span>
 
-<span class="nc" id="L342">		Connection db_conn = null;</span>
-<span class="nc" id="L343">		PreparedStatement ps = null;</span>
-<span class="nc" id="L344">		ResultSet rs = null;</span>
-		try
-		{
-<span class="nc" id="L347">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L348">			String query = &quot;SELECT domain_name, old_url, new_url FROM url_redirect WHERE publish_date &lt;= ? OR publish_date IS NULL ORDER BY publish_date DESC, insert_date DESC&quot;;</span>
-<span class="nc bnc" id="L349" title="All 4 branches missed.">			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="nc" id="L350">				query = &quot;SELECT domain_name, old_url, new_url FROM url_redirect WHERE publish_date &lt;= ? OR publish_date IS NULL ORDER BY publish_date DESC NULLS LAST, insert_date DESC NULLS LAST&quot;;</span>
+<span class="nc" id="L317">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);</span>
+<span class="nc bnc" id="L318" title="All 4 branches missed.">			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
+<span class="nc" id="L319">				query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending().nullsLast());</span>
+<span class="nc" id="L320">				query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending().nullsLast());</span>
+			} else {
+<span class="nc" id="L322">				query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending());</span>
+<span class="nc" id="L323">				query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending());</span>
 			}
-<span class="nc" id="L352">			ps = db_conn.prepareStatement(query);</span>
-<span class="nc" id="L353">			ps.setTime(1, new java.sql.Time(new Date().getTime()));</span>
-<span class="nc" id="L354">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L355" title="All 2 branches missed.">			while (rs.next())</span>
-			{
-<span class="nc" id="L357">				String domain = firstNonNull(DB.getDbString(rs, &quot;domain_name&quot;), &quot;&quot;);</span>
-<span class="nc" id="L358">				String oldUrl = DB.getDbString(rs, &quot;old_url&quot;);</span>
-<span class="nc" id="L359">				String newUrl = DB.getDbString(rs, &quot;new_url&quot;);</span>
 
-<span class="nc bnc" id="L361" title="All 2 branches missed.">				if (!redirects.containsKey(domain))</span>
-<span class="nc" id="L362">					redirects.put(domain, new HashMap&lt;&gt;());</span>
+<span class="nc" id="L326">			List&lt;UrlRedirectBean&gt; list = JpaDB.getResultList(manager.createQuery(query));</span>
 
-<span class="nc" id="L364">				oldUrl = normalizeUrl(oldUrl);</span>
-<span class="nc bnc" id="L365" title="All 2 branches missed.">				if (!redirects.get(domain).containsKey(oldUrl))</span>
-<span class="nc" id="L366">					redirects.get(domain).put(oldUrl, newUrl);</span>
-<span class="nc" id="L367">			}</span>
-<span class="nc" id="L368">			rs.close();</span>
-<span class="nc" id="L369">			ps.close();</span>
-<span class="nc" id="L370">			db_conn.close();</span>
-<span class="nc" id="L371">			rs = null;</span>
-<span class="nc" id="L372">			ps = null;</span>
-<span class="nc" id="L373">			db_conn = null;</span>
-		}
-<span class="nc" id="L375">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L377">			sk.iway.iwcm.Logger.error(ex);</span>
-		}
-		finally
-		{
-			try
-			{
-<span class="nc bnc" id="L383" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L384">					rs.close();</span>
-<span class="nc bnc" id="L385" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L386">					ps.close();</span>
-<span class="nc bnc" id="L387" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L388">					db_conn.close();</span>
-			}
-<span class="nc" id="L390">			catch (Exception ex2)</span>
-			{
-<span class="nc" id="L392">			}</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			for (UrlRedirectBean b : list) {</span>
+<span class="nc" id="L329">				String domain = b.getDomainName();</span>
+<span class="nc bnc" id="L330" title="All 2 branches missed.">				if (!redirects.containsKey(domain)) redirects.put(domain, new HashMap&lt;&gt;());</span>
+<span class="nc" id="L331">				String oldUrl = normalizeUrl(b.getOldUrl());</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">				if (redirects.get(domain).containsKey(oldUrl)==false) {</span>
+<span class="nc" id="L333">					UrlRedirectBean redirect = new UrlRedirectBean(oldUrl, b.getNewUrl(), b.getRedirectCode(), b.getDomainName());</span>
+<span class="nc" id="L334">					redirects.get(domain).put(oldUrl, redirect);</span>
+				}
+
+<span class="nc" id="L337">			}</span>
+
+<span class="nc" id="L339">		} catch (Exception e){</span>
+
+		}finally{
+<span class="nc bnc" id="L342" title="All 2 branches missed.">			if (manager != null) manager.close();</span>
 		}
 
-<span class="nc" id="L395">		ServletContext context = Constants.getServletContext();</span>
-<span class="nc" id="L396">		context.setAttribute(CACHED_REDIRECTS, redirects);</span>
+<span class="nc" id="L345">		ServletContext context = Constants.getServletContext();</span>
+<span class="nc" id="L346">		context.setAttribute(CACHED_REDIRECTS, redirects);</span>
 
-<span class="nc" id="L398">		return redirects;</span>
+<span class="nc" id="L348">		return redirects;</span>
 	}
 
 	/**
@@ -403,61 +353,41 @@ public class UrlRedirectDB
 	 * @return
 	 */
 	private static boolean isReloadNecessary() {
-<span class="nc" id="L406">		boolean result = false;</span>
+<span class="nc" id="L356">		boolean result = false;</span>
 
-<span class="nc" id="L408">		Connection db_conn = null;</span>
-<span class="nc" id="L409">		PreparedStatement ps = null;</span>
-<span class="nc" id="L410">		ResultSet rs = null;</span>
-		try
-		{
-<span class="nc" id="L413">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L414">			String query = &quot;SELECT url_redirect_id FROM url_redirect WHERE publish_date &gt;= ? ORDER BY publish_date DESC, insert_date DESC&quot;;</span>
-<span class="nc bnc" id="L415" title="All 4 branches missed.">			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="nc" id="L416">				query = &quot;SELECT url_redirect_id FROM url_redirect WHERE publish_date &gt;= ? ORDER BY publish_date DESC NULLS LAST, insert_date DESC NULLS LAST&quot;;</span>
-			}
-<span class="nc" id="L418">			ps = db_conn.prepareStatement(query);</span>
+<span class="nc" id="L358">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
+		try {
+<span class="nc" id="L360">			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get(&quot;publish_date&quot;).greaterThanEqual( new java.sql.Time(new Date().getTime()) );</span>
 
-<span class="nc" id="L420">			ps.setTimestamp(1, new Timestamp(new Date().getTime()));</span>
-<span class="nc" id="L421">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L422" title="All 2 branches missed.">			if (rs.next())</span>
-<span class="nc" id="L423">				result = true;</span>
-<span class="nc" id="L424">			rs.close();</span>
-<span class="nc" id="L425">			ps.close();</span>
-<span class="nc" id="L426">			db_conn.close();</span>
-<span class="nc" id="L427">			rs = null;</span>
-<span class="nc" id="L428">			ps = null;</span>
-<span class="nc" id="L429">			db_conn = null;</span>
-		}
-<span class="nc" id="L431">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L433">			sk.iway.iwcm.Logger.error(ex);</span>
-		}
-		finally
-		{
-			try
-			{
-<span class="nc bnc" id="L439" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L440">					rs.close();</span>
-<span class="nc bnc" id="L441" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L442">					ps.close();</span>
-<span class="nc bnc" id="L443" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L444">					db_conn.close();</span>
+<span class="nc" id="L362">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);</span>
+<span class="nc bnc" id="L363" title="All 4 branches missed.">			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
+<span class="nc" id="L364">				query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending().nullsLast());</span>
+<span class="nc" id="L365">				query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending().nullsLast());</span>
+			} else {
+<span class="nc" id="L367">				query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending());</span>
+<span class="nc" id="L368">				query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending());</span>
 			}
-<span class="nc" id="L446">			catch (Exception ex2)</span>
-			{
-<span class="nc" id="L448">			}</span>
+
+<span class="nc" id="L371">			List&lt;UrlRedirectBean&gt; list = JpaDB.getResultList(manager.createQuery(query));</span>
+<span class="nc" id="L372">			manager.close();</span>
+
+<span class="nc bnc" id="L374" title="All 2 branches missed.">			if(list.size() &gt; 0) result = true;</span>
+<span class="nc" id="L375">		} catch (NoResultException e){</span>
+<span class="nc" id="L376">			return result;</span>
+		} finally{
+<span class="nc" id="L378">			manager.close();</span>
 		}
-<span class="nc" id="L450">		return result;</span>
+
+<span class="nc" id="L381">		return result;</span>
 	}
-
 
 	protected static String normalizeUrl(String oldUrl)
 	{
 		//doesn't end in an extension
-<span class="nc bnc" id="L457" title="All 2 branches missed.">		if (!oldUrl.matches(&quot;^.*[.][a-zA-Z0-9]+$&quot;))</span>
-<span class="nc" id="L458">			oldUrl = oldUrl + &quot;/&quot;;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">		if (!oldUrl.matches(&quot;^.*[.][a-zA-Z0-9]+$&quot;))</span>
+<span class="nc" id="L388">			oldUrl = oldUrl + &quot;/&quot;;</span>
 
-<span class="nc" id="L460">		return oldUrl.replace(&quot;//&quot;, &quot;/&quot;);</span>
+<span class="nc" id="L390">		return oldUrl.replace(&quot;//&quot;, &quot;/&quot;);</span>
 	}
 
 
@@ -469,12 +399,12 @@ public class UrlRedirectDB
 	 */
 	public static List&lt;UrlRedirectBean&gt; search(String url, int kategoria)
 	{
-<span class="nc" id="L472">		return UrlRedirectDB.search(url, kategoria, null);</span>
+<span class="nc" id="L402">		return UrlRedirectDB.search(url, kategoria, null);</span>
 	}
 
 	public static List&lt;UrlRedirectBean&gt; search(String url, int kategoria, boolean adminSearch)
 	{
-<span class="nc" id="L477">		return UrlRedirectDB.search(url, kategoria, null, adminSearch);</span>
+<span class="nc" id="L407">		return UrlRedirectDB.search(url, kategoria, null, adminSearch);</span>
 	}
 
 	/**
@@ -484,52 +414,52 @@ public class UrlRedirectDB
 	 * @return
 	 */
 	public static List&lt;UrlRedirectBean&gt; search(String url, int kategoria, String domain) {
-<span class="fc" id="L487">		return search(url, kategoria, domain, false);</span>
+<span class="fc" id="L417">		return search(url, kategoria, domain, false);</span>
 	}
 
 	public static List&lt;UrlRedirectBean&gt; search(String url, int kategoria, String domain, boolean adminSearch)
 	{
 		try
 		{
-<span class="fc" id="L494">			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get(&quot;urlRedirectId&quot;).greaterThan(0);</span>
-<span class="pc bpc" id="L495" title="2 of 4 branches missed.">			if (url != null &amp;&amp; kategoria &gt; -1)</span>
+<span class="fc" id="L424">			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get(&quot;urlRedirectId&quot;).greaterThan(0);</span>
+<span class="pc bpc" id="L425" title="2 of 4 branches missed.">			if (url != null &amp;&amp; kategoria &gt; -1)</span>
 			{
-<span class="pc bpc" id="L497" title="1 of 2 branches missed.">				if (kategoria == OLD)</span>
-<span class="nc" id="L498">					conditions = conditions.and(new ExpressionBuilder().get(&quot;oldUrl&quot;).like('%'+url+'%'));</span>
-<span class="pc bpc" id="L499" title="1 of 2 branches missed.">				else if (kategoria == NEW)</span>
-<span class="nc" id="L500">					conditions = conditions.and(new ExpressionBuilder().get(&quot;newUrl&quot;).like('%'+url+'%'));</span>
-<span class="pc bpc" id="L501" title="1 of 2 branches missed.">				else if (kategoria == OLD_EXACT)</span>
-<span class="fc" id="L502">					conditions = conditions.and(new ExpressionBuilder().get(&quot;oldUrl&quot;).equal(url));</span>
+<span class="pc bpc" id="L427" title="1 of 2 branches missed.">				if (kategoria == OLD)</span>
+<span class="nc" id="L428">					conditions = conditions.and(new ExpressionBuilder().get(&quot;oldUrl&quot;).like('%'+url+'%'));</span>
+<span class="pc bpc" id="L429" title="1 of 2 branches missed.">				else if (kategoria == NEW)</span>
+<span class="nc" id="L430">					conditions = conditions.and(new ExpressionBuilder().get(&quot;newUrl&quot;).like('%'+url+'%'));</span>
+<span class="pc bpc" id="L431" title="1 of 2 branches missed.">				else if (kategoria == OLD_EXACT)</span>
+<span class="fc" id="L432">					conditions = conditions.and(new ExpressionBuilder().get(&quot;oldUrl&quot;).equal(url));</span>
 			}
-<span class="pc bpc" id="L504" title="1 of 2 branches missed.">			if(!adminSearch) {</span>
-<span class="fc" id="L505">				conditions = conditions.and(new ExpressionBuilder().get(&quot;publishDate&quot;).lessThanEqual(new Date()).or(new ExpressionBuilder().get(&quot;publishDate&quot;).isNull()));</span>
+<span class="pc bpc" id="L434" title="1 of 2 branches missed.">			if(!adminSearch) {</span>
+<span class="fc" id="L435">				conditions = conditions.and(new ExpressionBuilder().get(&quot;publishDate&quot;).lessThanEqual(new Date()).or(new ExpressionBuilder().get(&quot;publishDate&quot;).isNull()));</span>
 			}
 
-<span class="fc bfc" id="L508" title="All 2 branches covered.">			if (isNotEmpty(domain))</span>
+<span class="fc bfc" id="L438" title="All 2 branches covered.">			if (isNotEmpty(domain))</span>
 			{
-<span class="pc bpc" id="L510" title="1 of 2 branches missed.">				if (kategoria == OLD_EXACT) conditions = conditions.and(new ExpressionBuilder().get(&quot;domainName&quot;).equal(domain));</span>
-<span class="nc" id="L511">				else conditions = conditions.and(new ExpressionBuilder().get(&quot;domainName&quot;).like('%'+domain+'%'));</span>
+<span class="pc bpc" id="L440" title="1 of 2 branches missed.">				if (kategoria == OLD_EXACT) conditions = conditions.and(new ExpressionBuilder().get(&quot;domainName&quot;).equal(domain));</span>
+<span class="nc" id="L441">				else conditions = conditions.and(new ExpressionBuilder().get(&quot;domainName&quot;).like('%'+domain+'%'));</span>
 			}
 
-<span class="fc" id="L514">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);</span>
-<span class="pc bpc" id="L515" title="2 of 4 branches missed.">            if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="nc" id="L516">                query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending().nullsLast());</span>
-<span class="nc" id="L517">                query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending().nullsLast());</span>
+<span class="fc" id="L444">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);</span>
+<span class="pc bpc" id="L445" title="2 of 4 branches missed.">            if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
+<span class="nc" id="L446">                query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending().nullsLast());</span>
+<span class="nc" id="L447">                query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending().nullsLast());</span>
             } else {
-<span class="fc" id="L519">                query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending());</span>
-<span class="fc" id="L520">                query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending());</span>
+<span class="fc" id="L449">                query.addOrdering(new ExpressionBuilder().get(&quot;publishDate&quot;).descending());</span>
+<span class="fc" id="L450">                query.addOrdering(new ExpressionBuilder().get(&quot;insertDate&quot;).descending());</span>
             }
 
-<span class="fc" id="L523">			JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="fc" id="L524">			List&lt;UrlRedirectBean&gt; list = JpaDB.getResultList(manager.createQuery(query));</span>
-<span class="fc" id="L525">			manager.close();</span>
-<span class="fc" id="L526">			return list;</span>
+<span class="fc" id="L453">			JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L454">			List&lt;UrlRedirectBean&gt; list = JpaDB.getResultList(manager.createQuery(query));</span>
+<span class="fc" id="L455">			manager.close();</span>
+<span class="fc" id="L456">			return list;</span>
 		}
-<span class="nc" id="L528">		catch (Exception e)</span>
+<span class="nc" id="L458">		catch (Exception e)</span>
 		{
-<span class="nc" id="L530">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L460">			sk.iway.iwcm.Logger.error(e);</span>
 		}
-<span class="nc" id="L532">		return (null);</span>
+<span class="nc" id="L462">		return (null);</span>
 	}
 
 	/**
@@ -541,93 +471,93 @@ public class UrlRedirectDB
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public static List&lt;String&gt; getDistinctDomains()
 	{
-<span class="nc" id="L544">		return new SimpleQuery().forList(&quot;SELECT DISTINCT(domain_name) FROM url_redirect ORDER BY domain_name ASC&quot;);</span>
+<span class="nc" id="L474">		return new SimpleQuery().forList(&quot;SELECT DISTINCT(domain_name) FROM url_redirect ORDER BY domain_name ASC&quot;);</span>
 	}
 
 	public static void delete(Long id)
 	{
-<span class="nc" id="L549">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L550">		UrlRedirectBean urlRedirect = em.getReference(UrlRedirectBean.class, id);</span>
-<span class="nc" id="L551">		removeRedirectFromCache(id);</span>
+<span class="nc" id="L479">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="nc" id="L480">		UrlRedirectBean urlRedirect = em.getReference(UrlRedirectBean.class, id);</span>
+<span class="nc" id="L481">		removeRedirectFromCache(id);</span>
 
-<span class="nc bnc" id="L553" title="All 4 branches missed.">		if (InitServlet.isTypeCloud() &amp;&amp; CloudToolsForCore.getDomainName().equals(urlRedirect.getDomainName())==false) return;</span>
+<span class="nc bnc" id="L483" title="All 4 branches missed.">		if (InitServlet.isTypeCloud() &amp;&amp; CloudToolsForCore.getDomainName().equals(urlRedirect.getDomainName())==false) return;</span>
 
-<span class="nc" id="L555">		em.getTransaction().begin();</span>
-<span class="nc" id="L556">		em.remove(urlRedirect);</span>
-<span class="nc" id="L557">		em.getTransaction().commit();</span>
+<span class="nc" id="L485">		em.getTransaction().begin();</span>
+<span class="nc" id="L486">		em.remove(urlRedirect);</span>
+<span class="nc" id="L487">		em.getTransaction().commit();</span>
 
-<span class="nc bnc" id="L559" title="All 4 branches missed.">		if(Tools.isNotEmpty(urlRedirect.getOldUrl()) &amp;&amp; urlRedirect.getOldUrl().startsWith(regExpPrefix))</span>
-<span class="nc" id="L560">			Cache.getInstance().removeObject(regExpCacheKey);</span>
-<span class="nc" id="L561">	}</span>
+<span class="nc bnc" id="L489" title="All 4 branches missed.">		if(Tools.isNotEmpty(urlRedirect.getOldUrl()) &amp;&amp; urlRedirect.getOldUrl().startsWith(regExpPrefix))</span>
+<span class="nc" id="L490">			Cache.getInstance().removeObject(regExpCacheKey);</span>
+<span class="nc" id="L491">	}</span>
 
 	private static void removeRedirectFromCache(Long id)
 	{
-<span class="nc bnc" id="L565" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
-<span class="nc" id="L566">			return;</span>
+<span class="nc bnc" id="L495" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
+<span class="nc" id="L496">			return;</span>
 
-<span class="nc" id="L568">		UrlRedirectBean redirect = getById(id);</span>
-<span class="nc" id="L569">		removeRedirectFromCache(redirect);</span>
-<span class="nc" id="L570">	}</span>
+<span class="nc" id="L498">		UrlRedirectBean redirect = getById(id);</span>
+<span class="nc" id="L499">		removeRedirectFromCache(redirect);</span>
+<span class="nc" id="L500">	}</span>
 
 
 	public static void save(UrlRedirectBean urlRedirect)
 	{
-<span class="fc" id="L575">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="pc bpc" id="L576" title="3 of 4 branches missed.">		if(urlRedirect.getUrlRedirectId()==null || urlRedirect.getUrlRedirectId()&lt;1)</span>
+<span class="fc" id="L505">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="pc bpc" id="L506" title="3 of 4 branches missed.">		if(urlRedirect.getUrlRedirectId()==null || urlRedirect.getUrlRedirectId()&lt;1)</span>
 		{
-<span class="fc" id="L578">			urlRedirect.setInsertDate(new Date());</span>
+<span class="fc" id="L508">			urlRedirect.setInsertDate(new Date());</span>
 		}
 		else
 		{
-<span class="nc" id="L582">			em.detach(urlRedirect);</span>
-<span class="nc" id="L583">			UrlRedirectBean oldRedirect = getById(urlRedirect.getUrlRedirectId());</span>
-<span class="nc" id="L584">			removeRedirectFromCache(oldRedirect);</span>
+<span class="nc" id="L512">			em.detach(urlRedirect);</span>
+<span class="nc" id="L513">			UrlRedirectBean oldRedirect = getById(urlRedirect.getUrlRedirectId());</span>
+<span class="nc" id="L514">			removeRedirectFromCache(oldRedirect);</span>
 		}
 
 		try{
-<span class="fc" id="L588">			em.getTransaction().begin();</span>
-<span class="pc bpc" id="L589" title="3 of 4 branches missed.">			if(urlRedirect.getUrlRedirectId()!=null &amp;&amp; urlRedirect.getUrlRedirectId() &gt; 0)</span>
-<span class="nc" id="L590">				urlRedirect = em.merge(urlRedirect);</span>
+<span class="fc" id="L518">			em.getTransaction().begin();</span>
+<span class="pc bpc" id="L519" title="3 of 4 branches missed.">			if(urlRedirect.getUrlRedirectId()!=null &amp;&amp; urlRedirect.getUrlRedirectId() &gt; 0)</span>
+<span class="nc" id="L520">				urlRedirect = em.merge(urlRedirect);</span>
 			else
-<span class="fc" id="L592">				urlRedirect.setUrlRedirectId(0L);</span>
-<span class="fc" id="L593">			em.persist(urlRedirect);</span>
-<span class="fc" id="L594">			em.getTransaction().commit();</span>
-<span class="nc" id="L595">		}catch (Exception e) {</span>
-<span class="nc" id="L596">			em.getTransaction().rollback();</span>
+<span class="fc" id="L522">				urlRedirect.setUrlRedirectId(0L);</span>
+<span class="fc" id="L523">			em.persist(urlRedirect);</span>
+<span class="fc" id="L524">			em.getTransaction().commit();</span>
+<span class="nc" id="L525">		}catch (Exception e) {</span>
+<span class="nc" id="L526">			em.getTransaction().rollback();</span>
 		} finally{
-<span class="fc" id="L598">			em.close();</span>
+<span class="fc" id="L528">			em.close();</span>
 		}
-<span class="fc" id="L600">		addToCache(urlRedirect);</span>
+<span class="fc" id="L530">		addToCache(urlRedirect);</span>
 
-<span class="pc bpc" id="L602" title="2 of 4 branches missed.">		if(Tools.isNotEmpty(urlRedirect.getOldUrl()) &amp;&amp; urlRedirect.getOldUrl().startsWith(regExpPrefix))</span>
-<span class="nc" id="L603">			Cache.getInstance().removeObject(regExpCacheKey);</span>
-<span class="fc" id="L604">	}</span>
+<span class="pc bpc" id="L532" title="2 of 4 branches missed.">		if(Tools.isNotEmpty(urlRedirect.getOldUrl()) &amp;&amp; urlRedirect.getOldUrl().startsWith(regExpPrefix))</span>
+<span class="nc" id="L533">			Cache.getInstance().removeObject(regExpCacheKey);</span>
+<span class="fc" id="L534">	}</span>
 
 	private static void removeRedirectFromCache(UrlRedirectBean oldRedirect)
 	{
-<span class="nc bnc" id="L608" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
-<span class="nc" id="L609">			return;</span>
-<span class="nc" id="L610">		String domain = firstNonNull(oldRedirect.getDomainName(), &quot;&quot;);</span>
+<span class="nc bnc" id="L538" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
+<span class="nc" id="L539">			return;</span>
+<span class="nc" id="L540">		String domain = firstNonNull(oldRedirect.getDomainName(), &quot;&quot;);</span>
 
-<span class="nc" id="L612">		Map&lt;String, Map&lt;String,String&gt;&gt; cachedRedirects = getCachedRedirects();</span>
+<span class="nc" id="L542">		Map&lt;String, Map&lt;String,UrlRedirectBean&gt;&gt; cachedRedirects = getCachedRedirects();</span>
 
-<span class="nc bnc" id="L614" title="All 2 branches missed.">		if (cachedRedirects != null) {</span>
-<span class="nc" id="L615">			Map&lt;String, String&gt; cacheForThisDomain = cachedRedirects.get(domain);</span>
-<span class="nc" id="L616">			cacheForThisDomain.remove(normalizeUrl(oldRedirect.getOldUrl()));</span>
+<span class="nc bnc" id="L544" title="All 2 branches missed.">		if (cachedRedirects != null) {</span>
+<span class="nc" id="L545">			Map&lt;String, UrlRedirectBean&gt; cacheForThisDomain = cachedRedirects.get(domain);</span>
+<span class="nc" id="L546">			cacheForThisDomain.remove(normalizeUrl(oldRedirect.getOldUrl()));</span>
 		}
-<span class="nc" id="L618">	}</span>
+<span class="nc" id="L548">	}</span>
 
 	private static void addToCache(UrlRedirectBean redirect)
 	{
-<span class="pc bpc" id="L622" title="1 of 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
-<span class="fc" id="L623">			return;</span>
-<span class="nc" id="L624">		Cache.getInstance().setObject(TIMESTAMP_OF_NEXT_RUN, getDateOfNextChange().getTime(), TIMESTAMP_VALID_IN_MINUTES);</span>
-<span class="nc" id="L625">		String domain = firstNonNull(redirect.getDomainName(), &quot;&quot;);</span>
-<span class="nc bnc" id="L626" title="All 2 branches missed.">		if (!getCachedRedirects().containsKey(domain))</span>
-<span class="nc" id="L627">			getCachedRedirects().put(domain, new HashMap&lt;&gt;());</span>
+<span class="pc bpc" id="L552" title="1 of 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
+<span class="fc" id="L553">			return;</span>
+<span class="nc" id="L554">		Cache.getInstance().setObject(TIMESTAMP_OF_NEXT_RUN, getDateOfNextChange().getTime(), TIMESTAMP_VALID_IN_MINUTES);</span>
+<span class="nc" id="L555">		String domain = firstNonNull(redirect.getDomainName(), &quot;&quot;);</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">		if (!getCachedRedirects().containsKey(domain))</span>
+<span class="nc" id="L557">			getCachedRedirects().put(domain, new HashMap&lt;&gt;());</span>
 
-<span class="nc" id="L629">		getCachedRedirects().get(domain).put(normalizeUrl(redirect.getOldUrl()), redirect.getNewUrl());</span>
-<span class="nc" id="L630">	}</span>
+<span class="nc" id="L559">		getCachedRedirects().get(domain).put(normalizeUrl(redirect.getOldUrl()), redirect);</span>
+<span class="nc" id="L560">	}</span>
 
 
 	/**
@@ -640,155 +570,161 @@ public class UrlRedirectDB
 	 */
 	public static void changeDomain(String oldDomain, String newDomain)
 	{
-<span class="nc bnc" id="L643" title="All 4 branches missed.">		if(oldDomain == null || newDomain == null)</span>
-<span class="nc" id="L644">			return;</span>
+<span class="nc bnc" id="L573" title="All 4 branches missed.">		if(oldDomain == null || newDomain == null)</span>
+<span class="nc" id="L574">			return;</span>
 
-<span class="nc" id="L646">		new SimpleQuery().execute(&quot;UPDATE url_redirect SET domain_name = ? WHERE domain_name = ?&quot;, newDomain, oldDomain);</span>
-<span class="nc" id="L647">		changeDomainInCache(oldDomain, newDomain);</span>
-<span class="nc" id="L648">	}</span>
+<span class="nc" id="L576">		new SimpleQuery().execute(&quot;UPDATE url_redirect SET domain_name = ? WHERE domain_name = ?&quot;, newDomain, oldDomain);</span>
+<span class="nc" id="L577">		changeDomainInCache(oldDomain, newDomain);</span>
+<span class="nc" id="L578">	}</span>
 
 
 	private static void changeDomainInCache(String oldDomain, String newDomain)
 	{
-<span class="nc bnc" id="L653" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
-<span class="nc" id="L654">			return;</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;cacheUrlRedirects&quot;))</span>
+<span class="nc" id="L584">			return;</span>
 
-<span class="nc" id="L656">		Map&lt;String, String&gt; oldRedirects = getCachedRedirects().get(oldDomain);</span>
-<span class="nc" id="L657">		getCachedRedirects().remove(oldDomain);</span>
-<span class="nc bnc" id="L658" title="All 2 branches missed.">		if (getCachedRedirects().get(newDomain) == null)</span>
-<span class="nc" id="L659">			getCachedRedirects().put(newDomain, new HashMap&lt;&gt;());</span>
-<span class="nc" id="L660">		getCachedRedirects().get(newDomain).putAll(oldRedirects);</span>
-<span class="nc" id="L661">	}</span>
+<span class="nc" id="L586">		Map&lt;String, UrlRedirectBean&gt; oldRedirects = getCachedRedirects().get(oldDomain);</span>
+
+		//swap domain name in lists elements
+<span class="nc bnc" id="L589" title="All 2 branches missed.">		for (UrlRedirectBean b : oldRedirects.values()) {</span>
+<span class="nc" id="L590">			b.setDomainName(newDomain);</span>
+<span class="nc" id="L591">		}</span>
+
+<span class="nc" id="L593">		getCachedRedirects().remove(oldDomain);</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">		if (getCachedRedirects().get(newDomain) == null)</span>
+<span class="nc" id="L595">			getCachedRedirects().put(newDomain, new HashMap&lt;&gt;());</span>
+<span class="nc" id="L596">		getCachedRedirects().get(newDomain).putAll(oldRedirects);</span>
+<span class="nc" id="L597">	}</span>
 
 	@SuppressWarnings(&quot;unchecked&quot;)
-	private static Map&lt;String, Map&lt;String,String&gt;&gt; getCachedRedirects()
+	private static Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt; getCachedRedirects()
 	{
-<span class="nc" id="L666">		ServletContext context = Constants.getServletContext();</span>
+<span class="nc" id="L602">		ServletContext context = Constants.getServletContext();</span>
 		// domain =&gt; [old url =&gt; new url]
-<span class="nc" id="L668">		Map&lt;String, Map&lt;String,String&gt;&gt; redirects = (Map&lt;String, Map&lt;String, String&gt;&gt;) context.getAttribute(CACHED_REDIRECTS);</span>
+<span class="nc" id="L604">		Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt; redirects = (Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt;) context.getAttribute(CACHED_REDIRECTS);</span>
 
 		//context.setAttribute(CACHED_FUTURE_REDIRECTS, findFutureRedirects());
-<span class="nc bnc" id="L671" title="All 2 branches missed.">		if (redirects == null)</span>
+<span class="nc bnc" id="L607" title="All 2 branches missed.">		if (redirects == null)</span>
 		{
-<span class="nc" id="L673">			synchronized (UrlRedirectDB.class)</span>
+<span class="nc" id="L609">			synchronized (UrlRedirectDB.class)</span>
 			{
 				//double check
-<span class="nc" id="L676">				redirects = (Map&lt;String, Map&lt;String, String&gt;&gt;) context.getAttribute(CACHED_REDIRECTS);</span>
-<span class="nc bnc" id="L677" title="All 2 branches missed.">				if (redirects == null)</span>
+<span class="nc" id="L612">				redirects = (Map&lt;String, Map&lt;String, UrlRedirectBean&gt;&gt;) context.getAttribute(CACHED_REDIRECTS);</span>
+<span class="nc bnc" id="L613" title="All 2 branches missed.">				if (redirects == null)</span>
 				{
-<span class="nc" id="L679">					redirects = reloadCache();</span>
+<span class="nc" id="L615">					redirects = reloadCache();</span>
 				}
-<span class="nc" id="L681">			}</span>
+<span class="nc" id="L617">			}</span>
 		}
-<span class="nc" id="L683">		return redirects;</span>
+<span class="nc" id="L619">		return redirects;</span>
 	}
 
 	@SuppressWarnings(&quot;unchecked&quot;)
 	private static String regExpRedirect(String oldUrl, String domainName)
 	{
-<span class="fc" id="L689">		String redirectURL = null;</span>
+<span class="fc" id="L625">		String redirectURL = null;</span>
 
 		try
 		{
 			//cache-uje sa dvojica redirect bean a jeho regexp pattern (aby sa nemusel stale vztvarat)
-<span class="fc" id="L694">			List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt; regExps = (List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt;) Cache.getInstance().getObject(regExpCacheKey);</span>
-<span class="fc bfc" id="L695" title="All 2 branches covered.">			if(regExps == null)</span>
+<span class="fc" id="L630">			List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt; regExps = (List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt;) Cache.getInstance().getObject(regExpCacheKey);</span>
+<span class="fc bfc" id="L631" title="All 2 branches covered.">			if(regExps == null)</span>
 			{
-<span class="fc" id="L697">				regExps = loadRegExps();</span>
-<span class="fc" id="L698">				Cache.getInstance().setObject(regExpCacheKey, regExps, Constants.getInt(&quot;redirectRegExpCacheMinutes&quot;));</span>
+<span class="fc" id="L633">				regExps = loadRegExps();</span>
+<span class="fc" id="L634">				Cache.getInstance().setObject(regExpCacheKey, regExps, Constants.getInt(&quot;redirectRegExpCacheMinutes&quot;));</span>
 			}
 
-<span class="pc bpc" id="L701" title="1 of 2 branches missed.">			if(regExps != null)</span>
+<span class="pc bpc" id="L637" title="1 of 2 branches missed.">			if(regExps != null)</span>
 			{
-<span class="fc bfc" id="L703" title="All 2 branches covered.">				for(Entry&lt;UrlRedirectBean, Pattern&gt; redirect : regExps)</span>
+<span class="fc bfc" id="L639" title="All 2 branches covered.">				for(Entry&lt;UrlRedirectBean, Pattern&gt; redirect : regExps)</span>
 				{
 					//ak je zadane domainName, ale nenechadza sa v redirect objekte, alebo sa nerovna, tak preskocime
-<span class="pc bpc" id="L706" title="2 of 6 branches missed.">					if(Tools.isNotEmpty(domainName) &amp;&amp; (Tools.isEmpty(redirect.getKey().getDomainName()) || !redirect.getKey().getDomainName().equals(domainName)))</span>
-<span class="nc" id="L707">						continue;</span>
+<span class="pc bpc" id="L642" title="2 of 6 branches missed.">					if(Tools.isNotEmpty(domainName) &amp;&amp; (Tools.isEmpty(redirect.getKey().getDomainName()) || !redirect.getKey().getDomainName().equals(domainName)))</span>
+<span class="nc" id="L643">						continue;</span>
 
-<span class="fc" id="L709">					Matcher m = redirect.getValue().matcher(oldUrl);</span>
-<span class="pc bpc" id="L710" title="1 of 2 branches missed.">					if(m.matches())</span>
+<span class="fc" id="L645">					Matcher m = redirect.getValue().matcher(oldUrl);</span>
+<span class="fc bfc" id="L646" title="All 2 branches covered.">					if(m.matches())</span>
 					{
-<span class="nc" id="L712">						redirectURL = redirect.getKey().getNewUrl();</span>
+<span class="fc" id="L648">						redirectURL = redirect.getKey().getNewUrl();</span>
 
 						// nahrada skupin v regExp, napr.: ^\/thisiswhere\/oldfiles\/(.+) -&gt; /thisiswhere/myfilesmovedto/$1
-<span class="nc bnc" id="L715" title="All 2 branches missed.">						for(int i=1; i&lt;=m.groupCount(); i++)</span>
-<span class="nc" id="L716">							redirectURL = Tools.replace(redirectURL, &quot;$&quot;+i, m.group(i));</span>
-<span class="nc" id="L717">						break;</span>
+<span class="fc bfc" id="L651" title="All 2 branches covered.">						for(int i=1; i&lt;=m.groupCount(); i++)</span>
+<span class="fc" id="L652">							redirectURL = Tools.replace(redirectURL, &quot;$&quot;+i, m.group(i));</span>
+<span class="fc" id="L653">						break;</span>
 					}
-<span class="fc" id="L719">				}</span>
+<span class="fc" id="L655">				}</span>
 			}
 		}
-<span class="pc" id="L722">		catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc" id="L658">		catch(Exception e){sk.iway.iwcm.Logger.error(e);}</span>
 
-<span class="fc" id="L724">		return redirectURL;</span>
+<span class="fc" id="L660">		return redirectURL;</span>
 	}
 
 	private static List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt; loadRegExps()
 	{
-<span class="fc" id="L729">		List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt; regExps = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L665">		List&lt;Entry&lt;UrlRedirectBean, Pattern&gt;&gt; regExps = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L731">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L667">		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();</span>
 		try
 		{
-<span class="fc" id="L734">			Expression condition = new ExpressionBuilder(UrlRedirectBean.class).get(&quot;oldUrl&quot;).like(regExpPrefix+&quot;%&quot;);</span>
-<span class="fc" id="L735">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, condition);</span>
-<span class="fc" id="L736">			manager.getTransaction().begin();</span>
-<span class="fc" id="L737">			query.addDescendingOrdering(&quot;urlRedirectId&quot;);</span>
-<span class="fc" id="L738">			Query q = manager.createQuery(query);</span>
-<span class="fc" id="L739">			List&lt;UrlRedirectBean&gt; resultList = JpaDB.getResultList(q);</span>
+<span class="fc" id="L670">			Expression condition = new ExpressionBuilder(UrlRedirectBean.class).get(&quot;oldUrl&quot;).like(regExpPrefix+&quot;%&quot;);</span>
+<span class="fc" id="L671">			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, condition);</span>
+<span class="fc" id="L672">			manager.getTransaction().begin();</span>
+<span class="fc" id="L673">			query.addDescendingOrdering(&quot;urlRedirectId&quot;);</span>
+<span class="fc" id="L674">			Query q = manager.createQuery(query);</span>
+<span class="fc" id="L675">			List&lt;UrlRedirectBean&gt; resultList = JpaDB.getResultList(q);</span>
 
-<span class="pc bpc" id="L741" title="1 of 2 branches missed.">			if(resultList!=null)</span>
+<span class="pc bpc" id="L677" title="1 of 2 branches missed.">			if(resultList!=null)</span>
 			{
-<span class="fc bfc" id="L743" title="All 2 branches covered.">				for(UrlRedirectBean redirect : resultList)</span>
+<span class="fc bfc" id="L679" title="All 2 branches covered.">				for(UrlRedirectBean redirect : resultList)</span>
 				{
-<span class="pc bpc" id="L745" title="2 of 4 branches missed.">					if(Tools.isNotEmpty(redirect.getOldUrl()) &amp;&amp; redirect.getOldUrl().length()&gt;regExpPrefix.length())</span>
+<span class="pc bpc" id="L681" title="2 of 4 branches missed.">					if(Tools.isNotEmpty(redirect.getOldUrl()) &amp;&amp; redirect.getOldUrl().length()&gt;regExpPrefix.length())</span>
 					{
 					    try
                         {
-<span class="fc" id="L749">                            String regExpString = redirect.getOldUrl().substring(regExpPrefix.length());</span>
-<span class="fc" id="L750">                            Entry&lt;UrlRedirectBean, Pattern&gt; element = new SimpleEntry&lt;&gt;(redirect, Pattern.compile(regExpString));</span>
-<span class="fc" id="L751">                            regExps.add(element);</span>
+<span class="fc" id="L685">                            String regExpString = redirect.getOldUrl().substring(regExpPrefix.length());</span>
+<span class="fc" id="L686">                            Entry&lt;UrlRedirectBean, Pattern&gt; element = new SimpleEntry&lt;&gt;(redirect, Pattern.compile(regExpString));</span>
+<span class="fc" id="L687">                            regExps.add(element);</span>
                         }
-<span class="pc" id="L753">                        catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+<span class="pc" id="L689">                        catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
 					}
-<span class="fc" id="L755">				}</span>
+<span class="fc" id="L691">				}</span>
 			}
-<span class="nc" id="L757">		}catch (NoResultException e){</span>
+<span class="nc" id="L693">		}catch (NoResultException e){</span>
 		}finally{
-<span class="fc" id="L759">			manager.close();</span>
+<span class="fc" id="L695">			manager.close();</span>
 		}
 
-<span class="fc" id="L762">		return regExps;</span>
+<span class="fc" id="L698">		return regExps;</span>
 	}
 
 	public static Date getDateOfNextChange() {
-<span class="nc" id="L766">		String sql = &quot;&quot;;</span>
+<span class="nc" id="L702">		String sql = &quot;&quot;;</span>
 
-<span class="nc bnc" id="L768" title="All 2 branches missed.">		if(Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
-<span class="nc" id="L769">			sql = &quot;SELECT * FROM (SELECT publish_date FROM url_redirect WHERE publish_date &gt; ? ORDER BY publish_date ASC) where ROWNUM &lt;= 1&quot;;</span>
-<span class="nc bnc" id="L770" title="All 2 branches missed.">		} else if (Constants.DB_TYPE == Constants.DB_MSSQL) {</span>
-<span class="nc" id="L771">			sql = &quot;SELECT TOP 1 publish_date FROM url_redirect WHERE CAST(publish_date AS DATETIME) &gt; CAST(? AS DATETIME) ORDER BY publish_date ASC&quot;;</span>
+<span class="nc bnc" id="L704" title="All 2 branches missed.">		if(Constants.DB_TYPE == Constants.DB_ORACLE) {</span>
+<span class="nc" id="L705">			sql = &quot;SELECT * FROM (SELECT publish_date FROM url_redirect WHERE publish_date &gt; ? ORDER BY publish_date ASC) where ROWNUM &lt;= 1&quot;;</span>
+<span class="nc bnc" id="L706" title="All 2 branches missed.">		} else if (Constants.DB_TYPE == Constants.DB_MSSQL) {</span>
+<span class="nc" id="L707">			sql = &quot;SELECT TOP 1 publish_date FROM url_redirect WHERE CAST(publish_date AS DATETIME) &gt; CAST(? AS DATETIME) ORDER BY publish_date ASC&quot;;</span>
 		} else {
-<span class="nc" id="L773">			sql = &quot;SELECT publish_date FROM url_redirect WHERE publish_date &gt; ? ORDER BY publish_date ASC LIMIT 1&quot;;</span>
+<span class="nc" id="L709">			sql = &quot;SELECT publish_date FROM url_redirect WHERE publish_date &gt; ? ORDER BY publish_date ASC LIMIT 1&quot;;</span>
 		}
 
 		// musel som upravit sk.iway.iwcm.database.SimpleQuery.forDate vid koment tam
-<span class="nc" id="L777">		Date date = new SimpleQuery().forDate(sql, new Date());</span>
-<span class="nc bnc" id="L778" title="All 2 branches missed.">		if (date == null) {</span>
-<span class="nc" id="L779">			Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L780">			cal.set(Calendar.YEAR, 2050);</span>
-<span class="nc" id="L781">			date = cal.getTime();</span>
+<span class="nc" id="L713">		Date date = new SimpleQuery().forDate(sql, new Date());</span>
+<span class="nc bnc" id="L714" title="All 2 branches missed.">		if (date == null) {</span>
+<span class="nc" id="L715">			Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L716">			cal.set(Calendar.YEAR, 2050);</span>
+<span class="nc" id="L717">			date = cal.getTime();</span>
 		}
-<span class="nc" id="L783">		return date;</span>
+<span class="nc" id="L719">		return date;</span>
 	}
 
 	public static void updateDomainName(String newDomainName, String oldDomainName) {
-<span class="nc" id="L787">		new SimpleQuery().execute(&quot;UPDATE url_redirect SET domain_name=? WHERE domain_name=?&quot;);</span>
-<span class="nc bnc" id="L788" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;cacheUrlRedirects&quot;) &amp;&amp; isReloadNecessary()) {</span>
+<span class="nc" id="L723">		new SimpleQuery().execute(&quot;UPDATE url_redirect SET domain_name=? WHERE domain_name=?&quot;);</span>
+<span class="nc bnc" id="L724" title="All 4 branches missed.">		if (Constants.getBoolean(&quot;cacheUrlRedirects&quot;) &amp;&amp; isReloadNecessary()) {</span>
 			// alebo pozret do cache a rovno ju editnut kedze len menim domenu
-<span class="nc" id="L790">			reloadCache();</span>
+<span class="nc" id="L726">			reloadCache();</span>
 		}
-<span class="nc" id="L792">	}</span>
+<span class="nc" id="L728">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -61,7 +61,7 @@ Pripravte si hypotézu, ktorá by mala zlepšiť stav
 
 ## Vytvorenie testu
 
-B verziu stránky vytvoríte označením originálnej verzie stránky a kliknutím na ikonu <i class="fas fa-restroom"></i> Uložiť ako AB test. Následne sa vám vytvorí kópia stránky, ktorá v stĺpci Stav bude zobrazovať ikonu <i class="fas fa-restroom"></i>. V B verzii môžete upraviť text stránky, ktorým budete testovať dopad zmien.
+B verziu stránky vytvoríte označením originálnej verzie stránky a kliknutím na ikonu <i class="ti ti-a-b"></i> Uložiť ako AB test. Následne sa vám vytvorí kópia stránky, ktorá v stĺpci Stav bude zobrazovať ikonu <i class="ti ti-a-b"></i>. V B verzii môžete upraviť text stránky, ktorým budete testovať dopad zmien.
 
 ![](datatable.png)
 

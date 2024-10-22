@@ -69,9 +69,9 @@ function initClosure() {
 
     $(".md-large-menu__item__link").on("click", function (e) {
 
-        if ($(this).parent(".md-large-menu__item").hasClass("md-large-menu__item--active")) {
-            e.preventDefault();
-        } else {
+        e.preventDefault();
+
+        if ($(this).parent(".md-large-menu__item").hasClass("md-large-menu__item--active")==false) {
 
             $(".md-large-menu__item").not($(this).parent(".md-large-menu__item")).removeClass("md-large-menu__item--active");
             $(this).parent(".md-large-menu__item").addClass("md-large-menu__item--active");
@@ -419,6 +419,9 @@ function initClosure() {
                 $("div.dataTables_processing").hide();
                 if (!response.result) {
                     WJ.notifyError(response.error);
+                    setTimeout(function() {
+                        $('#SomStromcek').jstree(true).refresh();
+                    }, 500);
                     return;
                 }
 

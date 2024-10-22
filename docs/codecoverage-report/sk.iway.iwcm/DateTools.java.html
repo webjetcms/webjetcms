@@ -22,9 +22,8 @@ import java.util.Locale;
  */
 <span class="nc" id="L23">public class DateTools</span>
 {
-<span class="nc" id="L25">	private int poradieTyzdnaFrom = 0;</span>
-<span class="nc" id="L26">	private int poradieTyzdna = 0;</span>
-<span class="nc" id="L27">	private boolean hasRun = false;</span>
+<span class="nc" id="L25">	private int poradieTyzdna = 0;</span>
+<span class="nc" id="L26">	private boolean hasRun = false;</span>
 
 	/**
 	 * Vrati polnoc, koniec dnesneho dna
@@ -33,9 +32,8 @@ import java.util.Locale;
 	 */
 	public static Calendar getMidnightToday()
 	{
-<span class="nc" id="L36">		Calendar cal = new GregorianCalendar();</span>
-<span class="nc" id="L37">		cal = midnightToday(cal);</span>
-<span class="nc" id="L38">		return cal;</span>
+<span class="nc" id="L35">		Calendar cal = new GregorianCalendar();</span>
+<span class="nc" id="L36">		return midnightToday(cal);</span>
 	}
 
 	/**
@@ -45,9 +43,8 @@ import java.util.Locale;
 	 */
 	public static Calendar getMidnightDaysBefore(int count)
 	{
-<span class="nc" id="L48">		Calendar cal = new GregorianCalendar();</span>
-<span class="nc" id="L49">		cal = midnightDaysBefore(count, cal);</span>
-<span class="nc" id="L50">		return cal;</span>
+<span class="nc" id="L46">		Calendar cal = new GregorianCalendar();</span>
+<span class="nc" id="L47">		return midnightDaysBefore(count, cal);</span>
 	}
 
 	/**
@@ -58,9 +55,8 @@ import java.util.Locale;
 	 */
 	public static Calendar getMidninght(Date date)
 	{
-<span class="nc" id="L61">		Calendar cal = dateToCalendar(date);</span>
-<span class="nc" id="L62">		cal = midnightToday(cal);</span>
-<span class="nc" id="L63">		return cal;</span>
+<span class="nc" id="L58">		Calendar cal = dateToCalendar(date);</span>
+<span class="nc" id="L59">		return midnightToday(cal);</span>
 	}
 
 	/**
@@ -71,9 +67,8 @@ import java.util.Locale;
 	 */
 	public static Calendar getHourOfDay(Date date, int hour)
 	{
-<span class="nc" id="L74">		Calendar cal = dateToCalendar(date);</span>
-<span class="nc" id="L75">		cal = hourOfDay(cal, hour);</span>
-<span class="nc" id="L76">		return cal;</span>
+<span class="nc" id="L70">		Calendar cal = dateToCalendar(date);</span>
+<span class="nc" id="L71">		return hourOfDay(cal, hour);</span>
 	}
 
 	/**
@@ -85,9 +80,9 @@ import java.util.Locale;
 	 */
 	public static Calendar getHoursBefore(Date date, int hour)
 	{
-<span class="nc" id="L88">		Calendar cal = dateToCalendar(date);</span>
-<span class="nc" id="L89">		cal.add(Calendar.HOUR, -hour);</span>
-<span class="nc" id="L90">		return cal;</span>
+<span class="nc" id="L83">		Calendar cal = dateToCalendar(date);</span>
+<span class="nc" id="L84">		cal.add(Calendar.HOUR, -hour);</span>
+<span class="nc" id="L85">		return cal;</span>
 	}
 
 	/**
@@ -98,9 +93,9 @@ import java.util.Locale;
 	 */
 	public static Calendar midnightToday(Calendar cal)
 	{
-<span class="nc" id="L101">		cal = getMidnight(cal);</span>
-<span class="nc" id="L102">		cal.add(Calendar.DAY_OF_MONTH, 1);</span>
-<span class="nc" id="L103">		return cal;</span>
+<span class="nc" id="L96">		setMidnight(cal);</span>
+<span class="nc" id="L97">		cal.add(Calendar.DAY_OF_MONTH, 1);</span>
+<span class="nc" id="L98">		return cal;</span>
 	}
 
 	/**
@@ -109,14 +104,13 @@ import java.util.Locale;
 	 * @param cal
 	 * @return
 	 */
-	private static Calendar getMidnight(Calendar cal)
+	private static void setMidnight(Calendar cal)
 	{
-<span class="nc" id="L114">		cal.set(Calendar.HOUR_OF_DAY, 0);</span>
-<span class="nc" id="L115">		cal.set(Calendar.MINUTE, 0);</span>
-<span class="nc" id="L116">		cal.set(Calendar.SECOND, 0);</span>
-<span class="nc" id="L117">		cal.set(Calendar.MILLISECOND, 0);</span>
-<span class="nc" id="L118">		return cal;</span>
-	}
+<span class="nc" id="L109">		cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="nc" id="L110">		cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L111">		cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L112">		cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L113">	}</span>
 
 	/**
 	 * Vrati polnoc ktorou vybraty den zacinal x dni dozadu
@@ -126,10 +120,10 @@ import java.util.Locale;
 	 */
 	public static Calendar midnightDaysBefore(int daysBefore, Calendar cal)
 	{
-<span class="nc" id="L129">		int days = daysBefore - 1;</span>
-<span class="nc" id="L130">		cal = getMidnight(cal);</span>
-<span class="nc" id="L131">		cal.add(Calendar.DAY_OF_MONTH, -days);</span>
-<span class="nc" id="L132">		return cal;</span>
+<span class="nc" id="L123">		int days = daysBefore - 1;</span>
+<span class="nc" id="L124">		setMidnight(cal);</span>
+<span class="nc" id="L125">		cal.add(Calendar.DAY_OF_MONTH, -days);</span>
+<span class="nc" id="L126">		return cal;</span>
 	}
 
 	/**
@@ -138,11 +132,11 @@ import java.util.Locale;
 	 */
 	public static Calendar getFirstDateOfPreviousMonth()
 	{
-<span class="nc" id="L141">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L142">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) - 1);</span>
-<span class="nc" id="L143">		cal = getMidnight(cal);</span>
-<span class="nc" id="L144">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L145">		return cal;</span>
+<span class="nc" id="L135">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L136">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) - 1);</span>
+<span class="nc" id="L137">		setMidnight(cal);</span>
+<span class="nc" id="L138">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L139">		return cal;</span>
 	}
 
 	/**
@@ -151,11 +145,11 @@ import java.util.Locale;
 	 */
 	public static Calendar getLastDateOfPreviousMonth()
 	{
-<span class="nc" id="L154">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L155">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) - 1);</span>
-<span class="nc" id="L156">		cal = getMidnight(cal);</span>
-<span class="nc" id="L157">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L158">		return cal;</span>
+<span class="nc" id="L148">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L149">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) - 1);</span>
+<span class="nc" id="L150">		setMidnight(cal);</span>
+<span class="nc" id="L151">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L152">		return cal;</span>
 	}
 
 	/**
@@ -164,10 +158,10 @@ import java.util.Locale;
 	 */
 	public static Calendar getFirstDateOfCurrentMonth()
 	{
-<span class="nc" id="L167">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L168">		cal = getMidnight(cal);</span>
-<span class="nc" id="L169">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L170">		return cal;</span>
+<span class="nc" id="L161">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L162">		setMidnight(cal);</span>
+<span class="nc" id="L163">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L164">		return cal;</span>
 	}
 
 	/**
@@ -176,10 +170,10 @@ import java.util.Locale;
 	 */
 	public static Calendar getLastDateOfCurrentMonth()
 	{
-<span class="nc" id="L179">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L180">		cal = getMidnight(cal);</span>
-<span class="nc" id="L181">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L182">		return cal;</span>
+<span class="nc" id="L173">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L174">		setMidnight(cal);</span>
+<span class="nc" id="L175">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L176">		return cal;</span>
 	}
 
 	/**
@@ -188,11 +182,11 @@ import java.util.Locale;
 	 */
 	public static Calendar getFirstDateOfNextMonth()
 	{
-<span class="nc" id="L191">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L192">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) + 1);</span>
-<span class="nc" id="L193">		cal = getMidnight(cal);</span>
-<span class="nc" id="L194">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L195">		return cal;</span>
+<span class="nc" id="L185">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L186">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) + 1);</span>
+<span class="nc" id="L187">		setMidnight(cal);</span>
+<span class="nc" id="L188">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L189">		return cal;</span>
 	}
 
 	/**
@@ -201,11 +195,11 @@ import java.util.Locale;
 	 */
 	public static Calendar getLastDateOfNextMonth()
 	{
-<span class="nc" id="L204">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L205">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) + 1);</span>
-<span class="nc" id="L206">		cal = getMidnight(cal);</span>
-<span class="nc" id="L207">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L208">		return cal;</span>
+<span class="nc" id="L198">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L199">		cal.set(Calendar.MONTH, cal.get(Calendar.MONTH) + 1);</span>
+<span class="nc" id="L200">		setMidnight(cal);</span>
+<span class="nc" id="L201">		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
+<span class="nc" id="L202">		return cal;</span>
 	}
 
 	/**
@@ -216,11 +210,11 @@ import java.util.Locale;
 	 */
 	public static Calendar hourOfDay(Calendar cal, int hour)
 	{
-<span class="nc" id="L219">		cal.set(Calendar.HOUR_OF_DAY, hour);</span>
-<span class="nc" id="L220">		cal.set(Calendar.MINUTE, 0);</span>
-<span class="nc" id="L221">		cal.set(Calendar.SECOND, 0);</span>
-<span class="nc" id="L222">		cal.set(Calendar.MILLISECOND, 0);</span>
-<span class="nc" id="L223">		return cal;</span>
+<span class="nc" id="L213">		cal.set(Calendar.HOUR_OF_DAY, hour);</span>
+<span class="nc" id="L214">		cal.set(Calendar.MINUTE, 0);</span>
+<span class="nc" id="L215">		cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L216">		cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L217">		return cal;</span>
 	}
 
 	/**
@@ -231,9 +225,9 @@ import java.util.Locale;
 	 */
 	public static Calendar dateToCalendar(Date date)
 	{
-<span class="nc" id="L234">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L235">		cal.setTime(date);</span>
-<span class="nc" id="L236">		return cal;</span>
+<span class="nc" id="L228">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L229">		cal.setTime(date);</span>
+<span class="nc" id="L230">		return cal;</span>
 	}
 
 	/**
@@ -244,9 +238,9 @@ import java.util.Locale;
 	 */
 	public static Calendar timestampToCalendar(Timestamp timestamp)
 	{
-<span class="fc" id="L247">		Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L248">		cal.setTimeInMillis(timestamp.getTime());</span>
-<span class="fc" id="L249">		return cal;</span>
+<span class="fc" id="L241">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L242">		cal.setTimeInMillis(timestamp.getTime());</span>
+<span class="fc" id="L243">		return cal;</span>
 	}
 
 	/**
@@ -257,8 +251,8 @@ import java.util.Locale;
 	 */
 	public static Calendar getDaysAfter(int daysAfter, Calendar cal)
 	{
-<span class="nc" id="L260">		cal.add(Calendar.DATE, daysAfter);</span>
-<span class="nc" id="L261">		return cal;</span>
+<span class="nc" id="L254">		cal.add(Calendar.DATE, daysAfter);</span>
+<span class="nc" id="L255">		return cal;</span>
 	}
 
 	/**
@@ -270,21 +264,21 @@ import java.util.Locale;
 	 */
 	public static List&lt;Date&gt; getDatesBetweenInclude(final Date dateFrom, final Date dateTo)
 	{
-<span class="nc" id="L273">		List&lt;Date&gt; dates = new ArrayList&lt;Date&gt;();</span>
-<span class="nc" id="L274">		Calendar c1 = new GregorianCalendar();</span>
-<span class="nc" id="L275">		c1.setTime(dateFrom);</span>
-<span class="nc" id="L276">		Calendar c2 = new GregorianCalendar();</span>
-<span class="nc" id="L277">		c2.setTime(dateTo);</span>
+<span class="nc" id="L267">		List&lt;Date&gt; dates = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L268">		Calendar c1 = new GregorianCalendar();</span>
+<span class="nc" id="L269">		c1.setTime(dateFrom);</span>
+<span class="nc" id="L270">		Calendar c2 = new GregorianCalendar();</span>
+<span class="nc" id="L271">		c2.setTime(dateTo);</span>
 		//int a = c1.get(Calendar.DATE);
 		//int b = c2.get(Calendar.DATE);
-<span class="nc" id="L280">		dates.add(dateFrom);</span>
-<span class="nc bnc" id="L281" title="All 4 branches missed.">		while ((c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR)) || (c1.get(Calendar.MONTH) != c2.get(Calendar.MONTH))</span>
-<span class="nc bnc" id="L282" title="All 2 branches missed.">					|| (c1.get(Calendar.DATE) != c2.get(Calendar.DATE)))</span>
+<span class="nc" id="L274">		dates.add(dateFrom);</span>
+<span class="nc bnc" id="L275" title="All 4 branches missed.">		while ((c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR)) || (c1.get(Calendar.MONTH) != c2.get(Calendar.MONTH))</span>
+<span class="nc bnc" id="L276" title="All 2 branches missed.">					|| (c1.get(Calendar.DATE) != c2.get(Calendar.DATE)))</span>
 		{
-<span class="nc" id="L284">			c1.add(Calendar.DATE, 1);</span>
-<span class="nc" id="L285">			dates.add(new Date(c1.getTimeInMillis()));</span>
+<span class="nc" id="L278">			c1.add(Calendar.DATE, 1);</span>
+<span class="nc" id="L279">			dates.add(new Date(c1.getTimeInMillis()));</span>
 		}
-<span class="nc" id="L287">		return dates;</span>
+<span class="nc" id="L281">		return dates;</span>
 	}
 
 	/**
@@ -298,15 +292,15 @@ import java.util.Locale;
 	 */
 	public static List&lt;String&gt; getDatesBetweenIncludeString(Date dateFrom, Date dateTo)
 	{
-<span class="nc" id="L301">		List&lt;Date&gt; datumListDate = DateTools.getDatesBetweenInclude(dateFrom, dateTo);</span>
-<span class="nc" id="L302">		List&lt;String&gt; datumListString = new ArrayList&lt;String&gt;();</span>
-<span class="nc bnc" id="L303" title="All 2 branches missed.">		for (int i = 0; i &lt; datumListDate.size(); i++)</span>
+<span class="nc" id="L295">		List&lt;Date&gt; datumListDate = DateTools.getDatesBetweenInclude(dateFrom, dateTo);</span>
+<span class="nc" id="L296">		List&lt;String&gt; datumListString = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L297" title="All 2 branches missed.">		for (int i = 0; i &lt; datumListDate.size(); i++)</span>
 		{
-<span class="nc" id="L305">			Date datum = datumListDate.get(i);</span>
-<span class="nc" id="L306">			datumListString.add(getShortDayName(datum, new Locale(&quot;sk&quot;)) + &quot;.&quot; + Tools.formatDate(datum) + &quot;.&quot;</span>
-<span class="nc" id="L307">						+ getShortMonthName(datum, new Locale(&quot;sk&quot;)));</span>
+<span class="nc" id="L299">			Date datum = datumListDate.get(i);</span>
+<span class="nc" id="L300">			datumListString.add(getShortDayName(datum, new Locale(&quot;sk&quot;)) + &quot;.&quot; + Tools.formatDate(datum) + &quot;.&quot;</span>
+<span class="nc" id="L301">						+ getShortMonthName(datum, new Locale(&quot;sk&quot;)));</span>
 		}
-<span class="nc" id="L309">		return datumListString;</span>
+<span class="nc" id="L303">		return datumListString;</span>
 	}
 
 	/**
@@ -320,44 +314,44 @@ import java.util.Locale;
 	 */
 	public List&lt;String&gt; getDatesBetweenIncludeOrderString(Date dateFrom, Date dateTo)
 	{
-<span class="nc" id="L323">		List&lt;Date&gt; datumListDate = DateTools.getDatesBetweenInclude(dateFrom, dateTo);</span>
-<span class="nc" id="L324">		Calendar calFrom = dateToCalendar(dateFrom);</span>
-<span class="nc" id="L325">		poradieTyzdnaFrom = calFrom.get(Calendar.WEEK_OF_YEAR);</span>
-<span class="nc" id="L326">		List&lt;String&gt; datumListString = new ArrayList&lt;String&gt;();</span>
-<span class="nc bnc" id="L327" title="All 2 branches missed.">		for (int i = 0; i &lt; datumListDate.size(); i++)</span>
+<span class="nc" id="L317">		List&lt;Date&gt; datumListDate = DateTools.getDatesBetweenInclude(dateFrom, dateTo);</span>
+<span class="nc" id="L318">		Calendar calFrom = dateToCalendar(dateFrom);</span>
+<span class="nc" id="L319">		int poradieTyzdnaFrom = calFrom.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="nc" id="L320">		List&lt;String&gt; datumListString = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L321" title="All 2 branches missed.">		for (int i = 0; i &lt; datumListDate.size(); i++)</span>
 		{
-<span class="nc" id="L329">			Date datum = datumListDate.get(i);</span>
-<span class="nc" id="L330">			String datumSoSkratkami = getShortDayName(datum, new Locale(&quot;sk&quot;)) + &quot;.&quot; + Tools.formatDate(datum) + &quot;.&quot;</span>
-<span class="nc" id="L331">						+ getShortMonthName(datum, new Locale(&quot;sk&quot;));</span>
-<span class="nc" id="L332">			Calendar cal = dateToCalendar(datum);</span>
-<span class="nc" id="L333">			int poradieDnaVTyzdni = cal.get(Calendar.DAY_OF_WEEK);</span>
-<span class="nc bnc" id="L334" title="All 2 branches missed.">			if (poradieDnaVTyzdni == 1)</span>
+<span class="nc" id="L323">			Date datum = datumListDate.get(i);</span>
+<span class="nc" id="L324">			String datumSoSkratkami = getShortDayName(datum, new Locale(&quot;sk&quot;)) + &quot;.&quot; + Tools.formatDate(datum) + &quot;.&quot;</span>
+<span class="nc" id="L325">						+ getShortMonthName(datum, new Locale(&quot;sk&quot;));</span>
+<span class="nc" id="L326">			Calendar cal = dateToCalendar(datum);</span>
+<span class="nc" id="L327">			int poradieDnaVTyzdni = cal.get(Calendar.DAY_OF_WEEK);</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">			if (poradieDnaVTyzdni == 1)</span>
 			{
-<span class="nc" id="L336">				poradieDnaVTyzdni = 7;</span>
+<span class="nc" id="L330">				poradieDnaVTyzdni = 7;</span>
 			}
 			else
 			{
-<span class="nc" id="L340">				poradieDnaVTyzdni = poradieDnaVTyzdni - 1;</span>
+<span class="nc" id="L334">				poradieDnaVTyzdni = poradieDnaVTyzdni - 1;</span>
 			}
-<span class="nc" id="L342">			System.out.println(&quot;datum: &quot; + datumSoSkratkami + &quot;poradieTyzdna: &quot; + poradieTyzdna);</span>
-<span class="nc bnc" id="L343" title="All 4 branches missed.">			if (cal.get(Calendar.WEEK_OF_YEAR) == 1 &amp;&amp; hasRun == false)</span>
+<span class="nc" id="L336">			Logger.debug(DateTools.class, &quot;datum: &quot; + datumSoSkratkami + &quot;poradieTyzdna: &quot; + poradieTyzdna);</span>
+<span class="nc bnc" id="L337" title="All 4 branches missed.">			if (cal.get(Calendar.WEEK_OF_YEAR) == 1 &amp;&amp; hasRun == false)</span>
 			{
-<span class="nc" id="L345">				poradieTyzdnaFrom = poradieTyzdna;</span>
-<span class="nc" id="L346">				hasRun = true;</span>
+<span class="nc" id="L339">				poradieTyzdnaFrom = poradieTyzdna;</span>
+<span class="nc" id="L340">				hasRun = true;</span>
 			}
-<span class="nc bnc" id="L348" title="All 2 branches missed.">			if (hasRun == true)</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">			if (hasRun == true)</span>
 			{
-<span class="nc" id="L350">				poradieTyzdna = cal.get(Calendar.WEEK_OF_YEAR) + poradieTyzdnaFrom + 1;</span>
+<span class="nc" id="L344">				poradieTyzdna = cal.get(Calendar.WEEK_OF_YEAR) + poradieTyzdnaFrom + 1;</span>
 			}
 			else
 			{
-<span class="nc" id="L354">				poradieTyzdna = cal.get(Calendar.WEEK_OF_YEAR) - poradieTyzdnaFrom + 1;</span>
+<span class="nc" id="L348">				poradieTyzdna = cal.get(Calendar.WEEK_OF_YEAR) - poradieTyzdnaFrom + 1;</span>
 			}
-<span class="nc" id="L356">			System.out.println(&quot;poradieTyzdna: &quot; + poradieTyzdna + &quot; poradieTyzdnaFrom: &quot; + poradieTyzdnaFrom);</span>
-<span class="nc" id="L357">			String poradieDnaATyzdna = &quot;&quot; + poradieDnaVTyzdni + &quot;/&quot; + poradieTyzdna;</span>
-<span class="nc" id="L358">			datumListString.add(datumSoSkratkami + &quot;-&quot; + poradieDnaATyzdna);</span>
+<span class="nc" id="L350">			Logger.debug(DateTools.class, &quot;poradieTyzdna: &quot; + poradieTyzdna + &quot; poradieTyzdnaFrom: &quot; + poradieTyzdnaFrom);</span>
+<span class="nc" id="L351">			String poradieDnaATyzdna = &quot;&quot; + poradieDnaVTyzdni + &quot;/&quot; + poradieTyzdna;</span>
+<span class="nc" id="L352">			datumListString.add(datumSoSkratkami + &quot;-&quot; + poradieDnaATyzdna);</span>
 		}
-<span class="nc" id="L360">		return datumListString;</span>
+<span class="nc" id="L354">		return datumListString;</span>
 	}
 
 	/**
@@ -369,11 +363,11 @@ import java.util.Locale;
 	 */
 	public static String getShortMonthName(Date datum, Locale locale)
 	{
-<span class="nc" id="L372">		Calendar c = dateToCalendar(datum);</span>
-<span class="nc" id="L373">		int month = c.get(Calendar.MONTH);</span>
-<span class="nc" id="L374">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
-<span class="nc" id="L375">		String[] monthNames = symbols.getShortMonths();</span>
-<span class="nc" id="L376">		return monthNames[month];</span>
+<span class="nc" id="L366">		Calendar c = dateToCalendar(datum);</span>
+<span class="nc" id="L367">		int month = c.get(Calendar.MONTH);</span>
+<span class="nc" id="L368">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L369">		String[] monthNames = symbols.getShortMonths();</span>
+<span class="nc" id="L370">		return monthNames[month];</span>
 	}
 
 	/**
@@ -385,11 +379,11 @@ import java.util.Locale;
 	 */
 	public static String getMonthName(Date datum, Locale locale)
 	{
-<span class="nc" id="L388">		Calendar c = dateToCalendar(datum);</span>
-<span class="nc" id="L389">		int month = c.get(Calendar.MONTH);</span>
-<span class="nc" id="L390">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
-<span class="nc" id="L391">		String[] monthNames = symbols.getMonths();</span>
-<span class="nc" id="L392">		return monthNames[month - 1];</span>
+<span class="nc" id="L382">		Calendar c = dateToCalendar(datum);</span>
+<span class="nc" id="L383">		int month = c.get(Calendar.MONTH);</span>
+<span class="nc" id="L384">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L385">		String[] monthNames = symbols.getMonths();</span>
+<span class="nc" id="L386">		return monthNames[month - 1];</span>
 	}
 
 	/**
@@ -401,11 +395,11 @@ import java.util.Locale;
 	 */
 	public static String getShortDayName(Date datum, Locale locale)
 	{
-<span class="nc" id="L404">		Calendar c = dateToCalendar(datum);</span>
-<span class="nc" id="L405">		int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);</span>
-<span class="nc" id="L406">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
-<span class="nc" id="L407">		String[] dayNames = symbols.getShortWeekdays();</span>
-<span class="nc" id="L408">		return dayNames[dayOfWeek];</span>
+<span class="nc" id="L398">		Calendar c = dateToCalendar(datum);</span>
+<span class="nc" id="L399">		int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);</span>
+<span class="nc" id="L400">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L401">		String[] dayNames = symbols.getShortWeekdays();</span>
+<span class="nc" id="L402">		return dayNames[dayOfWeek];</span>
 	}
 
 	/**
@@ -417,18 +411,18 @@ import java.util.Locale;
 	 */
 	public static String getDayName(Date datum, Locale locale)
 	{
-<span class="nc" id="L420">		Calendar c = dateToCalendar(datum);</span>
-<span class="nc" id="L421">		int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);</span>
-<span class="nc" id="L422">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
-<span class="nc" id="L423">		String[] dayNames = symbols.getWeekdays();</span>
-<span class="nc" id="L424">		return dayNames[dayOfWeek];</span>
+<span class="nc" id="L414">		Calendar c = dateToCalendar(datum);</span>
+<span class="nc" id="L415">		int dayOfWeek = c.get(Calendar.DAY_OF_WEEK);</span>
+<span class="nc" id="L416">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L417">		String[] dayNames = symbols.getWeekdays();</span>
+<span class="nc" id="L418">		return dayNames[dayOfWeek];</span>
 	}
 
 	public static String[] getShortDayNames(Locale locale)
 	{
-<span class="nc" id="L429">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
-<span class="nc" id="L430">		String[] dayNames = symbols.getShortWeekdays();</span>
-<span class="nc" id="L431">		return dayNames;</span>
+<span class="nc" id="L423">		DateFormatSymbols symbols = new DateFormatSymbols(locale);</span>
+<span class="nc" id="L424">		String[] dayNames = symbols.getShortWeekdays();</span>
+<span class="nc" id="L425">		return dayNames;</span>
 	}
 
 	/**
@@ -438,12 +432,12 @@ import java.util.Locale;
 	 * @return
 	 */
 	public long getTimeLongWithoutSeconds(long timeMillisWithSeconds){
-<span class="nc" id="L441">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L442">		cal.setTimeInMillis(timeMillisWithSeconds);</span>
-<span class="nc" id="L443">		cal.set(Calendar.SECOND, 0);</span>
-<span class="nc" id="L444">		cal.set(Calendar.MILLISECOND, 0);</span>
-<span class="nc" id="L445">		long timeMillisWithoutSeconds = cal.getTimeInMillis();</span>
-<span class="nc" id="L446">		return timeMillisWithoutSeconds;</span>
+<span class="nc" id="L435">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L436">		cal.setTimeInMillis(timeMillisWithSeconds);</span>
+<span class="nc" id="L437">		cal.set(Calendar.SECOND, 0);</span>
+<span class="nc" id="L438">		cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="nc" id="L439">		long timeMillisWithoutSeconds = cal.getTimeInMillis();</span>
+<span class="nc" id="L440">		return timeMillisWithoutSeconds;</span>
 	}
 
     /**
@@ -453,13 +447,13 @@ import java.util.Locale;
      * @return
      */
 	public static Date substractDays(Date date, int days) {
-<span class="nc bnc" id="L456" title="All 2 branches missed.">	    if (date == null) {</span>
-<span class="nc" id="L457">	        return null;</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">	    if (date == null) {</span>
+<span class="nc" id="L451">	        return null;</span>
         }
-<span class="nc" id="L459">        Calendar calendar = Calendar.getInstance();</span>
-<span class="nc" id="L460">        calendar.setTime(date);</span>
-<span class="nc" id="L461">        calendar.add(Calendar.DATE, days * -1);</span>
-<span class="nc" id="L462">        return calendar.getTime();</span>
+<span class="nc" id="L453">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L454">        calendar.setTime(date);</span>
+<span class="nc" id="L455">        calendar.add(Calendar.DATE, days * -1);</span>
+<span class="nc" id="L456">        return calendar.getTime();</span>
     }
 
     /**
@@ -469,13 +463,60 @@ import java.util.Locale;
      * @return
      */
     public static Date addDays(Date date, int days) {
-<span class="nc bnc" id="L472" title="All 2 branches missed.">        if (date == null) {</span>
-<span class="nc" id="L473">            return null;</span>
+<span class="nc bnc" id="L466" title="All 2 branches missed.">        if (date == null) {</span>
+<span class="nc" id="L467">            return null;</span>
         }
-<span class="nc" id="L475">        Calendar calendar = Calendar.getInstance();</span>
-<span class="nc" id="L476">        calendar.setTime(date);</span>
-<span class="nc" id="L477">        calendar.add(Calendar.DATE, days);</span>
-<span class="nc" id="L478">        return calendar.getTime();</span>
+<span class="nc" id="L469">        Calendar calendar = Calendar.getInstance();</span>
+<span class="nc" id="L470">        calendar.setTime(date);</span>
+<span class="nc" id="L471">        calendar.add(Calendar.DATE, days);</span>
+<span class="nc" id="L472">        return calendar.getTime();</span>
     }
+
+	/**
+	 * Validates the range between two dates.
+	 *
+	 * @param dateFrom the starting date of the range
+	 * @param dateTo the ending date of the range
+	 * @param canBeInPast a flag indicating whether the range can include past dates
+	 * @return an integer value representing the validation result:
+	 *         &lt;p&gt; -1 if either dateFrom or dateTo is null,
+	 *         &lt;p&gt; 1 if the range is in the past and canBeInPast is false,
+	 *         &lt;p&gt; 2 if dateFrom is after dateTo,
+	 *         &lt;p&gt; 0 if the range is valid
+	 */
+	public static int validateRange(Date dateFrom, Date dateTo, boolean canBeInPast) {
+		//Check for wrong values
+<span class="pc bpc" id="L489" title="2 of 4 branches missed.">		if(dateFrom == null || dateTo == null) return -1;</span>
+<span class="fc" id="L490">		return validateRange(dateFrom.getTime(), dateTo.getTime(), canBeInPast);</span>
+	}
+
+	/**
+	 * Validates the range between two dates.
+	 *
+	 * @param dateFrom the starting date of the range
+	 * @param dateTo the ending date of the range
+	 * @param canBeInPast a flag indicating whether the range can be in the past
+	 * @return an integer value representing the validation result:
+	 *         &lt;p&gt; -1 if either dateFrom or dateTo is negative,
+	 *         &lt;p&gt; 1 if the range is in the past and canBeInPast is false,
+	 *         &lt;p&gt; 2 if dateFrom is after dateTo,
+	 *         &lt;p&gt; 0 if the range is valid
+	 */
+	public static int validateRange(long dateFrom, long dateTo, boolean canBeInPast) {
+		//Check for wrong values
+<span class="pc bpc" id="L507" title="2 of 4 branches missed.">		if(dateFrom &lt; 0 || dateTo &lt; 0) return -1;</span>
+
+		//Validate id range is in past
+<span class="pc bpc" id="L510" title="1 of 6 branches missed.">		if(canBeInPast == false &amp;&amp; (dateFrom &lt; System.currentTimeMillis() || dateTo &lt; System.currentTimeMillis()) ) {</span>
+<span class="fc" id="L511">			return 1;</span>
+		}
+
+		//Validate if dateFrom is before dateTo
+<span class="fc bfc" id="L515" title="All 2 branches covered.">		if(dateFrom &gt; dateTo) {</span>
+<span class="fc" id="L516">			return 2;</span>
+		}
+
+<span class="fc" id="L519">		return 0;</span>
+	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

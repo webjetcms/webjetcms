@@ -75,7 +75,7 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
 <span class="pc bpc" id="L75" title="1 of 8 branches missed.">        if (click != null &amp;&amp; (click.contains(&quot;dt-tree-group-root&quot;) || click.contains(&quot;dt-tree-groupid-root&quot;)) &amp;&amp; id&lt;0) {</span>
             //id&lt;0=zobraz root group
 <span class="fc" id="L77">            GroupsJsTreeItem rootItem = new GroupsJsTreeItem(WebpagesService.getRootGroup(), user, false);</span>
-<span class="fc" id="L78">            rootItem.setIcon(&quot;fas fa-home&quot;);</span>
+<span class="fc" id="L78">            rootItem.setIcon(&quot;ti ti-home&quot;);</span>
 <span class="fc" id="L79">            rootItem.getState().setLoaded(true);</span>
 <span class="fc" id="L80">            rootItem.getState().setOpened(true);</span>
 <span class="fc" id="L81">            items.add(rootItem);</span>
@@ -89,7 +89,7 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
 <span class="fc" id="L89">                domainGroup.setGroupName(domain);</span>
 
 <span class="fc" id="L91">                GroupsJsTreeItem rootItem = new GroupsJsTreeItem(domainGroup, user, false);</span>
-<span class="fc" id="L92">                rootItem.setIcon(&quot;fas fa-home&quot;);</span>
+<span class="fc" id="L92">                rootItem.setIcon(&quot;ti ti-home&quot;);</span>
 <span class="fc" id="L93">                rootItem.setId(&quot;domain:&quot;+domain);</span>
 <span class="fc" id="L94">                items.add(rootItem);</span>
 <span class="fc" id="L95">            }</span>
@@ -113,7 +113,7 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
 <span class="fc" id="L113">            String referer = getRequest().getHeader(&quot;referer&quot;);</span>
 <span class="pc bpc" id="L114" title="1 of 8 branches missed.">            if(false == (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;)) ) {</span>
                 //If root group is in list, remove it
-<span class="fc bfc" id="L116" title="All 2 branches covered.">                if( Integer.valueOf( items.get(0).getId() ) == 0)</span>
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">                if(items.size()&gt;0 &amp;&amp; Integer.valueOf( items.get(0).getId() ) == 0)</span>
 <span class="fc" id="L117">                    items.remove(0);</span>
             }
         }
@@ -316,7 +316,7 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
         //User can edit all groups -&gt; so return group (no check needed)
         //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
 <span class="fc" id="L318">        String referer = getRequest().getHeader(&quot;referer&quot;);</span>
-<span class="pc bpc" id="L319" title="2 of 8 branches missed.">        if( Tools.isEmpty(user.getEditableGroups()) || (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;))) {</span>
+<span class="pc bpc" id="L319" title="2 of 8 branches missed.">        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null &amp;&amp; referer.contains(&quot;/apps/stat/admin/&quot;) &amp;&amp; user.isEnabledItem(&quot;cmp_stat_seeallgroups&quot;))) {</span>
 <span class="fc bfc" id="L320" title="All 2 branches covered.">            if(groupId &gt; 0) return groupsDB.findGroup(groupId);</span>
 
 <span class="fc" id="L322">            GroupDetails rootGroup = new GroupDetails();</span>
@@ -335,11 +335,11 @@ public class GroupsTreeRestController extends JsTreeRestController&lt;DocGroupIn
 <span class="nc" id="L335">           return groupsDB.findGroup(groupId);</span>
         } else {
             //Problem, user missing rights for this group ... return first permitted group
-<span class="fc" id="L338">            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;);</span>
+<span class="fc" id="L338">            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(true), &quot;,&quot;);</span>
 
             //Use first groupId
 <span class="fc" id="L341">            return groupsDB.findGroup( permittedGroups[0] );</span>
         }
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

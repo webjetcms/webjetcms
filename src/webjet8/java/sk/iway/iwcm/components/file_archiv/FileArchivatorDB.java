@@ -794,7 +794,7 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 		//musime odstranit
 		for(int i = 0; i< shorFab.size(); i++)
 		{
-			if(!shorFab.get(i).getShowFile())
+			if(!shorFab.get(i).getShowFile() || shorFab.get(i).getUploaded() != -1)
 			{
 				shorFab.remove(i);
 				i--; //NOSONAR
@@ -810,12 +810,19 @@ public class FileArchivatorDB extends JpaDB<FileArchivatorBean>
 				else
 					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getId).reversed());
 			}
-			else if("time".equals(sortByReference))
+			else if("orderId".equals(sortByReference))
 			{
 				if(asc)
 					shorFab.sort(Comparator.comparingInt(FileArchivatorBean::getOrderId));
 				else
 					shorFab.sort(Comparator.comparingInt(FileArchivatorBean::getOrderId).reversed());
+			}
+			else if("time".equals(sortByReference))
+			{
+				if(asc)
+					shorFab.sort(Comparator.comparing(FileArchivatorBean::getDateInsert));
+				else
+					shorFab.sort(Comparator.comparing(FileArchivatorBean::getDateInsert).reversed());
 			}
 			else if("virtual_file_name".equals(sortByReference))
 			{

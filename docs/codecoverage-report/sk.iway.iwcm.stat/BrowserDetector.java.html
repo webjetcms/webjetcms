@@ -2,551 +2,496 @@
 
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.seo.SeoManager;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.io.IwcmInputStream;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.util.ResponseUtils;
+
 import java.io.Serializable;
 import java.util.StringTokenizer;
 
-import static sk.iway.iwcm.Tools.isEmpty;
+import ua_parser.Parser;
+import ua_parser.Client;
 
 /**
- *  Description of the Class
- *
- *@Title        magma-web
- *@Company      Interway s.r.o. (www.interway.sk)
- *@Copyright    Interway s.r.o. (c) 2001-2002
- *@author       $Author: jeeff $
- *@version      $Revision: 1.1.1.1 $
- *@created      Utorok, 2002, mďż˝j 28
- *@modified     $Date: 2003/01/28 11:30:13 $
+ * Parse User-Agent string to detect browser name, version and platform.
  */
-public class BrowserDetector implements Serializable
-{
-   /**
+public class BrowserDetector implements Serializable {
+	/**
 	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
 	 */
 	private static final long serialVersionUID = -4467029894704819932L;
 
 	/**
-    *  The user agent string.
-    */
-<span class="fc" id="L33">   private String userAgentString = &quot;&quot;;</span>
-
-   /**
-    *  The browser name specified in the user agent string.
-    */
-<span class="fc" id="L38">   private String browserName = &quot;&quot;;</span>
-
-   /**
-    *  The browser version specified in the user agent string. If we can't parse
-    *  the version just assume an old browser.
-    */
-<span class="fc" id="L44">   private float browserVersion = (float) 1.0;</span>
-
-   /**
-    *  The browser platform specified in the user agent string.
-    */
-<span class="fc" id="L49">   private String browserPlatform = &quot;unknown&quot;;</span>
-
-<span class="fc" id="L51">   private String browserSubplatform=&quot;&quot;;</span>
-
-<span class="fc" id="L53">   private boolean phone = false;</span>
-<span class="fc" id="L54">   private boolean tablet = false;</span>
-   private boolean amp;
-
-<span class="fc" id="L57">   private String browserDeviceType = null;</span>
-
-   public final static String MSIE = &quot;MSIE&quot;;
-   public final static String OPERA = &quot;Opera&quot;;
-   public final static String MOZILLA = &quot;Mozilla&quot;;
-   public final static String FIREFOX = &quot;Firefox&quot;;
-   public final static String SAFARI = &quot;Safari&quot;;
-   public final static String CHROME = &quot;Chrome&quot;;
-
-   public final static String WINDOWS = &quot;Windows&quot;;
-   public final static String UNIX = &quot;Unix&quot;;
-   public final static String MACINTOSH = &quot;macOS&quot;;
-
-   //boty maskujuce sa ako Mozilla
-<span class="fc" id="L71">   public final static String BOTS[] = {&quot;Googlebot&quot;, &quot;Yahoo!&quot;, &quot;Charlotte&quot;, &quot;Wauuu&quot;, &quot;VoilaBot&quot;};</span>
-
-<span class="fc" id="L73">   private int browserUaId = 0;</span>
-<span class="fc" id="L74">   private int platformId = 0;</span>
-<span class="fc" id="L75">   private int subplatformId = 0;</span>
-<span class="fc" id="L76">   private String country = null;</span>
-
-   /**
-    * Ziska instanciu detektora prehliadaca a ulozi do session na neskorsie pouzitie
-    * @param request
-    * @return
-    */
-   public static BrowserDetector getInstance(HttpServletRequest request)
-   {
-<span class="fc bfc" id="L85" title="All 2 branches covered.">   	if (request.getParameter(&quot;forceBrowserDetector&quot;)!=null) request.getSession().removeAttribute(StatDB.BROWSER_DETECTOR);</span>
-
-<span class="fc" id="L87">   	BrowserDetector browser = (BrowserDetector) request.getSession().getAttribute(StatDB.BROWSER_DETECTOR);</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">   	if (browser != null)</span>
-		{
-<span class="fc" id="L90">			return browser;</span>
-		}
-   	//toto synchronized robilo problemy na pluske... docasne zrusene
-   	//synchronized (BrowserDetector.class)
-		{
-   		//double check	cez Cache objekt (kvoli botom)
-<span class="fc" id="L96">			String KEY = null;</span>
-<span class="fc" id="L97">			Cache c = null;</span>
-<span class="fc bfc" id="L98" title="All 2 branches covered.">			if (request.getParameter(&quot;forceBrowserDetector&quot;)==null)</span>
-			{
-<span class="fc" id="L100">				c = Cache.getInstance();</span>
-<span class="fc" id="L101">				KEY = &quot;browserDetector-&quot; + Tools.getRemoteIP(request) + &quot;-&quot; + request.getHeader(&quot;User-Agent&quot;);</span>
-<span class="fc" id="L102">	   		browser = (BrowserDetector) c.getObject(KEY);</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">	      	if (browser != null)</span>
-	   		{
-<span class="fc" id="L105">	   			return browser;</span>
-	   		}
-			}
-
-<span class="fc" id="L109">			browser = new BrowserDetector(request);</span>
-<span class="fc" id="L110">			request.getSession().setAttribute(StatDB.BROWSER_DETECTOR, browser);</span>
-
-<span class="pc bpc" id="L112" title="1 of 4 branches missed.">			if (KEY != null &amp;&amp; c != null)</span>
-			{
-<span class="fc" id="L114">				c.setObjectSeconds(KEY, browser, 5*60);</span>
-			}
-
-<span class="fc" id="L117">			return browser;</span>
-		}
-   }
-
-   public static boolean isStatIpAllowedFast(HttpServletRequest request)
-   {
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">   	if (request == null) return true;</span>
-
-<span class="fc" id="L125">   	BrowserDetector browser = (BrowserDetector) request.getSession().getAttribute(StatDB.BROWSER_DETECTOR);</span>
-<span class="fc bfc" id="L126" title="All 2 branches covered.">   	if (browser != null)</span>
-		{
-<span class="fc" id="L128">			return browser.isStatIpAllowed();</span>
-		}
-<span class="fc" id="L130">   	return isStatIpAllowedImpl(request);</span>
-   }
-
-   private static boolean isStatIpAllowedImpl(HttpServletRequest request)
-   {
-   	try
-		{
-<span class="fc" id="L137">			String statNoLogIP = Constants.getString(&quot;statNoLogIP&quot;);</span>
-<span class="pc bpc" id="L138" title="1 of 2 branches missed.">			if (statNoLogIP!=null)</span>
-			{
-<span class="fc" id="L140">				StringTokenizer st = new StringTokenizer(statNoLogIP, &quot;,&quot;);</span>
-				String ip;
-<span class="fc" id="L142">				String myIP = Tools.getRemoteIP(request);</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">				while (st.hasMoreTokens())</span>
-				{
-<span class="nc" id="L145">					ip = st.nextToken();</span>
-<span class="nc bnc" id="L146" title="All 2 branches missed.">					if (myIP.startsWith(ip))</span>
-					{
-<span class="nc" id="L148">						return false;</span>
-					}
-				}
-			}
-		}
-<span class="nc" id="L153">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L155">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L156">		}</span>
-<span class="fc" id="L157">		return true;</span>
-   }
-
-   public BrowserDetector(String userAgentString)
-<span class="fc" id="L161">	{</span>
-<span class="fc" id="L162">   	this.userAgentString = userAgentString;</span>
-<span class="fc" id="L163">	}</span>
-
-  /**
-   * Konstruktor objektu, nemal by sa pouzivat, treba pouzivat getInstance(request)
-   * @param request
-   */
-   public BrowserDetector(HttpServletRequest request)
-<span class="fc" id="L170">   {</span>
-<span class="fc" id="L171">      this.userAgentString = request.getHeader(&quot;User-Agent&quot;);</span>
-
-<span class="fc" id="L173">		Logger.debug(BrowserDetector.class, &quot;BD: get Instance, ip=&quot;+Tools.getRemoteIP(request)+&quot; ua=&quot;+userAgentString);</span>
-
-<span class="fc" id="L175">      parse(request);</span>
-
-<span class="fc" id="L177">      statIpAllowed = isStatIpAllowedImpl(request);</span>
-
-<span class="fc" id="L179">		statUserAgentAllowed = true;</span>
-<span class="fc" id="L180">		String statDisableUserAgent = Constants.getString(&quot;statDisableUserAgent&quot;);</span>
-<span class="pc bpc" id="L181" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(statDisableUserAgent))</span>
-		{
-<span class="fc" id="L183">			StringTokenizer st = new StringTokenizer(statDisableUserAgent.toLowerCase(), &quot;,;+&quot;);</span>
-			String userAgent;
-			//potrebujeme full UA
-<span class="fc" id="L186">			String browserName = request.getHeader(&quot;User-Agent&quot;);</span>
-<span class="pc bpc" id="L187" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(browserName))</span>
-			{
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">				if (browserName.indexOf('(')==-1)</span>
-				{
-					//je velmi nepravdepodobne, ze normalny UA tam nema nieco v ()
-<span class="nc" id="L192">					statUserAgentAllowed = false;</span>
-				}
-				else
-				{
-<span class="fc" id="L196">					browserName = browserName.toLowerCase();</span>
-<span class="fc bfc" id="L197" title="All 2 branches covered.">					while (st.hasMoreTokens())</span>
-					{
-<span class="fc" id="L199">						userAgent = st.nextToken().trim();</span>
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">						if (browserName.indexOf(userAgent) != -1)</span>
-						{
-<span class="nc" id="L202">							statUserAgentAllowed = false;</span>
-<span class="nc" id="L203">							break;</span>
-						}
-					}
-				}
-			}
-			else
-			{
-				//ak je UA prazdne, povazujeme to za robota
-<span class="nc" id="L211">				statUserAgentAllowed = false;</span>
-			}
-
-			/**
-			 * 	ulozi vyhladavaci stroj do tabulky kvoli statistike
-			 */
-<span class="pc bpc" id="L217" title="1 of 2 branches missed.">			if(!statUserAgentAllowed)</span>
-			{
-<span class="nc" id="L219">				SeoManager.addSearchEngineVisit(this.browserName +&quot; &quot;+ this.browserVersion);</span>
-<span class="nc bnc" id="L220" title="All 2 branches missed.">				if (&quot;unknown&quot;.equals(getBrowserPlatform())) browserPlatform = &quot;Search Bot&quot;;</span>
-			}
-		}
-
-		//nastav idecka
-<span class="fc" id="L225">      browserUaId = StatDB.getStatKeyId(getBrowserName() + &quot; &quot; + getBrowserVersionShort());</span>
-<span class="fc" id="L226">      platformId = StatDB.getStatKeyId(getBrowserPlatform());</span>
-<span class="fc" id="L227">      subplatformId = StatDB.getStatKeyId(getBrowserSubplatform());</span>
-
-
-<span class="fc" id="L230">   }</span>
-
-   /**
-    *  Helper method to initialize this class.
-    */
-   public void parse(HttpServletRequest request)
-   {
-		try
-		{
-<span class="pc bpc" id="L239" title="1 of 2 branches missed.">			if (userAgentString == null)</span>
-<span class="nc" id="L240">				return;</span>
-<span class="fc" id="L241">			RfcBrowserDetector detector = new RfcBrowserDetector(userAgentString);</span>
-<span class="fc" id="L242">			Product browser = detector.getBrowser();</span>
-<span class="fc" id="L243">			browserName = browser.name;</span>
-			try
-			{
-<span class="fc" id="L246">				browserVersion = toFloat(browser.version);</span>
-			}
-<span class="nc" id="L248">			catch (Exception e2)</span>
-			{
-<span class="nc" id="L250">				browserVersion = 0.0f;</span>
-<span class="fc" id="L251">			}</span>
-<span class="fc" id="L252">			browserPlatform = detector.getOsName();</span>
-<span class="fc" id="L253">			browserSubplatform = detector.getOsVersion();</span>
-<span class="pc bpc" id="L254" title="3 of 4 branches missed.">			if (&quot;Mozilla&quot;.equals(browserName) &amp;&amp; userAgentString.indexOf(&quot;http://&quot;) != -1)</span>
-			{
-				// je to nejaky neznamy maskujuci sa bot
-<span class="nc" id="L257">				browserName = &quot;UnknownSearchBot&quot;;</span>
-			}
-<span class="fc" id="L259">			String forceBrowserDetector = forceBrowserTypeIfRequested(request);</span>
-<span class="fc" id="L260">			detectBrowserDeviceType();</span>
-			// nastav globalnu premennu
-<span class="fc bfc" id="L262" title="All 2 branches covered.">			if (Tools.isNotEmpty(forceBrowserDetector)) browserDeviceType = forceBrowserDetector;</span>
-
-<span class="fc bfc" id="L264" title="All 2 branches covered.">			if (&quot;phone&quot;.equals(forceBrowserDetector))</span>
-			{
-<span class="fc" id="L266">				phone = true;</span>
-			}
-<span class="pc bpc" id="L268" title="1 of 2 branches missed.">			else if (&quot;amp&quot;.equals(forceBrowserDetector))</span>
-			{
-<span class="nc" id="L270">				amp = true;</span>
-			}
-<span class="fc bfc" id="L272" title="All 2 branches covered.">			else if (&quot;tablet&quot;.equals(forceBrowserDetector))</span>
-			{
-<span class="fc" id="L274">				tablet = true;</span>
-			}
-<span class="pc bpc" id="L276" title="1 of 2 branches missed.">			else if (&quot;smartphoneOrTablet&quot;.equals(forceBrowserDetector))</span>
-			{
-<span class="nc" id="L278">				tablet = true;</span>
-			}
-<span class="pc bpc" id="L280" title="2 of 4 branches missed.">			else if (&quot;normal&quot;.equals(forceBrowserDetector) || &quot;pc&quot;.equals(forceBrowserDetector))</span>
-			{
-<span class="nc" id="L282">				phone = false;</span>
-<span class="nc" id="L283">				tablet = false;</span>
-<span class="nc" id="L284">				browserDeviceType = null;</span>
-			}
-<span class="fc" id="L286">			detectCountry(request);</span>
-		}
-<span class="fc" id="L288">   	catch (Exception e)</span>
-   	{
-<span class="fc" id="L290">   		Logger.error(BrowserDetector.class, &quot;BD PARSE: ua=&quot;+userAgentString);</span>
-<span class="fc" id="L291">   		sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L292">   	}</span>
-<span class="fc" id="L293">   }</span>
-
-   private String forceBrowserTypeIfRequested(HttpServletRequest request)
-	{
-<span class="fc" id="L297">		String forceBrowserDetector = (String)request.getSession().getAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;);</span>
-<span class="fc bfc" id="L298" title="All 2 branches covered.">      if (Tools.isNotEmpty(request.getParameter(&quot;forceBrowserDetector&quot;)))</span>
-      {
-<span class="fc" id="L300">      	forceBrowserDetector = request.getParameter(&quot;forceBrowserDetector&quot;).toLowerCase();</span>
-<span class="fc bfc" id="L301" title="All 2 branches covered.">      	if (&quot;pc&quot;.equals(forceBrowserDetector))</span>
-      	{
-<span class="fc" id="L303">      		forceBrowserDetector = null;</span>
-<span class="fc" id="L304">      		request.getSession().removeAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;);</span>
-      	}
-      	else
-      	{
-<span class="fc" id="L308">      		request.getSession().setAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;, forceBrowserDetector);</span>
-      	}
-      }
-<span class="fc" id="L311">		return forceBrowserDetector;</span>
-	}
-
-	private void detectBrowserDeviceType()
-	{
-		//null lebo s nim narabame tak v Template device type (historicka zalezitost)
-<span class="fc" id="L317">		browserDeviceType = null;</span>
-<span class="fc" id="L318">		String ua = getUserAgentString().toLowerCase();</span>
-<span class="pc bpc" id="L319" title="3 of 6 branches missed.">		if (ua.contains(&quot;ipad&quot;) || ua.contains(&quot;tablet&quot;) || ua.contains(&quot;kindle&quot;))</span>
-		{
-<span class="nc" id="L321">			tablet = true;</span>
-<span class="nc" id="L322">			browserDeviceType = &quot;tablet&quot;;</span>
-		}
-<span class="pc bpc" id="L324" title="1 of 2 branches missed.">		else if (ua.contains(&quot;iphone&quot;))</span>
-		{
-<span class="nc" id="L326">			phone = true;</span>
-<span class="nc" id="L327">			browserDeviceType = &quot;phone&quot;;</span>
-		}
-<span class="pc bpc" id="L329" title="1 of 2 branches missed.">		else if (ua.contains(&quot;android&quot;))</span>
-		{
-			//https://stackoverflow.com/questions/5341637/how-do-detect-android-tablets-in-general-useragent
-<span class="nc bnc" id="L332" title="All 2 branches missed.">			if (ua.contains(&quot;mobile&quot;))</span>
-			{
-<span class="nc" id="L334">				phone = true;</span>
-<span class="nc" id="L335">				browserDeviceType = &quot;phone&quot;;</span>
-			}
-			else
-			{
-<span class="nc" id="L339">				tablet = true;</span>
-<span class="nc" id="L340">				browserDeviceType = &quot;tablet&quot;;</span>
-			}
-		}
-<span class="fc" id="L343">	}</span>
-
-	private void detectCountry(HttpServletRequest request)
-	{
-<span class="fc" id="L347">      country = Tools.getRemoteHost(request);</span>
-<span class="pc bpc" id="L348" title="2 of 4 branches missed.">		if (country == null || country.length()&lt;2)</span>
-		{
-<span class="nc" id="L350">			country = &quot;unknown&quot;;</span>
-		}
-
-<span class="fc" id="L353">		int index = country.lastIndexOf('.');</span>
-<span class="pc bpc" id="L354" title="1 of 2 branches missed.">		if (index &gt; 0)</span>
-		{
-<span class="nc" id="L356">			country = country.substring(index + 1);</span>
-		}
-		else
-		{
-<span class="fc" id="L360">			country = &quot;unknown&quot;;</span>
-		}
-
-		//ak host je cislo je to IP adresa, nemame meno...
-		try
-		{
-<span class="nc" id="L366">			Integer.parseInt(country);</span>
-<span class="nc" id="L367">			country = &quot;unknown&quot;;</span>
-		}
-<span class="fc" id="L369">		catch (Exception ex)</span>
-		{
-
-<span class="nc" id="L372">		}</span>
-
-<span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if (&quot;unknown&quot;.equals(country))</span>
-		{
-			//skusme vydedukovat podla accept language
-			try
-			{
-				//sk,en-us;q=0.7,en;q=0.3
-<span class="fc" id="L380">				String acceptLanguage = request.getHeader(&quot;accept-language&quot;);</span>
-<span class="pc bpc" id="L381" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(acceptLanguage))</span>
-				{
-<span class="nc" id="L383">					String alArray[] = acceptLanguage.split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L384" title="All 2 branches missed.">					if (alArray.length&gt;0)</span>
-					{
-<span class="nc" id="L386">						String lang = alArray[0];</span>
-						try
-						{
-							//en-us;q=0.7
-<span class="nc bnc" id="L390" title="All 2 branches missed.">							if (lang.indexOf(';')!=-1) lang = lang.split(&quot;;&quot;)[0];</span>
-							//en-us
-<span class="nc bnc" id="L392" title="All 2 branches missed.">							if (lang.indexOf('-')!=-1) lang = lang.split(&quot;-&quot;)[1];</span>
-							//sk_SK
-<span class="nc bnc" id="L394" title="All 2 branches missed.">							if (lang.indexOf('_')!=-1) lang = lang.split(&quot;_&quot;)[1];</span>
-<span class="nc" id="L395">						} catch (Exception e) {}</span>
-
-<span class="nc" id="L397">						lang = lang.toLowerCase();</span>
-<span class="nc" id="L398">						String domain = StatDB.getLanguageDomainTable().get(lang);</span>
-<span class="nc bnc" id="L399" title="All 2 branches missed.">						if (domain != null) lang = domain;</span>
-
-<span class="nc" id="L401">						country = lang;</span>
-					}
-<span class="nc" id="L403">				}</span>
-				else
-				{
-<span class="fc" id="L406">					Logger.debug(StatDB.class, &quot;Unknown IP &amp; lang: ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
-				}
-			}
-<span class="nc" id="L409">			catch (Exception e)</span>
-			{
-<span class="nc" id="L411">				Logger.error(StatDB.class, &quot;Unknown IP &amp; lang: ua=&quot;+request.getHeader(&quot;User-Agent&quot;)+&quot; acceptLanguage=&quot;+request.getHeader(&quot;accept-language&quot;));</span>
-<span class="nc" id="L412">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L413">			}</span>
-		}
-
-<span class="pc bpc" id="L416" title="1 of 2 branches missed.">		if (&quot;gb&quot;.equals(country)) country=&quot;co.uk&quot;;</span>
-<span class="pc bpc" id="L417" title="1 of 2 branches missed.">		if (country.indexOf('_')&gt;0) country = country.substring(0, country.indexOf('_'));</span>
-<span class="pc bpc" id="L418" title="1 of 2 branches missed.">		if (country.indexOf('-')&gt;0) country = country.substring(0, country.indexOf('-'));</span>
-
-<span class="fc" id="L420">		country = DB.internationalToEnglish(DB.prepareString(country, 4).toLowerCase());</span>
-<span class="fc" id="L421">	}</span>
-
-   /**
-    * Ak je nastavene true zaznamenava sa statistika pre aktualnu IP adresu
-    */
-<span class="fc" id="L426">   private boolean statIpAllowed = true;</span>
-   public boolean isStatIpAllowed()
-   {
-<span class="fc" id="L429">   	return statIpAllowed;</span>
-   }
-
-   /**
-    * Ak je nastavene na true zaznamenava sa statistika pre aktualneho user agenta
-    */
-<span class="fc" id="L435">   private boolean statUserAgentAllowed = true;</span>
-   public boolean isStatUserAgentAllowed()
-   {
-<span class="fc" id="L438">   	return statUserAgentAllowed;</span>
-   }
-
-   public String getBrowserName()
-   {
-<span class="pc bpc" id="L443" title="1 of 2 branches missed.">      return browserName != null ? browserName : &quot;&quot;;</span>
-   }
-
-   public String getBrowserPlatform()
-   {
-<span class="fc" id="L448">      return browserPlatform;</span>
-   }
-
-   public float getBrowserVersion()
-   {
-<span class="fc" id="L453">      return browserVersion;</span>
-   }
-
-   public float getBrowserVersionShort()
-   {
-<span class="fc" id="L458">      int ver = (int) (browserVersion * 10f);</span>
-<span class="fc" id="L459">      return ((ver / 10f));</span>
-   }
-
-   public String getUserAgentString()
-   {
-<span class="fc" id="L464">      return userAgentString;</span>
-   }
-
-   private float toFloat(String s)
-   {
-<span class="pc bpc" id="L469" title="1 of 2 branches missed.">   	if (isEmpty(s))</span>
-<span class="nc" id="L470">   		return 0.0f;</span>
-<span class="fc" id="L471">   	String sArr[] = s.split(&quot;\\.&quot;);</span>
-<span class="pc bpc" id="L472" title="1 of 2 branches missed.">   	if (sArr.length==1) return Float.parseFloat(sArr[0]);</span>
-<span class="nc bnc" id="L473" title="All 2 branches missed.">   	else if (sArr.length&gt;1) return Float.parseFloat(sArr[0]+&quot;.&quot;+sArr[1]);</span>
-
-<span class="nc" id="L475">      throw new NumberFormatException();</span>
-   }
-
-   public String getBrowserSubplatform()
-   {
-<span class="fc" id="L480">      return browserSubplatform;</span>
-   }
-
-   public boolean isAmp() {
-<span class="fc" id="L484">	   return amp;</span>
-   }
-
-	public boolean isTablet()
-	{
-<span class="fc" id="L489">		return tablet;</span>
-	}
-
-	public boolean isPhone()
-	{
-<span class="fc" id="L494">		return phone;</span>
-	}
-
-	public boolean isDesktop() {
-<span class="fc bfc" id="L498" title="All 4 branches covered.">		if(isTablet() || isPhone()) return false;</span>
-<span class="fc" id="L499">		return true;</span>
-	}
-
-	/**
-	 * Vrati true ak sa jedna o iPhone, iPad alebo Android zariadenie
-	 * @return
+	 * The user agent string.
 	 */
-	public boolean isSmartphoneOrTablet()
-	{
-<span class="pc bpc" id="L508" title="2 of 4 branches missed.">		return tablet || phone;</span>
-	}
+<span class="fc" id="L30">	private String userAgentString = &quot;&quot;;</span>
 
 	/**
-	 * Vrati true ak sa jedna o iPhone, iPad alebo Android zariadenie
+	 * The browser name specified in the user agent string.
+	 */
+<span class="fc" id="L35">	private String browserName = &quot;&quot;;</span>
+
+	/**
+	 * The browser version specified in the user agent string. If we can't parse
+	 * the version just assume an old browser.
+	 */
+<span class="fc" id="L41">	private String browserVersion = &quot;0.0&quot;;</span>
+
+	/**
+	 * The browser platform specified in the user agent string.
+	 */
+<span class="fc" id="L46">	private String browserPlatform = &quot;unknown&quot;;</span>
+
+<span class="fc" id="L48">	private String browserSubplatform = &quot;&quot;;</span>
+
+<span class="fc" id="L50">	private boolean phone = false;</span>
+<span class="fc" id="L51">	private boolean tablet = false;</span>
+	private boolean amp;
+
+<span class="fc" id="L54">	private String browserDeviceType = null;</span>
+
+	public static final String MSIE = &quot;MSIE&quot;;
+	public static final String OPERA = &quot;Opera&quot;;
+	public static final String MOZILLA = &quot;Mozilla&quot;;
+	public static final String FIREFOX = &quot;Firefox&quot;;
+	public static final String SAFARI = &quot;Safari&quot;;
+	public static final String CHROME = &quot;Chrome&quot;;
+
+	public static final String WINDOWS = &quot;Windows&quot;;
+	public static final String UNIX = &quot;Unix&quot;;
+	public static final String MACINTOSH = &quot;macOS&quot;;
+
+	// boty maskujuce sa ako Mozilla
+<span class="fc" id="L68">	protected static final String[] BOTS = { &quot;Googlebot&quot;, &quot;Yahoo!&quot;, &quot;Charlotte&quot;, &quot;Wauuu&quot;, &quot;VoilaBot&quot; };</span>
+
+<span class="fc" id="L70">	private int browserUaId = 0;</span>
+<span class="fc" id="L71">	private int platformId = 0;</span>
+<span class="fc" id="L72">	private int subplatformId = 0;</span>
+<span class="fc" id="L73">	private String country = null;</span>
+
+<span class="fc" id="L75">	private static Parser uaParser = null;</span>
+
+	static {
+<span class="fc" id="L78">		String configPath = Constants.getString(&quot;uaParserYamlPath&quot;);</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(configPath)) {</span>
+			try {
+<span class="nc" id="L81">				IwcmFile yamlFile = new IwcmFile(Tools.getRealPath(configPath));</span>
+<span class="nc bnc" id="L82" title="All 6 branches missed.">				if (yamlFile.exists() &amp;&amp; yamlFile.isFile() &amp;&amp; yamlFile.canRead()) {</span>
+<span class="nc" id="L83">					Logger.debug(BrowserDetector.class, &quot;loading parser from &quot; + yamlFile.getAbsolutePath());</span>
+<span class="nc" id="L84">					IwcmInputStream is = new IwcmInputStream(yamlFile);</span>
+<span class="nc" id="L85">					uaParser = new Parser(is, Parser.getDefaultLoaderOptions());</span>
+<span class="nc" id="L86">					is.close();</span>
+				}
+<span class="nc" id="L88">			} catch (Exception ie) {</span>
+<span class="nc" id="L89">				Logger.error(BrowserDetector.class, &quot;Failed to initialize parser from &quot;+configPath, ie);</span>
+<span class="nc" id="L90">			}</span>
+		}
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">		if (uaParser == null) uaParser = new Parser();</span>
+<span class="fc" id="L93">	}</span>
+
+	/**
+	 * Ziska instanciu detektora prehliadaca a ulozi do session na neskorsie
+	 * pouzitie
+	 *
 	 * @param request
 	 * @return
 	 */
-	public static boolean isSmartphoneOrTablet(HttpServletRequest request)
-	{
-<span class="fc" id="L518">		BrowserDetector bd = BrowserDetector.getInstance(request);</span>
-<span class="pc bpc" id="L519" title="1 of 2 branches missed.">		if (bd == null) return false;</span>
-<span class="fc" id="L520">		return bd.isSmartphoneOrTablet();</span>
+	public static BrowserDetector getInstance(HttpServletRequest request) {
+<span class="fc bfc" id="L103" title="All 2 branches covered.">		if (request.getParameter(&quot;forceBrowserDetector&quot;) != null)</span>
+<span class="fc" id="L104">			request.getSession().removeAttribute(StatDB.BROWSER_DETECTOR);</span>
+
+<span class="fc" id="L106">		BrowserDetector browser = (BrowserDetector) request.getSession().getAttribute(StatDB.BROWSER_DETECTOR);</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">		if (browser != null) {</span>
+<span class="fc" id="L108">			return browser;</span>
+		}
+
+		// double check cez Cache objekt (kvoli botom)
+<span class="fc" id="L112">		String KEY = null;</span>
+<span class="fc" id="L113">		Cache c = null;</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">		if (request.getParameter(&quot;forceBrowserDetector&quot;) == null) {</span>
+<span class="fc" id="L115">			c = Cache.getInstance();</span>
+<span class="fc" id="L116">			KEY = &quot;browserDetector-&quot; + Tools.getRemoteIP(request) + &quot;-&quot; + request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="fc" id="L117">			browser = (BrowserDetector) c.getObject(KEY);</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">			if (browser != null) {</span>
+<span class="fc" id="L119">				return browser;</span>
+			}
+		}
+
+<span class="fc" id="L123">		browser = new BrowserDetector(request);</span>
+<span class="fc" id="L124">		request.getSession().setAttribute(StatDB.BROWSER_DETECTOR, browser);</span>
+
+<span class="fc bfc" id="L126" title="All 2 branches covered.">		if (c != null) {</span>
+<span class="fc" id="L127">			c.setObjectSeconds(KEY, browser, 5 * 60);</span>
+		}
+
+<span class="fc" id="L130">		return browser;</span>
 	}
 
-	public String getBrowserDeviceType()
-	{
-<span class="fc" id="L525">		return browserDeviceType;</span>
+	public static boolean isStatIpAllowedFast(HttpServletRequest request) {
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">		if (request == null)</span>
+<span class="nc" id="L135">			return true;</span>
+
+<span class="fc" id="L137">		BrowserDetector browser = (BrowserDetector) request.getSession().getAttribute(StatDB.BROWSER_DETECTOR);</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		if (browser != null) {</span>
+<span class="fc" id="L139">			return browser.isStatIpAllowed();</span>
+		}
+<span class="fc" id="L141">		return isStatIpAllowedImpl(request);</span>
 	}
 
-	public int getBrowserUaId()
-	{
-<span class="nc" id="L530">		return browserUaId;</span>
+	private static boolean isStatIpAllowedImpl(HttpServletRequest request) {
+		try {
+<span class="fc" id="L146">			String statNoLogIP = Constants.getString(&quot;statNoLogIP&quot;);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">			if (statNoLogIP != null) {</span>
+<span class="fc" id="L148">				StringTokenizer st = new StringTokenizer(statNoLogIP, &quot;,&quot;);</span>
+				String ip;
+<span class="fc" id="L150">				String myIP = Tools.getRemoteIP(request);</span>
+<span class="pc bpc" id="L151" title="1 of 2 branches missed.">				while (st.hasMoreTokens()) {</span>
+<span class="nc" id="L152">					ip = st.nextToken();</span>
+<span class="nc bnc" id="L153" title="All 2 branches missed.">					if (myIP.startsWith(ip)) {</span>
+<span class="nc" id="L154">						return false;</span>
+					}
+				}
+			}
+<span class="nc" id="L158">		} catch (Exception ex) {</span>
+<span class="nc" id="L159">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L160">		}</span>
+<span class="fc" id="L161">		return true;</span>
 	}
 
-	public int getPlatformId()
-	{
-<span class="nc" id="L535">		return platformId;</span>
+<span class="fc" id="L164">	public BrowserDetector(String userAgentString) {</span>
+<span class="fc" id="L165">		this.userAgentString = userAgentString;</span>
+<span class="fc" id="L166">		parse(null);</span>
+<span class="fc" id="L167">	}</span>
+
+	/**
+	 * Konstruktor objektu, nemal by sa pouzivat, treba pouzivat
+	 * getInstance(request)
+	 *
+	 * @param request
+	 */
+<span class="fc" id="L175">	public BrowserDetector(HttpServletRequest request) {</span>
+<span class="fc" id="L176">		this.userAgentString = request.getHeader(&quot;User-Agent&quot;);</span>
+
+<span class="fc" id="L178">		Logger.debug(BrowserDetector.class, &quot;BD: get Instance, ip=&quot; + Tools.getRemoteIP(request) + &quot; ua=&quot; + userAgentString);</span>
+
+<span class="fc" id="L180">		parse(request);</span>
+
+<span class="fc" id="L182">		statIpAllowed = isStatIpAllowedImpl(request);</span>
+
+<span class="fc" id="L184">		statUserAgentAllowed = true;</span>
+<span class="fc" id="L185">		String statDisableUserAgent = Constants.getString(&quot;statDisableUserAgent&quot;);</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(statDisableUserAgent)) {</span>
+<span class="fc" id="L187">			StringTokenizer st = new StringTokenizer(statDisableUserAgent.toLowerCase(), &quot;,;+&quot;);</span>
+			// potrebujeme full UA
+<span class="fc" id="L189">			String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(userAgent)) {</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">				if (userAgent.indexOf('(') == -1) {</span>
+					// je velmi nepravdepodobne, ze normalny UA tam nema nieco v ()
+<span class="fc" id="L193">					statUserAgentAllowed = false;</span>
+				} else {
+<span class="fc" id="L195">					userAgent = userAgent.toLowerCase();</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">					while (st.hasMoreTokens()) {</span>
+<span class="fc" id="L197">						String token = st.nextToken().trim();</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">						if (userAgent.indexOf(token) != -1) {</span>
+<span class="fc" id="L199">							statUserAgentAllowed = false;</span>
+<span class="fc" id="L200">							break;</span>
+						}
+<span class="fc" id="L202">					}</span>
+				}
+			} else {
+				// ak je UA prazdne, povazujeme to za robota
+<span class="nc" id="L206">				statUserAgentAllowed = false;</span>
+			}
+
+			/**
+			 * ulozi vyhladavaci stroj do tabulky kvoli statistike
+			 */
+<span class="fc bfc" id="L212" title="All 2 branches covered.">			if (!statUserAgentAllowed) {</span>
+<span class="fc" id="L213">				SeoManager.addSearchEngineVisit(this.browserName + &quot; &quot; + this.browserVersion);</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">				if (&quot;unknown&quot;.equals(getBrowserPlatform()))</span>
+<span class="fc" id="L215">					browserPlatform = &quot;Search Bot&quot;;</span>
+			}
+		}
+
+		// nastav idecka
+<span class="fc" id="L220">		browserUaId = StatDB.getStatKeyId(getBrowserName() + &quot; &quot; + getBrowserVersionShort());</span>
+<span class="fc" id="L221">		platformId = StatDB.getStatKeyId(getBrowserPlatform());</span>
+<span class="fc" id="L222">		subplatformId = StatDB.getStatKeyId(getBrowserSubplatform());</span>
+
+<span class="fc" id="L224">	}</span>
+
+	/**
+	 * Helper method to initialize this class.
+	 */
+	public void parse(HttpServletRequest request) {
+		try {
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">			if (userAgentString == null)</span>
+<span class="nc" id="L232">				return;</span>
+
+<span class="fc" id="L234">			Client uaClient = uaParser.parse(userAgentString);</span>
+
+<span class="fc" id="L236">			browserName = uaClient.userAgent.family;</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">			if (uaClient.userAgent.major!=null) browserVersion = uaClient.userAgent.major+&quot;.&quot;+uaClient.userAgent.minor;</span>
+<span class="fc" id="L238">			browserPlatform = uaClient.os.family;</span>
+<span class="fc" id="L239">			browserSubplatform = uaClient.os.major;</span>
+
+<span class="fc" id="L241">			String forceBrowserDetector = forceBrowserTypeIfRequested(request);</span>
+<span class="fc" id="L242">			detectBrowserDeviceType();</span>
+			// nastav globalnu premennu
+<span class="fc bfc" id="L244" title="All 2 branches covered.">			if (Tools.isNotEmpty(forceBrowserDetector))</span>
+<span class="fc" id="L245">				browserDeviceType = forceBrowserDetector;</span>
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">			if (&quot;phone&quot;.equals(forceBrowserDetector)) {</span>
+<span class="fc" id="L248">				phone = true;</span>
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">			} else if (&quot;amp&quot;.equals(forceBrowserDetector)) {</span>
+<span class="nc" id="L250">				amp = true;</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">			} else if (&quot;tablet&quot;.equals(forceBrowserDetector)) {</span>
+<span class="fc" id="L252">				tablet = true;</span>
+<span class="pc bpc" id="L253" title="1 of 2 branches missed.">			} else if (&quot;smartphoneOrTablet&quot;.equals(forceBrowserDetector)) {</span>
+<span class="nc" id="L254">				tablet = true;</span>
+<span class="pc bpc" id="L255" title="2 of 4 branches missed.">			} else if (&quot;normal&quot;.equals(forceBrowserDetector) || &quot;pc&quot;.equals(forceBrowserDetector)) {</span>
+<span class="nc" id="L256">				phone = false;</span>
+<span class="nc" id="L257">				tablet = false;</span>
+<span class="nc" id="L258">				browserDeviceType = null;</span>
+			}
+<span class="fc" id="L260">			detectCountry(request);</span>
+
+<span class="nc" id="L262">		} catch (Exception e) {</span>
+<span class="nc" id="L263">			Logger.error(BrowserDetector.class, &quot;BD PARSE: ua=&quot; + userAgentString);</span>
+<span class="nc" id="L264">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L265">		}</span>
+<span class="fc" id="L266">	}</span>
+
+	private String forceBrowserTypeIfRequested(HttpServletRequest request) {
+<span class="fc bfc" id="L269" title="All 2 branches covered.">		if (request == null) return null;</span>
+
+<span class="fc" id="L271">		String forceBrowserDetector = null;</span>
+
+<span class="fc bfc" id="L273" title="All 2 branches covered.">		if (request.getSession()!=null) {</span>
+<span class="fc" id="L274">			forceBrowserDetector = (String) request.getSession().getAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;);</span>
+		}
+<span class="fc bfc" id="L276" title="All 2 branches covered.">		if (Tools.isNotEmpty(request.getParameter(&quot;forceBrowserDetector&quot;))) {</span>
+<span class="fc" id="L277">			forceBrowserDetector = request.getParameter(&quot;forceBrowserDetector&quot;).toLowerCase();</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">			if (&quot;pc&quot;.equals(forceBrowserDetector)) {</span>
+<span class="fc" id="L279">				forceBrowserDetector = null;</span>
+<span class="fc" id="L280">				request.getSession().removeAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;);</span>
+			} else {
+<span class="fc" id="L282">				request.getSession().setAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;, forceBrowserDetector);</span>
+			}
+		}
+<span class="fc" id="L285">		return forceBrowserDetector;</span>
 	}
 
-	public int getSubplatformId()
-	{
-<span class="nc" id="L540">		return subplatformId;</span>
+	private void detectBrowserDeviceType() {
+		// null lebo s nim narabame tak v Template device type (historicka zalezitost)
+<span class="fc" id="L290">		browserDeviceType = null;</span>
+<span class="fc" id="L291">		String ua = getUserAgentString().toLowerCase();</span>
+<span class="pc bpc" id="L292" title="2 of 6 branches missed.">		if (ua.contains(&quot;ipad&quot;) || ua.contains(&quot;tablet&quot;) || ua.contains(&quot;kindle&quot;)) {</span>
+<span class="fc" id="L293">			tablet = true;</span>
+<span class="fc" id="L294">			browserDeviceType = &quot;tablet&quot;;</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">		} else if (ua.contains(&quot;iphone&quot;)) {</span>
+<span class="fc" id="L296">			phone = true;</span>
+<span class="fc" id="L297">			browserDeviceType = &quot;phone&quot;;</span>
+<span class="fc bfc" id="L298" title="All 2 branches covered.">		} else if (ua.contains(&quot;android&quot;)) {</span>
+			// https://stackoverflow.com/questions/5341637/how-do-detect-android-tablets-in-general-useragent
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">			if (ua.contains(&quot;mobile&quot;)) {</span>
+<span class="fc" id="L301">				phone = true;</span>
+<span class="fc" id="L302">				browserDeviceType = &quot;phone&quot;;</span>
+			} else {
+<span class="nc" id="L304">				tablet = true;</span>
+<span class="nc" id="L305">				browserDeviceType = &quot;tablet&quot;;</span>
+			}
+		}
+<span class="fc" id="L308">	}</span>
+
+	private void detectCountry(HttpServletRequest request) {
+<span class="fc bfc" id="L311" title="All 2 branches covered.">		if (request == null) {</span>
+<span class="fc" id="L312">			country = &quot;unknown&quot;;</span>
+<span class="fc" id="L313">			return;</span>
+		}
+<span class="fc" id="L315">		country = Tools.getRemoteHost(request);</span>
+<span class="pc bpc" id="L316" title="2 of 4 branches missed.">		if (country == null || country.length() &lt; 2) {</span>
+<span class="nc" id="L317">			country = &quot;unknown&quot;;</span>
+		}
+
+<span class="fc" id="L320">		int index = country.lastIndexOf('.');</span>
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">		if (index &gt; 0) {</span>
+<span class="nc" id="L322">			country = country.substring(index + 1);</span>
+		} else {
+<span class="fc" id="L324">			country = &quot;unknown&quot;;</span>
+		}
+
+		// ak host je cislo je to IP adresa, nemame meno...
+		try {
+<span class="nc" id="L329">			Integer.parseInt(country);</span>
+<span class="nc" id="L330">			country = &quot;unknown&quot;;</span>
+<span class="fc" id="L331">		} catch (Exception ex) {</span>
+
+<span class="nc" id="L333">		}</span>
+
+<span class="pc bpc" id="L335" title="1 of 2 branches missed.">		if (&quot;unknown&quot;.equals(country)) {</span>
+			// skusme vydedukovat podla accept language
+			try {
+				// sk,en-us;q=0.7,en;q=0.3
+<span class="fc" id="L339">				String acceptLanguage = request.getHeader(&quot;accept-language&quot;);</span>
+<span class="pc bpc" id="L340" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(acceptLanguage)) {</span>
+<span class="nc" id="L341">					String[] alArray = acceptLanguage.split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L342" title="All 2 branches missed.">					if (alArray.length &gt; 0) {</span>
+<span class="nc" id="L343">						String lang = alArray[0];</span>
+						try {
+							// en-us;q=0.7
+<span class="nc bnc" id="L346" title="All 2 branches missed.">							if (lang.indexOf(';') != -1)</span>
+<span class="nc" id="L347">								lang = lang.split(&quot;;&quot;)[0];</span>
+							// en-us
+<span class="nc bnc" id="L349" title="All 2 branches missed.">							if (lang.indexOf('-') != -1)</span>
+<span class="nc" id="L350">								lang = lang.split(&quot;-&quot;)[1];</span>
+							// sk_SK
+<span class="nc bnc" id="L352" title="All 2 branches missed.">							if (lang.indexOf('_') != -1)</span>
+<span class="nc" id="L353">								lang = lang.split(&quot;_&quot;)[1];</span>
+<span class="nc" id="L354">						} catch (Exception e) {</span>
+<span class="nc" id="L355">						}</span>
+
+<span class="nc" id="L357">						lang = lang.toLowerCase();</span>
+<span class="nc" id="L358">						String domain = StatDB.getLanguageDomainTable().get(lang);</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">						if (domain != null)</span>
+<span class="nc" id="L360">							lang = domain;</span>
+
+<span class="nc" id="L362">						country = lang;</span>
+					}
+<span class="nc" id="L364">				} else {</span>
+<span class="fc" id="L365">					Logger.debug(StatDB.class, &quot;Unknown IP &amp; lang: ua=&quot; + request.getHeader(&quot;User-Agent&quot;));</span>
+				}
+<span class="nc" id="L367">			} catch (Exception e) {</span>
+<span class="nc" id="L368">				Logger.error(StatDB.class, &quot;Unknown IP &amp; lang: ua=&quot; + request.getHeader(&quot;User-Agent&quot;)</span>
+<span class="nc" id="L369">						+ &quot; acceptLanguage=&quot; + request.getHeader(&quot;accept-language&quot;));</span>
+<span class="nc" id="L370">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L371">			}</span>
+		}
+
+<span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if (&quot;gb&quot;.equals(country))</span>
+<span class="nc" id="L375">			country = &quot;co.uk&quot;;</span>
+<span class="pc bpc" id="L376" title="1 of 2 branches missed.">		if (country.indexOf('_') &gt; 0) //NOSONAR</span>
+<span class="nc" id="L377">			country = country.substring(0, country.indexOf('_'));</span>
+<span class="pc bpc" id="L378" title="1 of 2 branches missed.">		if (country.indexOf('-') &gt; 0) //NOSONAR</span>
+<span class="nc" id="L379">			country = country.substring(0, country.indexOf('-'));</span>
+
+<span class="fc" id="L381">		country = DB.internationalToEnglish(DB.prepareString(country, 4).toLowerCase());</span>
+<span class="fc" id="L382">	}</span>
+
+	/**
+	 * Ak je nastavene true zaznamenava sa statistika pre aktualnu IP adresu
+	 */
+<span class="fc" id="L387">	private boolean statIpAllowed = true;</span>
+
+	public boolean isStatIpAllowed() {
+<span class="fc" id="L390">		return statIpAllowed;</span>
+	}
+
+	/**
+	 * Ak je nastavene na true zaznamenava sa statistika pre aktualneho user agenta
+	 */
+<span class="fc" id="L396">	private boolean statUserAgentAllowed = true;</span>
+
+	public boolean isStatUserAgentAllowed() {
+<span class="fc" id="L399">		return statUserAgentAllowed;</span>
+	}
+
+	public String getBrowserName() {
+<span class="pc bpc" id="L403" title="1 of 4 branches missed.">		if (Tools.isEmpty(browserName) || &quot;Other&quot;.equals(browserName)) return &quot;Unknown&quot;;</span>
+<span class="fc bfc" id="L404" title="All 2 branches covered.">		if (&quot;IE&quot;.equals(browserName)) return &quot;MSIE&quot;;</span>
+<span class="fc" id="L405">		return ResponseUtils.filter(browserName);</span>
+	}
+
+	public String getBrowserPlatform() {
+<span class="pc bpc" id="L409" title="1 of 4 branches missed.">		if (Tools.isEmpty(browserPlatform) || &quot;Other&quot;.equals(browserPlatform)) return &quot;unknown&quot;;</span>
+<span class="fc" id="L410">		return ResponseUtils.filter(browserPlatform);</span>
+	}
+
+	public String getBrowserVersion() {
+<span class="fc" id="L414">		return browserVersion;</span>
+	}
+
+	public String getBrowserVersionShort() {
+<span class="pc bpc" id="L418" title="1 of 2 branches missed.">		if (browserVersion == null) return &quot;&quot;;</span>
+<span class="fc" id="L419">		int index = browserVersion.indexOf('.');</span>
+<span class="pc bpc" id="L420" title="1 of 2 branches missed.">		if (index != -1) {</span>
+<span class="fc" id="L421">			return browserVersion.substring(0, index);</span>
+		}
+<span class="nc" id="L423">		return browserVersion;</span>
+	}
+
+	public String getUserAgentString() {
+<span class="fc" id="L427">		return ResponseUtils.filter(userAgentString);</span>
+	}
+
+	public String getBrowserSubplatform() {
+<span class="fc" id="L431">		return ResponseUtils.filter(browserSubplatform);</span>
+	}
+
+	public boolean isAmp() {
+<span class="fc" id="L435">		return amp;</span>
+	}
+
+	public boolean isTablet() {
+<span class="fc" id="L439">		return tablet;</span>
+	}
+
+	public boolean isPhone() {
+<span class="fc" id="L443">		return phone;</span>
+	}
+
+	public boolean isDesktop() {
+<span class="fc bfc" id="L447" title="All 4 branches covered.">		if (isTablet() || isPhone())</span>
+<span class="fc" id="L448">			return false;</span>
+<span class="fc" id="L449">		return true;</span>
+	}
+
+	/**
+	 * Vrati true ak sa jedna o iPhone, iPad alebo Android zariadenie
+	 *
+	 * @return
+	 */
+	public boolean isSmartphoneOrTablet() {
+<span class="pc bpc" id="L458" title="1 of 4 branches missed.">		return tablet || phone;</span>
+	}
+
+	/**
+	 * Vrati true ak sa jedna o iPhone, iPad alebo Android zariadenie
+	 *
+	 * @param request
+	 * @return
+	 */
+	public static boolean isSmartphoneOrTablet(HttpServletRequest request) {
+<span class="fc" id="L468">		BrowserDetector bd = BrowserDetector.getInstance(request);</span>
+<span class="fc" id="L469">		return bd.isSmartphoneOrTablet();</span>
+	}
+
+	public String getBrowserDeviceType() {
+<span class="fc" id="L473">		return ResponseUtils.filter(browserDeviceType);</span>
+	}
+
+	public int getBrowserUaId() {
+<span class="fc" id="L477">		return browserUaId;</span>
+	}
+
+	public int getPlatformId() {
+<span class="fc" id="L481">		return platformId;</span>
+	}
+
+	public int getSubplatformId() {
+<span class="fc" id="L485">		return subplatformId;</span>
 	}
 
 	/**
 	 * Max 4 pismenkovy kod krajiny
+	 *
 	 * @return
 	 */
-	public String getCountry()
-	{
-<span class="nc" id="L549">		return country;</span>
+	public String getCountry() {
+<span class="fc" id="L494">		return ResponseUtils.filter(country);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

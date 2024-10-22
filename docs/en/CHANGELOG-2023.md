@@ -211,7 +211,7 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 - Datatables - added support `LocalDate/LocalDateTime` for data fields, added attribute `alwaysCopyProperties` to `DatatableColumn` for the copy option when editing from [of an existing record](developer/datatables-editor/datatable-columns.md).
 - Users - supplemented usage documentation `afterSaveInterceptor` At [user registration](custom-apps/apps/user/README.md) and the option to not send a standard welcome email by overriding the method `shouldSendUserWelcomeEmail` (#54953-28).
 
-<img class="meme" title="meme" src="_media/meme/2023-52.jpg" />
+![meme](_media/meme/2023-52.jpg)
 
 ## 2023.40
 
@@ -339,7 +339,7 @@ New application [HTTP headers](admin/settings/response-header/README.md) in the 
 - Whole SEO section redesigned (#55537).
 - Supplemented documentation on [SEO section](redactor/apps/seo/README.md).
 
-![](redactor/apps/seo/stat-searchEngines-page.png)
+![](redactor/apps/seo/seo-admin-page.png)
 
 ### News
 
@@ -520,7 +520,7 @@ Section **Missing keys** redesigned. Added information about **the last time and
 - Documentation created for [transition from Struts to Spring](developer/frameworks/struts/README.md)
 - Modified upload processing/`upload` file. For URLs `path.contains("spring") || path.contains("rest") || path.startsWith("/admin/v9/") || queryString.contains("__sfu=0")` the old `MultipartWrapper.getFileParameterValue(key)` but the standard Spring `MultipartFile`.
 
-<img class="meme" title="meme" src="_media/meme/2023-40.jpg" />
+![meme](_media/meme/2023-40.jpg)
 
 ## 2023.18
 
@@ -741,7 +741,7 @@ Added features:
 - Documentation created for [extending existing Spring DATA repositories](custom-apps/spring/repository-extend.md) in your project (#UCMWS-14).
 - Added option [](developer/datatables/export-import.md#špeciálny-typ-exportu)
 
-<img class="meme" title="meme" src="_media/meme/2023-18.jpg" />
+![meme](_media/meme/2023-18.jpg)
 
 ##
 

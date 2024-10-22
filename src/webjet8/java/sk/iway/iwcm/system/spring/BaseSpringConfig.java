@@ -49,7 +49,9 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableAsync
 //@EnableJpaRepositories
 //@EnableTransactionManagement
-@ComponentScan({"sk.iway.iwcm.system.spring.components"})
+@ComponentScan({
+    "sk.iway.iwcm.system.spring.components"
+})
 public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 {
     @Autowired
@@ -65,15 +67,15 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         Logger.println(BaseSpringConfig.class, "-------> Configure security, http="+http);
 
         http
-                .authorizeRequests()
-                    .antMatchers("/private/rest/**","/webjars/**").authenticated()
-                    .antMatchers("/swagger-ui**", "/admin/rest/**").hasRole("Group_admin")
+                .authorizeHttpRequests()
+                    .requestMatchers("/private/rest/**","/webjars/**").authenticated()
+                    .requestMatchers("/swagger-ui**", "/admin/rest/**").hasRole("Group_admin")
                     //toto nemoze byt, pokazi to custom SpringConfig kde sa nastavuje security .anyRequest().permitAll()
                 /*.and()
                     .formLogin()
                     .loginPage("/admin/logon/")
                     .loginProcessingUrl("/admin/logon/")*/
-                 ;
+                ;
     }
 
     @Bean
@@ -89,7 +91,7 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
                 .title("WebJet API")
-                .description("WebJet webservices")
+                .description("WebJET services")
                 .version("")
                 .license("")
                 .licenseUrl("https://www.interway.sk/kontakt/")

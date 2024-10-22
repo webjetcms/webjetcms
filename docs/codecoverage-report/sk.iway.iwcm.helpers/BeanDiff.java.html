@@ -42,54 +42,60 @@ import sk.iway.iwcm.DBPool;
 
 	public Map&lt;String, PropertyDiff&gt; diff()
 	{
-<span class="fc" id="L45">		Map&lt;String, PropertyDiff&gt; changes = new HashMap&lt;String, PropertyDiff&gt;();</span>
+<span class="fc" id="L45">		Map&lt;String, PropertyDiff&gt; changes = new HashMap&lt;&gt;();</span>
 
-<span class="pc bpc" id="L47" title="2 of 4 branches missed.">		if (original != null &amp;&amp; actual != null)</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">		if (actual != null)</span>
 		{
-<span class="fc bfc" id="L49" title="All 2 branches covered.">			for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(original.getClass()))</span>
+			PropertyDescriptor[] descriptors;
+<span class="fc bfc" id="L50" title="All 2 branches covered.">			if (original != null)</span>
+<span class="fc" id="L51">				descriptors = PropertyUtils.getPropertyDescriptors(original.getClass());</span>
+			else
+<span class="fc" id="L53">				descriptors = PropertyUtils.getPropertyDescriptors(actual.getClass());</span>
+
+<span class="fc bfc" id="L55" title="All 2 branches covered.">			for (PropertyDescriptor descriptor : descriptors)</span>
 			{
 				try{
-<span class="fc" id="L52">					String property = descriptor.getName();</span>
-<span class="fc bfc" id="L53" title="All 4 branches covered.">					if (whitelistOn &amp;&amp; !whitelist.contains(property)) continue;</span>
-<span class="fc bfc" id="L54" title="All 4 branches covered.">					if (blacklistOn &amp;&amp; blacklist.contains(property)) continue;</span>
-<span class="pc bpc" id="L55" title="1 of 4 branches missed.">					if (descriptor.getPropertyType() != null &amp;&amp; !ArrayUtils.contains(supportedClasses, descriptor.getPropertyType().getSimpleName()))</span>
-<span class="fc" id="L56">						continue;</span>
+<span class="fc" id="L58">					String property = descriptor.getName();</span>
+<span class="fc bfc" id="L59" title="All 4 branches covered.">					if (whitelistOn &amp;&amp; !whitelist.contains(property)) continue;</span>
+<span class="fc bfc" id="L60" title="All 4 branches covered.">					if (blacklistOn &amp;&amp; blacklist.contains(property)) continue;</span>
+<span class="pc bpc" id="L61" title="1 of 4 branches missed.">					if (descriptor.getPropertyType() != null &amp;&amp; !ArrayUtils.contains(supportedClasses, descriptor.getPropertyType().getSimpleName()))</span>
+<span class="fc" id="L62">						continue;</span>
 
-<span class="fc" id="L58">					Object originalValue = PropertyUtils.getProperty(original, property);</span>
-<span class="fc" id="L59">					Object newValue = PropertyUtils.getProperty(actual, property);</span>
-<span class="fc bfc" id="L60" title="All 4 branches covered.">					if (originalValue == null &amp;&amp; descriptor.getPropertyType() == String.class)</span>
-<span class="fc" id="L61">						originalValue = &quot;&quot;;</span>
-<span class="fc bfc" id="L62" title="All 4 branches covered.">					if (newValue == null &amp;&amp; descriptor.getPropertyType() == String.class)</span>
-<span class="fc" id="L63">						newValue = &quot;&quot;;</span>
-<span class="fc bfc" id="L64" title="All 2 branches covered.">					if (originalValue == null) originalValue = &quot;NULL&quot;;</span>
-<span class="fc bfc" id="L65" title="All 2 branches covered.">					if (newValue == null) newValue = &quot;NULL&quot;;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">					Object originalValue = original != null ? PropertyUtils.getProperty(original, property) : null;</span>
+<span class="fc" id="L65">					Object newValue = PropertyUtils.getProperty(actual, property);</span>
+<span class="fc bfc" id="L66" title="All 4 branches covered.">					if (originalValue == null &amp;&amp; descriptor.getPropertyType() == String.class)</span>
+<span class="fc" id="L67">						originalValue = &quot;&quot;;</span>
+<span class="fc bfc" id="L68" title="All 4 branches covered.">					if (newValue == null &amp;&amp; descriptor.getPropertyType() == String.class)</span>
+<span class="fc" id="L69">						newValue = &quot;&quot;;</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">					if (originalValue == null) originalValue = &quot;NULL&quot;;</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">					if (newValue == null) newValue = &quot;NULL&quot;;</span>
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">					if (!originalValue.equals(newValue))</span>
+<span class="fc bfc" id="L73" title="All 4 branches covered.">					if (!originalValue.equals(newValue) || original == null)</span>
 					{
-<span class="fc" id="L69">						PropertyDiff diff = new PropertyDiff();</span>
-<span class="fc" id="L70">						diff.valueBefore = originalValue;</span>
-<span class="fc" id="L71">						diff.valueAfter = newValue;</span>
-<span class="fc" id="L72">						changes.put(property, diff);</span>
+<span class="fc" id="L75">						PropertyDiff diff = new PropertyDiff();</span>
+<span class="fc" id="L76">						diff.valueBefore = originalValue;</span>
+<span class="fc" id="L77">						diff.valueAfter = newValue;</span>
+<span class="fc" id="L78">						changes.put(property, diff);</span>
 					}
 
 				}
-<span class="fc" id="L76">				catch (Exception e) {/*in order to satisfy compiler*/}</span>
+<span class="fc" id="L82">				catch (Exception e) {/*in order to satisfy compiler*/}</span>
 			}
 		}
 
-<span class="fc" id="L80">		return changes;</span>
+<span class="fc" id="L86">		return changes;</span>
 	}
 
 	public BeanDiff setOriginal(Object original)
 	{
-<span class="fc" id="L85">		this.original = original;</span>
-<span class="fc" id="L86">		return this;</span>
+<span class="fc" id="L91">		this.original = original;</span>
+<span class="fc" id="L92">		return this;</span>
 	}
 
 	public BeanDiff setNew(Object newBean)
 	{
-<span class="fc" id="L91">		this.actual = newBean;</span>
-<span class="fc" id="L92">		return this;</span>
+<span class="fc" id="L97">		this.actual = newBean;</span>
+<span class="fc" id="L98">		return this;</span>
 	}
 
 	/**
@@ -101,32 +107,37 @@ import sk.iway.iwcm.DBPool;
 	 */
 	public BeanDiff setNewLoadJpaOriginal(Object actual, int id)
 	{
-<span class="nc" id="L104">		this.actual = actual;</span>
+<span class="nc" id="L110">		this.actual = actual;</span>
 
 		//ak je to JPA vieme ziskat original, musime mat ale novy EntityManager a nie ten z ThreadLocal, tam by sme totiz mohli vidiet uz zmeneny bean co je actual
-<span class="nc" id="L107">		EntityManagerFactory factory = DBPool.getEntityManagerFactory(&quot;iwcm&quot;);</span>
-<span class="nc" id="L108">		EntityManager em = factory.createEntityManager();</span>
+<span class="nc" id="L113">		EntityManagerFactory factory = DBPool.getEntityManagerFactory(&quot;iwcm&quot;);</span>
+<span class="nc" id="L114">		EntityManager em = factory.createEntityManager();</span>
 
-<span class="nc" id="L110">		this.original = em.find(actual.getClass(), id);</span>
+<span class="nc" id="L116">		this.original = em.find(actual.getClass(), id);</span>
 
-<span class="nc" id="L112">		em.close();</span>
+<span class="nc" id="L118">		em.close();</span>
 
-<span class="nc" id="L114">		return this;</span>
+<span class="nc" id="L120">		return this;</span>
 	}
 
 	public BeanDiff whitelist(String... properties)
 	{
-<span class="fc" id="L119">		whitelistOn = true;</span>
-<span class="fc" id="L120">		whitelist = Arrays.asList(properties);</span>
-<span class="fc" id="L121">		return this;</span>
+<span class="fc" id="L125">		whitelistOn = true;</span>
+<span class="fc" id="L126">		whitelist = Arrays.asList(properties);</span>
+<span class="fc" id="L127">		return this;</span>
 	}
 
 	public BeanDiff blacklist(String... properties)
 	{
-<span class="fc" id="L126">		blacklistOn = true;</span>
-<span class="fc" id="L127">		blacklist = Arrays.asList(properties);</span>
-<span class="fc" id="L128">		return this;</span>
+<span class="fc" id="L132">		blacklistOn = true;</span>
+<span class="fc" id="L133">		blacklist = Arrays.asList(properties);</span>
+<span class="fc" id="L134">		return this;</span>
+	}
+
+	public boolean hasOriginal()
+	{
+<span class="fc bfc" id="L139" title="All 2 branches covered.">		return original != null;</span>
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

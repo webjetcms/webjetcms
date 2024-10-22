@@ -42,11 +42,19 @@ Scenario('password-strength-login', ({ I, Document }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
 
     let language = I.getConfLng();
-    if("sk" !== language) {
-        if("en" == language) { 
+    switch (language) {
+        case "sk":
+            break;
+        case "en":
             I.selectOption("language", "English");
-        }
+            break;
+        case "cs":
+            I.selectOption("language", "Česky");
+            break;
+        default:
+            throw new Error("Unknown language: " + language);
     }
+    
 
     I.fillField("#username", "admin");
     I.fillField("#password", "admin");
@@ -149,11 +157,19 @@ Scenario('users-docs-permsfilter', ({ I , DTE, Document}) => {
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
 
-    if("sk" === I.getConfLng()) {
-        I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "adresár");
-    } else if("en" === I.getConfLng()) { 
-        I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "director");
-    }
+    switch (I.getConfLng()) {
+        case "sk":
+            I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "adresár");
+            break;
+        case "en":
+            I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "directory");
+            break;
+        case "cs":
+            I.fillField("div.DTE_Field_Type_jsTree div.input-group input.form-control", "adresář");
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
+    }    
 
     I.click("div.DTE_Field_Type_jsTree div.input-group button.btn-search")
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-right-search.png");

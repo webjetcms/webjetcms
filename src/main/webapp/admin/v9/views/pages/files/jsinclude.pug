@@ -1,0 +1,533 @@
+//-CODEMIRROR
+link(rel='stylesheet', type='text/css', href='/admin/codemirror/lib/codemirror.css')
+link(rel='stylesheet', type='text/css', href='/admin/codemirror/theme/eclipse.css')
+link(rel='stylesheet', type='text/css', href='/admin/codemirror/addon/display/fullscreen.css')
+link(rel='stylesheet', type='text/css', href='/admin/codemirror/addon/dialog/dialog.css')
+
+script(type="text/javascript", src="/admin/codemirror/lib/codemirror.js")
+script(type="text/javascript", src="/admin/codemirror/mode/xml/xml.js")
+script(type="text/javascript", src="/admin/codemirror/mode/javascript/javascript.js")
+script(type="text/javascript", src="/admin/codemirror/mode/css/css.js")
+script(type="text/javascript", src="/admin/codemirror/mode/htmlmixed/htmlmixed.js")
+script(type="text/javascript", src="/admin/codemirror/addon/mode/multiplex.js")
+script(type="text/javascript", src="/admin/codemirror/mode/htmlembedded/htmlembedded.js")
+script(type="text/javascript", src="/admin/codemirror/addon/edit/matchbrackets.js")
+script(type="text/javascript", src="/admin/codemirror/addon/display/fullscreen.js")
+script(type="text/javascript", src="/admin/codemirror/addon/dialog/dialog.js")
+script(type="text/javascript", src="/admin/codemirror/addon/search/searchcursor.js")
+script(type="text/javascript", src="/admin/codemirror/addon/search/search.js")
+
+<script type="text/javascript" src="/admin/scripts/modalDialog.js"></script>
+
+//-jQuery UI (REQUIRED)
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/jquery/jquery-ui-1.13.2.css')
+
+//-elfinder css
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/commands.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/common.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/contextmenu.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/cwd.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/dialog.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/fonts.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/navbar.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/places.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/quicklook.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/statusbar.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/theme.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/toast.css')
+link(rel='stylesheet', type='text/css', href='/admin/elFinder/css/toolbar.css')
+
+//-Query and jQuery UI (REQUIRED)
+script(type='text/javascript', src='/admin/elFinder/jquery/jquery-ui-1.13.2.js', charset='UTF-8')
+
+//-elfinder core
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.version.js')
+script(type='text/javascript', src='/admin/elFinder/js/jquery.elfinder.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.mimetypes.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.options.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.options.netmount.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.history.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.command.js')
+script(type='text/javascript', src='/admin/elFinder/js/elFinder.resources.js')
+
+//-elfinder dialog
+script(type='text/javascript', src='/admin/elFinder/js/jquery.dialogelfinder.js')
+
+//-elfinder languages
+script(type='text/javascript', src='/admin/elFinder/js/i18n/elfinder.cs.js', charset='UTF-8')
+script(type='text/javascript', src='/admin/elFinder/js/i18n/elfinder.de.js', charset='UTF-8')
+script(type='text/javascript', src='/admin/elFinder/js/i18n/elfinder.en.js', charset='UTF-8')
+script(type='text/javascript', src='/admin/elFinder/js/i18n/elfinder.sk.js', charset='UTF-8')
+
+//-ELFINDER UI
+script(type='text/javascript', src='/admin/elFinder/js/ui/button.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/contextmenu.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/cwd.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/dialog.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/fullscreenbutton.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/navbar.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/navdock.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/overlay.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/panel.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/path.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/places.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/sortbutton.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/stat.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/toast.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/toolbar.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/tree.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/uploadButton.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/viewbutton.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/wjsearchbutton.js')
+script(type='text/javascript', src='/admin/elFinder/js/ui/workzone.js')
+
+//-ELFINDER COMMANDS
+script(type='text/javascript', src='/admin/elFinder/js/commands/archive.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/back.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/chmod.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/colwidth.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/copy.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/cut.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/download.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/duplicate.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/edit.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/empty.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/extract.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/forward.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/fullscreen.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/getfile.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/help.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/hidden.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/hide.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/home.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/info.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/mkdir.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/mkfile.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/netmount.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/open.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/opendir.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/opennew.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/paste.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/places.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/preference.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/quicklook.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/quicklook.plugins.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/reload.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/rename.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/resize.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/restore.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/rm.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/selectall.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/selectinvert.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/selectnone.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/sort.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/undo.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/up.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/upload.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/view.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjfilearchive.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjfileopen.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjmetadata.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjresize.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjsearch.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjfileupdate.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjfileprops.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjdirprops.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjedit.js')
+script(type='text/javascript', src='/admin/elFinder/js/commands/wjeditswitch.js')
+
+script.
+    //kompatibilita s novym jQuery, po aktualizacii elfindera sa moze zrusit
+    var rxhtmlTag = '/<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:-]+)[^>]*)\/>/gi';
+    jQuery.extend( {
+        htmlPrefilter: function( html ) {
+            var fixedHtml = html.replace( rxhtmlTag, "<$1></$2>" );
+            //if (html != fixedHtml) console.log("htmlPrefilter: ", html, "fixed=", fixedHtml);
+            //else console.log("SAME: ", html);
+            return fixedHtml;
+        }
+    });
+
+    var elFinderInitialized = false;
+
+    //upravi tlacitka na toolbare podla webjet8 grafiky
+    function changeElfinderIconToWj(iconName, wjIconName, hideFirstSeparator, replaceThirdToBr)
+    {
+        var copyIcon = $(iconName);
+        var copyIconDiv = copyIcon.parent();
+        copyIconDiv.addClass("wjIconBigSize");
+        copyIcon.addClass("wjIconBig "+wjIconName);
+        if ("wjIconBig-forward" == wjIconName) copyIconDiv.addClass("wjIconBig-short");
+        var iconButtonset = copyIconDiv.closest('.elfinder-buttonset');
+        //console.log(copyIconDiv);
+        //console.log(iconButtonset);
+        iconButtonset.css("padding-top", "0px");
+        if (hideFirstSeparator) iconButtonset.children().eq(1).hide();
+        //if (replaceThirdToBr) iconButtonset.children().eq(3)[0].outerHTML="<br/>";
+        return iconButtonset
+    }
+
+    function elfinderTabClick(name)
+    {
+        var elfToolbar = $(".elfinder-toolbar div.elfinder-buttonset");
+        var i = 0;
+        for (i=0; i<elfToolbar.length; i++)
+        {
+            $(elfToolbar[i]).hide();
+        }
+        if ("file"==name)
+        {
+            $("#finder").show();
+            $("#pixabay").hide();
+            $(elfToolbar[0]).show();
+            $(elfToolbar[1]).show();
+            $(elfToolbar[2]).show();
+            $(elfToolbar[3]).show();
+        }
+        else if ("tools"==name)
+        {
+            $("#finder").show();
+            $("#pixabay").hide();
+            $(elfToolbar[4]).show();
+            $(elfToolbar[5]).show();
+            $(elfToolbar[6]).show();
+            $(elfToolbar[7]).show();
+            $(elfToolbar[8]).show();
+            $(elfToolbar[9]).show();
+        }
+        else if ("pixabay"==name)
+        {
+            $("#finder").hide();
+            $("#pixabay").show();
+        }
+    }
+
+    $(document).ready(function()
+    {
+        setTimeout(initializeElfinder, 100);
+    });
+
+    function openDefaultImageFolder(refreshData)
+    {
+        var elFinderInstance = $('#finder').elfinder('instance');
+        if (refreshData)
+        {
+            $($("span.elfinder-navbar-dir")[0]).trigger("click");
+            setTimeout(function() {
+                elFinderInstance.sync().done(function () {
+                    setTimeout(function() { clickDefaultImageFolder(); }, 100);
+                });
+            }, 100);
+        }
+        else clickDefaultImageFolder();
+    }
+
+    //private funkcia
+    function clickDefaultImageFolder()
+    {
+        //console.log(window.location.href);
+        if (window.location.href.indexOf("wj_link")!=-1)
+        {
+            //console.log("Clicked");
+            //$($("span.elfinder-navbar-dir")[2]).trigger("click");
+            openElfinderInFolder("/files:default");
+        }
+        else
+        {
+            //console.log("Clicked");
+            //$($("span.elfinder-navbar-dir")[1]).trigger("click");
+            openElfinderInFolder("/images:default");
+        }
+    }
+
+    function openElfinderInFolder(url) {
+        $.ajax({
+            method: "POST",
+            url: "/admin/elFinder/gethash.jsp",
+            data: {url: url, docId: lastDocId, groupId: lastGroupId, title: getPageNavbar()}
+        })
+            .done(function (msg) {
+                //console.log(msg);
+                elFinderInstance.exec("open", msg.volume).done(function () {
+                    //console.log("open root");
+                    setTimeout(function () {
+                        elFinderInstance.request({
+                            data: {cmd: 'parents', target: msg.hashParent},
+                            preventFail: true
+                        })
+                            .done(function (data) {
+                                //console.log("DONE parents");
+                                //console.log(data);
+                                setTimeout(function () {
+                                    //console.log("Opening parent="+msg.hashParent);
+                                    elFinderInstance.exec('open', msg.hashParent).done(function () {
+                                        //console.log("open parent");
+                                        setTimeout(function () {
+                                            try {
+                                                //console.log("select file " + msg.hash);
+                                                elFinderInstance.selectfiles({files: [msg.hash]})
+                                            } catch (e) {
+                                            }
+                                        }, 300);
+                                    });
+                                }, 100);
+                            });
+                    }, 10);
+                });
+            });
+    }
+
+    $(function(){
+        $('#elfinder-modal button.submit').click(function(){
+            var action = $('#elfinder-modal .action').is(":visible") ? $('#elfinder-modal .action').val() : null
+                iframe = $('#elfinderIframe')[0].contentWindow;
+            if (action != null) {
+                if ($('#elfinderIframe').attr('src').indexOf('/admin/fbrowser/fileprop/') != -1) {
+                    switch(action) {
+                        case "bSubmit":
+                            iframe.submitForm();
+                            //$("#elfinderFileIframe").contents().find('form#fbrowserFileEditForm').submit();
+                            break;
+                        case "bReindex":
+                            iframe.reindexFile();
+                            break;
+                        case "bUsage":
+                            iframe.viewUsage();
+                            break;
+                        case "showHistory":
+                            iframe.showHistory();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else {
+                    switch(action) {
+                        case "bReindex":
+                            iframe.reindexDir();
+                            break;
+                        case "bUsage":
+                            iframe.viewUsage();
+                            break;
+                        case "bSubmit":
+                            $("#elfinderIframe").contents().find('form#fbrowserEditForm').submit();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            else {
+                if (typeof iframe.Ok != "undefined") {
+                    iframe.Ok();
+                }
+            }
+        });
+    });
+
+    //vola sa po nastaveni metadat
+    function fbrowserDone(reload)
+    {
+        if (typeof reload == "undefined") {
+            reload = true;
+        }
+        if (typeof elFinderInstance != "undefined") {
+            if (reload) {
+                // reloadujem dva krat, lebo po prvom reloade sa v elfindri bugne oznacenie suborov
+                elFinderInstance.exec('reload');
+                setTimeout(function(){
+                    elFinderInstance.exec('reload');
+                }, 800);
+            }
+            $('#elfinder-modal').modal('hide');
+        }
+        else {
+            window.location.reload();
+        }
+    }
+
+    function processEventReload(event, elfinderInstance) {
+        try {
+            //console.log("event=", event, "elfinderInstance=", elfinderInstance);
+            if (event.data.forceReloadTree === true) {
+                //console.log("processing reload");
+                setTimeout(function() {
+                    //console.log("RELOADING");
+                    elfinderInstance.exec('reload');
+                }, 2000);
+            }
+        } catch (e) {console.log(e);}
+    }
+
+    function getCkEditorInstanceElfinder() {
+        var ckEditorInstance;
+        try {
+            ckEditorInstance = window.parent.opener.getCkEditorInstance();
+        } catch (e) {}
+        try {
+            if(typeof ckEditorInstance == "undefined") ckEditorInstance = window.parent.getCkEditorInstance(); //webjet9
+        } catch (e) {}
+        try {
+            if(typeof ckEditorInstance == "undefined") ckEditorInstance = window.parent.opener.opener.parent.parent.parent.getCkEditorInstance();
+        } catch (e) {}
+        try {
+            if(typeof ckEditorInstance == "undefined") ckEditorInstance = window.parent.opener.parent.getCkEditorInstance(); //media iframe
+        } catch (e) {}
+        try {
+            if(typeof ckEditorInstance == "undefined") ckEditorInstance = window.parent.opener.parent.parent.getCkEditorInstance(); //dialog.jsp otvoreny z aplikacie app-docsembed
+        } catch (e) {}
+        try {
+            if(typeof ckEditorInstance == "undefined") ckEditorInstance = window.parent.parent.parent.getCkEditorInstance(); //dialog.pug otvoreny z aplikacie app-docsembed
+        } catch (e) {}
+        return ckEditorInstance
+    }
+
+    //if you update this function update it also in src/main/webapp/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp
+    function getPageNavbar() {
+        try {
+            var navbar = undefined;
+            if (window.parent.$) navbar = window.parent.$("#DTE_Field_navbar").val();
+            if (typeof navbar == "undefined") {
+                try {
+                    navbar = window.parent?.parent?.$("#DTE_Field_navbar").val(); //page builder - insert image
+                } catch (e) { }
+            }
+            if (typeof navbar == "undefined") {
+                try {
+                    navbar = window.parent?.opener?.parent?.$("#DTE_Field_navbar").val(); //page builder - background of element
+                } catch (e) { }
+            }
+
+            var ckInstance = getCkEditorInstanceElfinder();
+            if (typeof navbar == "undefined") navbar = ckInstance.element.$.form.navbar?.value;
+            if (typeof navbar == "undefined") navbar = ckInstance.element.$.form.title?.value;
+            //console.log("returning navbar=", navbar);
+            return navbar;
+        } catch (e) {
+        }
+        return "";
+    }
+
+    const initialElfinderHeight = setInterval(setInitialElfinderHeight, 1500);
+    function setInitialElfinderHeight() {
+        let elfinder = $('#finder');
+        //Check if elfinder is already initialized
+        if(elfinder === undefined || elfinder === null || elfinder.length < 0) { return; }
+
+        //
+        $(".elfinder-buttonset").addClass("dt-buttons");
+        $(".elfinder-button").addClass("btn btn-sm");
+
+        $(".elfinder-button").has(".elfinder-button-icon-cut").addClass("div-danger");
+        $(".elfinder-button").has(".elfinder-button-icon-rm").addClass("div-danger");
+
+        $(".elfinder-button").has(".elfinder-button-icon-upload").addClass("div-create");
+        $(".elfinder-button").has(".elfinder-button-icon-mkdir").addClass("div-create");
+
+        $(".elfinder-button").has(".elfinder-button-icon-duplicate").addClass("div-duplicate");
+
+        $(".elfinder-button").has(".elfinder-button-icon-wjeditswitch").addClass("div-warning");
+
+        //Set height of elfinder
+        setElfinderHeight();
+        clearTimeout(initialElfinderHeight);
+
+        const search =  window.location.href;
+        const urlParams = new URLSearchParams(window.location.search);
+        const stop_resizing = urlParams.get('stop_resizing');
+        if(stop_resizing == undefined || stop_resizing == null || stop_resizing != "true") {
+            const resizingInterval = setInterval(setElfinderHeight, 5000);
+        }
+    }
+
+    function setElfinderHeight() {
+        let elfinder = $('#finder');
+        let elfinderWorkzone = $('#finder > div.elfinder-workzone');
+        let elfinderCwdWrapper = $('#finder > div.elfinder-workzone > div.elfinder-cwd-wrapper');
+        let elfinderNavbar = $('#finder > div.elfinder-workzone > div.elfinder-navbar');
+
+        let availableSpace = computeAvailableSpaceHeight();
+        let redundantSpace = computeElfinderRedundantHeight();
+
+        elfinder.css("width", "100%");
+        elfinder.css("height", (availableSpace - 1) + "px");
+        elfinderWorkzone.css("height", (availableSpace - redundantSpace - 1)  + "px");
+        elfinderCwdWrapper.css("height", (availableSpace - redundantSpace - 15)  + "px"); //-15 px
+        elfinderNavbar.css("height", (availableSpace - redundantSpace - 10)  + "px"); //-10 px because of possible scrollbar
+    }
+
+    function computeAvailableSpaceHeight() {
+        let availableSpace = parseInt( $(".ly-content").outerHeight() ) - parseInt( $(".md-breadcrumb").outerHeight() );
+
+        //Can contain additional height
+        let url =  window.location.href;
+        if(url == undefined || url == null || url.length < 1) {
+            return availableSpace;
+        } else {
+            let linkInput = $('#linkInput');
+            if(linkInput !== undefined && linkInput !== null && linkInput.length > 0) {
+                if(url.includes("hideLinkInput=true")) {
+                    linkInput.hide();
+                    return availableSpace;
+                }
+
+                if(url.includes("/dialog")) {
+                     return ( availableSpace - parseInt( linkInput.innerHeight() ) );
+                }
+            }
+
+            let innerPadding = $('div.innerPadding');
+            if(innerPadding !== undefined && innerPadding !== null && innerPadding.length > 0) {
+                if(url.includes("/wj_image") || url.includes("/wj_link")) {
+                    return ( availableSpace - parseInt( innerPadding.innerHeight() ) );
+                }
+            }
+        }
+
+        //For index pug
+        return availableSpace;
+    }
+
+    function computeElfinderRedundantHeight() {
+        return parseInt( $(".elfinder-toolbar").outerHeight() ) + parseInt( $(".elfinder-statusbar").outerHeight() );
+    }
+
+    var lastDialogOptions = {};
+    function resizeElfinderDialog(textarea)
+    {
+        var ta = $(textarea),
+            taBase = ta.parent(),
+            dialog = taBase.parent();
+        var realWidth = $("#finder").width();
+        var realHeight = $("#finder").height();
+        var width = realWidth / 100 * 90;
+        var height = realHeight / 100 * 80;
+        var left = realWidth / 100 * 5;
+
+        lastDialogOptions.height = height;
+        lastDialogOptions.width = width;
+        lastDialogOptions.left = left;
+        dialog.css("height", height);
+        dialog.css("width", width);
+        dialog.css("left", left);
+        dialog.css("top", 0);
+        var dialogContent = dialog.find(".ui-dialog-content");
+        var dialogContentCodeMirror = dialog.find(".CodeMirror");
+
+        let dialogContentHeight = height;
+        dialogContentHeight -= taBase.outerHeight() - taBase.height(); //padding / margin / border
+        let header = dialog.find(".ui-dialog-titlebar.ui-widget-header");
+        if(header != undefined && header != null && header.length > 0) {
+            dialogContentHeight -= header.outerHeight();
+        }
+        let footer = dialog.find(".ui-helper-clearfix.ui-dialog-buttonpane");
+        if(footer != undefined && footer != null && footer.length > 0) {
+            dialogContentHeight -= footer.outerHeight();
+        }
+
+        setTimeout(function(){
+            dialogContent.css("height", dialogContentHeight);
+            dialogContentCodeMirror.css("height", "100%");
+        }, 50);
+    }

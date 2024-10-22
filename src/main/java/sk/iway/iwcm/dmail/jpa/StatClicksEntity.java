@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
 @SecondaryTable(name = "emails", pkJoinColumns=@PrimaryKeyJoinColumn(name="email_id", referencedColumnName="email_id"))
 public class StatClicksEntity extends ActiveRecordRepository implements Serializable {
 

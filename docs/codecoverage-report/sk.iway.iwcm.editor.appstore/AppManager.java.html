@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,7 +44,7 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class AppManager
 {
-<span class="fc" id="L45">	private static Cache c = Cache.getInstance();</span>
+<span class="fc" id="L47">	private static Cache c = Cache.getInstance();</span>
 
 	private AppManager() {
 		//private konstruktor, kedze vsetky metody su staticke
@@ -56,29 +58,34 @@ public class AppManager
 	 */
 	private static List&lt;AppBean&gt; filterUserAppList(List&lt;AppBean&gt; appsList, HttpServletRequest request)
 	{
-<span class="fc" id="L59">		List&lt;AppBean&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="pc bpc" id="L60" title="1 of 2 branches missed.">		if (appsList != null)</span>
+<span class="fc" id="L61">		List&lt;AppBean&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (appsList != null)</span>
 		{
-<span class="fc" id="L62">			ret.addAll(appsList);</span>
-<span class="fc" id="L63">			Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L64">			Logger.debug(AppManager.class, &quot;filterUserAppList, getCurrentUser=&quot;+user);</span>
-<span class="pc bpc" id="L65" title="1 of 2 branches missed.">			if (user == null)</span>
-<span class="nc" id="L66">				return ret;</span>
+<span class="fc" id="L64">			ret.addAll(appsList);</span>
+<span class="fc" id="L65">			Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L66">			Logger.debug(AppManager.class, &quot;filterUserAppList, getCurrentUser=&quot;+user);</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">			if (user == null)</span>
+<span class="nc" id="L68">				return ret;</span>
 
-<span class="fc bfc" id="L68" title="All 2 branches covered.">			for (Iterator&lt;AppBean&gt; iterator = ret.iterator(); iterator.hasNext();)</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">			for (Iterator&lt;AppBean&gt; iterator = ret.iterator(); iterator.hasNext();)</span>
 			{
-<span class="fc" id="L70">				AppBean app = iterator.next();</span>
+<span class="fc" id="L72">				AppBean app = iterator.next();</span>
 				//odstranim zakazane moduly pre pouzivatela
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">				if(user.isDisabledItem(app.getItemKey()))</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">				if(user.isDisabledItem(app.getItemKey()))</span>
 				{
-<span class="nc" id="L74">					Logger.debug(AppManager.class, &quot;filterUserAppList, odstranujem: app.getItemKey()=&quot;+app.getItemKey());</span>
-<span class="nc" id="L75">					iterator.remove();</span>
+<span class="nc" id="L76">					Logger.debug(AppManager.class, &quot;filterUserAppList, odstranujem: app.getItemKey()=&quot;+app.getItemKey());</span>
+<span class="nc" id="L77">					iterator.remove();</span>
 				}
-<span class="fc" id="L77">			}</span>
-<span class="fc" id="L78">			return ret;</span>
+<span class="fc" id="L79">			}</span>
+
+			// sort alphabetically by app name
+<span class="fc" id="L82">			Prop prop = Prop.getInstance(Constants.getServletContext(), request);</span>
+<span class="fc" id="L83">			Collections.sort(ret, new ModuleComparator(prop));</span>
+
+<span class="fc" id="L85">			return ret;</span>
 		}
 
-<span class="nc" id="L81">		return ret;</span>
+<span class="nc" id="L88">		return ret;</span>
 	}
 
 	/**
@@ -91,38 +98,33 @@ public class AppManager
 	public static List&lt;AppBean&gt; getAppsList(HttpServletRequest request)
 	{
 
-<span class="fc" id="L94">		String CACHE_KEY = &quot;cloud.AppManager.appsList&quot;;</span>
+<span class="fc" id="L101">		String CACHE_KEY = &quot;cloud.AppManager.appsList&quot;;</span>
 		@SuppressWarnings(&quot;unchecked&quot;)
-<span class="fc" id="L96">		List&lt;AppBean&gt; appsList = (List&lt;AppBean&gt;) c.getObject(CACHE_KEY);</span>
-<span class="fc bfc" id="L97" title="All 2 branches covered.">		if (appsList != null)</span>
-<span class="fc" id="L98">			return filterUserAppList(appsList, request);</span>
+<span class="fc" id="L103">		List&lt;AppBean&gt; appsList = (List&lt;AppBean&gt;) c.getObject(CACHE_KEY);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">		if (appsList != null)</span>
+<span class="fc" id="L105">			return filterUserAppList(appsList, request);</span>
 
-<span class="fc" id="L100">		appsList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L101">		Prop prop = Prop.getInstance(</span>
-<span class="fc" id="L102">				sk.iway.iwcm.Constants.getServletContext(), request);</span>
+<span class="fc" id="L107">		appsList = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L104">		String dirPath = sk.iway.iwcm.Tools.getRealPath(&quot;/components/&quot;);</span>
-<span class="fc" id="L105">		List&lt;ModuleInfo&gt; modules = Modules.getInstance().getAvailableModules();</span>
+<span class="fc" id="L109">		String dirPath = sk.iway.iwcm.Tools.getRealPath(&quot;/components/&quot;);</span>
+<span class="fc" id="L110">		List&lt;ModuleInfo&gt; modules = Modules.getInstance().getAvailableModules();</span>
 		ModuleInfo mi;
 		AppBean app;
-<span class="pc bpc" id="L108" title="1 of 2 branches missed.">		if (dirPath != null)</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">		if (dirPath != null)</span>
 		{
-<span class="fc" id="L110">			int size = modules.size();</span>
+<span class="fc" id="L115">			int size = modules.size();</span>
 			int i;
-
-			// usporiadaj podla abecedy
-<span class="fc" id="L114">			Collections.sort(modules, new ModuleComparator(prop));</span>
 
 			// prescanuj adresar /components na podadresare, ktory existuje
 			// vypis
 			String imgPath;
 			String editorPath;
 
-<span class="fc bfc" id="L121" title="All 2 branches covered.">			for (i = 0; i &lt; size; i++)</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">			for (i = 0; i &lt; size; i++)</span>
 			{
-<span class="fc" id="L123">				mi = modules.get(i);</span>
+<span class="fc" id="L125">				mi = modules.get(i);</span>
 
-<span class="pc bpc" id="L125" title="1 of 2 branches missed.">				if (&quot;cmp_htmlbox_cloud&quot;.equals(mi.getItemKey()))</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">				if (&quot;cmp_htmlbox_cloud&quot;.equals(mi.getItemKey()))</span>
 				{
 					// Logger.debug(AppManager.class, &quot;Som HTMLBOX&quot;);
 				}
@@ -131,116 +133,153 @@ public class AppManager
 				// if (mi.getPath().indexOf(&quot;/basket&quot;)!=-1) continue;
 
 				// otestuj ci je tam subor editor.jsp
-<span class="fc" id="L134">				editorPath = mi.getPath() + &quot;/editor_component.jsp&quot;;</span>
-<span class="fc bfc" id="L135" title="All 2 branches covered.">				if (FileTools.isFile(editorPath))</span>
+<span class="fc" id="L136">				editorPath = mi.getPath() + &quot;/editor_component.jsp&quot;;</span>
+<span class="fc bfc" id="L137" title="All 2 branches covered.">				if (FileTools.isFile(editorPath))</span>
 				{
-<span class="fc" id="L137">					imgPath = mi.getPath() + &quot;/editoricon.png&quot;;</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">					if (FileTools.isFile(imgPath)==false) imgPath = mi.getPath() + &quot;/editoricon.gif&quot;;</span>
-<span class="fc bfc" id="L139" title="All 2 branches covered.">					if (FileTools.isFile(imgPath)==false)</span>
+<span class="fc" id="L139">					imgPath = mi.getPath() + &quot;/editoricon.png&quot;;</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">					if (FileTools.isFile(imgPath)==false) imgPath = mi.getPath() + &quot;/editoricon.gif&quot;;</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">					if (FileTools.isFile(imgPath)==false)</span>
 					{
-<span class="fc" id="L141">						continue;</span>
+<span class="fc" id="L143">						continue;</span>
 					}
 
-<span class="fc" id="L144">					app = new AppBean();</span>
-<span class="fc bfc" id="L145" title="All 2 branches covered.">					app.setItemKey(mi.isUserItem() ? mi.getItemKey() : &quot;&quot;);</span>
-<span class="fc" id="L146">					app.setNameKey(mi.getNameKey());</span>
-<span class="fc" id="L147">					app.setComponentClickAction(mi.getPath().substring(mi.getPath().lastIndexOf(&quot;/&quot;) + 1));</span>
-<span class="fc" id="L148">					app.setImagePath(imgPath);</span>
+<span class="fc" id="L146">					app = new AppBean();</span>
+<span class="fc" id="L147">					app.setItemKey(mi.getItemKey());</span>
+<span class="fc" id="L148">					app.setNameKey(mi.getNameKey());</span>
+<span class="fc" id="L149">					app.setComponentClickAction(mi.getPath().substring(mi.getPath().lastIndexOf(&quot;/&quot;) + 1));</span>
+<span class="fc" id="L150">					app.setImagePath(imgPath);</span>
 
-<span class="fc" id="L150">					app.setDomainName(mi.getDomainName());</span>
-<span class="fc" id="L151">					appsList.add(app);</span>
+<span class="fc" id="L152">					app.setDomainName(mi.getDomainName());</span>
+<span class="fc" id="L153">					appsList.add(app);</span>
 				}
-<span class="pc bpc" id="L153" title="3 of 4 branches missed.">				if (mi.getComponents() != null &amp;&amp; mi.getComponents().size() &gt; 0)</span>
+<span class="pc bpc" id="L155" title="3 of 4 branches missed.">				if (mi.getComponents() != null &amp;&amp; mi.getComponents().size() &gt; 0)</span>
 				{
-<span class="nc bnc" id="L155" title="All 2 branches missed.">					for (LabelValueDetails lvd : mi.getComponents())</span>
+<span class="nc bnc" id="L157" title="All 2 branches missed.">					for (LabelValueDetails lvd : mi.getComponents())</span>
 					{
-<span class="nc" id="L157">						app = new AppBean();</span>
-<span class="nc bnc" id="L158" title="All 2 branches missed.">						app.setItemKey(mi.isUserItem() ? mi.getItemKey() : &quot;&quot;);</span>
-<span class="nc" id="L159">						app.setNameKey(lvd.getLabel());</span>
-<span class="nc bnc" id="L160" title="All 2 branches missed.">						if(&quot;cloud&quot;.equals(Constants.getInstallName())) app.setComponentClickAction(lvd.getValue().substring(lvd.getValue().lastIndexOf(&quot;cloud&quot;)+6,lvd.getValue().lastIndexOf('/')));</span>
-<span class="nc" id="L161">						else app.setComponentClickAction(lvd.getValue());</span>
-<span class="nc" id="L162">						app.setImagePath(lvd.getValue2());</span>
+<span class="nc" id="L159">						app = new AppBean();</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">						app.setItemKey(mi.isUserItem() ? mi.getItemKey() : &quot;&quot;);</span>
+<span class="nc" id="L161">						app.setNameKey(lvd.getLabel());</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">						if(&quot;cloud&quot;.equals(Constants.getInstallName())) app.setComponentClickAction(lvd.getValue().substring(lvd.getValue().lastIndexOf(&quot;cloud&quot;)+6,lvd.getValue().lastIndexOf('/')));</span>
+<span class="nc" id="L163">						else app.setComponentClickAction(lvd.getValue());</span>
+<span class="nc" id="L164">						app.setImagePath(lvd.getValue2());</span>
 
-<span class="nc" id="L164">						appsList.add(app);</span>
-<span class="nc" id="L165">					}</span>
+<span class="nc" id="L166">						appsList.add(app);</span>
+<span class="nc" id="L167">					}</span>
 				}
 
 			}// for
 		}
 
 		String dirPathSpec = sk.iway.iwcm.Tools
-<span class="fc" id="L172">				.getRealPath(&quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot;);</span>
-<span class="fc" id="L173">		IwcmFile file = new IwcmFile(dirPathSpec);</span>
-<span class="fc" id="L174">		IwcmFile[] names = file.listFiles();</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">		for (IwcmFile f : names)</span>
+<span class="fc" id="L174">				.getRealPath(&quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot;);</span>
+<span class="fc" id="L175">		IwcmFile file = new IwcmFile(dirPathSpec);</span>
+<span class="fc" id="L176">		IwcmFile[] names = file.listFiles();</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">		for (IwcmFile f : names)</span>
 		{
-<span class="pc bpc" id="L177" title="2 of 4 branches missed.">			if (f.isDirectory() &amp;&amp; f.getName().startsWith(&quot;app-&quot;))</span>
+<span class="pc bpc" id="L179" title="1 of 4 branches missed.">			if (f.isDirectory() &amp;&amp; f.getName().startsWith(&quot;app-&quot;))</span>
 			{
-<span class="nc" id="L179">				app = new AppBean();</span>
-<span class="nc" id="L180">				String nameKey = &quot;components.&quot;+Constants.getInstallName()+&quot;.&quot; + f.getName() + &quot;.title&quot;;</span>
+<span class="nc" id="L181">				app = new AppBean();</span>
+<span class="nc" id="L182">				String nameKey = &quot;components.&quot;+Constants.getInstallName()+&quot;.&quot; + f.getName() + &quot;.title&quot;;</span>
 
-<span class="nc" id="L182">				String imgPath = &quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot; + f.getName() + &quot;/editoricon.png&quot;;</span>
-<span class="nc bnc" id="L183" title="All 2 branches missed.">				if (FileTools.isFile(imgPath)==false) imgPath = &quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot; + f.getName() + &quot;/editoricon.gif&quot;;</span>
+<span class="nc" id="L184">				String imgPath = &quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot; + f.getName() + &quot;/editoricon.png&quot;;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">				if (FileTools.isFile(imgPath)==false) imgPath = &quot;/components/&quot;+Constants.getInstallName()+&quot;/&quot; + f.getName() + &quot;/editoricon.gif&quot;;</span>
 
 				//String componentClick = &quot;/components/&quot;+Constants.INSTALL_NAME+&quot;/&quot; + f.getName() + &quot;/editor_component.jsp&quot;;
-<span class="nc" id="L186">				app.setNameKey(nameKey);</span>
-<span class="nc" id="L187">				app.setComponentClickAction(f.getName());</span>
-<span class="nc" id="L188">				app.setImagePath(imgPath);</span>
+<span class="nc" id="L188">				app.setNameKey(nameKey);</span>
+<span class="nc" id="L189">				app.setComponentClickAction(f.getName());</span>
+<span class="nc" id="L190">				app.setImagePath(imgPath);</span>
+<span class="nc" id="L191">				app.setCustom(true);</span>
 
-<span class="nc" id="L190">				appsList.add(app);</span>
+<span class="nc" id="L193">				appsList.add(app);</span>
 			}
 		}
 
-<span class="fc" id="L194">        scanAnnotations(appsList);</span>
+<span class="fc" id="L197">        scanAnnotations(appsList);</span>
 
-<span class="fc" id="L196">		c.setObjectSeconds(CACHE_KEY, appsList, 120 * 60, true);</span>
+<span class="fc" id="L199">		c.setObjectSeconds(CACHE_KEY, appsList, 120 * 60, true);</span>
 
-<span class="fc" id="L198">		return filterUserAppList(appsList, request);</span>
+<span class="fc" id="L201">		return filterUserAppList(appsList, request);</span>
 	}
 
     private static void scanAnnotations(List&lt;AppBean&gt; apps) {
 
-<span class="fc" id="L203">        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);</span>
-<span class="fc" id="L204">        provider.addIncludeFilter(new AnnotationTypeFilter(WebjetAppStore.class));</span>
+<span class="fc" id="L206">        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);</span>
+<span class="fc" id="L207">        provider.addIncludeFilter(new AnnotationTypeFilter(WebjetAppStore.class));</span>
 
-<span class="fc" id="L206">		List&lt;String&gt; packageNames = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L207">		packageNames.add(&quot;sk.iway.iwcm&quot;);</span>
-<span class="fc" id="L208">		packageNames.add(&quot;sk.iway.&quot;+Constants.getInstallName());</span>
-<span class="pc bpc" id="L209" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getLogInstallName())) packageNames.add(&quot;sk.iway.&quot;+Constants.getLogInstallName());</span>
-<span class="pc bpc" id="L210" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;springAddPackages&quot;))) packageNames.addAll(Arrays.asList(Tools.getTokens(Constants.getString(&quot;springAddPackages&quot;), &quot;,&quot;, true)));</span>
+<span class="fc" id="L209">		List&lt;String&gt; packageNames = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L210">		packageNames.add(&quot;sk.iway.iwcm&quot;);</span>
+<span class="fc" id="L211">		packageNames.add(&quot;sk.iway.&quot;+Constants.getInstallName());</span>
+<span class="pc bpc" id="L212" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getLogInstallName())) packageNames.add(&quot;sk.iway.&quot;+Constants.getLogInstallName());</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;springAddPackages&quot;))) packageNames.addAll(Arrays.asList(Tools.getTokens(Constants.getString(&quot;springAddPackages&quot;), &quot;,&quot;, true)));</span>
 
-<span class="fc" id="L212">		Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L215">		Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
 
-<span class="fc bfc" id="L214" title="All 2 branches covered.">		for (String packageName : packageNames) {</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">			for (BeanDefinition beanDef : provider.findCandidateComponents(packageName)) {</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">		for (String packageName : packageNames) {</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">			for (BeanDefinition beanDef : provider.findCandidateComponents(packageName)) {</span>
 				try {
-<span class="fc" id="L217">					String fqdn = beanDef.getBeanClassName();</span>
-<span class="fc" id="L218">					Class&lt;?&gt; cl = Class.forName(fqdn);</span>
+<span class="fc" id="L220">					String fqdn = beanDef.getBeanClassName();</span>
+<span class="fc" id="L221">					Class&lt;?&gt; cl = Class.forName(fqdn);</span>
 
-<span class="pc bpc" id="L220" title="2 of 4 branches missed.">					if (fqdn == null || duplicityCheck.contains(fqdn)) continue;</span>
-<span class="fc" id="L221">					duplicityCheck.add(fqdn);</span>
+<span class="pc bpc" id="L223" title="2 of 4 branches missed.">					if (fqdn == null || duplicityCheck.contains(fqdn)) continue;</span>
+<span class="fc" id="L224">					duplicityCheck.add(fqdn);</span>
 
-<span class="fc" id="L223">					WebjetAppStore appStore = cl.getAnnotation(WebjetAppStore.class);</span>
+<span class="fc" id="L226">					WebjetAppStore appStore = cl.getAnnotation(WebjetAppStore.class);</span>
 
-<span class="fc" id="L225">					AppBean app = new AppBean();</span>
-<span class="fc" id="L226">					app.setComponentClickAction(cl.getCanonicalName());</span>
-<span class="fc" id="L227">					app.setNameKey(appStore.nameKey());</span>
-<span class="fc" id="L228">					app.setDescKey(appStore.descKey());</span>
-<span class="fc" id="L229">					app.setImagePath(appStore.imagePath());</span>
-<span class="fc" id="L230">					app.setDomainName(appStore.domainName());</span>
-<span class="fc" id="L231">					app.setGalleryImages(appStore.galleryImages());</span>
+<span class="fc" id="L228">					String itemKey = appStore.itemKey();</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">					if (Tools.isNotEmpty(itemKey)) {</span>
+						//remove app from apps if there is already one with the same itemKey
+<span class="fc bfc" id="L231" title="All 2 branches covered.">						for (AppBean app : apps) {</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">							if (app.getItemKey().equals(itemKey)) {</span>
+<span class="fc" id="L233">								apps.remove(app);</span>
+<span class="fc" id="L234">								break;</span>
+							}
+<span class="fc" id="L236">						}</span>
+					}
 
-<span class="pc bpc" id="L233" title="1 of 2 branches missed.">					if (fqdn.startsWith(&quot;sk.iway.iwcm&quot;)) apps.add(app);</span>
-<span class="fc" id="L234">					else apps.add(0, app);</span>
+<span class="fc" id="L239">					AppBean app = new AppBean();</span>
+<span class="fc" id="L240">					app.setComponentClickAction(cl.getCanonicalName());</span>
+<span class="fc" id="L241">					app.setNameKey(appStore.nameKey());</span>
+<span class="fc" id="L242">					app.setDescKey(appStore.descKey());</span>
+<span class="fc" id="L243">					app.setItemKey(itemKey);</span>
+<span class="fc" id="L244">					app.setImagePath(appStore.imagePath());</span>
+<span class="fc" id="L245">					app.setDomainName(appStore.domainName());</span>
+<span class="fc" id="L246">					app.setGalleryImages(appStore.galleryImages());</span>
+<span class="fc" id="L247">					app.setComponentPath(appStore.componentPath());</span>
 
-<span class="fc" id="L236">					Logger.debug(AppManager.class, &quot;Adding app from annotation, key=&quot;+app.getNameKey()+&quot; fqdn=&quot;+fqdn);</span>
+<span class="fc bfc" id="L249" title="All 2 branches covered.">					if (fqdn.startsWith(&quot;sk.iway.iwcm&quot;)) {</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">						if (appStore.custom().length&gt;1) app.setCustom(appStore.custom()[0]);</span>
+<span class="fc" id="L251">						apps.add(app);</span>
+					}
+					else {
+<span class="fc" id="L254">						apps.add(0, app);</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">						if (appStore.custom().length&gt;1) app.setCustom(appStore.custom()[0]);</span>
+<span class="fc" id="L256">						else app.setCustom(true);</span>
+					}
 
-<span class="nc" id="L238">				} catch (Exception e) {</span>
-<span class="nc" id="L239">					Logger.error(AppManager.class, &quot;Got exception: &quot; + e.getMessage());</span>
-<span class="fc" id="L240">				}</span>
-<span class="fc" id="L241">			}</span>
-<span class="fc" id="L242">		}</span>
-<span class="fc" id="L243">    }</span>
+<span class="fc" id="L259">					Logger.debug(AppManager.class, &quot;Adding app from annotation, key=&quot;+app.getNameKey()+&quot; fqdn=&quot;+fqdn);</span>
+
+<span class="nc" id="L261">				} catch (Exception e) {</span>
+<span class="nc" id="L262">					Logger.error(AppManager.class, &quot;Got exception: &quot; + e.getMessage());</span>
+<span class="fc" id="L263">				}</span>
+<span class="fc" id="L264">			}</span>
+<span class="fc" id="L265">		}</span>
+<span class="fc" id="L266">    }</span>
+
+	/**
+	 * Returns map of class names and jsp paths for replacing in appstore editor componentseg.:
+	 * &quot;sk.iway.iwcm.components.gallery.GalleryApp&quot; -&gt; &quot;/components/gallery/gallery.jsp&quot;
+	 * @param request
+	 * @return
+	 */
+	public static Map&lt;String, String&gt; getClassToJspReplaces(HttpServletRequest request) {
+<span class="fc" id="L275">		Map&lt;String, String&gt; replaces = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L276">		List&lt;AppBean&gt; apps = getAppsList(request);</span>
+<span class="fc bfc" id="L277" title="All 2 branches covered.">		for (AppBean app : apps) {</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">			if (Tools.isEmpty(app.getComponentPath())) continue;</span>
+<span class="fc" id="L279">			replaces.put(app.getComponentPath(), app.getComponentClickAction());</span>
+<span class="fc" id="L280">		}</span>
+<span class="fc" id="L281">		return replaces;</span>
+	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

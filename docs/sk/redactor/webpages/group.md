@@ -39,7 +39,7 @@ Po kliknutí na priečinok v stromovej štruktúre sa zobrazia web stránky vo v
     - Zobraziť - zobrazuje sa hlavná stránka a podpriečinky
     - Nezobraziť - priečinok a podpriečinky sa v menu nebude zobrazovať
     - Bez podpriečinkov - v menu sa zobrazí len hlavná stránka priečinka
-    - Zobraziť vrátane web stránok - v menu sa zobrazia stránky aj priečinky. Pre všetky stránky priečinka zobrazí zaškrtávacie políčko Základné údaje > Zobraziť v menu
+    - Zobraziť vrátane web stránok - v menu sa zobrazia stránky aj priečinky. Pre všetky stránky priečinka zobrazí zaškrtávacie políčko Základné údaje -> Zobraziť v menu
 - Navigačná lišta - spôsob zobrazenia priečinku v navigačnej lište (navbar/breadcrumb):
   - Rovnako ako menu - spôsob zobrazenia je zhodný so zobrazením v navigačnom menu.
   - Zobraziť - priečinok sa vždy bude zobrazovať.
@@ -54,7 +54,8 @@ Spôsob zobrazenia je rozdelený na prihláseného a neprihláseného návštevn
 
 ## Karta prístup
 
-V karte prístup nastavujete oprávnenia pre prístup k stránkam v tomto priečinku. Ak zvolíte niektorú používateľskú skupinu nebude obsah priečinka verejne dostupný. Bude dostupný len prihlásenému návštevníkovi, ktorý patrí do jednej z vybraných používateľských skupín. POZOR: nejedná sa o nastavenie oprávnení pre administrátorov, ale pre vytvorenie tzv. zaheslovanej sekcie na web stránke (pre návštevníkov stránky)
+V karte prístup nastavujete oprávnenia pre prístup k stránkam v tomto priečinku. Ak zvolíte niektorú používateľskú skupinu nebude obsah priečinka verejne dostupný. Bude dostupný len prihlásenému návštevníkovi, ktorý patrí do jednej z vybraných používateľských skupín.
+!>**Upozornenie:** nejedná sa o nastavenie oprávnení pre administrátorov, ale pre vytvorenie tzv. zaheslovanej sekcie na web stránke (pre návštevníkov stránky)
 
 - Povoliť prístup len pre skupinu používateľov - ak zvolíte niektorú skupinu používateľov bude pre zobrazenie stránky vyžadované prihlásenie používateľa z danej skupiny.
 Priradiť stránku k hromadnému emailu - stránka bude dostupná pre hromadný email používateľov vo zvolenej skupine. Je možné takto kategorizovať odosielané hromadné emaily podľa preferencií návštevníkov.

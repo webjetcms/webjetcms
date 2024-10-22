@@ -40,11 +40,20 @@ Scenario('frontend', ({ I, Document }) => {
 Scenario('admin-with-upload', ({ I, Document }) => {
     I.amOnPage("/apps/contact/admin/upload/");
 
-    if("sk" === I.getConfLng()) {
-        I.click("Potvrdiť");
-    } else if("en" === I.getConfLng()) { 
-        I.click("Submit");
+    switch (I.getConfLng()) {
+        case "sk":
+            I.click("Potvrdiť");
+            break;
+        case "en":
+            I.click("Submit");
+            break;
+        case "cs":
+            I.click("Potvrdit");
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
     }
+    
 
     //cela stranka
     Document.screenshot("/custom-apps/spring-mvc/admin-upload.png");

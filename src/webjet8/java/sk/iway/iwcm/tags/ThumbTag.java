@@ -135,7 +135,7 @@ public class ThumbTag extends BodyTagSupport
 	{
 		String realPathSmall = returnRealPath ? Tools.getRealPath(Constants.getString("thumbServletCacheDir")+imagePath) : imagePath;
 		//uprav cache nazov
-		return ThumbServlet.getImagePathCache(realPathSmall, width, height, ip, fillColor, quality);
+		return ThumbServlet.getImagePathCache(realPathSmall, width, height, ip, false, fillColor, quality);
 	}
 
 	public int getW()

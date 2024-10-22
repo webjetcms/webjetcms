@@ -20,16 +20,16 @@ import sk.iway.iwcm.Tools;
  *@created      Date: 3.12.2005 17:03:48
  *@modified     $Date: 2009/04/01 09:06:02 $
  */
-<span class="nc" id="L23">public class DateDecorator implements DisplaytagColumnDecorator</span>
+<span class="fc" id="L23">public class DateDecorator implements DisplaytagColumnDecorator</span>
 {
 	@Override
 	public final String decorate(Object columnValue, PageContext pageContext, MediaTypeEnum media)
    {
-<span class="nc bnc" id="L28" title="All 2 branches missed.">		if(columnValue != null) {</span>
-<span class="nc bnc" id="L29" title="All 2 branches missed.">			if (columnValue instanceof Date)</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">		if(columnValue != null) {</span>
+<span class="pc bpc" id="L29" title="1 of 2 branches missed.">			if (columnValue instanceof Date)</span>
 			{
-<span class="nc" id="L31">				Date date = (Date) columnValue;</span>
-<span class="nc" id="L32">				return(Tools.formatDate(date.getTime()));</span>
+<span class="fc" id="L31">				Date date = (Date) columnValue;</span>
+<span class="fc" id="L32">				return(Tools.formatDate(date.getTime()));</span>
 			}
 			
 			//mozno je to long, skus sparsovat
@@ -45,7 +45,7 @@ import sk.iway.iwcm.Tools;
 			
 <span class="nc" id="L46">			return(columnValue.toString());</span>
 		}
-<span class="nc" id="L48">		return &quot;&amp;nbsp;&quot;;</span>
+<span class="fc" id="L48">		return &quot;&amp;nbsp;&quot;;</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -12,6 +12,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.structuremirroring.GroupMirroringServiceV9;
@@ -28,7 +29,11 @@ import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
 import sk.iway.iwcm.users.UsersDB;
 
-<span class="nc" id="L31">public class CloneStructureService {</span>
+public class CloneStructureService {
+
+    private CloneStructureService() {
+        //Utility class
+    }
 
     /**
      * Check if &quot;structureMirroringConfig&quot; conf contain combination of entered id's.
@@ -40,37 +45,37 @@ import sk.iway.iwcm.users.UsersDB;
      * @param domainName - name of current domain
      */
 	private static void setMirroringConfig(int srcGroupId, int destGroupId, String domainName) {
-<span class="fc" id="L43">		String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
+<span class="fc" id="L48">		String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
 
-<span class="pc bpc" id="L45" title="1 of 2 branches missed.">		if(mirroringConfig.isEmpty()==false) {</span>
-<span class="fc" id="L46">			String lines[] = Tools.getTokens(mirroringConfig, &quot;\n&quot;);</span>
-<span class="fc bfc" id="L47" title="All 2 branches covered.">			for(String line : lines) {</span>
-<span class="fc" id="L48">				String stringIds = &quot;&quot;;</span>
-<span class="fc" id="L49">				int i = line.indexOf(&quot;:&quot;);</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">		if(mirroringConfig.isEmpty()==false) {</span>
+<span class="fc" id="L51">			String[] lines = Tools.getTokens(mirroringConfig, &quot;\n&quot;);</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">			for(String line : lines) {</span>
+<span class="fc" id="L53">				String stringIds = &quot;&quot;;</span>
+<span class="fc" id="L54">				int i = line.indexOf(&quot;:&quot;);</span>
 
-<span class="pc bpc" id="L51" title="1 of 2 branches missed.">         		if (i &gt; 0) stringIds = line.substring(0, i);</span>
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">         		if (i &gt; 0) stringIds = line.substring(0, i);</span>
 
-<span class="fc" id="L53">				String ids[] = stringIds.split(&quot;,&quot;);</span>
+<span class="fc" id="L58">				String[] ids = stringIds.split(&quot;,&quot;);</span>
 
-<span class="pc bpc" id="L55" title="1 of 2 branches missed.">				if(Tools.containsOneItem(ids, &quot;&quot;+srcGroupId)) {</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">				if(Tools.containsOneItem(ids, &quot;&quot;+srcGroupId)) {</span>
                     //mapping is allready set
-<span class="nc bnc" id="L57" title="All 2 branches missed.">                    if (Tools.containsOneItem(ids, &quot;&quot;+destGroupId)) return;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                    if (Tools.containsOneItem(ids, &quot;&quot;+destGroupId)) return;</span>
 
                     //add mapping to this line
-<span class="nc" id="L60">					String newLine = line.substring(0, i) + &quot;,&quot; + destGroupId + line.substring(i);</span>
-<span class="nc" id="L61">                    mirroringConfig = mirroringConfig.replace(line, newLine);</span>
-<span class="nc" id="L62">                    ConfDB.setName(&quot;structureMirroringConfig&quot;, mirroringConfig);</span>
-<span class="nc" id="L63">                    return;</span>
+<span class="nc" id="L65">					String newLine = line.substring(0, i) + &quot;,&quot; + destGroupId + line.substring(i);</span>
+<span class="nc" id="L66">                    mirroringConfig = mirroringConfig.replace(line, newLine);</span>
+<span class="nc" id="L67">                    ConfDB.setName(&quot;structureMirroringConfig&quot;, mirroringConfig);</span>
+<span class="nc" id="L68">                    return;</span>
 				}
 			}
 		}
 
 		//NO, this mirroring combination is not set YET -&gt; DO IT
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (mirroringConfig.isEmpty()==false) mirroringConfig += &quot;\n&quot;;</span>
-<span class="fc" id="L70">		mirroringConfig += srcGroupId + &quot;,&quot; + destGroupId + &quot;:&quot; + domainName;</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        if (mirroringConfig.isEmpty()==false) mirroringConfig += &quot;\n&quot;;</span>
+<span class="fc" id="L75">		mirroringConfig += srcGroupId + &quot;,&quot; + destGroupId + &quot;:&quot; + domainName;</span>
 
-<span class="fc" id="L72">		ConfDB.setName(&quot;structureMirroringConfig&quot;, mirroringConfig);</span>
-<span class="fc" id="L73">	}</span>
+<span class="fc" id="L77">		ConfDB.setName(&quot;structureMirroringConfig&quot;, mirroringConfig);</span>
+<span class="fc" id="L78">	}</span>
 
     /**
      * Check if GroupDetails entity contain's sync_id.
@@ -81,139 +86,164 @@ import sk.iway.iwcm.users.UsersDB;
      * @param domainName - name of current domain
      */
 	private static int setSyncId(GroupDetails group, String domainName) {
-<span class="fc" id="L84">        int syncId = group.getSyncId();</span>
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if(syncId &lt; 1) {</span>
-<span class="fc" id="L86">            syncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
-<span class="fc" id="L87">            (new SimpleQuery()).execute(&quot;UPDATE groups SET sync_id=? WHERE group_id=? AND domain_name=?&quot;, syncId, group.getGroupId(), domainName);</span>
+<span class="fc" id="L89">        int syncId = group.getSyncId();</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if(syncId &lt; 1) {</span>
+<span class="fc" id="L91">            syncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)) {</span>
+<span class="fc" id="L93">                (new SimpleQuery()).execute(&quot;UPDATE groups SET sync_id=? WHERE group_id=? AND domain_name=?&quot;, syncId, group.getGroupId(), domainName);</span>
+            } else {
+<span class="nc" id="L95">                (new SimpleQuery()).execute(&quot;UPDATE groups SET sync_id=? WHERE group_id=?&quot;, syncId, group.getGroupId());</span>
+            }
+<span class="fc" id="L97">            group.setSyncId(syncId);</span>
+<span class="fc" id="L98">            GroupDetails cached = GroupsDB.getInstance().getGroup(group.getGroupId());</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            if (cached != null) cached.setSyncId(syncId);</span>
         }
-<span class="fc" id="L89">        return syncId;</span>
+<span class="fc" id="L101">        return syncId;</span>
     }
 
     /**
-     * Check if GroupDetails entity contain's sync_id.
+     * Check if DocDetails entity contain's sync_id.
      * If yes -&gt; do nothing.
      * If no -&gt; generate new sync_id and set it into DB via SimpleQuery.
      *
      * @param doc
      */
     private static int setSyncId(DocDetails doc) {
-<span class="fc" id="L100">        int syncId = doc.getSyncId();</span>
-<span class="fc bfc" id="L101" title="All 2 branches covered.">        if(syncId &lt; 1) {</span>
-<span class="fc" id="L102">            syncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
-<span class="fc" id="L103">            (new SimpleQuery()).execute(&quot;UPDATE documents SET sync_id=? WHERE doc_id=?&quot;, syncId, doc.getDocId());</span>
+<span class="fc" id="L112">        int syncId = doc.getSyncId();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if(syncId &lt; 1) {</span>
+<span class="fc" id="L114">            syncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
+<span class="fc" id="L115">            (new SimpleQuery()).execute(&quot;UPDATE documents SET sync_id=? WHERE doc_id=?&quot;, syncId, doc.getDocId());</span>
+<span class="fc" id="L116">            doc.setSyncId(syncId);</span>
         }
-<span class="fc" id="L105">        return syncId;</span>
+<span class="fc" id="L118">        return syncId;</span>
     }
 
     private static void println(PrintWriter out, String text)
 	{
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (out != null)</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">		if (out != null)</span>
 		{
-<span class="fc" id="L112">			out.println(text + &quot;&lt;br&gt;&quot;);</span>
-<span class="fc" id="L113">            out.flush();</span>
+<span class="fc" id="L125">			out.println(text + &quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L126">            out.flush();</span>
 		}
 		else
 		{
-<span class="nc" id="L117">			Logger.println(CloneStructureService.class, text);</span>
+<span class="nc" id="L130">			Logger.println(CloneStructureService.class, text);</span>
 		}
-<span class="fc" id="L119">	}</span>
+<span class="fc" id="L132">	}</span>
 
-	public static String cloneStructure(int srcGroupId, int destGroupId, boolean keepMirroring, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-<span class="fc" id="L122">		String domainName = CloudToolsForCore.getDomainName();</span>
-<span class="fc" id="L123">        Prop prop = Prop.getInstance(request);</span>
+    /**
+     * Clone structure of group and all subgroups and docs.
+     * @param srcGroupId - ID of source group
+     * @param destGroupId - ID of destination group
+     * @param keepMirroring - keep mirroring config after cloning
+     * @param keepVirtualPath - keep virtual path during cloning
+     * @param request
+     * @param response
+     * @return - String of HTML response
+     * @throws IOException
+     * @throws ServletException
+     */
+	public static String cloneStructure(int srcGroupId, int destGroupId, boolean keepMirroring, boolean keepVirtualPath, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+<span class="fc" id="L147">		String domainName = CloudToolsForCore.getDomainName();</span>
+<span class="fc" id="L148">        Prop prop = Prop.getInstance(request);</span>
 
         //Check that id's and domain are present
-<span class="pc bpc" id="L126" title="3 of 6 branches missed.">        if(srcGroupId == -1 || destGroupId == -1 || domainName.isEmpty()) return null;</span>
+<span class="pc bpc" id="L151" title="3 of 6 branches missed.">        if(srcGroupId == -1 || destGroupId == -1 || domainName.isEmpty()) return null;</span>
 
-<span class="fc" id="L128">        int srcSyncId = GroupMirroringServiceV9.getSyncId(srcGroupId);</span>
+        //save parameters to requestBean to use in services
+<span class="fc" id="L154">        RequestBean.addParameter(&quot;keepVirtualPath&quot;, &quot;&quot;+keepVirtualPath);</span>
+<span class="fc" id="L155">        RequestBean.addParameter(&quot;srcGroupId&quot;, &quot;&quot;+srcGroupId);</span>
+<span class="fc" id="L156">        RequestBean.addParameter(&quot;destGroupId&quot;, &quot;&quot;+destGroupId);</span>
+
+<span class="fc" id="L158">        int srcSyncId = GroupMirroringServiceV9.getSyncId(srcGroupId);</span>
 
 		//Set id's to mirroring (if they are not set allready)
-<span class="fc" id="L131">        String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
-<span class="fc" id="L132">		setMirroringConfig(srcGroupId, destGroupId, domainName);</span>
+<span class="fc" id="L161">        String mirroringConfig = Constants.getString(&quot;structureMirroringConfig&quot;);</span>
+<span class="fc" id="L162">		setMirroringConfig(srcGroupId, destGroupId, domainName);</span>
 
         //Prepare DB instances
-<span class="fc" id="L135">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L136">        DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L165">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L166">        DocDB docDB = DocDB.getInstance();</span>
 
         //Obtain and check source group to clone
-<span class="fc" id="L139">        GroupDetails srcGroup = groupsDB.getGroup(srcGroupId);</span>
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if(srcGroup == null) return null;</span>
+<span class="fc" id="L169">        GroupDetails srcGroup = groupsDB.getGroup(srcGroupId);</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">        if(srcGroup == null) return null;</span>
 
-<span class="fc" id="L142">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L172">        Identity user = UsersDB.getCurrentUser(request);</span>
 
         //Perms check for groups
-<span class="pc bpc" id="L145" title="2 of 4 branches missed.">        if(!GroupsDB.isGroupEditable(user,srcGroupId) || !GroupsDB.isGroupEditable(user,destGroupId)) {</span>
-<span class="nc" id="L146">			request.setAttribute(&quot;err_msg&quot;, prop.getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
-<span class="nc" id="L147">			SpringUrlMapping.redirectToLogon(response);</span>
-<span class="nc" id="L148">            return null;</span>
+<span class="pc bpc" id="L175" title="2 of 4 branches missed.">        if(!GroupsDB.isGroupEditable(user,srcGroupId) || !GroupsDB.isGroupEditable(user,destGroupId)) {</span>
+<span class="nc" id="L176">			request.setAttribute(&quot;err_msg&quot;, prop.getText(&quot;admin.editor_dir.dontHavePermsForThisDir&quot;));</span>
+<span class="nc" id="L177">			SpringUrlMapping.redirectToLogon(response);</span>
+<span class="nc" id="L178">            return null;</span>
 		}
 
-<span class="fc" id="L151">        sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
-<span class="fc" id="L152">        request.setAttribute(&quot;iconLink&quot;, &quot;&quot;);</span>
-<span class="fc" id="L153">        request.setAttribute(&quot;dialogTitle&quot;, prop.getText(&quot;admin.clone.dialogTitle&quot;));</span>
-<span class="fc" id="L154">        request.setAttribute(&quot;dialogDesc&quot;, prop.getText(&quot;admin.clone.dialogDesc&quot;)+ &quot;.&quot;);</span>
-<span class="fc" id="L155">        request.getRequestDispatcher(&quot;/admin/layout_top_dialog.jsp&quot;).include(request, response);</span>
+<span class="fc" id="L181">        sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
+<span class="fc" id="L182">        request.setAttribute(&quot;iconLink&quot;, &quot;&quot;);</span>
+<span class="fc" id="L183">        request.setAttribute(&quot;dialogTitle&quot;, prop.getText(&quot;admin.clone.dialogTitle&quot;));</span>
+<span class="fc" id="L184">        request.setAttribute(&quot;dialogDesc&quot;, prop.getText(&quot;admin.clone.dialogDesc&quot;)+ &quot;.&quot;);</span>
+<span class="fc" id="L185">        request.getRequestDispatcher(&quot;/admin/layout_top_dialog.jsp&quot;).include(request, response);</span>
 
-<span class="fc" id="L157">        PrintWriter out = response.getWriter();</span>
-<span class="fc" id="L158">        out.println(&quot;&lt;div class=\&quot;padding10\&quot;&gt;&quot;);</span>
-<span class="fc" id="L159">        out.println(&quot;&lt;h2&gt;&quot;+prop.getText(&quot;components.clone.cloning_please_wait&quot;)+&quot;&lt;/h2&gt;&quot;);</span>
-<span class="fc" id="L160">        out.flush();</span>
-<span class="fc" id="L161">        println(out, prop.getText(&quot;components.clone.copy_dir&quot;) + &quot;: &quot; + srcGroupId + &quot; -&gt; &quot; + destGroupId);</span>
+<span class="fc" id="L187">        PrintWriter out = response.getWriter();</span>
+<span class="fc" id="L188">        out.println(&quot;&lt;div class=\&quot;padding10\&quot;&gt;&quot;);</span>
+<span class="fc" id="L189">        out.println(&quot;&lt;h2&gt;&quot;+prop.getText(&quot;components.clone.cloning_please_wait&quot;)+&quot;&lt;/h2&gt;&quot;);</span>
+<span class="fc" id="L190">        out.flush();</span>
+<span class="fc" id="L191">        println(out, prop.getText(&quot;components.clone.copy_dir&quot;) + &quot;: &quot; + srcGroupId + &quot; -&gt; &quot; + destGroupId);</span>
 
         //disable structure mirroring available=false on create
-<span class="fc" id="L164">        boolean structureMirroringDisabledOnCreate = Constants.getBoolean(&quot;structureMirroringDisabledOnCreate&quot;);</span>
-<span class="fc" id="L165">        Constants.setBoolean(&quot;structureMirroringDisabledOnCreate&quot;, false);</span>
+<span class="fc" id="L194">        boolean structureMirroringDisabledOnCreate = Constants.getBoolean(&quot;structureMirroringDisabledOnCreate&quot;);</span>
+<span class="fc" id="L195">        Constants.setBoolean(&quot;structureMirroringDisabledOnCreate&quot;, false);</span>
 
         try {
             //Get all group's that belongs under source group (even with source group)
-<span class="fc" id="L169">            List&lt;GroupDetails&gt; groups = groupsDB.getGroupsTree(srcGroupId, true, true);</span>
-<span class="fc bfc" id="L170" title="All 2 branches covered.">            for(GroupDetails nextGroup : groups) {</span>
+<span class="fc" id="L199">            List&lt;GroupDetails&gt; groups = groupsDB.getGroupsTree(srcGroupId, true, true);</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">            for(GroupDetails nextGroup : groups) {</span>
 
-<span class="fc" id="L172">                println(out, &quot;&lt;br/&gt;&quot;+prop.getText(&quot;components.clone.creating_dir&quot;) + &quot;: &quot; + nextGroup.getGroupIdName());</span>
+<span class="fc" id="L202">                println(out, &quot;&lt;br/&gt;&quot;+prop.getText(&quot;components.clone.creating_dir&quot;) + &quot;: &quot; + nextGroup.getGroupIdName());</span>
 
                 //If group is present, set sync_id (if it's needed)
-<span class="fc" id="L175">                setSyncId(nextGroup, domainName);</span>
+<span class="fc" id="L205">                setSyncId(nextGroup, domainName);</span>
 
                 //Publish event -&gt; fake GROUP editing, so creating clone action of group will be performed by MIRRORING logic
-<span class="fc" id="L178">                (new WebjetEvent&lt;GroupDetails&gt;(nextGroup, WebjetEventType.AFTER_SAVE)).publishEvent();</span>
+<span class="fc" id="L208">                (new WebjetEvent&lt;GroupDetails&gt;(nextGroup, WebjetEventType.AFTER_SAVE)).publishEvent();</span>
 
                 //Get all doc's (web pages) that belongs under current looped group
-<span class="fc" id="L181">                List&lt;DocDetails&gt; groupDocs = docDB.getDocByGroup( nextGroup.getGroupId(), DocDB.ORDER_ID, true, -1, -1, false, false);</span>
-<span class="fc bfc" id="L182" title="All 2 branches covered.">                for(DocDetails groupDoc : groupDocs) {</span>
+<span class="fc" id="L211">                List&lt;DocDetails&gt; groupDocs = docDB.getDocByGroup( nextGroup.getGroupId(), DocDB.ORDER_ID, true, -1, -1, false, false);</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">                for(DocDetails groupDoc : groupDocs) {</span>
 
-<span class="fc" id="L184">                    println(out, &quot;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot; + prop.getText(&quot;components.clone.creating_page&quot;) + &quot;: &quot; + groupDoc.getDocId() + &quot; &quot; + groupDoc.getTitle());</span>
+<span class="fc" id="L214">                    println(out, &quot;&amp;nbsp;&amp;nbsp;&amp;nbsp;&quot; + prop.getText(&quot;components.clone.creating_page&quot;) + &quot;: &quot; + groupDoc.getDocId() + &quot; &quot; + groupDoc.getTitle());</span>
 
                     //If doc is present, set sync_id (if it's needed)
-<span class="fc" id="L187">                    setSyncId(groupDoc);</span>
+<span class="fc" id="L217">                    setSyncId(groupDoc);</span>
 
                     //Publish event -&gt; fake DOC editing, so creating clone action of doc will be performed by MIRRORING logic
-<span class="fc" id="L190">                    (new WebjetEvent&lt;DocDetails&gt;(groupDoc, WebjetEventType.AFTER_SAVE)).publishEvent();</span>
-<span class="fc" id="L191">                }</span>
-<span class="fc" id="L192">            }</span>
-<span class="nc" id="L193">        } catch (Exception e) {</span>
-<span class="nc" id="L194">            Logger.error(e);</span>
-<span class="nc" id="L195">            println(out, &quot;ERROR: &quot;+e.getLocalizedMessage());</span>
-<span class="fc" id="L196">        }</span>
+<span class="fc" id="L220">                    (new WebjetEvent&lt;DocDetails&gt;(groupDoc, WebjetEventType.AFTER_SAVE)).publishEvent();</span>
+<span class="fc" id="L221">                }</span>
+<span class="fc" id="L222">            }</span>
+<span class="nc" id="L223">        } catch (Exception e) {</span>
+<span class="nc" id="L224">            Logger.error(e);</span>
+<span class="nc" id="L225">            println(out, &quot;ERROR: &quot;+e.getLocalizedMessage());</span>
+<span class="fc" id="L226">        }</span>
 
-<span class="fc" id="L198">        Constants.setBoolean(&quot;structureMirroringDisabledOnCreate&quot;, structureMirroringDisabledOnCreate);</span>
-<span class="pc bpc" id="L199" title="1 of 2 branches missed.">        if (keepMirroring==false) {</span>
+<span class="fc" id="L228">        Constants.setBoolean(&quot;structureMirroringDisabledOnCreate&quot;, structureMirroringDisabledOnCreate);</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">        if (keepMirroring==false) {</span>
             //set original mirroring config
-<span class="fc" id="L201">            ConfDB.setName(&quot;structureMirroringConfig&quot;, mirroringConfig);</span>
+<span class="fc" id="L231">            ConfDB.setName(&quot;structureMirroringConfig&quot;, mirroringConfig);</span>
 
             //it there was no syncId on sourceFolder clear also source
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">            if (srcSyncId&lt;1) MirroringService.clearSyncId(srcGroupId);</span>
-<span class="fc" id="L205">            MirroringService.clearSyncId(destGroupId);</span>
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">            if (srcSyncId&lt;1) MirroringService.clearSyncId(srcGroupId);</span>
+<span class="fc" id="L235">            MirroringService.clearSyncId(destGroupId);</span>
         }
 
-<span class="fc" id="L208">        DocDB.getInstance(true);</span>
-<span class="fc" id="L209">        GroupsDB.getInstance(true);</span>
+<span class="fc" id="L238">        DocDB.getInstance(true);</span>
+<span class="fc" id="L239">        GroupsDB.getInstance(true);</span>
 
-<span class="fc" id="L211">        out.println(&quot;&lt;br/&gt;&lt;br/&gt;&lt;hr/&gt;&lt;strong&gt;&quot;+prop.getText(&quot;components.clone.done&quot;)+&quot;&lt;/strong&gt;&quot;);</span>
-<span class="fc" id="L212">        out.println(&quot;&lt;script type='text/javascript'&gt;window.opener.location.reload(); function Ok() {window.close();} &lt;/script&gt;&quot;);</span>
-<span class="fc" id="L213">        out.print(&quot;&lt;/div&gt;&quot;);</span>
-<span class="fc" id="L214">        request.getRequestDispatcher(&quot;/admin/layout_bottom_dialog.jsp&quot;).include(request, response);</span>
+<span class="fc" id="L241">        out.println(&quot;&lt;br/&gt;&lt;br/&gt;&lt;hr/&gt;&lt;strong&gt;&quot;+prop.getText(&quot;components.clone.done&quot;)+&quot;&lt;/strong&gt;&quot;);</span>
+<span class="fc" id="L242">        out.println(&quot;&lt;script type='text/javascript'&gt;window.opener.location.reload(); function Ok() {window.close();} &lt;/script&gt;&quot;);</span>
+<span class="fc" id="L243">        out.print(&quot;&lt;/div&gt;&quot;);</span>
+<span class="fc" id="L244">        request.getRequestDispatcher(&quot;/admin/layout_bottom_dialog.jsp&quot;).include(request, response);</span>
 
-<span class="fc" id="L216">		return null;</span>
+<span class="fc" id="L246">		return null;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

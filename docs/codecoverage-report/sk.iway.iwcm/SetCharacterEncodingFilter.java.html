@@ -7,6 +7,8 @@ import org.displaytag.filter.ExportDelegate;
 import org.displaytag.tags.TableTag;
 import org.displaytag.tags.TableTagParameters;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.components.proxy.Proxy;
@@ -60,7 +62,7 @@ import java.util.regex.Pattern;
  *@modified     $Date: 2003/07/29 17:13:02 $
  */
 
-<span class="fc" id="L63">public class SetCharacterEncodingFilter implements Filter</span>
+<span class="fc" id="L65">public class SetCharacterEncodingFilter extends OncePerRequestFilter</span>
 {
 
    // ----------------------------------------------------- Instance Variables
@@ -70,20 +72,14 @@ import java.util.regex.Pattern;
     *  The default character encoding to set for requests that pass through this
     *  filter.
     */
-<span class="fc" id="L73">   protected static String encoding = &quot;windows-1250&quot;;</span>
-
-   /**
-    *  The filter configuration object we are associated with. If this value is
-    *  null, this filter instance is not currently configured.
-    */
-<span class="fc" id="L79">   protected FilterConfig filterConfig = null;</span>
+<span class="fc" id="L75">   protected static String encoding = &quot;utf-8&quot;;</span>
 
    public static final String PDF_PRINT_PARAM = &quot;_printAsPdf&quot;;
 
    //customizovana error hlaska pri nedostupnosti DB spojenia pri starte servera
-<span class="fc" id="L84">   private static Map&lt;String, String&gt; dbErrorMessageText = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L80">   private static Map&lt;String, String&gt; dbErrorMessageText = new Hashtable&lt;&gt;();</span>
    static {
-<span class="fc" id="L86">   	dbErrorMessageText.put(&quot;&quot;,  &quot;Nastala chyba pri komunikacii s databazou, skuste sa prosim pripojit neskor.&lt;br/&gt;Error occured during database query, please try connecting later.&quot;);</span>
+<span class="fc" id="L82">   	dbErrorMessageText.put(&quot;&quot;,  &quot;Nastala chyba pri komunikacii s databazou, skuste sa prosim pripojit neskor.&lt;br/&gt;Error occured during database query, please try connecting later.&quot;);</span>
 	}
 
 
@@ -94,24 +90,23 @@ import java.util.regex.Pattern;
 	 */
 	@Override
 	public void destroy() {
-<span class="fc" id="L97">		this.filterConfig = null;</span>
-<span class="fc" id="L98">		requests.clear();</span>
+<span class="nc" id="L93">		requests.clear();</span>
 
-<span class="fc" id="L100">		Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
+<span class="nc" id="L95">		Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
 
-<span class="pc bpc" id="L102" title="1 of 2 branches missed.">		if (map != null) {</span>
-<span class="nc" id="L103">			map.clear();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">		if (map != null) {</span>
+<span class="nc" id="L98">			map.clear();</span>
 		}
-<span class="fc" id="L105">		threadEntityManagers.remove();</span>
-<span class="fc" id="L106">	}</span>
+<span class="nc" id="L100">		threadEntityManagers.remove();</span>
+<span class="nc" id="L101">	}</span>
 
 
-<span class="fc" id="L109">   private static Map&lt;Long, RequestBean&gt; requests = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L104">   private static Map&lt;Long, RequestBean&gt; requests = new HashMap&lt;&gt;();</span>
 
 	/**
 	 * ThreadLocal mapa, uchovavajuca pary EntityManagerFactory - EntityManager
 	 */
-<span class="fc" id="L114">   private static ThreadLocal&lt;Map&lt;EntityManagerFactory, EntityManager&gt;&gt; threadEntityManagers = new ThreadLocal&lt;&gt;();</span>
+<span class="fc" id="L109">   private static ThreadLocal&lt;Map&lt;EntityManagerFactory, EntityManager&gt;&gt; threadEntityManagers = new ThreadLocal&lt;&gt;();</span>
 
 
    /**
@@ -122,84 +117,84 @@ import java.util.regex.Pattern;
    public static void registerDataContext(ServletRequest req)
    {
    	//iba HttpServletRequest ma session
-<span class="nc bnc" id="L125" title="All 2 branches missed.">		if (req instanceof HttpServletRequest)</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (req instanceof HttpServletRequest)</span>
 		{
-<span class="nc" id="L127">			HttpServletRequest request = (HttpServletRequest)req;</span>
-<span class="nc" id="L128">			registerDataContext(request);</span>
+<span class="nc" id="L122">			HttpServletRequest request = (HttpServletRequest)req;</span>
+<span class="nc" id="L123">			registerDataContext(request);</span>
 		}
-<span class="nc" id="L130">   }</span>
+<span class="nc" id="L125">   }</span>
 
 
    public static void registerDataContext(HttpServletRequest request)
    {
-<span class="fc" id="L135">		RequestBean requestBean = new RequestBean();</span>
+<span class="fc" id="L130">		RequestBean requestBean = new RequestBean();</span>
 
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">		if (request != null)</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">		if (request != null)</span>
 		{
 			//iba HttpServletRequest ma session
-<span class="fc" id="L140">			HttpSession session = (request).getSession();</span>
+<span class="fc" id="L135">			HttpSession session = (request).getSession();</span>
 
-<span class="fc" id="L142">			String url = request.getRequestURI();</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">			if (ContextFilter.isRunning(request))</span>
+<span class="fc" id="L137">			String url = request.getRequestURI();</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">			if (ContextFilter.isRunning(request))</span>
 			{
-<span class="nc" id="L145">				url = ContextFilter.removeContextPath(request.getContextPath(), url);</span>
+<span class="nc" id="L140">				url = ContextFilter.removeContextPath(request.getContextPath(), url);</span>
 			}
 
 
-<span class="fc" id="L149">			Identity user = UsersDB.getCurrentUser(session);</span>
-<span class="fc bfc" id="L150" title="All 2 branches covered.">			if (user != null)</span>
+<span class="fc" id="L144">			Identity user = UsersDB.getCurrentUser(session);</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">			if (user != null)</span>
 			{
-<span class="fc" id="L152">				requestBean.setUserId(user.getUserId());</span>
-<span class="fc" id="L153">				requestBean.setUserAdmin(user.isAdmin());</span>
+<span class="fc" id="L147">				requestBean.setUserId(user.getUserId());</span>
+<span class="fc" id="L148">				requestBean.setUserAdmin(user.isAdmin());</span>
 			} else {
-<span class="fc" id="L155">				requestBean.setUserId(-1);</span>
-<span class="fc" id="L156">				requestBean.setUserAdmin(false);</span>
+<span class="fc" id="L150">				requestBean.setUserId(-1);</span>
+<span class="fc" id="L151">				requestBean.setUserAdmin(false);</span>
 			}
-<span class="fc" id="L158">			requestBean.setRemoteIP(Tools.getRemoteIP(request));</span>
-<span class="fc" id="L159">			requestBean.setRemoteHost(Tools.getRemoteHost(request));</span>
-<span class="fc" id="L160">			requestBean.setBaseHref(Tools.getBaseHref(request));</span>
-<span class="fc" id="L161">			requestBean.setLng(PageLng.getUserLng(request));</span>
-<span class="fc" id="L162">			requestBean.setUrl(url);</span>
-<span class="fc" id="L163">			requestBean.setQueryString(request.getQueryString());</span>
-<span class="fc" id="L164">			requestBean.setSessionId(session.getId());</span>
-<span class="fc" id="L165">			requestBean.setParameters(request.getParameterMap());</span>
-<span class="fc" id="L166">			requestBean.setHeaderOrigin(request.getHeader(&quot;origin&quot;));</span>
-<span class="fc" id="L167">			requestBean.setReferrer(request.getHeader(&quot;referer&quot;));</span>
-<span class="fc" id="L168">			requestBean.setCryptoPrivateKey((String)session.getAttribute(&quot;JPACryptoConverter.privateKey&quot;));</span>
+<span class="fc" id="L153">			requestBean.setRemoteIP(Tools.getRemoteIP(request));</span>
+<span class="fc" id="L154">			requestBean.setRemoteHost(Tools.getRemoteHost(request));</span>
+<span class="fc" id="L155">			requestBean.setBaseHref(Tools.getBaseHref(request));</span>
+<span class="fc" id="L156">			requestBean.setLng(PageLng.getUserLng(request));</span>
+<span class="fc" id="L157">			requestBean.setUrl(url);</span>
+<span class="fc" id="L158">			requestBean.setQueryString(request.getQueryString());</span>
+<span class="fc" id="L159">			requestBean.setSessionId(session.getId());</span>
+<span class="fc" id="L160">			requestBean.setParameters(request.getParameterMap());</span>
+<span class="fc" id="L161">			requestBean.setHeaderOrigin(request.getHeader(&quot;origin&quot;));</span>
+<span class="fc" id="L162">			requestBean.setReferrer(request.getHeader(&quot;referer&quot;));</span>
+<span class="fc" id="L163">			requestBean.setCryptoPrivateKey((String)session.getAttribute(&quot;JPACryptoConverter.privateKey&quot;));</span>
 
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">			if (Constants.getServletContext().getAttribute(&quot;springContext&quot;) != null) {</span>
-<span class="fc" id="L171">				requestBean.setSpringContext((ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;));</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">			if (Constants.getServletContext().getAttribute(&quot;springContext&quot;) != null) {</span>
+<span class="fc" id="L166">				requestBean.setSpringContext((ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;));</span>
 			}
 			else
             {
-<span class="nc" id="L175">                requestBean.setSpringContext(null);</span>
+<span class="nc" id="L170">                requestBean.setSpringContext(null);</span>
             }
 
-<span class="fc" id="L178">			String ua = request.getHeader(&quot;User-Agent&quot;);</span>
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">			if (ua == null) ua = &quot;unknown&quot;;</span>
-<span class="fc" id="L180">			requestBean.setUserAgent(ua);</span>
-<span class="pc bpc" id="L181" title="1 of 2 branches missed.">			if (InitServlet.isTypeCloud())</span>
+<span class="fc" id="L173">			String ua = request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">			if (ua == null) ua = &quot;unknown&quot;;</span>
+<span class="fc" id="L175">			requestBean.setUserAgent(ua);</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">			if (InitServlet.isTypeCloud())</span>
 			{
-<span class="nc" id="L183">				requestBean.setDomain(Tools.getServerName(request));</span>
+<span class="nc" id="L178">				requestBean.setDomain(Tools.getServerName(request));</span>
 			} else
 			{
-<span class="fc" id="L186">				requestBean.setDomain(DocDB.getDomain(request));</span>
+<span class="fc" id="L181">				requestBean.setDomain(DocDB.getDomain(request));</span>
 			}
-<span class="fc" id="L188">			requestBean.setServerName(request.getServerName());</span>
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">			requestBean.setHttpProtocol(Tools.isSecure(request) ? &quot;https&quot; : &quot;http&quot;);</span>
-<span class="fc" id="L190">			requestBean.setHttpPort(request.getServerPort());</span>
+<span class="fc" id="L183">			requestBean.setServerName(request.getServerName());</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">			requestBean.setHttpProtocol(Tools.isSecure(request) ? &quot;https&quot; : &quot;http&quot;);</span>
+<span class="fc" id="L185">			requestBean.setHttpPort(request.getServerPort());</span>
 
-<span class="fc" id="L192">			String path = request.getRequestURI();</span>
-<span class="pc bpc" id="L193" title="1 of 2 branches missed.">			if (ContextFilter.isRunning(request)) path = ContextFilter.removeContextPath(request.getContextPath(), path);</span>
+<span class="fc" id="L187">			String path = request.getRequestURI();</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">			if (ContextFilter.isRunning(request)) path = ContextFilter.removeContextPath(request.getContextPath(), path);</span>
 
-<span class="fc bfc" id="L195" title="All 4 branches covered.">			if (path.startsWith(&quot;/admin/elfinder-connector/&quot;) || path.equals(&quot;/admin/elFinder/gethash.jsp&quot;))</span>
+<span class="fc bfc" id="L190" title="All 4 branches covered.">			if (path.startsWith(&quot;/admin/elfinder-connector/&quot;) || path.equals(&quot;/admin/elFinder/gethash.jsp&quot;))</span>
 			{
-<span class="fc" id="L197">				requestBean.setRequest(request);</span>
+<span class="fc" id="L192">				requestBean.setRequest(request);</span>
 			}
 		}
 
-<span class="fc" id="L201">		requests.put(Thread.currentThread().getId(), requestBean);</span>
-<span class="fc" id="L202">   }</span>
+<span class="fc" id="L196">		requests.put(Thread.currentThread().getId(), requestBean);</span>
+<span class="fc" id="L197">   }</span>
 
    /**
     * Odregistrovanie RequestBeanu, musi sa volat ak zavolate register (napr. v 404 stranke)
@@ -207,89 +202,89 @@ import java.util.regex.Pattern;
    public static void unRegisterDataContext()
    {
 		//requests.remove(Thread.currentThread().getId());
-<span class="nc" id="L210">		closeEntityManagers();</span>
-<span class="nc" id="L211">   }</span>
+<span class="nc" id="L205">		closeEntityManagers();</span>
+<span class="nc" id="L206">   }</span>
 
    /**
     * inicializacia mapy EntityManager-ov
     */
    private static void initializeEntityManagerMap()
    {
-<span class="fc" id="L218">		Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
+<span class="fc" id="L213">		Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
 
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">		if (map == null)</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">		if (map == null)</span>
 		{
-<span class="fc" id="L222">			map = new ConcurrentHashMap&lt;&gt;();</span>
-<span class="fc" id="L223">			threadEntityManagers.set(map);</span>
+<span class="fc" id="L217">			map = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L218">			threadEntityManagers.set(map);</span>
 		}
-<span class="fc" id="L225">   }</span>
+<span class="fc" id="L220">   }</span>
 
    /**
     * upratanie pouzitych EntityManager-ov
     */
    private static void closeEntityManagers()
    {
-<span class="fc" id="L232">		Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
+<span class="fc" id="L227">		Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
 
-<span class="fc bfc" id="L234" title="All 2 branches covered.">		if (map == null)</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">		if (map == null)</span>
 		{
 			// ziadne nemame
-<span class="fc" id="L237">			return;</span>
+<span class="fc" id="L232">			return;</span>
 		}
 
-<span class="fc" id="L240">		threadEntityManagers.remove();</span>
+<span class="fc" id="L235">		threadEntityManagers.remove();</span>
 
-<span class="fc bfc" id="L242" title="All 2 branches covered.">		for (EntityManager entityManager : map.values())</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">		for (EntityManager entityManager : map.values())</span>
 		{
-<span class="fc" id="L244">			EntityTransaction transaction =	entityManager.getTransaction();</span>
+<span class="fc" id="L239">			EntityTransaction transaction =	entityManager.getTransaction();</span>
 
 			// ak niekto nechal otvorene transakcie, spravime rollback
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">			if (transaction != null)</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">			if (transaction != null)</span>
 			{
-<span class="pc bpc" id="L249" title="1 of 2 branches missed.">				if (transaction.isActive())</span>
-<span class="nc" id="L250">					transaction.rollback();</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">				if (transaction.isActive())</span>
+<span class="nc" id="L245">					transaction.rollback();</span>
 			}
-<span class="fc bfc" id="L252" title="All 2 branches covered.">			if (entityManager.isOpen())</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">			if (entityManager.isOpen())</span>
 			{
-<span class="fc" id="L254">				entityManager.close();</span>
+<span class="fc" id="L249">				entityManager.close();</span>
 			}
-<span class="fc" id="L256">		}</span>
-<span class="fc" id="L257">   }</span>
+<span class="fc" id="L251">		}</span>
+<span class="fc" id="L252">   }</span>
 
    public static void printDbErrorMessage(String path, HttpServletRequest request, HttpServletResponse res) throws IOException
    {
-<span class="nc" id="L261">        Logger.println(SetCharacterEncodingFilter.class, &quot;Printing DB error message&quot;);</span>
-<span class="nc" id="L262">        res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);</span>
-<span class="nc" id="L263">		res.setContentType(&quot;text/html; charset=&quot; +getEncoding());</span>
+<span class="nc" id="L256">        Logger.println(SetCharacterEncodingFilter.class, &quot;Printing DB error message&quot;);</span>
+<span class="nc" id="L257">        res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);</span>
+<span class="nc" id="L258">		res.setContentType(&quot;text/html; charset=&quot; +getEncoding());</span>
 
-<span class="nc" id="L265">		String key = &quot;&quot;;</span>
+<span class="nc" id="L260">		String key = &quot;&quot;;</span>
 
 		try
 		{
-<span class="nc bnc" id="L269" title="All 6 branches missed.">			if (path!=null &amp;&amp; path.length()&gt;2 &amp;&amp; path.startsWith(&quot;/&quot;))</span>
+<span class="nc bnc" id="L264" title="All 6 branches missed.">			if (path!=null &amp;&amp; path.length()&gt;2 &amp;&amp; path.startsWith(&quot;/&quot;))</span>
 			{
-<span class="nc" id="L271">				int i = path.indexOf(&quot;/&quot;, 1);</span>
-<span class="nc bnc" id="L272" title="All 2 branches missed.">				if (i&gt;2)</span>
+<span class="nc" id="L266">				int i = path.indexOf(&quot;/&quot;, 1);</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">				if (i&gt;2)</span>
 				{
-<span class="nc" id="L274">					key = path.substring(1, i);</span>
-<span class="nc" id="L275">					Logger.debug(SetCharacterEncodingFilter.class, &quot;key=&quot;+key+&quot; path=&quot;+path);</span>
+<span class="nc" id="L269">					key = path.substring(1, i);</span>
+<span class="nc" id="L270">					Logger.debug(SetCharacterEncodingFilter.class, &quot;key=&quot;+key+&quot; path=&quot;+path);</span>
 				}
 			}
 		}
-<span class="nc" id="L279">		catch (Exception ex)</span>
+<span class="nc" id="L274">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L281">		    sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L282">		}</span>
+<span class="nc" id="L276">		    sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L277">		}</span>
 
-<span class="nc" id="L284">		String message = dbErrorMessageText.get(key);</span>
-<span class="nc bnc" id="L285" title="All 2 branches missed.">		if (message==null) message = dbErrorMessageText.get(&quot;&quot;);</span>
+<span class="nc" id="L279">		String message = dbErrorMessageText.get(key);</span>
+<span class="nc bnc" id="L280" title="All 2 branches missed.">		if (message==null) message = dbErrorMessageText.get(&quot;&quot;);</span>
 
-<span class="nc" id="L287">		message = Tools.replace(message, &quot;!BASE_HREF!&quot;, Tools.getBaseHref(request));</span>
-<span class="nc" id="L288">		message = Tools.replace(message, &quot;!DOMAIN_NAME!&quot;, DocDB.getDomain(request));</span>
+<span class="nc" id="L282">		message = Tools.replace(message, &quot;!BASE_HREF!&quot;, Tools.getBaseHref(request));</span>
+<span class="nc" id="L283">		message = Tools.replace(message, &quot;!DOMAIN_NAME!&quot;, DocDB.getDomain(request));</span>
 
 	   	//Logger.debug(SetCharacterEncodingFilter.class, message);
-<span class="nc" id="L291">		res.getWriter().print(message);</span>
-<span class="nc" id="L292">   }</span>
+<span class="nc" id="L286">		res.getWriter().print(message);</span>
+<span class="nc" id="L287">   }</span>
 
    /**
     *  Select and set (if specified) the character encoding to be used to
@@ -302,54 +297,59 @@ import java.util.regex.Pattern;
     *@exception  ServletException  if a servlet error occurs
     */
    @Override
-   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
          FilterChain chain)
           throws IOException, ServletException
    {
-<span class="fc" id="L309">   	long startTime = System.currentTimeMillis();</span>
-<span class="fc" id="L310">   	MemoryMeasurement memoryConsumed = new MemoryMeasurement();</span>
+<span class="fc" id="L304">	String KEY = &quot;SetCharacterEncodingFilter.doFilter&quot;;</span>
+<span class="pc bpc" id="L305" title="1 of 2 branches missed.">	if (request.getAttribute(KEY) != null) {</span>
+<span class="nc" id="L306">		chain.doFilter(request, response);</span>
+<span class="nc" id="L307">		return;</span>
+	}
+<span class="fc" id="L309">	request.setAttribute(KEY, &quot;1&quot;);</span>
+	//Logger.debug(SetCharacterEncodingFilter.class, &quot;doFilterInternal, url=&quot;+request.getRequestURI());
+
+<span class="fc" id="L312">   	long startTime = System.currentTimeMillis();</span>
+<span class="fc" id="L313">   	MemoryMeasurement memoryConsumed = new MemoryMeasurement();</span>
    	try
    	{
-<span class="fc" id="L313">   		HttpServletRequest req = (HttpServletRequest) servletRequest;</span>
-<span class="fc" id="L314">   		String path = req.getRequestURI();</span>
-<span class="fc" id="L315">   		String pathNoContext = path;</span>
-<span class="pc bpc" id="L316" title="1 of 2 branches missed.">		if (ContextFilter.isRunning(req)) pathNoContext = ContextFilter.removeContextPath(req.getContextPath(), path);</span>
+<span class="fc" id="L316">   		String path = request.getRequestURI();</span>
+<span class="fc" id="L317">   		String pathNoContext = path;</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">		if (ContextFilter.isRunning(request)) pathNoContext = ContextFilter.removeContextPath(request.getContextPath(), path);</span>
 
-<span class="pc bpc" id="L318" title="1 of 2 branches missed.">		if (Logger.isLevel(Logger.DEBUG)) {</span>
-<span class="pc bpc" id="L319" title="2 of 16 branches missed.">			if (pathNoContext != null &amp;&amp; pathNoContext.indexOf(&quot;/images/&quot;) == -1 &amp;&amp; pathNoContext.indexOf(&quot;/css/&quot;) == -1 &amp;&amp; pathNoContext.indexOf(&quot;/scripts/&quot;) == -1 &amp;&amp; pathNoContext.endsWith(&quot;.gif&quot;) == false &amp;&amp; pathNoContext.endsWith(&quot;.png&quot;) == false &amp;&amp; pathNoContext.startsWith(&quot;/admin/refresher.jsp&quot;) == false &amp;&amp; pathNoContext.startsWith(&quot;/components/messages/refresher-ac.jsp&quot;) == false) {</span>
-<span class="fc bfc" id="L320" title="All 2 branches covered.">				Logger.debug(SetCharacterEncodingFilter.class, req.getMethod() + &quot; &quot; + path + (req.getQueryString() != null ? &quot;?&quot; + req.getQueryString() : &quot;&quot;));</span>
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">		if (Logger.isLevel(Logger.DEBUG)) {</span>
+<span class="pc bpc" id="L321" title="2 of 16 branches missed.">			if (pathNoContext != null &amp;&amp; pathNoContext.indexOf(&quot;/images/&quot;) == -1 &amp;&amp; pathNoContext.indexOf(&quot;/css/&quot;) == -1 &amp;&amp; pathNoContext.indexOf(&quot;/scripts/&quot;) == -1 &amp;&amp; pathNoContext.endsWith(&quot;.gif&quot;) == false &amp;&amp; pathNoContext.endsWith(&quot;.png&quot;) == false &amp;&amp; pathNoContext.startsWith(&quot;/admin/refresher.jsp&quot;) == false &amp;&amp; pathNoContext.startsWith(&quot;/components/messages/refresher-ac.jsp&quot;) == false) {</span>
+<span class="fc bfc" id="L322" title="All 2 branches covered.">				Logger.debug(SetCharacterEncodingFilter.class, request.getMethod() + &quot; &quot; + DocDB.getDomain(request) + path + (request.getQueryString() != null ? &quot;?&quot; + request.getQueryString() : &quot;&quot;));</span>
 			}
 		}
 
-<span class="pc bpc" id="L324" title="1 of 2 branches missed.">		if (pathNoContext == null) {</span>
-<span class="nc" id="L325">			pathNoContext = &quot;/&quot;;</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">		if (pathNoContext == null) {</span>
+<span class="nc" id="L327">			pathNoContext = &quot;/&quot;;</span>
 		}
 
 		//POZOR PRED TYMTO MIESTOM NESMIE BYT ZIADNE CITANIE PARAMETROV!!!!!!!
 	    // Select and set (if needed) the character encoding to be used
-<span class="fc" id="L330">	    String currentEncoding = selectEncoding(servletRequest);</span>
-<span class="pc bpc" id="L331" title="1 of 2 branches missed.">	    if (currentEncoding != null)</span>
+<span class="fc" id="L332">	    String currentEncoding = selectEncoding(request);</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">	    if (currentEncoding != null)</span>
 	    {
-<span class="fc" id="L333">	    	servletRequest.setCharacterEncoding(currentEncoding);</span>
+<span class="fc" id="L335">	    	request.setCharacterEncoding(currentEncoding);</span>
 	    }
 
-<span class="fc" id="L336">	    registerDataContext(req);</span>
+<span class="fc" id="L338">	    registerDataContext(request);</span>
 	   	//System.out.println(&quot;SetCharacterEncodingFilter.doFilter&quot;);
 
-<span class="pc bpc" id="L339" title="1 of 2 branches missed.">		if (pathNoContext.startsWith(&quot;/wjerrorpages/&quot;)</span>
-<span class="pc bpc" id="L340" title="3 of 4 branches missed.">						|| ( InitServlet.isWebjetInitialized()==false &amp;&amp; (pathNoContext.startsWith(&quot;/templates/&quot;)) )</span>
-<span class="pc bpc" id="L341" title="3 of 4 branches missed.">						|| ( InitServlet.isWebjetInitialized()==false &amp;&amp; (pathNoContext.startsWith(&quot;/components/_common/combine.jsp&quot;)) )</span>
+<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		if (pathNoContext.startsWith(&quot;/wjerrorpages/&quot;)</span>
+<span class="pc bpc" id="L342" title="3 of 4 branches missed.">						|| ( InitServlet.isWebjetInitialized()==false &amp;&amp; (pathNoContext.startsWith(&quot;/templates/&quot;)) )</span>
+<span class="pc bpc" id="L343" title="3 of 4 branches missed.">						|| ( InitServlet.isWebjetInitialized()==false &amp;&amp; (pathNoContext.startsWith(&quot;/components/_common/combine.jsp&quot;)) )</span>
 		) {
-<span class="nc" id="L343">			Constants.setServletContext(servletRequest.getServletContext());</span>
-<span class="nc" id="L344">			servletRequest.getRequestDispatcher(pathNoContext).forward(servletRequest, servletResponse);</span>
-<span class="nc" id="L345">			return;</span>
+<span class="nc" id="L345">			Constants.setServletContext(request.getServletContext());</span>
+<span class="nc" id="L346">			request.getRequestDispatcher(pathNoContext).forward(request, response);</span>
+<span class="nc" id="L347">			return;</span>
 		}
 
-<span class="pc bpc" id="L348" title="1 of 2 branches missed.">   		if (InitServlet.isWebjetInitialized()==false)</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">   		if (InitServlet.isWebjetInitialized()==false)</span>
    		{
-<span class="nc" id="L350">   			HttpServletResponse res = (HttpServletResponse)servletResponse;</span>
-
-<span class="nc" id="L352">   			printDbErrorMessage(pathNoContext, req, res);</span>
+<span class="nc" id="L352">   			printDbErrorMessage(pathNoContext, request, response);</span>
 
 <span class="nc" id="L354">   			return;</span>
    		}
@@ -357,16 +357,16 @@ import java.util.regex.Pattern;
 	      //aby mem.jsp bolo dostupne v kazdej situacii bez ohladu na DB spojenia
 <span class="pc bpc" id="L358" title="1 of 2 branches missed.">	      if (pathNoContext.startsWith(&quot;/admin/mem2.jsp&quot;))</span>
 	      {
-<span class="nc" id="L360">	      	servletRequest.getRequestDispatcher(pathNoContext).forward(servletRequest, servletResponse);</span>
+<span class="nc" id="L360">	      	request.getRequestDispatcher(pathNoContext).forward(request, response);</span>
 <span class="nc" id="L361">	      	return;</span>
 	      }
 
 	      //toto bypasne pathFilter
-<span class="pc bpc" id="L365" title="1 of 2 branches missed.">			if (PathFilter.bypassPath(path, servletRequest))</span>
+<span class="pc bpc" id="L365" title="1 of 2 branches missed.">			if (PathFilter.bypassPath(path, request))</span>
 			{
 <span class="nc" id="L367">				Logger.debug(SetCharacterEncodingFilter.class, &quot;PathFilter.bypass: &quot; + path);</span>
-<span class="nc" id="L368">				req.setAttribute(&quot;PathFilter.bypass&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L369">				chain.doFilter(servletRequest, servletResponse);</span>
+<span class="nc" id="L368">				request.setAttribute(&quot;PathFilter.bypass&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L369">				chain.doFilter(request, response);</span>
 <span class="nc" id="L370">				return;</span>
 			}
 
@@ -378,207 +378,205 @@ import java.util.regex.Pattern;
 <span class="nc" id="L378">			catch (NullPointerException npe)</span>
 			{
 				//nastala chyba pripojenia do DB
-<span class="nc" id="L381">				HttpServletResponse res = (HttpServletResponse)servletResponse;</span>
-<span class="nc" id="L382">   			printDbErrorMessage(pathNoContext, req, res);</span>
-<span class="nc" id="L383">   			return;</span>
-<span class="fc" id="L384">			}</span>
+<span class="nc" id="L381">   				printDbErrorMessage(pathNoContext, request, response);</span>
+<span class="nc" id="L382">   			return;</span>
+<span class="fc" id="L383">			}</span>
 
-<span class="fc" id="L386">			Identity user = (Identity)req.getSession().getAttribute(Constants.USER_KEY);</span>
-<span class="pc bpc" id="L387" title="3 of 4 branches missed.">			if (AuthenticationFilter.weTrustIIS() &amp;&amp; Tools.getUserPrincipal(req) != null &amp;&amp;</span>
-<span class="nc bnc" id="L388" title="All 2 branches missed.">						Tools.isNotEmpty(Tools.getUserPrincipal(req).getName()))</span>
+<span class="fc" id="L385">			Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L386" title="3 of 4 branches missed.">			if (AuthenticationFilter.weTrustIIS() &amp;&amp; Tools.getUserPrincipal(request) != null &amp;&amp;</span>
+<span class="nc bnc" id="L387" title="All 2 branches missed.">						Tools.isNotEmpty(Tools.getUserPrincipal(request).getName()))</span>
 			{
-<span class="nc" id="L390">				HttpServletResponse res = (HttpServletResponse) servletResponse;</span>
-<span class="nc bnc" id="L391" title="All 2 branches missed.">				if (isLoggedAsSomeoneElse(req, user))</span>
+<span class="nc bnc" id="L389" title="All 2 branches missed.">				if (isLoggedAsSomeoneElse(request, user))</span>
 				{
-<span class="nc" id="L393">					Logger.debug(getClass(), &quot;Redirecting user - logged in ambigously - &quot; + user.getLogin());</span>
-<span class="nc" id="L394">					String pathQS = path;</span>
-<span class="nc bnc" id="L395" title="All 2 branches missed.">					if (Tools.isNotEmpty(req.getQueryString())) pathQS = path + &quot;?&quot; + req.getQueryString();</span>
-<span class="nc" id="L396">					res.sendRedirect( Tools.addParameterToUrlNoAmp(AuthenticationFilter.getForbiddenURL(), &quot;origUrl&quot;, pathQS));</span>
-<span class="nc" id="L397">					LogonTools.setUserToSession(req.getSession(), null);</span>
-<span class="nc" id="L398">					return;</span>
+<span class="nc" id="L391">					Logger.debug(getClass(), &quot;Redirecting user - logged in ambigously - &quot; + user.getLogin());</span>
+<span class="nc" id="L392">					String pathQS = path;</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">					if (Tools.isNotEmpty(request.getQueryString())) pathQS = path + &quot;?&quot; + request.getQueryString();</span>
+<span class="nc" id="L394">					response.sendRedirect( Tools.addParameterToUrlNoAmp(AuthenticationFilter.getForbiddenURL(), &quot;origUrl&quot;, pathQS));</span>
+<span class="nc" id="L395">					LogonTools.setUserToSession(request.getSession(), null);</span>
+<span class="nc" id="L396">					return;</span>
 				}
 
-<span class="nc bnc" id="L401" title="All 2 branches missed.">				if (user == null)</span>
+<span class="nc bnc" id="L399" title="All 2 branches missed.">				if (user == null)</span>
 				{
 					//skontroluj, ci nie sme nahodou forbidden stranka
-<span class="nc" id="L404">					String pathQS = path;</span>
-<span class="nc bnc" id="L405" title="All 2 branches missed.">					if (Tools.isNotEmpty(req.getQueryString())) pathQS = path + &quot;?&quot; + req.getQueryString();</span>
+<span class="nc" id="L402">					String pathQS = path;</span>
+<span class="nc bnc" id="L403" title="All 2 branches missed.">					if (Tools.isNotEmpty(request.getQueryString())) pathQS = path + &quot;?&quot; + request.getQueryString();</span>
 
 					//ak sa nejedna o forbidden stranku, skus prihlasenie
-<span class="nc bnc" id="L408" title="All 2 branches missed.">					if (pathQS.equals(AuthenticationFilter.getForbiddenURL())==false)</span>
+<span class="nc bnc" id="L406" title="All 2 branches missed.">					if (pathQS.equals(AuthenticationFilter.getForbiddenURL())==false)</span>
 					{
 						try
 						{
-<span class="nc" id="L412">							Logger.debug(SetCharacterEncodingFilter.class, &quot;Actual URL: &quot; + pathQS + &quot; forbiddenURL: &quot; + AuthenticationFilter.getForbiddenURL());</span>
+<span class="nc" id="L410">							Logger.debug(SetCharacterEncodingFilter.class, &quot;Actual URL: &quot; + pathQS + &quot; forbiddenURL: &quot; + AuthenticationFilter.getForbiddenURL());</span>
 
-<span class="nc" id="L414">							user = logUserInViaNtlm(req, res);</span>
+<span class="nc" id="L412">							user = logUserInViaNtlm(request, response);</span>
 						}
-<span class="nc" id="L416">						catch (RedirectedException re)</span>
+<span class="nc" id="L414">						catch (RedirectedException re)</span>
 						{
-<span class="nc" id="L418">							Logger.debug(SetCharacterEncodingFilter.class, &quot;after logUserInViaNtlm, re=&quot;+re.getMessage());</span>
-<span class="nc" id="L419">							sk.iway.iwcm.Logger.error(re);</span>
+<span class="nc" id="L416">							Logger.debug(SetCharacterEncodingFilter.class, &quot;after logUserInViaNtlm, re=&quot;+re.getMessage());</span>
+<span class="nc" id="L417">							sk.iway.iwcm.Logger.error(re);</span>
 							//je nastaveny redirect, takze sa nemoze pokracovat
-<span class="nc" id="L421">							return;</span>
-<span class="nc" id="L422">						}</span>
+<span class="nc" id="L419">							return;</span>
+<span class="nc" id="L420">						}</span>
 					}
 				}
 				//ak si stale null, tak vypis nam informacie
-<span class="nc bnc" id="L426" title="All 2 branches missed.">				if (user == null)</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">				if (user == null)</span>
 				{
-<span class="nc" id="L428">					Logger.debug(getClass(), &quot;Automatic NtlmLogin unsuccessful&quot;);</span>
+<span class="nc" id="L426">					Logger.debug(getClass(), &quot;Automatic NtlmLogin unsuccessful&quot;);</span>
 				}
 			}
 
-<span class="fc" id="L432">			ProxyBean proxy = proxyDB.getProxy(pathNoContext);</span>
-<span class="fc bfc" id="L433" title="All 2 branches covered.">			if (proxy != null)</span>
+<span class="fc" id="L430">			ProxyBean proxy = proxyDB.getProxy(pathNoContext);</span>
+<span class="fc bfc" id="L431" title="All 2 branches covered.">			if (proxy != null)</span>
 			{
-<span class="fc" id="L435">				Logger.debug(SetCharacterEncodingFilter.class, &quot;Forwarding to proxy: &quot;+proxy.getRemoteServer());</span>
+<span class="fc" id="L433">				Logger.debug(SetCharacterEncodingFilter.class, &quot;Forwarding to proxy: &quot;+proxy.getRemoteServer());</span>
 
-<span class="fc" id="L437">				Proxy.service(proxy, req, (HttpServletResponse)servletResponse);</span>
+<span class="fc" id="L435">				Proxy.service(proxy, request, response);</span>
 
-<span class="fc" id="L439">				return;</span>
+<span class="fc" id="L437">				return;</span>
 			}
 
 			//ochrana pred priamym volanim Stripes action metod
-<span class="pc bpc" id="L443" title="1 of 4 branches missed.">			if (Constants.getBoolean(&quot;stripesEnableDirectActionCall&quot;)==false &amp;&amp; pathNoContext.endsWith(&quot;.action&quot;))</span>
+<span class="pc bpc" id="L441" title="1 of 4 branches missed.">			if (Constants.getBoolean(&quot;stripesEnableDirectActionCall&quot;)==false &amp;&amp; pathNoContext.endsWith(&quot;.action&quot;))</span>
 			{
-<span class="pc bpc" id="L445" title="5 of 6 branches missed.">				if (pathNoContext.indexOf(&quot;Ajax.action&quot;)!=-1||pathNoContext.indexOf(&quot;Download.action&quot;)!=-1||pathNoContext.indexOf(&quot;Upload.action&quot;)!=-1)</span>
+<span class="pc bpc" id="L443" title="5 of 6 branches missed.">				if (pathNoContext.indexOf(&quot;Ajax.action&quot;)!=-1||pathNoContext.indexOf(&quot;Download.action&quot;)!=-1||pathNoContext.indexOf(&quot;Upload.action&quot;)!=-1)</span>
 				{
 					//toto su defaultne povolene akcie
 				}
 				else
 				{
-<span class="nc" id="L451">					((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
-<span class="nc" id="L452">					req.getRequestDispatcher(&quot;/403.jsp&quot;).forward(req, servletResponse);</span>
-<span class="nc" id="L453">					return;</span>
+<span class="nc" id="L449">					response.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L450">					request.getRequestDispatcher(&quot;/403.jsp&quot;).forward(request, response);</span>
+<span class="nc" id="L451">					return;</span>
 				}
 			}
 
 			//nastavenie security headrov
-<span class="fc" id="L458">			setCommonHeaders((HttpServletResponse) servletResponse, (HttpServletRequest) servletRequest);</span>
+<span class="fc" id="L456">			setCommonHeaders(response, request);</span>
 
-<span class="pc bpc" id="L460" title="3 of 4 branches missed.">			if (&quot;true&quot;.equals(servletRequest.getParameter(PDF_PRINT_PARAM)) &amp;&amp; &quot;true&quot;.equals(servletRequest.getParameter(PDF_PRINT_PARAM+&quot;No&quot;))==false)</span>
+<span class="pc bpc" id="L458" title="3 of 4 branches missed.">			if (&quot;true&quot;.equals(request.getParameter(PDF_PRINT_PARAM)) &amp;&amp; &quot;true&quot;.equals(request.getParameter(PDF_PRINT_PARAM+&quot;No&quot;))==false)</span>
 	      {
-<span class="nc" id="L462">	         Logger.debug( SetCharacterEncodingFilter.class, &quot;------------&gt; ROBIM EXPORT PRE PDF&quot;);</span>
-<span class="nc" id="L463">	         HttpServletRequest request = (HttpServletRequest) servletRequest;</span>
-<span class="nc" id="L464">	         HttpServletResponse response = (HttpServletResponse) servletResponse;</span>
+<span class="nc" id="L460">	         Logger.debug( SetCharacterEncodingFilter.class, &quot;------------&gt; ROBIM EXPORT PRE PDF&quot;);</span>
 
-<span class="nc" id="L466">	         WJResponseWrapper wrapper = new WJResponseWrapper(response,request);</span>
+<span class="nc" id="L462">	         WJResponseWrapper wrapper = new WJResponseWrapper(response,request);</span>
 
-<span class="nc" id="L468">	         wrapper.setCharacterEncoding(currentEncoding);</span>
+<span class="nc" id="L464">	         wrapper.setCharacterEncoding(currentEncoding);</span>
 
-<span class="nc" id="L470">	         chain.doFilter(request, wrapper);</span>
+<span class="nc" id="L466">	         chain.doFilter(request, wrapper);</span>
 
 	         //ExportDelegate.writeExport((HttpServletResponse) servletResponse, servletRequest, wrapper);
-<span class="nc" id="L473">	         String content = wrapper.strWriter.getBuffer().toString();</span>
-<span class="nc" id="L474">	         Logger.debug( SetCharacterEncodingFilter.class, content);</span>
+<span class="nc" id="L469">	         String content = wrapper.strWriter.getBuffer().toString();</span>
+<span class="nc" id="L470">	         Logger.debug( SetCharacterEncodingFilter.class, content);</span>
 
-<span class="nc" id="L476">	         Logger.debug(SetCharacterEncodingFilter.class, &quot;response is commited: &quot;+response.isCommitted());</span>
+<span class="nc" id="L472">	         Logger.debug(SetCharacterEncodingFilter.class, &quot;response is commited: &quot;+response.isCommitted());</span>
 
 	         // clear headers
-<span class="nc bnc" id="L479" title="All 2 branches missed.">	         if (!response.isCommitted())</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">	         if (!response.isCommitted())</span>
 	         {
-<span class="nc" id="L481">	             response.reset();</span>
+<span class="nc" id="L477">	             response.reset();</span>
 	         }
 
 	         //content = CoBrand.getCleanBodyIncludeStartEnd(content, &quot;&lt;body&quot;, &quot;&lt;/body&gt;&quot;);
 
-<span class="nc" id="L486">	         response.setContentType(&quot;application/pdf&quot;);</span>
-<span class="nc" id="L487">	         StringBuilder fileName = new StringBuilder(&quot;export.pdf&quot;);</span>
-	         try
-	         {
-<span class="nc" id="L490">	         	int docId = DocDB.getDocIdFromURL(path, DocDB.getDomain(request));</span>
-<span class="nc bnc" id="L491" title="All 2 branches missed.">		         if(docId &gt; 0)</span>
-<span class="nc" id="L492">		         	request.setAttribute(&quot;docId&quot;, Integer.toString(docId));</span>
+<span class="nc" id="L482">	         response.setContentType(&quot;application/pdf&quot;);</span>
+<span class="nc bnc" id="L483" title="All 2 branches missed.">			 if (&quot;true&quot;.equals(request.getParameter(PDF_PRINT_PARAM+&quot;NoAttachment&quot;))==false) {</span>
+<span class="nc" id="L484">				StringBuilder fileName = new StringBuilder(&quot;export.pdf&quot;);</span>
+				try
+				{
+<span class="nc" id="L487">					int docId = DocDB.getDocIdFromURL(path, DocDB.getDomain(request));</span>
+<span class="nc bnc" id="L488" title="All 2 branches missed.">					if(docId &gt; 0)</span>
+<span class="nc" id="L489">						request.setAttribute(&quot;docId&quot;, Integer.toString(docId));</span>
 
-<span class="nc bnc" id="L494" title="All 2 branches missed.">	         	String pathTmp = path.endsWith(&quot;/&quot;) ? path.substring(0, path.length()-1) : path;</span>
-<span class="nc" id="L495">	         	fileName = new StringBuilder(pathTmp.substring(pathTmp.lastIndexOf('/')+1));</span>
-<span class="nc bnc" id="L496" title="All 2 branches missed.">	         	if (fileName.indexOf(&quot;.&quot;)!=-1) fileName = new StringBuilder(fileName.substring(0, fileName.lastIndexOf(&quot;.&quot;))).append(&quot;.pdf&quot;);</span>
-<span class="nc" id="L497">	         	else fileName.append(&quot;.pdf&quot;);</span>
-<span class="nc" id="L498">	         } catch (Exception ex) {}</span>
-<span class="nc" id="L499">	         response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment; filename=&quot; + fileName.toString());</span>
+<span class="nc bnc" id="L491" title="All 2 branches missed.">					String pathTmp = path.endsWith(&quot;/&quot;) ? path.substring(0, path.length()-1) : path;</span>
+<span class="nc" id="L492">					fileName = new StringBuilder(pathTmp.substring(pathTmp.lastIndexOf('/')+1));</span>
+<span class="nc bnc" id="L493" title="All 2 branches missed.">					if (fileName.indexOf(&quot;.&quot;)!=-1) fileName = new StringBuilder(fileName.substring(0, fileName.lastIndexOf(&quot;.&quot;))).append(&quot;.pdf&quot;);</span>
+<span class="nc" id="L494">					else fileName.append(&quot;.pdf&quot;);</span>
+<span class="nc" id="L495">				} catch (Exception ex) {}</span>
 
-<span class="nc" id="L501">	         setCommonHeaders(response, request);</span>
+<span class="nc" id="L497">				response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment; filename=&quot; + fileName.toString());</span>
+			 }
+
+<span class="nc" id="L500">	         setCommonHeaders(response, request);</span>
 
 	         //ak to islo napriamo tak to zhadzovalo IIS ISAPI filter!!!
-<span class="nc" id="L504">	         ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
-<span class="nc" id="L505">	         PdfTools.renderHtmlCode(content, baos, req);</span>
+<span class="nc" id="L503">	         ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L504">	         PdfTools.renderHtmlCode(content, baos, request);</span>
 
-<span class="nc" id="L507">	         response.setContentLength(baos.size());</span>
-<span class="nc" id="L508">	         response.getOutputStream().write(baos.toByteArray());</span>
-<span class="nc" id="L509">	         response.getOutputStream().flush();</span>
-<span class="nc" id="L510">	         response.getOutputStream().close();</span>
+<span class="nc" id="L506">	         response.setContentLength(baos.size());</span>
+<span class="nc" id="L507">	         response.getOutputStream().write(baos.toByteArray());</span>
+<span class="nc" id="L508">	         response.getOutputStream().flush();</span>
+<span class="nc" id="L509">	         response.getOutputStream().close();</span>
 
-<span class="nc" id="L512">	         return;</span>
+<span class="nc" id="L511">	         return;</span>
 	      }
-<span class="pc bpc" id="L514" title="1 of 2 branches missed.">			else if (servletRequest.getParameter(TableTagParameters.PARAMETER_EXPORTING) != null)</span>
+<span class="pc bpc" id="L513" title="1 of 2 branches missed.">			else if (request.getParameter(TableTagParameters.PARAMETER_EXPORTING) != null)</span>
 	      {
-<span class="nc" id="L516">			Logger.debug( SetCharacterEncodingFilter.class, &quot;------------&gt; ROBIM EXPORT PRE DISPLAYTAG&quot;);</span>
-<span class="nc" id="L517">	         HttpServletRequest request = (HttpServletRequest) servletRequest;</span>
+<span class="nc" id="L515">			Logger.debug( SetCharacterEncodingFilter.class, &quot;------------&gt; ROBIM EXPORT PRE DISPLAYTAG&quot;);</span>
 
-<span class="nc" id="L519">	         BufferedResponseWrapper wrapper = new BufferedResponseWrapper13Impl((HttpServletResponse) servletResponse);</span>
+<span class="nc" id="L517">	         BufferedResponseWrapper wrapper = new BufferedResponseWrapper13Impl(response);</span>
 
-<span class="nc" id="L521">	         Map&lt;String, Boolean&gt; contentBean = new HashMap&lt;&gt;(4);</span>
-<span class="nc" id="L522">	         contentBean.put(TableTagParameters.BEAN_BUFFER, Boolean.TRUE);</span>
+<span class="nc" id="L519">	         Map&lt;String, Boolean&gt; contentBean = new HashMap&lt;&gt;(4);</span>
+<span class="nc" id="L520">	         contentBean.put(TableTagParameters.BEAN_BUFFER, Boolean.TRUE);</span>
 
-<span class="nc" id="L524">	         request.setAttribute(TableTag.FILTER_CONTENT_OVERRIDE_BODY, contentBean);</span>
+<span class="nc" id="L522">	         request.setAttribute(TableTag.FILTER_CONTENT_OVERRIDE_BODY, contentBean);</span>
 
 	         //WebSphere toto nevie...
-<span class="nc" id="L527">	         wrapper.setCharacterEncoding(currentEncoding);</span>
+<span class="nc" id="L525">	         wrapper.setCharacterEncoding(currentEncoding);</span>
 
-<span class="nc" id="L529">	         chain.doFilter(request, wrapper);</span>
+<span class="nc" id="L527">	         chain.doFilter(request, wrapper);</span>
 
-<span class="nc" id="L531">	         ExportDelegate.writeExport((HttpServletResponse) servletResponse, servletRequest, wrapper);</span>
+<span class="nc" id="L529">	         ExportDelegate.writeExport(response, request, wrapper);</span>
 
-<span class="nc" id="L533">	      }</span>
+<span class="nc" id="L531">	      }</span>
 			else
 	      {
 		      try
 		      {
 		         //zaloguj start
 		         //Logger.println(this,&quot;Editor start&quot;);
-<span class="fc" id="L540">		         java.util.Date startDate = new java.util.Date();</span>
+<span class="fc" id="L538">		         java.util.Date startDate = new java.util.Date();</span>
 
-<span class="fc" id="L542">		         servletRequest.setAttribute(&quot;generationStartDate&quot;, startDate);</span>
+<span class="fc" id="L540">		         request.setAttribute(&quot;generationStartDate&quot;, startDate);</span>
 		      }
-<span class="nc" id="L544">		      catch (Exception ex)</span>
+<span class="nc" id="L542">		      catch (Exception ex)</span>
 		      {
 
-<span class="fc" id="L547">		      }</span>
+<span class="fc" id="L545">		      }</span>
 
 		      // Pass control on to the next filter
-<span class="fc" id="L550">		      chain.doFilter(servletRequest, servletResponse);</span>
+<span class="fc" id="L548">		      chain.doFilter(request, response);</span>
 	      }
 
-<span class="fc" id="L553">			long timeTaken = System.currentTimeMillis() - startTime;</span>
-<span class="pc bpc" id="L554" title="1 of 2 branches missed.">			if(Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;))</span>
-<span class="fc" id="L555">				savePerformanceMeasure((HttpServletRequest) servletRequest, timeTaken, memoryConsumed.diff());</span>
+<span class="fc" id="L551">			long timeTaken = System.currentTimeMillis() - startTime;</span>
+<span class="pc bpc" id="L552" title="1 of 2 branches missed.">			if(Constants.getBoolean(&quot;serverMonitoringEnablePerformance&quot;))</span>
+<span class="fc" id="L553">				savePerformanceMeasure(request, timeTaken, memoryConsumed.diff());</span>
    	}
    	finally
    	{
    		//to robi niekedy problem aj mimo cloudu, takze racej rusim if (InitServlet.isTypeCloud()==false) requests.remove(Thread.currentThread().getId());
-<span class="fc" id="L560">   		closeEntityManagers();</span>
+<span class="fc" id="L558">   		closeEntityManagers();</span>
    		//kontrola serializovatelnosti session
-<span class="pc bpc" id="L562" title="2 of 4 branches missed.">			if(Constants.getBoolean(&quot;enableSessionSerializableCheck&quot;) &amp;&amp; Tools.getServerName((HttpServletRequest)servletRequest).indexOf(&quot;iwcm.interway.sk&quot;)!= -1)</span>
+<span class="pc bpc" id="L560" title="2 of 4 branches missed.">			if(Constants.getBoolean(&quot;enableSessionSerializableCheck&quot;) &amp;&amp; Tools.getServerName(request).indexOf(&quot;iwcm.interway.sk&quot;)!= -1)</span>
 			{
 				try
 				{
-<span class="nc" id="L566">					checkSessionSerializable(servletRequest);</span>
+<span class="nc" id="L564">					checkSessionSerializable(request);</span>
 				}
-<span class="nc" id="L568">				catch (ObjectNotSerializableException e)</span>
+<span class="nc" id="L566">				catch (ObjectNotSerializableException e)</span>
 				{
-<span class="nc bnc" id="L570" title="All 2 branches missed.">				    if(!e.getMessage().endsWith(&quot;editorForm&quot;))</span>
+<span class="nc bnc" id="L568" title="All 2 branches missed.">				    if(!e.getMessage().endsWith(&quot;editorForm&quot;))</span>
                     {
-<span class="nc" id="L572">                        sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L570">                        sk.iway.iwcm.Logger.error(e);</span>
                     }
                     else
                     {
-<span class="nc" id="L576">                        Logger.debug(this,&quot;Error: &quot;+e.getMessage());</span>
+<span class="nc" id="L574">                        Logger.debug(this,&quot;Error: &quot;+e.getMessage());</span>
                     }
-<span class="nc" id="L578">				}</span>
+<span class="nc" id="L576">				}</span>
 			}
    	}
-<span class="fc" id="L581">   }</span>
+<span class="fc" id="L579">   }</span>
 
    /**
     * Nastavi secutiry hlavicky na response
@@ -587,53 +585,53 @@ import java.util.regex.Pattern;
     */
    public static void setCommonHeaders(HttpServletResponse res, HttpServletRequest req)
    {
-<span class="fc" id="L590">		String path = PathFilter.getOrigPath(req);</span>
-<span class="fc bfc" id="L591" title="All 2 branches covered.">		if (path == null)</span>
+<span class="fc" id="L588">		String path = PathFilter.getOrigPath(req);</span>
+<span class="fc bfc" id="L589" title="All 2 branches covered.">		if (path == null)</span>
 		{
-<span class="fc" id="L593">			path = req.getRequestURI();</span>
-<span class="pc bpc" id="L594" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(req.getContextPath()))</span>
+<span class="fc" id="L591">			path = req.getRequestURI();</span>
+<span class="pc bpc" id="L592" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(req.getContextPath()))</span>
 			{
-<span class="nc" id="L596">				path = path.substring(req.getContextPath().length());</span>
+<span class="nc" id="L594">				path = path.substring(req.getContextPath().length());</span>
 			}
 		}
 
-<span class="fc" id="L600">   	PathFilter.setHeader(res, &quot;X-Frame-Options&quot;, &quot;xFrameOptions&quot;);</span>
-<span class="fc" id="L601">		PathFilter.setAccessControlAllowOrigin(path, res);</span>
-<span class="fc" id="L602">		PathFilter.setHeader(res, &quot;X-XSS-Protection&quot;, &quot;xXssProtection&quot;);</span>
-<span class="fc" id="L603">		PathFilter.setHeader(res, &quot;Server&quot;, &quot;serverName&quot;);</span>
-<span class="pc bpc" id="L604" title="1 of 2 branches missed.">		if (Tools.isSecure(req))</span>
+<span class="fc" id="L598">   	PathFilter.setHeader(res, &quot;X-Frame-Options&quot;, &quot;xFrameOptions&quot;);</span>
+<span class="fc" id="L599">		PathFilter.setAccessControlAllowOrigin(path, res);</span>
+<span class="fc" id="L600">		PathFilter.setHeader(res, &quot;X-XSS-Protection&quot;, &quot;xXssProtection&quot;);</span>
+<span class="fc" id="L601">		PathFilter.setHeader(res, &quot;Server&quot;, &quot;serverName&quot;);</span>
+<span class="pc bpc" id="L602" title="1 of 2 branches missed.">		if (Tools.isSecure(req))</span>
 		{
-<span class="nc" id="L606">			PathFilter.setHeader(res, &quot;Strict-Transport-Security&quot;, &quot;strictTransportSecurity&quot;);</span>
+<span class="nc" id="L604">			PathFilter.setHeader(res, &quot;Strict-Transport-Security&quot;, &quot;strictTransportSecurity&quot;);</span>
 		}
-<span class="fc" id="L608">		PathFilter.setHeader(res, &quot;X-Content-Type-Options&quot;, &quot;xContentTypeOptions&quot;);</span>
-<span class="pc bpc" id="L609" title="1 of 4 branches missed.">		if (path != null &amp;&amp; path.toLowerCase().endsWith(&quot;.svg&quot;)) {</span>
+<span class="fc" id="L606">		PathFilter.setHeader(res, &quot;X-Content-Type-Options&quot;, &quot;xContentTypeOptions&quot;);</span>
+<span class="pc bpc" id="L607" title="1 of 4 branches missed.">		if (path != null &amp;&amp; path.toLowerCase().endsWith(&quot;.svg&quot;)) {</span>
 			//pre SVG mame separe CSP hlavicky
-<span class="fc" id="L611">			PathFilter.setHeader(res, &quot;Content-Security-Policy&quot;, &quot;contentSecurityPolicySvg&quot;);</span>
+<span class="fc" id="L609">			PathFilter.setHeader(res, &quot;Content-Security-Policy&quot;, &quot;contentSecurityPolicySvg&quot;);</span>
 		} else {
-<span class="fc" id="L613">			PathFilter.setHeader(res, &quot;Content-Security-Policy&quot;, &quot;contentSecurityPolicy&quot;);</span>
+<span class="fc" id="L611">			PathFilter.setHeader(res, &quot;Content-Security-Policy&quot;, &quot;contentSecurityPolicy&quot;);</span>
 		}
-<span class="fc" id="L615">		PathFilter.setHeader(res, &quot;Referrer-Policy&quot;, &quot;refererPolicy&quot;);</span>
+<span class="fc" id="L613">		PathFilter.setHeader(res, &quot;Referrer-Policy&quot;, &quot;refererPolicy&quot;);</span>
 
-<span class="fc" id="L617">		PathFilter.setFeaturePolicy(res);</span>
+<span class="fc" id="L615">		PathFilter.setFeaturePolicy(res);</span>
 
 		//overi, ci nemame nejaky displaytag parameter, ak ano generujme noindex, nofollow hlavicku
-<span class="fc" id="L620">		Enumeration&lt;String&gt; params = req.getParameterNames();</span>
-<span class="fc bfc" id="L621" title="All 2 branches covered.">		while (params.hasMoreElements())</span>
+<span class="fc" id="L618">		Enumeration&lt;String&gt; params = req.getParameterNames();</span>
+<span class="fc bfc" id="L619" title="All 2 branches covered.">		while (params.hasMoreElements())</span>
 		{
-<span class="fc" id="L623">			String name = params.nextElement();</span>
-<span class="pc bpc" id="L624" title="1 of 2 branches missed.">			if (name.startsWith(&quot;d-&quot;))</span>
+<span class="fc" id="L621">			String name = params.nextElement();</span>
+<span class="pc bpc" id="L622" title="1 of 2 branches missed.">			if (name.startsWith(&quot;d-&quot;))</span>
 			{
 				//name.endsWith(&quot;-p&quot;) - toto nedavame, to je strankovanie a to chceme indexovat
-<span class="nc bnc" id="L627" title="All 4 branches missed.">				if (name.endsWith(&quot;-s&quot;) || name.endsWith(&quot;-o&quot;))</span>
+<span class="nc bnc" id="L625" title="All 4 branches missed.">				if (name.endsWith(&quot;-s&quot;) || name.endsWith(&quot;-o&quot;))</span>
 				{
 					//#35701
-<span class="nc" id="L630">					PathFilter.setXRobotsTagValue(&quot;NOT_SEARCHABLE_PAGE&quot;, res);</span>
-<span class="nc" id="L631">					break;</span>
+<span class="nc" id="L628">					PathFilter.setXRobotsTagValue(&quot;NOT_SEARCHABLE_PAGE&quot;, res);</span>
+<span class="nc" id="L629">					break;</span>
 				}
 			}
-<span class="fc" id="L634">		}</span>
+<span class="fc" id="L632">		}</span>
 
-<span class="fc" id="L636">   }</span>
+<span class="fc" id="L634">   }</span>
 
 	/**
 	 * Skontroluje su objekty v session serializovatelne
@@ -642,30 +640,30 @@ import java.util.regex.Pattern;
 	 */
    private void checkSessionSerializable(ServletRequest servletRequest) throws ObjectNotSerializableException
 	{
-<span class="nc bnc" id="L645" title="All 2 branches missed.">		if (servletRequest instanceof HttpServletRequest) {</span>
-<span class="nc" id="L646">		   HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;</span>
-<span class="nc" id="L647">		   HttpSession session = httpRequest.getSession(false);</span>
-<span class="nc bnc" id="L648" title="All 2 branches missed.">		   if (session != null) {</span>
-<span class="nc" id="L649">		       boolean serializable = true;</span>
-<span class="nc" id="L650">		       StringBuilder items = new StringBuilder();</span>
-<span class="nc" id="L651">		       Enumeration&lt;String&gt; names = session.getAttributeNames();</span>
-<span class="nc bnc" id="L652" title="All 2 branches missed.">		       while (names.hasMoreElements()) {</span>
-<span class="nc" id="L653">		           String attrName = names.nextElement();</span>
-<span class="nc bnc" id="L654" title="All 6 branches missed.">		           if (&quot;sessionCssParsed&quot;.equals(attrName) || &quot;editorForm&quot;.equals(attrName) || &quot;ShowdocAction.showDocData&quot;.equals(attrName)) continue;</span>
-<span class="nc" id="L655">		           boolean attributeSerializable = serialize(</span>
-<span class="nc" id="L656">		                   attrName, session.getAttribute(attrName)</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">		if (servletRequest instanceof HttpServletRequest) {</span>
+<span class="nc" id="L644">		   HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;</span>
+<span class="nc" id="L645">		   HttpSession session = httpRequest.getSession(false);</span>
+<span class="nc bnc" id="L646" title="All 2 branches missed.">		   if (session != null) {</span>
+<span class="nc" id="L647">		       boolean serializable = true;</span>
+<span class="nc" id="L648">		       StringBuilder items = new StringBuilder();</span>
+<span class="nc" id="L649">		       Enumeration&lt;String&gt; names = session.getAttributeNames();</span>
+<span class="nc bnc" id="L650" title="All 2 branches missed.">		       while (names.hasMoreElements()) {</span>
+<span class="nc" id="L651">		           String attrName = names.nextElement();</span>
+<span class="nc bnc" id="L652" title="All 6 branches missed.">		           if (&quot;sessionCssParsed&quot;.equals(attrName) || &quot;editorForm&quot;.equals(attrName) || &quot;ShowdocAction.showDocData&quot;.equals(attrName)) continue;</span>
+<span class="nc" id="L653">		           boolean attributeSerializable = serialize(</span>
+<span class="nc" id="L654">		                   attrName, session.getAttribute(attrName)</span>
 		           );
-<span class="nc bnc" id="L658" title="All 2 branches missed.">		           if (!attributeSerializable) {</span>
-<span class="nc bnc" id="L659" title="All 2 branches missed.">		               if (items.length() &gt; 0) {</span>
-<span class="nc" id="L660">		                   items.append(&quot;, &quot;);</span>
+<span class="nc bnc" id="L656" title="All 2 branches missed.">		           if (!attributeSerializable) {</span>
+<span class="nc bnc" id="L657" title="All 2 branches missed.">		               if (items.length() &gt; 0) {</span>
+<span class="nc" id="L658">		                   items.append(&quot;, &quot;);</span>
 		               }
-<span class="nc" id="L662">		               items.append(attrName);</span>
+<span class="nc" id="L660">		               items.append(attrName);</span>
 		           }
-<span class="nc" id="L664">		           serializable &amp;= attributeSerializable;</span>
-<span class="nc" id="L665">		       }</span>
+<span class="nc" id="L662">		           serializable &amp;= attributeSerializable;</span>
+<span class="nc" id="L663">		       }</span>
 
-<span class="nc bnc" id="L667" title="All 2 branches missed.">		       if (!serializable) {</span>
-<span class="nc" id="L668">		           throw new ObjectNotSerializableException(</span>
+<span class="nc bnc" id="L665" title="All 2 branches missed.">		       if (!serializable) {</span>
+<span class="nc" id="L666">		           throw new ObjectNotSerializableException(</span>
 		                   &quot;These objects stored in session attributes &quot; +
 		                       &quot;are not serializable (see detailed log): &quot; +
 		                       items
@@ -673,7 +671,7 @@ import java.util.regex.Pattern;
 		       }
 		   }
         }
-<span class="nc" id="L676">	}</span>
+<span class="nc" id="L674">	}</span>
 
    /**
     * Serializes object into byteArray
@@ -683,66 +681,66 @@ import java.util.regex.Pattern;
     * @return
     */
    private boolean serialize(String attrName, Object object) {
-<span class="nc" id="L686">       ByteArrayOutputStream bos = null;</span>
-<span class="nc" id="L687">       ObjectOutput out = null;</span>
+<span class="nc" id="L684">       ByteArrayOutputStream bos = null;</span>
+<span class="nc" id="L685">       ObjectOutput out = null;</span>
        try{
-<span class="nc" id="L689">           bos = new ByteArrayOutputStream();</span>
-<span class="nc" id="L690">           out = new ObjectOutputStream(bos);</span>
-<span class="nc" id="L691">           out.writeObject(object);</span>
-<span class="nc" id="L692">           return true;</span>
-<span class="nc" id="L693">       } catch (IOException ex) {</span>
-<span class="nc" id="L694">           String msg = &quot;Failed to serialize attribute: &quot; + attrName;</span>
-<span class="nc" id="L695">           Logger.debug(SetCharacterEncodingFilter.class, msg + &quot;: &quot; +ex.getMessage());</span>
-<span class="nc" id="L696">           return false;</span>
+<span class="nc" id="L687">           bos = new ByteArrayOutputStream();</span>
+<span class="nc" id="L688">           out = new ObjectOutputStream(bos);</span>
+<span class="nc" id="L689">           out.writeObject(object);</span>
+<span class="nc" id="L690">           return true;</span>
+<span class="nc" id="L691">       } catch (IOException ex) {</span>
+<span class="nc" id="L692">           String msg = &quot;Failed to serialize attribute: &quot; + attrName;</span>
+<span class="nc" id="L693">           Logger.debug(SetCharacterEncodingFilter.class, msg + &quot;: &quot; +ex.getMessage());</span>
+<span class="nc" id="L694">           return false;</span>
        } finally {
-<span class="nc" id="L698">           IOUtils.closeQuietly(bos);</span>
-<span class="nc bnc" id="L699" title="All 2 branches missed.">           if (out != null) {</span>
-<span class="nc" id="L700">               try { out.close(); } catch (IOException ignored) {}</span>
+<span class="nc" id="L696">           IOUtils.closeQuietly(bos);</span>
+<span class="nc bnc" id="L697" title="All 2 branches missed.">           if (out != null) {</span>
+<span class="nc" id="L698">               try { out.close(); } catch (IOException ignored) {}</span>
            }
        }
    }
 
 	private void savePerformanceMeasure(HttpServletRequest request, long timeTakenToExecute, long memoryDiff)
 	{
-<span class="fc bfc" id="L707" title="All 2 branches covered.">		if (!isRequestAimedOnHtmlPage(request))</span>
-<span class="fc" id="L708">			return;</span>
+<span class="fc bfc" id="L705" title="All 2 branches covered.">		if (!isRequestAimedOnHtmlPage(request))</span>
+<span class="fc" id="L706">			return;</span>
 
-<span class="fc" id="L710">		StringBuilder measurementKey = new StringBuilder(request.getRequestURI());</span>
-<span class="fc" id="L711">		appendQueryStringIfNecessary(measurementKey, request);</span>
-<span class="fc" id="L712">		ExecutionTimeMonitor.recordDocumentExecution(measurementKey.toString(), timeTakenToExecute, memoryDiff);</span>
-<span class="fc" id="L713">	}</span>
+<span class="fc" id="L708">		StringBuilder measurementKey = new StringBuilder(request.getRequestURI());</span>
+<span class="fc" id="L709">		appendQueryStringIfNecessary(measurementKey, request);</span>
+<span class="fc" id="L710">		ExecutionTimeMonitor.recordDocumentExecution(measurementKey.toString(), timeTakenToExecute, memoryDiff);</span>
+<span class="fc" id="L711">	}</span>
 
 	private boolean isRequestAimedOnHtmlPage(HttpServletRequest request)
 	{
-<span class="fc" id="L717">		String uri = request.getRequestURI();</span>
+<span class="fc" id="L715">		String uri = request.getRequestURI();</span>
 
-<span class="pc bpc" id="L719" title="1 of 2 branches missed.">		if (uri == null)</span>
-<span class="nc" id="L720">			return false;</span>
+<span class="pc bpc" id="L717" title="1 of 2 branches missed.">		if (uri == null)</span>
+<span class="nc" id="L718">			return false;</span>
 
-<span class="fc bfc" id="L722" title="All 6 branches covered.">		return uri.contains(&quot;showdoc.do&quot;) || uri.contains(&quot;.html&quot;) || uri.endsWith(&quot;/&quot;);</span>
+<span class="fc bfc" id="L720" title="All 6 branches covered.">		return uri.contains(&quot;showdoc.do&quot;) || uri.contains(&quot;.html&quot;) || uri.endsWith(&quot;/&quot;);</span>
 	}
 
 	private void appendQueryStringIfNecessary(StringBuilder measurementKey, HttpServletRequest request)
 	{
-<span class="fc bfc" id="L727" title="All 2 branches covered.">		if (Tools.isEmpty(request.getQueryString()))</span>
-<span class="fc" id="L728">			return;</span>
+<span class="fc bfc" id="L725" title="All 2 branches covered.">		if (Tools.isEmpty(request.getQueryString()))</span>
+<span class="fc" id="L726">			return;</span>
 
-<span class="fc" id="L730">		String uri = request.getRequestURI();</span>
-<span class="fc" id="L731">		String queryString = request.getQueryString();</span>
-<span class="pc bpc" id="L732" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;appendQueryStringWhenMonitoringDocuments&quot;))</span>
+<span class="fc" id="L728">		String uri = request.getRequestURI();</span>
+<span class="fc" id="L729">		String queryString = request.getQueryString();</span>
+<span class="pc bpc" id="L730" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;appendQueryStringWhenMonitoringDocuments&quot;))</span>
 		{
-<span class="nc" id="L734">			measurementKey.append(queryString);</span>
+<span class="nc" id="L732">			measurementKey.append(queryString);</span>
 		}
-<span class="fc bfc" id="L736" title="All 2 branches covered.">		else if (uri.contains(&quot;showdoc.do&quot;))</span>
+<span class="fc bfc" id="L734" title="All 2 branches covered.">		else if (uri.contains(&quot;showdoc.do&quot;))</span>
 		{
-<span class="fc" id="L738">			Matcher docIdMatcher = Pattern.compile(&quot;docid=([0-9]*)&quot;).matcher(queryString); //NOSONAR</span>
+<span class="fc" id="L736">			Matcher docIdMatcher = Pattern.compile(&quot;docid=([0-9]*)&quot;).matcher(queryString); //NOSONAR</span>
 
-<span class="pc bpc" id="L740" title="1 of 2 branches missed.">			if (docIdMatcher.find())</span>
+<span class="pc bpc" id="L738" title="1 of 2 branches missed.">			if (docIdMatcher.find())</span>
 			{
-<span class="fc" id="L742">				measurementKey.append('?').append(&quot;docid=&quot;).append(docIdMatcher.group(1));</span>
+<span class="fc" id="L740">				measurementKey.append('?').append(&quot;docid=&quot;).append(docIdMatcher.group(1));</span>
 			}
 		}
-<span class="fc" id="L745">	}</span>
+<span class="fc" id="L743">	}</span>
 
 	/**
     *  Place this filter into service.
@@ -751,61 +749,55 @@ import java.util.regex.Pattern;
     *@exception  ServletException  Description of the Exception
     */
 	@Override
-   public void init(FilterConfig filterConfig) throws ServletException
+   public void initFilterBean() throws ServletException
    {
 		try
 		{
-
-<span class="fc" id="L759">	      this.filterConfig = filterConfig;</span>
-<span class="fc" id="L760">	      SetCharacterEncodingFilter.encoding = filterConfig.getInitParameter(&quot;encoding&quot;); //NOSONAR</span>
-
-	   	//skus to precitat zo suboru
-<span class="fc" id="L763">	   	File dir = new File(filterConfig.getServletContext().getRealPath(&quot;/wjerrorpages/&quot;));</span>
-<span class="pc bpc" id="L764" title="4 of 6 branches missed.">	   	if (dir!=null &amp;&amp; dir.exists() &amp;&amp; dir.canRead())</span>
-	   	{
-<span class="nc bnc" id="L766" title="All 2 branches missed.">	   		for (File f : dir.listFiles())</span>
-				{
-					//podpora pre dberror-en.html atd
-<span class="nc bnc" id="L769" title="All 4 branches missed.">					if (f.isFile() &amp;&amp; f.getName().startsWith(&quot;dberror&quot;))</span>
+			//skus to precitat zo suboru
+<span class="nc" id="L757">			File dir = new File(getServletContext().getRealPath(&quot;/wjerrorpages/&quot;));</span>
+<span class="nc bnc" id="L758" title="All 6 branches missed.">			if (dir!=null &amp;&amp; dir.exists() &amp;&amp; dir.canRead())</span>
+			{
+<span class="nc bnc" id="L760" title="All 2 branches missed.">				for (File f : dir.listFiles())</span>
 					{
-<span class="nc" id="L771">						String key = &quot;&quot;;</span>
-<span class="nc" id="L772">						int dot = f.getName().indexOf(&quot;.&quot;);</span>
-<span class="nc" id="L773">						int i = f.getName().indexOf(&quot;-&quot;);</span>
-<span class="nc bnc" id="L774" title="All 4 branches missed.">						if (i &gt; 0 &amp;&amp; dot &gt; i) key = f.getName().substring(i+1, dot);</span>
-
-						try
+						//podpora pre dberror-en.html atd
+<span class="nc bnc" id="L763" title="All 4 branches missed.">						if (f.isFile() &amp;&amp; f.getName().startsWith(&quot;dberror&quot;))</span>
 						{
-<span class="nc" id="L778">							StringBuilder contextFile = new StringBuilder();</span>
-<span class="nc" id="L779">							InputStreamReader isr = new InputStreamReader(new FileInputStream(f), SetCharacterEncodingFilter.encoding);</span>
-<span class="nc" id="L780">							char[] buff = new char[64000];</span>
-							int len;
-<span class="nc bnc" id="L782" title="All 2 branches missed.">							while ((len = isr.read(buff)) != -1)</span>
+<span class="nc" id="L765">							String key = &quot;&quot;;</span>
+<span class="nc" id="L766">							int dot = f.getName().indexOf(&quot;.&quot;);</span>
+<span class="nc" id="L767">							int i = f.getName().indexOf(&quot;-&quot;);</span>
+<span class="nc bnc" id="L768" title="All 4 branches missed.">							if (i &gt; 0 &amp;&amp; dot &gt; i) key = f.getName().substring(i+1, dot);</span>
+
+							try
 							{
-<span class="nc" id="L784">								contextFile.append(buff, 0, len);</span>
-							}
-<span class="nc" id="L786">							isr.close();</span>
+<span class="nc" id="L772">								StringBuilder contextFile = new StringBuilder();</span>
+<span class="nc" id="L773">								InputStreamReader isr = new InputStreamReader(new FileInputStream(f), SetCharacterEncodingFilter.encoding);</span>
+<span class="nc" id="L774">								char[] buff = new char[64000];</span>
+								int len;
+<span class="nc bnc" id="L776" title="All 2 branches missed.">								while ((len = isr.read(buff)) != -1)</span>
+								{
+<span class="nc" id="L778">									contextFile.append(buff, 0, len);</span>
+								}
+<span class="nc" id="L780">								isr.close();</span>
 
-<span class="nc" id="L788">							SetCharacterEncodingFilter.dbErrorMessageText.put(key, contextFile.toString());</span>
+<span class="nc" id="L782">								SetCharacterEncodingFilter.dbErrorMessageText.put(key, contextFile.toString());</span>
+							}
+<span class="nc" id="L784">							catch (Exception ex)</span>
+							{
+
+<span class="nc" id="L787">							}</span>
 						}
-<span class="nc" id="L790">						catch (Exception ex)</span>
-						{
-<span class="nc" id="L792">							String emt = filterConfig.getInitParameter(&quot;dbErrorMessageText&quot;);</span>
-<span class="nc bnc" id="L793" title="All 2 branches missed.">							if (Tools.isNotEmpty(emt)) SetCharacterEncodingFilter.dbErrorMessageText.put(&quot;&quot;, emt);</span>
-<span class="nc" id="L794">						}</span>
 					}
-				}
-	   	}
-	   	else
-	   	{
-<span class="fc" id="L800">	   		String emt = filterConfig.getInitParameter(&quot;dbErrorMessageText&quot;);</span>
-<span class="pc bpc" id="L801" title="1 of 2 branches missed.">	         if (Tools.isNotEmpty(emt)) SetCharacterEncodingFilter.dbErrorMessageText.put(&quot;&quot;, emt);</span>
-	   	}
+			}
+			else
+			{
+
+			}
 		}
-<span class="nc" id="L804">		catch (Exception ex)</span>
+<span class="nc" id="L796">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L806">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L807">		}</span>
-<span class="fc" id="L808">   }</span>
+<span class="nc" id="L798">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L799">		}</span>
+<span class="nc" id="L800">   }</span>
 
 
    // ------------------------------------------------------ Protected Methods
@@ -828,73 +820,73 @@ import java.util.regex.Pattern;
       try
       {
          //quick hack pre HP...
-<span class="fc" id="L831">         HttpServletRequest req = (HttpServletRequest)request;</span>
+<span class="fc" id="L823">         HttpServletRequest req = (HttpServletRequest)request;</span>
 
          //kvoli ajax requestom, ktore musia ist cez utf-8, riesenie je nazvat subory, na ktore idu ajax requesty pomocou ajax_utf-8
          // a takisto sa to vola aj ked sa uklada web stranka, lebo to od WJ7 ide cez ajax, aby ukladalo aj diakritiku
-<span class="pc bpc" id="L835" title="1 of 2 branches missed.">         if (&quot;utf-8&quot;.equals(SetCharacterEncodingFilter.encoding)==false</span>
+<span class="pc bpc" id="L827" title="1 of 2 branches missed.">         if (&quot;utf-8&quot;.equals(SetCharacterEncodingFilter.encoding)==false</span>
          			&amp;&amp; (
-<span class="nc bnc" id="L837" title="All 2 branches missed.">	         			req.getRequestURI().indexOf(&quot;ajax_utf-8&quot;) != -1 ||</span>
-<span class="nc bnc" id="L838" title="All 2 branches missed.">	         			req.getRequestURI().indexOf(&quot;editor.do&quot;) != -1 ||</span>
-<span class="nc bnc" id="L839" title="All 2 branches missed.">	         			req.getRequestURI().indexOf(&quot;editor_component.jsp&quot;) != -1 ||</span>
-<span class="nc bnc" id="L840" title="All 4 branches missed.">	         			(req.getQueryString()!=null &amp;&amp; req.getQueryString().indexOf(&quot;ajax_utf-8&quot;) != -1)</span>
+<span class="nc bnc" id="L829" title="All 2 branches missed.">	         			req.getRequestURI().indexOf(&quot;ajax_utf-8&quot;) != -1 ||</span>
+<span class="nc bnc" id="L830" title="All 2 branches missed.">	         			req.getRequestURI().indexOf(&quot;editor.do&quot;) != -1 ||</span>
+<span class="nc bnc" id="L831" title="All 2 branches missed.">	         			req.getRequestURI().indexOf(&quot;editor_component.jsp&quot;) != -1 ||</span>
+<span class="nc bnc" id="L832" title="All 4 branches missed.">	         			(req.getQueryString()!=null &amp;&amp; req.getQueryString().indexOf(&quot;ajax_utf-8&quot;) != -1)</span>
          			)
          	)
          {
          	//Logger.println(this,&quot;SCEF: utf8&quot;);
-<span class="nc" id="L845">         	req.setAttribute(&quot;SetCharacterEncodingFilter.encoding&quot;, &quot;utf-8&quot;);</span>
-<span class="nc" id="L846">            return(&quot;utf-8&quot;);</span>
+<span class="nc" id="L837">         	req.setAttribute(&quot;SetCharacterEncodingFilter.encoding&quot;, &quot;utf-8&quot;);</span>
+<span class="nc" id="L838">            return(&quot;utf-8&quot;);</span>
          }
-<span class="fc" id="L848">         req.setAttribute(&quot;SetCharacterEncodingFilter.encoding&quot;, SetCharacterEncodingFilter.encoding);</span>
+<span class="fc" id="L840">         req.setAttribute(&quot;SetCharacterEncodingFilter.encoding&quot;, SetCharacterEncodingFilter.encoding);</span>
       }
-<span class="nc" id="L850">      catch (Exception ex)</span>
+<span class="nc" id="L842">      catch (Exception ex)</span>
       {
-<span class="nc" id="L852">         sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L853">      }</span>
-<span class="fc" id="L854">      return (SetCharacterEncodingFilter.encoding);</span>
+<span class="nc" id="L844">         sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L845">      }</span>
+<span class="fc" id="L846">      return (SetCharacterEncodingFilter.encoding);</span>
    }
 
    public static String getEncoding()
    {
-<span class="fc" id="L859">   	return(encoding);</span>
+<span class="fc" id="L851">   	return(encoding);</span>
    }
 
    public static RequestBean getCurrentRequestBean()
 	{
    	try
 		{
-<span class="fc" id="L866">   		return requests.get(Thread.currentThread().getId());</span>
+<span class="fc" id="L858">   		return requests.get(Thread.currentThread().getId());</span>
 		}
-<span class="nc" id="L868">		catch (Exception e)</span>
+<span class="nc" id="L860">		catch (Exception e)</span>
 		{
-<span class="nc" id="L870">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L862">			sk.iway.iwcm.Logger.error(e);</span>
 		}
-<span class="nc" id="L872">		return null;</span>
+<span class="nc" id="L864">		return null;</span>
 	}
 
    private boolean isLoggedAsSomeoneElse(HttpServletRequest request, Identity user)
 	{
-<span class="nc bnc" id="L877" title="All 4 branches missed.">		if (Tools.getUserPrincipal(request) == null || user == null)</span>
-<span class="nc" id="L878">			return false;</span>
-<span class="nc" id="L879">		String userNameFromPrincipal = parseUserNameFromPrincipal(request);</span>
-<span class="nc" id="L880">		String userNameOfLoggedUser = user.getLogin();</span>
-<span class="nc bnc" id="L881" title="All 2 branches missed.">		return !userNameFromPrincipal.equalsIgnoreCase(userNameOfLoggedUser);</span>
+<span class="nc bnc" id="L869" title="All 4 branches missed.">		if (Tools.getUserPrincipal(request) == null || user == null)</span>
+<span class="nc" id="L870">			return false;</span>
+<span class="nc" id="L871">		String userNameFromPrincipal = parseUserNameFromPrincipal(request);</span>
+<span class="nc" id="L872">		String userNameOfLoggedUser = user.getLogin();</span>
+<span class="nc bnc" id="L873" title="All 2 branches missed.">		return !userNameFromPrincipal.equalsIgnoreCase(userNameOfLoggedUser);</span>
 	}
 
 	private String parseUserNameFromPrincipal(HttpServletRequest req)
 	{
 		try
 		{
-<span class="nc" id="L888">			String principalName = Tools.getUserPrincipal(req).getName();</span>
+<span class="nc" id="L880">			String principalName = Tools.getUserPrincipal(req).getName();</span>
 			//Logger.debug(getClass(), &quot;Parsing login from user principal...[&quot;+principalName+&quot;]&quot;);
-<span class="nc" id="L890">			String userNameFromPrincipal = principalName.substring( principalName.indexOf('\\') + 1 );</span>
+<span class="nc" id="L882">			String userNameFromPrincipal = principalName.substring( principalName.indexOf('\\') + 1 );</span>
 			///userNameFromPrincipal = userNameFromPrincipal.substring(0, userNameFromPrincipal.length());
 			//Logger.debug(getClass(), &quot;Parsed '&quot;+userNameFromPrincipal+&quot;'&quot;);
-<span class="nc" id="L893">			return userNameFromPrincipal;</span>
+<span class="nc" id="L885">			return userNameFromPrincipal;</span>
 		}
-<span class="nc" id="L895">		catch (RuntimeException e) {</span>
+<span class="nc" id="L887">		catch (RuntimeException e) {</span>
 			//Logger.println(getClass(), &quot;Nastala chyba pri spracovavani user principal-u: &quot;+e.getMessage());
-<span class="nc" id="L897">			return &quot;&quot;;</span>
+<span class="nc" id="L889">			return &quot;&quot;;</span>
 		}
 	}
 
@@ -902,62 +894,62 @@ import java.util.regex.Pattern;
 	{
 		try
 		{
-<span class="nc" id="L905">			Logger.debug(SetCharacterEncodingFilter.class, &quot;logUserInViaNtlm() START&quot;);</span>
-<span class="nc" id="L906">			String login = AuthenticationFilter.negotiateIIS(request, response, false).getName();</span>
-<span class="nc" id="L907">			Logger.debug(getClass(), &quot;NtlmPasswordAuthentication.getUsername() =&gt; &quot; + login );</span>
-<span class="nc" id="L908">			UserDetails loadedUser = NtlmLogonAction.authentificateUserAgainstLdap(request, response, login);</span>
+<span class="nc" id="L897">			Logger.debug(SetCharacterEncodingFilter.class, &quot;logUserInViaNtlm() START&quot;);</span>
+<span class="nc" id="L898">			String login = AuthenticationFilter.negotiateIIS(request, response, false).getName();</span>
+<span class="nc" id="L899">			Logger.debug(getClass(), &quot;NtlmPasswordAuthentication.getUsername() =&gt; &quot; + login );</span>
+<span class="nc" id="L900">			UserDetails loadedUser = NtlmLogonAction.authentificateUserAgainstLdap(request, response, login);</span>
 
-<span class="nc" id="L910">			String password = loadedUser.getPassword();</span>
-<span class="nc bnc" id="L911" title="All 2 branches missed.">			if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+<span class="nc" id="L902">			String password = loadedUser.getPassword();</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">			if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
 			{
 				//v BasicNtlmLogonAction to takto nastavime a ulozime, kedze heslo realne nevieme
-<span class="nc" id="L914">				password = loadedUser.getLogin();</span>
-<span class="nc" id="L915">				Logger.debug(NtlmLogonAction.class, &quot;Pass use hash, nastavujem na &quot;+password);</span>
+<span class="nc" id="L906">				password = loadedUser.getLogin();</span>
+<span class="nc" id="L907">				Logger.debug(NtlmLogonAction.class, &quot;Pass use hash, nastavujem na &quot;+password);</span>
 			}
 
-<span class="nc bnc" id="L918" title="All 4 branches missed.">			if (loadedUser.isAdmin()==false || &quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;)))</span>
+<span class="nc bnc" id="L910" title="All 4 branches missed.">			if (loadedUser.isAdmin()==false || &quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;)))</span>
 			{
-<span class="nc" id="L920">				LogonTools.logonUser(request, loadedUser.getLogin(), password);</span>
+<span class="nc" id="L912">				LogonTools.logonUser(request, loadedUser.getLogin(), password);</span>
 			}
 			else
 			{
-<span class="nc" id="L924">				Identity user = new Identity(loadedUser);</span>
-<span class="nc" id="L925">				Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L926">				LogonTools.logon(loadedUser.getLogin(), password, user, errors, request, Prop.getInstance(request));</span>
+<span class="nc" id="L916">				Identity user = new Identity(loadedUser);</span>
+<span class="nc" id="L917">				Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L918">				LogonTools.logon(loadedUser.getLogin(), password, user, errors, request, Prop.getInstance(request));</span>
 
-<span class="nc" id="L928">				Logger.debug(SetCharacterEncodingFilter.class, &quot;errors.ERROR_KEY=&quot;+errors.get(&quot;ERROR_KEY&quot;));</span>
+<span class="nc" id="L920">				Logger.debug(SetCharacterEncodingFilter.class, &quot;errors.ERROR_KEY=&quot;+errors.get(&quot;ERROR_KEY&quot;));</span>
 
-<span class="nc bnc" id="L930" title="All 2 branches missed.">				if (errors.get(&quot;ERROR_KEY&quot;)!=null)</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">				if (errors.get(&quot;ERROR_KEY&quot;)!=null)</span>
 				{
-<span class="nc" id="L932">					user = null;</span>
+<span class="nc" id="L924">					user = null;</span>
 				}
 				else
 				{
 					// Save our logged-in user in the session
-<span class="nc" id="L937">					user.setValid(true);</span>
-<span class="nc" id="L938">					LogonTools.setUserToSession(request.getSession(), user);</span>
+<span class="nc" id="L929">					user.setValid(true);</span>
+<span class="nc" id="L930">					LogonTools.setUserToSession(request.getSession(), user);</span>
 				}
 			}
 
 		}
-<span class="nc" id="L943">		catch (RedirectedException re)</span>
+<span class="nc" id="L935">		catch (RedirectedException re)</span>
 		{
-<span class="nc" id="L945">			Logger.debug(SetCharacterEncodingFilter.class, &quot;ERROR: RedirectedException &quot;+re.getMessage());</span>
-<span class="nc" id="L946">			sk.iway.iwcm.Logger.error(re);</span>
-<span class="nc" id="L947">			throw new RedirectedException();</span>
+<span class="nc" id="L937">			Logger.debug(SetCharacterEncodingFilter.class, &quot;ERROR: RedirectedException &quot;+re.getMessage());</span>
+<span class="nc" id="L938">			sk.iway.iwcm.Logger.error(re);</span>
+<span class="nc" id="L939">			throw new RedirectedException();</span>
 		}
-<span class="nc" id="L949">		catch (Exception e)</span>
+<span class="nc" id="L941">		catch (Exception e)</span>
 		{
-<span class="nc" id="L951">			Logger.debug(SetCharacterEncodingFilter.class, &quot;ERROR: Exception &quot;+e.getMessage());</span>
-<span class="nc" id="L952">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L943">			Logger.debug(SetCharacterEncodingFilter.class, &quot;ERROR: Exception &quot;+e.getMessage());</span>
+<span class="nc" id="L944">			sk.iway.iwcm.Logger.error(e);</span>
 			//nepodarilo sa prihlasenie - tok ostane rovnaky, ako predtym
-<span class="nc" id="L954">		}</span>
+<span class="nc" id="L946">		}</span>
 
-<span class="nc" id="L956">		Identity loggedUser = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L948">		Identity loggedUser = UsersDB.getCurrentUser(request);</span>
 
-<span class="nc" id="L958">		Logger.debug(SetCharacterEncodingFilter.class, &quot;logUserInViaNtlm() END, user=&quot;+loggedUser);</span>
+<span class="nc" id="L950">		Logger.debug(SetCharacterEncodingFilter.class, &quot;logUserInViaNtlm() END, user=&quot;+loggedUser);</span>
 
-<span class="nc" id="L960">		return loggedUser;</span>
+<span class="nc" id="L952">		return loggedUser;</span>
 	}
 
 
@@ -969,15 +961,15 @@ import java.util.regex.Pattern;
 	 */
 	public static EntityManager getEntityManager(String dbName)
 	{
-<span class="fc" id="L972">		EntityManagerFactory factory = DBPool.getEntityManagerFactory(dbName);</span>
+<span class="fc" id="L964">		EntityManagerFactory factory = DBPool.getEntityManagerFactory(dbName);</span>
 
-<span class="pc bpc" id="L974" title="1 of 2 branches missed.">		if (factory == null)</span>
+<span class="pc bpc" id="L966" title="1 of 2 branches missed.">		if (factory == null)</span>
 		{
-<span class="nc" id="L976">			  Logger.error(SetCharacterEncodingFilter.class, &quot;Nenajdeny EntityManagerFactory pre DB spojenie '&quot;+dbName+&quot;'&quot;);</span>
-<span class="nc" id="L977">			  return null;</span>
+<span class="nc" id="L968">			  Logger.error(SetCharacterEncodingFilter.class, &quot;Nenajdeny EntityManagerFactory pre DB spojenie '&quot;+dbName+&quot;'&quot;);</span>
+<span class="nc" id="L969">			  return null;</span>
 		}
 
-<span class="fc" id="L980">		return getEntityManager(factory);</span>
+<span class="fc" id="L972">		return getEntityManager(factory);</span>
 	}
 
 	/**
@@ -986,7 +978,7 @@ import java.util.regex.Pattern;
 	 */
 	public static EntityManager getEntityManager()
 	{
-<span class="nc" id="L989">		return getEntityManager(&quot;iwcm&quot;);</span>
+<span class="nc" id="L981">		return getEntityManager(&quot;iwcm&quot;);</span>
 	}
 
 	/**
@@ -1000,31 +992,31 @@ import java.util.regex.Pattern;
 	 */
 	private static EntityManager getEntityManager(EntityManagerFactory factory)
 	{
-<span class="fc" id="L1003">   	Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
+<span class="fc" id="L995">   	Map&lt;EntityManagerFactory, EntityManager&gt; map = threadEntityManagers.get();</span>
 
-<span class="fc" id="L1005">		EntityManager entityManager = null;</span>
+<span class="fc" id="L997">		EntityManager entityManager = null;</span>
 
-<span class="fc bfc" id="L1007" title="All 2 branches covered.">		if (map == null)</span>
+<span class="fc bfc" id="L999" title="All 2 branches covered.">		if (map == null)</span>
 		{
-<span class="fc" id="L1009">	   	initializeEntityManagerMap();</span>
-<span class="fc" id="L1010">	   	map = threadEntityManagers.get();</span>
-<span class="pc bpc" id="L1011" title="1 of 2 branches missed.">	   	if(map == null)</span>
+<span class="fc" id="L1001">	   	initializeEntityManagerMap();</span>
+<span class="fc" id="L1002">	   	map = threadEntityManagers.get();</span>
+<span class="pc bpc" id="L1003" title="1 of 2 branches missed.">	   	if(map == null)</span>
 	   	{
-<span class="nc" id="L1013">				Logger.error(SetCharacterEncodingFilter.class, &quot;CHYBA pri inicializaci, mapy ThreadEntityManagers. Mapa nie je inicializovana, vraciam NULL!!!&quot;);</span>
-<span class="nc" id="L1014">	   		return null;</span>
+<span class="nc" id="L1005">				Logger.error(SetCharacterEncodingFilter.class, &quot;CHYBA pri inicializaci, mapy ThreadEntityManagers. Mapa nie je inicializovana, vraciam NULL!!!&quot;);</span>
+<span class="nc" id="L1006">	   		return null;</span>
 	   	}
 		}
 
-<span class="fc" id="L1018">		entityManager = map.get(factory);</span>
+<span class="fc" id="L1010">		entityManager = map.get(factory);</span>
 
-<span class="fc bfc" id="L1020" title="All 4 branches covered.">		if (entityManager == null || entityManager.isOpen()==false)</span>
+<span class="fc bfc" id="L1012" title="All 4 branches covered.">		if (entityManager == null || entityManager.isOpen()==false)</span>
 		{
-<span class="fc" id="L1022">			entityManager = factory.createEntityManager();</span>
-<span class="fc" id="L1023">			map.put(factory, entityManager);</span>
+<span class="fc" id="L1014">			entityManager = factory.createEntityManager();</span>
+<span class="fc" id="L1015">			map.put(factory, entityManager);</span>
 		}
 
-<span class="fc" id="L1026">		return entityManager;</span>
+<span class="fc" id="L1018">		return entityManager;</span>
 	}
 }
 
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

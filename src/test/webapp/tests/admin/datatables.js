@@ -294,7 +294,7 @@ Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {
 function checkTemplateIdValue(I, checkToastMessage=true) {
     if (checkToastMessage) {
         I.waitForText("Pole Šablóna web stránky (tempId) neobsahuje možnosť s ID 5.", 10, "div.toast-message");
-        I.clickCss("button.toast-close-button", "#toast-container-webjet");
+        I.toastrClose();
     }
     I.clickCss("#pills-dt-datatableInit-template-tab");
     I.see("id: 5", "div.DTE_Field_Name_tempId div.filter-option-inner-inner");
@@ -311,7 +311,8 @@ Scenario('select - missing ID', ({ I, DT, DTE }) => {
     //
     I.say("Reopen editor, ther should not to be toast notify again");
     DTE.cancel();
-    I.click("Test missing tempId");
+    I.click("Test missing tempId", "#datatableInit");
+    DTE.waitForEditor();
     I.dontSeeElement("div.toast-message");
     checkTemplateIdValue(I, false);
     DTE.cancel();

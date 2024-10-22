@@ -1309,7 +1309,7 @@ body.datatable-labels-shown {
         height: calc(100vh - 317px);
     }
     div.dt-header-row {
-        min-height: 71px;
+        min-height: 79px;
         padding-top: 8px;
         padding-bottom: 0px;
     }
@@ -1366,7 +1366,7 @@ html.in-iframe-show-table {
     }
 }
 
-textarea.textarea-code, div.textarea-code textarea {
+textarea.textarea-code, div.textarea-code textarea, div.textarea-code-small textarea {
     white-space: pre;
     height: 500px;
     width: 888px;
@@ -1375,6 +1375,11 @@ textarea.textarea-code, div.textarea-code textarea {
     padding: 5px;
     margin-left: 5px;
     margin-right: 5px;
+}
+
+div.textarea-code-small textarea {
+    height: 300px;
+    width: 100%;
 }
 
 .DTE_Field_Type_datatable {

@@ -87,38 +87,38 @@ public class CustomAnalyzer extends StopwordAnalyzerBase
 	  @Override
 	  protected TokenStreamComponents createComponents(final String fieldName, final Reader reader)
 	  {
-<span class="nc" id="L90">		  final StandardTokenizer src = new StandardTokenizer(matchVersion, reader);</span>
-<span class="nc" id="L91">		  src.setMaxTokenLength(maxTokenLength);</span>
+<span class="fc" id="L90">		  final StandardTokenizer src = new StandardTokenizer(matchVersion, reader);</span>
+<span class="fc" id="L91">		  src.setMaxTokenLength(maxTokenLength);</span>
 	    //src.setReplaceInvalidAcronym(replaceInvalidAcronym);
-<span class="nc" id="L93">	    TokenStream tok = new StandardFilter(matchVersion, src);</span>
-<span class="nc" id="L94">	    tok = new LowerCaseFilter(matchVersion, tok);</span>
+<span class="fc" id="L93">	    TokenStream tok = new StandardFilter(matchVersion, src);</span>
+<span class="fc" id="L94">	    tok = new LowerCaseFilter(matchVersion, tok);</span>
 	    /* use algorithmic stemmers for Enlish and Czech language */
-<span class="nc bnc" id="L96" title="All 2 branches missed.">	    if (language.equals(&quot;en&quot;))</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">	    if (language.equals(&quot;en&quot;))</span>
 	    {
 <span class="nc" id="L98">	   	 tok = new PorterStemFilter(tok);</span>
 <span class="nc" id="L99">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
-<span class="nc bnc" id="L100" title="All 2 branches missed.">	    }else if (language.equals(&quot;cz&quot;))</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">	    }else if (language.equals(&quot;cz&quot;))</span>
 	    {
 <span class="nc" id="L102">	   	 tok = new CzechStemFilter(tok);</span>
 <span class="nc" id="L103">	   	 tok = new ASCIIFoldingFilter(tok);</span>
 <span class="nc" id="L104">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
 	    }
 	    else{
-<span class="nc" id="L107">	   	 tok = new ASCIIFoldingFilter(tok);</span>
-<span class="nc" id="L108">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
-<span class="nc" id="L109">	   	 tok = new LemmatisatingFilter(Version.LUCENE_31, tok, language);</span>
+<span class="fc" id="L107">	   	 tok = new ASCIIFoldingFilter(tok);</span>
+<span class="fc" id="L108">	   	 tok = new StopFilter(matchVersion, tok, stopwords);</span>
+<span class="fc" id="L109">	   	 tok = new LemmatisatingFilter(Version.LUCENE_31, tok, language);</span>
 	    }
 
 
-<span class="nc" id="L113">	    return new TokenStreamComponents(src, tok)</span>
-<span class="nc" id="L114">	    {</span>
+<span class="fc" id="L113">	    return new TokenStreamComponents(src, tok)</span>
+<span class="fc" id="L114">	    {</span>
 	      @Override
 	      protected boolean reset(final Reader reader) throws IOException
 	      {
-<span class="nc" id="L118">	        src.setMaxTokenLength(maxTokenLength);</span>
-<span class="nc" id="L119">	        return super.reset(reader);</span>
+<span class="fc" id="L118">	        src.setMaxTokenLength(maxTokenLength);</span>
+<span class="fc" id="L119">	        return super.reset(reader);</span>
 	      }
 	    };
 	  }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

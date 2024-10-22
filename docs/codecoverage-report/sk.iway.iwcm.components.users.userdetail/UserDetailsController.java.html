@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletRequest;
@@ -24,6 +25,8 @@ import sk.iway.Password;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.UserTools;
 import sk.iway.iwcm.components.users.AuthorizeUserService;
 import sk.iway.iwcm.components.users.groups_approve.GroupsApproveRepository;
@@ -55,255 +58,285 @@ public class UserDetailsController extends DatatableRestControllerV2&lt;UserDeta
     private final UserDetailsRepository userDetailsRepository;
     private final GroupsApproveRepository groupsApproveRepository;
 
+    private static final String PERM_EDIT_ADMINS = &quot;users.edit_admins&quot;;
+    private static final String PERM_EDIT_PUBLIC_USERS = &quot;users.edit_public_users&quot;;
+
     @Autowired
     public UserDetailsController(UserDetailsRepository userDetailsRepository, UserDetailsService userDetailsService, GroupsApproveRepository groupsApproveRepository) {
-<span class="fc" id="L60">        super(userDetailsRepository);</span>
-<span class="fc" id="L61">        this.userDetailsRepository = userDetailsRepository;</span>
-<span class="fc" id="L62">        this.userDetailsService = userDetailsService;</span>
-<span class="fc" id="L63">        this.groupsApproveRepository = groupsApproveRepository;</span>
-<span class="fc" id="L64">    }</span>
+<span class="fc" id="L66">        super(userDetailsRepository);</span>
+<span class="fc" id="L67">        this.userDetailsRepository = userDetailsRepository;</span>
+<span class="fc" id="L68">        this.userDetailsService = userDetailsService;</span>
+<span class="fc" id="L69">        this.groupsApproveRepository = groupsApproveRepository;</span>
+<span class="fc" id="L70">    }</span>
 
     @Override
     public Page&lt;UserDetailsEntity&gt; getAllItems(Pageable pageable) {
 
-<span class="fc" id="L69">        DatatablePageImpl&lt;UserDetailsEntity&gt; page = new DatatablePageImpl&lt;&gt;(getAllItemsIncludeSpecSearch(new UserDetailsEntity(), pageable));</span>
+<span class="fc" id="L75">        DatatablePageImpl&lt;UserDetailsEntity&gt; page = new DatatablePageImpl&lt;&gt;(getAllItemsIncludeSpecSearch(new UserDetailsEntity(), pageable));</span>
 
-<span class="fc" id="L71">        Prop prop = Prop.getInstance(Constants.getServletContext(), getRequest());</span>
-<span class="fc" id="L72">        Modules modules = Modules.getInstance();</span>
-<span class="fc" id="L73">        List&lt;ModuleInfo&gt; moduleItems = modules.getUserEditItems(prop);</span>
-<span class="fc" id="L74">        getRequest().setAttribute(&quot;moduleItems&quot;,moduleItems);</span>
+<span class="fc" id="L77">        Prop prop = Prop.getInstance(Constants.getServletContext(), getRequest());</span>
+<span class="fc" id="L78">        Modules modules = Modules.getInstance();</span>
+<span class="fc" id="L79">        List&lt;ModuleInfo&gt; moduleItems = modules.getUserEditItems(prop);</span>
+<span class="fc" id="L80">        getRequest().setAttribute(&quot;moduleItems&quot;,moduleItems);</span>
 
-<span class="fc" id="L76">        page.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L77">        page.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
-<span class="fc" id="L78">        page.addOptions(&quot;editorFields.enabledItems&quot;, moduleItems, &quot;itemKey&quot;, &quot;itemKey&quot;, false);</span>
-<span class="fc" id="L79">        page.addOptions(&quot;editorFields.permGroups&quot;, (new PermissionGroupDB()).getAll(), &quot;title&quot;, &quot;id&quot;, false);</span>
+<span class="fc" id="L82">        page.addOptions(&quot;editorFields.emails&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_EMAIL), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L83">        page.addOptions(&quot;editorFields.permisions&quot;, UserGroupsDB.getInstance().getUserGroupsByTypeId(UserGroupDetails.TYPE_PERMS), &quot;userGroupName&quot;, &quot;userGroupId&quot;, false);</span>
+<span class="fc" id="L84">        page.addOptions(&quot;editorFields.enabledItems&quot;, moduleItems, &quot;itemKey&quot;, &quot;itemKey&quot;, false);</span>
+<span class="fc" id="L85">        page.addOptions(&quot;editorFields.permGroups&quot;, (new PermissionGroupDB()).getAll(), &quot;title&quot;, &quot;id&quot;, false);</span>
 
-<span class="fc" id="L81">        return page;</span>
+<span class="fc" id="L87">        return page;</span>
     }
 
     @Override
     public UserDetailsEntity getOneItem(long id) {
-<span class="fc" id="L86">        UserDetailsEntity one = super.getOneItem(id);</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (id &lt; 1) {</span>
+<span class="fc" id="L92">        UserDetailsEntity one = super.getOneItem(id);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (id &lt; 1) {</span>
             //novy zaznam, nastav defaultne hodnoty
             //DTED 2.0.5 ma bug kedy padne, ak takyto option nema ziadnu hodnotu, museli sme nastavit
-<span class="fc" id="L90">            one.setSexMale(true);</span>
-<span class="fc" id="L91">            one.setAuthorized(Boolean.TRUE);</span>
+<span class="fc" id="L96">            one.setSexMale(true);</span>
+<span class="fc" id="L97">            one.setAuthorized(Boolean.TRUE);</span>
+        } else {
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (UserDetailsService.isUsersSplitByDomain()) {</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">                if (one.getDomainId()!=CloudToolsForCore.getDomainId()) return null;</span>
+            }
         }
-<span class="fc" id="L93">        return one;</span>
+<span class="fc" id="L103">        return one;</span>
     }
 
     @Override
 	public void beforeSave(UserDetailsEntity entity) {
 
-<span class="fc" id="L99">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
-<span class="fc" id="L100">        Boolean isCurrentUserAdmin = user.isEnabledItem(&quot;users.edit_admins&quot;);</span>
+<span class="fc" id="L109">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L110">        Boolean isCurrentUserAdmin = user.isEnabledItem(PERM_EDIT_ADMINS);</span>
 
         //If the user does not have admin permission but trying set admin permission throw error
-<span class="pc bpc" id="L103" title="1 of 4 branches missed.">        if(!isCurrentUserAdmin.booleanValue() &amp;&amp; entity.getAdmin().booleanValue()) {</span>
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        if(!isCurrentUserAdmin.booleanValue() &amp;&amp; entity.getAdmin().booleanValue()) {</span>
 
-<span class="nc" id="L105">            throwError(&quot;components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu&quot;);</span>
+<span class="nc" id="L115">            throwError(&quot;components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu&quot;);</span>
         }
 
         //Chceck if rating rank is set like null and set to 0
-<span class="fc bfc" id="L109" title="All 2 branches covered.">        if(entity.getRatingRank() == null) {</span>
-<span class="fc" id="L110">            entity.setRatingRank(0);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        if(entity.getRatingRank() == null) {</span>
+<span class="fc" id="L120">            entity.setRatingRank(0);</span>
         }
 
         //Chceck if forum rank is set like null and set to 0
-<span class="fc bfc" id="L114" title="All 2 branches covered.">        if(entity.getForumRank() == null) {</span>
-<span class="fc" id="L115">            entity.setForumRank(0);</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">        if(entity.getForumRank() == null) {</span>
+<span class="fc" id="L125">            entity.setForumRank(0);</span>
         }
 
         //Chceck if parent id is set like null and set to 0
-<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        if(entity.getParentId() == null) {</span>
-<span class="fc" id="L120">            entity.setParentId(0);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if(entity.getParentId() == null) {</span>
+<span class="fc" id="L130">            entity.setParentId(0);</span>
         }
 
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (entity.getRegDate() == null) entity.setRegDate(new Date(Tools.getNow()));</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (entity.getRegDate() == null) entity.setRegDate(new Date(Tools.getNow()));</span>
 
         //Save into session last saved user group's
-<span class="fc" id="L126">        userDetailsService.setBeforeSaveUserGroups(entity);</span>
-<span class="fc" id="L127">    }</span>
+<span class="fc" id="L136">        userDetailsService.setBeforeSaveUserGroups(entity);</span>
+<span class="fc" id="L137">    }</span>
 
     @Override
     public void afterSave(UserDetailsEntity entity, UserDetailsEntity saved) {
 
-<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        if (&quot;*&quot;.equals(entity.getApiKey())) {</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (&quot;*&quot;.equals(entity.getApiKey())) {</span>
             //vygeneruj access token
 
-<span class="nc" id="L135">            String apiKey = PasswordSecurity.generatePassword(32, true, true, true, true, false);</span>
-<span class="nc" id="L136">            entity.setApiKey(apiKey);</span>
+<span class="nc" id="L145">            String apiKey = PasswordSecurity.generatePassword(32, true, true, true, true, false);</span>
+<span class="nc" id="L146">            entity.setApiKey(apiKey);</span>
 
-<span class="nc" id="L138">            String header = saved.getLogin()+&quot;:&quot;+apiKey;</span>
-<span class="nc" id="L139">            header = Constants.getString(&quot;logonTokenHeaderName&quot;) + &quot;:&quot; + Base64.encodeBase64String(header.getBytes());</span>
-<span class="nc" id="L140">            addNotify(new NotifyBean(getProp().getText(&quot;components.user.apiKey.notifyTitle&quot;), getProp().getText(&quot;components.user.apiKey.notifyText&quot;, ResponseUtils.filter(apiKey), header), NotifyType.SUCCESS));</span>
+<span class="nc" id="L148">            String header = saved.getLogin()+&quot;:&quot;+apiKey;</span>
+<span class="nc" id="L149">            header = Constants.getString(&quot;logonTokenHeaderName&quot;) + &quot;:&quot; + Base64.encodeBase64String(header.getBytes());</span>
+<span class="nc" id="L150">            addNotify(new NotifyBean(getProp().getText(&quot;components.user.apiKey.notifyTitle&quot;), getProp().getText(&quot;components.user.apiKey.notifyText&quot;, ResponseUtils.filter(apiKey), header), NotifyType.SUCCESS));</span>
         }
 
-<span class="fc" id="L143">        boolean saveSuccess = userDetailsService.afterSave(entity, saved);</span>
-<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (saveSuccess==false) throwError(&quot;editor.ajax.save.error&quot;);</span>
+<span class="fc" id="L153">        boolean saveSuccess = userDetailsService.afterSave(entity, saved);</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">        if (saveSuccess==false) throwError(&quot;editor.ajax.save.error&quot;);</span>
 
         //Save was successfull, send email's about adding to user groups (if user was added into new user group)
-<span class="fc" id="L147">        userDetailsService.sendUserGroupsEmails(saved, entity, getUser(), getRequest());</span>
+<span class="fc" id="L157">        userDetailsService.sendUserGroupsEmails(saved, entity, getUser(), getRequest());</span>
 
         //update current user if editing self
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (userDetailsService.updateSelf(saved, getUser(), getRequest())) {</span>
-<span class="fc" id="L151">            NotifyBean notify = new NotifyBean(getProp().getText(&quot;user.profile.save.title.js&quot;), getProp().getText(&quot;user.profile.save.notifyText.js&quot;), NotifyType.INFO, 10000);</span>
-<span class="fc" id="L152">            notify.addButton(new NotifyButton(getProp().getText(&quot;menu.logout&quot;), &quot;btn btn-primary&quot;, &quot;far fa-sign-out&quot;, &quot;window.location.href=$('.js-logout-toggler').attr('href')&quot;));</span>
-<span class="fc" id="L153">            addNotify(notify);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (userDetailsService.updateSelf(saved, getUser(), getRequest())) {</span>
+<span class="fc" id="L161">            NotifyBean notify = new NotifyBean(getProp().getText(&quot;user.profile.save.title.js&quot;), getProp().getText(&quot;user.profile.save.notifyText.js&quot;), NotifyType.INFO, 10000);</span>
+<span class="fc" id="L162">            notify.addButton(new NotifyButton(getProp().getText(&quot;menu.logout&quot;), &quot;btn btn-primary&quot;, &quot;ti ti-logout&quot;, &quot;window.location.href=$('.js-logout-toggler').attr('href')&quot;));</span>
+<span class="fc" id="L163">            addNotify(notify);</span>
         }
-<span class="fc" id="L155">    }</span>
+<span class="fc" id="L165">    }</span>
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;UserDetailsEntity&gt; root, CriteriaBuilder builder) {
 
-<span class="fc" id="L160">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L170">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
 
         //Check user permissions and return for this user editable entities
-<span class="fc bfc" id="L163" title="All 4 branches covered.">        if(!user.isEnabledItem(&quot;users.edit_admins&quot;)  &amp;&amp; user.isEnabledItem(&quot;users.edit_public_users&quot;)) {</span>
-<span class="fc" id="L164">            predicates.add(builder.isFalse(root.get(&quot;admin&quot;)));</span>
-<span class="fc bfc" id="L165" title="All 4 branches covered.">        } else if(user.isEnabledItem(&quot;users.edit_admins&quot;)  &amp;&amp; !user.isEnabledItem(&quot;users.edit_public_users&quot;)) {</span>
-<span class="fc" id="L166">            predicates.add(builder.isTrue(root.get(&quot;admin&quot;)));</span>
-<span class="pc bpc" id="L167" title="1 of 4 branches missed.">        } else if(!user.isEnabledItem(&quot;users.edit_admins&quot;)  &amp;&amp; !user.isEnabledItem(&quot;users.edit_public_users&quot;)) {</span>
+<span class="fc" id="L173">        Expression&lt;Boolean&gt; colAdmin = root.get(&quot;admin&quot;);</span>
+<span class="fc bfc" id="L174" title="All 4 branches covered.">        if(!user.isEnabledItem(PERM_EDIT_ADMINS)  &amp;&amp; user.isEnabledItem(PERM_EDIT_PUBLIC_USERS)) {</span>
+<span class="fc" id="L175">            predicates.add(builder.isFalse(colAdmin));</span>
+<span class="fc bfc" id="L176" title="All 4 branches covered.">        } else if(user.isEnabledItem(PERM_EDIT_ADMINS)  &amp;&amp; !user.isEnabledItem(PERM_EDIT_PUBLIC_USERS)) {</span>
+<span class="fc" id="L177">            predicates.add(builder.isTrue(colAdmin));</span>
+<span class="pc bpc" id="L178" title="1 of 4 branches missed.">        } else if(!user.isEnabledItem(PERM_EDIT_ADMINS)  &amp;&amp; !user.isEnabledItem(PERM_EDIT_PUBLIC_USERS)) {</span>
             //If user doesnt have admin and public perm in same time
-<span class="fc" id="L169">            predicates.add(builder.isFalse(root.get(&quot;admin&quot;)));</span>
-<span class="fc" id="L170">            predicates.add(builder.isTrue(root.get(&quot;admin&quot;)));</span>
+<span class="fc" id="L180">            predicates.add(builder.isFalse(colAdmin));</span>
+<span class="fc" id="L181">            predicates.add(builder.isTrue(colAdmin));</span>
         }
 
-<span class="fc" id="L173">        SpecSearch&lt;UserDetailsEntity&gt; specSearch = new SpecSearch&lt;&gt;();</span>
-<span class="fc" id="L174">        String permissions = params.get(&quot;searchEditorFields.permisions&quot;);</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        if (permissions != null) {</span>
-<span class="fc" id="L176">            specSearch.addSpecSearchPasswordProtected(permissions, &quot;userGroupsIds&quot;, predicates, root, builder);</span>
+<span class="fc" id="L184">        SpecSearch&lt;UserDetailsEntity&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+<span class="fc" id="L185">        String permissions = params.get(&quot;searchEditorFields.permisions&quot;);</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        if (permissions != null) {</span>
+<span class="fc" id="L187">            specSearch.addSpecSearchPasswordProtected(permissions, &quot;userGroupsIds&quot;, predicates, root, builder);</span>
         }
-<span class="fc" id="L178">        String emails = params.get(&quot;searchEditorFields.emails&quot;);</span>
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">        if (emails != null) {</span>
-<span class="nc" id="L180">            specSearch.addSpecSearchPasswordProtected(emails, &quot;userGroupsIds&quot;, predicates, root, builder);</span>
+<span class="fc" id="L189">        String emails = params.get(&quot;searchEditorFields.emails&quot;);</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">        if (emails != null) {</span>
+<span class="nc" id="L191">            specSearch.addSpecSearchPasswordProtected(emails, &quot;userGroupsIds&quot;, predicates, root, builder);</span>
         }
-<span class="fc" id="L182">        int userGroupId = Tools.getIntValue(params.get(&quot;userGroupId&quot;), -1);</span>
-<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (userGroupId &gt; 0) {</span>
-<span class="fc" id="L184">            specSearch.addSpecSearchPasswordProtected(userGroupId, &quot;userGroupsIds&quot;, predicates, root, builder);</span>
-        }
-
-<span class="fc" id="L187">        int permGroup = Tools.getIntValue(params.get(&quot;searchEditorFields.permGroups&quot;), -1);</span>
-<span class="fc bfc" id="L188" title="All 2 branches covered.">        if(permGroup &gt; 0) {</span>
-<span class="fc" id="L189">            specSearch.addSpecSearchIdInForeignTableInteger(permGroup, &quot;users_in_perm_groups&quot;, &quot;user_id&quot;, &quot;perm_group_id&quot;, &quot;id&quot;, predicates, root, builder);</span>
+<span class="fc" id="L193">        int userGroupId = Tools.getIntValue(params.get(&quot;userGroupId&quot;), -1);</span>
+<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (userGroupId &gt; 0) {</span>
+<span class="fc" id="L195">            specSearch.addSpecSearchPasswordProtected(userGroupId, &quot;userGroupsIds&quot;, predicates, root, builder);</span>
         }
 
-<span class="fc" id="L192">        super.addSpecSearch(params, predicates, root, builder);</span>
-<span class="fc" id="L193">    }</span>
+<span class="fc" id="L198">        int permGroup = Tools.getIntValue(params.get(&quot;searchEditorFields.permGroups&quot;), -1);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if(permGroup &gt; 0) {</span>
+<span class="fc" id="L200">            specSearch.addSpecSearchIdInForeignTableInteger(permGroup, &quot;users_in_perm_groups&quot;, &quot;user_id&quot;, &quot;perm_group_id&quot;, &quot;id&quot;, predicates, root, builder);</span>
+        }
+
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        if (UserDetailsService.isUsersSplitByDomain()) {</span>
+<span class="fc" id="L204">            predicates.add(builder.equal(root.get(&quot;domainId&quot;), CloudToolsForCore.getDomainId()));</span>
+        }
+
+<span class="fc" id="L207">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L208">    }</span>
 
     @SuppressWarnings(&quot;all&quot;)
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, UserDetailsEntity&gt; target, Identity user, Errors errors, Long id, UserDetailsEntity entity) {
 
-<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (&quot;remove&quot;.equals(target.getAction())) return;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (&quot;remove&quot;.equals(target.getAction())) return;</span>
 
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">		if (&quot;random&quot;.equals(entity.getPassword()))</span>
+<span class="pc bpc" id="L216" title="2 of 4 branches missed.">		if (&quot;random&quot;.equals(entity.getPassword()) || &quot;*&quot;.equals(entity.getPassword()))</span>
 		{
 			//vygeneruj heslo
-<span class="nc" id="L204">			entity.setPassword(Password.generatePassword(5));</span>
+<span class="nc" id="L219">			entity.setPassword(Password.generateStringHash(5)+Password.generatePassword(5));</span>
 		}
 
-<span class="fc" id="L207">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L222">        Prop prop = Prop.getInstance(request);</span>
 
-        //pri importe moze byt v exceli prazdne heslo, nastav teda na unchanged
-<span class="pc bpc" id="L210" title="1 of 4 branches missed.">        if (isImporting() &amp;&amp; Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);</span>
+        //Import setting
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        if(isImporting()) {</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">            if(Tools.isEmpty(entity.getPassword())) entity.setPassword(UserTools.PASS_UNCHANGED);</span>
 
-<span class="fc" id="L212">        boolean allowWeakPassword = false;</span>
-<span class="pc bpc" id="L213" title="1 of 4 branches missed.">        if (entity.getEditorFields()!=null &amp;&amp; Boolean.TRUE.equals(entity.getEditorFields().getAllowWeakPassword())) allowWeakPassword = true;</span>
-<span class="fc" id="L214">        boolean admin = Boolean.TRUE.equals(entity.getAdmin());</span>
-<span class="fc" id="L215">        userDetailsService.validatePassword(entity, allowWeakPassword, admin, prop, errors);</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">            if (entity.getEditorFields()==null) {</span>
+<span class="nc" id="L229">                UserDetailsEditorFields udef = new UserDetailsEditorFields();</span>
+<span class="nc" id="L230">                udef.fromUserDetailsEntity(entity, false, getRequest(), groupsApproveRepository);</span>
+            }
+
+            //Generate default login
+<span class="pc bpc" id="L234" title="1 of 4 branches missed.">            if(entity.getEditorFields()!=null &amp;&amp; Tools.isEmpty(entity.getEditorFields().getLogin())) {</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">                String autoLogin = Tools.isEmpty(entity.getUserGroupsIds()) == true ? &quot;&quot; : entity.getUserGroupsIds() + &quot;-&quot;;</span>
+<span class="fc" id="L236">                autoLogin += entity.get__rowNum__() + &quot;-&quot; + Password.generatePassword(4);</span>
+<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                if( Tools.isNotEmpty(entity.getLastName()) ) autoLogin = DocTools.removeCharsDir( entity.getLastName() ).toLowerCase() + &quot;-&quot; + autoLogin;</span>
+<span class="fc" id="L238">                entity.getEditorFields().setLogin(autoLogin);</span>
+            }
+
+            //By default not admin
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">            if(entity.getAdmin() == null) entity.setAdmin(false);</span>
+        }
+
+<span class="fc" id="L245">        boolean allowWeakPassword = false;</span>
+<span class="pc bpc" id="L246" title="1 of 4 branches missed.">        if (entity.getEditorFields()!=null &amp;&amp; Boolean.TRUE.equals(entity.getEditorFields().getAllowWeakPassword())) allowWeakPassword = true;</span>
+<span class="fc" id="L247">        boolean admin = Boolean.TRUE.equals(entity.getAdmin());</span>
+<span class="fc" id="L248">        userDetailsService.validatePassword(entity, allowWeakPassword, admin, prop, errors);</span>
 
         //not empty aby pri prazdnej hlasilo v editore, ze to je povinne pole
-<span class="fc bfc" id="L218" title="All 4 branches covered.">        if (Tools.isNotEmpty(entity.getEmail()) &amp;&amp; Tools.isEmail(entity.getEmail())==false) {</span>
-<span class="fc" id="L219">            errors.rejectValue(&quot;errorField.email&quot;, null, prop.getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
+<span class="fc bfc" id="L251" title="All 4 branches covered.">        if (Tools.isNotEmpty(entity.getEmail()) &amp;&amp; Tools.isEmail(entity.getEmail())==false) {</span>
+<span class="fc" id="L252">            errors.rejectValue(&quot;errorField.email&quot;, null, prop.getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
         }
 
         //validate login
-<span class="pc bpc" id="L223" title="1 of 4 branches missed.">        if (entity.getEditorFields()==null || Tools.isEmpty(entity.getEditorFields().getLogin())) {</span>
-<span class="fc" id="L224">            errors.rejectValue(&quot;errorField.editorFields.login&quot;, null, prop.getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="pc bpc" id="L256" title="1 of 4 branches missed.">        if (entity.getEditorFields()==null || Tools.isEmpty(entity.getEditorFields().getLogin())) {</span>
+<span class="fc" id="L257">            errors.rejectValue(&quot;errorField.editorFields.login&quot;, null, prop.getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
         }
-<span class="fc" id="L226">    }</span>
+<span class="fc" id="L259">    }</span>
 
     @Override
     public UserDetailsEntity processFromEntity(UserDetailsEntity entity, ProcessItemAction action) {
-<span class="fc" id="L230">        boolean loadSubQueries = false;</span>
-<span class="fc bfc" id="L231" title="All 2 branches covered.">        if (ProcessItemAction.GETONE.equals(action)) {</span>
-<span class="fc" id="L232">            loadSubQueries = true;</span>
-<span class="fc bfc" id="L233" title="All 2 branches covered.">            if (entity == null) entity = new UserDetailsEntity();</span>
+<span class="fc" id="L263">        boolean loadSubQueries = false;</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (ProcessItemAction.GETONE.equals(action)) {</span>
+<span class="fc" id="L265">            loadSubQueries = true;</span>
+<span class="fc bfc" id="L266" title="All 2 branches covered.">            if (entity == null) entity = new UserDetailsEntity();</span>
         }
 
-<span class="pc bpc" id="L236" title="1 of 4 branches missed.">        if(entity != null &amp;&amp; entity.getEditorFields() == null) {</span>
-<span class="fc" id="L237">            UserDetailsEditorFields udef = new UserDetailsEditorFields();</span>
-<span class="fc" id="L238">            udef.fromUserDetailsEntity(entity, loadSubQueries, getRequest(), groupsApproveRepository);</span>
+<span class="pc bpc" id="L269" title="1 of 4 branches missed.">        if(entity != null &amp;&amp; entity.getEditorFields() == null) {</span>
+<span class="fc" id="L270">            UserDetailsEditorFields udef = new UserDetailsEditorFields();</span>
+<span class="fc" id="L271">            udef.fromUserDetailsEntity(entity, loadSubQueries, getRequest(), groupsApproveRepository);</span>
         }
 
         //pri exporte nastav prazdne heslo
-<span class="pc bpc" id="L242" title="3 of 4 branches missed.">        if (isExporting() &amp;&amp; entity!=null) entity.setPassword(&quot;&quot;);</span>
+<span class="pc bpc" id="L275" title="3 of 4 branches missed.">        if (isExporting() &amp;&amp; entity!=null) entity.setPassword(&quot;&quot;);</span>
 
-<span class="pc bpc" id="L244" title="2 of 8 branches missed.">        if (entity != null &amp;&amp; loadSubQueries &amp;&amp; entity.getId()!=null &amp;&amp; entity.getId().longValue()&gt;0) {</span>
-<span class="fc" id="L245">            String apiKey = userDetailsRepository.getApiKeyByUserId(entity.getId());</span>
-<span class="fc bfc" id="L246" title="All 2 branches covered.">            if (Tools.isNotEmpty(apiKey)) {</span>
-<span class="fc" id="L247">                entity.setApiKey(UserTools.PASS_UNCHANGED);</span>
+<span class="pc bpc" id="L277" title="2 of 8 branches missed.">        if (entity != null &amp;&amp; loadSubQueries &amp;&amp; entity.getId()!=null &amp;&amp; entity.getId().longValue()&gt;0) {</span>
+<span class="fc" id="L278">            String apiKey = userDetailsRepository.getApiKeyByUserId(entity.getId());</span>
+<span class="fc bfc" id="L279" title="All 2 branches covered.">            if (Tools.isNotEmpty(apiKey)) {</span>
+<span class="fc" id="L280">                entity.setApiKey(UserTools.PASS_UNCHANGED);</span>
             }
         }
 
-<span class="fc" id="L251">        return entity;</span>
+<span class="fc" id="L284">        return entity;</span>
     }
 
     @Override
     public UserDetailsEntity processToEntity(UserDetailsEntity entity, ProcessItemAction action) {
-<span class="pc bpc" id="L256" title="1 of 2 branches missed.">        if(entity != null) {</span>
+<span class="pc bpc" id="L289" title="1 of 2 branches missed.">        if(entity != null) {</span>
             //Call toUserDetailsEntity to set new entity values from EditorFields
-<span class="fc" id="L258">            UserDetailsEditorFields udef = new UserDetailsEditorFields();</span>
-<span class="fc" id="L259">            udef.toUserDetailsEntity(entity, getRequest());</span>
+<span class="fc" id="L291">            UserDetailsEditorFields udef = new UserDetailsEditorFields();</span>
+<span class="fc" id="L292">            udef.toUserDetailsEntity(entity, getRequest());</span>
         }
-<span class="fc" id="L261">        return entity;</span>
+<span class="fc" id="L294">        return entity;</span>
     }
 
     //Return list od user ids that belongs into selected groups
     public static List&lt;Integer&gt; getUserIdsByUserGroupsIds(UserDetailsRepository repo, List&lt;Integer&gt; groupIds) {
-<span class="fc" id="L266">        List&lt;Integer&gt; userIds = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L267" title="All 2 branches covered.">        for(Integer groupId : groupIds) {</span>
-<span class="fc" id="L268">            List&lt;Integer&gt; tmp = repo.getUserIdsByUserGroupsIds(</span>
+<span class="fc" id="L299">        List&lt;Integer&gt; userIds = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        for(Integer groupId : groupIds) {</span>
+<span class="fc" id="L301">            List&lt;Integer&gt; tmp = repo.getUserIdsByUserGroupsIds(</span>
                 &quot;&quot; + groupId,
                 &quot;%,&quot; + groupId,
                 groupId + &quot;,%&quot;,
                 &quot;%,&quot; + groupId + &quot;,%&quot;);
 
-<span class="fc" id="L274">            userIds.addAll(tmp);</span>
-<span class="fc" id="L275">        }</span>
+<span class="fc" id="L307">            userIds.addAll(tmp);</span>
+<span class="fc" id="L308">        }</span>
 
-<span class="fc" id="L277">        return userIds;</span>
+<span class="fc" id="L310">        return userIds;</span>
     }
 
     //Return list od user emails that belongs into selected groups
     public static List&lt;String&gt; getUserEmailsByUserGroupsIds(UserDetailsRepository repo, List&lt;Integer&gt; groupIds) {
-<span class="fc" id="L282">        List&lt;String&gt; userEmails = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L283" title="All 2 branches covered.">        for(Integer groupId : groupIds) {</span>
-<span class="fc" id="L284">            List&lt;String&gt; tmp = repo.getUserEmailsByUserGroupsIds(</span>
+<span class="fc" id="L315">        List&lt;String&gt; userEmails = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        for(Integer groupId : groupIds) {</span>
+<span class="fc" id="L317">            List&lt;String&gt; tmp = repo.getUserEmailsByUserGroupsIds(</span>
                 &quot;&quot; + groupId,
                 &quot;%,&quot; + groupId,
                 groupId + &quot;,%&quot;,
                 &quot;%,&quot; + groupId + &quot;,%&quot;);
 
-<span class="fc" id="L290">                userEmails.addAll(tmp);</span>
-<span class="fc" id="L291">        }</span>
+<span class="fc" id="L323">                userEmails.addAll(tmp);</span>
+<span class="fc" id="L324">        }</span>
 
-<span class="fc" id="L293">        return userEmails;</span>
+<span class="fc" id="L326">        return userEmails;</span>
     }
 
     @Override
     public boolean processAction(UserDetailsEntity entity, String action) {
         //Authorize user WITHOUT generation of new password
-<span class="pc bpc" id="L299" title="1 of 2 branches missed.">        if(&quot;authUserNoGen&quot;.equals(action))</span>
-<span class="nc" id="L300">            auth(entity.getId(), false);</span>
+<span class="pc bpc" id="L332" title="1 of 2 branches missed.">        if(&quot;authUserNoGen&quot;.equals(action))</span>
+<span class="nc" id="L333">            auth(entity.getId(), false);</span>
 
         //Authorize user WITH generation of new password
-<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if(&quot;authUserWithGen&quot;.equals(action))</span>
-<span class="fc" id="L304">            auth(entity.getId(), true);</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if(&quot;authUserWithGen&quot;.equals(action))</span>
+<span class="fc" id="L337">            auth(entity.getId(), true);</span>
 
-<span class="fc" id="L306">        return true;</span>
+<span class="fc" id="L339">        return true;</span>
     }
 
     /**
@@ -312,32 +345,42 @@ public class UserDetailsController extends DatatableRestControllerV2&lt;UserDeta
      * @param generatePass
      */
     public void auth(Long userId, boolean generatePass) {
+<span class="fc" id="L348">        String title = getProp().getText(&quot;components.users.auth_title&quot;);</span>
         //The ID must be &gt; 0
-<span class="pc bpc" id="L316" title="2 of 4 branches missed.">        if(userId == null || userId &lt; 0) {</span>
-<span class="nc" id="L317">            addNotify(new NotifyBean(getProp().getText(&quot;components.users.auth_title&quot;), getProp().getText(&quot;components.users.auth_failed.id_invalid&quot;), NotifyType.ERROR));</span>
-<span class="nc" id="L318">            return;</span>
+<span class="pc bpc" id="L350" title="2 of 4 branches missed.">        if(userId == null || userId &lt; 0) {</span>
+<span class="nc" id="L351">            addNotify(new NotifyBean(title, getProp().getText(&quot;components.users.auth_failed.id_invalid&quot;), NotifyType.ERROR));</span>
+<span class="nc" id="L352">            return;</span>
         }
 
-<span class="fc" id="L321">        UserDetailsEntity userToApprove = userDetailsRepository.getById(userId);</span>
-<span class="fc" id="L322">        boolean authorization = AuthorizeUserService.authUser(userToApprove, getUser(), generatePass, getRequest());</span>
+<span class="fc" id="L355">        UserDetailsEntity userToApprove = userDetailsRepository.getById(userId);</span>
+<span class="fc" id="L356">        boolean authorization = AuthorizeUserService.authUser(userToApprove, getUser(), generatePass, getRequest());</span>
 
         //Show notification about auth status
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        if(authorization) {</span>
-<span class="fc" id="L326">            setForceReload(true);</span>
-<span class="fc" id="L327">            addNotify(new NotifyBean(getProp().getText(&quot;components.users.auth_title&quot;), getProp().getText(&quot;components.users.auth_success&quot;, userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.SUCCESS, 15000));</span>
+<span class="pc bpc" id="L359" title="1 of 2 branches missed.">        if(authorization) {</span>
+<span class="fc" id="L360">            setForceReload(true);</span>
+<span class="fc" id="L361">            addNotify(new NotifyBean(title, getProp().getText(&quot;components.users.auth_success&quot;, userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.SUCCESS, 15000));</span>
         } else
-<span class="nc" id="L329">            addNotify(new NotifyBean(getProp().getText(&quot;components.users.auth_title&quot;), getProp().getText(&quot;components.users.auth_failed&quot;, userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.ERROR));</span>
-<span class="fc" id="L330">    }</span>
+<span class="nc" id="L363">            addNotify(new NotifyBean(title, getProp().getText(&quot;components.users.auth_failed&quot;, userToApprove.getFullName(), userToApprove.getLogin()), NotifyType.ERROR));</span>
+<span class="fc" id="L364">    }</span>
 
     @Override
     public boolean beforeDelete(UserDetailsEntity entity) {
-        //Check that user is not trying delete user account, that is actually loged
-<span class="fc bfc" id="L335" title="All 2 branches covered.">        if(entity.getId().intValue() == getUser().getUserId()) {</span>
-<span class="nc" id="L336">            throwError(&quot;user.self_delete_error&quot;);</span>
-<span class="nc" id="L337">            return false;</span>
+        //Check that user is not trying delete user account, that is actually logged
+<span class="fc bfc" id="L369" title="All 2 branches covered.">        if(entity.getId().intValue() == getUser().getUserId()) {</span>
+<span class="nc" id="L370">            throwError(&quot;user.self_delete_error&quot;);</span>
+<span class="nc" id="L371">            return false;</span>
         }
 
-<span class="fc" id="L340">        return true;</span>
+<span class="fc" id="L374">        return true;</span>
     }
+
+    @Override
+    public void beforeDuplicate(UserDetailsEntity entity) {
+        //Force random password generation -&gt; null value can cause problems
+<span class="pc bpc" id="L380" title="1 of 4 branches missed.">        if(entity.getPassword() == null || entity.getPassword().equals(UserTools.PASS_UNCHANGED)) {</span>
+<span class="fc" id="L381">            entity.setPassword(&quot;random&quot;);</span>
+<span class="fc" id="L382">            super.beforeDuplicate(entity);</span>
+        }
+<span class="fc" id="L384">    }   </span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

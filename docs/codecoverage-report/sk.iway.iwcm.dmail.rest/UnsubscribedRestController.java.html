@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.jpa.UnsubscribedEntity;
 import sk.iway.iwcm.dmail.jpa.UnsubscribedRepository;
@@ -23,48 +24,46 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RequestMapping(&quot;/admin/rest/dmail/unsubscribed&quot;)
 @PreAuthorize(&quot;@WebjetSecurityService.hasPermission('menuEmail')&quot;)
 @Datatable
-public class UnsubscribedRestController extends DatatableRestControllerV2&lt;UnsubscribedEntity, Long&gt;{
-
-    //private final UnsubscribedRepository unsubscribedRepository;
+public class UnsubscribedRestController extends DatatableRestControllerV2&lt;UnsubscribedEntity, Long&gt; {
 
     @Autowired
     public UnsubscribedRestController(UnsubscribedRepository unsubscribedRepository) {
-<span class="fc" id="L32">        super(unsubscribedRepository);</span>
-        //this.unsubscribedRepository = unsubscribedRepository;
-<span class="fc" id="L34">    }</span>
+<span class="fc" id="L31">        super(unsubscribedRepository);</span>
+<span class="fc" id="L32">    }</span>
 
     @Override
     public UnsubscribedEntity insertItem(UnsubscribedEntity entity) {
-<span class="fc" id="L38">        Set&lt;String&gt; unsubscribedEmails = DmailUtil.getUnsubscribedEmails();</span>
-<span class="fc" id="L39">        entity.setEmail(entity.getEmail().toLowerCase());</span>
-<span class="pc bpc" id="L40" title="1 of 2 branches missed.">        if (unsubscribedEmails.contains(entity.getEmail())) return null;</span>
+<span class="fc" id="L36">        Set&lt;String&gt; unsubscribedEmails = DmailUtil.getUnsubscribedEmails();</span>
+<span class="fc" id="L37">        entity.setEmail(entity.getEmail().toLowerCase());</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (unsubscribedEmails.contains(entity.getEmail())) return null;</span>
 
-<span class="fc" id="L42">        return super.insertItem(entity);</span>
+<span class="fc" id="L40">        return super.insertItem(entity);</span>
     }
 
     @Override
     public void beforeSave(UnsubscribedEntity entity) {
         //Set date created
-<span class="fc bfc" id="L48" title="All 2 branches covered.">        if (entity.getCreateDate()==null) entity.setCreateDate(new Date());</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (entity.getCreateDate()==null) entity.setCreateDate(new Date());</span>
 
         //do pola je mozne zadat viacero email adries, ulozime vsetky zadane
-<span class="fc" id="L51">        String[] emails = Tools.getTokens(entity.getEmail(), &quot;, ;\n&quot;, true);</span>
-<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (emails.length&gt;0) {</span>
-<span class="fc bfc" id="L53" title="All 2 branches covered.">            for (int i=0; i&lt;emails.length; i++) {</span>
-<span class="fc" id="L54">                String email = emails[i];</span>
-<span class="pc bpc" id="L55" title="1 of 2 branches missed.">                if (Tools.isEmail(email)==false) {</span>
-<span class="nc" id="L56">                    throwConstraintViolation(getProp().getText(&quot;components.dmail.unsubscribe.email.error&quot;, email));</span>
+<span class="fc" id="L49">        String[] emails = Tools.getTokens(entity.getEmail(), &quot;, ;\n&quot;, true);</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (emails.length&gt;0) {</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            for (int i=0; i&lt;emails.length; i++) {</span>
+<span class="fc" id="L52">                String email = emails[i].trim().toLowerCase();</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">                if (Tools.isEmail(email)==false) {</span>
+<span class="nc" id="L54">                    throwConstraintViolation(getProp().getText(&quot;components.dmail.unsubscribe.email.error&quot;, email));</span>
                 }
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">                if (i==0) entity.setEmail(email);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                if (i==0) entity.setEmail(email);</span>
                 else {
                     //musime vytvorit novu entitu a ulozit separe, je mozne zadat viac email adries
-<span class="nc" id="L61">                    UnsubscribedEntity e = new UnsubscribedEntity();</span>
-<span class="nc" id="L62">                    e.setEmail(email);</span>
-<span class="nc" id="L63">                    e.setCreateDate(new Date());</span>
-<span class="nc" id="L64">                    insertItem(e);</span>
+<span class="fc" id="L59">                    UnsubscribedEntity e = new UnsubscribedEntity();</span>
+<span class="fc" id="L60">                    e.setEmail(email);</span>
+<span class="fc" id="L61">                    e.setCreateDate(new Date());</span>
+<span class="fc" id="L62">                    e.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L63">                    insertItem(e);</span>
                 }
             }
         }
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L67">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

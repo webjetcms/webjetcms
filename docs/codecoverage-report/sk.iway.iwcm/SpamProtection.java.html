@@ -316,23 +316,23 @@ public class SpamProtection
 	 * Standardne, ak netreba ziskavat cas, staci volat metodu canPost(module, post, request)
 	 * */
 	public static long getWaitTimeout(String module, HttpServletRequest request){
-<span class="nc" id="L319">		String ip = Tools.getRemoteIP(request);</span>
+<span class="fc" id="L319">		String ip = Tools.getRemoteIP(request);</span>
 
-<span class="nc bnc" id="L321" title="All 2 branches missed.">		if (Tools.isEmpty(ip))</span>
+<span class="pc bpc" id="L321" title="1 of 2 branches missed.">		if (Tools.isEmpty(ip))</span>
 <span class="nc" id="L322">			return -1;</span>
 
 		UserTrackRecord trackRecord;
 
-<span class="nc" id="L326">		int hashCode = ip.hashCode();</span>
+<span class="fc" id="L326">		int hashCode = ip.hashCode();</span>
 
-<span class="nc bnc" id="L328" title="All 2 branches missed.">		if (hashCode &lt; 0)</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">		if (hashCode &lt; 0)</span>
 <span class="nc" id="L329">			hashCode *= -1;</span>
 
-<span class="nc" id="L331">		synchronized(locks[hashCode % LOCKS_COUNT])</span>
+<span class="fc" id="L331">		synchronized(locks[hashCode % LOCKS_COUNT])</span>
 		{
-<span class="nc" id="L333">			trackRecord = UserTrackRecord.getTrackRecordsFor(ip, module);</span>
+<span class="fc" id="L333">			trackRecord = UserTrackRecord.getTrackRecordsFor(ip, module);</span>
 
-<span class="nc" id="L335">			return trackRecord.getWaitTime(module);</span>
+<span class="fc" id="L335">			return trackRecord.getWaitTime(module);</span>
 		}
 	}
 
@@ -394,16 +394,16 @@ public class SpamProtection
 		}
 
 		public long getWaitTime(String module){
-<span class="nc" id="L397">			long now = System.currentTimeMillis();</span>
+<span class="fc" id="L397">			long now = System.currentTimeMillis();</span>
 
-<span class="nc" id="L399">			int hourlyLimit = getHourlyPostLimit(module);</span>
-<span class="nc bnc" id="L400" title="All 2 branches missed.">			if (hourlyLimit==-2) return 0;</span>
+<span class="fc" id="L399">			int hourlyLimit = getHourlyPostLimit(module);</span>
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">			if (hourlyLimit==-2) return 0;</span>
 
-<span class="nc bnc" id="L402" title="All 2 branches missed.">			if (records.size() &gt;= hourlyLimit){</span>
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">			if (records.size() &gt;= hourlyLimit){</span>
 <span class="nc" id="L403">				long wait = getFirstPostTime() + 60*1000*60 - now + 1;	//napr. 40 sekund =&gt; 0 minut -&gt; preto +1</span>
 <span class="nc" id="L404">				return wait;</span>
 			}
-<span class="nc" id="L406">			return 0;</span>
+<span class="fc" id="L406">			return 0;</span>
 		}
 
 		public long getLastPostTime(int ignoreRequests)
@@ -598,5 +598,16 @@ public class SpamProtection
 <span class="fc" id="L598">			executor.shutdownNow();</span>
 		}
 <span class="fc" id="L600">	}</span>
+
+	/**
+	 * Clear all maps
+	 */
+	public static void clearAll() {
+<span class="fc" id="L606">		userTracking.clear();</span>
+<span class="fc" id="L607">		userMinuteTracking.clear();</span>
+<span class="fc" id="L608">		userMinitTracking.clear();</span>
+<span class="fc" id="L609">		lastAccessedTime.clear();</span>
+<span class="fc" id="L610">		lastAccessedTimeInMinit.clear();</span>
+<span class="fc" id="L611">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

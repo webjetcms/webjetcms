@@ -6,7 +6,7 @@ Zobrazujú sa udalosti, ktoré sú schválené (automaticky alebo administrátor
 
 ![](page.png)
 
-**Upozornenie:** po odporučení/neodporučení sa udalosť naďalej **bude zobrazovať** v tabuľke, takže je možné ich stav odporučenia zmeniť. Avšak, až sa začiatok udalosti dostane do minulosti, **prestanú sa zobrazovať**. Udalosti však budú naďalej viditeľné v časti [Zoznam udalosti](../README.md)
+!>**Upozornenie:** po odporučení/neodporučení sa udalosť naďalej **bude zobrazovať** v tabuľke, takže je možné ich stav odporučenia zmeniť. Avšak, až sa začiatok udalosti dostane do minulosti, **prestanú sa zobrazovať**. Udalosti však budú naďalej viditeľné v časti [Zoznam udalosti](../README.md)
 
 ## Odporučenie udalosti
 

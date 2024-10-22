@@ -9,14 +9,19 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.DataSource;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.PerexGroupBean;
 
 import javax.persistence.*;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
@@ -176,6 +181,12 @@ public class AuditEntityListener {
         Number id = getId(entity);
         StringBuilder log = new StringBuilder();
 
+        //add auditValues from RequestBean
+        RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+        if (requestBean != null) {
+            log.append(Adminlog.getRequestBeanAuditLog(requestBean));
+        }
+
         List<String> auditHideProperties = Tools.getStringListValue(Tools.getTokens(Constants.getString("auditHideProperties", ""), ","));
 
         Object dbEntity = null;
@@ -209,9 +220,11 @@ public class AuditEntityListener {
             try {
                 String name = declaredField.getName();
                 if ("serialVersionUID".equals(name)) continue;
-                String entityValue = shrinkValue(String.valueOf(entityWrapper.getPropertyValue(name)));
+                if ("dataAsc".equals(name) || "data_asc".equals(name)) continue;
+
+                String entityValue = getStringValue(entityWrapper.getPropertyValue(name), name);
                 String dbEntityValue = null;
-                if (dbEntityWrapper!=null) dbEntityValue = shrinkValue(String.valueOf(dbEntityWrapper.getPropertyValue(name)));
+                if (dbEntityWrapper!=null) dbEntityValue = getStringValue(dbEntityWrapper.getPropertyValue(name), name);
 
                 //key mame kvoli TranslationKeys
                 if (compareToDb==false || !entityValue.equals(dbEntityValue) || "key".equals(name)) {
@@ -239,13 +252,50 @@ public class AuditEntityListener {
     }
 
     /**
+     * Format Object propertyValue to String representation
+     * @param entityPropertyValue
+     * @return
+     */
+    private String getStringValue(Object entityPropertyValue, String name) {
+        String entityValue = null;
+        if (entityPropertyValue == null) {
+            entityValue = "null";
+        } else {
+            if (entityPropertyValue.getClass().isArray()) {
+                Object[] array = (Object[]) entityPropertyValue;
+                StringBuilder builder = new StringBuilder();
+                for (Object o : array) {
+                    if (builder.isEmpty()==false) builder.append(",");
+
+                    if (name.equals("perexGroups") && o instanceof Integer) {
+                        Integer i = (Integer) o;
+                        PerexGroupBean pgb = DocDB.getInstance().getPerexGroup(i, null);
+                        if (pgb.getPerexGroupId()>0) builder.append(pgb.getPerexGroupNameId());
+                        else builder.append(i);
+                    } else {
+                        builder.append(String.valueOf(o));
+                    }
+                }
+                entityValue = builder.toString();
+            } else if (entityPropertyValue instanceof Date) {
+                entityValue = Tools.formatDateTimeSeconds((Date) entityPropertyValue);
+            } else if (entityPropertyValue instanceof Long && name.contains("date")) {
+                entityValue = Tools.formatDateTimeSeconds((Long) entityPropertyValue);
+            } else {
+                entityValue = shrinkValue(String.valueOf(entityPropertyValue));
+            }
+        }
+        return shrinkValue(entityValue);
+    }
+
+    /**
      * Skrati hodnotu, aby sa neauditovali dlhe zaznamy a audit nezaberal vela miesta
      * @param value
      * @return
      */
     private String shrinkValue(String value) {
+        if (value == null || "null".equals(value)) return "null";
         int maxLength = Constants.getInt("auditMaxChangeLength", 100);
-        if (value == null || "null".equals(value)) return "";
         if (value.length()>maxLength) value = value.substring(0, maxLength-1)+"...";
         return value;
     }

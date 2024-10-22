@@ -163,12 +163,12 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 	 */
 	public boolean isValidDates()
 	{
-<span class="nc bnc" id="L166" title="All 4 branches missed.">		if (validFrom == null || validTo == null) return true;</span>
+<span class="fc bfc" id="L166" title="All 4 branches covered.">		if (validFrom == null || validTo == null) return true;</span>
 
-<span class="nc" id="L168">		Date now = new Date(Tools.getNow());</span>
+<span class="fc" id="L168">		Date now = new Date(Tools.getNow());</span>
 
-<span class="nc bnc" id="L170" title="All 4 branches missed.">		if (validFrom != null &amp;&amp; validFrom.after(now)) return false;</span>
-<span class="nc bnc" id="L171" title="All 4 branches missed.">		else if (validTo != null &amp;&amp; validTo.before(now)) return false;</span>
+<span class="pc bpc" id="L170" title="2 of 4 branches missed.">		if (validFrom != null &amp;&amp; validFrom.after(now)) return false;</span>
+<span class="pc bpc" id="L171" title="2 of 4 branches missed.">		else if (validTo != null &amp;&amp; validTo.before(now)) return false;</span>
 <span class="nc bnc" id="L172" title="All 10 branches missed.">		else if (validFrom!=null &amp;&amp; validTo!=null &amp;&amp; (validFrom.before(now) &amp;&amp; validTo.after(now))==false) return false;</span>
 
 <span class="nc" id="L174">		return false;</span>
@@ -176,109 +176,109 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 
 	public int getNnFileArchiveId()
 	{
-<span class="nc" id="L179">		return nnFileArchiveId;</span>
+<span class="fc" id="L179">		return nnFileArchiveId;</span>
 	}
 
 	public void setNnFileArchiveId(int nnFileArchiveId)
 	{
-<span class="nc" id="L184">		this.nnFileArchiveId = nnFileArchiveId;</span>
-<span class="nc" id="L185">	}</span>
+<span class="fc" id="L184">		this.nnFileArchiveId = nnFileArchiveId;</span>
+<span class="fc" id="L185">	}</span>
 
 	@Override
 	public void setId(int id)
 	{
-<span class="nc" id="L190">		setNnFileArchiveId(id);</span>
-<span class="nc" id="L191">	}</span>
+<span class="fc" id="L190">		setNnFileArchiveId(id);</span>
+<span class="fc" id="L191">	}</span>
 
 	@Override
 	public int getId()
 	{
-<span class="nc" id="L196">		return getNnFileArchiveId();</span>
+<span class="fc" id="L196">		return getNnFileArchiveId();</span>
 	}
 
 	public int getUserId()
 	{
-<span class="nc" id="L201">		return userId;</span>
+<span class="fc" id="L201">		return userId;</span>
 	}
 
 	public void setUserId(int userId)
 	{
-<span class="nc" id="L206">		this.userId = userId;</span>
-<span class="nc" id="L207">	}</span>
+<span class="fc" id="L206">		this.userId = userId;</span>
+<span class="fc" id="L207">	}</span>
 
 	public String getFilePath()
 	{
-<span class="nc" id="L211">		return filePath;</span>
+<span class="fc" id="L211">		return filePath;</span>
 	}
 
 	public void setFilePath(String filePath)
 	{
-<span class="nc" id="L216">		this.filePath = filePath;</span>
-<span class="nc" id="L217">	}</span>
+<span class="fc" id="L216">		this.filePath = filePath;</span>
+<span class="fc" id="L217">	}</span>
 
 	public String getFileName()
 	{
-<span class="nc" id="L221">		return fileName;</span>
+<span class="fc" id="L221">		return fileName;</span>
 	}
 
 	public void setFileName(String fileName)
 	{
-<span class="nc" id="L226">		this.fileName = fileName;</span>
-<span class="nc" id="L227">	}</span>
+<span class="fc" id="L226">		this.fileName = fileName;</span>
+<span class="fc" id="L227">	}</span>
 
 	public String getVirtualFileName()
 	{
-<span class="nc" id="L231">		return virtualFileName;</span>
+<span class="fc" id="L231">		return virtualFileName;</span>
 	}
 
 	public void setVirtualFileName(String virtualFileName)
 	{
-<span class="nc" id="L236">		this.virtualFileName = virtualFileName;</span>
-<span class="nc" id="L237">	}</span>
+<span class="fc" id="L236">		this.virtualFileName = virtualFileName;</span>
+<span class="fc" id="L237">	}</span>
 
 	public boolean getShowFile()
 	{
-<span class="nc" id="L241">		return showFile;</span>
+<span class="fc" id="L241">		return showFile;</span>
 	}
 
 	public void setShowFile(boolean showFile)
 	{
-<span class="nc" id="L246">		this.showFile = showFile;</span>
-<span class="nc" id="L247">	}</span>
+<span class="fc" id="L246">		this.showFile = showFile;</span>
+<span class="fc" id="L247">	}</span>
 
 	public Date getDateInsert()
 	{
-<span class="nc" id="L251">		return dateInsert;</span>
+<span class="fc" id="L251">		return dateInsert;</span>
 	}
 
 	public void setDateInsert(Date dateInsert)
 	{
-<span class="nc" id="L256">		this.dateInsert = dateInsert;</span>
-<span class="nc" id="L257">	}</span>
+<span class="fc" id="L256">		this.dateInsert = dateInsert;</span>
+<span class="fc" id="L257">	}</span>
 
 	public Date getValidFrom()
 	{
-<span class="nc" id="L261">		return validFrom;</span>
+<span class="fc" id="L261">		return validFrom;</span>
 	}
 
 	public void setValidFrom(Date validFrom)
 	{
-<span class="nc" id="L266">		this.validFrom = validFrom;</span>
-<span class="nc" id="L267">	}</span>
+<span class="fc" id="L266">		this.validFrom = validFrom;</span>
+<span class="fc" id="L267">	}</span>
 
 	public Date getValidTo()
 	{
-<span class="nc" id="L271">		return validTo;</span>
+<span class="fc" id="L271">		return validTo;</span>
 	}
 
 	public void setValidTo(Date validTo)
 	{
-<span class="nc" id="L276">		this.validTo = validTo;</span>
-<span class="nc" id="L277">	}</span>
+<span class="fc" id="L276">		this.validTo = validTo;</span>
+<span class="fc" id="L277">	}</span>
 
 	public String getDomain()
 	{
-<span class="nc" id="L281">		return domain;</span>
+<span class="fc" id="L281">		return domain;</span>
 	}
 
 	public void setDomain(String domain)
@@ -288,17 +288,17 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 
 	public int getReferenceId()
 	{
-<span class="nc" id="L291">		return referenceId;</span>
+<span class="fc" id="L291">		return referenceId;</span>
 	}
 
 	public void setReferenceId(int referenceId)
 	{
-<span class="nc" id="L296">		this.referenceId = referenceId;</span>
-<span class="nc" id="L297">	}</span>
+<span class="fc" id="L296">		this.referenceId = referenceId;</span>
+<span class="fc" id="L297">	}</span>
 
 	public int getOrderId()
 	{
-<span class="nc" id="L301">		return orderId;</span>
+<span class="fc" id="L301">		return orderId;</span>
 	}
 
 	public void setOrderId(int orderId)
@@ -308,87 +308,87 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 
 	public String getProductCode()
 	{
-<span class="nc" id="L311">		return productCode;</span>
+<span class="fc" id="L311">		return productCode;</span>
 	}
 
 	public void setProductCode(String productCode)
 	{
-<span class="nc" id="L316">		this.productCode = productCode;</span>
-<span class="nc" id="L317">	}</span>
+<span class="fc" id="L316">		this.productCode = productCode;</span>
+<span class="fc" id="L317">	}</span>
 
 	public String getProduct()
 	{
-<span class="nc" id="L321">		return product;</span>
+<span class="fc" id="L321">		return product;</span>
 	}
 
 	public void setProduct(String product)
 	{
-<span class="nc" id="L326">		this.product = product;</span>
-<span class="nc" id="L327">	}</span>
+<span class="fc" id="L326">		this.product = product;</span>
+<span class="fc" id="L327">	}</span>
 
 	public String getCategory()
 	{
-<span class="nc" id="L331">		return category;</span>
+<span class="fc" id="L331">		return category;</span>
 	}
 
 	public void setCategory(String category)
 	{
-<span class="nc" id="L336">		this.category = category;</span>
-<span class="nc" id="L337">	}</span>
+<span class="fc" id="L336">		this.category = category;</span>
+<span class="fc" id="L337">	}</span>
 
 	public String getMd5()
 	{
-<span class="nc" id="L341">		return md5;</span>
+<span class="fc" id="L341">		return md5;</span>
 	}
 
 	public void setMd5(String md5)
 	{
-<span class="nc" id="L346">		this.md5 = md5;</span>
-<span class="nc" id="L347">	}</span>
+<span class="fc" id="L346">		this.md5 = md5;</span>
+<span class="fc" id="L347">	}</span>
 
 	public String getReferenceToMain()
 	{
-<span class="nc" id="L351">		return referenceToMain;</span>
+<span class="fc" id="L351">		return referenceToMain;</span>
 	}
 
 	public void setReferenceToMain(String referenceToMain)
 	{
-<span class="nc bnc" id="L356" title="All 4 branches missed.">		this.referenceToMain = referenceToMain != null ? (referenceToMain.trim().startsWith(&quot;/&quot;) ? referenceToMain.trim().substring(1) : referenceToMain.trim()) : null;</span>
-<span class="nc" id="L357">	}</span>
+<span class="pc bpc" id="L356" title="3 of 4 branches missed.">		this.referenceToMain = referenceToMain != null ? (referenceToMain.trim().startsWith(&quot;/&quot;) ? referenceToMain.trim().substring(1) : referenceToMain.trim()) : null;</span>
+<span class="fc" id="L357">	}</span>
 
 	public int getPriority()
 	{
-<span class="nc" id="L361">		return priority;</span>
+<span class="fc" id="L361">		return priority;</span>
 	}
 
 	public void setPriority(int priority)
 	{
-<span class="nc" id="L366">		this.priority = priority;</span>
-<span class="nc" id="L367">	}</span>
+<span class="fc" id="L366">		this.priority = priority;</span>
+<span class="fc" id="L367">	}</span>
 
 	public String getFieldA()
 	{
-<span class="nc" id="L371">		return fieldA;</span>
+<span class="fc" id="L371">		return fieldA;</span>
 	}
 
 	public void setFieldA(String fieldA)
 	{
-<span class="nc" id="L376">		this.fieldA = fieldA;</span>
-<span class="nc" id="L377">	}</span>
+<span class="fc" id="L376">		this.fieldA = fieldA;</span>
+<span class="fc" id="L377">	}</span>
 
 	public String getFieldB()
 	{
-<span class="nc" id="L381">		return fieldB;</span>
+<span class="fc" id="L381">		return fieldB;</span>
 	}
 
 	public void setFieldB(String fieldB)
 	{
-<span class="nc" id="L386">		this.fieldB = fieldB;</span>
-<span class="nc" id="L387">	}</span>
+<span class="fc" id="L386">		this.fieldB = fieldB;</span>
+<span class="fc" id="L387">	}</span>
 
 	public int getFieldC()
 	{
-<span class="nc" id="L391">		return fieldC;</span>
+<span class="fc" id="L391">		return fieldC;</span>
 	}
 
 	public void setFieldC(int fieldC)
@@ -398,7 +398,7 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 
 	public long getFieldD()
 	{
-<span class="nc" id="L401">		return fieldD;</span>
+<span class="fc" id="L401">		return fieldD;</span>
 	}
 
 	public void setFieldD(long fieldD)
@@ -408,7 +408,7 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 
 	public String getFieldE()
 	{
-<span class="nc" id="L411">		return fieldE;</span>
+<span class="fc" id="L411">		return fieldE;</span>
 	}
 
 	public void setFieldE(String fieldE)
@@ -418,159 +418,162 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 
 	public String getNote()
 	{
-<span class="nc" id="L421">		return note;</span>
+<span class="fc" id="L421">		return note;</span>
 	}
 
 	public void setNote(String note)
 	{
-<span class="nc" id="L426">		this.note = note;</span>
-<span class="nc" id="L427">	}</span>
+<span class="fc" id="L426">		this.note = note;</span>
+<span class="fc" id="L427">	}</span>
 
 	public int getGlobalId()
 	{
-<span class="nc" id="L431">		return globalId;</span>
+<span class="fc" id="L431">		return globalId;</span>
 	}
 
 	public void setGlobalId(int globalId)
 	{
-<span class="nc" id="L436">		this.globalId = globalId;</span>
-<span class="nc" id="L437">	}</span>
+<span class="fc" id="L436">		this.globalId = globalId;</span>
+<span class="fc" id="L437">	}</span>
 
 	private void deleteIndexedFile(String url)
 	{
-<span class="nc" id="L441">		int docId = DocDB.getInstance().getDocIdFromURLImpl(url+&quot;.html&quot;, GroupsDB.getInstance().getGroup(getDomainId()).getDomainName());</span>
-<span class="nc bnc" id="L442" title="All 2 branches missed.">		if (docId &gt; 0)</span>
+<span class="fc" id="L441">		int docId = DocDB.getInstance().getDocIdFromURLImpl(url+&quot;.html&quot;, GroupsDB.getInstance().getGroup(getDomainId()).getDomainName());</span>
+<span class="pc bpc" id="L442" title="1 of 2 branches missed.">		if (docId &gt; 0)</span>
 <span class="nc" id="L443">			DocDB.deleteDoc(docId, null);</span>
-<span class="nc" id="L444">	}</span>
+<span class="fc" id="L444">	}</span>
 
 	@Override
 	public boolean save()
 	{
-<span class="nc bnc" id="L449" title="All 2 branches missed.">		if(dateInsert == null)</span>
-<span class="nc" id="L450">			dateInsert = new Date();</span>
+<span class="fc bfc" id="L449" title="All 2 branches covered.">		if(dateInsert == null)</span>
+<span class="fc" id="L450">			dateInsert = new Date();</span>
 		//musim tu vymazat cache
-<span class="nc" id="L452">		FileArchivatorKit.deleteFileArchiveCache();</span>
+<span class="fc" id="L452">		FileArchivatorKit.deleteFileArchiveCache();</span>
 
-<span class="nc" id="L454">		UserDetails user = UsersDB.getUser(userId);</span>
-		//najprv zmazem stary index
-<span class="nc bnc" id="L456" title="All 2 branches missed.">		if(getId() &gt; 0)</span>
-<span class="nc" id="L457">			deleteIndexedFile(&quot;/&quot;+FileArchivatorDB.getInstance().getById(getId()).getVirtualPath());</span>
+<span class="fc" id="L454">		UserDetails user = UsersDB.getUser(userId);</span>
+<span class="fc" id="L455">		boolean save = super.save();</span>
 
-<span class="nc" id="L459">		boolean save = super.save();</span>
-
-<span class="nc bnc" id="L461" title="All 2 branches missed.">		if(save)</span>
+<span class="pc bpc" id="L457" title="1 of 2 branches missed.">		if(save)</span>
 		{
 			 //ak je subor validny a je ako zobrazovat
-<span class="nc bnc" id="L464" title="All 4 branches missed.">			 if(getShowFile() &amp;&amp; isValidDates())</span>
+<span class="pc bpc" id="L460" title="2 of 4 branches missed.">			 if(getShowFile() &amp;&amp; isValidDates())</span>
 			 {
 			 	 //indexujem bud iba hlavny subor, alebo ked je povolene, tak vsetky
-<span class="nc bnc" id="L467" title="All 4 branches missed.">			 	 boolean index = getReferenceId() &lt; 1 || Constants.getBoolean(&quot;fileArchivIndexOnlyMainFiles&quot;) == false;</span>
-<span class="nc bnc" id="L468" title="All 2 branches missed.">				 if(index)</span>
-<span class="nc" id="L469">						FileIndexerTools.indexFile(&quot;/&quot;+getVirtualPath(), user);</span>
+<span class="pc bpc" id="L463" title="3 of 4 branches missed.">			 	 boolean index = getReferenceId() &lt; 1 || Constants.getBoolean(&quot;fileArchivIndexOnlyMainFiles&quot;) == false;</span>
+<span class="pc bpc" id="L464" title="1 of 2 branches missed.">				 if(index)</span>
+<span class="fc" id="L465">						FileIndexerTools.indexFile(&quot;/&quot;+getVirtualPath(), user);</span>
 			 }
 		}
 
-<span class="nc" id="L473">		return save;</span>
+<span class="fc" id="L469">		return save;</span>
 	}
 
 	@Override
 	public boolean delete()
 	{
 		//musim tu vymazat cache
-<span class="nc" id="L480">		FileArchivatorKit.deleteFileArchiveCache();</span>
+<span class="fc" id="L476">		FileArchivatorKit.deleteFileArchiveCache();</span>
 
 		//zmazem index
-<span class="nc" id="L483">		deleteIndexedFile(&quot;/&quot;+getVirtualPath());</span>
+<span class="fc" id="L479">		deleteIndexedFile(&quot;/&quot;+getVirtualPath());</span>
 
-<span class="nc" id="L485">      Adminlog.add(Adminlog.TYPE_FILE_DELETE,&quot;File Archiv mazeme subor: &quot;+getVirtualPath()+&quot; &quot;+this,-1,-1);</span>
-<span class="nc" id="L486">		return super.delete();</span>
+<span class="fc" id="L481">      	Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE,&quot;DELETE: File Archiv mazeme subor: &quot;+getVirtualPath()+&quot; &quot;+this, this.getId(), -1);</span>
+<span class="fc" id="L482">		return super.delete();</span>
 	}
 
 
 	@Override
 	public String toString()
 	{
-<span class="nc" id="L493">		StringBuilder toString = new StringBuilder();</span>
-<span class="nc bnc" id="L494" title="All 2 branches missed.">		for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(this.getClass()))</span>
+<span class="fc" id="L489">		return toString(false);</span>
+	}
+
+	public String toString(boolean newLines)
+	{
+<span class="fc" id="L494">		StringBuilder toString = new StringBuilder();</span>
+<span class="fc bfc" id="L495" title="All 2 branches covered.">		for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(this.getClass()))</span>
 		{
 			try{
-<span class="nc" id="L497">				String property = descriptor.getName();</span>
-<span class="nc bnc" id="L498" title="All 2 branches missed.">				if(&quot;historyFiles&quot;.equals(property))</span>
-<span class="nc" id="L499">				    continue;</span>
-<span class="nc" id="L500">				Object value = PropertyUtils.getProperty(this, property);</span>
-<span class="nc" id="L501">				toString.append(property).append(&quot; = &quot;);</span>
-<span class="nc" id="L502">				toString.append(value).append(',');</span>
+<span class="fc" id="L498">				String property = descriptor.getName();</span>
+<span class="fc bfc" id="L499" title="All 2 branches covered.">				if(&quot;historyFiles&quot;.equals(property))</span>
+<span class="fc" id="L500">				    continue;</span>
+<span class="fc" id="L501">				Object value = PropertyUtils.getProperty(this, property);</span>
+<span class="fc" id="L502">				toString.append(property).append(&quot;: &quot;).append(value);</span>
+
+<span class="fc bfc" id="L504" title="All 2 branches covered.">				if (newLines) toString.append(&quot;\n&quot;);</span>
+<span class="fc" id="L505">				else toString.append(&quot;, &quot;);</span>
 			}
-<span class="nc" id="L504">			catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc" id="L507">			catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 		}
-<span class="nc" id="L506">		return toString.toString();</span>
+<span class="fc" id="L509">		return toString.toString();</span>
 	}
 
 	public Date getDateUploadLater() {
-<span class="nc" id="L510">		return dateUploadLater;</span>
+<span class="fc" id="L513">		return dateUploadLater;</span>
 	}
 
 	public void setDateUploadLater(Date dateUploadLater) {
-<span class="nc" id="L514">		this.dateUploadLater = dateUploadLater;</span>
-<span class="nc" id="L515">	}</span>
+<span class="fc" id="L517">		this.dateUploadLater = dateUploadLater;</span>
+<span class="fc" id="L518">	}</span>
 
 	public int getUploaded() {
-<span class="nc" id="L518">		return uploaded;</span>
+<span class="fc" id="L521">		return uploaded;</span>
 	}
 
 	public void setUploaded(int uploaded) {
-<span class="nc" id="L522">		this.uploaded = uploaded;</span>
-<span class="nc" id="L523">	}</span>
+<span class="fc" id="L525">		this.uploaded = uploaded;</span>
+<span class="fc" id="L526">	}</span>
 
 	public String getEmails() {
-<span class="nc" id="L526">		return emails;</span>
+<span class="fc" id="L529">		return emails;</span>
 	}
 
 	public void setEmails(String emails) {
-<span class="nc" id="L530">		this.emails = emails;</span>
-<span class="nc" id="L531">	}</span>
+<span class="fc" id="L533">		this.emails = emails;</span>
+<span class="fc" id="L534">	}</span>
 
 	public long getFileSize() {
-<span class="nc" id="L534">		return fileSize;</span>
+<span class="fc" id="L537">		return fileSize;</span>
 	}
 
 	public void setFileSize(long fileSize) {
-<span class="nc" id="L538">		this.fileSize = fileSize;</span>
-<span class="nc" id="L539">	}</span>
+<span class="fc" id="L541">		this.fileSize = fileSize;</span>
+<span class="fc" id="L542">	}</span>
 
 	public long getFileSizeKB() {
-<span class="nc" id="L542">		return fileSize / 1024;</span>
+<span class="fc" id="L545">		return fileSize / 1024;</span>
 	}
 
 	public double getFileSizeMB() {
-<span class="nc" id="L546">		return getFileSizeKB() / 1024d;</span>
+<span class="fc" id="L549">		return getFileSizeKB() / 1024d;</span>
 	}
 
 	public int getDomainId() {
-<span class="nc" id="L550">		return domainId;</span>
+<span class="fc" id="L553">		return domainId;</span>
 	}
 
 	public void setDomainId(int domainId) {
-<span class="nc" id="L554">		this.domainId = domainId;</span>
-<span class="nc" id="L555">	}</span>
+<span class="fc" id="L557">		this.domainId = domainId;</span>
+<span class="fc" id="L558">	}</span>
 
 	public List&lt;FileArchivatorBean&gt; getHistoryFiles()
     {
-<span class="nc" id="L559">        return FileArchivatorDB.getByReferenceId(this.getId());</span>
+<span class="nc" id="L562">        return FileArchivatorDB.getByReferenceId(this.getId());</span>
     }
 
     public String getVirtualPath()
     {
-<span class="nc" id="L564">        return getFilePath()+getFileName();</span>
+<span class="fc" id="L567">        return getFilePath()+getFileName();</span>
     }
 
     public int getExtendedDataId() {
-<span class="nc" id="L568">        return extendedDataId;</span>
+<span class="fc" id="L571">        return extendedDataId;</span>
     }
 
     public void setExtendedDataId(int extendedDataId) {
-<span class="nc" id="L572">        this.extendedDataId = extendedDataId;</span>
-<span class="nc" id="L573">    }</span>
+<span class="nc" id="L575">        this.extendedDataId = extendedDataId;</span>
+<span class="nc" id="L576">    }</span>
 
     /*
 
@@ -669,4 +672,4 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 				 emails NVARCHAR2(1100));
 	 */
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

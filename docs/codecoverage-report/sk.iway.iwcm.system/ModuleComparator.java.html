@@ -2,6 +2,8 @@
 
 import java.util.Comparator;
 
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.editor.appstore.AppBean;
 import sk.iway.iwcm.i18n.Prop;
 
 /**
@@ -15,21 +17,27 @@ import sk.iway.iwcm.i18n.Prop;
  *@created      Date: 23.1.2007 10:51:32
  *@modified     $Date: 2007/01/23 14:24:43 $
  */
-public class ModuleComparator implements Comparator&lt;ModuleInfo&gt;
+public class ModuleComparator implements Comparator&lt;AppBean&gt;
 {
 	private Prop prop;
-	
+
 	public ModuleComparator(Prop prop)
-<span class="fc" id="L23">	{</span>
-<span class="fc" id="L24">		this.prop = prop;</span>
-<span class="fc" id="L25">	}</span>
+<span class="fc" id="L25">	{</span>
+<span class="fc" id="L26">		this.prop = prop;</span>
+<span class="fc" id="L27">	}</span>
 	@Override
-	public int compare(ModuleInfo m1, ModuleInfo m2)
+	public int compare(AppBean m1, AppBean m2)
 	{
-<span class="fc" id="L29">		String name1 = prop.getText(m1.getNameKey());</span>
-<span class="fc" id="L30">		String name2 = prop.getText(m2.getNameKey());</span>
-		
-<span class="fc" id="L32">		return(name1.compareTo(name2));</span>
+<span class="fc" id="L31">		String name1 = DB.internationalToEnglish(prop.getText(m1.getNameKey()));</span>
+<span class="fc" id="L32">		String name2 = DB.internationalToEnglish(prop.getText(m2.getNameKey()));</span>
+
+<span class="fc" id="L34">		boolean custom1 = m1.getCustom();</span>
+<span class="fc" id="L35">		boolean custom2 = m2.getCustom();</span>
+
+		//sort first by custom and then by name
+<span class="pc bpc" id="L38" title="1 of 4 branches missed.">		if (custom1 &amp;&amp; !custom2) return -1;</span>
+<span class="fc bfc" id="L39" title="All 4 branches covered.">		if (!custom1 &amp;&amp; custom2) return 1;</span>
+<span class="fc" id="L40">		return name1.compareTo(name2);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

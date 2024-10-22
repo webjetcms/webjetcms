@@ -36,6 +36,60 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - right.jpg
 ```
 
+## Nastavenie šírky stĺpcov
+
+Editor umožňuje nastaviť šírky stĺpca podľa zvoleného zariadenia. V nástrojovej lište pri prepínači typu editora je možnosť nastaviť veľkosť (šírku) zariadenia.
+
+![](../../redactor/webpages/pagebuilder-switcher.png)
+
+- Desktop - je určený pre šírku väčšiu/rovnú ako 1200 bodov (nastavuje CSS triedu ```col-xl```).
+- Tablet - je určený pre šírku 768-1199 bodov (nastavuje CSS triedu ```col-md```)
+- Mobil - je určený pre šírku menšiu ako 768 bodov (nastavuje CSS triedu ```col-```)
+
+Správne nastavenie bloku obsahuje prednastavené všetky šírky, napr. `col-12 col-md-6 col-xl-3`:
+
+```html
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2 class="text-center">Etiam orci</h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-md-6 col-xl-3 text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Etiam orci</h3>
+        <p>Suspendisse interdum dolor justo, ac venenatis massa suscipit nec. Vivamus dictum malesuada mollis.</p>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3  text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Aenean </h3>
+        <p>Aliquam elementum ut ante vitae dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3  text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Maecenas</h3>
+        <p>Sed sollicitudin eros quis leo imperdiet, id congue lorem ornare. Suspendisse eleifend at ante id ultrices.</p>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3  text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Suspendisse</h3>
+        <p>Nullam ornare, magna in ultrices mattis, lectus neque mollis libero, vitae varius mauris metus a risus.</p>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
 ## Podpora Thymeleaf kódu
 
 Dôležité je si uvedomiť, že bloky sa do stránky vložia bez vykonania Thymeleaf kódu (technicky sa vloží priamo kód z html súboru do editora). Pri vložení sú aktuálne ale podporované nasledovné thymeleaf atribúty:

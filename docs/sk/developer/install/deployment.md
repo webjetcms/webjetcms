@@ -10,12 +10,12 @@ Pred vytvorením buildu je potrebné manuálne vykonať/skontrolovať nasledovn�
 - upraviť súbor ```docs/README.md``` - pridať na vrch najnovšiu verziu z changelogu a dole zmazať poslednú (v README.md sa zobrazuje 5 posledných verzií)
 - upraviť prekladový kľúč ```admin.overview.changelog``` so sumárom zmien aktuálnej verzie zobrazený pod uvítacím textom na úvodnej obrazovke
 - upraviť ```src/main/webapp/admin/v9/json/wjnews.LANG.json``` - doplniť sumár a odkaz na changelog najnovšej verzie
-- v súbore ```src/main/webapp/admin/v9/json/apps.LANG.vue``` doplniť aplikácie upravené pre verziu 2023
 
 Ak sa mení verzia, aktualizujte ju v:
 
-- `InitServlet.java`
 - `ant/build.xml`
+
+odtiaľ sa prenesie aj do `build.properties` pre zobrazenie verzie v administrácii.
 
 ## ANT task
 
@@ -41,7 +41,7 @@ cd ant
 ant deploy
 ```
 
-*Poznámka*: v adresári ```build/updatezip``` vznikne rozbalená štruktúra, tú je možné zozipovať a použiť ako aktualizačný balík pre WebJET v starej štruktúre (nepoužívajúcej jar archívy).
+*Poznámka*: v adresári ```build/updatezip``` vznikne rozbalená štruktúra, tú je možné zozipovať a použiť ako aktualizačný balík pre WebJET v starej štruktúre (nepoužívajúcej `jar` archívy).
 
 ## Kompletné skompilovanie zdrojových kódov
 

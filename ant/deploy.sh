@@ -17,6 +17,8 @@ ant update-version
 
 #ant deploy
 ant -Dcompress=true deployRepoIwmspSk
+ant -Dcompress=true createUpdateZip
+ant -Dcompress=true createUpdateZipJar
 
 #GITHUB: just run ant deployStaging
 #then close repo and deploy it

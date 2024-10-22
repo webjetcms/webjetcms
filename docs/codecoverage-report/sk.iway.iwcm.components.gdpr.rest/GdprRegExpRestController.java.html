@@ -9,8 +9,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +18,6 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpBean;
 import sk.iway.iwcm.components.gdpr.model.GdprRegExpRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
-import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
@@ -29,43 +26,31 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @Datatable
 public class GdprRegExpRestController  extends DatatableRestControllerV2&lt;GdprRegExpBean, Long&gt; {
 
-    private final GdprRegExpRepository repository;
-
     @Autowired
     public GdprRegExpRestController(GdprRegExpRepository repository) {
-<span class="fc" id="L36">        super(repository);</span>
-<span class="fc" id="L37">        this.repository = repository;</span>
-<span class="fc" id="L38">    }</span>
-
-    @Override
-    public Page&lt;GdprRegExpBean&gt; getAllItems(Pageable pageable) {
-
-<span class="fc" id="L43">        Page&lt;GdprRegExpBean&gt; items = repository.findAllByDomainId(CloudToolsForCore.getDomainId(), pageable);</span>
-
-<span class="fc" id="L45">        DatatablePageImpl&lt;GdprRegExpBean&gt; page = new DatatablePageImpl&lt;&gt;(items);</span>
-<span class="fc" id="L46">        return page;</span>
-    }
+<span class="fc" id="L31">        super(repository);</span>
+<span class="fc" id="L32">    }</span>
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;GdprRegExpBean&gt; root, CriteriaBuilder builder) {
         //aby nam hladalo aj podla searchUserFullName musime zavolat aj super metodu
-<span class="fc" id="L52">		super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L37">		super.addSpecSearch(params, predicates, root, builder);</span>
 
-<span class="fc" id="L54">        predicates.add(builder.equal(root.get(&quot;domainId&quot;), CloudToolsForCore.getDomainId()));</span>
-<span class="fc" id="L55">    }</span>
+<span class="fc" id="L39">        predicates.add(builder.equal(root.get(&quot;domainId&quot;), CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L40">    }</span>
 
     @Override
 	public void beforeSave(GdprRegExpBean entity) {
         //Id of domain where is this entity created
-<span class="fc" id="L60">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L45">        entity.setDomainId(CloudToolsForCore.getDomainId());</span>
 
         //Who create this regex
-<span class="fc" id="L63">        Identity user = getUser();</span>
-<span class="fc" id="L64">        entity.setUserId(user.getUserId());</span>
+<span class="fc" id="L48">        Identity user = getUser();</span>
+<span class="fc" id="L49">        entity.setUserId(user.getUserId());</span>
 
         //Date of last change
-<span class="fc" id="L67">        entity.setDateInsert(new Date());</span>
-<span class="fc" id="L68">    }</span>
+<span class="fc" id="L52">        entity.setDateInsert(new Date());</span>
+<span class="fc" id="L53">    }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

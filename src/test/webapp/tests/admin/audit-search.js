@@ -11,11 +11,6 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-function clearFilter(I) {
-    I.click("#dt-filter-labels-link-logType");
-    DT.waitForLoader();
-}
-
 Scenario("filter podla datumu", async ({ I, DT }) => {
   I.amOnPage("/admin/v9/apps/audit-search/");
   I.fillField({css: "input.dt-filter-from-createDate"}, "01. 01. 2020");
@@ -70,4 +65,48 @@ Scenario("filter podla hostname", ({ I, DT }) => {
   I.click({css: "button.dt-filtrujem-hostname"});
   DT.waitForLoader();
   I.see('localhost', {css: '#datatableInit > tbody > tr:nth-child(1) > td:nth-child(8) > div'})
+});
+
+Scenario("Audit - check menu items", ({ I }) => {
+  I.say("Test admin can see everything");
+  I.relogin("admin");
+  I.amOnPage("/admin/v9/apps/audit-search/");
+  I.see("Vyhľadávanie", "div.menu-wrapper");
+  I.see("Zoznam notifikácií", "div.menu-wrapper");
+  I.see("Zmenené stránky", "div.menu-wrapper");
+  I.see("Čaká na publikovanie", "div.menu-wrapper");
+  I.see("Úrovne logovania", "div.menu-wrapper");
+  I.see("Log súbory", "div.menu-wrapper");
+  I.see("Posledné logy", "div.menu-wrapper");
+
+  I.amOnPage("/admin/v9/apps/audit-search/?removePerm=menuWebpages");
+  I.see("Vyhľadávanie", "div.menu-wrapper");
+  I.see("Zoznam notifikácií", "div.menu-wrapper");
+  I.dontSee("Zmenené stránky", "div.menu-wrapper");
+  I.dontSee("Čaká na publikovanie", "div.menu-wrapper");
+  I.see("Úrovne logovania", "div.menu-wrapper");
+  I.see("Log súbory", "div.menu-wrapper");
+  I.see("Posledné logy", "div.menu-wrapper");
+
+  I.amOnPage("/admin/v9/apps/audit-search/?removePerm=cmp_in-memory-logging");
+  I.see("Vyhľadávanie", "div.menu-wrapper");
+  I.see("Zoznam notifikácií", "div.menu-wrapper");
+  I.see("Úrovne logovania", "div.menu-wrapper");
+  I.dontSee("Log súbory", "div.menu-wrapper");
+  I.dontSee("Posledné logy", "div.menu-wrapper");
+
+  I.say("Test NON admin to see only Audit based items");
+  I.relogin("permissionTest");
+  I.amOnPage("/admin/v9/apps/audit-search/");
+  I.see("Vyhľadávanie", "div.menu-wrapper");
+  I.see("Zoznam notifikácií", "div.menu-wrapper");
+  I.dontSee("Zmenené stránky", "div.menu-wrapper");
+  I.dontSee("Čaká na publikovanie", "div.menu-wrapper");
+  I.dontSee("Úrovne logovania", "div.menu-wrapper");
+  I.see("Log súbory", "div.menu-wrapper");
+  I.see("Posledné logy", "div.menu-wrapper");
+});
+
+Scenario("Audit - check menu items-logout", ({ I }) => {
+  I.logout();
 });

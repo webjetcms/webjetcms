@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ElfinderListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">ElfinderListener.java</span></div><h1>ElfinderListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.struts.util.ResponseUtils;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+import org.springframework.ui.ModelMap;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorKit;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.spring.events.WebjetEvent;
+import sk.iway.iwcm.users.UsersDB;
+
+@Component
+<span class="fc" id="L24">public class ElfinderListener {</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='files' &amp;&amp; event.source.subpage=='index'&quot;)
+    protected void setIndexInitialData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+<span class="fc" id="L28">        ModelMap model = event.getSource().getModel();</span>
+<span class="fc" id="L29">        HttpServletRequest request = event.getSource().getRequest();</span>
+
+        //
+<span class="pc bpc" id="L32" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) {</span>
+<span class="fc" id="L33">            model.addAttribute(&quot;rememberLastDir&quot;, false);</span>
+        } else {
+<span class="nc" id="L35">            model.addAttribute(&quot;rememberLastDir&quot;, true);</span>
+        }
+
+        //
+<span class="fc" id="L39">        model.addAttribute(&quot;lng&quot;,  Prop.getLng(request, false));</span>
+
+        //Check permission
+<span class="fc" id="L42">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L43">        model.addAttribute(&quot;haveFileIndexerPerm&quot;, user.isEnabledItem(&quot;fileIndexer&quot;));</span>
+
+        //
+<span class="fc" id="L46">        model.addAttribute(&quot;elfinderMetadataEnabled&quot;, Constants.getBoolean(&quot;elfinderMetadataEnabled&quot;));</span>
+<span class="fc" id="L47">        model.addAttribute(&quot;elfinderMetadataAutopopup&quot;, Constants.getBoolean(&quot;elfinderMetadataAutopopup&quot;));</span>
+<span class="fc" id="L48">    }</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='files' &amp;&amp; event.source.subpage=='dialog'&quot;)
+    protected void setDialogInitialData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+<span class="fc" id="L52">        ModelMap model = event.getSource().getModel();</span>
+<span class="fc" id="L53">        HttpServletRequest request = event.getSource().getRequest();</span>
+
+        //pre tento pripad nepamatajme, robilo haluze pri zmenach domeny a pristupoch do /images a /files foldrov
+<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)) {</span>
+<span class="fc" id="L57">            model.addAttribute(&quot;rememberLastDir&quot;, false);</span>
+        } else {
+<span class="nc" id="L59">            model.addAttribute(&quot;rememberLastDir&quot;, true);</span>
+        }
+
+<span class="fc" id="L62">        model.addAttribute(&quot;form&quot;, Tools.getStringValue(Tools.getRequestParameter(request, &quot;form&quot;), &quot;&quot;));</span>
+<span class="fc" id="L63">        model.addAttribute(&quot;elementName&quot;, Tools.getStringValue(Tools.getRequestParameter(request, &quot;elementName&quot;), &quot;&quot;));</span>
+<span class="fc" id="L64">        model.addAttribute(&quot;callback&quot;, Tools.getStringValue(Tools.getRequestParameter(request, &quot;callback&quot;), &quot;&quot;));</span>
+<span class="fc" id="L65">        model.addAttribute(&quot;volumes&quot;, Tools.getStringValue(Tools.getRequestParameter(request, &quot;volumes&quot;), &quot;link&quot;));</span>
+
+        // file, directory, fileDirectory, files, directories, filesDirectories
+<span class="fc" id="L68">        String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, &quot;selectMode&quot;), &quot;file&quot;);</span>
+<span class="fc" id="L69">        model.addAttribute(&quot;selectMode&quot;, selectMode);</span>
+
+        //Check permission
+<span class="fc" id="L72">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L73">        model.addAttribute(&quot;haveFileIndexerPerm&quot;, user.isEnabledItem(&quot;fileIndexer&quot;));</span>
+
+        //
+<span class="fc" id="L76">        String actualFile = &quot;&quot;;</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (Tools.isNotEmpty(Tools.getRequestParameter(request, &quot;link&quot;))) actualFile = Tools.getRequestParameter(request, &quot;link&quot;);</span>
+<span class="pc bpc" id="L78" title="5 of 6 branches missed.">        if (&quot;directory&quot;.equals(selectMode) &amp;&amp; Tools.isNotEmpty(actualFile) &amp;&amp; actualFile.endsWith(&quot;/&quot;)==false) actualFile = actualFile + &quot;/&quot;;</span>
+
+        //Vytvori defaultne adresare pre file system (/images,/files,/images/gallery,/images/video)
+<span class="fc" id="L81">        FileTools.createDefaultStaticContentFolders();</span>
+
+        //File value
+<span class="fc" id="L84">        model.addAttribute(&quot;actualFile&quot;, ResponseUtils.filter(actualFile));</span>
+
+<span class="fc" id="L86">        model.addAttribute(&quot;lng&quot;, Prop.getLng(request, false));</span>
+<span class="fc" id="L87">        model.addAttribute(&quot;insertJQuery&quot;, Tools.insertJQuery(request));</span>
+<span class="fc" id="L88">        model.addAttribute(&quot;encoding&quot;, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L89">        model.addAttribute(&quot;contextPath&quot;, request.getContextPath());</span>
+<span class="fc" id="L90">        model.addAttribute(&quot;elfinderMetadataEnabled&quot;, Constants.getBoolean(&quot;elfinderMetadataEnabled&quot;));</span>
+<span class="fc" id="L91">        model.addAttribute(&quot;elfinderFileArchiveEnabled&quot;, Constants.getBoolean(&quot;elfinderFileArchiveEnabled&quot;));</span>
+<span class="fc" id="L92">        model.addAttribute(&quot;pixabayEnabled&quot;, Constants.getBoolean(&quot;pixabayEnabled&quot;));</span>
+<span class="fc" id="L93">        model.addAttribute(&quot;archivPath&quot;, FileArchivatorKit.getArchivPath());</span>
+<span class="fc" id="L94">    }</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='files' &amp;&amp; event.source.subpage=='wj_image'&quot;)
+    protected void setWjImageInitialData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+<span class="fc" id="L98">        ModelMap model = event.getSource().getModel();</span>
+<span class="fc" id="L99">        HttpServletRequest request = event.getSource().getRequest();</span>
+
+        //
+<span class="fc" id="L102">        model.addAttribute(&quot;lng&quot;,  Prop.getLng(request, false));</span>
+<span class="fc" id="L103">        model.addAttribute(&quot;uploadIcon&quot;,  &quot;wjIconBig-uploadImage&quot;);</span>
+<span class="fc" id="L104">        model.addAttribute(&quot;editorImageDialogCopyAltToTitle&quot;, Constants.getBoolean(&quot;editorImageDialogCopyAltToTitle&quot;));</span>
+<span class="fc" id="L105">        model.addAttribute(&quot;elfinderMetadataEnabled&quot;, Constants.getBoolean(&quot;elfinderMetadataEnabled&quot;));</span>
+<span class="fc" id="L106">        model.addAttribute(&quot;editorAdvancedImageAlignment&quot;, Constants.getBoolean(&quot;editorAdvancedImageAlignment&quot;));</span>
+<span class="fc" id="L107">        model.addAttribute(&quot;setfield&quot;, Tools.getRequestParameter(request, &quot;setfield&quot;));</span>
+
+        //
+<span class="fc" id="L110">        boolean denyImageSize = false;</span>
+<span class="fc" id="L111">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (user != null) {</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">            if (user.isDisabledItem(&quot;editorMiniEdit&quot;)==false) denyImageSize = Constants.getBoolean(&quot;FCKConfig.DenyImageSize[Basic]&quot;);</span>
+<span class="fc" id="L114">            else denyImageSize = Constants.getBoolean(&quot;FCKConfig.DenyImageSize[Default]&quot;);</span>
+
+            //Check permission
+<span class="fc" id="L117">            model.addAttribute(&quot;haveFileIndexerPerm&quot;, user.isEnabledItem(&quot;fileIndexer&quot;));</span>
+        }
+<span class="fc" id="L119">        model.addAttribute(&quot;denyImageSize&quot;, denyImageSize);</span>
+<span class="fc" id="L120">    }</span>
+
+    @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='files' &amp;&amp; event.source.subpage=='wj_link'&quot;)
+    protected void setWjLinkInitialData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
+<span class="fc" id="L124">        ModelMap model = event.getSource().getModel();</span>
+<span class="fc" id="L125">        HttpServletRequest request = event.getSource().getRequest();</span>
+
+        //
+<span class="fc" id="L128">        model.addAttribute(&quot;lng&quot;,  Prop.getLng(request, false));</span>
+<span class="fc" id="L129">        model.addAttribute(&quot;uploadIcon&quot;,  &quot;wjIconBig-uploadImage&quot;);</span>
+<span class="fc" id="L130">        model.addAttribute(&quot;elfinderMetadataEnabled&quot;, Constants.getBoolean(&quot;elfinderMetadataEnabled&quot;));</span>
+<span class="fc" id="L131">        model.addAttribute(&quot;elfinderMetadataAutopopup&quot;, Constants.getBoolean(&quot;elfinderMetadataAutopopup&quot;));</span>
+
+        //
+<span class="fc" id="L134">        model.addAttribute(&quot;currentTimeMillis&quot;, new Date().getTime());</span>
+
+        //Check permission
+<span class="fc" id="L137">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L138">        model.addAttribute(&quot;haveFileIndexerPerm&quot;, user.isEnabledItem(&quot;fileIndexer&quot;));</span>
+
+        //
+<span class="fc" id="L141">        boolean denyImageSize = false;</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">        if (user != null) {</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">            if (user.isDisabledItem(&quot;editorMiniEdit&quot;)==false) denyImageSize = Constants.getBoolean(&quot;FCKConfig.DenyImageSize[Basic]&quot;);</span>
+<span class="fc" id="L144">            else denyImageSize = Constants.getBoolean(&quot;FCKConfig.DenyImageSize[Default]&quot;);</span>
+        }
+<span class="fc" id="L146">        model.addAttribute(&quot;denyImageSize&quot;, denyImageSize);</span>
+<span class="fc" id="L147">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

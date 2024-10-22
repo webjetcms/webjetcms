@@ -20,12 +20,19 @@ Scenario('Screens', async ({ I, Document }) => {
     Document.screenshotElement("#UPLOAD_selector", "/sysadmin/update/upload-selector.png");
 
     I.resizeWindow(1000, 800);
-
-    if("sk" === I.getConfLng()) {
-        I.click("Aktualizovať zo súboru");
-    } else if("en" === I.getConfLng()) { 
-        I.click("Update from file");
-    }
+    switch (I.getConfLng()) {
+        case "sk":
+            I.click("Aktualizovať zo súboru");
+            break;
+        case "en":
+            I.click("Update from file");
+            break;
+        case "cs":
+            I.click("Aktualizovat ze souboru");
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
+    }    
     I.wait(1);
 
     Document.screenshot("/sysadmin/update/upload-page.png");

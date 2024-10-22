@@ -185,6 +185,11 @@ export class DatatablesCkEditor {
 				console.log(ev);
 				*/
 
+				dialogDefinition.dialog.on( 'show', function() {
+					//::before contain tabler icon, remove X text
+					$(".cke_dialog_body > a.cke_dialog_close_button > span.cke_label").text("");
+				});
+
 				//console.log("dialogName: "+dialogName);
 
 				if ( dialogName == 'tableProperties' || dialogName == 'table')
@@ -256,7 +261,7 @@ export class DatatablesCkEditor {
 						{
 							type: 'html',
 							id: 'wjImageIframe',
-							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 460px;" src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_image.jsp" border="0"/></div>'
+							html: '<div><iframe id="wjImageIframeElement" style="width: 800px; height: 463px;" src="/admin/v9/files/wj_image?stop_resizing=true" border="0"/></div>'
 						}
 						]
 					}, 'info');
@@ -298,8 +303,20 @@ export class DatatablesCkEditor {
 						}, 'info');
 					}
 
+					//console.log("dialogDefinition=", dialogDefinition);
+
 					dialogDefinition.dialog.on( 'show', function()
 					{
+						//Need little adjustments
+						var cke_dialog_ui_html = this.getContentElement("wjImage", "wjImageIframe").getElement();
+						cke_dialog_ui_html.getParent().setStyle("padding", "0px");
+						cke_dialog_ui_html.getParent().setStyle("display", "flex");
+						cke_dialog_ui_html.getParent().getParent().getParent().getParent().getParent().getParent().setStyle("padding", "0px");
+
+						this.getContentElement("info", "basic").getElement().getParent().setStyle("width", "100%");
+						this.getContentElement("info", "txtWidth").getElement().getParent().getParent().getParent().getParent().getParent().getParent().setStyle("padding-right", "0px");
+						this.getContentElement("info", "txtWidth").getElement().getParent().getParent().getParent().getParent().getParent().getParent().setStyle("width", "100%");
+
 						this.getContentElement("info", "txtUrl").getElement().hide();
 						this.getContentElement("info", "txtAlt").getElement().hide();
 						//this.getContentElement("info", "dataName").getElement().hide();
@@ -391,8 +408,7 @@ export class DatatablesCkEditor {
 							});
 
 							if (videoFile != "") {
-								var editor = window.getCkEditorInstance().document;
-								editor.wjInsertUpdateComponent("!INCLUDE(/components/video/video_player.jsp, file="+videoFile+")!");
+								this._.editor.wjInsertUpdateComponent("!INCLUDE(/components/video/video_player.jsp, file="+videoFile+")!");
 								return;
 							}
 
@@ -465,6 +481,8 @@ export class DatatablesCkEditor {
 					dialogDefinition.minWidth = 800;
 					dialogDefinition.minHeight = 445;
 
+					//console.log("dialogDefinition=", dialogDefinition);
+
 					dialogDefinition.dialog.on( 'show', function()
 					{
 						this.getContentElement("info", "url").getElement().hide();
@@ -474,10 +492,11 @@ export class DatatablesCkEditor {
 						//console.log("ON SHOW 1");
 						var urlElement = this.getContentElement("info", "url").getElement();
 
-						if (document.getElementById("wjLinkIframe") == null)
+						if (that.ckEditorObject.document.getById("wjLinkIframe") == null)
 						{
+							//console.log("Creating iframe");
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
-							iframeElement.setAttribute("src", "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp");
+							iframeElement.setAttribute("src", "/admin/v9/files/wj_link?stop_resizing=true");
 							iframeElement.setAttribute("id", "wjLinkIframe");
 							//iframeElement.setAttribute("width", 580);
 							iframeElement.setStyle("width", 800+"px");
@@ -485,6 +504,13 @@ export class DatatablesCkEditor {
 							iframeElement.setStyle("height", 455+"px");
 							iframeElement.setStyle("margin-left", "-12px");
 							iframeElement.setStyle("margin-right", "-12px");
+
+							//
+							var tabpanel = this.getContentElement("info", "linkDisplayText").getElement().getParent().getParent().getParent().getParent().getParent();
+							tabpanel.setStyle("min-height", "auto");
+							tabpanel.setStyle("padding-right", "0px");
+							tabpanel.setStyle("display", "inline");
+							tabpanel.getParent().setStyle("padding", "0px");
 
 							//urlElement.$.insertBefore(iframeElement, .$);
 							urlElement.getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().insertBeforeMe(iframeElement);
@@ -986,7 +1012,7 @@ export class DatatablesCkEditor {
 									var nameCleared = $this.getContentElement("info", "_cke_saved_name");
 									if (nameCleared != "")
 									{
-										var editor = that.ckEditorObject.instances.data;
+										var editor = $this._.editor;
 										//toto je element na ktory sa doubleclicklo (je selectnuty)
 										var element = editor.getSelection().getStartElement();
 
@@ -1046,7 +1072,7 @@ export class DatatablesCkEditor {
 
 							//console.log(name);
 
-							if (name == "") {
+							if (name == "" && typeof this.getContentElement("info", "name") != "undefined") {
 								name = this.getContentElement("info", "name").getValue();
 							}
 
@@ -1064,7 +1090,7 @@ export class DatatablesCkEditor {
 							//----- zavolajme vytvorenie input pola ------
 							var result = original.call(this);
 
-							var editor = that.ckEditorObject.instances.data;
+							var editor = this._.editor;
 							var startElement = editor.getSelection().getStartElement();
 
 							//console.log(startElement);

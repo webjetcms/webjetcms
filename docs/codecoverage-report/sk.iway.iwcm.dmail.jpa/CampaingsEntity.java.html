@@ -10,13 +10,17 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.Email;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
+import sk.iway.iwcm.system.annotations.validations.MultipleEmails;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -28,8 +32,14 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
-<span class="fc" id="L32">public class CampaingsEntity implements Serializable {</span>
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
+<span class="fc" id="L36">public class CampaingsEntity implements Serializable {</span>
+
+    //Set entity domain id
+	@PrePersist
+	public void prePersist() {
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">		if(domainId == null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L42">	}</span>
 
     @Id
     @Column(name = &quot;emails_campain_id&quot;)
@@ -69,6 +79,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
         tab = &quot;main&quot;
     )
     @Size(max = 255)
+    @Email
     private String senderEmail;
 
     @Column(name = &quot;url&quot;)
@@ -98,7 +109,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     private String userGroupsIds;
 
     //Bind editor fields
-<span class="fc" id="L101">    @Transient</span>
+<span class="fc" id="L112">    @Transient</span>
     @DataTableColumnNested
 	private CampaingsEditorFields editorFields = null;
 
@@ -164,6 +175,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String attachments;
 
+    @MultipleEmails(checkUnsubscribed = false, canByEmpty = true)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title=&quot;components.dmail.replyTo&quot;,
@@ -174,6 +186,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     @Column(name = &quot;reply_to&quot;)
     private String replyTo;
 
+    @MultipleEmails(checkUnsubscribed = false, canByEmpty = true)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title=&quot;components.dmail.ccEmail&quot;,
@@ -184,6 +197,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     @Column(name = &quot;cc_email&quot;)
     private String ccEmail;
 
+    @MultipleEmails(checkUnsubscribed = false, canByEmpty = true)
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title=&quot;components.dmail.bccEmail&quot;,
@@ -211,5 +225,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     @Column(name = &quot;send_at&quot;)
     private Date sendAt;
 
+    @Column(name = &quot;domain_id&quot;)
+    private Integer domainId;
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -6,6 +6,7 @@ const { I } = inject();
 
 //.ge aby preslo email validaciou
 const CHANGE_TEXT = "-chan.ge";
+const DUPLICATE_TEXT = "-dupli.cate";
 
 module.exports = {
 
@@ -96,10 +97,14 @@ module.exports = {
         let switchDomainName = "mirroring.tau27.iway.sk";
         if (typeof options.switchDomainName != "undefined") switchDomainName=options.switchDomainName;
 
+        let skipDuplication = false;
+        if (typeof options.skipDuplication != "undefined") skipDuplication=options.skipDuplication;
+        options.skipDuplication = skipDuplication;
+
         let testingData = options.testingData || {};
         /* Testovanie - pridavanie */
         I.say("Testovanie - pridavanie");
-        I.click({css: container+'.dt-buttons .buttons-create'});
+        I.clickCss(container+'.dt-buttons .buttons-create');
         DTE.waitForEditor(options.id);
 
         /* Testovanie - custom createSteps funkcia */
@@ -128,12 +133,15 @@ module.exports = {
             let value = await I.grabValueFrom(`#DTE_Field_${field}`);
             if (typeof value == "undefined" || value == "") {
 
+                let characterAppend = "ľščô-";
+                if ("quill" === options.columnTypes[field]) characterAppend = "";
+
                 if (typeof testingData[field] != "undefined") testingData[index] = testingData[field];
                 if (typeof testingData[index] == "undefined") {
                     if (field.toLocaleLowerCase().indexOf("email")!=-1) {
                         testingData[index] = `${field}-autotest-${randomTextShort}@onetimeusemail.com`;
                     } else {
-                        testingData[index] = `${field}-autotest-${randomText}`;
+                        testingData[index] = `${field}-autotest-${characterAppend}${randomText}`;
                     }
                 }
                 I.say("setting testingData["+index+"]="+ testingData[index] );
@@ -178,7 +186,7 @@ module.exports = {
                 I.executeScript(({field}) => {
                     $("div.dataTables_scrollHeadInner select.dt-filter-" + field).selectpicker('refresh');
                 }, {field});
-                I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + field });
+                I.clickCss("div.dataTables_scrollHeadInner button.dt-filtrujem-" + field);
                 DT.waitForLoader();
             } else {
                 DT.filter(field, testingData[index]);
@@ -191,8 +199,8 @@ module.exports = {
         I.say("Testovanie - uprava");
         DT.filter(requiredFields[0], testingData[0]);
 
-        I.click({css: container+"td.dt-select-td"});
-        I.click({css: container+"button.buttons-edit"});
+        I.clickCss(container+"td.dt-select-td");
+        I.clickCss(container+"button.buttons-edit");
         DTE.waitForEditor(options.id);
 
         /* Testovanie - custom editSteps funkcia */
@@ -205,7 +213,7 @@ module.exports = {
             I.say("getting testingData["+index+"]="+ testingData[index] +" type="+options.columnTypes[field]);
 
             let fieldType = options.columnTypes[field];
-            if ("datetime" === fieldType || "date" === fieldType || "select" === fieldType) return;
+            if ("datetime" === fieldType || "date" === fieldType || "select" === fieldType || "number" === fieldType) return;
 
             if ("quill" === options.columnTypes[field]) DTE.fillQuill(field, testingData[index]+CHANGE_TEXT);
             else DTE.appendField(field, CHANGE_TEXT);
@@ -244,8 +252,8 @@ module.exports = {
 
             const firstRowId = await I.grabTextFrom('.datatable-column-width');
 
-            I.click({css: container+"td.dt-select-td"});
-            I.click({css: container+"button.buttons-edit"});
+            I.clickCss(container+"td.dt-select-td");
+            I.clickCss(container+"button.buttons-edit");
             DTE.waitForEditor(options.id);
             const dataTableName = options.dataTable;
             const newUrl = await I.executeScript(({dataTableName, firstRowId}) => {
@@ -290,6 +298,8 @@ module.exports = {
             I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
         }
 
+        await this.testDuplicateRow(options, testingData, requiredFields, container, containerModal, skipRefresh);
+
         /* Testovanie - custom beforeDelete funkcia */
         I.say("Testing beforeDeleteSteps: "+(typeof options.beforeDeleteSteps));
         if (typeof options.beforeDeleteSteps == "function") {
@@ -298,11 +308,11 @@ module.exports = {
 
         /* Testovanie - zmazanie */
         I.say("Testovanie - zmazanie");
-        if (skipRefresh==false) I.click(container+"td.dt-select-td");
+        if (skipRefresh==false) I.clickCss(container+"td.dt-select-td");
 
         I.see(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
 
-        I.click({css: container+'.dt-buttons .buttons-remove'});
+        I.clickCss(container+'.dt-buttons .buttons-remove');
         DTE.waitForEditor(options.id);
         I.waitForElement("div.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
@@ -314,11 +324,11 @@ module.exports = {
         //reloadni DT a over, ci to je skutocne zmazane
         I.say("Obnovenie DT a overenie zmazania");
         //I.click("#dt-filter-labels-link-availableGrooupsList");
-        I.click({css: container+'.dt-buttons .buttons-refresh'});
+        I.clickCss(container+'.dt-buttons .buttons-refresh');
         DT.waitForLoader();
         I.dontSee(`${testingData[0]}chan.ge`, ".dataTables_scrollBody table.dataTable tbody");
         I.dontSee(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
-        I.see("Záznamy 0 až 0 z 0");
+        I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
 
         await this.testAuditRecords(startDate.getTime(), testingData[0]);
 
@@ -344,14 +354,153 @@ module.exports = {
         I.amOnPage("/admin/v9/apps/audit-search/");
         let formatted = I.formatDateTime(startTime);
         I.fillField({css: "input.dt-filter-from-createDate"}, formatted);
-        //I.click({css: "button.dt-filtrujem-createDate"});
+        //I.clickCss( "button.dt-filtrujem-createDate"});
         I.fillField({css: "input.dt-filter-description"}, description);
-        I.click({css: "button.dt-filtrujem-description"});
+        I.clickCss("button.dt-filtrujem-description");
         DT.waitForLoader("#datatableInit_processing");
         //pause();
         let rows = await I.getTotalRows();
         //console.log(" mam rows=====", rows);
         I.assertAbove(rows+1, 3, "Nedostatocny pocet audit zaznamov");
+    },
+
+    /**
+     * Test duplicate function of the DataTable
+     * @param {*} options
+     * @param {*} testingData
+     * @param {*} requiredFields
+     * @param {*} container
+     * @param {*} containerModal
+     * @param {*} skipRefresh
+     */
+    async testDuplicateRow(options, testingData, requiredFields, container, containerModal, skipRefresh) {
+        /* Testovanie - duplikovanie */
+        if (true !== options.skipDuplication){
+            I.say("Duplikujem zaznam");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
+            I.click(container+"td.dt-select-td");
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.clickCss(container+'.dt-buttons .btn-duplicate');
+            DTE.waitForEditor(options.id);
+
+            /* Testovanie - custom duplicateSteps funkcia */
+            I.say("Testing duplicateSteps: " + (typeof options.duplicateSteps));
+            if (typeof options.duplicateSteps == "function") {
+                options.duplicateSteps(I, options, DT, DTE);
+            }
+
+            let field = requiredFields[0];
+            if ("quill" === options.columnTypes[field]) DTE.fillQuill(field, `${testingData[0]}${DUPLICATE_TEXT}`);
+            else I.fillField(`#DTE_Field_${field}`, `${testingData[0]}${DUPLICATE_TEXT}`);
+
+            I.see("Duplikovať", containerModal+"div.DTE_Form_Buttons");
+            DTE.save(options.id);
+
+            //over, ze sa modal zatvoril/zaznam sa ulozil
+            if (containerModal!="") I.dontSeeElement(containerModal);
+            else I.dontSeeElement('div.modal');
+
+            // vyhladanie povodneho zaznamu
+            I.say("Testovanie - vyhladanie povodneho zaznamu");
+            if (skipRefresh == false) {
+                I.refreshPage();
+                DT.waitForLoader();
+            }
+            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
+            I.clickCss(container+"td.dt-select-td");
+
+            // overenie poli v povodnom zazname
+            I.say("Overujem ci sa polia zhoduju v povodnom zazname");
+            I.clickCss(container+"button.buttons-edit");
+            DTE.waitForEditor(options.id);
+
+            let index = 0;
+            for (const fieldToCheck of requiredFields) {
+                await this._checkFieldValues(fieldToCheck, index, options, testingData, CHANGE_TEXT);
+                index++;
+            }
+            DTE.cancel(options.id);
+
+            // vyhladanie duplikovaneho zaznamu
+            I.say("Testovanie - vyhladanie duplikovaneho zaznamu");
+            if (skipRefresh == false) {
+                I.refreshPage();
+                DT.waitForLoader();
+            }
+            DT.filter(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
+            I.see(`${testingData[0]}${DUPLICATE_TEXT}`, "div.dataTables_scrollBody");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
+            I.clickCss(container+"td.dt-select-td");
+
+            // overenie poli v duplikovanom zazname
+            I.say("Overujem ci sa polia zhoduju v duplikovanom zazname");
+            I.clickCss(container+"button.buttons-edit");
+            DTE.waitForEditor(options.id);
+
+            index = 0;
+            for (const fieldToCheck of requiredFields) {
+                if(fieldToCheck != requiredFields[0]) continue;
+                await this._checkFieldValues(fieldToCheck, index, options, testingData, DUPLICATE_TEXT);
+                index++;
+            }
+            DTE.cancel(options.id);
+
+            // vymazanie duplikovaneho zaznamu
+            I.say("Testovanie - zmazanie duplikovaneho zaznamu");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
+            I.see(`${testingData[0]}${DUPLICATE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.clickCss(container+'.dt-buttons .buttons-remove');
+            DTE.waitForEditor(options.id);
+            I.waitForElement("div.DTE_Action_Remove");
+            I.click("Zmazať", "div.DTE_Action_Remove");
+            DTE.waitForLoader();
+            DTE.waitForModalClose(options.id+"_modal");
+
+            DT.filter(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
+            I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
+            I.dontSee(`${testingData[0]}dupli.cate`, ".dataTables_scrollBody table.dataTable tbody");
+            I.dontSee(`${testingData[0]}${DUPLICATE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+
+            //reloadni DT a over, ci to je skutocne zmazane
+            I.say("Obnovenie DT a overenie zmazania duplikovaneho zaznamu");
+            I.clickCss(container+'.dt-buttons .buttons-refresh');
+            DT.waitForLoader();
+            I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
+            I.dontSee(`${testingData[0]}dupli.cate`, ".dataTables_scrollBody table.dataTable tbody");
+            I.dontSee(`${testingData[0]}${DUPLICATE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
+
+            // over ci povodny stale existuje
+            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
+        }
+    },
+
+    /**
+     * Check field values with valueAppend text (e.g. CHANGE_TEXT, DUPLICATE_TEXT)
+     * @param {*} fieldToCheck
+     * @param {*} index
+     * @param {*} options
+     * @param {*} testingData
+     * @param {*} valueAppend
+     */
+    async _checkFieldValues(fieldToCheck, index, options, testingData, valueAppend) {
+        let fieldType = options.columnTypes[fieldToCheck];
+
+        //Get value of field + check it
+        if ("datetime" === fieldType || "date" === fieldType || "select" === fieldType || "number" === fieldType) {
+            //Date types does not have added text
+            const valueToCheck = await I.grabValueFrom(`#DTE_Field_${fieldToCheck}`);
+            I.assertEqual(`${testingData[index]}`, valueToCheck, `Hodnota pola #DTE_Field_${fieldToCheck} sa nezhoduje s povodne nastavenou`);
+        } else if ("quill" === fieldType) {
+            const valueToCheck = await I.grabHTMLFrom(`#DTE_Field_${fieldToCheck} > div.ql-container > div.ql-editor`);
+            I.assertEqual("<p>" + `${testingData[index]}` + valueAppend + "</p>", valueToCheck, 'Hodnota pola ' + `#DTE_Field_${fieldToCheck}` + ' sa nezhoduje s povodne nastavenou');
+        } else {
+            const valueToCheck = await I.grabValueFrom(`#DTE_Field_${fieldToCheck}`);
+            I.assertEqual(`${testingData[index]}` + valueAppend, valueToCheck, 'Hodnota pola ' + `#DTE_Field_${fieldToCheck}` + ' sa nezhoduje s povodne nastavenou');
+        }
     },
 
     /**
@@ -378,7 +527,7 @@ module.exports = {
         columns.forEach(column => {
             if (column.sName == field) {
                 if (typeof column.editor != "undefined" && column.editor.tab != undefined) {
-                    I.click("#pills-dt-"+options.id+"-"+column.editor.tab+"-tab");
+                    I.clickCss("#pills-dt-"+options.id+"-"+column.editor.tab+"-tab");
                 }
             }
         });
@@ -442,13 +591,13 @@ module.exports = {
 
         I.say("Importujem data");
 
-        I.click({css: "button[data-dtbtn=import]"});
+        I.clickCss("button[data-dtbtn=import]");
         DTE.waitForModal("datatableImportModal");
 
         I.attachFile('#insert-file', options.file);
 
         I.waitForEnabled("#submit-import", 5);
-        I.click("#submit-import");
+        I.clickCss("#submit-import");
 
         DTE.waitForModalClose("datatableImportModal");
         DT.waitForLoader();
@@ -462,7 +611,7 @@ module.exports = {
                 I.see(value, "div.dataTables_scrollBody");
             }
             I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-            I.see("Záznamy 1 až 1 z 1");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
         });
 
         //uprav data cez klasicky editor, dopln changed na vsetky povinne stlpce okrem updateBy stlpca
@@ -478,16 +627,16 @@ module.exports = {
                 I.see(value, "div.dataTables_scrollBody");
             }
             I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-            I.see("Záznamy 1 až 1 z 1");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
 
-            I.click({css: container+"td.dt-select-td"});
-            I.click({css: container+"button.buttons-edit"});
+            I.clickCss(container+"td.dt-select-td");
+            I.clickCss(container+"button.buttons-edit");
             DTE.waitForEditor(options.id);
 
             requiredFields.forEach((field, index) => {
                 //updateBy je vo formate nazov - field
                 if (options.updateBy.indexOf(" - "+field)!=-1) return;
-                I.click(`#DTE_Field_${field}`);
+                I.clickCss(`#DTE_Field_${field}`);
                 DTE.appendField(field, CHANGE_TEXT);
             });
 
@@ -495,13 +644,13 @@ module.exports = {
             DTE.waitForLoader();
 
             I.see(CHANGE_TEXT, "div.dataTables_scrollBody");
-            I.see("Záznamy 1 až 1 z 1");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
         });
 
         if (typeof options.preserveColumns != "undefined") {
             I.say("Setting preserve columns");
 
-            I.click({css: container+"button.buttons-edit"});
+            I.clickCss(container+"button.buttons-edit");
             DTE.waitForEditor(options.id);
 
             options.preserveColumns.forEach((field, index) => {
@@ -520,7 +669,7 @@ module.exports = {
         DT.waitForLoader();
 
         let updateBy = options.updateBy;
-        I.click({css: "button[data-dtbtn=import]"});
+        I.clickCss("button[data-dtbtn=import]");
         DTE.waitForModal("datatableImportModal");
 
         I.attachFile('#insert-file', options.file);
@@ -528,12 +677,12 @@ module.exports = {
 
         I.click("Aktualizovať existujúce záznamy");
         I.waitForVisible("#dt-import-update-by-column");
-        I.click({ css: "button[data-id=dt-settings-update-by-column]" });
+        I.clickCss("button[data-id=dt-settings-update-by-column]");
         I.waitForElement(locate('div.dropdown-menu.show .dropdown-item').withText(updateBy), 5);
         I.forceClick(locate('div.dropdown-menu.show .dropdown-item').withText(updateBy));
         I.wait(0.5);
 
-        I.click("#submit-import");
+        I.clickCss("#submit-import");
 
         DT.waitForLoader();
         //toto je haluz, ale ak to tu nie je, tak sa zrazu zobrazi dialog pre vyber suboru
@@ -549,13 +698,13 @@ module.exports = {
                 I.dontSee(value+CHANGE_TEXT, "div.dataTables_scrollBody");
             }
             I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-            I.see("Záznamy 1 až 1 z 1", "div.dt-footer-row");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
         });
 
         if (typeof options.preserveColumns != "undefined") {
             I.say("Checking preserve columns");
-            I.click({css: container+"td.dt-select-td"});
-            I.click({css: container+"button.buttons-edit"});
+            I.clickCss(container+"td.dt-select-td");
+            I.clickCss(container+"button.buttons-edit");
             DTE.waitForEditor(options.id);
 
             options.preserveColumns.forEach((field, index) => {
@@ -579,11 +728,11 @@ module.exports = {
                 I.see(value, "div.dataTables_scrollBody");
             }
             //over, ze sa nasiel jeden zaznam
-            I.waitForText("Záznamy 1 až 1 z 1", 5, "div.dt-footer-row");
+            I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
 
             //oznac ho a zmaz
-            I.click(container+"td.dt-select-td");
-            I.click(".buttons-remove", {css: container+'.dt-buttons'});
+            I.clickCss(container+"td.dt-select-td");
+            I.clickCss(container+'.dt-buttons .buttons-remove');
             I.waitForElement("div.DTE_Action_Remove");
             I.click("Zmazať", "div.DTE_Action_Remove");
 

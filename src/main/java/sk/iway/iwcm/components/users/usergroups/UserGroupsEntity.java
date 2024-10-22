@@ -11,6 +11,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.Transient;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -175,4 +177,14 @@ public class UserGroupsEntity {
         visible = false
     )
     private DocDetailsDto emailDoc;
+
+    @Column(name = "price_discount")
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title = "groupedit.price_discount",
+        tab = "basic"
+    )
+    @Max(100)
+    @Min(0)
+    private Integer priceDiscount;
 }

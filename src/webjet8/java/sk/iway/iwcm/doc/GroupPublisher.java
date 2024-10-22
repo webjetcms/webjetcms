@@ -64,9 +64,9 @@ public class GroupPublisher
 					"default_doc_id, temp_id, sort_priority, password_protected, menu_type, url_dir_name," +
 					" html_head, logon_page_doc_id, domain_name, new_page_docid_template, install_name, " +
 					"field_a, field_b, field_c, field_d, logged_menu_type, link_group_id," +
-					"when_to_publish, user_id, lng, hidden_in_admin" +
+					"when_to_publish, user_id, lng, hidden_in_admin, force_group_template" +
 					addFieldsInsert.toString() +
-					") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"+addFieldsInsertParams.toString()+")";
+					") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"+addFieldsInsertParams.toString()+")";
 
 			db_conn = DBPool.getConnection();
 			ps = db_conn.prepareStatement(sql);
@@ -74,7 +74,7 @@ public class GroupPublisher
 			Object[] parameters = {new Date(), g.getGroupId(), g.getGroupName(), g.isInternal(), g.getParentGroupId(), g.getNavbarName(), g.getDefaultDocId(),
 				g.getTempId(), g.getSortPriority(), g.getPasswordProtected(), g.getMenuType(), g.getUrlDirName(),
 				g.getHtmlHead(), g.getLogonPageDocId(), g.getDomainName(), g.getNewPageDocIdTemplate(), g.getInstallName(),
-				g.getFieldA(), g.getFieldB(), g.getFieldC(), g.getFieldD(), g.getLoggedMenuType(), g.getLinkGroupId(), pd, userId, g.getLng(), g.isHiddenInAdmin()};
+				g.getFieldA(), g.getFieldB(), g.getFieldC(), g.getFieldD(), g.getLoggedMenuType(), g.getLinkGroupId(), pd, userId, g.getLng(), g.isHiddenInAdmin(), g.isForceTheUseOfGroupTemplate()};
 
 			SimpleQuery.bindParameters(ps, parameters);
 

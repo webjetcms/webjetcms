@@ -64,5 +64,5 @@ public class GetAllItemsDocOptions {
         this.tempId = -1;
         if(request.getParameter("tempId") != null) this.tempIdRequested = true;
         else this.tempIdRequested = false;
-    };
+    }
 }

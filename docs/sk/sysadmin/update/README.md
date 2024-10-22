@@ -6,7 +6,7 @@ Pri kliknutí na jednotlivé verzie sa v pravej časti obrazovky zobrazí zoznam
 
 ![](main-page.png)
 
-**Upozornenie:** aktualizáciu WebJETu vykonávajte len v prípade ak viete čo robíte. Pred aktualizáciou kontaktujte vášho poskytovateľa hostingu pre prípadnú podporu. Môže sa stať, že po aktualizácii WebJET nenaštartuje správne a bude nutný reštart servera.
+!>**Upozornenie:** aktualizáciu WebJETu vykonávajte len v prípade ak viete čo robíte. Pred aktualizáciou kontaktujte vášho poskytovateľa hostingu pre prípadnú podporu. Môže sa stať, že po aktualizácii WebJET nenaštartuje správne a bude nutný reštart servera.
 
 Ak váš projekt obsahuje doplnkové JAR knižnice je potrebné ich umiestniť aj do priečinka `/WEB-INF/lib-custom/`. Počas aktualizácie je plne nahradený priečinok `/WEB-INF/lib/` a teda vaše knižnice by boli zmazané. To môže mať za následok neschopnosť spustenia po reštarte. Ak taká situácia nastane skopírujte chýbajúce knižnice do `/WEB-INF/lib/` zo zálohy.
 

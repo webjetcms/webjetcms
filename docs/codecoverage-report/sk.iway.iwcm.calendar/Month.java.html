@@ -6,45 +6,45 @@ import java.util.Date;
 public class Month {
     private Calendar calendar;
 
-<span class="nc" id="L9">    public Month(int year, int month) {</span>
-<span class="nc" id="L10">        calendar = Calendar.getInstance();</span>
-<span class="nc" id="L11">        calendar.set(year, month, 1);</span>
-<span class="nc" id="L12">    }</span>
+<span class="fc" id="L9">    public Month(int year, int month) {</span>
+<span class="fc" id="L10">        calendar = Calendar.getInstance();</span>
+<span class="fc" id="L11">        calendar.set(year, month, 1);</span>
+<span class="fc" id="L12">    }</span>
 
     public Date getStartDate() {
-<span class="nc" id="L15">        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
+<span class="fc" id="L15">        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMinimum(Calendar.DAY_OF_MONTH));</span>
 
-<span class="nc" id="L17">        return getBeginOfDate(calendar.getTime());</span>
+<span class="fc" id="L17">        return getBeginOfDate(calendar.getTime());</span>
     }
 
     public Date getEndDate() {
-<span class="nc" id="L21">        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
+<span class="fc" id="L21">        calendar.set(Calendar.DAY_OF_MONTH, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));</span>
 
-<span class="nc" id="L23">        return getEndOfDay(calendar.getTime());</span>
+<span class="fc" id="L23">        return getEndOfDay(calendar.getTime());</span>
     }
 
     public static Date getBeginOfDate(Date date)
     {
-<span class="nc" id="L28">        Calendar calendar = Calendar.getInstance();</span>
-<span class="nc" id="L29">        calendar.setTime(date);</span>
-<span class="nc" id="L30">        calendar.set(Calendar.HOUR_OF_DAY, 0);</span>
-<span class="nc" id="L31">        calendar.set(Calendar.MINUTE, 0);</span>
-<span class="nc" id="L32">        calendar.set(Calendar.SECOND, 0);</span>
-<span class="nc" id="L33">        calendar.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L28">        Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L29">        calendar.setTime(date);</span>
+<span class="fc" id="L30">        calendar.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L31">        calendar.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L32">        calendar.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L33">        calendar.set(Calendar.MILLISECOND, 0);</span>
 
-<span class="nc" id="L35">        return calendar.getTime();</span>
+<span class="fc" id="L35">        return calendar.getTime();</span>
     }
 
     public static Date getEndOfDay(Date date)
     {
-<span class="nc" id="L40">        Calendar calendar = Calendar.getInstance();</span>
-<span class="nc" id="L41">        calendar.setTime(date);</span>
-<span class="nc" id="L42">        calendar.set(Calendar.HOUR_OF_DAY, 23);</span>
-<span class="nc" id="L43">        calendar.set(Calendar.MINUTE, 59);</span>
-<span class="nc" id="L44">        calendar.set(Calendar.SECOND, 59);</span>
-<span class="nc" id="L45">        calendar.set(Calendar.MILLISECOND, 999);</span>
+<span class="fc" id="L40">        Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L41">        calendar.setTime(date);</span>
+<span class="fc" id="L42">        calendar.set(Calendar.HOUR_OF_DAY, 23);</span>
+<span class="fc" id="L43">        calendar.set(Calendar.MINUTE, 59);</span>
+<span class="fc" id="L44">        calendar.set(Calendar.SECOND, 59);</span>
+<span class="fc" id="L45">        calendar.set(Calendar.MILLISECOND, 999);</span>
 
-<span class="nc" id="L47">        return calendar.getTime();</span>
+<span class="fc" id="L47">        return calendar.getTime();</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

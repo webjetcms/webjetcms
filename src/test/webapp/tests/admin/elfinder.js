@@ -4,54 +4,53 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-function getFileUsage(I) {
+function getFileUsage(I, DT, loader) {
 
-    I.switchTo();
+    I.clickCss("#pills-dt-datatableInit-usage-tab");
 
-    I.selectOption('#elfinder-modal > div > div > div.modal-footer > select', 'Použitie');
+    I.waitForText("Použitie súboru", 300);
 
-    I.clickCss("#elfinder-modal > div > div > div.modal-footer > button.btn.btn-primary.submit");
+    DT.waitForLoader(loader);
 
-    I.switchTo("#elfinderIframe");
-
-    I.waitForText("Použitie súboru:", 300);
-
-    I.see("Použitie súboru:");
+    I.see("Použitie súboru");
 
     I.see("Test file usage");
 
     I.switchTo();
 }
 
-Scenario('dir usage', async ({I}) => {
+Scenario('dir usage', async ({I, DT}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_2_L2ltYWdlcw_E_E");
 
     I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
 
-    I.clickCss('#finder > div.touch-punch.ui-helper-reset.ui-front.ui-widget.ui-state-default.ui-corner-all.elfinder-contextmenu.elfinder-contextmenu-ltr.ui-draggable.ui-draggable-handle > div:nth-child(16)');
+    I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie priečinka"));
+    I.waitForVisible("#modalIframe", 10);
 
-    I.switchTo("#elfinderIframe");
+    I.switchTo("#modalIframe");
+    I.switchTo("#modalIframeIframeElement");
 
     I.see("Indexovať súbory pre vyhľadávanie");
     I.see("Obchodní partneri");
 
-
-    getFileUsage(I);
+    getFileUsage(I, DT, "#datatableFieldDTE_Field_editorFields-docDetailsList_processing");
 });
 
-Scenario('file usage', async ({I}) => {
+Scenario('file usage', async ({I, DT}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_2_L2ltYWdlcy9iYW5uZXJ5");
 
     I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E');
 
-    I.clickCss('#finder > div.touch-punch.ui-helper-reset.ui-front.ui-widget.ui-state-default.ui-corner-all.elfinder-contextmenu.elfinder-contextmenu-ltr.ui-draggable.ui-draggable-handle > div:nth-child(20)');
+    I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie súboru"));
+    I.waitForVisible("#modalIframe", 10);
 
-    I.switchTo("#elfinderIframe");
+    I.switchTo("#modalIframe");
+    I.switchTo("#modalIframeIframeElement");
 
     I.see("Názov súboru");
     I.see("Zmeniť názov vo všetkých súboroch");
 
-    getFileUsage(I);
+    getFileUsage(I, DT, "#datatableFieldDTE_Field_docDetailsList_processing");
 });
 
 Scenario('search files', ({I}) => {
@@ -65,7 +64,7 @@ Scenario('search files', ({I}) => {
     //
     I.say("Searching in current directory");
     I.fillField("div.elfinder-button-search input", "monitor");
-    I.waitForElement("div.elfinder-button-search div.elfinder-button-menu", 10);
+    I.waitForElement("div.elfinder-button-search-menu", 10);
     I.wait(0.5);
     I.clickCss("label[for=elfinder-finderSearchFromCwd]");
     I.waitForLoader(".WJLoaderDiv");
@@ -79,7 +78,7 @@ Scenario('search files', ({I}) => {
     //
     I.say("Searching in current directory and subdirectories");
     I.fillField("div.elfinder-button-search input", "monitor");
-    I.waitForElement("div.elfinder-button-search div.elfinder-button-menu", 10);
+    I.waitForElement("div.elfinder-button-search-menu", 10);
     I.wait(0.5);
     I.clickCss("label[for=elfinder-finderSearchFromCwdRecursive]");
     I.waitForLoader(".WJLoaderDiv");
@@ -108,7 +107,7 @@ Scenario('search webpages', ({I}) => {
     //
     I.say("Searching in current directory");
     I.fillField("div.elfinder-button-search input", "galer");
-    I.waitForElement("div.elfinder-button-search div.elfinder-button-menu", 10);
+    I.waitForElement("div.elfinder-button-search-menu", 10);
     I.wait(0.5);
     I.clickCss("label[for=elfinder-finderSearchFromCwd]");
     I.waitForLoader(".WJLoaderDiv");
@@ -122,7 +121,7 @@ Scenario('search webpages', ({I}) => {
     //
     I.say("Searching in current directory and subdirectories");
     I.fillField("div.elfinder-button-search input", "galer");
-    I.waitForElement("div.elfinder-button-search div.elfinder-button-menu", 10);
+    I.waitForElement("div.elfinder-button-search-menu", 10);
     I.wait(0.5);
     I.clickCss("label[for=elfinder-finderSearchFromCwdRecursive]");
     I.waitForLoader(".WJLoaderDiv");
@@ -157,12 +156,14 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
 
     I.waitForElement(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), 20);
     I.wait(1);
-    I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'));
+    I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
     I.waitForText('Foto galéria', 10, ".elfinder-cwd-file");
-    I.wait(1);
+    I.waitForVisible(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'), 10);
     I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'));
     I.waitForVisible(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'), 20);
+    I.wait(1);
     I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'));
+    I.waitForVisible("#iwcm_1_L2ltYWdlcy9nYWxsZXJ5L3Rlc3QvZGVzZXJ0LmpwZw_E_E", 10); //test/desert.jpg
     I.waitForVisible(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee'), 10);
 
     I.switchTo();
@@ -284,3 +285,172 @@ Scenario('CVE-2022-26960', async ({I}) => {
     });
     I.dontSee("This is test file for fileforward after logon");
 });
+
+Scenario('Explorer - file diacritics test', async ({ I }) => {
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+
+    I.say('Uploading file with diacritics in name');
+    I.click('.elfinder-navbar-wrapper span[id^="nav-iwcm_2_"][title*="files"] .elfinder-navbar-icon');
+    I.click('.elfinder-button-icon.elfinder-button-icon-upload');
+    I.attachFile('input[type=file]', 'tests/admin/ľščťú žýáíéô.png');
+    waitForUpload(I);
+
+    I.say('Checking if file was automatically renamed to the name without diacritics');
+    checkCorrectTitle(I);
+
+    I.say('Try to rename a file to name with diacritics');
+    within('.elfinder-cwd-message-board', () => {
+        I.rightClick('lsctu-zyaieo.png');
+        I.waitForVisible('.elfinder-contextmenu', 10);
+        I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
+    });
+    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo.png"]' }, 'ľščťú žýáíéô');
+    I.pressKey('Enter');
+
+    I.say('Checking if file was automatically renamed to the name without diacritics');
+    checkCorrectTitle(I);
+    await deleteTestFiles(I);
+
+    createFolder(I, 'ľščťú žýáíéô');
+
+    I.say('Try to rename a folder to the name with diacritics');
+    within('.elfinder-cwd-message-board', () => {
+        I.rightClick('lsctu-zyaieo');
+        I.waitForVisible('.elfinder-contextmenu', 10);
+        I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
+    });
+    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo"]' }, 'ľščťú žýáíéô');
+    I.pressKey('Enter');
+    checkCorrectTitle(I);
+});
+
+
+Scenario('Explorer - file diacritics delete', async ({ I }) => {
+    await deleteTestFiles(I);
+});
+
+Scenario('Elfinder - Move Confirm with config value true', async ({ I, Document }) => {
+    Document.setConfigValue('elfinderMoveConfirm', 'true');
+    await checkMoveConfirm(I, true);
+});
+
+Scenario('revert changes - Move Confirm with config value true', async ({ I }) => {
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
+    await deleteFile(I, 'outer');
+    await deleteFile(I, 'inner');
+});
+
+Scenario('Elfinder - Move Confirm with config value false', async ({ I, Document }) => {
+    Document.setConfigValue('elfinderMoveConfirm', 'false');
+    await checkMoveConfirm(I, false);
+});
+
+Scenario('revert changes - Move Confirm with config value false', async ({ I, Document }) => {
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
+    await deleteFile(I, 'outer');
+    await deleteFile(I, 'inner');
+    Document.setConfigValue('elfinderMoveConfirm', 'true');
+});
+
+async function checkMoveConfirm(I, elfinderMoveConfirm) {
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
+    I.clickCss('#nav-iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
+
+    I.say('Testing with drag and drop.');
+    createFolder(I, 'outer');
+    createFolder(I, 'inner');
+
+    I.dragAndDrop(getFileSelector('inner'), getFileSelector('outer'));
+
+    handleConfirmationDialog(elfinderMoveConfirm, I);
+
+    I.seeElement(getFileSelector('outer'));
+    I.waitForInvisible(getFileSelector('inner'));
+    I.dontSeeElement(getFileSelector('inner'));
+
+    await deleteFile(I, 'outer');
+
+    I.say('Testing with context menu');
+
+    I.clickCss('#nav-iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
+    createFolder(I, 'outer');
+    createFolder(I, 'inner');
+
+    I.rightClick(getFileSelector('inner'));
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-button-icon.elfinder-button-icon-cut.elfinder-contextmenu-icon');
+
+    I.rightClick(getFileSelector('outer'));
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-button-icon.elfinder-button-icon-paste.elfinder-contextmenu-icon');
+
+    handleConfirmationDialog(elfinderMoveConfirm, I);
+
+    I.seeElement(getFileSelector('outer'));
+    I.waitForInvisible(getFileSelector('inner'));
+    I.dontSeeElement(getFileSelector('inner'));
+}
+
+function handleConfirmationDialog(elfinderMoveConfirm, I) {
+    if (elfinderMoveConfirm) {
+        I.waitForVisible('div.ui-dialog.ui-widget.elfinder-dialog-confirm', 10);
+        I.see('Naozaj chcete presunúť položky do');
+        I.clickCss('button.elfinder-confirm-accept');
+    }
+    else {
+        I.dontSeeElement('div.ui-dialog.ui-widget.elfinder-dialog-confirm');
+        I.dontSee('Naozaj chcete presunúť položky do');
+        I.waitForVisible('.ui-front.toast-success.elfinder-frontmost', 10);
+        I.wait(2);
+    }
+}
+
+function createFolder(I, folderName) {
+    I.say('Creating a folder');
+    I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
+    I.fillField({ css: '.elfinder-cwd-filename[title="Nový priečinok"]' }, folderName);
+    I.pressKey('Enter');
+    I.waitForVisible('.elfinder-toast', 10);
+    I.wait(2);
+}
+
+function waitForUpload(I) {
+    I.clickIfVisible('.elfinder-confirm-accept');
+    I.waitForVisible('.elfinder-notify-chunkmerge', 10);
+    I.waitForInvisible('.elfinder-notify-upload', 10);
+    I.waitForInvisible('.elfinder-notify-chunkmerge', 10);
+}
+
+function checkCorrectTitle(I) {
+    I.waitForText('lsctu-zyaieo', 10, '.elfinder-cwd-filename');
+    I.dontSee('ľščťú-žýáíéô', '.elfinder-cwd-filename');
+    I.dontSee('ľščťú žýáíéô', '.elfinder-cwd-filename');
+    I.dontSee('lsctu zyaieo', '.elfinder-cwd-filename');
+}
+
+async function deleteTestFiles(I) {
+    I.say('Deleting uploaded files');
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+    let fileNames = ['lsctu-zyaieo.png', 'ľščťú-žýáíéô.png', 'ľščťú žýáíéô.png', 'lsctu zyaieo.png',
+        'lsctu-zyaieo', 'ľščťú-žýáíéô', 'ľščťú žýáíéô', 'lsctu zyaieo'];
+    for (const fileName of fileNames) {
+        await deleteFile(I, fileName);
+    }
+}
+
+function getFileSelector(fileName) {
+    return `.elfinder-cwd-filename[title="${fileName}"]`;
+}
+
+async function deleteFile(I, fileName) {
+    const numVisible = await I.grabNumberOfVisibleElements(`.elfinder-cwd-filename[title="${fileName}"]`);
+    if (numVisible) {
+        within('.elfinder-cwd-message-board', () => {
+            I.rightClick(fileName);
+            I.waitForVisible('.elfinder-contextmenu', 10);
+            I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rm');
+            I.clickCss('.elfinder-confirm-accept');
+            I.waitForInvisible(fileName);
+        });
+    }
+}

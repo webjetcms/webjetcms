@@ -36,21 +36,21 @@ import sk.iway.iwcm.i18n.Prop;
 
     @Override
     public int getId() {
-<span class="nc" id="L39">        return id;</span>
+<span class="fc" id="L39">        return id;</span>
     }
 
     @Override
     public String getLink() {
-<span class="nc" id="L44">        return &quot;/components/qa/admin_answer.jsp?id=&quot; + id + &quot;&amp;hash=&quot; + hash;</span>
+<span class="fc" id="L44">        return &quot;/components/qa/admin_answer.jsp?id=&quot; + id + &quot;&amp;hash=&quot; + hash;</span>
     }
 
     @Override
     public String getText(List&lt;GdprRegExpBean&gt; regexps) {
-<span class="nc" id="L49">        List&lt;String&gt; texts = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L50">        texts.add(groupName);</span>
-<span class="nc" id="L51">        texts.add(question);</span>
-<span class="nc" id="L52">        texts.add(answer);</span>
-<span class="nc" id="L53">        return GdprModule.getText(regexps, texts);</span>
+<span class="fc" id="L49">        List&lt;String&gt; texts = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L50">        texts.add(groupName);</span>
+<span class="fc" id="L51">        texts.add(question);</span>
+<span class="fc" id="L52">        texts.add(answer);</span>
+<span class="fc" id="L53">        return GdprModule.getText(regexps, texts);</span>
     }
 
     @Override
@@ -100,16 +100,16 @@ import sk.iway.iwcm.i18n.Prop;
 
     public String getLinkDelete(HttpServletRequest request)
     {
-<span class="nc" id="L103">        return &quot;deleteOK('&quot;+getProp(request).getText(&quot;components.qa.delete_confirm&quot;)+&quot;',this,'/qa.add.do?action=delete&amp;qaId=&quot;+id+&quot;')&quot;;</span>
+<span class="fc" id="L103">        return &quot;deleteOK('&quot;+getProp(request).getText(&quot;components.qa.delete_confirm&quot;)+&quot;',this,'/qa.add.do?action=delete&amp;qaId=&quot;+id+&quot;')&quot;;</span>
     }
 
     public String getLinkView(HttpServletRequest request)
     {
-<span class="nc" id="L108">        return getLink();</span>
+<span class="fc" id="L108">        return getLink();</span>
     }
     public String getName()
     {
-<span class="nc" id="L112">        return question;</span>
+<span class="fc" id="L112">        return question;</span>
     }
 
     public Prop getProp() {
@@ -117,14 +117,14 @@ import sk.iway.iwcm.i18n.Prop;
     }
 
     public Prop getProp(HttpServletRequest request) {
-<span class="nc bnc" id="L120" title="All 2 branches missed.">        if(prop == null)</span>
-<span class="nc" id="L121">            prop = Prop.getInstance(request);</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if(prop == null)</span>
+<span class="fc" id="L121">            prop = Prop.getInstance(request);</span>
 
-<span class="nc" id="L123">        return prop;</span>
+<span class="fc" id="L123">        return prop;</span>
     }
 
     public void setProp(Prop prop) {
 <span class="nc" id="L127">        this.prop = prop;</span>
 <span class="nc" id="L128">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

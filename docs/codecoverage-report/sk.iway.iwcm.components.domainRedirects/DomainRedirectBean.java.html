@@ -60,7 +60,8 @@ public class DomainRedirectBean implements Serializable
 	@NotBlank
 	@DataTableColumn(
 		inputType = DataTableColumnType.TEXT,
-		title = &quot;components.redirect.label.to&quot;
+		title = &quot;components.redirect.label.to&quot;,
+		className = &quot;multiweb-noteditable&quot;
 	)
    private String redirectTo;
 
@@ -107,86 +108,86 @@ public class DomainRedirectBean implements Serializable
 
    public boolean isRedirectPath()
 	{
-<span class="fc" id="L110">		return redirectPath;</span>
+<span class="fc" id="L111">		return redirectPath;</span>
 	}
 
 	public void setRedirectPath(boolean redirectPath)
 	{
-<span class="fc" id="L115">		this.redirectPath = redirectPath;</span>
-<span class="fc" id="L116">	}</span>
+<span class="fc" id="L116">		this.redirectPath = redirectPath;</span>
+<span class="fc" id="L117">	}</span>
 
 	public Integer getRedirectId() {
-<span class="fc" id="L119">		return redirectId;</span>
+<span class="fc" id="L120">		return redirectId;</span>
 	}
 
 	public void setRedirectId(Integer redirectId) {
-<span class="fc" id="L123">		this.redirectId = redirectId;</span>
-<span class="fc" id="L124">	}</span>
+<span class="fc" id="L124">		this.redirectId = redirectId;</span>
+<span class="fc" id="L125">	}</span>
 
 	public boolean getActive() {
-<span class="fc" id="L127">		return active;</span>
+<span class="fc" id="L128">		return active;</span>
 	}
 
 	public void setActive(boolean active) {
-<span class="fc" id="L131">		this.active = active;</span>
-<span class="fc" id="L132">	}</span>
+<span class="fc" id="L132">		this.active = active;</span>
+<span class="fc" id="L133">	}</span>
 
 	public String getRedirectFrom() {
-<span class="fc" id="L135">		return redirectFrom;</span>
+<span class="fc" id="L136">		return redirectFrom;</span>
 	}
 
 	public void setRedirectFrom(String redirectFrom) {
-<span class="fc" id="L139">		this.redirectFrom = redirectFrom;</span>
-<span class="fc" id="L140">	}</span>
+<span class="fc" id="L140">		this.redirectFrom = redirectFrom;</span>
+<span class="fc" id="L141">	}</span>
 
 	public String getRedirectTo() {
-<span class="fc" id="L143">		return redirectTo;</span>
+<span class="fc" id="L144">		return redirectTo;</span>
 	}
 
 	public void setRedirectTo(String redirectTo) {
-<span class="fc" id="L147">		this.redirectTo = Tools.trim(redirectTo);</span>
-<span class="fc" id="L148">	}</span>
+<span class="fc" id="L148">		this.redirectTo = Tools.trim(redirectTo);</span>
+<span class="fc" id="L149">	}</span>
 
 
 	public boolean getRedirectParams() {
-<span class="fc" id="L152">		return redirectParams;</span>
+<span class="fc" id="L153">		return redirectParams;</span>
 	}
 
 	public void setRedirectParams(boolean redirectParams) {
-<span class="fc" id="L156">		this.redirectParams = redirectParams;</span>
-<span class="fc" id="L157">	}</span>
+<span class="fc" id="L157">		this.redirectParams = redirectParams;</span>
+<span class="fc" id="L158">	}</span>
 
-<span class="fc" id="L159">	public DomainRedirectBean(){</span>
+<span class="fc" id="L160">	public DomainRedirectBean(){</span>
 
-<span class="fc" id="L161">	}</span>
+<span class="fc" id="L162">	}</span>
 
 	public DomainRedirectBean(int redirectId, boolean active, String redirectFrom,
 			String redirectTo, boolean redirectSource, boolean redirectParams, boolean redirectPath, String protocol) {
-<span class="nc" id="L165">		super();</span>
-<span class="nc" id="L166">		this.redirectId = redirectId;</span>
-<span class="nc" id="L167">		this.active = active;</span>
-<span class="nc" id="L168">		this.redirectFrom = redirectFrom;</span>
-<span class="nc" id="L169">		this.redirectTo = redirectTo;</span>
-<span class="nc" id="L170">		this.redirectParams = redirectParams;</span>
-<span class="nc" id="L171">		this.redirectPath = redirectPath;</span>
-<span class="nc" id="L172">		this.protocol = protocol;</span>
-<span class="nc" id="L173">	}</span>
+<span class="nc" id="L166">		super();</span>
+<span class="nc" id="L167">		this.redirectId = redirectId;</span>
+<span class="nc" id="L168">		this.active = active;</span>
+<span class="nc" id="L169">		this.redirectFrom = redirectFrom;</span>
+<span class="nc" id="L170">		this.redirectTo = redirectTo;</span>
+<span class="nc" id="L171">		this.redirectParams = redirectParams;</span>
+<span class="nc" id="L172">		this.redirectPath = redirectPath;</span>
+<span class="nc" id="L173">		this.protocol = protocol;</span>
+<span class="nc" id="L174">	}</span>
 
 	@Override
 	 public String toString() {
-<span class="fc" id="L177">	   return new StringBuilder().append(&quot;Redirect = { redirectFrom: &quot;).append(getRedirectFrom()).append(&quot;, redirectTo: &quot;).append(getRedirectTo()).append(&quot; ,redirectId: &quot;).append(getRedirectId()).append(&quot;, redirectPath: &quot;).append(isRedirectPath()).append(&quot; , redirectParams: &quot;).append(getRedirectParams()).append(&quot; , active: &quot;).append(getActive()).append(&quot; , protocol: &quot;).append(getProtocol()).toString();</span>
+<span class="fc" id="L178">	   return new StringBuilder().append(&quot;Redirect = { redirectFrom: &quot;).append(getRedirectFrom()).append(&quot;, redirectTo: &quot;).append(getRedirectTo()).append(&quot; ,redirectId: &quot;).append(getRedirectId()).append(&quot;, redirectPath: &quot;).append(isRedirectPath()).append(&quot; , redirectParams: &quot;).append(getRedirectParams()).append(&quot; , active: &quot;).append(getActive()).append(&quot; , protocol: &quot;).append(getProtocol()).toString();</span>
 	 }
 
 	public String getProtocol()
 	{
-<span class="fc" id="L182">		return protocol;</span>
+<span class="fc" id="L183">		return protocol;</span>
 	}
 
 	public void setProtocol(String protocol)
 	{
-<span class="fc" id="L187">		this.protocol = protocol;</span>
-<span class="fc" id="L188">	}</span>
+<span class="fc" id="L188">		this.protocol = protocol;</span>
+<span class="fc" id="L189">	}</span>
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

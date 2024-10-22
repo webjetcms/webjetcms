@@ -111,7 +111,7 @@ public class JpaTools
 
 	public static List<String> getJpaClassNames(String rootUrl)
 	{
-		List<String> foundFiles = new ArrayList<String>();
+		List<String> foundFiles = new ArrayList<>();
 
 		String basePackage = rootUrl;
 		if (basePackage.startsWith("/WEB-INF/classes/")) basePackage = basePackage.substring(17);
@@ -204,8 +204,9 @@ public class JpaTools
 
     public static <T> List<T> findByMatchingProperty(Class<T> clazz, String propertyName, Object propertyValue)
     {
-        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);
+        JpaEntityManager em = null;
         try{
+			em = JpaTools.getEclipseLinkEntityManager(clazz);
             ExpressionBuilder builder = new ExpressionBuilder();
             ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);
             Expression expr = builder.get(propertyName).equal(propertyValue);
@@ -219,15 +220,17 @@ public class JpaTools
         }catch (Exception e) {
             sk.iway.iwcm.Logger.error(e);
         }finally{
-            em.close();
+            if (em != null) em.close();
         }
         throw new IllegalStateException("Query did not complete regularly");
     }
 
 	public static <T> T findFirstByMatchingProperty(Class<T> clazz, String propertyName, Object propertyValue)
 	{
-		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);
+		JpaEntityManager em = null;
 		try{
+			em = JpaTools.getEclipseLinkEntityManager(clazz);
+
 			ExpressionBuilder builder = new ExpressionBuilder();
 			ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);
 			Expression expr = builder.get(propertyName).equal(propertyValue);
@@ -244,7 +247,7 @@ public class JpaTools
 		}catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}finally{
-			em.close();
+			if (em != null) em.close();
 		}
 		throw new IllegalStateException("Query did not complete normally");
 	}
@@ -253,8 +256,9 @@ public class JpaTools
 	@SafeVarargs
 	public static <T> List<T> findByProperties(Class<T> clazz, Pair<String, ? extends Object>...properties)
 	{
-		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);
+		JpaEntityManager em = null;
 		try{
+			em = JpaTools.getEclipseLinkEntityManager(clazz);
 			ExpressionBuilder builder = new ExpressionBuilder();
 			ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);
 			Expression expr = propertiesToExpression(builder, properties);
@@ -328,8 +332,9 @@ public class JpaTools
 	@SafeVarargs
 	public static <T> T findFirstByProperties(Class<T> clazz, Pair<String, ? extends Object>...properties)
 	{
-		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);
+		JpaEntityManager em = null;
 		try{
+			em = JpaTools.getEclipseLinkEntityManager(clazz);
 			ExpressionBuilder builder = new ExpressionBuilder();
 			ReadAllQuery dbQuery = new ReadAllQuery(clazz, builder);
 			Expression expr = propertiesToExpression(builder, properties);
@@ -344,7 +349,7 @@ public class JpaTools
 		}catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		}finally{
-			em.close();
+			if (em != null) em.close();
 		}
 		throw new IllegalStateException("Query did not complete normally");
 	}
@@ -357,8 +362,9 @@ public class JpaTools
 	@SuppressWarnings("unchecked")
 	public static <T> List<T> findBy(Class<T> clazz, Integer maxRows, Condition... conditions)
 	{
-		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager(clazz);
+		JpaEntityManager em = null;
 		try {
+			em = JpaTools.getEclipseLinkEntityManager(clazz);
 			ExpressionBuilder object = new ExpressionBuilder();
 			ReadAllQuery query = new ReadAllQuery(clazz, object);
 			Expression expr = null;
@@ -375,7 +381,7 @@ public class JpaTools
 		} catch (Exception e) {
 			sk.iway.iwcm.Logger.error(e);
 		} finally {
-			em.close();
+			if (em != null) em.close();
 		}
 		throw new IllegalStateException("Query did not complete normally");
 	}

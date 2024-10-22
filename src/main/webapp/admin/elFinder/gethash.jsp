@@ -19,7 +19,15 @@
         return;
     }
 
+    if (url.contains("stock") || url.contains("placeholder"))
+    {
+       url = "/images:default";
+    }
+
+    System.out.println("url="+url);
+
     if (url.indexOf("?")>0) url = url.substring(0, url.indexOf("?"));
+    if (url.startsWith("/thumb/")) url = url.substring("/thumb".length());
     String hashParent = null;
     String volume = "iwcm_1_";
 

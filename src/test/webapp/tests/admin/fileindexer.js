@@ -1,4 +1,4 @@
-Feature('elFinder.fileIndexer');
+Feature('admin.fileIndexer');
 
 var randomNumber = (new Date()).getTime();
 
@@ -10,27 +10,21 @@ Scenario('test indexovania suborov', ({I}) => {
     I.amOnPage("/admin/elFinder/#elf_iwcm_1_");
 
     I.click("#finder > div.elfinder-workzone > div.ui-state-default.elfinder-navbar.ui-resizable > div.elfinder-tree > div:nth-child(2)");
-
     I.rightClick('#iwcm_2_L2ZpbGVz');
+    I.click( locate('div.elfinder-contextmenu-item').withChild( locate("span").withText("Nastavenie priečinka") ) );
+    I.switchTo("#modalIframeIframeElement");
+    I.seeElement( locate("h5.modal-title").withText("/files") );
 
-    I.click('#finder > div.touch-punch.ui-helper-reset.ui-front.ui-widget.ui-state-default.ui-corner-all.elfinder-contextmenu.elfinder-contextmenu-ltr.ui-draggable.ui-draggable-handle > div:nth-child(16)');
+    I.clickCss("#pills-dt-datatableInit-index-tab");
 
-    I.switchTo("#elfinderIframe");
+    I.waitForElement("#indexMenu");
+    I.see("Spustiť akciu indexovania súborov. Táto akcia môže trvať niekoľko minút.");
+    I.click("button#start-index-button");
+    I.dontSee("Spustiť akciu indexovania súborov. Táto akcia môže trvať niekoľko minút.");
+    I.see("Indexujú sa súbory, prosím čakajte (môže to trvať niekoľko minút).");
 
-    I.switchTo();
-
-    I.selectOption('#elfinder-modal > div > div > div.modal-footer > select', 'Indexuj');
-
-    I.click("#elfinder-modal > div > div > div.modal-footer > button.btn.btn-primary.submit");
-
-    I.switchTo("#elfinderIframe");
-
-    I.waitForText("Indexovanie súborov dokončené", 300);
-
-    I.see("Indexovanie súborov dokončené");
-
-    I.see("/files/archiv/zsd_faq_fakturacia-poplatkov-od-2014.pdf");
-    I.see("/files/jurko.jpg");
+    I.waitForText("/files/jurko.jpg", 200);
+    I.dontSee("/files/archiv/zsd_faq_fakturacia-poplatkov-od-2014.pdf");
     I.see("/files/zaheslovane/barepage.png");
     //folder /files/zaheslovane/peknylogin should not be indexed
     I.dontSee("/files/zaheslovane/peknylogin/");

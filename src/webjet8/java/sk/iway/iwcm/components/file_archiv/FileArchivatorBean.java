@@ -452,10 +452,6 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 		FileArchivatorKit.deleteFileArchiveCache();
 
 		UserDetails user = UsersDB.getUser(userId);
-		//najprv zmazem stary index
-		if(getId() > 0)
-			deleteIndexedFile("/"+FileArchivatorDB.getInstance().getById(getId()).getVirtualPath());
-
 		boolean save = super.save();
 
 		if(save)
@@ -482,13 +478,18 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 		//zmazem index
 		deleteIndexedFile("/"+getVirtualPath());
 
-      Adminlog.add(Adminlog.TYPE_FILE_DELETE,"File Archiv mazeme subor: "+getVirtualPath()+" "+this,-1,-1);
+      	Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE,"DELETE: File Archiv mazeme subor: "+getVirtualPath()+" "+this, this.getId(), -1);
 		return super.delete();
 	}
 
 
 	@Override
 	public String toString()
+	{
+		return toString(false);
+	}
+
+	public String toString(boolean newLines)
 	{
 		StringBuilder toString = new StringBuilder();
 		for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(this.getClass()))
@@ -498,8 +499,10 @@ public class FileArchivatorBean extends ActiveRecord implements Serializable
 				if("historyFiles".equals(property))
 				    continue;
 				Object value = PropertyUtils.getProperty(this, property);
-				toString.append(property).append(" = ");
-				toString.append(value).append(',');
+				toString.append(property).append(": ").append(value);
+
+				if (newLines) toString.append("\n");
+				else toString.append(", ");
 			}
 			catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
 		}

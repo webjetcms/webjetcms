@@ -174,6 +174,18 @@ function wjAjaxOnFormResult(formDiv, resultDiv, data, callMyFunction) {
   } else {
     wjAjaxOnError(formDiv, resultDiv, result);
   }
+  try {
+    const wjEvent = new CustomEvent("WJ.formSubmit", {
+        detail: {
+          success: result.ok,
+          result: result,
+          formDiv: formDiv,
+          resultDiv: resultDiv
+        }
+    });
+    //console.log("Dispatching event: ", wjEvent);
+    window.dispatchEvent(wjEvent);
+  } catch (e) { console.log(e); }
 }
 
 /*

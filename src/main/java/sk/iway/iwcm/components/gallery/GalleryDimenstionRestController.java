@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -123,8 +124,20 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         if (entity.getEditorFields().isForceResizeModeToSubgroups()) {
             GalleryDB.updateDirectoryDimToSubfolders(entity.getPath());
         }
-        if (entity.getEditorFields().isRegenerateImages()) {
-            GalleryDB.resizePicturesInDirectory(entity.getPath(), entity.getEditorFields().isForceResizeModeToSubgroups(), getProp(), null);
+
+        if (entity.getEditorFields().isForceWatermarkToSubgroups()) {
+            List<GalleryDimension> subfolders = repository.findByPathLikeAndDomainId(entity.getPath()+"/%", CloudToolsForCore.getDomainId());
+            for (GalleryDimension subfolder : subfolders) {
+                subfolder.setWatermark(entity.getWatermark());
+                subfolder.setWatermarkPlacement(entity.getWatermarkPlacement());
+                subfolder.setWatermarkSaturation(entity.getWatermarkSaturation());
+                repository.save(subfolder);
+            }
+        }
+
+        if (entity.getEditorFields().isRegenerateImages() || entity.getEditorFields().isRegenerateWatermark()) {
+            boolean recursive = entity.getEditorFields().isForceResizeModeToSubgroups() || entity.getEditorFields().isForceWatermarkToSubgroups();
+            GalleryDB.resizePicturesInDirectory(entity.getPath(), recursive, getProp(), null);
         }
 
         return saved;
@@ -139,9 +152,33 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         if(entity == null) {
             //Get dimension id (who is calling, who is parent gallery)
             int dimensionId = Tools.getIntValue(getRequest().getParameter("dimensionId"), -1);
-            //If dimension id is present, get parent gallery and set his path to child (in insertItem we will adding to path new entity name)
+
+            //If dimension id is not present, set default path from path parameter
+            String parentPath = getRequest().getParameter("path");
+            if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = "/images/gallery"; //NOSONAR
+
+            String forcePath = null;
+
+            //If dimension id is present it's parent ID, copy properties
+            GalleryDimension parentGallery = null;
             if(dimensionId != -1) {
-                GalleryDimension parentGallery = repository.findFirstByIdAndDomainId(Long.valueOf(dimensionId), CloudToolsForCore.getDomainId()).orElse(null);
+                parentGallery = repository.findFirstByIdAndDomainId(Long.valueOf(dimensionId), CloudToolsForCore.getDomainId()).orElse(null);
+                if (parentGallery == null) parentPath = "/images/gallery"; //NOSONAR
+            } else {
+                //find settings by parentPath recursivelly from repository, so search for /images/gallery/path/subfolder, then /images/gallery/path etc until root
+                String[] pathParts = parentPath.split("/");
+                for(int i = pathParts.length; i > 0; i--) {
+                    String path = String.join("/", Arrays.copyOfRange(pathParts, 0, i));
+                    Optional<GalleryDimension> optional = repository.findFirstByPathAndDomainId(path, CloudToolsForCore.getDomainId());
+                    if (optional.isPresent()) {
+                        parentGallery = optional.get();
+                        forcePath = parentPath;
+                        break;
+                    }
+                }
+            }
+
+            if (parentGallery != null) {
                 entity = getNewEntity(parentGallery.getPath());
                 entity.setName("");
                 entity.setResizeMode(parentGallery.getResizeMode());
@@ -153,13 +190,12 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
                 entity.setWatermarkPlacement(parentGallery.getWatermarkPlacement());
                 entity.setWatermarkSaturation(parentGallery.getWatermarkSaturation());
             } else {
-                //If dimension id is not present, set default path
-                String parentPath = getRequest().getParameter("path");
-                if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = "/images"; //NOSONAR
                 //tu nemozeme poslat cestu, lebo by sa nastavil nazov, nevieme rozlisit ci sa jedna o edit, alebo o pridanie
                 entity = getNewEntity("");
                 entity.setPath(parentPath);
             }
+
+            if (forcePath!=null) entity.setPath(forcePath);
         }
 
         return entity;
@@ -191,14 +227,18 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
             throwError("user.rights.no_folder_rights");
         }
 
+        return true;
+    }
+
+    @Override
+    public boolean deleteItem(GalleryDimension entity, long id) {
         boolean success = GalleryDB.deleteGallery(entity.getPath());
         if(success) {
             setForceReload(true);
         } else {
             throwError("components.gallery.path_delete_error");
         }
-
-        return super.beforeDelete(entity);
+        return success;
     }
 
     /**

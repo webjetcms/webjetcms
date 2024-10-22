@@ -1513,7 +1513,11 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 //alert na odoslanie formularu
     if (location.href.indexOf("formsend=true")!=-1)
     {
-        checkForm.printAlertMessage(null, "<iwcm:text key="checkform.sent"/>", null);
+        if (location.href.indexOf("DoubleOptIn")!=-1) {
+            checkForm.printAlertMessage(null, "<iwcm:text key="checkform.sentDoubleOptIn"/>", null);
+        } else {
+            checkForm.printAlertMessage(null, "<iwcm:text key="checkform.sent"/>", null);
+        }
     }
 
     if (location.href.indexOf("formfail=formIsAllreadySubmitted")!=-1)

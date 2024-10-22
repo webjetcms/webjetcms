@@ -20,7 +20,7 @@ Formuláru je potrebné nastaviť nasledovné hodnoty.
 
 ![](formsimple.png)
 
-Po zvolení možnosti Riadkové zobrazenie sa polia môžu zobrazovať v riadku vedľa seba. Pre vytvorenie nového riadku vložte do formuláru pole ```Nový riadok```:
+Po zvolení možnosti Riadkové zobrazenie sa polia môžu zobrazovať v riadku vedľa seba. Pre vytvorenie nového riadku vložte do formuláru pole **Nový riadok**:
 
 ![](formsimple-rowview.png)
 
@@ -58,7 +58,7 @@ Pole (položku) formuláru pridáte kliknutím na tlačidlo Nová položka, ktor
 - Povinné pole - zaškrtnutím sa pole označí ako povinné pre odoslanie formuláru.
 - Tooltip - ak zadáte hodnotu zobrazí sa pri názve poľa informačná bublina (vysvetlivka) s textom zadaným v tomto poli. Spôsob zobrazenia záleží od dizajnu web stránky (typicky vyžaduje podporu [FontAwesome](https://fontawesome.com) pre zobrazenie ikony).
 
-**Poznámka:** ak je v poli ```Hodnota``` prázdny text a je zadaný text v ```Zástupný text```, tak sa pri zobrazení formuláru na web stránke nezobrazí názov poľa samostatne ale len ako zástupný text. Umožňuje to vytvoriť menší formulár z pohľadu jeho priestoru na web stránke.
+**Poznámka:** ak je v poli **Hodnota** prázdny text a je zadaný text v poli **Zástupný text**, tak sa pri zobrazení formuláru na web stránke nezobrazí názov poľa samostatne ale len ako zástupný text. Umožňuje to vytvoriť menší formulár z pohľadu jeho priestoru na web stránke.
 
 Pre **skupiny polí (napr. Skupina výberových alebo zaškrtávacích polí)** sa v poli Hodnota definuje zoznam možností. Ako rozdeľovač možností sa hľadá znak ```|```, ak sa nenájde hľadá sa znak ```,```, ak sa nenájde použije sa medzera. Môžete teda zadať napr. ```Slobodný,Ženatý,Rozvedený```, alebo ak v možnosti potrebujete zadať čiarku tak použite oddeľovač ```|``` ako ```Predjedlo|Polievku|Hlavné jedlo|Koláč, kávu``` (možnosť ```Koláč, káva``` bude jedna položka).
 
@@ -89,7 +89,7 @@ Jednotlivé položky definujete cez kľúče:
 
 Príklad:
 
-```html
+```
 //najjednoduchsi typ pola
 components.formsimple.label.meno=Meno
 components.formsimple.input.meno=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <input class="${classes}form-control" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}" type="text" maxlength="20" />${cs-error}</div>

@@ -20,9 +20,9 @@ V prípade zvolenia iného jazyku sa tabuľka načíta s novými textami pre vyb
 - Ak v tomto jazyku text nie je zadefinovaný, zobrazí sa prázdna bunka (bez textu).
 - To že sa zobrazuje prázdna bunka však neznamená, že sa na front-end zobrazí prázdna hodnota.
     - **Zobrazenie textu na front-end funguje nasledovne:**
-        1. hľadá text zadefinovaný v **aktuálne zobrazenom jazyku** (pre príklad napr. v EN)
-        1. ak text neexistuje, hľadá v jazyku nastavenom v konštante `defaultLanguage` (pre príklad napr. CZ)
-        1. ak text neexistuje, hľadá na tvrdo v **SK** jazyku
+        - hľadá text zadefinovaný v **aktuálne zobrazenom jazyku** (pre príklad napr. v EN)
+        - ak text neexistuje, hľadá v jazyku nastavenom v konštante `defaultLanguage` (pre príklad napr. CZ)
+        - ak text neexistuje, hľadá na tvrdo v **SK** jazyku
 
 ## Úprava skupiny
 
@@ -57,8 +57,8 @@ Pre všetky šablóny v skupine s nastaveným prefixom **testujemPrefix** sa nas
 
 V prípade migrácie skupiny na iné prostredie, je potrebné spraviť tieto kroky:
 
-1. preniesť fyzický adresár skupiny v `/templates/` z prostredia A na prostredie B
+- preniesť fyzický adresár skupiny v `/templates/` z prostredia A na prostredie B
     - ak sú v JSP súboroch migrovanej šablóny priamo linkované moduly a iné JSP súbory, ktoré na prostredí B nie sú, preniesť aj tie
-1. skontrolovať nastavené premenné `$wj-install-name` a `$wj-template-name` v súbore `_variables.scss`
-1. Vytvorenie a nastavenie skupiny na prostredí B podľa vzoru z prostredia A
-1. Exportovanie textových kľúčov z prostredia A s prefixom nastaveným v poli **Prefix textových kľúčov** a importovanie na prostredie B
+- skontrolovať nastavené premenné `$wj-install-name` a `$wj-template-name` v súbore `_variables.scss`
+- Vytvorenie a nastavenie skupiny na prostredí B podľa vzoru z prostredia A
+- Exportovanie textových kľúčov z prostredia A s prefixom nastaveným v poli **Prefix textových kľúčov** a importovanie na prostredie B

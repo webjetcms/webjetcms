@@ -1,12 +1,14 @@
 package sk.iway.iwcm.components.reservation.jpa;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
@@ -18,8 +20,6 @@ import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
 @Getter
 @Setter
 public class ReservationObjectEditorFields implements Serializable {
-    
-    public ReservationObjectEditorFields() {}
 
     //With this columns we inform that we want add/change password
     @DataTableColumn(
@@ -48,7 +48,7 @@ public class ReservationObjectEditorFields implements Serializable {
         tab = "advanced"
     )
     private String newPassword;
-    
+
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title="components.reservation.admin_addObject.pass.repeat",
@@ -239,13 +239,13 @@ public class ReservationObjectEditorFields implements Serializable {
     )
     private Date reservationTimeToG;
 
-    //special anotation, create a ReservationObjectPrice table inside specialPrice tab
+    //special annotation, create a ReservationObjectPrice table inside specialPrice tab
     @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = "&nbsp;",
         tab = "specialPrice",
         hidden = true,
         editor = { @DataTableColumnEditor(
             attr = {
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/reservation/reservation_object_price?objectId={id}"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/reservation/reservation-object-price?object-id={id}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false")
             }
@@ -257,20 +257,19 @@ public class ReservationObjectEditorFields implements Serializable {
 
         //Most of fields are visible only in editor, so we need them only if action is "EDIT/CREATE"
         if(action != ProcessItemAction.GETALL) {
-            if(originalEntity.getId() == null || originalEntity.getId() == -1) { 
-
+            if(originalEntity.getId() == null || originalEntity.getId() == -1) {
                 //Set default values of ReservationObjectEntity for new entity
                 originalEntity.setMaxReservations(1);
                 originalEntity.setCancelTimeBefor(0);
                 originalEntity.setReservationTimeFrom(DefaultTimeValueConverter.getValidTimeValue(8, 0));
                 originalEntity.setReservationTimeTo(DefaultTimeValueConverter.getValidTimeValue(16, 0));
                 originalEntity.setTimeUnit(30);
-                originalEntity.setPriceForHour(0.0);
-                originalEntity.setPriceForDay(0.0);
+                originalEntity.setPriceForHour(BigDecimal.valueOf(0.0));
+                originalEntity.setPriceForDay(BigDecimal.valueOf(0.0));
             }
 
-            //IF reservationObjectTimesEntities is null (or empty) set default values, else set vaules from list (load values from DB)
-            if(reservationObjectTimesEntities == null || reservationObjectTimesEntities.size() == 0)
+            //IF reservationObjectTimesEntities is null (or empty) set default values, else set values from list (load values from DB)
+            if(reservationObjectTimesEntities == null || reservationObjectTimesEntities.isEmpty() == true)
                 setReservationObjectTimesDefault();
             else
                 setReservationObjectTimes(reservationObjectTimesEntities);
@@ -287,8 +286,8 @@ public class ReservationObjectEditorFields implements Serializable {
         Date defaultTimeTo = DefaultTimeValueConverter.getValidTimeValue(16, 0);
 
         reservationTimeFromA = defaultTimeFrom;
-        reservationTimeToA = defaultTimeTo;        
-        
+        reservationTimeToA = defaultTimeTo;
+
         reservationTimeFromB = defaultTimeFrom;
         reservationTimeToB = defaultTimeTo;
 
@@ -297,13 +296,13 @@ public class ReservationObjectEditorFields implements Serializable {
 
         reservationTimeFromD = defaultTimeFrom;
         reservationTimeToD = defaultTimeTo;
-                
+
         reservationTimeFromE = defaultTimeFrom;
         reservationTimeToE = defaultTimeTo;
-                
+
         reservationTimeFromF = defaultTimeFrom;
         reservationTimeToF = defaultTimeTo;
-                
+
         reservationTimeFromG = defaultTimeFrom;
         reservationTimeToG = defaultTimeTo;
     }
@@ -312,7 +311,7 @@ public class ReservationObjectEditorFields implements Serializable {
         //First set default values
         setReservationObjectTimesDefault();
 
-        if(entities == null || entities.size() < 1) return;
+        if(entities.isEmpty() == true) return;
 
         for(ReservationObjectTimesEntity entity : entities) {
             if(entity.getDay() == 1) {
@@ -358,15 +357,15 @@ public class ReservationObjectEditorFields implements Serializable {
         //Its important to set domain id
         if(originalEntity.getDomainId() == null ) originalEntity.setDomainId(CloudToolsForCore.getDomainId());
 
-        //Update reseravtion object times (bind to this ReservationObject entity)
+        //Update reservation object times (bind to this ReservationObject entity)
         if(action != ProcessItemAction.CREATE)
             updateReservationObjectTimesInDB(originalEntity, rotr);
 
         //Set password
-        if(addPassword) 
+        if(Tools.isTrue(addPassword))
             originalEntity.setPassword(newPassword);
 
-        if(originalEntity.getMustAccepted() == false)
+        if(Tools.isFalse(originalEntity.getMustAccepted()))
             originalEntity.setEmailAccepter("");
     }
 
@@ -384,7 +383,7 @@ public class ReservationObjectEditorFields implements Serializable {
     }
 
     private void updateReservationObjectTimesInDB(ReservationObjectEntity originalEntity, ReservationObjectTimesRepository rotr) {
-        //Status about which day has set specific time reservation (actualy from originalEntity)
+        //Status about which day has set specific time reservation (actually from originalEntity)
         List<Boolean> chooseDaysStatus = getChooseDayStats();
 
         for(int i = 0; i < chooseDaysStatus.size(); i++) {
@@ -394,9 +393,9 @@ public class ReservationObjectEditorFields implements Serializable {
 
             //Try find if this day is saved in DB (e.g. i=0 its monday)
             if(originalEntity.getId() != null && originalEntity.getId() != -1) {
-                for(ReservationObjectTimesEntity entity : rotr.findAllByObjectIdAndDomainId(originalEntity.getId().intValue(), CloudToolsForCore.getDomainId())) {
+                for(ReservationObjectTimesEntity entity : rotr.findAllByObjectIdAndDomainId(originalEntity.getId(), CloudToolsForCore.getDomainId())) {
                     //i+1 because in list we start from 0, and in DB we start from 1
-                    if(entity.getDay() == i + 1) { 
+                    if(entity.getDay() == i + 1) {
                         isInDB = true;
                         timeEntity = entity;
                         break;
@@ -405,10 +404,10 @@ public class ReservationObjectEditorFields implements Serializable {
             }
 
             //Need to delete from DB
-            if(chooseDayStatus == false && isInDB && timeEntity != null) rotr.deleteById(timeEntity.getId());
+            if(Tools.isFalse(chooseDayStatus) && isInDB && timeEntity != null) rotr.deleteById(timeEntity.getId());
 
             //Need to add new record to DB, OR update time values
-            if(chooseDayStatus == true)
+            if(Tools.isTrue(chooseDayStatus))
                 rotr.save(convertToReservationObjectTimes(i+1, originalEntity, timeEntity));
         }
     }
@@ -423,29 +422,29 @@ public class ReservationObjectEditorFields implements Serializable {
             timeEntity = new ReservationObjectTimesEntity();
             timeEntity.setDay(day);
             timeEntity.setDomainId(reservationObject.getDomainId());
-            timeEntity.setObjectId(reservationObject.getId().intValue());
+            timeEntity.setObjectId(reservationObject.getId());
         }
 
         //Update time values
-        if(day == 1) { 
+        if(day == 1) {
             timeFrom = roef.getReservationTimeFromA();
             timeTo = roef.getReservationTimeToA();
-        } else if(day == 2) { 
+        } else if(day == 2) {
             timeFrom = roef.getReservationTimeFromB();
             timeTo = roef.getReservationTimeToB();
-        } else if(day == 3) { 
+        } else if(day == 3) {
             timeFrom = roef.getReservationTimeFromC();
             timeTo = roef.getReservationTimeToC();
-        } else if(day == 4) { 
+        } else if(day == 4) {
             timeFrom = roef.getReservationTimeFromD();
             timeTo = roef.getReservationTimeToD();
-        } else if(day == 5) { 
+        } else if(day == 5) {
             timeFrom = roef.getReservationTimeFromE();
             timeTo = roef.getReservationTimeToE();
-        } else if(day == 6) { 
+        } else if(day == 6) {
             timeFrom = roef.getReservationTimeFromF();
             timeTo = roef.getReservationTimeToF();
-        } else if(day == 7) { 
+        } else if(day == 7) {
             timeFrom = roef.getReservationTimeFromG();
             timeTo = roef.getReservationTimeToG();
         }

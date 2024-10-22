@@ -1,0 +1,242 @@
+extends ../../partials/layout
+
+block content
+
+    include jsinclude
+
+    script.
+        let editor = null;
+        var elFinderInstance;
+        var filesRespository;
+
+        //ThymeLeaf variables
+        let elfinderMetadataEnabled = [(${elfinderMetadataEnabled})];
+        let elfinderMetadataAutopopup = [(${elfinderMetadataAutopopup})];
+        let haveFileIndexerPerm = [(${haveFileIndexerPerm})];
+
+        let commands = [
+            'archive', 'back', 'copy', 'cut', 'download', 'duplicate', 'edit', 'extract',
+            'forward', 'getfile', 'help', 'home', 'info', 'mkdir', 'mkfile', 'netmount',
+            'open', 'paste', 'quicklook', 'reload', 'rename', 'resize', 'rm',
+            'sort', 'up', 'upload', 'view',
+            'wjedit', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
+        ];
+
+        let files = [
+            'wjeditswitch', 'wjfileopen', 'wjfileupdate',
+            '|',
+            'quicklook',
+            '|',
+            'download',
+            '|',
+            'copy', 'cut', 'paste', 'duplicate',
+            '|',
+            'rm',
+            '|',
+            'rename',
+            '|',
+            'archive', 'extract',
+            '|',
+            'info', 'wjfileprops', 'wjdirprops'
+        ];
+
+        let toolbar = [
+            ['back', 'up', 'forward'],
+            ['paste', 'cut', 'copy'],
+            ['upload', 'mkdir', 'reload'],
+            ['view', 'sort'], ['wjsearch'],
+            ['download'],
+            ['quicklook', 'info'],
+            ['wjeditswitch', 'duplicate', 'rm', 'rename'],
+            ['extract', 'archive']
+        ];
+
+        if(elfinderMetadataEnabled === true) {
+            commands.push('wjmetadata');
+            files.push('wjmetadata');
+        }
+
+        function initializeElfinder()
+        {
+            elFinderInstance = $('#finder').elfinder({
+                'bind': {
+                    'upload.pre mkdir.pre mkfile.pre rename.pre archive.pre ls.pre': [
+                        'Plugin.Sanitizer.cmdPreprocess'
+                    ],
+                    'ls': [
+                        'Plugin.Sanitizer.cmdPostprocess'
+                    ],
+                    'upload.presave': [
+                        'Plugin.Sanitizer.onUpLoadPreSave'
+                    ]
+                },
+                uploadOverwrite: true,
+                overwriteUploadConfirm: true,
+                url: '/admin/elfinder-connector/',
+                enableByMouseOver: false,
+                width: '100%',
+                rememberLastDir: [(${rememberLastDir})],
+                customData: {volumes: "files"},
+                sortType: 'sort_priority',
+                requestType: 'post',
+                sortRules: {
+                    sort_priority: function(file1, file2) {
+                        var sort = 0;
+                        if (file1.mime == "directory" && file2.mime == "text/html") {
+                            sort = -1;
+                        }
+                        else if (file1.mime == "text/html" && file2.mime == "directory") {
+                            sort = 1;
+                        }
+                        else if (file1.mime == "directory" && file2.mime == "directory" ||
+                            file1.mime == "text/html" && file2.mime == "text/html") {
+                            sort = file1.sort_priority - file2.sort_priority;
+                        }
+                        if (sort == 0) {
+                            return file1.name.toLowerCase().localeCompare(file2.name.toLowerCase());
+                        }
+                    }
+                },
+                handlers: {
+                    dblclick: function(event, elfinderInstance)
+                    {
+                        event.preventDefault();
+                        elfinderInstance.exec('getfile')
+                            .done(function() { elfinderInstance.exec('wjedit'); })
+                            .fail(function() { elfinderInstance.exec('open'); });
+                    },
+                    select: function(event, elfinderInstance) {
+                        var selected = event.data.selected;
+                    },
+                    add: function(event, elfinderInstance) {
+                        processEventReload(event, elfinderInstance);
+                    },
+                    remove: function(event, elfinderInstance) {
+                        processEventReload(event, elfinderInstance);
+                    },
+                    change: function(event, elfinderInstance) {
+                        processEventReload(event, elfinderInstance);
+                    }
+                },
+                lang: window.userLng,
+                baseUrl: "/admin/elFinder/", //Needed for loading main css style (theme)
+                onlyClassicFileUpload: true,
+                commands: commands,
+                contextmenu: {
+                    files: files
+                },
+                commandsOptions: {
+                    wjedit: {
+                        editors: [{
+                                mimes: ['text/plain', 'text/html', 'text/jsp', 'text/javascript', 'text/css', 'text/xml', 'text/x-js', 'text/markdown'],
+                                load: function(textarea) {
+                                    var ta = $(textarea),
+                                        taBase = ta.parent(),
+                                        dialog = taBase.parent();
+                                    editor = CodeMirror.fromTextArea(textarea, {
+                                        lineNumbers: true,
+                                        styleActiveLine: true,
+                                        matchBrackets: true,
+                                        extraKeys: {
+                                            "F11": function(cm) {
+                                                cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+                                            },
+                                            "Esc": function(cm) {
+                                            if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+                                            },
+                                            "Alt-F": "findPersistent"
+                                        },
+                                        mode: "application/x-ejs",
+                                        theme: "eclipse"
+                                    });
+                                    resizeElfinderDialog(textarea);
+                                },
+                                close: function(textarea, instance) {
+                                },
+                                save: function(textarea, editorX) {
+                                    textarea.value = editor.getValue();
+                                }
+                            }
+                        ]
+                    },
+                    paste: {
+                        moveConfirm: [(${layout.getConstant('elfinderMoveConfirm')})]
+                    }
+                },
+                ui: ['toolbar', 'tree', 'path', 'stat'],
+                uiOptions: {
+                    toolbar: toolbar,
+                    tree: {
+                        subTreeMax: 5000
+                    }
+                }
+            }).elfinder('instance');
+
+            var toolbarFixApplied = false;
+            elFinderInstance.bind('lazydone', function(event) {
+                if (!toolbarFixApplied) {
+                    toolbarFixApplied = true;
+                    elfinderTabClick("file");
+                }
+            });
+
+            if(elfinderMetadataEnabled === true && elfinderMetadataAutopopup === true) {
+                elFinderInstance.bind('upload', function(event) {
+                    if (event.data == null || event.data.added == null || event.data.added.length < 1) return;
+                    var hashes = $.map(event.data.added, function(v, i){
+                        if (v.virtualPath.indexOf("/files/") == 0) {
+                            return v.hash;
+                        }
+                        return false;;
+                    });
+                    if (hashes.length > 0) {
+                        elFinderInstance.exec("wjmetadata", hashes);
+                    }
+                });
+            }
+
+            //HIDE grip icon for resizing elfinder
+            $("div.ui-icon-gripsmall-diagonal-se").css('display', 'none');
+        }
+
+        function hideButtons()
+        {
+            $('#elfinder-modal .submitButton').hide();
+        }
+
+        function showAllowedButtons(allowed)
+        {
+            var modal = $('#elfinder-modal');
+            allowed.useVersioning ? modal.find('.showHistory').show() : modal.find('.showHistory').hide() ;
+        }
+
+    .tabbable.tabbable-custom.tabbable-full-width.tabbable-elfinder
+        div.md-breadcrumb
+            ul.nav( role='tablist')
+                li.nav-item(role='presentation')
+                    a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
+                        | [[\#{fbrowse.file}]]
+                li.nav-item
+                    a.nav-link(onclick="elfinderTabClick('tools')" style='cursor:pointer' aria-selected=false data-bs-toggle='tab' role='presentation')
+                        | [[\#{editor_dir.tools}]]
+                li.nav-item.last.noperms-cmp_sync
+                    a.nav-link(href="javascript:WJ.openPopupDialog('/components/sync/export_setup.jsp', 650, 500);" style='cursor:pointer' aria-selected=false role='presentation')
+                        | Export - Import
+
+        #finder [[\#{divpopup-blank.wait_please}]]
+
+        #elfinder-modal.modal(tabindex='-1' role='dialog' aria-labelledby='elfinder-modal')
+            .modal-dialog(role='document')
+                .modal-content
+                    .modal-header
+                        button.close(type='button' data-dismiss='modal' aria-label='Close')
+                            span(aria-hidden='true') &times;
+                        h4#modalLabel.modal-title [[\#{fbrowser.dirprop.dir}]]
+                .modal-body
+                .modal-footer
+                    button.btn.btn-default.btn-closeModal(type='button' data-dismiss='modal') [[\#{webpages.modal.close}]]
+                    select.btn.form-control.form-select.action(name='action')
+                        option.bSubmit(value='bSubmit') [[\#{fbrowse.save_button}]]
+                        option.bUsage(value='bUsage') [[\#{fbrowse.usage_button}]]
+                        option.showHistory(value='showHistory') [[\#{groupslist.show_history}]]
+                    button.btn.btn-primary.submit(type='button' name='submit') [[\#{elfinder.dirprops.save}]]

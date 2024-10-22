@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -75,6 +77,11 @@ public class AppManager
 					iterator.remove();
 				}
 			}
+
+			// sort alphabetically by app name
+			Prop prop = Prop.getInstance(Constants.getServletContext(), request);
+			Collections.sort(ret, new ModuleComparator(prop));
+
 			return ret;
 		}
 
@@ -98,8 +105,6 @@ public class AppManager
 			return filterUserAppList(appsList, request);
 
 		appsList = new ArrayList<>();
-		Prop prop = Prop.getInstance(
-				sk.iway.iwcm.Constants.getServletContext(), request);
 
 		String dirPath = sk.iway.iwcm.Tools.getRealPath("/components/");
 		List<ModuleInfo> modules = Modules.getInstance().getAvailableModules();
@@ -109,9 +114,6 @@ public class AppManager
 		{
 			int size = modules.size();
 			int i;
-
-			// usporiadaj podla abecedy
-			Collections.sort(modules, new ModuleComparator(prop));
 
 			// prescanuj adresar /components na podadresare, ktory existuje
 			// vypis
@@ -142,7 +144,7 @@ public class AppManager
 					}
 
 					app = new AppBean();
-					app.setItemKey(mi.isUserItem() ? mi.getItemKey() : "");
+					app.setItemKey(mi.getItemKey());
 					app.setNameKey(mi.getNameKey());
 					app.setComponentClickAction(mi.getPath().substring(mi.getPath().lastIndexOf("/") + 1));
 					app.setImagePath(imgPath);
@@ -186,6 +188,7 @@ public class AppManager
 				app.setNameKey(nameKey);
 				app.setComponentClickAction(f.getName());
 				app.setImagePath(imgPath);
+				app.setCustom(true);
 
 				appsList.add(app);
 			}
@@ -222,16 +225,36 @@ public class AppManager
 
 					WebjetAppStore appStore = cl.getAnnotation(WebjetAppStore.class);
 
+					String itemKey = appStore.itemKey();
+					if (Tools.isNotEmpty(itemKey)) {
+						//remove app from apps if there is already one with the same itemKey
+						for (AppBean app : apps) {
+							if (app.getItemKey().equals(itemKey)) {
+								apps.remove(app);
+								break;
+							}
+						}
+					}
+
 					AppBean app = new AppBean();
 					app.setComponentClickAction(cl.getCanonicalName());
 					app.setNameKey(appStore.nameKey());
 					app.setDescKey(appStore.descKey());
+					app.setItemKey(itemKey);
 					app.setImagePath(appStore.imagePath());
 					app.setDomainName(appStore.domainName());
 					app.setGalleryImages(appStore.galleryImages());
+					app.setComponentPath(appStore.componentPath());
 
-					if (fqdn.startsWith("sk.iway.iwcm")) apps.add(app);
-					else apps.add(0, app);
+					if (fqdn.startsWith("sk.iway.iwcm")) {
+						if (appStore.custom().length>1) app.setCustom(appStore.custom()[0]);
+						apps.add(app);
+					}
+					else {
+						apps.add(0, app);
+						if (appStore.custom().length>1) app.setCustom(appStore.custom()[0]);
+						else app.setCustom(true);
+					}
 
 					Logger.debug(AppManager.class, "Adding app from annotation, key="+app.getNameKey()+" fqdn="+fqdn);
 
@@ -241,5 +264,21 @@ public class AppManager
 			}
 		}
     }
+
+	/**
+	 * Returns map of class names and jsp paths for replacing in appstore editor componentseg.:
+	 * "sk.iway.iwcm.components.gallery.GalleryApp" -> "/components/gallery/gallery.jsp"
+	 * @param request
+	 * @return
+	 */
+	public static Map<String, String> getClassToJspReplaces(HttpServletRequest request) {
+		Map<String, String> replaces = new Hashtable<>();
+		List<AppBean> apps = getAppsList(request);
+		for (AppBean app : apps) {
+			if (Tools.isEmpty(app.getComponentPath())) continue;
+			replaces.put(app.getComponentPath(), app.getComponentClickAction());
+		}
+		return replaces;
+	}
 
 }

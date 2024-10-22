@@ -27,7 +27,6 @@
 import WebjetOverviewDashboardInfobox from './components/webjet-overview-dashboard-infobox.vue';
 import WebjetOverviewDashboardMiniApps from './components/webjet-overview-dashboard-mini-apps.vue';
 import WebjetOverviewDashboardWebsites from './components/webjet-overview-dashboard-websites.vue';
-import WebjetOverviewDashboardApps from './components/webjet-overview-dashboard-apps.vue';
 import WebjetOverviewDashboardNews from './components/webjet-overview-dashboard-news.vue';
 import WebjetServerMonitoring from '../webjet-server-monitoring/vue-server-monitoring.vue';
 import WebjetOverviewDashboardMiniAppBookmarkModal from "./mini-apps/webjet-overview-dashboard-mini-app-bookmark-modal";
@@ -40,7 +39,6 @@ export default {
         'webjet-overview-dashboard-infobox': WebjetOverviewDashboardInfobox,
         'webjet-overview-dashboard-mini-apps': WebjetOverviewDashboardMiniApps,
         'webjet-overview-dashboard-websites': WebjetOverviewDashboardWebsites,
-        'webjet-overview-dashboard-apps': WebjetOverviewDashboardApps,
         'webjet-overview-dashboard-news': WebjetOverviewDashboardNews,
         'webjet-server-monitoring': WebjetServerMonitoring,
     },

@@ -2,19 +2,15 @@
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.apache.commons.beanutils.BeanUtils;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -28,8 +24,6 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.editor.EditorDB;
-import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UserDetails;
@@ -49,9 +43,9 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class FileIndexer
 {
-<span class="nc" id="L52">	protected FileIndexer() {</span>
+<span class="nc" id="L46">	protected FileIndexer() {</span>
 		//utility class
-<span class="nc" id="L54">	}</span>
+<span class="nc" id="L48">	}</span>
 
 	/**
 	 * Zaindexuje subor
@@ -59,202 +53,13 @@ public class FileIndexer
 	 * @param indexedFiles - zoznam do ktoreho sa zapise vysledok
 	 * @param request
 	 * @return
+	 *
+	 * @deprecated - use FileIndexerTools.indexFile
 	 */
+	@Deprecated
 	public static boolean indexFile(String url, List&lt;ResultBean&gt; indexedFiles, HttpServletRequest request)
 	{
-<span class="pc bpc" id="L65" title="1 of 4 branches missed.">		if (!url.startsWith(&quot;/files/&quot;) || url.endsWith(&quot;/upload&quot;))</span>
-		{
-<span class="fc" id="L67">			 Logger.error(FileIndexer.class,&quot;url musi zacinat na /files/ a nesmie koncit na /upload: &quot;+url);</span>
-<span class="fc" id="L68">			 return false;</span>
-		}
-<span class="fc" id="L70">		url = Tools.replace(url, &quot;//&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L71">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">	   if(user == null)</span>
-		{
-<span class="nc" id="L74">			Logger.error(FileIndexer.class,&quot;prihlaseny user je NULL&quot;);</span>
-<span class="nc" id="L75">			return false;</span>
-		}
-<span class="fc" id="L77">		boolean ok = true;</span>
-		try
-		{
-<span class="fc" id="L80">			String realPath = Tools.getRealPath(url);</span>
-<span class="fc" id="L81">			String data = null;</span>
-
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			if (url.indexOf('.')==-1)</span>
-			{
-<span class="nc" id="L85">				Logger.error(FileIndexer.class,&quot;url musi obsahovat bodku: &quot;+url);</span>
-<span class="nc" id="L86">				return(false);</span>
-			}
-
-<span class="fc" id="L89">			String ext = url.substring(url.lastIndexOf('.')).toLowerCase();</span>
-
-			try
-			{
-<span class="fc" id="L93">				data = FileIndexerTools.getData(url, realPath, data, ext);</span>
-			}
-<span class="nc" id="L95">			catch (Exception ex)</span>
-			{
-<span class="nc" id="L97">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L98">			}</span>
-
-<span class="pc bpc" id="L100" title="3 of 6 branches missed.">			if (Tools.isEmpty(data) &amp;&amp; Constants.getBoolean(&quot;fileIndexerIndexAllFiles&quot;) &amp;&amp; url.startsWith(&quot;/files/&quot;))</span>
-			{
-<span class="nc" id="L102">				data = &quot;&lt;p&gt;&lt;a href='&quot;+url+&quot;'&gt;&quot;+url+&quot;&lt;/p&gt;&quot;;</span>
-			}
-<span class="pc bpc" id="L104" title="1 of 4 branches missed.">			if (data != null &amp;&amp; data.trim().length() &gt; 4)</span>
-			{
-				//mame text, mozeme zaindexovat
-
-<span class="fc" id="L108">				data = FileIndexerTools.cleanText(url, data);</span>
-
-				//Logger.debug(FileIndexer.class, data);
-
-				//Logger.println(FileIndexer.class,data);
-<span class="fc" id="L113">				Logger.println(FileIndexer.class,&quot;done, size=&quot;+data.length());</span>
-<span class="fc" id="L114">				ResultBean result = new ResultBean();</span>
-<span class="fc" id="L115">				result.setFile(url);</span>
-<span class="fc" id="L116">				result.setData(data);</span>
-<span class="fc" id="L117">				indexedFiles.add(result);</span>
-
-				//vytvor Stranku s tymto suborom
-<span class="fc" id="L120">				StringTokenizer st = new StringTokenizer(FileIndexerTools.getUrlForGroupsTokenize(url), &quot;/&quot;);</span>
-<span class="fc" id="L121">				int parentDirId = 0;</span>
-<span class="fc" id="L122">				int parentTempId = 1;</span>
-				String dirName;
-<span class="fc" id="L124">				GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L125">				GroupDetails group = null;</span>
-<span class="fc" id="L126">				int level = 0;</span>
-<span class="fc" id="L127">				int sortPriority = Constants.getInt(&quot;fileIndexerSortPriority&quot;);</span>
-<span class="fc bfc" id="L128" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
-				{
-<span class="fc" id="L130">					level++;</span>
-<span class="fc" id="L131">					dirName = st.nextToken();</span>
-
-<span class="pc bpc" id="L133" title="3 of 4 branches missed.">					if ((Constants.getBoolean(&quot;multiDomainEnabled&quot;)==false &amp;&amp; level &gt; 1) ||</span>
-<span class="pc bpc" id="L134" title="1 of 4 branches missed.">						 (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==true  &amp;&amp; level &gt; 2))</span>
-					{
-						//automaticke navysovanie priority
-<span class="fc" id="L137">						sortPriority = sortPriority * 10;</span>
-					}
-
-<span class="fc bfc" id="L140" title="All 2 branches covered.">					if (st.hasMoreTokens())</span>
-					{
-						//je to skutocne adresar
-<span class="fc" id="L143">						boolean changed = false;</span>
-<span class="fc" id="L144">						group = FileIndexerTools.findGroup(groupsDB.getGroupsAll(), parentDirId, dirName);</span>
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">						if (group == null)</span>
-						{
-							//vytvor adresar
-<span class="nc" id="L148">							group = new GroupDetails();</span>
-<span class="nc" id="L149">							changed = true;</span>
-						}
-<span class="pc bpc" id="L151" title="2 of 4 branches missed.">						if (changed || group.getGroupName().equals(dirName)==false ||</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">							 group.getSortPriority()!=sortPriority)</span>
-						{
-<span class="pc bpc" id="L154" title="2 of 4 branches missed.">							if (level==1 &amp;&amp; Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
-							{
-								//je to root, s nim nerobime nic
-							}
-							else
-							{
-<span class="nc" id="L160">								group.setGroupName(dirName);</span>
-<span class="nc" id="L161">								group.setParentGroupId(parentDirId);</span>
-<span class="nc" id="L162">								group.setSortPriority(sortPriority);</span>
-<span class="nc" id="L163">								group.setTempId(parentTempId);</span>
-<span class="nc" id="L164">								group.setMenuType(GroupDetails.MENU_TYPE_HIDDEN);</span>
-
-<span class="nc bnc" id="L166" title="All 4 branches missed.">								if (level == 2 &amp;&amp; Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
-								{
-									//aby sa nam multidomain subfolder nezobrazoval v ceste
-<span class="nc" id="L169">									group.setNavbar(&quot;&amp;nbsp;&quot;);</span>
-<span class="nc" id="L170">									group.setUrlDirName(dirName);</span>
-								}
-
-<span class="nc" id="L173">								groupsDB.setGroup(group);</span>
-							}
-						}
-
-<span class="fc" id="L177">						parentDirId = group.getGroupId();</span>
-<span class="fc" id="L178">						parentTempId = group.getTempId();</span>
-<span class="fc" id="L179">					}</span>
-<span class="pc bpc" id="L180" title="1 of 2 branches missed.">					else if (group != null)</span>
-					{
-<span class="fc" id="L182">						IwcmFile f = new IwcmFile(realPath);</span>
-<span class="fc" id="L183">						long length = f.length();</span>
-
-						//uz sme na konci, dirName je uz fileName
-<span class="fc" id="L186">						Logger.println(FileIndexer.class,&quot;Vytvaram stranku: &quot; + dirName);</span>
-
-<span class="fc" id="L188">						int docId = DocDB.getInstance().getDocIdFromURLImpl(url+&quot;.html&quot;, null);</span>
-<span class="pc bpc" id="L189" title="1 of 2 branches missed.">						if (docId &lt; 1) docId = FileIndexerTools.getFileDocId(dirName, group.getGroupId());</span>
-
-<span class="fc" id="L191">						EditorForm ef = EditorDB.getEditorForm(request, docId, -1, parentDirId);</span>
-						//suborom nastavujem rovnaku pripritu ako je priorita adresara
-<span class="fc" id="L193">						ef.setGroupId(parentDirId);</span>
-<span class="fc" id="L194">						ef.setSortPriority(group.getSortPriority());</span>
-<span class="fc" id="L195">						ef.setTitle(dirName);</span>
-<span class="fc" id="L196">						ef.setData(data);</span>
-<span class="fc" id="L197">						ef.setExternalLink(url);</span>
-<span class="fc" id="L198">						ef.setVirtualPath(url+&quot;.html&quot;);</span>
-<span class="fc" id="L199">						ef.setNavbar(dirName +  &quot; (&quot;+Tools.formatFileSize(length)+&quot;)&quot;);</span>
-
-						//ak este existuje user, ktory subor povodne zaindexoval, zachovaj ho, inak zmen na aktualne prihlaseneho
-<span class="fc" id="L202">						UserDetails author = UsersDB.getUser(ef.getAuthorId());</span>
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">						if (author == null)	ef.setAuthorId(user.getUserId());</span>
-
-<span class="fc" id="L205">						ef.setSearchable(true);</span>
-<span class="fc" id="L206">						ef.setAvailable(true);</span>
-<span class="fc" id="L207">						ef.setCacheable(false);</span>
-<span class="fc" id="L208">						ef.setPublish(&quot;1&quot;);</span>
-
-						//ak mame v requeste nejake editor hodnoty, nastavme ich, tie z request.getAttribute sa pouzivaju v UnzipAction
-<span class="pc bpc" id="L211" title="1 of 2 branches missed.">						if (request.getParameter(&quot;passwordProtected&quot;)!=null) BeanUtils.setProperty(ef, &quot;passwordProtected&quot;, request.getParameterValues(&quot;passwordProtected&quot;));</span>
-<span class="pc bpc" id="L212" title="1 of 2 branches missed.">						if (request.getAttribute(&quot;passwordProtected&quot;)!=null) ef.setPasswordProtectedString((String)request.getAttribute(&quot;passwordProtected&quot;));</span>
-
-<span class="fc" id="L214">						String[] fields = {&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;, &quot;F&quot;, &quot;G&quot;, &quot;H&quot;, &quot;I&quot;, &quot;J&quot;, &quot;K&quot;, &quot;L&quot;};</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">						for (String pismeno : fields)</span>
-						{
-<span class="fc" id="L217">							String value = request.getParameter(&quot;field&quot;+pismeno);</span>
-<span class="pc bpc" id="L218" title="1 of 2 branches missed.">							if (value==null) value = (String)request.getAttribute(&quot;field&quot;+pismeno);</span>
-
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">							if (value != null) BeanUtils.setProperty(ef, &quot;field&quot;+pismeno, value);</span>
-						}
-<span class="pc bpc" id="L222" title="1 of 2 branches missed.">						if (request.getParameter(&quot;perexGroup&quot;)!=null) BeanUtils.setProperty(ef, &quot;perexGroup&quot;, request.getParameterValues(&quot;perexGroup&quot;));</span>
-<span class="pc bpc" id="L223" title="1 of 2 branches missed.">						if(Tools.isNotEmpty(Constants.getString(&quot;beforeFileIndexerEditorSaveMathod&quot;)))</span>
-						{
-							try{
-<span class="nc" id="L226">								String saveMethod = Constants.getString(&quot;beforeFileIndexerEditorSaveMathod&quot;);</span>
-<span class="nc" id="L227">								String clazzName = saveMethod.substring( 0, saveMethod.lastIndexOf('.'));</span>
-<span class="nc" id="L228">								String methodName = saveMethod.substring( clazzName.length() +1 );</span>
-<span class="nc" id="L229">								Class&lt;?&gt; clazz = Class.forName(clazzName);</span>
-<span class="nc" id="L230">								Method method = clazz.getMethod(methodName, Class.forName(&quot;sk.iway.iwcm.editor.EditorForm&quot;),Class.forName(&quot;javax.servlet.http.HttpServletRequest&quot;));</span>
-<span class="nc" id="L231">								method.invoke(null, ef,request);</span>
-							}
-<span class="nc" id="L233">							catch(Exception e){</span>
-<span class="nc" id="L234">								Logger.debug(FileIndexer.class, &quot;Exception while trying to invoke &quot;+Constants.getString(&quot;beforeFileIndexerEditorSaveMathod&quot;)+&quot; , cause: &quot;+e.getMessage());</span>
-<span class="nc" id="L235">							}</span>
-						}
-<span class="fc" id="L237">						int saveEditOk = EditorDB.saveEditorForm(ef, request);</span>
-
-<span class="fc" id="L239">						EditorDB.cleanSessionData(request);</span>
-
-<span class="pc bpc" id="L241" title="1 of 2 branches missed.">						if(saveEditOk &lt; 1)</span>
-						{
-<span class="nc" id="L243">							Logger.error(FileIndexer.class,&quot;nepodarilo sa ulozit stranku saveEditOk &quot;+saveEditOk);</span>
-<span class="nc" id="L244">							ok = false;</span>
-						}
-<span class="fc" id="L246">						result.setDocId(ef.getDocId());</span>
-<span class="fc" id="L247">					}</span>
-				}
-			}
-		}
-<span class="nc" id="L251">		catch (Exception ex)</span>
-		{
-<span class="nc" id="L253">			ok = false;</span>
-<span class="nc" id="L254">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L255">		}</span>
-
-<span class="fc" id="L257">		return(ok);</span>
+<span class="nc" id="L62">		return FileIndexerTools.indexFile(url, indexedFiles, request);</span>
 	}
 
 
@@ -266,68 +71,69 @@ public class FileIndexer
 	 */
 	public static void indexDir(String dirUrl, List&lt;ResultBean&gt; indexedFiles, HttpServletRequest request)
 	{
-<span class="nc" id="L269">		indexDir(dirUrl, indexedFiles, request, null);</span>
-<span class="nc" id="L270">	}</span>
+<span class="nc" id="L74">		indexDir(dirUrl, indexedFiles, request, null);</span>
+<span class="nc" id="L75">	}</span>
 
 	public static void indexDir(String dirUrl, List&lt;ResultBean&gt; indexedFiles, HttpServletRequest request, PrintWriter out)
 	{
-<span class="fc" id="L274">		Logger.println(FileIndexer.class,&quot;index dir: &quot; + dirUrl);</span>
+<span class="fc" id="L79">		Logger.println(FileIndexer.class,&quot;index dir: &quot; + dirUrl);</span>
 
-<span class="pc bpc" id="L276" title="1 of 2 branches missed.">		if (out != null)</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">		if (out != null)</span>
 		{
-<span class="fc" id="L278">			out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L83">			out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
 		}
 
-<span class="fc" id="L281">		disablePagesInDir(dirUrl);</span>
+<span class="fc" id="L86">		disablePagesInDir(dirUrl);</span>
 
-<span class="fc bfc" id="L283" title="All 2 branches covered.">		if (dirUrl.contains(&quot;backup&quot;)) {</span>
-<span class="pc bpc" id="L284" title="1 of 2 branches missed.">			if (out != null) out.println(dirUrl+&quot; is BACKUP, skipping&lt;/br&gt;&quot;);</span>
-<span class="fc" id="L285">			return;</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (dirUrl.contains(&quot;backup&quot;)) {</span>
+<span class="fc" id="L89">			Logger.error(FileIndexer.class, dirUrl+&quot; is BACKUP, skipping&quot;);</span>
+<span class="fc" id="L90">			return;</span>
 		}
 
-<span class="fc" id="L288">		IwcmFile dir = new IwcmFile(Tools.getRealPath(dirUrl));</span>
-<span class="fc" id="L289">		IwcmFile[] files = dir.listFiles();</span>
+<span class="fc" id="L93">		IwcmFile dir = new IwcmFile(Tools.getRealPath(dirUrl));</span>
+<span class="fc" id="L94">		IwcmFile[] files = dir.listFiles();</span>
 		IwcmFile f;
-<span class="fc" id="L291">		int size = files.length;</span>
+<span class="fc" id="L96">		int size = files.length;</span>
 		int i;
 
-<span class="fc" id="L294">		DebugTimer dt = new DebugTimer(&quot;FileIndexer&quot;);</span>
+<span class="fc" id="L99">		DebugTimer dt = new DebugTimer(&quot;FileIndexer&quot;);</span>
 
-<span class="fc bfc" id="L296" title="All 2 branches covered.">		for (i=0; i&lt;size; i++)</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">		for (i=0; i&lt;size; i++)</span>
 		{
-<span class="fc" id="L298">			f = files[i];</span>
+<span class="fc" id="L103">			f = files[i];</span>
 
-<span class="fc" id="L300">			Logger.debug(FileIndexer.class, &quot;indexDir, i=&quot;+i+&quot;/&quot;+size+&quot; f=&quot;+f.getAbsolutePath()+&quot; dir=&quot;+f.isDirectory()+&quot; canRead=&quot;+f.canRead());</span>
+<span class="fc" id="L105">			Logger.debug(FileIndexer.class, &quot;indexDir, i=&quot;+i+&quot;/&quot;+size+&quot; f=&quot;+f.getAbsolutePath()+&quot; dir=&quot;+f.isDirectory()+&quot; canRead=&quot;+f.canRead());</span>
 
-<span class="fc bfc" id="L302" title="All 2 branches covered.">			if (f.isDirectory())</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">			if (f.isDirectory())</span>
 			{
 				//rekurzia
-<span class="fc" id="L305">				indexDir(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request, out);</span>
+<span class="fc" id="L110">				indexDir(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request, out);</span>
 			}
-<span class="pc bpc" id="L307" title="1 of 2 branches missed.">			else if (f.canRead())</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">			else if (f.canRead())</span>
 			{
 
-<span class="pc bpc" id="L310" title="1 of 2 branches missed.">				if (out != null)</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">				if (out != null)</span>
 				{
-<span class="fc" id="L312">					out.println(dirUrl + &quot;/&quot; + f.getName());</span>
-<span class="fc" id="L313">					out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
-<span class="fc" id="L314">					out.flush();</span>
+<span class="fc" id="L117">					out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L118">					out.flush();</span>
 				}
 
-<span class="fc" id="L317">				indexFile(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request);</span>
+<span class="fc" id="L121">				boolean indexed = FileIndexerTools.indexFile(dirUrl + &quot;/&quot; + f.getName(), indexedFiles, request);</span>
 
-<span class="pc bpc" id="L319" title="1 of 2 branches missed.">				if (out != null)</span>
+<span class="pc bpc" id="L123" title="1 of 4 branches missed.">				if (out != null &amp;&amp; indexed)</span>
 				{
-<span class="fc" id="L321">					long lastDiff = dt.diff(dirUrl + &quot;/&quot; + f.getName());</span>
-<span class="fc" id="L322">					out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L323">					out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
-<span class="fc" id="L324">					out.flush();</span>
+<span class="fc" id="L125">					out.println(dirUrl + &quot;/&quot; + f.getName());</span>
+
+<span class="fc" id="L127">					long lastDiff = dt.diff(dirUrl + &quot;/&quot; + f.getName());</span>
+<span class="fc" id="L128">					out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L129">					out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L130">					out.flush();</span>
 				}
 			}
 		}
 
-<span class="fc" id="L329">		deleteDisabledPagesInDir(dirUrl);</span>
-<span class="fc" id="L330">	}</span>
+<span class="fc" id="L135">		deleteDisabledPagesInDir(dirUrl);</span>
+<span class="fc" id="L136">	}</span>
 
 	/**
 	 * Pred reindexaciou adresara zakaze zobrazenie vsetkych web stranok, ktore sa nasledne vymazu (aby sa aktualizoval stav voci file systemu)
@@ -336,45 +142,45 @@ public class FileIndexer
 	private static void disablePagesInDir(String dirUrl)
 	{
 		//otaguj stare web stranky aby sa vymazali neexistujuce stranky (subory)
-<span class="fc" id="L339">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L340">		GroupDetails rootGroup = groupsDB.getGroupByPath(dirUrl);</span>
-<span class="pc bpc" id="L341" title="1 of 2 branches missed.">		if (rootGroup != null)</span>
+<span class="fc" id="L145">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L146">		GroupDetails rootGroup = groupsDB.getGroupByPath(dirUrl);</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">		if (rootGroup != null)</span>
 		{
-<span class="nc" id="L343">			Connection db_conn = null;</span>
-<span class="nc" id="L344">			PreparedStatement ps = null;</span>
+<span class="nc" id="L149">			Connection db_conn = null;</span>
+<span class="nc" id="L150">			PreparedStatement ps = null;</span>
 			try
 			{
-<span class="nc" id="L347">				db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L348">				ps = db_conn.prepareStatement(&quot;UPDATE documents SET available=? WHERE group_id=?&quot;);</span>
-<span class="nc" id="L349">				ps.setBoolean(1, false);</span>
-<span class="nc" id="L350">				ps.setInt(2, rootGroup.getGroupId());</span>
-<span class="nc" id="L351">				ps.execute();</span>
-<span class="nc" id="L352">				ps.close();</span>
-<span class="nc" id="L353">				db_conn.close();</span>
-<span class="nc" id="L354">				ps = null;</span>
-<span class="nc" id="L355">				db_conn = null;</span>
+<span class="nc" id="L153">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L154">				ps = db_conn.prepareStatement(&quot;UPDATE documents SET available=? WHERE group_id=?&quot;);</span>
+<span class="nc" id="L155">				ps.setBoolean(1, false);</span>
+<span class="nc" id="L156">				ps.setInt(2, rootGroup.getGroupId());</span>
+<span class="nc" id="L157">				ps.execute();</span>
+<span class="nc" id="L158">				ps.close();</span>
+<span class="nc" id="L159">				db_conn.close();</span>
+<span class="nc" id="L160">				ps = null;</span>
+<span class="nc" id="L161">				db_conn = null;</span>
 
-<span class="nc" id="L357">				DocDB.getInstance(true);</span>
+<span class="nc" id="L163">				DocDB.getInstance(true);</span>
 			}
-<span class="nc" id="L359">			catch (Exception ex)</span>
+<span class="nc" id="L165">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L361">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L167">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="nc bnc" id="L367" title="All 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L368">						ps.close();</span>
-<span class="nc bnc" id="L369" title="All 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L370">						db_conn.close();</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L174">						ps.close();</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L176">						db_conn.close();</span>
 				}
-<span class="nc" id="L372">				catch (Exception ex2)</span>
+<span class="nc" id="L178">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L374">				}</span>
+<span class="nc" id="L180">				}</span>
 			}
 		}
-<span class="fc" id="L377">	}</span>
+<span class="fc" id="L183">	}</span>
 
 	/**
 	 * Po reindexacii adresara vymaze neexistujuce subory (stranky)
@@ -383,109 +189,112 @@ public class FileIndexer
 	private static void deleteDisabledPagesInDir(String dirUrl)
 	{
 		//otaguj stare web stranky aby sa vymazali neexistujuce stranky (subory)
-<span class="fc" id="L386">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L387">		GroupDetails rootGroup = groupsDB.getGroupByPath(dirUrl);</span>
-<span class="pc bpc" id="L388" title="1 of 2 branches missed.">		if (rootGroup != null)</span>
+<span class="fc" id="L192">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L193">		GroupDetails rootGroup = groupsDB.getGroupByPath(dirUrl);</span>
+<span class="pc bpc" id="L194" title="1 of 2 branches missed.">		if (rootGroup != null)</span>
 		{
-<span class="nc" id="L390">			Connection db_conn = null;</span>
-<span class="nc" id="L391">			PreparedStatement ps = null;</span>
+<span class="nc" id="L196">			Connection db_conn = null;</span>
+<span class="nc" id="L197">			PreparedStatement ps = null;</span>
 			try
 			{
-<span class="nc" id="L394">				db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L395">				ps = db_conn.prepareStatement(&quot;DELETE FROM documents WHERE available=? AND group_id=?&quot;);</span>
-<span class="nc" id="L396">				ps.setBoolean(1, false);</span>
-<span class="nc" id="L397">				ps.setInt(2, rootGroup.getGroupId());</span>
-<span class="nc" id="L398">				ps.execute();</span>
-<span class="nc" id="L399">				ps.close();</span>
-<span class="nc" id="L400">				db_conn.close();</span>
-<span class="nc" id="L401">				ps = null;</span>
-<span class="nc" id="L402">				db_conn = null;</span>
+<span class="nc" id="L200">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L201">				ps = db_conn.prepareStatement(&quot;DELETE FROM documents WHERE available=? AND group_id=?&quot;);</span>
+<span class="nc" id="L202">				ps.setBoolean(1, false);</span>
+<span class="nc" id="L203">				ps.setInt(2, rootGroup.getGroupId());</span>
+<span class="nc" id="L204">				ps.execute();</span>
+<span class="nc" id="L205">				ps.close();</span>
+<span class="nc" id="L206">				db_conn.close();</span>
+<span class="nc" id="L207">				ps = null;</span>
+<span class="nc" id="L208">				db_conn = null;</span>
 
-<span class="nc" id="L404">				DocDB.getInstance(true);</span>
+<span class="nc" id="L210">				DocDB.getInstance(true);</span>
 			}
-<span class="nc" id="L406">			catch (Exception ex)</span>
+<span class="nc" id="L212">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L408">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L214">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="nc bnc" id="L414" title="All 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L415">						ps.close();</span>
-<span class="nc bnc" id="L416" title="All 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L417">						db_conn.close();</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L221">						ps.close();</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L223">						db_conn.close();</span>
 				}
-<span class="nc" id="L419">				catch (Exception ex2)</span>
+<span class="nc" id="L225">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L421">				}</span>
+<span class="nc" id="L227">				}</span>
 			}
 		}
-<span class="fc" id="L424">	}</span>
+<span class="fc" id="L230">	}</span>
 
 	/**
 	 * Vrati docId pre zadanu URL adresu suboru (pre multidomain uz musi byt zdekodovana na filesystem URL)
 	 * @param url
 	 * @param request
 	 * @return
+	 *
+	 * @deprecated - not used anymore
 	 */
+	@Deprecated
 	public static int getFileDocId(String url, HttpServletRequest request)
 	{
-<span class="nc" id="L434">		int docId = -1;</span>
-<span class="nc" id="L435">		Connection db_conn = null;</span>
-<span class="nc" id="L436">		PreparedStatement ps = null;</span>
-<span class="nc" id="L437">		ResultSet rs = null;</span>
+<span class="nc" id="L243">		int docId = -1;</span>
+<span class="nc" id="L244">		Connection db_conn = null;</span>
+<span class="nc" id="L245">		PreparedStatement ps = null;</span>
+<span class="nc" id="L246">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L440">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
-<span class="nc" id="L441">			ps = db_conn.prepareStatement(&quot;SELECT doc_id FROM documents WHERE virtual_path=? OR virtual_path=?&quot;);</span>
-<span class="nc" id="L442">			ps.setString(1, url+&quot;.html&quot;);</span>
-<span class="nc" id="L443">			ps.setString(2, Tools.replace(url, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;);</span>
-<span class="nc" id="L444">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L445" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="nc" id="L249">			db_conn = DBPool.getConnection(DBPool.getDBName(request));</span>
+<span class="nc" id="L250">			ps = db_conn.prepareStatement(&quot;SELECT doc_id FROM documents WHERE virtual_path=? OR virtual_path=?&quot;);</span>
+<span class="nc" id="L251">			ps.setString(1, url+&quot;.html&quot;);</span>
+<span class="nc" id="L252">			ps.setString(2, Tools.replace(url, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;);</span>
+<span class="nc" id="L253">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="nc" id="L447">				docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L256">				docId = rs.getInt(&quot;doc_id&quot;);</span>
 			}
-<span class="nc" id="L449">			rs.close();</span>
-<span class="nc" id="L450">			ps.close();</span>
-<span class="nc" id="L451">			db_conn.close();</span>
-<span class="nc" id="L452">			rs = null;</span>
-<span class="nc" id="L453">			ps = null;</span>
-<span class="nc" id="L454">			db_conn = null;</span>
+<span class="nc" id="L258">			rs.close();</span>
+<span class="nc" id="L259">			ps.close();</span>
+<span class="nc" id="L260">			db_conn.close();</span>
+<span class="nc" id="L261">			rs = null;</span>
+<span class="nc" id="L262">			ps = null;</span>
+<span class="nc" id="L263">			db_conn = null;</span>
 		}
-<span class="nc" id="L456">		catch (Exception ex)</span>
+<span class="nc" id="L265">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L458">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L267">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L464" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L465">					rs.close();</span>
-<span class="nc bnc" id="L466" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L467">					ps.close();</span>
-<span class="nc bnc" id="L468" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L469">					db_conn.close();</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L274">					rs.close();</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L276">					ps.close();</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L278">					db_conn.close();</span>
 			}
-<span class="nc" id="L471">			catch (Exception ex2)</span>
+<span class="nc" id="L280">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L473">			}</span>
+<span class="nc" id="L282">			}</span>
 		}
 
-<span class="nc" id="L476">		return(docId);</span>
+<span class="nc" id="L285">		return(docId);</span>
 	}
 
 
 	public static boolean isFileIndexerConfigured()
 	{
-<span class="pc bpc" id="L482" title="1 of 2 branches missed.">		if (GroupsDB.getInstance().checkExist(0, &quot;files&quot;)) return true;</span>
-<span class="pc bpc" id="L483" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">		if (GroupsDB.getInstance().checkExist(0, &quot;files&quot;)) return true;</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;))</span>
 		{
-<span class="fc" id="L485">            int domainId = CloudToolsForCore.getDomainId();</span>
-<span class="pc bpc" id="L486" title="1 of 2 branches missed.">			if (GroupsDB.getInstance().checkExist(domainId, &quot;files&quot;)) return true;</span>
+<span class="fc" id="L294">            int domainId = CloudToolsForCore.getDomainId();</span>
+<span class="pc bpc" id="L295" title="1 of 2 branches missed.">			if (GroupsDB.getInstance().checkExist(domainId, &quot;files&quot;)) return true;</span>
 		}
-<span class="nc" id="L488">		return false;</span>
+<span class="nc" id="L297">		return false;</span>
 	}
 
 	/**
@@ -493,15 +302,15 @@ public class FileIndexer
 	 */
 	@Deprecated
 	public static void indexFile(String url, UserDetails user){
-<span class="nc" id="L496">		FileIndexerTools.indexFile(url,user);</span>
-<span class="nc" id="L497">	}</span>
+<span class="nc" id="L305">		FileIndexerTools.indexFile(url,user);</span>
+<span class="nc" id="L306">	}</span>
 
 	/**
 	 * @deprecated - use FileIndexerTools.deleteIndexedFile
 	 */
 	@Deprecated
 	public static boolean deleteIndexedFile(String url){
-<span class="nc" id="L504">		return FileIndexerTools.deleteIndexedFile(url);</span>
+<span class="nc" id="L313">		return FileIndexerTools.deleteIndexedFile(url);</span>
 	}
 
 	/**
@@ -509,7 +318,7 @@ public class FileIndexer
 	 */
 	@Deprecated
 	public static GroupDetails findGroup(List&lt;GroupDetails&gt; groups, int parentGroupId, String name){
-<span class="nc" id="L512">		return FileIndexerTools.findGroup(groups,parentGroupId,name);</span>
+<span class="nc" id="L321">		return FileIndexerTools.findGroup(groups,parentGroupId,name);</span>
 	}
 
 	/**
@@ -526,72 +335,67 @@ public class FileIndexer
 		HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
 
 		//If user is not logged, redirect him to loggon
-<span class="fc" id="L529">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L530" title="2 of 4 branches missed.">		if (user == null || user.isAdmin() == false) {</span>
-<span class="nc" id="L531">			response.sendRedirect(&quot;/admin/logon.jsp&quot;);</span>
-<span class="nc" id="L532">			return;</span>
+<span class="nc" id="L338">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L339" title="All 4 branches missed.">		if (user == null || user.isAdmin() == false) {</span>
+<span class="nc" id="L340">			response.sendRedirect(&quot;/admin/logon.jsp&quot;);</span>
+<span class="nc" id="L341">			return;</span>
 		}
 
-<span class="pc bpc" id="L535" title="1 of 4 branches missed.">		if (Tools.isNotEmpty(file) &amp;&amp; Tools.isEmpty(dir)) {</span>
-<span class="fc" id="L536">			int last = file.lastIndexOf(&quot;/&quot;);</span>
-<span class="pc bpc" id="L537" title="1 of 2 branches missed.">			if (last &gt; 0) dir = file.substring(0, last);</span>
+<span class="nc bnc" id="L344" title="All 4 branches missed.">		if (Tools.isNotEmpty(file) &amp;&amp; Tools.isEmpty(dir)) {</span>
+<span class="nc" id="L345">			int last = file.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">			if (last &gt; 0) dir = file.substring(0, last);</span>
 		}
 
-<span class="fc" id="L540">		List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L349">		List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L542">		response.setContentType(&quot;text/html; charset=&quot; + SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L351">		response.setContentType(&quot;text/html; charset=&quot; + SetCharacterEncodingFilter.getEncoding());</span>
 
-<span class="fc" id="L544">		PrintWriter out = response.getWriter();</span>
-<span class="fc" id="L545">		Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L353">		PrintWriter out = response.getWriter();</span>
+<span class="nc" id="L354">		Prop prop = Prop.getInstance(request);</span>
 
-<span class="fc" id="L547">		out.println(&quot;&lt;html&gt;&lt;head&gt;&lt;LINK rel='stylesheet' href='/admin/css/style.css'&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
-<span class="fc" id="L548">		out.println(&quot;&lt;strong&gt;&quot; + prop.getText(&quot;findexer.indexing&quot;) + &quot;&lt;/strong&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L356">		out.println(&quot;&lt;html&gt;&lt;head&gt;&lt;LINK rel='stylesheet' href='/admin/css/style.css'&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L357">		out.println(&quot;&lt;strong&gt;&quot; + prop.getText(&quot;findexer.indexing&quot;) + &quot;&lt;/strong&gt;&lt;br/&gt;&quot;);</span>
 
-<span class="pc bpc" id="L550" title="1 of 2 branches missed.">		if (user.isFolderWritable(dir)) {</span>
-<span class="fc bfc" id="L551" title="All 2 branches covered.">			if (Tools.isNotEmpty(file)) {</span>
-<span class="fc" id="L552">				String[] filesArray = {file};</span>
-<span class="pc bpc" id="L553" title="2 of 4 branches missed.">				if(filesArray != null &amp;&amp; filesArray.length &gt; 0) {</span>
-<span class="fc bfc" id="L554" title="All 2 branches covered.">					for(String fileTmp : filesArray) {</span>
-<span class="pc bpc" id="L555" title="1 of 2 branches missed.">						if(fileTmp.indexOf('/') == -1)</span>
-<span class="nc" id="L556">							fileTmp = dir + &quot;/&quot; + fileTmp;</span>
-<span class="fc" id="L557">						Logger.println(FileIndexer.class,&quot;indexujem subor: &quot; + fileTmp);</span>
-<span class="fc" id="L558">						out.println(fileTmp);</span>
-<span class="fc" id="L559">						out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
-<span class="fc" id="L560">						out.flush();</span>
-<span class="fc" id="L561">						DebugTimer dt = new DebugTimer(&quot;FileIndexer&quot;);</span>
-<span class="fc" id="L562">						FileIndexer.indexFile(fileTmp, indexedFiles, request);</span>
-<span class="fc" id="L563">						long lastDiff = dt.diff(fileTmp);</span>
-<span class="fc" id="L564">						out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L565">						out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
-<span class="fc" id="L566">						out.flush();</span>
-					}
-				}
-<span class="fc" id="L569">				dir = null;</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">		if (user.isFolderWritable(dir)) {</span>
+<span class="nc bnc" id="L360" title="All 2 branches missed.">			if (Tools.isNotEmpty(file)) {</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">				if(file.indexOf('/') == -1)</span>
+<span class="nc" id="L362">					file = dir + &quot;/&quot; + file;</span>
+<span class="nc" id="L363">				Logger.println(FileIndexer.class,&quot;indexujem subor: &quot; + file);</span>
+<span class="nc" id="L364">				out.println(file);</span>
+<span class="nc" id="L365">				out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L366">				out.flush();</span>
+<span class="nc" id="L367">				DebugTimer dt = new DebugTimer(&quot;FileIndexer&quot;);</span>
+<span class="nc" id="L368">				FileIndexerTools.indexFile(file, indexedFiles, request);</span>
+<span class="nc" id="L369">				long lastDiff = dt.diff(file);</span>
+<span class="nc" id="L370">				out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L371">				out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L372">				out.flush();</span>
+<span class="nc" id="L373">				dir = null;</span>
 			}
 
-<span class="pc bpc" id="L572" title="2 of 6 branches missed.">			if (Tools.isNotEmpty(dir) &amp;&amp; dir != null &amp;&amp; dir.contains(&quot;WEB-INF&quot;) == false) {</span>
+<span class="nc bnc" id="L376" title="All 6 branches missed.">			if (Tools.isNotEmpty(dir) &amp;&amp; dir != null &amp;&amp; dir.contains(&quot;WEB-INF&quot;) == false) {</span>
 				//budeme rovno vypisovat ak sa nejedna o hromadne indexovanie
-<span class="fc" id="L574">				sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
+<span class="nc" id="L378">				sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
 
-<span class="fc bfc" id="L576" title="All 2 branches covered.">				for (int i = 0; i &lt; 10; i++) {</span>
-<span class="fc" id="L577">					out.println(&quot;                                                                             &quot;);</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">				for (int i = 0; i &lt; 10; i++) {</span>
+<span class="nc" id="L381">					out.println(&quot;                                                                             &quot;);</span>
 				}
-<span class="fc" id="L579">				out.flush();</span>
-<span class="fc" id="L580">				FileIndexer.indexDir(dir, indexedFiles, request, out);</span>
+<span class="nc" id="L383">				out.flush();</span>
+<span class="nc" id="L384">				FileIndexer.indexDir(dir, indexedFiles, request, out);</span>
 			}
 		}
 
-<span class="fc" id="L584">		out.println(&quot;&lt;hr&gt;&quot; + prop.getText(&quot;findex.done&quot;));</span>
+<span class="nc" id="L388">		out.println(&quot;&lt;hr&gt;&quot; + prop.getText(&quot;findex.done&quot;));</span>
 
-<span class="fc" id="L586">		out.println(&quot;&lt;script type='text/javascript'&gt;&quot;);</span>
-<span class="fc" id="L587">		out.println(&quot;if (window.parent != null &amp;&amp; typeof window.parent.hideButtons == 'function')&quot;);</span>
-<span class="fc" id="L588">		out.println(&quot;{&quot;);</span>
-<span class="fc" id="L589">		out.println(&quot;window.parent.hideButtons();&quot;);</span>
-<span class="fc" id="L590">		out.println(&quot;}&quot;);</span>
-<span class="fc" id="L591">		out.print(&quot;window.scrollBy(0, 1000);&quot;);</span>
-<span class="fc" id="L592">		out.print(&quot;&lt;/script&gt;&quot;);</span>
+<span class="nc" id="L390">		out.println(&quot;&lt;script type='text/javascript'&gt;&quot;);</span>
+<span class="nc" id="L391">		out.println(&quot;if (window.parent != null &amp;&amp; typeof window.parent.hideButtons == 'function')&quot;);</span>
+<span class="nc" id="L392">		out.println(&quot;{&quot;);</span>
+<span class="nc" id="L393">		out.println(&quot;window.parent.hideButtons();&quot;);</span>
+<span class="nc" id="L394">		out.println(&quot;}&quot;);</span>
+<span class="nc" id="L395">		out.print(&quot;window.scrollBy(0, 1000);&quot;);</span>
+<span class="nc" id="L396">		out.print(&quot;&lt;/script&gt;&quot;);</span>
 
-<span class="fc" id="L594">		out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
-<span class="fc" id="L595">	}</span>
+<span class="nc" id="L398">		out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L399">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

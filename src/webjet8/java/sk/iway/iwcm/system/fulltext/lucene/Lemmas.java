@@ -2,18 +2,18 @@ package sk.iway.iwcm.system.fulltext.lucene;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Hashtable;
-import java.util.Map;
 
 import io.github.duckasteroid.cdb.Cdb;
 
-import org.apache.commons.pool.impl.GenericObjectPool;
 import org.apache.lucene.analysis.cz.CzechStemmer;
 import org.apache.lucene.analysis.de.GermanMinimalStemmer;
 import org.apache.lucene.analysis.en.EnglishMinimalStemmer;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.fulltext.cdb.CdbCacheListener;
 import sk.iway.iwcm.system.fulltext.cdb.CdbFactory;
 import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
 
@@ -28,11 +28,8 @@ import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
  *@created Date: 4.5.2011 15:40:45
  *@modified $Date: 2004/08/16 06:26:11 $
  */
-@SuppressWarnings("rawtypes")
 public class Lemmas
 {
-	private static final Map<String, GenericObjectPool> pools = new Hashtable<>();
-
 	protected Lemmas() {
 		//utility class
 	}
@@ -64,7 +61,6 @@ public class Lemmas
 	 * @param length
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public static char[] get(String language, char[] form,int offset,int length)
 	{
 		if (Constants.getBoolean("luceneIndexingSkAlgorithmicStemming") && "sk".equals(language)){
@@ -96,32 +92,25 @@ public class Lemmas
 			return stemmed;
 		}
 
-		synchronized (pools)
-		{
-			if (!pools.containsKey(language))
-			{
-				GenericObjectPool pool = new GenericObjectPool(new CdbFactory(language,CdbFactory.Type.Lemmas));
-				pools.put(language, pool);
+		try {
+			Cache c = Cache.getInstance();
+			CdbCacheListener.init();
+			String CACHE_KEY = "Lucene.Lemmas."+language+"."+Thread.currentThread().getId();
+			Cdb cdb = (Cdb)c.getObject(CACHE_KEY);
+			if (cdb == null) {
+				cdb = (Cdb)new CdbFactory(language,CdbFactory.Type.LEMMAS).makeObject();
+				c.setObjectSeconds(CACHE_KEY, cdb, 5*60, false);
 			}
-			try
-			{
-				GenericObjectPool pool = pools.get(language);
-				Cdb cdb = (Cdb)pool.borrowObject();
-				ByteBuffer bytes = cdb.find( ByteBuffer.wrap(CdbUtils.encode(form, offset, length)) );
 
-				pool.returnObject(cdb);
-				if (bytes != null && bytes.hasArray())
-				{
-					return CdbUtils.decode(bytes.array());
-				}else{
-					return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();
-				}
-			}
-			catch (Exception e)
+			ByteBuffer bytes = cdb.find( ByteBuffer.wrap(CdbUtils.encode(form, offset, length)) );
+
+			if (bytes != null && bytes.hasArray())
 			{
-				//sk.iway.iwcm.Logger.error(e);
+				return CdbUtils.decode(bytes.array());
 			}
+		} catch (Exception e) {
+			Logger.error(Lemmas.class, e);
 		}
-		return form;
+		return SlovakStemmer.stem(new String(form,offset,length)).toCharArray();
 	}
 }

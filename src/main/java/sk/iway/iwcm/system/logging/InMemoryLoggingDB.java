@@ -126,6 +126,7 @@ public class InMemoryLoggingDB {
     }
 
     public static void setQueueSize(int size) {
+        if (size < 1) size = 200;
         if (queue.maxSize()!=size) {
             Logger.debug(InMemoryLoggingDB.class, "Reseting queue size to "+size+" originalSize="+queue.maxSize());
             queue = new CircularFifoQueue<>(size);

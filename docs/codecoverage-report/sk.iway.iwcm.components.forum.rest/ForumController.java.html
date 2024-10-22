@@ -30,7 +30,7 @@ import sk.iway.iwcm.components.forum.jpa.DocForumEntity;
     @PostMapping(&quot;/saveForumFile&quot;)
     public String saveForumFile(@RequestParam(&quot;uploadedFile&quot;) CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
         try {
-<span class="nc" id="L33">            return DocForumService.uploadForumFile(uploadFile, request, response);</span>
+<span class="fc" id="L33">            return DocForumService.uploadForumFile(uploadFile, request);</span>
 <span class="nc" id="L34">        } catch(Exception e) {</span>
 <span class="nc" id="L35">           sk.iway.iwcm.Logger.error(e);</span>
         }
@@ -38,4 +38,4 @@ import sk.iway.iwcm.components.forum.jpa.DocForumEntity;
 <span class="nc" id="L38">        return null;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

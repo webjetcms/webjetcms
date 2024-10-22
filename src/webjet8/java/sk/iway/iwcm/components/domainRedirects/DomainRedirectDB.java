@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.domainRedirects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,9 +94,14 @@ public class DomainRedirectDB
 
 	public static List<DomainRedirectBean> getAllRedirects() {
 
-		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
-		ReadAllQuery q = new ReadAllQuery(DomainRedirectBean.class);
-		return JpaDB.getResultList(em.createQuery(q));
+		try {
+			JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();
+			ReadAllQuery q = new ReadAllQuery(DomainRedirectBean.class);
+			return JpaDB.getResultList(em.createQuery(q));
+		} catch (Exception ex) {
+			Logger.error(DomainRedirectDB.class, ex);
+			return new ArrayList<>();
+		}
 	}
 
 

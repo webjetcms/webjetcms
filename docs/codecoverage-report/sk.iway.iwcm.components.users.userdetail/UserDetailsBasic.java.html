@@ -18,6 +18,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -26,7 +27,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @MappedSuperclass
 @Getter
 @Setter
-<span class="fc" id="L29">public class UserDetailsBasic {</span>
+<span class="fc" id="L30">public class UserDetailsBasic extends ActiveRecordRepository {</span>
 
     @Id
     @Column(name = &quot;user_id&quot;)
@@ -304,18 +305,18 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     //Prepare and return user full name
     @JsonIgnore
     public String getFullName() {
-<span class="fc" id="L307">		StringBuilder fullName = new StringBuilder(&quot;&quot;);</span>
+<span class="fc" id="L308">		StringBuilder fullName = new StringBuilder(&quot;&quot;);</span>
 
-<span class="pc bpc" id="L309" title="3 of 4 branches missed.">		if(Constants.getBoolean(&quot;fullNameIncludeTitle&quot;) &amp;&amp; !Tools.isEmpty(title))</span>
-<span class="nc" id="L310">			fullName.append(title).append(&quot; &quot;);</span>
+<span class="pc bpc" id="L310" title="3 of 4 branches missed.">		if(Constants.getBoolean(&quot;fullNameIncludeTitle&quot;) &amp;&amp; !Tools.isEmpty(title))</span>
+<span class="nc" id="L311">			fullName.append(title).append(&quot; &quot;);</span>
 
-<span class="pc bpc" id="L312" title="1 of 2 branches missed.">		if(!Tools.isEmpty(firstName))</span>
-<span class="fc" id="L313">			fullName.append(firstName).append(&quot; &quot;);</span>
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">		if(!Tools.isEmpty(firstName))</span>
+<span class="fc" id="L314">			fullName.append(firstName).append(&quot; &quot;);</span>
 
-<span class="pc bpc" id="L315" title="1 of 2 branches missed.">		if(!Tools.isEmpty(lastName))</span>
-<span class="fc" id="L316">			fullName.append(lastName).append(&quot; &quot;);</span>
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">		if(!Tools.isEmpty(lastName))</span>
+<span class="fc" id="L317">			fullName.append(lastName).append(&quot; &quot;);</span>
 
-<span class="fc" id="L318">		return fullName.toString().trim();</span>
+<span class="fc" id="L319">		return fullName.toString().trim();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

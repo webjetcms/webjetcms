@@ -8,8 +8,26 @@ To perform the cloning action, you need to specify the source folder ID (which f
 
 Cloning itself uses [Mirroring the structure](../docmirroring/README.md) a [Automatic translation](../../../admin/setup/translation.md). This means that when you start cloning, the selected folders (if they are not already) are automatically linked by the configuration variable `structureMirroringConfig`. From the source folder, all sub-folders (and all their nestings) and web pages are cloned into the destination folder, with the original and cloned folders/pages being linked together. The language is taken from the settings of the source and destination folders. Also, these folders/pages are also automatically translated if a translator is set up.
 
+## Options
+
+### Source directory ID
+
+Set the ID of the folder to clone from.
+
+### Destination directory ID
+
+Set the ID of the folder to clone to. In this folder, pages and subfolders will be created according to the source folder.
+
+### Keep mirroring active
+
+If you choose the option **After cloning, leave active mirroring of the structure** preserves the set [mirroring](../docmirroring/README.md) between the source and destination folders. Then when a new folder or web page is created it will be transferred between the mirrored folders.
+
+You can also disconnect the setting later by editing the conf. variable `structureMirroringConfig` from which you delete the row with the set folder IDs.
+
+### Leave URL
+
+By selecting the option **Leave URL** it is safe to assume that the URL of pages and folders will not be translated into the language of the destination folder. This means that the new language mutation will have **the same URLs but a different prefix with which these URLs begin**.
+
+Example: let's have folders SK (with Slovak language set) and EN (with Slovak language set). The SK folder contains a sub-folder **Property**which has a main page with the same name. The address of such a page is **/sk/majetok/**. If we use the cloning structure **without leaving the URL**, from the SK folder to the EN folder, a copy of this page will have the URL **/en/property/**. If we use the cloning structure **leaving the URL**, from the SK folder to the EN folder, a copy of this page will have the URL **/en/majetok/**. As we can see, the url has not been translated, only the prefix has changed from /sk to /en, which represents the parent folder.
+
 ![](clone_structure_result.png)
-
-## Site disconnection
-
-If you are using cloning to create a copy of a web site for a subsidiary or subordinate organization, for example, it is undesirable that changes are transferred between these versions. In this case, just edit the conf. variable after creating the clone `structureMirroringConfig` from which you delete the row with the set folder IDs.

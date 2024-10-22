@@ -61,7 +61,7 @@ Dostupný je JavaScript objekt ```window.currentUser```. Pridané VUE filtre pre
 - doplnená dokumentácia k vkladaniu [HTML kódu bez escapingu](developer/frameworks/thymeleaf.md#základny-výpis-textu--atribútu) v Thymeleaf
 - doplnená dokumentácia k [formátovaniu dátumu a času](developer/frameworks/vue.md#formátovanie-dátumu-a-času) vo Vue
 
-<img class="meme" title="meme" src="_media/meme/2020-53.jpg"/>
+![meme](_media/meme/2020-53.jpg ":no-zoom")
 
 ## 2020.51
 
@@ -81,7 +81,7 @@ Ak by sa agregácia nevykonala, padol by pravdepodobne prehliadač na množstvo 
 - #50053 [Grafy] - doplnená základná dokumentácia ku knižnici [amcharts](developer/frameworks/amcharts.md).
 - #50053 [Grafy] - v ```app.js``` doplnená asynchrónna inicializácia knižnice amcharts volaním ```window.initAmcharts()```.
 
-<img class="meme" title="meme" src="_media/meme/2020-51.jpg"/>
+![meme](_media/meme/2020-51.jpg ":no-zoom")
 
 ## 2020.50
 

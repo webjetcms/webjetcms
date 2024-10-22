@@ -102,9 +102,9 @@ import java.util.Date;
     Date nextRefresh;
 
     public int getResultSize() {
-<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (dataResult == null) return 0;</span>
-<span class="nc" id="L106">        resultSize = dataResult.length();</span>
-<span class="nc" id="L107">        return resultSize;</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">        if (dataResult == null) return 0;</span>
+<span class="fc" id="L106">        resultSize = dataResult.length();</span>
+<span class="fc" id="L107">        return resultSize;</span>
     }
 
     public void setResultSize(int resultSize) {
@@ -118,11 +118,11 @@ import java.util.Date;
 
     @Override
     public Long getId() {
-<span class="nc" id="L121">        return getCacheId();</span>
+<span class="fc" id="L121">        return getCacheId();</span>
     }
 
     public Long getCacheId() {
-<span class="nc" id="L125">        return cacheId;</span>
+<span class="fc" id="L125">        return cacheId;</span>
     }
 
     public void setCacheId(Long cacheId) {
@@ -130,7 +130,7 @@ import java.util.Date;
 <span class="nc" id="L130">    }</span>
 
     public int getDataType() {
-<span class="nc" id="L133">        return dataType;</span>
+<span class="fc" id="L133">        return dataType;</span>
     }
 
     public void setDataType(int dataType) {
@@ -138,7 +138,7 @@ import java.util.Date;
 <span class="nc" id="L138">    }</span>
 
     public String getDataValue() {
-<span class="nc" id="L141">        return dataValue;</span>
+<span class="fc" id="L141">        return dataValue;</span>
     }
 
     public void setDataValue(String dataValue) {
@@ -146,7 +146,7 @@ import java.util.Date;
 <span class="nc" id="L146">    }</span>
 
     public int getRefreshMinutes() {
-<span class="nc" id="L149">        return refreshMinutes;</span>
+<span class="fc" id="L149">        return refreshMinutes;</span>
     }
 
     public void setRefreshMinutes(int refreshMinutes) {
@@ -154,7 +154,7 @@ import java.util.Date;
 <span class="nc" id="L154">    }</span>
 
     public Date getNextRefresh() {
-<span class="nc" id="L157">        return nextRefresh;</span>
+<span class="fc" id="L157">        return nextRefresh;</span>
     }
 
     public void setNextRefresh(Date nextRefresh) {
@@ -162,7 +162,7 @@ import java.util.Date;
 <span class="nc" id="L162">    }</span>
 
     public String getDataResult() {
-<span class="nc" id="L165">        return dataResult;</span>
+<span class="fc" id="L165">        return dataResult;</span>
     }
 
     public void setDataResult(String dataResult) {
@@ -171,4 +171,4 @@ import java.util.Date;
 
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

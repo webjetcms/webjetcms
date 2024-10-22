@@ -217,7 +217,7 @@ if(user == null || (oldId > 0 && !user.isFolderWritable("/"+ab.getFab().getFileP
 			<td width="350;">
 				<div class="input-group">
 					<stripes:text name="fab.filePath" class="form-control" readonly="true" id="filePath" />
-					<span class="input-group-btn"><input type="button"  class="btn green" name="groupSelect" value="Vybrať" onClick='popupFromDialog("<iwcm:cp/>/admin/dialog_select_dir.jsp?rootDir=<%=FileArchivatorKit.getArchivPath()%>", 500, 500);'></span>
+					<span class="input-group-btn"><input type="button" class="btn green btn-text" name="groupSelect" value="Vybrať" onClick='popupFromDialog("<iwcm:cp/>/admin/dialog_select_dir.jsp?rootDir=<%=FileArchivatorKit.getArchivPath()%>", 500, 500);'></span>
 				</div>
 			</td>
 		</tr>

@@ -20,6 +20,8 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
+import lombok.Getter;
+import lombok.Setter;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -32,9 +34,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorValue( &quot;default&quot; )
 
+@Getter
+@Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_UPDATEDB)
-<span class="fc" id="L37">public class EnumerationTypeBean extends ActiveRecordRepository implements Serializable {</span>
+<span class="fc" id="L41">public class EnumerationTypeBean extends ActiveRecordRepository implements Serializable {</span>
 
     private static final long serialVersionUID = -1L;
 
@@ -301,290 +305,50 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     private EnumerationTypeBean childEnumerationTypeBean;
 
     //Bind editor fields
-<span class="fc" id="L304">    @Transient</span>
+<span class="fc" id="L308">    @Transient</span>
     @DataTableColumnNested
 	private EnumerationTypeEditorFields editorFields = null;
 
     @Override
     public boolean equals(Object o) {
-<span class="nc bnc" id="L310" title="All 2 branches missed.">        if (this == o) return true;</span>
-<span class="nc bnc" id="L311" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
-<span class="nc" id="L312">        EnumerationTypeBean that = (EnumerationTypeBean) o;</span>
-<span class="nc bnc" id="L313" title="All 2 branches missed.">        return id == that.id &amp;&amp;</span>
-<span class="nc bnc" id="L314" title="All 2 branches missed.">                Objects.equals(id, that.id) &amp;&amp;</span>
-<span class="nc bnc" id="L315" title="All 2 branches missed.">                Objects.equals(typeName, that.typeName);</span>
+<span class="nc bnc" id="L314" title="All 2 branches missed.">        if (this == o) return true;</span>
+<span class="nc bnc" id="L315" title="All 4 branches missed.">        if (o == null || getClass() != o.getClass()) return false;</span>
+<span class="nc" id="L316">        EnumerationTypeBean that = (EnumerationTypeBean) o;</span>
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        return id == that.id &amp;&amp;</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">                Objects.equals(id, that.id) &amp;&amp;</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">                Objects.equals(typeName, that.typeName);</span>
     }
 
     @Override
     public int hashCode() {
-<span class="nc" id="L320">        return Objects.hash(id, id, typeName);</span>
+<span class="nc" id="L324">        return Objects.hash(id, id, typeName);</span>
     }
 
     @Override
     public Long getId() {
-<span class="fc" id="L325">        return id;</span>
+<span class="fc" id="L329">        return id;</span>
     }
 
     @Override
     public void setId(Long id) {
-<span class="fc" id="L330">        this.id = id;</span>
-<span class="fc" id="L331">    }</span>
+<span class="fc" id="L334">        this.id = id;</span>
+<span class="fc" id="L335">    }</span>
 
     public static long getSerialVersionUID() {
-<span class="nc" id="L334">        return serialVersionUID;</span>
+<span class="nc" id="L338">        return serialVersionUID;</span>
     }
 
     public Integer getEnumerationTypeId() {
-<span class="fc bfc" id="L338" title="All 2 branches covered.">       if(id == null) return null;</span>
-<span class="fc" id="L339">       return id.intValue();</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">       if(id == null) return null;</span>
+<span class="fc" id="L343">       return id.intValue();</span>
     }
 
     public void setEnumerationTypeId(Integer enumerationTypeId) {
-<span class="fc" id="L343">        this.id = Long.valueOf(enumerationTypeId);</span>
-<span class="fc" id="L344">    }</span>
-
-    public void setEnumerationTypeId(int enumerationTypeId) {
 <span class="fc" id="L347">        this.id = Long.valueOf(enumerationTypeId);</span>
 <span class="fc" id="L348">    }</span>
 
-    public String getTypeName() {
-<span class="fc" id="L351">        return typeName;</span>
-    }
-
-    public void setTypeName(String type_name) {
-<span class="fc" id="L355">        this.typeName = type_name;</span>
-<span class="fc" id="L356">    }</span>
-
-    public String getString1Name() {
-<span class="fc" id="L359">        return string1Name;</span>
-    }
-
-    public void setString1Name(String string1Name) {
-<span class="fc" id="L363">        this.string1Name = string1Name;</span>
-<span class="fc" id="L364">    }</span>
-
-    public String getString2Name() {
-<span class="fc" id="L367">        return string2Name;</span>
-    }
-
-    public void setString2Name(String string2Name) {
-<span class="fc" id="L371">        this.string2Name = string2Name;</span>
-<span class="fc" id="L372">    }</span>
-
-    public String getString3Name() {
-<span class="fc" id="L375">        return string3Name;</span>
-    }
-
-    public void setString3Name(String string3Name) {
-<span class="fc" id="L379">        this.string3Name = string3Name;</span>
-<span class="fc" id="L380">    }</span>
-
-    public String getDecimal1Name() {
-<span class="fc" id="L383">        return decimal1Name;</span>
-    }
-
-    public void setDecimal1Name(String decimal1Name) {
-<span class="fc" id="L387">        this.decimal1Name = decimal1Name;</span>
-<span class="fc" id="L388">    }</span>
-
-    public String getDecimal2Name() {
-<span class="fc" id="L391">        return decimal2Name;</span>
-    }
-
-    public void setDecimal2Name(String decimal2Name) {
-<span class="fc" id="L395">        this.decimal2Name = decimal2Name;</span>
-<span class="fc" id="L396">    }</span>
-
-    public String getDecimal3Name() {
-<span class="fc" id="L399">        return decimal3Name;</span>
-    }
-
-    public void setDecimal3Name(String decimal3Name) {
-<span class="fc" id="L403">        this.decimal3Name = decimal3Name;</span>
-<span class="fc" id="L404">    }</span>
-
-    public String getString4Name() {
-<span class="fc" id="L407">        return string4Name;</span>
-    }
-
-    public void setString4Name(String string4Name) {
-<span class="fc" id="L411">        this.string4Name = string4Name;</span>
-<span class="fc" id="L412">    }</span>
-
-    public String getDecimal4Name() {
-<span class="fc" id="L415">        return decimal4Name;</span>
-    }
-
-    public void setDecimal4Name(String decimal4Name) {
-<span class="fc" id="L419">        this.decimal4Name = decimal4Name;</span>
-<span class="fc" id="L420">    }</span>
-
-    public String getBoolean1Name() {
-<span class="fc" id="L423">        return boolean1Name;</span>
-    }
-
-    public void setBoolean1Name(String boolean1Name) {
-<span class="fc" id="L427">        this.boolean1Name = boolean1Name;</span>
-<span class="fc" id="L428">    }</span>
-
-    public String getBoolean2Name() {
-<span class="fc" id="L431">        return boolean2Name;</span>
-    }
-
-    public void setBoolean2Name(String boolean2Name) {
-<span class="fc" id="L435">        this.boolean2Name = boolean2Name;</span>
-<span class="fc" id="L436">    }</span>
-
-    public String getBoolean3Name() {
-<span class="fc" id="L439">        return boolean3Name;</span>
-    }
-
-    public void setBoolean3Name(String boolean3Name) {
-<span class="fc" id="L443">        this.boolean3Name = boolean3Name;</span>
-<span class="fc" id="L444">    }</span>
-
-    public String getBoolean4Name() {
-<span class="fc" id="L447">        return boolean4Name;</span>
-    }
-
-    public void setBoolean4Name(String boolean4Name) {
-<span class="fc" id="L451">        this.boolean4Name = boolean4Name;</span>
-<span class="fc" id="L452">    }</span>
-
-    public boolean isHidden() {
-<span class="fc" id="L455">        return hidden;</span>
-    }
-
-    public void setHidden(boolean hidden) {
-<span class="fc" id="L459">        this.hidden = hidden;</span>
-<span class="fc" id="L460">    }</span>
-
-    public EnumerationTypeBean getChildEnumerationTypeBean() {
-<span class="fc" id="L463">        return childEnumerationTypeBean;</span>
-    }
-
-    public void setChildEnumerationTypeBean(EnumerationTypeBean childEnumerationTypeBean) {
-<span class="fc" id="L467">        this.childEnumerationTypeBean = childEnumerationTypeBean;</span>
-<span class="fc" id="L468">    }</span>
-
-    public boolean isAllowChildEnumerationType() {
-<span class="fc" id="L471">        return allowChildEnumerationType;</span>
-    }
-
-    public void setAllowChildEnumerationType(boolean allowChildEnumerationType) {
-<span class="fc" id="L475">        this.allowChildEnumerationType = allowChildEnumerationType;</span>
-<span class="fc" id="L476">    }</span>
-
-    public String getString5Name() {
-<span class="fc" id="L479">        return string5Name;</span>
-    }
-
-    public void setString5Name(String string5Name) {
-<span class="fc" id="L483">        this.string5Name = string5Name;</span>
-<span class="fc" id="L484">    }</span>
-
-    public String getString6Name() {
-<span class="fc" id="L487">        return string6Name;</span>
-    }
-
-    public void setString6Name(String string6Name) {
-<span class="fc" id="L491">        this.string6Name = string6Name;</span>
-<span class="fc" id="L492">    }</span>
-
-    public String getDate1Name() {
-<span class="fc" id="L495">        return date1Name;</span>
-    }
-
-    public void setDate1Name(String date1Name) {
-<span class="fc" id="L499">        this.date1Name = date1Name;</span>
-<span class="fc" id="L500">    }</span>
-
-    public String getDate2Name() {
-<span class="fc" id="L503">        return date2Name;</span>
-    }
-
-    public void setDate2Name(String date2Name) {
-<span class="fc" id="L507">        this.date2Name = date2Name;</span>
-<span class="fc" id="L508">    }</span>
-
-    public String getDate3Name() {
-<span class="fc" id="L511">        return date3Name;</span>
-    }
-
-    public void setDate3Name(String date3Name) {
-<span class="fc" id="L515">        this.date3Name = date3Name;</span>
-<span class="fc" id="L516">    }</span>
-
-    public String getDate4Name() {
-<span class="fc" id="L519">        return date4Name;</span>
-    }
-
-    public void setDate4Name(String date4Name) {
-<span class="fc" id="L523">        this.date4Name = date4Name;</span>
-<span class="fc" id="L524">    }</span>
-
-    public boolean isAllowParentEnumerationData() {
-<span class="fc" id="L527">        return allowParentEnumerationData;</span>
-    }
-
-    public void setAllowParentEnumerationData(boolean allowParentEnumerationData) {
-<span class="fc" id="L531">        this.allowParentEnumerationData = allowParentEnumerationData;</span>
-<span class="fc" id="L532">    }</span>
-
-    public String getString7Name() {
-<span class="fc" id="L535">        return string7Name;</span>
-    }
-
-    public void setString7Name(String string7Name) {
-<span class="fc" id="L539">        this.string7Name = string7Name;</span>
-<span class="fc" id="L540">    }</span>
-
-    public String getString8Name() {
-<span class="fc" id="L543">        return string8Name;</span>
-    }
-
-    public void setString8Name(String string8Name) {
-<span class="fc" id="L547">        this.string8Name = string8Name;</span>
-<span class="fc" id="L548">    }</span>
-
-    public String getString9Name() {
-<span class="fc" id="L551">        return string9Name;</span>
-    }
-
-    public void setString9Name(String string9Name) {
-<span class="fc" id="L555">        this.string9Name = string9Name;</span>
-<span class="fc" id="L556">    }</span>
-
-    public String getString10Name() {
-<span class="fc" id="L559">        return string10Name;</span>
-    }
-
-    public void setString10Name(String string10Name) {
-<span class="fc" id="L563">        this.string10Name = string10Name;</span>
-<span class="fc" id="L564">    }</span>
-
-    public String getString11Name() {
-<span class="fc" id="L567">        return string11Name;</span>
-    }
-
-    public void setString11Name(String string11Name) {
-<span class="fc" id="L571">        this.string11Name = string11Name;</span>
-<span class="fc" id="L572">    }</span>
-
-    public String getString12Name() {
-<span class="fc" id="L575">        return string12Name;</span>
-    }
-
-    public void setString12Name(String string12Name) {
-<span class="fc" id="L579">        this.string12Name = string12Name;</span>
-<span class="fc" id="L580">    }</span>
-
-    public void setEditorFields(EnumerationTypeEditorFields editorFields) {
-<span class="fc" id="L583">        this.editorFields = editorFields;</span>
-<span class="fc" id="L584">    }</span>
-
-    public EnumerationTypeEditorFields getEditorFields() {
-<span class="fc" id="L587">        return this.editorFields;</span>
-    }
+    public void setEnumerationTypeId(int enumerationTypeId) {
+<span class="fc" id="L351">        this.id = Long.valueOf(enumerationTypeId);</span>
+<span class="fc" id="L352">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

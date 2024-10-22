@@ -30,6 +30,7 @@ public class UserGroupDetails
 	private int emailDocId = -1;
 	private boolean allowUserEdit;
 	private boolean requireEmailVerification = false;
+	private int priceDiscount = 0;
 
 	public void reset(ActionMapping mapping, HttpServletRequest request)
 	{
@@ -151,5 +152,15 @@ public class UserGroupDetails
 	public void setRequireEmailVerification(boolean requireEmailVerification)
 	{
 		this.requireEmailVerification = requireEmailVerification;
+	}
+
+	public int getPriceDiscount() {
+		return priceDiscount;
+	}
+
+	public void setPriceDiscount(int priceDiscount) {
+		if(priceDiscount < 0) priceDiscount = 0;
+		else if(priceDiscount > 100) priceDiscount = 100;
+		this.priceDiscount = priceDiscount;
 	}
 }

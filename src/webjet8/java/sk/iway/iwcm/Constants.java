@@ -127,8 +127,8 @@ public class Constants {
 
 		allValues = new ArrayList<>();
 
-		// deprecated hodnota
-		setString("defaultEncoding", "windows-1250");
+		// default response encoding
+		setString("defaultEncoding", "utf-8");
 
 		// format je: nazov, hodnota, relevantne moduly oddelene znakom;, popis
 		setInt("rootGroupId", 1, MOD_CONFIG, "ID predvoleneho korenoveho adresara");
@@ -428,14 +428,14 @@ public class Constants {
 		setString("chartColors", "#5C5CF7,#F75C5C,#5CF75C,#FFC165,#E463E4,#A13600,#55FFFF,#FFAFAF,#B10505,#065BD8",
 				"stat;config", "farby ciar a textov pre grafy statistiky (Open Flash Chart)");
 
-		setInt("cacheRemoveCheckSeconds", 300, MOD_PERFORMANCE, "pocet sekund kontroly expirovanych dat v cache");
+		setInt("cacheRemoveCheckSeconds", 300, MOD_PERFORMANCE, "pocet sekund kontroly exspirovanych dat v cache");
 		setInt("cacheSmartRefreshSeconds", 30, MOD_PERFORMANCE, "pocet sekund kontroly smart cache");
 
 		setBoolean("serverBeyoundProxy", false, MOD_CONFIG,
 				"ak je nastavene na true, tak sa IP adresa bere z hlavicky x-forwarded-for");
 
 		setInt("cacheStaticContentSeconds", 300, MOD_PERFORMANCE,
-				"nastavenie casu v sekundach (standardne nastavene na 0), na kory server nastavi expiraciu statickych suborov nastavenych konfiguracnou premennou cacheStaticContentSuffixes (standardne .gif,.jpg,.png,.swf,.css,.js). Ak je prihlaseny administrator, alebo sa jedna o pristup z IP adries pre ktore sa neeviduje statistika (premenna statNoLogIP) tak sa cache hlavicka nenastavi.");
+				"nastavenie casu v sekundach (standardne nastavene na 0), na kory server nastavi exspiraciu statickych suborov nastavenych konfiguracnou premennou cacheStaticContentSuffixes (standardne .gif,.jpg,.png,.swf,.css,.js). Ak je prihlaseny administrator, alebo sa jedna o pristup z IP adries pre ktore sa neeviduje statistika (premenna statNoLogIP) tak sa cache hlavicka nenastavi.");
 		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2", MOD_PERFORMANCE,
 				"pripony suborov, na ktore bude aplikovana cache hlavicka");
 
@@ -980,7 +980,7 @@ public class Constants {
 		setBoolean("xssProtectionStrictGet", true, MOD_SECURITY,
 				"ak je nastavene na true je vykonavana kontrola na specificke znaky (apostrof, uvodzovky atd) vo vsetkych GET parametroch");
 		setString("xssProtectionStrictGetUrlExceptionSystem",
-				"/images,/components/_common/flash/open-flash-chart,/admin/FCKeditor/,/admin/dialogframe.jsp,%editor_component.jsp,/components/_common/banner,/components/reloadParentClose.jsp,/admin/fbrowser/fileprop/,/components/data_deleting/admin_deleting_,/components/editor_component_universal.jsp,/admin/prop_,/admin/fbrowser.,/admin/skins/webjet6/left_files-tree.jsp,/admin/imageeditor/load_image.jsp,/components/adminlog/adminlog.jsp,%_autocomplete.jsp,/admin/editor.do,%admin_news_list.jsp,/admin/inline/dialogframe_inline.jsp,/admin/searchall.jsp,/admin/offline.do,/admin/swfupload/multiple_files_upload_popup.jsp,/components/basket/admin_products_list.jsp,/admin/archive.jsp,/admin/inline/form_report_problem.jsp,/components/gallery/ajax/getimagedata.jsp,/components/basket/admin_transports_list.jsp,/admin/rest/document",
+				"/images,/components/_common/flash/open-flash-chart,/admin/FCKeditor/,/admin/dialogframe.jsp,%editor_component.jsp,/components/_common/banner,/components/reloadParentClose.jsp,/admin/fbrowser/fileprop/,/components/data_deleting/admin_deleting_,/components/editor_component_universal.jsp,/admin/prop_,/admin/fbrowser.,/admin/skins/webjet6/left_files-tree.jsp,/admin/imageeditor/load_image.jsp,/components/adminlog/adminlog.jsp,%_autocomplete.jsp,/admin/editor.do,%admin_news_list.jsp,/admin/inline/dialogframe_inline.jsp,/admin/searchall.jsp,/admin/offline.do,/admin/swfupload/multiple_files_upload_popup.jsp,/components/basket/admin_products_list.jsp,/admin/archive.jsp,/admin/inline/form_report_problem.jsp,/components/gallery/ajax/getimagedata.jsp,/components/basket/admin_transports_list.jsp,/admin/rest/document,/admin/v9/files/dialog",
 				MOD_SECURITY,
 				"casti URL adries (ich zaciatky) pre ktore sa nepouzije xssProtectionStrictGet, jednotlive URL su oddelene ciarkou");
 		setString("xssProtectionStrictGetUrlException", "", MOD_SECURITY,
@@ -1021,7 +1021,7 @@ public class Constants {
 		setInt("linkCheckEmptyPageSize", 100, "webpages;editor",
 				"Dlzka HTML kodu stranky, ktora sa pri kontrole povazuje za prazdnu");
 
-		setString("imageEditorRatio", "16:9, 4:3, 1:1", "editor;imageeditor",
+		setString("imageEditorRatio", "3:2, 4:3, 5:4, 7:5, 16:9", "editor;imageeditor",
 				"Pomer strán pre orezanie v image editore.");
 
 		setBoolean("fulltextIncludeAttributes", false, "config;search",
@@ -1449,7 +1449,7 @@ public class Constants {
 		setString("ABTestingCookieName", "wjabtesting", "abtest",
 				"Meno cookie pouzitej pre zapamatanie si verzie testu pri split testoch - ak sa rozhodne pre B variantu, zapamata sa v cookie s tymto nazvom a podla toho sa dalej budu poskytovat B verzie stranok");
 		setInt("ABTestingCookieDays", 30, "abtest",
-				"Pocet dni zapamatania si zvolenej verzie pri AB testovani - cas expiracie cookie");
+				"Pocet dni zapamatania si zvolenej verzie pri AB testovani - cas exspiracie cookie");
 
 		//setInt("logonBlockedDelaySecondsMax", 5 * 60, MOD_SECURITY,
 		//		"maximalne mozne zablokovanie prihlasenia pri opakovanych neuspesnych pokusoch o prihlasenie");
@@ -1579,7 +1579,7 @@ public class Constants {
 		setBoolean("SpringRequiresSecure", false, MOD_CONFIG,
 				"Ak je nastavene na true, vyzaduje httpS pripojenie pre Spring volania");
 
-		setString("appstorePromo", "news,gallery,banner,video", MOD_EDITOR, "zoznam klucov promo aplikacii v appstore");
+		setString("appstorePromo", "cmp_news,menuGallery,menuBanner,cmp_video", MOD_EDITOR, "zoznam klucov promo aplikacii v appstore");
 
 		setBoolean("elfinderMetadataEnabled", false, mods(MOD_SECURITY, "files"),
 				"Ak je nastavene na true, tak sa povoli metadata plugin pre elfinder (nastavenie opravneni na subory)");
@@ -1980,7 +1980,7 @@ public class Constants {
 				"Aktivuje synchronizaciu mena adresara a hlavnej stranky adresara");
 
 		setString("responseHeaders", "/admin:X-Accel-Buffering:no", MOD_CONFIG, "nastavi HTTP hlavicky pre url");
-		setString("auditHideProperties", "password,password2,password_salt", MOD_SECURITY,
+		setString("auditHideProperties", "password,password2,password_salt,html_data", MOD_SECURITY,
 				"Zoznam nazvov vlastnosti objektu, ktorych hodnota sa nebude auditovat, napr. password, do auditu sa pre taketo property vypisu len *****");
 		setInt("auditMaxChangeLength", 100, MOD_SECURITY,
 				"Maximalny pocet znakov auditu pri porovnani zmien v databazovych entitach");
@@ -2021,7 +2021,7 @@ public class Constants {
 		setString("mariaDbDefaultEngine", "MyISAM", MOD_CONFIG,
 				"Predvoleny typ engine pre MariaDB SQL server, moze byt nastavene na MyISAM alebo InnoDB. Pre pouzitie utf8mb4 je potrebny engine InnoDB.");
 
-		setBoolean("fileArchivIndexOnlyMainFiles", false, MOD_CONFIG,
+		setBoolean("fileArchivIndexOnlyMainFiles", true, MOD_CONFIG,
 				"Ak je true, budu sa pre archiv suborov indexovat len hlavne subory, teda bez verzii.");
 
 		setString("basketQuantityField", "fieldM", MOD_BASKET,
@@ -2256,7 +2256,7 @@ public class Constants {
 	}
 
 	/**
-	 * Sets the int attribute of the Constants class
+	 * Sets the long attribute of the Constants class
 	 *
 	 * @param constName The new int value
 	 * @param VALUE     The new int value
@@ -2296,6 +2296,8 @@ public class Constants {
 						return ((String) obj);
 					} else if (obj instanceof Integer) {
 						return ((Integer) obj).toString();
+					} else if (obj instanceof Long) {
+						return ((Long) obj).toString();
 					} else if (obj instanceof Boolean) {
 						return ((Boolean) obj).toString();
 					}

@@ -3,6 +3,11 @@
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.components.calendar.jpa.CalendarEventsBasic;
-import sk.iway.iwcm.components.calendar.jpa.CalendarEventsRepository;
 import sk.iway.iwcm.components.calendar.jpa.CalendarTypesEntity;
 import sk.iway.iwcm.components.calendar.jpa.CalendarTypesRepository;
+import sk.iway.iwcm.components.calendar.jpa.SuggestEventEntity;
+import sk.iway.iwcm.components.calendar.jpa.SuggestEventsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -26,77 +31,82 @@ import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 @RequestMapping(&quot;/admin/rest/calendar-suggest-events&quot;)
 @PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_calendar')&quot;)
 @Datatable
-public class SuggestEventsRestController extends DatatableRestControllerV2&lt;CalendarEventsBasic, Long&gt; {
+public class SuggestEventsRestController extends DatatableRestControllerV2&lt;SuggestEventEntity, Long&gt; {
 
-    private final CalendarEventsRepository calendarEventsRepository;
+    private final SuggestEventsRepository suggestEventsRepository;
     private final CalendarTypesRepository calendarTypesRepository;
 
     @Autowired
-    public SuggestEventsRestController(CalendarEventsRepository calendarEventsRepository, CalendarTypesRepository calendarTypesRepository) {
-<span class="fc" id="L36">        super(null);</span>
-<span class="fc" id="L37">        this.calendarEventsRepository = calendarEventsRepository;</span>
-<span class="fc" id="L38">        this.calendarTypesRepository = calendarTypesRepository;</span>
-<span class="fc" id="L39">    }</span>
+    public SuggestEventsRestController(SuggestEventsRepository suggestEventsRepository, CalendarTypesRepository calendarTypesRepository) {
+<span class="fc" id="L41">        super(suggestEventsRepository);</span>
+<span class="fc" id="L42">        this.suggestEventsRepository = suggestEventsRepository;</span>
+<span class="fc" id="L43">        this.calendarTypesRepository = calendarTypesRepository;</span>
+<span class="fc" id="L44">    }</span>
 
     @Override
-    public Page&lt;CalendarEventsBasic&gt; getAllItems(Pageable pageable) {
-<span class="nc" id="L43">        Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L44">        cal.setTime(new Date());</span>
-<span class="nc" id="L45">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
-<span class="nc" id="L46">        cal.set(Calendar.MINUTE, 0);</span>
-<span class="nc" id="L47">        cal.set(Calendar.SECOND, 0);</span>
-<span class="nc" id="L48">        cal.set(Calendar.MILLISECOND, 0);</span>
+    public Page&lt;SuggestEventEntity&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L48">        DatatablePageImpl&lt;SuggestEventEntity&gt; page = new DatatablePageImpl&lt;&gt;( super.getAllItemsIncludeSpecSearch(new SuggestEventEntity(), pageable) );</span>
 
-<span class="nc" id="L50">        List&lt;CalendarEventsBasic&gt; events = calendarEventsRepository.getBasicEventsForSuggest(cal.getTime(), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L50">        List&lt;CalendarTypesEntity&gt; calendarTypes = calendarTypesRepository.findAllByDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for(CalendarTypesEntity type : calendarTypes) {</span>
+<span class="fc" id="L52">            page.addOption(&quot;typeId&quot;, type.getName(), type.getId().toString(), false);</span>
+<span class="fc" id="L53">        }</span>
 
-        //Create page
-<span class="nc" id="L53">        DatatablePageImpl&lt;CalendarEventsBasic&gt; page = new DatatablePageImpl&lt;&gt;(events);</span>
-
-
-<span class="nc" id="L56">        List&lt;CalendarTypesEntity&gt; calendarTypes = calendarTypesRepository.findAllByDomainId(CloudToolsForCore.getDomainId());</span>
-<span class="nc bnc" id="L57" title="All 2 branches missed.">        for(CalendarTypesEntity type : calendarTypes) {</span>
-<span class="nc" id="L58">            page.addOption(&quot;typeId&quot;, type.getName(), type.getId().toString(), false);</span>
-<span class="nc" id="L59">        }</span>
-
-<span class="nc" id="L61">        return page;</span>
+<span class="fc" id="L55">        return page;</span>
     }
+
+    @Override
+    public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;SuggestEventEntity&gt; root, CriteriaBuilder builder) {
+<span class="fc" id="L60">        super.addSpecSearch(params, predicates, root, builder);</span>
+
+<span class="fc" id="L62">        Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L63">        cal.setTime(new Date());</span>
+<span class="fc" id="L64">        cal.set(Calendar.HOUR_OF_DAY, 0);</span>
+<span class="fc" id="L65">        cal.set(Calendar.MINUTE, 0);</span>
+<span class="fc" id="L66">        cal.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L67">        cal.set(Calendar.MILLISECOND, 0);</span>
+
+<span class="fc" id="L69">        predicates.add(builder.greaterThanOrEqualTo(root.get(&quot;dateFrom&quot;), cal.getTime())); //Only future events</span>
+
+<span class="fc" id="L71">        predicates.add(builder.equal(root.get(&quot;approve&quot;), 1)); //Only approved events</span>
+<span class="fc" id="L72">    }</span>
 
     //Needed for DatatableRestControllerV2 -&gt; when calling action from FE
     @Override
-    public CalendarEventsBasic getOneItem(long id) {
-<span class="nc bnc" id="L67" title="All 2 branches missed.">        if(id &lt; 1) throwError(&quot;&quot;);</span>
+    public SuggestEventEntity getOneItem(long id) {
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if(id &lt; 1) throwError(&quot;&quot;);</span>
 
-<span class="nc" id="L69">        return calendarEventsRepository.getOne(id, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L79">        return suggestEventsRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);</span>
     }
 
     @Override
-    public boolean processAction(CalendarEventsBasic entity, String action) {
-<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (&quot;suggestEvent&quot;.equals(action)) {</span>
+    public boolean processAction(SuggestEventEntity entity, String action) {
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (&quot;suggestEvent&quot;.equals(action)) {</span>
             //Approve
-<span class="nc" id="L76">            int updatedRow = calendarEventsRepository.updateSuggest(entity.getId(), true, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L86">            int updatedRow = suggestEventsRepository.updateSuggest(entity.getId(), true, CloudToolsForCore.getDomainId());</span>
 
-<span class="nc bnc" id="L78" title="All 2 branches missed.">            if(updatedRow == 1) {</span>
-<span class="nc" id="L79">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.suggest_event_action&quot;), getProp().getText(&quot;calendar.suggest_event_action_success&quot;, entity.getTitle()), NotifyType.SUCCESS, 15000));</span>
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">            if(updatedRow == 1) {</span>
+<span class="fc" id="L89">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.suggest_event_action&quot;), getProp().getText(&quot;calendar.suggest_event_action_success&quot;, entity.getTitle()), NotifyType.SUCCESS, 15000));</span>
             } else {
-<span class="nc" id="L81">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.suggest_event_action&quot;), getProp().getText(&quot;calendar.suggest_event_action_failed&quot;, entity.getTitle()), NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L91">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.suggest_event_action&quot;), getProp().getText(&quot;calendar.suggest_event_action_failed&quot;, entity.getTitle()), NotifyType.ERROR, 15000));</span>
             }
 
-<span class="nc" id="L84">            return true;</span>
-<span class="nc bnc" id="L85" title="All 2 branches missed.">        } else if (&quot;notSuggestEvent&quot;.equals(action)) {</span>
+<span class="fc" id="L94">            return true;</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        } else if (&quot;notSuggestEvent&quot;.equals(action)) {</span>
             //Reject (dis-approve)
-<span class="nc" id="L87">            int updatedRow = calendarEventsRepository.updateSuggest(entity.getId(), false, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L97">            int updatedRow = suggestEventsRepository.updateSuggest(entity.getId(), false, CloudToolsForCore.getDomainId());</span>
 
-<span class="nc bnc" id="L89" title="All 2 branches missed.">            if(updatedRow == 1) {</span>
-<span class="nc" id="L90">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.not_suggest_event_action&quot;), getProp().getText(&quot;calendar.not_suggest_event_action_success&quot;, entity.getTitle()), NotifyType.SUCCESS, 15000));</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if(updatedRow == 1) {</span>
+<span class="nc" id="L100">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.not_suggest_event_action&quot;), getProp().getText(&quot;calendar.not_suggest_event_action_success&quot;, entity.getTitle()), NotifyType.SUCCESS, 15000));</span>
             } else {
-<span class="nc" id="L92">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.not_suggest_event_action&quot;), getProp().getText(&quot;calendar.not_suggest_event_action_failed&quot;, entity.getTitle()), NotifyType.ERROR, 15000));</span>
+<span class="nc" id="L102">                addNotify(new NotifyBean(getProp().getText(&quot;calendar.not_suggest_event_action&quot;), getProp().getText(&quot;calendar.not_suggest_event_action_failed&quot;, entity.getTitle()), NotifyType.ERROR, 15000));</span>
             }
 
-<span class="nc" id="L95">            return true;</span>
+<span class="nc" id="L105">            return true;</span>
         }
 
         //Uknown action
-<span class="nc" id="L99">        return false;</span>
+<span class="nc" id="L109">        return false;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

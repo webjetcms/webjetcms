@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TimeBookApp.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation</a> &gt; <span class="el_source">TimeBookApp.java</span></div><h1>TimeBookApp.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.WebjetComponentAbstract;
+import sk.iway.iwcm.components.reservation.jpa.ReservationEditorFields;
+import sk.iway.iwcm.components.reservation.jpa.ReservationEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationRepository;
+import sk.iway.iwcm.components.reservation.rest.ReservationService;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.annotations.DefaultHandler;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.annotations.WebjetComponent;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
+import sk.iway.iwcm.users.UsersDB;
+
+@WebjetComponent(&quot;sk.iway.iwcm.components.reservation.TimeBookApp&quot;)
+@WebjetAppStore(nameKey = &quot;components.reservation.time_book.title&quot;, descKey=&quot;components.reservation.time_book.desc&quot;, imagePath = &quot;ti ti-calendar-check text-success bg-light&quot;, galleryImages = &quot;/apps/reservation/mvc/app-page.png&quot;, commonSettings = true)
+@Getter
+@Setter
+public class TimeBookApp extends WebjetComponentAbstract {
+
+    @JsonIgnore
+    private ReservationObjectRepository ror;
+
+    @JsonIgnore
+    private ReservationRepository rr;
+
+    @JsonIgnore
+    private ReservationObjectPriceRepository ropr;
+
+    private static final String VIEW_PATH = &quot;/apps/reservation/mvc/time-book&quot;; //NOSONAR
+    private static final String DATE_FORMAT = &quot;yyyy-MM-dd&quot;;
+
+    @Autowired
+<span class="fc" id="L67">    public TimeBookApp(ReservationObjectRepository ror, ReservationRepository rr, ReservationObjectPriceRepository ropr) {</span>
+<span class="fc" id="L68">        this.ror = ror;</span>
+<span class="fc" id="L69">        this.rr = rr;</span>
+<span class="fc" id="L70">        this.ropr = ropr;</span>
+<span class="fc" id="L71">    }</span>
+
+    //Choose reservation object
+    @DataTableColumn(inputType = DataTableColumnType.MULTISELECT, title = &quot;components.reservation.time_book.reservation_object_ids&quot;, tab = &quot;basic&quot;, editor = {
+        @DataTableColumnEditor(
+            options = {
+                @DataTableColumnEditorAttr(key = &quot;method:sk.iway.iwcm.components.reservation.rest.ReservationService.getReservationObjectSelectList&quot;, value = &quot;label:value&quot;)
+            }
+        )
+    })
+    private String reservationObjectIds;
+
+    @Override
+    public void init(HttpServletRequest request, HttpServletResponse response) {
+<span class="fc" id="L85">        Logger.debug(TimeBookApp.class, &quot;Init of TimeBookApp app&quot;);</span>
+<span class="fc" id="L86">    }</span>
+
+    @DefaultHandler
+	public String view(Model model, HttpServletRequest request)
+	{
+<span class="fc" id="L91">        prepareTimeBookApp(model, request, null);</span>
+<span class="fc" id="L92">        return VIEW_PATH;</span>
+	}
+
+    public String saveForm(@Valid @ModelAttribute(&quot;entity&quot;) ReservationEntity entity, BindingResult result, Model model, HttpServletRequest request) {
+        //Remove errors about timeFrom-timeTo this fields are sent in separe param
+<span class="fc" id="L97">        List&lt;ObjectError&gt; realErrors = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        for(ObjectError err : result.getAllErrors()) {</span>
+<span class="fc" id="L99">            FieldError ferr = (FieldError) err;</span>
+<span class="pc bpc" id="L100" title="1 of 4 branches missed.">            if(ferr.getField().equals(&quot;dateFrom&quot;) || ferr.getField().equals(&quot;dateTo&quot;)) {</span>
+<span class="fc" id="L101">                continue;</span>
+            }
+<span class="nc" id="L103">            realErrors.add(err);</span>
+<span class="nc" id="L104">        }</span>
+
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if(Tools.isEmail(entity.getEmail()) == false) {</span>
+<span class="nc" id="L107">            realErrors.add(new FieldError(&quot;entity&quot;, &quot;email&quot;, Prop.getInstance(request).getText(&quot;javax.validation.constraints.Email.message&quot;)));</span>
+        }
+
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">        if (realErrors == null || realErrors.isEmpty() == true) {</span>
+<span class="fc" id="L111">            Prop prop = Prop.getInstance(request);</span>
+
+<span class="fc" id="L113">            Long reservationObjectId = Tools.getLongValue(request.getParameter(&quot;reservationObjectId&quot;), -1);</span>
+<span class="pc bpc" id="L114" title="1 of 2 branches missed.">            if(reservationObjectId == -1) {</span>
+<span class="nc" id="L115">                return returnError(prop.getText(&quot;components.reservation.reservation_app.save_error&quot;), model, request);</span>
+            }
+
+<span class="fc" id="L118">            String reservationDateString = request.getParameter(&quot;reservationDateHidden&quot;);</span>
+            Date reservationDate;
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">            if(reservationDateString.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;) == true)</span>
+<span class="fc" id="L121">                reservationDate = Tools.getDateFromString(reservationDateString, DATE_FORMAT);</span>
+            else {
+<span class="nc" id="L123">                return returnError(prop.getText(&quot;components.reservation.reservation_app.save_error&quot;), model, request);</span>
+            }
+
+<span class="fc" id="L126">            String[] timeRange = Tools.getTokens(request.getParameter(&quot;timeRange&quot;), &quot;-&quot;);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">            if(timeRange.length != 2) {</span>
+<span class="nc" id="L128">                return returnError(prop.getText(&quot;components.reservation.reservation_app.save_error&quot;), model, request);</span>
+            }
+
+            //Remove &quot;:00&quot; postfix
+<span class="fc" id="L132">            timeRange[0] = timeRange[0].substring(0, timeRange[0].length()-3);</span>
+<span class="fc" id="L133">            timeRange[1] = timeRange[1].substring(0, timeRange[1].length()-3);</span>
+
+<span class="fc" id="L135">            Date timeFrom = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[0]), 0, 1);</span>
+<span class="fc" id="L136">            Date timeTo = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[1]), 0);</span>
+<span class="fc" id="L137">            entity.setReservationObjectId(reservationObjectId);</span>
+<span class="fc" id="L138">            entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(reservationDate, timeFrom) );</span>
+<span class="fc" id="L139">            entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(reservationDate, timeTo) );</span>
+
+            try {
+<span class="fc" id="L142">                ReservationObjectEntity roe = ror.findById(entity.getReservationObjectId()).orElse(null);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">                if(roe == null) {</span>
+<span class="nc" id="L144">                    return returnError(prop.getText(&quot;components.reservation.reservation_app.save_error&quot;), model, request);</span>
+                }
+
+<span class="fc" id="L147">                entity.setReservationObjectForReservation(roe);</span>
+<span class="fc" id="L148">                ReservationEditorFields ref = new ReservationEditorFields();</span>
+<span class="fc" id="L149">                ref.toReservationEntity(entity, rr, request, true);</span>
+<span class="nc" id="L150">            } catch (Exception e) {</span>
+<span class="nc" id="L151">                return returnError( e.getLocalizedMessage(), model, request);</span>
+<span class="fc" id="L152">            }</span>
+
+            //Its CREATE, reservationId is by default -1
+<span class="fc" id="L155">            int userId = ReservationService.getUserToPay(entity.getEmail(), Long.valueOf(-1), rr, request);</span>
+<span class="fc" id="L156">            entity.setUserId(userId);</span>
+<span class="fc" id="L157">            entity.setPrice( ReservationService.calculateReservationPrice(reservationDate, reservationDate, timeFrom, timeTo, reservationObjectId, userId, ror, ropr) );</span>
+
+<span class="fc" id="L159">            boolean isAccepted = ReservationService.acceptation(entity, request);</span>
+<span class="fc" id="L160">            rr.save(entity);</span>
+
+            //Add suitable message
+<span class="fc bfc" id="L163" title="All 2 branches covered.">            if(isAccepted == true) {</span>
+<span class="fc" id="L164">                model.addAttribute(&quot;saveMsg&quot;, prop.getText(&quot;components.reservation.reservation_app.save_msg&quot;));</span>
+            } else {
+<span class="fc" id="L166">                model.addAttribute(&quot;saveMsg&quot;, prop.getText(&quot;components.reservation.reservation_app.save_msg_acceptation&quot;));</span>
+            }
+
+<span class="fc" id="L169">            prepareTimeBookApp(model, request, entity.getDateFrom());</span>
+<span class="fc" id="L170">            return VIEW_PATH;</span>
+        }
+
+<span class="nc" id="L173">        prepareTimeBookApp(model, request, entity.getDateFrom());</span>
+<span class="nc" id="L174">        model.addAttribute(&quot;errors&quot;, realErrors);</span>
+<span class="nc" id="L175">        model.addAttribute(&quot;reservationEntity&quot;, entity);</span>
+<span class="nc" id="L176">        return VIEW_PATH;</span>
+    }
+
+    private void prepareTimeBookApp(Model model, HttpServletRequest request, Date setReservationDate) {
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if(Tools.isEmpty(reservationObjectIds) == true) return;</span>
+<span class="fc" id="L181">        Integer[] ids = Arrays.stream( Tools.getTokensInt(reservationObjectIds, &quot;+&quot;) ).boxed().toArray( Integer[]::new );</span>
+<span class="fc" id="L182">        List&lt;ReservationObjectEntity&gt; reservationObjectList = ror.findAllByIdIn(ids);</span>
+
+        Date reservationDate;
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if(setReservationDate != null) {</span>
+<span class="fc" id="L186">            reservationDate = setReservationDate;</span>
+        } else {
+<span class="fc" id="L188">            String reservationDateString = request.getParameter(&quot;reservation-date&quot;);</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">            if(Tools.isEmpty(reservationDateString) == true) {</span>
+<span class="fc" id="L190">                reservationDate = new Date();</span>
+            } else {
+                //Returns as yyyy-MM-dd
+<span class="pc bpc" id="L193" title="1 of 2 branches missed.">                if(reservationDateString.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;) == true)</span>
+<span class="fc" id="L194">                    reservationDate = Tools.getDateFromString(reservationDateString, DATE_FORMAT);</span>
+                else
+<span class="nc" id="L196">                    reservationDate = new Date();</span>
+            }
+        }
+
+        //datepicker require yyyy-MM-dd string as value
+<span class="fc" id="L201">        SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);</span>
+<span class="fc" id="L202">        model.addAttribute(&quot;reservationDate&quot;, format.format(reservationDate));</span>
+
+        /* Prepare list with hour that represent reservation range (joined by all reservation objects range) */
+<span class="fc" id="L205">        Long minTimeStart = Long.MAX_VALUE;</span>
+<span class="fc" id="L206">        Long maxTimeEnd = Long.MIN_VALUE;</span>
+<span class="fc" id="L207">        Map&lt;Long, Long[]&gt; timeRanges = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">        for(ReservationObjectEntity roe : reservationObjectList) {</span>
+<span class="fc" id="L209">            Long[] timeRange = ReservationService.getReservationTimeRange(reservationDate, roe);</span>
+<span class="fc" id="L210">            timeRanges.put(roe.getId(), timeRange);</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">            if(timeRange[0] &lt; minTimeStart) minTimeStart = timeRange[0];</span>
+<span class="fc bfc" id="L212" title="All 2 branches covered.">            if(timeRange[1] &gt; maxTimeEnd) maxTimeEnd = timeRange[1];</span>
+<span class="fc" id="L213">        }</span>
+<span class="fc" id="L214">        List&lt;String&gt; hours = ReservationService.getHoursForTable(minTimeStart, maxTimeEnd);</span>
+<span class="fc" id="L215">        model.addAttribute(&quot;hours&quot;, hours);</span>
+
+        /* Figure out, how many reservations for current hour and reservation object are already used */
+<span class="fc" id="L218">        Map&lt;String, List&lt;ReservationService.ReservationTableCell&gt;&gt; tableLines = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">        for(ReservationObjectEntity roe : reservationObjectList) {</span>
+<span class="fc" id="L220">            tableLines.put(roe.getName(), ReservationService.computeReservationUsageByHours(roe, rr, minTimeStart, maxTimeEnd, timeRanges.get(roe.getId())));</span>
+<span class="fc" id="L221">        }</span>
+<span class="fc" id="L222">        model.addAttribute(&quot;tableLines&quot;, tableLines);</span>
+
+<span class="fc" id="L224">        ReservationEntity reservation = new ReservationEntity();</span>
+<span class="fc" id="L225">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc bfc" id="L226" title="All 2 branches covered.">        if(user != null) {</span>
+<span class="fc" id="L227">            reservation.setName(user.getFirstName());</span>
+<span class="fc" id="L228">            reservation.setSurname(user.getLastName());</span>
+<span class="fc" id="L229">            reservation.setEmail(user.getEmail());</span>
+        }
+<span class="fc" id="L231">        model.addAttribute(&quot;reservationEntity&quot;, reservation);</span>
+<span class="fc" id="L232">    }</span>
+
+    public String returnError(String errorMsg, Date reservationDate, Model model, HttpServletRequest request) {
+<span class="nc" id="L235">        request.setAttribute(&quot;reservationDate&quot;, reservationDate);</span>
+<span class="nc" id="L236">        return returnError(errorMsg, model, request);</span>
+    }
+
+    public String returnError(String errorMsg, Model model, HttpServletRequest request) {
+<span class="nc" id="L240">        model.addAttribute(&quot;customError&quot;, errorMsg);</span>
+<span class="nc" id="L241">        prepareTimeBookApp(model, request, null);</span>
+<span class="nc" id="L242">        return VIEW_PATH;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

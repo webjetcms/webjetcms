@@ -35,7 +35,7 @@ public class PermissionGroupRestController extends DatatableRestControllerV2<Per
             if (entity == null) entity = new PermissionGroupBean();
         }
 
-        if(entity != null && entity.getEditorFields() == null) {
+        if(entity != null) {
             PermissionGroupEditorFields pgef = new PermissionGroupEditorFields();
             pgef.fromPermissionGroupBean(entity, loadSubQueries, getRequest());
             entity.setEditorFields(pgef);
@@ -45,7 +45,6 @@ public class PermissionGroupRestController extends DatatableRestControllerV2<Per
 
     @Override
     public PermissionGroupBean processToEntity(PermissionGroupBean entity, ProcessItemAction action) {
-
         if(entity != null) {
             //Call toUserDetailsEntity to set new entity values from EditorFields
             PermissionGroupEditorFields pgef = new PermissionGroupEditorFields();

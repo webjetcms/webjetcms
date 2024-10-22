@@ -33,11 +33,11 @@ public class UserAgent {
 <span class="fc" id="L33">    }</span>
 
     /**
-     * Funkcia na vr?tenie verzie prehliada?a. Verzia sa zis?uje na z?klade UserAdent
-     * @return String - verzia prehliada?a
+     * Funkcia na vratenie verzie prehliadaca. Verzia sa zistuje na zaklade UserAdent
+     * @return String - verzia prehliadaca
      */
     public String getBrowserVersion(){
-<span class="fc" id="L40">        String browserVersion = String.valueOf(Math.round(getBrowserDetector().getBrowserVersion()));</span>
+<span class="fc" id="L40">        String browserVersion = getBrowserDetector().getBrowserVersionShort();</span>
 <span class="fc" id="L41">        return browserVersion;</span>
     }
 
@@ -83,37 +83,38 @@ public class UserAgent {
     }
 
     public String getDeviceOS(){
-<span class="fc" id="L86">        String deviceOs = getBrowserDetector().getBrowserPlatform()+&quot; &quot;+getBrowserDetector().getBrowserSubplatform();</span>
-<span class="fc" id="L87">        return deviceOs.toLowerCase();</span>
+<span class="fc" id="L86">        String deviceOs = getBrowserDetector().getBrowserPlatform();</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (Tools.isNotEmpty(getBrowserDetector().getBrowserSubplatform())) deviceOs += &quot; &quot;+getBrowserDetector().getBrowserSubplatform();</span>
+<span class="fc" id="L88">        return deviceOs.toLowerCase();</span>
     }
 
     public boolean isBrowserOutdated()
     {
-<span class="fc" id="L92">        int browserVersion = getMinimalBrowserVersion(getBrowserName());</span>
+<span class="fc" id="L93">        int browserVersion = getMinimalBrowserVersion(getBrowserName());</span>
         //pre nezdetekovany browser vratime false, zhodni sme sa na tom s MHO ze to je lepsie
-<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if (browserVersion &lt; 1) return false;</span>
-<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        return Tools.getIntValue(getBrowserVersion(), 999) &lt; browserVersion;</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">        if (browserVersion &lt; 1) return false;</span>
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        return Tools.getIntValue(getBrowserVersion(), 999) &lt; browserVersion;</span>
     }
 
     public int getMinimalBrowserVersion(String browser){
-<span class="fc" id="L99">        Integer version =  minimalBrowserVersion.get(browser);</span>
-<span class="pc bpc" id="L100" title="2 of 4 branches missed.">        if (version == null || version &lt;1) return -1;</span>
-<span class="fc" id="L101">        return version;</span>
+<span class="fc" id="L100">        Integer version =  minimalBrowserVersion.get(browser);</span>
+<span class="pc bpc" id="L101" title="3 of 4 branches missed.">        if (version == null || version &lt;1) return -1;</span>
+<span class="nc" id="L102">        return version;</span>
     }
 
     public boolean isBlind(){
-<span class="fc" id="L105">        BrowserDetector instance = BrowserDetector.getInstance(ninja.getRequest());</span>
-<span class="fc" id="L106">        boolean isBlind = false;</span>
-<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        if(&quot;blind&quot;.equals(instance.getBrowserDeviceType())){</span>
-<span class="nc" id="L108">            isBlind = true;</span>
+<span class="fc" id="L106">        BrowserDetector instance = BrowserDetector.getInstance(ninja.getRequest());</span>
+<span class="fc" id="L107">        boolean isBlind = false;</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if(&quot;blind&quot;.equals(instance.getBrowserDeviceType())){</span>
+<span class="nc" id="L109">            isBlind = true;</span>
         }
-<span class="fc" id="L110">        return isBlind;</span>
+<span class="fc" id="L111">        return isBlind;</span>
     }
 
     private BrowserDetector getBrowserDetector()
     {
-<span class="fc bfc" id="L115" title="All 2 branches covered.">        if (bd == null) bd = BrowserDetector.getInstance(ninja.getRequest());</span>
-<span class="fc" id="L116">        return bd;</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (bd == null) bd = BrowserDetector.getInstance(ninja.getRequest());</span>
+<span class="fc" id="L117">        return bd;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

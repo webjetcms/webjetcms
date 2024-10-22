@@ -13,7 +13,8 @@
   - [Skupiny práv](/admin/users/perm-groups.md)
 
 - Nastavenia
+  - [Automatizované úlohy](/admin/settings/cronjob/README.md)
+  - [HTTP hlavičky](/admin/settings/response-header/README.md)
   - Prekladové kľúče
     - [Zoznam kľúčov](/admin/settings/translation-keys/README.md)
     - [Chýbajúce kľúče](/admin/settings/missing-keys/README.md)
-  - [HTTP hlavičky](/admin/settings/response-header/README.md)

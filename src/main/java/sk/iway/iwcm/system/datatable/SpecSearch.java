@@ -11,7 +11,6 @@ import javax.persistence.criteria.Root;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.admin.layout.LayoutBean;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.users.UserDetails;
@@ -63,13 +62,7 @@ public class SpecSearch<T> {
      * @param builder
      */
 	public void addSpecSearchPerexGroup(String perexGroupName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder) {
-		String idsSelectSql;
-		if (LayoutBean.isPerexGroupsRenderAsSelect()) {
-			//SQL is empty to use searchValue directly as number
-			idsSelectSql = null;
-		} else {
-			idsSelectSql = "SELECT DISTINCT perex_group_id FROM perex_groups WHERE perex_group_name";
-		}
+		String idsSelectSql = "SELECT DISTINCT perex_group_id FROM perex_groups WHERE perex_group_name";
 		addSpecSearchBySelect(idsSelectSql, perexGroupName, jpaProperty, false, predicates, root, builder);
 	}
 

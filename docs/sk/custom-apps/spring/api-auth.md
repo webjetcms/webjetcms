@@ -1,6 +1,6 @@
 # API autorizácia
 
-Ak potrebujete pristupovať k REST službám/API WebJET CMS z externého systému môžete využiť možnosť autorizácie API kľúčom. Ten sa posiela v HTTP hlavičke ```x-auth-token``` pri volaní REST služby. Pri takejto autorizácii nie je potrebné posielať CSRF token.
+Ak potrebujete pristupovať k REST službám/`API WebJET CMS` z externého systému môžete využiť možnosť autorizácie API kľúčom. Ten sa posiela v HTTP hlavičke ```x-auth-token``` pri volaní REST služby. Pri takejto autorizácii nie je potrebné posielať CSRF token.
 
 ## Nastavenie kľúča
 

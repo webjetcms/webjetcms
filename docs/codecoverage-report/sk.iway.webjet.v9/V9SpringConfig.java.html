@@ -76,37 +76,49 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     &quot;sk.iway.iwcm.filebrowser&quot;,
     &quot;sk.iway.iwcm.components.forum.rest&quot;,
     &quot;sk.iway.iwcm.components.seo.rest&quot;,
-    &quot;sk.iway.iwcm.setup&quot;,
     &quot;sk.iway.iwcm.doc.clone_structure&quot;,
     &quot;sk.iway.iwcm.update&quot;,
     &quot;sk.iway.iwcm.xls&quot;,
     &quot;sk.iway.iwcm.components.restaurant_menu.rest&quot;,
     &quot;sk.iway.iwcm.components.quiz.rest&quot;,
-    &quot;sk.iway.iwcm.components.blog.rest&quot;
+    &quot;sk.iway.iwcm.components.blog.rest&quot;,
+    &quot;sk.iway.iwcm.components.appcookiebar&quot;,
+    &quot;sk.iway.iwcm.components.appdocsembed&quot;,
+    &quot;sk.iway.iwcm.components.appfacebookcomments&quot;,
+    &quot;sk.iway.iwcm.components.appfacebooklike&quot;,
+    &quot;sk.iway.iwcm.components.appsmartsupp&quot;,
+    &quot;sk.iway.iwcm.components.apphtmlembed&quot;,
+    &quot;sk.iway.iwcm.components.appvyhladavanie&quot;,
+    &quot;sk.iway.iwcm.components.contentblock&quot;,
+    &quot;sk.iway.iwcm.components.sendlink&quot;,
+    &quot;sk.iway.iwcm.components.gdpr&quot;,
+    &quot;sk.iway.iwcm.components.sitebrowser&quot;
+
+
 })
-<span class="fc" id="L87">public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {</span>
+<span class="fc" id="L99">public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {</span>
 
     @Bean
     public AcceptHeaderLocaleResolver localeResolver() {
-<span class="fc" id="L91">        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {</span>
+<span class="fc" id="L103">        AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver() {</span>
             @Override
             public Locale resolveLocale(HttpServletRequest request) {
-<span class="fc" id="L94">                String lng = Prop.getLng(request, false);</span>
-<span class="fc bfc" id="L95" title="All 2 branches covered.">                if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
-<span class="fc bfc" id="L96" title="All 2 branches covered.">                if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
-<span class="fc" id="L97">                return org.springframework.util.StringUtils.parseLocaleString(PageLng.getUserLngIso(lng).replaceAll(&quot;-&quot;, &quot;_&quot;));</span>
+<span class="fc" id="L106">                String lng = Prop.getLng(request, false);</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">                if (Tools.isEmpty(lng)) lng = &quot;sk&quot;;</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">                if (&quot;cz&quot;.equals(lng)) lng = &quot;cs&quot;;</span>
+<span class="fc" id="L109">                return org.springframework.util.StringUtils.parseLocaleString(PageLng.getUserLngIso(lng).replaceAll(&quot;-&quot;, &quot;_&quot;));</span>
             }
         };
 
-<span class="fc" id="L101">        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString(&quot;defaultLanguage&quot;)).replaceAll(&quot;-&quot;, &quot;_&quot;)));</span>
-<span class="fc" id="L102">        return localeResolver;</span>
+<span class="fc" id="L113">        localeResolver.setDefaultLocale(new Locale(PageLng.getUserLngIso(Constants.getString(&quot;defaultLanguage&quot;)).replaceAll(&quot;-&quot;, &quot;_&quot;)));</span>
+<span class="fc" id="L114">        return localeResolver;</span>
     }
 
     @Bean(name = &quot;multipartResolver&quot;)
     public CommonsMultipartResolver multipartResolver() {
-<span class="fc" id="L107">        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();</span>
-<span class="fc" id="L108">        multipartResolver.setMaxUploadSize(-1);</span>
-<span class="fc" id="L109">        return multipartResolver;</span>
+<span class="fc" id="L119">        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();</span>
+<span class="fc" id="L120">        multipartResolver.setMaxUploadSize(-1);</span>
+<span class="fc" id="L121">        return multipartResolver;</span>
     }
 
     /**
@@ -115,15 +127,18 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
      */
     @Bean(name = &quot;conversionService&quot;)
     public ConversionService conversionService() {
-<span class="fc" id="L118">        ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();</span>
-<span class="fc" id="L119">        conversionServiceFactoryBean.afterPropertiesSet();</span>
-<span class="fc" id="L120">        return conversionServiceFactoryBean.getObject();</span>
+<span class="fc" id="L130">        ConversionServiceFactoryBean conversionServiceFactoryBean = new ConversionServiceFactoryBean();</span>
+<span class="fc" id="L131">        conversionServiceFactoryBean.afterPropertiesSet();</span>
+<span class="fc" id="L132">        return conversionServiceFactoryBean.getObject();</span>
     }
 
     @Override
     public void configureSecurity(HttpSecurity http) throws Exception {
-        //pridaj filter na prihlasovanie cez ApiToken
-<span class="fc" id="L126">        http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);</span>
-<span class="fc" id="L127">    }</span>
+        //add logon filter using API token
+<span class="fc" id="L138">        http.addFilterAfter(new ApiTokenAuthFilter(), BasicAuthenticationFilter.class);</span>
+
+        //add SetCharacterEncodingFilter for setting RequestBean and other system stuff, must be after ApiTokenAuthFilter because it needs logged user
+<span class="fc" id="L141">        http.addFilterAfter(new sk.iway.iwcm.SetCharacterEncodingFilter(), ApiTokenAuthFilter.class);</span>
+<span class="fc" id="L142">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -28,17 +28,17 @@ The editor window can be moved (for example, if you need to see information on t
 
 If you change the way the table is arranged (by clicking on the column name), the table will remember this arrangement in your browser. When you go back to that section again, the table will be arranged according to your preference.
 
-Click on the icon <i class="far fa-wrench" role="presentation" />, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the layout.
+Click on the icon <i class="ti ti-adjustments-horizontal" role="presentation"></i>, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the layout.
 
 ### Changing the order of columns
 
 You can move columns in the table to change their order according to your needs. Just grab the column header (name) and start dragging it left or right. The order of the columns will be remembered in the browser and when you go back to that section again, the order of the columns will be preserved.
 
-Click on the icon <i class="far fa-wrench" role="presentation" />, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the column order.
+Click on the icon <i class="ti ti-adjustments-horizontal" role="presentation"></i>, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the column order.
 
 ## Setting the display of columns
 
-Click on the button <i class="far fa-wrench" role="presentation" /> settings, you will be given the option to set the display of columns and the number of records displayed per page.
+Click on the button <i class="ti ti-adjustments-horizontal" role="presentation"></i> settings, you will be given the option to set the display of columns and the number of records displayed per page.
 
 In most tables all columns are displayed by default, but some like the table in the list of web pages contain very many columns, so only the basic ones are displayed by default. Click on the option **Columns display** opens a dialog box in which you can **select which columns you want to display**. Select them at will and click on the **Save**, the selected columns in **your browser will remember**. The selected columns will also be displayed after the page is refreshed.
 
@@ -53,7 +53,7 @@ There is also a button in the column display settings **Refresh**which will rest
 **Warning:** the more columns you have displayed, the longer it will take your computer to display the table.
 ## Number of records per page
 
-Click on the button <i class="far fa-wrench" role="presentation" /> settings, the option to set the number of records per page will appear.
+Click on the button <i class="ti ti-adjustments-horizontal" role="presentation"></i> settings, the option to set the number of records per page will appear.
 
 In order for the window to contain the ideal number of table rows, its size is calculated and preset according to this calculation. In the number of records setting, the first option displayed is Automatic (X) where X is the calculated number of rows according to the height of the window.
 

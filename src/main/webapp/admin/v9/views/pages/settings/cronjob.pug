@@ -16,7 +16,9 @@ block content
 
             cronTable = WJ.DataTable({
                 url: "/admin/rest/settings/cronjob",
-                columns: columns
+                columns: columns,
+                fetchOnCreate: true,
+                fetchOnEdit: true
             });
 
             cronTable.button().add(4, {

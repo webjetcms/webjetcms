@@ -3,6 +3,7 @@
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 
 import java.lang.reflect.InvocationHandler;
@@ -12,51 +13,56 @@ import java.lang.reflect.Proxy;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.IntStream;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
-<span class="fc" id="L16">public class DemoRestController</span>
+<span class="fc" id="L19">public class DemoRestController</span>
 {
 	@GetMapping(path={&quot;/demo-test&quot;})
-	public String test()
+	public String test(HttpServletRequest request)
 	{
-<span class="nc" id="L21">		final StringBuilder result = new StringBuilder();</span>
-<span class="nc" id="L22">		result.append(&quot;Demo OK &quot;).append(Constants.getInstallName()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L24">		final StringBuilder result = new StringBuilder();</span>
+<span class="fc" id="L25">		result.append(&quot;Demo OK &quot;).append(Constants.getInstallName()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L24">		result.append(&quot;docList.size=&quot;+DocDB.getInstance().getDocByGroup(4).size()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L27">		result.append(&quot;docList.size=&quot;+DocDB.getInstance().getDocByGroup(4).size()).append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L26">		result.append(&quot;Java 17 (&lt;a href=\&quot;https://www.baeldung.com/java-17-new-features\&quot;&gt;https://www.baeldung.com/java-17-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L29">		result.append(&quot;Java 17 (&lt;a href=\&quot;https://www.baeldung.com/java-17-new-features\&quot;&gt;https://www.baeldung.com/java-17-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L28">		IntStream random = RandomGeneratorFactory.of(&quot;Random&quot;)</span>
-<span class="nc" id="L29">				.create()</span>
-<span class="nc" id="L30">				.ints(10, 0, 100);</span>
+<span class="fc" id="L31">		IntStream random = RandomGeneratorFactory.of(&quot;Random&quot;)</span>
+<span class="fc" id="L32">				.create()</span>
+<span class="fc" id="L33">				.ints(10, 0, 100);</span>
 
-<span class="nc" id="L32">		result.append(&quot;&lt;b&gt;2.2. Enhanced Pseudo-Random Number Generators&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
-<span class="nc" id="L33">		random.forEach(i -&gt; result.append(i).append(&quot;\n&lt;br&gt;&quot;));</span>
-<span class="nc" id="L34">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L35">		result.append(&quot;&lt;b&gt;2.2. Enhanced Pseudo-Random Number Generators&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L36">		random.forEach(i -&gt; result.append(i).append(&quot;\n&lt;br&gt;&quot;));</span>
+<span class="fc" id="L37">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L36">		result.append(&quot;Java 16 (&lt;a href=\&quot;https://www.baeldung.com/java-16-new-features\&quot;&gt;https://www.baeldung.com/java-16-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L39">		result.append(&quot;Java 16 (&lt;a href=\&quot;https://www.baeldung.com/java-16-new-features\&quot;&gt;https://www.baeldung.com/java-16-new-features&lt;/a&gt;)&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L38">		String r = &quot;&quot;;</span>
-<span class="nc" id="L39">		Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), new Class&lt;?&gt;[] { HelloWorld.class },</span>
+<span class="fc" id="L41">		String r = &quot;&quot;;</span>
+<span class="fc" id="L42">		Object proxy = Proxy.newProxyInstance(getClass().getClassLoader(), new Class&lt;?&gt;[] { HelloWorld.class },</span>
 				(prox, method, args) -&gt; {
-<span class="nc bnc" id="L41" title="All 2 branches missed.">					if (method.isDefault()) {</span>
-<span class="nc" id="L42">						return InvocationHandler.invokeDefault(prox, method, args);</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">					if (method.isDefault()) {</span>
+<span class="fc" id="L45">						return InvocationHandler.invokeDefault(prox, method, args);</span>
 					}
 
-<span class="nc" id="L45">					return &quot;default not found&quot;;</span>
+<span class="nc" id="L48">					return &quot;default not found&quot;;</span>
 				}
 		);
 		try {
-<span class="nc" id="L49">			Method method = proxy.getClass().getMethod(&quot;hello&quot;);</span>
-<span class="nc" id="L50">			r = (String) method.invoke(proxy);</span>
-<span class="nc" id="L51">		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {</span>
-<span class="nc" id="L52">			e.printStackTrace();</span>
-<span class="nc" id="L53">		}</span>
+<span class="fc" id="L52">			Method method = proxy.getClass().getMethod(&quot;hello&quot;);</span>
+<span class="fc" id="L53">			r = (String) method.invoke(proxy);</span>
+<span class="nc" id="L54">		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {</span>
+<span class="nc" id="L55">			e.printStackTrace();</span>
+<span class="fc" id="L56">		}</span>
 
-<span class="nc" id="L55">		result.append(&quot;&lt;b&gt;2. Invoke Default Methods From Proxy Instances&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
-<span class="nc" id="L56">		result.append(&quot;Vysledok by mal byt world, je: &quot;).append(r);</span>
-<span class="nc" id="L57">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L58">		result.append(&quot;&lt;b&gt;2. Invoke Default Methods From Proxy Instances&lt;/b&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
+<span class="fc" id="L59">		result.append(&quot;Vysledok by mal byt world, je: &quot;).append(r);</span>
+<span class="fc" id="L60">		result.append(&quot;\n&lt;br&gt;&quot;).append(&quot;\n&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L59">		return result.toString();</span>
+<span class="fc" id="L62">		String name = Tools.getParameter(request, &quot;name&quot;);</span>
+<span class="fc" id="L63">		result.append(&quot;\n&lt;p class='name-request'&gt;&quot;).append(name).append(&quot;&lt;/p&gt;&quot;);</span>
+
+<span class="fc" id="L65">		return result.toString();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

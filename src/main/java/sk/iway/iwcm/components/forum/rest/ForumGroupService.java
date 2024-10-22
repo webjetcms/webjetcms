@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -19,18 +21,22 @@ import sk.iway.iwcm.i18n.Prop;
 
 public class ForumGroupService {
 
-    private static final String userGroupsDelimiter = "+";
+    private ForumGroupService() {}
+
+    private static final String USER_GROUPS_DELIMITER = "+";
 
     private static boolean dataHasForumText(String data)  {
-        if (data.indexOf("/forum/forum_mb")!=-1 || data.indexOf("forum_mb.jsp")!=-1)
-			if (data.indexOf("type=topics") != -1 || data.indexOf("rootGroup=") != -1 || data.indexOf("bbRootGroupId=") != -1)
-				return(true);
+        if (data.indexOf("/forum/forum_mb")!=-1 || data.indexOf("forum_mb.jsp")!=-1) {
+			if (data.indexOf("type=topics") != -1 || data.indexOf("rootGroup=") != -1 || data.indexOf("bbRootGroupId=") != -1) {
+				return true;
+            }
+        }
 
-		else if (data.indexOf("/forum/forum")!=-1)
-			if (data.indexOf("type=topics") != -1 || data.indexOf("bbRootGroupId=") != -1)
-				return(true);
+		if (data.indexOf("/forum/forum") != -1 && ( data.indexOf("type=topics") != -1 || data.indexOf("bbRootGroupId=") != -1) ) {
+			return true;
+        }
 
-		return(false);
+		return false;
     }
 
     public static boolean isMessageBoard(DocDetails doc, TemplateDetails temp) {
@@ -40,7 +46,7 @@ public class ForumGroupService {
         if( dataHasForumText(temp.getMenuDocData()) ) return true;
         if( dataHasForumText(temp.getRightMenuDocData()) ) return true;
         if( dataHasForumText(temp.getObjectADocData()) ) return true;
-		if( dataHasForumText(temp.getObjectBDocData()) ) return true;
+        if( dataHasForumText(temp.getObjectBDocData()) ) return true;
         if( dataHasForumText(temp.getObjectCDocData()) ) return true;
         if( dataHasForumText(temp.getObjectDDocData()) ) return true;
 
@@ -53,7 +59,7 @@ public class ForumGroupService {
         if(docForumEntity == null || docId < 1) return;
 
         Prop prop = Prop.getInstance();
-		ForumGroupRepository forumGroupRepository = Tools.getSpringBean("forumGroupRepository", ForumGroupRepository.class);
+		ForumGroupRepository forumGroupRepository = getForumGroupRespository();
 		Optional<ForumGroupEntity> forumGroupEntityOpt = forumGroupRepository.findFirstByDocIdOrderById(docId);
 
         ForumGroupEntity forumGroupEntity;
@@ -78,7 +84,7 @@ public class ForumGroupService {
 		}
 
         //
-		if(forumGroupEntity.getActive()) forumGroupEntity.setForumStatus( prop.getText("components.forum.status_true") );
+		if(Tools.isTrue(forumGroupEntity.getActive())) forumGroupEntity.setForumStatus( prop.getText("components.forum.status_true") );
 		else forumGroupEntity.setForumStatus( prop.getText("components.forum.status_false"));
 
 		//
@@ -91,42 +97,75 @@ public class ForumGroupService {
             if(!Tools.isEmpty( forumGroupEntity.getAdminGroups() ))
                 forumGroupEntity.setAdminPerms(
                     Arrays.stream(
-                        Tools.getTokensInt( forumGroupEntity.getAdminGroups(), userGroupsDelimiter)
+                        Tools.getTokensInt( forumGroupEntity.getAdminGroups(), USER_GROUPS_DELIMITER)
                     ).boxed().toArray( Integer[]::new )
                 );
         } else forumGroupEntity.setForumType( prop.getText("components.forum.admin.forumType.simple") );
 
-        //Take string of id's addmessageGroups
+        //Take string of id's add messageGroups
 		// -> convert it to int[] (using Tools.getTokensInt)
 		// -> this array convert to Integer[] and save into addMessagePerms (using Arrays.stream)
 		if(!Tools.isEmpty( forumGroupEntity.getAddmessageGroups() ))
 			forumGroupEntity.setAddMessagePerms(
 				Arrays.stream(
-					Tools.getTokensInt( forumGroupEntity.getAddmessageGroups(), userGroupsDelimiter)
+					Tools.getTokensInt( forumGroupEntity.getAddmessageGroups(), USER_GROUPS_DELIMITER)
 				).boxed().toArray( Integer[]::new )
 			);
 
         docForumEntity.setForumGroupEntity(forumGroupEntity);
     }
 
+    /**
+     * Create forum group after webpage page is saved, so user can immediately change forum settings
+     * @param docId
+     * @param pageData
+     */
+    public static void createForumAfterPage(int docId, String pageData) {
+        if (Tools.isEmpty(pageData)) return;
+
+        if(pageData.contains("/forum/forum.jsp") || pageData.contains("/forum/forum_mb.jsp")) {
+            ForumGroupRepository forumGroupRepository = getForumGroupRespository();
+
+            ForumGroupEntity entity = forumGroupRepository.findFirstByDocIdOrderById(docId).orElse(null);
+
+            if(entity == null) {
+                entity = new ForumGroupEntity();
+                entity.setDocId(docId);
+                entity.setActive(true);
+                entity.setDomainId( CloudToolsForCore.getDomainId() );
+                entity.setMessageConfirmation(false);
+                entity.setHoursAfterLastMessage(0);
+                entity.setMessageBoard( pageData.contains("/forum/forum_mb.jsp") );
+            }
+
+            Pattern pattern = Pattern.compile("notifyPageAuthor=([^,)]+)");
+            Matcher matcher = pattern.matcher(pageData);
+            boolean notifyPageAuthor = false;
+            if(matcher.find()) notifyPageAuthor = Tools.getBooleanValue(matcher.group(1), false);
+            entity.setNotifyPageAuthor(notifyPageAuthor);
+
+            forumGroupRepository.save(entity);
+        }
+    }
+
     public static void saveForum(ForumGroupEntity entityToSave) {
-        ForumGroupRepository forumGroupRepository = Tools.getSpringBean("forumGroupRepository", ForumGroupRepository.class);
+        ForumGroupRepository forumGroupRepository = getForumGroupRespository();
 
         /* Convert selected user groups to string */
 
         //!! only message board can select admin users
-        if(entityToSave.getMessageBoard()) {
-            String adminPermsString = "";
-            Boolean first = true;
+        if(Tools.isTrue(entityToSave.getMessageBoard())) {
+            StringBuilder adminPermsString = new StringBuilder("");
+            boolean first = true;
             for(Integer userGroupId : entityToSave.getAdminPerms()) {
                 if(first) {
                     first = false;
-                    adminPermsString += userGroupId;
-                } else adminPermsString += "+" + userGroupId;
+                    adminPermsString.append(userGroupId);
+                } else adminPermsString.append("+").append(userGroupId);
             }
 
             //Set this string into entity
-            entityToSave.setAdminGroups(adminPermsString);
+            entityToSave.setAdminGroups(adminPermsString.toString());
         } else {
             //This params can be set if forum type != message board
             entityToSave.setAdminGroups(null);
@@ -134,17 +173,17 @@ public class ForumGroupService {
         }
 
         //Both types can set add message perms
-        Boolean first = true;
-        String addMessagePermsString = "";
+        boolean first = true;
+        StringBuilder addMessagePermsString = new StringBuilder("");
         for(Integer userGroupId : entityToSave.getAddMessagePerms()) {
             if(first) {
                 first = false;
-                addMessagePermsString += userGroupId;
-            } else addMessagePermsString += "+" + userGroupId;
+                addMessagePermsString.append(userGroupId);
+            } else addMessagePermsString.append("+").append(userGroupId);
         }
 
         //Set this string into entity
-        entityToSave.setAddmessageGroups(addMessagePermsString);
+        entityToSave.setAddmessageGroups(addMessagePermsString.toString());
 
         // "null" string fix !!
         if("null".equals(entityToSave.getAdminGroups())) entityToSave.setAdminGroups("");
@@ -166,7 +205,7 @@ public class ForumGroupService {
     }
 
 	public static ForumGroupEntity getForum(int docId, boolean returnNull) {
-        ForumGroupRepository forumGroupRepository = Tools.getSpringBean("forumGroupRepository", ForumGroupRepository.class);
+        ForumGroupRepository forumGroupRepository = getForumGroupRespository();
 
 		//Forum group aka FORUM
 		Optional<ForumGroupEntity> forum = forumGroupRepository.findFirstByDocIdOrderById(docId);
@@ -194,16 +233,14 @@ public class ForumGroupService {
             ForumGroupEntity fge = getForum(docId, true);
             if (fge != null) {
                 //Check active param
-                if (!fge.getActive()) ret = false;
+                if (Tools.isFalse(fge.getActive())) ret = false;
 
                 //Check is we are NOW between FROM - TO range
-                if(fge.getDateFrom() != null)
-                    if(Tools.getNow() <= fge.getDateFrom().getTime())
-                        ret = false;
+                if(fge.getDateFrom() != null && Tools.getNow() <= fge.getDateFrom().getTime())
+                    ret = false;
 
-                if(fge.getDateTo() != null)
-                    if(Tools.getNow() >= fge.getDateTo().getTime())
-                        ret = false;
+                if(fge.getDateTo() != null && Tools.getNow() >= fge.getDateTo().getTime())
+                    ret = false;
 
                 //Now check, if forum have set HoursAfterLastMessage param
                 //If yes, check that this amount of hour haven't passed since QuestionDate
@@ -220,5 +257,9 @@ public class ForumGroupService {
             }
         }
         return ret;
+    }
+
+    private static ForumGroupRepository getForumGroupRespository() {
+        return Tools.getSpringBean("forumGroupRepository", ForumGroupRepository.class);
     }
 }

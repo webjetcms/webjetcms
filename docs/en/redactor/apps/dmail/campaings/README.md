@@ -6,7 +6,7 @@ The advantage is that every email can be personalized - if you put the !name! th
 
 Email can be sent to visitors who are registered in the admin part of the Web JET system, or create a file with a list of names and email addresses and then import them as email recipients.
 
-![](datatable.png)
+![](dataTable.png)
 
 ## Tab - Basic
 
@@ -66,11 +66,14 @@ When the campaign is saved, the real list of recipients and already sent emails 
 
 ## Tab - Beneficiaries
 
-In the Recipients tab we can see a summary of all recipients who will receive the campaign emails. Recipients can be added, duplicated or deleted using the buttons in the table. When inserting a record via the button `+` you can enter multiple email addresses separated by a comma, semicolon or newline.
+In the Recipients tab we can see a summary of all recipients who will receive the campaign emails. Recipients can be added, edited, duplicated or deleted in the table.
 
 ![](receivers.png)
 
-Note: the recipient list is treated against duplicate emails. When importing/adding an existing email, it will be skipped. Also, it is not possible to add an email address to a campaign that is in the list [Unsubscribed emails](../unsubscribed/README.md).
+**Warning,** the list of recipients is treated against certain non-conforming values:
+- Duplication protection, checking for duplication in the entered emails as well as with those already existing in the campaign
+- protection against inappropriate email, the email must comply with the standard format **meno@domena.sk** (special exception for [Import from xlsx](#import-z-xlsx))
+- protection against unsubscribed emails, it is not possible to add a recipient whose email address is in the list [Unsubscribed emails](../unsubscribed/README.md)
 
 ### Email status
 
@@ -83,34 +86,54 @@ Important is the "Email Status" column which can contain values:
 
 ### Manual addition
 
-To manually add emails to your campaign, click on the "Add" button. The "Email" field is required, in which you must enter one or more emails separated by a comma, semicolon or newline. The entered emails will then be added to the recipients of the campaign.
+To manually add emails to your campaign, click on the "Add" button. Required is the "Email" field, in which you must enter one or more emails separated by **comma, semicolon, space or newline**. You can use multiple department types at the same time, such as "test1@test.sk, test2@test.sk; test3@test.sk test4@test.sk". The specified emails will then be added to the recipients of the campaign.
 
 The "Name" field is optional. If you do not fill it in, the recipient's name will be retrieved from the user database based on an email match (if any). If no such email is found in the database, the value "- -" is inserted as the name. If you fill in the "Name" field, it will be set to all the emails you are currently entering via the "Email" field.
 
 ![](raw-import.png)
 
+Manual addition offers the possibility **Skip erroneous entries**. If you enter E-mail as `Test1@test.sk, Test2@test.sk; Test13Wrong Test4@test.sk Test2@test.sk` and the option to Skip erroneous records **is switched off**, adding recipients stops at the first non-compliant value and an error is displayed:
+
+![](recipients_editor_err.png)
+
+The save ended on the third email `Test13Wrong` due to a value in the wrong format. The previous two emails were satisfactory and were saved (you can reload the data in the table to view it).
+
+![](recipients_A.png)
+
+**If the option is on**, the non-compliant values are skipped and a notification is displayed telling you which values were not saved and why:
+
+![](recipients_notification.png)
+
+Since only 3 of the 5 emails were matched, only 3 recipients were added to the campaign.
+
+![](recipients_B.png)
+
 ### Import from xlsx
 
-You can import recipients in bulk from an xlsx file by standard import.
+The bulk way to add/update recipients is via a standard import of recipients from an xlsx file.
 
 ![](xlsx-import.png)
 
-In excel in the first line you need to have the following names defined:
+In the file in the first line you need to have the following names defined:
 - `Meno|recipientName` - name and surname of the recipient
 - `E-mail|recipientEmail` - email address of the recipient
 
 ![](xlsx-import-example.png)
 
-Note: you can get the correct import file simply by exporting the recipients. You can then delete the ID column and fill in the names and email addresses for the import of the recipients.
+You can get the correct import file simply by exporting the recipients. You can then delete the ID column and fill in the names and email addresses for importing the recipients.
 
-## Tab - Openings
+**Warning:**
+- Importing from an xlxs file does not support adding multiple emails in one cell as in the case of manual addition. There must only ever be one email address in a cell.
+- Importing from an xlxs file supports the email format exception. When manually adding, each mail must have the format **meno@domena.sk**. However, if you are copying emails from outlook, the copied value may have the format `"Ján Tester <jan_tester@test.com>"`. If the value contains characters `<>`(in that exact order)**, the value in between shall be used. In this case, it would just be the value **. This value must have the format `jan_tester@test.com`meno@domena.sk**.**Tab - Openings
 
-The open tab records the recipient opening the email. This is done using an embedded image. Not all recipients will confirm the image has been retrieved from the server, so the list is not complete.
+## The open tab records the recipient opening the email. This is done using an embedded image. Not all recipients will confirm the image has been retrieved from the server, so the list is not complete.
+
+Tab - Clicks
 
 ![](opens.png)
 
-## Tab - Clicks
+## Displays a list of clicks on a link in an email. A recipient can click on a link multiple times, so multiple clicks from a single recipient can be recorded in the table.
 
-Displays a list of clicks on a link in an email. A recipient can click on a link multiple times, so multiple clicks from a single recipient can be recorded in the table.
+
 
 ![](clicks.png)

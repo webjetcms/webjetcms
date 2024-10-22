@@ -9,8 +9,8 @@ Odosielanie emailov kampane vykonáva na pozadí tzv. ```Sender```. Ten pracuje 
 - Pre vybraný email sa zvýši počítadlo pokusov odoslania a nastaví sa dátum odoslania na aktuálny dátum a čas (aj keď email ešte nie je odoslaný, znižuje to ale pravdepodobnosť duplicitného odoslania emailu v prípade clustrovej inštalácie).
 - Ak počet odoslaní presahuje maximálny počet pokusov email sa označí ako nesprávny (hodnota ```retry``` v tabuľke bude mať hodnotu ```-1```).
 - Cez HTTP protokol sa stiahne web stránka s textom a dizajnom emailu.
-- Ak je príjemca z databázy registrovaných používateľov vo WebJET CMS daný používateľ sa pri sťahovaní web stránky prihlási. V stránke je tak možné využívať [značky pre vloženie údajov používateľa](README.MD#karta-základné).
-- Ak príjemca nie je z databázy registrovaných používateľov nahradia sa len [základné značky](README.MD#karta-základné).
+- Ak je príjemca z databázy registrovaných používateľov vo WebJET CMS daný používateľ sa pri sťahovaní web stránky prihlási. V stránke je tak možné využívať [značky pre vloženie údajov používateľa](../campaings/README.md#základné).
+- Ak príjemca nie je z databázy registrovaných používateľov nahradia sa len [základné značky](../campaings/README.md#základné).
 - Ak je v tele emailu aplikácia môže do tela vygenerovať text ```SENDER: DO NOT SEND THIS EMAIL```, v takom prípade sa email neodošle a označí sa za úspešne odoslaný. Je to možné použiť v prípade, ak aplikácia kontroluje nastavenie používateľa - napr. má záujem dostávať len ponuku na 3-izbový byt, ktorý ale aktuálne nemáte v ponuke.
 - K telu emailu sa priložia obrázky a prílohy.
 - Telo emailu sa doplní o značku pre sledovanie kliknutí na odkaz v emaile.
@@ -59,7 +59,7 @@ Ak potrebujete urýchliť odosielanie môžete postupovať nasledovne:
 
 - Zvýšte doménové limity, odporúčame nastaviť vyššie limity na domény ```gmail.com``` a vašu firemnú doménu.
 - Upravte ```dmailWaitTimeout``` na hodnotu ```500```, čo zvýši rýchlosť volania odoslania emailu, z dôvodu blokovania (viď vyššie). To ale neznamená, že sa email odošle každých 500ms.
-- Ak databáza obsahuje veľa neplatných emailov znížte ```dmailSleepTimeAfterException```, pozor ale, ak skutočne nastane výpadok vášho SMTP servera, tak sa emaily veľmi rýchlo označia ako odoslané, pretože pretečie počet ```dmailMaxRetryCount```.
+- Ak databáza obsahuje veľa neplatných emailov znížte ```dmailSleepTimeAfterException```. **Upozornenie:**, ak skutočne nastane výpadok vášho SMTP servera, tak sa emaily veľmi rýchlo označia ako odoslané, pretože pretečie počet ```dmailMaxRetryCount```.
 - Nastavte ```natUrlTranslate``` pre priame sťahovanie textu emailu z lokálneho aplikačného servera. Ak máte viac doménovú inštaláciu môže nastať problém s výberom správnej domény. Odporúčame v ```hosts``` súbore na serveri nastaviť všetky domény na IP adresu 127.0.0.1, v takom prípade nastavíte len presmerovanie portu z 80 na 8080 (alebo na akom porte máte spustený lokálny aplikačný server).
 - Minimalizujte obrázky a prílohy. Tie zvyšujú záťaž na server a objem emailu. Prípadne nastavte konf. premennú ```dmailDisableInlineImages``` na ```false``` pre vypnutie prikladania obrázkov priamo do tela emailu.
 - Ak máte cluster môžete povoliť odosielanie z viacerých nodov paralelne, zvyšuje sa ale riziko viac duplicitného odoslania emailu príjemcovi. Zoznam nodov, z ktorých sa email odosiela sa nastavuje v konf. premennej ```senderRunOnNode```.

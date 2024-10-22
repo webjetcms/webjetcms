@@ -2,15 +2,15 @@
 
 Aplikácia hromadný e-mail vám umožní posielať hromadné **personalizované** emailové správy viacerým používateľom. Každá správa sa posiela samostatne, jednotliví príjemcovia nevidia e-mail adresy ostatných príjemcov.
 
-Výhodou je, že každý e-mail môže byť personalizovaný - ak do tela mailu vložíte značku !name! namiesto nej sa vloží skutočné meno príjemcu.
+Výhodou je, že každý e-mail môže byť personalizovaný - ak do tela mailu vložíte značku ```!name!``` namiesto nej sa vloží skutočné meno príjemcu.
 
-E-mail je možné posielať návštevníkom, ktorí sú registrovaní v admin časti systému Web JET, alebo vytvoriť súbor so zoznamom mien a e-mail adries a tie potom naimportovať ako príjemcov emailu.
+E-mail je možné posielať návštevníkom, ktorí sú registrovaní v admin časti systému Web JET, alebo vytvoriť súbor so zoznamom mien a e-mail adries a tie potom importovať ako príjemcov emailu.
 
 ![](dataTable.png)
 
-## Karta - Základné
+## Základné
 
-Pri vytváraní nového záznamu máme na výber iba jednú kartu zo základnými informáciami, ktoré potrebujeme vyplniť a to "Predmet" a "Web stránka". Údaje o odosielateľovi sa vyplnia automatický podľa prihláseného používateľa, ale môžete ich samozrejme zmeniť.
+Pri vytváraní nového záznamu máme v karte **Základné** na výber iba jednu kartu zo základnými informáciami, ktoré potrebujeme vyplniť a to "Predmet" a "Web stránka". Údaje o odosielateľovi sa vyplnia automatický podľa prihláseného používateľa, ale môžete ich samozrejme zmeniť.
 
 Text emailu je prebratý z vybranej web stránky (vrátane jej dizajnu). Odporúčame si v sekcii Web stránky vytvoriť priečinok napr. ```Newsletter``` s nastavenou vhodnou šablónou. V tomto priečinku najskôr vytvorte web stránku s textom emailu a následne ju vyberte v kampani.
 
@@ -45,9 +45,9 @@ Ak je príjemca z databázy používateľov WebJET CMS je možné využiť aj ď
 - ```!LOGGED_USER_FIELDE!``` - voľné pole E
 - `!LOGGED_USER_GROUPS!` - zoznam skupín používateľov
 
-## Karta - Pokročilé
+## Pokročilé
 
-Môžete nastaviť polia email správy pre odpovedanie, kópiu a skrytú kópiu.
+V karte **Pokročilé** môžete nastaviť polia email správy pre odpovedanie, kópiu a skrytú kópiu.
 
 Ak zadáte dátum do poľa začiatok odosielania začnú sa emaily odosielať až po zadanom čase (môžete si teda e-mailovú kampaň naplánovať vopred).
 
@@ -55,9 +55,9 @@ K emailu môžete priložiť maximálne 3 prílohy (súbory).
 
 ![](advanced.png)
 
-## Karta - Skupiny
+## Skupiny
 
-V karte Skupiny vybratím/zaškrtnutím konkrétnej skupiny používateľov sa **po uložení kampane** pridajú používatelia patriaci pod tieto skupiny medzi príjemcov. Čo znamená, že budú dostávať email-y tejto kampane.
+V karte **Skupiny** vybratím/zaškrtnutím konkrétnej skupiny používateľov sa **po uložení kampane** pridajú používatelia patriaci pod tieto skupiny medzi príjemcov. Čo znamená, že budú dostávať email-y tejto kampane.
 
 Akcie na ktoré je potrebné si dať pozor:
 
@@ -68,13 +68,13 @@ Pri uložení kampane sa spočíta reálny zoznam príjemcov a už odoslaných e
 
 ![](users.png)
 
-## Karta - Príjemcovia
+## Príjemcovia
 
-V karte Príjemcovia vidíme prehľad všetkých príjemcov, ktorý budu dostavať email-y kampane. Príjemcov je možné v tabuľke pridať, upraviť, duplikovať alebo zmazať.
+V karte **Príjemcovia** vidíme prehľad všetkých príjemcov, ktorý budú dostavať email-y kampane. Príjemcov je možné v tabuľke pridať, upraviť, duplikovať alebo zmazať.
 
 ![](receivers.png)
 
-**Upozornenie,** zoznam príjemcov je ošetrený proti určitým nevyhovujúcim hodnotám:
+!>**Upozornenie,** zoznam príjemcov je ošetrený proti určitým nevyhovujúcim hodnotám:
 - ochrana proti duplicite, kontroluje sa duplicita v zadaných emailoch ako aj s tými, ktoré už existujú v kampani
 - ochrana proti nevhodnému emailu, email musí spĺňať štandardný formát **meno@domena.sk** (špeciálna výnimka pri [Import z xlsx](#import-z-xlsx))
 - ochrana proti odhláseným emailom, nie možné pridať príjemcu, ktorého emailová adresa je v zozname [Odhlásené e-maily](../unsubscribed/README.md)
@@ -86,14 +86,14 @@ Dôležitý je stĺpec "Stav E-mailu" ktorý môže obsahovať hodnoty:
 - Nový - novo pridaný email, je potrebné uložiť kampaň pre pridanie tohto emailu do kampane.
 - Uložený - email je uložený, čaká v rade na odoslanie
 - Odoslaný - email je odoslaný, v stĺpci Dátum odoslania je uložený presný dátum a čas odoslania emailu
-- Zastavený - email je pripravený na odosielanie, v tabuľke zoznamu kampaní označte kampaň a kliknite na tlačidlo ```Spustiť odosielanie``` pre odoslanie emailu.
+- Zastavený - email je pripravený na odosielanie, v tabuľke zoznamu kampaní označte kampaň a kliknite na tlačidlo **Spustiť odosielanie** pre odoslanie emailu.
 - Chyba odoslania - bol prekročený počet pokusov o odoslanie e-mailu (predvolene 3 pokusy). Buď je e-mail nesprávny, alebo je iná chyba v kampani.
 
 ### Manuálne pridanie
 
-Manuálne pridanie emailov do kampane vykonáte kliknutím na tlačidlo "Pridať". Povinné je pole "E-mail", do ktorej musíte zadať jeden alebo viac emailov oddelených **čiarkou, bodkočiarkou, medzerou alebo novým riadkom**. Môžete využiť viaceré typy oddelenia súčasne, ako napr. "test1@test.sk, test2@test.sk; test3@test.sk  test4@test.sk". Zadané e-maily sa následné pridajú medzi príjemcov kampane.
+Manuálne pridanie emailov do kampane vykonáte kliknutím na tlačidlo "Pridať". Povinné je pole "E-mail", do ktorej musíte zadať jeden alebo viac emailov oddelených **čiarkou, bodkočiarkou, medzerou alebo novým riadkom**. Môžete využiť viaceré typy oddelenia súčasne, ako napr. ```test1@test.sk, test2@test.sk; test3@test.sk  test4@test.sk```. Zadané e-maily sa následné pridajú medzi príjemcov kampane.
 
-Pole "Meno" je voliteľné. Ak ho nevyplníte, tak sa meno príjemcu získa z databázy používateľov na základe zhody emailu (ak existuje). Ak sa takýto email v databáze nenachádza, vloží sa ako meno hodnota "- -". Ak pole "Meno" vyplníte, tak sa nastaví všetkým emailov, ktoré práve vkladáte prostredníctvom poľa "E-mail".
+Pole **Meno** je voliteľné. Ak ho nevyplníte, tak sa meno príjemcu získa z databázy používateľov na základe zhody emailu (ak existuje). Ak sa takýto email v databáze nenachádza, vloží sa ako meno hodnota ```- -```. Ak pole **Meno** vyplníte, tak sa nastaví všetkým emailov, ktoré práve vkladáte prostredníctvom poľa **E-mail**.
 
 ![](raw-import.png)
 
@@ -128,19 +128,19 @@ V súbore v prvom riadku je potrebné mať definované nasledovné názvy:
 
 Korektný súbor pre import získate jednoducho exportom príjemcov. Následne môžete zmazať stĺpec ID a vyplniť mená a email adresy pre import príjemcov.
 
-**Upozornenie:**
+!>**Upozornenie:**
 
 - Import z xlxs súboru nepodporuje pridanie viacerých emailov v jednej bunke ako v prípade manuálneho pridania. V bunke musí byť vždy len jedna emailová adresa.
-- Import z xlxs súboru podporuje výnimku formátu emailu. Pri manuálnom pridaní musí mať každý mail formát **meno@domena.sk**. Ak však kopírujete emaily napr z outlook-u, skopírovaná hodnota môže mať formát ```"Ján Tester <jan_tester@test.com>"```. V prípade, že hodnota obsahuje znaky ```<>``` **(presne v tomto poradí)**, použije sa hodnota medzi nimi. V tomto prípade by to bola práve hodnota ```jan_tester@test.com```. Táto hodnota musí mať formát **meno@domena.sk**.
+- Import z xlxs súboru podporuje výnimku formátu emailu. Pri manuálnom pridaní musí mať každý mail formát **meno@domena.sk**. Ak však kopírujete emaily napr. z aplikácie Outlook, skopírovaná hodnota môže mať formát ```"Ján Tester <jan_tester@test.com>"```. V prípade, že hodnota obsahuje znaky ```<>```, **(presne v tomto poradí)**, použije sa hodnota medzi nimi. V tomto prípade by to bola práve hodnota ```jan_tester@test.com```. Táto hodnota musí mať formát **meno@domena.sk**.
 
-## Karta - Otvorenia
+## Otvorenia
 
-V karte otvorenia sa zaznamená otvorenie e-mailu príjemcom. Toto je realizované pomocou vloženého obrázka. Nie všetci príjemcovia potvrdia načítanie obrázka zo servera, takže zoznam nie je kompletný.
+V karte **Otvorenia** sa zaznamená otvorenie e-mailu príjemcom. Toto je realizované pomocou vloženého obrázka. Nie všetci príjemcovia potvrdia načítanie obrázka zo servera, takže zoznam nie je kompletný.
 
 ![](opens.png)
 
-## Karta - Kliknutia
+##
 
-Zobrazuje zoznam kliknutí na odkaz v emaile. Príjemca môže na odkaz kliknúť viac krát, preto môže byť v tabuľke kliknutie zaznamenané viac krát od jedného príjemcu.
+Karta **Kliknutia** zobrazuje zoznam kliknutí na odkaz v emaile. Príjemca môže na odkaz kliknúť viac krát, preto môže byť v tabuľke kliknutie zaznamenané viac krát od jedného príjemcu.
 
 ![](clicks.png)

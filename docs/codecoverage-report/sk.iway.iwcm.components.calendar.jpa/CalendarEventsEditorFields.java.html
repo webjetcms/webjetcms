@@ -15,6 +15,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -27,9 +28,9 @@ import sk.iway.iwcm.users.UsersDB;
 @Setter
 public class CalendarEventsEditorFields extends BaseEditorFields implements Serializable {
 
-<span class="fc" id="L30">    public CalendarEventsEditorFields(){</span>
+<span class="fc" id="L31">    public CalendarEventsEditorFields(){</span>
         //constructor
-<span class="fc" id="L32">    }</span>
+<span class="fc" id="L33">    }</span>
 
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
@@ -59,11 +60,10 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
 
     public void fromCalendarEventsEntity(CalendarEventsEntity originalEntity, HttpServletRequest request, Prop prop) {
 
-<span class="pc bpc" id="L62" title="1 of 4 branches missed.">        if(originalEntity.getId() == null || originalEntity.getId() == -1) {</span>
-<span class="fc" id="L63">            originalEntity.setDateFrom(new Date());</span>
-<span class="fc" id="L64">            originalEntity.setDateTo(new Date());</span>
-<span class="fc" id="L65">            originalEntity.setNotifyIntrotext(prop.getText(&quot;calendar_edit.notify_introtext_default&quot;));</span>
-<span class="fc" id="L66">            originalEntity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L63" title="1 of 4 branches missed.">        if(originalEntity.getId() == null || originalEntity.getId() == -1) {</span>
+<span class="fc" id="L64">            originalEntity.setDateFrom(new Date());</span>
+<span class="fc" id="L65">            originalEntity.setDateTo(new Date());</span>
+<span class="fc" id="L66">            originalEntity.setNotifyIntrotext(prop.getText(&quot;calendar_edit.notify_introtext_default&quot;));</span>
 
 <span class="fc" id="L68">            Identity loggedUser = UsersDB.getCurrentUser(request);</span>
 <span class="fc" id="L69">            originalEntity.setNotifySender(loggedUser.getEmail());</span>
@@ -102,7 +102,7 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
 <span class="fc" id="L102">        originalEntity.setEditorFields(this);</span>
 <span class="fc" id="L103">    }</span>
 
-    public void toCalendarEventsEntity(CalendarEventsEntity originalEntity, CalendarTypesRepository ctr, Prop prop, CalendarEventsRepository cer, HttpServletRequest request) {
+    public void toCalendarEventsEntity(CalendarEventsEntity originalEntity, CalendarTypesRepository ctr, Prop prop, CalendarEventsRepository cer, HttpServletRequest request, ProcessItemAction action) {
 
 <span class="fc" id="L107">        StringBuilder notifySendertext = new StringBuilder();</span>
 <span class="fc" id="L108">        UserGroupsDB ugdb = UserGroupsDB.getInstance();</span>
@@ -114,62 +114,65 @@ public class CalendarEventsEditorFields extends BaseEditorFields implements Seri
         }
 <span class="fc" id="L115">        originalEntity.setNotifyEmails(notifySendertext.toString());</span>
 
-<span class="fc" id="L117">        boolean newEntity = false;</span>
-<span class="fc" id="L118">        boolean changedType = false;</span>
+        //Set domainId - if create
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        if(action == ProcessItemAction.CREATE) originalEntity.setDomainId(CloudToolsForCore.getDomainId());</span>
+
+<span class="fc" id="L120">        boolean newEntity = false;</span>
+<span class="fc" id="L121">        boolean changedType = false;</span>
 
         //Check if entity is new
-<span class="pc bpc" id="L121" title="1 of 4 branches missed.">        if(originalEntity.getId() == null || originalEntity.getId() == -1) newEntity = true;</span>
+<span class="pc bpc" id="L124" title="1 of 4 branches missed.">        if(originalEntity.getId() == null || originalEntity.getId() == -1) newEntity = true;</span>
 
         //Check if type was changed
-<span class="fc" id="L124">        CalendarEventsEntity fromDB = null;</span>
-<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (originalEntity.getId()!=null) fromDB = cer.getById(originalEntity.getId());</span>
-<span class="pc bpc" id="L126" title="1 of 4 branches missed.">        if(fromDB != null &amp;&amp; fromDB.getTypeId().equals(originalEntity.getTypeId())==false) changedType = true;</span>
+<span class="fc" id="L127">        CalendarEventsEntity fromDB = null;</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        if (originalEntity.getId()!=null) fromDB = cer.findFirstByIdAndDomainId(originalEntity.getId(), CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">        if(fromDB != null &amp;&amp; fromDB.getTypeId().equals(originalEntity.getTypeId())==false) changedType = true;</span>
 
-<span class="pc bpc" id="L128" title="1 of 4 branches missed.">        if(newEntity || changedType) {</span>
+<span class="pc bpc" id="L131" title="1 of 4 branches missed.">        if(newEntity || changedType) {</span>
             //Get selected calendar type
-<span class="fc" id="L130">            CalendarTypesEntity cte = ctr.getById(Long.valueOf(originalEntity.getTypeId()));</span>
-<span class="fc" id="L131">            Integer approverId = cte.getApproverId();</span>
-<span class="fc" id="L132">            UserDetails loggedUser = UsersDB.getUser(originalEntity.getCreatorId());</span>
+<span class="fc" id="L133">            CalendarTypesEntity cte = ctr.findFirstByIdAndDomainId(Long.valueOf(originalEntity.getTypeId()), CloudToolsForCore.getDomainId()).orElse(null);</span>
+<span class="fc" id="L134">            Integer approverId = cte.getApproverId();</span>
+<span class="fc" id="L135">            UserDetails loggedUser = UsersDB.getUser(originalEntity.getCreatorId());</span>
 
-<span class="pc bpc" id="L134" title="2 of 4 branches missed.">            if(approverId == null || approverId == -1) {</span>
+<span class="pc bpc" id="L137" title="1 of 4 branches missed.">            if(approverId == null || approverId == -1) {</span>
                 //Approver is not set, approve this event
-<span class="fc" id="L136">                originalEntity.setApprove(1);</span>
-<span class="nc bnc" id="L137" title="All 2 branches missed.">            } else if(approverId == loggedUser.getUserId()) {</span>
+<span class="fc" id="L139">                originalEntity.setApprove(1);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">            } else if(approverId == loggedUser.getUserId()) {</span>
                 //Approver and creator are same person, approve event
-<span class="nc" id="L139">                originalEntity.setApprove(1);</span>
+<span class="nc" id="L142">                originalEntity.setApprove(1);</span>
             } else {
                 //Approver and creator are NOT same person, wait for approve
-<span class="nc" id="L142">                originalEntity.setApprove(-1);</span>
+<span class="fc" id="L145">                originalEntity.setApprove(-1);</span>
 
-<span class="nc" id="L144">                sendMailToApprover(originalEntity, approverId, loggedUser, prop, request);</span>
+<span class="fc" id="L147">                sendMailToApprover(originalEntity, approverId, loggedUser, prop, request);</span>
             }
         }
 
-<span class="fc bfc" id="L148" title="All 2 branches covered.">        if(newEntity) originalEntity.setSuggest(false);</span>
-<span class="fc" id="L149">    }</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if(newEntity) originalEntity.setSuggest(false);</span>
+<span class="fc" id="L152">    }</span>
 
     private void sendMailToApprover(CalendarEventsEntity originalEntity, Integer approverId, UserDetails creator, Prop prop, HttpServletRequest request) {
         //UserDetails approver = UsersDB.getUser(approverId);
 
-<span class="nc" id="L154">        String eventDate = &quot;&quot;;</span>
-<span class="nc bnc" id="L155" title="All 2 branches missed.">        if(originalEntity.getDateFrom() != null)</span>
-<span class="nc" id="L156">            eventDate = &quot;&quot; + originalEntity.getDateFrom();</span>
-<span class="nc bnc" id="L157" title="All 2 branches missed.">        if(originalEntity.getDateTo() != null)</span>
-<span class="nc" id="L158">            eventDate +=  &quot; - &quot; + originalEntity.getDateTo();</span>
-<span class="nc bnc" id="L159" title="All 2 branches missed.">        if(originalEntity.getTimeRange() != null)</span>
-<span class="nc" id="L160">            eventDate += &quot; o &quot; + originalEntity.getTimeRange();</span>
+<span class="fc" id="L157">        String eventDate = &quot;&quot;;</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if(originalEntity.getDateFrom() != null)</span>
+<span class="fc" id="L159">            eventDate = &quot;&quot; + originalEntity.getDateFrom();</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">        if(originalEntity.getDateTo() != null)</span>
+<span class="fc" id="L161">            eventDate +=  &quot; - &quot; + originalEntity.getDateTo();</span>
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">        if(originalEntity.getTimeRange() != null)</span>
+<span class="fc" id="L163">            eventDate += &quot; o &quot; + originalEntity.getTimeRange();</span>
 
-<span class="nc" id="L162">        StringBuilder emailClientData=new StringBuilder();</span>
-<span class="nc" id="L163">        emailClientData.append(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
-<span class="nc" id="L164">        emailClientData.append(&quot;&lt;style&gt;&quot;);</span>
-<span class="nc" id="L165">        emailClientData.append(&quot;body{&quot;);</span>
-<span class="nc" id="L166">        emailClientData.append(&quot;font-family: Arial;&quot;);</span>
-<span class="nc" id="L167">        emailClientData.append(&quot;font-size: 11pt;&quot;);</span>
-<span class="nc" id="L168">        emailClientData.append('}');</span>
-<span class="nc" id="L169">        emailClientData.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
-<span class="nc" id="L170">        emailClientData.append(prop.getText(&quot;calendar.vytvoril_akciu&quot;, creator.getFullName(), originalEntity.getTitle(), eventDate));</span>
-<span class="nc" id="L171">        emailClientData.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
-<span class="nc" id="L172">        SendMail.send(creator.getFullName(), creator.getEmailAddress(), creator.getEmail(), prop.getText(&quot;calendar.na_schvalenie&quot;), emailClientData.toString(), request);</span>
-<span class="nc" id="L173">    }</span>
+<span class="fc" id="L165">        StringBuilder emailClientData=new StringBuilder();</span>
+<span class="fc" id="L166">        emailClientData.append(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
+<span class="fc" id="L167">        emailClientData.append(&quot;&lt;style&gt;&quot;);</span>
+<span class="fc" id="L168">        emailClientData.append(&quot;body{&quot;);</span>
+<span class="fc" id="L169">        emailClientData.append(&quot;font-family: Arial;&quot;);</span>
+<span class="fc" id="L170">        emailClientData.append(&quot;font-size: 11pt;&quot;);</span>
+<span class="fc" id="L171">        emailClientData.append('}');</span>
+<span class="fc" id="L172">        emailClientData.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="fc" id="L173">        emailClientData.append(prop.getText(&quot;calendar.vytvoril_akciu&quot;, creator.getFullName(), originalEntity.getTitle(), eventDate));</span>
+<span class="fc" id="L174">        emailClientData.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="fc" id="L175">        SendMail.send(creator.getFullName(), creator.getEmailAddress(), creator.getEmail(), prop.getText(&quot;calendar.na_schvalenie&quot;), emailClientData.toString(), request);</span>
+<span class="fc" id="L176">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

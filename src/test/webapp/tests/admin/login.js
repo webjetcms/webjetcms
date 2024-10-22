@@ -42,8 +42,8 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
 
     login(I, false);
     I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");
-    I.say("Cakam 10 sekund na expirovanie zablokovanej IP adresy");
-    //je potrebne cakat 10 sekund na expirovanie zleho hesla
+    I.say("Cakam 10 sekund na exspirovanie zablokovanej IP adresy");
+    //je potrebne cakat 10 sekund na exspirovanie zleho hesla
     I.wait(10);
 
     login(I, true);
@@ -60,7 +60,7 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
         I.wait(10)
     }
 
-    I.say("Cakam 60 sekund na expirovanie zablokovanej IP adresy");
+    I.say("Cakam 60 sekund na exspirovanie zablokovanej IP adresy");
     I.wait(10);
     login(I, true, false);
     I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");

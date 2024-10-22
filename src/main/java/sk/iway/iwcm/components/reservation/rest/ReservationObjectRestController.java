@@ -1,7 +1,5 @@
 package sk.iway.iwcm.components.reservation.rest;
 
-import java.util.List;
-
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
@@ -12,13 +10,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEditorFields;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
-import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceEntity;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
-import sk.iway.iwcm.components.reservation.jpa.ReservationObjectTimesEntity;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectTimesRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -26,7 +23,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
-@RequestMapping("/admin/rest/reservation/reservation_object")
+@RequestMapping("/admin/rest/reservation/reservation-object")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_reservation')")
 @Datatable
 public class ReservationObjectRestController extends DatatableRestControllerV2<ReservationObjectEntity, Long> {
@@ -72,6 +69,8 @@ public class ReservationObjectRestController extends DatatableRestControllerV2<R
     @Override
     public ReservationObjectEntity processFromEntity(ReservationObjectEntity entity, ProcessItemAction action) {
 
+        if (entity == null) return null;
+
         //Special situation, saved entity with allready set editorFields
         //We dont want processFromEntity because it can re-write our data
         if(entity.getEditorFields() != null) return entity;
@@ -81,7 +80,7 @@ public class ReservationObjectRestController extends DatatableRestControllerV2<R
 
         //Set editor fields values and this editorFields set into entity
         if(action == ProcessItemAction.EDIT) //Only if we editing entity that exist, we use bind reservationObjectTimes from DB
-            roef.fromReservationObjectEntity(entity, action, reservationObjectTimesRepository.findAllByObjectIdAndDomainId(entity.getId().intValue(), CloudToolsForCore.getDomainId()));
+            roef.fromReservationObjectEntity(entity, action, reservationObjectTimesRepository.findAllByObjectIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId()));
         else
             roef.fromReservationObjectEntity(entity, action, null);
 
@@ -99,14 +98,10 @@ public class ReservationObjectRestController extends DatatableRestControllerV2<R
     @Override
     public boolean beforeDelete(ReservationObjectEntity entity) {
         //Before delete remove bind ReservationObjectTimes records from DB
-        List<ReservationObjectTimesEntity> timeEntitiesToDelete = reservationObjectTimesRepository.findAllByObjectIdAndDomainId(entity.getId().intValue(), CloudToolsForCore.getDomainId());
-        if(timeEntitiesToDelete != null && timeEntitiesToDelete.size() > 0)
-            reservationObjectTimesRepository.deleteAll(timeEntitiesToDelete);
+        reservationObjectTimesRepository.deleteAllByObjectIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId());
 
         //Before delete remove bind ReservationObjectPrices records from DB
-        List<ReservationObjectPriceEntity> pricesToDelete = reservationObjectPriceRepository.findAllByObjectIdAndDomainId(entity.getId().intValue(), CloudToolsForCore.getDomainId());
-        if(pricesToDelete != null && pricesToDelete.size() > 0)
-            reservationObjectPriceRepository.deleteAll(pricesToDelete);
+        reservationObjectPriceRepository.deleteAllByObjectIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId());
 
         return true;
     }
@@ -115,14 +110,14 @@ public class ReservationObjectRestController extends DatatableRestControllerV2<R
 	public void beforeSave(ReservationObjectEntity entity) {
         ReservationObjectEditorFields roef = entity.getEditorFields();
         //Check password validations
-        if(roef.getAddPassword()) {
+        if(Tools.isTrue(roef.getAddPassword())) {
             if(roef.getNewPassword() == null || roef.getNewPassword().isEmpty()) throwError("reservation.reservation_object.password_error_empty");
             if(roef.getPasswordCheck() == null || roef.getPasswordCheck().isEmpty()) throwError("reservation.reservation_object.password_error_empty");
             if(!roef.getNewPassword().equals(roef.getPasswordCheck())) throwError("passwordsNotMatch");
         }
 
         //Email validation
-        if(entity.getMustAccepted()) {
+        if(Tools.isTrue(entity.getMustAccepted())) {
             if(entity.getEmailAccepter() == null || entity.getEmailAccepter().isEmpty()) throwError("components.reservation.reservation_manager.addReservationObject.one");
             //Email validation
             try {

@@ -3,13 +3,10 @@
 import static sk.iway.iwcm.system.fulltext.cdb.CdbUtils.encode;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 import io.github.duckasteroid.cdb.Cdb;
-
-import org.apache.commons.pool.impl.GenericObjectPool;
-
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.system.fulltext.cdb.CdbCacheListener;
 import sk.iway.iwcm.system.fulltext.cdb.CdbFactory;
 import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
 
@@ -24,14 +21,11 @@ import sk.iway.iwcm.system.fulltext.cdb.CdbUtils;
  *@created      Date: 5.5.2011 14:12:42
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-@SuppressWarnings(&quot;rawtypes&quot;)
 public class Synonyms
 {
-<span class="nc" id="L30">	private static final Map&lt;String, GenericObjectPool&gt; pools = new HashMap&lt;&gt;();</span>
-
-<span class="nc" id="L32">	protected Synonyms() {</span>
+<span class="nc" id="L26">	protected Synonyms() {</span>
 		//utility class
-<span class="nc" id="L34">	}</span>
+<span class="nc" id="L28">	}</span>
 
 	/**
 	 * Get the base word from synonym order
@@ -41,34 +35,31 @@ public class Synonyms
 	 * @param length
 	 * @return
 	 */
-	@SuppressWarnings(&quot;unchecked&quot;)
 	public static char[] get(String language, char[] form,int offset,int length)
 	{
-<span class="nc" id="L47">		synchronized (pools)</span>
+		try
 		{
-<span class="nc bnc" id="L49" title="All 2 branches missed.">			if (!pools.containsKey(language))</span>
+<span class="nc" id="L42">			Cache c = Cache.getInstance();</span>
+<span class="nc" id="L43">			CdbCacheListener.init();</span>
+<span class="nc" id="L44">			String CACHE_KEY = &quot;Lucene.Synonyms.&quot; + language+&quot;.&quot;+Thread.currentThread().getId();</span>
+<span class="nc" id="L45">			Cdb cdb = (Cdb)c.getObject(CACHE_KEY);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			if (cdb == null)</span>
 			{
-<span class="nc" id="L51">				GenericObjectPool pool = new GenericObjectPool(new CdbFactory(language,CdbFactory.Type.Synonyms));</span>
-<span class="nc" id="L52">				pools.put(language, pool);</span>
+<span class="nc" id="L48">				cdb = (Cdb)new CdbFactory(language,CdbFactory.Type.SYNONYMS).makeObject();</span>
+<span class="nc" id="L49">				c.setObjectSeconds(CACHE_KEY, cdb, 5*60, false);</span>
 			}
-			try
-			{
-<span class="nc" id="L56">				GenericObjectPool pool = pools.get(language);</span>
-<span class="nc" id="L57">				Cdb cdb = (Cdb)pool.borrowObject();</span>
-<span class="nc" id="L58">				ByteBuffer bytes = cdb.find(ByteBuffer.wrap(encode(form, offset, length)));</span>
 
-<span class="nc" id="L60">				pool.returnObject(cdb);</span>
-<span class="nc bnc" id="L61" title="All 4 branches missed.">				if (bytes != null &amp;&amp; bytes.hasArray())</span>
-				{
-<span class="nc" id="L63">					return CdbUtils.decode(bytes.array());</span>
-				}
-			}
-<span class="nc" id="L66">			catch (Exception e)</span>
+<span class="nc" id="L52">			ByteBuffer bytes = cdb.find(ByteBuffer.wrap(encode(form, offset, length)));</span>
+<span class="nc bnc" id="L53" title="All 4 branches missed.">			if (bytes != null &amp;&amp; bytes.hasArray())</span>
 			{
-<span class="nc" id="L68">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L69">			}</span>
-<span class="nc" id="L70">		}</span>
-<span class="nc" id="L71">		return null;</span>
+<span class="nc" id="L55">				return CdbUtils.decode(bytes.array());</span>
+			}
+		}
+<span class="nc" id="L58">		catch (Exception e)</span>
+		{
+<span class="nc" id="L60">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L61">		}</span>
+<span class="nc" id="L62">		return null;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

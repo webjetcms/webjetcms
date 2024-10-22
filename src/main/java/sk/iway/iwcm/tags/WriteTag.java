@@ -503,7 +503,7 @@ public class WriteTag extends BodyTagSupport
 									StringTokenizer st = new StringTokenizer(includeText.substring(cacheTimePos+13), " ,)");
 									if (st.hasMoreTokens())
 									{
-										cacheTime = Tools.getIntValue(st.nextToken(), 0);
+										cacheTime = Tools.getIntValue(Tools.replace(st.nextToken(), "&quot;", ""), 0);
 									}
 
 									//vybereme z cache, adminom ale zobrazujeme priamo (a dole spravime refresh cache)
@@ -605,12 +605,12 @@ public class WriteTag extends BodyTagSupport
 						final String deviceParam = "device=";
 						//In preview mode it does not matter what type of device we use (we want see all banners)
 						if (request.getAttribute("inPreviewMode")!=null) checkDeviceType = false;
-						
+
 						/** Check if this app can be included in current device type **/
 						if(canInclude && checkDeviceType && includeText.contains(deviceParam)) {
 							final String regex = "([^\";, ]*)";
 							Pattern pattern = Pattern.compile(deviceParam + regex);
-							Matcher matcher = pattern.matcher(includeText);
+							Matcher matcher = pattern.matcher(Tools.replace(includeText, "&quot;", ""));
 
 							//Is deviceParam presented in include ? -> NO, then do nothing
 							if(matcher.find()) {

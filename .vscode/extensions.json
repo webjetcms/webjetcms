@@ -14,7 +14,8 @@
 		"naco-siren.gradle-language",
 		"mutantdino.resourcemonitor",
 		"srmeyers.git-prefix",
-		"ban.spellright"
+		"ban.spellright",
+		"ryanluker.vscode-coverage-gutters",
 	],
 
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.

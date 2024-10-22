@@ -123,7 +123,7 @@ import java.util.List;
 	 */
 	public static boolean verifyTokenAndDeleteIt(HttpSession session, String tokenValue)
 	{
-<span class="nc" id="L126">		return verifyToken(session, tokenValue, true);</span>
+<span class="fc" id="L126">		return verifyToken(session, tokenValue, true);</span>
 	}
 
 	/**
@@ -161,10 +161,10 @@ import java.util.List;
 
 		@SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L163">		List&lt;String&gt; tokenList = (List&lt;String&gt;)session.getAttribute(SESSION_KEY);</span>
-<span class="pc bpc" id="L164" title="1 of 2 branches missed.">		if (tokenList == null)</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">		if (tokenList == null)</span>
 		{
-<span class="nc" id="L166">			RequestBean.addError(&quot;CSRF list in session is empty&quot;);</span>
-<span class="nc" id="L167">			return false;</span>
+<span class="fc" id="L166">			RequestBean.addError(&quot;CSRF list in session is empty&quot;);</span>
+<span class="fc" id="L167">			return false;</span>
 		}
 
 <span class="fc" id="L170">		boolean tokenFound = false;</span>
@@ -232,4 +232,4 @@ import java.util.List;
 <span class="nc" id="L232">		return PARAMETER_NAME + &quot;=&quot; + getCsrfToken(session,saveToSession);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

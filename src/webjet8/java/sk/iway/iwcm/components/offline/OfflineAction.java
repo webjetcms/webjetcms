@@ -31,17 +31,17 @@ public class OfflineAction extends HttpServlet
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Logger.println(OfflineAction.class,"DeleteServlet  CALLED - GET");
-        execute(request,response);
+        execute(request,response); //NOSONAR
     }
 
 	@Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         Logger.println(OfflineAction.class,"DeleteServlet  CALLED - POST");
-        execute(request,response);
+        execute(request,response); //NOSONAR
     }
 
-	public void execute(
+	private void execute(
          HttpServletRequest request,
          HttpServletResponse response)
          throws IOException
@@ -56,7 +56,7 @@ public class OfflineAction extends HttpServlet
 		}
 
 		Identity user = UsersDB.getCurrentUser(request);
-		if (user == null || user.isAdmin()==false)
+		if (user == null || user.isAdmin()==false || user.isDisabledItem("export_offline"))
 		{
 			response.sendRedirect("/admin/");
 			return;

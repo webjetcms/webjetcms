@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileUsageDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FileUsageDTO.java</span></div><h1>FileUsageDTO.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Getter
+@Setter
+public class FileUsageDTO {
+
+<span class="nc" id="L12">    public FileUsageDTO() {}</span>
+
+<span class="fc" id="L14">    public FileUsageDTO(String fileName, String fileUrl, Integer docId) {</span>
+<span class="fc" id="L15">        this.fileName = fileName;</span>
+<span class="fc" id="L16">        this.fileUrl = fileUrl;</span>
+<span class="fc" id="L17">        this.fileUrlHidden = fileUrl;</span>
+<span class="fc" id="L18">        this.docId = docId;</span>
+<span class="fc" id="L19">    }</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;sync.title&quot;,
+        renderFormatLinkTemplate = &quot;javascript:openDocDetails({{docId}});&quot;
+    )
+    private String fileName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;editor.virtual_path&quot;,
+        renderFormatLinkTemplate = &quot;javascript:openFile('{{fileUrl}}');&quot;
+    )
+    private String fileUrl;
+
+    //Need as param for renderFormatLinkTemplate
+    private String fileUrlHidden;
+    private Integer docId;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

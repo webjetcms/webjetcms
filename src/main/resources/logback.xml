@@ -10,8 +10,7 @@
     <!--appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>./build/webjet.log</file>
         <append>true</append>
-        <!- - set immediateFlush to false for much higher logging throughput - ->
-        <immediateFlush>true</immediateFlush>
+        <immediateFlush>false</immediateFlush>
         <encoder>
             <pattern>[%X{installName}][%c{1}][%p][%X{userId}] %d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
         </encoder>

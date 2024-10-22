@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.reservation.jpa;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -12,14 +13,19 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -91,7 +97,7 @@ public class ReservationObjectEntity implements Serializable {
         visible = false,
         tab = "basic"
     )
-    private Double priceForDay;
+    private BigDecimal priceForDay;
 
     @Column(name = "time_unit")
     @DataTableColumn(
@@ -109,7 +115,7 @@ public class ReservationObjectEntity implements Serializable {
         visible = false,
         tab = "basic"
     )
-    private Double priceForHour;
+    private BigDecimal priceForHour;
 
     @Column(name = "photo_link")
     @DataTableColumn(
@@ -192,8 +198,15 @@ public class ReservationObjectEntity implements Serializable {
     @DataTableColumnNested
 	private ReservationObjectEditorFields editorFields = null;
 
-    @Transient
-    private List<ReservationObjectTimesEntity> reservationObjectTimesEntities = null;
+	@JsonManagedReference(value="reservationObjectForTime")
+    @OneToMany(mappedBy="reservationObjectForTime", fetch=FetchType.LAZY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<ReservationObjectTimesEntity> reservationObjectTimeEntities;
+
+    @JsonManagedReference(value="reservationObjectForPrice")
+    @OneToMany(mappedBy="reservationObjectForPrice", fetch=FetchType.LAZY)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private List<ReservationObjectPriceEntity> reservationObjectPriceEntities;
 
     public void setPassword(String password) {
         this.password = getHashPassword(password);

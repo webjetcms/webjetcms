@@ -6,6 +6,20 @@
     var lastIgnoredChildId = null;
     var lastIgnoredParentId = null;
 
+    window.disableDeletedEnum = function(ul, item) {
+        var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
+
+        if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "" && item.label.startsWith(deletedPrefix)) {
+            return $("<li>")
+                .append($("<div>").append(item.label))
+                .appendTo(ul).addClass("disabled");
+        }
+
+        return $("<li>")
+            .append($("<div>").append(item.label))
+            .appendTo(ul);
+    }
+
     WJ.breadcrumb({
         id: "enumeration-data",
         tabs: [
@@ -60,20 +74,24 @@
                     enumerationDataDataTable.EDITOR.on('open', function (e, mode, action) {
                         var enumTypeSelectValue = $('#enumerationTypeFilterSelect').val();
 
+                        //Hide field, used only for value
+                        enumerationDataDataTable.EDITOR.field("typeId").hide();
+
+                        //During create action typeId is not set yet, we must set it manually because autocomplete use this value
+                        if(action === 'create')
+                            enumerationDataDataTable.EDITOR.field("typeId").val(enumTypeSelectValue);
+
                         $.ajax({url: url + "/enum-type?enumerationTypeId=" + enumTypeSelectValue, success: function(enumType) {
                             //Handle child enum type id visibility (and select options)
-                            if(enumType['allowChildEnumerationType']) {
-                                enumerationDataDataTable.EDITOR.field("editorFields.childEnumTypeId").show();
-                                setChildEnumTypeSelect();
-                            } else enumerationDataDataTable.EDITOR.field("editorFields.childEnumTypeId").hide();
+                            if(enumType['allowChildEnumerationType'])
+                                enumerationDataDataTable.EDITOR.field("editorFields.childEnumTypeName").show();
+                            else enumerationDataDataTable.EDITOR.field("editorFields.childEnumTypeName").hide();
 
                             //Handle parent enum data id visibility (and select options)
-                            if(enumType['allowParentEnumerationData']) {
-                                enumerationDataDataTable.EDITOR.field("editorFields.parentEnumDataId").show();
-                                if(action === 'create') setParentEnumDataSelect(null);
-                                else if(action === 'edit') setParentEnumDataSelect( e.currentTarget.currentJson["enumerationDataId"] );
-                            } else
-                                enumerationDataDataTable.EDITOR.field("editorFields.parentEnumDataId").hide();
+                            if(enumType['allowParentEnumerationData'])
+                                enumerationDataDataTable.EDITOR.field("editorFields.parentEnumDataName").show();
+                            else
+                                enumerationDataDataTable.EDITOR.field("editorFields.parentEnumDataName").hide();
                         }});
                     });
                 }
@@ -86,6 +104,11 @@
             }
         });
 
+        /**
+         * Set external filter data for filtering enumeration data. It's list of enumerationTypes
+         * !! List contains ONLY NON HIDDEN enumeration types !! (provided by REST)
+         * @param mapOfTypes
+         */
         function setEnumerationTypeFilterSelect(mapOfTypes) {
             //Get object, select
             let enumerationTypeFilterSelect = document.getElementById('enumerationTypeFilterSelect');
@@ -103,49 +126,6 @@
 
             //Refresh object
             $("#enumerationTypeFilterSelect").selectpicker('refresh');
-        }
-
-        function setChildEnumTypeSelect() {
-            //Find deleted options and disabled it
-            //EnumTypes are just soft deleted in DB because of reference logic
-            $("#DTE_Field_editorFields-childEnumTypeId option").each(function() {
-                var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
-                if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "")
-                    if($(this).text().startsWith('(!deleted)_'))
-                        $('#DTE_Field_editorFields-childEnumTypeId option[value="' + $(this).val() + '"]').prop('disabled', true);
-            });
-
-            var idToIgnore = $('#enumerationTypeFilterSelect').val(); //a.k.a right now selected enum type as filter
-            if(lastIgnoredChildId !== null)
-                $('#DTE_Field_editorFields-childEnumTypeId option[value="' + lastIgnoredChildId + '"]').prop('disabled', false);
-
-            //Disable select option
-            $('#DTE_Field_editorFields-childEnumTypeId option[value="' + idToIgnore + '"]').prop('disabled', true);
-            //Refresh select
-            $("#DTE_Field_editorFields-childEnumTypeId").selectpicker('refresh');
-            //Save last disabled option, so next time this option can be enabled
-            lastIgnoredChildId = idToIgnore;
-        }
-
-        function setParentEnumDataSelect(idToIgnore) {
-            //Find deleted options and disabled it
-            //EnumDatas are just soft deleted in DB because of reference logic
-            $("#DTE_Field_editorFields-parentEnumDataId option").each(function() {
-                var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
-                if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "")
-                    if($(this).text().startsWith('(!deleted)_'))
-                        $('#DTE_Field_editorFields-parentEnumDataId option[value="' + $(this).val() + '"]').prop('disabled', true);
-            });
-
-            if(lastIgnoredParentId !== null)
-                $('#DTE_Field_editorFields-parentEnumDataId option[value="' + lastIgnoredParentId + '"]').prop('disabled', false);
-
-            //Disable select option
-            $('#DTE_Field_editorFields-parentEnumDataId option[value="' + idToIgnore + '"]').prop('disabled', true);
-            //Refresh select
-            $("#DTE_Field_editorFields-parentEnumDataId").selectpicker('refresh');
-            //Save last disabled option, so next time this option can be enabled
-            lastIgnoredParentId = idToIgnore;
         }
     });
     </script>

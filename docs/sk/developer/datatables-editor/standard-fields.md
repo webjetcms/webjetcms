@@ -78,7 +78,7 @@ Textové pole ```type="password"``` pre zadanie hesla.
 
 ## TEXTAREA
 
-Viac riadkové textové pole.
+Viac riadkové textové pole. Dlhý text sa nezalamuje, ak chcete zalomiť dlhý text do viac riadkov nastavte `className = "wrap"`:
 
 ```java
     @Column(name = "gallery_perex")
@@ -88,6 +88,22 @@ Viac riadkové textové pole.
         tab = "basic"
     )
     private String perex = "";
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        tab = "basic",
+        title="components.app-cookiebar.text",
+        className = "wrap",
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = "placeholder",
+                    value = "components.app-cookiebar.cookie_text")
+            }
+        )
+    })
+    private String cookie_text;
 ```
 
 ## DATE
@@ -331,7 +347,7 @@ Hodnoty oddelené čiarkou je potrebné použiť pre ```MULTISELECT``` polia pou
 
 ```java
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "ti ti-id", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {
@@ -416,6 +432,15 @@ Reprezentuje zjednodušený zápis poľa typu ```CHECKBOX``` pre binárnu voľbu
         tab = "basic"
     )
     private Boolean requireApprove;
+```
+
+## BOOLEAN_TEXT
+
+Reprezentuje typ ```BOOLEAN``` pre binárnu voľbu áno/nie s titulkom napravo namiesto naľavo a možnosti Áno pri zaškrtávacom poli.
+
+```java
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title="components.news.paging")
+    private boolean pagination = true;
 ```
 
 ## HIDDEN
@@ -556,3 +581,69 @@ Pole pre výber [stromovej štruktúry](field-jstree.md).
 ```
 
 ![](field-type-jstree.png)
+
+## COLOR
+
+Pole pre výber farby v `HEX` formáte vrátane priesvitnosti, napr. `#FF0000FF`:
+
+```java
+    @DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "basic", title="components.app-cookiebar.textColor")
+    private String color_text;
+```
+
+## IFRAME
+
+Pole pre vloženie inej stránky do `iframe` elementu, používa sa v aplikáciach v editore pre vloženie napr. foto galérie:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
+@WebjetAppStore(nameKey = "components.gallery.title", descKey = "components.gallery.desc", itemKey="menuGallery", imagePath = "/components/gallery/editoricon.png", galleryImages = "/components/gallery/", componentPath = "/components/gallery/gallery.jsp")
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "componentIframe", title = "components.gallery.images")
+})
+@Getter
+@Setter
+public class GalleryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframe", title="&nbsp;")
+    private String iframe  = "/admin/v9/apps/gallery/?dir={dir}";
+
+}
+```
+
+### BASE64
+
+Pole, ktoré kóduje a dekóduje hodnotu pomocou algoritmu `base64`, zobrazené ako `textarea`. Používa sa primárne ako pole pre aplikáciu v editore pre zachovanie špeciálnych znakov vloženej hodnoty. Ak potrebujete použiť `base64` aj na iný typ poľa môžete nastaviť `className = "dt-style-base64"`.
+
+!>**Upozornenie:** JavaScript funkcia `btoa` podporuje len `ASCII` znaky.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.BASE64,
+        tab = "basic",
+        title="components.app-docsembed.editor_components.url",
+    )
+    private String url;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        tab = "basic",
+        title="components.app-docsembed.editor_components.url",
+        className = "dt-style-base64"
+    )
+    private String url;
+```
+
+### STATIC_TEXT
+
+Zobrazenie statického textu na pozícii bežného vstupného poľa, čiže v pravej časti. V prekladovom kľúči je podporovaná markdown syntax.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.STATIC_TEXT,
+        tab = "basic",
+        title="components.app-vyhladavanie_info"
+    )
+    private String explain;
+```

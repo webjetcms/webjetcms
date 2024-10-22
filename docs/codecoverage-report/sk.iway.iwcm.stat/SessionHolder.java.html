@@ -18,10 +18,12 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -44,7 +46,7 @@ public class SessionHolder
     *  Description of the Field
     */
    public static final String SESSION_HOLDER = &quot;iwcm_session_holder&quot;;
-<span class="pc" id="L47">	private Map&lt;String, SessionDetails&gt; data = Collections.synchronizedMap(new Hashtable&lt;String, SessionDetails&gt;());</span>
+<span class="pc" id="L49">	private Map&lt;String, SessionDetails&gt; data = Collections.synchronizedMap(new Hashtable&lt;String, SessionDetails&gt;());</span>
 
 	private static final String INVALIDATE_SESSION_ADDR = &quot;INVALIDATE&quot;;
 
@@ -53,13 +55,13 @@ public class SessionHolder
 	 *
 	 */
 	public SessionHolder()
-<span class="nc" id="L56">	{</span>
+<span class="nc" id="L58">	{</span>
 
-<span class="nc" id="L58">	}</span>
+<span class="nc" id="L60">	}</span>
 
    public static SessionHolder getInstance()
    {
-<span class="fc" id="L62">   	return(getInstance(Constants.getServletContext()));</span>
+<span class="fc" id="L64">   	return(getInstance(Constants.getServletContext()));</span>
    }
 
    /**
@@ -70,11 +72,11 @@ public class SessionHolder
     */
    public static SessionHolder getInstance(javax.servlet.ServletContext servletContext)
    {
-<span class="pc bpc" id="L73" title="1 of 4 branches missed.">      if (servletContext!=null &amp;&amp; servletContext.getAttribute(SESSION_HOLDER) != null)</span>
+<span class="pc bpc" id="L75" title="1 of 4 branches missed.">      if (servletContext!=null &amp;&amp; servletContext.getAttribute(SESSION_HOLDER) != null)</span>
       {
-<span class="fc" id="L75">         return ((SessionHolder) servletContext.getAttribute(SESSION_HOLDER));</span>
+<span class="fc" id="L77">         return ((SessionHolder) servletContext.getAttribute(SESSION_HOLDER));</span>
       }
-<span class="fc" id="L77">      return (new SessionHolder(servletContext));</span>
+<span class="fc" id="L79">      return (new SessionHolder(servletContext));</span>
    }
 
    /**
@@ -83,11 +85,11 @@ public class SessionHolder
     *@param  servletContext  Description of the Parameter
     */
    private SessionHolder(javax.servlet.ServletContext servletContext)
-<span class="fc" id="L86">   {</span>
+<span class="fc" id="L88">   {</span>
       //Logger.println(this,&quot;SessionHolder: constructor&quot;);
-<span class="fc" id="L88">		data = Collections.synchronizedMap(new Hashtable&lt;String, SessionDetails&gt;());</span>
-<span class="fc" id="L89">      servletContext.setAttribute(SESSION_HOLDER, this);</span>
-<span class="fc" id="L90">   }</span>
+<span class="fc" id="L90">		data = Collections.synchronizedMap(new Hashtable&lt;String, SessionDetails&gt;());</span>
+<span class="fc" id="L91">      servletContext.setAttribute(SESSION_HOLDER, this);</span>
+<span class="fc" id="L92">   }</span>
 
    /**
     * Vrati aktualny zoznam ludi v session
@@ -95,19 +97,26 @@ public class SessionHolder
     */
    public List&lt;SessionDetails&gt; getList()
    {
-<span class="fc" id="L98">   		cleanup();</span>
+<span class="fc" id="L100">   		cleanup();</span>
 
-<span class="fc" id="L100">		List&lt;SessionDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L101">		Collection&lt;Entry&lt;String, SessionDetails&gt;&gt; entries = null;</span>
-<span class="fc" id="L102">		synchronized (data)</span>
+<span class="fc" id="L102">		List&lt;SessionDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L103">		Collection&lt;Entry&lt;String, SessionDetails&gt;&gt; entries = null;</span>
+<span class="fc" id="L104">		synchronized (data)</span>
 		{
-<span class="fc" id="L104">			entries = new Vector&lt;&gt;(data.entrySet());</span>
-<span class="fc" id="L105">		}</span>
-<span class="fc bfc" id="L106" title="All 2 branches covered.">		for (Entry&lt;String, SessionDetails&gt; me : entries)</span>
+<span class="fc" id="L106">			entries = new Vector&lt;&gt;(data.entrySet());</span>
+<span class="fc" id="L107">		}</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">		for (Entry&lt;String, SessionDetails&gt; me : entries)</span>
 		{
-<span class="fc" id="L108">			list.add(me.getValue());</span>
-<span class="fc" id="L109">		}</span>
-<span class="fc" id="L110">		return list;</span>
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">			if (InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true)</span>
+			{
+<span class="fc bfc" id="L112" title="All 2 branches covered.">				if (me.getValue().getDomainId() != CloudToolsForCore.getDomainId())</span>
+				{
+<span class="fc" id="L114">					continue;</span>
+				}
+			}
+<span class="fc" id="L117">			list.add(me.getValue());</span>
+<span class="fc" id="L118">		}</span>
+<span class="fc" id="L119">		return list;</span>
    }
 
    /**
@@ -119,80 +128,82 @@ public class SessionHolder
     */
    	public boolean set(String sessionId, String lastURL, HttpServletRequest request) {
 		// lebo iframe a cookie toho potom vygeneruje kopec
-<span class="pc bpc" id="L122" title="1 of 6 branches missed.">		if (lastURL != null &amp;&amp; (lastURL.indexOf(&quot;/admin/mem.jsp&quot;) != -1 || lastURL.indexOf(&quot;/admin/refresher.jsp&quot;) != -1</span>
-<span class="pc bpc" id="L123" title="1 of 4 branches missed.">				|| lastURL.indexOf(&quot;/admin/divpopup-blank.jsp&quot;) != -1 || lastURL.indexOf(&quot;/admin/FCKeditor&quot;) != -1</span>
-<span class="fc bfc" id="L124" title="All 2 branches covered.">				|| lastURL.indexOf(&quot;/admin/rest/refresher&quot;) != -1))</span>
-<span class="fc" id="L125">			return true;</span>
+<span class="pc bpc" id="L131" title="1 of 6 branches missed.">		if (lastURL != null &amp;&amp; (lastURL.indexOf(&quot;/admin/mem.jsp&quot;) != -1 || lastURL.indexOf(&quot;/admin/refresher.jsp&quot;) != -1</span>
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">				|| lastURL.indexOf(&quot;/admin/divpopup-blank.jsp&quot;) != -1 || lastURL.indexOf(&quot;/admin/FCKeditor&quot;) != -1</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">				|| lastURL.indexOf(&quot;/admin/rest/refresher&quot;) != -1))</span>
+<span class="fc" id="L134">			return true;</span>
 
 		// aby bolo mozne grafy tlacit do PDF, normalne by nam nastal session stealing
 		// check
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (lastURL != null</span>
-<span class="pc bpc" id="L130" title="2 of 4 branches missed.">				&amp;&amp; (lastURL.startsWith(&quot;/admin/statchartnew.do&quot;) || lastURL.startsWith(&quot;/admin/statchart.do&quot;)))</span>
-<span class="nc" id="L131">			return true;</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">		if (lastURL != null</span>
+<span class="pc bpc" id="L139" title="2 of 4 branches missed.">				&amp;&amp; (lastURL.startsWith(&quot;/admin/statchartnew.do&quot;) || lastURL.startsWith(&quot;/admin/statchart.do&quot;)))</span>
+<span class="nc" id="L140">			return true;</span>
 
 		// multiupload robi cachre machre so session, radsej vynechavam
-<span class="pc bpc" id="L134" title="2 of 4 branches missed.">		if (lastURL != null &amp;&amp; lastURL.startsWith(&quot;/admin/multiplefileupload.do&quot;))</span>
-<span class="nc" id="L135">			return true;</span>
+<span class="pc bpc" id="L143" title="2 of 4 branches missed.">		if (lastURL != null &amp;&amp; lastURL.startsWith(&quot;/admin/multiplefileupload.do&quot;))</span>
+<span class="nc" id="L144">			return true;</span>
 
-<span class="fc" id="L137">		SessionDetails det = get(sessionId);</span>
-<span class="fc bfc" id="L138" title="All 2 branches covered.">		if (det == null) {</span>
-<span class="fc" id="L139">			cleanup();</span>
+<span class="fc" id="L146">		SessionDetails det = get(sessionId);</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">		if (det == null) {</span>
+<span class="fc" id="L148">			cleanup();</span>
 
-<span class="fc" id="L141">			det = new SessionDetails();</span>
-<span class="fc" id="L142">			det.setLogonTime(Tools.getNow());</span>
-<span class="fc" id="L143">			det.setRemoteAddr(Tools.getRemoteIP(request));</span>
+<span class="fc" id="L150">			det = new SessionDetails();</span>
+<span class="fc" id="L151">			det.setLogonTime(Tools.getNow());</span>
+<span class="fc" id="L152">			det.setRemoteAddr(Tools.getRemoteIP(request));</span>
 		} else {
-<span class="fc" id="L145">			Identity sessionUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L154">			Identity sessionUser = UsersDB.getCurrentUser(request);</span>
 
-<span class="pc bpc" id="L147" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;sessionStealingCheck&quot;) == true</span>
-<span class="pc bpc" id="L148" title="1 of 2 branches missed.">					&amp;&amp; det.getRemoteAddr().equals(Tools.getRemoteIP(request)) == false) {</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;sessionStealingCheck&quot;) == true</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">					&amp;&amp; det.getRemoteAddr().equals(Tools.getRemoteIP(request)) == false) {</span>
 				// session stealing vyvolame len ak je niekto prihlaseny
-<span class="nc bnc" id="L150" title="All 4 branches missed.">				if (sessionUser != null || det.getLoggedUserId() &gt; 0) {</span>
-<span class="nc" id="L151">					String sessionUserData = &quot;&quot;;</span>
-<span class="nc bnc" id="L152" title="All 2 branches missed.">					if (sessionUser != null)</span>
-<span class="nc" id="L153">						sessionUserData = &quot; suid=&quot; + sessionUser.getUserId() + &quot; &quot; + sessionUser.getFullName();</span>
+<span class="nc bnc" id="L159" title="All 4 branches missed.">				if (sessionUser != null || det.getLoggedUserId() &gt; 0) {</span>
+<span class="nc" id="L160">					String sessionUserData = &quot;&quot;;</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">					if (sessionUser != null)</span>
+<span class="nc" id="L162">						sessionUserData = &quot; suid=&quot; + sessionUser.getUserId() + &quot; &quot; + sessionUser.getFullName();</span>
 
-<span class="nc" id="L155">					String description = &quot;SESSION STEALING, sessionId=&quot; + sessionId + &quot; userId=&quot; + det.getLoggedUserId()</span>
-<span class="nc" id="L156">							+ &quot; &quot; + det.getLoggedUserName() + &quot; logonDate=&quot; + Tools.formatDateTime(det.getLogonTime())</span>
-<span class="nc" id="L157">							+ &quot; session IP=&quot; + det.getRemoteAddr() + &quot; req IP=&quot; + Tools.getRemoteIP(request) + &quot; &quot;</span>
+<span class="nc" id="L164">					String description = &quot;SESSION STEALING, sessionId=&quot; + sessionId + &quot; userId=&quot; + det.getLoggedUserId()</span>
+<span class="nc" id="L165">							+ &quot; &quot; + det.getLoggedUserName() + &quot; logonDate=&quot; + Tools.formatDateTime(det.getLogonTime())</span>
+<span class="nc" id="L166">							+ &quot; session IP=&quot; + det.getRemoteAddr() + &quot; req IP=&quot; + Tools.getRemoteIP(request) + &quot; &quot;</span>
 							+ sessionUserData;
 
-<span class="nc" id="L160">					Logger.error(SessionHolder.class, description);</span>
+<span class="nc" id="L169">					Logger.error(SessionHolder.class, description);</span>
 
-<span class="nc" id="L162">					Adminlog.add(Adminlog.TYPE_XSS, description, -1, -1);</span>
+<span class="nc" id="L171">					Adminlog.add(Adminlog.TYPE_XSS, description, -1, -1);</span>
 
-<span class="nc" id="L164">					request.getSession().invalidate();</span>
-<span class="nc" id="L165">					return false;</span>
+<span class="nc" id="L173">					request.getSession().invalidate();</span>
+<span class="nc" id="L174">					return false;</span>
 				}
 			}
 
-<span class="pc bpc" id="L169" title="1 of 2 branches missed.">			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {</span>
-<span class="nc" id="L170">				request.getSession().invalidate();</span>
-<span class="nc" id="L171">				return false;</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">			if (INVALIDATE_SESSION_ADDR.equals(det.getRemoteAddr())) {</span>
+<span class="nc" id="L179">				request.getSession().invalidate();</span>
+<span class="nc" id="L180">				return false;</span>
 			}
 		}
-<span class="fc" id="L174">		det.setLastURL(lastURL);</span>
+<span class="fc" id="L183">		det.setLastURL(lastURL);</span>
+<span class="fc" id="L184">		det.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L185">		det.setDomainName(CloudToolsForCore.getDomainName());</span>
 
-<span class="fc" id="L176">		Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">		if (user != null) {</span>
-<span class="pc bpc" id="L178" title="1 of 4 branches missed.">			if (det.getLoggedUserId() &lt; 1 || det.getLoggedUserId() != user.getUserId()) {</span>
-<span class="fc" id="L179">				det.setLoggedUserId(user.getUserId());</span>
-<span class="fc" id="L180">				det.setAdmin(user.isAdmin());</span>
-<span class="fc" id="L181">				det.setLoggedUserName(user.getFullName());</span>
+<span class="fc" id="L187">		Identity user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">		if (user != null) {</span>
+<span class="pc bpc" id="L189" title="1 of 4 branches missed.">			if (det.getLoggedUserId() &lt; 1 || det.getLoggedUserId() != user.getUserId()) {</span>
+<span class="fc" id="L190">				det.setLoggedUserId(user.getUserId());</span>
+<span class="fc" id="L191">				det.setAdmin(user.isAdmin());</span>
+<span class="fc" id="L192">				det.setLoggedUserName(user.getFullName());</span>
 			}
 		} else {
-<span class="pc bpc" id="L184" title="1 of 2 branches missed.">			if (det.getLoggedUserId() &gt; 0) {</span>
-<span class="nc" id="L185">				det.setLoggedUserId(-1);</span>
-<span class="nc" id="L186">				det.setAdmin(false);</span>
-<span class="nc" id="L187">				det.setLoggedUserName(null);</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">			if (det.getLoggedUserId() &gt; 0) {</span>
+<span class="nc" id="L196">				det.setLoggedUserId(-1);</span>
+<span class="nc" id="L197">				det.setAdmin(false);</span>
+<span class="nc" id="L198">				det.setLoggedUserName(null);</span>
 			}
 		}
 
 		// ziskaj IP a remoteHost
-<span class="fc" id="L192">		det.setLastActivity(Tools.getNow());</span>
-<span class="fc" id="L193">		data.put(sessionId, det);</span>
+<span class="fc" id="L203">		det.setLastActivity(Tools.getNow());</span>
+<span class="fc" id="L204">		data.put(sessionId, det);</span>
 
-<span class="fc" id="L195">		return true;</span>
+<span class="fc" id="L206">		return true;</span>
 	}
 
    /**
@@ -202,13 +213,13 @@ public class SessionHolder
     */
    public void setLastDocId(String sessionId, int lastDocId)
    {
-<span class="fc" id="L205">      SessionDetails det = get(sessionId);</span>
-<span class="fc bfc" id="L206" title="All 2 branches covered.">      if (det != null)</span>
+<span class="fc" id="L216">      SessionDetails det = get(sessionId);</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">      if (det != null)</span>
    	{
-<span class="fc" id="L208">   		det.setLastDocId(lastDocId);</span>
-<span class="fc" id="L209">   		data.put(sessionId, det);</span>
+<span class="fc" id="L219">   		det.setLastDocId(lastDocId);</span>
+<span class="fc" id="L220">   		data.put(sessionId, det);</span>
    	}
-<span class="fc" id="L211">   }</span>
+<span class="fc" id="L222">   }</span>
 
    /**
     *  Description of the Method
@@ -218,7 +229,7 @@ public class SessionHolder
     */
    public SessionDetails get(String sessionId)
    {
-<span class="fc" id="L221">      return data.get(sessionId);</span>
+<span class="fc" id="L232">      return data.get(sessionId);</span>
    }
 
    /**
@@ -228,15 +239,15 @@ public class SessionHolder
     */
    public void remove(String sessionId)
    {
-<span class="fc" id="L231">   	SessionDetails ses = get(sessionId);</span>
-<span class="pc bpc" id="L232" title="1 of 2 branches missed.">   	if (ses != null)</span>
+<span class="fc" id="L242">   	SessionDetails ses = get(sessionId);</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">   	if (ses != null)</span>
    	{
-<span class="fc" id="L234">   		ses = null;</span>
+<span class="fc" id="L245">   		ses = null;</span>
    	}
-<span class="fc" id="L236">      data.remove(sessionId);</span>
+<span class="fc" id="L247">      data.remove(sessionId);</span>
 
-<span class="fc" id="L238">      cleanup();</span>
-<span class="fc" id="L239">   }</span>
+<span class="fc" id="L249">      cleanup();</span>
+<span class="fc" id="L250">   }</span>
 
    /**
     * Vrati aktualny pocet sessions aktualneho clustru (kolko ludi si cita stranku)
@@ -244,8 +255,8 @@ public class SessionHolder
     */
    public static int getTotalSessionsPerNode()
    {
-<span class="fc" id="L247">   	SessionHolder sh = SessionHolder.getInstance();</span>
-<span class="fc" id="L248">   	return(sh.getList().size());</span>
+<span class="fc" id="L258">   	SessionHolder sh = SessionHolder.getInstance();</span>
+<span class="fc" id="L259">   	return(sh.getList().size());</span>
    }
 
    /**
@@ -258,16 +269,16 @@ public class SessionHolder
     */
    public static int getTotalSessions()
    {
-<span class="pc bpc" id="L261" title="1 of 2 branches missed.">   	if(ClusterDB.isServerRunningInClusterMode())</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">   	if(ClusterDB.isServerRunningInClusterMode())</span>
    	{
-<span class="fc" id="L263">   		int totalSessions=Constants.getInt(&quot;statSessionsAllNodes&quot;);</span>
-<span class="pc bpc" id="L264" title="1 of 2 branches missed.">   		if(totalSessions&lt;=0)</span>
-<span class="nc" id="L265">   			totalSessions = getTotalSessionsPerNode();</span>
-<span class="fc" id="L266">   		return totalSessions;</span>
+<span class="fc" id="L274">   		int totalSessions=Constants.getInt(&quot;statSessionsAllNodes&quot;);</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">   		if(totalSessions&lt;=0)</span>
+<span class="nc" id="L276">   			totalSessions = getTotalSessionsPerNode();</span>
+<span class="fc" id="L277">   		return totalSessions;</span>
 
    	}
    	else
-<span class="nc" id="L270">   		return getTotalSessionsPerNode();</span>
+<span class="nc" id="L281">   		return getTotalSessionsPerNode();</span>
    }
 
 
@@ -283,29 +294,29 @@ public class SessionHolder
 		//pouziva Cache - iteruje nad vsetkymi pouzivatelmi a uzamkyna pritom
 		//zamok (ak by nezamkynal - mozny ConcurrentModificationException) =&gt; mozny bottleNeck
    	//notNull &amp;&amp; isInteger
-<span class="pc bpc" id="L286" title="1 of 2 branches missed.">   	if (Cache.getInstance().getObject(&quot;distinctUserCount&quot;) instanceof Integer)</span>
-<span class="nc" id="L287">   		return (Integer)Cache.getInstance().getObject(&quot;distinctUserCount&quot;);</span>
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">   	if (Cache.getInstance().getObject(&quot;distinctUserCount&quot;) instanceof Integer)</span>
+<span class="nc" id="L298">   		return (Integer)Cache.getInstance().getObject(&quot;distinctUserCount&quot;);</span>
 
-<span class="fc" id="L289">   	SessionHolder sh = SessionHolder.getInstance();</span>
+<span class="fc" id="L300">   	SessionHolder sh = SessionHolder.getInstance();</span>
 
-<span class="fc" id="L291">   	Set&lt;Integer&gt; userIds = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L302">   	Set&lt;Integer&gt; userIds = new HashSet&lt;&gt;();</span>
    	//vyrobime si kopiu
-<span class="fc" id="L293">   	List&lt;SessionDetails&gt; sessionList = null;</span>
-<span class="fc" id="L294">   	synchronized(getInstance().data)</span>
+<span class="fc" id="L304">   	List&lt;SessionDetails&gt; sessionList = null;</span>
+<span class="fc" id="L305">   	synchronized(getInstance().data)</span>
    	{
-<span class="fc" id="L296">   		sessionList = new ArrayList&lt;&gt;(sh.getList());</span>
-<span class="fc" id="L297">   	}</span>
+<span class="fc" id="L307">   		sessionList = new ArrayList&lt;&gt;(sh.getList());</span>
+<span class="fc" id="L308">   	}</span>
 
-<span class="fc bfc" id="L299" title="All 2 branches covered.">   	for (SessionDetails session : sessionList)</span>
+<span class="fc bfc" id="L310" title="All 2 branches covered.">   	for (SessionDetails session : sessionList)</span>
    	{
-<span class="fc bfc" id="L301" title="All 2 branches covered.">   		if (session.getLoggedUserId() &gt; 0)</span>
-<span class="fc" id="L302">   			userIds.add( session.getLoggedUserId() );</span>
-<span class="fc" id="L303">   	}</span>
+<span class="fc bfc" id="L312" title="All 2 branches covered.">   		if (session.getLoggedUserId() &gt; 0)</span>
+<span class="fc" id="L313">   			userIds.add( session.getLoggedUserId() );</span>
+<span class="fc" id="L314">   	}</span>
 
-<span class="fc" id="L305">   	final int SECONDS_TO_LAST_IN_CACHE = 10;</span>
-<span class="fc" id="L306">   	Cache.getInstance().setObjectSeconds(&quot;distinctUserCount&quot;,userIds.size(),SECONDS_TO_LAST_IN_CACHE);</span>
+<span class="fc" id="L316">   	final int SECONDS_TO_LAST_IN_CACHE = 10;</span>
+<span class="fc" id="L317">   	Cache.getInstance().setObjectSeconds(&quot;distinctUserCount&quot;,userIds.size(),SECONDS_TO_LAST_IN_CACHE);</span>
 
-<span class="fc" id="L308">   	return userIds.size();</span>
+<span class="fc" id="L319">   	return userIds.size();</span>
    }
 
 	/**
@@ -320,15 +331,15 @@ public class SessionHolder
     */
    public static int getDistinctUsersCount()
    {
-<span class="nc bnc" id="L323" title="All 2 branches missed.">   	if(ClusterDB.isServerRunningInClusterMode())</span>
+<span class="nc bnc" id="L334" title="All 2 branches missed.">   	if(ClusterDB.isServerRunningInClusterMode())</span>
    	{
-<span class="nc" id="L325">   		int totalUsers=Constants.getInt(&quot;statDistinctUsersAllNodes&quot;);</span>
-<span class="nc bnc" id="L326" title="All 2 branches missed.">   		if(totalUsers&lt;=0)</span>
-<span class="nc" id="L327">   			totalUsers = getDistinctUsersCountPerNode();</span>
-<span class="nc" id="L328">   		return totalUsers;</span>
+<span class="nc" id="L336">   		int totalUsers=Constants.getInt(&quot;statDistinctUsersAllNodes&quot;);</span>
+<span class="nc bnc" id="L337" title="All 2 branches missed.">   		if(totalUsers&lt;=0)</span>
+<span class="nc" id="L338">   			totalUsers = getDistinctUsersCountPerNode();</span>
+<span class="nc" id="L339">   		return totalUsers;</span>
    	}
    	else
-<span class="nc" id="L331">   		return getDistinctUsersCountPerNode();</span>
+<span class="nc" id="L342">   		return getDistinctUsersCountPerNode();</span>
    }
 
    /**
@@ -338,57 +349,69 @@ public class SessionHolder
    	private void cleanup() {
 		try {
 			SessionDetails sd;
-<span class="fc" id="L341">			Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L342">			cal.add(Calendar.MINUTE, -Constants.getInt(&quot;sessionRemoveTimeout&quot;));</span>
-<span class="fc" id="L343">			long removeTime = cal.getTimeInMillis();</span>
+<span class="fc" id="L352">			Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L353">			cal.add(Calendar.MINUTE, -Constants.getInt(&quot;sessionRemoveTimeout&quot;));</span>
+<span class="fc" id="L354">			long removeTime = cal.getTimeInMillis();</span>
 
-<span class="fc" id="L345">			synchronized (data) {</span>
-<span class="fc" id="L346">				Set&lt;String&gt; keys = data.keySet();</span>
-<span class="fc" id="L347">				List&lt;String&gt; myKeysList = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L348" title="All 2 branches covered.">				for (String key : keys) {</span>
-<span class="fc" id="L349">					myKeysList.add(key);</span>
-<span class="fc" id="L350">				}</span>
-<span class="fc bfc" id="L351" title="All 2 branches covered.">				for (String key : myKeysList) {</span>
-<span class="fc" id="L352">					sd = data.get(key);</span>
-<span class="pc bpc" id="L353" title="2 of 4 branches missed.">					if (sd == null || sd.getLastActivity() &lt; removeTime) {</span>
-<span class="nc bnc" id="L354" title="All 2 branches missed.">						if (sd == null) {</span>
-<span class="nc" id="L355">							Logger.debug(SessionHolder.class, &quot;Removing session: &quot; + key + &quot; sd=null&quot;);</span>
+<span class="fc" id="L356">			synchronized (data) {</span>
+<span class="fc" id="L357">				Set&lt;String&gt; keys = data.keySet();</span>
+<span class="fc" id="L358">				List&lt;String&gt; myKeysList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L359" title="All 2 branches covered.">				for (String key : keys) {</span>
+<span class="fc" id="L360">					myKeysList.add(key);</span>
+<span class="fc" id="L361">				}</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">				for (String key : myKeysList) {</span>
+<span class="fc" id="L363">					sd = data.get(key);</span>
+<span class="pc bpc" id="L364" title="2 of 4 branches missed.">					if (sd == null || sd.getLastActivity() &lt; removeTime) {</span>
+<span class="nc bnc" id="L365" title="All 2 branches missed.">						if (sd == null) {</span>
+<span class="nc" id="L366">							Logger.debug(SessionHolder.class, &quot;Removing session: &quot; + key + &quot; sd=null&quot;);</span>
 						} else {
-<span class="nc" id="L357">							Logger.debug(SessionHolder.class,</span>
-<span class="nc" id="L358">									&quot;Removing session: &quot; + key + &quot; la=&quot; + Tools.formatDateTime(sd.getLastActivity()));</span>
+<span class="nc" id="L368">							Logger.debug(SessionHolder.class,</span>
+<span class="nc" id="L369">									&quot;Removing session: &quot; + key + &quot; la=&quot; + Tools.formatDateTime(sd.getLastActivity()));</span>
 						}
-<span class="nc" id="L360">						data.remove(key);</span>
+<span class="nc" id="L371">						data.remove(key);</span>
 					}
-<span class="fc" id="L362">				}</span>
-<span class="fc" id="L363">			}</span>
-<span class="nc" id="L364">		} catch (Exception e) {</span>
+<span class="fc" id="L373">				}</span>
+<span class="fc" id="L374">			}</span>
+<span class="nc" id="L375">		} catch (Exception e) {</span>
 			// sk.iway.iwcm.Logger.error(e);
-<span class="fc" id="L366">		}</span>
-<span class="fc" id="L367">	}</span>
+<span class="fc" id="L377">		}</span>
+<span class="fc" id="L378">	}</span>
 
 	/**
 	 * Nastavi vsetkym ostatnym session atribut pre ich invalidovanie (napr. po zmene hesla)
 	 */
 	public void invalidateOtherUserSessions()
 	{
-<span class="nc" id="L374">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L375" title="All 4 branches missed.">		if (rb == null || rb.getUserId()&lt;1) return;</span>
+<span class="nc" id="L385">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L386" title="All 4 branches missed.">		if (rb == null || rb.getUserId()&lt;1) return;</span>
 
-<span class="nc bnc" id="L377" title="All 2 branches missed.">		for (Map.Entry&lt;String, SessionDetails&gt; entry : data.entrySet())</span>
+<span class="nc" id="L388">		invalidateOtherUserSessions(rb.getUserId());</span>
+<span class="nc" id="L389">	}</span>
+
+	/**
+	 * Invalidate other sessions for user with userId, call this after password change
+	 * @param userId - ID of user changed password
+	 */
+	public void invalidateOtherUserSessions(int userId)
+	{
+<span class="fc" id="L397">		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L398" title="2 of 4 branches missed.">		if (rb == null || rb.getUserId()&lt;1) return;</span>
+
+<span class="fc bfc" id="L400" title="All 2 branches covered.">		for (Map.Entry&lt;String, SessionDetails&gt; entry : data.entrySet())</span>
 		{
-<span class="nc" id="L379">			String sessionId = entry.getKey();</span>
-<span class="nc bnc" id="L380" title="All 2 branches missed.">			if (Tools.isEmpty(sessionId)) continue;</span>
+<span class="fc" id="L402">			String sessionId = entry.getKey();</span>
+<span class="pc bpc" id="L403" title="1 of 2 branches missed.">			if (Tools.isEmpty(sessionId)) continue;</span>
 
-<span class="nc" id="L382">			SessionDetails sd = entry.getValue();</span>
-<span class="nc bnc" id="L383" title="All 2 branches missed.">			if (sd == null) continue;</span>
+<span class="fc" id="L405">			SessionDetails sd = entry.getValue();</span>
+<span class="pc bpc" id="L406" title="1 of 2 branches missed.">			if (sd == null) continue;</span>
 
-<span class="nc bnc" id="L385" title="All 4 branches missed.">			if (sd.getLoggedUserId() == rb.getUserId() &amp;&amp; sessionId.equals(rb.getSessionId())==false)</span>
+<span class="pc bpc" id="L408" title="1 of 4 branches missed.">			if (sd.getLoggedUserId() == userId &amp;&amp; sessionId.equals(rb.getSessionId())==false)</span>
 			{
-				//danu session musime destroynut
-<span class="nc" id="L388">				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);</span>
-<span class="nc" id="L389">				Logger.debug(SessionHolder.class, &quot;Invalidating session: &quot; + sessionId +&quot; uid=&quot;+sd.getLoggedUserId());</span>
+				//destroy session
+<span class="nc" id="L411">				sd.setRemoteAddr(INVALIDATE_SESSION_ADDR);</span>
+<span class="nc" id="L412">				Logger.debug(SessionHolder.class, &quot;Invalidating session: &quot; + sessionId +&quot; uid=&quot;+sd.getLoggedUserId());</span>
 			}
-<span class="nc" id="L391">		}</span>
-<span class="nc" id="L392">	}</span>
+<span class="fc" id="L414">		}</span>
+<span class="fc" id="L415">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

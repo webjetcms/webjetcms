@@ -1,6 +1,6 @@
 # Recovering web pages and folders from the Recycle Bin
 
-Restoring web pages and folders is a process that can only be performed on those pages/folders that are located in a folder `Kôš`. There is a special icon for this action ![](recover-button.png ":no-zoom").
+Restoring web pages and folders is a process that can only be performed on those pages/folders that are located in a folder `Trash`. There is a special icon for this action ![](recover-button.png ":no-zoom").
 
 Technically, restoring a web page is done by retrieving a version of it from history.
 
@@ -20,7 +20,7 @@ If all requirements have been met, mark the page by checking the option in the r
 
 ## Restore a folder
 
-The restored folder is moved from the Recycle Bin to the last folder, or to `Koreňového priečinka` if the folder has no recorded history. All sub-folders and all pages from those folders will also be restored. Pages will be set to display by page history, or to Yes if the page has no history.
+The restored folder is moved from the Recycle Bin to the last folder, or to `Root folder` if the folder has no recorded history. All sub-folders and all pages from those folders will also be restored. Pages will be set to display by page history, or to Yes if the page has no history.
 
 To successfully restore a folder, the following must be true:
 - A folder must be selected in the Recycle Bin. You verify this by checking the ID field ![](recover-folder-id-2.png ":no-zoom") where the identifier of the currently selected folder is not empty.
@@ -34,12 +34,12 @@ Confirmation will trigger the renewal action and you will be notified of its suc
 
 ### Property to display after refresh
 
-Since we want to restore the web pages that were in the restored folders to their original state, we need to set them to the correct value of the option `Zobrazovať`. Website option `Zobrazovať` was automatically disabled when the folder was deleted, thus hiding the web pages on the web site (this applies to all web pages, even those from directories).
+Since we want to restore the web pages that were in the restored folders to their original state, we need to set them to the correct value of the option `Enable web page display`. Website option `Enable web page display` was automatically disabled when the folder was deleted, thus hiding the web pages on the web site (this applies to all web pages, even those from directories).
 
-On refresh, the value of the option `Zobrazovať` set according to the following rules:
-- the current history record for each web page being refreshed is retrieved, and its value `Zobrazovať` is set according to the pattern from the history
+On refresh, the value of the option `Enable web page display` set according to the following rules:
+- the current history record for each web page being refreshed is retrieved, and its value `Enable web page display` is set according to the pattern from the history
 - if there is no current history record for this page, the most recent non-updated history record is used
-- `Zobrazovať`
-****
-- ****
-- ****`Zobrazovať`.
+- if the page has no history, its value `Enable web page display` is automatically switched on
+**Note this difference:**
+- when the web page is refreshed, the page **CANNOT be renewed** without a record in the history, as we don't know where this page was located.
+- when the folder is restored, the web page **CAN be restored** even without a history entry, since we know where it is (its location in the folder being restored is clear) and we use the history entry only to set the value of the option `Enable web page display`.

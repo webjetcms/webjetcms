@@ -9,31 +9,37 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import sk.iway.iwcm.InitServlet;
+
 @Controller
-<span class="fc" id="L13">public class LicenseController {</span>
-    
-    @GetMapping(&quot;/wjerrorpages/setup/license&quot;) 
+<span class="nc" id="L15">public class LicenseController {</span>
+
+    @GetMapping(&quot;/wjerrorpages/setup/license&quot;)
     public String setup(Model model, HttpServletRequest request, HttpServletResponse response) {
         try {
             //Set initial params into model (!!)
-<span class="nc" id="L19">            LicenseActionService.setModel(model, request, response);</span>
-<span class="nc" id="L20">            return &quot;/admin/setup/license&quot;;</span>
-<span class="nc" id="L21">        } catch(Exception e) {</span>
-<span class="nc" id="L22">           sk.iway.iwcm.Logger.error(e);</span>
-        }
+<span class="nc bnc" id="L21" title="All 2 branches missed.">            if (InitServlet.isValid()==false) {</span>
+<span class="nc" id="L22">                LicenseActionService.setModel(model, request, response);</span>
+<span class="nc" id="L23">                return &quot;/admin/setup/license&quot;;</span>
+            }
+<span class="nc" id="L25">        } catch(Exception e) {</span>
+<span class="nc" id="L26">           sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L27">        }</span>
 
-<span class="nc" id="L25">        return null;</span>
+<span class="nc" id="L29">        return null;</span>
     }
 
-    @PostMapping(&quot;/wjerrorpages/setup/save-license&quot;) 
+    @PostMapping(&quot;/wjerrorpages/setup/save-license&quot;)
     public String save(@ModelAttribute LicenseFormBean licenseForm, Model model, HttpServletRequest request, HttpServletResponse response) {
         try {
-<span class="nc" id="L31">           return LicenseActionService.updateLicense(licenseForm, model, request, response);</span>
-<span class="nc" id="L32">        } catch(Exception e) {</span>
-<span class="nc" id="L33">           sk.iway.iwcm.Logger.error(e);</span>
-        }
+<span class="nc bnc" id="L35" title="All 2 branches missed.">            if (InitServlet.isValid()==false) {</span>
+<span class="nc" id="L36">                return LicenseActionService.updateLicense(licenseForm, model, request, response);</span>
+            }
+<span class="nc" id="L38">        } catch(Exception e) {</span>
+<span class="nc" id="L39">           sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L40">        }</span>
 
-<span class="nc" id="L36">        return null;</span>
+<span class="nc" id="L42">        return null;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

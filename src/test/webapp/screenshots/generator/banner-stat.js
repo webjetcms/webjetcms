@@ -9,11 +9,18 @@ Scenario('banner-stat a banner-detail', ({I, Document}) => {
 
     I.click("div.md-breadcrumb input.dt-filter-from-dayDate");
 
-    if("sk" === I.getConfLng()) {
-        I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "01.05.2022");
-    } else if("en" === I.getConfLng()) {
-        I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "05/01/2022");
-    } 
+    switch (I.getConfLng()) {
+        case "sk":
+        case "cs": 
+            I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "01.05.2022");
+            break;
+        case "en":
+            I.fillField("div.md-breadcrumb input.dt-filter-from-dayDate", "05/01/2022");
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
+    }
+    
 
     I.click("#bannerStatDataTable_extfilter > div > div.col-auto.dt-extfilter.dt-extfilter-dayDate > form > div > button");
     I.wait(2);

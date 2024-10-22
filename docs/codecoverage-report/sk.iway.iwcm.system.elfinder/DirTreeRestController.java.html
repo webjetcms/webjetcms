@@ -30,35 +30,35 @@ import sk.iway.iwcm.io.IwcmFile;
 
     @Override
     protected void tree(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
-<span class="nc" id="L33">        String parentPath = item.getId();</span>
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (&quot;-1&quot;.equals(parentPath)) parentPath = &quot;/&quot;;</span>
+<span class="fc" id="L33">        String parentPath = item.getId();</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (&quot;-1&quot;.equals(parentPath)) parentPath = &quot;/&quot;;</span>
 
-<span class="nc" id="L36">        boolean isRoot = &quot;/&quot;.equals(parentPath);</span>
+<span class="fc" id="L36">        boolean isRoot = &quot;/&quot;.equals(parentPath);</span>
 
-<span class="nc" id="L38">        Identity user = getUser();</span>
+<span class="fc" id="L38">        Identity user = getUser();</span>
 
         List&lt;IwcmFile&gt; files;
-<span class="nc bnc" id="L41" title="All 4 branches missed.">        if (isRoot || user.isFolderWritable(parentPath)) {</span>
-<span class="nc" id="L42">            IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));</span>
-<span class="nc" id="L43">            files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -&gt; {</span>
-<span class="nc bnc" id="L44" title="All 2 branches missed.">                if (file.isFile()) return false;</span>
+<span class="pc bpc" id="L41" title="1 of 4 branches missed.">        if (isRoot || user.isFolderWritable(parentPath)) {</span>
+<span class="fc" id="L42">            IwcmFile directory = new IwcmFile(Tools.getRealPath(parentPath));</span>
+<span class="fc" id="L43">            files = Arrays.asList(FileTools.sortFilesByName(directory.listFiles(file -&gt; {</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">                if (file.isFile()) return false;</span>
 
                 //System.out.println(&quot;path=&quot;+file.getVirtualPath()+&quot; isRoot=&quot;+isRoot+&quot; isJarPackaging=&quot;+file.isJarPackaging());
-<span class="nc bnc" id="L47" title="All 4 branches missed.">                if (isRoot==false &amp;&amp; file.isJarPackaging()) return false;</span>
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">                if (isRoot==false &amp;&amp; file.isJarPackaging()) return false;</span>
 
-<span class="nc bnc" id="L49" title="All 2 branches missed.">                if (user.isFolderWritable(file.getVirtualPath())==false) return false;</span>
+<span class="pc bpc" id="L49" title="1 of 2 branches missed.">                if (user.isFolderWritable(file.getVirtualPath())==false) return false;</span>
 
-<span class="nc" id="L51">                return true;</span>
+<span class="fc" id="L51">                return true;</span>
             })));
-<span class="nc" id="L53">        } else {</span>
+<span class="fc" id="L53">        } else {</span>
 <span class="nc" id="L54">            files = new ArrayList&lt;&gt;();</span>
         }
 
-<span class="nc" id="L57">        List&lt;DirTreeItem&gt; items = files.stream().map(f -&gt; new DirTreeItem(f)).collect(Collectors.toList());</span>
+<span class="fc" id="L57">        List&lt;DirTreeItem&gt; items = files.stream().map(f -&gt; new DirTreeItem(f)).collect(Collectors.toList());</span>
 
-<span class="nc" id="L59">        result.put(&quot;result&quot;, true);</span>
-<span class="nc" id="L60">        result.put(&quot;items&quot;, items);</span>
-<span class="nc" id="L61">    }</span>
+<span class="fc" id="L59">        result.put(&quot;result&quot;, true);</span>
+<span class="fc" id="L60">        result.put(&quot;items&quot;, items);</span>
+<span class="fc" id="L61">    }</span>
 
     @Override
     protected void move(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
@@ -84,8 +84,8 @@ import sk.iway.iwcm.io.IwcmFile;
     @Override
     public boolean checkAccessAllowed(HttpServletRequest request) {
         //prava kontrolujeme hore v cykle
-<span class="nc" id="L87">        return true;</span>
+<span class="fc" id="L87">        return true;</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

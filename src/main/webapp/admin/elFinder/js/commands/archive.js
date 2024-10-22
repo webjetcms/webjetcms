@@ -1,4 +1,3 @@
-"use strict"
 /**
  * @class  elFinder command "archive"
  * Archive selected files
@@ -6,6 +5,7 @@
  * @author Dmitry (dio) Levashov
  **/
 elFinder.prototype.commands.archive = function() {
+	"use strict";
 	var self  = this,
 		fm    = self.fm,
 		mimes = [],
@@ -15,6 +15,8 @@ elFinder.prototype.commands.archive = function() {
 	
 	this.disableOnSearch = false;
 	
+	this.nextAction = {};
+	
 	/**
 	 * Update mimes on open/reload
 	 *
@@ -23,24 +25,32 @@ elFinder.prototype.commands.archive = function() {
 	fm.bind('open reload', function() {
 		self.variants = [];
 		$.each((mimes = fm.option('archivers')['create'] || []), function(i, mime) {
-			self.variants.push([mime, fm.mime2kind(mime)])
+			self.variants.push([mime, fm.mime2kind(mime)]);
 		});
 		self.change();
 	});
 	
-	this.getstate = function(sel) {
-		var sel = this.files(sel),
+	this.getstate = function(select) {
+		var sel = this.files(select),
 			cnt = sel.length,
-			chk = (cnt && ! fm.isRoot(sel[0]) && (fm.file(sel[0].phash) || {}).write && ! $.map(sel, function(f){ return f.read ? null : true }).length),
+			chk = (cnt && ! fm.isRoot(sel[0]) && (fm.file(sel[0].phash) || {}).write),
+			filter = function(files) {
+				var fres = true;
+				return $.grep(files, function(f) {
+					fres = fres && f.read && f.hash.indexOf(cwdId) === 0 ? true : false;
+					return fres;
+				});
+			},
 			cwdId;
 		
 		if (chk && fm.searchStatus.state > 1) {
-			cwdId = fm.cwd().volumeid;
-			chk = (cnt === $.map(sel, function(f) { return f.read && f.hash.indexOf(cwdId) === 0 ? f : null; }).length);
+			if (chk = (cnt === filter(sel).length)) {
+				cwdId = fm.cwd().volumeid;
+			}
 		}
 		
 		return chk && !this._disabled && mimes.length && (cnt || (dfrd && dfrd.state() == 'pending')) ? 0 : -1;
-	}
+	};
 	
 	this.exec = function(hashes, type) {
 		var files = this.files(hashes),
@@ -85,6 +95,6 @@ elFinder.prototype.commands.archive = function() {
 		}
 		
 		return dfrd;
-	}
+	};
 
 };

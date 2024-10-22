@@ -35,33 +35,36 @@ public class FormMailAjax implements ActionBean, ValidationErrorHandler
 	private ActionBeanContext context;
 
 	@Override
-	public Resolution handleValidationErrors(ValidationErrors errors) throws Exception 
-	{  
+	public Resolution handleValidationErrors(ValidationErrors errors) throws Exception
+	{
 		Logger.debug(FormMailAjax.class, "handleValidationErrors: "+errors);
-		return new ActionContextJavaScriptResolution(this);  
+		return new ActionContextJavaScriptResolution(this);
 	}
-	
+
 	@DefaultHandler
 	public Resolution defaultResolution()
 	{
 		Logger.debug(FormMailAjax.class, "DefaultResolution");
-		
+
 		String formName = DB.internationalToEnglish(context.getRequest().getParameter("savedb"));
 
 		//POZOR vsetky request pemenne treba ziskavat z tohto, nie z context.getRequest() - inak by neslo nastavenie formu cez databazove hodnoty
 		HttpServletRequest request = FormMailAction.fillRequestWithDatabaseOptions(formName, context.getRequest(), null);
 		String forward = FormMailAction.saveForm(request, null, null, getContext());
-		
+
 		if (context.getValidationErrors().size()>0)
 		{
 			return new ActionContextJavaScriptResolution(this);
 		}
-		
+
 		//tato metoda berie hodnotu podla session, takze sa pouzije spravny jazyk
 		Prop prop = Prop.getInstance(PageLng.getUserLng(getContext().getRequest()));
 		if (forward.indexOf("formsend=true")!=-1)
 		{
-			context.getMessages().add(new SimpleMessage(prop.getTextWithSuffix("checkform.sent", formName)));
+			String key = "checkform.sent";
+			if (forward.indexOf("DoubleOptIn")!=-1) key = "checkform.sentDoubleOptIn";
+
+			context.getMessages().add(new SimpleMessage(prop.getTextWithSuffix(key, formName)));
 			String forwardOk = request.getParameter("forward");
 			if (Tools.isNotEmpty(forwardOk))
 			{
@@ -96,11 +99,11 @@ public class FormMailAjax implements ActionBean, ValidationErrorHandler
 		{
 			context.getValidationErrors().add("notSendMessage", new SimpleError(prop.getTextWithSuffix("checkform.sendfail", formName)));
 		}
-		
-		//query was created  
-		return new ActionContextJavaScriptResolution(this); 
+
+		//query was created
+		return new ActionContextJavaScriptResolution(this);
 	}
-	
+
 	@Override
 	public ActionBeanContext getContext()
 	{

@@ -8,6 +8,7 @@ export class WebjetJsTree {
         this.jsTreeUrl = this.id.data("rest-url");
         this.jsTreeMoveUrl = this.id.data("rest-move-url");
         this.jsTreeParamName = this.id.data("rest-param-name");
+        this.jsTreeRoot = this.id.data("rest-root") || "-1";
         this.createJsTree();
         this.events();
     }
@@ -19,7 +20,7 @@ export class WebjetJsTree {
                     return !(operation === 'copy_node' || operation === 'move_node' && parent.id === '#');
                 },
                 'data': (obj, callback) => {
-                    let jsTreeParamValue = -1;
+                    let jsTreeParamValue = this.jsTreeRoot;
 
                     if (this.jsTreeParamName === 'url') {
                         jsTreeParamValue = '/images';

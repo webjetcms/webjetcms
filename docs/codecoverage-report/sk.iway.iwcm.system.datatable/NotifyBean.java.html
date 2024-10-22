@@ -15,7 +15,7 @@ public class NotifyBean {
     private String type;
 
     private String text;
-<span class="fc" id="L18">    private long timeout = 0;</span>
+<span class="pc" id="L18">    private long timeout = 0;</span>
 
     private List&lt;NotifyButton&gt; buttons;
 
@@ -26,11 +26,15 @@ public class NotifyBean {
 <span class="fc" id="L26">        ERROR</span>
     }
 
-<span class="fc" id="L29">    public NotifyBean(String title, String text, NotifyType type) {</span>
-<span class="fc" id="L30">        this.title = title;</span>
-<span class="fc" id="L31">        setType(type);</span>
-<span class="fc" id="L32">        this.text = text;</span>
-<span class="fc" id="L33">    }</span>
+<span class="nc" id="L29">    public NotifyBean() {</span>
+        //empty constructor
+<span class="nc" id="L31">    }</span>
+
+<span class="fc" id="L33">    public NotifyBean(String title, String text, NotifyType type) {</span>
+<span class="fc" id="L34">        this.title = title;</span>
+<span class="fc" id="L35">        setType(type);</span>
+<span class="fc" id="L36">        this.text = text;</span>
+<span class="fc" id="L37">    }</span>
 
     /**
      * Prida novu notifikaciu
@@ -39,30 +43,30 @@ public class NotifyBean {
      * @param type
      * @param timeout - pocet ms po ktorych sa notifikacia schova
      */
-<span class="fc" id="L42">    public NotifyBean(String title, String text, NotifyType type, long timeout) {</span>
-<span class="fc" id="L43">        this.title = title;</span>
-<span class="fc" id="L44">        setType(type);</span>
-<span class="fc" id="L45">        this.text = text;</span>
-<span class="fc" id="L46">        this.timeout = timeout;</span>
-<span class="fc" id="L47">    }</span>
+<span class="fc" id="L46">    public NotifyBean(String title, String text, NotifyType type, long timeout) {</span>
+<span class="fc" id="L47">        this.title = title;</span>
+<span class="fc" id="L48">        setType(type);</span>
+<span class="fc" id="L49">        this.text = text;</span>
+<span class="fc" id="L50">        this.timeout = timeout;</span>
+<span class="fc" id="L51">    }</span>
 
     // Set type using string
     public void setType(String type) {
-<span class="nc" id="L51">        this.type = type;</span>
-<span class="nc" id="L52">    }</span>
+<span class="nc" id="L55">        this.type = type;</span>
+<span class="nc" id="L56">    }</span>
 
     //Set type using create notifyType enum
     public void setType(NotifyType type) {
-<span class="fc bfc" id="L56" title="All 2 branches covered.">        if(type == NotifyType.SUCCESS) {</span>
-<span class="fc" id="L57">            this.type = &quot;success&quot;;</span>
-<span class="fc bfc" id="L58" title="All 2 branches covered.">        } else if(type == NotifyType.INFO) {</span>
-<span class="fc" id="L59">            this.type = &quot;info&quot;;</span>
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        } else if(type == NotifyType.WARNING) {</span>
-<span class="fc" id="L61">            this.type = &quot;warning&quot;;</span>
-<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        } else if(type == NotifyType.ERROR) {</span>
-<span class="fc" id="L63">            this.type = &quot;error&quot;;</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if(type == NotifyType.SUCCESS) {</span>
+<span class="fc" id="L61">            this.type = &quot;success&quot;;</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">        } else if(type == NotifyType.INFO) {</span>
+<span class="fc" id="L63">            this.type = &quot;info&quot;;</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        } else if(type == NotifyType.WARNING) {</span>
+<span class="fc" id="L65">            this.type = &quot;warning&quot;;</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        } else if(type == NotifyType.ERROR) {</span>
+<span class="fc" id="L67">            this.type = &quot;error&quot;;</span>
         }
-<span class="fc" id="L65">    }</span>
+<span class="fc" id="L69">    }</span>
 
     /**
      * Prida tlacidlo do notifikacie
@@ -70,9 +74,9 @@ public class NotifyBean {
      * @return
      */
     public NotifyBean addButton(NotifyButton button) {
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">        if (buttons == null) buttons = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L74">        buttons.add(button);</span>
-<span class="fc" id="L75">        return this;</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (buttons == null) buttons = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L78">        buttons.add(button);</span>
+<span class="fc" id="L79">        return this;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

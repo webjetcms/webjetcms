@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>WebjetComponentAbstract.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components</a> &gt; <span class="el_source">WebjetComponentAbstract.java</span></div><h1>WebjetComponentAbstract.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -11,7 +16,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 /**
  * Base/Abstract class for WebJET app
  */
-<span class="fc" id="L14">public abstract class WebjetComponentAbstract implements WebjetComponentInterface {</span>
+<span class="fc" id="L19">public abstract class WebjetComponentAbstract implements WebjetComponentInterface {</span>
 
     /** DEFAULT commonSettings TAB */
     @DataTableColumn(
@@ -46,7 +51,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
      */
     public void init() {
 
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L54">    }</span>
 
     /**
      * Initialization method for custom component initialization
@@ -54,31 +59,45 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
      */
     public void init(HttpServletRequest request, HttpServletResponse response) {
 
-<span class="fc" id="L57">    }</span>
+<span class="fc" id="L62">    }</span>
+
+    /**
+     * Returns list of options for app editor in webpage
+     */
+    public Map&lt;String, List&lt;OptionDto&gt;&gt; getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+<span class="fc" id="L68">        return null;</span>
+    }
+
+    /**
+     * Initialization method for app editor in webpage
+     */
+    public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+
+<span class="fc" id="L76">    }</span>
 
     @Override
     public String getViewFolder() {
-<span class="fc" id="L61">        return viewFolder;</span>
+<span class="fc" id="L80">        return viewFolder;</span>
     }
 
     public void setViewFolder(String viewFolder) {
-<span class="nc" id="L65">        this.viewFolder = viewFolder;</span>
-<span class="nc" id="L66">    }</span>
+<span class="nc" id="L84">        this.viewFolder = viewFolder;</span>
+<span class="nc" id="L85">    }</span>
 
     public String getDevice() {
-<span class="fc" id="L69">        return device;</span>
+<span class="fc" id="L88">        return device;</span>
     }
 
     public void setDevice(String device) {
-<span class="fc" id="L73">        this.device = device;</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L92">        this.device = device;</span>
+<span class="fc" id="L93">    }</span>
 
     public Integer getCacheMinutes() {
-<span class="fc" id="L77">        return cacheMinutes;</span>
+<span class="fc" id="L96">        return cacheMinutes;</span>
     }
 
     public void setCacheMinutes(Integer cacheMinutes) {
-<span class="fc" id="L81">        this.cacheMinutes = cacheMinutes;</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L100">        this.cacheMinutes = cacheMinutes;</span>
+<span class="fc" id="L101">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

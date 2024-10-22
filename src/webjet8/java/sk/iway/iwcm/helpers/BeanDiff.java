@@ -42,11 +42,17 @@ public class BeanDiff
 
 	public Map<String, PropertyDiff> diff()
 	{
-		Map<String, PropertyDiff> changes = new HashMap<String, PropertyDiff>();
+		Map<String, PropertyDiff> changes = new HashMap<>();
 
-		if (original != null && actual != null)
+		if (actual != null)
 		{
-			for (PropertyDescriptor descriptor : PropertyUtils.getPropertyDescriptors(original.getClass()))
+			PropertyDescriptor[] descriptors;
+			if (original != null)
+				descriptors = PropertyUtils.getPropertyDescriptors(original.getClass());
+			else
+				descriptors = PropertyUtils.getPropertyDescriptors(actual.getClass());
+
+			for (PropertyDescriptor descriptor : descriptors)
 			{
 				try{
 					String property = descriptor.getName();
@@ -55,7 +61,7 @@ public class BeanDiff
 					if (descriptor.getPropertyType() != null && !ArrayUtils.contains(supportedClasses, descriptor.getPropertyType().getSimpleName()))
 						continue;
 
-					Object originalValue = PropertyUtils.getProperty(original, property);
+					Object originalValue = original != null ? PropertyUtils.getProperty(original, property) : null;
 					Object newValue = PropertyUtils.getProperty(actual, property);
 					if (originalValue == null && descriptor.getPropertyType() == String.class)
 						originalValue = "";
@@ -64,7 +70,7 @@ public class BeanDiff
 					if (originalValue == null) originalValue = "NULL";
 					if (newValue == null) newValue = "NULL";
 
-					if (!originalValue.equals(newValue))
+					if (!originalValue.equals(newValue) || original == null)
 					{
 						PropertyDiff diff = new PropertyDiff();
 						diff.valueBefore = originalValue;
@@ -126,6 +132,11 @@ public class BeanDiff
 		blacklistOn = true;
 		blacklist = Arrays.asList(properties);
 		return this;
+	}
+
+	public boolean hasOriginal()
+	{
+		return original != null;
 	}
 
 }

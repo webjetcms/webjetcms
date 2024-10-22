@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+html.pg-iframe {
+    .ly-container.container { padding: 0px !important; }
+    .innerPadding {
+        padding: 4px 9px 2px 9px !important;
+        label.cke_dialog_ui_labeled_label, input.cke_dialog_ui_input_text {
+            font-size: 14px !important;
+        }
+    }
+}

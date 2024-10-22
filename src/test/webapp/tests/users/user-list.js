@@ -4,6 +4,7 @@ var randomText = null;
 var url = "/admin/v9/users/user-list/";
 var permEditAdminUser = "users.edit_admins";
 var permEditPublicUser = "users.edit_public_users";
+const DUPLICATE_TEXT = "-dupli.cate";
 
 Before(({ I, login }) => {
      login('admin');
@@ -14,7 +15,7 @@ Before(({ I, login }) => {
      I.amOnPage("/admin/v9/users/user-list/");
 });
 
-Scenario('user-list-zakladne testy', async ({ I, DataTables, DTE }) => {
+Scenario('user-list-zakladne testy @baseTest', async ({ I, DataTables, DTE }) => {
      await DataTables.baseTest({
           dataTable: 'usersDatatable',
           perms: 'menuUsers',
@@ -22,13 +23,16 @@ Scenario('user-list-zakladne testy', async ({ I, DataTables, DTE }) => {
                DTE.save();
                I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");
                I.fillField("#DTE_Field_password", "password");
-               I.waitForText("Toto je veľmi často používané heslo.", "div.DTE_Field_Name_password");
+               I.waitForText("Toto je veľmi často používané heslo.", 10, "div.DTE_Field_Name_password");
                I.fillField("#DTE_Field_password", "Heslo"+randomText);
 
                //tieto polia musia byt zadane a nezbehne ich autodetekcia, kedze su len v editore
                I.see("Povinné pole. Zadajte aspoň jeden znak.", "div.DTE_Field_Name_editorFields\\.login")
                I.fillField("#DTE_Field_editorFields-login", "login-"+randomText);
           },
+          duplicateSteps: function(I, options) {
+               I.fillField('#DTE_Field_editorFields-login', "login-"+randomText+DUPLICATE_TEXT);
+           },
           skipSwitchDomain: true
      });
 });
@@ -44,7 +48,7 @@ Scenario('user-list-email-validacia', ({ I, DTE }) => {
 /**
  * Existoval bug, kedy padalo na NPE ked sa zmazali nastavene skupiny prav
  */
-Scenario('user-list-test pridania a odobratia skupin prav', async ({ I, DataTables }) => {
+Scenario('user-list-test pridania a odobratia skupin prav @baseTest', async ({ I, DataTables }) => {
      randomText = I.getRandomTextShort();
 
      await DataTables.baseTest({
@@ -73,6 +77,9 @@ Scenario('user-list-test pridania a odobratia skupin prav', async ({ I, DataTabl
                I.dontSeeElement("#DTE_Field_editorFields-permGroups_1:checked");
                I.dontSeeElement("#DTE_Field_editorFields-permGroups_2:checked");
                I.click("#pills-dt-datatableInit-personalInfo-tab");
+          },
+          duplicateSteps: function(I, options) {
+               I.fillField('#DTE_Field_editorFields-login', "login-"+randomText+DUPLICATE_TEXT);
           },
           skipSwitchDomain: true
      });
@@ -447,7 +454,7 @@ Scenario("logout 2", ({I}) => {
      I.logout();
 });
 
-Scenario('user-list-multiweb testy @singlethread', async ({ I, DataTables, DT, DTE, Document }) => {
+Scenario('user-list-multiweb testy @singlethread @baseTest', async ({ I, DataTables, DT, DTE, Document }) => {
      //test users in MultiWeb configuration - split by domains
 
      Document.setConfigValue("usersSplitByDomain", "true");
@@ -466,12 +473,15 @@ Scenario('user-list-multiweb testy @singlethread', async ({ I, DataTables, DT, D
                DTE.save();
                I.see("Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie", "div.DTE_Field_Name_password");
                I.fillField("#DTE_Field_password", "password");
-               I.waitForText("Toto je veľmi často používané heslo.", "div.DTE_Field_Name_password");
+               I.waitForText("Toto je veľmi často používané heslo.", 10, "div.DTE_Field_Name_password");
                I.fillField("#DTE_Field_password", "Heslo"+randomText);
 
                //tieto polia musia byt zadane a nezbehne ich autodetekcia, kedze su len v editore
                I.see("Povinné pole. Zadajte aspoň jeden znak.", "div.DTE_Field_Name_editorFields\\.login")
                I.fillField("#DTE_Field_editorFields-login", "login-"+randomText);
+          },
+          duplicateSteps: function(I, options) {
+               I.fillField('#DTE_Field_editorFields-login', "login-"+randomText+DUPLICATE_TEXT);
           }
      });
      I.relogin("admin");

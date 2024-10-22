@@ -142,6 +142,10 @@ public class Identity extends UserDetails
 	 */
 	public boolean isDisabledItem(String name)
 	{
+		if (name.contains("&") || name.contains("|")) {
+			return isEnabledItem(name)==false;
+		}
+
 		//allow welcome for all
 		if ("welcome".equals(name)) return false;
 

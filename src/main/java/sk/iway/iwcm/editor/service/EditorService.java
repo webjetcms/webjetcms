@@ -24,6 +24,7 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -357,6 +358,8 @@ public class EditorService {
 			historyId = editedHistory.getHistoryId();
 			dt.diff("after dochistory get id");
 
+			RequestBean.addAuditValue("historyId", String.valueOf(historyId));
+
 			//Publishing
 			if(wasApproved) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
 		}
@@ -381,8 +384,6 @@ public class EditorService {
 		dt.diff("after instances");
 
 		/*Finish*/
-		auditSave(editedDoc, isNewPage, historyId);
-
 		dt.diff("done");
 
 		//Publikovanie eventov
@@ -456,7 +457,7 @@ public class EditorService {
 		}
 		editedDoc.setSortPriority(editedDoc.getSortPriority() + 10);
 
-		WebpagesService.processFromEntity(editedDoc, ProcessItemAction.GETONE, request);
+		WebpagesService.processFromEntity(editedDoc, ProcessItemAction.GETONE, request, true);
 
 		return editedDoc;
 	}
@@ -502,7 +503,7 @@ public class EditorService {
 		if (editedDoc == null) {
 			return(null);
 		} else {
-			WebpagesService.processFromEntity(editedDoc, ProcessItemAction.GETONE, request);
+			WebpagesService.processFromEntity(editedDoc, ProcessItemAction.GETONE, request, true);
 
 			//ak nacitavam slave clanok a chcem zachovat sort priority, tak NEnacitavam sort priority mastra
 			boolean multiGroupkeepSortPriority = Constants.getBoolean("multiGroupKeepSortPriority");
@@ -653,28 +654,6 @@ public class EditorService {
 
 		if (historyIds.isEmpty()==false) historyRepo.updateActualHistory(false, "", historyIds);
 		dt.diff("after was_approved");
-	}
-
-	/**
-	 * Zapise auditny zaznam po ulozeni web stranky
-	 * @param editedDoc
-	 * @param isNewPage
-	 * @param historyId
-	 */
-	private void auditSave(DocDetails editedDoc, boolean isNewPage, int historyId) {
-		String newPageAppend = "";
-		if (isNewPage) newPageAppend = " (newpage)";
-
-		//Priprava description textu pre admin log
-		StringBuilder adminlogDescription = new StringBuilder();
-		adminlogDescription.append("Save Webpage" + newPageAppend);
-		adminlogDescription.append(" doc_id:" + editedDoc.getDocId());
-		adminlogDescription.append(" history_id:" + historyId);
-		adminlogDescription.append(" title: " + editedDoc.getTitle());
-		adminlogDescription.append(" path: " + editedDoc.getVirtualPath());
-
-		//Zapisanie audit zaznamu
-		Adminlog.add(Adminlog.TYPE_SAVEDOC, adminlogDescription.toString(), editedDoc.getDocId(), historyId);
 	}
 
 	/**
@@ -1330,7 +1309,7 @@ public class EditorService {
 
 		//Inicialize editorFields
 		DocEditorFields def = new DocEditorFields();
-		def.fromDocDetails(editedDoc, true);
+		def.fromDocDetails(editedDoc, true, false);
 		def.setRequestPublish(true);
 		editedDoc.setEditorFields(def);
 

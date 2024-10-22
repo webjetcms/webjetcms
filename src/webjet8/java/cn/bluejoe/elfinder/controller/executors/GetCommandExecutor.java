@@ -7,6 +7,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -19,6 +20,7 @@ import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.controller.executors.LockfileCommandExecutor.LockedFileInfoHolder;
 import cn.bluejoe.elfinder.service.FsService;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.io.IwcmFile;
@@ -60,7 +62,10 @@ public class GetCommandExecutor extends AbstractJsonCommandExecutor
 	}
 
 	public static String getEncoding(FsItemEx fsi, String content) {
-		Charset readFileCharset = Charset.forName("windows-1250");//default
+		Charset readFileCharset = Charset.forName(Constants.getString("defaultEncoding"));//default
+
+		IwcmInputStream fis = null;
+		BufferedInputStream bis = null;
 		try {
 
 			IwcmFile file = new IwcmFile(PathFilter.getRealPath(fsi.getPath()));
@@ -70,20 +75,24 @@ public class GetCommandExecutor extends AbstractJsonCommandExecutor
 			if (file.getName().endsWith(".jsp") && content != null) {
 				//pre JSP obsahujuce pageEncoding="utf-8"
 				if (content.contains("pageEncoding=\"utf-8\"") || content.contains("pageEncoding='utf-8'")) return "utf-8";
+				if (content.contains("pageEncoding=\"windows-1250\"") || content.contains("pageEncoding='windows-1250'")) return "windows-1250";
 			}
+
+			if (content != null && content.contains("#encoding=utf-8")) return "utf-8";
+			else if (content!=null && content.contains("#encoding=windows-1250")) return "windows-1250";
 
 			if (file.exists() && file.canRead()) {
 
 				Charset[] testedCharsets;
 				//zoznam charsetov na testovanie, ked mame content (=zapisujeme) tak skus preverit windows-1250 a az potom utf-8, pri citani preferuj utf-8
 				//ak tam bolo len lsctz tak to nepadlo pri windows-1250 aj ked sa jednalo o utf-8 subor
-				if (content != null) testedCharsets = new Charset[]{Charset.forName("windows-1250"),Charset.forName("utf-8")};
-				else testedCharsets = new Charset[]{Charset.forName("utf-8")};
+				if (content != null) testedCharsets = new Charset[]{Charset.forName("windows-1250"),StandardCharsets.UTF_8};
+				else testedCharsets = new Charset[]{StandardCharsets.UTF_8};
 
 				for (Charset charset:testedCharsets)
 				{
-					IwcmInputStream fis = new IwcmInputStream(file);
-					BufferedInputStream bis = new BufferedInputStream(fis); //fsi.openInputStream());
+					fis = new IwcmInputStream(file);
+					bis = new BufferedInputStream(fis); //fsi.openInputStream());
 
 					CharsetDecoder decoder = charset.newDecoder();
 					decoder.reset();
@@ -92,6 +101,16 @@ public class GetCommandExecutor extends AbstractJsonCommandExecutor
 					boolean identified = false;
 					if ((bis.read(buffer) != -1))
 					{
+						String text = new String(buffer);
+						if (text.contains("#encoding=utf-8")) {
+							readFileCharset = StandardCharsets.UTF_8;
+							break;
+						}
+						else if (text.contains("#encoding=windows-1250")) {
+							readFileCharset = Charset.forName("windows-1250");
+							break;
+						}
+
 						identified = identify(buffer, decoder);
 					}
 					while ((bis.read(buffer) != -1) && (identified))
@@ -99,8 +118,10 @@ public class GetCommandExecutor extends AbstractJsonCommandExecutor
 						identified = identify(buffer, decoder);
 					}
 
-					bis.close();
 					fis.close();
+					fis = null;
+					bis.close();
+					bis = null;
 
 					if (identified)
 					{
@@ -112,6 +133,9 @@ public class GetCommandExecutor extends AbstractJsonCommandExecutor
 
 		} catch (Exception ex)  {
 
+		} finally {
+			if (bis != null) try { bis.close(); } catch (Exception e) {}
+			if (fis != null) try { fis.close(); } catch (Exception e) {}
 		}
 
 		return readFileCharset.toString();

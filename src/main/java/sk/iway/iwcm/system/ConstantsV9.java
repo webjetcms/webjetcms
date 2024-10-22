@@ -52,7 +52,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				"Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields");
 
-		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,rnd,login,auth");
+		Constants.setString("xsrfParamNameExceptionSystem", Constants.getString("xsrfParamNameExceptionSystem")+",tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_CONFIG, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
 
@@ -89,6 +89,28 @@ public class ConstantsV9 {
 
 		Constants.setString("uaParserYamlPath", "", "stat", "Cesta k YAML suboru s konfiguraciou pre UA parser. Ak je prazdna, tak sa pouzije defaultna konfiguracia.");
 		Constants.setBoolean("usersSplitByDomain", false, Constants.MOD_USER, "Pri nastaveni na true su oddeleny pouzivatelia podla domen podobne ako v MultiWeb instalacii");
+
+		Constants.setString("amchartLicense", "", Constants.MOD_STAT, "Licencny kluc pre amchart kniznicu");
+
+		Constants.setBoolean("ABTestingAllowVariantUrl", false, "abtest", "Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html");
+
+		Constants.setBoolean("forumAlwaysNotifyPageAuthor", false, Constants.MOD_CONFIG, "Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.");
+
+		Constants.setLong("licenseExpiryDate", 0L, Constants.MOD_STAT, "Datum exspiracie licencie v milisekundach");
+
+		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "server_monitoring;performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
+
+		Constants.setBoolean("webpagesNotifyAutorOnPublish", true, Constants.MOD_CONFIG, "Nastavenie odosielania notifikacie autorovi pri publikovani stranky.");
+
+		Constants.setInt("perexGroupsRenderAsSelect", 30, Constants.MOD_EDITOR, "Počet perex skupín pri ktorom sa perex začne zobrazovať ako multiselect");
+
+		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_USER, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
+
+		Constants.setInt("dashboardRecentSize", 8, "dashboard", "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
+
+		Constants.setInt("contentBlockTypeCount", 5, "contentBlock", "Pocet dostupnych typov blokov pre obsah");
+
+		Constants.setBoolean("elfinderMoveConfirm", true, "files", "Zobrazi potvrdzovaci dialog pri presune priecinkov a suborov");
 	}
 
 	/**

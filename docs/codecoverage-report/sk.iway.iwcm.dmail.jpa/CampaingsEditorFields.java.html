@@ -138,8 +138,8 @@ import sk.iway.iwcm.users.UserGroupsDB;
 
 <span class="fc bfc" id="L139" title="All 2 branches covered.">            if(&quot;disabled&quot;.equals(currentStatus)) {</span>
 <span class="fc" id="L140">                status = prop.getText(&quot;components.dmail.campaings.status.disabled&quot;);</span>
-<span class="pc bpc" id="L141" title="1 of 2 branches missed.">            } else if (&quot;enabled&quot;.equals(currentStatus)) {</span>
-<span class="nc" id="L142">                status = prop.getText(&quot;components.dmail.campaings.status.enabled&quot;);</span>
+<span class="fc bfc" id="L141" title="All 2 branches covered.">            } else if (&quot;enabled&quot;.equals(currentStatus)) {</span>
+<span class="fc" id="L142">                status = prop.getText(&quot;components.dmail.campaings.status.enabled&quot;);</span>
 <span class="fc bfc" id="L143" title="All 2 branches covered.">            } else if (&quot;all_sent&quot;.equals(currentStatus)) {</span>
 <span class="fc" id="L144">                status = prop.getText(&quot;components.dmail.campaings.status.all_sent&quot;);</span>
 <span class="pc bpc" id="L145" title="1 of 2 branches missed.">            } else if (&quot;unknown&quot;.equals(currentStatus)) {</span>
@@ -171,39 +171,38 @@ import sk.iway.iwcm.users.UserGroupsDB;
 
         //Check if url was changed
 <span class="fc" id="L173">        DocDB  docDB = DocDB.getInstance();</span>
-<span class="fc" id="L174">        int docId = campOriginal.getEditorFields().getPageToSend().getDocId();</span>
-<span class="fc bfc" id="L175" title="All 2 branches covered.">        if(docId != -1) {</span>
-<span class="fc" id="L176">            String docLink = docDB.getDocLink(docId, null, true, request);</span>
-<span class="fc bfc" id="L177" title="All 2 branches covered.">            if(!docLink.equals(campOriginal.getUrl())) campOriginal.setUrl(docLink);</span>
-<span class="fc" id="L178">        } else campOriginal.setUrl(&quot;&quot;);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if(campOriginal.getEditorFields().getPageToSend()!=null) {</span>
+<span class="fc" id="L175">            String docLink = docDB.getDocLink(campOriginal.getEditorFields().getPageToSend().getDocId(), null, true, request);</span>
+<span class="fc bfc" id="L176" title="All 2 branches covered.">            if(!docLink.equals(campOriginal.getUrl())) campOriginal.setUrl(docLink);</span>
+<span class="pc" id="L177">        } else campOriginal.setUrl(&quot;&quot;);</span>
 
         //Check if user groups was changed
-<span class="fc" id="L181">        campOriginal.setUserGroupsIds(UserDetailsService.getUserGroupIds(campOriginal.getEditorFields().getPermisions(), campOriginal.getEditorFields().getEmails()));</span>
+<span class="fc" id="L180">        campOriginal.setUserGroupsIds(UserDetailsService.getUserGroupIds(campOriginal.getEditorFields().getPermisions(), campOriginal.getEditorFields().getEmails()));</span>
 
         //Cannot be null
-<span class="fc bfc" id="L184" title="All 2 branches covered.">        if(campOriginal.getCountOfSentMails() == null) campOriginal.setCountOfSentMails(0);</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if(campOriginal.getCountOfSentMails() == null) campOriginal.setCountOfSentMails(0);</span>
 
         //process attachments, format is /files/path/filename.pdf;filename.pdf;/files/path/file2.pdf;file2.pdf;
-<span class="fc" id="L187">        StringBuilder attachments = new StringBuilder();</span>
-<span class="fc" id="L188">        BeanWrapperImpl bw = new BeanWrapperImpl(campOriginal.getEditorFields());</span>
-<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (int fileCounter=1; fileCounter&lt;=3; fileCounter++) {</span>
+<span class="fc" id="L186">        StringBuilder attachments = new StringBuilder();</span>
+<span class="fc" id="L187">        BeanWrapperImpl bw = new BeanWrapperImpl(campOriginal.getEditorFields());</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">        for (int fileCounter=1; fileCounter&lt;=3; fileCounter++) {</span>
             try {
-<span class="fc" id="L191">                String path = (String)bw.getPropertyValue(&quot;file&quot;+fileCounter);</span>
-<span class="pc bpc" id="L192" title="2 of 4 branches missed.">                if (path==null || Tools.isEmpty(path)) continue;</span>
+<span class="fc" id="L190">                String path = (String)bw.getPropertyValue(&quot;file&quot;+fileCounter);</span>
+<span class="pc bpc" id="L191" title="2 of 4 branches missed.">                if (path==null || Tools.isEmpty(path)) continue;</span>
 
-<span class="nc" id="L194">                int separator = path.lastIndexOf(&quot;/&quot;);</span>
-<span class="nc bnc" id="L195" title="All 2 branches missed.">                if (separator&gt;1) {</span>
-<span class="nc" id="L196">                    String name = path.substring(separator+1);</span>
-<span class="nc" id="L197">                    attachments.append(path).append(&quot;;&quot;).append(name).append(&quot;;&quot;);</span>
+<span class="nc" id="L193">                int separator = path.lastIndexOf(&quot;/&quot;);</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                if (separator&gt;1) {</span>
+<span class="nc" id="L195">                    String name = path.substring(separator+1);</span>
+<span class="nc" id="L196">                    attachments.append(path).append(&quot;;&quot;).append(name).append(&quot;;&quot;);</span>
                 }
 
-<span class="nc" id="L200">            } catch (Exception ex) {</span>
-<span class="nc" id="L201">                Logger.error(CampaingsEditorFields.class, ex);</span>
-<span class="nc" id="L202">            }</span>
+<span class="nc" id="L199">            } catch (Exception ex) {</span>
+<span class="nc" id="L200">                Logger.error(CampaingsEditorFields.class, ex);</span>
+<span class="nc" id="L201">            }</span>
         }
-<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (attachments.length()&lt;1) campOriginal.setAttachments(null);</span>
-<span class="nc" id="L205">        else campOriginal.setAttachments(attachments.toString());</span>
-<span class="fc" id="L206">    }</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">        if (attachments.length()&lt;1) campOriginal.setAttachments(null);</span>
+<span class="nc" id="L204">        else campOriginal.setAttachments(attachments.toString());</span>
+<span class="fc" id="L205">    }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

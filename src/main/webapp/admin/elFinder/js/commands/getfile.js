@@ -1,4 +1,3 @@
-"use strict";
 /**
  * @class elFinder command "getfile". 
  * Return selected files info into outer callback.
@@ -7,13 +6,16 @@
  * @author Dmitry (dio) Levashov, dio@std42.ru
  **/
 (elFinder.prototype.commands.getfile = function() {
+	"use strict";
 	var self   = this,
 		fm     = this.fm,
 		filter = function(files) {
-			var o = self.options;
+			var o = self.options,
+				fres = true;
 
-			files = $.map(files, function(file) {
-				return (file.mime != 'directory' || o.folders) && file.read ? file : null;
+			files = $.grep(files, function(file) {
+				fres = fres && (file.mime != 'directory' || o.folders) && file.read ? true : false;
+				return fres;
 			});
 
 			return o.multiple || files.length == 1 ? files : [];
@@ -23,12 +25,12 @@
 	this.callback      = fm.options.getFileCallback;
 	this._disabled     = typeof(this.callback) == 'function';
 	
-	this.getstate = function(sel) {
-		var sel = this.files(sel),
+	this.getstate = function(select) {
+		var sel = this.files(select),
 			cnt = sel.length;
 			
 		return this.callback && cnt && filter(sel).length == cnt ? 0 : -1;
-	}
+	};
 	
 	this.exec = function(hashes) {
 		var fm    = this.fm,
@@ -46,17 +48,29 @@
 							} else if (opts.oncomplete == 'destroy') {
 								fm.destroy();
 							}
+						},
+						fail = function(error) {
+							if (opts.onerror == 'close') {
+								fm.hide();
+							} else if (opts.onerror == 'destroy') {
+								fm.destroy();
+							} else {
+								error && fm.error(error);
+							}
 						};
 					
 					fm.trigger('getfile', {files : data});
 					
-					res = self.callback(data, fm);
+					//TODO - this part was doing problem (maybe next update will fix it)
+					// try {
+					// 	res = self.callback(data, fm);
+					// } catch(e) {
+					// 	fail(['Error in `getFileCallback`.', e.message]);
+					// 	return;
+					// }
 					
 					if (typeof res === 'object' && typeof res.done === 'function') {
-						res.done(done)
-						.fail(function(error) {
-							error && fm.error(error);
-						});
+						res.done(done).fail(fail);
 					} else {
 						done();
 					}
@@ -141,11 +155,11 @@
 		if (req.length) {
 			$.when.apply(null, req).always(function() {
 				dfrd.resolve(result(files));
-			})
+			});
 			return dfrd;
 		}
 		
 		return dfrd.resolve(result(files));
-	}
+	};
 
 }).prototype = { forceLoad : true }; // this is required command

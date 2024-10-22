@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('unsubscribed-zakladne testy', async ({I, DataTables}) => {
+Scenario('unsubscribed-zakladne testy @baseTest', async ({I, DataTables}) => {
 
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
     await DataTables.baseTest({
@@ -92,7 +92,8 @@ Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE, Document}) =
     I.click("button.buttons-create");
     DTE.waitForEditor("unsubscribedDataTable");
 
-    var email = "autotest-unsub1-"+I.getRandomText()+"@balat.sk, autotest-unsub2-"+I.getRandomText()+"@balat.sk";
+    var randomText = I.getRandomText();
+    var email = "autotest-unsub1-"+randomText+"@balat.sk, autotest-unsub2-"+randomText+"@balat.sk";
     DTE.fillField("email", email);
     DTE.save();
     I.dontSeeElement("div.DTE_Form_Error");
@@ -101,8 +102,8 @@ Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE, Document}) =
 
     //
     I.say("Check emails");
-    DT.filter("email", "autotest-unsub");
-    I.waitForText("Záznamy 1 až 2 z 2", "div.dataTables_info");
+    DT.filter("email", randomText+"@balat.sk");
+    I.waitForText("Záznamy 1 až 2 z 2", 10, "div.dataTables_info");
     for (var e of email.split(", ")) {
         I.see(e, "#unsubscribedDataTable_wrapper");
     };
@@ -110,7 +111,7 @@ Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE, Document}) =
     //
     I.say("Deleting emails");
     I.click("button.buttons-select-all");
-    I.waitForText("2 riadky označené", "div.dataTables_info");
+    I.waitForText("2 riadky označené", 10, "div.dataTables_info");
     I.click("button.buttons-remove");
     DTE.waitForEditor("unsubscribedDataTable");
     DTE.save();

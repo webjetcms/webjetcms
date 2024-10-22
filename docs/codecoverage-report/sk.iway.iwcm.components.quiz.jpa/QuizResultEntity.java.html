@@ -12,8 +12,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 
-import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
@@ -29,7 +29,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QUIZ)
 <span class="fc" id="L31">public class QuizResultEntity implements Serializable {</span>
-    
+
     @Id
     @Column(name = &quot;id&quot;)
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_quiz_results&quot;)
@@ -77,4 +77,4 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 <span class="pc bpc" id="L77" title="1 of 2 branches missed.">        return position == null ? 0 : position;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -64,9 +64,10 @@ public class DocForumEntity implements Serializable {
         editor = @DataTableColumnEditor(
             attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
         ),
-        filter = true
+        filter = true,
+        orderable = false
     )
-    private DocDetailsDto docDetails;
+    private transient DocDetailsDto docDetails;
 
     @Column(name = "subject")
     @NotBlank
@@ -133,7 +134,7 @@ public class DocForumEntity implements Serializable {
 
     @Transient
 	@DataTableColumnNested
-	private DocForumEditorFields editorFields = null;
+	private transient DocForumEditorFields editorFields = null;
 
     /* Adding ForumGroupEntity (DB tbale forum), it's used as forum setting's */
     @Transient
@@ -176,17 +177,17 @@ public class DocForumEntity implements Serializable {
     private Integer domainId;
 
     @Transient
-    private FormFile uploadedFile = null;
+    private transient FormFile uploadedFile = null;
 
     @Transient
-    private String prefix;
+    private transient String prefix;
 
     @Transient
-    private Integer level;
+    private transient Integer level;
 
     @Transient
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
-    private UserBasicDto userDetails;
+    private transient UserBasicDto userDetails;
 
     //***************SPECIAL LOGIC METHODS***************************
     public void setDocDetails(DocDetailsDto docDetails) {
@@ -214,7 +215,7 @@ public class DocForumEntity implements Serializable {
             //Check if he is logged
             if(user == null) return false;
 
-            //When logged, he must be allso AUTHOR of the Forum
+            //When logged, he must be also AUTHOR of the Forum
             if(getUserId() != null && getUserId() != user.getUserId()) return false;
         }
 
@@ -335,7 +336,9 @@ public class DocForumEntity implements Serializable {
 	}
 
     public boolean isSendNotif() {
-		if(getSendAnswerNotif() == null) return false;
+		if(getSendAnswerNotif() == null) {
+            return false;
+        }
         return getSendAnswerNotif();
 	}
 

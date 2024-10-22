@@ -62,17 +62,18 @@ Scenario("aktualne hodnoty", ({ I }) => {
  * Phase 1, check we see delet button, then to web pages and open "Jet portal 4 - testovacia stranka", close current tab
  * This is importatnt so we can see chnages in out stat's
  */
-function phase1(I) {
-  I.seeElement("button.buttons-remove");
+function phase1(I, DT) {
+  I.waitForElement("button.buttons-remove", 10);
   I.click("button.buttons-remove")
-  I.wait(1);
+  DT.waitForLoader();
   I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
   I.amOnPage("/admin/v9/webpages/web-pages-list/");
-  I.click("tr.odd a.preview-page-link");
-  I.wait(2);
-  I.switchToNextTab();
-  I.closeCurrentTab();
+
+  for (var i=1; i<=3; i++) {
+    I.amOnPage("/apps/bannerovy-system/?v="+i);
+    I.wait(0.3);
+  }
 }
 
 /**
@@ -81,24 +82,24 @@ function phase1(I) {
 function phase2(I, DT) {
   DT.filter("whatWasExecuted", "");
   I.click("button.buttons-remove")
-  I.wait(1);
-  I.see("Nenašli sa žiadne vyhovujúce záznamy");
+  DT.waitForLoader();
+  I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5);
 }
 
 /**
  * Check that after changing NODe delete button will be hidden.
  * Then call refresh of data and check "no records", "loader" and "notification".
  */
-function phase3(I) {
+function phase3(I, DT) {
   I.seeElement("button.buttons-remove");
   I.click(locate("button.dropdown-toggle.bootstrap-select").withText('(Aktuálny uzol)'));
   I.click(locate("a.dropdown-item").withText("node3"));
   I.wait(1);
   I.dontSeeElement("button.buttons-remove");
   I.click({css: "button.buttons-refresh"});
-  I.wait(1);
-  I.see("Nenašli sa žiadne vyhovujúce záznamy");
-  I.seeElement("#webjetAnimatedLoader");
+  DT.waitForLoader();
+  I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5);
+  I.waitForElement("#webjetAnimatedLoader", 5);
   I.seeElement("#toast-container-webjet");
   I.see("Získavanie dát");
 }
@@ -106,7 +107,7 @@ function phase3(I) {
 Scenario("Monitoring server components", ({I, DT}) => {
   I.amOnPage("/apps/server_monitoring/admin/components/");
 
-  phase1(I);
+  phase1(I, DT);
 
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/components/");
@@ -120,13 +121,13 @@ Scenario("Monitoring server components", ({I, DT}) => {
 
   phase2(I, DT);
 
-  phase3(I);
+  phase3(I, DT);
 });
 
-Scenario("Monitoring server documents", ({I, DT}) => {
+Scenario("Monitoring server documents @singlethread", ({I, DT}) => {
   I.amOnPage("/apps/server_monitoring/admin/documents/");
 
-  phase1(I);
+  phase1(I, DT);
 
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/documents/");
@@ -140,16 +141,17 @@ Scenario("Monitoring server documents", ({I, DT}) => {
 
   phase2(I, DT);
 
-  phase3(I);
+  phase3(I, DT);
 });
 
 Scenario("Monitoring server sql", ({I, DT}) => {
   I.amOnPage("/apps/server_monitoring/admin/sql/");
 
-  phase1(I);
+  phase1(I, DT);
 
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/sql/");
+  DT.waitForLoader();
   DT.filter("whatWasExecuted", "SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
   I.see("SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
   I.dontSee("SELECT id, group_id, banner_id FROM banner_gr WHERE (banner_id = ?)");
@@ -160,7 +162,7 @@ Scenario("Monitoring server sql", ({I, DT}) => {
 
   phase2(I, DT);
 
-  phase3(I);
+  phase3(I, DT);
 });
 
 

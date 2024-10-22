@@ -128,9 +128,9 @@ public class FileAtrDB
 	 */
 	public static List&lt;List&lt;FileAtrBean&gt;&gt; getAtributes(String link, HttpServletRequest request)
 	{
-<span class="fc" id="L131">		List&lt;List&lt;FileAtrBean&gt;&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L131">		List&lt;List&lt;FileAtrBean&gt;&gt; ret = new ArrayList&lt;&gt;();</span>
 		List&lt;FileAtrBean&gt; atrs;
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		for (LabelValueDetails lvd : getAtrGroups(request))</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		for (LabelValueDetails lvd : getAtrGroups(request))</span>
 		{
 			//Logger.println(this,&quot;lvd-&gt;&quot;+lvd.getLabel());
 			//ok mame grupu
@@ -138,7 +138,7 @@ public class FileAtrDB
 <span class="nc" id="L138">			ret.add(atrs);</span>
 <span class="nc" id="L139">		}</span>
 
-<span class="fc" id="L141">		return (ret);</span>
+<span class="nc" id="L141">		return (ret);</span>
 	}
 
 	/**
@@ -212,30 +212,30 @@ public class FileAtrDB
 	 */
 	public static List&lt;LabelValueDetails&gt; getAtrGroups(HttpServletRequest request)
 	{
-<span class="fc" id="L215">		List&lt;LabelValueDetails&gt; groups = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L215">		List&lt;LabelValueDetails&gt; groups = new ArrayList&lt;&gt;();</span>
 		LabelValueDetails lvd;
-<span class="fc" id="L217">		Connection db_conn = null;</span>
-<span class="fc" id="L218">		PreparedStatement ps = null;</span>
-<span class="fc" id="L219">		ResultSet rs = null;</span>
+<span class="nc" id="L217">		Connection db_conn = null;</span>
+<span class="nc" id="L218">		PreparedStatement ps = null;</span>
+<span class="nc" id="L219">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L222">			db_conn = DBPool.getConnection(request);</span>
-<span class="fc" id="L223">			String sql = &quot;SELECT distinct atr_group FROM file_atr_def ORDER BY atr_group&quot;;</span>
-<span class="fc" id="L224">			ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L225">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L226" title="1 of 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L222">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L223">			String sql = &quot;SELECT distinct atr_group FROM file_atr_def ORDER BY atr_group&quot;;</span>
+<span class="nc" id="L224">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L225">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">			while (rs.next())</span>
 			{
 <span class="nc" id="L228">				lvd = new LabelValueDetails();</span>
 <span class="nc" id="L229">				lvd.setLabel(DB.getDbString(rs, &quot;atr_group&quot;));</span>
 <span class="nc" id="L230">				lvd.setValue(lvd.getLabel());</span>
 <span class="nc" id="L231">				groups.add(lvd);</span>
 			}
-<span class="fc" id="L233">			rs.close();</span>
-<span class="fc" id="L234">			ps.close();</span>
-<span class="fc" id="L235">			db_conn.close();</span>
-<span class="fc" id="L236">			rs = null;</span>
-<span class="fc" id="L237">			ps = null;</span>
-<span class="fc" id="L238">			db_conn = null;</span>
+<span class="nc" id="L233">			rs.close();</span>
+<span class="nc" id="L234">			ps.close();</span>
+<span class="nc" id="L235">			db_conn.close();</span>
+<span class="nc" id="L236">			rs = null;</span>
+<span class="nc" id="L237">			ps = null;</span>
+<span class="nc" id="L238">			db_conn = null;</span>
 		}
 <span class="nc" id="L240">		catch (Exception ex)</span>
 		{
@@ -245,19 +245,19 @@ public class FileAtrDB
 		{
 			try
 			{
-<span class="pc bpc" id="L248" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc bnc" id="L248" title="All 2 branches missed.">				if (rs != null)</span>
 <span class="nc" id="L249">					rs.close();</span>
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">				if (ps != null)</span>
 <span class="nc" id="L251">					ps.close();</span>
-<span class="pc bpc" id="L252" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">				if (db_conn != null)</span>
 <span class="nc" id="L253">					db_conn.close();</span>
 			}
 <span class="nc" id="L255">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L257">			}</span>
+<span class="nc" id="L257">			}</span>
 		}
 
-<span class="fc" id="L260">		return (groups);</span>
+<span class="nc" id="L260">		return (groups);</span>
 	}
 
 	/**
@@ -552,25 +552,25 @@ public class FileAtrDB
 	 */
 	public static void fillEditForm(EditForm ef)
 	{
-<span class="fc" id="L555">		Connection db_conn = null;</span>
-<span class="fc" id="L556">		PreparedStatement ps = null;</span>
-<span class="fc" id="L557">		ResultSet rs = null;</span>
+<span class="nc" id="L555">		Connection db_conn = null;</span>
+<span class="nc" id="L556">		PreparedStatement ps = null;</span>
+<span class="nc" id="L557">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L560">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L561">			ps = db_conn.prepareStatement(&quot;SELECT * FROM dirprop WHERE dir_url = ?&quot;);</span>
-<span class="fc" id="L562">			ps.setString(1, ef.getOrigDir());</span>
-<span class="fc" id="L563">			rs = ps.executeQuery();</span>
-<span class="fc bfc" id="L564" title="All 2 branches covered.">			if (rs.next())</span>
+<span class="nc" id="L560">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L561">			ps = db_conn.prepareStatement(&quot;SELECT * FROM dirprop WHERE dir_url = ?&quot;);</span>
+<span class="nc" id="L562">			ps.setString(1, ef.getOrigDir());</span>
+<span class="nc" id="L563">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L564" title="All 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="fc" id="L566">				ef.setIndexFulltext(rs.getBoolean(&quot;index_fulltext&quot;));</span>
-<span class="fc" id="L567">				ef.setPasswordProtectedString(DB.getDbString(rs, &quot;password_protected&quot;));</span>
-<span class="fc" id="L568">				ef.setLogonDocId(rs.getInt(&quot;logon_doc_id&quot;));</span>
+<span class="nc" id="L566">				ef.setIndexFulltext(rs.getBoolean(&quot;index_fulltext&quot;));</span>
+<span class="nc" id="L567">				ef.setPasswordProtectedString(DB.getDbString(rs, &quot;password_protected&quot;));</span>
+<span class="nc" id="L568">				ef.setLogonDocId(rs.getInt(&quot;logon_doc_id&quot;));</span>
 			}
-<span class="fc" id="L570">			rs.close();</span>
-<span class="fc" id="L571">			ps.close();</span>
-<span class="fc" id="L572">			rs = null;</span>
-<span class="fc" id="L573">			ps = null;</span>
+<span class="nc" id="L570">			rs.close();</span>
+<span class="nc" id="L571">			ps.close();</span>
+<span class="nc" id="L572">			rs = null;</span>
+<span class="nc" id="L573">			ps = null;</span>
 		}
 <span class="nc" id="L575">		catch (Exception ex)</span>
 		{
@@ -580,17 +580,17 @@ public class FileAtrDB
 		{
 			try
 			{
-<span class="pc bpc" id="L583" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="fc" id="L584">					db_conn.close();</span>
-<span class="pc bpc" id="L585" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc bnc" id="L583" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L584">					db_conn.close();</span>
+<span class="nc bnc" id="L585" title="All 2 branches missed.">				if (rs != null)</span>
 <span class="nc" id="L586">					rs.close();</span>
-<span class="pc bpc" id="L587" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc bnc" id="L587" title="All 2 branches missed.">				if (ps != null)</span>
 <span class="nc" id="L588">					ps.close();</span>
 			}
 <span class="nc" id="L590">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L592">			}</span>
+<span class="nc" id="L592">			}</span>
 		}
-<span class="fc" id="L594">	}</span>
+<span class="nc" id="L594">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

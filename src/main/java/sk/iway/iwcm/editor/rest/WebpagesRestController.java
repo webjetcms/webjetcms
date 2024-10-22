@@ -134,6 +134,14 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
 
     @Override
     public DocDetails insertItem(DocDetails entity) {
+        //Cant insert in TRASH group
+        Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+        String trashDirName = propSystem.getText("config.trash_dir");
+        if(entity.getEditorFields() != null && entity.getEditorFields().getGroupDetails() != null && entity.getEditorFields().getGroupDetails().getFullPath().startsWith(trashDirName) ) { //starts with so it block insert in trash and child folders
+            addNotify( new NotifyBean(getProp().getText("webpage.insert_into_trash.title"), getProp().getText("webpage.insert_into_trash.text"), NotifyBean.NotifyType.ERROR, 60000) );
+            return null;
+        }
+
         //Is this blog version
         if(isBlogVersion()) {
             //Check user perms
@@ -304,8 +312,8 @@ public class WebpagesRestController extends DatatableRestControllerV2<DocDetails
     }
 
     @Override
-    public DocDetails processFromEntity(DocDetails entity, ProcessItemAction action) {
-        return (DocDetails)WebpagesService.processFromEntity(entity, action, getRequest());
+    public DocDetails processFromEntity(DocDetails entity, ProcessItemAction action, int rowCount) {
+        return (DocDetails)WebpagesService.processFromEntity(entity, action, getRequest(), rowCount == 1);
     }
 
     @Override

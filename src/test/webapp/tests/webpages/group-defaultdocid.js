@@ -18,9 +18,10 @@ Before(({ I, login }) => {
 
 });
 
-Scenario('Hlavna stranka priecinka', ({ I, DT, DTE }) => {
+Scenario('Hlavna stranka priecinka @singlethread', ({ I, DT, DTE }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.waitForText('Zoznam web stránok', 10);
+     DT.resetTable();
 
      // 1. pridanie noveho priecinka folder-autotest
      I.say('1. Pridanie noveho priecinka folder-autotest');
@@ -67,6 +68,7 @@ Scenario('Hlavna stranka priecinka', ({ I, DT, DTE }) => {
      I.forceClick('Pridať', '#datatableInit_modal');
 
      DTE.waitForLoader();
+     DT.resetTable();
 
      I.seeElement(locate('.even').withText(auto_webPage), 5);
      I.wait(1);

@@ -22,78 +22,97 @@ import java.util.Date;
 <span class="fc" id="L22">   private String loggedUserName = null;</span>
 <span class="fc" id="L23">   private int loggedUserId = -1;</span>
 <span class="fc" id="L24">   private boolean admin = false;</span>
+   private int domainId;
+   private String domainName;
 
 	public String getRemoteAddr()
 	{
-<span class="fc" id="L28">		return remoteAddr;</span>
+<span class="fc" id="L30">		return remoteAddr;</span>
 	}
 	public void setRemoteAddr(String remoteAddr)
 	{
-<span class="fc" id="L32">		this.remoteAddr = remoteAddr;</span>
-<span class="fc" id="L33">	}</span>
+<span class="fc" id="L34">		this.remoteAddr = remoteAddr;</span>
+<span class="fc" id="L35">	}</span>
 	public long getLastActivity()
 	{
-<span class="fc" id="L36">		return lastActivity;</span>
+<span class="fc" id="L38">		return lastActivity;</span>
 	}
 	public Date getLastActivityAsDate()
 	{
-<span class="fc" id="L40">		return new Date(lastActivity);</span>
+<span class="fc" id="L42">		return new Date(lastActivity);</span>
 	}
 	public void setLastActivity(long lastActivity)
 	{
-<span class="fc" id="L44">		this.lastActivity = lastActivity;</span>
-<span class="fc" id="L45">	}</span>
+<span class="fc" id="L46">		this.lastActivity = lastActivity;</span>
+<span class="fc" id="L47">	}</span>
 	public long getLogonTime()
 	{
-<span class="nc" id="L48">		return logonTime;</span>
+<span class="nc" id="L50">		return logonTime;</span>
 	}
 	public Date getLogonTimeAsDate()
 	{
-<span class="fc" id="L52">		return new Date(logonTime);</span>
+<span class="fc" id="L54">		return new Date(logonTime);</span>
 	}
 	public void setLogonTime(long logonTime)
 	{
-<span class="fc" id="L56">		this.logonTime = logonTime;</span>
-<span class="fc" id="L57">	}</span>
+<span class="fc" id="L58">		this.logonTime = logonTime;</span>
+<span class="fc" id="L59">	}</span>
 	public String getLastURL()
 	{
-<span class="fc" id="L60">		return lastURL;</span>
+<span class="fc" id="L62">		return lastURL;</span>
 	}
 	public void setLastURL(String lastURL)
 	{
-<span class="fc" id="L64">		this.lastURL = lastURL;</span>
-<span class="fc" id="L65">	}</span>
+<span class="fc" id="L66">		this.lastURL = lastURL;</span>
+<span class="fc" id="L67">	}</span>
 	public int getLastDocId()
 	{
-<span class="nc" id="L68">		return lastDocId;</span>
+<span class="nc" id="L70">		return lastDocId;</span>
 	}
 	public void setLastDocId(int lastDocId)
 	{
-<span class="fc" id="L72">		this.lastDocId = lastDocId;</span>
-<span class="fc" id="L73">	}</span>
+<span class="fc" id="L74">		this.lastDocId = lastDocId;</span>
+<span class="fc" id="L75">	}</span>
 	public String getLoggedUserName()
 	{
-<span class="fc" id="L76">		return loggedUserName;</span>
+<span class="fc" id="L78">		return loggedUserName;</span>
 	}
 	public void setLoggedUserName(String loggedUserName)
 	{
-<span class="fc" id="L80">		this.loggedUserName = loggedUserName;</span>
-<span class="fc" id="L81">	}</span>
+<span class="fc" id="L82">		this.loggedUserName = loggedUserName;</span>
+<span class="fc" id="L83">	}</span>
 	public int getLoggedUserId()
 	{
-<span class="fc" id="L84">		return loggedUserId;</span>
+<span class="fc" id="L86">		return loggedUserId;</span>
 	}
 	public void setLoggedUserId(int loggedUserId)
 	{
-<span class="fc" id="L88">		this.loggedUserId = loggedUserId;</span>
-<span class="fc" id="L89">	}</span>
+<span class="fc" id="L90">		this.loggedUserId = loggedUserId;</span>
+<span class="fc" id="L91">	}</span>
 	public boolean isAdmin()
 	{
-<span class="fc" id="L92">		return admin;</span>
+<span class="fc" id="L94">		return admin;</span>
 	}
 	public void setAdmin(boolean admin)
 	{
-<span class="fc" id="L96">		this.admin = admin;</span>
-<span class="fc" id="L97">	}</span>
+<span class="fc" id="L98">		this.admin = admin;</span>
+<span class="fc" id="L99">	}</span>
+	public int getDomainId()
+	{
+<span class="fc" id="L102">		return domainId;</span>
+	}
+	public void setDomainId(int domainId)
+	{
+<span class="fc" id="L106">		this.domainId = domainId;</span>
+<span class="fc" id="L107">	}</span>
+	public String getDomainName()
+	{
+<span class="nc" id="L110">		return domainName;</span>
+	}
+	public void setDomainName(String domainName)
+	{
+<span class="fc" id="L114">		this.domainName = domainName;</span>
+<span class="fc" id="L115">	}</span>
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

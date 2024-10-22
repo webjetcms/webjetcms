@@ -62,6 +62,8 @@
         vueMonitoringApp.config.globalProperties.$uptime= '[[#{components.monitor.monitoring.basic.server.uptime.date}]]';
         vueMonitoringApp.config.globalProperties.$uptimeSeconds= '[[#{components.monitor.monitoring.basic.server.uptime.date.sec}]]';
 
+        vueMonitoringApp.config.globalProperties.$licenseExpirationDate = '[[#{components.monitoring.license_expiration_date}]]';
+
         window.VueTools.setDefaultObjects(vueMonitoringApp);
         window.vueMonitoringApp = vueMonitoringApp;
 

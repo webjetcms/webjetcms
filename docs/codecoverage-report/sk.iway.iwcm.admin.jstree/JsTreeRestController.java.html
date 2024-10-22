@@ -133,10 +133,10 @@ import java.util.Map;
     public abstract boolean checkAccessAllowed(HttpServletRequest request);
 
     protected Prop getProp() {
-<span class="nc bnc" id="L136" title="All 2 branches missed.">        if (prop == null) {</span>
-<span class="nc" id="L137">            prop = Prop.getInstance(getRequest());</span>
+<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (prop == null) {</span>
+<span class="fc" id="L137">            prop = Prop.getInstance(getRequest());</span>
         }
-<span class="nc" id="L139">        return prop;</span>
+<span class="fc" id="L139">        return prop;</span>
     }
 
     public HttpServletRequest getRequest() {
@@ -148,7 +148,7 @@ import java.util.Map;
 <span class="nc" id="L148">    }</span>
 
     public Identity getUser(){
-<span class="nc" id="L151">		return UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L151">		return UsersDB.getCurrentUser(getRequest());</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

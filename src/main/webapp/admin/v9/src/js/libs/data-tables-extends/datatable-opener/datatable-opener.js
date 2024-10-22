@@ -103,7 +103,8 @@ export class DatatableOpener {
             if (key != null && key === "-1") {
                 //console.log("Som -1, otvaram add okno, id=", this.dataTable.DATA.id);
                 setTimeout(() => {
-                    $("#"+this.dataTable.DATA.id+"_wrapper div.dt-buttons button.buttons-create").trigger("click");
+                    //$("#"+this.dataTable.DATA.id+"_wrapper div.dt-buttons button.buttons-create").trigger("click");
+                    this.dataTable.wjCreate();
                 }, 500);
             } else {
                 key = this.validateId(key);

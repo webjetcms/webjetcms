@@ -40,11 +40,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  * @see sk.iway.iwcm.system.spring.services.WebjetSecurityService
  */
 @WebjetComponent(&quot;sk.iway.basecms.contact.ContactApp&quot;)
-@WebjetAppStore(nameKey = &quot;apps.contact.title&quot;, descKey = &quot;apps.contact.desc&quot;, imagePath = &quot;fas fa-address-card&quot;, galleryImages = &quot;/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg&quot;, commonSettings = false)
+@WebjetAppStore(nameKey = &quot;apps.contact.title&quot;, descKey = &quot;apps.contact.desc&quot;, imagePath = &quot;ti ti-id&quot;, galleryImages = &quot;/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg&quot;, commonSettings = false)
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {
-
     //Spring DATA repozitar
     @JsonIgnore
     private ContactRepository contactRepository;
@@ -53,7 +52,7 @@ public class ContactApp extends WebjetComponentAbstract {
      * Privatne vlastnosti s get/set-rami slúžia na prenesenie parametrov pageParams z !INCLUDE()! do triedy
      * Pomocou anotacie @DataTableColumn vytvarame pole pre nastavenie aplikacie
      */
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = &quot;basic&quot;, editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;components.contact.property.country&quot; , tab = &quot;basic&quot;, editor = {
         @DataTableColumnEditor(
             options = {
                 //klasicky option tag
@@ -70,9 +69,9 @@ public class ContactApp extends WebjetComponentAbstract {
     private String country;
 
     @Autowired
-<span class="fc" id="L73">    public ContactApp(ContactRepository contactRepository) {</span>
-<span class="fc" id="L74">        this.contactRepository = contactRepository;</span>
-<span class="fc" id="L75">    }</span>
+<span class="fc" id="L72">    public ContactApp(ContactRepository contactRepository) {</span>
+<span class="fc" id="L73">        this.contactRepository = contactRepository;</span>
+<span class="fc" id="L74">    }</span>
 
     /**
      * metoda init sa vola po vytvoreni objektu a nastaveni parametrov,
@@ -82,8 +81,8 @@ public class ContactApp extends WebjetComponentAbstract {
      */
     @Override
     public void init(HttpServletRequest request, HttpServletResponse response) {
-<span class="fc" id="L85">        Logger.debug(ContactApp.class, &quot;Init call, request.getHeader(User-Agent)=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
-<span class="fc" id="L86">    }</span>
+<span class="fc" id="L84">        Logger.debug(ContactApp.class, &quot;Init call, request.getHeader(User-Agent)=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
+<span class="fc" id="L85">    }</span>
 
     /**
      * Metóda anotovaná @DefaultHandler sa vykoná, ak v requeste nie je žiaden parameter, ktorý by sa zhodoval s názvom inej metódy v triede
@@ -95,8 +94,8 @@ public class ContactApp extends WebjetComponentAbstract {
     @DefaultHandler
 	public String view(Model model, HttpServletRequest request)
 	{
-<span class="fc" id="L98">        model.addAttribute(&quot;contants&quot;, contactRepository.findAllByCountry(country, null));</span>
-<span class="fc" id="L99">		return &quot;/apps/contact/mvc/list&quot;;</span>
+<span class="fc" id="L97">        model.addAttribute(&quot;contants&quot;, contactRepository.findAllByCountry(country, null));</span>
+<span class="fc" id="L98">		return &quot;/apps/contact/mvc/list&quot;;</span>
 	}
 
     /**
@@ -107,13 +106,13 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String edit(@RequestParam(&quot;id&quot;) long id, Model model, HttpServletRequest request) {
-<span class="fc" id="L110">        ContactEntity contact = contactRepository.getById(id);</span>
-<span class="fc" id="L111">        model.addAttribute(&quot;entity&quot;, contact);</span>
+<span class="fc" id="L109">        ContactEntity contact = contactRepository.getById(id);</span>
+<span class="fc" id="L110">        model.addAttribute(&quot;entity&quot;, contact);</span>
 
         //pridaj do modelu moznosti pre select country
-<span class="fc" id="L114">        model.addAttribute(&quot;countries&quot;, ContactRestController.getCountries());</span>
+<span class="fc" id="L113">        model.addAttribute(&quot;countries&quot;, ContactRestController.getCountries());</span>
 
-<span class="fc" id="L116">        return &quot;/apps/contact/mvc/edit&quot;;</span>
+<span class="fc" id="L115">        return &quot;/apps/contact/mvc/edit&quot;;</span>
     }
 
     /**
@@ -123,15 +122,15 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String add(Model model) {
-<span class="fc" id="L126">        ContactEntity contact = new ContactEntity();</span>
+<span class="fc" id="L125">        ContactEntity contact = new ContactEntity();</span>
         //tu mozete nastavit nejake default hodnoty
-<span class="fc" id="L128">        contact.setCountry(&quot;sk&quot;);</span>
+<span class="fc" id="L127">        contact.setCountry(&quot;sk&quot;);</span>
 
         //pridaj do modelu moznosti pre select country
-<span class="fc" id="L131">        model.addAttribute(&quot;countries&quot;, ContactRestController.getCountries());</span>
+<span class="fc" id="L130">        model.addAttribute(&quot;countries&quot;, ContactRestController.getCountries());</span>
 
-<span class="fc" id="L133">        model.addAttribute(&quot;entity&quot;, contact);</span>
-<span class="fc" id="L134">        return &quot;/apps/contact/mvc/edit&quot;;</span>
+<span class="fc" id="L132">        model.addAttribute(&quot;entity&quot;, contact);</span>
+<span class="fc" id="L133">        return &quot;/apps/contact/mvc/edit&quot;;</span>
     }
 
     /**
@@ -143,14 +142,14 @@ public class ContactApp extends WebjetComponentAbstract {
      * @return
      */
     public String saveForm(@Valid @ModelAttribute(&quot;entity&quot;) ContactEntity entity, BindingResult result, Model model, HttpServletRequest request) {
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (!result.hasErrors()) {</span>
-<span class="nc" id="L147">            contactRepository.save(entity);</span>
-<span class="nc" id="L148">            return &quot;redirect:&quot; + PathFilter.getOrigPath(request);</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (!result.hasErrors()) {</span>
+<span class="nc" id="L146">            contactRepository.save(entity);</span>
+<span class="nc" id="L147">            return &quot;redirect:&quot; + PathFilter.getOrigPath(request);</span>
         }
-<span class="fc" id="L150">        model.addAttribute(&quot;error&quot;, result);</span>
-<span class="fc" id="L151">        model.addAttribute(&quot;entity&quot;, entity);</span>
-<span class="fc" id="L152">        return &quot;/apps/contact/mvc/edit&quot;;</span>
+<span class="fc" id="L149">        model.addAttribute(&quot;error&quot;, result);</span>
+<span class="fc" id="L150">        model.addAttribute(&quot;entity&quot;, entity);</span>
+<span class="fc" id="L151">        return &quot;/apps/contact/mvc/edit&quot;;</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

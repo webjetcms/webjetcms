@@ -18,17 +18,19 @@ public class AuditDto {
     private int createdByUserId;
     private String createdByUserName;
     private String createdByUserLogin;
+    private int logId;
 
-<span class="fc" id="L22">    public AuditDto(AdminlogBean adminlog) {</span>
-<span class="fc" id="L23">        type = Prop.getInstance().getText(&quot;components.adminlog.&quot;+adminlog.getLogType());</span>
-<span class="fc" id="L24">        description = DB.prepareString(adminlog.getDescription(), 100);</span>
-<span class="fc" id="L25">        date = Tools.formatDateTime(adminlog.getCreateDate());</span>
-<span class="fc" id="L26">        createdByUserId = adminlog.getUserId();</span>
-<span class="fc" id="L27">        UserDetails user = UsersDB.getUser(createdByUserId);</span>
-<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (user != null) {</span>
-<span class="fc" id="L29">            createdByUserName = user.getFullName();</span>
-<span class="fc" id="L30">            createdByUserLogin = user.getLogin();</span>
+<span class="fc" id="L23">    public AuditDto(AdminlogBean adminlog) {</span>
+<span class="fc" id="L24">        logId = adminlog.getLogId();</span>
+<span class="fc" id="L25">        type = Prop.getInstance().getText(&quot;components.adminlog.&quot;+adminlog.getLogType());</span>
+<span class="fc" id="L26">        description = DB.prepareString(adminlog.getDescription(), 140);</span>
+<span class="fc" id="L27">        date = Tools.formatDateTime(adminlog.getCreateDate());</span>
+<span class="fc" id="L28">        createdByUserId = adminlog.getUserId();</span>
+<span class="fc" id="L29">        UserDetails user = UsersDB.getUser(createdByUserId);</span>
+<span class="fc bfc" id="L30" title="All 2 branches covered.">        if (user != null) {</span>
+<span class="fc" id="L31">            createdByUserName = user.getFullName();</span>
+<span class="fc" id="L32">            createdByUserLogin = user.getLogin();</span>
         }
-<span class="fc" id="L32">    }</span>
+<span class="fc" id="L34">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

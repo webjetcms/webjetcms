@@ -6,7 +6,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('zakladne testy', async ({I, DataTables}) => {
+Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/tooltip/admin/");
     await DataTables.baseTest({
         dataTable: 'tooltipDataTable',

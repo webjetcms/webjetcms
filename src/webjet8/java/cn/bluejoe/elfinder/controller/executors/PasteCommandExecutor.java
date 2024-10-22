@@ -17,6 +17,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.UrlRedirectDB;
+import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -48,8 +49,6 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 				String name = ftgt.getName();
 				FsItemEx newFile = new FsItemEx(fdst, name);
 
-
-
 				//JEEFF: upravene pre podporu nasho DocGroup
 				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))
 				{
@@ -57,7 +56,7 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 				}
 				else
 				{
-					super.createAndCopy(ftgt, newFile);
+					super.createAndCopy(ftgt, newFile, request);
 					if (cut)
 					{
 						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))
@@ -68,6 +67,7 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 
 							//ak chcem povodny vymazat, musim mat pravo na zapis aj do zdrojoveho
 							ftgt.delete();
+							FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);
 						}
 						else
 						{
@@ -89,8 +89,6 @@ public class PasteCommandExecutor extends AbstractJsonCommandExecutor
 			json.put("error", prop.getText("components.elfinder.commands.paste.error", fdst.getPath()));
 
 		}
-
-
 
 		json.put("added", files2JsonArray(request, added));
 		//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov

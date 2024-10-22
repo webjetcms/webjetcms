@@ -47,7 +47,7 @@ store.setStorageItem('sub-kľúč-2', 'hodnota-2');
 ## Zoznam API
 **(Kliknutím zobrazíš detail pre funkciu)**
 
-| Metódy                                                | Poznámka
+| Metódy                                                | Poznámka    |
 | -----------                                           | ----------- |
 | [setStoreName()](#setstorename)                       |
 | [setSessionStorage()](store.md?id=setsessionstorage)  | Zdedená metóda z triedy [Store](store.md) [presmeruje do súboru [store.md](store.md)] |

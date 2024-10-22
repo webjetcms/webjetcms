@@ -1,16 +1,16 @@
 <template>
     <div>
         <div class="input-group">
-            <input type="text" class="form-control" v-bind:value="[grp.fullPath ? ((grp.domainName && grp.domainName != '' && click.indexOf('alldomains')!=-1 ? grp.domainName+':' : '')+grp?.fullPath?.replaceAll('&#'+'47;', '/')) : grp?.virtualPath?.replaceAll('&#'+'47;', '/')]" disabled="disabled" />
+            <input type="text" class="form-control" v-bind:value="[grp.fullPath ? ((grp.domainName && grp.domainName != '' && click.indexOf('alldomains')!=-1 ? grp.domainName+':' : '')+grp?.fullPath?.replaceAll('&'+'#'+'47;', '/')) : grp?.virtualPath?.replaceAll('&'+'#'+'47;', '/')]" disabled="disabled" />
 
-                <button @click="toggleModals" class="btn btn-outline-secondary  btn-vue-jstree-item-edit" type="button" v-tooltip:top="$WJ.translate('button.select')"><i class="ti ti-focus-2"></i></button>
-                <button @click="removeFolder" v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-group-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
-                <button @click="removePage" v-if="click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-page-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
-                <button @click="removeById" v-if="click.indexOf('dt-tree-dir-array')==0 || click.indexOf('dt-tree-universal-array')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
+            <button @click="toggleModals" class="btn btn-outline-secondary  btn-vue-jstree-item-edit" type="button" v-tooltip:top="$WJ.translate('button.select')"><i class="ti ti-focus-2"></i></button>
+            <button @click="removeFolder" v-if="click.indexOf('dt-tree-group-array')==0 || click.indexOf('dt-tree-group-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
+            <button @click="removePage" v-if="click.indexOf('dt-tree-page-array')==0 || click.indexOf('dt-tree-page-null')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
+            <button @click="removeById" v-if="click.indexOf('dt-tree-dir-array')==0 || click.indexOf('dt-tree-universal-array')==0" class="btn btn-outline-secondary btn-vue-jstree-item-remove" type="button" v-tooltip:top="$WJ.translate('button.delete')"><i class="ti ti-trash"></i></button>
 
         </div>
         <transition name="fade">
-            <folder-tree-modal v-if="readyToOpen" :groupId="grp.groupId" :click="click" :readyToOpen="readyToOpen" @close-custom-modal="closeModal"></folder-tree-modal>
+            <folder-tree-modal v-if="readyToOpen" :groupId="grp.groupId" :click="click" :readyToOpen="readyToOpen" :attr="attr" @close-custom-modal="closeModal"></folder-tree-modal>
         </transition>
     </div>
 </template>
@@ -21,7 +21,7 @@
 
     export default {
         name: 'webjet-dte-jstree-item',
-        props: ['data', 'idKey', 'dataTableName', 'dataTable', 'click', 'grp', 'index'],
+        props: ['data', 'idKey', 'dataTableName', 'dataTable', 'click', 'grp', 'index', 'attr'],
         emits: ["remove-item"],
         components: {
             'folder-tree-modal': FolderTree
@@ -41,7 +41,7 @@
             }
         },
         created() {
-            //console.log("vue ITEM, created, data=", this.$props.data, " length=", this.$props.data.length, " dataTable=", this.$props.dataTable);
+            //console.log("vue ITEM, created, data=", this.$props.data, " length=", this.$props.data.length, " dataTable=", this.$props.dataTable, "attr=", this.$props.attr);
 
             this.jsonData = this.$props.data;
 

@@ -1,0 +1,19 @@
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-submenu-item .tui-image-editor-button.apply label, .tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-submenu-item .tui-image-editor-button.cancel label {
+    vertical-align: 0px !important;
+}
+.tui-image-editor-container .tui-image-editor-range-wrap label,
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-submenu-item .tui-image-editor-button,
+div.tui-image-editor-partition select,
+label.preset-dimension-label,
+.tui-image-editor-container .tui-image-editor-submenu .tui-image-editor-submenu-item label > span {
+    font-size: 12px !important;
+}
+li.tui-image-editor-submenu-align {
+    display: block !important;
+}
+div.tui-image-editor-menu-resize li.tui-image-editor-submenu-align div.tui-image-editor-checkbox-wrap {
+    margin-left: 30px !important;
+}
+ul.tui-image-editor-submenu-item {
+    margin-left: 10px !important;
+}

@@ -222,7 +222,9 @@ Scenario('presun druheho podpriecinka do prveho podpriecinka', ({ I, DT, DTE }) 
      // Skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci en struktury
      I.say('Skontrolujem ci sa pricinok subfolder2 presunul do priecinka subfolder1 v ramci en struktury');
      I.click(locate('.jstree-node.jstree-closed').withDescendant('a.jstree-anchor').withText(auto_folder_en).find('.jstree-icon.jstree-ocl'));
+     I.jstreeWaitForLoader();
      I.click(locate('.jstree-anchor').withDescendant('.jstree-icon.jstree-themeicon.ti.ti-folder.jstree-themeicon-custom').withText(auto_subfolder1_sk));
+     I.jstreeWaitForLoader();
      within((locate('li.jstree-node.jstree-last.jstree-open').withDescendant('.jstree-anchor.jstree-clicked')), () => {
           I.waitForElement(locate('ul.jstree-children').withText(auto_subfolder2_sk));
      });

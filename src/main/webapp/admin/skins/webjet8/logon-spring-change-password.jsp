@@ -1,8 +1,7 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
-%><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"
-%><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"
+%><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
 %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
@@ -65,10 +64,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
 
 <%
     Identity user = (Identity)session.getAttribute(Constants.USER_KEY+"_changepassword");
-    String constStr = "User";
-    if(user != null && user.isAdmin()){
-        constStr = "Admin";
-    }
+    String constStr = "Admin";
     String lng = (String)session.getAttribute(Prop.SESSION_I18N_PROP_LNG);
     if (Tools.isEmpty(lng)) lng = "sk";
 %>
@@ -78,19 +74,21 @@ String brandSuffix = InitServlet.getBrandSuffix();
             <h3 class="form-title"><iwcm:text key="logon.logon"/></h3>
                 <div class="alert alert-danger display -hide">
                         <p style="color: black;">
-                            <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
-                            <c:if test='<%=Constants.getInt("password"+constStr+"MinLength") > 0 %>'>
+                            <c:if test="${empty param.auth}">
+                                <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
+                            </c:if>
+                            <c:if test="${not empty param.auth}">
+                                <iwcm:text key="logon.password.enter_new_password"/><br/>
+                            </c:if>
+                            <%if (Constants.getInt("password"+constStr+"MinLength") > 0) { %>
                                 - <iwcm:text key="logon.change_password.min_length" param1='<%=Constants.getString("password"+constStr+"MinLength")%>'/><br/>
-                            </c:if>
-                            <c:if test='<%=Constants.getInt("password"+constStr+"MinCountOfDigits") > 0 %>'>
+                            <% } if (Constants.getInt("password"+constStr+"MinCountOfDigits") > 0) { %>
                                 - <iwcm:text key="logon.change_password.count_of_digits" param1='<%=Constants.getString("password"+constStr+"MinCountOfDigits")%>'/><br/>
-                            </c:if>
-                            <c:if test='<%=Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0 %>'>
+                            <% } if (Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0) { %>
                                 - <iwcm:text key="logon.change_password.count_of_upper_case" param1='<%=Constants.getString("password"+constStr+"MinUpperCaseLetters")%>'/><br/>
-                            </c:if>
-                            <c:if test='<%=Constants.getInt("password"+constStr+"MinCountOfSpecialSigns") > 0 %>'>
+                            <% } if (Constants.getInt("password"+constStr+"MinCountOfSpecialSigns") > 0) { %>
                                 - <iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=Constants.getString("password"+constStr+"MinCountOfSpecialSigns")%>'/><br/>
-                            </c:if>
+                            <% } %>
                                 - <iwcm:text key="logon.change_password.used_in_history2"/><br/>
                         </p>
                         <logic:present name="errors">
@@ -104,23 +102,37 @@ String brandSuffix = InitServlet.getBrandSuffix();
                     </div>
                 <div class="login_content">
                     <form:form action="changePassword" method="post" modelAttribute="userForm">
-                        <div class="form-group">
-                            <label class="control-label"><iwcm:text key="logon.old_password"/>:</label>
-                            <form:password path="password" disabled="true" showPassword="true" maxlength="40" size="16" cssClass="form-control" autocomplete="false"/>
-                            <form:hidden path="password"/>
-                        </div>
+                        <c:if test="${empty param.auth}">
+                            <div class="form-group">
+                                <label class="control-label"><iwcm:text key="logon.old_password"/>:</label>
+                                <form:password path="password" disabled="true" showPassword="true" maxlength="64" size="16" cssClass="form-control" autocomplete="false"/>
+                                <form:hidden path="password"/>
+                            </div>
+                        </c:if>
+                        <c:if test="${not empty param.auth}">
+                            <div class="form-group">
+                                <label><iwcm:text key="logon.change_password.select_login"/>:</label>
+                                <form:select path="selectedLogin" cssClass="form-control">
+                                    <c:forEach var="login" items="${userForm.login}">
+                                        <form:option value="${login}">${login}</form:option>
+                                    </c:forEach>
+                                </form:select>
+                            </div>
+                        </c:if>
                         <div class="form-group">
                             <label class="control-label"><iwcm:text key="logon.new_password"/>:</label>
-                            <form:password path="newPassword" maxlength="32" size="16" cssClass="form-control"/>
+                            <form:password path="newPassword" maxlength="64" size="16" cssClass="form-control"/>
                             <div class="password-strength-info"></div>
                         </div>
                         <div class="form-group">
                             <label class="control-label"><iwcm:text key="logon.retype_new_password"/>:</label>
-                            <form:password path="retypeNewPassword" maxlength="32" size="16" cssClass="form-control"/>
+                            <form:password path="retypeNewPassword" maxlength="64" size="16" cssClass="form-control"/>
                         </div>
                         <div class="form-actions text-right">
                             <button type="submit" name="login-submit" id="login-submit" class="btn blue"><iwcm:text key="button.submit"/> <i class="m-icon-swapright m-icon-white"></i></button>
                             <input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(lng)%>"/>
+                            <form:hidden path="login"/>
+                            <form:hidden path="auth"/>
                             <%--<form:button name="login-submit" value="Submit">Submit</form:button>--%>
                         </div>
                     </form:form>

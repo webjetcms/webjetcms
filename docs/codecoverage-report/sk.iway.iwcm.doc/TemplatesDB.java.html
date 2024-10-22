@@ -221,14 +221,14 @@ public class TemplatesDB extends DB
     */
    public TemplateDetails getTemplate(int temp_id)
    {
-<span class="pc bpc" id="L224" title="1 of 2 branches missed.">      for (TemplateDetails details : temps)</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">      for (TemplateDetails details : temps)</span>
       {
 <span class="fc bfc" id="L226" title="All 2 branches covered.">         if (details.getTempId() == temp_id)</span>
          {
 <span class="fc" id="L228">            return (details);</span>
          }
 <span class="fc" id="L230">      }</span>
-<span class="nc" id="L231">      return (null);</span>
+<span class="fc" id="L231">      return (null);</span>
    }
 
    /**
@@ -242,14 +242,14 @@ public class TemplatesDB extends DB
    {
 <span class="pc bpc" id="L243" title="2 of 4 branches missed.">      if (tempName==null || tempName.trim().length()&lt;1) return(null);</span>
 <span class="fc" id="L244">      tempName = tempName.trim();</span>
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">      for (TemplateDetails details : temps)</span>
+<span class="fc bfc" id="L245" title="All 2 branches covered.">      for (TemplateDetails details : temps)</span>
       {
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">         if (details.getTempName().equalsIgnoreCase(tempName))</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">         if (details.getTempName().equalsIgnoreCase(tempName))</span>
          {
 <span class="fc" id="L249">            return (details);</span>
          }
-<span class="nc" id="L251">      }</span>
-<span class="nc" id="L252">      return (null);</span>
+<span class="fc" id="L251">      }</span>
+<span class="fc" id="L252">      return (null);</span>
    }
 
    /**
@@ -359,7 +359,7 @@ public class TemplatesDB extends DB
 	public static File getDeviceTemplateFile(File rootDir, String forward, BrowserDetector bd)
 	{
 <span class="fc" id="L361">		File forwFile = new File(rootDir.getAbsolutePath()+File.separatorChar+forward.replace('/', File.separatorChar));</span>
-<span class="pc bpc" id="L362" title="1 of 2 branches missed.">		if (forwFile.exists()==false) return(forwFile);</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">		if (forwFile.exists()==false) return(forwFile);</span>
 
 <span class="pc bpc" id="L364" title="1 of 4 branches missed.">		if (bd!=null &amp;&amp; bd.getBrowserDeviceType()!=null)</span>
 		{
@@ -675,7 +675,7 @@ public class TemplatesDB extends DB
 
 <span class="fc" id="L676">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="fc" id="L678">		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
+<span class="fc" id="L678">		int[] userEditableGroups = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(true), &quot;,&quot;), true);</span>
 <span class="pc bpc" id="L679" title="1 of 4 branches missed.">		if ((userEditableGroups == null || userEditableGroups.length&lt;1)) return allTemps;</span>
 
 <span class="fc bfc" id="L681" title="All 2 branches covered.">		for (TemplateDetails temp : allTemps)</span>
@@ -769,4 +769,4 @@ public class TemplatesDB extends DB
 <span class="fc" id="L769">		return &quot;&quot;;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

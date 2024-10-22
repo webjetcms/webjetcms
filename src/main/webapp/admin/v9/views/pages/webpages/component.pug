@@ -1,19 +1,14 @@
-extends ../../partials/layout
+extends ../../partials/iframe
 
 block content
-
-    +breadcrumb(
-        'forms',
-        [
-            [ '#form-detail', '[[\#{admin.components_list.component}]]', true ]
-        ],
-        [ '/admin/v9/components/component', '[[\#{admin.components_list.title}]]' ]
-    )
 
     style.
         .modal-header {
             margin-top: 6px !important;
             border-top-width: 0px !important;
+        }
+        .modal.DTED .modal-header .DTE_Header_Content .row .col-sm-4 {
+            width: 33.33333333% !important;
         }
         div.DTE_Action_Edit div.DTE_Footer {
             display: none;
@@ -21,11 +16,19 @@ block content
 
     script.
         let componentDatatable = null,
-            componentClass;
+            componentClass,
+            componentPath = null,
+            componentColumns = null;
 
         window.domReady.add(function () {
             componentClass = $('#className', window.parent.document).val();
             let parameters = $('#parameters', window.parent.document).val();
+            let docId = $('#docId', window.parent.document).val();
+            let groupId = $('#groupId', window.parent.document).val();
+            let title = $('#title', window.parent.document).val();
+            componentPath = componentClass;
+
+            //console.log("PUG docId=", docId, "groupId=", groupId, "title=", title);
 
             if (componentClass === '') {
                 return;
@@ -38,7 +41,10 @@ block content
                 url: '/admin/rest/components/component',
                 data: JSON.stringify({
                     className: componentClass,
-                    parameters: parameters
+                    parameters: parameters,
+                    docId: docId,
+                    groupId: groupId,
+                    pageTitle: title
                 }),
                 dataType: 'json',
                 contentType: 'application/json',
@@ -51,8 +57,7 @@ block content
                         return;
                     }
 
-                    let componentInitialUrl = '/admin/rest/components',
-                        componentColumns = response.columns;
+                    componentColumns = response.columns;
 
                     componentColumns.push({
                         "data" : "id",
@@ -70,26 +75,58 @@ block content
                         "array" : false
                     });
 
+                    response.data['id'] = 1;
+                    var multidata = convertMultichoiseData(response.data);
+                    //console.log("multidata=", multidata, "original=", response.data);
+
+                    //create json data for editor, prevent call to REST service using "forceData": true
+                    let jsonData = {
+                        "content": [
+                            multidata
+                        ],
+                        "notify": null,
+                        "totalPages": 1,
+                        "totalElements": 1,
+                        "last": true,
+                        "size": 12,
+                        "number": 0,
+                        "sort": {
+                            "empty": false,
+                            "unsorted": false,
+                            "sorted": true
+                        },
+                        "first": true,
+                        "numberOfElements": 1,
+                        "empty": false,
+                        "forceData": true
+                    }
+
                     componentDatatable = WJ.DataTable({
                         id: 'component-datatable',
-                        url: componentInitialUrl,
+                        url: '/admin/rest/components',
+                        initialData: jsonData,
                         columns: componentColumns,
                         serverSide: false,
                         editorId: "id",
                         fetchOnCreate: false,
                         fetchOnEdit: false,
                         idAutoOpener: true,
-                        tabs: response.tabs
-                        //hideTable:true
+                        tabs: response.tabs,
+                        editorLocking: false,
+                        hideTable:true
                     });
+
+                    if (response.options != null) {
+                        componentDatatable.updateOptionsFromJson(response);
+                    }
+
                     componentDatatable.EDITOR.on('open', function (e, mode, action) {
                         $("#"+componentDatatable.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(response.title);
                     });
 
-                    response.data['id'] = 1;
-                    var multidata = convertMultichoiseData(componentColumns, response.data);
-                    //console.log("multidata=", multidata);
-                    componentDatatable.row.add( multidata ).draw();
+                    if (response.componentPath != null && response.componentPath != '') {
+                        componentPath = response.componentPath;
+                    }
                 }
             });
         });
@@ -100,45 +137,43 @@ block content
          * @param data
          * @returns {*}
          */
-        function convertMultichoiseData(componentColumns, data) {
-            for(let i = 0; i < componentColumns.length; i++) {;
-                let fieldValue = data[componentColumns[i].data];
+        function convertMultichoiseData(data) {
+            for (let column of componentColumns) {
+                let fieldValue = data[column.data];
+                //console.log("fieldValue=", fieldValue, "column=", column, "typeof=", typeof fieldValue);
 
-                if("checkbox" == componentColumns[i].editor.type && typeof fieldValue === "string") {
-                    //It's multichoise (checkbox multichoise), convert to array
-                    if(fieldValue === null || fieldValue === undefined) fieldValue = [];
-                    else data[componentColumns[i].data] = fieldValue.split("+");
+                //replace &lt; and &gt; to < and >
+                if (fieldValue != null && typeof fieldValue === "string") {
+                    fieldValue = fieldValue.replace(/&amp;lt;/gi, "<").replace(/&lt;/gi, "<").replace(/&amp;gt;/gi, ">").replace(/&gt;/gi, ">");
+                    data[column.data] = fieldValue;
                 }
 
-                if("select" == componentColumns[i].editor.type && true === componentColumns[i].editor.multiple) {
+                if (fieldValue != null && typeof column.className != "undefined" && column.className != null && column.className.indexOf("dt-style-base64")!=-1) {
+                    fieldValue = WJ.base64decode(fieldValue);
+                    data[column.data] = fieldValue;
+                }
+
+                if("checkbox" == column.editor.type && typeof fieldValue === "string") {
+                    //It's multichoise (checkbox multichoise), convert to array
+                    if(fieldValue === null || fieldValue === undefined) fieldValue = [];
+                    else data[column.data] = fieldValue.split("+");
+                }
+
+                if("select" == column.editor.type && true === column.editor.multiple) {
                     //It's multichoise (select multichoise), convert to array
                     if(fieldValue === null || fieldValue === undefined) fieldValue = [];
-                    else data[componentColumns[i].data] = fieldValue.split("+");
+                    else data[column.data] = fieldValue.split("+");
                 }
             }
 
             return data;
         }
 
-        function getParamValue(paramName) {
-            var url = window.location.search.substring(1); //get rid of "?" in querystring
-            var qArray = url.split('&'); //get key-value pairs
-            for (var i = 0; i < qArray.length; i++)
-            {
-                var pArr = qArray[i].split('='); //split key and value
-                if (pArr[0] === paramName) {
-                    return pArr[1]; //return value
-                }
-            }
-
-            return '';
-        }
-
         function Ok() {
             try {
                 let params = componentDatatable.EDITOR.get();
                 delete params['id'];
-                let include = "!INCLUDE(" + componentClass;
+                let include = "!INCLUDE(" + componentPath;
                 if (Object.keys(params).length > 0) {
                     include += ", " + convertObjectToInludeParams(params);
                 }
@@ -151,11 +186,41 @@ block content
             return false;
         }
 
+        /**
+         * Add quotes, do not add for:
+         * - numbers/boolean values
+         * - simple one word without special characters
+         * @param value value to add quotes
+         */
+        function addQuotes(value) {
+            if (value == null || value === "") return "";
+            if (isNaN(value)===false) return value;
+            if ("true"===value || "false"===value) return value;
+            //if value is simple one word without special characters
+            if (/^[a-zA-Z0-9+]+$/.test(value)) return value;
+
+            return '"' + value + '"';
+        }
+
         function convertObjectToInludeParams(params) {
             let result = [];
-            $.each(params, function(key, value) {
+            for (let column of componentColumns) {
+
+                let key = column.data;
+                let value = params[key];
+
+                //skip id or static text
+                if ("id"===key || "dt-format-static-text"===column.renderFormat) continue;
+
+                if (typeof column.className != "undefined" && column.className != null && column.className.indexOf("dt-style-base64")!=-1) {
+                    value = WJ.base64encode(value);
+                }
+
                 // boolean prichadza ako array
                 //console.log("key=", key, "value=", value, "typeof=", typeof value, "isArray=", Array.isArray(value));
+
+                //skip field type iframe
+                if (componentDatatable.EDITOR.field(key).dom.container.hasClass("DTE_Field_Type_iframe")) continue;
 
                 //GroupDetails/DocDetails object
                 if (typeof value == "object") {
@@ -182,8 +247,8 @@ block content
                         //console.log("key=", key, " id=", id);
 
                         if (id != null) {
-                            result.push(key + '="' + id + '"');
-                            return;
+                            result.push(key + '=' + addQuotes(id));
+                            continue;
                         }
                     } catch (e) {
                         console.log(e);
@@ -196,12 +261,24 @@ block content
                 }
 
                 if (typeof value === "string") {
-                    value = value.replace(/\"/gi, "&amp;quot;");
-                    value = value.replace(/, /gi, ",&nbsp;");
+                    //same as in common.jsp addIncludeParameter
+                    value = value.replace(/"/gi, "\\\"");
+                    value = value.replace('<',"&lt;");
+                    value = value.replace('</',"&lt;/");
+                    value = value.replace('>',"&gt;");
+
+                    if (value === "" || value === "0") {
+                        if ("device" === key || "cacheMinutes" === key) {
+                            //skip empty device and cacheMinutes parameters
+                            continue;
+                        }
+                    }
                 }
-                result.push(key + '="' + value + '"');
-            });
-            return result.join(", ");
+                result.push(key + '=' + addQuotes(value));
+            }
+            const includeParams = result.join(", ");
+            //console.log(includeParams);
+            return includeParams;
         }
 
     <table id="component-datatable" class="datatableInit table"></table>

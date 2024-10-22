@@ -1,4 +1,3 @@
-"use strict"
 /**
  * @class  elFinder command "search"
  * Find files
@@ -6,9 +5,10 @@
  * @author Dmitry (dio) Levashov
  **/
 elFinder.prototype.commands.wjsearch = function() {
+	"use strict";
 	this.title          = 'Find files';
-	this.options        = {ui : 'wjsearchbutton'}
-	//this.alwaysEnabled  = false;
+	this.options        = {ui : 'wjsearchbutton'};
+	this.alwaysEnabled  = true;
 	this.updateOnSelect = false;
 
 	/**
@@ -42,11 +42,20 @@ elFinder.prototype.commands.wjsearch = function() {
 	 * @param  String  search string
 	 * @return $.Deferred
 	 **/
-	this.exec = function(q, target, mime, recursive=false) {
+	this.exec = function(q, target, mime, type, recursive) {
+		if (typeof recursive == "undefined" || recursive == null) recursive = false;
 		var fm = this.fm,
 			reqDef = [],
+			sType = type || '',
 			onlyMimes = fm.options.onlyMimes,
-			phash;
+			phash, targetVolids = [],
+			setType = function(data) {
+				if (sType && sType !== 'SearchName' && sType !== 'SearchMime') {
+					data.type = sType;
+				}
+				return data;
+			},
+			rootCnt;
 
 		if (typeof q == 'string' && q) {
 			if (typeof target == 'object') {
@@ -56,31 +65,34 @@ elFinder.prototype.commands.wjsearch = function() {
 			target = target? target : '';
 			if (mime) {
 				mime = $.trim(mime).replace(',', ' ').split(' ');
-				mime = $.map(mime, function(m){
-					m = $.trim(m);
-					return m && ($.inArray(m, onlyMimes) !== -1
-								|| $.map(onlyMimes, function(om) { return m.indexOf(om) === 0? true : null }).length
-								)? m : null
-				});
+				if (onlyMimes.length) {
+					mime = $.map(mime, function(m){
+						m = $.trim(m);
+						return m && ($.inArray(m, onlyMimes) !== -1
+									|| $.grep(onlyMimes, function(om) { return m.indexOf(om) === 0? true : false; }).length
+									)? m : null;
+					});
+				}
 			} else {
 				mime = [].concat(onlyMimes);
 			}
 
-			fm.trigger('searchstart', {query : q, target : target, mimes : mime});
+			fm.trigger('searchstart', setType({query : q, target : target, mimes : mime}));
 
 			if (! onlyMimes.length || mime.length) {
 				if (target === '' && fm.api >= 2.1) {
+					rootCnt = Object.keys(fm.roots).length;
 					$.each(fm.roots, function(id, hash) {
 						reqDef.push(fm.request({
-							data   : {cmd : 'search', q : q, target : hash, mimes : mime, recursive: recursive},
-							notify : {type : 'search', cnt : 1, hideCnt : (reqDef.length? false : true)},
+							data   : setType({cmd : 'search', q : q, target : hash, mimes : mime, recursive: recursive}),
+							notify : {type : 'search', cnt : 1, hideCnt : (rootCnt > 1? false : true)},
 							cancel : true,
 							preventDone : true
 						}));
 					});
 				} else {
 					reqDef.push(fm.request({
-						data   : {cmd : 'search', q : q, target : target, mimes : mime, recursive: recursive},
+						data   : setType({cmd : 'search', q : q, target : target, mimes : mime, recursive: recursive}),
 						notify : {type : 'search', cnt : 1, hideCnt : true},
 						cancel : true,
 						preventDone : true
@@ -91,8 +103,10 @@ elFinder.prototype.commands.wjsearch = function() {
 							while(phash) {
 								if (target === phash) {
 									$.each(roots, function() {
+										var f = fm.file(this);
+										f && f.volumeid && targetVolids.push(f.volumeid);
 										reqDef.push(fm.request({
-											data   : {cmd : 'search', q : q, target : this, mimes : mime},
+											data   : setType({cmd : 'search', q : q, target : this, mimes : mime, recursive: recursive}),
 											notify : {type : 'search', cnt : 1, hideCnt : false},
 											cancel : true,
 											preventDone : true
@@ -108,7 +122,7 @@ elFinder.prototype.commands.wjsearch = function() {
 				reqDef = [$.Deferred().resolve({files: []})];
 			}
 
-			fm.searchStatus.mixed = (reqDef.length > 1);
+			fm.searchStatus.mixed = (reqDef.length > 1)? targetVolids : false;
 
 			return $.when.apply($, reqDef).done(function(data) {
 				var argLen = arguments.length,
@@ -127,6 +141,9 @@ elFinder.prototype.commands.wjsearch = function() {
 					}
 				}
 
+				// because "preventDone : true" so update files cache
+				data.files && data.files.length && fm.cache(data.files);
+
 				fm.lazy(function() {
 					fm.trigger('search', data);
 				}).then(function() {
@@ -140,8 +157,8 @@ elFinder.prototype.commands.wjsearch = function() {
 				});
 			});
 		}
-		fm.getUI('toolbar').find('.'+fm.res('class', 'searchbtn')+' :text').focus();
+		fm.getUI('toolbar').find('.'+fm.res('class', 'searchbtn')+' :text').trigger('focus');
 		return $.Deferred().reject();
-	}
+	};
 
 };

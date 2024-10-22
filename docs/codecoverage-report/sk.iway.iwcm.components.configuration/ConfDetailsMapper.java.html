@@ -29,7 +29,7 @@ import java.util.List;
 
     ConfDetailsDto entityToDto(ConfDetails cd) {
 <span class="fc" id="L31">        ConfDetailsDto dto = new ConfDetailsDto();</span>
-<span class="fc" id="L32">        NullAwareBeanUtils.copyProperties(cd, dto);</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        if (cd != null) NullAwareBeanUtils.copyProperties(cd, dto);</span>
 <span class="fc" id="L33">        return dto;</span>
     }
 
@@ -53,4 +53,4 @@ import java.util.List;
 <span class="fc" id="L53">        return dto;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

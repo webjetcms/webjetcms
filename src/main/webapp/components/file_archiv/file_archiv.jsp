@@ -1,22 +1,37 @@
-<%@page import="java.util.List"%><%
-sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*,java.util.*,sk.iway.iwcm.components.file_archiv.*,sk.iway.iwcm.common.SearchTools" %><%@
-taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
-taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
-taglib prefix="bean" uri="/WEB-INF/struts-bean.tld" %><%@
-taglib prefix="html" uri="/WEB-INF/struts-html.tld" %><%@
-taglib prefix="logic" uri="/WEB-INF/struts-logic.tld" %><%@
-taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
-taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
-taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%=Tools.insertJQuery(request)%>
+<%@page import="sk.iway.iwcm.components.file_archiv.FileArchivatorKit"%>
+<%@page import="sk.iway.iwcm.components.file_archiv.FileArchivatorBean"%>
+<%@page import="sk.iway.iwcm.components.file_archiv.FileArchivatorDB"%>
+<%@page import="java.util.Calendar"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="java.util.List"%>
+<%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%
-try
-{
+sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
+taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%!
+
+public String getValidityDates(FileArchivatorBean fab, Prop prop) {
+	String from = Tools.formatDate(fab.getValidFrom());
+	String to = Tools.formatDate(fab.getValidTo());
+	if(Tools.isNotEmpty(from) && Tools.isNotEmpty(to)) {
+		return prop.getText("components.file_archiv.validFromTo", from, to);
+	} else if(Tools.isNotEmpty(from)) {
+		return prop.getText("components.file_archiv.validFrom", from);
+	} else if(Tools.isNotEmpty(to)) {
+		return prop.getText("components.file_archiv.validTo", to);
+	}
+	return "";
+}
+
+%>
+<%
+	String lng = PageLng.getUserLng(request);
+	pageContext.setAttribute("lng", lng);
+	Prop prop = Prop.getInstance(lng);
+
 	PageParams pageParams = new PageParams(request);
 	String dirPath = pageParams.getValue("dir",FileArchivatorKit.getArchivPath());
-	if(!dirPath.endsWith("/"))
-		dirPath += "/";
+	if(!dirPath.endsWith("/")) dirPath += "/";
 
 	List<FileArchivatorBean> fabListCache = new ArrayList<>();
 	//ak chcem zobrazit len vybrane subory (tzn. nie doplnit do existujuceho zoznamu) zoznam necham prazdny
@@ -27,14 +42,17 @@ try
 				//podmienka na orderMain kvoli spatnej kompatibilite kedy ascMain este neexistovalo a riadilo sa na zaklade asc
 				pageParams.getBooleanValue("subDirsInclude", false), pageParams.getValue("orderMain", null) != null ? pageParams.getBooleanValue("ascMain", false) : pageParams.getBooleanValue("asc", false), true, true);
 	}
+
 	// pocet includov
 	int fileArchivCount = Tools.getIntValue(""+request.getAttribute("file_archiv_include_count"),-1);
 	request.setAttribute("file_archiv_include_count", ++fileArchivCount);
-%>
+	%>
 
-	<div class="documents">
-		<h2><iwcm:text key="components.file_archiv.heading"/></h2>
-		<ul>
+
+<div class="table-responsive table-responsive-file-archive">
+<table class="table table-striped table-small table-file-archive">
+	<tbody>
+
 		<%
 		//pozadovane globalIds, zo String pola do Integer listu
 		String[] globalIdsArray = Tools.getTokens(pageParams.getValue("globalIds", ""), "+");
@@ -78,8 +96,8 @@ try
 				for(FileArchivatorBean archivFab:globalList)
 				{
 					fabList.addAll(FileArchivatorDB.getByReferenceId(archivFab.getId()));
-      }
-    }
+				}
+			}
 			//12.4.2017 #21687
 			for(int i=0;i<fabList.size();i++)
 			{
@@ -100,36 +118,46 @@ try
 			int referenceId = -1;
 			//boolean isSetReference = false;
 			boolean canPrintH4 = false;
-			FileArchivatorBean paternFab;
+			FileArchivatorBean paternFab = null;
 			int count  =  0;
 			do
 			{
 				for(int i=0;i<fabList.size();i++)
 				{
+					boolean liIsOpen = false;
+
 					if(referenceId == -1 && fabList.get(i).getReferenceId() == -1)
 					{
-						%><li>
-							<a class="download-link inline" target="blank" href="<%="/"+fabList.get(i).getFilePath()+fabList.get(i).getFileName() %>">
-								<span class="media-body">
-									<%=fabList.get(i).getVirtualFileName() %>
-									<span class="note">[<%=Tools.formatFileSize(fabList.get(i).getFileSize())%>]  </span>
-								</span>
-								<span class="media-right">
-									<span class="badge" title="<%=fabList.get(i).getFileName().contains(".")?fabList.get(i).getFileName().substring(fabList.get(i).getFileName().lastIndexOf(".")+1):""%>"><%=fabList.get(i).getFileName().contains(".")?fabList.get(i).getFileName().substring(fabList.get(i).getFileName().lastIndexOf(".")+1):""%></span>
-								</span>
-							</a>
-							<%paternFab = FileArchivatorDB.getPatern(fabList.get(i).getFilePath()+fabList.get(i).getFileName());
+						liIsOpen = true;
+						%>
+						<tr>
+							<td class="td-file-archive-name"><a href="<%="/"+fabList.get(i).getFilePath()+fabList.get(i).getFileName()+"?v="+fabList.get(i).getDateInsert().getTime() %>" target="_blank"><%=fabList.get(i).getVirtualFileName() %></a></td>
+							<td class="td-file-archive-note"><%
+								String note = "";
+								String validityDates = getValidityDates(fabList.get(i), prop);
+								if(Tools.isNotEmpty(fabList.get(i).getNote())) {
+									note = "<span class=\"note\">"+fabList.get(i).getNote();
+									if (Tools.isNotEmpty(validityDates)) {
+										note += ", ";
+									}
+									note += "</span>";
+								}
+								if(Tools.isNotEmpty(validityDates)) {
+									note += "<span class=\"validity\">"+validityDates+"</span>";
+								}
+								out.print(note);
+							%></td>
+							<td class="td-file-archive-size lighter"><%=fabList.get(i).getFileName().contains(".")?fabList.get(i).getFileName().substring(fabList.get(i).getFileName().lastIndexOf(".")+1).toUpperCase():""%> <%=Tools.formatFileSize(fabList.get(i).getFileSize())%></td>
+							<td class="td-file-archive-link"><a class="icon download" href="<%="/"+fabList.get(i).getFilePath()+fabList.get(i).getFileName()+"?v="+fabList.get(i).getDateInsert().getTime() %>" target="_blank">Download</a></td>
+
+								<%paternFab = FileArchivatorDB.getPatern(fabList.get(i).getFilePath()+fabList.get(i).getFileName());
 							//System.out.println(fabList.get(i).getFilePath()+fabList.get(i).getFileName());
 							if(paternFab != null){ %>
-								<ul><li><a class="vzor-link inline" target="blank" href="<%="/"+paternFab.getFilePath()+paternFab.getFileName()%>"><iwcm:text key="components.file_archiv.pattern"/></a></li></ul>
-							<%
-							}
-							%>
+								<ul><li><a class="vzor-link inline" target="blank" href="<%="/"+paternFab.getFilePath()+paternFab.getFileName()%>">Vzor</a></li></ul>
+							<% paternFab = null;
+							}%>
 
 						<%
-						if(Tools.isNotEmpty(fabList.get(i).getNote())) {%>
-							<div class="info-box">(<%=SearchTools.htmlToPlain(fabList.get(i).getNote())%>)</div><%
-						}
 
 						if(FileArchivatorDB.getNumberOfReference(fabList, fabList.get(i).getId()) > 0)
 						{
@@ -139,63 +167,76 @@ try
 						{%><%}
 						fabList.remove(i);
 						canPrintH4 = true;
-						%></li><%
+						if (liIsOpen) {
+						liIsOpen=false;
+						%></tr><%
+						}
 						break;
 					}
 
 					if(referenceId > 0 && fabList.get(i).getReferenceId() == referenceId)
 					{
 						if(canPrintH4){%>
-						<li class="archive">
-							<div class="media-left"><h4><iwcm:text key="components.file_archiv.archiv"/></h4></div>
+						<tr class="archive"><td colspan="4">
+							<div class="media-left"><strong><iwcm:text key="components.file_archiv.archiv"/></strong></div>
 							<ul class="media-body">
 							<%canPrintH4 = false;
 							}
 
 							for(FileArchivatorBean fab : FileArchivatorDB.getReference(referenceId, pageParams.getValue("order", "reference"), pageParams.getBooleanValue("asc", true)))
 							{%>
-								<li><a class="download-link inline" target="blank" href="<%="/"+fab.getFilePath()+fab.getFileName() %>">
-
-									<%if(Tools.isEmpty(Tools.formatDate(fab.getValidFrom())) || Tools.isEmpty(Tools.formatDate(fab.getValidTo()))) {
-										%><span class="media-body"><%=fab.getVirtualFileName()%>
-											<span class="note">[<%=Tools.formatFileSize(fabList.get(i).getFileSize())%>]</span>
-										</span><%
-									}else{
-										%><span class="media-body"><iwcm:text key="components.file_archiv.valid_from_till" param1="<%=Tools.formatDate(fab.getValidFrom())%>" param2="<%=Tools.formatDate(fab.getValidTo())%>"/>
-									    	<span class="note">[<%=Tools.formatFileSize(fabList.get(i).getFileSize())%>]  </span>
-										</span><%
-									} %>
-										<span class="media-right">
-											<span class="badge" title="<%=fabList.get(i).getFileName().contains(".")?fabList.get(i).getFileName().substring(fabList.get(i).getFileName().lastIndexOf(".")+1):""%>"><%=fabList.get(i).getFileName().contains(".")?fabList.get(i).getFileName().substring(fabList.get(i).getFileName().lastIndexOf(".")+1):""%></span>
-										</span>
-									</a>
+								<li>
+                                    <a class="download-link inline" target="_blank" href="<%="/"+fab.getFilePath()+fab.getFileName() %>"><span class="media-body"><%=fab.getVirtualFileName()%></span></a>
+                                    <%
+                                    if(Tools.isNotEmpty(fab.getNote())) out.println("<span class=\"note\"> - "+fab.getNote()+", </span>");
+									String validityDates = getValidityDates(fab, prop);
+									if(Tools.isNotEmpty(validityDates)) {
+										out.println("<span class=\"validity\">"+validityDates+", </span>");
+									}%>
+                                    <span class="fileSize"><%=fab.getFileName().contains(".")?fab.getFileName().substring(fab.getFileName().lastIndexOf(".")+1).toUpperCase():""%> <%=Tools.formatFileSize(fab.getFileSize())%></span>
 								</li>
 								<%
 								if(FileArchivatorDB.getNumberOfReference(fabList, referenceId) == 1)
 								{
 									referenceId = -1;
-									%></ul></li><%
+									%></ul></li>
+									<%
 								}
 								FileArchivatorDB.removeById(fabList, fab.getId());
 							}
+						//fabList.remove(i);
+
+						//continue;
+
+					}
+					if (liIsOpen) {
+						%></td></tr><%
 					}
 				}
 				count++;
 
 				//out.print("count: "+count);
 			}while(maxCount*3 > count && fabList.size() > 0);
-		}
-		else
-		{
-			%><p class="u-font-size-s"><iwcm:text key="components.file_archiv.files_not_found"/></p><%
-		}
-		%>
-		</ul>
+		}%>
+
+		</tbody>
+	</table>
 	</div>
-	<%
+
+ <style type="text/css">
+a.icon.download {
+    background-image: url(/components/file_archiv/download.png);
 }
-catch(Exception ex)
-{
-	sk.iway.iwcm.Logger.error(ex);
+a.icon.plus {
+    background-image: url(/components/file_archiv/plus.png);
 }
- %>
+a.icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    text-indent: -9000px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+ </style>

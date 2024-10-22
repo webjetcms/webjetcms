@@ -1,21 +1,14 @@
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ page pageEncoding="utf-8"
 import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
-%><%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"
-%><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"
 %><%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
-%><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
+%><%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"
+%><%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"
 %><%
-Prop prop = Prop.getInstance(request);
-String brandSuffix = InitServlet.getBrandSuffix();
+    Prop prop = Prop.getInstance(request);
+    String brandSuffix = InitServlet.getBrandSuffix();
 %><!DOCTYPE html>
-<!--[if IE 8]> <html class="ie8 no-js"> <![endif]-->
-<!--[if IE 9]> <html class="ie9 no-js"> <![endif]-->
-<!--[if !IE]><!-->
 <html>
-<!--<![endif]-->
-<!-- BEGIN HEAD -->
 <head>
     <meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" >
     <title>WebJET CMS</title>
@@ -26,7 +19,6 @@ String brandSuffix = InitServlet.getBrandSuffix();
     <iwcm:combine type="css" set="adminStandardCss" />
     <iwcm:combine type="css" set="/admin/skins/webjet8/assets/admin/pages/css/login-soft.css" combine="false"/>
 
-    <!-- END THEME STYLES -->
     <link rel="shortcut icon" href="/admin/skins/webjet8/assets/global/img/wj/favicon-cms.ico"/>
 
     <iwcm:combine type="js" set="adminJqueryJs" />
@@ -79,6 +71,27 @@ String brandSuffix = InitServlet.getBrandSuffix();
                     </ul>
                 </div>
             </logic:present>
+            <logic:present name="cancelChangePasswordAction">
+                <div class="alert alert-success display -hide">
+                    <span>
+                        <iwcm:text key="logon.change_password.action_canceled"/>
+                    </span>
+                </div>
+            </logic:present>
+            <logic:present name="changePasswordActionFailed">
+                <div class="alert alert-danger display -hide">
+                    <span>
+                        <iwcm:text key="logon.password.invalid_parameters"/>
+                    </span>
+                </div>
+            </logic:present>
+            <c:if test="${param.act eq 'changePasswordActionSuccess'}">
+                <div class="alert alert-success display -hide">
+                    <span>
+                        <iwcm:text key="logon.password.change_successful"/>
+                    </span>
+                </div>
+            </c:if>
             <logic:present name="passResultEmail">
                 <div class="alert alert-danger">
                     <button class="close" data-close="alert"></button>
@@ -87,22 +100,19 @@ String brandSuffix = InitServlet.getBrandSuffix();
             </logic:present>
             <form:form method="post" name="logonForm" modelAttribute="userForm" action="/admin/logon/">
                 <div class="form-group">
-                    <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.name"/>:</label>
                     <div class="input-icon">
                         <i class="ti ti-user"></i>
-                        <form:input path="username" maxlength="40" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.login")%>'/>
+                        <form:input path="username" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.login")%>'/>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
                     <div class="input-icon">
                         <i class="ti ti-lock"></i>
-                        <form:password path="password" maxlength="32" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.password")%>'/>
+                        <form:password path="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.password")%>'/>
                     </div>
                     <div class="password-strength-info"></div>
                 </div>
                 <div class="form-group">
-                <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.language"/>:</label>
                 <form:select path="language" cssClass="lang select2 form-control" onchange="selectLanguage(this)">
                     <form:option value="sk"><iwcm:text key="logon.language.slovak"/></form:option>
                     <form:option value="en"><iwcm:text key="logon.language.english"/></form:option>
@@ -111,7 +121,6 @@ String brandSuffix = InitServlet.getBrandSuffix();
                 </form:select>
                 </div>
                 <div class="form-actions">
-                    <%--<form:button name="login" value="Submit">Submit</form:button>--%>
                     <button type="submit" name="login-submit" id="login-submit" class="btn blue pull-right"><iwcm:text key="button.login"/></button>
                     <button type="button" class="btn lost-password" onclick="$('#sendPassword').show('slow');"><i class="ti ti-lock-open"></i> <iwcm:text key="logon.mail.lost_password"/></button>
                 </div>
@@ -130,9 +139,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
                 <br/><p><iwcm:text key="logon.lost_password_message"/></p>
                 <form id="sendPasswd" name="f_passwd" method="get" action="">
                     <div class="form-group">
-                        <label class="control-label visible-ie8 visible-ie9">><iwcm:text key="logon.name"/>:</label>
                         <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
-                        <%--<input type="submit" value="<iwcm:text key="button.send"/>"  class="button" />--%>
                     </div>
                     <div class="form-actions text-right">
                         <button type="submit" id="register-submit-btn" class="btn blue">

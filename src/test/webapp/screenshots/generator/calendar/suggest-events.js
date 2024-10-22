@@ -44,5 +44,5 @@ Scenario('calendar suggest events screens', async ({I, DT, DTE, Document}) => {
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
 });

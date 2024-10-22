@@ -103,7 +103,7 @@ function wj9DeleteSubpage(I, DT, DTE, randomNumber) {
      I.say('Vymazavam druhu podstranku v sk strukture');
      I.jstreeClick(auto_folder_sk);
      I.waitForElement(locate('tbody>tr.odd').withText(auto_webpage2_sk));
-     I.click(locate('tbody>tr.odd').withText(auto_webpage2_sk).find('td.dt-select-td.cell-not-editable.sorting_1'));
+     I.click(locate('tbody>tr.odd').withText(auto_webpage2_sk).find('td.dt-select-td.cell-not-editable'));
      I.waitForElement(locate('tbody>tr.odd.selected').withText(auto_webpage2_sk));
      I.click(delete_webpage_button);
      DT.waitForLoader();
@@ -165,7 +165,7 @@ function wj9MoveSubpage(I, DT, DTE, randomNumber) {
      I.say('Presuvam webpage1 do podpriecinka sk-mir-subfolder1');
      I.jstreeClick(auto_folder_sk);
      I.waitForElement(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk));
-     I.click(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk).find('td.dt-select-td.cell-not-editable.sorting_1'));
+     I.click(locate('tbody>tr.even.is-default-page').withText(auto_webpage1_sk).find('td.dt-select-td.cell-not-editable'));
      I.waitForElement(locate('tbody>tr.even.is-default-page.selected').withText(auto_webpage1_sk));
      I.click(edit_webpage_button);
      I.waitForVisible('#datatableInit_modal');
@@ -252,7 +252,8 @@ function wj9DeleteMainFolder(I, DT, DTE, randomNumber) {
      I.dontSeeElement(locate('.jstree-anchor').withText(auto_folder_en));
 }
 
-Scenario('reset nastavenej domeny', ({ I }) => {
+Scenario('reset nastavenej domeny', ({ I, DT }) => {
+     DT.resetTable();
      I.logout();
  });
 

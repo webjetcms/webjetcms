@@ -12,19 +12,19 @@ import cn.bluejoe.elfinder.controller.executor.AbstractJsonCommandExecutor;
 import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 
-<span class="nc" id="L15">public class TreeCommandExecutor extends AbstractJsonCommandExecutor</span>
+<span class="fc" id="L15">public class TreeCommandExecutor extends AbstractJsonCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
 			throws Exception
 	{
-<span class="nc" id="L21">		String target = request.getParameter(&quot;target&quot;);</span>
+<span class="fc" id="L21">		String target = request.getParameter(&quot;target&quot;);</span>
 
-<span class="nc" id="L23">		Map&lt;String, FsItemEx&gt; files = new HashMap&lt;String, FsItemEx&gt;();</span>
-<span class="nc" id="L24">		FsItemEx fsi = super.findItem(fsService, target);</span>
-<span class="nc" id="L25">		super.addSubfolders(files, fsi);</span>
+<span class="fc" id="L23">		Map&lt;String, FsItemEx&gt; files = new HashMap&lt;String, FsItemEx&gt;();</span>
+<span class="fc" id="L24">		FsItemEx fsi = super.findItem(fsService, target);</span>
+<span class="fc" id="L25">		super.addSubfolders(files, fsi);</span>
 
-<span class="nc" id="L27">		json.put(&quot;tree&quot;, files2JsonArray(request, files.values()));</span>
-<span class="nc" id="L28">	}</span>
+<span class="fc" id="L27">		json.put(&quot;tree&quot;, files2JsonArray(request, files.values()));</span>
+<span class="fc" id="L28">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

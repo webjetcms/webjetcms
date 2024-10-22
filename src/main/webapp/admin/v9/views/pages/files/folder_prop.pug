@@ -1,0 +1,126 @@
+extends ../../partials/layout
+
+block content
+    +breadcrumb(
+        'folder-prop',
+        [
+            [ '#folder-prop', '[[\#{elfinder.folder_prop.title}]]', true ]
+        ]
+    )
+
+    script.
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const urlDirPath = urlParams.get('dirPath');
+        const urlFileIndexerPerm = urlParams.get('fileIndexerPerm');
+
+        if(urlDirPath == undefined || urlDirPath == null || urlDirPath.length < 1) {
+            window.location.replace("/404.jsp");
+        } else {
+            let folderPropertiesTable;
+            let isIndexing = false;
+
+            window.domReady.add(function () {
+                let url = '/admin/rest/elfinder/folder-properties';
+                var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.elfinder.FolderPropertiesEntity')})];
+                let initIndexTab = false;
+
+                var tabs = [
+                    { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
+                    { id: 'index', title: '[[\#{elfinder.folder_prop.index.tab}]]' },
+                    { id: 'usage', title: '[[\#{elfinder.folder_prop.usage.tab}]]' }
+                ];
+
+                folderPropertiesTable = WJ.DataTable({
+                    url: WJ.urlAddParam(url, "dir", urlDirPath),
+                    columns: columns,
+                    tabs: tabs,
+                    serverSide: true,
+                    fetchOnEdit: true,
+                    fetchOnCreate: true
+                });
+
+                folderPropertiesTable.EDITOR.on( 'open', function ( e, data, action ) {
+                    $("div.DTE_Header_Content").find("h5.modal-title").text( folderPropertiesTable.EDITOR.currentJson["dirUrl"] );
+
+                    if(urlFileIndexerPerm == undefined || urlFileIndexerPerm == null) urlFileIndexerPerm = true;
+
+                    //show/hide tab index
+                    if( urlDirPath.startsWith("/files") && (urlFileIndexerPerm == true || urlFileIndexerPerm == "true")) {
+                        $("#pills-dt-datatableInit-index-tab").on("click", function(e) {
+                            addIndexMenu();
+                            $("div.DTE_Body_Content").addClass('changed');
+
+                            $("#pills-dt-datatableInit-basic-tab").on("click", function(e) {
+                                $("div.DTE_Body_Content").removeClass('changed');
+                            });
+
+                            $("#pills-dt-datatableInit-usage-tab").on("click", function(e) {
+                                $("div.DTE_Body_Content").removeClass('changed');
+                            });
+                        });
+                    } else {
+                        $("#pills-dt-datatableInit-index-tab").css("display", "none");
+                    }
+                });
+
+                function addIndexMenu() {
+                    if(initIndexTab == false) {
+                        let panelBody = $("#pills-dt-datatableInit-index > div.panel-body");
+                        panelBody.append("<div id='indexMenu'> <p> [[\#{elfinder.folder_prop.start_indexing.txt}]] </p> <button id='start-index-button' class='btn btn-primary' onClick='startIndexing()'> [[\#{elfinder.folder_prop.start_indexing.btn}]] </button> </div>");
+
+                        //Add loader
+                        let loaderText = WJ.translate("elfinder.folder_prop.start_indexing.in_progress.js");
+                        loaderEl = $(`
+                            <div id="webjetAnimatedLoader">
+                                <div class="lds-dual-ring"></div>
+                                <p class="loaderText">${loaderText}</p>
+                            </div>`
+                        );
+                        loaderEl.insertAfter(panelBody);
+                        WJ.hideLoader();
+
+                        initIndexTab = true;
+                    }
+                }
+            });
+
+            function startIndexing() {
+                $("div#indexMenu").css("display", "none");
+                WJ.showLoader();
+                if(isIndexing == false) {
+                    isIndexing = true;
+
+                    //Add notification about running indexing
+                    $("#pills-dt-datatableInit-index > div.panel-body").append("<strong> [[\#{findexer.indexing}]] </strong> <hr>");
+
+                    $.ajax({
+                        url: '/admin/rest/elfinder/folder-properties/fulltext-index?dir=' + urlDirPath,
+                        success: function(data) {
+                            WJ.hideLoader();
+                            $("#pills-dt-datatableInit-index > div.panel-body").html("<div class='log'>"+data+"</div>");
+                        }
+                    });
+                }
+            }
+            function openDocDetails(docId) {
+                if(docId != undefined && docId != null && docId > 0) {
+                    window.open("/admin/v9/webpages/web-pages-list?docid=" + docId);
+                }
+            }
+            function openFile(path) {
+                if(path != undefined && path != null && path.length > 0) {
+                    window.open(path);
+                }
+            }
+        }
+
+    style.
+        .changed { text-align: center; padding: 10px; }
+        .changed::before { background-color: transparent !important; }
+        div.log {
+            text-align: left;
+            font-size: 14px;
+        }
+
+    <table id="folderPropertiesTable" class="datatableInit table"></table>

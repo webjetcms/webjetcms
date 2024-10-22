@@ -67,9 +67,15 @@
 				</td>
 			</tr>
 			<tr>
-				<td><label for="destGroupId1"><b><iwcm:text key="admin.clone.keepMirroring"/></b></label></td>
+				<td><label><b><iwcm:text key="admin.clone.keepMirroring"/></b></label></td>
 				<td>
 					<input type="checkbox" name="keepMirroring" value="true">
+				</td>
+			</tr>
+			<tr>
+				<td><label><b><iwcm:text key="admin.clone.keepVirtualPath"/></b></label></td>
+				<td>
+					<input type="checkbox" name="keepVirtualPath" value="true">
 				</td>
 			</tr>
 		</table>

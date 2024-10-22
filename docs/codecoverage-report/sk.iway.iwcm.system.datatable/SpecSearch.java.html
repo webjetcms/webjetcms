@@ -11,7 +11,6 @@ import javax.persistence.criteria.Root;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.admin.layout.LayoutBean;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.users.UserDetails;
@@ -19,7 +18,7 @@ import sk.iway.iwcm.users.UserDetails;
 /**
  * Pomocne metody pre specialne/zlozite vyhladavanie v repozitaroch
  */
-<span class="fc" id="L22">public class SpecSearch&lt;T&gt; {</span>
+<span class="fc" id="L21">public class SpecSearch&lt;T&gt; {</span>
 
     /**
      * Specialne vyhladavanie v password_protected stlpci, kde sa hlada zadany vyraz cez LIKE vo forme ID ID,% %,ID,% %,ID
@@ -31,8 +30,8 @@ import sk.iway.iwcm.users.UserDetails;
      * @param builder
      */
     public void addSpecSearchPasswordProtected(String userGroupName, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L34">		addSpecSearchBySelect(&quot;SELECT DISTINCT user_group_id FROM user_groups WHERE user_group_name&quot;, userGroupName, jpaProperty, true, predicates, root, builder);</span>
-<span class="fc" id="L35">	}</span>
+<span class="fc" id="L33">		addSpecSearchBySelect(&quot;SELECT DISTINCT user_group_id FROM user_groups WHERE user_group_name&quot;, userGroupName, jpaProperty, true, predicates, root, builder);</span>
+<span class="fc" id="L34">	}</span>
 
     /**
      * Specialne vyhladavanie v password_protected stlpci, kde sa hlada zadany vyraz cez LIKE vo forme ID ID,% %,ID,% %,ID
@@ -44,14 +43,14 @@ import sk.iway.iwcm.users.UserDetails;
      * @param builder
      */
     public void addSpecSearchPasswordProtected(Integer userGroupId, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L47">        List&lt;Predicate&gt; idsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L46">        List&lt;Predicate&gt; idsList = new ArrayList&lt;&gt;();</span>
         //hladame vsetky varianty ID ID, ,ID, ,ID
-<span class="fc" id="L49">        idsList.add(builder.like(root.get(jpaProperty), String.valueOf(userGroupId)));</span>
-<span class="fc" id="L50">        idsList.add(builder.like(root.get(jpaProperty), String.valueOf(userGroupId)+&quot;,%&quot;));</span>
-<span class="fc" id="L51">        idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+userGroupId+&quot;,%&quot;));</span>
-<span class="fc" id="L52">        idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+userGroupId));</span>
-<span class="fc" id="L53">        predicates.add(builder.or(idsList.toArray(new Predicate[idsList.size()])));</span>
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L48">        idsList.add(builder.like(root.get(jpaProperty), String.valueOf(userGroupId)));</span>
+<span class="fc" id="L49">        idsList.add(builder.like(root.get(jpaProperty), String.valueOf(userGroupId)+&quot;,%&quot;));</span>
+<span class="fc" id="L50">        idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+userGroupId+&quot;,%&quot;));</span>
+<span class="fc" id="L51">        idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+userGroupId));</span>
+<span class="fc" id="L52">        predicates.add(builder.or(idsList.toArray(new Predicate[idsList.size()])));</span>
+<span class="fc" id="L53">    }</span>
 
 	/**
      * Specialne vyhladavanie v perex_group stlpci, kde sa hlada zadany vyraz cez LIKE vo forme ID ID,% %,ID,% %,ID
@@ -63,15 +62,9 @@ import sk.iway.iwcm.users.UserDetails;
      * @param builder
      */
 	public void addSpecSearchPerexGroup(String perexGroupName, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
-		String idsSelectSql;
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">		if (LayoutBean.isPerexGroupsRenderAsSelect()) {</span>
-			//SQL is empty to use searchValue directly as number
-<span class="nc" id="L69">			idsSelectSql = null;</span>
-		} else {
-<span class="fc" id="L71">			idsSelectSql = &quot;SELECT DISTINCT perex_group_id FROM perex_groups WHERE perex_group_name&quot;;</span>
-		}
-<span class="fc" id="L73">		addSpecSearchBySelect(idsSelectSql, perexGroupName, jpaProperty, false, predicates, root, builder);</span>
-<span class="fc" id="L74">	}</span>
+<span class="fc" id="L65">		String idsSelectSql = &quot;SELECT DISTINCT perex_group_id FROM perex_groups WHERE perex_group_name&quot;;</span>
+<span class="fc" id="L66">		addSpecSearchBySelect(idsSelectSql, perexGroupName, jpaProperty, false, predicates, root, builder);</span>
+<span class="fc" id="L67">	}</span>
 
 	/**
 	 * Specialne vyhladavanie kde sa prevedie searchText na zoznam ID podla zadaneho idsSelectSql
@@ -87,53 +80,53 @@ import sk.iway.iwcm.users.UserDetails;
 	 */
     private void addSpecSearchBySelect(String idsSelectSql, String searchText, String jpaProperty, boolean equalsSingleResult, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
 
-<span class="fc" id="L90">		String valueClean = DatatableRestControllerV2.getCleanValue(searchText);</span>
+<span class="fc" id="L83">		String valueClean = DatatableRestControllerV2.getCleanValue(searchText);</span>
 
-<span class="fc" id="L92">		String operator = &quot;LIKE&quot;;</span>
-<span class="fc" id="L93">		String prepend = &quot;%&quot;;</span>
-<span class="fc" id="L94">		String append = &quot;%&quot;;</span>
+<span class="fc" id="L85">		String operator = &quot;LIKE&quot;;</span>
+<span class="fc" id="L86">		String prepend = &quot;%&quot;;</span>
+<span class="fc" id="L87">		String append = &quot;%&quot;;</span>
 
-<span class="fc" id="L96">		boolean isEqual = false;</span>
+<span class="fc" id="L89">		boolean isEqual = false;</span>
 
-<span class="pc bpc" id="L98" title="1 of 4 branches missed.">		if (searchText.startsWith(&quot;^&quot;) &amp;&amp; searchText.endsWith(&quot;$&quot;)) {</span>
-<span class="fc" id="L99">			operator = &quot;=&quot;;</span>
-<span class="fc" id="L100">			prepend = &quot;&quot;;</span>
-<span class="fc" id="L101">			append = &quot;&quot;;</span>
-<span class="fc" id="L102">			isEqual = true;</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		} else if (searchText.startsWith(&quot;^&quot;)) {</span>
-<span class="nc" id="L104">			prepend = &quot;&quot;;</span>
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">		} else if (searchText.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L106">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">		if (searchText.startsWith(&quot;^&quot;) &amp;&amp; searchText.endsWith(&quot;$&quot;)) {</span>
+<span class="fc" id="L92">			operator = &quot;=&quot;;</span>
+<span class="fc" id="L93">			prepend = &quot;&quot;;</span>
+<span class="fc" id="L94">			append = &quot;&quot;;</span>
+<span class="fc" id="L95">			isEqual = true;</span>
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">		} else if (searchText.startsWith(&quot;^&quot;)) {</span>
+<span class="nc" id="L97">			prepend = &quot;&quot;;</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">		} else if (searchText.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L99">			append = &quot;&quot;;</span>
 		}
 
 		List&lt;Number&gt; searchIds;
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(idsSelectSql)) {</span>
-<span class="fc" id="L111">			searchIds = (new SimpleQuery()).forListNumber(idsSelectSql+&quot; &quot;+operator+&quot; ?&quot;, prepend+valueClean+append);</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(idsSelectSql)) {</span>
+<span class="fc" id="L104">			searchIds = (new SimpleQuery()).forListNumber(idsSelectSql+&quot; &quot;+operator+&quot; ?&quot;, prepend+valueClean+append);</span>
 		} else {
 			//if SQL is empty use searchValue directly as number
-<span class="nc" id="L114">			searchIds = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L115">			searchIds.add(Tools.getIntValue(searchText, -1));</span>
+<span class="nc" id="L107">			searchIds = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L108">			searchIds.add(Tools.getIntValue(searchText, -1));</span>
 		}
-<span class="pc bpc" id="L117" title="1 of 2 branches missed.">		if (searchIds.isEmpty()==false) {</span>
-<span class="fc" id="L118">            List&lt;Predicate&gt; idsList = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L119" title="All 2 branches covered.">            for (Number id : searchIds) {</span>
-<span class="pc bpc" id="L120" title="1 of 4 branches missed.">				if (isEqual &amp;&amp; equalsSingleResult) {</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">		if (searchIds.isEmpty()==false) {</span>
+<span class="fc" id="L111">            List&lt;Predicate&gt; idsList = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            for (Number id : searchIds) {</span>
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">				if (isEqual &amp;&amp; equalsSingleResult) {</span>
 					//we are searching to match user with only this exact group (just single ID)
-<span class="fc" id="L122">					idsList.add(builder.equal(root.get(jpaProperty), String.valueOf(id)));</span>
+<span class="fc" id="L115">					idsList.add(builder.equal(root.get(jpaProperty), String.valueOf(id)));</span>
 				} else {
 					//hladame vsetky varianty ID ID, ,ID, ,ID
-<span class="fc" id="L125">					idsList.add(builder.like(root.get(jpaProperty), String.valueOf(id)));</span>
-<span class="fc" id="L126">					idsList.add(builder.like(root.get(jpaProperty), String.valueOf(id)+&quot;,%&quot;));</span>
-<span class="fc" id="L127">					idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+id+&quot;,%&quot;));</span>
-<span class="fc" id="L128">					idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+id));</span>
+<span class="fc" id="L118">					idsList.add(builder.like(root.get(jpaProperty), String.valueOf(id)));</span>
+<span class="fc" id="L119">					idsList.add(builder.like(root.get(jpaProperty), String.valueOf(id)+&quot;,%&quot;));</span>
+<span class="fc" id="L120">					idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+id+&quot;,%&quot;));</span>
+<span class="fc" id="L121">					idsList.add(builder.like(root.get(jpaProperty), &quot;%,&quot;+id));</span>
 				}
-<span class="fc" id="L130">            }</span>
-<span class="fc" id="L131">            predicates.add(builder.or(idsList.toArray(new Predicate[idsList.size()])));</span>
-<span class="fc" id="L132">        }</span>
+<span class="fc" id="L123">            }</span>
+<span class="fc" id="L124">            predicates.add(builder.or(idsList.toArray(new Predicate[idsList.size()])));</span>
+<span class="fc" id="L125">        }</span>
 		else {
-<span class="nc" id="L134">            predicates.add(builder.like(root.get(jpaProperty), &quot;xxxxxxxx-notfound&quot;));</span>
+<span class="nc" id="L127">            predicates.add(builder.like(root.get(jpaProperty), &quot;xxxxxxxx-notfound&quot;));</span>
         }
-<span class="fc" id="L136">	}</span>
+<span class="fc" id="L129">	}</span>
 
     /**
 	 * Specialne vyhladavanie podla zadaneho mena/priezviska s konverziou na hladanie podla ID pouzivatela (v DB tabulke je zvycajne ulozene ID pouzivatela, nie jeho cele meno).
@@ -146,26 +139,26 @@ import sk.iway.iwcm.users.UserDetails;
 	 */
 	public void addSpecSearchUserFullName(String paramValue, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
 
-<span class="fc" id="L149">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
+<span class="fc" id="L142">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
 
-<span class="fc" id="L151">		String operator = &quot;LIKE&quot;;</span>
-<span class="fc" id="L152">		String prepend = &quot;%&quot;;</span>
-<span class="fc" id="L153">		String append = &quot;%&quot;;</span>
+<span class="fc" id="L144">		String operator = &quot;LIKE&quot;;</span>
+<span class="fc" id="L145">		String prepend = &quot;%&quot;;</span>
+<span class="fc" id="L146">		String append = &quot;%&quot;;</span>
 
-<span class="pc bpc" id="L155" title="3 of 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L156">			operator = &quot;=&quot;;</span>
-<span class="nc" id="L157">			prepend = &quot;&quot;;</span>
-<span class="nc" id="L158">			append = &quot;&quot;;</span>
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
-<span class="nc" id="L160">			prepend = &quot;&quot;;</span>
-<span class="pc bpc" id="L161" title="1 of 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L162">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L148" title="3 of 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L149">			operator = &quot;=&quot;;</span>
+<span class="nc" id="L150">			prepend = &quot;&quot;;</span>
+<span class="nc" id="L151">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
+<span class="nc" id="L153">			prepend = &quot;&quot;;</span>
+<span class="pc bpc" id="L154" title="1 of 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L155">			append = &quot;&quot;;</span>
 		}
 
-<span class="fc" id="L165">		List&lt;Integer&gt; userIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) &quot;+operator+&quot; ?&quot;, prepend+valueClean+append);</span>
-<span class="pc bpc" id="L166" title="1 of 2 branches missed.">		if (userIds.size()&gt;0) predicates.add(root.get(jpaProperty).in(userIds));</span>
-<span class="nc" id="L167">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
-<span class="fc" id="L168">	}</span>
+<span class="fc" id="L158">		List&lt;Integer&gt; userIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT user_id FROM users WHERE CONCAT(CONCAT(first_name, ' '), last_name) &quot;+operator+&quot; ? OR email &quot;+operator+&quot; ?&quot;, prepend+valueClean+append, prepend+valueClean+append);</span>
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">		if (userIds.size()&gt;0) predicates.add(root.get(jpaProperty).in(userIds));</span>
+<span class="nc" id="L160">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
+<span class="fc" id="L161">	}</span>
 
     /**
 	 * Specialne vyhladavanie podla stavovej ikony
@@ -176,33 +169,33 @@ import sk.iway.iwcm.users.UserDetails;
 	 */
 	public void addSpecSearchStatusIcons(String statusSearch, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
 		//vyhladavanie na zaklade stavu
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(statusSearch)) {</span>
-<span class="fc" id="L180">			int columnIndex = statusSearch.indexOf(&quot;:&quot;);</span>
-<span class="fc bfc" id="L181" title="All 2 branches covered.">			if (columnIndex &gt; 0) {</span>
-<span class="fc" id="L182">				String column = statusSearch.substring(0, columnIndex);</span>
-<span class="fc" id="L183">				String value = statusSearch.substring(columnIndex+1);</span>
+<span class="pc bpc" id="L172" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(statusSearch)) {</span>
+<span class="fc" id="L173">			int columnIndex = statusSearch.indexOf(&quot;:&quot;);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">			if (columnIndex &gt; 0) {</span>
+<span class="fc" id="L175">				String column = statusSearch.substring(0, columnIndex);</span>
+<span class="fc" id="L176">				String value = statusSearch.substring(columnIndex+1);</span>
 
-<span class="fc bfc" id="L185" title="All 2 branches covered.">				if (&quot;notEmpty&quot;.equals(value)) {</span>
-<span class="fc" id="L186">					List&lt;Predicate&gt; notEmptyList = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L187">					notEmptyList.add(builder.isNotNull(root.get(column)));</span>
-<span class="fc" id="L188">					notEmptyList.add(builder.notEqual(root.get(column), &quot;&quot;));</span>
+<span class="fc bfc" id="L178" title="All 2 branches covered.">				if (&quot;notEmpty&quot;.equals(value)) {</span>
+<span class="fc" id="L179">					List&lt;Predicate&gt; notEmptyList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L180">					notEmptyList.add(builder.isNotNull(root.get(column)));</span>
+<span class="fc" id="L181">					notEmptyList.add(builder.notEqual(root.get(column), &quot;&quot;));</span>
 					//and ( NOT null AND !='')
-<span class="fc" id="L190">					predicates.add(builder.and(notEmptyList.toArray(new Predicate[notEmptyList.size()])));</span>
-<span class="pc bpc" id="L191" title="1 of 2 branches missed.">				} else if (&quot;empty&quot;.equals(value)) {</span>
-<span class="nc" id="L192">					List&lt;Predicate&gt; emptyList = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L193">					emptyList.add(builder.isNull(root.get(column)));</span>
-<span class="nc" id="L194">					emptyList.add(builder.equal(root.get(column), &quot;&quot;));</span>
+<span class="fc" id="L183">					predicates.add(builder.and(notEmptyList.toArray(new Predicate[notEmptyList.size()])));</span>
+<span class="pc bpc" id="L184" title="1 of 2 branches missed.">				} else if (&quot;empty&quot;.equals(value)) {</span>
+<span class="nc" id="L185">					List&lt;Predicate&gt; emptyList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L186">					emptyList.add(builder.isNull(root.get(column)));</span>
+<span class="nc" id="L187">					emptyList.add(builder.equal(root.get(column), &quot;&quot;));</span>
 					//and (NULL OR '')
-<span class="nc" id="L196">					predicates.add(builder.or(emptyList.toArray(new Predicate[emptyList.size()])));</span>
-<span class="pc bfc" id="L197" title="All 2 branches covered.">				} else if (value.contains(&quot;%&quot;)) {</span>
-<span class="pc bpc" id="L198" title="1 of 2 branches missed.">					if (value.startsWith(&quot;!&quot;)) predicates.add(builder.notLike(root.get(column), value.substring(1)));</span>
-<span class="fc" id="L199">					else predicates.add(builder.like(root.get(column), value));</span>
+<span class="nc" id="L189">					predicates.add(builder.or(emptyList.toArray(new Predicate[emptyList.size()])));</span>
+<span class="pc bfc" id="L190" title="All 2 branches covered.">				} else if (value.contains(&quot;%&quot;)) {</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">					if (value.startsWith(&quot;!&quot;)) predicates.add(builder.notLike(root.get(column), value.substring(1)));</span>
+<span class="fc" id="L192">					else predicates.add(builder.like(root.get(column), value));</span>
 				} else {
-<span class="fc" id="L201">					predicates.add(builder.equal(root.get(column), &quot;true&quot;.equals(value)));</span>
+<span class="fc" id="L194">					predicates.add(builder.equal(root.get(column), &quot;true&quot;.equals(value)));</span>
 				}
 			}
 		}
-<span class="fc" id="L205">	}</span>
+<span class="fc" id="L198">	}</span>
 
 	/**
 	 * Search by ID in foreign table in column with name foreignColumnName by paramValue
@@ -217,32 +210,32 @@ import sk.iway.iwcm.users.UserDetails;
 	 * @param builder
 	 */
 	public void addSpecSearchIdInForeignTable(String paramValue, String foreignTableName, String foreignTableId, String foreignColumnName, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
-<span class="nc" id="L220">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
+<span class="nc" id="L213">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
 
-<span class="nc" id="L222">		String operator = &quot;LIKE&quot;;</span>
-<span class="nc" id="L223">		String prepend = &quot;%&quot;;</span>
-<span class="nc" id="L224">		String append = &quot;%&quot;;</span>
+<span class="nc" id="L215">		String operator = &quot;LIKE&quot;;</span>
+<span class="nc" id="L216">		String prepend = &quot;%&quot;;</span>
+<span class="nc" id="L217">		String append = &quot;%&quot;;</span>
 
-<span class="nc bnc" id="L226" title="All 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L227">			operator = &quot;=&quot;;</span>
-<span class="nc" id="L228">			prepend = &quot;&quot;;</span>
-<span class="nc" id="L229">			append = &quot;&quot;;</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
-<span class="nc" id="L231">			prepend = &quot;&quot;;</span>
-<span class="nc bnc" id="L232" title="All 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L233">			append = &quot;&quot;;</span>
+<span class="nc bnc" id="L219" title="All 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L220">			operator = &quot;=&quot;;</span>
+<span class="nc" id="L221">			prepend = &quot;&quot;;</span>
+<span class="nc" id="L222">			append = &quot;&quot;;</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
+<span class="nc" id="L224">			prepend = &quot;&quot;;</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L226">			append = &quot;&quot;;</span>
 		}
 
-<span class="nc" id="L236">		List&lt;Integer&gt; ids = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT &quot;+foreignTableId+&quot; FROM &quot;+foreignTableName+&quot; WHERE &quot;+foreignColumnName+&quot; &quot;+operator+&quot; ?&quot;, prepend+valueClean+append);</span>
-<span class="nc bnc" id="L237" title="All 2 branches missed.">		if (ids.size()&gt;0) predicates.add(root.get(jpaProperty).in(ids));</span>
-<span class="nc" id="L238">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
-<span class="nc" id="L239">	}</span>
+<span class="nc" id="L229">		List&lt;Integer&gt; ids = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT &quot;+foreignTableId+&quot; FROM &quot;+foreignTableName+&quot; WHERE &quot;+foreignColumnName+&quot; &quot;+operator+&quot; ?&quot;, prepend+valueClean+append);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">		if (ids.size()&gt;0) predicates.add(root.get(jpaProperty).in(ids));</span>
+<span class="nc" id="L231">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
+<span class="nc" id="L232">	}</span>
 
 	public void addSpecSearchIdInForeignTableInteger(int paramValue, String foreignTableName, String foreignTableId, String foreignColumnName, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L242">		List&lt;Integer&gt; ids = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT &quot;+foreignTableId+&quot; FROM &quot;+foreignTableName+&quot; WHERE &quot;+foreignColumnName+&quot; = ?&quot;, paramValue);</span>
-<span class="pc bpc" id="L243" title="1 of 2 branches missed.">		if (ids.size()&gt;0) predicates.add(root.get(jpaProperty).in(ids));</span>
-<span class="nc" id="L244">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
-<span class="fc" id="L245">	}</span>
+<span class="fc" id="L235">		List&lt;Integer&gt; ids = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT &quot;+foreignTableId+&quot; FROM &quot;+foreignTableName+&quot; WHERE &quot;+foreignColumnName+&quot; = ?&quot;, paramValue);</span>
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">		if (ids.size()&gt;0) predicates.add(root.get(jpaProperty).in(ids));</span>
+<span class="nc" id="L237">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
+<span class="fc" id="L238">	}</span>
 
 	/**
 	 * Search by DocDetails.fullPath value, simulated by concating file_name/title in table documents
@@ -254,31 +247,31 @@ import sk.iway.iwcm.users.UserDetails;
 	 */
 	public void addSpecSearchDocFullPath(String paramValue, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
 
-<span class="fc" id="L257">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
+<span class="fc" id="L250">		String valueClean = DatatableRestControllerV2.getCleanValue(paramValue);</span>
 
-<span class="fc" id="L259">		String operator = &quot;LIKE&quot;;</span>
-<span class="fc" id="L260">		String prepend = &quot;%&quot;;</span>
-<span class="fc" id="L261">		String append = &quot;%&quot;;</span>
+<span class="fc" id="L252">		String operator = &quot;LIKE&quot;;</span>
+<span class="fc" id="L253">		String prepend = &quot;%&quot;;</span>
+<span class="fc" id="L254">		String append = &quot;%&quot;;</span>
 
-<span class="pc bpc" id="L263" title="3 of 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L264">			operator = &quot;=&quot;;</span>
-<span class="nc" id="L265">			prepend = &quot;&quot;;</span>
-<span class="nc" id="L266">			append = &quot;&quot;;</span>
-<span class="pc bpc" id="L267" title="1 of 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
-<span class="nc" id="L268">			prepend = &quot;&quot;;</span>
-<span class="pc bpc" id="L269" title="1 of 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
-<span class="nc" id="L270">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L256" title="3 of 4 branches missed.">		if (paramValue.startsWith(&quot;^&quot;) &amp;&amp; paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L257">			operator = &quot;=&quot;;</span>
+<span class="nc" id="L258">			prepend = &quot;&quot;;</span>
+<span class="nc" id="L259">			append = &quot;&quot;;</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">		} else if (paramValue.startsWith(&quot;^&quot;)) {</span>
+<span class="nc" id="L261">			prepend = &quot;&quot;;</span>
+<span class="pc bpc" id="L262" title="1 of 2 branches missed.">		} else if (paramValue.endsWith(&quot;$&quot;)) {</span>
+<span class="nc" id="L263">			append = &quot;&quot;;</span>
 		}
 
-<span class="fc" id="L273">		List&lt;Integer&gt; docIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT doc_id FROM documents WHERE &quot;+DB.fixAiCiCol(&quot;CONCAT(CONCAT(file_name, '/'), title)&quot;)+&quot; &quot;+operator+&quot; ?&quot;, prepend+DB.fixAiCiValue(valueClean)+append);</span>
+<span class="fc" id="L266">		List&lt;Integer&gt; docIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT doc_id FROM documents WHERE &quot;+DB.fixAiCiCol(&quot;CONCAT(CONCAT(file_name, '/'), title)&quot;)+&quot; &quot;+operator+&quot; ?&quot;, prepend+DB.fixAiCiValue(valueClean)+append);</span>
 
 		//if it's number add it as direct docid
-<span class="fc" id="L276">		int paramDocId = Tools.getIntValue(paramValue, -1);</span>
-<span class="fc bfc" id="L277" title="All 2 branches covered.">		if (paramDocId&gt;0) docIds.add(paramDocId);</span>
+<span class="fc" id="L269">		int paramDocId = Tools.getIntValue(paramValue, -1);</span>
+<span class="fc bfc" id="L270" title="All 2 branches covered.">		if (paramDocId&gt;0) docIds.add(paramDocId);</span>
 
-<span class="pc bpc" id="L279" title="1 of 2 branches missed.">		if (docIds.size()&gt;0) predicates.add(root.get(jpaProperty).in(docIds));</span>
-<span class="nc" id="L280">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
-<span class="fc" id="L281">	}</span>
+<span class="pc bpc" id="L272" title="1 of 2 branches missed.">		if (docIds.size()&gt;0) predicates.add(root.get(jpaProperty).in(docIds));</span>
+<span class="nc" id="L273">		else predicates.add(builder.equal(root.get(jpaProperty), Integer.MAX_VALUE));</span>
+<span class="fc" id="L274">	}</span>
 
 	/**
 	 * Search by allowed user editable pages/groups
@@ -289,29 +282,29 @@ import sk.iway.iwcm.users.UserDetails;
 	 * @param builder
 	 */
 	public void addSpecSearchByUserEditable(UserDetails user, String jpaProperty, List&lt;Predicate&gt; predicates, Root&lt;T&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L292">		List&lt;Integer&gt; docIdsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L285">		List&lt;Integer&gt; docIdsList = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L294" title="All 2 branches covered.">		if (Tools.isNotEmpty(user.getEditablePages())) {</span>
-<span class="fc" id="L295">            int[] docIds = Tools.getTokensInt(user.getEditablePages(), &quot;,&quot;);</span>
-<span class="pc bpc" id="L296" title="2 of 4 branches missed.">            if (docIds != null &amp;&amp; docIds.length&gt;0) {</span>
-<span class="fc" id="L297">                docIdsList.addAll(Arrays.stream(docIds).boxed().collect(Collectors.toList()));</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">		if (Tools.isNotEmpty(user.getEditablePages())) {</span>
+<span class="fc" id="L288">            int[] docIds = Tools.getTokensInt(user.getEditablePages(), &quot;,&quot;);</span>
+<span class="pc bpc" id="L289" title="2 of 4 branches missed.">            if (docIds != null &amp;&amp; docIds.length&gt;0) {</span>
+<span class="fc" id="L290">                docIdsList.addAll(Arrays.stream(docIds).boxed().collect(Collectors.toList()));</span>
             }
         }
-<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
-<span class="fc" id="L301">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L302">            int[] expandedGroupIds = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
-<span class="fc" id="L303">			String groupIdsJoined = Arrays.stream(expandedGroupIds)</span>
-<span class="fc" id="L304">			.mapToObj(String::valueOf)</span>
-<span class="fc" id="L305">			.collect(Collectors.joining(&quot;,&quot;));</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">        if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
+<span class="fc" id="L294">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L295">            int[] expandedGroupIds = groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(), &quot;,&quot;), true);</span>
+<span class="fc" id="L296">			String groupIdsJoined = Arrays.stream(expandedGroupIds)</span>
+<span class="fc" id="L297">			.mapToObj(String::valueOf)</span>
+<span class="fc" id="L298">			.collect(Collectors.joining(&quot;,&quot;));</span>
 
 			//Fix, if groupIdsJoined is empty (&quot;=&quot;) sql is invalid
-<span class="fc bfc" id="L308" title="All 2 branches covered.">			if(!groupIdsJoined.isEmpty()) {</span>
-<span class="fc" id="L309">				List&lt;Integer&gt; docIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT doc_id FROM documents WHERE group_id IN (&quot;+groupIdsJoined+&quot;)&quot;);</span>
-<span class="fc" id="L310">				docIdsList.addAll(docIds);</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">			if(!groupIdsJoined.isEmpty()) {</span>
+<span class="fc" id="L302">				List&lt;Integer&gt; docIds = (new SimpleQuery()).forListInteger(&quot;SELECT DISTINCT doc_id FROM documents WHERE group_id IN (&quot;+groupIdsJoined+&quot;)&quot;);</span>
+<span class="fc" id="L303">				docIdsList.addAll(docIds);</span>
 			}
         }
 
-<span class="fc bfc" id="L314" title="All 2 branches covered.">		if (docIdsList.isEmpty()==false) predicates.add(root.get(jpaProperty).in(docIdsList));</span>
-<span class="fc" id="L315">	}</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">		if (docIdsList.isEmpty()==false) predicates.add(root.get(jpaProperty).in(docIdsList));</span>
+<span class="fc" id="L308">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

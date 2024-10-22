@@ -177,172 +177,181 @@ public class CronTask {
 	private boolean audit = true;
 <span class="fc" id="L178">	private boolean businessDays = false;</span>
 
-<span class="fc" id="L180">	@DataTableColumn(inputType = DataTableColumnType.SELECT, title = &quot;[[#{admin.crontab.cluster_node}]]&quot;)</span>
+<span class="fc" id="L180">	@DataTableColumn(inputType = DataTableColumnType.TEXT, title = &quot;[[#{admin.crontab.cluster_node}]]&quot;, editor = {</span>
+		@DataTableColumnEditor(
+			attr = {
+				@DataTableColumnEditorAttr(key = &quot;data-ac-url&quot;, value = &quot;/admin/rest/settings/cronjob/nodes&quot;),
+				@DataTableColumnEditorAttr(key = &quot;data-ac-min-length&quot;, value = &quot;1&quot;),
+				@DataTableColumnEditorAttr(key = &quot;data-ac-select&quot;, value = &quot;true&quot;)
+			}
+		)
+	})
 	private String clusterNode = &quot;all&quot;;
 
-<span class="fc" id="L183">	public CronTask() {</span>
-<span class="fc" id="L184">	}</span>
+<span class="fc" id="L191">	public CronTask() {</span>
+		// empty constructor
+<span class="fc" id="L193">	}</span>
 
 	public String receiveCronPattern() {
-<span class="fc" id="L187">		String dayOfWeek = this.daysOfWeek;</span>
+<span class="fc" id="L196">		String dayOfWeek = this.daysOfWeek;</span>
 		/* jeeff: businessDays uz nepouzivame (GUI nepodporuje)
 		if (&quot;*&quot;.equals(dayOfWeek) &amp;&amp; businessDays)
 			dayOfWeek = &quot;1-5&quot;;
 		*/
 
-<span class="fc" id="L193">		StringBuilder cronPattern = new StringBuilder();</span>
-<span class="fc" id="L194">		cronPattern.append(seconds).append(' ').</span>
-<span class="fc" id="L195">				append(minutes).append(' ').</span>
-<span class="fc" id="L196">				append(hours).append(' ').</span>
-<span class="fc" id="L197">				append(daysOfMonth).append(' ').</span>
-<span class="fc" id="L198">				append(months).append(' ').</span>
-<span class="fc" id="L199">				append(dayOfWeek).append(' ').</span>
-<span class="fc" id="L200">				append(years);</span>
-<span class="fc" id="L201">		return cronPattern.toString();</span>
+<span class="fc" id="L202">		StringBuilder cronPattern = new StringBuilder();</span>
+<span class="fc" id="L203">		cronPattern.append(seconds).append(' ').</span>
+<span class="fc" id="L204">				append(minutes).append(' ').</span>
+<span class="fc" id="L205">				append(hours).append(' ').</span>
+<span class="fc" id="L206">				append(daysOfMonth).append(' ').</span>
+<span class="fc" id="L207">				append(months).append(' ').</span>
+<span class="fc" id="L208">				append(dayOfWeek).append(' ').</span>
+<span class="fc" id="L209">				append(years);</span>
+<span class="fc" id="L210">		return cronPattern.toString();</span>
 	}
 
 	public Class&lt;?&gt; receiveClazz() throws ClassNotFoundException {
-<span class="fc" id="L205">		return Class.forName(task);</span>
+<span class="fc" id="L214">		return Class.forName(task);</span>
 	}
 
 	public String[] receiveArgs() {
-<span class="fc bfc" id="L209" title="All 2 branches covered.">		if (isEmpty(params))</span>
-<span class="fc" id="L210">			return new String[]{};</span>
-<span class="fc" id="L211">		return params.split(&quot;\\|&quot;);</span>
+<span class="fc bfc" id="L218" title="All 2 branches covered.">		if (isEmpty(params))</span>
+<span class="fc" id="L219">			return new String[]{};</span>
+<span class="fc" id="L220">		return params.split(&quot;\\|&quot;);</span>
 	}
 
 	public String getTaskName() {
-<span class="fc" id="L215">		return taskName;</span>
+<span class="fc" id="L224">		return taskName;</span>
 	}
 
 	public void setTaskName(String taskName) {
-<span class="fc" id="L219">		this.taskName = taskName;</span>
-<span class="fc" id="L220">	}</span>
+<span class="fc" id="L228">		this.taskName = taskName;</span>
+<span class="fc" id="L229">	}</span>
 
 	public String getSeconds() {
-<span class="fc" id="L223">		return seconds;</span>
+<span class="fc" id="L232">		return seconds;</span>
 	}
 
 	public void setSeconds(String seconds) {
-<span class="fc" id="L227">		this.seconds = seconds;</span>
-<span class="fc" id="L228">	}</span>
+<span class="fc" id="L236">		this.seconds = seconds;</span>
+<span class="fc" id="L237">	}</span>
 
 	public String getMinutes() {
-<span class="fc" id="L231">		return minutes;</span>
+<span class="fc" id="L240">		return minutes;</span>
 	}
 
 	public void setMinutes(String minutes) {
-<span class="fc" id="L235">		this.minutes = minutes;</span>
-<span class="fc" id="L236">	}</span>
+<span class="fc" id="L244">		this.minutes = minutes;</span>
+<span class="fc" id="L245">	}</span>
 
 	public String getHours() {
-<span class="fc" id="L239">		return hours;</span>
+<span class="fc" id="L248">		return hours;</span>
 	}
 
 	public void setHours(String hours) {
-<span class="fc" id="L243">		this.hours = hours;</span>
-<span class="fc" id="L244">	}</span>
+<span class="fc" id="L252">		this.hours = hours;</span>
+<span class="fc" id="L253">	}</span>
 
 	public String getMonths() {
-<span class="fc" id="L247">		return months;</span>
+<span class="fc" id="L256">		return months;</span>
 	}
 
 	public void setMonths(String months) {
-<span class="fc" id="L251">		this.months = months;</span>
-<span class="fc" id="L252">	}</span>
+<span class="fc" id="L260">		this.months = months;</span>
+<span class="fc" id="L261">	}</span>
 
 	public String getYears() {
-<span class="fc" id="L255">		return years;</span>
+<span class="fc" id="L264">		return years;</span>
 	}
 
 	public void setYears(String years) {
-<span class="fc" id="L259">		this.years = years;</span>
-<span class="fc" id="L260">	}</span>
+<span class="fc" id="L268">		this.years = years;</span>
+<span class="fc" id="L269">	}</span>
 
 	public String getDaysOfMonth() {
-<span class="fc" id="L263">		return daysOfMonth;</span>
+<span class="fc" id="L272">		return daysOfMonth;</span>
 	}
 
 	public void setDaysOfMonth(String daysOfMonth) {
-<span class="fc" id="L267">		this.daysOfMonth = daysOfMonth;</span>
-<span class="fc" id="L268">	}</span>
+<span class="fc" id="L276">		this.daysOfMonth = daysOfMonth;</span>
+<span class="fc" id="L277">	}</span>
 
 	public String getDaysOfWeek() {
-<span class="fc" id="L271">		return daysOfWeek;</span>
+<span class="fc" id="L280">		return daysOfWeek;</span>
 	}
 
 	public void setDaysOfWeek(String daysOfWeek) {
-<span class="fc" id="L275">		this.daysOfWeek = daysOfWeek;</span>
-<span class="fc" id="L276">	}</span>
+<span class="fc" id="L284">		this.daysOfWeek = daysOfWeek;</span>
+<span class="fc" id="L285">	}</span>
 
 	public String getTask() {
-<span class="fc" id="L279">		return task;</span>
+<span class="fc" id="L288">		return task;</span>
 	}
 
 	public void setTask(String task) {
-<span class="fc" id="L283">		this.task = task;</span>
-<span class="fc" id="L284">	}</span>
+<span class="fc" id="L292">		this.task = task;</span>
+<span class="fc" id="L293">	}</span>
 
 	public String getParams() {
-<span class="fc" id="L287">		return params;</span>
+<span class="fc" id="L296">		return params;</span>
 	}
 
 	public void setParams(String params) {
-<span class="pc bpc" id="L291" title="1 of 2 branches missed.">		this.params = params == null ? &quot;&quot; : params;</span>
-<span class="fc" id="L292">	}</span>
+<span class="pc bpc" id="L300" title="1 of 2 branches missed.">		this.params = params == null ? &quot;&quot; : params;</span>
+<span class="fc" id="L301">	}</span>
 
 	public boolean isBusinessDays() {
-<span class="fc" id="L295">		return businessDays;</span>
+<span class="fc" id="L304">		return businessDays;</span>
 	}
 
 	public void setBusinessDays(boolean businessDays) {
-<span class="fc" id="L299">		this.businessDays = businessDays;</span>
-<span class="fc" id="L300">	}</span>
+<span class="fc" id="L308">		this.businessDays = businessDays;</span>
+<span class="fc" id="L309">	}</span>
 
 	public String getClusterNode() {
-<span class="fc" id="L303">		return clusterNode;</span>
+<span class="fc" id="L312">		return clusterNode;</span>
 	}
 
 	public void setClusterNode(String clusterNode) {
-<span class="fc" id="L307">		this.clusterNode = clusterNode;</span>
-<span class="fc" id="L308">	}</span>
+<span class="fc" id="L316">		this.clusterNode = clusterNode;</span>
+<span class="fc" id="L317">	}</span>
 
 	public Long getId() {
-<span class="fc" id="L311">		return id;</span>
+<span class="fc" id="L320">		return id;</span>
 	}
 
 	public void setId(Long id) {
-<span class="fc" id="L315">		this.id = id;</span>
-<span class="fc" id="L316">	}</span>
+<span class="fc" id="L324">		this.id = id;</span>
+<span class="fc" id="L325">	}</span>
 
 	@Override
 	public String toString() {
-<span class="nc" id="L320">		return String.format(&quot;%s that runs every %s, audit task: &quot; + getAudit(), getTask(), receiveCronPattern());</span>
+<span class="nc" id="L329">		return String.format(&quot;%s that runs every %s, audit task: %b&quot;, getTask(), receiveCronPattern(), getAudit());</span>
 	}
 
 	public void setAudit(boolean log) {
-<span class="fc" id="L324">		this.audit = log;</span>
-<span class="fc" id="L325">	}</span>
+<span class="fc" id="L333">		this.audit = log;</span>
+<span class="fc" id="L334">	}</span>
 
 	public boolean getAudit() {
-<span class="fc" id="L328">		return audit;</span>
+<span class="fc" id="L337">		return audit;</span>
 	}
 
 	public boolean isRunAtStartup() {
-<span class="fc" id="L332">		return runAtStartup;</span>
+<span class="fc" id="L341">		return runAtStartup;</span>
 	}
 
 	public void setRunAtStartup(boolean runAtStartup) {
-<span class="fc" id="L336">		this.runAtStartup = runAtStartup;</span>
-<span class="fc" id="L337">	}</span>
+<span class="fc" id="L345">		this.runAtStartup = runAtStartup;</span>
+<span class="fc" id="L346">	}</span>
 
 	public boolean isEnableTask() {
-<span class="fc" id="L340">		return enableTask;</span>
+<span class="fc" id="L349">		return enableTask;</span>
 	}
 
 	public void setEnableTask(boolean enableTask) {
-<span class="fc" id="L344">		this.enableTask = enableTask;</span>
-<span class="fc" id="L345">	}</span>
+<span class="fc" id="L353">		this.enableTask = enableTask;</span>
+<span class="fc" id="L354">	}</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

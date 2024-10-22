@@ -62,7 +62,7 @@ Scenario('Kontrolova editor locking hlasenia', ({ I, DT, DTE }) => {
     I.see("Záznam má v editore otvorený aj:", "div.toast-message");
     I.see("Tester2 Playwright2", "div.toast-message");
 
-    //pockaj 2 minuty na expirovanie cache
+    //pockaj 2 minuty na exspirovanie cache
     I.wait(120);
 
     I.amOnPage("/apps/qa/admin/?id=1");

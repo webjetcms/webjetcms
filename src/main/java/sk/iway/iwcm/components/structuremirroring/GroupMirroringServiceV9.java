@@ -8,6 +8,8 @@ import java.util.List;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -104,6 +106,14 @@ public class GroupMirroringServiceV9 {
                      mirror.setMenuType(group.getMenuType());
                      mirror.setLoggedMenuType(group.getLoggedMenuType());
                   }
+
+                  //keepVirtualPath
+                  RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+                  boolean keepVirtualPath = "true".equals(rb.getParameter("keepVirtualPath"));
+                  if(keepVirtualPath) {
+                     mirror.setUrlDirName(group.getUrlDirName());
+                  }
+
                   mirror.setParentGroupId(mappedGroup.getGroupId());
                   mirror.setDefaultDocId(0);
                   mirror.setSyncId(group.getSyncId());

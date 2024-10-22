@@ -1,8 +1,8 @@
 # Rozšírenie Spring DATA repozitárov WebJET CMS
 
-V niektorých prípadoch budete vo vašom projekte potrebovať rozšíriť možnosti Spring DATA repozitárov existujúcich entít. Napríklad pri zobrazení špeciálnych noviniek, kde potrebujete zobraziť zoznam ```DocDetails``` entít.
+V niektorých prípadoch budete vo vašom projekte potrebovať rozšíriť možnosti `Spring DATA` repozitárov existujúcich entít. Napríklad pri zobrazení špeciálnych noviniek, kde potrebujete zobraziť zoznam ```DocDetails``` entít.
 
-Máte niekoľko možností realizácie. Toto je ukážkový REST controller, ktorý ukazuje použitie všetkých nižšie uvedených príkladov:
+Máte niekoľko možností realizácie. Toto je ukážkový `REST controller`, ktorý ukazuje použitie všetkých nižšie uvedených príkladov:
 
 ```java
 package sk.iway.web.news;
@@ -77,9 +77,9 @@ V ```SpringConfig``` a ```JpaDBConfig``` nezabudnite pridať package ```sk.iway.
 
 ## Nový repozitár v originálnom package
 
-Najjednoduchšie riešenie bez dodatočnej konfigurácie je vytvoriť nový Spring DATA repozitár v package rovnakom ako je štandardný WebJET repozitár (napr. ```sk.iway.iwcm.doc```). To zabezpečí jeho automatickú inicializáciu pri štarte WebJETu.
+Najjednoduchšie riešenie bez dodatočnej konfigurácie je vytvoriť nový `Spring DATA` repozitár v package rovnakom ako je štandardný WebJET repozitár (napr. ```sk.iway.iwcm.doc```). To zabezpečí jeho automatickú inicializáciu pri štarte WebJETu.
 
-UPOZORNENIE: tento package nesmiete pridať do vášho ```JpaDBConfig```, pretože jedna entita (trieda) nemôže byť vo viacerých JPA konfiguráciách naraz.
+!>**Upozornenie:** tento package nesmiete pridať do vášho ```JpaDBConfig```, pretože jedna entita (trieda) nemôže byť vo viacerých JPA konfiguráciách naraz.
 
 V príklade je vytvorená metóda ```findByTitleLike``` pre vyhľadanie zoznamu web stránok podľa názvu. Používajú sa pôvodné ```DocDetails``` entity.
 

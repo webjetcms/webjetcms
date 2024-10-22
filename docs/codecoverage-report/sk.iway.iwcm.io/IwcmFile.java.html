@@ -236,7 +236,7 @@ public class IwcmFile
 		}
 		else
 		{
-<span class="pc bpc" id="L239" title="4 of 6 branches missed.">			if (file.exists() &amp;&amp; IwcmFsDB.useVersioning() &amp;&amp; IwcmFsDB.useDBStorage())</span>
+<span class="pc bpc" id="L239" title="3 of 6 branches missed.">			if (file.exists() &amp;&amp; IwcmFsDB.useVersioning() &amp;&amp; IwcmFsDB.useDBStorage())</span>
 			{
 <span class="nc" id="L241">				IwcmFsDB.writeFileToDB(file);</span>
 			}
@@ -404,7 +404,7 @@ public class IwcmFile
 
 	public boolean mkdir()
 	{
-<span class="nc" id="L407">		return mkdirs();</span>
+<span class="fc" id="L407">		return mkdirs();</span>
 	}
 
 	public String getParent()
@@ -770,4 +770,4 @@ public class IwcmFile
 <span class="fc" id="L770">		return isJarPackaging;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

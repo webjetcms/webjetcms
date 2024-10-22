@@ -6,6 +6,7 @@ import java.util.List;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -15,40 +16,37 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 public class PerexGroupsEditorFields implements Serializable{
 
-<span class="fc" id="L18">    public PerexGroupsEditorFields(){}</span>
+<span class="fc" id="L19">    public PerexGroupsEditorFields(){}</span>
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;admin.temp.edit.showForDir&quot;, className = &quot;dt-tree-group-array&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title=&quot;admin.temp.edit.showForDir&quot;, className = &quot;dt-tree-group-array-alldomains&quot;)
     private List&lt;GroupDetails&gt; availableGroups;
 
     public void fromPerexGroupsEntity(PerexGroupsEntity perexGroupOriginal) {
-<span class="fc" id="L24">        availableGroups = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L25">        String availableGroupsString = perexGroupOriginal.getAvailableGroups();</span>
-<span class="fc bfc" id="L26" title="All 4 branches covered.">        if(availableGroupsString != null &amp;&amp; !availableGroupsString.isEmpty()) {</span>
-<span class="fc" id="L27">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L28">            String availableGroupsIdArray[] = availableGroupsString.split(&quot;,&quot;);</span>
+<span class="fc" id="L25">        availableGroups = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L26">        String availableGroupsString = perexGroupOriginal.getAvailableGroups();</span>
+<span class="fc bfc" id="L27" title="All 4 branches covered.">        if(availableGroupsString != null &amp;&amp; !availableGroupsString.isEmpty()) {</span>
+<span class="fc" id="L28">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L29">            String availableGroupsIdArray[] = availableGroupsString.split(&quot;,&quot;);</span>
 
-<span class="fc bfc" id="L30" title="All 2 branches covered.">            for(int i = 0; i &lt; availableGroupsIdArray.length; i++) {</span>
-<span class="fc" id="L31">                GroupDetails tmp = groupsDB.getGroup(Integer.parseInt(availableGroupsIdArray[i]));</span>
-<span class="pc bpc" id="L32" title="1 of 2 branches missed.">                if (tmp != null) availableGroups.add(tmp);</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">            for(int i = 0; i &lt; availableGroupsIdArray.length; i++) {</span>
+<span class="fc" id="L32">                GroupDetails tmp = groupsDB.getGroup(Integer.parseInt(availableGroupsIdArray[i]));</span>
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">                if (tmp != null) availableGroups.add(tmp);</span>
             }
-<span class="fc" id="L34">            perexGroupOriginal.setEditorFields(this);</span>
-<span class="fc" id="L35">        } else {</span>
-<span class="fc" id="L36">            perexGroupOriginal.setEditorFields(this);</span>
+<span class="fc" id="L35">            perexGroupOriginal.setEditorFields(this);</span>
+<span class="fc" id="L36">        } else {</span>
+<span class="fc" id="L37">            perexGroupOriginal.setEditorFields(this);</span>
         }
-<span class="fc" id="L38">    }</span>
+<span class="fc" id="L39">    }</span>
 
     public void toPerexGroupsEntity(PerexGroupsEntity perexGroupOriginal) {
-<span class="fc" id="L41">        List&lt;GroupDetails&gt; groups = perexGroupOriginal.getEditorFields().getAvailableGroups();</span>
-<span class="fc" id="L42">        String groupsIds = &quot;&quot;;</span>
-<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        for(int i = 0; i &lt; groups.size(); i++) {</span>
-<span class="nc bnc" id="L44" title="All 2 branches missed.">            if (groups.get(i)==null) return;</span>
-<span class="nc bnc" id="L45" title="All 4 branches missed.">            if(perexGroupOriginal.getAvailableGroups() == null || perexGroupOriginal.getAvailableGroups().equals(&quot;&quot;)) {</span>
-<span class="nc" id="L46">                perexGroupOriginal.setAvailableGroups(&quot;&quot; + groups.get(i).getGroupId());</span>
-            } else {
-<span class="nc" id="L48">                groupsIds = perexGroupOriginal.getAvailableGroups();</span>
-<span class="nc" id="L49">                perexGroupOriginal.setAvailableGroups(groupsIds + &quot;,&quot; + groups.get(i).getGroupId());</span>
-            }
+<span class="fc" id="L42">        String newGroupIds = &quot;&quot;;</span>
+        //loop MediaGroupEditorFileds.availableGroups, get every group id and join them using &quot;,&quot; as separator
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        for(int i = 0; i &lt; this.availableGroups.size(); i++) {</span>
+<span class="nc bnc" id="L45" title="All 2 branches missed.">            if (this.availableGroups.get(i)==null) continue;</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">            if (Tools.isNotEmpty(newGroupIds)) newGroupIds += &quot;,&quot;;</span>
+<span class="nc" id="L47">            newGroupIds += this.availableGroups.get(i).getGroupId();</span>
         }
-<span class="fc" id="L52">    }</span>
+<span class="fc" id="L49">        perexGroupOriginal.setAvailableGroups(newGroupIds);</span>
+<span class="fc" id="L50">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationEntity.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationEntity.java</span></div><h1>ReservationEntity.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -9,11 +10,18 @@ import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +38,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_RESERVATION)
-<span class="fc" id="L33">public class ReservationEntity implements Serializable {</span>
+<span class="fc" id="L41">public class ReservationEntity implements Serializable {</span>
 
     @Id
     @Column(name = &quot;reservation_id&quot;)
@@ -39,6 +47,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     private Long id;
 
     @Column(name = &quot;name&quot;)
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title=&quot;components.reservation.reservation_list.name&quot;,
@@ -48,6 +57,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     private String name;
 
     @Column(name = &quot;surname&quot;)
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         title=&quot;components.reservation.reservation_list.surname&quot;,
@@ -57,6 +67,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     private String surname;
 
     @Column(name = &quot;email&quot;)
+    @NotBlank
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT,
         title=&quot;components.reservation.reservation_list.email&quot;,
@@ -72,10 +83,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
         sortAfter = &quot;editorFields.selectedReservation&quot;
     )
     @Column(name = &quot;reservation_object_id&quot;)
-    private Integer reservationObjectId;
+    private Long reservationObjectId;
 
     @Column(name = &quot;date_from&quot;)
     @Temporal(TemporalType.TIMESTAMP)
+    @NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title=&quot;components.reservation.reservation_list.date_from2&quot;,
@@ -85,6 +97,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
     @Column(name = &quot;date_to&quot;)
     @Temporal(TemporalType.TIMESTAMP)
+    @NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title=&quot;components.reservation.reservation_list.date_to2&quot;,
@@ -132,11 +145,39 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     @Size(max = 60)
     private String hashValue;
 
+    @Column(name = &quot;price&quot;)
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        title=&quot;components.reservation.reservations.price&quot;,
+        tab = &quot;basic&quot;,
+        sortAfter = &quot;editorFields.reservationTimeTo&quot;,
+        editor = {
+            @DataTableColumnEditor(
+                attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) }
+            )
+        }
+    )
+    private BigDecimal price;
+
     @Column(name = &quot;domain_id&quot;)
     private Integer domainId;
 
-<span class="fc" id="L138">    @Transient</span>
+    @Column(name = &quot;user_id&quot;)
+    private Integer userId;
+
+<span class="fc" id="L169">    @Transient</span>
     @DataTableColumnNested
-    private ReservationEditorFields editorFields = null;
+    private transient ReservationEditorFields editorFields = null;
+
+    @ManyToOne
+    @JsonBackReference(value=&quot;reservationObjectForReservation&quot;)
+    @JoinColumn(name=&quot;reservation_object_id&quot;, insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private ReservationObjectEntity reservationObjectForReservation;
+
+    public String getReservationObjectName() {
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        return reservationObjectForReservation != null ? reservationObjectForReservation.getName() : &quot;&quot;;</span>
+    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

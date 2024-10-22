@@ -188,7 +188,7 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 
 - Added function `WJ.confirm` For [obtaining value](developer/frameworks/webjetjs.md#získanie-hodnoty) (#54701).
 
-<img class="meme" title="meme" src="_media/meme/2022-52.jpg" />
+![meme](_media/meme/2022-52.jpg)
 
 ## 2022.40
 
@@ -475,7 +475,7 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 - Bulk email - fixed initial setting of recipients, number of recipients and emails sent when saving a campaign, non-removal of emails if user is in both selected and removed group (#39751-44).
 - Datatable - corrected search after changing the order of columns (#43144).
 
-<img class="meme" title="meme" src="_media/meme/2022-40.jpg" />
+![meme](_media/meme/2022-40.jpg)
 
 ## 2022.18
 
@@ -688,7 +688,7 @@ The todo application, which has not yet been implemented, does not yet appear on
 - Web site - fixed error saving tags (perex groups) (#53805).
 - Media - Fixed display of the Media app in the list of apps in the page editor (#54381).
 
-<img class="meme" title="meme" src="_media/meme/2022-18.jpg" />
+![meme](_media/meme/2022-18.jpg)
 
 ## 2022.0
 
@@ -731,4 +731,4 @@ The todo application, which has not yet been implemented, does not yet appear on
 - Gallery - corrected display in the Area of Interest tab.
 - Datatables - file upload - corrected the upload status setting when finished (the spinning wheel was incorrectly left displayed).
 
-<img class="meme" title="meme" src="_media/meme/2022-0.jpg" />
+![meme](_media/meme/2022-0.jpg)

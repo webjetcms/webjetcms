@@ -1,0 +1,25 @@
+ <div class="sidebar-section">Programování zákaznických aplikací</div>
+
+- [:point\_left: Zpět na úvod](/?back)
+- Spring
+  - [Konfigurace Spring](/custom-apps/spring-config/)
+  - [Autorizace tokenů](/custom-apps/spring/api-auth.md)
+  - [Poskytování služeb REST](/custom-apps/spring/rest-url.md)
+  - [Rozšíření úložišť Spring DATA systému WebJET CMS](/custom-apps/spring/repository-extend.md)
+- Aplikace
+  - [Položka menu v sekci správce](/custom-apps/admin-menu-item/)
+  - [Seznam webových stránek/novinek](/custom-apps/news/)
+  - [Uživatelé](/custom-apps/apps/user/README.md)
+  - [Konfigurace](/custom-apps/config/README.md)
+- Spring MVC
+  - [Aplikace na webové stránce](/custom-apps/spring-mvc/)
+  - [Správce s nahráváním souborů](/custom-apps/spring-mvc/admin-with-upload.md)
+  - [Import správce z aplikace Excel](/custom-apps/spring-mvc/admin-excel-import.md)
+- Appstore
+  - [Zobrazení v seznamu aplikací](/custom-apps/appstore/)
+- Kód VS
+  - [Úvod](/custom-apps/vscode/README.md)
+  - [Nastavení režimu ladění](/custom-apps/vscode/debugging/README.md)
+- Testování
+  - [Možnosti testování](/custom-apps/testing/README.md)
+  - [Pokrytí kódu](/custom-apps/testing/codecoverage.md)

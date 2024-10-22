@@ -131,7 +131,7 @@ Upozornenie: z dôvodu veľkého počtu zmien v jar knižniciach bude počas akt
 - Opravené zobrazenie filtra pri nadpise stránky v monitorovaní servera a v aplikácii GDPR.
 - Opravené označenie všetkých riadkov pri klientskom stránkovaní - označí sa len aktuálna strana (#54281).
 
-<img class="meme" title="meme" src="_media/meme/2021-52.jpg"/>
+![meme](_media/meme/2021-52.jpg ":no-zoom")
 
 ## 2021.47
 
@@ -193,7 +193,7 @@ Upozornenie: z dôvodu veľkého počtu zmien v jar knižniciach bude počas akt
 
 - Opravené aktualizovanie cache ```TemplatesDB``` pri uložení stránky v lokálnom (doménovom) Systém adresári.
 
-<img class="meme" title="meme" src="_media/meme/2021-47.jpg"/>
+![meme](_media/meme/2021-47.jpg ":no-zoom")
 
 ## 2021.45
 
@@ -283,7 +283,7 @@ Upravili sme proces zostavenia artifaktov novej verzie. V tejto verzii sa všetk
 - Vytvorená dokumentácia k možnosti použitia [dedenia v entitách](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
 - Vytvorená dokumentácia k použitiu [dedenia v JPA entitách](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
 
-<img class="meme" title="meme" src="_media/meme/2021-45.jpg"/>
+![meme](_media/meme/2021-45.jpg ":no-zoom")
 
 ## 2021.40
 
@@ -422,7 +422,7 @@ REST rozhrania datatabuliek upravené na použitie ```ThreadLocal``` objektu, kt
 
 - Datatabuľky - opravené nastavenie voliteľných polí pri novo vytváranom zázname.
 
-<img class="meme" title="meme" src="_media/meme/2021-40.jpg"/>
+![meme](_media/meme/2021-40.jpg ":no-zoom")
 
 ## 2021.26
 
@@ -488,7 +488,7 @@ REST rozhrania datatabuliek upravené na použitie ```ThreadLocal``` objektu, kt
 - Monitorovanie servera - opravený predvolený rozsah grafov na hodnotu posledných 14 dní.
 - Datatabuľka - opravené zvýraznenie označených riadkov po uložení, ak prijaté dáta obsahujú nastavenie CSS štýlu riadku - zachová sa CSS štýl ```selected``` aj ```highlight```.
 
-<img class="meme" title="meme" src="_media/meme/2021-24.jpg"/>
+![meme](_media/meme/2021-24.jpg ":no-zoom")
 
 ## 2021.20
 
@@ -525,7 +525,7 @@ Pripravili sme dokumentáciu s informáciami o [nastavení voliteľných polí](
 - Prekladové kľúče - doplnené vyvolanie zmeny kľúča v internej cache a v cache clustra.
 - Prekladové kľúče - doplnená kontrola a test na právo Editácia textov - zobrazenie všetkých textov.
 
-<img class="meme" title="meme" src="_media/meme/2021-20.jpg"/>
+![meme](_media/meme/2021-20.jpg ":no-zoom")
 
 ## 2021.18
 
@@ -573,7 +573,7 @@ Pripravili sme dokumentáciu s informáciami o [nastavení voliteľných polí](
 - Editácia textov - opravené vyhľadávanie v zákazníckych projektoch.
 - Datatables - opravené zobrazenie číselníkových údajov pri vlastnom zobrazení zoznamu stĺpcov (#53653).
 
-<img class="meme" title="meme" src="_media/meme/2021-18.jpg"/>
+![meme](_media/meme/2021-18.jpg ":no-zoom")
 
 ## 2021.13
 
@@ -663,7 +663,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Opravené zobrazenie zoznamu šablón pri pridávaní/úprave adresára web stránky. Šablóny sa už zobrazujú podmienečne podľa nastavených adresárov (pôvodná verzia zobrazovala všade všetky šablóny).
 - Opravená distribučná verzia pre iné projekty (Spring DATA repozitáre, chýbajúce súbory, aktualizované knižnice závislostí).
 
-<img class="meme" title="meme" src="_media/meme/2021-13.jpg"/>
+![meme](_media/meme/2021-13.jpg ":no-zoom")
 
 ## 2021.12
 
@@ -708,7 +708,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Vnorená datatabuľka - pridané volanie ```deselect``` pred načítaním nových dát vnorenej datatabuľky, aby sa korektne nastavili tlačidlá (deaktivovali sa, ak vyžadujú zvolený riadok).
 - Opravené volanie ```TABLE.hideButton``` - tlačidlá schová len v danej tabuľke, nie vo všetkých (pridané obmedzenie na ID tabuľky pri hľadaní tlačidiel v DOM strome).
 
-<img class="meme" title="meme" src="_media/meme/2021-11.jpg"/>
+![meme](_media/meme/2021-11.jpg ":no-zoom")
 
 ## 2021.10
 
@@ -725,7 +725,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 
 - Doplnené testy pre web obsah web stránky (pridanie tabuľky, nájdi a nahraď, vloženie obrázka, krok späť, vloženie špeciálneho znaku).
 
-<img class="meme" title="meme" src="_media/meme/2021-10.jpg"/>
+![meme](_media/meme/2021-10.jpg ":no-zoom")
 
 ## 2021.8
 
@@ -782,7 +782,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Modálne okno - opravené nastavenie udalostí kliknutia pre modálne okno volané cez ```WJ.openIframeModal```. Keďže modálne okno je používané pre rôzne adresy vloženého iframe je potrebné dynamicky nastavovať funkciu po kliknutí. Pôvodná verzia ju po nastavení nezmenila a po zatvorení dialógu a otvorení nového sa vyvolala aj pôvodná ```click``` akcia. To napr. spôsobilo nastavenie linky z ```elfinder``` dátového poľa do viacerých polí v editore.
 - Menu - opravené zobrazenie menu a aktívnej položky pri volaní ```/admin/v9/``` adresy bez lomky na konci. URL adresy menu položiek normalizované s lomkou na konci.
 
-<img class="meme" title="meme" src="_media/meme/2021-08.jpg"/>
+![meme](_media/meme/2021-08.jpg ":no-zoom")
 
 ## 2021.7
 
@@ -848,7 +848,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Konfigurácia - opravené chyba pri pridaní a následnej editácii konfiguračnej premennej (#53137)
 - Web stránky - opravená funkčnosť prepínania domén v hlavičke administrácie
 
-<img class="meme" title="meme" src="_media/meme/2021-07.jpg"/>
+![meme](_media/meme/2021-07.jpg ":no-zoom")
 
 ## 2021.5
 
@@ -881,7 +881,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Datatabuľky - pri otvorení dialógu sa už nezobrazujú chybové hlásenia z predchádzajúceho uloženia (#52639).
 - Datatabuľky - opravené zobrazenie hlásenia Naozaj chcete zmazať túto položku? v editácii (po zrušení zmazania) (#52639).
 
-<img class="meme" title="meme" src="_media/meme/2021-05.jpg"/>
+![meme](_media/meme/2021-05.jpg ":no-zoom")
 
 ## 2021.4
 
@@ -922,7 +922,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Web stránky - mazanie adresárov obsahujúcich znak : v názve
 - Datatables - opravené zobrazenie nastavenia datatabuľky (zobrazenie výberového menu bez orezania a pozícia)
 
-<img class="meme" title="meme" src="_media/meme/2021-04.jpg"/>
+![meme](_media/meme/2021-04.jpg ":no-zoom")
 
 ## 2021.2
 
@@ -965,7 +965,7 @@ Refaktorovali sme kód v index.js a presunuli definíciu dátových polí json a
 - datatables editor - opravené nastavenie CSS štýlov na ```multi checkboxoch``` (obalenie ```custom-switch```). Pôvodne sa CSS nastavili len pri prvom otvorení okna, ale pri zmene ```options``` hodnôt (napr. pri prechode do iného adresára) sa regenerovali a zobrazili sa namiesto posuvníkov ako štandardné zaškrtávacie polia. Nastavenie sa teraz vykoná pri každom otvorení okna editora. (#52609)
 - datatables editor - opravená chyba pri ktorej zostal zobrazený backdrop dialógu po zatvorení okna (nastalo v situácii otvoriť okno editora, zrušiť, otvoriť okno priečinku, zrušiť, otvoriť znova okno editora, zrušiť - backdrop zostal otvorený). Pridané volanie ```$("div.modal-backdrop").hide();``` pri zatvorení okna editora. (#52609)
 
-<img class="meme" title="meme" src="_media/meme/2021-02.jpg"/>
+![meme](_media/meme/2021-02.jpg ":no-zoom")
 
 ## 2021.1
 
@@ -1007,7 +1007,7 @@ Doplnený dialóg editácie adresára o TODO položky (okrem histórie a plánov
 - doplnená dokumentácia k možnosti [vyvolania chybovej správy](developer/datatables/restcontroller.md#validácia--povinné-polia) pri editovaní položky (metóda ```throwError```)
 - doplnená dokumentácia k
 
-<img class="meme" title="meme" src="_media/meme/2021-01.jpg"/>
+![meme](_media/meme/2021-01.jpg ":no-zoom")
 
 ## 2021.0
 
@@ -1036,4 +1036,4 @@ Doplnený prvý návrh úvodnej obrazovky. Obsahuje zatiaľ zoznam prihlásenýc
 - #52396 - doplnená dokumentácia k použitiu ikon v [jstree](developer/jstree/README.md#spôsob-použitia-ikon) a [datatabuľke](developer/datatables/README.md#štýlovanie-riadku-a-ikony)
 - #52444 - doplnená dokumentácia k použitiu [npm](developer/frameworks/README.md#npm)
 
-<img class="meme" title="meme" src="_media/meme/2021-00.jpg"/>
+![meme](_media/meme/2021-00.jpg ":no-zoom")

@@ -81,8 +81,8 @@ public class WriteTagToolsForCore {
 
     public static StringBuilder preventSpam(StringBuilder text, HttpServletRequest request)
     {
-<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;spamProtection&quot;) == false)</span>
-<span class="nc" id="L85">            return (text);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (Constants.getBoolean(&quot;spamProtection&quot;) == false)</span>
+<span class="fc" id="L85">            return (text);</span>
 
 <span class="fc bfc" id="L87" title="All 2 branches covered.">        if (request.getAttribute(&quot;spamProtectionDisable&quot;)!=null)</span>
 <span class="fc" id="L88">            return (text);</span>
@@ -91,10 +91,10 @@ public class WriteTagToolsForCore {
 
         //vypnutie spam ochrany na urovni sablony
 <span class="fc" id="L93">        TemplateDetails temp = (TemplateDetails)request.getAttribute(&quot;templateDetails&quot;);</span>
-<span class="pc bpc" id="L94" title="2 of 4 branches missed.">        if (temp != null &amp;&amp; temp.isDisableSpamProtection()) return text;</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">        if (temp != null &amp;&amp; temp.isDisableSpamProtection()) return text;</span>
 
 <span class="fc" id="L96">        String dmail = request.getHeader(&quot;dmail&quot;);</span>
-<span class="pc bpc" id="L97" title="3 of 4 branches missed.">        if (dmail!=null &amp;&amp; dmail.equals(EmailToolsForCore.ACTUAL_USER_HASH))</span>
+<span class="pc bpc" id="L97" title="1 of 4 branches missed.">        if (dmail!=null &amp;&amp; dmail.equals(EmailToolsForCore.ACTUAL_USER_HASH))</span>
         {
             //pre direct mail sa nepozije ochrana
 <span class="nc" id="L100">            return text;</span>
@@ -102,8 +102,8 @@ public class WriteTagToolsForCore {
 
         //#11325: pre offline export do HTML sa nepouzije ochrana
 <span class="fc" id="L104">        String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
-<span class="pc bpc" id="L105" title="4 of 6 branches missed.">        if(userAgent != null &amp;&amp; userAgent.indexOf(&quot;WebJET Offline&quot;) != -1 &amp;&amp; &quot;true&quot;.equals(Constants.getString(&quot;disableSpamProtectionForOffline&quot;)))</span>
-<span class="nc" id="L106">            return text;</span>
+<span class="pc bpc" id="L105" title="2 of 6 branches missed.">        if(userAgent != null &amp;&amp; userAgent.indexOf(&quot;WebJET Offline&quot;) != -1 &amp;&amp; &quot;true&quot;.equals(Constants.getString(&quot;disableSpamProtectionForOffline&quot;)))</span>
+<span class="fc" id="L106">            return text;</span>
 
 <span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if (PathFilter.getOrigPath(request).endsWith(&quot;spamprotectiondisable.jsp&quot;)) return text;</span>
 
@@ -821,15 +821,15 @@ public class WriteTagToolsForCore {
 <span class="fc bfc" id="L821" title="All 2 branches covered.">            if (temp != null)</span>
             {
 <span class="fc" id="L823">                String templateInstallName = temp.getTemplateInstallName();</span>
-<span class="pc bpc" id="L824" title="5 of 6 branches missed.">                if (Tools.isNotEmpty(templateInstallName) &amp;&amp; (&quot;/templates/&quot;.equals(prefix) || origUrl.startsWith(prefix+templateInstallName+&quot;/&quot;)==false))</span>
+<span class="pc bpc" id="L824" title="3 of 6 branches missed.">                if (Tools.isNotEmpty(templateInstallName) &amp;&amp; (&quot;/templates/&quot;.equals(prefix) || origUrl.startsWith(prefix+templateInstallName+&quot;/&quot;)==false))</span>
                 {
                     //skus prehladavat /components/ing/news/news.jsp (orig. /components/ing/menu/news.jsp)
                     String fileName;
-<span class="nc bnc" id="L828" title="All 2 branches missed.">                    if (origUrl.startsWith(prefix+templateInstallName+&quot;/&quot;)==false) fileName = Tools.replace(origUrl, prefix, prefix+templateInstallName+&quot;/&quot;);</span>
-<span class="nc" id="L829">                    else fileName = origUrl;</span>
+<span class="pc bpc" id="L828" title="1 of 2 branches missed.">                    if (origUrl.startsWith(prefix+templateInstallName+&quot;/&quot;)==false) fileName = Tools.replace(origUrl, prefix, prefix+templateInstallName+&quot;/&quot;);</span>
+<span class="fc" id="L829">                    else fileName = origUrl;</span>
 
-<span class="nc" id="L831">                    newUrl = checkSetFile(newUrl, fileName);</span>
-<span class="nc" id="L832">                    newUrl = checkSetFile(newUrl, Tools.replace(fileName, ext, &quot;-&quot;+lng+ext));</span>
+<span class="fc" id="L831">                    newUrl = checkSetFile(newUrl, fileName);</span>
+<span class="fc" id="L832">                    newUrl = checkSetFile(newUrl, Tools.replace(fileName, ext, &quot;-&quot;+lng+ext));</span>
                 }
             }
         }
@@ -893,4 +893,4 @@ public class WriteTagToolsForCore {
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

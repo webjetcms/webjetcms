@@ -52,7 +52,7 @@ Scenario('Blog articles', ({ I, DTE, Document }) => {
     I.jstreeClick("NewSubFolder");
     I.click(delete_button);
     DTE.waitForEditor("groups-datatable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
     DTE.waitForLoader();
     I.dontSeeElement(locate("a.jstree-anchor").withText("NewSubFolder"));
 

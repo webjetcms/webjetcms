@@ -289,17 +289,219 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
         initializePageBuilder();
 
+        document.addEventListener("keydown", function(e) {
+            //zachytenie CTRL+S/CMD+S pre ulozenie stranky
+            if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.key === 's') {
+                e.preventDefault();
+                //console.log("Dispatching WJ.DTE.save");
+                try {
+                    window.parent.WJ.dispatchEvent("WJ.DTE.save", {});
+                } catch (ex) {}
+            }
+        }, false);
     });
 
     window.editorStyles = <%=JsonTools.objectToJSON(sk.iway.iwcm.editor.service.EditorService.getCssListJson(doc))%>;
-</script>
 
+    //otvorenie dialogoveho okna IE/Mozilla - based on FCKDialog
+    var WJDialog = new Object() ;
+    var WJDialogArguments = null;
+
+    // This method opens a dialog window using the standard dialog template.
+    WJDialog.OpenDialog = function( dialogName, dialogTitle, dialogPage, width, height, customValue, parentWindow )
+    {
+        // Setup the dialog info.
+        var oDialogInfo = new Object() ;
+        oDialogInfo.Title = dialogTitle ;
+        oDialogInfo.Page = dialogPage ;
+        oDialogInfo.Editor = window ;
+        oDialogInfo.CustomValue = customValue ;		// Optional
+
+        //window.alert("WJDialog");
+
+        window.FCKLang = new Object();
+        window.FCKConfig = new Object();
+        //link dialog setup
+        window.FCKConfig.LinkDlgHideAdvanced = true;
+
+        var sUrl = '/admin/dialogframe.jsp' ;
+        this.Show( oDialogInfo, dialogName, sUrl, width, height, parentWindow ) ;
+    }
+
+    WJDialog.Show = function( dialogInfo, dialogName, pageUrl, dialogWidth, dialogHeight, parentWindow )
+    {
+        if (navigator.userAgent.indexOf("MSIE")!=-1)
+        {
+        if ( !parentWindow )
+            parentWindow = window ;
+
+            parentWindow.showModalDialog( pageUrl, dialogInfo, "dialogWidth:" + dialogWidth + "px;dialogHeight:" + dialogHeight + "px;help:no;scroll:no;status:no") ;
+            return;
+        }
+
+        var iTop  = (screen.height - dialogHeight) / 2 ;
+        var iLeft = (screen.width  - dialogWidth)  / 2 ;
+
+        if (iLeft < 0) iLeft = 0;
+        if (iTop < 0) iTop = 0;
+
+        if (navigator.userAgent.indexOf("Firefox/")!=-1)
+        {
+            dialogHeight = dialogHeight + 62;
+        }
+        else if (navigator.userAgent.indexOf("Trident/")!=-1)
+        {
+            dialogHeight = dialogHeight + 35;
+        }
+
+        var sOption  = "location=no,menubar=no,resizable=no,toolbar=no,dependent=yes,dialog=yes,minimizable=no,modal=yes,alwaysRaised=yes" +
+            ",width="  + dialogWidth +
+            ",height=" + dialogHeight +
+            ",top="  + iTop +
+            ",left=" + iLeft ;
+
+        if ( !parentWindow )
+            parentWindow = window ;
+
+        var oWindow = parentWindow.open( pageUrl, 'FCKEditorDialog_' + dialogName, sOption, true ) ;
+        //window.alert("iLeft="+iLeft+" iTop="+iTop);
+
+        if (navigator.userAgent.indexOf("Chrome")==-1)
+        {
+            //ked tu bolo toto, Chrome zle pozicioval okno
+            oWindow.moveTo( iLeft, iTop ) ;
+            if (dialogWidth>0 && dialogHeight>0) oWindow.resizeTo( dialogWidth, dialogHeight ) ;
+        }
+
+        oWindow.focus() ;
+        oWindow.dialogArguments = dialogInfo;
+
+        //oWindow.location.href = pageUrl ;
+        WJDialogArguments = dialogInfo;
+
+        // On some Gecko browsers (probably over slow connections) the
+        // "dialogArguments" are not set to the target window so we must
+        // put it in the opener window so it can be used by the target one.
+        parentWindow.FCKLastDialogInfo = dialogInfo ;
+
+        this.Window = oWindow ;
+
+        // Try/Catch must be used to avoit an error when using a frameset
+        // on a different domain:
+        // "Permission denied to get property Window.releaseEvents".
+        try
+        {
+            /*parentWindow.captureEvents( Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS ) ;
+            parentWindow.top.addEventListener( 'mousedown', this.CheckFocus, true ) ;
+            parentWindow.top.addEventListener( 'mouseup', this.CheckFocus, true ) ;
+            parentWindow.top.addEventListener( 'click', this.CheckFocus, true ) ;
+            parentWindow.top.addEventListener( 'focus', this.CheckFocus, true ) ;*/
+
+            window.captureEvents( Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS ) ;
+            window.addEventListener( 'mousedown', this.CheckFocus, true ) ;
+            window.addEventListener( 'mouseup', this.CheckFocus, true ) ;
+            window.addEventListener( 'click', this.CheckFocus, true ) ;
+            window.addEventListener( 'focus', this.CheckFocus, true ) ;
+        }
+        catch (e)
+        {}
+    }
+
+    WJDialog.CheckFocus = function()
+    {
+        //WJDialog.Window.status = "check focus: " + new Date();
+
+        // It is strange, but we have to check the WJDialog existence to avoid a
+        // random error: "WJDialog is not defined".
+        if ( typeof( WJDialog ) != "object" )
+            return ;
+
+        if ( WJDialog.Window && !WJDialog.Window.closed )
+        {
+        try
+        {
+                //WJDialog.Window.focus();
+                WJDialog.Window.document.getElementById('frmMain').contentWindow.focus();
+            }
+            catch (e)
+            {}
+            //WJDialog.Window.status = WJDialog.Window.location.href + " " + new Date();
+            return false ;
+        }
+        else
+        {
+            //WJDialog.Window.status = "XXX: " + new Date();
+
+            // Try/Catch must be used to avoit an error when using a frameset
+            // on a different domain:
+            // "Permission denied to get property Window.releaseEvents".
+            try
+            {
+                window.top.releaseEvents(Event.CLICK | Event.MOUSEDOWN | Event.MOUSEUP | Event.FOCUS) ;
+                window.top.parent.removeEventListener( 'onmousedown', FCKDialog.CheckFocus, true ) ;
+                window.top.parent.removeEventListener( 'mouseup', FCKDialog.CheckFocus, true ) ;
+                window.top.parent.removeEventListener( 'click', FCKDialog.CheckFocus, true ) ;
+                window.top.parent.removeEventListener( 'onfocus', FCKDialog.CheckFocus, true ) ;
+            }
+            catch (e)
+            {}
+        }
+    }
+
+    function openElFinderDialogWindow(form, elementName, requestedImageDir, volume="all")
+    {
+        var url = '/admin/elFinder/dialog.jsp';
+
+        if (form != null && elementName != null) {
+            url = url + "?form=" + form;
+            url = url + "&elementName=" + encodeURIComponent(elementName);
+            url = url + "&volumes=" + encodeURIComponent(volume);
+
+            try {
+                var link = null;
+                if ("ckEditorDialog"==form)
+                {
+                    var dialog = CKEDITOR.dialog.getCurrent();
+                    var tabNamePair = elementName.split(":");
+                    var element = dialog.getContentElement(tabNamePair[0], tabNamePair[1]);
+                    link = element.getValue();
+                }
+                else {
+                    link = document.forms[form].elements[elementName].value;
+                }
+                if (link != null && link!=""){
+                    url = url + "&link=" + encodeURIComponent(link);
+                }else  if (requestedImageDir!=undefined && requestedImageDir!=null && requestedImageDir!="") url += '&link=' + requestedImageDir;
+            } catch (e) { console.log(e); }
+        }
+        //window.alert(navigator.userAgent);
+        WJDialog.OpenDialog( 'WJDialog_Image' , "Image", url, 820, 604);
+    }
+    function openImageDialogWindow(formName, fieldName, requestedImageDir)
+    {
+        //console.log("openImageDialogWindow, formName=", formName, "fieldName=", fieldName, "requestedImageDir=", requestedImageDir);
+        openElFinderDialogWindow(formName, fieldName, requestedImageDir, "images");
+    }
+
+    function openLinkDialogWindow(formName, fieldName, requestedImageDir, requestedFileDir)
+    {
+        openElFinderDialogWindow(formName, fieldName, null, "link");
+    }
+</script>
+<%
+int inlineDocId = doc.getDocId();
+String inlineTitle = doc.getTitle();
+if ("true".equals(request.getParameter("inlineEditingNewPage"))) {
+    inlineDocId = -1;
+    inlineTitle = (String)request.getAttribute("title");
+}
+%>
 <div id="inlineEditorToolbarTop" class="wj-toolbar-panel">
     <div class="wj-content-line" id="wjInlineCkEditorToolbarOffsetElement">
         <form name="editorForm" id="editorFormId" class="donotobfuscate" method="post">
-            <input type="hidden" name="docId" value="<%=doc.getDocId()%>"/>
+            <input type="hidden" name="docId" value="<%=inlineDocId%>"/>
             <input type="hidden" name="groupId" value="<%=doc.getGroupId()%>"/>
-            <input type="hidden" name="title" value="<%=doc.getTitle()%>"/>
+            <input type="hidden" name="title" value="<%=inlineTitle%>"/>
             <input type="hidden" name="virtualPath" value="<%=doc.getVirtualPath()%>"/>
 
             <div id='wjInlineCkEditorToolbarElement'></div>

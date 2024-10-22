@@ -32,7 +32,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
 public class CampaingsEntity implements Serializable {
 
     //Set entity domain id

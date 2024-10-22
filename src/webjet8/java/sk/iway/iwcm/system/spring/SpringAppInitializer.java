@@ -1,76 +1,64 @@
 package sk.iway.iwcm.system.spring;
 
 import org.springframework.web.WebApplicationInitializer;
+import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.request.RequestContextListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
+import org.springframework.web.filter.CharacterEncodingFilter;
+import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
-import sk.iway.iwcm.*;
-import sk.iway.iwcm.system.ConfDB;
 
+import sk.iway.iwcm.*;
+
+import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRegistration.Dynamic;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class SpringAppInitializer implements WebApplicationInitializer
 {
-	public static String installName;
-	public static String logInstallName;
 	private List<String> customConfigs = new ArrayList<>();
 
 	@Override
 	public void onStartup(ServletContext servletContext) throws ServletException
 	{
-		Logger.println(this,"SPRING: inicializujem");
+		boolean initialized = InitServlet.initializeWebJET(servletContext);
+		String installName = Constants.getInstallName();
+
+		Logger.println(this,"SPRING: onStartup");
 		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
 		customConfigs.add("sk.iway.iwcm.system.spring.BaseSpringConfig");
 
-		String contextDbName = servletContext.getInitParameter("webjetDbname");
-		Logger.debug(getClass(),"SPRING: contextDbName="+contextDbName);
-		InitServlet.setContextDbName(contextDbName);
-		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
-		Constants.setServletContext(servletContext);
+		if (initialized) {
+			String contextDbName = servletContext.getInitParameter("webjetDbname");
+			Logger.debug(getClass(),"SPRING: contextDbName="+contextDbName);
+			InitServlet.setContextDbName(contextDbName);
 
-		String installName = getConstant("installName");
-		if (Tools.isNotEmpty(installName)) {
-			customConfigs.add("sk.iway." + installName + ".SpringConfig");
-			SpringAppInitializer.installName = installName;
-            Constants.setInstallName(installName);
-		}
-
-		String logInstallName = getConstant("logInstallName");
-		if (Tools.isNotEmpty(logInstallName)) {
-			SpringAppInitializer.logInstallName = logInstallName;
-
-			String logClassName = "sk.iway." + logInstallName + ".LogSpringConfig";
-			//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
-			try {
-				Class.forName(logClassName);
-				customConfigs.add(logClassName);
-			} catch (ClassNotFoundException e) {
-				//nenasiel sa LogSpringConfig, skusime teda pridat po starom
-				customConfigs.add("sk.iway." + logInstallName + ".SpringConfig");
+			if (Tools.isNotEmpty(installName)) {
+				customConfigs.add("sk.iway." + installName + ".SpringConfig");
+				Constants.setInstallName(installName);
 			}
 
+			String logInstallName = Constants.getLogInstallName();
+			if (Tools.isNotEmpty(logInstallName)) {
+				String logClassName = "sk.iway." + logInstallName + ".LogSpringConfig";
+				//over ci existuje trieda LogSpringConfig kvoli spatnej kompatibilite boli stare ako SpringConfig
+				try {
+					Class.forName(logClassName);
+					customConfigs.add(logClassName);
+				} catch (ClassNotFoundException e) {
+					//nenasiel sa LogSpringConfig, skusime teda pridat po starom
+					customConfigs.add("sk.iway." + logInstallName + ".SpringConfig");
+				}
+
+			}
+
+			//WebJET 9/2021
+			customConfigs.add("sk.iway.webjet.v9.V9SpringConfig");
 		}
-
-		//ak sme Tomcat 7 nemozeme mat spring komponenty (ma staru verziu el), musime inicializovat takto
-		Logger.println(this,"ServerInfo: "+servletContext.getServerInfo());
-		if (servletContext.getServerInfo().contains("Tomcat/7"))
-		{
-			customConfigs.add("sk.iway.tomcat7.Tomcat7SpringConfig");
-		}
-
-		//WebJET 8
-		//customConfigs.add("sk.iway.webjet.v8.SpringConfig");
-
-		//WebJET 9/2021
-		customConfigs.add("sk.iway.webjet.v9.V9SpringConfig");
 
 		ctx.setServletContext(servletContext);
 
@@ -78,7 +66,11 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		dynamic.addMapping("/");
 		dynamic.setLoadOnStartup(1);
 
-		if (Tools.isEmpty(installName)) {
+		CharacterEncodingFilter filter = new CharacterEncodingFilter();
+		filter.setEncoding(Constants.getString("defaultEncoding"));
+		servletContext.addFilter("SpringEncodingFilter", filter).addMappingForUrlPatterns(null, false, "/*");
+
+		if (initialized == false) {
 			//WebJET is not initialized - there is no DB connection, allow only setup
 			customConfigs.clear();
 			addScanPackagesInit(ctx);
@@ -86,9 +78,20 @@ public class SpringAppInitializer implements WebApplicationInitializer
 			loadConfigs(ctx);
 			servletContext.addListener(RequestContextListener.class);
 			addScanPackages(ctx);
+			servletContext.addListener(new ContextLoaderListener(ctx));
 		}
 
 		servletContext.setAttribute("springContext", ctx);
+
+		if (initialized) {
+			// spring security filter
+			final DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy("springSecurityFilterChain");
+			final FilterRegistration.Dynamic addedFilter = servletContext.addFilter("springSecurityFilterChain", springSecurityFilterChain);
+			addedFilter.addMappingForUrlPatterns(null, false, "/*");
+		} else {
+			//it is normally initialized in V9SpringConfig, but we need to add it here for setup/bad db connection
+			servletContext.addFilter("failedSetCharacterEncodingFilter", new SetCharacterEncodingFilter()).addMappingForUrlPatterns(null, false, "/*");
+		}
 	}
 
 	private void loadConfigs(AnnotationConfigWebApplicationContext ctx) {
@@ -98,7 +101,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 				return Class.forName(c) != null;
 			} catch (ClassNotFoundException e) {
 				//sk.iway.iwcm.Logger.error(e);
-				Logger.println(this, "SPRING: NEnasiel som custom config (1) pre " + c);
+				Logger.println(this, "SPRING: NOT found custom config (1) " + c);
 			}
 			return false;
 		}).collect(Collectors.toList());
@@ -111,14 +114,14 @@ public class SpringAppInitializer implements WebApplicationInitializer
 				Class<?> aClass = Class.forName(customConfig);
 				if (aClass != null) {
 					objectArray[i] = aClass;
-					Logger.println(this, "SPRING: nasiel som custom config " + customConfig);
+					Logger.println(this, "SPRING: found custom config " + customConfig);
 				}
 				else {
-					Logger.println(this, "SPRING: NEnasiel som custom config (2) pre " + customConfig);
+					Logger.println(this, "SPRING: NOT found custom config (2) " + customConfig);
 				}
 			} catch (Exception e) {
 				// config class asi neexistuje.
-				Logger.println(this, "SPRING: NEnasiel som custom config (3) pre " + customConfig);
+				Logger.println(this, "SPRING: found custom config (3) " + customConfig);
 			}
 
 		}
@@ -152,7 +155,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		//packages.add("sk.iway.intranet.dms");
 		packages.add("sk.iway.iwcm.localconf");
 
-		String addPackages = getConstant("springAddPackages");
+		String addPackages = Constants.getString("springAddPackages");
 		if (Tools.isNotEmpty(addPackages)) {
 			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, ",")));
 		}
@@ -171,58 +174,5 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		packages.add("sk.iway.iwcm.setup");
 		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
 		ctx.scan(packages.toArray(new String[packages.size()]));
-	}
-
-	public static String getInstallName() {
-		if (installName == null) {
-			installName = getConstant("installName");
-		}
-
-		return installName;
-	}
-
-	public static String getLogInstallName() {
-		if (logInstallName == null) {
-			logInstallName = getConstant("logInstallName");
-		}
-
-		return logInstallName;
-	}
-
-	private static String getConstant(String name) {
-		String value = null;
-		try
-		{
-			Connection dbConn = DBPool.getConnection("iwcm");
-
-			Logger.println(SpringAppInitializer.class, "Getting " + name + " from table "+ConfDB.CONF_TABLE_NAME);
-			PreparedStatement ps = dbConn.prepareStatement("SELECT value FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?");
-			ps.setString(1, name);
-			try
-			{
-				ResultSet rs = ps.executeQuery();
-				try
-				{
-					if (rs.next())
-					{
-						value = DB.getDbString(rs, "value");
-					}
-				}
-				finally
-				{
-					rs.close();
-				}
-			} finally
-			{
-				ps.close();
-				dbConn.close();
-			}
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(SpringAppInitializer.class, ex.getMessage());
-		}
-
-		return (value);
 	}
 }

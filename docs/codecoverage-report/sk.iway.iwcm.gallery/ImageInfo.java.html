@@ -321,8 +321,8 @@ public class ImageInfo {
 <span class="nc" id="L321">            return checkGif();</span>
          }
          else
-<span class="pc bpc" id="L324" title="3 of 4 branches missed.">         if (b1 == 0x89 &amp;&amp; b2 == 0x50) {</span>
-<span class="nc" id="L325">            return checkPng();</span>
+<span class="pc bpc" id="L324" title="1 of 4 branches missed.">         if (b1 == 0x89 &amp;&amp; b2 == 0x50) {</span>
+<span class="fc" id="L325">            return checkPng();</span>
          }
          else
 <span class="pc bpc" id="L328" title="2 of 4 branches missed.">         if (b1 == 0xff &amp;&amp; b2 == 0xd8) {</span>
@@ -649,23 +649,23 @@ public class ImageInfo {
    }
 
    private boolean checkPng() throws IOException {
-<span class="nc" id="L652">      final byte[] PNG_MAGIC = {0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};</span>
-<span class="nc" id="L653">      byte[] a = new byte[24];</span>
-<span class="nc bnc" id="L654" title="All 2 branches missed.">      if (read(a) != 24) {</span>
+<span class="fc" id="L652">      final byte[] PNG_MAGIC = {0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a};</span>
+<span class="fc" id="L653">      byte[] a = new byte[24];</span>
+<span class="pc bpc" id="L654" title="1 of 2 branches missed.">      if (read(a) != 24) {</span>
 <span class="nc" id="L655">         return false;</span>
       }
-<span class="nc bnc" id="L657" title="All 2 branches missed.">      if (!equals(a, 0, PNG_MAGIC, 0, 6)) {</span>
+<span class="pc bpc" id="L657" title="1 of 2 branches missed.">      if (!equals(a, 0, PNG_MAGIC, 0, 6)) {</span>
 <span class="nc" id="L658">         return false;</span>
       }
-<span class="nc" id="L660">      format = FORMAT_PNG;</span>
-<span class="nc" id="L661">      width = getIntBigEndian(a, 14);</span>
-<span class="nc" id="L662">      height = getIntBigEndian(a, 18);</span>
-<span class="nc" id="L663">      bitsPerPixel = a[22] &amp; 0xff;</span>
-<span class="nc" id="L664">      int colorType = a[23] &amp; 0xff;</span>
-<span class="nc bnc" id="L665" title="All 4 branches missed.">      if (colorType == 2 || colorType == 6) {</span>
-<span class="nc" id="L666">         bitsPerPixel *= 3;</span>
+<span class="fc" id="L660">      format = FORMAT_PNG;</span>
+<span class="fc" id="L661">      width = getIntBigEndian(a, 14);</span>
+<span class="fc" id="L662">      height = getIntBigEndian(a, 18);</span>
+<span class="fc" id="L663">      bitsPerPixel = a[22] &amp; 0xff;</span>
+<span class="fc" id="L664">      int colorType = a[23] &amp; 0xff;</span>
+<span class="pc bpc" id="L665" title="1 of 4 branches missed.">      if (colorType == 2 || colorType == 6) {</span>
+<span class="fc" id="L666">         bitsPerPixel *= 3;</span>
       }
-<span class="nc" id="L668">      return true;</span>
+<span class="fc" id="L668">      return true;</span>
    }
 
    private boolean checkPnm(int id) throws IOException {
@@ -860,7 +860,7 @@ public class ImageInfo {
    }
 
    private int getIntBigEndian(byte[] a, int offs) {
-<span class="nc" id="L863">      return</span>
+<span class="fc" id="L863">      return</span>
          (a[offs] &amp; 0xff) &lt;&lt; 24 |
          (a[offs + 1] &amp; 0xff) &lt;&lt; 16 |
          (a[offs + 2] &amp; 0xff) &lt;&lt; 8 |
@@ -1005,8 +1005,8 @@ public class ImageInfo {
    }
 
    private int read(byte[] a) throws IOException {
-<span class="nc bnc" id="L1008" title="All 2 branches missed.">      if (in != null) {</span>
-<span class="nc" id="L1009">         return in.read(a);</span>
+<span class="pc bpc" id="L1008" title="1 of 2 branches missed.">      if (in != null) {</span>
+<span class="fc" id="L1009">         return in.read(a);</span>
       } else {
 <span class="nc" id="L1011">         din.readFully(a);</span>
 <span class="nc" id="L1012">         return a.length;</span>
@@ -1184,4 +1184,4 @@ public class ImageInfo {
       }
 <span class="fc" id="L1185">   }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

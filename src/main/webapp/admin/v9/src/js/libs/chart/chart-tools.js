@@ -54,12 +54,34 @@ export class BarChartForm {
  */
 export class PieChartForm {
     constructor(yAxeName, xAxeName, chartTitle,
-        chartDivId, chartData) {
+        chartDivId, chartData, labelKey) {
         this.yAxeName = yAxeName;
         this.xAxeName = xAxeName;
         this.chartTitle = chartTitle;
         this.chartDivId = chartDivId;
         this.chartData = chartData;
+        this.labelKey = labelKey;
+        this.chart = undefined;
+        this.chartLegend = undefined;
+    }
+}
+
+/**
+ * Object (chart form) representing PIE type chart BUT with two series (inner and outer)
+ */
+export class DoublePieChartForm {
+    constructor(yAxeName_inner, yAxeName_outer, xAxeName, chartTitle,
+        chartDivId, chartData, labelSeries = null, labelKey = null) {
+        this.yAxeName_inner = yAxeName_inner;
+        this.yAxeName_outer = yAxeName_outer;
+        this.xAxeName = xAxeName;
+        this.chartTitle = chartTitle;
+        this.chartDivId = chartDivId;
+        this.chartData = chartData;
+
+        this.labelSeries = labelSeries;
+        this.labelKey = labelKey;
+
         this.chart = undefined;
         this.chartLegend = undefined;
     }
@@ -451,18 +473,24 @@ export async function createAmchart(chartForm, update) {
     else root.locale = window.am5locales_sk_SK;
 
     //Hide amcharts logo
-    root._logo.dispose();
+    if (window.am5.registry.licenses.length>0) root._logo.dispose();
+
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),
         am5_dark.new(root),
         WebjetTheme.new(root)
     ]);
-    //Add title to chart div
-    if(update !== true) {
-        var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
-        $('#' + chartForm.chartDivId).before(htmlCode);
+    
+    if(update === true) {
+        //We need to remove previous header in order too push new ONE -> if we want update chart title
+        let previousHeader = $('#' + chartForm.chartDivId).prev();
+        if(previousHeader != undefined && previousHeader != null && previousHeader.length > 0) previousHeader.remove();
     }
+
+    //Add title to chart div
+    var htmlCode = '<h6 class="amchart-header">' + chartForm.chartTitle;
+    $('#' + chartForm.chartDivId).before(htmlCode);
 
     //By the type of input ChartForm create chart of that type
     if(chartForm instanceof BarChartForm) {
@@ -474,6 +502,8 @@ export async function createAmchart(chartForm, update) {
     } else if(chartForm instanceof LineChartForm) {
         //LINE type chart
         createLineChart(root, chartForm);
+    } else if(chartForm instanceof DoublePieChartForm) {
+        createDoublePieChart(root, chartForm);
     }
 }
 
@@ -829,13 +859,16 @@ async function createPieChart(root, chartForm) {
         stroke: am5.color("#FFFFFF"),
         strokeOpacity: 1,
         //strokeWidth: 1.5
-    })
+    });
+
+    //
+    setPieSumLabel(chartForm)
 
     //Create and format tooltip
     var tooltip = am5.Tooltip.new(root, {
         labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName + "})",
         autoTextColor: false
-    })
+    });
     tooltip.label.setAll({
         fill: am5.color("#FFFFFF")
     });
@@ -847,19 +880,193 @@ async function createPieChart(root, chartForm) {
 }
 
 /**
- * Update chart set in entered ChartForm. The chart data must be allready updated in this ChartForm object.
+ * Create DOUBLE PIE type chart and set all setting around chart. The created chart is set in DoublePieChartForm.chart param.
+ *
+ * @param {am5.Root} root
+ * @param {DoublePieChartForm} chartForm
+ */
+async function createDoublePieChart(root, chartForm) {
+    //Create chart instance
+    var chart = root.container.children.push(
+        am5percent.PieChart.new(root, {
+            innerRadius: am5.percent(50),
+            layout: root.verticalLayout
+        })
+    );
+
+    //!! set created chart into PieChartForm.chart
+    chartForm.chart = chart;
+
+    //Create series
+    /* INNER series must be crated before OUTER series, or they switch places */
+    var series_inner = chart.series.push(
+        am5percent.PieSeries.new(root, {
+            valueField: chartForm.yAxeName_inner,
+            categoryField: chartForm.xAxeName,
+            legendLabelText: "{category}",
+            legendValueText: "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]" //Format legend
+        })
+    );
+
+    var series_outer = chart.series.push(
+        am5percent.PieSeries.new(root, {
+            valueField: chartForm.yAxeName_outer,
+            categoryField: chartForm.xAxeName,
+            legendLabelText: "{category}",
+            legendValueText: "[bold]{valuePercentTotal.formatNumber('0.0')}%[/]" //Format legend
+        })
+    );
+
+    //set chart slices (parts)
+    series_inner.slices.template.setAll({
+        strokeWidth: 3,
+        stroke: am5.color("#2b303b")
+    });
+
+    series_outer.slices.template.setAll({
+        strokeWidth: 3,
+        stroke: am5.color("#2b303b")
+    });
+
+    //
+    setPieSumLabel(chartForm)
+
+    //Format labels
+    series_inner.labels.template.set("text", "{category}: [bold]{valuePercentTotal.formatNumber('0.0')}%[/]");
+    series_outer.labels.template.set("text", "{category}: [bold]{valuePercentTotal.formatNumber('0.0')}%[/]");
+
+    //We are setting data in series only if data length is more than 0, or error occur
+    if(chartForm.chartData != undefined && chartForm.chartData.length > 0) {
+        series_inner.data.setAll(chartForm.chartData);
+        series_outer.data.setAll(chartForm.chartData);
+    }
+
+    //!! Set ticks color
+    //If you dont know (like me), TICKS are that stupid lines that connect pie slice with label
+    series_outer.ticks.template.setAll({
+        fill: am5.color("#FFFFFF"),
+        fillOpacity: 1,
+        opacity: 1,
+        stroke: am5.color("#FFFFFF"),
+        strokeOpacity: 1
+    })
+
+    series_inner.ticks.template.setAll({ forceHidden: true });
+    series_inner.labels.template.setAll({ forceHidden: true });
+
+    //Create and format tooltip's
+    var tooltip_inner = am5.Tooltip.new(root, {
+        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_inner + "})",
+        autoTextColor: false
+    })
+    tooltip_inner.label.setAll({ fill: am5.color("#FFFFFF") });
+    series_inner.set("tooltip", tooltip_inner);
+
+    var tooltip_outer = am5.Tooltip.new(root, {
+        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_outer + "})",
+        autoTextColor: false
+    })
+    tooltip_outer.label.setAll({ fill: am5.color("#FFFFFF") });
+    series_outer.set("tooltip", tooltip_outer);
+}
+
+/**
+ * Set SUM label inside PIE chart. This label is set in the center of chart and show sum of values in chart.
+ * In case of DoublePieChartForm, you can decide if you want to show sum of inner or outer series via chartForm.labelSeries param (inner/outer).
+ * @param {PieChartForm} chartForm 
+ * @param {DoublePieChartForm} chartForm 
+ * @returns 
+ */
+function setPieSumLabel(chartForm) {
+
+    //Series that value we want to SUM
+    let valueSeries;
+    //Most inner series to compute max radius
+    let innerSeries;
+
+    if(chartForm instanceof DoublePieChartForm) {
+        if("inner" == chartForm.labelSeries) {
+            innerSeries = chartForm.chart.series.values[0];
+            valueSeries = innerSeries;
+        } else if("outer" == chartForm.labelSeries) {
+            innerSeries = chartForm.chart.series.values[0];
+            valueSeries = chartForm.chart.series.values[1];
+        } else {
+            //WRONG VALUE
+            return;
+        }
+    } else if(chartForm instanceof PieChartForm) {
+        //Classic PieChartForm have only one series
+        innerSeries = chartForm.chart.series.values[0];
+        valueSeries = innerSeries;
+    } else {
+        //This chart type is not supported for this action
+        return;
+    }
+
+    //Key MUST be set
+    if(chartForm.labelKey == undefined || chartForm.labelKey == null || chartForm.labelKey.length < 1) return;
+
+    var label = valueSeries.children.push(am5.Label.new(chartForm.chart.root, {
+        text: "[fontSize: 20px; #999]" + WJ.translate(chartForm.labelKey) + "[/]\n{valueSum.formatNumber()}",
+        textAlign: "center",
+        centerX: am5.p50,
+        centerY: am5.p50,
+        fontSize: 40,
+        fontWeight: "500",
+        populateText: true,
+        fill: am5.color(0x555555),
+        oversizedBehavior: "fit"
+    }));
+
+    let innerRadius = innerSeries._privateSettings.radius;
+    innerSeries.onPrivate("radius", function(radius) {
+        if(innerRadius != undefined) radius = innerRadius;
+        if(radius > 1) { label.set("maxWidth", radius * 1.4); }
+    });
+
+    if(innerRadius != undefined && innerRadius > 1) { label.set("maxWidth", innerRadius * 1.4); }
+}
+
+/**
+ * Remove old SUM label from PIE chart and set new one.
+ * 
+ * @param {PieChartForm} chartForm 
+ * @param {DoublePieChartForm} chartForm 
+ * @returns 
+ */
+function updatePieSumLabels(chartForm) {
+    //MUST be PIE chart
+    if(chartForm instanceof PieChartForm == false && chartForm instanceof DoublePieChartForm == false) return;
+
+    chartForm.chart.series.values.forEach(series => {
+        series.children._values.forEach(element => {
+            if(element instanceof am5.Label) {
+                //Remove old label
+                element.dispose();
+                //Set new label
+                setPieSumLabel(chartForm);
+            }
+        });
+    });
+}
+
+/**
+ * Update chart set in entered ChartForm. The chart data must be already updated in this ChartForm object.
  *
  * @param {*} chartForm one of the ChartForm objects, LineChartForm / PieChartForm / BarChartForm
  */
 export async function updateChart(chartForm) {
     if(chartForm instanceof BarChartForm) {
         //BAR chart dont need remove series, just set new data to series
-        //our bar hart allways support only 1 series
+        //our bar chart always support only 1 series
         chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
 
         //!! its also MUST to set new data into CategoryAxis
         chartForm.chart.yAxes.values[0].data.setAll(chartForm.chartData);
     } else if(chartForm instanceof PieChartForm) {
+        updatePieSumLabels(chartForm);
+
         //PIE chart dont need remove series, just set new data to series
         //this type of charts cant have more series
         chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
@@ -873,10 +1080,17 @@ export async function updateChart(chartForm) {
                 //remove created root element
                 root.dispose();
 
-                //Create new root with chart, update param in createAmchart is set as true, because chart div header is allready generated
+                //Create new root with chart, update param in createAmchart is set as true, because chart div header is already generated
                 createAmchart(chartForm, true);
             }
         });
+    } else if(chartForm instanceof DoublePieChartForm) {
+        updatePieSumLabels(chartForm);
+
+        //DOUBLE PIE chart dont need remove series, just set new data to series
+        //this type of charts MUST have exactly 2 series
+        chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
+        chartForm.chart.series.values[1].data.setAll(chartForm.chartData);
     }
 }
 
@@ -1057,7 +1271,7 @@ export async function createServerMonitoringChart(rootName, type) {
     //Create root
     var root = am5.Root.new(rootName);
     //Hide amcharts5 logo
-    root._logo.dispose();
+    if (window.am5.registry.licenses.length>0) root._logo.dispose();
     //Set themes
     root.setThemes([
         am5themes_Animated.new(root),

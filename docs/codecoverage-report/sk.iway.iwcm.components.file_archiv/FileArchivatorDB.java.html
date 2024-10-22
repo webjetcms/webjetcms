@@ -43,7 +43,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 
 	public static FileArchivatorDB getInstance()
 	{
-<span class="nc" id="L46">		return INSTANCE;</span>
+<span class="fc" id="L46">		return INSTANCE;</span>
 	}
 
 	public FileArchivatorDB()
@@ -58,31 +58,31 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static List&lt;FileArchivatorBean&gt; getByReferenceId(int referenceId)
 	{
-<span class="nc" id="L61">		String methodName = &quot;getByReferenceId-&quot;;</span>
-<span class="nc" id="L62">		String cacheKey = cachePrefix+methodName+referenceId;</span>
-<span class="nc" id="L63">		Object o = Cache.getInstance().getObject(cacheKey);</span>
-<span class="nc bnc" id="L64" title="All 2 branches missed.">		if(o != null) {</span>
+<span class="fc" id="L61">		String methodName = &quot;getByReferenceId-&quot;;</span>
+<span class="fc" id="L62">		String cacheKey = cachePrefix+methodName+referenceId;</span>
+<span class="fc" id="L63">		Object o = Cache.getInstance().getObject(cacheKey);</span>
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">		if(o != null) {</span>
 			@SuppressWarnings(&quot;unchecked&quot;)
 <span class="nc" id="L66">			List&lt;FileArchivatorBean&gt; list = (List&lt;FileArchivatorBean&gt;) o;</span>
 <span class="nc" id="L67">			return list;</span>
 		}
 
-<span class="nc" id="L70">		Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);</span>
-<span class="nc" id="L71">		List&lt;FileArchivatorBean&gt; fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;referenceId&quot;, referenceId));</span>
-<span class="nc" id="L72">		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
-<span class="nc" id="L73">		return fabList;</span>
+<span class="fc" id="L70">		Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);</span>
+<span class="fc" id="L71">		List&lt;FileArchivatorBean&gt; fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;referenceId&quot;, referenceId));</span>
+<span class="fc" id="L72">		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
+<span class="fc" id="L73">		return fabList;</span>
 	}
 
     public static int getCountByReferenceId(int referenceId)
     {
-<span class="nc" id="L78">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L79">        em.getTransaction().begin();</span>
-<span class="nc" id="L80">        Query query =  em.createQuery(&quot;SELECT COUNT (f)  FROM FileArchivatorBean  f WHERE f.referenceId = :reference&quot;, Long.class);</span>
+<span class="fc" id="L78">        JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L79">        em.getTransaction().begin();</span>
+<span class="fc" id="L80">        Query query =  em.createQuery(&quot;SELECT COUNT (f)  FROM FileArchivatorBean  f WHERE f.referenceId = :reference&quot;, Long.class);</span>
 
-<span class="nc" id="L82">        query.setParameter(&quot;reference&quot;,referenceId);</span>
-<span class="nc" id="L83">        int count = (int)((long)query.getSingleResult());</span>
-<span class="nc" id="L84">        em.getTransaction().commit();</span>
-<span class="nc" id="L85">        return count;</span>
+<span class="fc" id="L82">        query.setParameter(&quot;reference&quot;,referenceId);</span>
+<span class="fc" id="L83">        int count = (int)((long)query.getSingleResult());</span>
+<span class="fc" id="L84">        em.getTransaction().commit();</span>
+<span class="fc" id="L85">        return count;</span>
     }
 
 	/** Pokusi sa najst v DB hlavne subory s rovnakym hashom. Pozor ! Vracia aj sam seba ;-)
@@ -92,7 +92,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static List&lt;FileArchivatorBean&gt; getByHash(FileArchivatorBean fab)
 	{
-<span class="nc" id="L95">		return JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;md5&quot;, fab.getMd5()), Pair.of(&quot;referenceId&quot;, -1), Pair.of(&quot;domainId&quot;, CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L95">		return JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;md5&quot;, fab.getMd5()), Pair.of(&quot;referenceId&quot;, -1), Pair.of(&quot;domainId&quot;, CloudToolsForCore.getDomainId()));</span>
 	}
 
 	/** Vrati vsetky aktualne (hlavne) subory z cache + zohladni CloudToolsForCore.getDomainId() ak je zapnute
@@ -101,7 +101,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static List&lt;FileArchivatorBean&gt; getMainFileList()
     {
-<span class="nc" id="L104">        return getMainFileList(false);</span>
+<span class="fc" id="L104">        return getMainFileList(false);</span>
     }
 
 	public static List&lt;FileArchivatorBean&gt; getPaginatedAndUncachedMainFileList(int page, int pageSize)
@@ -125,19 +125,19 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	@SuppressWarnings(&quot;unchecked&quot;)
     public static List&lt;FileArchivatorBean&gt; getMainFileList(boolean cleanCache)
 	{
-<span class="nc" id="L128">		String methodName = &quot;getMainFileList-&quot;;</span>
-<span class="nc" id="L129">		String cacheKey = cachePrefix+methodName+&quot;-domain_id-&quot;+CloudToolsForCore.getDomainId();</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">		if(!cleanCache)</span>
+<span class="fc" id="L128">		String methodName = &quot;getMainFileList-&quot;;</span>
+<span class="fc" id="L129">		String cacheKey = cachePrefix+methodName+&quot;-domain_id-&quot;+CloudToolsForCore.getDomainId();</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">		if(!cleanCache)</span>
         {
-<span class="nc" id="L132">            Object o = Cache.getInstance().getObject(cacheKey);</span>
-<span class="nc bnc" id="L133" title="All 2 branches missed.">            if (o != null)</span>
+<span class="fc" id="L132">            Object o = Cache.getInstance().getObject(cacheKey);</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">            if (o != null)</span>
 <span class="nc" id="L134">                return (List&lt;FileArchivatorBean&gt;) o;</span>
         }
 		//Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);
 		// Pair.of(&quot;uploaded&quot;, -1) - nezobrazujeme subory, ktore sa maju nahrat neskor
-<span class="nc" id="L138">		List&lt;FileArchivatorBean&gt; fabList =  JpaTools.findByProperties(FileArchivatorBean.class,Pair.of(&quot;referenceId&quot;, -1), Pair.of(&quot;uploaded&quot;, -1), Pair.of(&quot;domainId&quot;, CloudToolsForCore.getDomainId()));</span>
-<span class="nc" id="L139">		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
-<span class="nc" id="L140">		return fabList;</span>
+<span class="fc" id="L138">		List&lt;FileArchivatorBean&gt; fabList =  JpaTools.findByProperties(FileArchivatorBean.class,Pair.of(&quot;referenceId&quot;, -1), Pair.of(&quot;uploaded&quot;, -1), Pair.of(&quot;domainId&quot;, CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L139">		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
+<span class="fc" id="L140">		return fabList;</span>
 	}
 
 	/** Vrati vsetky subory cakajuce na nahranie v buducnosti
@@ -147,36 +147,36 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public static List&lt;FileArchivatorBean&gt; getWaitingFileList()
 	{
-<span class="nc" id="L150">		String methodName = &quot;getWaitingFileList-&quot;;</span>
-<span class="nc" id="L151">		String cacheKey = cachePrefix+methodName+&quot;-domainId-&quot;+CloudToolsForCore.getDomainId();</span>
-<span class="nc" id="L152">		Object o = Cache.getInstance().getObject(cacheKey);</span>
-<span class="nc bnc" id="L153" title="All 2 branches missed.">		if(o != null)</span>
-<span class="nc" id="L154">			return (List&lt;FileArchivatorBean&gt;) o;</span>
+<span class="fc" id="L150">		String methodName = &quot;getWaitingFileList-&quot;;</span>
+<span class="fc" id="L151">		String cacheKey = cachePrefix+methodName+&quot;-domainId-&quot;+CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L152">		Object o = Cache.getInstance().getObject(cacheKey);</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">		if(o != null)</span>
+<span class="fc" id="L154">			return (List&lt;FileArchivatorBean&gt;) o;</span>
 
-<span class="nc" id="L156">		Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);</span>
+<span class="fc" id="L156">		Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);</span>
 
 		//List&lt;FileArchivatorBean&gt; fabList =  JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;uploaded&quot;, 0));
 
 		// .notEqual(-1) aby sme vypisaly skutocne vsetky
-<span class="nc" id="L161">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
-<span class="nc" id="L162">		List&lt;FileArchivatorBean&gt; fabList = null;</span>
+<span class="fc" id="L161">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
+<span class="fc" id="L162">		List&lt;FileArchivatorBean&gt; fabList = null;</span>
 		try{
-<span class="nc" id="L164">			ExpressionBuilder builder = new ExpressionBuilder();</span>
-<span class="nc" id="L165">			ReadAllQuery dbQuery = new ReadAllQuery(FileArchivatorBean.class, builder);</span>
-<span class="nc" id="L166">			Expression expr = builder.get(&quot;uploaded&quot;).notEqual(-1);</span>
-<span class="nc" id="L167">			expr = expr.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
-<span class="nc" id="L168">			dbQuery.setSelectionCriteria(expr);</span>
+<span class="fc" id="L164">			ExpressionBuilder builder = new ExpressionBuilder();</span>
+<span class="fc" id="L165">			ReadAllQuery dbQuery = new ReadAllQuery(FileArchivatorBean.class, builder);</span>
+<span class="fc" id="L166">			Expression expr = builder.get(&quot;uploaded&quot;).notEqual(-1);</span>
+<span class="fc" id="L167">			expr = expr.and(builder.get(&quot;domainId&quot;).equal(CloudToolsForCore.getDomainId()));</span>
+<span class="fc" id="L168">			dbQuery.setSelectionCriteria(expr);</span>
 
-<span class="nc" id="L170">			Query query = em.createQuery(dbQuery);</span>
-<span class="nc" id="L171">			fabList = JpaDB.getResultList(query);</span>
+<span class="fc" id="L170">			Query query = em.createQuery(dbQuery);</span>
+<span class="fc" id="L171">			fabList = JpaDB.getResultList(query);</span>
 <span class="nc" id="L172">		}catch (Exception e) {</span>
 <span class="nc" id="L173">			sk.iway.iwcm.Logger.error(e);</span>
 		}finally{
-<span class="nc" id="L175">			em.close();</span>
+<span class="fc" id="L175">			em.close();</span>
 		}
 
-<span class="nc" id="L178">		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
-<span class="nc" id="L179">		return fabList;</span>
+<span class="fc" id="L178">		Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
+<span class="fc" id="L179">		return fabList;</span>
 	}
 
 	/** Vrati vsetky subory, ktore sa mozu nahrat vzhladom na aktualny cas
@@ -211,7 +211,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	public static List&lt;FileArchivatorBean&gt; getByConditions(Collection&lt;String&gt; domain, Collection&lt;String&gt; product, Collection&lt;String&gt; category,
 				Collection&lt;String&gt; productCode, String dirPath_cached, boolean includeSubdirs, boolean asc, Boolean showFile,boolean useCache)
 	{
-<span class="nc" id="L214">		return getByConditions(null, product, category, productCode, dirPath_cached, includeSubdirs, asc, showFile, null, null, useCache, -1, false);</span>
+<span class="fc" id="L214">		return getByConditions(null, product, category, productCode, dirPath_cached, includeSubdirs, asc, showFile, null, null, useCache, -1, false);</span>
 	}
 
 	/**
@@ -242,7 +242,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 			 Collection&lt;String&gt; productCode, String dirPath_cached, boolean includeSubdirs, boolean asc, Boolean pShowFile,
 			 String virtualName, String realName, boolean useCache, int globalId, boolean onlyMain)
 	{
-<span class="nc" id="L245">		return getByConditions(product, category, productCode, dirPath_cached, includeSubdirs, asc, pShowFile, virtualName, realName, useCache, globalId, onlyMain);</span>
+<span class="fc" id="L245">		return getByConditions(product, category, productCode, dirPath_cached, includeSubdirs, asc, pShowFile, virtualName, realName, useCache, globalId, onlyMain);</span>
 	}
 
 	/**
@@ -265,24 +265,24 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
                                                            Collection&lt;String&gt; productCode, String dirPath, boolean includeSubdirs, boolean asc, Boolean pShowFile,
                                                            String virtualName, String realName, boolean useCache, int globalId, boolean onlyMain)
     {
-<span class="nc" id="L268">        Boolean showFile = pShowFile;</span>
-<span class="nc" id="L269">        FileArchivatorSearchBean fabSearch = new FileArchivatorSearchBean();</span>
-<span class="nc" id="L270">        fabSearch.setProduct(product);</span>
-<span class="nc" id="L271">        fabSearch.setCategory(category);</span>
-<span class="nc" id="L272">        fabSearch.setProductCode(productCode);</span>
-<span class="nc" id="L273">        fabSearch.setDirPath(dirPath);</span>
-<span class="nc" id="L274">        fabSearch.setIncludeSubdirs(includeSubdirs);</span>
-<span class="nc" id="L275">        fabSearch.setAsc(asc);</span>
-<span class="nc bnc" id="L276" title="All 2 branches missed.">        if(showFile == null)</span>
+<span class="fc" id="L268">        Boolean showFile = pShowFile;</span>
+<span class="fc" id="L269">        FileArchivatorSearchBean fabSearch = new FileArchivatorSearchBean();</span>
+<span class="fc" id="L270">        fabSearch.setProduct(product);</span>
+<span class="fc" id="L271">        fabSearch.setCategory(category);</span>
+<span class="fc" id="L272">        fabSearch.setProductCode(productCode);</span>
+<span class="fc" id="L273">        fabSearch.setDirPath(dirPath);</span>
+<span class="fc" id="L274">        fabSearch.setIncludeSubdirs(includeSubdirs);</span>
+<span class="fc" id="L275">        fabSearch.setAsc(asc);</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">        if(showFile == null)</span>
 <span class="nc" id="L277">            showFile = true;</span>
-<span class="nc" id="L278">        fabSearch.setShowFile(showFile);</span>
-<span class="nc" id="L279">        fabSearch.setVirtualFileName(virtualName);</span>
-<span class="nc" id="L280">        fabSearch.setFileName(realName);</span>
-<span class="nc" id="L281">        fabSearch.setUseCache(useCache);</span>
-<span class="nc" id="L282">        fabSearch.setGlobalId(globalId);</span>
-<span class="nc" id="L283">        fabSearch.setOnlyMain(onlyMain);</span>
+<span class="fc" id="L278">        fabSearch.setShowFile(showFile);</span>
+<span class="fc" id="L279">        fabSearch.setVirtualFileName(virtualName);</span>
+<span class="fc" id="L280">        fabSearch.setFileName(realName);</span>
+<span class="fc" id="L281">        fabSearch.setUseCache(useCache);</span>
+<span class="fc" id="L282">        fabSearch.setGlobalId(globalId);</span>
+<span class="fc" id="L283">        fabSearch.setOnlyMain(onlyMain);</span>
 
-<span class="nc" id="L285">        return search(fabSearch);</span>
+<span class="fc" id="L285">        return search(fabSearch);</span>
     }
 
 	/** vysledky z databazy bez pouzitia Cache + zohladni CloudToolsForCore.getDomainId() ak je zapnute
@@ -298,7 +298,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 <span class="fc" id="L298">				+ fabSearch.isIncludeSubdirs() + fabSearch.getGlobalId() + fabSearch.isOnlyMain() + fabSearch.getShowFile() + fabSearch.getVirtualFileName() + fabSearch.getFileName() + &quot;-&quot;</span>
 <span class="fc" id="L299">				+ fabSearch.isAsc() + &quot;-domain_id-&quot; + CloudToolsForCore.getDomainId() + fabSearch.getNote() + fabSearch.getFieldA() + fabSearch.getFieldB() + fabSearch.getFieldC();</span>
 
-<span class="pc bpc" id="L301" title="1 of 2 branches missed.">		if(fabSearch.isUseCache())</span>
+<span class="fc bfc" id="L301" title="All 2 branches covered.">		if(fabSearch.isUseCache())</span>
 		{
 <span class="fc" id="L303">			Object o = Cache.getInstance().getObject(cacheKey);</span>
 <span class="fc bfc" id="L304" title="All 2 branches covered.">			if(o != null)</span>
@@ -352,7 +352,7 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
         }
 
 		//13.9.2018
-<span class="pc bpc" id="L355" title="1 of 2 branches missed.">        if(!Tools.isEmpty(fabSearch.getExcludeCategory()))</span>
+<span class="fc bfc" id="L355" title="All 2 branches covered.">        if(!Tools.isEmpty(fabSearch.getExcludeCategory()))</span>
 <span class="fc" id="L356">            conditions.add(filterNotIn(&quot;category&quot;, fabSearch.getExcludeCategory()));</span>
 
 
@@ -368,13 +368,13 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 			}
 		}
 
-<span class="pc bpc" id="L371" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(fabSearch.getVirtualFileName()))</span>
-<span class="nc" id="L372">			conditions.add(filterSubstring(&quot;virtual_file_name&quot;, fabSearch.getVirtualFileName()));</span>
+<span class="fc bfc" id="L371" title="All 2 branches covered.">		if(Tools.isNotEmpty(fabSearch.getVirtualFileName()))</span>
+<span class="fc" id="L372">			conditions.add(filterSubstring(&quot;virtual_file_name&quot;, fabSearch.getVirtualFileName()));</span>
 
 <span class="pc bpc" id="L374" title="1 of 2 branches missed.">		if(Tools.isNotEmpty(fabSearch.getFileName()))</span>
 <span class="nc" id="L375">			conditions.add(filterSubstring(&quot;file_name&quot;, fabSearch.getFileName()));</span>
 
-<span class="pc bpc" id="L377" title="1 of 2 branches missed.">		if(fabSearch.isOnlyMain())</span>
+<span class="fc bfc" id="L377" title="All 2 branches covered.">		if(fabSearch.isOnlyMain())</span>
 <span class="fc" id="L378">			conditions.add(filterEquals(&quot;reference_id&quot;, -1));</span>
 
 <span class="pc bpc" id="L380" title="1 of 2 branches missed.">		if(fabSearch.getGlobalId() &gt;= 0)</span>
@@ -404,12 +404,12 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 <span class="fc" id="L404">		List&lt;FileArchivatorBean&gt; fabList = JpaTools.findBy(FileArchivatorBean.class, conditions.toArray(new Condition[]{}));</span>
 <span class="fc" id="L405">		filterByDir(fabList, fabSearch.getDirPath(), fabSearch.isIncludeSubdirs());</span>
 		//odstranime vzory - tie sa dohladavaju zvlast
-<span class="pc bpc" id="L407" title="1 of 2 branches missed.">		if(fabSearch.isUseCache())//ked nepouzivame cache ideme z filtra a tam vysledky vyhladavania chceme. Vo vypise komponenty nie</span>
+<span class="fc bfc" id="L407" title="All 2 branches covered.">		if(fabSearch.isUseCache())//ked nepouzivame cache ideme z filtra a tam vysledky vyhladavania chceme. Vo vypise komponenty nie</span>
 <span class="fc" id="L408">			removePattern(fabList);</span>
 
 <span class="fc" id="L410">		fabList.sort(new SortByPriority(fabSearch.isAsc()));</span>
 
-<span class="pc bpc" id="L412" title="1 of 2 branches missed.">		if(fabSearch.isUseCache())</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">		if(fabSearch.isUseCache())</span>
 		{
 <span class="fc" id="L414">			Cache.getInstance().setObject(cacheKey, fabList, getCacheTime(methodName));</span>
 		}
@@ -419,30 +419,30 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 
 	protected static void filterByDir(List&lt;FileArchivatorBean&gt; fabList, String dirPath, boolean includeSubdirs )
 	{
-<span class="pc bpc" id="L422" title="3 of 4 branches missed.">		if(!Tools.isEmpty(fabList) &amp;&amp; Tools.isNotEmpty(dirPath))</span>
+<span class="fc bfc" id="L422" title="All 4 branches covered.">		if(!Tools.isEmpty(fabList) &amp;&amp; Tools.isNotEmpty(dirPath))</span>
 		{
-<span class="nc" id="L424">			Iterator&lt;FileArchivatorBean&gt; it = fabList.iterator();</span>
-<span class="nc bnc" id="L425" title="All 2 branches missed.">			while(it.hasNext())</span>
+<span class="fc" id="L424">			Iterator&lt;FileArchivatorBean&gt; it = fabList.iterator();</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">			while(it.hasNext())</span>
 			{
-<span class="nc" id="L427">				FileArchivatorBean fab = it.next();</span>
-<span class="nc bnc" id="L428" title="All 4 branches missed.">				if(Tools.isNotEmpty(fab.getFilePath()) &amp;&amp; fab.getFilePath().startsWith(dirPath))</span>
+<span class="fc" id="L427">				FileArchivatorBean fab = it.next();</span>
+<span class="pc bpc" id="L428" title="2 of 4 branches missed.">				if(Tools.isNotEmpty(fab.getFilePath()) &amp;&amp; fab.getFilePath().startsWith(dirPath))</span>
 				{
-<span class="nc bnc" id="L430" title="All 4 branches missed.">					if(!includeSubdirs &amp;&amp; !fab.getFilePath().equals(dirPath))</span>
+<span class="pc bpc" id="L430" title="2 of 4 branches missed.">					if(!includeSubdirs &amp;&amp; !fab.getFilePath().equals(dirPath))</span>
 <span class="nc" id="L431">						it.remove();</span>
 				}
 				else
 				{
 <span class="nc" id="L435">					it.remove();</span>
 				}
-<span class="nc" id="L437">			}</span>
+<span class="fc" id="L437">			}</span>
 		}
 <span class="fc" id="L439">	}</span>
 
 	protected static void removePattern(List&lt;FileArchivatorBean&gt; fabList)
 	{
-<span class="pc bpc" id="L443" title="1 of 2 branches missed.">		for(int i=0;i&lt;fabList.size();i++)</span>
+<span class="fc bfc" id="L443" title="All 2 branches covered.">		for(int i=0;i&lt;fabList.size();i++)</span>
 		{
-<span class="nc bnc" id="L445" title="All 2 branches missed.">			if(Tools.isNotEmpty(fabList.get(i).getReferenceToMain()))</span>
+<span class="pc bpc" id="L445" title="1 of 2 branches missed.">			if(Tools.isNotEmpty(fabList.get(i).getReferenceToMain()))</span>
 			{
 <span class="nc" id="L447">				fabList.remove(i);</span>
 <span class="nc" id="L448">				i--; //NOSONAR</span>
@@ -458,41 +458,41 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public static FileArchivatorBean getPatern(String url)
 	{
-<span class="nc bnc" id="L461" title="All 2 branches missed.">		if(Tools.isEmpty(url))</span>
+<span class="pc bpc" id="L461" title="1 of 2 branches missed.">		if(Tools.isEmpty(url))</span>
 <span class="nc" id="L462">			return null;</span>
 
-<span class="nc" id="L464">		String methodName = &quot;getPatern-&quot;;</span>
-<span class="nc" id="L465">		Map&lt;String,FileArchivatorBean&gt; fabPatternTable = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L466">		String cacheKey = cachePrefix+methodName+&quot;domain_id-&quot;+CloudToolsForCore.getDomainId();</span>
-<span class="nc" id="L467">		Object o = Cache.getInstance().getObject(cacheKey);</span>
-<span class="nc bnc" id="L468" title="All 2 branches missed.">		if(o == null)</span>
+<span class="fc" id="L464">		String methodName = &quot;getPatern-&quot;;</span>
+<span class="fc" id="L465">		Map&lt;String,FileArchivatorBean&gt; fabPatternTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L466">		String cacheKey = cachePrefix+methodName+&quot;domain_id-&quot;+CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L467">		Object o = Cache.getInstance().getObject(cacheKey);</span>
+<span class="fc bfc" id="L468" title="All 2 branches covered.">		if(o == null)</span>
 		{
-<span class="nc bnc" id="L470" title="All 2 branches missed.">			for(FileArchivatorBean fab: FileArchivatorDB.getInstance().getAll())</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">			for(FileArchivatorBean fab: FileArchivatorDB.getInstance().getAll())</span>
 			{
-<span class="nc bnc" id="L472" title="All 2 branches missed.">				if(Tools.isNotEmpty(fab.getReferenceToMain()))</span>
+<span class="pc bpc" id="L472" title="1 of 2 branches missed.">				if(Tools.isNotEmpty(fab.getReferenceToMain()))</span>
 <span class="nc" id="L473">					fabPatternTable.put(fab.getReferenceToMain(), fab);</span>
-<span class="nc" id="L474">			}</span>
+<span class="fc" id="L474">			}</span>
 
-<span class="nc" id="L476">			Cache.getInstance().setObject(cacheKey, fabPatternTable, getCacheTime(methodName));</span>
-<span class="nc" id="L477">			o = fabPatternTable;</span>
+<span class="fc" id="L476">			Cache.getInstance().setObject(cacheKey, fabPatternTable, getCacheTime(methodName));</span>
+<span class="fc" id="L477">			o = fabPatternTable;</span>
 		}
 
-<span class="nc" id="L480">		fabPatternTable = (Map&lt;String,FileArchivatorBean&gt;) o;</span>
+<span class="fc" id="L480">		fabPatternTable = (Map&lt;String,FileArchivatorBean&gt;) o;</span>
 
-<span class="nc" id="L482">		return fabPatternTable.get(url);</span>
+<span class="fc" id="L482">		return fabPatternTable.get(url);</span>
 	}
 
 	public static FileArchivatorBean getByPath(String path, String fileName)
 	{
-<span class="nc bnc" id="L487" title="All 4 branches missed.">		if(Tools.isNotEmpty(path) &amp;&amp; Tools.isNotEmpty(fileName))</span>
+<span class="pc bpc" id="L487" title="2 of 4 branches missed.">		if(Tools.isNotEmpty(path) &amp;&amp; Tools.isNotEmpty(fileName))</span>
 		{
-<span class="nc" id="L489">			List&lt;FileArchivatorBean&gt; fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;filePath&quot;, path), Pair.of(&quot;fileName&quot;, fileName));</span>
-<span class="nc bnc" id="L490" title="All 4 branches missed.">			if(fabList != null &amp;&amp; fabList.size() &gt;= 1)</span>
+<span class="fc" id="L489">			List&lt;FileArchivatorBean&gt; fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;filePath&quot;, path), Pair.of(&quot;fileName&quot;, fileName));</span>
+<span class="pc bpc" id="L490" title="2 of 4 branches missed.">			if(fabList != null &amp;&amp; fabList.size() &gt;= 1)</span>
 			{
 <span class="nc" id="L492">				return fabList.get(0);</span>
 			}
 		}
-<span class="nc" id="L495">		return null;</span>
+<span class="fc" id="L495">		return null;</span>
 	}
 
    /**
@@ -510,18 +510,18 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	{
 		try
 		{
-<span class="pc bpc" id="L513" title="1 of 2 branches missed.">			if(Tools.isEmpty(url))</span>
+<span class="fc bfc" id="L513" title="All 2 branches covered.">			if(Tools.isEmpty(url))</span>
 <span class="fc" id="L514">				return null;</span>
-<span class="nc" id="L515">			int lastSeparator = url.lastIndexOf('/');</span>
-<span class="nc bnc" id="L516" title="All 2 branches missed.">			if (lastSeparator&lt;1) return null;</span>
+<span class="fc" id="L515">			int lastSeparator = url.lastIndexOf('/');</span>
+<span class="pc bpc" id="L516" title="1 of 2 branches missed.">			if (lastSeparator&lt;1) return null;</span>
 			//z path odstranujeme prve lomitko, tak to ma palo neviempreco v DB
-<span class="nc" id="L518">			String path = url.substring(1, lastSeparator+1);</span>
-<span class="nc" id="L519">			String fileName = url.substring(lastSeparator+1);</span>
+<span class="fc" id="L518">			String path = url.substring(1, lastSeparator+1);</span>
+<span class="fc" id="L519">			String fileName = url.substring(lastSeparator+1);</span>
 
-<span class="nc bnc" id="L521" title="All 4 branches missed.">			if(Tools.isNotEmpty(path) &amp;&amp; Tools.isNotEmpty(fileName))</span>
+<span class="pc bpc" id="L521" title="2 of 4 branches missed.">			if(Tools.isNotEmpty(path) &amp;&amp; Tools.isNotEmpty(fileName))</span>
 			{
-<span class="nc" id="L523">				List&lt;FileArchivatorBean&gt; fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;filePath&quot;, path), Pair.of(&quot;fileName&quot;, fileName));</span>
-<span class="nc bnc" id="L524" title="All 2 branches missed.">				for (FileArchivatorBean fab : fabList)</span>
+<span class="fc" id="L523">				List&lt;FileArchivatorBean&gt; fabList = JpaTools.findByProperties(FileArchivatorBean.class, Pair.of(&quot;filePath&quot;, path), Pair.of(&quot;fileName&quot;, fileName));</span>
+<span class="pc bpc" id="L524" title="1 of 2 branches missed.">				for (FileArchivatorBean fab : fabList)</span>
 				{
 <span class="nc bnc" id="L526" title="All 4 branches missed.">					if (!alsoInactive &amp;&amp; !fab.getShowFile()) continue;</span>
 <span class="nc bnc" id="L527" title="All 2 branches missed.">					if (fab.isValidDates()) return fab;</span>
@@ -531,9 +531,9 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 <span class="nc" id="L531">		catch (Exception ex)</span>
 		{
 <span class="nc" id="L533">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L534">		}</span>
+<span class="fc" id="L534">		}</span>
 
-<span class="nc" id="L536">		return null;</span>
+<span class="fc" id="L536">		return null;</span>
 	}
 
 	/**
@@ -544,8 +544,8 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static List&lt;FileArchivatorBean&gt; getByGlobalId(List&lt;Integer&gt; globalId)
 	{
-<span class="nc bnc" id="L547" title="All 4 branches missed.">		if(globalId==null || globalId.isEmpty())</span>
-<span class="nc" id="L548">			return null;</span>
+<span class="pc bpc" id="L547" title="2 of 4 branches missed.">		if(globalId==null || globalId.isEmpty())</span>
+<span class="fc" id="L548">			return null;</span>
 
 <span class="nc" id="L550">		JpaEntityManager em = JpaTools.getEclipseLinkEntityManager();</span>
 <span class="nc" id="L551">		List&lt;FileArchivatorBean&gt; fabList = null;</span>
@@ -583,12 +583,12 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 
 	public static String getCachePrefix()
 	{
-<span class="nc" id="L586">		return cachePrefix;</span>
+<span class="fc" id="L586">		return cachePrefix;</span>
 	}
 
 	public static String getConstantsPrefix()
 	{
-<span class="nc" id="L591">		return CONSTANTS_PREFIX;</span>
+<span class="fc" id="L591">		return CONSTANTS_PREFIX;</span>
 	}
 
 	protected static String getCheckSum(Collection&lt;String&gt; strCollection_1, Collection&lt;String&gt; strCollection_2, Collection&lt;String&gt; strCollection_3, Collection&lt;String&gt; strCollection_4)
@@ -789,50 +789,57 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static List&lt;FileArchivatorBean&gt; getReference(int referenceId, String sortByReference, boolean asc)
 	{
-<span class="nc" id="L792">		List&lt;FileArchivatorBean&gt; shorFab = new ArrayList&lt;&gt;(FileArchivatorDB.getByReferenceId(referenceId));</span>
+<span class="fc" id="L792">		List&lt;FileArchivatorBean&gt; shorFab = new ArrayList&lt;&gt;(FileArchivatorDB.getByReferenceId(referenceId));</span>
 
 		//musime odstranit
-<span class="nc bnc" id="L795" title="All 2 branches missed.">		for(int i = 0; i&lt; shorFab.size(); i++)</span>
+<span class="fc bfc" id="L795" title="All 2 branches covered.">		for(int i = 0; i&lt; shorFab.size(); i++)</span>
 		{
-<span class="nc bnc" id="L797" title="All 2 branches missed.">			if(!shorFab.get(i).getShowFile())</span>
+<span class="pc bpc" id="L797" title="2 of 4 branches missed.">			if(!shorFab.get(i).getShowFile() || shorFab.get(i).getUploaded() != -1)</span>
 			{
 <span class="nc" id="L799">				shorFab.remove(i);</span>
 <span class="nc" id="L800">				i--; //NOSONAR</span>
 			}
 		}
 
-<span class="nc bnc" id="L804" title="All 2 branches missed.">		if(shorFab.size() &gt; 0)</span>
+<span class="pc bpc" id="L804" title="1 of 2 branches missed.">		if(shorFab.size() &gt; 0)</span>
 		{
-<span class="nc bnc" id="L806" title="All 2 branches missed.">			if(&quot;reference&quot;.equals(sortByReference))</span>
+<span class="pc bpc" id="L806" title="1 of 2 branches missed.">			if(&quot;reference&quot;.equals(sortByReference))</span>
 			{
 <span class="nc bnc" id="L808" title="All 2 branches missed.">				if(asc)</span>
 <span class="nc" id="L809">					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getId));</span>
 				else
 <span class="nc" id="L811">					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getId).reversed());</span>
 			}
-<span class="nc bnc" id="L813" title="All 2 branches missed.">			else if(&quot;time&quot;.equals(sortByReference))</span>
+<span class="pc bpc" id="L813" title="1 of 2 branches missed.">			else if(&quot;orderId&quot;.equals(sortByReference))</span>
 			{
 <span class="nc bnc" id="L815" title="All 2 branches missed.">				if(asc)</span>
 <span class="nc" id="L816">					shorFab.sort(Comparator.comparingInt(FileArchivatorBean::getOrderId));</span>
 				else
 <span class="nc" id="L818">					shorFab.sort(Comparator.comparingInt(FileArchivatorBean::getOrderId).reversed());</span>
 			}
-<span class="nc bnc" id="L820" title="All 2 branches missed.">			else if(&quot;virtual_file_name&quot;.equals(sortByReference))</span>
+<span class="pc bpc" id="L820" title="1 of 2 branches missed.">			else if(&quot;time&quot;.equals(sortByReference))</span>
 			{
-<span class="nc bnc" id="L822" title="All 2 branches missed.">				 if(asc)</span>
-<span class="nc" id="L823">					  shorFab.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName));</span>
+<span class="nc bnc" id="L822" title="All 2 branches missed.">				if(asc)</span>
+<span class="nc" id="L823">					shorFab.sort(Comparator.comparing(FileArchivatorBean::getDateInsert));</span>
+				else
+<span class="nc" id="L825">					shorFab.sort(Comparator.comparing(FileArchivatorBean::getDateInsert).reversed());</span>
+			}
+<span class="pc bpc" id="L827" title="1 of 2 branches missed.">			else if(&quot;virtual_file_name&quot;.equals(sortByReference))</span>
+			{
+<span class="nc bnc" id="L829" title="All 2 branches missed.">				 if(asc)</span>
+<span class="nc" id="L830">					  shorFab.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName));</span>
 				 else
-<span class="nc" id="L825">					  shorFab.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName).reversed());</span>
+<span class="nc" id="L832">					  shorFab.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName).reversed());</span>
 			}
 			else//priority
 			{
-<span class="nc bnc" id="L829" title="All 2 branches missed.">				if(asc)</span>
-<span class="nc" id="L830">					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority));</span>
+<span class="pc bpc" id="L836" title="1 of 2 branches missed.">				if(asc)</span>
+<span class="fc" id="L837">					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority));</span>
 				else
-<span class="nc" id="L832">					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority).reversed());</span>
+<span class="nc" id="L839">					shorFab.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority).reversed());</span>
 			}
 		}
-<span class="nc" id="L835">		return shorFab;</span>
+<span class="fc" id="L842">		return shorFab;</span>
 	}
 
 	/**
@@ -843,11 +850,11 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static Collection&lt;String&gt; createCollection(String pageParamName, HttpServletRequest request)
 	{
-<span class="nc" id="L846">		PageParams pageParams = new PageParams(request);</span>
-<span class="nc" id="L847">		String[] propertyArray = Tools.getTokens(pageParams.getValue(pageParamName, &quot;&quot;), &quot;+&quot;);</span>
-<span class="nc bnc" id="L848" title="All 4 branches missed.">		if(propertyArray != null &amp;&amp; propertyArray.length &gt; 0)</span>
-<span class="nc" id="L849">			return Arrays.asList(propertyArray);</span>
-<span class="nc" id="L850">		return null;</span>
+<span class="fc" id="L853">		PageParams pageParams = new PageParams(request);</span>
+<span class="fc" id="L854">		String[] propertyArray = Tools.getTokens(pageParams.getValue(pageParamName, &quot;&quot;), &quot;+&quot;);</span>
+<span class="pc bpc" id="L855" title="2 of 4 branches missed.">		if(propertyArray != null &amp;&amp; propertyArray.length &gt; 0)</span>
+<span class="nc" id="L856">			return Arrays.asList(propertyArray);</span>
+<span class="fc" id="L857">		return null;</span>
 	}
 
 	/**
@@ -855,17 +862,17 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static int getNumberOfReference(List&lt;FileArchivatorBean&gt; fabsList, int referenceId)
 	{
-<span class="nc" id="L858">		int count = 0;</span>
-<span class="nc bnc" id="L859" title="All 2 branches missed.">		if(fabsList != null)</span>
+<span class="fc" id="L865">		int count = 0;</span>
+<span class="pc bpc" id="L866" title="1 of 2 branches missed.">		if(fabsList != null)</span>
 		{
-<span class="nc bnc" id="L861" title="All 2 branches missed.">			for(FileArchivatorBean fab:fabsList)</span>
+<span class="fc bfc" id="L868" title="All 2 branches covered.">			for(FileArchivatorBean fab:fabsList)</span>
 			{
-<span class="nc bnc" id="L863" title="All 2 branches missed.">				if(fab.getReferenceId() == referenceId)</span>
-<span class="nc" id="L864">					count++;</span>
-<span class="nc" id="L865">			}</span>
-<span class="nc" id="L866">			return count;</span>
+<span class="fc bfc" id="L870" title="All 2 branches covered.">				if(fab.getReferenceId() == referenceId)</span>
+<span class="fc" id="L871">					count++;</span>
+<span class="fc" id="L872">			}</span>
+<span class="fc" id="L873">			return count;</span>
 		}
-<span class="nc" id="L868">		return -1;</span>
+<span class="nc" id="L875">		return -1;</span>
 	}
 
 	/**
@@ -873,18 +880,18 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	 */
 	public static void removeById(List&lt;FileArchivatorBean&gt; fabsList, int fileArchivId)
 	{
-<span class="nc bnc" id="L876" title="All 2 branches missed.">		if(fabsList != null)</span>
+<span class="pc bpc" id="L883" title="1 of 2 branches missed.">		if(fabsList != null)</span>
 		{
-<span class="nc bnc" id="L878" title="All 2 branches missed.">			for (int i = 0; i &lt; fabsList.size(); i++)</span>
+<span class="pc bpc" id="L885" title="1 of 2 branches missed.">			for (int i = 0; i &lt; fabsList.size(); i++)</span>
 			{
-<span class="nc bnc" id="L880" title="All 2 branches missed.">				if (fabsList.get(i).getId() == fileArchivId)</span>
+<span class="pc bpc" id="L887" title="1 of 2 branches missed.">				if (fabsList.get(i).getId() == fileArchivId)</span>
 				{
-<span class="nc" id="L882">					fabsList.remove(i);</span>
-<span class="nc" id="L883">					break;</span>
+<span class="fc" id="L889">					fabsList.remove(i);</span>
+<span class="fc" id="L890">					break;</span>
 				}
 			}
 		}
-<span class="nc" id="L887">	}</span>
+<span class="fc" id="L894">	}</span>
 
 	/**
 	 * vrati zoznam nunikatnych hodnot pre stlpec vo file_archiv, okrem null a pradnych + cachuje per domena
@@ -894,19 +901,19 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	@SuppressWarnings(&quot;unchecked&quot;)
 	public static List&lt;String&gt; getDistinctListByProperty(String column)
 	{
-<span class="nc bnc" id="L897" title="All 2 branches missed.">		if(Tools.isEmpty(column)) return Collections.emptyList();</span>
+<span class="pc bpc" id="L904" title="1 of 2 branches missed.">		if(Tools.isEmpty(column)) return Collections.emptyList();</span>
 
-<span class="nc" id="L899">		String methodName = &quot;getDistinctListByProperty-&quot;;</span>
-<span class="nc" id="L900">		String cacheKey = cachePrefix+methodName+&quot;-property-&quot;+column+&quot;-domain_id-&quot;+CloudToolsForCore.getDomainId();</span>
-<span class="nc" id="L901">		Object o = Cache.getInstance().getObject(cacheKey);</span>
-<span class="nc bnc" id="L902" title="All 2 branches missed.">		if(o != null)</span>
-<span class="nc" id="L903">			return (List&lt;String&gt;) o;</span>
-<span class="nc" id="L904">		Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);</span>
+<span class="fc" id="L906">		String methodName = &quot;getDistinctListByProperty-&quot;;</span>
+<span class="fc" id="L907">		String cacheKey = cachePrefix+methodName+&quot;-property-&quot;+column+&quot;-domain_id-&quot;+CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L908">		Object o = Cache.getInstance().getObject(cacheKey);</span>
+<span class="fc bfc" id="L909" title="All 2 branches covered.">		if(o != null)</span>
+<span class="fc" id="L910">			return (List&lt;String&gt;) o;</span>
+<span class="fc" id="L911">		Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);</span>
 
-<span class="nc" id="L906">		List&lt;String&gt; result =  DB.queryForList(&quot;SELECT DISTINCT &quot;+column+&quot; FROM file_archiv WHERE &quot;+column+&quot; IS NOT NULL AND uploaded=-1 AND domain_id=&quot;+CloudToolsForCore.getDomainId()+&quot; ORDER BY &quot;+column+&quot; ASC&quot;);</span>
-<span class="nc" id="L907">		Cache.getInstance().setObject(cacheKey, result, getCacheTime(methodName));</span>
+<span class="fc" id="L913">		List&lt;String&gt; result =  DB.queryForList(&quot;SELECT DISTINCT &quot;+column+&quot; FROM file_archiv WHERE &quot;+column+&quot; IS NOT NULL AND uploaded=-1 AND domain_id=&quot;+CloudToolsForCore.getDomainId()+&quot; ORDER BY &quot;+column+&quot; ASC&quot;);</span>
+<span class="fc" id="L914">		Cache.getInstance().setObject(cacheKey, result, getCacheTime(methodName));</span>
 
-<span class="nc" id="L909">		return result;</span>
+<span class="fc" id="L916">		return result;</span>
 	}
 
 	 /**
@@ -917,31 +924,31 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 	  */
 	 public static void sortBy(List&lt;FileArchivatorBean&gt; fabListCache, String sortBy, boolean asc)
 	 {
-<span class="nc bnc" id="L920" title="All 4 branches missed.">		  if(fabListCache != null &amp;&amp; fabListCache.size() &gt; 0)</span>
+<span class="pc bpc" id="L927" title="2 of 4 branches missed.">		  if(fabListCache != null &amp;&amp; fabListCache.size() &gt; 0)</span>
 		  {
-<span class="nc bnc" id="L922" title="All 2 branches missed.">				if(&quot;priority&quot;.equals(sortBy))</span>
-				{
-<span class="nc bnc" id="L924" title="All 2 branches missed.">					 if(asc)</span>
-<span class="nc" id="L925">						  fabListCache.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority));</span>
-					 else
-<span class="nc" id="L927">						  fabListCache.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority).reversed());</span>
-				}
-<span class="nc bnc" id="L929" title="All 2 branches missed.">				else if(&quot;virtual_file_name&quot;.equals(sortBy))</span>
+<span class="pc bpc" id="L929" title="1 of 2 branches missed.">				if(&quot;priority&quot;.equals(sortBy))</span>
 				{
 <span class="nc bnc" id="L931" title="All 2 branches missed.">					 if(asc)</span>
-<span class="nc" id="L932">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName));</span>
+<span class="nc" id="L932">						  fabListCache.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority));</span>
 					 else
-<span class="nc" id="L934">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName).reversed());</span>
+<span class="nc" id="L934">						  fabListCache.sort(Comparator.comparingDouble(FileArchivatorBean::getPriority).reversed());</span>
+				}
+<span class="pc bpc" id="L936" title="1 of 2 branches missed.">				else if(&quot;virtual_file_name&quot;.equals(sortBy))</span>
+				{
+<span class="nc bnc" id="L938" title="All 2 branches missed.">					 if(asc)</span>
+<span class="nc" id="L939">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName));</span>
+					 else
+<span class="nc" id="L941">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getVirtualFileName).reversed());</span>
 				}
 				else //time - default
 				{
-<span class="nc bnc" id="L938" title="All 2 branches missed.">					 if(asc)</span>
-<span class="nc" id="L939">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getDateInsert));</span>
+<span class="pc bpc" id="L945" title="1 of 2 branches missed.">					 if(asc)</span>
+<span class="fc" id="L946">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getDateInsert));</span>
 					 else
-<span class="nc" id="L941">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getDateInsert).reversed());</span>
+<span class="nc" id="L948">						  fabListCache.sort(Comparator.comparing(FileArchivatorBean::getDateInsert).reversed());</span>
 				}
 
 		  }
-<span class="nc" id="L945">	 }</span>
+<span class="fc" id="L952">	 }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

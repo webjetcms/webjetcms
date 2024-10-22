@@ -26,7 +26,7 @@ function insight(I, version) {
      I.forceClick(locate('#datatableFieldDTE_Field_editorFields-history>tbody>tr.even').find('.dt-select-td.cell-not-editable'));
 
      if (version === 'old') {
-          I.waitForText('1 riadok označený', '.select-item');
+          I.waitForText('1 riadok označený', 10, '.select-item');
      } else if (version === 'new') {
           I.forceClick(locate('#datatableFieldDTE_Field_editorFields-history>tbody>tr.odd').find('.dt-select-td.cell-not-editable'));
      }
@@ -226,7 +226,7 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
 
      // 4.ZOBRAZ STARY ZAZNAM Z HISTORIE CEZ EDITACIU A ULOZ HO AKO AKTUALNY
      I.say('Zobraz stary zaznam z historie cez editaciu a uloz ho ako aktualny');
-     I.waitForText('1 riadok označený', '.select-item');
+     I.waitForText('1 riadok označený', 10, '.select-item');
      I.click(edit_history_webpage);
 
      // Skontroluj zalozku Obsah

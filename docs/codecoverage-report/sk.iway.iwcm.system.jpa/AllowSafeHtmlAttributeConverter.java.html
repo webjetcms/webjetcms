@@ -6,7 +6,9 @@ import javax.persistence.Converter;
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
+import sk.iway.iwcm.Tools;
 
 /**
  * Attribute konverter pre JPA beany ktory umozni pouzit BEZPECNY HTML kod
@@ -17,37 +19,54 @@ import sk.iway.iwcm.DB;
  * @javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)
  */
 @Converter(autoApply = false)
-<span class="fc" id="L20">public class AllowSafeHtmlAttributeConverter implements AttributeConverter&lt;String, String&gt;</span>
+<span class="fc" id="L22">public class AllowSafeHtmlAttributeConverter implements AttributeConverter&lt;String, String&gt;</span>
 {
    @Override
    public String convertToDatabaseColumn(String data)
    {
-<span class="fc" id="L25">      return data;</span>
+<span class="fc" id="L27">      return data;</span>
    }
 
    @Override
    public String convertToEntityAttribute(String databaseValue)
    {
       //V pripade potreby vypnutia je mozne do konf. premennej xssHtmlAllowedFields pridat hodnotu jpaentity
-<span class="pc bpc" id="L32" title="1 of 4 branches missed.">      if (databaseValue!=null &amp;&amp; DB.isHtmlAllowed(&quot;jpaentity&quot;)==false)</span>
+<span class="pc bpc" id="L34" title="1 of 4 branches missed.">      if (databaseValue!=null &amp;&amp; DB.isHtmlAllowed(&quot;jpaentity&quot;)==false)</span>
       {
-         //odfiltruj nebezpecny kod na zaklade OWASP sanitizera
-         //https://owasp.org/www-project-java-html-sanitizer/
-<span class="fc" id="L36">         PolicyFactory policy = new HtmlPolicyBuilder()</span>
-<span class="fc" id="L37">            .allowCommonInlineFormattingElements()</span>
-<span class="fc" id="L38">            .allowCommonBlockElements()</span>
-<span class="fc" id="L39">            .allowStyling()</span>
-<span class="fc" id="L40">            .allowElements(&quot;a&quot;)</span>
-<span class="fc" id="L41">            .allowElements(&quot;img&quot;)</span>
-<span class="fc" id="L42">            .allowUrlProtocols(&quot;http&quot;, &quot;https&quot;, &quot;data&quot;)</span>
-<span class="fc" id="L43">            .allowAttributes(&quot;href&quot;).onElements(&quot;a&quot;)</span>
-<span class="fc" id="L44">            .allowAttributes(&quot;src&quot;).onElements(&quot;img&quot;)</span>
-<span class="fc" id="L45">            .toFactory();</span>
-<span class="fc" id="L46">         String safeHTML = policy.sanitize(databaseValue);</span>
-<span class="fc" id="L47">         return safeHTML;</span>
+<span class="fc" id="L36">         String safeHTML = sanitize(databaseValue);</span>
+<span class="fc" id="L37">         return safeHTML;</span>
       }
 
-<span class="fc" id="L50">      return databaseValue;</span>
+<span class="fc" id="L40">      return databaseValue;</span>
+   }
+
+   /**
+    * Sanitize HTML code using Owasp HTML sanitizer, allowed is:
+    * - common inline formatting elements
+    * - common block elements
+    * - styling
+    * - a element
+    * - img element
+    * - href attribute on a element
+    * @param unsafeHtml
+    * @return
+    */
+   public static String sanitize(String unsafeHtml) {
+      //odfiltruj nebezpecny kod na zaklade OWASP sanitizera
+      //https://owasp.org/www-project-java-html-sanitizer/
+<span class="fc" id="L57">      PolicyFactory policy = new HtmlPolicyBuilder()</span>
+<span class="fc" id="L58">         .allowCommonInlineFormattingElements()</span>
+<span class="fc" id="L59">         .allowCommonBlockElements()</span>
+<span class="fc" id="L60">         .allowStyling()</span>
+<span class="fc" id="L61">         .allowElements(&quot;a&quot;)</span>
+<span class="fc" id="L62">         .allowElements(&quot;img&quot;)</span>
+<span class="fc" id="L63">         .allowUrlProtocols(&quot;http&quot;, &quot;https&quot;, &quot;data&quot;)</span>
+<span class="fc" id="L64">         .allowAttributes(&quot;href&quot;).onElements(&quot;a&quot;)</span>
+<span class="fc" id="L65">         .allowAttributes(&quot;src&quot;).onElements(&quot;img&quot;)</span>
+<span class="fc" id="L66">         .toFactory();</span>
+<span class="fc" id="L67">      String safeHTML = policy.sanitize(unsafeHtml);</span>
+<span class="fc" id="L68">      safeHTML = Tools.replace(safeHTML, Constants.NON_BREAKING_SPACE, &quot;&amp;nbsp;&quot;);</span>
+<span class="fc" id="L69">      return safeHTML;</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

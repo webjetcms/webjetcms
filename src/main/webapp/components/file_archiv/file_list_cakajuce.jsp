@@ -155,3 +155,5 @@ function loadComponentIframe()
 			<%}%>
 		</display:table>
 	</div>
+
+<%@ include file="/admin/layout_bottom.jsp" %>

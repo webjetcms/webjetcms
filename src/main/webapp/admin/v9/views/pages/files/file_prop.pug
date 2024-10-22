@@ -1,0 +1,186 @@
+extends ../../partials/layout
+
+block content
+    +breadcrumb(
+        'file-prop',
+        [
+            [ '#file-prop', '[[\#{elfinder.folder_prop.title}]]', true ]
+        ]
+    )
+
+    script.
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const urlDirPath = urlParams.get('dirPath');
+        const urlFileName = urlParams.get('fileName');
+        const urlFileIndexerPerm = urlParams.get('fileIndexerPerm');
+
+        let historyTable = null;
+
+        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
+            if(event.detail.conf.id == "DTE_Field_fileHistoryList" && historyTable == null) {
+                historyTable = event.detail.conf.datatable;
+
+                historyTable.button().add(1, {
+                    text: '<i class="ti ti-eye"></i>',
+                    action: function (e, dt, node) {
+                        let selectedRows = dt.rows({ selected: true }).data();
+                        for (let i=0; i<selectedRows.length; i++) {
+                            let row = selectedRows[i];
+                            window.open(row.fileUrl + "?fHistoryId=" + row.id);
+                        }
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                    },
+                    className: 'btn btn-outline-secondary',
+                    attr: {
+                        'title': '[[\#{elfinder.file_prop.history.show}]]',
+                        'data-toggle': 'tooltip'
+                    }
+                });
+
+                historyTable.button().add(2, {
+                    text: '<i class="ti ti-git-compare"></i>',
+                    action: function (e, dt, node) {
+                        let selectedRows = dt.rows({ selected: true }).data();
+                        for (let i=0; i<selectedRows.length; i++) {
+                            let row = selectedRows[i];
+                            window.open("/admin/file_compare.jsp?firstFile=" + row.fileUrl + "&secondFile=" + row.fileUrl + "%3FfHistoryId%3D" + row.id);
+                        }
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+                    },
+                    className: 'btn btn-outline-secondary',
+                    attr: {
+                        'title': '[[\#{elfinder.file_prop.history.compare}]]',
+                        'data-toggle': 'tooltip'
+                    }
+                });
+
+                historyTable.button().add(3, {
+                    text: '<i class="ti ti-restore"></i>',
+                    action: function (e, dt, node) {
+                        historyTable.executeAction("rollBack");
+                    },
+                    init: function ( dt, node, config ) {
+                        $.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);
+                    },
+                    className: 'btn btn-warning',
+                    attr: {
+                        'title': '[[\#{elfinder.file_prop.history.rollback}]]',
+                        'data-toggle': 'tooltip'
+                    }
+                });
+            }
+        });
+
+        if(urlDirPath == null || urlDirPath.length < 1 || urlFileName == null || urlFileName.length < 1) {
+            window.location.replace("/404.jsp");
+        } else {
+            let filePropertiesTable;
+            let isIndexing = false;
+
+            window.domReady.add(function () {
+                let url = '/admin/rest/elfinder/file-properties';
+                var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.elfinder.FilePropertiesDTO')})];
+                let initIndexTab = false;
+
+                var tabs = [
+                    { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
+                    { id: 'index', title: '[[\#{elfinder.folder_prop.index.tab}]]' },
+                    { id: 'usage', title: '[[\#{elfinder.folder_prop.usage.tab}]]' },
+                    { id: 'history', title: '[[\#{elfinder.file_prop.history.tab}]]' }
+                ];
+
+                filePropertiesTable = WJ.DataTable({
+                    url: WJ.urlAddParam(WJ.urlAddParam(url, "dirPath", urlDirPath), "fileName", urlFileName),
+                    columns: columns,
+                    tabs: tabs,
+                    serverSide: true,
+                    fetchOnEdit: true,
+                    fetchOnCreate: true
+                });
+
+                filePropertiesTable.EDITOR.on( 'open', function ( e, data, action ) {
+
+                    //console.log($("div.DTE_Header_Content").find("h5.modal-title"));
+                    //console.log( filePropertiesTable.EDITOR.currentJson );
+
+                    $("div.DTE_Header_Content").find("h5.modal-title").text( filePropertiesTable.EDITOR.currentJson["fileName"] );
+
+                    if(urlFileIndexerPerm == undefined || urlFileIndexerPerm == null) urlFileIndexerPerm = true;
+
+                    //show/hide tab index
+                    if( urlDirPath.startsWith("/files") && (urlFileIndexerPerm == true || urlFileIndexerPerm == "true")) {
+                        $("#pills-dt-datatableInit-index-tab").on("click", function(e) {
+                            addIndexMenu();
+                            $("div.DTE_Body_Content").addClass('changed');
+                        });
+
+                        $("#pills-dt-datatableInit-basic-tab").on("click", function(e) {
+                            $("div.DTE_Body_Content").removeClass('changed');
+                        });
+
+                        $("#pills-dt-datatableInit-usage-tab").on("click", function(e) {
+                            $("div.DTE_Body_Content").removeClass('changed');
+                        });
+                    } else {
+                        $("#pills-dt-datatableInit-index-tab").css("display", "none");
+                    }
+                });
+
+                function addIndexMenu() {
+                    if(initIndexTab == false) {
+                        let panelBody = $("#pills-dt-datatableInit-index > div.panel-body");
+                        panelBody.append("<div id='indexMenu'> <p> [[\#{elfinder.folder_prop.start_indexing.txt}]] </p> <button id='start-index-button' class='btn btn-primary' onClick='startIndexing()'> [[\#{elfinder.folder_prop.start_indexing.btn}]] </button> </div>");
+
+                        //Add loader
+                        let loaderText = WJ.translate("elfinder.folder_prop.start_indexing.in_progress.js");
+                        loaderEl = $(`
+                            <div id="webjetAnimatedLoader">
+                                <div class="lds-dual-ring"></div>
+                                <p class="loaderText">${loaderText}</p>
+                            </div>`
+                        );
+                        loaderEl.insertAfter(panelBody);
+                        WJ.hideLoader();
+                        initIndexTab = true;
+                    }
+                }
+            });
+
+            function startIndexing() {
+                $("div#indexMenu").css("display", "none");
+                WJ.showLoader();
+                if(isIndexing == false) {
+                    isIndexing = true;
+                    //Add notification about running indexing
+                    $("#pills-dt-datatableInit-index > div.panel-body").append("<strong> [[\#{findexer.indexing}]] </strong> <hr>");
+                    $.ajax({
+                        url: '/admin/rest/elfinder/file-properties/fulltext-index?dir=' + urlDirPath + "&file=" + urlFileName,
+                        success: function(data) {
+                            WJ.hideLoader();
+                            $("#pills-dt-datatableInit-index > div.panel-body").append(data);
+                        }
+                    });
+                }
+            }
+           function openDocDetails(docId) {
+                if(docId != undefined && docId != null && docId > 0) {
+                    window.open("/admin/v9/webpages/web-pages-list?docid=" + docId);
+                }
+            }
+            function openFile(path) {
+                if(path != undefined && path != null && path.length > 0) {
+                    window.open(path);
+                }
+            }
+        }
+
+    style.
+        .changed { text-align: center; padding: 10px; }
+        .changed::before { background-color: transparent !important; }
+
+    <table id="folderPropertiesTable" class="datatableInit table"></table>

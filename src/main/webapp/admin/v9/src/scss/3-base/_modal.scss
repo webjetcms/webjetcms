@@ -143,7 +143,10 @@ body.modal-open {
                 @include show-scrollbar;
             }
             &.wrap textarea {
-                white-space: normal;
+                white-space: pre-wrap;
+            }
+            &.pre textarea, textarea.textarea-code {
+                white-space: pre;
             }
             &.required {
                 label {
@@ -176,7 +179,7 @@ body.modal-open {
             margin-top: 1px;
         }
 
-        .DTE_Field_Type_datatable {
+        .DTE_Field_Type_datatable, .DTE_Field_Type_iframe {
             background-color: white;
             .col-form-label {
                 display: none;
@@ -189,6 +192,13 @@ body.modal-open {
                 padding-bottom: 0px;
             }
         }
+        .form-group.row.DTE_Field_Type_iframe {
+            margin-top: 0px;
+            div.iframeFieldType {
+                height: 523px;
+            }
+        }
+
 
         div.input-group {
             .input-group-text {
@@ -652,8 +662,9 @@ div.DTE_Bubble_Background {
         width: auto;
         max-width: unset;
         .modal-header {
-            padding-top: 13px;
-            padding-bottom: 13px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+            margin-top: 0px !important;
             h5 {
                 float: left;
                 text-align: left;
@@ -681,6 +692,9 @@ div.DTE_Bubble_Background {
             iframe {
                 border: 0px;
             }
+        }
+        .modal-footer {
+            padding-bottom: 0px;
         }
     }
 
@@ -710,7 +724,7 @@ div.DTE_Bubble_Background {
 }
 
 @media (max-width: ($bp-tablet - 1)) {
-    .jstree {
+    html:not(.in-iframe-show-table) .jstree {
         height: auto !important;
     }
     .modal.DTED {
@@ -972,6 +986,10 @@ html.in-iframe {
     }
     div.modal.DTED.show div.DTE_Form_Error {
         margin-top: 8px !important;
+    }
+    div.modal-backdrop {
+        //hide backdrop in iframe version - editor is full screen
+        display: none !important;
     }
 }
 html.in-iframe:not(.in-iframe-show-footer-primary) {

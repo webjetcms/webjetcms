@@ -27,7 +27,7 @@ function generateHtmlPlugins(templateDir) {
             removeComments: true,
             useShortDoctype: true,
             minifyCSS:true,
-            minifyJS:true
+            minifyJS:false
         },
         inject: false,
         data: WP_DATA
@@ -176,6 +176,8 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/default")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-changed-webpages")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-awaiting-publish-webpages")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-log-levels")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/apps/audit-log-files")),
 
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-list")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/templates/temps-groups-list")),
@@ -201,6 +203,13 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/user-groups")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/permission-groups")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/users/self")),
+
+        new HtmlWebpackPlugin(generateHtmlPlugins("/files/index")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/files/dialog")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/files/wj_image")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/files/wj_link")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/files/folder_prop")),
+        new HtmlWebpackPlugin(generateHtmlPlugins("/files/file_prop")),
 
         //new WebjetModifyPlugin(['imageEditor']),
 

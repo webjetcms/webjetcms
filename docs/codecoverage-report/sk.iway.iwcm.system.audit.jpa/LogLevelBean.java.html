@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogLevelBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.audit.jpa</a> &gt; <span class="el_source">LogLevelBean.java</span></div><h1>LogLevelBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.audit.jpa;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+
+/**
+ * Bean to handle log level for package for DataTable
+ */
+@Getter
+@Setter
+public class LogLevelBean {
+
+<span class="fc" id="L17">    public LogLevelBean() {}</span>
+
+<span class="fc" id="L19">    public LogLevelBean(Long id, String packageName, String logLevel) {</span>
+<span class="fc" id="L20">		this.id = id;</span>
+<span class="fc" id="L21">        this.packageName = packageName;</span>
+<span class="fc" id="L22">        this.logLevel = logLevel.toUpperCase();</span>
+<span class="fc" id="L23">    }</span>
+
+	@DataTableColumn(inputType = DataTableColumnType.ID, title = &quot;ID&quot;)
+	private Long id;
+
+	@DataTableColumn(
+        inputType = DataTableColumnType.OPEN_EDITOR,
+        title = &quot;audit_log_level.package_name&quot;
+    )
+	private String packageName;
+
+	@DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = &quot;audit_log_level.log_level&quot;,
+        editor = {
+			@DataTableColumnEditor(
+				options = {
+					@DataTableColumnEditorAttr(key = &quot;DEBUG&quot;, value = &quot;DEBUG&quot;),
+					@DataTableColumnEditorAttr(key = &quot;NORMAL&quot;, value = &quot;NORMAL&quot;),
+					@DataTableColumnEditorAttr(key = &quot;ERROR&quot;, value = &quot;ERROR&quot;),
+					@DataTableColumnEditorAttr(key = &quot;INFO&quot;, value = &quot;INFO&quot;),
+					@DataTableColumnEditorAttr(key = &quot;TRACE&quot;, value = &quot;TRACE&quot;),
+					@DataTableColumnEditorAttr(key = &quot;WARN&quot;, value = &quot;WARN&quot;),
+				}
+			)
+		}
+    )
+	private String logLevel;
+
+	@DataTableColumn(
+		inputType = DataTableColumnType.CHECKBOX,
+		title = &quot;audit_log_level.save_in_db_label&quot;,
+		hidden = true,
+		editor = {
+			@DataTableColumnEditor(
+				attr = {
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-hr&quot;, value = &quot;before&quot;),
+					@DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;[[#{audit_log_level.save_in_db}]]&quot;)
+				}
+			)
+		}
+	)
+	private boolean saveIntoDB;
+
+	public String getFullLog() {
+<span class="fc" id="L68">		return packageName + &quot;=&quot; + logLevel;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

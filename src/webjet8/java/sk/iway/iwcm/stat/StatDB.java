@@ -184,7 +184,7 @@ public class StatDB extends DB
 			Logger.debug(StatDB.class, "reading table stat_keys");
 
 			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM stat_keys");
+			ps = db_conn.prepareStatement("SELECT * FROM stat_keys"); //NOSONAR
 			rs = ps.executeQuery();
 			while (rs.next())
 			{
@@ -658,6 +658,9 @@ public class StatDB extends DB
 		if (Tools.isEmpty(url)) return;
 		if (queryString == null) queryString = "";
 
+		url = removeJsessionId(url);
+		queryString = removeJsessionId(queryString);
+
 		Calendar cal = Calendar.getInstance();
 		cal.setFirstDayOfWeek(Calendar.MONDAY);
 		int year = cal.get(Calendar.YEAR);
@@ -668,6 +671,26 @@ public class StatDB extends DB
 		String insert = "INSERT INTO stat_error"+StatNewDB.getTableSuffix("stat_error")+" (url, query_string, year, week, domain_id, count) VALUES (?, ?, ?, ?, ?, 1)";
 
 		StatWriteBuffer.addUpdateInsertPair(update, insert, "stat_error", params);
+	}
+
+	/**
+	 * Removes JSESSIONID from URL
+	 * @param url
+	 * @return
+	 */
+	protected static String removeJsessionId(String url) {
+		if (Tools.isEmpty(url)) return url;
+
+		int i = url.indexOf(";jsessionid");
+		if (i != -1) {
+			int j = url.indexOf("?", i);
+			if (j == -1) {
+				url = url.substring(0, i);
+			} else {
+				url = url.substring(0, i) + url.substring(j);
+			}
+		}
+		return url;
 	}
 
 	private static Map<String, String> languageDomainTable = null;
@@ -1115,7 +1138,7 @@ public class StatDB extends DB
 		 * Ak vyslo browserId mensie ako konstanta pre neregistrovanych pouzivatelov, vygenerujeme nove Id.
 		 * Tato situacia by nemala nikdy nastat, lebo pre registrovanych sa browserId pocita ako konstanta + userId
 		 * a takisto pre vyhladavacie stroje. Situacia moze nastat ak sa SEO modul nasadil az po urcitej chvili
-		 * pouzivania WebJET-u a v cookies su ulozene stare hodnoty, kedze cookies expiruje az po dvoch mesiacoch.
+		 * pouzivania WebJET-u a v cookies su ulozene stare hodnoty, kedze cookies exspiruje az po dvoch mesiacoch.
 		 */
 		if (browserId < Constants.getInt("unloggedUserBrowserId"))
 		{

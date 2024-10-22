@@ -184,10 +184,10 @@ export function bindExportButton(TABLE, DATA) {
             for (let i=0; i<selectedRows.length; i++) {
                 let row = selectedRows[i];
                 let id = row[DATA.byIdExportColumnName];
-                console.log("Getting rows to export, row=", row, "id=", id);
+                //console.log("Getting rows to export, row=", row, "id=", id);
                 if (searchIds == null) searchIds = [];
                 searchIds.push(id);
-                console.log("searchIds=", searchIds);
+                //console.log("searchIds=", searchIds);
             }
         }
 
@@ -276,7 +276,25 @@ export function bindExportButton(TABLE, DATA) {
                         //pre formulare su data v columnNamesAndValues
                         Object.keys(c.columnNamesAndValues).forEach(function(key,index) {
                             //console.log("fixing column names, key=", key, "value=", c.columnNamesAndValues[key]);
-                            rowData["col_"+key] = c.columnNamesAndValues[key];
+                            var value = c.columnNamesAndValues[key];
+                            try {
+                                //if value contains only numbers, comma, dash convert comma to dot
+                                if (typeof value === "string" && value.match(/^\-?[\d,]+$/) && value.indexOf(",")!=-1) {
+                                    value = value.replace(",", ".");
+                                }
+
+                                //if the value is number convert it to number object, skip if it starts with 0 or contains + (probably phone number)
+                                if (typeof value === "string" && value.indexOf("0")!=0 && value.indexOf("+")==-1 && !isNaN(value)) {
+                                    var converted = Number.parseFloat(value);
+                                    //console.log("Converting to number["+index+"]: ", value, "converted=", converted);
+                                    if (!isNaN(converted)) value = converted;
+                                }
+                            } catch (e) {
+                                console.log(e);
+                            }
+                            if ("0"===value) value = 0;
+
+                            rowData["col_"+key] = value;
                         });
 
                         //odstran NULL hodnoty, pretoze tie su potom nahradene za vyraz nevyplnene, co vo formoch nechceme

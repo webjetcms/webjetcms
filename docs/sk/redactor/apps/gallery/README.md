@@ -6,7 +6,7 @@ Aplikácia galéria umožňuje jednoduchým spôsobom vytvárať galériu fotogr
 - Obrázok v bežnom rozlíšení – fotka v rozlíšení pre bežný monitor, teda cca 600x400 bodov – táto fotka sa zobrazí po kliknutí na náhľadový obrázok
 - Originál fotka – primárne slúži ako kópia nahratej fotky pre možnosť pregenerovania rozmerov menších obrázkov. Podľa nastavenia galérie ale je možné originál fotku stiahnuť pre získanie najkvalitnejšej verzie.
 
-Rozmery náhľadového obrázka a obrázka v bežnom rozlíšení je možné nastavovať vo vlastnostiach priečinka a prípadne kedykoľvek zmeniť (obrázky sa automaticky pregenerujú z originálnej fotky).
+Rozmery náhľadového obrázka a obrázka v bežnom rozlíšení je možné nastavovať vo vlastnostiach priečinka a prípadne kedykoľvek zmeniť (obrázky sa automaticky vygenerujú z originálnej fotky).
 
 ## Práca s aplikáciou galéria
 
@@ -43,8 +43,8 @@ Pri používaní doménových aliasov (nastavená konf. premenná ```multiDomain
 
 Priečinky majú nasledovné ikony:
 
-- <i class="fas fa-folder" role="presentation"></i> plná ikonka priečinku = štandardný priečinok, má nastavené rozmery galérie
-- <i class="far fa-folder" role="presentation"></i> prázdna ikonka priečinku = priečinok nemá nastavené rozmery galérie, typicky sa jedná o ```{PRIECINOK}```, viď vyššie.
+- <i class="ti ti-folder-filled" role="presentation"></i> plná ikonka priečinku = štandardný priečinok, má nastavené rozmery galérie
+- <i class="ti ti-folder" role="presentation"></i> prázdna ikonka priečinku = priečinok nemá nastavené rozmery galérie, typicky sa jedná o ```{PRIECINOK}```, viď vyššie.
 
 ### Správa fotografií
 
@@ -56,14 +56,41 @@ Nástrojová lišta obsahuje ikony ```SML``` na nastavenie veľkosti zobrazenýc
 
 Kliknutím na fotografiu ju označíte, následne môžete zvoliť funkciu kliknutím na nástrojovú lištu (upraviť, zmazať, zobraziť, otočiť...). Pre rýchle zobrazenie editora môžete kliknúť priamo na názov súboru.
 
-![](admin-edit-photo.png)
+Editor obsahuje nasledujúce karty:
 
-Editor obsahuje nasledovné karty:
+**Popis**
 
-- Popis - krátky a dlhý popis fotografie v rôznych jazykoch (podľa zobrazeného jazyka stránky sa zobrazí príslušný popis).
-- Metadáta - doplnkové údaje, pole priorita je možné použiť na usporiadanie fotografií v galérii.
-- Editor - úprava fotografie v editore obrázkov, môžete spraviť výrez, otočenie, doplniť objekty, text atď.
-- Oblasť záujmu - nastavuje [oblasť záujmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu) na fotografii pre zobrazenie napr. v zozname noviniek a podobne.
+Krátky a dlhý popis fotografie v rôznych jazykoch.
+
+Tieto popisy sú dôležité pre medzinárodných používateľov. Krátky popis poskytuje rýchly náhľad na obsah fotografie, zatiaľ čo dlhý popis poskytuje detailnejšie informácie. Popisy sa automaticky zobrazujú podľa zvoleného jazyka stránky.
+
+![](description-preview.png)
+
+**Metadáta**
+
+Obsahuje doplnkové údaje:
+
+  - **Meno súboru**: Unikátny názov súboru fotografie, ktorý umožňuje jej identifikáciu v systéme.
+  - **Priečinok**: Cesta alebo umiestnenie v rámci úložiska, kde je fotografia uložená. Pomáha organizovať a vyhľadávať fotografie.
+  - **Autor**: Meno alebo pseudonym osoby, ktorá fotografiu vytvorila.
+  - **Dátum nahratia**: Dátum a čas, kedy bola fotografia nahraná do systému. Pomáha sledovať chronológiu a umožňuje vyhľadávať fotografie podľa času ich nahrania.
+  - **Priorita**: Úroveň dôležitosti alebo preferencie, ktorá sa môže použiť na usporiadanie fotografií v galérii. Nižšia priorita znamená, že fotografia bude zobrazená na poprednejších miestach.
+
+![](metadata-preview.png)
+
+**Editor obrázkov**
+
+Obsahuje editor obrázkov kde jednoducho môžete fotku otočiť, orezať, upraviť veľkosť, doplniť text a použiť rôzne efekty, viac info [v časti Editor obrázkov](../../image-editor/README.md)
+
+![](../../image-editor/editor-preview.png)
+
+**Oblasť záujmu**
+
+Nastavuje [oblasť záujmu](../../../frontend/thumb-servlet/interest-point.md) na fotografii pre zobrazenie napr. v zozname noviniek a podobne.
+
+Používa sa, ak potrebujeme mať pôvodnú fotografiu, ale z nej zobrazovať len určitý výrez - nespravíme orezanie fotografie, ale len nastavíme oblasť záujmu.
+
+![](area_of_interest-preview.png)
 
 ## Vloženie aplikácie do web stránky
 

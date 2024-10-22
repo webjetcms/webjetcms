@@ -17,38 +17,38 @@ import sk.iway.iwcm.Logger;
 <span class="nc" id="L17">public class CaptchaServiceSingleton</span>
 {
 	private static WebJETImageCaptchaService instance;
-<span class="nc" id="L20">	private static String lastUsedMode = null;</span>
-<span class="nc" id="L21">	private static String lastBackgroundMode = null;</span>
-<span class="nc" id="L22">	private static int lastWaveSize = -9999;</span>
+<span class="fc" id="L20">	private static String lastUsedMode = null;</span>
+<span class="fc" id="L21">	private static String lastBackgroundMode = null;</span>
+<span class="fc" id="L22">	private static int lastWaveSize = -9999;</span>
 
    public static WebJETImageCaptchaService getInstance()
    {
-<span class="nc bnc" id="L26" title="All 4 branches missed.">	   if (instance==null || isConfigChange())</span>
+<span class="pc bpc" id="L26" title="1 of 4 branches missed.">	   if (instance==null || isConfigChange())</span>
 	   {
-<span class="nc" id="L28">	   	Logger.debug(CaptchaServiceSingleton.class, &quot;Creating Captcha instance&quot;);</span>
-<span class="nc" id="L29">		   instance = new WebJETImageCaptchaService();</span>
+<span class="fc" id="L28">	   	Logger.debug(CaptchaServiceSingleton.class, &quot;Creating Captcha instance&quot;);</span>
+<span class="fc" id="L29">		   instance = new WebJETImageCaptchaService();</span>
 		   
 	   }
 	   
-<span class="nc" id="L33">	   return instance;</span>
+<span class="fc" id="L33">	   return instance;</span>
    }
    
    private static boolean isConfigChange()
    {
-<span class="nc" id="L38">   	boolean isChange = false;</span>
+<span class="fc" id="L38">   	boolean isChange = false;</span>
    	
-<span class="nc bnc" id="L40" title="All 4 branches missed.">   	if (lastUsedMode == null || lastUsedMode.equals(Constants.getString(&quot;captchaMode&quot;))==false) isChange = true;</span>
-<span class="nc bnc" id="L41" title="All 4 branches missed.">   	if (lastBackgroundMode == null || lastBackgroundMode.equals(Constants.getString(&quot;captchaBackgroundMode&quot;))==false) isChange = true;</span>
-<span class="nc bnc" id="L42" title="All 4 branches missed.">   	if (lastWaveSize == -9999 || lastWaveSize != Constants.getInt(&quot;captchaWaveSize&quot;)) isChange = true;</span>
+<span class="pc bpc" id="L40" title="3 of 4 branches missed.">   	if (lastUsedMode == null || lastUsedMode.equals(Constants.getString(&quot;captchaMode&quot;))==false) isChange = true;</span>
+<span class="pc bpc" id="L41" title="3 of 4 branches missed.">   	if (lastBackgroundMode == null || lastBackgroundMode.equals(Constants.getString(&quot;captchaBackgroundMode&quot;))==false) isChange = true;</span>
+<span class="pc bpc" id="L42" title="3 of 4 branches missed.">   	if (lastWaveSize == -9999 || lastWaveSize != Constants.getInt(&quot;captchaWaveSize&quot;)) isChange = true;</span>
    	
-<span class="nc bnc" id="L44" title="All 2 branches missed.">   	if (isChange)</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">   	if (isChange)</span>
    	{
-<span class="nc" id="L46">   		lastUsedMode = Constants.getString(&quot;captchaMode&quot;);</span>
-<span class="nc" id="L47">   		lastBackgroundMode = Constants.getString(&quot;captchaBackgroundMode&quot;);</span>
-<span class="nc" id="L48">		   lastWaveSize = Constants.getInt(&quot;captchaWaveSize&quot;);</span>
+<span class="fc" id="L46">   		lastUsedMode = Constants.getString(&quot;captchaMode&quot;);</span>
+<span class="fc" id="L47">   		lastBackgroundMode = Constants.getString(&quot;captchaBackgroundMode&quot;);</span>
+<span class="fc" id="L48">		   lastWaveSize = Constants.getInt(&quot;captchaWaveSize&quot;);</span>
    	}
    	
-<span class="nc" id="L51">   	return isChange;</span>
+<span class="fc" id="L51">   	return isChange;</span>
    }
    
    public static void flush()
@@ -56,4 +56,4 @@ import sk.iway.iwcm.Logger;
 <span class="nc" id="L56">	   instance = null;</span>
 <span class="nc" id="L57">   }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

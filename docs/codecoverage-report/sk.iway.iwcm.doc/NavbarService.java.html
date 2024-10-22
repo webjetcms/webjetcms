@@ -88,10 +88,10 @@ import org.apache.commons.lang.StringUtils;
 <span class="fc" id="L88">			group = groupsDB.findGroup(currentGroupId);</span>
 <span class="pc bpc" id="L89" title="2 of 4 branches missed.">			if (group != null &amp;&amp; group.getGroupId()!=group.getParentGroupId())</span>
 			{
-<span class="pc bpc" id="L91" title="2 of 4 branches missed.">				if (group.isInternal()==true || group.getShowInNavbar(session)==GroupDetails.MENU_TYPE_HIDDEN)</span>
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">				if (group.isInternal()==true || group.getShowInNavbar(session)==GroupDetails.MENU_TYPE_HIDDEN)</span>
 				{
-<span class="nc" id="L93">					currentGroupId = group.getParentGroupId();</span>
-<span class="nc" id="L94">					continue;</span>
+<span class="fc" id="L93">					currentGroupId = group.getParentGroupId();</span>
+<span class="fc" id="L94">					continue;</span>
 				}
 
 <span class="pc bpc" id="L97" title="2 of 4 branches missed.">				if (group.getNavbar().length() &gt; 1 &amp;&amp; &quot;&amp;nbsp;&quot;.equals(group.getNavbarName())==false)</span>
@@ -356,4 +356,4 @@ import org.apache.commons.lang.StringUtils;
 <span class="nc" id="L356">		return (htmlCode);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

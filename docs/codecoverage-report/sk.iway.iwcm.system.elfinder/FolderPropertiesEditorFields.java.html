@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FolderPropertiesEditorFields.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FolderPropertiesEditorFields.java</span></div><h1>FolderPropertiesEditorFields.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
+
+@Getter
+@Setter
+<span class="fc" id="L24">public class FolderPropertiesEditorFields {</span>
+    
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;editor.directory_name&quot;,
+        tab = &quot;basic&quot;,
+        editor = {
+            @DataTableColumnEditor( attr = { @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;) } )
+        }
+    )
+    private String dirName;
+
+    private List&lt;UserGroupDetails&gt; userGroupsList;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = &quot;user.permissions.label&quot;, tab = &quot;basic&quot;, sortAfter = &quot;dirUrl&quot;, hidden = true, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = &quot;data-dt-field-headline&quot;, value = &quot;user.permissions&quot;),
+            @DataTableColumnEditorAttr(key = &quot;unselectedValue&quot;, value = &quot;&quot;) }) })
+    private Integer[] permisions;
+
+    @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = &quot;&amp;nbsp;&quot;,
+        tab = &quot;usage&quot;,
+        editor = { @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-url&quot;, value = &quot;/admin/rest/elfinder/file-usage?filePath={dirUrl}&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-columns&quot;, value = &quot;sk.iway.iwcm.system.elfinder.FileUsageDTO&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-hideButtons&quot;, value = &quot;create,edit,duplicate,remove,import,celledit&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-full-headline&quot;, value = &quot;fbrowse.usage&quot;),
+                @DataTableColumnEditorAttr(key = &quot;data-dt-field-dt-serverSide&quot;, value = &quot;false&quot;)
+            }
+        )
+    })
+    private List&lt;DocDetails&gt; docDetailsList;
+
+    public void prepareFolderProperties(FolderPropertiesEntity originalEntity, HttpServletRequest request) {
+<span class="fc" id="L59">        String dir = request.getParameter(&quot;dir&quot;);</span>
+
+        //
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">        if( Tools.isEmpty(dir) == true ) return;</span>
+
+<span class="fc" id="L64">        UserDetails user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L65">        boolean canUpload = user.isFolderWritable(&quot;/&quot; + dir);</span>
+
+        //
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if(canUpload == false) return;</span>
+
+<span class="fc" id="L70">        IwcmFile f = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(dir));</span>
+<span class="fc" id="L71">        this.dirName = f.getName();</span>
+
+<span class="fc" id="L73">        UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+<span class="fc" id="L74">        this.userGroupsList = userGroupsDB.getUserGroups();</span>
+
+
+        //Take passwordProtected string, split on Individual ids, convert to Integer
+<span class="fc" id="L78">        int[] passwordProtected =  Tools.getTokensInt(originalEntity.getPasswordProtected(), &quot;,&quot;);</span>
+<span class="fc" id="L79">        List&lt;Integer[]&gt; splitPermsEmails = UserDetailsService.splitGroupsToPermsAndEmails(passwordProtected);</span>
+<span class="fc" id="L80">        permisions = splitPermsEmails.get(0);</span>
+
+<span class="fc" id="L82">        originalEntity.setEditorFields(this);</span>
+<span class="fc" id="L83">    }</span>
+
+    public void toFolderProperties(FolderPropertiesEntity entity) {
+<span class="fc" id="L86">        entity.setPasswordProtected( UserDetailsService.getUserGroupIds(this.getPermisions(), null) );</span>
+<span class="fc" id="L87">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

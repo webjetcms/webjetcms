@@ -9,7 +9,7 @@
         "dev": "webpack --config webpack.dev.js",
         "prod": "webpack --config webpack.prod.js",
         "watch": "npm run dev -- --watch",
-        "postinstall": "node node_modules/datatables.net-editor/install.js src/js/plugins/Editor-2.1.2.zip && npx replace-in-file exports exportsall node_modules/xlsx/package.json && cd node_modules/tui-image-editor && npm install && npm run build:image-editor && cd ../../ && rm -rf node_modules/jquery-ui/external/jquery*"
+        "postinstall": "node node_modules/datatables.net-editor/install.js src/js/plugins/Editor-2.1.2.zip && npx replace-in-file exports exportsall node_modules/xlsx/package.json && rm -rf node_modules/jquery-ui/external/jquery*"
     },
     "keywords": [],
     "author": "",
@@ -55,6 +55,7 @@
         "@babel/polyfill": "^7.6.0",
         "@popperjs/core": "^2.11.7",
         "@tabler/icons-webfont": "^3.1.0",
+        "@webjetcms/tui-image-editor": "^3.15.304",
         "@zxcvbn-ts/core": "^3.0.1",
         "@zxcvbn-ts/language-common": "^3.0.2",
         "@zxcvbn-ts/language-en": "^3.0.1",
@@ -64,6 +65,7 @@
         "dropzone": "^5.9.3",
         "jquery": "^3.7.0",
         "jquery-ui": "^1.13.2",
+        "js-base64": "^3.7.7",
         "jstree": "^3.3.15",
         "jszip": "^3.10.1",
         "lodash": "^4.17.21",
@@ -74,7 +76,6 @@
         "smooth-scrollbar": "^8.8.3",
         "tiny-emitter": "^2.1.0",
         "toastr": "^2.1.4",
-        "tui-image-editor": "github:antonaavik/tui.image-editor#feat/fabricUpdate5.2.4",
         "vue": "^3.3.2",
         "vue-advanced-cropper": "^2.8.8",
         "vue-router": "^4.2.0",

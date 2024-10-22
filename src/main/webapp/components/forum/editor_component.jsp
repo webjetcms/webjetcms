@@ -47,6 +47,7 @@ function Ok()
 		var sortTopicsBy = document.getElementById('sortTopicsBy');
 		var componentName = "forum.jsp";
 		var params = "!INCLUDE(/components/forum/";
+
 		if(document.textForm.forumType.value == "forum")
 		{
 			var forumDet = document.getElementById('forumDet').value;
@@ -65,6 +66,14 @@ function Ok()
 			params += ", sortAscending=true";
 		else
 			params += ", sortAscending=false";
+
+		var notifyPageAuthor = document.getElementById('notifyPageAuthor').checked;
+		if(notifyPageAuthor == undefined || false == notifyPageAuthor) {
+			params += ", notifyPageAuthor=false";
+		} else {
+			params += ", notifyPageAuthor=true";
+		}
+
 		htmlCode = ", style="+style+"";
 		htmlCode = params + ")!";
 		oEditor.FCK.InsertHtml(htmlCode);
@@ -149,6 +158,7 @@ function loadListIframe()
 	<div class="tab-page" id="tabMenu1" style="display: block; width: 790px;">
 		<form name="textForm" action="editor_component2.jsp">
 			<div class="col-sm-10">
+
 				<div class="col-sm-12">
 					<div class="col-sm-6 leftCol">
 						<label for="forumType"><iwcm:text key="components.forum.select_component"/>:</label>
@@ -160,6 +170,7 @@ function loadListIframe()
 						</select>
 					</div>
 				</div>
+
 				<div class="col-sm-12">
 					<div class="col-sm-6 leftCol">
 						<span id="sortOrderLabel"><iwcm:text key="components.forum.sort_by_question_date"/></span>:
@@ -171,6 +182,7 @@ function loadListIframe()
 						</select>
 					</div>
 				</div>
+
 				<div id="forumMenu" style="display: block;">
 					<div class="col-sm-12" >
 						<div class="col-sm-6 leftCol">
@@ -186,6 +198,7 @@ function loadListIframe()
 							</select>
 						</div>
 					</div>
+
 					<div class="col-sm-12">
 						<div class="col-sm-6 leftCol">
 							<label for="usePagingId"><iwcm:text key="components.forum.paging"/>:&nbsp;</label>
@@ -195,6 +208,7 @@ function loadListIframe()
 							out.print("checked='checked'");%> onclick="addPageSize(this);" />
 						</div>
 					</div>
+
 					<div class="col-sm-12" id="pageSizeForumRow">
 						<div class="col-sm-6 leftCol">
 							<label for="pageSizeForumId"><iwcm:text key="components.forum.page_size"/>:</label>
@@ -281,6 +295,15 @@ function loadListIframe()
 								<input type="text" name="searchPostsDocId2" id="searchPostsDocId2" size="2" value="<%=ResponseUtils.filter(pageParams.getValue("searchPostsDocId2", "")) %>" />
 							</div>
 						</div>
+					</div>
+				</div>
+
+				<div class="col-sm-12" style="display: inline-block;">
+					<div class="col-sm-6 leftCol">
+						<label for="notifyPageAuthor"><iwcm:text key="components.forum.notify_page_author"/>:</label>
+					</div>
+					<div class="col-sm-6">
+						<input type="checkbox" name="notifyPageAuthor" id="notifyPageAuthor" <%if (pageParams.getBooleanValue("notifyPageAuthor", false)) out.print("checked='checked'");%> />
 					</div>
 				</div>
 			</div>

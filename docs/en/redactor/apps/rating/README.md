@@ -14,7 +14,7 @@ You can add a form to rate a page as an app or directly using code `!INCLUDE(/co
 
 The form contains parameters:
 - `checkLogon` - Enable logged in user check, if selected, only logged in users can rate the page.
-- `ratingDocId`
+- `ratingDocId` - Doc ID of the page to be evaluated, if the entered value is less than 1, the ID of the currently displayed web page will be used automatically.
 - `range` - The range of the rating scale.
 
 ![](rating-form_app.png)

@@ -27,31 +27,38 @@ public class SaveGroupListener {
   @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.doc.GroupDetails'")
   public void changeDirection(final WebjetEvent<GroupDetails> event) {
 
-    Identity user = UsersDB.getCurrentUser(request);
-    GroupDetails groupToSave = event.getSource();
+    try {
+      //probably published by background task
+      if (request == null) return;
 
-    if (event.getEventType().equals(WebjetEventType.ON_START) && groupToSave.getGroupId()>0) {
+      Identity user = UsersDB.getCurrentUser(request);
+      GroupDetails groupToSave = event.getSource();
 
-      //sme ON_START, ulozena v DB je este stara verzia
-      int parentGroupId = (new SimpleQuery()).forInt("SELECT parent_group_id FROM groups WHERE group_id=?", groupToSave.getGroupId());
-      String urlDirName = (new SimpleQuery()).forString("SELECT url_dir_name FROM groups WHERE group_id=?", groupToSave.getGroupId());
-      if (urlDirName == null) urlDirName = "";
-      // Over či bola zmenená poloha group v stromovej štrukture alebo bola zmenena
-      // virtualPath hodnota
-      if (parentGroupId != groupToSave.getParentGroupId()
-          || urlDirName.equals(groupToSave.getUrlDirName()) == false) {
-        //musime to preniest takto
-        request.setAttribute(REQUEST_KEY, Boolean.TRUE);
+      if (event.getEventType().equals(WebjetEventType.ON_START) && groupToSave.getGroupId()>0) {
+
+        //sme ON_START, ulozena v DB je este stara verzia
+        int parentGroupId = (new SimpleQuery()).forInt("SELECT parent_group_id FROM groups WHERE group_id=?", groupToSave.getGroupId());
+        String urlDirName = (new SimpleQuery()).forString("SELECT url_dir_name FROM groups WHERE group_id=?", groupToSave.getGroupId());
+        if (urlDirName == null) urlDirName = "";
+        // Over či bola zmenená poloha group v stromovej štrukture alebo bola zmenena
+        // virtualPath hodnota
+        if (parentGroupId != groupToSave.getParentGroupId()
+            || urlDirName.equals(groupToSave.getUrlDirName()) == false) {
+          //musime to preniest takto
+          request.setAttribute(REQUEST_KEY, Boolean.TRUE);
+        }
       }
-    }
 
-    if (event.getEventType().equals(WebjetEventType.AFTER_SAVE) && request.getAttribute(REQUEST_KEY) != null) {
-      try {
-        request.removeAttribute(REQUEST_KEY);
-        WebpagesService.regenerateUrl(groupToSave.getGroupId(), user, request, true);
-      } catch (Exception ex) {
-        Logger.error(SaveListener.class, ex);
+      if (event.getEventType().equals(WebjetEventType.AFTER_SAVE) && request.getAttribute(REQUEST_KEY) != null) {
+        try {
+          request.removeAttribute(REQUEST_KEY);
+          WebpagesService.regenerateUrl(groupToSave.getGroupId(), user, request, true);
+        } catch (Exception ex) {
+          Logger.error(SaveListener.class, ex);
+        }
       }
+    } catch (IllegalStateException ex) {
+      //it's not called from web request, probably background task
     }
   }
 }

@@ -11,7 +11,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('zakladne testy', async ({I, DataTables, DTE}) => {
+Scenario('zakladne testy @baseTest', async ({I, DataTables, DTE}) => {
     await DataTables.baseTest({
         dataTable: 'qaDataTable',
         perms: 'menuQa',
@@ -42,6 +42,10 @@ Scenario('zakladne testy', async ({I, DataTables, DTE}) => {
         },
         beforeDeleteSteps: function(I, options) {
             //I.wait(20);
+        }, 
+        duplicateSteps: function(I, options) {
+            I.click("#pills-dt-qaDataTable-answer-tab");
+            I.wait(1);
         },
     });
 });

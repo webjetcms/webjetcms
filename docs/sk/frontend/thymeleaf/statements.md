@@ -56,7 +56,7 @@ okrem toho je možné použiť aj [Literal substitutions](https://www.thymeleaf.
 <span data-th-text="|Welcome to our application, ${docDetails.title}!|">
 ```
 
-POZOR: ak vám vyhodí chybu typu: ```Could not parse as expression: "aitem--open md-large-menu"```, je to kvôli ```__```. To je špeciálna značka pre [pre-procesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing)
+!>**Upozornenie:** ak vám vyhodí chybu typu: ```Could not parse as expression: "aitem--open md-large-menu"```, je to kvôli ```__```. To je špeciálna značka pre [pre-procesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing)
 a je potrebne to escapovať ako \\\\_, príklad:
 
 ```html
@@ -78,7 +78,7 @@ Pre [cyklus](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#ite
 Atribút ```data-th-if``` zabezpečí zobrazenie ```tagu``` jedine pri splnení [zadanej podmienky](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#conditional-evaluation).
 
 ```html
-<i data-th-if="${!docDetails.available}" class="fas fa-chevron-down"></i>
+<i data-th-if="${!docDetails.available}" class="ti ti-chevron-down"></i>
 ```
 
 ## Include

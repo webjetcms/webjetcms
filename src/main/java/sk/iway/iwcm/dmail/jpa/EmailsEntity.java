@@ -29,7 +29,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
 public class EmailsEntity extends ActiveRecordRepository implements Serializable {
 
     public EmailsEntity() {}

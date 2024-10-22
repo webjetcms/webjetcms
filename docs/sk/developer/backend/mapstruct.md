@@ -57,7 +57,7 @@ public class DocHistoryDto {
 
 ## Mapovanie
 
-**POZOR** mapovacia trieda musí obsahovať v názve výraz ```Mapper``` z dôvodu kompilácie na ```Jenkins``` serveri, napr. [DocHistoryDtoMapper](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+!>**Upozornenie:** mapovacia trieda musí obsahovať v názve výraz ```Mapper``` z dôvodu kompilácie na ```Jenkins``` serveri, napr. [DocHistoryDtoMapper](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;

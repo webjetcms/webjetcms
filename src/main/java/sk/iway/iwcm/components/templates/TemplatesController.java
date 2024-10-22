@@ -166,7 +166,9 @@ public class TemplatesController extends DatatableRestControllerAvailableGroups<
 
     @Override
     public TemplateDetails getOneItem(long id) {
+        if (id < 1) return new TemplateDetails();
         TemplateDetails old = TemplatesDB.getInstance().getTemplate((int)id);
+        if (old == null) return new TemplateDetails();
 
         List<TemplateDetails> list = new ArrayList<>();
         list.add(old);

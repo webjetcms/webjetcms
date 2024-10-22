@@ -8,6 +8,7 @@
 * Language
   * [sk](/sk/)
   * [en](/en/)
+  * [cs](/cs/)
 
 * Help
   * [WebJET CMS info](https://www.webjetcms.com/)

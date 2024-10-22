@@ -19,6 +19,8 @@ window.dataLayer = window.dataLayer || \[]; function gtag(){dataLayer.push(argum
 ```javascript
 gtag("consent", "default", {
 	ad_storage: "denied",
+	ad_user_data: "denied",
+	ad_personalization: "denied",
 	analytics_storage: "denied",
 });
 ```
@@ -27,6 +29,8 @@ This is the default setting. When the page is loaded, it is set to `denied/grant
 
 **In principle, the**
 - `ad_storage` = WebJET marketing category `cookies`
+- `ad_user_data` = WebJET marketing category `cookies`
+- `ad_personalization` = WebJET marketing category `cookies`
 - `analytics_storage` = WebJET statistical category `cookies`
 **Warning:** the default setting of consents must be in the code before the inserted `GTM`.
 *Interestingly, if the consents above are disabled, Google Analytics will still run. However, it does not create `cookies` and does not send information about the user, his browser, does not track the visit, etc. It is being launched because it promises to do-model analytics based on missing data from users who have not given consent.*
@@ -37,8 +41,11 @@ The code above should of course also be supplemented with WebJET categories `coo
 ```javascript
 gtag("consent", "default", {
 	ad_storage: "denied",
+	ad_user_data: "denied",
+	ad_personalization: "denied",
 	analytics_storage: "denied",
 	preferencne: "denied",
+	nutne: "granted",
 });
 ```
 
@@ -60,6 +67,10 @@ In the framework of `gtag update` you only need to insert the categories that ha
 `DataLayer` push is an event due to `GTM`to be able to launch the tools directly when consent is granted and not wait for the page to refresh.
 
 The data is automatically updated by the application `GDPR Cookies` and the app `Cookiebar`.
+
+## Defining consents if the visitor has confirmed their choices
+
+`Consent default` - categories (except `nutne`) are always set to `denied`, even though it is a repeat visit and the visitor has previously enabled each category. But in this case, right after defining `consent default` follows in the code `consent update` (without DataLayer push event - it is sent only when interacting with the cookie bar).
 
 ## Model example
 

@@ -106,754 +106,751 @@ import javax.servlet.http.HttpServlet;
 <span class="nc" id="L106">					sk.iway.iwcm.Logger.error(ex);</span>
 <span class="nc" id="L107">				}</span>
 
-				//ak sme Tomcat 7 nemozeme mat spring komponenty (ma staru verziu el), musime zmazat
-<span class="nc bnc" id="L110" title="All 2 branches missed.">                if (sc.getServerInfo().contains(&quot;Tomcat/7&quot;))</span>
-                {
-<span class="nc" id="L112">                    deleteDirTree(&quot;/WEB-INF/update/&quot;+version+&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/webjet_component&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L113">                    deleteFile(&quot;/WEB-INF/update/&quot;+version+&quot;/WEB-INF/lib/hibernate-validator-6.0.7.Final.jar&quot;, notDeleted, version, sc);</span>
-                }
-
 				//skopiruj vsetky subory
-<span class="nc" id="L117">				moveDir(&quot;/&quot;, version, sc);</span>
+<span class="nc" id="L110">				moveDir(&quot;/&quot;, version, sc);</span>
 			}
 		}
-<span class="nc" id="L120">		catch (Exception e)</span>
+<span class="nc" id="L113">		catch (Exception e)</span>
 		{
-<span class="nc" id="L122">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L123">		}</span>
+<span class="nc" id="L115">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L116">		}</span>
 
 		//zmaz stare class subory
-<span class="nc" id="L126">		List&lt;String&gt; files = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L127">		files.add(&quot;/WEB-INF/classes/org/apache/commons/fileupload/MultipartStream$IllegalBoundaryException.class&quot;);</span>
-<span class="nc" id="L128">		files.add(&quot;/WEB-INF/classes/org/apache/commons/fileupload/MultipartStream$MalformedStreamException.class&quot;);</span>
-<span class="nc" id="L129">		files.add(&quot;/WEB-INF/classes/org/apache/commons/fileupload/MultipartStream.class&quot;);</span>
-<span class="nc" id="L130">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/SmsAddressBookBean.class&quot;);</span>
-<span class="nc" id="L131">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/SmsTemplateBean.class&quot;);</span>
-<span class="nc" id="L132">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/MultilangBean.class&quot;);</span>
-<span class="nc" id="L133">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/XhrFileUploadServlet.class&quot;);</span>
-<span class="nc" id="L134">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/XhrFileUploadServlet$PartialUploadHolder.class&quot;);</span>
-<span class="nc" id="L135">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/XhrFileUploadServlet$PathHolder.class&quot;);</span>
+<span class="nc" id="L119">		List&lt;String&gt; files = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L120">		files.add(&quot;/WEB-INF/classes/org/apache/commons/fileupload/MultipartStream$IllegalBoundaryException.class&quot;);</span>
+<span class="nc" id="L121">		files.add(&quot;/WEB-INF/classes/org/apache/commons/fileupload/MultipartStream$MalformedStreamException.class&quot;);</span>
+<span class="nc" id="L122">		files.add(&quot;/WEB-INF/classes/org/apache/commons/fileupload/MultipartStream.class&quot;);</span>
+<span class="nc" id="L123">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/SmsAddressBookBean.class&quot;);</span>
+<span class="nc" id="L124">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/SmsTemplateBean.class&quot;);</span>
+<span class="nc" id="L125">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/MultilangBean.class&quot;);</span>
+<span class="nc" id="L126">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/XhrFileUploadServlet.class&quot;);</span>
+<span class="nc" id="L127">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/XhrFileUploadServlet$PartialUploadHolder.class&quot;);</span>
+<span class="nc" id="L128">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/XhrFileUploadServlet$PathHolder.class&quot;);</span>
 		//nahradene za sk.iway.iwcm.common.ImageGallery
-<span class="nc" id="L137">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/ImageTools.class&quot;);</span>
+<span class="nc" id="L130">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/ImageTools.class&quot;);</span>
 		//zmena logovania, zmazanie starych, prechod na log4j
-<span class="nc" id="L139">		files.add(&quot;/WEB-INF/classes/simplelog.properties&quot;);</span>
-<span class="nc" id="L140">		files.add(&quot;/WEB-INF/classes/commons-logging.properties&quot;);</span>
+<span class="nc" id="L132">		files.add(&quot;/WEB-INF/classes/simplelog.properties&quot;);</span>
+<span class="nc" id="L133">		files.add(&quot;/WEB-INF/classes/commons-logging.properties&quot;);</span>
 		//ak nezmazeme zostane stara verzia ktora potrebuje collections ktore uz nemame
-<span class="nc" id="L142">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/HelloRestServiceController.class&quot;);</span>
+<span class="nc" id="L135">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/HelloRestServiceController.class&quot;);</span>
 
 		//2023
-<span class="nc" id="L145">		files.add(&quot;/WEB-INF/classes/com/&quot;);</span>
-<span class="nc" id="L146">		files.add(&quot;/WEB-INF/classes/it/&quot;);</span>
-<span class="nc" id="L147">		files.add(&quot;/WEB-INF/classes/mp4/&quot;);</span>
-<span class="nc" id="L148">		files.add(&quot;/WEB-INF/classes/net/&quot;);</span>
-<span class="nc" id="L149">		files.add(&quot;/WEB-INF/classes/za/&quot;);</span>
-<span class="nc" id="L150">		files.add(&quot;/WEB-INF/classes/org/apache/axis/&quot;);</span>
-<span class="nc" id="L151">		files.add(&quot;/WEB-INF/classes/org/apache/commons/httpclient/&quot;);</span>
-<span class="nc" id="L152">		files.add(&quot;/WEB-INF/classes/org/apache/struts/&quot;);</span>
-<span class="nc" id="L153">		files.add(&quot;/WEB-INF/classes/org/arabidopsis/&quot;);</span>
-<span class="nc" id="L154">		files.add(&quot;/WEB-INF/classes/org/displaytag/&quot;);</span>
-<span class="nc" id="L155">		files.add(&quot;/WEB-INF/classes/org/eclipse/&quot;);</span>
-<span class="nc" id="L156">		files.add(&quot;/WEB-INF/classes/org/infohazard/&quot;);</span>
-<span class="nc" id="L157">		files.add(&quot;/WEB-INF/classes/org/jcrontab/&quot;);</span>
-<span class="nc" id="L158">		files.add(&quot;/WEB-INF/classes/org/objectstyle/&quot;);</span>
-<span class="nc" id="L159">		files.add(&quot;/WEB-INF/classes/org/outerj/&quot;);</span>
-<span class="nc" id="L160">		files.add(&quot;/WEB-INF/classes/org/tempuri/&quot;);</span>
-<span class="nc" id="L161">		files.add(&quot;/WEB-INF/classes/org/w3c/&quot;);</span>
-<span class="nc" id="L162">		files.add(&quot;/WEB-INF/classes/org/xml/&quot;);</span>
+<span class="nc" id="L138">		files.add(&quot;/WEB-INF/classes/com/&quot;);</span>
+<span class="nc" id="L139">		files.add(&quot;/WEB-INF/classes/it/&quot;);</span>
+<span class="nc" id="L140">		files.add(&quot;/WEB-INF/classes/mp4/&quot;);</span>
+<span class="nc" id="L141">		files.add(&quot;/WEB-INF/classes/net/&quot;);</span>
+<span class="nc" id="L142">		files.add(&quot;/WEB-INF/classes/za/&quot;);</span>
+<span class="nc" id="L143">		files.add(&quot;/WEB-INF/classes/org/apache/axis/&quot;);</span>
+<span class="nc" id="L144">		files.add(&quot;/WEB-INF/classes/org/apache/commons/httpclient/&quot;);</span>
+<span class="nc" id="L145">		files.add(&quot;/WEB-INF/classes/org/apache/struts/&quot;);</span>
+<span class="nc" id="L146">		files.add(&quot;/WEB-INF/classes/org/arabidopsis/&quot;);</span>
+<span class="nc" id="L147">		files.add(&quot;/WEB-INF/classes/org/displaytag/&quot;);</span>
+<span class="nc" id="L148">		files.add(&quot;/WEB-INF/classes/org/eclipse/&quot;);</span>
+<span class="nc" id="L149">		files.add(&quot;/WEB-INF/classes/org/infohazard/&quot;);</span>
+<span class="nc" id="L150">		files.add(&quot;/WEB-INF/classes/org/jcrontab/&quot;);</span>
+<span class="nc" id="L151">		files.add(&quot;/WEB-INF/classes/org/objectstyle/&quot;);</span>
+<span class="nc" id="L152">		files.add(&quot;/WEB-INF/classes/org/outerj/&quot;);</span>
+<span class="nc" id="L153">		files.add(&quot;/WEB-INF/classes/org/tempuri/&quot;);</span>
+<span class="nc" id="L154">		files.add(&quot;/WEB-INF/classes/org/w3c/&quot;);</span>
+<span class="nc" id="L155">		files.add(&quot;/WEB-INF/classes/org/xml/&quot;);</span>
 
-<span class="nc" id="L164">		files.add(&quot;/WEB-INF/classes/sk/iway/apollo/&quot;);</span>
-<span class="nc" id="L165">		files.add(&quot;/WEB-INF/classes/sk/iway/asterisk/&quot;);</span>
-<span class="nc" id="L166">		files.add(&quot;/WEB-INF/classes/sk/iway/cals/&quot;);</span>
-<span class="nc" id="L167">		files.add(&quot;/WEB-INF/classes/sk/iway/city_university/&quot;);</span>
-<span class="nc" id="L168">		files.add(&quot;/WEB-INF/classes/sk/iway/ckm/&quot;);</span>
-<span class="nc" id="L169">		files.add(&quot;/WEB-INF/classes/sk/iway/columbex/&quot;);</span>
-<span class="nc" id="L170">		files.add(&quot;/WEB-INF/classes/sk/iway/cps/&quot;);</span>
-<span class="nc" id="L171">		files.add(&quot;/WEB-INF/classes/sk/iway/cykloportal/&quot;);</span>
-<span class="nc" id="L172">		files.add(&quot;/WEB-INF/classes/sk/iway/dekampo/&quot;);</span>
-<span class="nc" id="L173">		files.add(&quot;/WEB-INF/classes/sk/iway/detivpohybe/&quot;);</span>
-<span class="nc" id="L174">		files.add(&quot;/WEB-INF/classes/sk/iway/dexia/&quot;);</span>
-<span class="nc" id="L175">		files.add(&quot;/WEB-INF/classes/sk/iway/dovera/&quot;);</span>
-<span class="nc" id="L176">		files.add(&quot;/WEB-INF/classes/sk/iway/druchema/&quot;);</span>
-<span class="nc" id="L177">		files.add(&quot;/WEB-INF/classes/sk/iway/dsoft/&quot;);</span>
-<span class="nc" id="L178">		files.add(&quot;/WEB-INF/classes/sk/iway/electroworld/&quot;);</span>
-<span class="nc" id="L179">		files.add(&quot;/WEB-INF/classes/sk/iway/enviro_intra/&quot;);</span>
-<span class="nc" id="L180">		files.add(&quot;/WEB-INF/classes/sk/iway/essox/&quot;);</span>
-<span class="nc" id="L181">		files.add(&quot;/WEB-INF/classes/sk/iway/express/&quot;);</span>
-<span class="nc" id="L182">		files.add(&quot;/WEB-INF/classes/sk/iway/ferona/&quot;);</span>
-<span class="nc" id="L183">		files.add(&quot;/WEB-INF/classes/sk/iway/fincop/&quot;);</span>
-<span class="nc" id="L184">		files.add(&quot;/WEB-INF/classes/sk/iway/generali/&quot;);</span>
-<span class="nc" id="L185">		files.add(&quot;/WEB-INF/classes/sk/iway/glanc/&quot;);</span>
-<span class="nc" id="L186">		files.add(&quot;/WEB-INF/classes/sk/iway/gtsint/&quot;);</span>
-<span class="nc" id="L187">		files.add(&quot;/WEB-INF/classes/sk/iway/helpdesk/&quot;);</span>
-<span class="nc" id="L188">		files.add(&quot;/WEB-INF/classes/sk/iway/i6shop/&quot;);</span>
-<span class="nc" id="L189">		files.add(&quot;/WEB-INF/classes/sk/iway/infolib/&quot;);</span>
-<span class="nc" id="L190">		files.add(&quot;/WEB-INF/classes/sk/iway/ing/&quot;);</span>
-<span class="nc" id="L191">		files.add(&quot;/WEB-INF/classes/sk/iway/jasr/&quot;);</span>
-<span class="nc" id="L192">		files.add(&quot;/WEB-INF/classes/sk/iway/keep/&quot;);</span>
-<span class="nc" id="L193">		files.add(&quot;/WEB-INF/classes/sk/iway/lesy/&quot;);</span>
-<span class="nc" id="L194">		files.add(&quot;/WEB-INF/classes/sk/iway/livage/&quot;);</span>
-<span class="nc" id="L195">		files.add(&quot;/WEB-INF/classes/sk/iway/magma/&quot;);</span>
-<span class="nc" id="L196">		files.add(&quot;/WEB-INF/classes/sk/iway/mamina/&quot;);</span>
-<span class="nc" id="L197">		files.add(&quot;/WEB-INF/classes/sk/iway/measureshop/&quot;);</span>
-<span class="nc" id="L198">		files.add(&quot;/WEB-INF/classes/sk/iway/mediamonitoring/&quot;);</span>
-<span class="nc" id="L199">		files.add(&quot;/WEB-INF/classes/sk/iway/metroprojekt/&quot;);</span>
-<span class="nc" id="L200">		files.add(&quot;/WEB-INF/classes/sk/iway/mobileapp/&quot;);</span>
-<span class="nc" id="L201">		files.add(&quot;/WEB-INF/classes/sk/iway/pamas/&quot;);</span>
-<span class="nc" id="L202">		files.add(&quot;/WEB-INF/classes/sk/iway/pfizer/&quot;);</span>
-<span class="nc" id="L203">		files.add(&quot;/WEB-INF/classes/sk/iway/pfizer_cz/&quot;);</span>
-<span class="nc" id="L204">		files.add(&quot;/WEB-INF/classes/sk/iway/playstation/&quot;);</span>
-<span class="nc" id="L205">		files.add(&quot;/WEB-INF/classes/sk/iway/plus7/&quot;);</span>
-<span class="nc" id="L206">		files.add(&quot;/WEB-INF/classes/sk/iway/pluska/&quot;);</span>
-<span class="nc" id="L207">		files.add(&quot;/WEB-INF/classes/sk/iway/pss/&quot;);</span>
-<span class="nc" id="L208">		files.add(&quot;/WEB-INF/classes/sk/iway/sba/&quot;);</span>
-<span class="nc" id="L209">		files.add(&quot;/WEB-INF/classes/sk/iway/slovanet/&quot;);</span>
-<span class="nc" id="L210">		files.add(&quot;/WEB-INF/classes/sk/iway/slovnaft/&quot;);</span>
-<span class="nc" id="L211">		files.add(&quot;/WEB-INF/classes/sk/iway/sony/&quot;);</span>
-<span class="nc" id="L212">		files.add(&quot;/WEB-INF/classes/sk/iway/sopk/&quot;);</span>
-<span class="nc" id="L213">		files.add(&quot;/WEB-INF/classes/sk/iway/strategie/&quot;);</span>
-<span class="nc" id="L214">		files.add(&quot;/WEB-INF/classes/sk/iway/syts/&quot;);</span>
-<span class="nc" id="L215">		files.add(&quot;/WEB-INF/classes/sk/iway/tento/&quot;);</span>
-<span class="nc" id="L216">		files.add(&quot;/WEB-INF/classes/sk/iway/ugkk/&quot;);</span>
-<span class="nc" id="L217">		files.add(&quot;/WEB-INF/classes/sk/iway/ulib/&quot;);</span>
-<span class="nc" id="L218">		files.add(&quot;/WEB-INF/classes/sk/iway/uninova/&quot;);</span>
-<span class="nc" id="L219">		files.add(&quot;/WEB-INF/classes/sk/iway/victory/&quot;);</span>
-<span class="nc" id="L220">		files.add(&quot;/WEB-INF/classes/sk/iway/vszp/&quot;);</span>
-<span class="nc" id="L221">		files.add(&quot;/WEB-INF/classes/sk/iway/vszpi/&quot;);</span>
-<span class="nc" id="L222">		files.add(&quot;/WEB-INF/classes/sk/iway/vubintra/&quot;);</span>
-<span class="nc" id="L223">		files.add(&quot;/WEB-INF/classes/sk/iway/vubweb/&quot;);</span>
-<span class="nc" id="L224">		files.add(&quot;/WEB-INF/classes/sk/iway/vuc_nitra/&quot;);</span>
-<span class="nc" id="L225">		files.add(&quot;/WEB-INF/classes/sk/iway/vuc_presov/&quot;);</span>
-<span class="nc" id="L226">		files.add(&quot;/WEB-INF/classes/sk/iway/vuc_zilina/&quot;);</span>
-<span class="nc" id="L227">		files.add(&quot;/WEB-INF/classes/sk/iway/vucza/&quot;);</span>
-<span class="nc" id="L228">		files.add(&quot;/WEB-INF/classes/sk/iway/wtc/&quot;);</span>
-<span class="nc" id="L229">		files.add(&quot;/WEB-INF/classes/sk/iway/zscargo/&quot;);</span>
+<span class="nc" id="L157">		files.add(&quot;/WEB-INF/classes/sk/iway/apollo/&quot;);</span>
+<span class="nc" id="L158">		files.add(&quot;/WEB-INF/classes/sk/iway/asterisk/&quot;);</span>
+<span class="nc" id="L159">		files.add(&quot;/WEB-INF/classes/sk/iway/cals/&quot;);</span>
+<span class="nc" id="L160">		files.add(&quot;/WEB-INF/classes/sk/iway/city_university/&quot;);</span>
+<span class="nc" id="L161">		files.add(&quot;/WEB-INF/classes/sk/iway/ckm/&quot;);</span>
+<span class="nc" id="L162">		files.add(&quot;/WEB-INF/classes/sk/iway/columbex/&quot;);</span>
+<span class="nc" id="L163">		files.add(&quot;/WEB-INF/classes/sk/iway/cps/&quot;);</span>
+<span class="nc" id="L164">		files.add(&quot;/WEB-INF/classes/sk/iway/cykloportal/&quot;);</span>
+<span class="nc" id="L165">		files.add(&quot;/WEB-INF/classes/sk/iway/dekampo/&quot;);</span>
+<span class="nc" id="L166">		files.add(&quot;/WEB-INF/classes/sk/iway/detivpohybe/&quot;);</span>
+<span class="nc" id="L167">		files.add(&quot;/WEB-INF/classes/sk/iway/dexia/&quot;);</span>
+<span class="nc" id="L168">		files.add(&quot;/WEB-INF/classes/sk/iway/dovera/&quot;);</span>
+<span class="nc" id="L169">		files.add(&quot;/WEB-INF/classes/sk/iway/druchema/&quot;);</span>
+<span class="nc" id="L170">		files.add(&quot;/WEB-INF/classes/sk/iway/dsoft/&quot;);</span>
+<span class="nc" id="L171">		files.add(&quot;/WEB-INF/classes/sk/iway/electroworld/&quot;);</span>
+<span class="nc" id="L172">		files.add(&quot;/WEB-INF/classes/sk/iway/enviro_intra/&quot;);</span>
+<span class="nc" id="L173">		files.add(&quot;/WEB-INF/classes/sk/iway/essox/&quot;);</span>
+<span class="nc" id="L174">		files.add(&quot;/WEB-INF/classes/sk/iway/express/&quot;);</span>
+<span class="nc" id="L175">		files.add(&quot;/WEB-INF/classes/sk/iway/ferona/&quot;);</span>
+<span class="nc" id="L176">		files.add(&quot;/WEB-INF/classes/sk/iway/fincop/&quot;);</span>
+<span class="nc" id="L177">		files.add(&quot;/WEB-INF/classes/sk/iway/generali/&quot;);</span>
+<span class="nc" id="L178">		files.add(&quot;/WEB-INF/classes/sk/iway/glanc/&quot;);</span>
+<span class="nc" id="L179">		files.add(&quot;/WEB-INF/classes/sk/iway/gtsint/&quot;);</span>
+<span class="nc" id="L180">		files.add(&quot;/WEB-INF/classes/sk/iway/helpdesk/&quot;);</span>
+<span class="nc" id="L181">		files.add(&quot;/WEB-INF/classes/sk/iway/i6shop/&quot;);</span>
+<span class="nc" id="L182">		files.add(&quot;/WEB-INF/classes/sk/iway/infolib/&quot;);</span>
+<span class="nc" id="L183">		files.add(&quot;/WEB-INF/classes/sk/iway/ing/&quot;);</span>
+<span class="nc" id="L184">		files.add(&quot;/WEB-INF/classes/sk/iway/jasr/&quot;);</span>
+<span class="nc" id="L185">		files.add(&quot;/WEB-INF/classes/sk/iway/keep/&quot;);</span>
+<span class="nc" id="L186">		files.add(&quot;/WEB-INF/classes/sk/iway/lesy/&quot;);</span>
+<span class="nc" id="L187">		files.add(&quot;/WEB-INF/classes/sk/iway/livage/&quot;);</span>
+<span class="nc" id="L188">		files.add(&quot;/WEB-INF/classes/sk/iway/magma/&quot;);</span>
+<span class="nc" id="L189">		files.add(&quot;/WEB-INF/classes/sk/iway/mamina/&quot;);</span>
+<span class="nc" id="L190">		files.add(&quot;/WEB-INF/classes/sk/iway/measureshop/&quot;);</span>
+<span class="nc" id="L191">		files.add(&quot;/WEB-INF/classes/sk/iway/mediamonitoring/&quot;);</span>
+<span class="nc" id="L192">		files.add(&quot;/WEB-INF/classes/sk/iway/metroprojekt/&quot;);</span>
+<span class="nc" id="L193">		files.add(&quot;/WEB-INF/classes/sk/iway/mobileapp/&quot;);</span>
+<span class="nc" id="L194">		files.add(&quot;/WEB-INF/classes/sk/iway/pamas/&quot;);</span>
+<span class="nc" id="L195">		files.add(&quot;/WEB-INF/classes/sk/iway/pfizer/&quot;);</span>
+<span class="nc" id="L196">		files.add(&quot;/WEB-INF/classes/sk/iway/pfizer_cz/&quot;);</span>
+<span class="nc" id="L197">		files.add(&quot;/WEB-INF/classes/sk/iway/playstation/&quot;);</span>
+<span class="nc" id="L198">		files.add(&quot;/WEB-INF/classes/sk/iway/plus7/&quot;);</span>
+<span class="nc" id="L199">		files.add(&quot;/WEB-INF/classes/sk/iway/pluska/&quot;);</span>
+<span class="nc" id="L200">		files.add(&quot;/WEB-INF/classes/sk/iway/pss/&quot;);</span>
+<span class="nc" id="L201">		files.add(&quot;/WEB-INF/classes/sk/iway/sba/&quot;);</span>
+<span class="nc" id="L202">		files.add(&quot;/WEB-INF/classes/sk/iway/slovanet/&quot;);</span>
+<span class="nc" id="L203">		files.add(&quot;/WEB-INF/classes/sk/iway/slovnaft/&quot;);</span>
+<span class="nc" id="L204">		files.add(&quot;/WEB-INF/classes/sk/iway/sony/&quot;);</span>
+<span class="nc" id="L205">		files.add(&quot;/WEB-INF/classes/sk/iway/sopk/&quot;);</span>
+<span class="nc" id="L206">		files.add(&quot;/WEB-INF/classes/sk/iway/strategie/&quot;);</span>
+<span class="nc" id="L207">		files.add(&quot;/WEB-INF/classes/sk/iway/syts/&quot;);</span>
+<span class="nc" id="L208">		files.add(&quot;/WEB-INF/classes/sk/iway/tento/&quot;);</span>
+<span class="nc" id="L209">		files.add(&quot;/WEB-INF/classes/sk/iway/ugkk/&quot;);</span>
+<span class="nc" id="L210">		files.add(&quot;/WEB-INF/classes/sk/iway/ulib/&quot;);</span>
+<span class="nc" id="L211">		files.add(&quot;/WEB-INF/classes/sk/iway/uninova/&quot;);</span>
+<span class="nc" id="L212">		files.add(&quot;/WEB-INF/classes/sk/iway/victory/&quot;);</span>
+<span class="nc" id="L213">		files.add(&quot;/WEB-INF/classes/sk/iway/vszp/&quot;);</span>
+<span class="nc" id="L214">		files.add(&quot;/WEB-INF/classes/sk/iway/vszpi/&quot;);</span>
+<span class="nc" id="L215">		files.add(&quot;/WEB-INF/classes/sk/iway/vubintra/&quot;);</span>
+<span class="nc" id="L216">		files.add(&quot;/WEB-INF/classes/sk/iway/vubweb/&quot;);</span>
+<span class="nc" id="L217">		files.add(&quot;/WEB-INF/classes/sk/iway/vuc_nitra/&quot;);</span>
+<span class="nc" id="L218">		files.add(&quot;/WEB-INF/classes/sk/iway/vuc_presov/&quot;);</span>
+<span class="nc" id="L219">		files.add(&quot;/WEB-INF/classes/sk/iway/vuc_zilina/&quot;);</span>
+<span class="nc" id="L220">		files.add(&quot;/WEB-INF/classes/sk/iway/vucza/&quot;);</span>
+<span class="nc" id="L221">		files.add(&quot;/WEB-INF/classes/sk/iway/wtc/&quot;);</span>
+<span class="nc" id="L222">		files.add(&quot;/WEB-INF/classes/sk/iway/zscargo/&quot;);</span>
 
 		//problemy po aktualizacii WJ
-<span class="nc" id="L232">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/database/ComplexQueryJUnit.class&quot;);</span>
-<span class="nc" id="L233">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/database/ComplexQueryJUnit$1.class&quot;);</span>
-<span class="nc" id="L234">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/DefaultEntityImporter$1.class&quot;);</span>
-<span class="nc" id="L235">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/ImportCS.class&quot;);</span>
-<span class="nc" id="L236">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/XlsToHtmlCacheBean.class&quot;);</span>
-<span class="nc" id="L237">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/XlsChartAction.class&quot;);</span>
-<span class="nc" id="L238">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/ExcelImportJXLTest.class&quot;);</span>
-<span class="nc" id="L239">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/XlsToHtmlTable.class&quot;);</span>
-<span class="nc" id="L240">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormResultsParserJUnit.class&quot;);</span>
-<span class="nc" id="L241">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormSaveNoteAction.class&quot;);</span>
-<span class="nc" id="L242">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormDelAction.class&quot;);</span>
-<span class="nc" id="L243">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormToPdfAction.class&quot;);</span>
-<span class="nc" id="L244">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormListAction.class&quot;);</span>
-<span class="nc" id="L245">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormEditActionBean.class&quot;);</span>
-<span class="nc" id="L246">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormHtmlAction.class&quot;);</span>
-<span class="nc" id="L247">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormEditNoteAction.class&quot;);</span>
-<span class="nc" id="L248">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormNoteForm.class&quot;);</span>
-<span class="nc" id="L249">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/CalendarAction.class&quot;);</span>
-<span class="nc" id="L250">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/ListEventsAction.class&quot;);</span>
-<span class="nc" id="L251">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/DeleteEventAction.class&quot;);</span>
-<span class="nc" id="L252">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/SaveEventAction.class&quot;);</span>
-<span class="nc" id="L253">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/EditEventAction.class&quot;);</span>
-<span class="nc" id="L254">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryCreateForm.class&quot;);</span>
-<span class="nc" id="L255">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryCreateAction.class&quot;);</span>
-<span class="nc" id="L256">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryDeleteAction.class&quot;);</span>
-<span class="nc" id="L257">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryAction.class&quot;);</span>
-<span class="nc" id="L258">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/epayments/class_structure.uxf&quot;);</span>
-<span class="nc" id="L259">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/epayments/CsobTlacitkoInformation.class&quot;);</span>
-<span class="nc" id="L260">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/epayments/ebanking_workflow.uxf&quot;);</span>
-<span class="nc" id="L261">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/MoneyJUnit.class&quot;);</span>
-<span class="nc" id="L262">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/MoneyJUnit$1.class&quot;);</span>
-<span class="nc" id="L263">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/AdminlogJUnit.class&quot;);</span>
-<span class="nc" id="L264">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/BaseWebjetTest.class&quot;);</span>
-<span class="nc" id="L265">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/AssertionsJUnit.class&quot;);</span>
-<span class="nc" id="L266">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/TestRequest.class&quot;);</span>
-<span class="nc" id="L267">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Equal.class&quot;);</span>
-<span class="nc" id="L268">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/BaseWebjetTest$1.class&quot;);</span>
-<span class="nc" id="L269">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Assertions$1.class&quot;);</span>
-<span class="nc" id="L270">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Assertions.class&quot;);</span>
-<span class="nc" id="L271">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Assertions$2.class&quot;);</span>
-<span class="nc" id="L272">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/AssertionsJUnit$1.class&quot;);</span>
-<span class="nc" id="L273">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stripes/doc/UserSettingsActionBean.class&quot;);</span>
-<span class="nc" id="L274">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/XmlSaxImporter.class&quot;);</span>
-<span class="nc" id="L275">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/UploadAction.class&quot;);</span>
-<span class="nc" id="L276">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/MultipleOperationsAction.class&quot;);</span>
-<span class="nc" id="L277">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/PhotoGalleryAction.class&quot;);</span>
-<span class="nc" id="L278">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/UserVertexShapeTransformer.class&quot;);</span>
-<span class="nc" id="L279">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/UserLabelTransformer.class&quot;);</span>
-<span class="nc" id="L280">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/OrgTreeBuilder.class&quot;);</span>
-<span class="nc" id="L281">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/UserDetailsNameComparator.class&quot;);</span>
-<span class="nc" id="L282">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/pdf/AbstractExample.class&quot;);</span>
-<span class="nc" id="L283">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/pdf/AcroFormTools.class&quot;);</span>
-<span class="nc" id="L284">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/utils/MapUtilsJUnit.class&quot;);</span>
-<span class="nc" id="L285">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/utils/PairJUnit.class&quot;);</span>
-<span class="nc" id="L286">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/utils/MapUtilsJUnit$1.class&quot;);</span>
-<span class="nc" id="L287">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/CalendarTag.class&quot;);</span>
-<span class="nc" id="L288">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/AddStatTag.class&quot;);</span>
-<span class="nc" id="L289">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/MultilangTextareaTag.class&quot;);</span>
-<span class="nc" id="L290">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/MultiUploadTag.class&quot;);</span>
-<span class="nc" id="L291">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/SendEmailTag.class&quot;);</span>
-<span class="nc" id="L292">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/ToJSTag.class&quot;);</span>
-<span class="nc" id="L293">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/DocMenuTag.class&quot;);</span>
-<span class="nc" id="L294">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/MultilangTextTag.class&quot;);</span>
-<span class="nc" id="L295">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/NetscapeTag.class&quot;);</span>
-<span class="nc" id="L296">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/TopTenTag.class&quot;);</span>
-<span class="nc" id="L297">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/NotNetscapeTag.class&quot;);</span>
-<span class="nc" id="L298">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoRestServiceController.class&quot;);</span>
-<span class="nc" id="L299">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoRecentFiles$RecentFile.class&quot;);</span>
-<span class="nc" id="L300">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/ExcelTemplate.class&quot;);</span>
-<span class="nc" id="L301">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoTask.class&quot;);</span>
-<span class="nc" id="L302">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoNode.class&quot;);</span>
-<span class="nc" id="L303">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoRecentFiles.class&quot;);</span>
-<span class="nc" id="L304">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoFile.class&quot;);</span>
-<span class="nc" id="L305">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ResponseHeaderFilter.class&quot;);</span>
-<span class="nc" id="L306">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ssl/DummySSLSocketFactory.class&quot;);</span>
-<span class="nc" id="L307">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ssl/DummyTrustManager.class&quot;);</span>
-<span class="nc" id="L308">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/UrlRedirectActionBean.class&quot;);</span>
-<span class="nc" id="L309">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/msg/AdminMessage.class&quot;);</span>
-<span class="nc" id="L310">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/msg/_AdminMessage.class&quot;);</span>
-<span class="nc" id="L311">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/stripes/MultipartWrapper$1.class&quot;);</span>
-<span class="nc" id="L312">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/AuthenticatedRequest.class&quot;);</span>
-<span class="nc" id="L313">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/NtlmLogonAction$RedirectedException.class&quot;);</span>
-<span class="nc" id="L314">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/Negotiate.class&quot;);</span>
-<span class="nc" id="L315">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/NtlmHttpFilter.class&quot;);</span>
-<span class="nc" id="L316">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/MultilangDB.class&quot;);</span>
-<span class="nc" id="L317">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/adminlog/AdminlogNotifyAction.class&quot;);</span>
-<span class="nc" id="L318">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/adminlog/AdminlogNotifyBean.class&quot;);</span>
-<span class="nc" id="L319">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/postgre/PostgreSQLAdapter.class&quot;);</span>
-<span class="nc" id="L320">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/oracle/OracleAdapter.class&quot;);</span>
-<span class="nc" id="L321">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/mysql/MySQLAdapter.class&quot;);</span>
-<span class="nc" id="L322">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/PkGenerator.class&quot;);</span>
-<span class="nc" id="L323">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/mssql/SQLServerAdapter.class&quot;);</span>
-<span class="nc" id="L324">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/FilePartNoTransferEncoding.class&quot;);</span>
-<span class="nc" id="L325">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/jpa/WebJETInitializationHelper.class&quot;);</span>
-<span class="nc" id="L326">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/lucene/SynonymExpansionFilter.class&quot;);</span>
-<span class="nc" id="L327">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/FulltextSearchTest$2.class&quot;);</span>
-<span class="nc" id="L328">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/Indexed$Callback.class&quot;);</span>
-<span class="nc" id="L329">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Tickets$1.class&quot;);</span>
-<span class="nc" id="L330">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Documents$3$1.class&quot;);</span>
-<span class="nc" id="L331">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Documents$3.class&quot;);</span>
-<span class="nc" id="L332">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Tickets.class&quot;);</span>
-<span class="nc" id="L333">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/FulltextSearchTest$1.class&quot;);</span>
-<span class="nc" id="L334">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/Indexed.class&quot;);</span>
-<span class="nc" id="L335">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/FulltextSearchTest.class&quot;);</span>
-<span class="nc" id="L336">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/jobs/TicketsIndexing.class&quot;);</span>
-<span class="nc" id="L337">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/captcha/CaptchaDictionaryAction.class&quot;);</span>
-<span class="nc" id="L338">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/Modules.java.bak&quot;);</span>
-<span class="nc" id="L339">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/CayenneServletConfiguration.class&quot;);</span>
-<span class="nc" id="L340">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/StringPartNoTransferEncoding.class&quot;);</span>
-<span class="nc" id="L341">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/model/_UrlRedirect.class&quot;);</span>
-<span class="nc" id="L342">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/packager/Packager.class&quot;);</span>
-<span class="nc" id="L343">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/IwSecurityManager$AccessRight.class&quot;);</span>
-<span class="nc" id="L344">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsDirectoryResource.class&quot;);</span>
-<span class="nc" id="L345">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/MiltonWrapper.class&quot;);</span>
-<span class="nc" id="L346">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsResource.class&quot;);</span>
-<span class="nc" id="L347">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FileSystemResourceFactory.class&quot;);</span>
-<span class="nc" id="L348">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsFileResource.class&quot;);</span>
-<span class="nc" id="L349">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/MiltonWrapper$1.class&quot;);</span>
-<span class="nc" id="L350">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/IwSecurityManager.class&quot;);</span>
-<span class="nc" id="L351">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsMemoryLockManager$CurrentLock.class&quot;);</span>
-<span class="nc" id="L352">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsMemoryLockManager.class&quot;);</span>
-<span class="nc" id="L353">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ReqTestAction.class&quot;);</span>
-<span class="nc" id="L354">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/CayenneDataSourceFactory.class&quot;);</span>
-<span class="nc" id="L355">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/QueryString$1.class&quot;);</span>
-<span class="nc" id="L356">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/Portal$PortletRegistrationListener.class&quot;);</span>
-<span class="nc" id="L357">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/util/PortletUtils.class&quot;);</span>
-<span class="nc" id="L358">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/driver/DriverConfigurationFactory.class&quot;);</span>
-<span class="nc" id="L359">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/driver/IwayPortalDriverServlet.class&quot;);</span>
-<span class="nc" id="L360">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/driver/IwayPortalUrlParser.class&quot;);</span>
-<span class="nc" id="L361">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/Portal.class&quot;);</span>
-<span class="nc" id="L362">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/QueryString.class&quot;);</span>
-<span class="nc" id="L363">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayUserInfoService.class&quot;);</span>
-<span class="nc" id="L364">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService$2.class&quot;);</span>
-<span class="nc" id="L365">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService.class&quot;);</span>
-<span class="nc" id="L366">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService$1.class&quot;);</span>
-<span class="nc" id="L367">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService$3.class&quot;);</span>
-<span class="nc" id="L368">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/IwayOptionalContainerServices.class&quot;);</span>
-<span class="nc" id="L369">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/IwayRequiredContainerServices.class&quot;);</span>
-<span class="nc" id="L370">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/MemoryMeasurementJUnit$1TestMemoryMeasurement.class&quot;);</span>
-<span class="nc" id="L371">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/MemoryMeasurementJUnit.class&quot;);</span>
-<span class="nc" id="L372">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/MonitoringClusterJUnit.class&quot;);</span>
-<span class="nc" id="L373">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/ExecutionTimeMonitoringJUnit.class&quot;);</span>
-<span class="nc" id="L374">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/UrlRedirect.class&quot;);</span>
-<span class="nc" id="L375">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/sass/SassFileMonitor.class&quot;);</span>
-<span class="nc" id="L376">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/sass/FileMonitor.class&quot;);</span>
-<span class="nc" id="L377">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/help/SearchResultBean.class&quot;);</span>
-<span class="nc" id="L378">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/help/SearchHelpAction.class&quot;);</span>
-<span class="nc" id="L379">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/help/SearchManager.class&quot;);</span>
-<span class="nc" id="L380">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/JCrontabSQLSource.class&quot;);</span>
-<span class="nc" id="L381">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/CronJUnit.class&quot;);</span>
-<span class="nc" id="L382">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/ClusteredCrontabEntryBean.class&quot;);</span>
-<span class="nc" id="L383">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/CrontabAction.class&quot;);</span>
-<span class="nc" id="L384">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/SpringUrlMapping$1.class&quot;);</span>
-<span class="nc" id="L385">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/SpringSecurityConf$1.class&quot;);</span>
-<span class="nc" id="L386">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/LogoffAction.class&quot;);</span>
-<span class="nc" id="L387">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$PostBankMethodInformation.class&quot;);</span>
-<span class="nc" id="L388">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$TatraPayMethodInformation.class&quot;);</span>
-<span class="nc" id="L389">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$SporoPayMethodInformation.class&quot;);</span>
-<span class="nc" id="L390">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/_BasketItem.class&quot;);</span>
-<span class="nc" id="L391">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/_BasketInvoice.class&quot;);</span>
-<span class="nc" id="L392">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketItem.class&quot;);</span>
-<span class="nc" id="L393">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments.class&quot;);</span>
-<span class="nc" id="L394">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketInvoice.class&quot;);</span>
-<span class="nc" id="L395">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$PaymentMethodInformation.class&quot;);</span>
-<span class="nc" id="L396">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/StavyObjednavok$1.class&quot;);</span>
-<span class="nc" id="L397">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$VubMethodInformation.class&quot;);</span>
-<span class="nc" id="L398">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/domainRedirects/DomainRedirectAction.class&quot;);</span>
-<span class="nc" id="L399">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/KurzyDB.class&quot;);</span>
-<span class="nc" id="L400">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/UploadFileAction.class&quot;);</span>
-<span class="nc" id="L401">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/DeleteOldFilesCronJob.class&quot;);</span>
-<span class="nc" id="L402">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchFactory.class&quot;);</span>
-<span class="nc" id="L403">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchFactory$SearchType.class&quot;);</span>
-<span class="nc" id="L404">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/GroupSubSearch$1.class&quot;);</span>
-<span class="nc" id="L405">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SpotlightSearch$2.class&quot;);</span>
-<span class="nc" id="L406">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileSubSearch.class&quot;);</span>
-<span class="nc" id="L407">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/ConfigSubSearch$1.class&quot;);</span>
-<span class="nc" id="L408">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SubSearch.class&quot;);</span>
-<span class="nc" id="L409">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/Icon.class&quot;);</span>
-<span class="nc" id="L410">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/GroupSubSearch.class&quot;);</span>
-<span class="nc" id="L411">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/UserSubSearch.class&quot;);</span>
-<span class="nc" id="L412">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SpotlightSearch$1.class&quot;);</span>
-<span class="nc" id="L413">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchResult.class&quot;);</span>
-<span class="nc" id="L414">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileIndexer.class&quot;);</span>
-<span class="nc" id="L415">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileSubSearch$1.class&quot;);</span>
-<span class="nc" id="L416">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/DocumentSubSearch$2.class&quot;);</span>
-<span class="nc" id="L417">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileIndexer$1.class&quot;);</span>
-<span class="nc" id="L418">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/UserSubSearch$1.class&quot;);</span>
-<span class="nc" id="L419">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/DocumentSubSearch.class&quot;);</span>
-<span class="nc" id="L420">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/Ranker.class&quot;);</span>
-<span class="nc" id="L421">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/DocumentSubSearch$1.class&quot;);</span>
-<span class="nc" id="L422">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/ConfigSubSearch.class&quot;);</span>
-<span class="nc" id="L423">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SpotlightSearch.class&quot;);</span>
-<span class="nc" id="L424">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileIndexer$2.class&quot;);</span>
-<span class="nc" id="L425">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchFactory$NullSubSearch.class&quot;);</span>
-<span class="nc" id="L426">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/TemplateSubSearch.class&quot;);</span>
-<span class="nc" id="L427">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/proxy/ProxyByHttpClient.class&quot;);</span>
-<span class="nc" id="L428">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/proxy/ProxyBean.class&quot;);</span>
-<span class="nc" id="L429">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/proxy/ProxyAction.class&quot;);</span>
-<span class="nc" id="L430">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Entity.class&quot;);</span>
-<span class="nc" id="L431">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatDB$1.class&quot;);</span>
-<span class="nc" id="L432">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Session.class&quot;);</span>
-<span class="nc" id="L433">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatRoomAction.class&quot;);</span>
-<span class="nc" id="L434">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/SystemMessage.class&quot;);</span>
-<span class="nc" id="L435">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Message.class&quot;);</span>
-<span class="nc" id="L436">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Room.class&quot;);</span>
-<span class="nc" id="L437">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/User.class&quot;);</span>
-<span class="nc" id="L438">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatController.class&quot;);</span>
-<span class="nc" id="L439">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/HtmlChatRoom.class&quot;);</span>
-<span class="nc" id="L440">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatDB.class&quot;);</span>
-<span class="nc" id="L441">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatRoomForm.class&quot;);</span>
-<span class="nc" id="L442">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ModeratedRoom.class&quot;);</span>
-<span class="nc" id="L443">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/dataDeleting/DataDeletingAjaxAction.class&quot;);</span>
-<span class="nc" id="L444">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/dataDeleting/DataDeletingBean.class&quot;);</span>
-<span class="nc" id="L445">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/pageUpdateInfo/PageUpdateInfoForm.class&quot;);</span>
-<span class="nc" id="L446">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/pageUpdateInfo/PageUpdateInfoDB.class&quot;);</span>
-<span class="nc" id="L447">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/pageUpdateInfo/PageUpdateInfoAction.class&quot;);</span>
-<span class="nc" id="L448">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/sita/NewsItem.class&quot;);</span>
-<span class="nc" id="L449">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/sita/SitaParser.class&quot;);</span>
-<span class="nc" id="L450">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarDB.class&quot;);</span>
-<span class="nc" id="L451">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarGroupAction.class&quot;);</span>
-<span class="nc" id="L452">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarAdvertisementAction.class&quot;);</span>
-<span class="nc" id="L453">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarGroupBean.class&quot;);</span>
-<span class="nc" id="L454">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarAdvertisementBean.class&quot;);</span>
-<span class="nc" id="L455">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/graph/GraphAction.class&quot;);</span>
-<span class="nc" id="L456">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/graph/XlsParser.class&quot;);</span>
-<span class="nc" id="L457">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/graph/GraphTools.class&quot;);</span>
-<span class="nc" id="L458">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/webserices/GetDoc.class&quot;);</span>
-<span class="nc" id="L459">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/importZipFile/ImportZipFileAction.class&quot;);</span>
-<span class="nc" id="L460">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/importZipFile/ImportZipFileForm.class&quot;);</span>
-<span class="nc" id="L461">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/importZipFile/ImportZipFileAction$1.class&quot;);</span>
-<span class="nc" id="L462">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/reservation/ReservationObjectPriceAction.class&quot;);</span>
-<span class="nc" id="L463">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/wiki/WikiAction.class&quot;);</span>
-<span class="nc" id="L464">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/welcome/WallAjaxAction.class&quot;);</span>
-<span class="nc" id="L465">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/todo/ToDoAjaxAction.class&quot;);</span>
-<span class="nc" id="L466">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/stat/StatViewChartAction.class&quot;);</span>
-<span class="nc" id="L467">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/stat/StatViewsDB.class&quot;);</span>
-<span class="nc" id="L468">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/stat/StatComparator.class&quot;);</span>
-<span class="nc" id="L469">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/EditPage.class&quot;);</span>
-<span class="nc" id="L470">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/ViewPage.class&quot;);</span>
-<span class="nc" id="L471">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/ListPage.class&quot;);</span>
-<span class="nc" id="L472">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/CommonPage.class&quot;);</span>
-<span class="nc" id="L473">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/DetailPage.class&quot;);</span>
-<span class="nc" id="L474">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/InventoryDetailEditAction.class&quot;);</span>
-<span class="nc" id="L475">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/Message.class&quot;);</span>
-<span class="nc" id="L476">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/Type.class&quot;);</span>
-<span class="nc" id="L477">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/InventoryException.class&quot;);</span>
-<span class="nc" id="L478">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/Type$TypeBean.class&quot;);</span>
-<span class="nc" id="L479">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/InventoryEditAction.class&quot;);</span>
-<span class="nc" id="L480">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$2.class&quot;);</span>
-<span class="nc" id="L481">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDB.class&quot;);</span>
-<span class="nc" id="L482">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogBean.class&quot;);</span>
-<span class="nc" id="L483">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$2.class&quot;);</span>
-<span class="nc" id="L484">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailBean.class&quot;);</span>
-<span class="nc" id="L485">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$4.class&quot;);</span>
-<span class="nc" id="L486">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$4.class&quot;);</span>
-<span class="nc" id="L487">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$3.class&quot;);</span>
-<span class="nc" id="L488">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$3.class&quot;);</span>
-<span class="nc" id="L489">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$1.class&quot;);</span>
-<span class="nc" id="L490">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$1.class&quot;);</span>
-<span class="nc" id="L491">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB.class&quot;);</span>
-<span class="nc" id="L492">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/CommonBean.class&quot;);</span>
-<span class="nc" id="L493">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryFilter.class&quot;);</span>
-<span class="nc" id="L494">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB.class&quot;);</span>
-<span class="nc" id="L495">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryBean.class&quot;);</span>
-<span class="nc" id="L496">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/SmsDB.class&quot;);</span>
-<span class="nc" id="L497">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipsAction.class&quot;);</span>
-<span class="nc" id="L498">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipsDB.class&quot;);</span>
-<span class="nc" id="L499">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipsExcelImport.class&quot;);</span>
-<span class="nc" id="L500">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipBean.class&quot;);</span>
-<span class="nc" id="L501">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/SmsTemplateBean.class&quot;);</span>
-<span class="nc" id="L502">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvyDB.class&quot;);</span>
-<span class="nc" id="L503">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/PrilohaBean.class&quot;);</span>
-<span class="nc" id="L504">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvyAction.class&quot;);</span>
-<span class="nc" id="L505">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvyDB$1.class&quot;);</span>
-<span class="nc" id="L506">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvaBean.class&quot;);</span>
-<span class="nc" id="L507">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ImportZmluv.class&quot;);</span>
-<span class="nc" id="L508">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/DocmanFilter.class&quot;);</span>
-<span class="nc" id="L509">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/WebDavOpenAction.class&quot;);</span>
-<span class="nc" id="L510">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/DocmanDB.class&quot;);</span>
-<span class="nc" id="L511">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/UploadAction.class&quot;);</span>
-<span class="nc" id="L512">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/DocmanAction.class&quot;);</span>
-<span class="nc" id="L513">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/export/ExportDatAction.class&quot;);</span>
-<span class="nc" id="L514">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/insertScript/InsertScriptAction.class&quot;);</span>
-<span class="nc" id="L515">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/convert2pdf/Convert2pdf.class&quot;);</span>
-<span class="nc" id="L516">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/KurzBean.class&quot;);</span>
-<span class="nc" id="L517">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheBean.class&quot;);</span>
-<span class="nc" id="L518">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheFileDB.class&quot;);</span>
-<span class="nc" id="L519">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCachePageBean.class&quot;);</span>
-<span class="nc" id="L520">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCachePageDB.class&quot;);</span>
-<span class="nc" id="L521">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheActionBean.class&quot;);</span>
-<span class="nc" id="L522">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheDB.class&quot;);</span>
-<span class="nc" id="L523">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheFileBean.class&quot;);</span>
-<span class="nc" id="L524">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/BannerAction.class&quot;);</span>
-<span class="nc" id="L525">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerStatViews.class&quot;);</span>
-<span class="nc" id="L526">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerBean.class&quot;);</span>
-<span class="nc" id="L527">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerStatClicks.class&quot;);</span>
-<span class="nc" id="L528">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/BannerForm.class&quot;);</span>
-<span class="nc" id="L529">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerGroupBean.class&quot;);</span>
-<span class="nc" id="L530">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/InitServlet$1.class&quot;);</span>
-<span class="nc" id="L531">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/StatNewDBTest.class&quot;);</span>
-<span class="nc" id="L532">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/BrowserDetectorJUnit.class&quot;);</span>
-<span class="nc" id="L533">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/ChartAction.class&quot;);</span>
-<span class="nc" id="L534">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/heat_map/HeatMapJUnit$1.class&quot;);</span>
-<span class="nc" id="L535">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/heat_map/HeatMapJUnit.class&quot;);</span>
-<span class="nc" id="L536">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/ChartNewAction.class&quot;);</span>
-<span class="nc" id="L537">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/Forms.class&quot;);</span>
-<span class="nc" id="L538">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/GroupsAjaxAction.class&quot;);</span>
-<span class="nc" id="L539">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/EditorAction.class&quot;);</span>
-<span class="nc" id="L540">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/FileEditorAjaxAction.class&quot;);</span>
-<span class="nc" id="L541">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/EditorAjaxAction.class&quot;);</span>
-<span class="nc" id="L542">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SocialAuthenticationAction.class&quot;);</span>
-<span class="nc" id="L543">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/XLSServlet.class&quot;);</span>
-<span class="nc" id="L544">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegAlarm.class&quot;);</span>
-<span class="nc" id="L545">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$5.class&quot;);</span>
-<span class="nc" id="L546">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/EditUserAction.class&quot;);</span>
-<span class="nc" id="L547">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$1.class&quot;);</span>
-<span class="nc" id="L548">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/AlarmDetails.class&quot;);</span>
-<span class="nc" id="L549">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/EditUserGroupAction.class&quot;);</span>
-<span class="nc" id="L550">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$3.class&quot;);</span>
-<span class="nc" id="L551">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/AuthForm.class&quot;);</span>
-<span class="nc" id="L552">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/OutlookImport.class&quot;);</span>
-<span class="nc" id="L553">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$4.class&quot;);</span>
-<span class="nc" id="L554">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegUpdateAction.class&quot;);</span>
-<span class="nc" id="L555">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SaveUserAction.class&quot;);</span>
-<span class="nc" id="L556">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$6.class&quot;);</span>
-<span class="nc" id="L557">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ImportAction.class&quot;);</span>
-<span class="nc" id="L558">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction.class&quot;);</span>
-<span class="nc" id="L559">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/UserFormPfizer.class&quot;);</span>
-<span class="nc" id="L560">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$2.class&quot;);</span>
-<span class="nc" id="L561">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/PasswordSecurityJUnit.class&quot;);</span>
-<span class="nc" id="L562">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SaveUserGroupAction.class&quot;);</span>
-<span class="nc" id="L563">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegUserAction.class&quot;);</span>
-<span class="nc" id="L564">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/MultipleOperationsAction.class&quot;);</span>
-<span class="nc" id="L565">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SocialAuthSuccessAction.class&quot;);</span>
-<span class="nc" id="L566">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ChangeUserAction.class&quot;);</span>
-<span class="nc" id="L567">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/STokenizer.class&quot;);</span>
-<span class="nc" id="L568">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegUserPfizerAction.class&quot;);</span>
-<span class="nc" id="L569">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/UserForm.class&quot;);</span>
-<span class="nc" id="L570">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/EditAction.class&quot;);</span>
-<span class="nc" id="L571">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/UnzipAction.class&quot;);</span>
-<span class="nc" id="L572">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/DeleteAction.class&quot;);</span>
-<span class="nc" id="L573">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/SaveAction.class&quot;);</span>
-<span class="nc" id="L574">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/Script.class&quot;);</span>
-<span class="nc" id="L575">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/profesia/Offer.class&quot;);</span>
-<span class="nc" id="L576">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/profesia/OfferDetails.class&quot;);</span>
-<span class="nc" id="L577">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/profesia/OfferList.class&quot;);</span>
-<span class="nc" id="L578">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure89.class&quot;);</span>
-<span class="nc" id="L579">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ShowDocAction.class&quot;);</span>
-<span class="nc" id="L580">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/LinkCheckAction.class&quot;);</span>
-<span class="nc" id="L581">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure91.class&quot;);</span>
-<span class="nc" id="L582">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/GroupsListAction.class&quot;);</span>
-<span class="nc" id="L583">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure103.class&quot;);</span>
-<span class="nc" id="L584">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ListDocAction.class&quot;);</span>
-<span class="nc" id="L585">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure101.class&quot;);</span>
-<span class="nc" id="L586">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure129.class&quot;);</span>
-<span class="nc" id="L587">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DeleteAction.class&quot;);</span>
-<span class="nc" id="L588">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure99.class&quot;);</span>
-<span class="nc" id="L589">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/TemplatesForm.class&quot;);</span>
-<span class="nc" id="L590">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/GroupsListAction.java.bak&quot;);</span>
-<span class="nc" id="L591">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ListTempsAction.class&quot;);</span>
-<span class="nc" id="L592">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDetails$1.class&quot;);</span>
-<span class="nc" id="L593">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure83.class&quot;);</span>
-<span class="nc" id="L594">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure131.class&quot;);</span>
-<span class="nc" id="L595">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/FileSyncAction.class&quot;);</span>
-<span class="nc" id="L596">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/NewGroupAction.class&quot;);</span>
-<span class="nc" id="L597">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/NewGroupForm.class&quot;);</span>
-<span class="nc" id="L598">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/GroupsListAction$1.class&quot;);</span>
-<span class="nc" id="L599">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SpeedTestAction.class&quot;);</span>
-<span class="nc" id="L600">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SkkEuroLoader.class&quot;);</span>
-<span class="nc" id="L601">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/XmlSaxImport.class&quot;);</span>
-<span class="nc" id="L602">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/sync/SyncAction.class&quot;);</span>
-<span class="nc" id="L603">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/sync/inport/NumberedTest.class&quot;);</span>
-<span class="nc" id="L604">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SendMail$1Authenticator.class&quot;);</span>
-<span class="nc" id="L605">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/helpers/BeanDiffJUnit.class&quot;);</span>
-<span class="nc" id="L606">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/UsrLogonSMSAction.class&quot;);</span>
-<span class="nc" id="L607">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ICalActionBean.class&quot;);</span>
-<span class="nc" id="L608">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB.class&quot;);</span>
-<span class="nc" id="L609">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB$ReminderItem.class&quot;);</span>
-<span class="nc" id="L610">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB$1.class&quot;);</span>
-<span class="nc" id="L611">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB$ReminderMapper.class&quot;);</span>
-<span class="nc" id="L612">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/DocDetailsConverter.class&quot;);</span>
-<span class="nc" id="L613">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SendSMS.class&quot;);</span>
-<span class="nc" id="L614">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/PreviewAction.class&quot;);</span>
-<span class="nc" id="L615">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/SaveTemplateAction.class&quot;);</span>
-<span class="nc" id="L616">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/EditorAction.class&quot;);</span>
-<span class="nc" id="L617">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/DirAction$2.class&quot;);</span>
-<span class="nc" id="L618">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateWordpress$1.class&quot;);</span>
-<span class="nc" id="L619">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateHtml$1.class&quot;);</span>
-<span class="nc" id="L620">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateExternal.class&quot;);</span>
-<span class="nc" id="L621">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateHtml.class&quot;);</span>
-<span class="nc" id="L622">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateWordpress.class&quot;);</span>
-<span class="nc" id="L623">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/ImportTemplatesAction.class&quot;);</span>
-<span class="nc" id="L624">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/HTMLCleanAction.class&quot;);</span>
-<span class="nc" id="L625">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/FckStylesAction.class&quot;);</span>
-<span class="nc" id="L626">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/PKeyGeneratorJUnit.class&quot;);</span>
-<span class="nc" id="L627">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/dmail/DomainLimitsActionBean.class&quot;);</span>
-<span class="nc" id="L628">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/dmail/EmailCsvImport.class&quot;);</span>
-<span class="nc" id="L629">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/dmail/EMailAction.class&quot;);</span>
+<span class="nc" id="L225">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/database/ComplexQueryJUnit.class&quot;);</span>
+<span class="nc" id="L226">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/database/ComplexQueryJUnit$1.class&quot;);</span>
+<span class="nc" id="L227">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/DefaultEntityImporter$1.class&quot;);</span>
+<span class="nc" id="L228">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/ImportCS.class&quot;);</span>
+<span class="nc" id="L229">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/XlsToHtmlCacheBean.class&quot;);</span>
+<span class="nc" id="L230">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/XlsChartAction.class&quot;);</span>
+<span class="nc" id="L231">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/ExcelImportJXLTest.class&quot;);</span>
+<span class="nc" id="L232">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/xls/XlsToHtmlTable.class&quot;);</span>
+<span class="nc" id="L233">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormResultsParserJUnit.class&quot;);</span>
+<span class="nc" id="L234">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormSaveNoteAction.class&quot;);</span>
+<span class="nc" id="L235">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormDelAction.class&quot;);</span>
+<span class="nc" id="L236">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormToPdfAction.class&quot;);</span>
+<span class="nc" id="L237">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormListAction.class&quot;);</span>
+<span class="nc" id="L238">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormEditActionBean.class&quot;);</span>
+<span class="nc" id="L239">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormHtmlAction.class&quot;);</span>
+<span class="nc" id="L240">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormEditNoteAction.class&quot;);</span>
+<span class="nc" id="L241">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/form/FormNoteForm.class&quot;);</span>
+<span class="nc" id="L242">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/CalendarAction.class&quot;);</span>
+<span class="nc" id="L243">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/ListEventsAction.class&quot;);</span>
+<span class="nc" id="L244">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/DeleteEventAction.class&quot;);</span>
+<span class="nc" id="L245">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/SaveEventAction.class&quot;);</span>
+<span class="nc" id="L246">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/calendar/EditEventAction.class&quot;);</span>
+<span class="nc" id="L247">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryCreateForm.class&quot;);</span>
+<span class="nc" id="L248">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryCreateAction.class&quot;);</span>
+<span class="nc" id="L249">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryDeleteAction.class&quot;);</span>
+<span class="nc" id="L250">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/inquiry/InquiryAction.class&quot;);</span>
+<span class="nc" id="L251">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/epayments/class_structure.uxf&quot;);</span>
+<span class="nc" id="L252">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/epayments/CsobTlacitkoInformation.class&quot;);</span>
+<span class="nc" id="L253">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/epayments/ebanking_workflow.uxf&quot;);</span>
+<span class="nc" id="L254">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/MoneyJUnit.class&quot;);</span>
+<span class="nc" id="L255">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/ebanking/MoneyJUnit$1.class&quot;);</span>
+<span class="nc" id="L256">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/AdminlogJUnit.class&quot;);</span>
+<span class="nc" id="L257">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/BaseWebjetTest.class&quot;);</span>
+<span class="nc" id="L258">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/AssertionsJUnit.class&quot;);</span>
+<span class="nc" id="L259">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/TestRequest.class&quot;);</span>
+<span class="nc" id="L260">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Equal.class&quot;);</span>
+<span class="nc" id="L261">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/BaseWebjetTest$1.class&quot;);</span>
+<span class="nc" id="L262">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Assertions$1.class&quot;);</span>
+<span class="nc" id="L263">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Assertions.class&quot;);</span>
+<span class="nc" id="L264">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/Assertions$2.class&quot;);</span>
+<span class="nc" id="L265">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/test/AssertionsJUnit$1.class&quot;);</span>
+<span class="nc" id="L266">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stripes/doc/UserSettingsActionBean.class&quot;);</span>
+<span class="nc" id="L267">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/XmlSaxImporter.class&quot;);</span>
+<span class="nc" id="L268">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/UploadAction.class&quot;);</span>
+<span class="nc" id="L269">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/MultipleOperationsAction.class&quot;);</span>
+<span class="nc" id="L270">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/gallery/PhotoGalleryAction.class&quot;);</span>
+<span class="nc" id="L271">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/UserVertexShapeTransformer.class&quot;);</span>
+<span class="nc" id="L272">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/UserLabelTransformer.class&quot;);</span>
+<span class="nc" id="L273">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/OrgTreeBuilder.class&quot;);</span>
+<span class="nc" id="L274">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/orgtree/UserDetailsNameComparator.class&quot;);</span>
+<span class="nc" id="L275">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/pdf/AbstractExample.class&quot;);</span>
+<span class="nc" id="L276">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/pdf/AcroFormTools.class&quot;);</span>
+<span class="nc" id="L277">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/utils/MapUtilsJUnit.class&quot;);</span>
+<span class="nc" id="L278">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/utils/PairJUnit.class&quot;);</span>
+<span class="nc" id="L279">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/utils/MapUtilsJUnit$1.class&quot;);</span>
+<span class="nc" id="L280">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/CalendarTag.class&quot;);</span>
+<span class="nc" id="L281">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/AddStatTag.class&quot;);</span>
+<span class="nc" id="L282">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/MultilangTextareaTag.class&quot;);</span>
+<span class="nc" id="L283">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/MultiUploadTag.class&quot;);</span>
+<span class="nc" id="L284">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/SendEmailTag.class&quot;);</span>
+<span class="nc" id="L285">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/ToJSTag.class&quot;);</span>
+<span class="nc" id="L286">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/DocMenuTag.class&quot;);</span>
+<span class="nc" id="L287">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/MultilangTextTag.class&quot;);</span>
+<span class="nc" id="L288">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/NetscapeTag.class&quot;);</span>
+<span class="nc" id="L289">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/TopTenTag.class&quot;);</span>
+<span class="nc" id="L290">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/tags/NotNetscapeTag.class&quot;);</span>
+<span class="nc" id="L291">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoRestServiceController.class&quot;);</span>
+<span class="nc" id="L292">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoRecentFiles$RecentFile.class&quot;);</span>
+<span class="nc" id="L293">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/ExcelTemplate.class&quot;);</span>
+<span class="nc" id="L294">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoTask.class&quot;);</span>
+<span class="nc" id="L295">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoNode.class&quot;);</span>
+<span class="nc" id="L296">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoRecentFiles.class&quot;);</span>
+<span class="nc" id="L297">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/alfresco/AlfrescoFile.class&quot;);</span>
+<span class="nc" id="L298">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ResponseHeaderFilter.class&quot;);</span>
+<span class="nc" id="L299">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ssl/DummySSLSocketFactory.class&quot;);</span>
+<span class="nc" id="L300">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ssl/DummyTrustManager.class&quot;);</span>
+<span class="nc" id="L301">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/UrlRedirectActionBean.class&quot;);</span>
+<span class="nc" id="L302">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/msg/AdminMessage.class&quot;);</span>
+<span class="nc" id="L303">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/msg/_AdminMessage.class&quot;);</span>
+<span class="nc" id="L304">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/stripes/MultipartWrapper$1.class&quot;);</span>
+<span class="nc" id="L305">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/AuthenticatedRequest.class&quot;);</span>
+<span class="nc" id="L306">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/NtlmLogonAction$RedirectedException.class&quot;);</span>
+<span class="nc" id="L307">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/Negotiate.class&quot;);</span>
+<span class="nc" id="L308">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ntlm/NtlmHttpFilter.class&quot;);</span>
+<span class="nc" id="L309">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/MultilangDB.class&quot;);</span>
+<span class="nc" id="L310">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/adminlog/AdminlogNotifyAction.class&quot;);</span>
+<span class="nc" id="L311">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/adminlog/AdminlogNotifyBean.class&quot;);</span>
+<span class="nc" id="L312">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/postgre/PostgreSQLAdapter.class&quot;);</span>
+<span class="nc" id="L313">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/oracle/OracleAdapter.class&quot;);</span>
+<span class="nc" id="L314">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/mysql/MySQLAdapter.class&quot;);</span>
+<span class="nc" id="L315">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/PkGenerator.class&quot;);</span>
+<span class="nc" id="L316">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cayenne/mssql/SQLServerAdapter.class&quot;);</span>
+<span class="nc" id="L317">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/FilePartNoTransferEncoding.class&quot;);</span>
+<span class="nc" id="L318">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/jpa/WebJETInitializationHelper.class&quot;);</span>
+<span class="nc" id="L319">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/lucene/SynonymExpansionFilter.class&quot;);</span>
+<span class="nc" id="L320">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/FulltextSearchTest$2.class&quot;);</span>
+<span class="nc" id="L321">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/Indexed$Callback.class&quot;);</span>
+<span class="nc" id="L322">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Tickets$1.class&quot;);</span>
+<span class="nc" id="L323">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Documents$3$1.class&quot;);</span>
+<span class="nc" id="L324">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Documents$3.class&quot;);</span>
+<span class="nc" id="L325">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/indexed/Tickets.class&quot;);</span>
+<span class="nc" id="L326">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/FulltextSearchTest$1.class&quot;);</span>
+<span class="nc" id="L327">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/Indexed.class&quot;);</span>
+<span class="nc" id="L328">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/FulltextSearchTest.class&quot;);</span>
+<span class="nc" id="L329">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/fulltext/jobs/TicketsIndexing.class&quot;);</span>
+<span class="nc" id="L330">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/captcha/CaptchaDictionaryAction.class&quot;);</span>
+<span class="nc" id="L331">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/Modules.java.bak&quot;);</span>
+<span class="nc" id="L332">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/CayenneServletConfiguration.class&quot;);</span>
+<span class="nc" id="L333">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/StringPartNoTransferEncoding.class&quot;);</span>
+<span class="nc" id="L334">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/model/_UrlRedirect.class&quot;);</span>
+<span class="nc" id="L335">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/packager/Packager.class&quot;);</span>
+<span class="nc" id="L336">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/IwSecurityManager$AccessRight.class&quot;);</span>
+<span class="nc" id="L337">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsDirectoryResource.class&quot;);</span>
+<span class="nc" id="L338">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/MiltonWrapper.class&quot;);</span>
+<span class="nc" id="L339">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsResource.class&quot;);</span>
+<span class="nc" id="L340">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FileSystemResourceFactory.class&quot;);</span>
+<span class="nc" id="L341">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsFileResource.class&quot;);</span>
+<span class="nc" id="L342">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/MiltonWrapper$1.class&quot;);</span>
+<span class="nc" id="L343">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/IwSecurityManager.class&quot;);</span>
+<span class="nc" id="L344">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsMemoryLockManager$CurrentLock.class&quot;);</span>
+<span class="nc" id="L345">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/webdav/FsMemoryLockManager.class&quot;);</span>
+<span class="nc" id="L346">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/ReqTestAction.class&quot;);</span>
+<span class="nc" id="L347">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/CayenneDataSourceFactory.class&quot;);</span>
+<span class="nc" id="L348">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/QueryString$1.class&quot;);</span>
+<span class="nc" id="L349">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/Portal$PortletRegistrationListener.class&quot;);</span>
+<span class="nc" id="L350">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/util/PortletUtils.class&quot;);</span>
+<span class="nc" id="L351">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/driver/DriverConfigurationFactory.class&quot;);</span>
+<span class="nc" id="L352">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/driver/IwayPortalDriverServlet.class&quot;);</span>
+<span class="nc" id="L353">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/driver/IwayPortalUrlParser.class&quot;);</span>
+<span class="nc" id="L354">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/Portal.class&quot;);</span>
+<span class="nc" id="L355">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/QueryString.class&quot;);</span>
+<span class="nc" id="L356">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayUserInfoService.class&quot;);</span>
+<span class="nc" id="L357">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService$2.class&quot;);</span>
+<span class="nc" id="L358">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService.class&quot;);</span>
+<span class="nc" id="L359">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService$1.class&quot;);</span>
+<span class="nc" id="L360">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/impl/IwayPortletPreferencesService$3.class&quot;);</span>
+<span class="nc" id="L361">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/IwayOptionalContainerServices.class&quot;);</span>
+<span class="nc" id="L362">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/portlet/services/IwayRequiredContainerServices.class&quot;);</span>
+<span class="nc" id="L363">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/MemoryMeasurementJUnit$1TestMemoryMeasurement.class&quot;);</span>
+<span class="nc" id="L364">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/MemoryMeasurementJUnit.class&quot;);</span>
+<span class="nc" id="L365">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/MonitoringClusterJUnit.class&quot;);</span>
+<span class="nc" id="L366">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/monitoring/ExecutionTimeMonitoringJUnit.class&quot;);</span>
+<span class="nc" id="L367">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/UrlRedirect.class&quot;);</span>
+<span class="nc" id="L368">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/sass/SassFileMonitor.class&quot;);</span>
+<span class="nc" id="L369">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/sass/FileMonitor.class&quot;);</span>
+<span class="nc" id="L370">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/help/SearchResultBean.class&quot;);</span>
+<span class="nc" id="L371">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/help/SearchHelpAction.class&quot;);</span>
+<span class="nc" id="L372">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/help/SearchManager.class&quot;);</span>
+<span class="nc" id="L373">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/JCrontabSQLSource.class&quot;);</span>
+<span class="nc" id="L374">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/CronJUnit.class&quot;);</span>
+<span class="nc" id="L375">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/ClusteredCrontabEntryBean.class&quot;);</span>
+<span class="nc" id="L376">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/cron/CrontabAction.class&quot;);</span>
+<span class="nc" id="L377">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/SpringUrlMapping$1.class&quot;);</span>
+<span class="nc" id="L378">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/spring/SpringSecurityConf$1.class&quot;);</span>
+<span class="nc" id="L379">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/LogoffAction.class&quot;);</span>
+<span class="nc" id="L380">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$PostBankMethodInformation.class&quot;);</span>
+<span class="nc" id="L381">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$TatraPayMethodInformation.class&quot;);</span>
+<span class="nc" id="L382">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$SporoPayMethodInformation.class&quot;);</span>
+<span class="nc" id="L383">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/_BasketItem.class&quot;);</span>
+<span class="nc" id="L384">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/_BasketInvoice.class&quot;);</span>
+<span class="nc" id="L385">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketItem.class&quot;);</span>
+<span class="nc" id="L386">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments.class&quot;);</span>
+<span class="nc" id="L387">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/BasketInvoice.class&quot;);</span>
+<span class="nc" id="L388">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$PaymentMethodInformation.class&quot;);</span>
+<span class="nc" id="L389">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/StavyObjednavok$1.class&quot;);</span>
+<span class="nc" id="L390">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/basket/ElectronicPayments$VubMethodInformation.class&quot;);</span>
+<span class="nc" id="L391">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/domainRedirects/DomainRedirectAction.class&quot;);</span>
+<span class="nc" id="L392">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/KurzyDB.class&quot;);</span>
+<span class="nc" id="L393">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/UploadFileAction.class&quot;);</span>
+<span class="nc" id="L394">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/uschovna/DeleteOldFilesCronJob.class&quot;);</span>
+<span class="nc" id="L395">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchFactory.class&quot;);</span>
+<span class="nc" id="L396">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchFactory$SearchType.class&quot;);</span>
+<span class="nc" id="L397">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/GroupSubSearch$1.class&quot;);</span>
+<span class="nc" id="L398">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SpotlightSearch$2.class&quot;);</span>
+<span class="nc" id="L399">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileSubSearch.class&quot;);</span>
+<span class="nc" id="L400">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/ConfigSubSearch$1.class&quot;);</span>
+<span class="nc" id="L401">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SubSearch.class&quot;);</span>
+<span class="nc" id="L402">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/Icon.class&quot;);</span>
+<span class="nc" id="L403">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/GroupSubSearch.class&quot;);</span>
+<span class="nc" id="L404">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/UserSubSearch.class&quot;);</span>
+<span class="nc" id="L405">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SpotlightSearch$1.class&quot;);</span>
+<span class="nc" id="L406">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchResult.class&quot;);</span>
+<span class="nc" id="L407">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileIndexer.class&quot;);</span>
+<span class="nc" id="L408">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileSubSearch$1.class&quot;);</span>
+<span class="nc" id="L409">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/DocumentSubSearch$2.class&quot;);</span>
+<span class="nc" id="L410">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileIndexer$1.class&quot;);</span>
+<span class="nc" id="L411">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/UserSubSearch$1.class&quot;);</span>
+<span class="nc" id="L412">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/DocumentSubSearch.class&quot;);</span>
+<span class="nc" id="L413">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/Ranker.class&quot;);</span>
+<span class="nc" id="L414">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/DocumentSubSearch$1.class&quot;);</span>
+<span class="nc" id="L415">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/ConfigSubSearch.class&quot;);</span>
+<span class="nc" id="L416">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SpotlightSearch.class&quot;);</span>
+<span class="nc" id="L417">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/FileIndexer$2.class&quot;);</span>
+<span class="nc" id="L418">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/SearchFactory$NullSubSearch.class&quot;);</span>
+<span class="nc" id="L419">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/spotlight/TemplateSubSearch.class&quot;);</span>
+<span class="nc" id="L420">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/proxy/ProxyByHttpClient.class&quot;);</span>
+<span class="nc" id="L421">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/proxy/ProxyBean.class&quot;);</span>
+<span class="nc" id="L422">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/proxy/ProxyAction.class&quot;);</span>
+<span class="nc" id="L423">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Entity.class&quot;);</span>
+<span class="nc" id="L424">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatDB$1.class&quot;);</span>
+<span class="nc" id="L425">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Session.class&quot;);</span>
+<span class="nc" id="L426">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatRoomAction.class&quot;);</span>
+<span class="nc" id="L427">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/SystemMessage.class&quot;);</span>
+<span class="nc" id="L428">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Message.class&quot;);</span>
+<span class="nc" id="L429">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/Room.class&quot;);</span>
+<span class="nc" id="L430">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/User.class&quot;);</span>
+<span class="nc" id="L431">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatController.class&quot;);</span>
+<span class="nc" id="L432">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/HtmlChatRoom.class&quot;);</span>
+<span class="nc" id="L433">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatDB.class&quot;);</span>
+<span class="nc" id="L434">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ChatRoomForm.class&quot;);</span>
+<span class="nc" id="L435">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/chat/ModeratedRoom.class&quot;);</span>
+<span class="nc" id="L436">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/dataDeleting/DataDeletingAjaxAction.class&quot;);</span>
+<span class="nc" id="L437">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/dataDeleting/DataDeletingBean.class&quot;);</span>
+<span class="nc" id="L438">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/pageUpdateInfo/PageUpdateInfoForm.class&quot;);</span>
+<span class="nc" id="L439">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/pageUpdateInfo/PageUpdateInfoDB.class&quot;);</span>
+<span class="nc" id="L440">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/pageUpdateInfo/PageUpdateInfoAction.class&quot;);</span>
+<span class="nc" id="L441">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/sita/NewsItem.class&quot;);</span>
+<span class="nc" id="L442">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/sita/SitaParser.class&quot;);</span>
+<span class="nc" id="L443">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarDB.class&quot;);</span>
+<span class="nc" id="L444">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarGroupAction.class&quot;);</span>
+<span class="nc" id="L445">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarAdvertisementAction.class&quot;);</span>
+<span class="nc" id="L446">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarGroupBean.class&quot;);</span>
+<span class="nc" id="L447">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/bazar/BazarAdvertisementBean.class&quot;);</span>
+<span class="nc" id="L448">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/graph/GraphAction.class&quot;);</span>
+<span class="nc" id="L449">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/graph/XlsParser.class&quot;);</span>
+<span class="nc" id="L450">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/graph/GraphTools.class&quot;);</span>
+<span class="nc" id="L451">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/webserices/GetDoc.class&quot;);</span>
+<span class="nc" id="L452">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/importZipFile/ImportZipFileAction.class&quot;);</span>
+<span class="nc" id="L453">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/importZipFile/ImportZipFileForm.class&quot;);</span>
+<span class="nc" id="L454">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/importZipFile/ImportZipFileAction$1.class&quot;);</span>
+<span class="nc" id="L455">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/reservation/ReservationObjectPriceAction.class&quot;);</span>
+<span class="nc" id="L456">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/wiki/WikiAction.class&quot;);</span>
+<span class="nc" id="L457">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/welcome/WallAjaxAction.class&quot;);</span>
+<span class="nc" id="L458">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/todo/ToDoAjaxAction.class&quot;);</span>
+<span class="nc" id="L459">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/stat/StatViewChartAction.class&quot;);</span>
+<span class="nc" id="L460">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/stat/StatViewsDB.class&quot;);</span>
+<span class="nc" id="L461">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/stat/StatComparator.class&quot;);</span>
+<span class="nc" id="L462">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/EditPage.class&quot;);</span>
+<span class="nc" id="L463">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/ViewPage.class&quot;);</span>
+<span class="nc" id="L464">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/ListPage.class&quot;);</span>
+<span class="nc" id="L465">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/CommonPage.class&quot;);</span>
+<span class="nc" id="L466">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/page/DetailPage.class&quot;);</span>
+<span class="nc" id="L467">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/InventoryDetailEditAction.class&quot;);</span>
+<span class="nc" id="L468">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/Message.class&quot;);</span>
+<span class="nc" id="L469">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/Type.class&quot;);</span>
+<span class="nc" id="L470">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/InventoryException.class&quot;);</span>
+<span class="nc" id="L471">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/Type$TypeBean.class&quot;);</span>
+<span class="nc" id="L472">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/InventoryEditAction.class&quot;);</span>
+<span class="nc" id="L473">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$2.class&quot;);</span>
+<span class="nc" id="L474">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDB.class&quot;);</span>
+<span class="nc" id="L475">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogBean.class&quot;);</span>
+<span class="nc" id="L476">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$2.class&quot;);</span>
+<span class="nc" id="L477">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailBean.class&quot;);</span>
+<span class="nc" id="L478">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$4.class&quot;);</span>
+<span class="nc" id="L479">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$4.class&quot;);</span>
+<span class="nc" id="L480">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$3.class&quot;);</span>
+<span class="nc" id="L481">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$3.class&quot;);</span>
+<span class="nc" id="L482">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB$1.class&quot;);</span>
+<span class="nc" id="L483">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB$1.class&quot;);</span>
+<span class="nc" id="L484">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryLogDB.class&quot;);</span>
+<span class="nc" id="L485">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/CommonBean.class&quot;);</span>
+<span class="nc" id="L486">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryFilter.class&quot;);</span>
+<span class="nc" id="L487">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryDetailDB.class&quot;);</span>
+<span class="nc" id="L488">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/inventory/db/InventoryBean.class&quot;);</span>
+<span class="nc" id="L489">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/SmsDB.class&quot;);</span>
+<span class="nc" id="L490">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipsAction.class&quot;);</span>
+<span class="nc" id="L491">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipsDB.class&quot;);</span>
+<span class="nc" id="L492">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipsExcelImport.class&quot;);</span>
+<span class="nc" id="L493">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/tips/TipBean.class&quot;);</span>
+<span class="nc" id="L494">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/SmsTemplateBean.class&quot;);</span>
+<span class="nc" id="L495">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvyDB.class&quot;);</span>
+<span class="nc" id="L496">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/PrilohaBean.class&quot;);</span>
+<span class="nc" id="L497">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvyAction.class&quot;);</span>
+<span class="nc" id="L498">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvyDB$1.class&quot;);</span>
+<span class="nc" id="L499">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ZmluvaBean.class&quot;);</span>
+<span class="nc" id="L500">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/zmluvy/ImportZmluv.class&quot;);</span>
+<span class="nc" id="L501">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/DocmanFilter.class&quot;);</span>
+<span class="nc" id="L502">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/WebDavOpenAction.class&quot;);</span>
+<span class="nc" id="L503">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/DocmanDB.class&quot;);</span>
+<span class="nc" id="L504">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/UploadAction.class&quot;);</span>
+<span class="nc" id="L505">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/docman/DocmanAction.class&quot;);</span>
+<span class="nc" id="L506">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/export/ExportDatAction.class&quot;);</span>
+<span class="nc" id="L507">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/insertScript/InsertScriptAction.class&quot;);</span>
+<span class="nc" id="L508">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/convert2pdf/Convert2pdf.class&quot;);</span>
+<span class="nc" id="L509">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/KurzBean.class&quot;);</span>
+<span class="nc" id="L510">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheBean.class&quot;);</span>
+<span class="nc" id="L511">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheFileDB.class&quot;);</span>
+<span class="nc" id="L512">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCachePageBean.class&quot;);</span>
+<span class="nc" id="L513">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCachePageDB.class&quot;);</span>
+<span class="nc" id="L514">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheActionBean.class&quot;);</span>
+<span class="nc" id="L515">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheDB.class&quot;);</span>
+<span class="nc" id="L516">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/appCache/AppCacheFileBean.class&quot;);</span>
+<span class="nc" id="L517">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/BannerAction.class&quot;);</span>
+<span class="nc" id="L518">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerStatViews.class&quot;);</span>
+<span class="nc" id="L519">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerBean.class&quot;);</span>
+<span class="nc" id="L520">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerStatClicks.class&quot;);</span>
+<span class="nc" id="L521">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/BannerForm.class&quot;);</span>
+<span class="nc" id="L522">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/_BannerGroupBean.class&quot;);</span>
+<span class="nc" id="L523">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/InitServlet$1.class&quot;);</span>
+<span class="nc" id="L524">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/StatNewDBTest.class&quot;);</span>
+<span class="nc" id="L525">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/BrowserDetectorJUnit.class&quot;);</span>
+<span class="nc" id="L526">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/ChartAction.class&quot;);</span>
+<span class="nc" id="L527">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/heat_map/HeatMapJUnit$1.class&quot;);</span>
+<span class="nc" id="L528">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/heat_map/HeatMapJUnit.class&quot;);</span>
+<span class="nc" id="L529">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/stat/ChartNewAction.class&quot;);</span>
+<span class="nc" id="L530">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/Forms.class&quot;);</span>
+<span class="nc" id="L531">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/GroupsAjaxAction.class&quot;);</span>
+<span class="nc" id="L532">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/EditorAction.class&quot;);</span>
+<span class="nc" id="L533">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/FileEditorAjaxAction.class&quot;);</span>
+<span class="nc" id="L534">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/mobile/EditorAjaxAction.class&quot;);</span>
+<span class="nc" id="L535">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SocialAuthenticationAction.class&quot;);</span>
+<span class="nc" id="L536">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/XLSServlet.class&quot;);</span>
+<span class="nc" id="L537">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegAlarm.class&quot;);</span>
+<span class="nc" id="L538">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$5.class&quot;);</span>
+<span class="nc" id="L539">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/EditUserAction.class&quot;);</span>
+<span class="nc" id="L540">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$1.class&quot;);</span>
+<span class="nc" id="L541">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/AlarmDetails.class&quot;);</span>
+<span class="nc" id="L542">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/EditUserGroupAction.class&quot;);</span>
+<span class="nc" id="L543">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$3.class&quot;);</span>
+<span class="nc" id="L544">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/AuthForm.class&quot;);</span>
+<span class="nc" id="L545">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/OutlookImport.class&quot;);</span>
+<span class="nc" id="L546">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$4.class&quot;);</span>
+<span class="nc" id="L547">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegUpdateAction.class&quot;);</span>
+<span class="nc" id="L548">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SaveUserAction.class&quot;);</span>
+<span class="nc" id="L549">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$6.class&quot;);</span>
+<span class="nc" id="L550">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ImportAction.class&quot;);</span>
+<span class="nc" id="L551">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction.class&quot;);</span>
+<span class="nc" id="L552">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/UserFormPfizer.class&quot;);</span>
+<span class="nc" id="L553">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ListUsersAction$2.class&quot;);</span>
+<span class="nc" id="L554">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/PasswordSecurityJUnit.class&quot;);</span>
+<span class="nc" id="L555">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SaveUserGroupAction.class&quot;);</span>
+<span class="nc" id="L556">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegUserAction.class&quot;);</span>
+<span class="nc" id="L557">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/MultipleOperationsAction.class&quot;);</span>
+<span class="nc" id="L558">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/SocialAuthSuccessAction.class&quot;);</span>
+<span class="nc" id="L559">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/ChangeUserAction.class&quot;);</span>
+<span class="nc" id="L560">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/STokenizer.class&quot;);</span>
+<span class="nc" id="L561">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/RegUserPfizerAction.class&quot;);</span>
+<span class="nc" id="L562">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/users/UserForm.class&quot;);</span>
+<span class="nc" id="L563">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/EditAction.class&quot;);</span>
+<span class="nc" id="L564">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/UnzipAction.class&quot;);</span>
+<span class="nc" id="L565">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/DeleteAction.class&quot;);</span>
+<span class="nc" id="L566">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/filebrowser/SaveAction.class&quot;);</span>
+<span class="nc" id="L567">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/Script.class&quot;);</span>
+<span class="nc" id="L568">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/profesia/Offer.class&quot;);</span>
+<span class="nc" id="L569">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/profesia/OfferDetails.class&quot;);</span>
+<span class="nc" id="L570">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/profesia/OfferList.class&quot;);</span>
+<span class="nc" id="L571">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure89.class&quot;);</span>
+<span class="nc" id="L572">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ShowDocAction.class&quot;);</span>
+<span class="nc" id="L573">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/LinkCheckAction.class&quot;);</span>
+<span class="nc" id="L574">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure91.class&quot;);</span>
+<span class="nc" id="L575">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/GroupsListAction.class&quot;);</span>
+<span class="nc" id="L576">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure103.class&quot;);</span>
+<span class="nc" id="L577">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ListDocAction.class&quot;);</span>
+<span class="nc" id="L578">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure101.class&quot;);</span>
+<span class="nc" id="L579">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure129.class&quot;);</span>
+<span class="nc" id="L580">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DeleteAction.class&quot;);</span>
+<span class="nc" id="L581">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure99.class&quot;);</span>
+<span class="nc" id="L582">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/TemplatesForm.class&quot;);</span>
+<span class="nc" id="L583">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/GroupsListAction.java.bak&quot;);</span>
+<span class="nc" id="L584">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ListTempsAction.class&quot;);</span>
+<span class="nc" id="L585">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDetails$1.class&quot;);</span>
+<span class="nc" id="L586">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure83.class&quot;);</span>
+<span class="nc" id="L587">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/DocDB$AjcClosure131.class&quot;);</span>
+<span class="nc" id="L588">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/FileSyncAction.class&quot;);</span>
+<span class="nc" id="L589">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/NewGroupAction.class&quot;);</span>
+<span class="nc" id="L590">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/NewGroupForm.class&quot;);</span>
+<span class="nc" id="L591">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/GroupsListAction$1.class&quot;);</span>
+<span class="nc" id="L592">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SpeedTestAction.class&quot;);</span>
+<span class="nc" id="L593">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SkkEuroLoader.class&quot;);</span>
+<span class="nc" id="L594">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/XmlSaxImport.class&quot;);</span>
+<span class="nc" id="L595">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/sync/SyncAction.class&quot;);</span>
+<span class="nc" id="L596">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/sync/inport/NumberedTest.class&quot;);</span>
+<span class="nc" id="L597">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SendMail$1Authenticator.class&quot;);</span>
+<span class="nc" id="L598">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/helpers/BeanDiffJUnit.class&quot;);</span>
+<span class="nc" id="L599">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/UsrLogonSMSAction.class&quot;);</span>
+<span class="nc" id="L600">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ICalActionBean.class&quot;);</span>
+<span class="nc" id="L601">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB.class&quot;);</span>
+<span class="nc" id="L602">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB$ReminderItem.class&quot;);</span>
+<span class="nc" id="L603">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB$1.class&quot;);</span>
+<span class="nc" id="L604">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/ReminderDocumentDB$ReminderMapper.class&quot;);</span>
+<span class="nc" id="L605">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/intranet/reminder/DocDetailsConverter.class&quot;);</span>
+<span class="nc" id="L606">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SendSMS.class&quot;);</span>
+<span class="nc" id="L607">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/PreviewAction.class&quot;);</span>
+<span class="nc" id="L608">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/SaveTemplateAction.class&quot;);</span>
+<span class="nc" id="L609">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/EditorAction.class&quot;);</span>
+<span class="nc" id="L610">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/DirAction$2.class&quot;);</span>
+<span class="nc" id="L611">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateWordpress$1.class&quot;);</span>
+<span class="nc" id="L612">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateHtml$1.class&quot;);</span>
+<span class="nc" id="L613">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateExternal.class&quot;);</span>
+<span class="nc" id="L614">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateHtml.class&quot;);</span>
+<span class="nc" id="L615">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/TemplateWordpress.class&quot;);</span>
+<span class="nc" id="L616">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/templates/ImportTemplatesAction.class&quot;);</span>
+<span class="nc" id="L617">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/HTMLCleanAction.class&quot;);</span>
+<span class="nc" id="L618">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/editor/FckStylesAction.class&quot;);</span>
+<span class="nc" id="L619">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/PKeyGeneratorJUnit.class&quot;);</span>
+<span class="nc" id="L620">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/dmail/DomainLimitsActionBean.class&quot;);</span>
+<span class="nc" id="L621">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/dmail/EmailCsvImport.class&quot;);</span>
 
-<span class="nc" id="L631">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ProjectForm.class&quot;);</span>
-<span class="nc" id="L632">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/BranchAction.class&quot;);</span>
-<span class="nc" id="L633">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ServiceComparator.class&quot;);</span>
-<span class="nc" id="L634">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CustomerForm.class&quot;);</span>
-<span class="nc" id="L635">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CaseStudyForm.class&quot;);</span>
-<span class="nc" id="L636">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CaseStudyAction.class&quot;);</span>
-<span class="nc" id="L637">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/RefDB.class&quot;);</span>
-<span class="nc" id="L638">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/JobAction.class&quot;);</span>
-<span class="nc" id="L639">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/JobForm.class&quot;);</span>
-<span class="nc" id="L640">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefBranch.class&quot;);</span>
-<span class="nc" id="L641">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefCustomerBranch.class&quot;);</span>
-<span class="nc" id="L642">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefJob.class&quot;);</span>
-<span class="nc" id="L643">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefService.class&quot;);</span>
-<span class="nc" id="L644">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefProject.class&quot;);</span>
-<span class="nc" id="L645">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefCustomer.class&quot;);</span>
-<span class="nc" id="L646">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefJob.class&quot;);</span>
-<span class="nc" id="L647">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomerBranch.class&quot;);</span>
-<span class="nc" id="L648">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomer.class&quot;);</span>
-<span class="nc" id="L649">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefProject.class&quot;);</span>
-<span class="nc" id="L650">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCaseStudy.class&quot;);</span>
-<span class="nc" id="L651">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefCaseStudy.class&quot;);</span>
-<span class="nc" id="L652">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomer$1.class&quot;);</span>
-<span class="nc" id="L653">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefBranch$1.class&quot;);</span>
-<span class="nc" id="L654">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_Media.class&quot;);</span>
-<span class="nc" id="L655">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefBranch.class&quot;);</span>
-<span class="nc" id="L656">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomer$2.class&quot;);</span>
-<span class="nc" id="L657">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefProject$1.class&quot;);</span>
-<span class="nc" id="L658">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefService.class&quot;);</span>
-<span class="nc" id="L659">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/BranchForm.class&quot;);</span>
-<span class="nc" id="L660">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ProjectAction.class&quot;);</span>
-<span class="nc" id="L661">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CustomerAction.class&quot;);</span>
-<span class="nc" id="L662">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ServiceAction.class&quot;);</span>
-<span class="nc" id="L663">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ServiceForm.class&quot;);</span>
-<span class="nc" id="L664">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/MediaAction.class&quot;);</span>
-<span class="nc" id="L665">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/MediaForm.class&quot;);</span>
-<span class="nc" id="L666">		files.add(&quot;/WEB-INF/classes/sk/iway/FixedSizeList.class&quot;);</span>
-<span class="nc" id="L667">		files.add(&quot;/WEB-INF/classes/sk/iway/Downloader.class&quot;);</span>
-<span class="nc" id="L668">		files.add(&quot;/WEB-INF/classes/sk/iway/Downloader$DownloadResult.class&quot;);</span>
-<span class="nc" id="L669">		files.add(&quot;/WEB-INF/classes/sk/iway/tags/RndTag.class&quot;);</span>
-<span class="nc" id="L670">		files.add(&quot;/WEB-INF/classes/sk/iway/tags/CssTag.class&quot;);</span>
-<span class="nc" id="L671">		files.add(&quot;/WEB-INF/classes/sk/iway/ImageInfo.class&quot;);</span>
-<span class="nc" id="L672">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/payments/UserPaymentBean.class&quot;);</span>
-<span class="nc" id="L673">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/payments/UserPaymentDB.class&quot;);</span>
-<span class="nc" id="L674">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/app/AppManager.class&quot;);</span>
-<span class="nc" id="L675">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/app/AppManager$1.class&quot;);</span>
-<span class="nc" id="L676">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/app/AppBean.class&quot;);</span>
-<span class="nc" id="L677">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/CloudTools.class&quot;);</span>
-<span class="nc" id="L678">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/sport/CloudSportMatchDB.class&quot;);</span>
-<span class="nc" id="L679">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/sport/CloudSportMatchBean.class&quot;);</span>
-<span class="nc" id="L680">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/sport/CloudSportComparator.class&quot;);</span>
-<span class="nc" id="L681">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/styles/SaveLogoAjaxAction.class&quot;);</span>
-<span class="nc" id="L682">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/styles/CustomHeaderFooterAction.class&quot;);</span>
-<span class="nc" id="L683">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/styles/StyleTools.class&quot;);</span>
-<span class="nc" id="L684">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/cleanup/CleanupCronJob$1.class&quot;);</span>
-<span class="nc" id="L685">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/cleanup/CleanupCronJob.class&quot;);</span>
-<span class="nc" id="L686">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestJsonReaderWebSupport.class&quot;);</span>
-<span class="nc" id="L687">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/CompareByLength.class&quot;);</span>
-<span class="nc" id="L688">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestDomainPrices.class&quot;);</span>
-<span class="nc" id="L689">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/DomainPrices.class&quot;);</span>
-<span class="nc" id="L690">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/CloudChangeDomainDB.class&quot;);</span>
-<span class="nc" id="L691">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RegisterDomainApiTools.class&quot;);</span>
-<span class="nc" id="L692">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/Domain.class&quot;);</span>
-<span class="nc" id="L693">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestHostingBean.class&quot;);</span>
-<span class="nc" id="L694">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/CloudChangeDomainBean.class&quot;);</span>
-<span class="nc" id="L695">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestApiWebSupport.class&quot;);</span>
-<span class="nc" id="L696">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/JsonReaderWebSupport.class&quot;);</span>
-<span class="nc" id="L697">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/FilePathTools.class&quot;);</span>
-<span class="nc" id="L698">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/users/LogonAction.class&quot;);</span>
-<span class="nc" id="L699">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/extended/ExtendedServicesAction.class&quot;);</span>
-<span class="nc" id="L700">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/services/UserServiceAction.class&quot;);</span>
-<span class="nc" id="L701">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/services/UserServiceDB.class&quot;);</span>
-<span class="nc" id="L702">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/services/UserServiceBean.class&quot;);</span>
-<span class="nc" id="L703">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudSendedWarningBean.class&quot;);</span>
-<span class="nc" id="L704">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudSendedWarningDB.class&quot;);</span>
-<span class="nc" id="L705">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudWarningMailingBean.class&quot;);</span>
-<span class="nc" id="L706">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudWarningMailingDB.class&quot;);</span>
-<span class="nc" id="L707">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudWarningMailing.class&quot;);</span>
-<span class="nc" id="L708">		files.add(&quot;/WEB-INF/classes/sk/iway/FtpDownloader$1.class&quot;);</span>
-<span class="nc" id="L709">		files.add(&quot;/WEB-INF/classes/sk/iway/FtpDownloader.class&quot;);</span>
-<span class="nc" id="L710">		files.add(&quot;/WEB-INF/classes/sk/iway/upload/MultipartIterator.class&quot;);</span>
-<span class="nc" id="L711">		files.add(&quot;/WEB-INF/classes/sk/iway/Downloader$1.class&quot;);</span>
-<span class="nc" id="L712">		files.add(&quot;/WEB-INF/classes/sk/iway/displaytag/RowCountDaysDecorator.class&quot;);</span>
-<span class="nc" id="L713">		files.add(&quot;/WEB-INF/classes/WTCMap.map.xml&quot;);</span>
-<span class="nc" id="L714">		files.add(&quot;/WEB-INF/classes/VUCZilinaMap.map.xml&quot;);</span>
-<span class="nc" id="L715">		files.add(&quot;/WEB-INF/classes/WebJETMap.map.xml&quot;);</span>
-<span class="nc" id="L716">		files.add(&quot;/WEB-INF/classes/SpiritRefMap.map.xml&quot;);</span>
-<span class="nc" id="L717">		files.add(&quot;/WEB-INF/classes/text_de-sopk.properties&quot;);</span>
-<span class="nc" id="L718">		files.add(&quot;/WEB-INF/classes/cayenne.xml&quot;);</span>
-<span class="nc" id="L719">		files.add(&quot;/WEB-INF/classes/cvu/html/TagToken.jbx&quot;);</span>
-<span class="nc" id="L720">		files.add(&quot;/WEB-INF/classes/text-sopk.properties&quot;);</span>
-<span class="nc" id="L721">		files.add(&quot;/WEB-INF/classes/text_en-sopk.properties&quot;);</span>
-<span class="nc" id="L722">		files.add(&quot;/WEB-INF/classes/EekonomiaMap.map.xml&quot;);</span>
-<span class="nc" id="L723">		files.add(&quot;/WEB-INF/classes/ApplicationResources.properties&quot;);</span>
+<span class="nc" id="L623">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ProjectForm.class&quot;);</span>
+<span class="nc" id="L624">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/BranchAction.class&quot;);</span>
+<span class="nc" id="L625">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ServiceComparator.class&quot;);</span>
+<span class="nc" id="L626">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CustomerForm.class&quot;);</span>
+<span class="nc" id="L627">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CaseStudyForm.class&quot;);</span>
+<span class="nc" id="L628">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CaseStudyAction.class&quot;);</span>
+<span class="nc" id="L629">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/RefDB.class&quot;);</span>
+<span class="nc" id="L630">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/JobAction.class&quot;);</span>
+<span class="nc" id="L631">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/JobForm.class&quot;);</span>
+<span class="nc" id="L632">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefBranch.class&quot;);</span>
+<span class="nc" id="L633">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefCustomerBranch.class&quot;);</span>
+<span class="nc" id="L634">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefJob.class&quot;);</span>
+<span class="nc" id="L635">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefService.class&quot;);</span>
+<span class="nc" id="L636">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefProject.class&quot;);</span>
+<span class="nc" id="L637">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefCustomer.class&quot;);</span>
+<span class="nc" id="L638">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefJob.class&quot;);</span>
+<span class="nc" id="L639">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomerBranch.class&quot;);</span>
+<span class="nc" id="L640">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomer.class&quot;);</span>
+<span class="nc" id="L641">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefProject.class&quot;);</span>
+<span class="nc" id="L642">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCaseStudy.class&quot;);</span>
+<span class="nc" id="L643">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefCaseStudy.class&quot;);</span>
+<span class="nc" id="L644">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomer$1.class&quot;);</span>
+<span class="nc" id="L645">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefBranch$1.class&quot;);</span>
+<span class="nc" id="L646">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_Media.class&quot;);</span>
+<span class="nc" id="L647">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefBranch.class&quot;);</span>
+<span class="nc" id="L648">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefCustomer$2.class&quot;);</span>
+<span class="nc" id="L649">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/RefProject$1.class&quot;);</span>
+<span class="nc" id="L650">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/model/_RefService.class&quot;);</span>
+<span class="nc" id="L651">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/BranchForm.class&quot;);</span>
+<span class="nc" id="L652">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ProjectAction.class&quot;);</span>
+<span class="nc" id="L653">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/CustomerAction.class&quot;);</span>
+<span class="nc" id="L654">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ServiceAction.class&quot;);</span>
+<span class="nc" id="L655">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/ServiceForm.class&quot;);</span>
+<span class="nc" id="L656">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/MediaAction.class&quot;);</span>
+<span class="nc" id="L657">		files.add(&quot;/WEB-INF/classes/sk/iway/spirit/MediaForm.class&quot;);</span>
+<span class="nc" id="L658">		files.add(&quot;/WEB-INF/classes/sk/iway/FixedSizeList.class&quot;);</span>
+<span class="nc" id="L659">		files.add(&quot;/WEB-INF/classes/sk/iway/Downloader.class&quot;);</span>
+<span class="nc" id="L660">		files.add(&quot;/WEB-INF/classes/sk/iway/Downloader$DownloadResult.class&quot;);</span>
+<span class="nc" id="L661">		files.add(&quot;/WEB-INF/classes/sk/iway/tags/RndTag.class&quot;);</span>
+<span class="nc" id="L662">		files.add(&quot;/WEB-INF/classes/sk/iway/tags/CssTag.class&quot;);</span>
+<span class="nc" id="L663">		files.add(&quot;/WEB-INF/classes/sk/iway/ImageInfo.class&quot;);</span>
+<span class="nc" id="L664">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/payments/UserPaymentBean.class&quot;);</span>
+<span class="nc" id="L665">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/payments/UserPaymentDB.class&quot;);</span>
+<span class="nc" id="L666">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/app/AppManager.class&quot;);</span>
+<span class="nc" id="L667">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/app/AppManager$1.class&quot;);</span>
+<span class="nc" id="L668">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/app/AppBean.class&quot;);</span>
+<span class="nc" id="L669">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/CloudTools.class&quot;);</span>
+<span class="nc" id="L670">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/sport/CloudSportMatchDB.class&quot;);</span>
+<span class="nc" id="L671">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/sport/CloudSportMatchBean.class&quot;);</span>
+<span class="nc" id="L672">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/sport/CloudSportComparator.class&quot;);</span>
+<span class="nc" id="L673">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/styles/SaveLogoAjaxAction.class&quot;);</span>
+<span class="nc" id="L674">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/styles/CustomHeaderFooterAction.class&quot;);</span>
+<span class="nc" id="L675">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/styles/StyleTools.class&quot;);</span>
+<span class="nc" id="L676">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/cleanup/CleanupCronJob$1.class&quot;);</span>
+<span class="nc" id="L677">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/cleanup/CleanupCronJob.class&quot;);</span>
+<span class="nc" id="L678">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestJsonReaderWebSupport.class&quot;);</span>
+<span class="nc" id="L679">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/CompareByLength.class&quot;);</span>
+<span class="nc" id="L680">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestDomainPrices.class&quot;);</span>
+<span class="nc" id="L681">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/DomainPrices.class&quot;);</span>
+<span class="nc" id="L682">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/CloudChangeDomainDB.class&quot;);</span>
+<span class="nc" id="L683">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RegisterDomainApiTools.class&quot;);</span>
+<span class="nc" id="L684">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/Domain.class&quot;);</span>
+<span class="nc" id="L685">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestHostingBean.class&quot;);</span>
+<span class="nc" id="L686">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/CloudChangeDomainBean.class&quot;);</span>
+<span class="nc" id="L687">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/RestApiWebSupport.class&quot;);</span>
+<span class="nc" id="L688">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/registration_domain/JsonReaderWebSupport.class&quot;);</span>
+<span class="nc" id="L689">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/FilePathTools.class&quot;);</span>
+<span class="nc" id="L690">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/users/LogonAction.class&quot;);</span>
+<span class="nc" id="L691">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/extended/ExtendedServicesAction.class&quot;);</span>
+<span class="nc" id="L692">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/services/UserServiceAction.class&quot;);</span>
+<span class="nc" id="L693">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/services/UserServiceDB.class&quot;);</span>
+<span class="nc" id="L694">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/services/UserServiceBean.class&quot;);</span>
+<span class="nc" id="L695">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudSendedWarningBean.class&quot;);</span>
+<span class="nc" id="L696">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudSendedWarningDB.class&quot;);</span>
+<span class="nc" id="L697">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudWarningMailingBean.class&quot;);</span>
+<span class="nc" id="L698">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudWarningMailingDB.class&quot;);</span>
+<span class="nc" id="L699">		files.add(&quot;/WEB-INF/classes/sk/iway/cloud/mailing/CloudWarningMailing.class&quot;);</span>
+<span class="nc" id="L700">		files.add(&quot;/WEB-INF/classes/sk/iway/FtpDownloader$1.class&quot;);</span>
+<span class="nc" id="L701">		files.add(&quot;/WEB-INF/classes/sk/iway/FtpDownloader.class&quot;);</span>
+<span class="nc" id="L702">		files.add(&quot;/WEB-INF/classes/sk/iway/upload/MultipartIterator.class&quot;);</span>
+<span class="nc" id="L703">		files.add(&quot;/WEB-INF/classes/sk/iway/Downloader$1.class&quot;);</span>
+<span class="nc" id="L704">		files.add(&quot;/WEB-INF/classes/sk/iway/displaytag/RowCountDaysDecorator.class&quot;);</span>
+<span class="nc" id="L705">		files.add(&quot;/WEB-INF/classes/WTCMap.map.xml&quot;);</span>
+<span class="nc" id="L706">		files.add(&quot;/WEB-INF/classes/VUCZilinaMap.map.xml&quot;);</span>
+<span class="nc" id="L707">		files.add(&quot;/WEB-INF/classes/WebJETMap.map.xml&quot;);</span>
+<span class="nc" id="L708">		files.add(&quot;/WEB-INF/classes/SpiritRefMap.map.xml&quot;);</span>
+<span class="nc" id="L709">		files.add(&quot;/WEB-INF/classes/text_de-sopk.properties&quot;);</span>
+<span class="nc" id="L710">		files.add(&quot;/WEB-INF/classes/cayenne.xml&quot;);</span>
+<span class="nc" id="L711">		files.add(&quot;/WEB-INF/classes/cvu/html/TagToken.jbx&quot;);</span>
+<span class="nc" id="L712">		files.add(&quot;/WEB-INF/classes/text-sopk.properties&quot;);</span>
+<span class="nc" id="L713">		files.add(&quot;/WEB-INF/classes/text_en-sopk.properties&quot;);</span>
+<span class="nc" id="L714">		files.add(&quot;/WEB-INF/classes/EekonomiaMap.map.xml&quot;);</span>
+<span class="nc" id="L715">		files.add(&quot;/WEB-INF/classes/ApplicationResources.properties&quot;);</span>
 
-<span class="nc" id="L725">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/sync/GetObjectAction.class&quot;);</span>
-<span class="nc" id="L726">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/LogonForm.class&quot;);</span>
-<span class="nc" id="L727">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SetUsrLogonAction.class&quot;);</span>
-<span class="nc" id="L728">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/UsrLogonAction.class&quot;);</span>
+<span class="nc" id="L717">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/sync/GetObjectAction.class&quot;);</span>
+<span class="nc" id="L718">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/LogonForm.class&quot;);</span>
+<span class="nc" id="L719">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/SetUsrLogonAction.class&quot;);</span>
+<span class="nc" id="L720">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/UsrLogonAction.class&quot;);</span>
 
-<span class="nc" id="L730">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersEditorFields.class&quot;);</span>
-<span class="nc" id="L731">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersEntity.class&quot;);</span>
-<span class="nc" id="L732">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersRepository.class&quot;);</span>
-<span class="nc" id="L733">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersRestController.class&quot;);</span>
-<span class="nc" id="L734">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersService.class&quot;);</span>
-<span class="nc" id="L735">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/qa/AddAction.class&quot;);</span>
+<span class="nc" id="L722">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersEditorFields.class&quot;);</span>
+<span class="nc" id="L723">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersEntity.class&quot;);</span>
+<span class="nc" id="L724">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersRepository.class&quot;);</span>
+<span class="nc" id="L725">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersRestController.class&quot;);</span>
+<span class="nc" id="L726">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/qa/QuestionsAnswersService.class&quot;);</span>
+<span class="nc" id="L727">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/qa/AddAction.class&quot;);</span>
 
-<span class="nc" id="L737">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ApproveAction.class&quot;);</span>
-<span class="nc" id="L738">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ApproveDelAction.class&quot;);</span>
+<span class="nc" id="L729">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ApproveAction.class&quot;);</span>
+<span class="nc" id="L730">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/doc/ApproveDelAction.class&quot;);</span>
 
-<span class="nc" id="L740">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringActualBean.class&quot;);</span>
-<span class="nc" id="L741">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringAggregator.class&quot;);</span>
-<span class="nc" id="L742">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringEntity.class&quot;);</span>
-<span class="nc" id="L743">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringManager.class&quot;);</span>
-<span class="nc" id="L744">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringRepository.class&quot;);</span>
-<span class="nc" id="L745">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringRestController.class&quot;);</span>
+<span class="nc" id="L732">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringActualBean.class&quot;);</span>
+<span class="nc" id="L733">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringAggregator.class&quot;);</span>
+<span class="nc" id="L734">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringEntity.class&quot;);</span>
+<span class="nc" id="L735">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringManager.class&quot;);</span>
+<span class="nc" id="L736">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringRepository.class&quot;);</span>
+<span class="nc" id="L737">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringRestController.class&quot;);</span>
 
-<span class="nc bnc" id="L747" title="All 2 branches missed.">		for (String file : files)</span>
+<span class="nc" id="L739">		files.add(&quot;/WEB-INF/classes/sk/iway/iwcm/system/StrutsRedirectServlet.class&quot;);</span>
+
+<span class="nc" id="L741">		files.add(&quot;/admin/elFinder/js/i18n/elfinder.cs.js.jsp&quot;);</span>
+<span class="nc" id="L742">		files.add(&quot;/admin/elFinder/js/i18n/elfinder.sk.js.jsp&quot;);</span>
+
+<span class="nc bnc" id="L744" title="All 2 branches missed.">		for (String file : files)</span>
 		{
-<span class="nc" id="L749">			File f = new File(sc.getRealPath(file));</span>
-<span class="nc bnc" id="L750" title="All 4 branches missed.">			if (f.exists() &amp;&amp; f.canWrite())</span>
+<span class="nc" id="L746">			File f = new File(sc.getRealPath(file));</span>
+<span class="nc bnc" id="L747" title="All 4 branches missed.">			if (f.exists() &amp;&amp; f.canWrite())</span>
 			{
-<span class="nc bnc" id="L752" title="All 4 branches missed.">				if (INSTALL_NAME==null || file.contains(&quot;/&quot;+INSTALL_NAME+&quot;/&quot;)==false) {</span>
-<span class="nc bnc" id="L753" title="All 2 branches missed.">					if (f.isDirectory()) {</span>
-<span class="nc" id="L754">						deleteDirTree(file, notDeleted, version, sc);</span>
+<span class="nc bnc" id="L749" title="All 4 branches missed.">				if (INSTALL_NAME==null || file.contains(&quot;/&quot;+INSTALL_NAME+&quot;/&quot;)==false) {</span>
+<span class="nc bnc" id="L750" title="All 2 branches missed.">					if (f.isDirectory()) {</span>
+<span class="nc" id="L751">						deleteDirTree(file, notDeleted, version, sc);</span>
 					} else {
-<span class="nc" id="L756">						deleteFile(f, file, notDeleted, version, sc);</span>
+<span class="nc" id="L753">						deleteFile(f, file, notDeleted, version, sc);</span>
 					}
 				}
 			}
-<span class="nc" id="L760">		}</span>
+<span class="nc" id="L757">		}</span>
 
 		//zmaz subory z WJ7 ktore nefunguju vo WJ8
 		//deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/components/banner/model/&quot;, sc);
-<span class="nc" id="L764">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/magzilla/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L765">        deleteDirTree(&quot;/WEB-INF/classes/sk/iway/kanban/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L766">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/catalog/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L767">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/components/cestovka/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L768">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/components/db_browser/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L761">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/magzilla/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L762">        deleteDirTree(&quot;/WEB-INF/classes/sk/iway/kanban/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L763">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/catalog/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L764">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/components/cestovka/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L765">		deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/components/db_browser/&quot;, notDeleted, version, sc);</span>
 		//deleteDirTree(&quot;/WEB-INF/classes/sk/iway/iwcm/components/dictionary/model/&quot;, notDeleted, sc);
-<span class="nc" id="L770">		deleteDirTree(&quot;/components/bazar/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L771">		deleteDirTree(&quot;/components/chat/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L772">		deleteDirTree(&quot;/components/page_update_info/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L773">		deleteDirTree(&quot;/components/magzilla/&quot;, notDeleted, version, sc);</span>
-<span class="nc" id="L774">		deleteDirTree(&quot;/components/tips/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L767">		deleteDirTree(&quot;/components/bazar/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L768">		deleteDirTree(&quot;/components/chat/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L769">		deleteDirTree(&quot;/components/page_update_info/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L770">		deleteDirTree(&quot;/components/magzilla/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L771">		deleteDirTree(&quot;/components/tips/&quot;, notDeleted, version, sc);</span>
 		//fix verzie org.json - presun na JAR archiv
-<span class="nc" id="L776">		deleteDirTree(&quot;/WEB-INF/classes/org/json/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L773">		deleteDirTree(&quot;/WEB-INF/classes/org/json/&quot;, notDeleted, version, sc);</span>
 
-<span class="nc bnc" id="L778" title="All 2 branches missed.">		if(!notDeleted.isEmpty())</span>
+<span class="nc bnc" id="L775" title="All 2 branches missed.">		if(!notDeleted.isEmpty())</span>
 		{
 			//list not deleted files
-<span class="nc" id="L781">			BufferedWriter writer = null;</span>
+<span class="nc" id="L778">			BufferedWriter writer = null;</span>
 	        try {
 	            //create a temporary file
-<span class="nc" id="L784">	            File logFile = new File(sc.getRealPath(&quot;/WEB-INF/update/error-log.txt&quot;));</span>
+<span class="nc" id="L781">	            File logFile = new File(sc.getRealPath(&quot;/WEB-INF/update/error-log.txt&quot;));</span>
 	            // This will output the full path where the file will be written to...
-<span class="nc" id="L786">	            writer = new BufferedWriter(new FileWriter(logFile));</span>
-<span class="nc bnc" id="L787" title="All 2 branches missed.">	            for(File f : notDeleted)</span>
+<span class="nc" id="L783">	            writer = new BufferedWriter(new FileWriter(logFile));</span>
+<span class="nc bnc" id="L784" title="All 2 branches missed.">	            for(File f : notDeleted)</span>
 	            {
-<span class="nc" id="L789">	            	writer.write(f.getAbsolutePath()); writer.newLine();</span>
-<span class="nc" id="L790">	            }</span>
-<span class="nc" id="L791">	        } catch (Exception e) {</span>
-<span class="nc" id="L792">	            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L786">	            	writer.write(f.getAbsolutePath()); writer.newLine();</span>
+<span class="nc" id="L787">	            }</span>
+<span class="nc" id="L788">	        } catch (Exception e) {</span>
+<span class="nc" id="L789">	            sk.iway.iwcm.Logger.error(e);</span>
 	        } finally {
 	            try {
 	                // Close the writer regardless of what happens...
-<span class="nc bnc" id="L796" title="All 2 branches missed.">	                if (writer!=null) writer.close();</span>
-<span class="nc" id="L797">	            } catch (Exception e) {</span>
-<span class="nc" id="L798">	            }</span>
+<span class="nc bnc" id="L793" title="All 2 branches missed.">	                if (writer!=null) writer.close();</span>
+<span class="nc" id="L794">	            } catch (Exception e) {</span>
+<span class="nc" id="L795">	            }</span>
 	        }
 		}
 
 		//zachova web-update.xml
-<span class="nc" id="L803">		copyFile(&quot;/WEB-INF/web.xml&quot;, &quot;/WEB-INF/web-update.xml&quot;, sc);</span>
+<span class="nc" id="L800">		copyFile(&quot;/WEB-INF/web.xml&quot;, &quot;/WEB-INF/web-update.xml&quot;, sc);</span>
 
 		//skopiruj naspat web.xml
 
 		//kontrola noveho web.xml suboru
-<span class="nc" id="L808">		File webXML2023 = new File(sc.getRealPath(&quot;/WEB-INF/web-v2023.xml&quot;));</span>
-<span class="nc" id="L809">		File beforeWebXML = new File(sc.getRealPath(&quot;/WEB-INF/web-before_update.xml&quot;));</span>
-<span class="nc bnc" id="L810" title="All 4 branches missed.">		if (webXML2023.exists() &amp;&amp; beforeWebXML.exists())</span>
+<span class="nc" id="L805">		File webXML2023 = new File(sc.getRealPath(&quot;/WEB-INF/web-v2023.xml&quot;));</span>
+<span class="nc" id="L806">		File beforeWebXML = new File(sc.getRealPath(&quot;/WEB-INF/web-before_update.xml&quot;));</span>
+<span class="nc bnc" id="L807" title="All 4 branches missed.">		if (webXML2023.exists() &amp;&amp; beforeWebXML.exists())</span>
 		{
 			//nacitaj si obsah aktualneho web-before_update.xml
-<span class="nc" id="L813">			String actualWebXML = readFileContent(beforeWebXML, &quot;utf-8&quot;);</span>
-<span class="nc bnc" id="L814" title="All 4 branches missed.">			if (actualWebXML.contains(&quot;stripes&quot;)==false || actualWebXML.contains(&quot;web-app_2_4.xsd&quot;))</span>
+<span class="nc" id="L810">			String actualWebXML = readFileContent(beforeWebXML, &quot;utf-8&quot;);</span>
+<span class="nc bnc" id="L811" title="All 4 branches missed.">			if (actualWebXML.contains(&quot;stripes&quot;)==false || actualWebXML.contains(&quot;web-app_2_4.xsd&quot;))</span>
 			{
 				//2.4 web.xml je potrebne aktualizovat na 3.0
-<span class="nc" id="L817">				moveFile(&quot;/WEB-INF/web-v2023.xml&quot;, &quot;/WEB-INF/web.xml&quot;, sc);</span>
+<span class="nc" id="L814">				moveFile(&quot;/WEB-INF/web-v2023.xml&quot;, &quot;/WEB-INF/web.xml&quot;, sc);</span>
 			}
 			else
 			{
-<span class="nc" id="L821">				moveFile(&quot;/WEB-INF/web-before_update.xml&quot;, &quot;/WEB-INF/web.xml&quot;, sc);</span>
+<span class="nc" id="L818">				moveFile(&quot;/WEB-INF/web-before_update.xml&quot;, &quot;/WEB-INF/web.xml&quot;, sc);</span>
 			}
-<span class="nc" id="L823">		}</span>
+<span class="nc" id="L820">		}</span>
 		else
 		{
-<span class="nc" id="L826">			moveFile(&quot;/WEB-INF/web-before_update.xml&quot;, &quot;/WEB-INF/web.xml&quot;, sc);</span>
+<span class="nc" id="L823">			moveFile(&quot;/WEB-INF/web-before_update.xml&quot;, &quot;/WEB-INF/web.xml&quot;, sc);</span>
 		}
 
 		//zmen mu datum
-<span class="nc" id="L830">		File webXmlFile = new File(sc.getRealPath(&quot;/WEB-INF/web.xml&quot;));</span>
-<span class="nc" id="L831">		webXmlFile.setLastModified((new java.util.Date()).getTime());</span>
+<span class="nc" id="L827">		File webXmlFile = new File(sc.getRealPath(&quot;/WEB-INF/web.xml&quot;));</span>
+<span class="nc" id="L828">		webXmlFile.setLastModified((new java.util.Date()).getTime());</span>
 
 		//restartni sa
-<span class="nc" id="L834">		restart(sc);</span>
+<span class="nc" id="L831">		restart(sc);</span>
 
-<span class="nc" id="L836">		Logger.println(InitServlet.class,&quot;Update init done, version=&quot;+version);</span>
-<span class="nc" id="L837">	}</span>
+<span class="nc" id="L833">		Logger.println(InitServlet.class,&quot;Update init done, version=&quot;+version);</span>
+<span class="nc" id="L834">	}</span>
 
 	private static void restart(ServletContext sc)
 	{
-<span class="nc" id="L841">		touch(sc, &quot;/WEB-INF/classes/sk/updater/InitServlet.class&quot;);</span>
-<span class="nc" id="L842">		touch(sc, &quot;/WEB-INF/web.xml&quot;);</span>
-<span class="nc" id="L843">		touch(sc, &quot;/WEB-INF/classes/sk/iway/iwcm/InitServlet.class&quot;);</span>
-<span class="nc" id="L844">		touch(sc, &quot;/WEB-INF/classes/sk/updater/ResponseServlet.class&quot;);</span>
-<span class="nc" id="L845">	}</span>
+<span class="nc" id="L838">		touch(sc, &quot;/WEB-INF/classes/sk/updater/InitServlet.class&quot;);</span>
+<span class="nc" id="L839">		touch(sc, &quot;/WEB-INF/web.xml&quot;);</span>
+<span class="nc" id="L840">		touch(sc, &quot;/WEB-INF/classes/sk/iway/iwcm/InitServlet.class&quot;);</span>
+<span class="nc" id="L841">		touch(sc, &quot;/WEB-INF/classes/sk/updater/ResponseServlet.class&quot;);</span>
+<span class="nc" id="L842">	}</span>
 
 	private static boolean touch(ServletContext sc, String url) {
-<span class="nc" id="L848">		boolean ret = false;</span>
-<span class="nc" id="L849">		File f = new File(sc.getRealPath(url));</span>
-<span class="nc bnc" id="L850" title="All 2 branches missed.">		if (f.exists())</span>
+<span class="nc" id="L845">		boolean ret = false;</span>
+<span class="nc" id="L846">		File f = new File(sc.getRealPath(url));</span>
+<span class="nc bnc" id="L847" title="All 2 branches missed.">		if (f.exists())</span>
 		{
-<span class="nc" id="L852">			System.out.println(&quot;RESTART request update.InitServlet &quot; + f.getAbsolutePath());</span>
-<span class="nc" id="L853">			f.setLastModified(System.currentTimeMillis());</span>
-<span class="nc" id="L854">			ret = true;</span>
+<span class="nc" id="L849">			System.out.println(&quot;RESTART request update.InitServlet &quot; + f.getAbsolutePath());</span>
+<span class="nc" id="L850">			f.setLastModified(System.currentTimeMillis());</span>
+<span class="nc" id="L851">			ret = true;</span>
 		}
-<span class="nc" id="L856">		return ret;</span>
+<span class="nc" id="L853">		return ret;</span>
 	}
 
 	/**
@@ -867,17 +864,17 @@ import javax.servlet.http.HttpServlet;
 	{
 		//if (toPath.indexOf(&quot;web.xml&quot;)==-1) return(true);
 
-<span class="nc bnc" id="L870" title="All 2 branches missed.">		if (toPath.indexOf(&quot;/sk/updater/&quot;)!=-1)</span>
+<span class="nc bnc" id="L867" title="All 2 branches missed.">		if (toPath.indexOf(&quot;/sk/updater/&quot;)!=-1)</span>
 		{
 			//sk.updater.* sa nesmie aktualizovat
-<span class="nc" id="L873">			return(true);</span>
+<span class="nc" id="L870">			return(true);</span>
 		}
 
-<span class="nc" id="L876">		boolean renamed = false;</span>
+<span class="nc" id="L873">		boolean renamed = false;</span>
 
 		try
 		{
-<span class="nc" id="L880">			renamed = copyFile(fromPath, toPath, sc);</span>
+<span class="nc" id="L877">			renamed = copyFile(fromPath, toPath, sc);</span>
 
 			try
 			{
@@ -889,80 +886,80 @@ import javax.servlet.http.HttpServlet;
 				sk.iway.iwcm.Logger.error(ex);
 			}
 		}
-<span class="nc" id="L892">		catch (Exception ex)</span>
+<span class="nc" id="L889">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L894">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L895">		}</span>
+<span class="nc" id="L891">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L892">		}</span>
 
-<span class="nc" id="L897">		return renamed;</span>
+<span class="nc" id="L894">		return renamed;</span>
 	}
 
 	private static boolean copyFile(String fromPath, String toPath, ServletContext sc)
 	{
-<span class="nc" id="L902">		boolean copyOK = false;</span>
+<span class="nc" id="L899">		boolean copyOK = false;</span>
 
-<span class="nc" id="L904">		Logger.println(InitServlet.class,&quot;   Copy file: &quot; + fromPath + &quot; -&gt; &quot; + toPath);</span>
+<span class="nc" id="L901">		Logger.println(InitServlet.class,&quot;   Copy file: &quot; + fromPath + &quot; -&gt; &quot; + toPath);</span>
 
-<span class="nc bnc" id="L906" title="All 2 branches missed.">		if (toPath.indexOf(&quot;/sk/updater/&quot;)!=-1)</span>
+<span class="nc bnc" id="L903" title="All 2 branches missed.">		if (toPath.indexOf(&quot;/sk/updater/&quot;)!=-1)</span>
 		{
 			//sk.updater.* sa nesmie aktualizovat
-<span class="nc" id="L909">			return(true);</span>
+<span class="nc" id="L906">			return(true);</span>
 		}
 
 		try
 		{
-<span class="nc" id="L914">			File fromFile = new File(sc.getRealPath(fromPath));</span>
-<span class="nc" id="L915">			File toFile = new File(sc.getRealPath(toPath));</span>
+<span class="nc" id="L911">			File fromFile = new File(sc.getRealPath(fromPath));</span>
+<span class="nc" id="L912">			File toFile = new File(sc.getRealPath(toPath));</span>
 
-<span class="nc bnc" id="L917" title="All 2 branches missed.">			if (toFile.exists())</span>
+<span class="nc bnc" id="L914" title="All 2 branches missed.">			if (toFile.exists())</span>
 			{
 				//toFile.delete();
 				//toto nemozeme kvoli clustru a symlinkom na web.xml
 			}
-<span class="nc" id="L922">			File toFileParent = toFile.getParentFile();</span>
-<span class="nc bnc" id="L923" title="All 2 branches missed.">			if(toFileParent.exists()==false)</span>
+<span class="nc" id="L919">			File toFileParent = toFile.getParentFile();</span>
+<span class="nc bnc" id="L920" title="All 2 branches missed.">			if(toFileParent.exists()==false)</span>
 			{
-<span class="nc bnc" id="L925" title="All 2 branches missed.">				if(toFileParent.mkdirs() == false)</span>
+<span class="nc bnc" id="L922" title="All 2 branches missed.">				if(toFileParent.mkdirs() == false)</span>
 				{
-<span class="nc" id="L927">					Logger.println(InitServlet.class,&quot; [FAIL] - can't create parent dir&quot;);</span>
-<span class="nc" id="L928">					return false;</span>
+<span class="nc" id="L924">					Logger.println(InitServlet.class,&quot; [FAIL] - can't create parent dir&quot;);</span>
+<span class="nc" id="L925">					return false;</span>
 				}
 			}
-<span class="nc bnc" id="L931" title="All 4 branches missed.">			if(toFile.exists()==false &amp;&amp; toFile.createNewFile() == false)</span>
+<span class="nc bnc" id="L928" title="All 4 branches missed.">			if(toFile.exists()==false &amp;&amp; toFile.createNewFile() == false)</span>
 			{
-<span class="nc" id="L933">				Logger.println(InitServlet.class,&quot; [FAIL] - can't create new file&quot;);</span>
-<span class="nc" id="L934">				return false;</span>
+<span class="nc" id="L930">				Logger.println(InitServlet.class,&quot; [FAIL] - can't create new file&quot;);</span>
+<span class="nc" id="L931">				return false;</span>
 			}
 
-<span class="nc" id="L937">			FileInputStream inStream = new FileInputStream(fromFile);</span>
-<span class="nc" id="L938">			FileOutputStream out = new FileOutputStream(toFile);</span>
+<span class="nc" id="L934">			FileInputStream inStream = new FileInputStream(fromFile);</span>
+<span class="nc" id="L935">			FileOutputStream out = new FileOutputStream(toFile);</span>
 
 			int c;
-<span class="nc" id="L941">			byte[] buff = new byte[150000];</span>
-<span class="nc bnc" id="L942" title="All 2 branches missed.">			while ((c = inStream.read(buff)) != -1)</span>
+<span class="nc" id="L938">			byte[] buff = new byte[150000];</span>
+<span class="nc bnc" id="L939" title="All 2 branches missed.">			while ((c = inStream.read(buff)) != -1)</span>
 			{
-<span class="nc" id="L944">				out.write(buff, 0, c);</span>
+<span class="nc" id="L941">				out.write(buff, 0, c);</span>
 			}
-<span class="nc" id="L946">			out.close();</span>
-<span class="nc" id="L947">			inStream.close();</span>
+<span class="nc" id="L943">			out.close();</span>
+<span class="nc" id="L944">			inStream.close();</span>
 
-<span class="nc" id="L949">			copyOK = true;</span>
+<span class="nc" id="L946">			copyOK = true;</span>
 		}
-<span class="nc" id="L951">		catch (Exception ex)</span>
+<span class="nc" id="L948">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L953">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L954">		}</span>
+<span class="nc" id="L950">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L951">		}</span>
 
-<span class="nc bnc" id="L956" title="All 2 branches missed.">		if (copyOK)</span>
+<span class="nc bnc" id="L953" title="All 2 branches missed.">		if (copyOK)</span>
 		{
-<span class="nc" id="L958">		   Logger.println(InitServlet.class,&quot; [OK]&quot;);</span>
+<span class="nc" id="L955">		   Logger.println(InitServlet.class,&quot; [OK]&quot;);</span>
 		}
 		else
 		{
-<span class="nc" id="L962">			Logger.println(InitServlet.class,&quot; [FAIL]&quot;);</span>
+<span class="nc" id="L959">			Logger.println(InitServlet.class,&quot; [FAIL]&quot;);</span>
 		}
 
-<span class="nc" id="L965">		return copyOK;</span>
+<span class="nc" id="L962">		return copyOK;</span>
 	}
 
 	/**
@@ -971,30 +968,30 @@ import javax.servlet.http.HttpServlet;
 	 */
 	private static void moveDir(String path, String version, ServletContext sc)
 	{
-<span class="nc" id="L974">		Logger.println(InitServlet.class,&quot;Move dir: &quot; + path);</span>
+<span class="nc" id="L971">		Logger.println(InitServlet.class,&quot;Move dir: &quot; + path);</span>
 
-<span class="nc" id="L976">		String srcDir = &quot;/WEB-INF/update/&quot;+version+path;</span>
-<span class="nc" id="L977">		File srcDirFile = new File(sc.getRealPath(srcDir));</span>
+<span class="nc" id="L973">		String srcDir = &quot;/WEB-INF/update/&quot;+version+path;</span>
+<span class="nc" id="L974">		File srcDirFile = new File(sc.getRealPath(srcDir));</span>
 
-<span class="nc" id="L979">		File[] files = srcDirFile.listFiles();</span>
-<span class="nc" id="L980">		int size = files.length;</span>
+<span class="nc" id="L976">		File[] files = srcDirFile.listFiles();</span>
+<span class="nc" id="L977">		int size = files.length;</span>
 		int i;
 
-<span class="nc bnc" id="L983" title="All 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
+<span class="nc bnc" id="L980" title="All 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
 		{
-<span class="nc bnc" id="L985" title="All 2 branches missed.">			if (files[i].isDirectory())</span>
+<span class="nc bnc" id="L982" title="All 2 branches missed.">			if (files[i].isDirectory())</span>
 			{
 				//rekurzia
-<span class="nc" id="L988">				moveDir(path + files[i].getName() + &quot;/&quot;, version, sc);</span>
+<span class="nc" id="L985">				moveDir(path + files[i].getName() + &quot;/&quot;, version, sc);</span>
 			}
 			else
 			{
 				//presun subor
-<span class="nc" id="L993">				moveFile(srcDir+files[i].getName(), path+files[i].getName(), sc);</span>
+<span class="nc" id="L990">				moveFile(srcDir+files[i].getName(), path+files[i].getName(), sc);</span>
 			}
 		}
 
-<span class="nc" id="L997">	}</span>
+<span class="nc" id="L994">	}</span>
 
 	/**
 	 * Vymaze subory z normalneho adresara, ktore sa nenachadzaju v aktualizacii
@@ -1004,38 +1001,38 @@ import javax.servlet.http.HttpServlet;
 	 */
 	private static void deleteUnwantedFiles(String path, String version, Collection&lt;File&gt; notDeleted, ServletContext sc)
 	{
-<span class="nc" id="L1007">		Logger.println(InitServlet.class,&quot;deleteUnwantedFiles dir: &quot; + path);</span>
+<span class="nc" id="L1004">		Logger.println(InitServlet.class,&quot;deleteUnwantedFiles dir: &quot; + path);</span>
 
-<span class="nc" id="L1009">		String updateDir = &quot;/WEB-INF/update/&quot;+version+path;</span>
-<span class="nc" id="L1010">		File updateDirFile = new File(sc.getRealPath(updateDir));</span>
+<span class="nc" id="L1006">		String updateDir = &quot;/WEB-INF/update/&quot;+version+path;</span>
+<span class="nc" id="L1007">		File updateDirFile = new File(sc.getRealPath(updateDir));</span>
 
-<span class="nc bnc" id="L1012" title="All 6 branches missed.">		if (updateDirFile == null || updateDirFile.exists()==false || updateDirFile.isDirectory()==false)</span>
+<span class="nc bnc" id="L1009" title="All 4 branches missed.">		if (updateDirFile.exists()==false || updateDirFile.isDirectory()==false)</span>
 		{
-<span class="nc" id="L1014">			return;</span>
+<span class="nc" id="L1011">			return;</span>
 		}
 
-<span class="nc" id="L1017">		File srcDirFile = new File(sc.getRealPath(path));</span>
-<span class="nc" id="L1018">		File[] srcFiles = srcDirFile.listFiles();</span>
+<span class="nc" id="L1014">		File srcDirFile = new File(sc.getRealPath(path));</span>
+<span class="nc" id="L1015">		File[] srcFiles = srcDirFile.listFiles();</span>
 
 
-<span class="nc" id="L1021">		File[] updateFiles = updateDirFile.listFiles();</span>
+<span class="nc" id="L1018">		File[] updateFiles = updateDirFile.listFiles();</span>
 
-<span class="nc" id="L1023">		int size = updateFiles.length;</span>
-<span class="nc" id="L1024">		Hashtable&lt;String, String&gt; updateTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L1020">		int size = updateFiles.length;</span>
+<span class="nc" id="L1021">		Hashtable&lt;String, String&gt; updateTable = new Hashtable&lt;&gt;();</span>
 		int i;
-<span class="nc bnc" id="L1026" title="All 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
+<span class="nc bnc" id="L1023" title="All 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
 		{
-<span class="nc bnc" id="L1028" title="All 2 branches missed.">			if (updateFiles[i].isFile())</span>
+<span class="nc bnc" id="L1025" title="All 2 branches missed.">			if (updateFiles[i].isFile())</span>
 			{
-<span class="nc" id="L1030">				updateTable.put(updateFiles[i].getName(), updateFiles[i].getAbsolutePath());</span>
+<span class="nc" id="L1027">				updateTable.put(updateFiles[i].getName(), updateFiles[i].getAbsolutePath());</span>
 			}
 		}
 
 		//pridaj tam este kniznice z custom lib adresara
-<span class="nc" id="L1035">		size = srcFiles.length;</span>
-<span class="nc bnc" id="L1036" title="All 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
+<span class="nc" id="L1032">		size = srcFiles.length;</span>
+<span class="nc bnc" id="L1033" title="All 2 branches missed.">		for (i=0; i&lt;size; i++)</span>
 		{
-<span class="nc bnc" id="L1038" title="All 2 branches missed.">			if (srcFiles[i].isDirectory())</span>
+<span class="nc bnc" id="L1035" title="All 2 branches missed.">			if (srcFiles[i].isDirectory())</span>
 			{
 				//rekurzia
 				//moveDir(path + files[i].getName() + &quot;/&quot;, version, sc);
@@ -1043,16 +1040,16 @@ import javax.servlet.http.HttpServlet;
 			else
 			{
 				//vymaz subor
-<span class="nc bnc" id="L1046" title="All 2 branches missed.">				if (updateTable.get(srcFiles[i].getName())==null)</span>
+<span class="nc bnc" id="L1043" title="All 2 branches missed.">				if (updateTable.get(srcFiles[i].getName())==null)</span>
 				{
-<span class="nc" id="L1048">					boolean delOK = srcFiles[i].delete();</span>
-<span class="nc" id="L1049">					Logger.println(InitServlet.class,&quot;MAZEM: &quot; + srcFiles[i].getAbsolutePath()+&quot; ok=&quot;+delOK);</span>
-<span class="nc bnc" id="L1050" title="All 2 branches missed.">					if(!delOK) notDeleted.add(srcFiles[i]);</span>
+<span class="nc" id="L1045">					boolean delOK = srcFiles[i].delete();</span>
+<span class="nc" id="L1046">					Logger.println(InitServlet.class,&quot;MAZEM: &quot; + srcFiles[i].getAbsolutePath()+&quot; ok=&quot;+delOK);</span>
+<span class="nc bnc" id="L1047" title="All 2 branches missed.">					if(!delOK) notDeleted.add(srcFiles[i]);</span>
 
 				}
 			}
 		}
-<span class="nc" id="L1055">	}</span>
+<span class="nc" id="L1052">	}</span>
 
 	/**
 	 * Nakopiruje do noveho LIB adreasra to co je v /WEB-INF/lib-custom
@@ -1061,125 +1058,113 @@ import javax.servlet.http.HttpServlet;
 	 */
 	private static void addCustomLib(String version, ServletContext sc)
 	{
-<span class="nc" id="L1064">		String customDir = &quot;/WEB-INF/lib-custom/&quot;;</span>
+<span class="nc" id="L1061">		String customDir = &quot;/WEB-INF/lib-custom/&quot;;</span>
 
-<span class="nc" id="L1066">		String updateDir = &quot;/WEB-INF/update/&quot;+version+&quot;/WEB-INF/lib/&quot;;</span>
+<span class="nc" id="L1063">		String updateDir = &quot;/WEB-INF/update/&quot;+version+&quot;/WEB-INF/lib/&quot;;</span>
 
-<span class="nc" id="L1068">		File libCustom = new File(sc.getRealPath(customDir));</span>
-<span class="nc bnc" id="L1069" title="All 4 branches missed.">		if (libCustom.exists()==false || libCustom.canRead()==false) return;</span>
+<span class="nc" id="L1065">		File libCustom = new File(sc.getRealPath(customDir));</span>
+<span class="nc bnc" id="L1066" title="All 4 branches missed.">		if (libCustom.exists()==false || libCustom.canRead()==false) return;</span>
 
 		//skopiruj subory
-<span class="nc" id="L1072">		File[] files = libCustom.listFiles();</span>
-<span class="nc bnc" id="L1073" title="All 2 branches missed.">		for (File f : files)</span>
+<span class="nc" id="L1069">		File[] files = libCustom.listFiles();</span>
+<span class="nc bnc" id="L1070" title="All 2 branches missed.">		for (File f : files)</span>
 		{
-<span class="nc bnc" id="L1075" title="All 4 branches missed.">			if (f.isFile() &amp;&amp; f.canRead())</span>
+<span class="nc bnc" id="L1072" title="All 4 branches missed.">			if (f.isFile() &amp;&amp; f.canRead())</span>
 			{
-<span class="nc" id="L1077">				copyFile(customDir+f.getName(), updateDir+f.getName(), sc);</span>
+<span class="nc" id="L1074">				copyFile(customDir+f.getName(), updateDir+f.getName(), sc);</span>
 			}
 		}
-<span class="nc" id="L1080">	}</span>
+<span class="nc" id="L1077">	}</span>
 
 	private static String readFileContent(File f, String encoding)
 	{
-<span class="nc" id="L1084">		StringBuilder contextFile = new StringBuilder();</span>
+<span class="nc" id="L1081">		StringBuilder contextFile = new StringBuilder();</span>
 
-<span class="nc bnc" id="L1086" title="All 2 branches missed.">		if (encoding == null) encoding = &quot;windows-1250&quot;;</span>
+<span class="nc bnc" id="L1083" title="All 2 branches missed.">		if (encoding == null) encoding = &quot;windows-1250&quot;;</span>
 
 		try
 		{
-<span class="nc bnc" id="L1090" title="All 4 branches missed.">			if (f.exists() &amp;&amp; f.canRead())</span>
+<span class="nc bnc" id="L1087" title="All 4 branches missed.">			if (f.exists() &amp;&amp; f.canRead())</span>
 			{
 
-<span class="nc" id="L1093">				InputStreamReader isr = new InputStreamReader(new FileInputStream(f), encoding);</span>
-<span class="nc" id="L1094">				char[] buff = new char[64000];</span>
+<span class="nc" id="L1090">				InputStreamReader isr = new InputStreamReader(new FileInputStream(f), encoding);</span>
+<span class="nc" id="L1091">				char[] buff = new char[64000];</span>
 				int len;
-<span class="nc bnc" id="L1096" title="All 2 branches missed.">				while ((len = isr.read(buff))!=-1)</span>
+<span class="nc bnc" id="L1093" title="All 2 branches missed.">				while ((len = isr.read(buff))!=-1)</span>
 				{
-<span class="nc" id="L1098">					contextFile.append(buff, 0, len);</span>
+<span class="nc" id="L1095">					contextFile.append(buff, 0, len);</span>
 				}
-<span class="nc" id="L1100">				isr.close();</span>
+<span class="nc" id="L1097">				isr.close();</span>
 			}
 		}
-<span class="nc" id="L1103">		catch (Exception ex)</span>
+<span class="nc" id="L1100">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1105">			ex.printStackTrace();</span>
-<span class="nc" id="L1106">		}</span>
+<span class="nc" id="L1102">			ex.printStackTrace();</span>
+<span class="nc" id="L1103">		}</span>
 		//System.out.println(&quot;!!!! in fileContent &quot;+url);
-<span class="nc" id="L1108">   	return(contextFile.toString());</span>
+<span class="nc" id="L1105">   	return(contextFile.toString());</span>
 	}
 
 	private static boolean deleteDirTree(String url, Collection&lt;File&gt; notDeleted, String version, ServletContext sc)
 	{
-<span class="nc" id="L1113">		File file = new File(sc.getRealPath(url));</span>
+<span class="nc" id="L1110">		File file = new File(sc.getRealPath(url));</span>
 
-<span class="nc" id="L1115">		boolean result = true;</span>
+<span class="nc" id="L1112">		boolean result = true;</span>
 
-<span class="nc bnc" id="L1117" title="All 4 branches missed.">		if (file.exists() &amp;&amp; file.isDirectory())</span>
+<span class="nc bnc" id="L1114" title="All 4 branches missed.">		if (file.exists() &amp;&amp; file.isDirectory())</span>
 		{
-<span class="nc" id="L1119">			System.out.println(&quot;deleting: &quot; + url);</span>
+<span class="nc" id="L1116">			System.out.println(&quot;deleting: &quot; + url);</span>
 
 			int size;
 			int i;
 
 			try
 			{
-<span class="nc bnc" id="L1126" title="All 2 branches missed.">				if (file.isDirectory())</span>
+<span class="nc bnc" id="L1123" title="All 2 branches missed.">				if (file.isDirectory())</span>
 				{
 					File f;
-<span class="nc" id="L1129">					File[] files = file.listFiles();</span>
-<span class="nc bnc" id="L1130" title="All 2 branches missed.">					if (files != null)</span>
+<span class="nc" id="L1126">					File[] files = file.listFiles();</span>
+<span class="nc bnc" id="L1127" title="All 2 branches missed.">					if (files != null)</span>
 					{
-<span class="nc" id="L1132">						size = files.length;</span>
-<span class="nc bnc" id="L1133" title="All 2 branches missed.">						for (i = 0; i &lt; size; i++)</span>
+<span class="nc" id="L1129">						size = files.length;</span>
+<span class="nc bnc" id="L1130" title="All 2 branches missed.">						for (i = 0; i &lt; size; i++)</span>
 						{
-<span class="nc" id="L1135">							f = files[i];</span>
-<span class="nc bnc" id="L1136" title="All 2 branches missed.">							if (f.isDirectory())</span>
+<span class="nc" id="L1132">							f = files[i];</span>
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">							if (f.isDirectory())</span>
 							{
-<span class="nc" id="L1138">								result = deleteDirTree(url+f.getName()+&quot;/&quot;, notDeleted, version, sc);</span>
+<span class="nc" id="L1135">								result = deleteDirTree(url+f.getName()+&quot;/&quot;, notDeleted, version, sc);</span>
 							} else
 							{
-<span class="nc" id="L1141">								result = deleteFile(f, url+f.getName(), notDeleted, version, sc);</span>
-<span class="nc bnc" id="L1142" title="All 2 branches missed.">								if (result==false) notDeleted.add(f);</span>
+<span class="nc" id="L1138">								result = deleteFile(f, url+f.getName(), notDeleted, version, sc);</span>
+<span class="nc bnc" id="L1139" title="All 2 branches missed.">								if (result==false) notDeleted.add(f);</span>
 							}
 						}
 					}
-<span class="nc" id="L1146">					result = file.delete();</span>
+<span class="nc" id="L1143">					result = file.delete();</span>
 				}
 			}
-<span class="nc" id="L1149">			catch (Exception e)</span>
+<span class="nc" id="L1146">			catch (Exception e)</span>
 			{
-<span class="nc" id="L1151">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L1152">			}</span>
+<span class="nc" id="L1148">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L1149">			}</span>
 		}
-<span class="nc" id="L1154">		return (result);</span>
+<span class="nc" id="L1151">		return (result);</span>
 	}
-
-    /**
-     * Zmaze subor na zadanom URL
-     * @param url
-     * @param sc
-     * @return
-     */
-	private static boolean deleteFile(String url, Collection&lt;File&gt; notDeleted, String version, ServletContext sc)
-    {
-<span class="nc" id="L1165">        File f = new File(sc.getRealPath(url));</span>
-<span class="nc" id="L1166">        return deleteFile(f, url, notDeleted, version, sc);</span>
-    }
 
 	private static boolean deleteFile(File f, String url, Collection&lt;File&gt; notDeleted, String version, ServletContext sc)
     {
-<span class="nc bnc" id="L1171" title="All 2 branches missed.">        if (f.exists())</span>
+<span class="nc bnc" id="L1156" title="All 2 branches missed.">        if (f.exists())</span>
         {
 			//create backup
-<span class="nc" id="L1174">			copyFile(url, &quot;/WEB-INF/update/&quot;+version+&quot;_backup&quot;+url, sc);</span>
+<span class="nc" id="L1159">			copyFile(url, &quot;/WEB-INF/update/&quot;+version+&quot;_backup&quot;+url, sc);</span>
 
-<span class="nc" id="L1176">            System.out.println(&quot;Deleting &quot; + url);</span>
-<span class="nc" id="L1177">            boolean ok = f.delete();</span>
-<span class="nc bnc" id="L1178" title="All 2 branches missed.">			if (ok==false) notDeleted.add(f);</span>
-<span class="nc" id="L1179">			return ok;</span>
+<span class="nc" id="L1161">            System.out.println(&quot;Deleting &quot; + url);</span>
+<span class="nc" id="L1162">            boolean ok = f.delete();</span>
+<span class="nc bnc" id="L1163" title="All 2 branches missed.">			if (ok==false) notDeleted.add(f);</span>
+<span class="nc" id="L1164">			return ok;</span>
         }
 
-<span class="nc" id="L1182">        return false;</span>
+<span class="nc" id="L1167">        return false;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

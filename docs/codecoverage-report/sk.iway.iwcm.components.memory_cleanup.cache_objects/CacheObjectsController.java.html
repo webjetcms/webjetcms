@@ -51,27 +51,27 @@ public class CacheObjectsController extends DatatableRestControllerV2&lt;CacheDt
 
     @Override
     public Page&lt;CacheDto&gt; searchItem(Map&lt;String, String&gt; params, Pageable pageable, CacheDto search) {
-<span class="nc" id="L54">        String sortKey = null;</span>
-<span class="nc" id="L55">        String sortValue = null;</span>
-<span class="nc" id="L56">        Map&lt;String, String&gt; searchMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L54">        String sortKey = null;</span>
+<span class="fc" id="L55">        String sortValue = null;</span>
+<span class="fc" id="L56">        Map&lt;String, String&gt; searchMap = new HashMap&lt;&gt;();</span>
 
-<span class="nc bnc" id="L58" title="All 2 branches missed.">        for (Map.Entry&lt;String, String&gt; paramsEntry : params.entrySet()) {</span>
-<span class="nc bnc" id="L59" title="All 2 branches missed.">            if (cacheObjectsService.checkSearchParam(paramsEntry.getKey())) {</span>
-<span class="nc" id="L60">                String key = getCleanKey(paramsEntry.getKey());</span>
-<span class="nc" id="L61">                String value = getCleanValue(paramsEntry.getValue());</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">                if (&quot;expirationDate&quot;.equals(key)) {</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        for (Map.Entry&lt;String, String&gt; paramsEntry : params.entrySet()) {</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">            if (cacheObjectsService.checkSearchParam(paramsEntry.getKey())) {</span>
+<span class="fc" id="L60">                String key = getCleanKey(paramsEntry.getKey());</span>
+<span class="fc" id="L61">                String value = getCleanValue(paramsEntry.getValue());</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">                if (&quot;expirationDate&quot;.equals(key)) {</span>
 <span class="nc" id="L63">                    value = paramsEntry.getValue();</span>
                 }
-<span class="nc" id="L65">                searchMap.put(key, value);</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">            } else if (cacheObjectsService.checkSortParam(paramsEntry.getKey())) {</span>
-<span class="nc" id="L67">                String[] sortParams = paramsEntry.getValue().split(&quot;,&quot;);</span>
-<span class="nc" id="L68">                sortKey = sortParams[0];</span>
-<span class="nc" id="L69">                sortValue = sortParams[1];</span>
+<span class="fc" id="L65">                searchMap.put(key, value);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            } else if (cacheObjectsService.checkSortParam(paramsEntry.getKey())) {</span>
+<span class="fc" id="L67">                String[] sortParams = paramsEntry.getValue().split(&quot;,&quot;);</span>
+<span class="fc" id="L68">                sortKey = sortParams[0];</span>
+<span class="fc" id="L69">                sortValue = sortParams[1];</span>
             }
-<span class="nc" id="L71">        }</span>
+<span class="fc" id="L71">        }</span>
 
-<span class="nc" id="L73">        Pair&lt;String, String&gt; sortPair = new Pair&lt;&gt;(sortKey, sortValue);</span>
-<span class="nc" id="L74">        return cacheObjectsService.getFilteredCacheDtos(searchMap, sortPair, pageable);</span>
+<span class="fc" id="L73">        Pair&lt;String, String&gt; sortPair = new Pair&lt;&gt;(sortKey, sortValue);</span>
+<span class="fc" id="L74">        return cacheObjectsService.getFilteredCacheDtos(searchMap, sortPair, pageable);</span>
     }
 
     @Override
@@ -84,4 +84,4 @@ public class CacheObjectsController extends DatatableRestControllerV2&lt;CacheDt
 <span class="nc" id="L84">        return false;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

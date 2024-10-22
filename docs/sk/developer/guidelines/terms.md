@@ -7,6 +7,8 @@ Pri písaní textu je potrebné dodržať rovnakú terminológiu. Používajte l
 - začiarkávacie pole = `checkbox` - Google Translate
 - ukazateľ postupu = `progress bar` - Google Translate
 - nástrojová lišta = `toolbar` - Google Translate
+- viacnásobné výberové pole `multi selection field` - Google Translate
+- rozbaľovacia ponuka = `dropdown` - Google Translate
 
 ## Názvoslovie pre kód
 

@@ -14,6 +14,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.stat.BrowserDetector;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -44,17 +45,34 @@ public class ABTesting
 		if(abTestAvailable == false || (user != null && user.isAdmin()) )
 			return docDB.getVirtualPathDocId(path, domain);
 
-		String variant = Tools.getCookieValue(request.getCookies(), Constants.getString("ABTestingCookieName"), null);
 
-		if(variant==null)
-		{
-			variant = generateVariant();
-			Cookie cookie = new Cookie(Constants.getString("ABTestingCookieName"), variant);
-			cookie.setMaxAge(Constants.getInt("ABTestingCookieDays") *24*60*60);
-			cookie.setPath("/");
-			//response.addCookie(cookie);
-			Tools.addCookie(cookie, response, request);
+		String variant;
+		BrowserDetector browser = BrowserDetector.getInstance(request);
+		if(browser.isStatUserAgentAllowed()==false) {
+			//In case, user agent is crawler, we will always return variant A
+			variant = "a";
+		} else {
+
+			if ("true".equals(request.getAttribute("ABTestingPrefferVariantUrl"))) {
+				//if we are in AB testing variant URL, we will not use cookie
+				variant = getVariantFromUrl(path);
+			} else {
+				variant = Tools.getCookieValue(request.getCookies(), Constants.getString("ABTestingCookieName"), null);
+			}
+
+			if(variant==null)
+			{
+				variant = generateVariant();
+				Cookie cookie = new Cookie(Constants.getString("ABTestingCookieName"), variant);
+				cookie.setMaxAge(Constants.getInt("ABTestingCookieDays") *24*60*60);
+				cookie.setPath("/");
+				//response.addCookie(cookie);
+				Tools.addCookie(cookie, response, request);
+			}
 		}
+
+		//Set variant into request - used in Ninja
+		request.setAttribute("ABTestingVariant", variant);
 
 		if("a".equals(variant))
 			return docDB.getVirtualPathDocId(path, domain);
@@ -145,7 +163,7 @@ public class ABTesting
 
 	public static List<Integer> getAllVariantsDocIds(DocDetails doc, List<String> allDomains, DocDB docDB)
 	{
-		List<Integer> result = new ArrayList<Integer>();
+		List<Integer> result = new ArrayList<>();
 
 		if(doc==null)
 			return result;
@@ -186,5 +204,22 @@ public class ABTesting
 		catch(Exception e){sk.iway.iwcm.Logger.error(e);}
 
 		return result;
+	}
+
+	/**
+	 * Get AB testing variant from URL address
+	 * @param url - URL in format /invest/abtestvariantb.html for B variant
+	 * @return - variant from URL or "a" if not found
+	 */
+	public static String getVariantFromUrl(String url) {
+		//return AB testing variant from url in format /path/to/page/abtestvariantb.html where variant could be after abtestvariant keyword
+		String variant = "a";
+		if (url != null) {
+			int index = url.indexOf(Constants.getString("ABTestingName"));
+			if (index > 0) {
+				variant = url.substring(index + Constants.getString("ABTestingName").length(), index + Constants.getString("ABTestingName").length() + 1);
+			}
+		}
+		return variant;
 	}
 }

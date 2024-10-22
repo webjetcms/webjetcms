@@ -19,14 +19,31 @@ public class DataTableTab {
     private String id;
     private String title;
     private boolean selected;
+    private boolean hideOnCreate;
     private String content;
 
-    public DataTableTab(DataTableColumn annotation, boolean selected) {
-        setId(annotation.tab());
-        String key = "editor.tab." + annotation.tab();
+    public DataTableTab(String id, String title, boolean selected) {
+        setId(id);
+        String key;
+        if (title.contains(".")==false) key = "editor.tab." + title;
+        else key = title;
         String translated = DataTableColumnsFactory.translate(key);
-        if (key.equals(translated)) translated = annotation.tab();
+        if (key.equals(translated)) translated = title;
         setTitle(translated);
         setSelected(selected);
+        hideOnCreate = false;
+        content = null;
+    }
+
+    public DataTableTab(DataTableColumn annotation, boolean selected) {
+        this(annotation.tab(), annotation.tab(), selected);
+    }
+
+    public DataTableTab(sk.iway.iwcm.system.datatable.annotations.DataTableTab annotation) {
+        this(annotation.id(), annotation.title(), annotation.selected());
+        setHideOnCreate(annotation.hideOnCreate());
+        String content = annotation.content();
+        if ("null".equals(content)) content = null;
+        setContent(content);
     }
 }

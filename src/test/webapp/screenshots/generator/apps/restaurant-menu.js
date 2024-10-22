@@ -13,13 +13,25 @@ Scenario('meals screens', ({ I, DTE, Document }) => {
 
     Document.screenshotElement("div.DTE_Action_Create", "/redactor/apps/restaurant-menu/meals-editor.png");
 
-    let confLng = I.getConfLng();
-    if("sk" === confLng) {
-        DTE.selectOption('editorFields\\.alergensArr', '1 - Obilniny');
-        I.click(locate('div.dropdown-menu.show .dropdown-item').withText("7 - Mlieko"));
-    } else if("en" === confLng) { 
-        DTE.selectOption('editorFields\\.alergensArr', '1 - Cereals');
-        I.click(locate('div.dropdown-menu.show .dropdown-item').withText("7 - Milk"));
+    const confLng = I.getConfLng();
+    const allergenField = 'editorFields\\.alergensArr';
+    const dropdownSelector = 'div.dropdown-menu.show .dropdown-item';
+    
+    switch (confLng) {
+        case 'sk':
+            DTE.selectOption(allergenField, '1 - Obilniny');
+            I.click(locate(dropdownSelector).withText("7 - Mlieko"));
+            break;
+        case 'en':
+            DTE.selectOption(allergenField, '1 - Cereals');
+            I.click(locate(dropdownSelector).withText("7 - Milk"));
+            break;
+        case 'cs':
+            DTE.selectOption(allergenField, '1 - Obilniny');
+            I.click(locate(dropdownSelector).withText("7 - Mléko"));
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/restaurant-menu/meals-allergens-list.png");
@@ -83,13 +95,22 @@ Scenario('menu app screens', async ({ I, DT, DTE, Document }) => {
 
     Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/restaurant-menu/menu-app-dialog-menu.png");
 
-    if("sk" === I.getConfLng()) { 
-        I.amOnPage("/apps/restaurant-menu/?week=2023-W48");
-        I.waitForElement(locate("h2.menu").withText("Pondelok (27.11.2023)"));
-    } else if("en" === I.getConfLng()) { 
-        I.amOnPage("/apps/restaurant-menu/?week=2023-W48&language=en");
-        I.waitForElement(locate("h2.menu").withText("Monday (27.11.2023)"));
-    }
+    switch (I.getConfLng()) {
+        case "sk":
+            I.amOnPage("/apps/restaurant-menu/?week=2023-W48");
+            I.waitForElement(locate("h2.menu").withText("Pondelok (27.11.2023)"));
+            break;
+        case "en":
+            I.amOnPage("/apps/restaurant-menu/?week=2023-W48&language=en");
+            I.waitForElement(locate("h2.menu").withText("Monday (27.11.2023)"));
+            break;
+        case "cs":
+            I.amOnPage("/apps/restaurant-menu/?week=2023-W48&language=cs");
+            I.waitForElement(locate("h2.menu").withText("Pondělí (27.11.2023)"));
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
+    }    
 
     Document.screenshot("/redactor/apps/restaurant-menu/menu-app-frontend.png", 1000, 1100);
 });

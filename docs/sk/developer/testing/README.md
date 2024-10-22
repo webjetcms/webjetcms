@@ -47,7 +47,7 @@ cd src/test/webapp/
 npm install
 ```
 
-**POZOR**: pred spustením testovania je potrebné skompilovať JS/CSS admin časti WebJETu:
+!>**Upozornenie:** pred spustením testovania je potrebné skompilovať JS/CSS admin časti WebJETu:
 
 ```shell
 cd src/main/webapp/admin/v9/
@@ -115,7 +115,7 @@ V npm je nastavený [plugin pre generovanie HTML reportov](https://codecept.io/r
 ```shell
 npm run codeceptjs --reporter mochawesome
 ```
-a do adresára /build/test/report sa vygeneruje HTML report s výsledkom testu. Pre neúspešné testy sa vytvorí aj fotka obrazovky. Nastavenie je v [codecept.conf.js](../../../src/test/webapp/codecept.conf.js) v sekcii ```mocha```.
+a do adresára /build/test/report sa vygeneruje HTML report s výsledkom testu. Pre neúspešné testy sa vytvorí aj fotka obrazovky. Nastavenie je v [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) v sekcii ```mocha```.
 
 **Allure**
 
@@ -165,9 +165,9 @@ Základná konfigurácia je v súbore ```codecept.conf.js```. Dôležité atrib�
 
 Testy sa vytvárajú v pod adresároch tests, kde sú delené podľa jednotlivých modulov/aplikácií WebJETu. Sú písane v jazyku JavaScript, takže je možné využívať všetky možnosti, ktoré vám JavaScript ponuka.
 
-Príklad komplexnejšieho testu na otestovanie prihlásenia [src/test/webapp/tests/admin/login.js](../../../src/test/webapp/tests/admin/login.js):
+Príklad komplexnejšieho testu na otestovanie prihlásenia [src/test/webapp/tests/admin/login.js](../../../../src/test/webapp/tests/admin/login.js):
 
-**Upozornenie:** do ```Feature``` zápisu zadávajte hodnotu vo formáte ```adresár.podadresár.meno-súboru``` pre korektné zobrazenie testov v stromovej štruktúre a ľahké dohľadanie súboru podľa vypísaného ```Feature``` v log súbore.
+!>**Upozornenie:** do ```Feature``` zápisu zadávajte hodnotu vo formáte ```adresár.podadresár.meno-súboru``` pre korektné zobrazenie testov v stromovej štruktúre a ľahké dohľadanie súboru podľa vypísaného ```Feature``` v log súbore.
 
 ```javascript
 Feature('admin.login');
@@ -192,8 +192,8 @@ Scenario('prihlasenie zablokovane', ({I}) => {
     I.fillField("password", "wrongpassword");
     I.click("login-submit");
     I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");
-    I.say("Cakam 10 sekund na expirovanie zablokovanej IP adresy");
-    //je potrebne cakat 10 sekund na expirovanie zleho hesla
+    I.say("Cakam 10 sekund na exspirovanie zablokovanej IP adresy");
+    //je potrebne cakat 10 sekund na exspirovanie zleho hesla
     I.wait(13);
     //odkomentujte pre zobrazenie interaktivneho terminalu
     //pause();
@@ -268,28 +268,28 @@ V [oficiálnej dokumentácii](https://codecept.io/helpers/Playwright/) je zoznam
 
 Pre WebJET sme doplnili niekoľko užitočných funkcií:
 
-- [I.formatDateTime(timestamp)](../../../src/test/webapp/steps_file.js) - naformátuje timestamp na dátum a čas s využitím moment knižnice
-- [I.seeAndClick(selector)](../../../src/test/webapp/steps_file.js) - počká na zobrazenie elementu a následne naň klikne
-- [I.clickIfVisible(selector)](../../../src/test/webapp/custom_helper.js) - ak je daný element zobrazený klikne naň, ak zobrazený nie je preskočí krok (nevyhodí chybu)
-- [I.verifyDisabled(selector)](../../../src/test/webapp/custom_helper.js) - overí, či dané pole je neaktívne
-- [I.wjSetDefaultWindowSize()](../../../src/test/webapp/steps_file.js) - nastaví predvolenú veľkosť okna po jeho zmene, je volané automaticky aj po prihlásení v prihlasovacej sekvencii v [codecept.conf.js](../../../src/test/webapp/codecept.conf.js)
-- [Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)](../../../src/test/webapp/codecept.conf.js) - vykoná [vizuálne porovnanie](#vizuálne-testovanie)
+- [I.formatDateTime(timestamp)](../../../../src/test/webapp/steps_file.js) - naformátuje timestamp na dátum a čas s využitím moment knižnice
+- [I.seeAndClick(selector)](../../../../src/test/webapp/steps_file.js) - počká na zobrazenie elementu a následne naň klikne
+- [await I.clickIfVisible(selector)](../../../../src/test/webapp/custom_helper.js) - ak je daný element zobrazený klikne naň, ak zobrazený nie je preskočí krok (nevyhodí chybu)
+- [I.verifyDisabled(selector)](../../../../src/test/webapp/custom_helper.js) - overí, či dané pole je neaktívne
+- [I.wjSetDefaultWindowSize()](../../../../src/test/webapp/steps_file.js) - nastaví predvolenú veľkosť okna po jeho zmene, je volané automaticky aj po prihlásení v prihlasovacej sekvencii v [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js)
+- [Document.compareScreenshotElement(selector, screenshotFileName, width, height, tolerance)](../../../../src/test/webapp/codecept.conf.js) - vykoná [vizuálne porovnanie](#vizuálne-testovanie)
 - `I.waitForTime(time)` - čakanie do zadaného času (timestamp).
 - `I.toastrClose()` - zatvorenie okna `toastr` notifikácie.
 - `clickCss(name, parent=null)` - vykoná kliknutie rovnako ako `I.click` ale `name` považuje za CSS selektor - vykonanie je rýchlejšie, nie je potrebné použiť obalenie do `{css: name}`.
 - `forceClickCss(name, parent=null)` - vykoná kliknutie rovnako ako `I.forceClick` ale `name` považuje za CSS selektor - vykonanie je rýchlejšie, nie je potrebné použiť obalenie do `{css: name}`.
 
-Pre datatabuľku máme pripravené špeciálne funkcie. Sú implementované v [DT.js](../../../src/test/webapp/pages/DT.js):
+Pre datatabuľku máme pripravené špeciálne funkcie. Sú implementované v [DT.js](../../../../src/test/webapp/pages/DT.js):
 
 - ```DT.waitForLoader(name)``` - čaká na zobrazenie a následné schovanie informácie "Spracúvam" v datatabuľke. Používa sa ako ```DT.waitForLoader("#forms-list_processing");```
 - ```DT.filter(name, value, type=null)``` - nastaví hodnotu ```value``` do textového filtra stĺpca ```name``` datatabuľky. Ak je zadaný aj atribút ```type``` nastaví sa typ hľadania (napr. Začína na, Končí na, Rovná sa).
 - ```DT.filterSelect(name, value)``` - nastaví hodnotu ```value``` do výberového poľa (select) filtra stĺpca ```name``` datatabuľky. Používa sa ako ```DT.filterSelect('cookieClass', 'Neklasifikované');```
 - ```async I.getDataTableColumns(dataTableName)``` - vráti objekt DATA s definíciou datatabuľky, používa sa v automatickom testovaní datatabuľky
 - ```async getDataTableId(dataTableName)``` - vráti ID datatabuľky, volá JS funkciu ```dataTable.DATA.id```
-- [async I.getTotalRows()](../../../src/test/webapp/custom_helper.js) - vráti celkový počet záznamov v datatabuľke
+- [async I.getTotalRows()](../../../../src/test/webapp/custom_helper.js) - vráti celkový počet záznamov v datatabuľke
 - ```DT.deleteAll(name = "datatableInit")``` - zmaže aktuálne zobrazené záznamy, pred použitím vždy použite ```DT.filter``` pre filtrovanie potrebných údajov.
 
-Pre Datatable Editor implementované v [DTE.js](../../../src/test/webapp/pages/DTE.js):
+Pre Datatable Editor implementované v [DTE.js](../../../../src/test/webapp/pages/DTE.js):
 
 - ```DTE.waitForLoader(name)``` - čaká na schovanie ```loadera``` v editore (uloženie záznamu)
 - ```DTE.waitForEditor(name)``` - čaká na zobrazenie editora, ak je definované name, použije sa datatabuľka s daným menom, predvolene ```datatableInit```
@@ -299,7 +299,7 @@ Pre Datatable Editor implementované v [DTE.js](../../../src/test/webapp/pages/D
 - ```DTE.fillField(name, value)``` - vyplní štandardné pole, na rozdiel od volania ```I.fillField``` je možné do ```name``` parametra zadať priamo meno poľa na backende/json definícii.
 - ```DTE.fillQuill(name, value)``` - vyplní hodnotu do poľa typy ```QUILL```.
 - ```DTE.fillCkeditor(htmlCode)``` - nastaví HTML kód do aktuálne zobrazeného CKEditor-a.
-- ```DTE.fillCleditor(parentSelector, value)``` - zadá text do WYSIWYG ```cleditor```. Hodnota ```parentSelector``` - odkaz na element v ktorom sa ```cleditor``` nachádza (napr. ```#forum```), ```value``` - hodnota na vyplnenie, POZOR, nevie to zatiaľ diakritiku z dôvodu použitia ```type``` príkazu.
+- ```DTE.fillCleditor(parentSelector, value)``` - zadá text do WYSIWYG ```cleditor```. Hodnota ```parentSelector``` - odkaz na element v ktorom sa ```cleditor``` nachádza (napr. ```#forum```), ```value``` - hodnota na vyplnenie. **Upozornenie:** nevie to zatiaľ diakritiku z dôvodu použitia ```type``` príkazu.
 Pre datatabuľku je možné vykonať aj [automatizovaný test](datatable.md).
 - `DTE.appendField(name, value)` - doplní text to poľa v editore, rieši problém s použitím `I.appendField`, ktoré sa v editore nevykoná vždy správne.
 
@@ -333,6 +333,13 @@ Funkcie implementované v ```Document``` objekte:
 - `scrollTo(selector)` - posunie obsah okna na zadaný element.
 
 V ```Document``` objekte sú aj funkcie pre vytváranie [fotiek obrazovky](screenshots.md).
+
+Pre testovanie emailov pomocou [tempmail.plus](https://tempmail.plus) existuje objekt `TempMail`:
+
+- `login(name, emailDomain = "fexpost.com")` - prihlásenie a nastavenie konta
+- `openLatestEmail()` - otvorí najnovší email
+- `closeEmail()` - zatvorí otvorený email a vráti sa na zoznam emailov
+- `destroyInbox()` - zmaže všetky emaily v schránke
 
 ### Čakanie na dokončenie
 
@@ -372,7 +379,7 @@ pomocou 2x stlačenia TAB klávesy sa vám zobrazí nápoveda (zoznam možných 
 
 ### Prihlasovanie
 
-V súbore [codecept.conf.js](../../../src/test/webapp/codecept.conf.js) je definované aj prihlasovanie cez rozšírenie [autologin](https://codecept.io/plugins/#autologin):
+V súbore [codecept.conf.js](../../../../src/test/webapp/codecept.conf.js) je definované aj prihlasovanie cez rozšírenie [autologin](https://codecept.io/plugins/#autologin):
 
 ```javascript
 autoLogin: {
@@ -449,7 +456,7 @@ I.assertAbove(2, 1, 'Target data not above the given value');
 I.assertAbove(1, 2, 'Target data not below the given value');
 ```
 
-Ak je potrebné, môžete využiť aj [assert](https://www.npmjs.com/package/assert) knižnicu. Príklad použitia je v teste [gallery.js](../../../src/test/webapp/tests/components/gallery.js):
+Ak je potrebné, môžete využiť aj [assert](https://www.npmjs.com/package/assert) knižnicu. Príklad použitia je v teste [gallery.js](../../../../src/test/webapp/tests/apps/gallery.js):
 
 ```javascript
 const assert = require('assert');
@@ -459,7 +466,7 @@ assert.equal(+inputValueH, +area.h);
 
 ### Page objekty
 
-Na vytvorenie univerzálnych testovacích scenárov je zložka [Pages] do ktorej sa generujú Page objekty
+Na vytvorenie univerzálnych testovacích scenárov je zložka `Pages` do ktorej sa generujú Page objekty
 cez príkaz `npx codeceptjs gpo`, vytvorí sa page objekt pomocou ```Dependency Injection``` (podobne ako v Angular).
 
 ```javascript
@@ -470,7 +477,7 @@ module.exports = {
   // insert your locators and methods here
 }
 ```
-Na to aby sme ho vedeli používať v testoch ho treba zaregistrovať v [codecept.conf.js].
+Na to aby sme ho vedeli používať v testoch ho treba zaregistrovať v `codecept.conf.js`.
 
 ```javascript
 exports.config = {
@@ -522,7 +529,7 @@ if (Browser.isFirefox()) {
 
 Volaním adresy stránky s parametrom ```removePerm``` je možné za behu odobrať zadané právo prihlásenému používateľovi (bez uloženia zmien v právach), ak prihlasovacie meno používateľa začína na ```tester```. Je tak možné testovať zobrazenie stránky bez zadaného práva a overiť tak bezpečnosť volania REST služieb.
 
-Odobratie práva je implementované vo funkcii ```DT.checkPerms(perms, url)``` v [DT.js](../../../src/test/webapp/pages/DT.js). Vyžaduje zadať právo a adresu stránky na ktorej sa právo testuje. Testo overuje zobrazenie notifikácie ```Prístup k tejto stránke je zamietnutý```.
+Odobratie práva je implementované vo funkcii ```DT.checkPerms(perms, url)``` v [DT.js](../../../../src/test/webapp/pages/DT.js). Vyžaduje zadať právo a adresu stránky na ktorej sa právo testuje. Testo overuje zobrazenie notifikácie ```Prístup k tejto stránke je zamietnutý```.
  Voliteľný parameter ```datatableId``` reprezentuje ID/meno tabuľky v stránke (je potrebné zadať ak je v stránke viacero datatabuliek).
 
 Príklad použitia:
@@ -589,7 +596,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, login, DT, DTE }) => {
 
 **Technické informácie:**
 
-Odobratie práva je implementované v [ThymeleafAdminController.removePermissionFromCurrentUser](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java). Pri zadaní URL parametra ```removePerm``` sú upravené práva aktuálne prihláseného používateľa vrátane Spring kontextu.
+Odobratie práva je implementované v [ThymeleafAdminController.removePermissionFromCurrentUser](../../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java). Pri zadaní URL parametra ```removePerm``` sú upravené práva aktuálne prihláseného používateľa vrátane Spring kontextu.
 
 ## Vizuálne testovanie
 
@@ -641,7 +648,7 @@ Pre úspešné a opakované spúšťanie testov odporúčame dodržať nasledovn
 
 - pripravte a zmažte si testovacie dáta
 - všetky vytvorené objekty musia obsahovať text ```autotest``` pre identifikovanie objektov vytvorených automatizovaným testom
-- odporúčame použiť volanie ```I.getRandomText()``` pre získanie unikátneho suffixu, použitie vidno napr. v [group-internal.js](../../../src/test/webapp/tests/webpages/group-internal.js) kde sú definované premenné a sú naplnené v ```Before``` funkcii
+- odporúčame použiť volanie ```I.getRandomText()``` pre získanie unikátneho suffixu, použitie vidno napr. v [group-internal.js](../../../../src/test/webapp/tests/webpages/group-internal.js) kde sú definované premenné a sú naplnené v ```Before``` funkcii
 - je ideálne, ak testovacie dáta vytvoríte v samostatnom scenári a aj ich zmažete v samostatnom scenári. Ak teda padne niektorý test, tak zmazanie dát sa vykoná aj tak.
 
 ```javascript
@@ -721,13 +728,13 @@ Databáza používaním testov rastie, keďže adresáre aj web stránky sa po z
 ```sql
 DELETE FROM emails_campain WHERE subject LIKE '%-autotest%';
 OPTIMIZE TABLE emails_campain;
-DELETE FROM groups WHERE group_name LIKE '%sk-mirroring-subfolder%' OR group_name LIKE '%sk-mir-subfolder%' OR group_name LIKE '%-autotest%' OR group_name LIKE '%_autotest%' OR group_name LIKE '%test-adresar-2%';
+DELETE FROM groups WHERE group_name LIKE '%sk-mirroring-subfolder%' OR group_name LIKE '%sk-mir-subfolder%' OR group_name LIKE '%autotest%' OR group_name LIKE '%test-adresar-2%' OR group_name='NewSubFolder' OR group_name LIKE 'section-2%';
 OPTIMIZE TABLE groups;
-DELETE FROM groups_scheduler WHERE group_name LIKE '%sk-mirroring-subfolder%' OR group_name LIKE '%sk-mir-subfolder%' OR group_name LIKE '%-autotest%' OR group_name LIKE '%_autotest%' OR group_name LIKE '%test-adresar-2%';;
+DELETE FROM groups_scheduler WHERE group_name LIKE '%sk-mirroring-subfolder%' OR group_name LIKE '%sk-mir-subfolder%' OR group_name LIKE '%autotest%' OR group_name LIKE '%test-adresar-2%' OR group_name='NewSubFolder' OR group_name LIKE 'section-2%';
 OPTIMIZE TABLE groups_scheduler;
-DELETE FROM documents WHERE (doc_id NOT IN (7611, 18426, 2664, 27827, 29195, 29289, 64425, 50222)) AND (title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%_autotest%' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%' OR title LIKE 'dobré ráno-%' OR title LIKE 'good morning-%');
+DELETE FROM documents WHERE (doc_id NOT IN (7611, 18426, 2664, 27827, 29195, 29289, 64425, 50222, 60434)) AND (title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%autotest_%' OR title LIKE '%_autotest%' OR title='autotest' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%' OR title LIKE 'dobré ráno-%' OR title LIKE 'good morning-%' OR title LIKE 'test-mir-elfinderFile%');
 OPTIMIZE TABLE documents;
-DELETE FROM documents_history WHERE title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%_autotest%' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%' OR title LIKE 'Test_volnych_poli_sablony%';
+DELETE FROM documents_history WHERE title LIKE 'Test_volnych_poli_sablony%' OR title LIKE '%sk-mirroring-subfolder%' OR title LIKE '%sk-mir-subfolder%' OR title LIKE '%-autotest%' OR title LIKE '%autotest_%' OR title LIKE '%_autotest%' OR title='autotest' OR title LIKE 'test-adresar-%' OR title='Nová web stránka' OR title LIKE 'page-%' OR title LIKE 'dobré ráno-%' OR title LIKE 'good morning-%' OR title LIKE 'test-mir-elfinderFile%';
 DELETE FROM documents_history WHERE doc_id=4 AND history_id>26 AND actual=0 AND publicable=0;
 OPTIMIZE TABLE documents_history;
 DELETE FROM _adminlog_ WHERE log_id>10 AND log_id NOT IN (58993, 58730, 103758, 103756);
@@ -742,6 +749,10 @@ OPTIMIZE TABLE enumeration_data;
 UPDATE enumeration_type SET child_enumeration_type_id=NULL WHERE name like '%AutoTest%' AND enumeration_type_id>2283;
 DELETE FROM enumeration_type WHERE name like '%AutoTest%' AND enumeration_type_id>2283;
 OPTIMIZE TABLE enumeration_type;
+DELETE FROM documents_history WHERE doc_id=22955 AND publicable=0;
+UPDATE groups SET sort_priority=10 WHERE parent_group_id IN (15257, 80578);
+DELETE FROM media WHERE media_fk_id NOT IN (259) AND (media_title_sk LIKE '%autotest%' OR media_title_sk LIKE 'image test%' OR media_title_sk LIKE '%onerror=alert%' OR media_title_sk LIKE 'media%');
+OPTIMIZE TABLE media;
 ```
 
 ## Testovanie REST služieb

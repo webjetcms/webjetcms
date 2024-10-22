@@ -163,7 +163,7 @@ public class UploadService {
 <span class="fc" id="L163">            String imageOriginal = GalleryToolsForCore.getImagePathPrefix(&quot;o_&quot;, virtualPath);</span>
 
 <span class="fc" id="L165">            IwcmFile originalGalleryFile = new IwcmFile(Tools.getRealPath(imageOriginal));</span>
-<span class="pc bpc" id="L166" title="2 of 4 branches missed.">            if (originalGalleryFile.exists() &amp;&amp; virtualPath.equals(imageOriginal)==false) {</span>
+<span class="pc bpc" id="L166" title="1 of 4 branches missed.">            if (originalGalleryFile.exists() &amp;&amp; virtualPath.equals(imageOriginal)==false) {</span>
                 //musime skopirovat obsah do o_ suboru, pretoze nasledne sa resize robi z o_ obrazku (ak existuje)
 <span class="fc" id="L168">                FileTools.copyFile(uploadedFile, originalGalleryFile);</span>
             }
@@ -194,7 +194,7 @@ public class UploadService {
 <span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (FileIndexer.isFileIndexerConfigured())</span>
         {
 <span class="fc" id="L196">            List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L197">            FileIndexer.indexFile(dir + &quot;/&quot; + fileName, indexedFiles, request);</span>
+<span class="fc" id="L197">            FileIndexerTools.indexFile(dir + &quot;/&quot; + fileName, indexedFiles, request);</span>
         }
 
 <span class="fc" id="L200">        UploadFileAction.reflectionLoader(request, user, dir + &quot;/&quot; + fileName);</span>
@@ -242,61 +242,61 @@ public class UploadService {
     }
 
     public boolean processDelete() {
-<span class="nc" id="L245">        IwcmFile uploadedFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
-<span class="nc bnc" id="L246" title="All 2 branches missed.">        if (!uploadedFile.exists()) {</span>
-<span class="nc" id="L247">            return false;</span>
+<span class="fc" id="L245">        IwcmFile uploadedFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (!uploadedFile.exists()) {</span>
+<span class="fc" id="L247">            return false;</span>
         }
 
         // maze z galerie video a thumbnail
-<span class="nc" id="L251">        removeVideo(uploadedFile.getVirtualPath());</span>
+<span class="fc" id="L251">        removeVideo(uploadedFile.getVirtualPath());</span>
 
         // maze z galerie obrazky
-<span class="nc bnc" id="L254" title="All 2 branches missed.">        if (GalleryDB.isGalleryFolder(uploadedFile.getVirtualParent())) {</span>
-<span class="nc" id="L255">            removeOriginalBigAndSmallImage();</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">        if (GalleryDB.isGalleryFolder(uploadedFile.getVirtualParent())) {</span>
+<span class="fc" id="L255">            removeOriginalBigAndSmallImage();</span>
         }
 
         //ak existuje adresar files, maze index
-<span class="nc bnc" id="L259" title="All 2 branches missed.">        if (FileIndexer.isFileIndexerConfigured()) {</span>
-<span class="nc" id="L260">            FileIndexerTools.deleteIndexedFile(virtualPath);</span>
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">        if (FileIndexer.isFileIndexerConfigured()) {</span>
+<span class="fc" id="L260">            FileIndexerTools.deleteIndexedFile(virtualPath);</span>
         }
 
-<span class="nc" id="L263">        return true;</span>
+<span class="fc" id="L263">        return true;</span>
     }
 
     private void removeVideo(String virtualPath) {
-<span class="nc" id="L267">        IwcmFile file = new IwcmFile(Tools.getRealPath(changeExtension(virtualPath, Constants.getString(&quot;defaultVideoFormat&quot;, &quot;mp4&quot;))));</span>
-<span class="nc bnc" id="L268" title="All 2 branches missed.">        if (file.exists()) {</span>
+<span class="fc" id="L267">        IwcmFile file = new IwcmFile(Tools.getRealPath(changeExtension(virtualPath, Constants.getString(&quot;defaultVideoFormat&quot;, &quot;mp4&quot;))));</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">        if (file.exists()) {</span>
 <span class="nc" id="L269">            Logger.debug(UploadService.class, String.format(&quot;File to delete: video, path: %s&quot;, file.getVirtualPath()));</span>
 <span class="nc" id="L270">            file.delete();</span>
         }
-<span class="nc" id="L272">    }</span>
+<span class="fc" id="L272">    }</span>
 
     private void removeOriginalBigAndSmallImage() {
         //schvalne musime pouzit prefix, pretoze tak sa nam nevrati original virtualPath ak subor neexistuje
-<span class="nc" id="L276">        String imageSmall = GalleryToolsForCore.getImagePathPrefix(&quot;s_&quot;, virtualPath);</span>
-<span class="nc" id="L277">        String imageOriginal = GalleryToolsForCore.getImagePathPrefix(&quot;o_&quot;, virtualPath);</span>
+<span class="fc" id="L276">        String imageSmall = GalleryToolsForCore.getImagePathPrefix(&quot;s_&quot;, virtualPath);</span>
+<span class="fc" id="L277">        String imageOriginal = GalleryToolsForCore.getImagePathPrefix(&quot;o_&quot;, virtualPath);</span>
 
-<span class="nc" id="L279">        IwcmFile originalGalleryFile = new IwcmFile(Tools.getRealPath(imageOriginal));</span>
-<span class="nc bnc" id="L280" title="All 2 branches missed.">        if (originalGalleryFile.exists()) {</span>
-<span class="nc" id="L281">            Logger.debug(UploadService.class, String.format(&quot;File to delete: image original, path: %s&quot;, originalGalleryFile.getVirtualPath()));</span>
-<span class="nc" id="L282">            originalGalleryFile.delete();</span>
+<span class="fc" id="L279">        IwcmFile originalGalleryFile = new IwcmFile(Tools.getRealPath(imageOriginal));</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">        if (originalGalleryFile.exists()) {</span>
+<span class="fc" id="L281">            Logger.debug(UploadService.class, String.format(&quot;File to delete: image original, path: %s&quot;, originalGalleryFile.getVirtualPath()));</span>
+<span class="fc" id="L282">            originalGalleryFile.delete();</span>
         }
 
-<span class="nc" id="L285">        IwcmFile smallGalleryFile = new IwcmFile(Tools.getRealPath(imageSmall));</span>
-<span class="nc bnc" id="L286" title="All 2 branches missed.">        if (smallGalleryFile.exists()) {</span>
-<span class="nc" id="L287">            Logger.debug(UploadService.class, String.format(&quot;File to delete: small original, path: %s&quot;, smallGalleryFile.getVirtualPath()));</span>
-<span class="nc" id="L288">            smallGalleryFile.delete();</span>
+<span class="fc" id="L285">        IwcmFile smallGalleryFile = new IwcmFile(Tools.getRealPath(imageSmall));</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">        if (smallGalleryFile.exists()) {</span>
+<span class="fc" id="L287">            Logger.debug(UploadService.class, String.format(&quot;File to delete: small original, path: %s&quot;, smallGalleryFile.getVirtualPath()));</span>
+<span class="fc" id="L288">            smallGalleryFile.delete();</span>
         }
 
-<span class="nc" id="L291">        IwcmFile bigGalleryFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
-<span class="nc bnc" id="L292" title="All 2 branches missed.">        if (bigGalleryFile.exists()) {</span>
-<span class="nc" id="L293">            Logger.debug(UploadService.class, String.format(&quot;File to delete: big original, path: %s&quot;, bigGalleryFile.getVirtualPath()));</span>
-<span class="nc" id="L294">            bigGalleryFile.delete();</span>
+<span class="fc" id="L291">        IwcmFile bigGalleryFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">        if (bigGalleryFile.exists()) {</span>
+<span class="fc" id="L293">            Logger.debug(UploadService.class, String.format(&quot;File to delete: big original, path: %s&quot;, bigGalleryFile.getVirtualPath()));</span>
+<span class="fc" id="L294">            bigGalleryFile.delete();</span>
         }
-<span class="nc" id="L296">    }</span>
+<span class="fc" id="L296">    }</span>
 
     private String changeExtension(String virtualPath, String newExtension) {
-<span class="nc" id="L299">        return virtualPath.substring(0, virtualPath.lastIndexOf(&quot;.&quot;) + 1) + newExtension;</span>
+<span class="fc" id="L299">        return virtualPath.substring(0, virtualPath.lastIndexOf(&quot;.&quot;) + 1) + newExtension;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

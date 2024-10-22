@@ -18,23 +18,23 @@ public class WebJETImageCaptchaService extends DefaultManageableImageCaptchaServ
 {
 	public WebJETImageCaptchaService()
 	{
-<span class="nc" id="L21">		super(new FastHashMapCaptchaStore(),</span>
+<span class="fc" id="L21">		super(new FastHashMapCaptchaStore(),</span>
 		    		new WebJETImageCaptchaEngine(),
 		    		180,
 		    		100000,
 		    		75000);
-<span class="nc" id="L26">	}</span>
+<span class="fc" id="L26">	}</span>
 	public boolean testResponseForID(String ID, String response)
 	{
 		try
 		{
-<span class="nc bnc" id="L31" title="All 2 branches missed.">			if (super.store.getCaptcha(ID) != null) return super.store.getCaptcha(ID).validateResponse(response.toUpperCase());</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">			if (super.store.getCaptcha(ID) != null) return super.store.getCaptcha(ID).validateResponse(response.toUpperCase());</span>
 		}
 <span class="nc" id="L33">		catch (Exception e)</span>
 		{
 			
-<span class="nc" id="L36">		}</span>
-<span class="nc" id="L37">		return false;		</span>
+<span class="fc" id="L36">		}</span>
+<span class="fc" id="L37">		return false;		</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

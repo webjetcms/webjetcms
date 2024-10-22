@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Rijndael.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.crypto</a> &gt; <span class="el_source">Rijndael.java</span></div><h1>Rijndael.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.crypto;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.google.crypto.tink.subtle.Hex;
+
+import sk.iway.Password;
+
+/**
+ * Implementation for Rijnadel algorithm from cryptix package with standard java crypto packages
+ */
+public class Rijndael {
+
+    private Rijndael() {
+        //utility class
+    }
+
+    /**
+     * Encrypt text by rijndaels algorithm
+     * @param text
+     * @param key
+     * @return
+     * @throws Exception
+     */
+    public static String encrypt(String text, String key) throws Exception {
+        //dlzka encryptovaneho stringu musi byt nasobok 16
+<span class="pc bpc" id="L28" title="1 of 2 branches missed.">        if (text.length() % 16 &gt; 0) {</span>
+<span class="nc" id="L29">            int len = ((text.length() / 16) + 1) * 16;</span>
+<span class="nc" id="L30">            text = text + &quot;                                 &quot;;</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">            if (text.length() &gt; len) {</span>
+<span class="nc" id="L32">                text = text.substring(0, len);</span>
+            }
+        }
+
+<span class="fc" id="L36">        String to_crypt = Password.fromByteArray(text.getBytes());</span>
+
+<span class="fc" id="L38">        Cipher cipher = Cipher.getInstance(&quot;AES/ECB/NoPadding&quot;); //NOSONAR</span>
+		//You can use ENCRYPT_MODE or DECRYPT_MODE
+<span class="fc" id="L40">		cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(Password.toByteArray(key), &quot;AES&quot;));</span>
+<span class="fc" id="L41">		byte[] ciphertext = cipher.doFinal(Password.toByteArray(to_crypt));</span>
+
+<span class="fc" id="L43">		String encoded = Hex.encode(ciphertext);</span>
+<span class="fc" id="L44">        return encoded;</span>
+    }
+
+    /**
+     * Decrypt data by rijndaels algorithm
+     * @param data
+     * @param key
+     * @return
+     * @throws Exception
+     */
+    public static String decrypt(String data, String key) throws Exception {
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (data == null)</span>
+		{
+<span class="nc" id="L57">			return (&quot;&quot;);</span>
+		}
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">		if (data.length() &lt; 10)</span>
+		{
+<span class="nc" id="L61">			return (data);</span>
+		}
+
+<span class="fc" id="L64">        Cipher cipher = Cipher.getInstance(&quot;AES/ECB/NoPadding&quot;); //NOSONAR</span>
+		//You can use ENCRYPT_MODE or DECRYPT_MODE
+<span class="fc" id="L66">		cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(Password.toByteArray(key), &quot;AES&quot;));</span>
+<span class="fc" id="L67">		byte[] ciphertext = cipher.doFinal(Password.toByteArray(data));</span>
+
+<span class="fc" id="L69">		String decoded = new String(ciphertext).trim();</span>
+<span class="fc" id="L70">        return decoded;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

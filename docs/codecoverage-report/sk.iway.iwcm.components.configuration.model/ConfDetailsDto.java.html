@@ -20,7 +20,8 @@ public class ConfDetailsDto extends ConfDetails {
         inputType = DataTableColumnType.ID,
         renderFormat = &quot;dt-format-selector&quot;,
         title = &quot;admin.conf_editor.id&quot;,
-        tab = &quot;basic&quot;
+        tab = &quot;basic&quot;,
+        filter = false
     )
     private Long id;
 
@@ -95,7 +96,8 @@ public class ConfDetailsDto extends ConfDetails {
     })
     private List&lt;ConfPreparedEntity&gt; confHistory;
 
-<span class="fc" id="L98">    public ConfDetailsDto() {</span>
-<span class="fc" id="L99">    }</span>
+    public ConfDetailsDto() {
+<span class="fc" id="L100">        super();</span>
+<span class="fc" id="L101">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

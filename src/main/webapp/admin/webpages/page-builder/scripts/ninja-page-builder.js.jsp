@@ -1098,9 +1098,9 @@
         get_actual_screen_size:function () {
             var colPrefix = 'col-xl-';
 
-            var screenSize =  $(this.element).width();
+            var screenSize =  $(window).width();
 
-            //console.log("get_actual_screen_size, screenSize=", screenSize);
+            //console.log("get_actual_screen_size, screenSize=", screenSize, "element=", this.element);
 
             // <%--//https://getbootstrap.com/docs/4.0/layout/grid/--%>
 
@@ -1349,6 +1349,10 @@
 
             if(this.duplicate) {
                 this.duplicatedElement = $(this.statec.is_special_helper);
+                //remove binded editors
+                this.duplicatedElement.find("*[class*='editableElement']").removeAttr("data-ckeditor-instance");
+                this.duplicatedElement.find("*[class*='editableElement']").removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
+
                 this.options.onElementDuplicated();
                 this.changedElement = $(this.statec.is_special_helper);
                 this.options.onGridChanged();
@@ -3005,6 +3009,8 @@
             var style_id = me.get_current_element_style_id(),
                 style = 'html > body ['+me.user_style.attr_name+'="'+style_id+'"] '+column_content+'{';
 
+            //console.log("Creating style, id=", style_id, " styles=", styles);
+
             $.each(styles, function( prop, value ) {
 
                 if(prop.indexOf('attr-')==0) {
@@ -3062,6 +3068,9 @@
                         me.user_style.current_element.removeClass('d-xl-block');
                         me.user_style.current_element.addClass('d-xl-none');
                     }
+                } else if (prop === 'background-image') {
+                    //overwrite background-image because it's probably inline
+                    me.user_style.current_element.css('background-image', value);
                 } else {
                     style += prop+':'+value+';';
                 }
@@ -3069,6 +3078,8 @@
             });
 
             style += '}';
+
+            //console.log("Applying style=", style, "id=", style_id, "element=", $('style[style-id="'+style_id+'"]'));
 
             if($('style[style-id="'+style_id+'"]').length < 1) {
                 $('<style style-id="'+style_id+'">')

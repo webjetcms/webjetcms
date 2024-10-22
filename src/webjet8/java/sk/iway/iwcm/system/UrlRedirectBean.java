@@ -45,6 +45,15 @@ public class UrlRedirectBean extends ActiveRecordRepository implements Serializa
 {
 	private static final long serialVersionUID = -1L;
 
+	public UrlRedirectBean() {}
+
+	public UrlRedirectBean(String oldUrl, String newUrl, Integer redirectCode, String domainName) {
+		this.oldUrl = oldUrl;
+		this.newUrl = newUrl;
+		this.redirectCode = redirectCode;
+		this.domainName = domainName;
+	}
+
 	@Id
 	@GeneratedValue(generator="WJGen_url_redirect")
 	@TableGenerator(name="WJGen_url_redirect",pkColumnValue="url_redirect")

@@ -327,25 +327,25 @@ import java.util.*;
 			}
 
 			//povolenie swagger-ui / defaultnej stranky Apache CXF (/ws)
-<span class="pc bpc" id="L330" title="4 of 8 branches missed.">         if (path.contains(&quot;/swagger&quot;) || path.contains(&quot;/v2/api-docs&quot;) || path.equals(&quot;/ws&quot;) || path.equals(&quot;/ws/&quot;))</span>
+<span class="pc bpc" id="L330" title="2 of 8 branches missed.">         if (path.contains(&quot;/swagger&quot;) || path.contains(&quot;/v2/api-docs&quot;) || path.equals(&quot;/ws&quot;) || path.equals(&quot;/ws/&quot;))</span>
          {
-<span class="nc" id="L332">            boolean swaggerEnabled = Constants.getBoolean(&quot;swaggerEnabled&quot;);</span>
-<span class="nc bnc" id="L333" title="All 2 branches missed.">            if (swaggerEnabled)</span>
+<span class="fc" id="L332">            boolean swaggerEnabled = Constants.getBoolean(&quot;swaggerEnabled&quot;);</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">            if (swaggerEnabled)</span>
             {
                //testni, ci je povoleny aj pre neadmina
-<span class="nc bnc" id="L336" title="All 2 branches missed.">               if (Constants.getBoolean(&quot;swaggerRequireAdmin&quot;))</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">               if (Constants.getBoolean(&quot;swaggerRequireAdmin&quot;))</span>
                {
-<span class="nc" id="L338">                  Identity user = UsersDB.getCurrentUser(req);</span>
-<span class="nc bnc" id="L339" title="All 4 branches missed.">                  if (user==null || user.isAdmin()==false) swaggerEnabled = false;</span>
+<span class="fc" id="L338">                  Identity user = UsersDB.getCurrentUser(req);</span>
+<span class="pc bpc" id="L339" title="1 of 4 branches missed.">                  if (user==null || user.isAdmin()==false) swaggerEnabled = false;</span>
                }
             }
 
-<span class="nc bnc" id="L343" title="All 2 branches missed.">            if (swaggerEnabled==false)</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">            if (swaggerEnabled==false)</span>
             {
-<span class="nc" id="L345">               Adminlog.add(Adminlog.TYPE_XSS, &quot;Swagger path is not enabled (conf. swaggerEnabled=false), path=&quot;+path, -1, -1);</span>
-<span class="nc" id="L346">               res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
-<span class="nc" id="L347">               forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
-<span class="nc" id="L348">					return;</span>
+<span class="fc" id="L345">               Adminlog.add(Adminlog.TYPE_XSS, &quot;Swagger path is not enabled (conf. swaggerEnabled=false), path=&quot;+path, -1, -1);</span>
+<span class="fc" id="L346">               res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
+<span class="fc" id="L347">               forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
+<span class="fc" id="L348">					return;</span>
             }
          }
 
@@ -381,13 +381,13 @@ import java.util.*;
 
 <span class="fc" id="L382">			req.setAttribute(&quot;path_filter_orig_docid&quot;, req.getParameter(&quot;docid&quot;));</span>
 
-<span class="pc bpc" id="L384" title="1 of 2 branches missed.">			if (&quot;true&quot;.equals(req.getHeader(&quot;userInServletContext&quot;)))</span>
+<span class="fc bfc" id="L384" title="All 2 branches covered.">			if (&quot;true&quot;.equals(req.getHeader(&quot;userInServletContext&quot;)))</span>
 			{
-<span class="nc" id="L386">				Identity user2 = (Identity)Constants.getServletContext().getAttribute(Constants.USER_KEY);</span>
-<span class="nc bnc" id="L387" title="All 2 branches missed.">				if (user2 != null)</span>
+<span class="fc" id="L386">				Identity user2 = (Identity)Constants.getServletContext().getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L387" title="1 of 2 branches missed.">				if (user2 != null)</span>
 				{
-<span class="nc" id="L389">					LogonTools.setUserToSession(req.getSession(), user2);</span>
-<span class="nc" id="L390">					req.setAttribute(&quot;NO WJTOOLBAR&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L389">					LogonTools.setUserToSession(req.getSession(), user2);</span>
+<span class="fc" id="L390">					req.setAttribute(&quot;NO WJTOOLBAR&quot;, &quot;true&quot;);</span>
 				}
 			}
 
@@ -520,10 +520,10 @@ import java.util.*;
 
 			//trackovanie kliknuti na linku v emaile
 <span class="fc" id="L522">			String dmailStatParamValue = req.getParameter(Constants.getString(&quot;dmailStatParam&quot;));</span>
-<span class="pc bpc" id="L523" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(dmailStatParamValue))</span>
+<span class="fc bfc" id="L523" title="All 2 branches covered.">			if (Tools.isNotEmpty(dmailStatParamValue))</span>
 			{
-<span class="nc" id="L525">				int emailId = Sender.getEmailIdFromClickHash(dmailStatParamValue);</span>
-<span class="nc bnc" id="L526" title="All 2 branches missed.">				if (emailId &gt; 0)</span>
+<span class="fc" id="L525">				int emailId = Sender.getEmailIdFromClickHash(dmailStatParamValue);</span>
+<span class="pc bpc" id="L526" title="1 of 2 branches missed.">				if (emailId &gt; 0)</span>
 				{
 <span class="nc" id="L528">					String extURL = req.getParameter(&quot;extURL&quot;);</span>
 <span class="nc bnc" id="L529" title="All 2 branches missed.">					if (Tools.isNotEmpty(extURL))</span>
@@ -692,7 +692,7 @@ import java.util.*;
 						else
 						{
 <span class="fc" id="L694">							user.setLoginName(username);</span>
-<span class="fc" id="L695">							user.setPasswordPlain(password);</span>
+<span class="fc" id="L695">							user.setPassword(UserTools.PASS_UNCHANGED);</span>
 <span class="fc" id="L696">							user.setValid(true);</span>
 							//je korektne prihlaseny
 <span class="fc" id="L698">							LogonTools.setUserToSession(req.getSession(), user);</span>
@@ -719,7 +719,7 @@ import java.util.*;
 				}
 
 				//ak je to nieco ako /admin.zip /admin~ /admin_backup tak nepresmeruj ale daj chybu
-<span class="pc bpc" id="L722" title="3 of 6 branches missed.">				if (path.startsWith(&quot;/admin&quot;) &amp;&amp; path.indexOf(&quot;/&quot;, 4)==-1 &amp;&amp; path.length()&gt;6) {</span>
+<span class="pc bpc" id="L722" title="1 of 6 branches missed.">				if (path.startsWith(&quot;/admin&quot;) &amp;&amp; path.indexOf(&quot;/&quot;, 4)==-1 &amp;&amp; path.length()&gt;6) {</span>
 <span class="nc" id="L723">					Logger.debug(PathFilter.class, &quot;Is file like, forwarding to 404.jsp&quot;);</span>
 					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
 <span class="nc" id="L725">					res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
@@ -759,13 +759,13 @@ import java.util.*;
 
 <span class="fc bfc" id="L760" title="All 4 branches covered.">			if (path.toLowerCase().endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;/&quot;))</span>
 			{
-<span class="pc bpc" id="L762" title="3 of 6 branches missed.">				if (path.startsWith(&quot;/images&quot;) || path.startsWith(&quot;/files&quot;) || path.startsWith(&quot;/shared&quot;))</span>
+<span class="pc bpc" id="L762" title="2 of 6 branches missed.">				if (path.startsWith(&quot;/images&quot;) || path.startsWith(&quot;/files&quot;) || path.startsWith(&quot;/shared&quot;))</span>
 				{
-<span class="nc" id="L764">					Logger.debug(PathFilter.class, &quot;Volane JSP z nepovoleneho adresara, path=&quot;+path);</span>
+<span class="fc" id="L764">					Logger.debug(PathFilter.class, &quot;Volane JSP z nepovoleneho adresara, path=&quot;+path);</span>
 					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
-<span class="nc" id="L766">					res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
-<span class="nc" id="L767">					forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
-<span class="nc" id="L768">					return;</span>
+<span class="fc" id="L766">					res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
+<span class="fc" id="L767">					forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
+<span class="fc" id="L768">					return;</span>
 				}
 			}
 
@@ -800,7 +800,7 @@ import java.util.*;
 <span class="pc bpc" id="L800" title="1 of 2 branches missed.">				if (doFileForbiddenRedirect(ef, user, path, req, res)) return;</span>
 			}
 
-<span class="pc bpc" id="L803" title="1 of 6 branches missed.">			if (path.contains(&quot;admin/&quot;) &amp;&amp; (path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;.html&quot;)))</span>
+<span class="fc bfc" id="L803" title="All 6 branches covered.">			if (path.contains(&quot;admin/&quot;) &amp;&amp; (path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;.html&quot;)))</span>
 			{
 				//otestuj, ci existuje JSP nahrada
 <span class="fc" id="L806">				File f = new File(Tools.getRealPath(path+&quot;.jsp&quot;));</span>
@@ -876,8 +876,8 @@ import java.util.*;
 				}
 			}
 
-			//posielaj admin/v9/dist/ adresar ako utf-8
-<span class="fc bfc" id="L880" title="All 6 branches covered.">			if (path.startsWith(&quot;/admin/v9/dist&quot;) &amp;&amp; (path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;.css&quot;)))</span>
+			//posielaj admin/v9/dist/ alebo /admin/elFinder adresar ako utf-8
+<span class="fc bfc" id="L880" title="All 8 branches covered.">			if ((path.startsWith(&quot;/admin/v9/dist&quot;) || path.startsWith(&quot;/admin/elFinder&quot;)) &amp;&amp; (path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;.css&quot;)))</span>
 			{
 <span class="fc" id="L882">				IwcmFile f = new IwcmFile(Tools.getRealPath(path));</span>
 <span class="pc bpc" id="L883" title="2 of 4 branches missed.">				if (f.exists() &amp;&amp; f.canRead())</span>
@@ -903,27 +903,43 @@ import java.util.*;
 			}
 
 			//toto standardne Tomcat nepozna, pridame hlavicky podla specky
-<span class="fc bfc" id="L906" title="All 4 branches covered.">			if (path.endsWith(&quot;.woff2&quot;) || path.endsWith(&quot;.woff&quot;))</span>
+<span class="pc bpc" id="L906" title="1 of 4 branches missed.">			if (path.endsWith(&quot;.woff2&quot;) || path.endsWith(&quot;.woff&quot;))</span>
 			{
-<span class="fc bfc" id="L908" title="All 2 branches covered.">				if (path.endsWith(&quot;.woff2&quot;)) res.setHeader(&quot;Content-Type&quot;, &quot;font/woff2&quot;);</span>
-<span class="fc" id="L909">				else res.setHeader(&quot;Content-Type&quot;, &quot;font/woff&quot;);</span>
+<span class="pc bpc" id="L908" title="1 of 2 branches missed.">				if (path.endsWith(&quot;.woff2&quot;)) res.setHeader(&quot;Content-Type&quot;, &quot;font/woff2&quot;);</span>
+<span class="nc" id="L909">				else res.setHeader(&quot;Content-Type&quot;, &quot;font/woff&quot;);</span>
+			}
+
+			//disable direct call to abtesting variant URL eg. /investicie/abtestvariantb.html for NON admin users
+<span class="fc bfc" id="L913" title="All 2 branches covered.">			if (path.contains(Constants.getString(&quot;ABTestingName&quot;)))</span>
+			{
+<span class="fc bfc" id="L915" title="All 2 branches covered.">				if (Constants.getBoolean(&quot;ABTestingAllowVariantUrl&quot;)==false) {</span>
+<span class="pc bpc" id="L916" title="1 of 4 branches missed.">					if (user == null || user.isAdmin()==false) {</span>
+<span class="fc" id="L917">						Logger.debug(PathFilter.class, &quot;ABTesting direct call, not allowed for non admin, forwarding to 404.jsp&quot;);</span>
+<span class="fc" id="L918">						res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
+<span class="fc" id="L919">						forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
+<span class="fc" id="L920">						return;</span>
+					}
+				} else {
+					//prefer URL variant instead of cookie value
+<span class="fc" id="L924">					req.setAttribute(&quot;ABTestingPrefferVariantUrl&quot;, &quot;true&quot;);</span>
+				}
 			}
 
 			//accessDocId je docId web stranky, ktoru sa zobrazuje, ku ktorej sa pristupuje z verejnej casti sidla, nie admin cast
-<span class="fc" id="L913">			DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L914">			String domain = DocDB.getDomain(req);</span>
-<span class="fc" id="L915">			int accessDocId = -1;</span>
+<span class="fc" id="L929">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L930">			String domain = DocDB.getDomain(req);</span>
+<span class="fc" id="L931">			int accessDocId = -1;</span>
 			//files adresar musime nechat povoleny kvoli linkam z fulltext indexu (/files/subor.xls.html) a presmerovaniu na subor.xls
-<span class="pc bpc" id="L917" title="1 of 6 branches missed.">			if (path.startsWith(&quot;/images&quot;)==false &amp;&amp; path.startsWith(&quot;/css&quot;)==false &amp;&amp; path.startsWith(&quot;/jscripts&quot;)==false)</span>
+<span class="pc bpc" id="L933" title="1 of 6 branches missed.">			if (path.startsWith(&quot;/images&quot;)==false &amp;&amp; path.startsWith(&quot;/css&quot;)==false &amp;&amp; path.startsWith(&quot;/jscripts&quot;)==false)</span>
 			{
-<span class="pc bpc" id="L919" title="1 of 2 branches missed.">				if (Constants.getBoolean(&quot;ABTesting&quot;)==true)</span>
+<span class="pc bpc" id="L935" title="1 of 2 branches missed.">				if (Constants.getBoolean(&quot;ABTesting&quot;)==true)</span>
 				{
-<span class="fc" id="L921">					accessDocId = ABTesting.getVirtualPathDocId(path, domain, req, res);</span>
+<span class="fc" id="L937">					accessDocId = ABTesting.getVirtualPathDocId(path, domain, req, res);</span>
 				}
 				else
 				{
 					//upravene takto ak nie je vobec abtesting trieda dostupna (napr. v cloude)
-<span class="nc" id="L926">					accessDocId = docDB.getVirtualPathDocId(path, domain);</span>
+<span class="nc" id="L942">					accessDocId = docDB.getVirtualPathDocId(path, domain);</span>
 				}
 			}
 
@@ -935,198 +951,198 @@ import java.util.*;
 				}
 				*/
 
-<span class="fc bfc" id="L938" title="All 2 branches covered.">			if (accessDocId &gt; 0)</span>
+<span class="fc bfc" id="L954" title="All 2 branches covered.">			if (accessDocId &gt; 0)</span>
 			{
 				//kontrola spravnosti domeny
-<span class="pc bpc" id="L941" title="1 of 2 branches missed.">				if (!checkDomain(req))</span>
+<span class="pc bpc" id="L957" title="1 of 2 branches missed.">				if (!checkDomain(req))</span>
 				{
-<span class="nc" id="L943">					Logger.debug(PathFilter.class, &quot;checkDomain=false, forwarding to 404.jsp&quot;);</span>
-<span class="nc" id="L944">					res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
-<span class="nc" id="L945">					forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
-<span class="nc" id="L946">					return;</span>
+<span class="nc" id="L959">					Logger.debug(PathFilter.class, &quot;checkDomain=false, forwarding to 404.jsp&quot;);</span>
+<span class="nc" id="L960">					res.setStatus(HttpServletResponse.SC_NOT_FOUND);</span>
+<span class="nc" id="L961">					forwardSafely(&quot;/404.jsp&quot;, req, res);</span>
+<span class="nc" id="L962">					return;</span>
 				}
 
 				//porovnaj URL a pripadne sprav redirect
-<span class="fc" id="L950">				String realUrl = docDB.getDocLink(accessDocId, req);</span>
-<span class="pc bpc" id="L951" title="1 of 6 branches missed.">				if (realUrl!=null &amp;&amp; realUrl.equals(path)==false &amp;&amp; !realUrl.contains(Constants.getString(&quot;ABTestingName&quot;)))</span>
+<span class="fc" id="L966">				String realUrl = docDB.getDocLink(accessDocId, req);</span>
+<span class="pc bpc" id="L967" title="1 of 6 branches missed.">				if (realUrl!=null &amp;&amp; realUrl.equals(path)==false &amp;&amp; !realUrl.contains(Constants.getString(&quot;ABTestingName&quot;)))</span>
 				{
 					//URL so znakom * sa odstranuju, musime specialne skontrolovat
-<span class="fc" id="L954">					String virtualPath = docDB.getBasicDocDetails(accessDocId, true).getVirtualPath();</span>
-<span class="pc bpc" id="L955" title="1 of 4 branches missed.">					if (virtualPath == null || virtualPath.indexOf(&quot;*&quot;)==-1)</span>
+<span class="fc" id="L970">					String virtualPath = docDB.getBasicDocDetails(accessDocId, true).getVirtualPath();</span>
+<span class="pc bpc" id="L971" title="1 of 4 branches missed.">					if (virtualPath == null || virtualPath.indexOf(&quot;*&quot;)==-1)</span>
 					{
-<span class="fc" id="L957">						Logger.debug(PathFilter.class, &quot;nesedi real URL, redirecting to: &quot;+realUrl);</span>
-<span class="fc" id="L958">						res.setStatus(301);</span>
-<span class="pc bpc" id="L959" title="1 of 2 branches missed.">						if (Tools.isNotEmpty(req.getQueryString())) realUrl += '?'+req.getQueryString();</span>
-<span class="pc bpc" id="L960" title="1 of 2 branches missed.">						if (realUrl.toLowerCase().startsWith(&quot;http&quot;)==false) realUrl = Tools.getBaseHref(req)+realUrl;</span>
-<span class="fc" id="L961">						res.setHeader(&quot;Location&quot;, Tools.sanitizeHttpHeaderParam(realUrl));</span>
-<span class="fc" id="L962">						return;</span>
+<span class="fc" id="L973">						Logger.debug(PathFilter.class, &quot;nesedi real URL, redirecting to: &quot;+realUrl);</span>
+<span class="fc" id="L974">						res.setStatus(301);</span>
+<span class="pc bpc" id="L975" title="1 of 2 branches missed.">						if (Tools.isNotEmpty(req.getQueryString())) realUrl += '?'+req.getQueryString();</span>
+<span class="pc bpc" id="L976" title="1 of 2 branches missed.">						if (realUrl.toLowerCase().startsWith(&quot;http&quot;)==false) realUrl = Tools.getBaseHref(req)+realUrl;</span>
+<span class="fc" id="L977">						res.setHeader(&quot;Location&quot;, Tools.sanitizeHttpHeaderParam(realUrl));</span>
+<span class="fc" id="L978">						return;</span>
 					}
 				}
 
 				//	setni data pre SessionListener - customer cast
-<span class="fc" id="L967">				String lastURL = path;</span>
-<span class="fc bfc" id="L968" title="All 2 branches covered.">				if (req.getQueryString()!=null)</span>
+<span class="fc" id="L983">				String lastURL = path;</span>
+<span class="fc bfc" id="L984" title="All 2 branches covered.">				if (req.getQueryString()!=null)</span>
 				{
-<span class="fc" id="L970">					path = path + &quot;?&quot; + req.getQueryString();</span>
+<span class="fc" id="L986">					path = path + &quot;?&quot; + req.getQueryString();</span>
 				}
 
-<span class="pc bpc" id="L973" title="1 of 2 branches missed.">				if (holder.set(req.getSession().getId(), lastURL, req)==false)</span>
+<span class="pc bpc" id="L989" title="1 of 2 branches missed.">				if (holder.set(req.getSession().getId(), lastURL, req)==false)</span>
 				{
 					//nastalo session stealing, spravime redirect aby nenastavali exception v JSP
 
-<span class="nc" id="L977">					StringBuilder redirPath = new StringBuilder(path);</span>
-<span class="nc bnc" id="L978" title="All 2 branches missed.">					if (Tools.isNotEmpty(req.getQueryString())) redirPath.append('?').append(req.getQueryString());</span>
+<span class="nc" id="L993">					StringBuilder redirPath = new StringBuilder(path);</span>
+<span class="nc bnc" id="L994" title="All 2 branches missed.">					if (Tools.isNotEmpty(req.getQueryString())) redirPath.append('?').append(req.getQueryString());</span>
 
-<span class="nc" id="L980">					res.sendRedirect(Tools.sanitizeHttpHeaderParam(redirPath.toString()));</span>
-<span class="nc" id="L981">					return;</span>
+<span class="nc" id="L996">					res.sendRedirect(Tools.sanitizeHttpHeaderParam(redirPath.toString()));</span>
+<span class="nc" id="L997">					return;</span>
 				}
 
 				//akoze skuska ochrany pred chybou Cannot create a session after the response has been committed
-<span class="fc bfc" id="L985" title="All 2 branches covered.">				if (req.getSession().getAttribute(&quot;preventCannotCreateSession&quot;)==null)</span>
+<span class="fc bfc" id="L1001" title="All 2 branches covered.">				if (req.getSession().getAttribute(&quot;preventCannotCreateSession&quot;)==null)</span>
 				{
-<span class="fc" id="L987">					req.getSession().setAttribute(&quot;preventCannotCreateSession&quot;, &quot;1&quot;);</span>
+<span class="fc" id="L1003">					req.getSession().setAttribute(&quot;preventCannotCreateSession&quot;, &quot;1&quot;);</span>
 				}
 
 				//Logger.println(this,&quot;forwarding to docId: &quot; + docId);
-<span class="fc" id="L991">				StringBuilder url = new StringBuilder(&quot;/showdoc.do?docid=&quot;).append(accessDocId);</span>
+<span class="fc" id="L1007">				StringBuilder url = new StringBuilder(&quot;/showdoc.do?docid=&quot;).append(accessDocId);</span>
 
-<span class="fc bfc" id="L993" title="All 2 branches covered.">				if (&quot;get&quot;.equalsIgnoreCase(req.getMethod()))</span>
+<span class="fc bfc" id="L1009" title="All 2 branches covered.">				if (&quot;get&quot;.equalsIgnoreCase(req.getMethod()))</span>
 				{
 					String name;
 					String[] values;
-<span class="fc" id="L997">					Enumeration&lt;String&gt; params = req.getParameterNames();</span>
-<span class="fc bfc" id="L998" title="All 2 branches covered.">					while (params.hasMoreElements())</span>
+<span class="fc" id="L1013">					Enumeration&lt;String&gt; params = req.getParameterNames();</span>
+<span class="fc bfc" id="L1014" title="All 2 branches covered.">					while (params.hasMoreElements())</span>
 					{
-<span class="fc" id="L1000">						name = params.nextElement();</span>
-<span class="pc bpc" id="L1001" title="1 of 4 branches missed.">						if (name.equals(&quot;docid&quot;) || name.equals(&quot;password&quot;)) continue;</span>
-<span class="fc" id="L1002">						values = req.getParameterValues(name);</span>
-<span class="fc bfc" id="L1003" title="All 2 branches covered.">						for (int i = 0; i &lt; values.length; i++)</span>
+<span class="fc" id="L1016">						name = params.nextElement();</span>
+<span class="pc bpc" id="L1017" title="1 of 4 branches missed.">						if (name.equals(&quot;docid&quot;) || name.equals(&quot;password&quot;)) continue;</span>
+<span class="fc" id="L1018">						values = req.getParameterValues(name);</span>
+<span class="fc bfc" id="L1019" title="All 2 branches covered.">						for (int i = 0; i &lt; values.length; i++)</span>
 						{
-<span class="fc" id="L1005">							url.append(&quot;&amp;&quot;).append(Tools.sanitizeHttpHeaderParam(name)).append('=').append(Tools.sanitizeHttpHeaderParam(values[i]));</span>
+<span class="fc" id="L1021">							url.append(&quot;&amp;&quot;).append(Tools.sanitizeHttpHeaderParam(name)).append('=').append(Tools.sanitizeHttpHeaderParam(values[i]));</span>
 						}
 					}
 				}
 
-<span class="fc" id="L1010">				Logger.debug(PathFilter.class, &quot;PathFilter, url: &quot; + url + &quot; domain=&quot;+domain+&quot; origUrl=&quot;+path+&quot; qs=&quot;+req.getQueryString());</span>
-<span class="pc bpc" id="L1011" title="9 of 10 branches missed.">				if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML || path.endsWith(&quot;.php&quot;) || path.endsWith(&quot;.asp&quot;) || path.endsWith(&quot;.aspx&quot;) || Constants.getBoolean(&quot;forwardVirtualPath&quot;))</span>
+<span class="fc" id="L1026">				Logger.debug(PathFilter.class, &quot;PathFilter, url: &quot; + url + &quot; domain=&quot;+domain+&quot; origUrl=&quot;+path+&quot; qs=&quot;+req.getQueryString());</span>
+<span class="pc bpc" id="L1027" title="9 of 10 branches missed.">				if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML || path.endsWith(&quot;.php&quot;) || path.endsWith(&quot;.asp&quot;) || path.endsWith(&quot;.aspx&quot;) || Constants.getBoolean(&quot;forwardVirtualPath&quot;))</span>
 				{
-<span class="fc" id="L1013">					req.setAttribute(&quot;docid&quot;, Integer.toString(accessDocId));</span>
-<span class="fc" id="L1014">					Logger.debug(PathFilter.class, &quot;forwarding1: req=&quot; + req + &quot; resp=&quot;+res);</span>
+<span class="fc" id="L1029">					req.setAttribute(&quot;docid&quot;, Integer.toString(accessDocId));</span>
+<span class="fc" id="L1030">					Logger.debug(PathFilter.class, &quot;forwarding1: req=&quot; + req + &quot; resp=&quot;+res);</span>
 
-<span class="fc" id="L1016">					String packagerMode = Constants.getString(&quot;packagerMode&quot;);</span>
-<span class="fc" id="L1017">					String packagerModeParam = req.getParameter(&quot;_packagerMode&quot;);</span>
-<span class="pc bpc" id="L1018" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(packagerModeParam)) packagerMode = packagerModeParam;</span>
+<span class="fc" id="L1032">					String packagerMode = Constants.getString(&quot;packagerMode&quot;);</span>
+<span class="fc" id="L1033">					String packagerModeParam = req.getParameter(&quot;_packagerMode&quot;);</span>
+<span class="pc bpc" id="L1034" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(packagerModeParam)) packagerMode = packagerModeParam;</span>
 
-<span class="pc bpc" id="L1020" title="3 of 4 branches missed.">					if (Tools.isEmpty(packagerMode) || &quot;none&quot;.endsWith(packagerMode))</span>
+<span class="pc bpc" id="L1036" title="3 of 4 branches missed.">					if (Tools.isEmpty(packagerMode) || &quot;none&quot;.endsWith(packagerMode))</span>
 					{
-<span class="fc" id="L1022">						req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot; + accessDocId).forward(req, res);</span>
+<span class="fc" id="L1038">						req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot; + accessDocId).forward(req, res);</span>
 					}
 					else
 					{
-<span class="nc" id="L1026">						long start = Tools.getNow();</span>
+<span class="nc" id="L1042">						long start = Tools.getNow();</span>
 
-<span class="nc" id="L1028">						WJResponseWrapper respWrapper = new WJResponseWrapper(res, req);</span>
-<span class="nc" id="L1029">						req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot; + accessDocId).forward(req, respWrapper);</span>
-<span class="nc" id="L1030">						StringBuilder htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());</span>
+<span class="nc" id="L1044">						WJResponseWrapper respWrapper = new WJResponseWrapper(res, req);</span>
+<span class="nc" id="L1045">						req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot; + accessDocId).forward(req, respWrapper);</span>
+<span class="nc" id="L1046">						StringBuilder htmlCode = new StringBuilder(respWrapper.strWriter.getBuffer().toString());</span>
 
-<span class="nc" id="L1032">						String fixedHtml = htmlCode.toString();</span>
+<span class="nc" id="L1048">						String fixedHtml = htmlCode.toString();</span>
 
 						//moznost prepnutia packagera (pre kazdy pripad)
-<span class="nc" id="L1035">						String packagerModeAttr = (String)req.getAttribute(&quot;packagerMode&quot;);</span>
-<span class="nc bnc" id="L1036" title="All 2 branches missed.">						if (packagerModeAttr!=null) packagerMode = packagerModeAttr;</span>
+<span class="nc" id="L1051">						String packagerModeAttr = (String)req.getAttribute(&quot;packagerMode&quot;);</span>
+<span class="nc bnc" id="L1052" title="All 2 branches missed.">						if (packagerModeAttr!=null) packagerMode = packagerModeAttr;</span>
 
 						//ak je treba posli redirect
-<span class="nc bnc" id="L1039" title="All 2 branches missed.">						if (Tools.isNotEmpty(respWrapper.getRedirectURL())) res.sendRedirect(respWrapper.getRedirectURL());</span>
+<span class="nc bnc" id="L1055" title="All 2 branches missed.">						if (Tools.isNotEmpty(respWrapper.getRedirectURL())) res.sendRedirect(respWrapper.getRedirectURL());</span>
 
-<span class="nc" id="L1041">						long end = Tools.getNow();</span>
-<span class="nc" id="L1042">						Logger.debug(PathFilter.class, &quot;Packager: HTML packaging tooks: &quot; + (end-start) + &quot;ms&quot;);</span>
+<span class="nc" id="L1057">						long end = Tools.getNow();</span>
+<span class="nc" id="L1058">						Logger.debug(PathFilter.class, &quot;Packager: HTML packaging tooks: &quot; + (end-start) + &quot;ms&quot;);</span>
 
 						//zapis vystup
-<span class="nc" id="L1045">						respWrapper.writeResponseToOriginalOutput(req, fixedHtml);</span>
+<span class="nc" id="L1061">						respWrapper.writeResponseToOriginalOutput(req, fixedHtml);</span>
 					}
-<span class="fc" id="L1047">				}</span>
+<span class="fc" id="L1063">				}</span>
 				else
 				{
-<span class="nc" id="L1050">					Logger.debug(PathFilter.class, &quot;redirecting: req=&quot;+req+&quot; resp=&quot;+res);</span>
-<span class="nc" id="L1051">					res.sendRedirect(req.getContextPath() + url.toString());</span>
+<span class="nc" id="L1066">					Logger.debug(PathFilter.class, &quot;redirecting: req=&quot;+req+&quot; resp=&quot;+res);</span>
+<span class="nc" id="L1067">					res.sendRedirect(req.getContextPath() + url.toString());</span>
 				}
-<span class="pc bpc" id="L1053" title="1 of 2 branches missed.">				if (timer != null)</span>
+<span class="pc bpc" id="L1069" title="1 of 2 branches missed.">				if (timer != null)</span>
 				{
-<span class="nc" id="L1055">					timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
-<span class="nc" id="L1056">					DBPool.getInstance().logConnections();</span>
+<span class="nc" id="L1071">					timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
+<span class="nc" id="L1072">					DBPool.getInstance().logConnections();</span>
 				}
-<span class="fc" id="L1058">				return;</span>
+<span class="fc" id="L1074">				return;</span>
 			}
 			else
 			{
-<span class="fc bfc" id="L1062" title="All 2 branches covered.">				if (&quot;/sitemap.xml&quot;.equals(path))</span>
+<span class="fc bfc" id="L1078" title="All 2 branches covered.">				if (&quot;/sitemap.xml&quot;.equals(path))</span>
 				{
 					//nie je definovana stranka s URL /sitemap.xml, priamo forwardnem
 					//je to tu kvoli cloudu, pretoze do 404.jsp uz dorazi request a nema RequestBean (zjavne sa to vola az po skonceni filtrov)
-<span class="fc" id="L1066">					res.setContentType(&quot;text/xml; charset=utf-8&quot;);</span>
-<span class="fc" id="L1067">					res.setStatus(HttpServletResponse.SC_OK);</span>
-<span class="fc" id="L1068">					String customPage = WriteTagToolsForCore.getCustomPage(&quot;/components/sitemap/google-sitemap.jsp&quot;, req);</span>
-<span class="fc" id="L1069">					forwardSafely(customPage, req, res);</span>
-<span class="fc" id="L1070">					return;</span>
+<span class="fc" id="L1082">					res.setContentType(&quot;text/xml; charset=utf-8&quot;);</span>
+<span class="fc" id="L1083">					res.setStatus(HttpServletResponse.SC_OK);</span>
+<span class="fc" id="L1084">					String customPage = WriteTagToolsForCore.getCustomPage(&quot;/components/sitemap/google-sitemap.jsp&quot;, req);</span>
+<span class="fc" id="L1085">					forwardSafely(customPage, req, res);</span>
+<span class="fc" id="L1086">					return;</span>
 				}
 			}
 
-<span class="pc bpc" id="L1074" title="1 of 8 branches missed.">			if ((path.startsWith(&quot;/components/&quot;) || path.startsWith(&quot;/templates/&quot;)) &amp;&amp; path.lastIndexOf('.') &gt; path.lastIndexOf('/') &amp;&amp; path.equals(&quot;/components/editoricon.gif&quot;)==false)</span>
+<span class="pc bpc" id="L1090" title="1 of 8 branches missed.">			if ((path.startsWith(&quot;/components/&quot;) || path.startsWith(&quot;/templates/&quot;)) &amp;&amp; path.lastIndexOf('.') &gt; path.lastIndexOf('/') &amp;&amp; path.equals(&quot;/components/editoricon.gif&quot;)==false)</span>
 			{
 				try
 				{
 					//skus najst nahradu za pozadovanu stranku
-<span class="fc" id="L1079">					String customPage = WriteTagToolsForCore.getCustomPage(path, req);</span>
-<span class="pc bpc" id="L1080" title="1 of 2 branches missed.">					if (customPage.equals(path)==false)</span>
+<span class="fc" id="L1095">					String customPage = WriteTagToolsForCore.getCustomPage(path, req);</span>
+<span class="pc bpc" id="L1096" title="1 of 2 branches missed.">					if (customPage.equals(path)==false)</span>
 					{
-<span class="nc" id="L1082">						forwardSafely(customPage, req, res);</span>
-<span class="nc" id="L1083">						return;</span>
+<span class="nc" id="L1098">						forwardSafely(customPage, req, res);</span>
+<span class="nc" id="L1099">						return;</span>
 					}
 
-<span class="fc bfc" id="L1086" title="All 2 branches covered.">					if (path.endsWith(&quot;editor_component.jsp&quot;))</span>
+<span class="fc bfc" id="L1102" title="All 2 branches covered.">					if (path.endsWith(&quot;editor_component.jsp&quot;))</span>
 					{
 						//over ci existuje, ak nie, pouzi defaultnu
-<span class="fc bfc" id="L1089" title="All 2 branches covered.">						if (WriteTagToolsForCore.isFileExists(path)==false)</span>
+<span class="fc bfc" id="L1105" title="All 2 branches covered.">						if (WriteTagToolsForCore.isFileExists(path)==false)</span>
 						{
 							try
 							{
 								//tu mame plne meno povodneho suboru v include
-<span class="fc" id="L1094">								String jspFileName = req.getParameter(&quot;jspFileName&quot;);</span>
-<span class="pc bpc" id="L1095" title="1 of 2 branches missed.">								if (jspFileName != null)</span>
+<span class="fc" id="L1110">								String jspFileName = req.getParameter(&quot;jspFileName&quot;);</span>
+<span class="pc bpc" id="L1111" title="1 of 2 branches missed.">								if (jspFileName != null)</span>
 								{
-<span class="nc bnc" id="L1097" title="All 2 branches missed.">									if (jspFileName.startsWith(&quot;!INCLUDE(&quot;)) jspFileName = jspFileName.substring(9).trim();</span>
+<span class="nc bnc" id="L1113" title="All 2 branches missed.">									if (jspFileName.startsWith(&quot;!INCLUDE(&quot;)) jspFileName = jspFileName.substring(9).trim();</span>
 
 									//skus verziu s odstranenou druhou castou, /components/iway/news/editor_component.jsp -&gt; /components/news/editor_component.jsp
-<span class="nc" id="L1100">									String pathBezDruhejCasti = &quot;/components&quot;+path.substring(path.indexOf(&quot;/&quot;, 13));</span>
-<span class="nc bnc" id="L1101" title="All 2 branches missed.">									if (WriteTagToolsForCore.isFileExists(pathBezDruhejCasti))</span>
+<span class="nc" id="L1116">									String pathBezDruhejCasti = &quot;/components&quot;+path.substring(path.indexOf(&quot;/&quot;, 13));</span>
+<span class="nc bnc" id="L1117" title="All 2 branches missed.">									if (WriteTagToolsForCore.isFileExists(pathBezDruhejCasti))</span>
 									{
 										//mame custom subor, ak ale existuje nastaveny CONF kluc k danemu suboru nepouzijeme
-<span class="nc" id="L1104">										String CONF_KEY = jspFileName.substring(0, jspFileName.lastIndexOf('.')).replace('/', '.').substring(1);</span>
-<span class="nc" id="L1105">										Prop prop = Prop.getInstance(req);</span>
+<span class="nc" id="L1120">										String CONF_KEY = jspFileName.substring(0, jspFileName.lastIndexOf('.')).replace('/', '.').substring(1);</span>
+<span class="nc" id="L1121">										Prop prop = Prop.getInstance(req);</span>
 										//ak kluc neexistuje pouzijeme
-<span class="nc bnc" id="L1107" title="All 4 branches missed.">										if (prop.getText(CONF_KEY+&quot;.conf.propSearchKey&quot;).equals(CONF_KEY+&quot;.conf.propSearchKey&quot;) &amp;&amp; prop.getText(CONF_KEY+&quot;.conf&quot;).equals(CONF_KEY+&quot;.conf&quot;))</span>
+<span class="nc bnc" id="L1123" title="All 4 branches missed.">										if (prop.getText(CONF_KEY+&quot;.conf.propSearchKey&quot;).equals(CONF_KEY+&quot;.conf.propSearchKey&quot;) &amp;&amp; prop.getText(CONF_KEY+&quot;.conf&quot;).equals(CONF_KEY+&quot;.conf&quot;))</span>
 										{
-<span class="nc" id="L1109">											Logger.debug(PathFilter.class, &quot;forwarding to:&quot;+pathBezDruhejCasti);</span>
-<span class="nc" id="L1110">											req.getRequestDispatcher(WriteTagToolsForCore.getCustomPage(pathBezDruhejCasti, req)).forward(req, res);</span>
+<span class="nc" id="L1125">											Logger.debug(PathFilter.class, &quot;forwarding to:&quot;+pathBezDruhejCasti);</span>
+<span class="nc" id="L1126">											req.getRequestDispatcher(WriteTagToolsForCore.getCustomPage(pathBezDruhejCasti, req)).forward(req, res);</span>
 										}
 									}
 								}
 							}
-<span class="nc" id="L1115">							catch (Exception ex)</span>
+<span class="nc" id="L1131">							catch (Exception ex)</span>
 							{
-<span class="nc" id="L1117">								sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L1118">							}</span>
+<span class="nc" id="L1133">								sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1134">							}</span>
 
-<span class="fc" id="L1120">							req.getRequestDispatcher(WriteTagToolsForCore.getCustomPage(&quot;/components/editor_component_universal.jsp&quot;, req)).forward(req, res);</span>
-<span class="fc" id="L1121">							return;</span>
+<span class="fc" id="L1136">							req.getRequestDispatcher(WriteTagToolsForCore.getCustomPage(&quot;/components/editor_component_universal.jsp&quot;, req)).forward(req, res);</span>
+<span class="fc" id="L1137">							return;</span>
 						}
 
 					}
 				}
-<span class="nc" id="L1126">				catch (RuntimeException e)</span>
+<span class="nc" id="L1142">				catch (RuntimeException e)</span>
 				{
-<span class="nc" id="L1128">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L1129">				}</span>
+<span class="nc" id="L1144">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L1145">				}</span>
 
 			}
 			//podpora custom pluginov v editore - NETREBA uz bereme z dist priecinka
@@ -1141,168 +1157,168 @@ import java.util.*;
 					return;
 				}
 			}*/
-<span class="pc bpc" id="L1144" title="2 of 4 branches missed.">			if (path.endsWith(&quot;.php&quot;) || path.endsWith(&quot;.asp&quot;))</span>
+<span class="pc bpc" id="L1160" title="2 of 4 branches missed.">			if (path.endsWith(&quot;.php&quot;) || path.endsWith(&quot;.asp&quot;))</span>
 			{
 				//skus najst JSP verziu stranky
-<span class="nc" id="L1147">				String jspPath = path.substring(0, path.length() - 4) + &quot;.jsp&quot;;</span>
-<span class="nc" id="L1148">				File jspFile = new File(Tools.getRealPath(jspPath));</span>
-<span class="nc bnc" id="L1149" title="All 2 branches missed.">				if (jspFile.exists())</span>
+<span class="nc" id="L1163">				String jspPath = path.substring(0, path.length() - 4) + &quot;.jsp&quot;;</span>
+<span class="nc" id="L1164">				File jspFile = new File(Tools.getRealPath(jspPath));</span>
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">				if (jspFile.exists())</span>
 				{
-<span class="nc" id="L1151">					forwardSafely(jspPath, req, res);</span>
-<span class="nc bnc" id="L1152" title="All 2 branches missed.">					if (timer != null)</span>
+<span class="nc" id="L1167">					forwardSafely(jspPath, req, res);</span>
+<span class="nc bnc" id="L1168" title="All 2 branches missed.">					if (timer != null)</span>
 					{
-<span class="nc" id="L1154">						timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
-<span class="nc" id="L1155">						DBPool.getInstance().logConnections();</span>
+<span class="nc" id="L1170">						timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
+<span class="nc" id="L1171">						DBPool.getInstance().logConnections();</span>
 					}
-<span class="nc" id="L1157">					return;</span>
+<span class="nc" id="L1173">					return;</span>
 				}
 			}
-<span class="pc bpc" id="L1160" title="1 of 2 branches missed.">			if (customPath != null)</span>
+<span class="pc bpc" id="L1176" title="1 of 2 branches missed.">			if (customPath != null)</span>
 			{
 				//skontroluj, ci pozadovany subor nie je custom
-<span class="nc" id="L1163">				IwcmFile f = new IwcmFile(customPath + File.separatorChar + Constants.getInstallName() + path.replace('/', File.separatorChar));</span>
+<span class="nc" id="L1179">				IwcmFile f = new IwcmFile(customPath + File.separatorChar + Constants.getInstallName() + path.replace('/', File.separatorChar));</span>
 
-<span class="nc bnc" id="L1165" title="All 2 branches missed.">				if (f.exists()==false)</span>
+<span class="nc bnc" id="L1181" title="All 2 branches missed.">				if (f.exists()==false)</span>
 				{
-<span class="nc" id="L1167">					f = new IwcmFile(Tools.getRealPath(&quot;/templates/&quot; + Constants.getInstallName() + &quot;/assets&quot; + path));</span>
+<span class="nc" id="L1183">					f = new IwcmFile(Tools.getRealPath(&quot;/templates/&quot; + Constants.getInstallName() + &quot;/assets&quot; + path));</span>
 				}
 
-<span class="nc bnc" id="L1170" title="All 12 branches missed.">				if (f.exists()==false &amp;&amp; path.contains(&quot;/admin/docsify/&quot;) &amp;&amp; &quot;iwcm.interway.sk&quot;.equals(req.getServerName()) &amp;&amp; user != null &amp;&amp; user.isAdmin() &amp;&amp; path.contains(&quot;..&quot;)==false)</span>
+<span class="nc bnc" id="L1186" title="All 12 branches missed.">				if (f.exists()==false &amp;&amp; path.contains(&quot;/admin/docsify/&quot;) &amp;&amp; &quot;iwcm.interway.sk&quot;.equals(req.getServerName()) &amp;&amp; user != null &amp;&amp; user.isAdmin() &amp;&amp; path.contains(&quot;..&quot;)==false)</span>
                 {
                     //je to docsify subor, ten mame inde, musime upravit
-<span class="nc" id="L1173">                    f = new IwcmFile(Tools.getRealPath(&quot;/&quot;));</span>
-<span class="nc" id="L1174">                    f = new IwcmFile(f.getParentFile(), path.substring(6).replace('/', File.separatorChar));</span>
+<span class="nc" id="L1189">                    f = new IwcmFile(Tools.getRealPath(&quot;/&quot;));</span>
+<span class="nc" id="L1190">                    f = new IwcmFile(f.getParentFile(), path.substring(6).replace('/', File.separatorChar));</span>
                 }
 
 				//Logger.println(this,&quot;Checking CUSTOM: &quot;+f.getAbsolutePath());
-<span class="nc bnc" id="L1178" title="All 4 branches missed.">				if (f.exists() &amp;&amp; f.isFile())</span>
+<span class="nc bnc" id="L1194" title="All 4 branches missed.">				if (f.exists() &amp;&amp; f.isFile())</span>
 				{
 					//existuje custom subor, posli ho na vystup
-<span class="nc bnc" id="L1181" title="All 4 branches missed.">					if (path.toLowerCase().endsWith(&quot;.jsp&quot;) || path.toLowerCase().endsWith(&quot;.class&quot;))</span>
+<span class="nc bnc" id="L1197" title="All 4 branches missed.">					if (path.toLowerCase().endsWith(&quot;.jsp&quot;) || path.toLowerCase().endsWith(&quot;.class&quot;))</span>
 					{
 						//toto este nevieme, nerob nic
-<span class="nc" id="L1184">						Logger.error(this,&quot;TOTO AKO CUSTOM NEVIEM: &quot; + path);</span>
+<span class="nc" id="L1200">						Logger.error(this,&quot;TOTO AKO CUSTOM NEVIEM: &quot; + path);</span>
 					}
 					else
 					{
 						//Logger.println(this,&quot;sending custom page:
 						// &quot;+f.getAbsolutePath());
 						//je to nejaky obrazok, alebo subor, posli na vystup
-<span class="nc" id="L1191">						FilePathTools.writeFileOut(f, req, res);</span>
+<span class="nc" id="L1207">						FilePathTools.writeFileOut(f, req, res);</span>
 						//Logger.println(this,&quot;Zapisany subor: &quot; + path);
-<span class="nc bnc" id="L1193" title="All 2 branches missed.">						if (timer != null)</span>
+<span class="nc bnc" id="L1209" title="All 2 branches missed.">						if (timer != null)</span>
 						{
-<span class="nc" id="L1195">							timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
-<span class="nc" id="L1196">							DBPool.getInstance().logConnections();</span>
+<span class="nc" id="L1211">							timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
+<span class="nc" id="L1212">							DBPool.getInstance().logConnections();</span>
 						}
-<span class="nc" id="L1198">						return;</span>
+<span class="nc" id="L1214">						return;</span>
 					}
 				}
 			}
 
-<span class="pc bpc" id="L1203" title="1 of 2 branches missed.">			if (FilePathTools.isExternalDir(path))</span>
+<span class="fc bfc" id="L1219" title="All 4 branches covered.">			if (FilePathTools.isExternalDir(path) &amp;&amp; path.startsWith(&quot;/files/protected/&quot;)==false)</span>
 			{
 				//externy adresar pre cloudStaticFilesDir folder
-<span class="nc" id="L1206">				boolean fileWritten = FilePathTools.writeFileOut(path, req, res);</span>
-<span class="nc bnc" id="L1207" title="All 2 branches missed.">				if (fileWritten)</span>
+<span class="fc" id="L1222">				boolean fileWritten = FilePathTools.writeFileOut(path, req, res);</span>
+<span class="pc bpc" id="L1223" title="1 of 2 branches missed.">				if (fileWritten)</span>
 				{
-<span class="nc bnc" id="L1209" title="All 2 branches missed.">					if (timer != null)</span>
+<span class="pc bpc" id="L1225" title="1 of 2 branches missed.">					if (timer != null)</span>
 					{
-<span class="nc" id="L1211">						timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
-<span class="nc" id="L1212">						DBPool.getInstance().logConnections();</span>
+<span class="nc" id="L1227">						timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
+<span class="nc" id="L1228">						DBPool.getInstance().logConnections();</span>
 					}
-<span class="nc" id="L1214">					return;</span>
+<span class="fc" id="L1230">					return;</span>
 				}
 			}
 
 			//zaslanie fresh suboru pre elfinder (volane len s parametrom v=xxx) po zmene velkosti
 			//tomcat 8 totiz nejako divne cachuje obrazky a aj ked ho zmenime tak to nepomoze a vrati povodny
-<span class="fc bfc" id="L1220" title="All 6 branches covered.">			if (user != null &amp;&amp; user.isAdmin() &amp;&amp; req.getParameter(&quot;v&quot;)!=null)</span>
+<span class="fc bfc" id="L1236" title="All 6 branches covered.">			if (user != null &amp;&amp; user.isAdmin() &amp;&amp; req.getParameter(&quot;v&quot;)!=null)</span>
 			{
-<span class="fc" id="L1222">				String mimeType = Constants.getServletContext().getMimeType(path.toLowerCase());</span>
-<span class="fc bfc" id="L1223" title="All 2 branches covered.">				if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
-<span class="fc bfc" id="L1224" title="All 4 branches covered.">				if (mimeType.startsWith(&quot;image/&quot;) &amp;&amp; path.startsWith(&quot;/images&quot;))</span>
+<span class="fc" id="L1238">				String mimeType = Constants.getServletContext().getMimeType(path.toLowerCase());</span>
+<span class="fc bfc" id="L1239" title="All 2 branches covered.">				if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="fc bfc" id="L1240" title="All 4 branches covered.">				if (mimeType.startsWith(&quot;image/&quot;) &amp;&amp; path.startsWith(&quot;/images&quot;))</span>
 				{
-<span class="fc" id="L1226">					IwcmFile f = new IwcmFile(Tools.getRealPath(path));</span>
-<span class="pc bpc" id="L1227" title="2 of 4 branches missed.">					if (f.exists() &amp;&amp; f.canRead()) {</span>
-<span class="fc" id="L1228">						FilePathTools.writeFileOut(f, req, res);</span>
+<span class="fc" id="L1242">					IwcmFile f = new IwcmFile(Tools.getRealPath(path));</span>
+<span class="pc bpc" id="L1243" title="2 of 4 branches missed.">					if (f.exists() &amp;&amp; f.canRead()) {</span>
+<span class="fc" id="L1244">						FilePathTools.writeFileOut(f, req, res);</span>
 						//Logger.println(this,&quot;Zapisany subor: &quot; + path);
-<span class="pc bpc" id="L1230" title="1 of 2 branches missed.">						if (timer != null)</span>
+<span class="pc bpc" id="L1246" title="1 of 2 branches missed.">						if (timer != null)</span>
 						{
-<span class="nc" id="L1232">							timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
-<span class="nc" id="L1233">							DBPool.getInstance().logConnections();</span>
+<span class="nc" id="L1248">							timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
+<span class="nc" id="L1249">							DBPool.getInstance().logConnections();</span>
 						}
-<span class="fc" id="L1235">						return;</span>
+<span class="fc" id="L1251">						return;</span>
 					}
 				}
 			}
 
 
 			//preposlanie suboru z historie, tiket 13373, parameter pochadza z file_history.jsp
-<span class="pc bpc" id="L1242" title="5 of 6 branches missed.">			if (req.getParameter(&quot;fHistoryId&quot;)!=null &amp;&amp; user != null &amp;&amp; user.isAdmin())</span>
+<span class="pc bpc" id="L1258" title="5 of 6 branches missed.">			if (req.getParameter(&quot;fHistoryId&quot;)!=null &amp;&amp; user != null &amp;&amp; user.isAdmin())</span>
 			{
-<span class="nc" id="L1244">				int fHistoryId = Tools.getIntValue(req.getParameter(&quot;fHistoryId&quot;), -1);</span>
-<span class="nc bnc" id="L1245" title="All 2 branches missed.">				if (fHistoryId &gt; 0)</span>
+<span class="nc" id="L1260">				int fHistoryId = Tools.getIntValue(req.getParameter(&quot;fHistoryId&quot;), -1);</span>
+<span class="nc bnc" id="L1261" title="All 2 branches missed.">				if (fHistoryId &gt; 0)</span>
 				{
-<span class="nc" id="L1247">					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, res);</span>
-<span class="nc bnc" id="L1248" title="All 2 branches missed.">					if (sendOK == false)</span>
+<span class="nc" id="L1263">					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, res);</span>
+<span class="nc bnc" id="L1264" title="All 2 branches missed.">					if (sendOK == false)</span>
 					{
-<span class="nc" id="L1250">						res.setStatus(404);</span>
+<span class="nc" id="L1266">						res.setStatus(404);</span>
 					}
-<span class="nc" id="L1252">					return;</span>
+<span class="nc" id="L1268">					return;</span>
 				}
 			}
 
 
 
-<span class="fc bfc" id="L1258" title="All 2 branches covered.">			if (path.startsWith(&quot;/templates/&quot;)) {</span>
-<span class="fc" id="L1259">				Ninja.includeNinja(req);</span>
+<span class="fc bfc" id="L1274" title="All 2 branches covered.">			if (path.startsWith(&quot;/templates/&quot;)) {</span>
+<span class="fc" id="L1275">				Ninja.includeNinja(req);</span>
 			}
 
 			//forward(request, response);
 			//return;
 		}
-<span class="nc" id="L1265">		catch (RuntimeException rex)</span>
+<span class="nc" id="L1281">		catch (RuntimeException rex)</span>
 		{
-<span class="nc" id="L1267">			sk.iway.iwcm.Logger.error(rex);</span>
+<span class="nc" id="L1283">			sk.iway.iwcm.Logger.error(rex);</span>
 		}
-<span class="nc" id="L1269">		catch (Exception ex)</span>
+<span class="nc" id="L1285">		catch (Exception ex)</span>
 		{
-<span class="nc bnc" id="L1271" title="All 2 branches missed.">			if (ex.getClass().getCanonicalName().startsWith(&quot;org.spring&quot;)) throw ex;</span>
+<span class="nc bnc" id="L1287" title="All 2 branches missed.">			if (ex.getClass().getCanonicalName().startsWith(&quot;org.spring&quot;)) throw ex;</span>
 			else
 			{
-<span class="nc" id="L1274">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1290">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
-<span class="pc" id="L1276">		}</span>
+<span class="pc" id="L1292">		}</span>
 
-<span class="pc bpc" id="L1278" title="1 of 2 branches missed.">		if (timer != null)</span>
+<span class="pc bpc" id="L1294" title="1 of 2 branches missed.">		if (timer != null)</span>
 		{
-<span class="nc" id="L1280">			timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
-<span class="nc" id="L1281">			DBPool.getInstance().logConnections();</span>
+<span class="nc" id="L1296">			timer.diff(&quot;   Path filter - chain, path: &quot; + path);</span>
+<span class="nc" id="L1297">			DBPool.getInstance().logConnections();</span>
 		}
 
 		try
 		{
 			// Pass control on to the next filter
-<span class="fc" id="L1287">			chain.doFilter(servletRequest, servletResponse);</span>
+<span class="fc" id="L1303">			chain.doFilter(servletRequest, servletResponse);</span>
 		}
-<span class="fc" id="L1289">		catch (NestedServletException|org.springframework.security.access.AccessDeniedException e)</span>
+<span class="fc" id="L1305">		catch (NestedServletException|org.springframework.security.access.AccessDeniedException e)</span>
 		{
 			//nastane napr. pri volani /admin/adminlog/logging ak user nema pravo na cmp_adminlog
 			//rest sluzby si to handluju same, toto sa tyka webview
 			//neda sa zachytit priamo AccessDeniedException preto chytame NestedServletException
-<span class="pc bpc" id="L1294" title="1 of 2 branches missed.">			if (e.getCause().toString().contains(&quot;AccessDeniedException&quot;))</span>
+<span class="pc bpc" id="L1310" title="1 of 2 branches missed.">			if (e.getCause().toString().contains(&quot;AccessDeniedException&quot;))</span>
 			{
-<span class="nc" id="L1296">				res.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L1312">				res.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
 				//ak to nie je rest posli ho aj na defaultnu 403 stranku
-<span class="nc bnc" id="L1298" title="All 4 branches missed.">				if (path==null || path.contains(&quot;/rest&quot;)==false) forwardSafely(&quot;/403.jsp&quot;, req, res);</span>
+<span class="nc bnc" id="L1314" title="All 4 branches missed.">				if (path==null || path.contains(&quot;/rest&quot;)==false) forwardSafely(&quot;/403.jsp&quot;, req, res);</span>
 			}
 			else
 			{
-<span class="fc" id="L1302">				throw e;</span>
+<span class="fc" id="L1318">				throw e;</span>
 			}
-<span class="fc" id="L1304">		}</span>
-<span class="fc" id="L1305">	}</span>
+<span class="fc" id="L1320">		}</span>
+<span class="fc" id="L1321">	}</span>
 
 
 
@@ -1316,72 +1332,72 @@ import java.util.*;
 	 */
 	public static boolean checkWebAccess(HttpServletRequest request, String path)
 	{
-<span class="fc" id="L1319">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L1335">        Identity user = UsersDB.getCurrentUser(request);</span>
 
         //kontrola referer hlavicky (CSRF), je povinna pre POST alebo ked je prihlaseny user
-<span class="fc" id="L1322">        String pathLC = path.toLowerCase();</span>
-<span class="pc bpc" id="L1323" title="1 of 8 branches missed.">        if (user != null || &quot;POST&quot;.equalsIgnoreCase(request.getMethod()) || pathLC.endsWith(&quot;.do&quot;) || pathLC.endsWith(&quot;.action&quot;))</span>
+<span class="fc" id="L1338">        String pathLC = path.toLowerCase();</span>
+<span class="pc bpc" id="L1339" title="1 of 8 branches missed.">        if (user != null || &quot;POST&quot;.equalsIgnoreCase(request.getMethod()) || pathLC.endsWith(&quot;.do&quot;) || pathLC.endsWith(&quot;.action&quot;))</span>
         {
-<span class="fc" id="L1325">            boolean isUrlAccessible = true;</span>
-<span class="fc" id="L1326">            boolean xsrfUrlException = DocTools.isXssStrictUrlException(path, &quot;xsrfUrlException&quot;);</span>
-<span class="fc bfc" id="L1327" title="All 4 branches covered.">            if (xsrfUrlException==false &amp;&amp; isXsrfCheckRequired(request))</span>
+<span class="fc" id="L1341">            boolean isUrlAccessible = true;</span>
+<span class="fc" id="L1342">            boolean xsrfUrlException = DocTools.isXssStrictUrlException(path, &quot;xsrfUrlException&quot;);</span>
+<span class="fc bfc" id="L1343" title="All 4 branches covered.">            if (xsrfUrlException==false &amp;&amp; isXsrfCheckRequired(request))</span>
             {
-<span class="fc" id="L1329">                isUrlAccessible = checkXsrf(request);</span>
+<span class="fc" id="L1345">                isUrlAccessible = checkXsrf(request);</span>
             }
 
             //nastal CSRF utok, referer nesedi
-<span class="pc bpc" id="L1333" title="1 of 2 branches missed.">            if (isUrlAccessible==false) return false;</span>
+<span class="pc bpc" id="L1349" title="1 of 2 branches missed.">            if (isUrlAccessible==false) return false;</span>
         }
 
 		//kontrola pristupu do /components/ adresara
-<span class="fc bfc" id="L1337" title="All 4 branches covered.">		if ((path.startsWith(&quot;/components/&quot;) || path.startsWith(&quot;/apps/&quot;))</span>
-<span class="pc bpc" id="L1338" title="1 of 6 branches missed.">			 &amp;&amp; (path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.ftl&quot;) || path.endsWith(&quot;.html&quot;)))</span>
+<span class="fc bfc" id="L1353" title="All 4 branches covered.">		if ((path.startsWith(&quot;/components/&quot;) || path.startsWith(&quot;/apps/&quot;))</span>
+<span class="pc bpc" id="L1354" title="1 of 6 branches missed.">			 &amp;&amp; (path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.ftl&quot;) || path.endsWith(&quot;.html&quot;)))</span>
 		{
-<span class="fc bfc" id="L1340" title="All 4 branches covered.">			if (user == null || user.isAdmin()==false)</span>
+<span class="fc bfc" id="L1356" title="All 4 branches covered.">			if (user == null || user.isAdmin()==false)</span>
 			{
-<span class="fc" id="L1342">				boolean canAccess = DocTools.isXssStrictUrlException(path, &quot;componentsDirectCallExceptions&quot;);</span>
-<span class="fc bfc" id="L1343" title="All 2 branches covered.">				if (canAccess==false)</span>
+<span class="fc" id="L1358">				boolean canAccess = DocTools.isXssStrictUrlException(path, &quot;componentsDirectCallExceptions&quot;);</span>
+<span class="fc bfc" id="L1359" title="All 2 branches covered.">				if (canAccess==false)</span>
 				{
 					//ak to zacina na /apps/ over este, ci to nie je platna URL adresa stranky
-<span class="fc" id="L1346">					int docId = -1;</span>
-<span class="fc bfc" id="L1347" title="All 2 branches covered.">					if (path.startsWith(&quot;/apps/&quot;)) docId = DocDB.getInstance().getDocIdFromURLImpl(path, DocDB.getDomain(request));</span>
-<span class="fc bfc" id="L1348" title="All 2 branches covered.">					if (docId &lt; 1)</span>
+<span class="fc" id="L1362">					int docId = -1;</span>
+<span class="fc bfc" id="L1363" title="All 2 branches covered.">					if (path.startsWith(&quot;/apps/&quot;)) docId = DocDB.getInstance().getDocIdFromURLImpl(path, DocDB.getDomain(request));</span>
+<span class="fc bfc" id="L1364" title="All 2 branches covered.">					if (docId &lt; 1)</span>
 					{
-<span class="fc" id="L1350">						Adminlog.add(Adminlog.TYPE_XSS, &quot;Direct component call, path=&quot;+path, -1, -1);</span>
-<span class="fc" id="L1351">						return false;</span>
+<span class="fc" id="L1366">						Adminlog.add(Adminlog.TYPE_XSS, &quot;Direct component call, path=&quot;+path, -1, -1);</span>
+<span class="fc" id="L1367">						return false;</span>
 					}
 				}
 				//duplicitna kontrola, v ziadnom pripade nema zmysel pristupovat na komponenty s URL obsahujucim admin a tiez do statistiky
-<span class="pc bpc" id="L1355" title="1 of 4 branches missed.">				if (canAccess &amp;&amp; path.contains(&quot;admin_answer.jsp&quot;)) return canAccess;</span>
-<span class="pc bpc" id="L1356" title="1 of 2 branches missed.">				if (path.contains(&quot;admin&quot;))</span>
+<span class="pc bpc" id="L1371" title="1 of 4 branches missed.">				if (canAccess &amp;&amp; path.contains(&quot;admin_answer.jsp&quot;)) return canAccess;</span>
+<span class="pc bpc" id="L1372" title="1 of 2 branches missed.">				if (path.contains(&quot;admin&quot;))</span>
 				{
-<span class="nc bnc" id="L1358" title="All 6 branches missed.">					if (user != null &amp;&amp; (path.contains(&quot;FCKeditor&quot;) || path.contains(&quot;/components/gallery/admin_gallery_popup.jsp&quot;) ||</span>
-<span class="nc bnc" id="L1359" title="All 2 branches missed.">							path.contains(&quot;/components/helpdesk/fotogaleria/admin_upload.jsp&quot;)))</span>
+<span class="nc bnc" id="L1374" title="All 6 branches missed.">					if (user != null &amp;&amp; (path.contains(&quot;FCKeditor&quot;) || path.contains(&quot;/components/gallery/admin_gallery_popup.jsp&quot;) ||</span>
+<span class="nc bnc" id="L1375" title="All 2 branches missed.">							path.contains(&quot;/components/helpdesk/fotogaleria/admin_upload.jsp&quot;)))</span>
 					{
 						//specialna vynimka pre CK editor pre rozne projekty kde je user prihlaseny ale nie je admin
 						//+ #17331 - pridana vynimka pre upload suboru vo fotogalerii v intre
 					}
 					else
 					{
-<span class="nc" id="L1366">						return false;</span>
+<span class="nc" id="L1382">						return false;</span>
 					}
 				}
-<span class="pc bpc" id="L1369" title="3 of 4 branches missed.">				if (path.contains(&quot;/components/stat/&quot;) &amp;&amp; path.contains(&quot;stat_async_ajax.jsp&quot;) == false) return false;</span>
+<span class="pc bpc" id="L1385" title="3 of 4 branches missed.">				if (path.contains(&quot;/components/stat/&quot;) &amp;&amp; path.contains(&quot;stat_async_ajax.jsp&quot;) == false) return false;</span>
 			}
 		}
 
 		//kontrola pristupu podla povolenych IP adries
-<span class="fc" id="L1374">		HttpSession session = request.getSession();</span>
-<span class="fc" id="L1375">		Boolean val = (Boolean) session.getAttribute(CHECK_WEB_ACCESS_SESSION_KEY);</span>
-<span class="fc bfc" id="L1376" title="All 2 branches covered.">		if (val != null)</span>
+<span class="fc" id="L1390">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L1391">		Boolean val = (Boolean) session.getAttribute(CHECK_WEB_ACCESS_SESSION_KEY);</span>
+<span class="fc bfc" id="L1392" title="All 2 branches covered.">		if (val != null)</span>
 		{
 			//Logger.println(this,&quot;Checking to access web from session: &quot; + val.booleanValue());
-<span class="fc" id="L1379">			return (val.booleanValue());</span>
+<span class="fc" id="L1395">			return (val.booleanValue());</span>
 		}
 
-<span class="fc" id="L1382">		boolean ret = Tools.checkIpAccess(request, &quot;webEnableIPs&quot;);</span>
-<span class="fc" id="L1383">		session.setAttribute(CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));</span>
-<span class="fc" id="L1384">		return (ret);</span>
+<span class="fc" id="L1398">		boolean ret = Tools.checkIpAccess(request, &quot;webEnableIPs&quot;);</span>
+<span class="fc" id="L1399">		session.setAttribute(CHECK_WEB_ACCESS_SESSION_KEY, Boolean.valueOf(ret));</span>
+<span class="fc" id="L1400">		return (ret);</span>
 	}
 
 	/**
@@ -1397,87 +1413,87 @@ import java.util.*;
 	 */
 	private boolean checkDomain(HttpServletRequest request)
 	{
-<span class="fc" id="L1400">		HttpSession session = request.getSession();</span>
-<span class="fc" id="L1401">		Boolean val = (Boolean) session.getAttribute(CHECK_DOMAIN_SESSION_KEY);</span>
-<span class="fc bfc" id="L1402" title="All 2 branches covered.">		if (val != null)</span>
+<span class="fc" id="L1416">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L1417">		Boolean val = (Boolean) session.getAttribute(CHECK_DOMAIN_SESSION_KEY);</span>
+<span class="fc bfc" id="L1418" title="All 2 branches covered.">		if (val != null)</span>
 		{
 			//Logger.println(this,&quot;Checking DOMAIN to access web from session: &quot; + val.booleanValue());
-<span class="fc" id="L1405">			return (val.booleanValue());</span>
+<span class="fc" id="L1421">			return (val.booleanValue());</span>
 		}
-<span class="fc" id="L1407">		String webAllowedDomains = Constants.getString(&quot;webAllowedDomains&quot;);</span>
-<span class="fc" id="L1408">		boolean ret = true;</span>
-<span class="pc bpc" id="L1409" title="2 of 4 branches missed.">		if (webAllowedDomains != null &amp;&amp; webAllowedDomains.length() &gt; 1)</span>
+<span class="fc" id="L1423">		String webAllowedDomains = Constants.getString(&quot;webAllowedDomains&quot;);</span>
+<span class="fc" id="L1424">		boolean ret = true;</span>
+<span class="pc bpc" id="L1425" title="2 of 4 branches missed.">		if (webAllowedDomains != null &amp;&amp; webAllowedDomains.length() &gt; 1)</span>
 		{
-<span class="nc" id="L1411">			ret = false;</span>
-<span class="nc" id="L1412">			StringTokenizer st = new StringTokenizer(webAllowedDomains, &quot;,&quot;);</span>
+<span class="nc" id="L1427">			ret = false;</span>
+<span class="nc" id="L1428">			StringTokenizer st = new StringTokenizer(webAllowedDomains, &quot;,&quot;);</span>
 			String domain;
-<span class="nc" id="L1414">			String myDomain = Tools.getServerName(request);</span>
-<span class="nc" id="L1415">			Logger.println(this,&quot;Checking: &quot; + myDomain + &quot; vs &quot; + webAllowedDomains);</span>
-<span class="nc bnc" id="L1416" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc" id="L1430">			String myDomain = Tools.getServerName(request);</span>
+<span class="nc" id="L1431">			Logger.println(this,&quot;Checking: &quot; + myDomain + &quot; vs &quot; + webAllowedDomains);</span>
+<span class="nc bnc" id="L1432" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L1418">				domain = st.nextToken();</span>
-<span class="nc bnc" id="L1419" title="All 2 branches missed.">				if (myDomain.endsWith(domain))</span>
+<span class="nc" id="L1434">				domain = st.nextToken();</span>
+<span class="nc bnc" id="L1435" title="All 2 branches missed.">				if (myDomain.endsWith(domain))</span>
 				{
-<span class="nc" id="L1421">					ret = true;</span>
-<span class="nc" id="L1422">					break;</span>
+<span class="nc" id="L1437">					ret = true;</span>
+<span class="nc" id="L1438">					break;</span>
 				}
 			}
 		}
-<span class="fc" id="L1426">		session.setAttribute(CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));</span>
-<span class="fc" id="L1427">		return (ret);</span>
+<span class="fc" id="L1442">		session.setAttribute(CHECK_DOMAIN_SESSION_KEY, Boolean.valueOf(ret));</span>
+<span class="fc" id="L1443">		return (ret);</span>
 	}
 
 	private boolean checkAccessToAdmin(String path, HttpServletRequest request, HttpServletResponse response)
 	{
-<span class="fc" id="L1432">		boolean isAdminUrlAccessible = true;</span>
-<span class="fc" id="L1433">        Identity user = UsersDB.getCurrentUser(request.getSession());</span>
+<span class="fc" id="L1448">		boolean isAdminUrlAccessible = true;</span>
+<span class="fc" id="L1449">        Identity user = UsersDB.getCurrentUser(request.getSession());</span>
 
-<span class="fc" id="L1435">        boolean xsrfUrlException = DocTools.isXssStrictUrlException(path, &quot;xsrfUrlException&quot;);</span>
+<span class="fc" id="L1451">        boolean xsrfUrlException = DocTools.isXssStrictUrlException(path, &quot;xsrfUrlException&quot;);</span>
 
-<span class="fc bfc" id="L1437" title="All 2 branches covered.">		if(path.startsWith(&quot;/admin&quot;) ||</span>
-<span class="fc bfc" id="L1438" title="All 4 branches covered.">			(path.startsWith(&quot;/components/&quot;) &amp;&amp; path.contains(&quot;/admin&quot;)) ||</span>
-<span class="fc bfc" id="L1439" title="All 4 branches covered.">			(path.startsWith(&quot;/apps/&quot;) &amp;&amp; path.contains(&quot;/admin&quot;)))	//pristupuje do admin casti a admin komponent/app</span>
+<span class="fc bfc" id="L1453" title="All 2 branches covered.">		if(path.startsWith(&quot;/admin&quot;) ||</span>
+<span class="fc bfc" id="L1454" title="All 4 branches covered.">			(path.startsWith(&quot;/components/&quot;) &amp;&amp; path.contains(&quot;/admin&quot;)) ||</span>
+<span class="fc bfc" id="L1455" title="All 4 branches covered.">			(path.startsWith(&quot;/apps/&quot;) &amp;&amp; path.contains(&quot;/admin&quot;)))	//pristupuje do admin casti a admin komponent/app</span>
 		{
-<span class="pc bpc" id="L1441" title="1 of 4 branches missed.">			if(user == null || UsersDB.checkUserPerms(user, &quot;admin|editableGroupsNotEmpty&quot;)==false)	//A nie je prihlaseny, alebo nie je prihlaseny ako admin</span>
+<span class="pc bpc" id="L1457" title="1 of 4 branches missed.">			if(user == null || UsersDB.checkUserPerms(user, &quot;admin|editableGroupsNotEmpty&quot;)==false)	//A nie je prihlaseny, alebo nie je prihlaseny ako admin</span>
 			{
-<span class="fc" id="L1443">				isAdminUrlAccessible = false;</span>
-<span class="fc" id="L1444">				String allowAdminUrls = Constants.getString(&quot;allowAdminUrls&quot;);</span>
+<span class="fc" id="L1459">				isAdminUrlAccessible = false;</span>
+<span class="fc" id="L1460">				String allowAdminUrls = Constants.getString(&quot;allowAdminUrls&quot;);</span>
 				//ak v starom WJ mali customizovanu premennu a nemaju tam springove prihlasenie, pridajme
-<span class="pc bpc" id="L1446" title="2 of 4 branches missed.">				if (allowAdminUrls.contains(&quot;/admin/logon.do&quot;) &amp;&amp; allowAdminUrls.contains(&quot;/admin/logon/&quot;)==false) allowAdminUrls += &quot;,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$&quot;;</span>
+<span class="pc bpc" id="L1462" title="2 of 4 branches missed.">				if (allowAdminUrls.contains(&quot;/admin/logon.do&quot;) &amp;&amp; allowAdminUrls.contains(&quot;/admin/logon/&quot;)==false) allowAdminUrls += &quot;,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$&quot;;</span>
 
-<span class="fc" id="L1448">				String[] adminUrls = Tools.getTokens(allowAdminUrls, &quot;,&quot;, true);</span>
+<span class="fc" id="L1464">				String[] adminUrls = Tools.getTokens(allowAdminUrls, &quot;,&quot;, true);</span>
 
-<span class="fc bfc" id="L1450" title="All 2 branches covered.">				for(String url: adminUrls)</span>
+<span class="fc bfc" id="L1466" title="All 2 branches covered.">				for(String url: adminUrls)</span>
 				{
-<span class="pc bpc" id="L1452" title="1 of 6 branches missed.">					if(path.startsWith(url) || (&quot;^&quot;+path+&quot;$&quot;).equals(url) || (path+&quot;$&quot;).endsWith(url))</span>
+<span class="pc bpc" id="L1468" title="1 of 6 branches missed.">					if(path.startsWith(url) || (&quot;^&quot;+path+&quot;$&quot;).equals(url) || (path+&quot;$&quot;).endsWith(url))</span>
 					{
-<span class="fc" id="L1454">						isAdminUrlAccessible = true;</span>
-<span class="fc" id="L1455">						break;</span>
+<span class="fc" id="L1470">						isAdminUrlAccessible = true;</span>
+<span class="fc" id="L1471">						break;</span>
 					}
 				}
 			}
-<span class="fc bfc" id="L1459" title="All 4 branches covered.">			if(isAdminUrlAccessible &amp;&amp; xsrfUrlException==false)</span>
+<span class="fc bfc" id="L1475" title="All 4 branches covered.">			if(isAdminUrlAccessible &amp;&amp; xsrfUrlException==false)</span>
 			{
-<span class="fc" id="L1461">				isAdminUrlAccessible = checkXsrf(request);</span>
+<span class="fc" id="L1477">				isAdminUrlAccessible = checkXsrf(request);</span>
 			}
 
-<span class="pc bpc" id="L1464" title="2 of 14 branches missed.">			if (path.endsWith(&quot;.html&quot;) || path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.action&quot;) || path.endsWith(&quot;.do&quot;) || path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;/&quot;) || path.indexOf(&quot;ajax&quot;)!=-1)</span>
+<span class="pc bpc" id="L1480" title="1 of 14 branches missed.">			if (path.endsWith(&quot;.html&quot;) || path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.action&quot;) || path.endsWith(&quot;.do&quot;) || path.endsWith(&quot;.js&quot;) || path.endsWith(&quot;/&quot;) || path.indexOf(&quot;ajax&quot;)!=-1)</span>
 			{
-<span class="fc" id="L1466">				setUaCompatibleAdmin(path, response);</span>
+<span class="fc" id="L1482">				setUaCompatibleAdmin(path, response);</span>
 			}
 		}
 
-<span class="fc bfc" id="L1470" title="All 4 branches covered.">		if (user != null &amp;&amp; user.isAdmin())</span>
+<span class="fc bfc" id="L1486" title="All 4 branches covered.">		if (user != null &amp;&amp; user.isAdmin())</span>
 		{
-<span class="fc bfc" id="L1472" title="All 2 branches covered.">            if (xsrfUrlException==false)</span>
+<span class="fc bfc" id="L1488" title="All 2 branches covered.">            if (xsrfUrlException==false)</span>
             {
-<span class="fc bfc" id="L1474" title="All 2 branches covered.">                if (isXsrfCheckRequired(request))</span>
+<span class="fc bfc" id="L1490" title="All 2 branches covered.">                if (isXsrfCheckRequired(request))</span>
                 {
-<span class="fc" id="L1476">                    isAdminUrlAccessible = checkXsrf(request);</span>
+<span class="fc" id="L1492">                    isAdminUrlAccessible = checkXsrf(request);</span>
                 }
             }
         }
-<span class="fc" id="L1480">		return isAdminUrlAccessible;</span>
+<span class="fc" id="L1496">		return isAdminUrlAccessible;</span>
 	}
 
     /**
@@ -1490,37 +1506,37 @@ import java.util.*;
     {
         //ak uz je user prihlaseny ako admin, kontrolujme CSRF vzdy (aby sa nedal spravit utok z inej stranky mazuci napr. data)
         //niektore URL musime whitelistovat, kedze mozu viest z mailu
-<span class="fc" id="L1493">        boolean isXsrfCheckRequired = false;</span>
-<span class="fc bfc" id="L1494" title="All 2 branches covered.">        if (&quot;GET&quot;.equalsIgnoreCase(request.getMethod()))</span>
+<span class="fc" id="L1509">        boolean isXsrfCheckRequired = false;</span>
+<span class="fc bfc" id="L1510" title="All 2 branches covered.">        if (&quot;GET&quot;.equalsIgnoreCase(request.getMethod()))</span>
         {
-<span class="fc" id="L1496">            Enumeration&lt;String&gt; paramNames = request.getParameterNames();</span>
-<span class="fc" id="L1497">            int failsafe = 0;</span>
-<span class="fc" id="L1498">            int maxFailsafe = 10;</span>
+<span class="fc" id="L1512">            Enumeration&lt;String&gt; paramNames = request.getParameterNames();</span>
+<span class="fc" id="L1513">            int failsafe = 0;</span>
+<span class="fc" id="L1514">            int maxFailsafe = 10;</span>
 
-<span class="fc" id="L1500">            String xsrfParamNames = Constants.getString(&quot;xsrfParamNameExceptionSystem&quot;);</span>
-<span class="pc bpc" id="L1501" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(Constants.getString(&quot;xsrfParamNameException&quot;))) xsrfParamNames += &quot;,&quot; + Constants.getString(&quot;xsrfParamNameException&quot;);</span>
+<span class="fc" id="L1516">            String xsrfParamNames = Constants.getString(&quot;xsrfParamNameExceptionSystem&quot;);</span>
+<span class="pc bpc" id="L1517" title="1 of 2 branches missed.">            if (Tools.isNotEmpty(Constants.getString(&quot;xsrfParamNameException&quot;))) xsrfParamNames += &quot;,&quot; + Constants.getString(&quot;xsrfParamNameException&quot;);</span>
 
-<span class="fc" id="L1503">            String[] xsrfParamNameException = Tools.getTokens(xsrfParamNames.toLowerCase(), &quot;,&quot;, true);</span>
-<span class="pc bpc" id="L1504" title="1 of 4 branches missed.">            while (paramNames.hasMoreElements() &amp;&amp; failsafe++ &lt;= maxFailsafe)</span>
+<span class="fc" id="L1519">            String[] xsrfParamNameException = Tools.getTokens(xsrfParamNames.toLowerCase(), &quot;,&quot;, true);</span>
+<span class="pc bpc" id="L1520" title="1 of 4 branches missed.">            while (paramNames.hasMoreElements() &amp;&amp; failsafe++ &lt;= maxFailsafe)</span>
             {
-<span class="fc" id="L1506">                String name = paramNames.nextElement().toLowerCase();</span>
+<span class="fc" id="L1522">                String name = paramNames.nextElement().toLowerCase();</span>
                 //natvrdo kvoli performance
-<span class="fc bfc" id="L1508" title="All 2 branches covered.">                if (&quot;docid&quot;.equals(name)) continue;</span>
+<span class="fc bfc" id="L1524" title="All 2 branches covered.">                if (&quot;docid&quot;.equals(name)) continue;</span>
                 //displaytag povolime
-<span class="pc bpc" id="L1510" title="1 of 2 branches missed.">                if (name.startsWith(&quot;d-&quot;)) continue;</span>
+<span class="pc bpc" id="L1526" title="1 of 2 branches missed.">                if (name.startsWith(&quot;d-&quot;)) continue;</span>
                 //over voci zoznamu povolenych parametrov
-<span class="fc bfc" id="L1512" title="All 2 branches covered.">                if (Tools.containsOneItem(xsrfParamNameException, name)) continue;</span>
+<span class="fc bfc" id="L1528" title="All 2 branches covered.">                if (Tools.containsOneItem(xsrfParamNameException, name)) continue;</span>
 
-<span class="fc" id="L1514">                isXsrfCheckRequired = true;</span>
-<span class="fc" id="L1515">            }</span>
+<span class="fc" id="L1530">                isXsrfCheckRequired = true;</span>
+<span class="fc" id="L1531">            }</span>
             //ak to ma vela parametrov tak to je rovno podozrive
-<span class="pc bpc" id="L1517" title="1 of 2 branches missed.">            if (failsafe&gt;=maxFailsafe) isXsrfCheckRequired = true;</span>
-<span class="fc" id="L1518">        }</span>
+<span class="fc bfc" id="L1533" title="All 2 branches covered.">            if (failsafe&gt;=maxFailsafe) isXsrfCheckRequired = true;</span>
+<span class="fc" id="L1534">        }</span>
         else {
             //pre POST je check required
-<span class="fc" id="L1521">            isXsrfCheckRequired = true;</span>
+<span class="fc" id="L1537">            isXsrfCheckRequired = true;</span>
         }
-<span class="fc" id="L1523">        return isXsrfCheckRequired;</span>
+<span class="fc" id="L1539">        return isXsrfCheckRequired;</span>
     }
 
 
@@ -1533,71 +1549,71 @@ import java.util.*;
 	 */
 	private static boolean checkXsrf(HttpServletRequest request)
 	{
-<span class="fc" id="L1536">		String trustedXsrfReferers = Constants.getString(&quot;xsrfReferers&quot;);</span>
+<span class="fc" id="L1552">		String trustedXsrfReferers = Constants.getString(&quot;xsrfReferers&quot;);</span>
 		//ten length je tam aby v Oracle DB bolo mozne v konfiguracii nastavit znak -
-<span class="pc bpc" id="L1538" title="2 of 4 branches missed.">		if(Tools.isEmpty(trustedXsrfReferers) || trustedXsrfReferers.length()&lt;2) return true;</span>
+<span class="pc bpc" id="L1554" title="2 of 4 branches missed.">		if(Tools.isEmpty(trustedXsrfReferers) || trustedXsrfReferers.length()&lt;2) return true;</span>
 
-<span class="fc" id="L1540">		String remoteReferrer = request.getHeader(&quot;referer&quot;);</span>
-<span class="fc bfc" id="L1541" title="All 2 branches covered.">		if(Tools.isEmpty(remoteReferrer))</span>
+<span class="fc" id="L1556">		String remoteReferrer = request.getHeader(&quot;referer&quot;);</span>
+<span class="fc bfc" id="L1557" title="All 2 branches covered.">		if(Tools.isEmpty(remoteReferrer))</span>
         {
             //vynimka pre elfinder download - /admin/elfinder-connector/?cmd=file&amp;target=iwcm_2_L2ZpbGVzL3pfb19wcmlzcF9uYV9wb2hyZWJfcGRmLnBkZg_E_E&amp;download=1&amp;volumes=files
             //nechcel som dat vynimku pre cely elfinder-connector, preto sa testuje parameter download
-<span class="fc" id="L1545">            String path = PathFilter.getOrigPath(request);</span>
-<span class="pc bpc" id="L1546" title="3 of 4 branches missed.">            if (&quot;/admin/elfinder-connector/&quot;.equals(path) &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;download&quot;)))</span>
+<span class="fc" id="L1561">            String path = PathFilter.getOrigPath(request);</span>
+<span class="pc bpc" id="L1562" title="3 of 4 branches missed.">            if (&quot;/admin/elfinder-connector/&quot;.equals(path) &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;download&quot;)))</span>
             {
-<span class="nc" id="L1548">                return true;</span>
+<span class="nc" id="L1564">                return true;</span>
             }
 
             //do slaka, MSIE posiela empty referer ked otvara popup okno, takze zial MSIE nebude pre GET poziadavky chranene
-<span class="fc" id="L1552">            String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
-<span class="fc" id="L1553">            boolean isMsie = false;</span>
-<span class="pc bpc" id="L1554" title="2 of 4 branches missed.">            if (userAgent!=null &amp;&amp; &quot;GET&quot;.equalsIgnoreCase(request.getMethod()))</span>
+<span class="fc" id="L1568">            String userAgent = request.getHeader(&quot;User-Agent&quot;);</span>
+<span class="fc" id="L1569">            boolean isMsie = false;</span>
+<span class="pc bpc" id="L1570" title="2 of 4 branches missed.">            if (userAgent!=null &amp;&amp; &quot;GET&quot;.equalsIgnoreCase(request.getMethod()))</span>
             {
                 //vynimka len pre Trident/7.0 co je MSIE 11, starsi MSIE nebude podporovany (jedine ochranu uplne vypnut)
-<span class="pc bpc" id="L1557" title="1 of 2 branches missed.">                if (userAgent.contains(&quot;Trident/7.0&quot;)) isMsie = true;</span>
+<span class="pc bpc" id="L1573" title="1 of 2 branches missed.">                if (userAgent.contains(&quot;Trident/7.0&quot;)) isMsie = true;</span>
             }
 
-<span class="pc bpc" id="L1560" title="2 of 4 branches missed.">            if  (isMsie==false &amp;&amp; isXsrfCheckRequired(request))</span>
+<span class="pc bpc" id="L1576" title="2 of 4 branches missed.">            if  (isMsie==false &amp;&amp; isXsrfCheckRequired(request))</span>
             {
-<span class="nc" id="L1562">                Adminlog.add(Adminlog.TYPE_XSRF, &quot;Possible XSRF attack, referer is empty&quot;, -1, -1);</span>
-<span class="nc" id="L1563">                return false;</span>
+<span class="nc" id="L1578">                Adminlog.add(Adminlog.TYPE_XSRF, &quot;Possible XSRF attack, referer is empty&quot;, -1, -1);</span>
+<span class="nc" id="L1579">                return false;</span>
             }
-<span class="fc" id="L1565">            return true;</span>
+<span class="fc" id="L1581">            return true;</span>
         }
 
-<span class="fc" id="L1568">		String remoteReferrerServer = &quot;&quot;;</span>
+<span class="fc" id="L1584">		String remoteReferrerServer = &quot;&quot;;</span>
 		try
 		{
-<span class="fc" id="L1571">			URL remoteReferrerUrl = new URL(remoteReferrer);</span>
-<span class="fc" id="L1572">			remoteReferrerServer = remoteReferrerUrl.getHost();</span>
+<span class="fc" id="L1587">			URL remoteReferrerUrl = new URL(remoteReferrer);</span>
+<span class="fc" id="L1588">			remoteReferrerServer = remoteReferrerUrl.getHost();</span>
 		}
-<span class="nc" id="L1574">		catch (Exception e)</span>
+<span class="nc" id="L1590">		catch (Exception e)</span>
 		{
-<span class="nc" id="L1576">			Logger.debug(PathFilter.class,&quot;Failed to create URL from referrer: &quot; + remoteReferrer);</span>
-<span class="fc" id="L1577">		}</span>
-<span class="pc bpc" id="L1578" title="1 of 2 branches missed.">		for(String trustedReferrer : trustedXsrfReferers.split(&quot;,&quot;))</span>
+<span class="nc" id="L1592">			Logger.debug(PathFilter.class,&quot;Failed to create URL from referrer: &quot; + remoteReferrer);</span>
+<span class="fc" id="L1593">		}</span>
+<span class="pc bpc" id="L1594" title="1 of 2 branches missed.">		for(String trustedReferrer : trustedXsrfReferers.split(&quot;,&quot;))</span>
 		{
-<span class="fc" id="L1580">			trustedReferrer = trustedReferrer.trim();</span>
-<span class="pc bpc" id="L1581" title="1 of 2 branches missed.">			if(trustedReferrer.equalsIgnoreCase(Constants.SERVER_NAME_MACRO))</span>
+<span class="fc" id="L1596">			trustedReferrer = trustedReferrer.trim();</span>
+<span class="pc bpc" id="L1597" title="1 of 2 branches missed.">			if(trustedReferrer.equalsIgnoreCase(Constants.SERVER_NAME_MACRO))</span>
 			{
-<span class="fc" id="L1583">				trustedReferrer = Tools.getServerName(request, false);</span>
+<span class="fc" id="L1599">				trustedReferrer = Tools.getServerName(request, false);</span>
 			}
-<span class="pc bpc" id="L1585" title="7 of 8 branches missed.">			if (trustedReferrer.startsWith(&quot;%&quot;) &amp;&amp; trustedReferrer.endsWith(&quot;%&quot;) &amp;&amp; trustedReferrer.length()&gt;4 &amp;&amp; remoteReferrerServer.contains(trustedReferrer.substring(1, trustedReferrer.length()-1)))</span>
+<span class="pc bpc" id="L1601" title="7 of 8 branches missed.">			if (trustedReferrer.startsWith(&quot;%&quot;) &amp;&amp; trustedReferrer.endsWith(&quot;%&quot;) &amp;&amp; trustedReferrer.length()&gt;4 &amp;&amp; remoteReferrerServer.contains(trustedReferrer.substring(1, trustedReferrer.length()-1)))</span>
 			{
-<span class="nc" id="L1587">					return true;</span>
+<span class="nc" id="L1603">					return true;</span>
 			}
-<span class="pc bpc" id="L1589" title="5 of 6 branches missed.">			if (trustedReferrer.startsWith(&quot;%&quot;) &amp;&amp; trustedReferrer.length()&gt;2 &amp;&amp; remoteReferrerServer.endsWith(trustedReferrer.substring(1)))</span>
+<span class="pc bpc" id="L1605" title="5 of 6 branches missed.">			if (trustedReferrer.startsWith(&quot;%&quot;) &amp;&amp; trustedReferrer.length()&gt;2 &amp;&amp; remoteReferrerServer.endsWith(trustedReferrer.substring(1)))</span>
 			{
-<span class="nc" id="L1591">				return true;</span>
+<span class="nc" id="L1607">				return true;</span>
 			}
-<span class="pc bpc" id="L1593" title="1 of 2 branches missed.">			if(remoteReferrerServer.equalsIgnoreCase(trustedReferrer))</span>
+<span class="pc bpc" id="L1609" title="1 of 2 branches missed.">			if(remoteReferrerServer.equalsIgnoreCase(trustedReferrer))</span>
 			{
-<span class="fc" id="L1595">				return true;</span>
+<span class="fc" id="L1611">				return true;</span>
 			}
 		}
-<span class="nc" id="L1598">		Adminlog.add(Adminlog.TYPE_XSRF, &quot;Possible XSRF attack from: &quot; + remoteReferrer, -1, -1);</span>
+<span class="nc" id="L1614">		Adminlog.add(Adminlog.TYPE_XSRF, &quot;Possible XSRF attack from: &quot; + remoteReferrer, -1, -1);</span>
 
-<span class="nc" id="L1600">		return false;</span>
+<span class="nc" id="L1616">		return false;</span>
 	}
 
 	/**
@@ -1608,36 +1624,36 @@ import java.util.*;
 	 */
 	public static boolean checkAdmin(HttpServletRequest request)
 	{
-<span class="fc" id="L1611">		HttpSession session = request.getSession();</span>
-<span class="fc" id="L1612">		Boolean val = (Boolean) session.getAttribute(CHECK_ADMIN_SESSION_KEY);</span>
-<span class="fc bfc" id="L1613" title="All 2 branches covered.">		if (val != null)</span>
+<span class="fc" id="L1627">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L1628">		Boolean val = (Boolean) session.getAttribute(CHECK_ADMIN_SESSION_KEY);</span>
+<span class="fc bfc" id="L1629" title="All 2 branches covered.">		if (val != null)</span>
 		{
-<span class="fc" id="L1615">			return (val.booleanValue());</span>
+<span class="fc" id="L1631">			return (val.booleanValue());</span>
 		}
 
-<span class="pc bpc" id="L1618" title="1 of 2 branches missed.">		if (&quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;))) return false;</span>
+<span class="pc bpc" id="L1634" title="1 of 2 branches missed.">		if (&quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;))) return false;</span>
 
-<span class="fc" id="L1620">		String adminEnableIPs = Constants.getString(&quot;adminEnableIPs&quot;);</span>
-<span class="fc" id="L1621">		boolean ret = true;</span>
-<span class="pc bpc" id="L1622" title="2 of 4 branches missed.">		if (adminEnableIPs != null &amp;&amp; adminEnableIPs.length() &gt; 1)</span>
+<span class="fc" id="L1636">		String adminEnableIPs = Constants.getString(&quot;adminEnableIPs&quot;);</span>
+<span class="fc" id="L1637">		boolean ret = true;</span>
+<span class="pc bpc" id="L1638" title="2 of 4 branches missed.">		if (adminEnableIPs != null &amp;&amp; adminEnableIPs.length() &gt; 1)</span>
 		{
-<span class="fc" id="L1624">			ret = false;</span>
-<span class="fc" id="L1625">			StringTokenizer st = new StringTokenizer(adminEnableIPs, &quot;,&quot;);</span>
+<span class="fc" id="L1640">			ret = false;</span>
+<span class="fc" id="L1641">			StringTokenizer st = new StringTokenizer(adminEnableIPs, &quot;,&quot;);</span>
 			String ip;
-<span class="fc" id="L1627">			String myIP = Tools.getRemoteIP(request);</span>
-<span class="fc" id="L1628">			Logger.println(PathFilter.class,&quot;Checking: &quot; + myIP + &quot; vs &quot; + adminEnableIPs);</span>
-<span class="pc bpc" id="L1629" title="1 of 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="fc" id="L1643">			String myIP = Tools.getRemoteIP(request);</span>
+<span class="fc" id="L1644">			Logger.println(PathFilter.class,&quot;Checking: &quot; + myIP + &quot; vs &quot; + adminEnableIPs);</span>
+<span class="pc bpc" id="L1645" title="1 of 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="fc" id="L1631">				ip = st.nextToken().trim();</span>
-<span class="pc bpc" id="L1632" title="1 of 2 branches missed.">				if (myIP.startsWith(ip))</span>
+<span class="fc" id="L1647">				ip = st.nextToken().trim();</span>
+<span class="pc bpc" id="L1648" title="1 of 2 branches missed.">				if (myIP.startsWith(ip))</span>
 				{
-<span class="fc" id="L1634">					ret = true;</span>
-<span class="fc" id="L1635">					break;</span>
+<span class="fc" id="L1650">					ret = true;</span>
+<span class="fc" id="L1651">					break;</span>
 				}
 			}
 		}
-<span class="fc" id="L1639">		session.setAttribute(CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));</span>
-<span class="fc" id="L1640">		return (ret);</span>
+<span class="fc" id="L1655">		session.setAttribute(CHECK_ADMIN_SESSION_KEY, Boolean.valueOf(ret));</span>
+<span class="fc" id="L1656">		return (ret);</span>
 	}
 
 	/**
@@ -1646,64 +1662,64 @@ import java.util.*;
 	 */
 	public static synchronized void reloadProtectedDirs()
 	{
-<span class="fc" id="L1649">		Map&lt;String, EditForm&gt; protectedDirs = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L1665">		Map&lt;String, EditForm&gt; protectedDirs = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L1651">		Connection db_conn = null;</span>
-<span class="fc" id="L1652">		PreparedStatement ps = null;</span>
-<span class="fc" id="L1653">		ResultSet rs = null;</span>
+<span class="fc" id="L1667">		Connection db_conn = null;</span>
+<span class="fc" id="L1668">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1669">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L1656">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L1657">			ps = db_conn.prepareStatement(&quot;SELECT * FROM dirprop&quot;);</span>
-<span class="fc" id="L1658">			rs = ps.executeQuery();</span>
+<span class="fc" id="L1672">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1673">			ps = db_conn.prepareStatement(&quot;SELECT * FROM dirprop&quot;); //NOSONAR</span>
+<span class="fc" id="L1674">			rs = ps.executeQuery();</span>
 			EditForm ef;
 			String passProtected;
-<span class="fc bfc" id="L1661" title="All 2 branches covered.">			while (rs.next())</span>
+<span class="fc bfc" id="L1677" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="fc" id="L1663">				passProtected = DB.getDbString(rs, &quot;password_protected&quot;);</span>
-<span class="fc bfc" id="L1664" title="All 2 branches covered.">				if (Tools.isEmpty(passProtected))</span>
+<span class="fc" id="L1679">				passProtected = DB.getDbString(rs, &quot;password_protected&quot;);</span>
+<span class="fc bfc" id="L1680" title="All 2 branches covered.">				if (Tools.isEmpty(passProtected))</span>
 				{
-<span class="fc" id="L1666">					continue;</span>
+<span class="fc" id="L1682">					continue;</span>
 				}
 
-<span class="fc" id="L1669">				ef = new EditForm();</span>
-<span class="fc" id="L1670">				ef.setPasswordProtectedString(passProtected);</span>
-<span class="fc" id="L1671">				ef.setOrigDir(DB.getDbString(rs, &quot;dir_url&quot;));</span>
-<span class="fc" id="L1672">				ef.setIndexFulltext(rs.getBoolean(&quot;index_fulltext&quot;));</span>
-<span class="fc" id="L1673">				ef.setLogonDocId(rs.getInt(&quot;logon_doc_id&quot;));</span>
+<span class="fc" id="L1685">				ef = new EditForm();</span>
+<span class="fc" id="L1686">				ef.setPasswordProtectedString(passProtected);</span>
+<span class="fc" id="L1687">				ef.setOrigDir(DB.getDbString(rs, &quot;dir_url&quot;));</span>
+<span class="fc" id="L1688">				ef.setIndexFulltext(rs.getBoolean(&quot;index_fulltext&quot;));</span>
+<span class="fc" id="L1689">				ef.setLogonDocId(rs.getInt(&quot;logon_doc_id&quot;));</span>
 
-<span class="fc" id="L1675">				protectedDirs.put(ef.getOrigDir(), ef);</span>
+<span class="fc" id="L1691">				protectedDirs.put(ef.getOrigDir(), ef);</span>
 			}
-<span class="fc" id="L1677">			rs.close();</span>
-<span class="fc" id="L1678">			ps.close();</span>
-<span class="fc" id="L1679">			rs = null;</span>
-<span class="fc" id="L1680">			ps = null;</span>
+<span class="fc" id="L1693">			rs.close();</span>
+<span class="fc" id="L1694">			ps.close();</span>
+<span class="fc" id="L1695">			rs = null;</span>
+<span class="fc" id="L1696">			ps = null;</span>
 		}
-<span class="nc" id="L1682">		catch (Exception sqlEx)</span>
+<span class="nc" id="L1698">		catch (Exception sqlEx)</span>
 		{
 			//ak este nie je spraveny update toto hadze exception
-<span class="nc bnc" id="L1685" title="All 2 branches missed.">			if (sqlEx.getMessage().indexOf(&quot;doesn't exist&quot;)!=-1)</span>
+<span class="nc bnc" id="L1701" title="All 2 branches missed.">			if (sqlEx.getMessage().indexOf(&quot;doesn't exist&quot;)!=-1)</span>
 			{
-<span class="nc" id="L1687">				sk.iway.iwcm.Logger.error(sqlEx);</span>
+<span class="nc" id="L1703">				sk.iway.iwcm.Logger.error(sqlEx);</span>
 			}
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1694" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="fc" id="L1695">					db_conn.close();</span>
-<span class="pc bpc" id="L1696" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1697">					rs.close();</span>
-<span class="pc bpc" id="L1698" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1699">					ps.close();</span>
+<span class="pc bpc" id="L1710" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L1711">					db_conn.close();</span>
+<span class="pc bpc" id="L1712" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1713">					rs.close();</span>
+<span class="pc bpc" id="L1714" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1715">					ps.close();</span>
 			}
-<span class="nc" id="L1701">			catch (Exception ex2)</span>
+<span class="nc" id="L1717">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1703">			}</span>
+<span class="fc" id="L1719">			}</span>
 		}
-<span class="fc" id="L1705">		passwordProtected = protectedDirs;</span>
-<span class="fc" id="L1706">	}</span>
+<span class="fc" id="L1721">		passwordProtected = protectedDirs;</span>
+<span class="fc" id="L1722">	}</span>
 
 	/**
 	 * Skontroluje, ci zadane URL je v protected zone
@@ -1712,8 +1728,8 @@ import java.util.*;
 	 */
 	public static EditForm isPasswordProtected(String url, HttpServletRequest request)
 	{
-<span class="pc bpc" id="L1715" title="1 of 2 branches missed.">		if (request == null) return isPasswordProtected(url, null, null);</span>
-<span class="fc" id="L1716">		return isPasswordProtected(url, request, request.getSession());</span>
+<span class="pc bpc" id="L1731" title="1 of 2 branches missed.">		if (request == null) return isPasswordProtected(url, null, null);</span>
+<span class="fc" id="L1732">		return isPasswordProtected(url, request, request.getSession());</span>
 	}
 
 	/**
@@ -1725,101 +1741,101 @@ import java.util.*;
 	 */
 	public static EditForm isPasswordProtected(String url, HttpServletRequest request, HttpSession session)
 	{
-<span class="fc" id="L1728">		boolean galleryCheckUserPerms = Constants.getBoolean(&quot;galleryCheckUserPerms&quot;);</span>
-<span class="pc bpc" id="L1729" title="1 of 6 branches missed.">		if (url.startsWith(&quot;/files&quot;)==false &amp;&amp; (url.startsWith(&quot;/images/gallery/&quot;)==false || galleryCheckUserPerms == false))</span>
+<span class="fc" id="L1744">		boolean galleryCheckUserPerms = Constants.getBoolean(&quot;galleryCheckUserPerms&quot;);</span>
+<span class="pc bpc" id="L1745" title="1 of 6 branches missed.">		if (url.startsWith(&quot;/files&quot;)==false &amp;&amp; (url.startsWith(&quot;/images/gallery/&quot;)==false || galleryCheckUserPerms == false))</span>
 		{
-<span class="fc" id="L1731">			return(null);</span>
+<span class="fc" id="L1747">			return(null);</span>
 		}
 
-<span class="pc bpc" id="L1734" title="3 of 4 branches missed.">		if (session == null &amp;&amp; request != null) session = request.getSession();</span>
+<span class="pc bpc" id="L1750" title="3 of 4 branches missed.">		if (session == null &amp;&amp; request != null) session = request.getSession();</span>
 
-<span class="fc" id="L1736">		EditForm efBestMatch = null;</span>
+<span class="fc" id="L1752">		EditForm efBestMatch = null;</span>
 
-<span class="pc bpc" id="L1738" title="2 of 4 branches missed.">		if(passwordProtected != null &amp;&amp; passwordProtected.size() &gt; 0)</span>
+<span class="pc bpc" id="L1754" title="2 of 4 branches missed.">		if(passwordProtected != null &amp;&amp; passwordProtected.size() &gt; 0)</span>
 		{
-<span class="fc" id="L1740">			String testPath = url;</span>
-<span class="fc" id="L1741">			int start = 1; //nastavit musim na 1, aby v pripade prvej podmienky islo do while cyklu</span>
-<span class="pc bpc" id="L1742" title="1 of 2 branches missed.">			if (testPath.endsWith(&quot;/&quot;)) testPath = testPath.substring(0, testPath.length()-1);</span>
-<span class="fc bfc" id="L1743" title="All 2 branches covered.">			else if(testPath.contains(&quot;.&quot;)) //ak sa jedna o subor - vytiahnem adresar</span>
+<span class="fc" id="L1756">			String testPath = url;</span>
+<span class="fc" id="L1757">			int start = 1; //nastavit musim na 1, aby v pripade prvej podmienky islo do while cyklu</span>
+<span class="pc bpc" id="L1758" title="1 of 2 branches missed.">			if (testPath.endsWith(&quot;/&quot;)) testPath = testPath.substring(0, testPath.length()-1);</span>
+<span class="fc bfc" id="L1759" title="All 2 branches covered.">			else if(testPath.contains(&quot;.&quot;)) //ak sa jedna o subor - vytiahnem adresar</span>
 			{
-<span class="fc" id="L1745">				start = testPath.lastIndexOf(&quot;/&quot;);</span>
-<span class="pc bpc" id="L1746" title="1 of 2 branches missed.">				if(start != -1) testPath = testPath.substring(0, testPath.lastIndexOf(&quot;/&quot;));</span>
+<span class="fc" id="L1761">				start = testPath.lastIndexOf(&quot;/&quot;);</span>
+<span class="pc bpc" id="L1762" title="1 of 2 branches missed.">				if(start != -1) testPath = testPath.substring(0, testPath.lastIndexOf(&quot;/&quot;));</span>
 			}
-<span class="fc" id="L1748">			EditForm ef = null;</span>
-<span class="fc" id="L1749">			int failsafe = 0;</span>
-<span class="fc" id="L1750">			String firstTestPath = &quot;&quot;;</span>
+<span class="fc" id="L1764">			EditForm ef = null;</span>
+<span class="fc" id="L1765">			int failsafe = 0;</span>
+<span class="fc" id="L1766">			String firstTestPath = &quot;&quot;;</span>
 			//hladam najblizsi nadradeny adresar kotry je password protected
-<span class="pc bpc" id="L1752" title="1 of 4 branches missed.">			while (start &gt; 0 &amp;&amp; failsafe++ &lt; 30)</span>
+<span class="pc bpc" id="L1768" title="1 of 4 branches missed.">			while (start &gt; 0 &amp;&amp; failsafe++ &lt; 30)</span>
 			{
-<span class="fc bfc" id="L1754" title="All 2 branches covered.">				if(failsafe == 1) firstTestPath = testPath;</span>
+<span class="fc bfc" id="L1770" title="All 2 branches covered.">				if(failsafe == 1) firstTestPath = testPath;</span>
 
-<span class="fc" id="L1756">				ef = passwordProtected.get(testPath);</span>
-<span class="fc bfc" id="L1757" title="All 2 branches covered.">				if(ef != null)</span>
+<span class="fc" id="L1772">				ef = passwordProtected.get(testPath);</span>
+<span class="fc bfc" id="L1773" title="All 2 branches covered.">				if(ef != null)</span>
 				{
-<span class="fc" id="L1759">					efBestMatch = ef;</span>
+<span class="fc" id="L1775">					efBestMatch = ef;</span>
 					//pokial som nenasiel v prvom pokuse, pridam do zoznamu, nech pri dalsom volani neiterujem zbytocne + ochrana proti DOC utokom
-<span class="pc bpc" id="L1761" title="3 of 4 branches missed.">					if(failsafe &gt; 1 &amp;&amp; passwordProtected.size() &lt; 2000) passwordProtected.put(firstTestPath, ef);</span>
+<span class="pc bpc" id="L1777" title="3 of 4 branches missed.">					if(failsafe &gt; 1 &amp;&amp; passwordProtected.size() &lt; 2000) passwordProtected.put(firstTestPath, ef);</span>
 					break;
 				}
 
-<span class="fc" id="L1765">				start = testPath.lastIndexOf(&quot;/&quot;);</span>
-<span class="fc bfc" id="L1766" title="All 2 branches covered.">				if (start &gt; 0) testPath = testPath.substring(0, start); //substring len v pripade ak lomitko nieje na zaciatku</span>
+<span class="fc" id="L1781">				start = testPath.lastIndexOf(&quot;/&quot;);</span>
+<span class="fc bfc" id="L1782" title="All 2 branches covered.">				if (start &gt; 0) testPath = testPath.substring(0, start); //substring len v pripade ak lomitko nieje na zaciatku</span>
 			}
 		}
 
-<span class="fc bfc" id="L1770" title="All 2 branches covered.">		if (url.startsWith(&quot;/files&quot;))</span>
+<span class="fc bfc" id="L1786" title="All 2 branches covered.">		if (url.startsWith(&quot;/files&quot;))</span>
 		{
 			//pre files skus skontrolovat ci nie je zaheslovany v sekcii /files/
-<span class="fc" id="L1773">			DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L1774">			int docId = docDB.getDocIdFromURLImpl(url+&quot;.html&quot;, null);</span>
-<span class="pc bpc" id="L1775" title="1 of 2 branches missed.">			if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(url+&quot;.html&quot;, DocDB.getDomain(request));</span>
-<span class="fc bfc" id="L1776" title="All 2 branches covered.">			if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(Tools.replace(url, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;, null);</span>
-<span class="fc bfc" id="L1777" title="All 2 branches covered.">			if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(Tools.replace(url, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;, DocDB.getDomain(request));</span>
-<span class="fc bfc" id="L1778" title="All 2 branches covered.">			if (docId &gt; 0)</span>
+<span class="fc" id="L1789">			DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1790">			int docId = docDB.getDocIdFromURLImpl(url+&quot;.html&quot;, null);</span>
+<span class="pc bpc" id="L1791" title="1 of 2 branches missed.">			if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(url+&quot;.html&quot;, DocDB.getDomain(request));</span>
+<span class="fc bfc" id="L1792" title="All 2 branches covered.">			if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(Tools.replace(url, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;, null);</span>
+<span class="fc bfc" id="L1793" title="All 2 branches covered.">			if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(Tools.replace(url, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;, DocDB.getDomain(request));</span>
+<span class="fc bfc" id="L1794" title="All 2 branches covered.">			if (docId &gt; 0)</span>
 			{
-<span class="fc" id="L1780">				DocDetails fileDoc = docDB.getBasicDocDetails(docId, false);</span>
-<span class="pc bpc" id="L1781" title="1 of 2 branches missed.">				if (fileDoc != null)</span>
+<span class="fc" id="L1796">				DocDetails fileDoc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L1797" title="1 of 2 branches missed.">				if (fileDoc != null)</span>
 				{
-<span class="fc" id="L1783">					Identity user = null;</span>
-<span class="pc bpc" id="L1784" title="1 of 2 branches missed.">					if (session != null) user = UsersDB.getCurrentUser(session);</span>
+<span class="fc" id="L1799">					Identity user = null;</span>
+<span class="pc bpc" id="L1800" title="1 of 2 branches missed.">					if (session != null) user = UsersDB.getCurrentUser(session);</span>
 					else
 					{
-<span class="nc" id="L1787">						RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L1788" title="All 4 branches missed.">						if (rb!=null &amp;&amp; rb.getUserId()&gt;0) user = new Identity(UsersDB.getUser(rb.getUserId()));</span>
+<span class="nc" id="L1803">						RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L1804" title="All 4 branches missed.">						if (rb!=null &amp;&amp; rb.getUserId()&gt;0) user = new Identity(UsersDB.getUser(rb.getUserId()));</span>
 					}
-<span class="fc" id="L1790">					boolean canAccess = DocDB.canAccess(fileDoc, user, true);</span>
-<span class="fc" id="L1791">					boolean isAvailable = fileDoc.isAvailable();</span>
-<span class="pc bpc" id="L1792" title="7 of 8 branches missed.">					if (isAvailable == false &amp;&amp; user != null &amp;&amp; user.isAdmin() &amp;&amp; Constants.getBoolean(&quot;adminCheckUserGroups&quot;)==false)</span>
+<span class="fc" id="L1806">					boolean canAccess = DocDB.canAccess(fileDoc, user, true);</span>
+<span class="fc" id="L1807">					boolean isAvailable = fileDoc.isAvailable();</span>
+<span class="pc bpc" id="L1808" title="7 of 8 branches missed.">					if (isAvailable == false &amp;&amp; user != null &amp;&amp; user.isAdmin() &amp;&amp; Constants.getBoolean(&quot;adminCheckUserGroups&quot;)==false)</span>
 					{
 						//ak je admin ignorujeme nastavenie available atributu stranky
-<span class="nc" id="L1795">						isAvailable = true;</span>
+<span class="nc" id="L1811">						isAvailable = true;</span>
 					}
 
-<span class="pc bpc" id="L1798" title="2 of 4 branches missed.">					if (!canAccess || !isAvailable)</span>
+<span class="pc bpc" id="L1814" title="2 of 4 branches missed.">					if (!canAccess || !isAvailable)</span>
 					{
-<span class="nc" id="L1800">						efBestMatch = new EditForm();</span>
+<span class="nc" id="L1816">						efBestMatch = new EditForm();</span>
 						//to cislo je bulharska konstanta len aby nam potom nezbehlo ef.isAccessibleFor, pretoze to neriesi podadresare dokumentu
-<span class="nc" id="L1802">						efBestMatch.setPasswordProtectedString(&quot;999888777&quot;);</span>
+<span class="nc" id="L1818">						efBestMatch.setPasswordProtectedString(&quot;999888777&quot;);</span>
 					}
 					else
 					{
 						try
 						{
-<span class="pc bpc" id="L1808" title="1 of 2 branches missed.">							if (request != null)</span>
+<span class="pc bpc" id="L1824" title="1 of 2 branches missed.">							if (request != null)</span>
 							{
-<span class="fc" id="L1810">								StatDB.add(request.getSession(), request, null, docId);</span>
+<span class="fc" id="L1826">								StatDB.add(request.getSession(), request, null, docId);</span>
 							}
 						}
-<span class="nc" id="L1813">						catch (Exception e)</span>
+<span class="nc" id="L1829">						catch (Exception e)</span>
 						{
-<span class="nc" id="L1815">							sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L1816">						}</span>
+<span class="nc" id="L1831">							sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L1832">						}</span>
 					}
 				}
 			}
 		}
 
-<span class="fc" id="L1822">		return(efBestMatch);</span>
+<span class="fc" id="L1838">		return(efBestMatch);</span>
 	}
 
 	/**
@@ -1835,78 +1851,78 @@ import java.util.*;
 	 */
 	public static boolean doFileForbiddenRedirect(EditForm ef, Identity user, String originalPath, HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException
 	{
-<span class="fc" id="L1838">		boolean isAccesible = false;</span>
-<span class="pc bpc" id="L1839" title="3 of 4 branches missed.">		if (user != null &amp;&amp; ef!=null)</span>
+<span class="fc" id="L1854">		boolean isAccesible = false;</span>
+<span class="pc bpc" id="L1855" title="3 of 4 branches missed.">		if (user != null &amp;&amp; ef!=null)</span>
 		{
 			//otestuj, ci je user v skupine pre tento adresar
 
 			int i;
-<span class="nc" id="L1844">			int size = ef.getPasswordProtected().length;</span>
-<span class="nc bnc" id="L1845" title="All 2 branches missed.">			for (i=0; i&lt;size; i++)</span>
+<span class="nc" id="L1860">			int size = ef.getPasswordProtected().length;</span>
+<span class="nc bnc" id="L1861" title="All 2 branches missed.">			for (i=0; i&lt;size; i++)</span>
 			{
-<span class="nc bnc" id="L1847" title="All 2 branches missed.">				if (user.isInUserGroup(ef.getPasswordProtected()[i]))</span>
+<span class="nc bnc" id="L1863" title="All 2 branches missed.">				if (user.isInUserGroup(ef.getPasswordProtected()[i]))</span>
 				{
-<span class="nc" id="L1849">					isAccesible = true;</span>
-<span class="nc" id="L1850">					break;</span>
+<span class="nc" id="L1865">					isAccesible = true;</span>
+<span class="nc" id="L1866">					break;</span>
 				}
 			}
 
 		}
 
-<span class="pc bpc" id="L1856" title="1 of 2 branches missed.">		if (isAccesible) return false;</span>
+<span class="pc bpc" id="L1872" title="1 of 2 branches missed.">		if (isAccesible) return false;</span>
 
-<span class="fc" id="L1858">		String pathQS = originalPath;</span>
-<span class="pc bpc" id="L1859" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(req.getQueryString())) pathQS = originalPath + &quot;?&quot; + req.getQueryString();</span>
+<span class="fc" id="L1874">		String pathQS = originalPath;</span>
+<span class="fc bfc" id="L1875" title="All 2 branches covered.">		if (Tools.isNotEmpty(req.getQueryString())) pathQS = originalPath + &quot;?&quot; + req.getQueryString();</span>
 
-<span class="fc" id="L1861">		Logger.debug(PathFilter.class, &quot;NOT ACCESSIBLE: path=&quot;+pathQS+&quot; user=&quot;+user);</span>
-<span class="pc bpc" id="L1862" title="1 of 2 branches missed.">		if (user != null)</span>
+<span class="fc" id="L1877">		Logger.debug(PathFilter.class, &quot;NOT ACCESSIBLE: path=&quot;+pathQS+&quot; user=&quot;+user);</span>
+<span class="pc bpc" id="L1878" title="1 of 2 branches missed.">		if (user != null)</span>
 		{
 			//user nema pristup, daj mu forbidden
-<span class="nc" id="L1865">			int fileAccessDeniedDocId = Constants.getInt(&quot;fileAccessDeniedDocId&quot;);</span>
-<span class="nc" id="L1866">			Logger.debug(PathFilter.class, &quot;fileAccessDeniedDocId=&quot;+fileAccessDeniedDocId+&quot; ntlm=&quot;+AuthenticationFilter.getForbiddenURL());</span>
-<span class="nc bnc" id="L1867" title="All 2 branches missed.">			if (fileAccessDeniedDocId &gt; 0)</span>
+<span class="nc" id="L1881">			int fileAccessDeniedDocId = Constants.getInt(&quot;fileAccessDeniedDocId&quot;);</span>
+<span class="nc" id="L1882">			Logger.debug(PathFilter.class, &quot;fileAccessDeniedDocId=&quot;+fileAccessDeniedDocId+&quot; ntlm=&quot;+AuthenticationFilter.getForbiddenURL());</span>
+<span class="nc bnc" id="L1883" title="All 2 branches missed.">			if (fileAccessDeniedDocId &gt; 0)</span>
 			{
-<span class="nc" id="L1869">				res.setHeader(&quot;Pragma&quot;,&quot;No-Cache&quot;);</span>
-<span class="nc" id="L1870">				res.setDateHeader(&quot;Expires&quot;,0);</span>
-<span class="nc" id="L1871">				res.setHeader(&quot;Cache-Control&quot;,&quot;no-Cache&quot;);</span>
+<span class="nc" id="L1885">				res.setHeader(&quot;Pragma&quot;,&quot;No-Cache&quot;);</span>
+<span class="nc" id="L1886">				res.setDateHeader(&quot;Expires&quot;,0);</span>
+<span class="nc" id="L1887">				res.setHeader(&quot;Cache-Control&quot;,&quot;no-Cache&quot;);</span>
 
-<span class="nc" id="L1873">				req.setAttribute(&quot;logonFormSubmitURL&quot;, originalPath);</span>
-<span class="nc" id="L1874">				req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot;+fileAccessDeniedDocId+&quot;&amp;origUrl=&quot;+Tools.URLEncode(pathQS)).forward(req, res);</span>
+<span class="nc" id="L1889">				req.setAttribute(&quot;logonFormSubmitURL&quot;, originalPath);</span>
+<span class="nc" id="L1890">				req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot;+fileAccessDeniedDocId+&quot;&amp;origUrl=&quot;+Tools.URLEncode(pathQS)).forward(req, res);</span>
 			}
-<span class="nc bnc" id="L1876" title="All 2 branches missed.">			else if (Tools.isNotEmpty(AuthenticationFilter.getForbiddenURL()))</span>
+<span class="nc bnc" id="L1892" title="All 2 branches missed.">			else if (Tools.isNotEmpty(AuthenticationFilter.getForbiddenURL()))</span>
 			{
-<span class="nc" id="L1878">				res.sendRedirect(Tools.addParameterToUrlNoAmp(AuthenticationFilter.getForbiddenURL(), &quot;origUrl&quot;, pathQS));</span>
+<span class="nc" id="L1894">				res.sendRedirect(Tools.addParameterToUrlNoAmp(AuthenticationFilter.getForbiddenURL(), &quot;origUrl&quot;, pathQS));</span>
 			}
 			else
 			{
-<span class="nc" id="L1882">				res.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
+<span class="nc" id="L1898">				res.setStatus(HttpServletResponse.SC_FORBIDDEN);</span>
 			}
-<span class="nc" id="L1884">		}</span>
+<span class="nc" id="L1900">		}</span>
 		else
 		{
 			//forwardni sa na logon stranku
-<span class="fc" id="L1888">			req.getSession().setAttribute(&quot;afterLogonRedirect&quot;, pathQS);</span>
+<span class="fc" id="L1904">			req.getSession().setAttribute(&quot;afterLogonRedirect&quot;, pathQS);</span>
 
-<span class="fc" id="L1890">			res.setHeader(&quot;Pragma&quot;,&quot;No-Cache&quot;);</span>
-<span class="fc" id="L1891">			res.setDateHeader(&quot;Expires&quot;,0);</span>
-<span class="fc" id="L1892">			res.setHeader(&quot;Cache-Control&quot;,&quot;no-Cache&quot;);</span>
+<span class="fc" id="L1906">			res.setHeader(&quot;Pragma&quot;,&quot;No-Cache&quot;);</span>
+<span class="fc" id="L1907">			res.setDateHeader(&quot;Expires&quot;,0);</span>
+<span class="fc" id="L1908">			res.setHeader(&quot;Cache-Control&quot;,&quot;no-Cache&quot;);</span>
 
-<span class="fc bfc" id="L1894" title="All 4 branches covered.">			if (ef != null &amp;&amp; ef.getLogonDocId()&gt;0)</span>
+<span class="fc bfc" id="L1910" title="All 4 branches covered.">			if (ef != null &amp;&amp; ef.getLogonDocId()&gt;0)</span>
 			{
 				//res.sendRedirect(&quot;/showdoc.do?docid=&quot;+ef.getLogonDocId());
 
 				//request.setAttribute(&quot;docDetailsOriginal&quot;, doc);
 
 				//pre subor sa musime submitnut priamo na usrlogon.do aby sa najskor spravilo prihlasenie az potom kontrola prav na subor
-<span class="fc" id="L1901">				req.setAttribute(&quot;logonFormSubmitURL&quot;, &quot;/usrlogon.do&quot;);</span>
-<span class="fc" id="L1902">				req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot;+ef.getLogonDocId()+&quot;&amp;dontUpdateLastDocId=true&quot;).forward(req, res);</span>
+<span class="fc" id="L1917">				req.setAttribute(&quot;logonFormSubmitURL&quot;, &quot;/usrlogon.do&quot;);</span>
+<span class="fc" id="L1918">				req.getRequestDispatcher(&quot;/showdoc.do?docid=&quot;+ef.getLogonDocId()+&quot;&amp;dontUpdateLastDocId=true&quot;).forward(req, res);</span>
 			}
 			else
 			{
-<span class="fc" id="L1906">				req.getRequestDispatcher(&quot;/components/user/logon.jsp?permsDenied=true&quot;).forward(req, res);</span>
+<span class="fc" id="L1922">				req.getRequestDispatcher(&quot;/components/user/logon.jsp?permsDenied=true&quot;).forward(req, res);</span>
 			}
 		}
-<span class="fc" id="L1909">		return true;</span>
+<span class="fc" id="L1925">		return true;</span>
 	}
 
 	/**
@@ -1916,22 +1932,22 @@ import java.util.*;
 	 */
 	public static String getRealPath(String url)
 	{
-<span class="pc bpc" id="L1919" title="1 of 2 branches missed.">		if (customPath != null)</span>
+<span class="pc bpc" id="L1935" title="1 of 2 branches missed.">		if (customPath != null)</span>
 		{
 			//skontroluj, ci pozadovany subor nie je custom
-<span class="nc bnc" id="L1922" title="All 2 branches missed.">			File f = new File(customPath + File.separatorChar + Constants.getInstallName() + (url.startsWith(&quot;/&quot;)?&quot;&quot;:File.separatorChar) + url.replace('/', File.separatorChar));</span>
+<span class="nc bnc" id="L1938" title="All 2 branches missed.">			File f = new File(customPath + File.separatorChar + Constants.getInstallName() + (url.startsWith(&quot;/&quot;)?&quot;&quot;:File.separatorChar) + url.replace('/', File.separatorChar));</span>
 			//Logger.println(this,&quot;Checking CUSTOM: &quot;+f.getAbsolutePath());
-<span class="nc bnc" id="L1924" title="All 2 branches missed.">			if (f.exists())</span>
+<span class="nc bnc" id="L1940" title="All 2 branches missed.">			if (f.exists())</span>
 			{
-<span class="nc" id="L1926">				return(f.getAbsolutePath());</span>
+<span class="nc" id="L1942">				return(f.getAbsolutePath());</span>
 			}
 		}
-<span class="fc" id="L1929">		return(Tools.getRealPath(url));</span>
+<span class="fc" id="L1945">		return(Tools.getRealPath(url));</span>
 	}
 
 	public static String getOrigPath(HttpServletRequest request)
 	{
-<span class="fc" id="L1934">		return((String)request.getAttribute(&quot;path_filter_orig_path&quot;));</span>
+<span class="fc" id="L1950">		return((String)request.getAttribute(&quot;path_filter_orig_path&quot;));</span>
 	}
 
 	/**
@@ -1941,15 +1957,15 @@ import java.util.*;
 	 */
 	public static String getOrigPathDocId(HttpServletRequest request)
 	{
-<span class="pc bpc" id="L1944" title="3 of 4 branches missed.">		if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_DOCID &amp;&amp; request.getParameter(&quot;docid&quot;)!=null)</span>
+<span class="pc bpc" id="L1960" title="3 of 4 branches missed.">		if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_DOCID &amp;&amp; request.getParameter(&quot;docid&quot;)!=null)</span>
 		{
-<span class="nc" id="L1946">			return &quot;/showdoc.do?docid=&quot;+Tools.getDocId(request);</span>
+<span class="nc" id="L1962">			return &quot;/showdoc.do?docid=&quot;+Tools.getDocId(request);</span>
 		}
-<span class="fc" id="L1948">		String origPath = getOrigPath(request);</span>
+<span class="fc" id="L1964">		String origPath = getOrigPath(request);</span>
 
-<span class="pc bpc" id="L1950" title="1 of 2 branches missed.">		if (&quot;/showdoc.do&quot;.equals(origPath)) origPath = origPath + &quot;?docid=&quot; + Tools.getDocId(request);</span>
+<span class="pc bpc" id="L1966" title="1 of 2 branches missed.">		if (&quot;/showdoc.do&quot;.equals(origPath)) origPath = origPath + &quot;?docid=&quot; + Tools.getDocId(request);</span>
 
-<span class="fc" id="L1952">		return origPath;</span>
+<span class="fc" id="L1968">		return origPath;</span>
 	}
 
 	/**
@@ -1960,39 +1976,39 @@ import java.util.*;
 	 */
 	public static String getOrigPathUpload(HttpServletRequest request)
 	{
-<span class="pc bpc" id="L1963" title="3 of 4 branches missed.">		if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_DOCID &amp;&amp; request.getParameter(&quot;docid&quot;)!=null)</span>
+<span class="pc bpc" id="L1979" title="3 of 4 branches missed.">		if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_DOCID &amp;&amp; request.getParameter(&quot;docid&quot;)!=null)</span>
 		{
-<span class="nc" id="L1965">			return &quot;/showdoc.do?docid=&quot;+Tools.getDocId(request) +&quot;&amp;__sfu=1&quot;;</span>
+<span class="nc" id="L1981">			return &quot;/showdoc.do?docid=&quot;+Tools.getDocId(request) +&quot;&amp;__sfu=1&quot;;</span>
 		}
-<span class="fc" id="L1967">		return getOrigPath(request)+&quot;?__sfu=1&quot;;</span>
+<span class="fc" id="L1983">		return getOrigPath(request)+&quot;?__sfu=1&quot;;</span>
 	}
 
 	public static boolean bypassPath(String path, ServletRequest servletRequest)
 	{
 		//aby nam lokalne fungoval customPath
-<span class="pc bpc" id="L1973" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()) &amp;&amp; &quot;iwcm.interway.sk&quot;.equals(servletRequest.getServerName())) return false;</span>
+<span class="pc bpc" id="L1989" title="3 of 4 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()) &amp;&amp; &quot;iwcm.interway.sk&quot;.equals(servletRequest.getServerName())) return false;</span>
 
-<span class="fc bfc" id="L1975" title="All 2 branches covered.">		if (bypassPath == null)</span>
+<span class="fc bfc" id="L1991" title="All 2 branches covered.">		if (bypassPath == null)</span>
 		{
-<span class="fc" id="L1977">			synchronized(PathFilter.class) //NOSONAR</span>
+<span class="fc" id="L1993">			synchronized(PathFilter.class) //NOSONAR</span>
 			{
-<span class="pc bpc" id="L1979" title="1 of 2 branches missed.">				if (bypassPath == null)</span>
+<span class="pc bpc" id="L1995" title="1 of 2 branches missed.">				if (bypassPath == null)</span>
 				{
-<span class="fc" id="L1981">					String[] tokens = Tools.getTokens(Constants.getString(&quot;pathFilterBypassPath&quot;), &quot;,&quot;, true);</span>
-<span class="pc bpc" id="L1982" title="1 of 2 branches missed.">					bypassPath = tokens == null ? new String[0] : tokens;</span>
+<span class="fc" id="L1997">					String[] tokens = Tools.getTokens(Constants.getString(&quot;pathFilterBypassPath&quot;), &quot;,&quot;, true);</span>
+<span class="pc bpc" id="L1998" title="1 of 2 branches missed.">					bypassPath = tokens == null ? new String[0] : tokens;</span>
 				}
-<span class="fc" id="L1984">			}</span>
+<span class="fc" id="L2000">			}</span>
 		}
 
-<span class="pc bpc" id="L1987" title="1 of 2 branches missed.">		if (bypassPath.length &gt; 0)</span>
+<span class="pc bpc" id="L2003" title="1 of 2 branches missed.">		if (bypassPath.length &gt; 0)</span>
 		{
-<span class="nc bnc" id="L1989" title="All 2 branches missed.">			for (int i=0; i&lt;bypassPath.length; i++)</span>
+<span class="nc bnc" id="L2005" title="All 2 branches missed.">			for (int i=0; i&lt;bypassPath.length; i++)</span>
 			{
-<span class="nc bnc" id="L1991" title="All 2 branches missed.">				if (path.startsWith(bypassPath[i])) return(true);</span>
+<span class="nc bnc" id="L2007" title="All 2 branches missed.">				if (path.startsWith(bypassPath[i])) return(true);</span>
 			}
 		}
 
-<span class="fc" id="L1995">		return(false);</span>
+<span class="fc" id="L2011">		return(false);</span>
 	}
 
     /**
@@ -2005,85 +2021,86 @@ import java.util.*;
      */
 	public static boolean setStaticContentHeaders(String path, Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
-<span class="fc bfc" id="L2008" title="All 4 branches covered.">		if (path.startsWith(&quot;/cache/&quot;)==false &amp;&amp; request.getParameter(&quot;v&quot;)!=null)</span>
+<span class="fc bfc" id="L2024" title="All 4 branches covered.">		if (path.startsWith(&quot;/cache/&quot;)==false &amp;&amp; request.getParameter(&quot;v&quot;)!=null)</span>
 		{
 			//vygeneruj odkaz bez v parametra, negeneruje pre fiktivne /cache/nieco.css linky
-<span class="fc" id="L2011">			String canonicalLink = Tools.getBaseHref(request) + path;</span>
-<span class="fc" id="L2012">			response.setHeader(&quot;Link&quot;, &quot;&lt;&quot;+canonicalLink+&quot;&gt;; rel=\&quot;canonical\&quot;&quot;);</span>
+<span class="fc" id="L2027">			String canonicalLink = Tools.getBaseHref(request) + path;</span>
+<span class="fc" id="L2028">			response.setHeader(&quot;Link&quot;, &quot;&lt;&quot;+canonicalLink+&quot;&gt;; rel=\&quot;canonical\&quot;&quot;);</span>
 		}
 
 		//vypnutie cachovania pre obrazky z imageeditora
-<span class="pc bpc" id="L2016" title="1 of 2 branches missed.">		if (path.contains(&quot;/_tmp_&quot;))</span>
+<span class="pc bpc" id="L2032" title="1 of 2 branches missed.">		if (path.contains(&quot;/_tmp_&quot;))</span>
 		{
-<span class="nc" id="L2018">			response.setDateHeader(&quot;Expires&quot;,0);</span>
-<span class="nc" id="L2019">			response.setDateHeader(&quot;Last-Modified&quot;, Tools.getNow());</span>
-<span class="nc" id="L2020">			response.setHeader(&quot;Cache-Control&quot;,&quot;no-store, no-cache, must-revalidate, max-age=0&quot;);</span>
+<span class="nc" id="L2034">			response.setDateHeader(&quot;Expires&quot;,0);</span>
+<span class="nc" id="L2035">			response.setDateHeader(&quot;Last-Modified&quot;, Tools.getNow());</span>
+<span class="nc" id="L2036">			response.setHeader(&quot;Cache-Control&quot;,&quot;no-store, no-cache, must-revalidate, max-age=0&quot;);</span>
 			//response.setHeader(&quot;Cache-Control&quot;,&quot;post-check=0, pre-check=0&quot;);
-<span class="nc" id="L2022">			response.setHeader(&quot;Pragma&quot;,&quot;No-Cache&quot;);</span>
-<span class="nc" id="L2023">			response.setHeader(&quot;Etag&quot;, &quot;&quot;);</span>
+<span class="nc" id="L2038">			response.setHeader(&quot;Pragma&quot;,&quot;No-Cache&quot;);</span>
+<span class="nc" id="L2039">			response.setHeader(&quot;Etag&quot;, &quot;&quot;);</span>
 
-<span class="nc" id="L2025">			return false;</span>
+<span class="nc" id="L2041">			return false;</span>
 		}
 
-<span class="fc bfc" id="L2028" title="All 2 branches covered.">		if (cacheStaticContentSeconds &lt; 0)</span>
+<span class="fc bfc" id="L2044" title="All 2 branches covered.">		if (cacheStaticContentSeconds &lt; 0)</span>
 		{
-<span class="fc" id="L2030">			cacheStaticContentSeconds = Constants.getInt(&quot;cacheStaticContentSeconds&quot;);</span>
+<span class="fc" id="L2046">			cacheStaticContentSeconds = Constants.getInt(&quot;cacheStaticContentSeconds&quot;);</span>
 		}
 
-<span class="fc bfc" id="L2033" title="All 2 branches covered.">		if (cacheStaticContentSuffixes == null)</span>
+<span class="fc bfc" id="L2049" title="All 2 branches covered.">		if (cacheStaticContentSuffixes == null)</span>
 		{
-<span class="fc" id="L2035">			synchronized(PathFilter.class) //NOSONAR</span>
+<span class="fc" id="L2051">			synchronized(PathFilter.class) //NOSONAR</span>
 			{
-<span class="pc bpc" id="L2037" title="1 of 2 branches missed.">				if (cacheStaticContentSuffixes == null)</span>
+<span class="pc bpc" id="L2053" title="1 of 2 branches missed.">				if (cacheStaticContentSuffixes == null)</span>
 				{
-<span class="fc" id="L2039">					String[] tokens = Tools.getTokens(Constants.getString(&quot;cacheStaticContentSuffixes&quot;), &quot;,&quot;, true);</span>
-<span class="pc bpc" id="L2040" title="1 of 2 branches missed.">					cacheStaticContentSuffixes = tokens == null ? new String[0] : tokens;</span>
+<span class="fc" id="L2055">					String[] tokens = Tools.getTokens(Constants.getString(&quot;cacheStaticContentSuffixes&quot;), &quot;,&quot;, true);</span>
+<span class="pc bpc" id="L2056" title="1 of 2 branches missed.">					cacheStaticContentSuffixes = tokens == null ? new String[0] : tokens;</span>
 				}
-<span class="fc" id="L2042">			}</span>
+<span class="fc" id="L2058">			}</span>
 		}
 
 		//prefixom /cache mame oznacene veci, co sa musia cachovat kvoli rychlosti admin casti (/admin/scripts/common.jsp)
-<span class="fc bfc" id="L2046" title="All 2 branches covered.">		if (path.startsWith(&quot;/cache/&quot;)==false)</span>
+<span class="fc bfc" id="L2062" title="All 2 branches covered.">		if (path.startsWith(&quot;/cache/&quot;)==false)</span>
 		{
-<span class="pc bpc" id="L2048" title="3 of 6 branches missed.">			if (cacheStaticContentSeconds&lt;1 || cacheStaticContentSuffixes==null || cacheStaticContentSuffixes.length&lt;1) return false;</span>
+<span class="pc bpc" id="L2064" title="3 of 6 branches missed.">			if (cacheStaticContentSeconds&lt;1 || cacheStaticContentSuffixes==null || cacheStaticContentSuffixes.length&lt;1) return false;</span>
 
 			//administratorom cache nenastavujem (okrem admin casti, tam sa to casto nemeni)
-<span class="pc bpc" id="L2051" title="1 of 10 branches missed.">			if (user!=null &amp;&amp; user.isAdmin() &amp;&amp; path.startsWith(&quot;/admin&quot;)==false &amp;&amp; path.startsWith(&quot;/components&quot;)==false &amp;&amp; Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false) return false;</span>
+<span class="pc bpc" id="L2067" title="1 of 10 branches missed.">			if (user!=null &amp;&amp; user.isAdmin() &amp;&amp; path.startsWith(&quot;/admin&quot;)==false &amp;&amp; path.startsWith(&quot;/components&quot;)==false &amp;&amp; Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false) return false;</span>
 
 			//pre IP pre ktore neevidujeme statistiku nenastavujem (pravdepodobne IWAY + admini)
-<span class="pc bpc" id="L2054" title="2 of 4 branches missed.">			if (Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false &amp;&amp; BrowserDetector.isStatIpAllowedFast(request)==false) return false;</span>
+<span class="pc bpc" id="L2070" title="2 of 4 branches missed.">			if (Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false &amp;&amp; BrowserDetector.isStatIpAllowedFast(request)==false) return false;</span>
 		}
 		//String pathLC = path.toLowerCase();
 		//v parametri v sa prenasa verzia suboru, v tom pripade cachujeme
 		//uz cachujem aj admin cast if (pathLC.startsWith(&quot;/admin/&quot;) &amp;&amp; (request.getParameter(&quot;v&quot;)==null &amp;&amp; request.getParameter(&quot;t&quot;)==null)) return false;
 
-<span class="fc" id="L2060">		int myCacheStaticContentSeconds = cacheStaticContentSeconds;</span>
-<span class="pc bpc" id="L2061" title="3 of 4 branches missed.">		if (myCacheStaticContentSeconds &lt; 1 &amp;&amp; path.startsWith(&quot;/cache/&quot;)) myCacheStaticContentSeconds = 300;</span>
+<span class="fc" id="L2076">		int myCacheStaticContentSeconds = cacheStaticContentSeconds;</span>
+<span class="pc bpc" id="L2077" title="3 of 4 branches missed.">		if (myCacheStaticContentSeconds &lt; 1 &amp;&amp; path.startsWith(&quot;/cache/&quot;)) myCacheStaticContentSeconds = 300;</span>
 		//ak mame parameter v tak natvrdo nastavime cas na 7 dni
-<span class="fc bfc" id="L2063" title="All 2 branches covered.">		if (request.getParameter(&quot;v&quot;)!=null) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
-<span class="fc bfc" id="L2064" title="All 2 branches covered.">		if (path.contains(&quot;ckeditor&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
-<span class="fc bfc" id="L2065" title="All 2 branches covered.">		if (path.contains(&quot;assets&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
-<span class="fc bfc" id="L2066" title="All 2 branches covered.">		if (path.contains(&quot;_common&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
-<span class="fc bfc" id="L2067" title="All 2 branches covered.">		if (path.contains(&quot;/admin/images/&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
+<span class="fc bfc" id="L2079" title="All 2 branches covered.">		if (request.getParameter(&quot;v&quot;)!=null) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
+<span class="fc bfc" id="L2080" title="All 2 branches covered.">		if (path.contains(&quot;ckeditor&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
+<span class="fc bfc" id="L2081" title="All 2 branches covered.">		if (path.contains(&quot;assets&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
+<span class="fc bfc" id="L2082" title="All 2 branches covered.">		if (path.contains(&quot;_common&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
+<span class="fc bfc" id="L2083" title="All 2 branches covered.">		if (path.contains(&quot;/admin/images/&quot;)) myCacheStaticContentSeconds = 60 * 60 * 24 * 7;</span>
+<span class="pc bpc" id="L2084" title="1 of 4 branches missed.">		if (path.contains(&quot;/admin/v9/dist/&quot;) &amp;&amp; myCacheStaticContentSeconds&lt;301) myCacheStaticContentSeconds = 60 * 30;</span>
 
-<span class="pc bpc" id="L2069" title="1 of 2 branches missed.">		if (myCacheStaticContentSeconds &lt; cacheStaticContentSeconds) myCacheStaticContentSeconds = cacheStaticContentSeconds;</span>
+<span class="pc bpc" id="L2086" title="1 of 2 branches missed.">		if (myCacheStaticContentSeconds &lt; cacheStaticContentSeconds) myCacheStaticContentSeconds = cacheStaticContentSeconds;</span>
 
-<span class="fc bfc" id="L2071" title="All 2 branches covered.">		for (int i=0; i&lt;cacheStaticContentSuffixes.length; i++)</span>
+<span class="fc bfc" id="L2088" title="All 2 branches covered.">		for (int i=0; i&lt;cacheStaticContentSuffixes.length; i++)</span>
 		{
-<span class="fc bfc" id="L2073" title="All 2 branches covered.">			if (path.endsWith(cacheStaticContentSuffixes[i]))</span>
+<span class="fc bfc" id="L2090" title="All 2 branches covered.">			if (path.endsWith(cacheStaticContentSuffixes[i]))</span>
 			{
-<span class="fc" id="L2075">				setCacheHeaders(myCacheStaticContentSeconds, response);</span>
+<span class="fc" id="L2092">				setCacheHeaders(myCacheStaticContentSeconds, response);</span>
 
-<span class="fc" id="L2077">				return true;</span>
+<span class="fc" id="L2094">				return true;</span>
 			}
 		}
 
 		//cachovanie json pre dashboard
-<span class="fc bfc" id="L2082" title="All 2 branches covered.">		if (path.contains(&quot;/admin/v9/json/&quot;)) {</span>
-<span class="fc" id="L2083">			setCacheHeaders(60 * 60 * 24, response);</span>
+<span class="pc bpc" id="L2099" title="1 of 2 branches missed.">		if (path.contains(&quot;/admin/v9/json/&quot;)) {</span>
+<span class="nc" id="L2100">			setCacheHeaders(60 * 60 * 24, response);</span>
 		}
 
-<span class="fc" id="L2086">		return false;</span>
+<span class="fc" id="L2103">		return false;</span>
 	}
 
     /**
@@ -2098,36 +2115,36 @@ import java.util.*;
      */
 	public static void setDownloadHeaders(String path, HttpServletRequest request, HttpServletResponse response)
     {
-<span class="fc bfc" id="L2101" title="All 2 branches covered.">        if (path.endsWith(&quot;/&quot;)) return;</span>
+<span class="fc bfc" id="L2118" title="All 2 branches covered.">        if (path.endsWith(&quot;/&quot;)) return;</span>
 
-<span class="fc bfc" id="L2103" title="All 4 branches covered.">        if (path.startsWith(&quot;/images&quot;) || path.startsWith(&quot;/files&quot;))</span>
+<span class="fc bfc" id="L2120" title="All 4 branches covered.">        if (path.startsWith(&quot;/images&quot;) || path.startsWith(&quot;/files&quot;))</span>
         {
             try
             {
-<span class="fc" id="L2107">                int lomka = path.lastIndexOf(&quot;/&quot;);</span>
-<span class="fc" id="L2108">                int bodka = path.indexOf(&quot;.&quot;, lomka);</span>
-<span class="pc bpc" id="L2109" title="2 of 4 branches missed.">                if (lomka &gt; 0 &amp;&amp; bodka &gt; lomka)</span>
+<span class="fc" id="L2124">                int lomka = path.lastIndexOf(&quot;/&quot;);</span>
+<span class="fc" id="L2125">                int bodka = path.indexOf(&quot;.&quot;, lomka);</span>
+<span class="pc bpc" id="L2126" title="1 of 4 branches missed.">                if (lomka &gt; 0 &amp;&amp; bodka &gt; lomka)</span>
                 {
-<span class="fc" id="L2111">                    String fileName = path.substring(lomka + 1);</span>
+<span class="fc" id="L2128">                    String fileName = path.substring(lomka + 1);</span>
 
-<span class="pc bpc" id="L2113" title="1 of 2 branches missed.">                    if (isForceDownload(fileName))</span>
+<span class="pc bpc" id="L2130" title="1 of 2 branches missed.">                    if (isForceDownload(fileName))</span>
                     {
-<span class="nc" id="L2115">                        response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment;filename=&quot;+fileName);</span>
+<span class="nc" id="L2132">                        response.setHeader(&quot;Content-Disposition&quot;, &quot;attachment;filename=&quot;+fileName);</span>
                     }
                 }
             }
-<span class="nc" id="L2119">            catch (Exception ex)</span>
+<span class="nc" id="L2136">            catch (Exception ex)</span>
             {
-<span class="nc" id="L2121">                sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L2122">            }</span>
+<span class="nc" id="L2138">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L2139">            }</span>
         }
-<span class="fc" id="L2124">    }</span>
+<span class="fc" id="L2141">    }</span>
 
     public static boolean isForceDownload(String fileName) {
-<span class="fc" id="L2127">		String forceDownloadSuffixes = Constants.getString(&quot;forceDownloadSuffixes&quot;);</span>
-<span class="fc" id="L2128">		String ext = FileTools.getFileExtension(fileName);</span>
+<span class="fc" id="L2144">		String forceDownloadSuffixes = Constants.getString(&quot;forceDownloadSuffixes&quot;);</span>
+<span class="fc" id="L2145">		String ext = FileTools.getFileExtension(fileName);</span>
 
-<span class="pc bpc" id="L2130" title="3 of 4 branches missed.">		return (Tools.isNotEmpty(forceDownloadSuffixes) &amp;&amp; forceDownloadSuffixes.contains(ext));</span>
+<span class="pc bpc" id="L2147" title="3 of 4 branches missed.">		return (Tools.isNotEmpty(forceDownloadSuffixes) &amp;&amp; forceDownloadSuffixes.contains(ext));</span>
 	}
 
 	/**
@@ -2137,10 +2154,10 @@ import java.util.*;
 	 */
 	public static void setCacheHeaders(int myCacheStaticContentSeconds, HttpServletResponse response)
 	{
-<span class="fc" id="L2140">		response.setHeader(&quot;Cache-Control&quot;, &quot;max-age=&quot;+myCacheStaticContentSeconds);</span>
-<span class="fc bfc" id="L2141" title="All 2 branches covered.">		if (response.containsHeader(&quot;Pragma&quot;))	response.setHeader(&quot;Pragma&quot;,&quot;&quot;);</span>
-<span class="fc bfc" id="L2142" title="All 2 branches covered.">		if (response.containsHeader(&quot;Expires&quot;)) response.setDateHeader(&quot;Expires&quot;, Tools.getNow()+myCacheStaticContentSeconds*1000);</span>
-<span class="fc" id="L2143">	}</span>
+<span class="fc" id="L2157">		response.setHeader(&quot;Cache-Control&quot;, &quot;max-age=&quot;+myCacheStaticContentSeconds);</span>
+<span class="fc bfc" id="L2158" title="All 2 branches covered.">		if (response.containsHeader(&quot;Pragma&quot;))	response.setHeader(&quot;Pragma&quot;,&quot;&quot;);</span>
+<span class="fc bfc" id="L2159" title="All 2 branches covered.">		if (response.containsHeader(&quot;Expires&quot;)) response.setDateHeader(&quot;Expires&quot;, Tools.getNow()+myCacheStaticContentSeconds*1000);</span>
+<span class="fc" id="L2160">	}</span>
 
 	/**
 	 * Cache pre staticke subory, cachuju sa len subory pre ktore sa nastavuje setStaticContentHeaders
@@ -2150,83 +2167,83 @@ import java.util.*;
 	public static boolean writeAndCacheFile(String url, HttpServletResponse response)
 	{
 		//ak je cache vypnuta, neriesime
-<span class="nc bnc" id="L2153" title="All 2 branches missed.">		if (FileCache.useFileCache() == false) return false;</span>
+<span class="nc bnc" id="L2170" title="All 2 branches missed.">		if (FileCache.useFileCache() == false) return false;</span>
 		//pre DB storage tu cache neriesime, to sa riesi priamo v IwcmFsFilter
-<span class="nc bnc" id="L2155" title="All 2 branches missed.">		if (IwcmFsDB.useDBStorage()) return false;</span>
+<span class="nc bnc" id="L2172" title="All 2 branches missed.">		if (IwcmFsDB.useDBStorage()) return false;</span>
 
-<span class="nc" id="L2157">		String mimeType = Constants.getServletContext().getMimeType(url.toLowerCase());</span>
-<span class="nc bnc" id="L2158" title="All 2 branches missed.">		if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
-<span class="nc" id="L2159">		response.setContentType(mimeType);</span>
+<span class="nc" id="L2174">		String mimeType = Constants.getServletContext().getMimeType(url.toLowerCase());</span>
+<span class="nc bnc" id="L2175" title="All 2 branches missed.">		if (Tools.isEmpty(mimeType)) mimeType = &quot;application/octet-stream&quot;;</span>
+<span class="nc" id="L2176">		response.setContentType(mimeType);</span>
 
-<span class="nc" id="L2161">		byte[] data = FileCache.getObject(url);</span>
-<span class="nc bnc" id="L2162" title="All 2 branches missed.">		if (data != null)</span>
+<span class="nc" id="L2178">		byte[] data = FileCache.getObject(url);</span>
+<span class="nc bnc" id="L2179" title="All 2 branches missed.">		if (data != null)</span>
 		{
-<span class="nc" id="L2164">			response.setContentLength(data.length);</span>
+<span class="nc" id="L2181">			response.setContentLength(data.length);</span>
 
 			try
 			{
-<span class="nc" id="L2168">				OutputStream out=response.getOutputStream();</span>
-<span class="nc" id="L2169">				out.write(data);</span>
-<span class="nc" id="L2170">				out.close();</span>
-<span class="nc" id="L2171">				return true;</span>
+<span class="nc" id="L2185">				OutputStream out=response.getOutputStream();</span>
+<span class="nc" id="L2186">				out.write(data);</span>
+<span class="nc" id="L2187">				out.close();</span>
+<span class="nc" id="L2188">				return true;</span>
 			}
-<span class="nc" id="L2173">			catch (Exception ex)</span>
+<span class="nc" id="L2190">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L2175">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L2176">			}</span>
+<span class="nc" id="L2192">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2193">			}</span>
 		}
 		else
 		{
-<span class="nc" id="L2180">			IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
-<span class="nc bnc" id="L2181" title="All 2 branches missed.">			if (f.length() &gt; FileCache.getMaxFileSize()) return false;</span>
+<span class="nc" id="L2197">			IwcmFile f = new IwcmFile(Tools.getRealPath(url));</span>
+<span class="nc bnc" id="L2198" title="All 2 branches missed.">			if (f.length() &gt; FileCache.getMaxFileSize()) return false;</span>
 
-<span class="nc" id="L2183">			response.setContentLength((int)f.length());</span>
+<span class="nc" id="L2200">			response.setContentLength((int)f.length());</span>
 
 			//nacitaj data do pola
-<span class="nc" id="L2186">			data = new byte[(int)f.length()];</span>
-<span class="nc" id="L2187">			boolean dataCopied = false;</span>
+<span class="nc" id="L2203">			data = new byte[(int)f.length()];</span>
+<span class="nc" id="L2204">			boolean dataCopied = false;</span>
 
-<span class="nc" id="L2189">			IwcmInputStream in = null;</span>
+<span class="nc" id="L2206">			IwcmInputStream in = null;</span>
 			try
 			{
-<span class="nc" id="L2192">				OutputStream out=response.getOutputStream();</span>
+<span class="nc" id="L2209">				OutputStream out=response.getOutputStream();</span>
 
-<span class="nc" id="L2194">				in = new IwcmInputStream(f);</span>
+<span class="nc" id="L2211">				in = new IwcmInputStream(f);</span>
 
-<span class="nc" id="L2196">				byte[] buffer = new byte[64000];</span>
-<span class="nc" id="L2197">				int bytesRead = 0;</span>
-<span class="nc" id="L2198">				int bytesCopied = 0;</span>
-<span class="nc bnc" id="L2199" title="All 2 branches missed.">				while ((bytesRead = in.read(buffer, 0, 64000)) != -1)</span>
+<span class="nc" id="L2213">				byte[] buffer = new byte[64000];</span>
+<span class="nc" id="L2214">				int bytesRead = 0;</span>
+<span class="nc" id="L2215">				int bytesCopied = 0;</span>
+<span class="nc bnc" id="L2216" title="All 2 branches missed.">				while ((bytesRead = in.read(buffer, 0, 64000)) != -1)</span>
 				{
 					//Logger.debug(IwcmFsDB.class, &quot;writing &quot;+bytesRead);
-<span class="nc" id="L2202">					out.write(buffer, 0, bytesRead);</span>
+<span class="nc" id="L2219">					out.write(buffer, 0, bytesRead);</span>
 
-<span class="nc" id="L2204">					System.arraycopy(buffer, 0, data, bytesCopied, bytesRead);</span>
-<span class="nc" id="L2205">					bytesCopied+=bytesRead;</span>
+<span class="nc" id="L2221">					System.arraycopy(buffer, 0, data, bytesCopied, bytesRead);</span>
+<span class="nc" id="L2222">					bytesCopied+=bytesRead;</span>
 				}
-<span class="nc" id="L2207">				out.flush();</span>
-<span class="nc" id="L2208">				out.close();</span>
-<span class="nc" id="L2209">				in.close();</span>
+<span class="nc" id="L2224">				out.flush();</span>
+<span class="nc" id="L2225">				out.close();</span>
+<span class="nc" id="L2226">				in.close();</span>
 
-<span class="nc" id="L2211">				dataCopied = true;</span>
+<span class="nc" id="L2228">				dataCopied = true;</span>
 			}
-<span class="nc" id="L2213">			catch (Exception e)</span>
+<span class="nc" id="L2230">			catch (Exception e)</span>
 			{
-<span class="nc" id="L2215">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L2232">				sk.iway.iwcm.Logger.error(e);</span>
 			}
 			finally
 			{
-<span class="nc bnc" id="L2219" title="All 2 branches missed.">				if (in != null) try { in.close(); } catch (Exception e) {}</span>
+<span class="nc bnc" id="L2236" title="All 2 branches missed.">				if (in != null) try { in.close(); } catch (Exception e) {}</span>
 			}
 
-<span class="nc bnc" id="L2222" title="All 2 branches missed.">			if (dataCopied)</span>
+<span class="nc bnc" id="L2239" title="All 2 branches missed.">			if (dataCopied)</span>
 			{
-<span class="nc" id="L2224">				FileCache.setObject(url, data);</span>
-<span class="nc" id="L2225">				return true;</span>
+<span class="nc" id="L2241">				FileCache.setObject(url, data);</span>
+<span class="nc" id="L2242">				return true;</span>
 			}
 		}
 
-<span class="nc" id="L2229">		return false;</span>
+<span class="nc" id="L2246">		return false;</span>
 	}
 
 	/**
@@ -2236,34 +2253,34 @@ import java.util.*;
 	 */
 	public static void setXRobotsTagValue(String url, HttpServletResponse response)
 	{
-<span class="fc" id="L2239">		String xRobotsTagUrls = Constants.getString(&quot;xRobotsTagUrls&quot;);</span>
-<span class="pc bpc" id="L2240" title="1 of 2 branches missed.">		if (Tools.isEmpty(xRobotsTagUrls)) return;</span>
+<span class="fc" id="L2256">		String xRobotsTagUrls = Constants.getString(&quot;xRobotsTagUrls&quot;);</span>
+<span class="pc bpc" id="L2257" title="1 of 2 branches missed.">		if (Tools.isEmpty(xRobotsTagUrls)) return;</span>
 
-<span class="fc bfc" id="L2242" title="All 2 branches covered.">		if (url.charAt(0)=='/') url = url.toLowerCase(); //aby sa nam NOT_SEARCHABLE_PAGE nezmenilo na male pismena</span>
+<span class="fc bfc" id="L2259" title="All 2 branches covered.">		if (url.charAt(0)=='/') url = url.toLowerCase(); //aby sa nam NOT_SEARCHABLE_PAGE nezmenilo na male pismena</span>
 
-<span class="fc" id="L2244">		String[] paths = Tools.getTokens(xRobotsTagUrls, &quot;,&quot;, true);</span>
-<span class="fc bfc" id="L2245" title="All 2 branches covered.">		for (String path : paths)</span>
+<span class="fc" id="L2261">		String[] paths = Tools.getTokens(xRobotsTagUrls, &quot;,&quot;, true);</span>
+<span class="fc bfc" id="L2262" title="All 2 branches covered.">		for (String path : paths)</span>
 		{
-<span class="fc bfc" id="L2247" title="All 2 branches covered.">			if (ResponseHeaderService.isPathCorrect(path, url))</span>
+<span class="fc bfc" id="L2264" title="All 2 branches covered.">			if (ResponseHeaderService.isPathCorrect(path, url))</span>
 			{
-<span class="fc" id="L2249">				String xRobotsTagValue = Constants.getStringExecuteMacro(&quot;xRobotsTagValue&quot;);</span>
-<span class="pc bpc" id="L2250" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(xRobotsTagValue))</span>
+<span class="fc" id="L2266">				String xRobotsTagValue = Constants.getStringExecuteMacro(&quot;xRobotsTagValue&quot;);</span>
+<span class="pc bpc" id="L2267" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(xRobotsTagValue))</span>
 				{
-<span class="fc" id="L2252">					response.setHeader(&quot;X-Robots-Tag&quot;, xRobotsTagValue);</span>
-<span class="fc" id="L2253">					return;</span>
+<span class="fc" id="L2269">					response.setHeader(&quot;X-Robots-Tag&quot;, xRobotsTagValue);</span>
+<span class="fc" id="L2270">					return;</span>
 				}
 			}
 		}
-<span class="fc" id="L2257">	}</span>
+<span class="fc" id="L2274">	}</span>
 
 	public static void setUaCompatibleAdmin(String path, HttpServletResponse response)
 	{
-<span class="fc" id="L2261">		String xUaCompatibleAdminValue = Constants.getString(&quot;xUaCompatibleAdminValue&quot;);</span>
-<span class="pc bpc" id="L2262" title="1 of 2 branches missed.">		if (Tools.isEmpty(xUaCompatibleAdminValue)) return;</span>
+<span class="fc" id="L2278">		String xUaCompatibleAdminValue = Constants.getString(&quot;xUaCompatibleAdminValue&quot;);</span>
+<span class="pc bpc" id="L2279" title="1 of 2 branches missed.">		if (Tools.isEmpty(xUaCompatibleAdminValue)) return;</span>
 
 
-<span class="fc" id="L2265">		response.setHeader(&quot;X-UA-Compatible&quot;, xUaCompatibleAdminValue);</span>
-<span class="fc" id="L2266">	}</span>
+<span class="fc" id="L2282">		response.setHeader(&quot;X-UA-Compatible&quot;, xUaCompatibleAdminValue);</span>
+<span class="fc" id="L2283">	}</span>
 
 	/**
 	 * Nastavi hlavicku X-Frame-Options podla konfiguracnej premennej xFrameOptions
@@ -2271,20 +2288,20 @@ import java.util.*;
 	 */
 	private static void setXFrameOptions(HttpServletResponse response)
 	{
-<span class="fc" id="L2274">		String xFrameOptions = Constants.getString(&quot;xFrameOptions&quot;);</span>
-<span class="pc bpc" id="L2275" title="1 of 2 branches missed.">		if (Tools.isEmpty(xFrameOptions)) return;</span>
+<span class="fc" id="L2291">		String xFrameOptions = Constants.getString(&quot;xFrameOptions&quot;);</span>
+<span class="pc bpc" id="L2292" title="1 of 2 branches missed.">		if (Tools.isEmpty(xFrameOptions)) return;</span>
 
 
-<span class="fc" id="L2278">		response.setHeader(&quot;X-Frame-Options&quot;, xFrameOptions);</span>
-<span class="fc" id="L2279">	}</span>
+<span class="fc" id="L2295">		response.setHeader(&quot;X-Frame-Options&quot;, xFrameOptions);</span>
+<span class="fc" id="L2296">	}</span>
 
 	private static void setXXssProtection(HttpServletResponse response)
 	{
-<span class="fc" id="L2283">		String xXssProtection = Constants.getString(&quot;xXssProtection&quot;);</span>
-<span class="pc bpc" id="L2284" title="1 of 2 branches missed.">		if (Tools.isEmpty(xXssProtection)) return;</span>
+<span class="fc" id="L2300">		String xXssProtection = Constants.getString(&quot;xXssProtection&quot;);</span>
+<span class="pc bpc" id="L2301" title="1 of 2 branches missed.">		if (Tools.isEmpty(xXssProtection)) return;</span>
 
-<span class="fc" id="L2286">		response.setHeader(&quot;X-XSS-Protection&quot;, xXssProtection);</span>
-<span class="fc" id="L2287">	}</span>
+<span class="fc" id="L2303">		response.setHeader(&quot;X-XSS-Protection&quot;, xXssProtection);</span>
+<span class="fc" id="L2304">	}</span>
 
 	/**
 	 * Nastavi hlavicku Feature-Policy podla konfiguracnej premennej featurePolicyHeader
@@ -2292,12 +2309,12 @@ import java.util.*;
 	 */
 	public static void setFeaturePolicy(HttpServletResponse response)
 	{
-<span class="fc" id="L2295">		String featurePolicy = Constants.getString(&quot;featurePolicyHeader&quot;);</span>
-<span class="pc bpc" id="L2296" title="1 of 2 branches missed.">		if (Tools.isEmpty(featurePolicy)) return;</span>
+<span class="fc" id="L2312">		String featurePolicy = Constants.getString(&quot;featurePolicyHeader&quot;);</span>
+<span class="pc bpc" id="L2313" title="1 of 2 branches missed.">		if (Tools.isEmpty(featurePolicy)) return;</span>
 
-<span class="nc" id="L2298">		response.setHeader(&quot;Feature-Policy&quot;, featurePolicy);</span>
-<span class="nc" id="L2299">		response.setHeader(&quot;Permissions-Policy&quot;, featurePolicy);</span>
-<span class="nc" id="L2300">	}</span>
+<span class="nc" id="L2315">		response.setHeader(&quot;Feature-Policy&quot;, featurePolicy);</span>
+<span class="nc" id="L2316">		response.setHeader(&quot;Permissions-Policy&quot;, featurePolicy);</span>
+<span class="nc" id="L2317">	}</span>
 
 	/**
 	 * Nastavenie hlavicky Access-Control-Allow-Origin
@@ -2306,49 +2323,49 @@ import java.util.*;
 	 */
 	public static void setAccessControlAllowOrigin(String url, HttpServletResponse response)
 	{
-<span class="fc" id="L2309">		String accessControlAllowOriginUrls = Constants.getString(&quot;accessControlAllowOriginUrls&quot;);</span>
-<span class="pc bpc" id="L2310" title="1 of 2 branches missed.">		if (Tools.isEmpty(accessControlAllowOriginUrls)) return;</span>
+<span class="fc" id="L2326">		String accessControlAllowOriginUrls = Constants.getString(&quot;accessControlAllowOriginUrls&quot;);</span>
+<span class="pc bpc" id="L2327" title="1 of 2 branches missed.">		if (Tools.isEmpty(accessControlAllowOriginUrls)) return;</span>
 
-<span class="fc" id="L2312">		String[] paths = Tools.getTokens(accessControlAllowOriginUrls, &quot;,&quot;, true);</span>
-<span class="fc" id="L2313">		String accessControlAllowOriginValue = Constants.getStringExecuteMacro(&quot;accessControlAllowOriginValue&quot;);</span>
-<span class="fc bfc" id="L2314" title="All 2 branches covered.">		for (String path : paths)</span>
+<span class="fc" id="L2329">		String[] paths = Tools.getTokens(accessControlAllowOriginUrls, &quot;,&quot;, true);</span>
+<span class="fc" id="L2330">		String accessControlAllowOriginValue = Constants.getStringExecuteMacro(&quot;accessControlAllowOriginValue&quot;);</span>
+<span class="fc bfc" id="L2331" title="All 2 branches covered.">		for (String path : paths)</span>
 		{
-<span class="fc bfc" id="L2316" title="All 2 branches covered.">			if (ResponseHeaderService.isPathCorrect(path, url))</span>
+<span class="fc bfc" id="L2333" title="All 2 branches covered.">			if (ResponseHeaderService.isPathCorrect(path, url))</span>
 			{
-<span class="pc bpc" id="L2318" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(accessControlAllowOriginValue))</span>
+<span class="pc bpc" id="L2335" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(accessControlAllowOriginValue))</span>
 				{
-<span class="fc" id="L2320">					String accessControlAllowedOrigins = Constants.getString(&quot;accessControlAllowedOrigins&quot;);</span>
-<span class="fc" id="L2321">					boolean canAccess = false;</span>
-<span class="pc bpc" id="L2322" title="1 of 2 branches missed.">					if (Tools.isEmpty(accessControlAllowedOrigins))</span>
+<span class="fc" id="L2337">					String accessControlAllowedOrigins = Constants.getString(&quot;accessControlAllowedOrigins&quot;);</span>
+<span class="fc" id="L2338">					boolean canAccess = false;</span>
+<span class="pc bpc" id="L2339" title="1 of 2 branches missed.">					if (Tools.isEmpty(accessControlAllowedOrigins))</span>
 					{
-<span class="fc" id="L2324">						canAccess = true;</span>
+<span class="fc" id="L2341">						canAccess = true;</span>
 					}
 					else
 					{
-<span class="nc" id="L2328">						accessControlAllowedOrigins = Tools.replace(accessControlAllowedOrigins, &quot;\n&quot;, &quot;,&quot;);</span>
-<span class="nc" id="L2329">						accessControlAllowedOrigins = Tools.replace(accessControlAllowedOrigins, &quot;\r&quot;, &quot;,&quot;);</span>
-<span class="nc" id="L2330">						RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L2331" title="All 2 branches missed.">						if (rb != null) {</span>
-<span class="nc" id="L2332">							String origin = rb.getHeaderOrigin();</span>
-<span class="nc bnc" id="L2333" title="All 2 branches missed.">							if (Tools.isNotEmpty(origin))</span>
+<span class="nc" id="L2345">						accessControlAllowedOrigins = Tools.replace(accessControlAllowedOrigins, &quot;\n&quot;, &quot;,&quot;);</span>
+<span class="nc" id="L2346">						accessControlAllowedOrigins = Tools.replace(accessControlAllowedOrigins, &quot;\r&quot;, &quot;,&quot;);</span>
+<span class="nc" id="L2347">						RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L2348" title="All 2 branches missed.">						if (rb != null) {</span>
+<span class="nc" id="L2349">							String origin = rb.getHeaderOrigin();</span>
+<span class="nc bnc" id="L2350" title="All 2 branches missed.">							if (Tools.isNotEmpty(origin))</span>
 							{
-<span class="nc bnc" id="L2335" title="All 2 branches missed.">								if ((&quot;,&quot;+accessControlAllowedOrigins+&quot;,&quot;).contains(&quot;,&quot;+origin+&quot;,&quot;)) canAccess = true;</span>
+<span class="nc bnc" id="L2352" title="All 2 branches missed.">								if ((&quot;,&quot;+accessControlAllowedOrigins+&quot;,&quot;).contains(&quot;,&quot;+origin+&quot;,&quot;)) canAccess = true;</span>
 							}
 						}
 					}
 
-<span class="pc bpc" id="L2340" title="1 of 2 branches missed.">					if (canAccess)</span>
+<span class="pc bpc" id="L2357" title="1 of 2 branches missed.">					if (canAccess)</span>
 					{
-<span class="fc" id="L2342">						response.setHeader(&quot;Access-Control-Allow-Origin&quot;, accessControlAllowOriginValue);</span>
-<span class="fc" id="L2343">						setHeader(response, &quot;Access-Control-Allow-Headers&quot;, &quot;accessControlAllowHeaders&quot;);</span>
-<span class="fc" id="L2344">						setHeader(response, &quot;Access-Control-Allow-Methods&quot;, &quot;accessControlAllowMethods&quot;);</span>
-<span class="fc" id="L2345">						setHeader(response, &quot;Access-Control-Max-Age&quot;, &quot;accessControlMaxAge&quot;);</span>
-<span class="fc" id="L2346">						return;</span>
+<span class="fc" id="L2359">						response.setHeader(&quot;Access-Control-Allow-Origin&quot;, accessControlAllowOriginValue);</span>
+<span class="fc" id="L2360">						setHeader(response, &quot;Access-Control-Allow-Headers&quot;, &quot;accessControlAllowHeaders&quot;);</span>
+<span class="fc" id="L2361">						setHeader(response, &quot;Access-Control-Allow-Methods&quot;, &quot;accessControlAllowMethods&quot;);</span>
+<span class="fc" id="L2362">						setHeader(response, &quot;Access-Control-Max-Age&quot;, &quot;accessControlMaxAge&quot;);</span>
+<span class="fc" id="L2363">						return;</span>
 					}
 				}
 			}
 		}
-<span class="fc" id="L2351">	}</span>
+<span class="fc" id="L2368">	}</span>
 
 	/**
 	 * Nastavi HTTP hlavicku podla nazvu konfiguracnej premennej
@@ -2358,15 +2375,15 @@ import java.util.*;
 	 */
 	public static void setHeader(HttpServletResponse response, String headerName, String constantName)
 	{
-<span class="fc" id="L2361">		String value = Constants.getStringExecuteMacro(constantName);</span>
-<span class="fc bfc" id="L2362" title="All 2 branches covered.">		if (Tools.isEmpty(value)) return;</span>
+<span class="fc" id="L2378">		String value = Constants.getStringExecuteMacro(constantName);</span>
+<span class="fc bfc" id="L2379" title="All 2 branches covered.">		if (Tools.isEmpty(value)) return;</span>
 
-<span class="pc bpc" id="L2364" title="1 of 2 branches missed.">		if (&quot;&amp;nbsp;&quot;.equals(value)) value = &quot; &quot;;</span>
+<span class="pc bpc" id="L2381" title="1 of 2 branches missed.">		if (&quot;&amp;nbsp;&quot;.equals(value)) value = &quot; &quot;;</span>
 
 		//Logger.debug(SetCharacterEncodingFilter.class, &quot;Setting header &quot;+headerName+&quot;:&quot;+value);
 
-<span class="fc" id="L2368">		response.setHeader(headerName, value);</span>
-<span class="fc" id="L2369">	}</span>
+<span class="fc" id="L2385">		response.setHeader(headerName, value);</span>
+<span class="fc" id="L2386">	}</span>
 
 	/**
 	 * Nastavi hlavicky pre konkretne volania podla konfiguracnej premennej responseHeaders
@@ -2374,44 +2391,44 @@ import java.util.*;
 	 */
 	private static void setResponseHeaders(String path, HttpServletRequest request, HttpServletResponse response) {
 
-<span class="pc bpc" id="L2377" title="1 of 6 branches missed.">		if (path.startsWith(&quot;/files&quot;) || path.startsWith(&quot;/images&quot;) || path.startsWith(&quot;/shared&quot;)) {</span>
-<span class="fc" id="L2378">			String lngCode = Constants.getString(&quot;defaultLanguage&quot;);</span>
+<span class="pc bpc" id="L2394" title="1 of 6 branches missed.">		if (path.startsWith(&quot;/files&quot;) || path.startsWith(&quot;/images&quot;) || path.startsWith(&quot;/shared&quot;)) {</span>
+<span class="fc" id="L2395">			String lngCode = Constants.getString(&quot;defaultLanguage&quot;);</span>
 			//set last known language for files and images folder
-<span class="fc bfc" id="L2380" title="All 2 branches covered.">			if (path.contains(&quot;/en/&quot;)) lngCode = &quot;en&quot;;</span>
-<span class="pc bpc" id="L2381" title="1 of 2 branches missed.">			else if (path.contains(&quot;/de/&quot;)) lngCode = &quot;de&quot;;</span>
-<span class="fc bfc" id="L2382" title="All 2 branches covered.">			else if (path.contains(&quot;/cz/&quot;)) lngCode = &quot;cz&quot;;</span>
-<span class="pc bpc" id="L2383" title="1 of 2 branches missed.">			else if (path.contains(&quot;/sk/&quot;)) lngCode = &quot;sk&quot;;</span>
-<span class="fc" id="L2384">			else lngCode = PageLng.getUserLng(request);</span>
+<span class="fc bfc" id="L2397" title="All 2 branches covered.">			if (path.contains(&quot;/en/&quot;)) lngCode = &quot;en&quot;;</span>
+<span class="pc bpc" id="L2398" title="1 of 2 branches missed.">			else if (path.contains(&quot;/de/&quot;)) lngCode = &quot;de&quot;;</span>
+<span class="fc bfc" id="L2399" title="All 2 branches covered.">			else if (path.contains(&quot;/cz/&quot;)) lngCode = &quot;cz&quot;;</span>
+<span class="pc bpc" id="L2400" title="1 of 2 branches missed.">			else if (path.contains(&quot;/sk/&quot;)) lngCode = &quot;sk&quot;;</span>
+<span class="fc" id="L2401">			else lngCode = PageLng.getUserLng(request);</span>
 
-<span class="fc" id="L2386">			String isoCode = PageLng.getUserLngIso(lngCode);</span>
-<span class="fc" id="L2387">			ResponseHeaderService.setContentLanguageHeader(isoCode, true, request, response);</span>
+<span class="fc" id="L2403">			String isoCode = PageLng.getUserLngIso(lngCode);</span>
+<span class="fc" id="L2404">			ResponseHeaderService.setContentLanguageHeader(isoCode, true, request, response);</span>
 		}
 
 		// parse and cache
-<span class="fc bfc" id="L2391" title="All 2 branches covered.">		if(responseHeaders == null) {</span>
-<span class="fc" id="L2392">			synchronized (PathFilter.class) {</span>
+<span class="fc bfc" id="L2408" title="All 2 branches covered.">		if(responseHeaders == null) {</span>
+<span class="fc" id="L2409">			synchronized (PathFilter.class) {</span>
 
-<span class="fc" id="L2394">				String[] headers = Tools.getTokens(Constants.getString(&quot;responseHeaders&quot;), &quot;\n&quot;);</span>
-<span class="pc bpc" id="L2395" title="1 of 2 branches missed.">				if(headers.length &gt; 0) {</span>
-<span class="fc" id="L2396">					responseHeaders = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L2397" title="All 2 branches covered.">					for(int i = 0; i &lt; headers.length; i++) {</span>
-<span class="fc" id="L2398">						responseHeaders.add(new ResponseHeaderBean(headers[i]));</span>
+<span class="fc" id="L2411">				String[] headers = Tools.getTokens(Constants.getString(&quot;responseHeaders&quot;), &quot;\n&quot;);</span>
+<span class="pc bpc" id="L2412" title="1 of 2 branches missed.">				if(headers.length &gt; 0) {</span>
+<span class="fc" id="L2413">					responseHeaders = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L2414" title="All 2 branches covered.">					for(int i = 0; i &lt; headers.length; i++) {</span>
+<span class="fc" id="L2415">						responseHeaders.add(new ResponseHeaderBean(headers[i]));</span>
 					}
 				}
-<span class="fc" id="L2401">			}</span>
+<span class="fc" id="L2418">			}</span>
 		}
 
 		// set headers
-<span class="pc bpc" id="L2405" title="1 of 2 branches missed.">		if(responseHeaders != null) {</span>
-<span class="fc bfc" id="L2406" title="All 2 branches covered.">			for(ResponseHeaderBean header : responseHeaders) {</span>
-<span class="fc bfc" id="L2407" title="All 2 branches covered.">				if(path.startsWith(header.getUrl())) {</span>
-<span class="fc" id="L2408">					response.setHeader(header.getName(), Constants.executeMacro(header.getValue()));</span>
+<span class="pc bpc" id="L2422" title="1 of 2 branches missed.">		if(responseHeaders != null) {</span>
+<span class="fc bfc" id="L2423" title="All 2 branches covered.">			for(ResponseHeaderBean header : responseHeaders) {</span>
+<span class="fc bfc" id="L2424" title="All 2 branches covered.">				if(path.startsWith(header.getUrl())) {</span>
+<span class="fc" id="L2425">					response.setHeader(header.getName(), Constants.executeMacro(header.getValue()));</span>
 				}
-<span class="fc" id="L2410">			}</span>
+<span class="fc" id="L2427">			}</span>
 		}
 
-<span class="fc" id="L2413">		ResponseHeaderService.setResponseHeaders(path, request, response);</span>
-<span class="fc" id="L2414">	}</span>
+<span class="fc" id="L2430">		ResponseHeaderService.setResponseHeaders(path, request, response);</span>
+<span class="fc" id="L2431">	}</span>
 
 	/**
 	 * Ak existuje _mobile.jsp verzia zadaneho JSP vykona nan interny forward a vrati true pre ukoncenie povodneho JSP, nieco ako:
@@ -2422,21 +2439,21 @@ import java.util.*;
 	 */
 	public static boolean forwardToMobileOrTablet(String jspFileName, PageContext context)
 	{
-<span class="nc bnc" id="L2425" title="All 2 branches missed.">		if (BrowserDetector.isSmartphoneOrTablet((HttpServletRequest)context.getRequest())==false) return false;</span>
+<span class="nc bnc" id="L2442" title="All 2 branches missed.">		if (BrowserDetector.isSmartphoneOrTablet((HttpServletRequest)context.getRequest())==false) return false;</span>
 
-<span class="nc" id="L2427">		String mobileJsp = Tools.replace(jspFileName, &quot;.jsp&quot;, &quot;_mobile.jsp&quot;);</span>
-<span class="nc bnc" id="L2428" title="All 2 branches missed.">		if (FileTools.isFile(mobileJsp)==false) return false;</span>
+<span class="nc" id="L2444">		String mobileJsp = Tools.replace(jspFileName, &quot;.jsp&quot;, &quot;_mobile.jsp&quot;);</span>
+<span class="nc bnc" id="L2445" title="All 2 branches missed.">		if (FileTools.isFile(mobileJsp)==false) return false;</span>
 
 		try
 		{
-<span class="nc" id="L2432">			context.forward(mobileJsp);</span>
-<span class="nc" id="L2433">			return true;</span>
+<span class="nc" id="L2449">			context.forward(mobileJsp);</span>
+<span class="nc" id="L2450">			return true;</span>
 		}
-<span class="nc" id="L2435">		catch (Exception e)</span>
+<span class="nc" id="L2452">		catch (Exception e)</span>
 		{
-<span class="nc" id="L2437">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L2454">			sk.iway.iwcm.Logger.error(e);</span>
 		}
-<span class="nc" id="L2439">		return false;</span>
+<span class="nc" id="L2456">		return false;</span>
 	}
 
 	/**
@@ -2449,38 +2466,38 @@ import java.util.*;
 	{
 		try
 		{
-<span class="pc bpc" id="L2452" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;nginxProxyMode&quot;)==false) return;</span>
+<span class="pc bpc" id="L2469" title="1 of 2 branches missed.">			if (Constants.getBoolean(&quot;nginxProxyMode&quot;)==false) return;</span>
 
-<span class="nc" id="L2454">			String actualCookieValue = Tools.getCookieValue(request.getCookies(), &quot;nc&quot;, null);</span>
-<span class="nc" id="L2455">			Cookie c = new Cookie(&quot;nc&quot;, &quot;1&quot;);</span>
-<span class="nc" id="L2456">			c.setPath(&quot;/&quot;);</span>
+<span class="nc" id="L2471">			String actualCookieValue = Tools.getCookieValue(request.getCookies(), &quot;nc&quot;, null);</span>
+<span class="nc" id="L2472">			Cookie c = new Cookie(&quot;nc&quot;, &quot;1&quot;);</span>
+<span class="nc" id="L2473">			c.setPath(&quot;/&quot;);</span>
 
 			//ak potrebujeme nastavit nocache cookie
-<span class="nc bnc" id="L2459" title="All 2 branches missed.">			if (isNoCacheCookieRequired(request))</span>
+<span class="nc bnc" id="L2476" title="All 2 branches missed.">			if (isNoCacheCookieRequired(request))</span>
 			{
 				//ak uz je nastavena na 1 tak ju nemusime nastavovat
-<span class="nc bnc" id="L2462" title="All 2 branches missed.">				if (&quot;1&quot;.equals(actualCookieValue)==false) {</span>
+<span class="nc bnc" id="L2479" title="All 2 branches missed.">				if (&quot;1&quot;.equals(actualCookieValue)==false) {</span>
 					//session cookie
-<span class="nc" id="L2464">					c.setMaxAge(-1);</span>
+<span class="nc" id="L2481">					c.setMaxAge(-1);</span>
 					//toto nesmie ist cez Tools.addCookie pretoze sa ani v pripade EU smernice nemoze vypnut
-<span class="nc" id="L2466">					response.addCookie(c);</span>
+<span class="nc" id="L2483">					response.addCookie(c);</span>
 				}
 			}
 			else
 			{
-<span class="nc bnc" id="L2471" title="All 2 branches missed.">				if (&quot;1&quot;.equals(actualCookieValue)) {</span>
+<span class="nc bnc" id="L2488" title="All 2 branches missed.">				if (&quot;1&quot;.equals(actualCookieValue)) {</span>
 					//cookie nam prisla v http requeste ale uz ju nemam setovat, takze ju dam zmazat
-<span class="nc" id="L2473">					c.setMaxAge(0);</span>
+<span class="nc" id="L2490">					c.setMaxAge(0);</span>
 					//toto nesmie ist cez Tools.addCookie pretoze sa ani v pripade EU smernice nemoze vypnut
-<span class="nc" id="L2475">					response.addCookie(c);</span>
+<span class="nc" id="L2492">					response.addCookie(c);</span>
 				}
 			}
 		}
-<span class="nc" id="L2479">		catch (Exception e)</span>
+<span class="nc" id="L2496">		catch (Exception e)</span>
 		{
-<span class="nc" id="L2481">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L2482">		}</span>
-<span class="nc" id="L2483">	}</span>
+<span class="nc" id="L2498">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L2499">		}</span>
+<span class="nc" id="L2500">	}</span>
 
 	/**
 	 * Overi, ci je mozne pouzit nginx proxy rezim (konstanta nginxProxyMode), ak je povoleny, overuje este:
@@ -2491,14 +2508,14 @@ import java.util.*;
 	 */
 	public static boolean isNoCacheCookieRequired(HttpServletRequest request)
 	{
-<span class="nc bnc" id="L2494" title="All 2 branches missed.">		if (request.getSession()!=null)</span>
+<span class="nc bnc" id="L2511" title="All 2 branches missed.">		if (request.getSession()!=null)</span>
 		{
-<span class="nc bnc" id="L2496" title="All 2 branches missed.">			if (request.getSession().getAttribute(Constants.USER_KEY)!=null) return true;</span>
-<span class="nc bnc" id="L2497" title="All 4 branches missed.">			else if (request.getParameter(&quot;forceBrowserDetector&quot;)!=null &amp;&amp; &quot;pc&quot;.equals(request.getParameter(&quot;forceBrowserDetector&quot;))==false) return true; //NOSONAR</span>
-<span class="nc bnc" id="L2498" title="All 2 branches missed.">			else if (request.getSession().getAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;)!=null) return true; //NOSONAR</span>
+<span class="nc bnc" id="L2513" title="All 2 branches missed.">			if (request.getSession().getAttribute(Constants.USER_KEY)!=null) return true;</span>
+<span class="nc bnc" id="L2514" title="All 4 branches missed.">			else if (request.getParameter(&quot;forceBrowserDetector&quot;)!=null &amp;&amp; &quot;pc&quot;.equals(request.getParameter(&quot;forceBrowserDetector&quot;))==false) return true; //NOSONAR</span>
+<span class="nc bnc" id="L2515" title="All 2 branches missed.">			else if (request.getSession().getAttribute(&quot;BrowserDetector.forceBrowserDetector&quot;)!=null) return true; //NOSONAR</span>
 		}
 
-<span class="nc" id="L2501">		return false;</span>
+<span class="nc" id="L2518">		return false;</span>
 	}
 
 
@@ -2509,11 +2526,11 @@ import java.util.*;
 	 */
 	public static String getHttpsRedirectUrl(HttpServletRequest request)
 	{
-<span class="nc" id="L2512">		String path = PathFilter.getOrigPath(request);</span>
-<span class="nc" id="L2513">		String qs = request.getQueryString();</span>
-<span class="nc" id="L2514">		StringBuilder url = new StringBuilder(&quot;https://&quot;).append(Tools.getServerName(request)).append(path);</span>
-<span class="nc bnc" id="L2515" title="All 2 branches missed.">		if (Tools.isNotEmpty(qs)) url.append('?').append(qs);</span>
-<span class="nc" id="L2516">		return Tools.sanitizeHttpHeaderParam(url.toString());</span>
+<span class="nc" id="L2529">		String path = PathFilter.getOrigPath(request);</span>
+<span class="nc" id="L2530">		String qs = request.getQueryString();</span>
+<span class="nc" id="L2531">		StringBuilder url = new StringBuilder(&quot;https://&quot;).append(Tools.getServerName(request)).append(path);</span>
+<span class="nc bnc" id="L2532" title="All 2 branches missed.">		if (Tools.isNotEmpty(qs)) url.append('?').append(qs);</span>
+<span class="nc" id="L2533">		return Tools.sanitizeHttpHeaderParam(url.toString());</span>
 	}
 
 	/**
@@ -2524,59 +2541,59 @@ import java.util.*;
 	 */
 	private static boolean isShowDocAllowDocId(int docId, String constantName)
 	{
-<span class="nc" id="L2527">		String showDocAllowDocIds = Constants.getString(constantName);</span>
-<span class="nc bnc" id="L2528" title="All 2 branches missed.">		if (Tools.isNotEmpty(showDocAllowDocIds))</span>
+<span class="nc" id="L2544">		String showDocAllowDocIds = Constants.getString(constantName);</span>
+<span class="nc bnc" id="L2545" title="All 2 branches missed.">		if (Tools.isNotEmpty(showDocAllowDocIds))</span>
 		{
-<span class="nc" id="L2530">			StringTokenizer st = new StringTokenizer(showDocAllowDocIds, &quot;,+;&quot;);</span>
-<span class="nc bnc" id="L2531" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc" id="L2547">			StringTokenizer st = new StringTokenizer(showDocAllowDocIds, &quot;,+;&quot;);</span>
+<span class="nc bnc" id="L2548" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L2533">				int token = Tools.getIntValue(st.nextToken().trim(), -1);</span>
-<span class="nc bnc" id="L2534" title="All 2 branches missed.">				if(token == -1) continue;	//preskocim</span>
-<span class="nc bnc" id="L2535" title="All 2 branches missed.">				if(docId == token)</span>
+<span class="nc" id="L2550">				int token = Tools.getIntValue(st.nextToken().trim(), -1);</span>
+<span class="nc bnc" id="L2551" title="All 2 branches missed.">				if(token == -1) continue;	//preskocim</span>
+<span class="nc bnc" id="L2552" title="All 2 branches missed.">				if(docId == token)</span>
 				{
-<span class="nc" id="L2537">					return true;</span>
+<span class="nc" id="L2554">					return true;</span>
 				}
-<span class="nc" id="L2539">			}</span>
+<span class="nc" id="L2556">			}</span>
 		}
-<span class="nc" id="L2541">		return false;</span>
+<span class="nc" id="L2558">		return false;</span>
 	}
 
 	public static void resetResponseHeaders() {
-<span class="nc" id="L2545">		responseHeaders = null;</span>
-<span class="nc" id="L2546">	}</span>
+<span class="nc" id="L2562">		responseHeaders = null;</span>
+<span class="nc" id="L2563">	}</span>
 
 	public static void resetCacheStaticContentSeconds()
 	{
-<span class="nc" id="L2550">		cacheStaticContentSeconds = -1;</span>
-<span class="nc" id="L2551">		cacheStaticContentSuffixes = null;</span>
-<span class="nc" id="L2552">	}</span>
+<span class="nc" id="L2567">		cacheStaticContentSeconds = -1;</span>
+<span class="nc" id="L2568">		cacheStaticContentSuffixes = null;</span>
+<span class="nc" id="L2569">	}</span>
 
 	//pre WebJET 9 kontrolujeme pri REST volaniach CSRF token
 	private boolean checkCSRFTokenAjax(String path, HttpServletRequest request) {
-<span class="pc bpc" id="L2556" title="2 of 6 branches missed.">		if (path.startsWith(&quot;/admin/rest/&quot;)==false || path.startsWith(&quot;/admin/rest/document/&quot;) || path.startsWith(&quot;/admin/rest/datatables/&quot;) ) {</span>
+<span class="pc bpc" id="L2573" title="2 of 6 branches missed.">		if (path.startsWith(&quot;/admin/rest/&quot;)==false || path.startsWith(&quot;/admin/rest/document/&quot;) || path.startsWith(&quot;/admin/rest/datatables/&quot;) ) {</span>
 			//taketo URL nekontrolujeme
-<span class="fc" id="L2558">			return true;</span>
+<span class="fc" id="L2575">			return true;</span>
 		}
 
 		//ak path obsahuje vyraz html tak token nie je potrebny
-<span class="pc bpc" id="L2562" title="1 of 4 branches missed.">		if (path.contains(&quot;/html&quot;) || path.contains(&quot;html/&quot;)) return true;</span>
+<span class="pc bpc" id="L2579" title="1 of 4 branches missed.">		if (path.contains(&quot;/html&quot;) || path.contains(&quot;html/&quot;)) return true;</span>
 
-<span class="pc bpc" id="L2564" title="1 of 2 branches missed.">		if (&quot;webjet9&quot;.equals(Constants.getString(&quot;defaultSkin&quot;))==false) return true;</span>
+<span class="pc bpc" id="L2581" title="1 of 2 branches missed.">		if (&quot;webjet9&quot;.equals(Constants.getString(&quot;defaultSkin&quot;))==false) return true;</span>
 
 		//pouziva sa pri prihlaseni tokenom, vtedy CSRF nie je posielane
-<span class="fc bfc" id="L2567" title="All 2 branches covered.">		if (request.getAttribute(&quot;csrfDisabled&quot;)!=null) return true;</span>
+<span class="fc bfc" id="L2584" title="All 2 branches covered.">		if (request.getAttribute(&quot;csrfDisabled&quot;)!=null) return true;</span>
 
-<span class="fc" id="L2569">		String header = request.getHeader(&quot;X-CSRF-Token&quot;);</span>
-<span class="fc bfc" id="L2570" title="All 2 branches covered.">		if (Tools.isEmpty(header)) {</span>
-<span class="fc" id="L2571">			return false;</span>
+<span class="fc" id="L2586">		String header = request.getHeader(&quot;X-CSRF-Token&quot;);</span>
+<span class="fc bfc" id="L2587" title="All 2 branches covered.">		if (Tools.isEmpty(header)) {</span>
+<span class="fc" id="L2588">			return false;</span>
 		}
 
-<span class="fc" id="L2574">		return CSRF.verifyTokenAjax(request.getSession(), header);</span>
+<span class="fc" id="L2591">		return CSRF.verifyTokenAjax(request.getSession(), header);</span>
 	}
 
 	private static void setCustomPath(String path) {
-<span class="fc" id="L2578">		PathFilter.customPath = path;</span>
-<span class="fc" id="L2579">	}</span>
+<span class="fc" id="L2595">		PathFilter.customPath = path;</span>
+<span class="fc" id="L2596">	}</span>
 
 	/**
 	 * Safely forward request dispatcher, need to use this if next statement is return
@@ -2587,10 +2604,10 @@ import java.util.*;
 	 */
 	private static void forwardSafely(String path, HttpServletRequest request, HttpServletResponse response){
 		try {
-<span class="fc" id="L2590">		request.getRequestDispatcher(path).forward(request, response);</span>
-<span class="nc" id="L2591">		} catch (Exception ex) {</span>
-<span class="nc" id="L2592">			Logger.error(PathFilter.class, ex);</span>
-<span class="fc" id="L2593">		}</span>
-<span class="fc" id="L2594">	}</span>
+<span class="fc" id="L2607">		request.getRequestDispatcher(path).forward(request, response);</span>
+<span class="nc" id="L2608">		} catch (Exception ex) {</span>
+<span class="nc" id="L2609">			Logger.error(PathFilter.class, ex);</span>
+<span class="fc" id="L2610">		}</span>
+<span class="fc" id="L2611">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

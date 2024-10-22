@@ -118,24 +118,34 @@ Scenario('Pristup a perex webstranky', async ({ I, DTE }) => {
      // Obrazok
      I.say('Pridaj obrazok do perexu');
      I.click(locate('.DTE_Field.form-group.row.DTE_Field_Type_elfinder.DTE_Field_Name_perexImage.image').withText('Obrázok').find('button.btn.btn-outline-secondary'));
-     I.waitForElement(locate('.modal-header').withText('Obrázok'), 10);
+     I.waitForElement('.modal-header h5', 10);
+     I.waitForElement("#modalIframeIframeElement", 10);
      I.switchTo('#modalIframeIframeElement');
      I.waitForLoader(".WJLoaderDiv");
      I.waitForElement(locate('.elfinder-navbar-wrapper').withText('Obrázky'), 15);
      I.wait(4);
-     I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'));
+     I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
      I.waitForText('Foto galéria', 20, ".elfinder-cwd-file");
      I.waitForElement(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'), 15);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'));
+     I.wait(1);
      I.waitForVisible(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'), 20);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'));
+     I.wait(1);
      I.waitForVisible(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee'), 10);
-     I.forceClick(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee:nth-child(3)'));
+     I.wait(1);
+     var selector = '.elfinder-cwd-file.ui-corner-all.ui-selectee:not(.directory)'
+     I.waitForVisible(locate(selector));
+     I.wait(1);
+     I.forceClick(locate(selector));
      I.wait(1);
 
-     const fileName = await I.grabAttributeFrom('.elfinder-cwd-file.ui-corner-all.ui-selectee:nth-child(3) div.elfinder-cwd-filename', 'title'); // zober nazov oznaceneho obrazka
+     const fileName = await I.grabAttributeFrom(selector+' div.elfinder-cwd-filename', 'title'); // zober nazov oznaceneho obrazka
+
+     I.say("Mam fileName="+fileName);
 
      I.switchTo();
+     I.wait(0.2);
      I.click(locate('#modalIframe button.btn.btn-primary').withText('Potvrdiť'));
      I.waitForValue('div.DTE_Field_Name_perexImage .form-control', '/images/gallery/test/' + fileName, 5);
 
@@ -150,8 +160,11 @@ Scenario('Pristup a perex webstranky', async ({ I, DTE }) => {
      I.waitForVisible('#SomStromcek');
 
      // ------------------------ KONTROLA ULOZENIA UDAJOV ------------------
+     I.wait(3);
+
      I.checkEditedWebPage(randomNumber);
      I.waitForText("Existuje rozpracovaná alebo neschválená verzia tejto stránky. Skontrolujte kartu História.", 10, "div.toast-message");
+     I.wait(2);
      I.click("Editovať poslednú verziu", "a.btn.btn.btn-primary");
      I.wait(3);
 
@@ -186,6 +199,7 @@ Scenario('Pristup a perex webstranky', async ({ I, DTE }) => {
      I.seeCheckboxIsChecked('#DTE_Field_perexGroups_0'); // dalsia perex skupina
      I.seeCheckboxIsChecked('#DTE_Field_perexGroups_1'); // investicia
      I.seeCheckboxIsChecked('#DTE_Field_perexGroups_2'); // podnikanie
+
      DTE.save();
 
      // Skontroluj ci ma webstranka priznak "needitovatelna"

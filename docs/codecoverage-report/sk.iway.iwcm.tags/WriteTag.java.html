@@ -208,7 +208,7 @@ import java.util.regex.Pattern;
 <span class="nc" id="L208">						showToolbar = false;</span>
 					}
 
-<span class="pc bpc" id="L211" title="2 of 8 branches missed.">					if (request.getHeader(&quot;dmail&quot;)!=null || request.getAttribute(&quot;NO WJTOOLBAR&quot;)!=null || request.getParameter(&quot;NO_WJTOOLBAR&quot;)!=null || request.getAttribute(&quot;isPreview&quot;)!=null)</span>
+<span class="pc bpc" id="L211" title="1 of 8 branches missed.">					if (request.getHeader(&quot;dmail&quot;)!=null || request.getAttribute(&quot;NO WJTOOLBAR&quot;)!=null || request.getParameter(&quot;NO_WJTOOLBAR&quot;)!=null || request.getAttribute(&quot;isPreview&quot;)!=null)</span>
 					{
 <span class="fc" id="L213">						showToolbar = false;</span>
 					}
@@ -231,9 +231,9 @@ import java.util.regex.Pattern;
 
 <span class="fc bfc" id="L232" title="All 2 branches covered.">					if (showToolbar)</span>
 					{
-<span class="pc bpc" id="L234" title="1 of 2 branches missed.">						if (&quot;doc_data&quot;.equals(name))</span>
+<span class="fc bfc" id="L234" title="All 2 branches covered.">						if (&quot;doc_data&quot;.equals(name))</span>
 						{
-<span class="nc" id="L236">							pageContext.include(&quot;/admin/page_toolbar.jsp&quot;);</span>
+<span class="fc" id="L236">							pageContext.include(&quot;/admin/page_toolbar.jsp&quot;);</span>
 						}
 					}
 				}
@@ -503,11 +503,11 @@ import java.util.regex.Pattern;
 <span class="fc" id="L503">									StringTokenizer st = new StringTokenizer(includeText.substring(cacheTimePos+13), &quot; ,)&quot;);</span>
 <span class="pc bpc" id="L504" title="1 of 2 branches missed.">									if (st.hasMoreTokens())</span>
 									{
-<span class="fc" id="L506">										cacheTime = Tools.getIntValue(st.nextToken(), 0);</span>
+<span class="fc" id="L506">										cacheTime = Tools.getIntValue(Tools.replace(st.nextToken(), &quot;&amp;quot;&quot;, &quot;&quot;), 0);</span>
 									}
 
 									//vybereme z cache, adminom ale zobrazujeme priamo (a dole spravime refresh cache)
-<span class="pc bpc" id="L510" title="7 of 8 branches missed.">									if (cacheTime &gt; 0 &amp;&amp; (user==null || user.isAdmin()==false || Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==true))</span>
+<span class="pc bpc" id="L510" title="3 of 8 branches missed.">									if (cacheTime &gt; 0 &amp;&amp; (user==null || user.isAdmin()==false || Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==true))</span>
 									{
 										//skus ziskat z cache
 <span class="nc" id="L513">										String htmlCode = (String)c.getObject(cacheKey);</span>
@@ -605,12 +605,12 @@ import java.util.regex.Pattern;
 <span class="fc" id="L605">						final String deviceParam = &quot;device=&quot;;</span>
 						//In preview mode it does not matter what type of device we use (we want see all banners)
 <span class="fc bfc" id="L607" title="All 2 branches covered.">						if (request.getAttribute(&quot;inPreviewMode&quot;)!=null) checkDeviceType = false;</span>
-						
+
 						/** Check if this app can be included in current device type **/
 <span class="pc bpc" id="L610" title="1 of 6 branches missed.">						if(canInclude &amp;&amp; checkDeviceType &amp;&amp; includeText.contains(deviceParam)) {</span>
 <span class="fc" id="L611">							final String regex = &quot;([^\&quot;;, ]*)&quot;;</span>
 <span class="fc" id="L612">							Pattern pattern = Pattern.compile(deviceParam + regex);</span>
-<span class="fc" id="L613">							Matcher matcher = pattern.matcher(includeText);</span>
+<span class="fc" id="L613">							Matcher matcher = pattern.matcher(Tools.replace(includeText, &quot;&amp;quot;&quot;, &quot;&quot;));</span>
 
 							//Is deviceParam presented in include ? -&gt; NO, then do nothing
 <span class="pc bpc" id="L616" title="1 of 2 branches missed.">							if(matcher.find()) {</span>
@@ -670,7 +670,7 @@ import java.util.regex.Pattern;
 <span class="fc" id="L670">									boolean isInlineEditing = false;</span>
 <span class="pc bpc" id="L671" title="1 of 2 branches missed.">									if (Constants.getBoolean(&quot;inlineEditingEnabled&quot;))</span>
 									{
-<span class="pc bpc" id="L673" title="2 of 8 branches missed.">										if (request.getHeader(&quot;dmail&quot;) == null &amp;&amp; request.getParameter(&quot;NO_WJTOOLBAR&quot;) == null &amp;&amp; request.getParameter(&quot;isDmail&quot;) == null &amp;&amp; request.getAttribute(&quot;isPreview&quot;) == null)</span>
+<span class="pc bpc" id="L673" title="1 of 8 branches missed.">										if (request.getHeader(&quot;dmail&quot;) == null &amp;&amp; request.getParameter(&quot;NO_WJTOOLBAR&quot;) == null &amp;&amp; request.getParameter(&quot;isDmail&quot;) == null &amp;&amp; request.getAttribute(&quot;isPreview&quot;) == null)</span>
 										{
 <span class="fc bfc" id="L675" title="All 4 branches covered.">											if (&quot;doc_data&quot;.equals(name) || request.getAttribute(name + &quot;-docId=&quot;) != null)</span>
 											{
@@ -775,10 +775,10 @@ import java.util.regex.Pattern;
 
 <span class="fc bfc" id="L776" title="All 2 branches covered.">									if (inlineEditingAppendEndDiv) content.append(&quot;&lt;/div&gt;&quot;);</span>
 
-<span class="pc bpc" id="L778" title="1 of 2 branches missed.">									if (cacheTime &gt; 0)</span>
+<span class="fc bfc" id="L778" title="All 2 branches covered.">									if (cacheTime &gt; 0)</span>
 									{
-<span class="nc" id="L780">										Logger.debug(WriteTag.class, &quot;Setting to cache: &quot;+cacheKey);</span>
-<span class="nc" id="L781">										c.setObjectSeconds(cacheKey, htmlCode.toString(), cacheTime*60, true);</span>
+<span class="fc" id="L780">										Logger.debug(WriteTag.class, &quot;Setting to cache: &quot;+cacheKey);</span>
+<span class="fc" id="L781">										c.setObjectSeconds(cacheKey, htmlCode.toString(), cacheTime*60, true);</span>
 									}
 
 <span class="fc" id="L784">									preserveParametersRemove(includeFileName, request);</span>
@@ -1254,12 +1254,12 @@ import java.util.regex.Pattern;
 	private static void preserveParametersSet(String includeFileName, HttpServletRequest request)
 	{
 		//toto robi search komponente problem, koliduje to s jej vyrazmi, kvoli problemom s custom JSP to davam radsej sem
-<span class="pc bpc" id="L1257" title="1 of 2 branches missed.">		if (includeFileName.indexOf(&quot;/search&quot;)!=-1)</span>
+<span class="fc bfc" id="L1257" title="All 2 branches covered.">		if (includeFileName.indexOf(&quot;/search&quot;)!=-1)</span>
 		{
-<span class="nc bnc" id="L1259" title="All 2 branches missed.">			for (String pname : SearchTools.getCheckInputParams())</span>
+<span class="fc bfc" id="L1259" title="All 2 branches covered.">			for (String pname : SearchTools.getCheckInputParams())</span>
 			{
-<span class="nc" id="L1261">				String value = (String)request.getAttribute(pname);</span>
-<span class="nc bnc" id="L1262" title="All 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
+<span class="fc" id="L1261">				String value = (String)request.getAttribute(pname);</span>
+<span class="pc bpc" id="L1262" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
 				{
 <span class="nc" id="L1264">					request.setAttribute(&quot;preserve_&quot;+pname, value);</span>
 <span class="nc" id="L1265">					request.removeAttribute(pname);</span>
@@ -1271,12 +1271,12 @@ import java.util.regex.Pattern;
 	private static void preserveParametersRemove(String includeFileName, HttpServletRequest request)
 	{
 		//toto robi search komponente problem, koliduje to s jej vyrazmi, kvoli problemom s custom JSP to davam radsej sem
-<span class="pc bpc" id="L1274" title="1 of 2 branches missed.">		if (includeFileName.indexOf(&quot;/search&quot;)!=-1)</span>
+<span class="fc bfc" id="L1274" title="All 2 branches covered.">		if (includeFileName.indexOf(&quot;/search&quot;)!=-1)</span>
 		{
-<span class="nc bnc" id="L1276" title="All 2 branches missed.">			for (String pname : SearchTools.getCheckInputParams())</span>
+<span class="fc bfc" id="L1276" title="All 2 branches covered.">			for (String pname : SearchTools.getCheckInputParams())</span>
 			{
-<span class="nc" id="L1278">				String value = (String)request.getAttribute(&quot;preserve_&quot;+pname);</span>
-<span class="nc bnc" id="L1279" title="All 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
+<span class="fc" id="L1278">				String value = (String)request.getAttribute(&quot;preserve_&quot;+pname);</span>
+<span class="pc bpc" id="L1279" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(value))</span>
 				{
 <span class="nc" id="L1281">					request.setAttribute(pname, value);</span>
 <span class="nc" id="L1282">					request.removeAttribute(&quot;preserve_&quot;+pname);</span>
@@ -1285,4 +1285,4 @@ import java.util.regex.Pattern;
 		}
 <span class="fc" id="L1286">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FilePropertiesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FilePropertiesService.java</span></div><h1>FilePropertiesService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
+import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.FileIndexerTools;
+import sk.iway.iwcm.doc.DebugTimer;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.editor.EditorDB;
+import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.filebrowser.FileAtrBean;
+import sk.iway.iwcm.filebrowser.FileAtrDB;
+import sk.iway.iwcm.findexer.FileIndexer;
+import sk.iway.iwcm.findexer.ResultBean;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.stat.Column;
+
+public class FilePropertiesService {
+    
+    private FilePropertiesService() {
+        // private constructor to hide the implicit public one
+    }
+    
+    public static FilePropertiesDTO getOneItem(HttpServletRequest request, Identity user) {
+<span class="fc" id="L49">        String dirPath = request.getParameter(&quot;dirPath&quot;);</span>
+<span class="fc" id="L50">        String fileName = request.getParameter(&quot;fileName&quot;);</span>
+
+<span class="pc bpc" id="L52" title="2 of 4 branches missed.">        if(Tools.isEmpty(dirPath) || Tools.isEmpty(fileName))</span>
+<span class="nc" id="L53">            throw new ResponseStatusException(HttpStatus.FORBIDDEN);</span>
+           
+        //Remove excessive spaces
+<span class="fc" id="L56">        dirPath = dirPath.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
+<span class="fc" id="L57">        fileName = fileName.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
+
+        //Check perms
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if(user.isFolderWritable(dirPath) == false)</span>
+<span class="nc" id="L61">            throw new ResponseStatusException(HttpStatus.FORBIDDEN);</span>
+                
+<span class="fc" id="L63">        FilePropertiesDTO filePropertiesDTO = new FilePropertiesDTO();</span>
+<span class="fc" id="L64">        filePropertiesDTO.setDirPath(dirPath);</span>
+<span class="fc" id="L65">        filePropertiesDTO.setFileName(fileName);</span>
+<span class="fc" id="L66">        filePropertiesDTO.setOriginalFileName(fileName);</span>
+<span class="fc" id="L67">        return filePropertiesDTO;</span>
+    }
+
+    public static void indexFile(String dir, String file, HttpServletRequest request, HttpServletResponse response, Identity user) throws IOException {
+<span class="fc" id="L71">        int last = file.lastIndexOf(&quot;/&quot;);</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        if (last &gt; 0) dir = file.substring(0, last);</span>
+
+<span class="fc" id="L74">        List&lt;ResultBean&gt; indexedFiles = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L75">        response.setContentType(&quot;text/html; charset=&quot; + SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L76">        PrintWriter out = response.getWriter();</span>
+<span class="fc" id="L77">        Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L78">        out.println(&quot;&lt;html&gt;&lt;body&gt;&quot;);</span>
+
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if(user.isFolderWritable(dir)) {</span>
+
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if(Tools.isNotEmpty(file)) {</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">                if(file.indexOf('/') == -1)</span>
+<span class="fc" id="L84">                    file = dir + &quot;/&quot; + file;</span>
+<span class="fc" id="L85">                Logger.println(FileIndexer.class,&quot;indexujem subor: &quot; + file);</span>
+<span class="fc" id="L86">                out.println(file);</span>
+<span class="fc" id="L87">                out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L88">                out.flush();</span>
+<span class="fc" id="L89">                DebugTimer dt = new DebugTimer(&quot;FileIndexer&quot;);</span>
+<span class="fc" id="L90">                FileIndexerTools.indexFile(file, indexedFiles, request);</span>
+<span class="fc" id="L91">                long lastDiff = dt.diff(file);</span>
+<span class="fc" id="L92">                out.println(&quot; (+&quot;+lastDiff+&quot; ms)&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L93">                out.println(&quot;&lt;script type='text/javascript'&gt;window.scrollBy(0, 1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L94">                out.flush();</span>
+<span class="fc" id="L95">                dir = null;</span>
+            }
+
+<span class="pc bpc" id="L98" title="5 of 6 branches missed.">            if(Tools.isNotEmpty(dir) &amp;&amp; dir != null &amp;&amp; dir.contains(&quot;WEB-INF&quot;) == false) {</span>
+                //budeme rovno vypisovat ak sa nejedna o hromadne indexovanie
+<span class="nc" id="L100">                sk.iway.iwcm.Encoding.setResponseEnc(request, response, &quot;text/html&quot;);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                for (int i = 0; i &lt; 10; i++) {</span>
+<span class="nc" id="L102">                    out.println(&quot;                                                                             &quot;);</span>
+                }
+
+<span class="nc" id="L105">                out.flush();</span>
+<span class="nc" id="L106">                FileIndexer.indexDir(dir, indexedFiles, request, out);</span>
+            }
+        }
+
+<span class="fc" id="L110">        out.println(prop.getText(&quot;findex.done&quot;));</span>
+<span class="fc" id="L111">        out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="fc" id="L112">    }</span>
+
+
+	// !! METHOD will remain unchanged from original form UNTIL file_atr table is implemented via SPRING
+    public static FilePropertiesDTO saveFile(FilePropertiesDTO entity, HttpServletRequest request, Identity user) {
+
+		//ak je to novy subor, alebo nazov nie je rovnaky ako povodny, skontroluj ho
+<span class="nc bnc" id="L119" title="All 4 branches missed.">		if (entity.getOriginalFileName() == null || entity.getOriginalFileName().compareTo(entity.getFileName()) != 0)</span>
+		{
+<span class="nc" id="L121">			entity.setFileName(DB.internationalToEnglish(DocTools.removeChars(entity.getFileName())));</span>
+		}
+
+<span class="nc bnc" id="L124" title="All 4 branches missed.">		if (entity.getFileName() == null || entity.getFileName().length() &lt; 1)</span>
+		{
+<span class="nc" id="L126">			entity.setFileName(&quot;new.html&quot;);</span>
+		}
+
+		//ak treba, presun subor
+<span class="nc bnc" id="L130" title="All 4 branches missed.">		if (entity.getOriginalFileName() != null &amp;&amp; entity.getOriginalFileName().length() &gt; 0)</span>
+		{
+<span class="nc bnc" id="L132" title="All 2 branches missed.">			if (!entity.getFileName().equals(entity.getOriginalFileName()))</span>
+			{
+<span class="nc" id="L134">				Adminlog.add(Adminlog.TYPE_FILE_EDIT, &quot;Rename file: oldUrl=&quot;+entity.getDirPath()+&quot;/&quot;+entity.getOriginalFileName()+&quot; newUrl=&quot;+entity.getDirPath()+&quot;/&quot;+entity.getFileName(), -1, -1);</span>
+
+<span class="nc" id="L136">				String dir = Tools.getRealPath(entity.getDirPath());</span>
+<span class="nc" id="L137">				Tools.renameFile(dir + File.separatorChar + entity.getOriginalFileName(), dir + File.separatorChar + entity.getFileName());</span>
+
+				//ak existuje full text zmen odkaz
+<span class="nc" id="L140">				String oldUrl = entity.getDirPath()+&quot;/&quot;+entity.getOriginalFileName();</span>
+<span class="nc" id="L141">				String newUrl = entity.getDirPath()+&quot;/&quot;+entity.getFileName();</span>
+<span class="nc" id="L142">				DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L143">				int docId = docDB.getDocIdFromURLImpl(oldUrl+&quot;.html&quot;, null);</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">				if (docId &lt; 1) docId = docDB.getDocIdFromURLImpl(Tools.replace(oldUrl, &quot;.&quot;, &quot;-&quot;)+&quot;.html&quot;, null);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">				if (docId &gt; 0)</span>
+				{
+<span class="nc" id="L147">					IwcmFile f = new IwcmFile(Tools.getRealPath(newUrl));</span>
+<span class="nc" id="L148">					long length = f.length();</span>
+
+					//existuje nam full text verzia
+<span class="nc" id="L151">					EditorForm ef = EditorDB.getEditorForm(request, docId, -1, -1);</span>
+<span class="nc" id="L152">					ef.setTitle(entity.getFileName());</span>
+<span class="nc" id="L153">					ef.setNavbar(entity.getFileName() +  &quot; (&quot;+Tools.formatFileSize(length)+&quot;)&quot;);</span>
+<span class="nc" id="L154">					ef.setVirtualPath(newUrl+&quot;.html&quot;);</span>
+<span class="nc" id="L155">					ef.setExternalLink(newUrl);</span>
+<span class="nc" id="L156">					ef.setAuthorId(user.getUserId());</span>
+<span class="nc" id="L157">					ef.setPublish(&quot;1&quot;);</span>
+
+<span class="nc" id="L159">					EditorDB.saveEditorForm(ef, request);</span>
+
+<span class="nc" id="L161">					EditorDB.cleanSessionData(request);</span>
+				}
+
+<span class="nc" id="L164">				String dir2 = entity.getDirPath();</span>
+<span class="nc" id="L165">				System.out.println(&quot;dir2 &quot;+dir2);</span>
+<span class="nc" id="L166">				String oldFile = dir2 + &quot;/&quot; +  entity.getOriginalFileName();</span>
+<span class="nc" id="L167">				String newFile = dir2 + &quot;/&quot; +  entity.getFileName();</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				if(Tools.getIntValue(request.getParameter(&quot;zmenNazov&quot;), 0)==1)</span>
+				{
+					// zmenim udaje v suboroch
+					Column col;
+<span class="nc" id="L173">					String stranka=&quot;&quot;;</span>
+<span class="nc" id="L174">					List&lt;Column&gt; zoznamUsage = FileTools.getFileUsage(oldFile);</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">					for(int i=0;i&lt;zoznamUsage.size();i++)</span>
+					{
+<span class="nc" id="L177">						col = zoznamUsage.get(i);</span>
+<span class="nc" id="L178">						String subor = col.getColumn2().replaceAll(&quot;\\\\&quot;, &quot;/&quot;);</span>
+<span class="nc" id="L179">						IwcmFile f = new IwcmFile(Tools.getRealPath(subor));</span>
+<span class="nc bnc" id="L180" title="All 6 branches missed.">						if (f.exists() &amp;&amp; f.isFile() &amp;&amp; f.canRead())</span>
+						{
+<span class="nc" id="L182">							stranka = FileTools.readFileContent(subor);</span>
+<span class="nc bnc" id="L183" title="All 2 branches missed.">							if(Tools.isNotEmpty(stranka))</span>
+							{
+<span class="nc" id="L185">								String strankaNova = stranka.replaceAll(oldFile, newFile);</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">								if (strankaNova.equals(stranka)==false)</span>
+								{
+<span class="nc" id="L188">									FileTools.saveFileContent(subor, strankaNova);</span>
+<span class="nc" id="L189">									System.out.println(&quot;ZMENENE &quot;+col.getColumn2());</span>
+								}
+							}
+						}
+					}
+					//zmenim udaje na strankach
+<span class="nc" id="L195">					List&lt;DocDetails&gt; replacedPages = docDB.replaceTextAll(oldFile, newFile);</span>
+<span class="nc" id="L196">					request.setAttribute(&quot;replacedPages&quot;, replacedPages);</span>
+				}
+			}
+		}
+
+		//ulozenie atributov stranky
+<span class="nc" id="L202">		Connection db_conn = null;</span>
+<span class="nc" id="L203">		PreparedStatement ps = null;</span>
+		try
+		{
+<span class="nc" id="L206">			String link = entity.getDirPath() + &quot;/&quot; + entity.getFileName();</span>
+			//TODO: ulozenie do history! (+restore z history)
+
+			//najskor vymazeme
+<span class="nc" id="L210">			db_conn = DBPool.getConnection(request);</span>
+<span class="nc" id="L211">			ps = db_conn.prepareStatement(&quot;DELETE FROM file_atr WHERE link=?&quot;);</span>
+<span class="nc" id="L212">			ps.setString(1, link);</span>
+<span class="nc" id="L213">			ps.execute();</span>
+<span class="nc" id="L214">			ps.close();</span>
+<span class="nc" id="L215">			ps = null;</span>
+
+			//nainsertujeme
+<span class="nc" id="L218">			Enumeration&lt;String&gt; params = request.getParameterNames();</span>
+			String name;
+			String value;
+			int atrId;
+			FileAtrBean atr;
+<span class="nc bnc" id="L223" title="All 2 branches missed.">			while (params.hasMoreElements())</span>
+			{
+				try
+				{
+<span class="nc" id="L227">					name = params.nextElement();</span>
+<span class="nc bnc" id="L228" title="All 4 branches missed.">					if (name != null &amp;&amp; name.startsWith(&quot;atr_&quot;))</span>
+					{
+<span class="nc" id="L230">						atrId = Integer.parseInt(name.substring(4));</span>
+<span class="nc" id="L231">						value = request.getParameter(name);</span>
+<span class="nc" id="L232">						atr = FileAtrDB.getAtrDef(atrId, request);</span>
+<span class="nc bnc" id="L233" title="All 4 branches missed.">						if (Tools.isNotEmpty(value) &amp;&amp; atr != null)</span>
+						{
+<span class="nc" id="L235">							ps = db_conn.prepareStatement(&quot;INSERT INTO file_atr (file_name, link, atr_id, value_string, value_int, value_bool) VALUES (?, ?, ?, ?, ?, ?)&quot;);</span>
+<span class="nc" id="L236">							ps.setString(1, entity.getFileName());</span>
+<span class="nc" id="L237">							ps.setString(2, link);</span>
+<span class="nc" id="L238">							ps.setInt(3, atrId);</span>
+<span class="nc bnc" id="L239" title="All 2 branches missed.">							if (atr.getAtrType() == FileAtrDB.TYPE_INT)</span>
+							{
+<span class="nc" id="L241">								ps.setString(4, Integer.toString(Integer.parseInt(value)));</span>
+<span class="nc" id="L242">								ps.setInt(5, Integer.parseInt(value));</span>
+<span class="nc" id="L243">								ps.setNull(6, Types.INTEGER);</span>
+							}
+<span class="nc bnc" id="L245" title="All 2 branches missed.">							else if (atr.getAtrType() == FileAtrDB.TYPE_BOOL)</span>
+							{
+<span class="nc" id="L247">								ps.setString(4, null);</span>
+<span class="nc" id="L248">								ps.setNull(5, Types.INTEGER);</span>
+<span class="nc bnc" id="L249" title="All 4 branches missed.">								if (&quot;true&quot;.equalsIgnoreCase(value) || &quot;yes&quot;.equalsIgnoreCase(value))</span>
+								{
+<span class="nc" id="L251">									ps.setBoolean(6, true);</span>
+								}
+								else
+								{
+<span class="nc" id="L255">									ps.setBoolean(6, false);</span>
+								}
+							}
+							else
+							{
+<span class="nc" id="L260">								ps.setString(4, value);</span>
+<span class="nc" id="L261">								ps.setNull(5, Types.INTEGER);</span>
+<span class="nc" id="L262">								ps.setNull(6, Types.INTEGER);</span>
+							}
+<span class="nc" id="L264">							ps.execute();</span>
+<span class="nc" id="L265">							ps.close();</span>
+<span class="nc" id="L266">							ps = null;</span>
+							//String sa = entity.
+							//ps = db_conn.prepareStatement(&quot;UPDATE documents SET title=? WHERE doc_id=?&quot;);
+						}
+					}
+				}
+<span class="nc" id="L272">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L274">					sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L275">				}</span>
+			}
+<span class="nc" id="L277">			db_conn.close();</span>
+<span class="nc" id="L278">			db_conn = null;</span>
+		}
+<span class="nc" id="L280">		catch (Exception ex)</span>
+		{
+<span class="nc" id="L282">			sk.iway.iwcm.Logger.error(ex);</span>
+		}
+		finally
+		{
+			try
+			{
+<span class="nc bnc" id="L288" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L289">					ps.close();</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L291">					db_conn.close();</span>
+			}
+<span class="nc" id="L293">			catch (Exception ex2)</span>
+			{
+<span class="nc" id="L295">			}</span>
+		}
+
+<span class="nc" id="L298">        return entity;</span>
+	}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -252,7 +252,11 @@ public class Logger
 					Logger.debug(Logger.class, String.format("getLogLevelsMap - Nepodarilo sa vyparsovat package a level zo stringu: %s", logLevel));
 				}
 			}
+		}
 
+		//to audit DB leaks we need this
+		if (logLevels.contains("com.zaxxer.hikari.pool.ProxyLeakTask")==false) {
+			result.put("com.zaxxer.hikari.pool.ProxyLeakTask", Level.WARN);
 		}
 
 		return result;

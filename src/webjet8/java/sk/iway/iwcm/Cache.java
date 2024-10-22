@@ -174,7 +174,7 @@ public class Cache
 	}
 
 	/**
-	 * Ziska objekt z cache, vrati null, ak sa v cache nenachadza (alebo cas expiroval)
+	 * Ziska objekt z cache, vrati null, ak sa v cache nenachadza (alebo cas exspiroval)
 	 * @param name - symbolicke meno objektu v cache
 	 * @return
 	 */
@@ -289,7 +289,7 @@ public class Cache
 	}
 
 	/**
-	 * Vlozi objekt do cache s nastavenym casom expiracie
+	 * Vlozi objekt do cache s nastavenym casom exspiracie
 	 * @param name
 	 * @param object
 	 * @param expiryTime
@@ -322,7 +322,7 @@ public class Cache
 	}
 
 	/**
-	 * Nastavi uz existujucemu objektu v cache novy cas expiracie
+	 * Nastavi uz existujucemu objektu v cache novy cas exspiracie
 	 * @param name
 	 * @param expiryTime
 	 */
@@ -526,7 +526,7 @@ public class Cache
 	}
 
 	/**
-	 * Ziska timestamp expiracie objektu z cache, vrati null, ak sa objekt v cache nenachadza (alebo cas expiroval)
+	 * Ziska timestamp exspiracie objektu z cache, vrati null, ak sa objekt v cache nenachadza (alebo cas exspiroval)
 	 * @param name - symbolicke meno objektu v cache
 	 * @return
 	 */
@@ -601,7 +601,7 @@ public class Cache
 	}
 
 	/**
-	 * Ziska objekt z cache, vrati null, ak sa v cache nenachadza (alebo cas expiroval)
+	 * Ziska objekt z cache, vrati null, ak sa v cache nenachadza (alebo cas exspiroval)
 	 * @param user - prihlaseny pouzivatel
 	 * @param name - symbolicke meno objektu v cache
 	 * @return

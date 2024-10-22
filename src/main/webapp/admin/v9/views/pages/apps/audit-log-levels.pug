@@ -1,0 +1,63 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'audit-log-levels',
+        [
+            [ '/admin/v9/apps/audit-log-levels/', '[[#{components.adminlog.logging}]]', true]
+        ]
+    )
+
+    script.
+        var logLevelsDataTable;
+        let url = "/admin/rest/audit/log-levels";
+        let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.LogLevelBean")})];
+        let mainLevelOptions = WJ.translate("audit_log_level.main_log_level.options.js").split("|");
+        let otherLevelOptions = WJ.translate("audit_log_level.other.options.js").split("|");
+
+        window.domReady.add(function () {
+
+            logLevelsDataTable = WJ.DataTable({
+                url: url,
+                serverSide: false,
+                columns: columns
+            });
+            logLevelsDataTable.hideButton('duplicate');
+
+            logLevelsDataTable.EDITOR.on('open', function (e, type, action) {
+
+                if(action === "create") {
+                    //LIKE is not MAIN level
+                     $("#DTE_Field_logLevel option").each(function() {
+                        if(otherLevelOptions.includes($(this).val()) == false)
+                            $("#DTE_Field_logLevel option[value='" + $(this).val() + "']").prop('disabled', true);
+                        else
+                            $("#DTE_Field_logLevel option[value='" + $(this).val() + "']").prop('disabled', false);
+                    });
+                } else {
+                    let packageName = e.currentTarget.currentJson["packageName"];
+                    if(packageName === WJ.translate("audit_log_level.main_log_level.js")) {
+                        //Its main log level
+                        $("#DTE_Field_logLevel option").each(function() {
+                            if(mainLevelOptions.includes($(this).val()) == false)
+                                $("#DTE_Field_logLevel option[value='" + $(this).val() + "']").prop('disabled', true);
+                            else
+                                $("#DTE_Field_logLevel option[value='" + $(this).val() + "']").prop('disabled', false);
+                        });
+                    } else {
+                        //It is not MAIN level
+                        $("#DTE_Field_logLevel option").each(function() {
+                            if(otherLevelOptions.includes($(this).val()) == false)
+                                $("#DTE_Field_logLevel option[value='" + $(this).val() + "']").prop('disabled', true);
+                            else
+                                $("#DTE_Field_logLevel option[value='" + $(this).val() + "']").prop('disabled', false);
+                        });
+                    }
+                }
+
+                $("#DTE_Field_logLevel").selectpicker('refresh');
+            });
+        });
+
+    <table class="datatableInit table"></table>

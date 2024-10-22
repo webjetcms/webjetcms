@@ -8,6 +8,7 @@
 * Jazyk
   * [sk](/sk/)
   * [en](/en/)
+  * [cs](/cs/)
 
 * Pomoc
   * [WebJET CMS info](https://www.webjetcms.sk/)

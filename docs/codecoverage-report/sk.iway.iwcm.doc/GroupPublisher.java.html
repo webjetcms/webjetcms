@@ -64,9 +64,9 @@ import sk.iway.iwcm.i18n.Prop;
 					&quot;default_doc_id, temp_id, sort_priority, password_protected, menu_type, url_dir_name,&quot; +
 					&quot; html_head, logon_page_doc_id, domain_name, new_page_docid_template, install_name, &quot; +
 					&quot;field_a, field_b, field_c, field_d, logged_menu_type, link_group_id,&quot; +
-					&quot;when_to_publish, user_id, lng, hidden_in_admin&quot; +
+					&quot;when_to_publish, user_id, lng, hidden_in_admin, force_group_template&quot; +
 <span class="fc" id="L68">					addFieldsInsert.toString() +</span>
-<span class="fc" id="L69">					&quot;) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?&quot;+addFieldsInsertParams.toString()+&quot;)&quot;;</span>
+<span class="fc" id="L69">					&quot;) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?&quot;+addFieldsInsertParams.toString()+&quot;)&quot;;</span>
 
 <span class="fc" id="L71">			db_conn = DBPool.getConnection();</span>
 <span class="fc" id="L72">			ps = db_conn.prepareStatement(sql);</span>
@@ -74,7 +74,7 @@ import sk.iway.iwcm.i18n.Prop;
 <span class="fc" id="L74">			Object[] parameters = {new Date(), g.getGroupId(), g.getGroupName(), g.isInternal(), g.getParentGroupId(), g.getNavbarName(), g.getDefaultDocId(),</span>
 <span class="fc" id="L75">				g.getTempId(), g.getSortPriority(), g.getPasswordProtected(), g.getMenuType(), g.getUrlDirName(),</span>
 <span class="fc" id="L76">				g.getHtmlHead(), g.getLogonPageDocId(), g.getDomainName(), g.getNewPageDocIdTemplate(), g.getInstallName(),</span>
-<span class="fc" id="L77">				g.getFieldA(), g.getFieldB(), g.getFieldC(), g.getFieldD(), g.getLoggedMenuType(), g.getLinkGroupId(), pd, userId, g.getLng(), g.isHiddenInAdmin()};</span>
+<span class="fc" id="L77">				g.getFieldA(), g.getFieldB(), g.getFieldC(), g.getFieldD(), g.getLoggedMenuType(), g.getLinkGroupId(), pd, userId, g.getLng(), g.isHiddenInAdmin(), g.isForceTheUseOfGroupTemplate()};</span>
 
 <span class="fc" id="L79">			SimpleQuery.bindParameters(ps, parameters);</span>
 
@@ -385,4 +385,4 @@ import sk.iway.iwcm.i18n.Prop;
 <span class="nc" id="L385">		return publicableGroups;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -117,10 +117,13 @@ if (url.startsWith("/components/")) {
 				<script type="text/javascript">
 					var src = '/admin/v9/webpages/component?id=1';
 					var iframe = window.parent.$('#editorComponent');
-					console.log("iframe=", iframe);
+					//console.log("iframe=", iframe);
 					iframe
 						.after($('<input type="hidden" id="className" />').val("<%=ResponseUtils.filter(componentName) %>"))
-						.after($('<input type="hidden" id="parameters" />').val(""));
+						.after($('<input type="hidden" id="parameters" />').val(""))
+						.after($('<input type="hidden" id="docId" />').val("<%=ResponseUtils.filter(request.getParameter("docId")) %>"))
+						.after($('<input type="hidden" id="groupId" />').val("<%=ResponseUtils.filter(request.getParameter("groupId")) %>"))
+						.after($('<input type="hidden" id="title" />').val("<%=ResponseUtils.filter(request.getParameter("title")) %>"))
 					iframe.attr('src', src);
 				</script>
 			<%

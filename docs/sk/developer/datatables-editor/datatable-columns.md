@@ -97,7 +97,7 @@ Pôvodná dokumentácia na stránke [datatables.net](https://datatables.net/refe
 Povinné polia:
 
 - ```inputType``` - skratka, ```enum DataTableColumnType``` - určuje typ dátového poľ. Možné je použiť aj spojenú hodnotu (napr.: ```inputType = { DataTableColumnType.OPEN_EDITOR, DataTableColumnType.JSON },```).
-- ```title``` - ak nie je zadaný automaticky sa vygeneruje ako ```components.meno_beanu_bez_dto_alebo_bean_na_konci.name``` - https://datatables.net/reference/option/columns.title, viď dokumentácia k [prekladom](#preklady-názvov-stĺpcov). POZOR: ak je title prázdny (alebo tvrdá medzera) tak sa automaticky stĺpcu nastaví atribút ```hidden=true```.
+- ```title``` - ak nie je zadaný automaticky sa vygeneruje ako ```components.meno_beanu_bez_dto_alebo_bean_na_konci.name``` - https://datatables.net/reference/option/columns.title, viď dokumentácia k [prekladom](#preklady-názvov-stĺpcov). **Upozornenie:** ak je title prázdny (alebo tvrdá medzera) tak sa automaticky stĺpcu nastaví atribút ```hidden=true```.
 
 Voliteľné polia:
 
@@ -274,7 +274,7 @@ columns.push({
 
 Implementovaná trieda ```EditorFields```, napr. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typicky obsahuje metódy ```fromDocDetails``` pre nastavenie atribútov v ```editorFields``` triede pred editáciou a ```toDocDetails``` pre spätné nastavenie atribútov v ```DocDetails``` pred uložení. Tieto metódy je potrebné implicitne volať vo vašom Java kóde.
 
-**POZOR:** ak je entita ukladaná v cache (ako napr. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavenie atribútu ```editorFields``` zostane aj v cache a môže zbytočne zaberať pamäť a vytvárať pri JSON serializácii zbytočne veľké dáta. V ```GroupDetails``` v editorFields odkazuje na ```parentGroupDetails```.
+!>**Upozornenie:** ak je entita ukladaná v cache (ako napr. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavenie atribútu ```editorFields``` zostane aj v cache a môže zbytočne zaberať pamäť a vytvárať pri JSON serializácii zbytočne veľké dáta. V ```GroupDetails``` v editorFields odkazuje na ```parentGroupDetails```.
 
 Pri štandardnom postupe sa postupne na každom ```GroupDetails``` objekte nastavil ```editorFields``` objekt. Pri serializácii hlboko vnoreného adresára sa následne vnárali objekty editorFields.parentGroupDetails.editorFields.parentGroupDetails atď. Objekt GroupDetails nemal len potrebný prvý editorFields. Riešením je najskôr objekt ```GroupDetails``` naklonovať a až tak do neho nastavit ```editorFields```. Príklad je v ```GroupEditorField.fromGroupDetails``` ktorý naklonuje objekt a následne ho vráti. Použitie v kóde je potom ako ```group = gef.fromGroupDetails(group);```.
 

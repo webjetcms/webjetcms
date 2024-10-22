@@ -30,6 +30,20 @@ script.
     window.editorImageAutoTitle = [(${layout.getConstant('editorImageAutoTitle')})];
     window.perexGroupsRenderAsSelect = [(${layout.isPerexGroupsRenderAsSelect()})];
     window.datatablesExportMaxRows = [(${layout.getConstantInt('datatablesExportMaxRows', 50000)})];
+    window.am5license = "[(${layout.getConstant('amchartLicense')})]";
+    
+    window.Constants = [];
+    window.Constants["urlRemoveSpojky"] = [(${layout.getConstant('urlRemoveSpojky')})];
+    window.Constants["urlRemoveSpojkyList"] = getTokens( "[(${layout.getConstant('urlRemoveSpojkyList')})]", ",");
+
+    function getTokens(value, delimiter) {
+        if(value == undefined || value == null || value.length < 1) return [];
+        let tokens = value.split(delimiter);
+        for(let i = 0; i < tokens.length; i++) {
+            tokens[i] = tokens[i].trim();
+        }
+        return tokens;
+    }
 
 // Outpul all script files
 -

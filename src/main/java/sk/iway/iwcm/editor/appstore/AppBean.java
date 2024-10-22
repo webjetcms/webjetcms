@@ -7,6 +7,7 @@ import java.util.List;
 
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.io.IwcmFile;
 
 /**
  *  AppBean.java
@@ -28,8 +29,9 @@ public class AppBean
 	private List<String> galleryImages = null;
 	private String domainName = null;
 	private String itemKey = ""; //pouziva sa v AppManager kvoli filtracii prav
-
     private String descKey;
+	private boolean custom = false;
+	private String componentPath;
 
 	public boolean isFree()
 	{
@@ -56,7 +58,7 @@ public class AppBean
 	{
 		if (galleryImages != null) return galleryImages;
 
-		List<String> images = new ArrayList<String>();
+		List<String> images = new ArrayList<>();
 
 		int lastSlash = imagePath.lastIndexOf('/');
 		if (lastSlash > 0)
@@ -167,12 +169,36 @@ public class AppBean
 
     public void setGalleryImages(String images)
     {
-        if (Tools.isNotEmpty(images))
-        {
+		if (images.endsWith("/")) {
+			//list all images with name screenshot-X.jpg in images folder
+			IwcmFile dir = new IwcmFile(Tools.getRealPath(images));
+			IwcmFile[] files = FileTools.sortFilesByName(dir.listFiles());
+			this.galleryImages = new ArrayList<>();
+			for (IwcmFile file : files) {
+				if (file.getName().startsWith("screenshot-")) {
+					this.galleryImages.add(images + file.getName());
+				}
+			}
+		} else if (Tools.isNotEmpty(images)) {
             String[] galleryImagesArr = Tools.getTokens(images, ",", true);
             this.galleryImages = Arrays.asList(galleryImagesArr);
         }
-
     }
+
+	public boolean getCustom() {
+		return custom;
+	}
+
+	public void setCustom(boolean custom) {
+		this.custom = custom;
+	}
+
+	public String getComponentPath() {
+		return componentPath;
+	}
+
+	public void setComponentPath(String componentPath) {
+		this.componentPath = componentPath;
+	}
 }
 

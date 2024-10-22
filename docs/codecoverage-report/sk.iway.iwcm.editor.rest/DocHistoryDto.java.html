@@ -12,10 +12,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Setter
 <span class="fc" id="L13">public class DocHistoryDto {</span>
 
-    @DataTableColumn(inputType = DataTableColumnType.ID, renderFormat = &quot;dt-format-selector&quot;, title = &quot;editor.cell.id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.ID, title = &quot;editor.cell.id&quot;)
     private Long id; //historyId
 
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.forum.docid&quot;, visible = false)
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = &quot;components.forum.docid&quot;, visible = false, renderFormat = &quot;dt-format-selector&quot;) //render nuber without spaces
     private int docId;
 
     @DataTableColumn(inputType = DataTableColumnType.DATETIME, title = &quot;history.date&quot;)
@@ -59,4 +59,4 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 	)
 	private String fullPath = null;
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

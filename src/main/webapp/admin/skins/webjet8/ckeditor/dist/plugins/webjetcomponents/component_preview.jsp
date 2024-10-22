@@ -36,6 +36,8 @@ else {
 		lng = groupDetails.getLng();
 	}
 }
+//set language also to Spring Locale object
+PageLng.setUserLng(request, response, lng);
 
 pageContext.setAttribute("lng", lng);
 request.setAttribute("PageLng", lng);
@@ -160,7 +162,9 @@ else
 			if (group != null) request.setAttribute("pageGroupDetails", group);
 
 			TemplateDetails temp = TemplatesDB.getInstance().getTemplate(doc.getTempId());
-			if (temp != null) request.setAttribute("templateDetails", temp);
+			if (temp != null) {
+				sk.iway.iwcm.doc.ShowDoc.setRequestData(temp, request);
+			}
 		}
 	}
 

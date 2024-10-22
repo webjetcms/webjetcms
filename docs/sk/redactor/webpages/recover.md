@@ -1,6 +1,6 @@
 # Obnovenie web stránok a priečinkov z koša
 
-Obnovenie web stránok a priečinkov je proces, ktorý sa dá vykonať iba na tých stránkach/priečinkoch, ktoré sú umiestnené v priečinku ```Kôš```. K tejto akcií slúži špeciálna ikona ![](recover-button.png ":no-zoom").
+Obnovenie web stránok a priečinkov je proces, ktorý sa dá vykonať iba na tých stránkach/priečinkoch, ktoré sú umiestnené v priečinku **Kôš**. K tejto akcií slúži špeciálna ikona ![](recover-button.png ":no-zoom").
 
 Technicky obnovenie web stránky je vykonané získaním jej verzie z histórie.
 
@@ -38,14 +38,14 @@ Potvrdením sa spustí akcia obnovenia a na konci ktorej budete oboznámený s j
 
 ### Vlastnosť zobrazovať po obnovení
 
-Nakoľko web stránky, ktoré sa nachádzali v obnovených priečinkoch, chceme uviesť do pôvodného stavu, musíme im nastaviť správnu hodnotu možnosti ``Zobrazovať``. Možnosť web stránok ``Zobrazovať`` sa pri vymazaní priečinka automatický vypla, čím sa web stránky skryli na web sídle (platí to pre všetky web stránky aj tie z adresárov).
+Nakoľko web stránky, ktoré sa nachádzali v obnovených priečinkoch, chceme uviesť do pôvodného stavu, musíme im nastaviť správnu hodnotu možnosti **Zobrazovať**. Možnosť web stránok **Zobrazovať** sa pri vymazaní priečinka automatický vypla, čím sa web stránky skryli na web sídle (platí to pre všetky web stránky aj tie z adresárov).
 
-Pri obnovení, sa hodnota možnosti ``Zobrazovať`` nastaví podľa nasledujúcich pravidiel:
+Pri obnovení, sa hodnota možnosti **Zobrazovať** nastaví podľa nasledujúcich pravidiel:
 
-- získa sa aktuálny záznam z histórie pre každú obnovovanú web stránku, a jej hodnota ``Zobrazovať`` sa nastaví podľa vzoru z histórie
+- získa sa aktuálny záznam z histórie pre každú obnovovanú web stránku, a jej hodnota **Zobrazovať** sa nastaví podľa vzoru z histórie
 - ak neexistuje aktuálny záznam v histórií pre túto stránku, využije sa najnovší neaktuálny záznam z histórie
-- ak stránka nemá žiaden záznam v histórii, jej hodnota ``Zobrazovať`` sa automaticky zapne
+- ak stránka nemá žiaden záznam v histórii, jej hodnota **Zobrazovať** sa automaticky zapne
 
-**Pozor na tento rozdiel:**
+**Dajte si pozor na tento rozdiel:**
 - pri Obnovení web stránky, sa stránka **NEDÁ obnoviť** bez záznamu v histórii, nakoľko nevieme, kde sa táto stránka nachádzala.
-- pri Obnovení priečinka, sa web stránka **DÁ obnoviť** aj bez záznamu v histórii, nakoľko vieme kde sa nachádza (jej poloha v obnovovanom priečinku je jasná) a záznam z histórie používame výhradne na nastavenie hodnoty možnosti ``Zobrazovať``.
+- pri Obnovení priečinka, sa web stránka **DÁ obnoviť** aj bez záznamu v histórii, nakoľko vieme kde sa nachádza (jej poloha v obnovovanom priečinku je jasná) a záznam z histórie používame výhradne na nastavenie hodnoty možnosti **Zobrazovať**.

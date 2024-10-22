@@ -75,7 +75,7 @@ Pre preklady priamo vo vyrenderovanej stránke sa používajú html data atribú
 Data atribút môže byť umiestnený na akúkoľvek HTML značku ale musí byť bezprostredne na značne, ktorá obsahuje prekladaný text.
 Ak je umiestnený na HTML značke, ktorá obsahuje ďalší HTML kód, musí byť tento HTML kód obsiahnutý aj v samotnom preklade, inak bude stávajúci HTML nahradený hodnotou z prekladu.
 
-**Upozornenie:**, _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
+!>**Upozornenie:**, _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
 
 ```html
 <span data-translator="components.datatables.data.insertDate">Dátum vloženia</span>
@@ -209,7 +209,7 @@ alebo pomocou ``document.ready`` čiže po dokončení renderu webu zabezpečím
 že všetkým elementom na stránke, ktoré majú zadefinovaný data atribút ``data-translator`` budú zmenené
 textové hodnoty ``innerHTML`` na základe kľúča uvedeného v data atribúte ``data-translator``.
 
-**Upozornenie:**, _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
+!>**Upozornenie:**, _Funkcia pri nastavovaní prekladaného textu odstraňuje všetky existujúce eventy, ktoré sú na danom elemente a na jeho potomkoch._
 
 [Klikni pre viac info o použití](#pre-celú-html-stránku)
 

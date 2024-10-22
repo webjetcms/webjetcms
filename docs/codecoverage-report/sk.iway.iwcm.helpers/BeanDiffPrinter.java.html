@@ -46,17 +46,22 @@ public class BeanDiffPrinter
 			{
 <span class="fc" id="L47">				output.append('\n').</span>
 <span class="fc" id="L48">					append(change.getKey()).</span>
-<span class="fc" id="L49">					append(&quot;: &quot;).</span>
-<span class="fc" id="L50">					append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).</span>
-<span class="fc" id="L51">					append(&quot; =&gt; &quot;).</span>
-<span class="fc" id="L52">					append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));</span>
-<span class="fc" id="L53">			}</span>
+<span class="fc" id="L49">					append(&quot;: &quot;);</span>
 
-<span class="fc" id="L55">			return output.toString();</span>
-<span class="nc" id="L56">		} catch (Exception ex) {</span>
-<span class="nc" id="L57">			Logger.error(BeanDiffPrinter.class, ex);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">				if (diff.hasOriginal()) {</span>
+<span class="fc" id="L52">					output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).</span>
+<span class="fc" id="L53">					append(&quot; =&gt; &quot;).</span>
+<span class="fc" id="L54">					append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));</span>
+				} else {
+<span class="fc" id="L56">					output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));</span>
+				}
+<span class="fc" id="L58">			}</span>
+
+<span class="fc" id="L60">			return output.toString();</span>
+<span class="nc" id="L61">		} catch (Exception ex) {</span>
+<span class="nc" id="L62">			Logger.error(BeanDiffPrinter.class, ex);</span>
 		}
-<span class="nc" id="L59">		return &quot; Chyba pri ziskani zoznamu zmien&quot;;</span>
+<span class="nc" id="L64">		return &quot; Chyba pri ziskani zoznamu zmien&quot;;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

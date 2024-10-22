@@ -69,8 +69,8 @@ Scenario("feedback", ({ I }) => {
     I.waitForInvisible("#feedback_modal", 10);
     I.waitForElement(".toast-message", 10);
 
-    I.see("Spätná väzba bola odoslaná, ďakujeme za Váš čas.", ".toast-message");
-    I.forceClick("button.toast-close-button");
+    I.waitForText("Spätná väzba bola odoslaná, ďakujeme za Váš čas.", 10, ".toast-message");
+    I.toastrClose();
 
     //
     I.say("skus spam protection");
@@ -85,6 +85,6 @@ Scenario("feedback", ({ I }) => {
     I.waitForInvisible("#feedback_modal", 10);
     I.waitForElement(".toast-message", 10);
 
-    I.see("Spätnú väzbu sa nepodarilo odoslať,", ".toast-message");
-    I.forceClick("button.toast-close-button");
+    I.waitForText("Spätnú väzbu sa nepodarilo odoslať,", 10, ".toast-message");
+    I.toastrClose();
 });

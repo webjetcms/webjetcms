@@ -152,7 +152,7 @@ application/x-frontline aop
 application/x-gameboy-rom gb
 application/x-gdbm
 application/x-gdesklets-display display
-application/x-genesis-rom gen md
+application/x-genesis-rom gen
 application/x-gettext-translation gmo
 application/x-glabels glabels
 application/x-glade glade
@@ -513,3 +513,4 @@ application/vnd.ms-powerpoint.addin.macroEnabled.12 ppam
 text/jsp jsp
 text/plain properties
 text/json json
+text/markdown md

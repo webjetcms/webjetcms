@@ -1,6 +1,6 @@
 # DatatableRestControllerV2.java
 
-Java trieda [DatatableRestControllerV2](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) zapúzdruje komunikáciu s [datatabuľkou](README.md) a [editorom](../datatables-editor/README.md).
+Java trieda [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) zapúzdruje komunikáciu s [datatabuľkou](README.md) a [editorom](../datatables-editor/README.md).
 
 ## Základná implementácia
 
@@ -37,7 +37,7 @@ dôležitý je konštruktor, ktorý odovzdáva Spring DATA repozitár ```Redirec
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
-**POZOR**: Spring DATA entita musí mať ako PK ```Long id``` (nie napr. ```adminlogId``` a podobne), ak sa stĺpec v databáze volá inak, je potrebné mu nastaviť meno stĺpca:
+!>**Upozornenie:** Spring DATA entita musí mať ako PK ```Long id``` (nie napr. ```adminlogId``` a podobne), ak sa stĺpec v databáze volá inak, je potrebné mu nastaviť meno stĺpca:
 
 ```java
 @Id
@@ -46,8 +46,7 @@ dôležitý je konštruktor, ktorý odovzdáva Spring DATA repozitár ```Redirec
 @DataTableColumn(inputType = DataTableColumnType.ID)
 private Long id;
 ```
-
-**POZOR**: v dátovej entite **NESMIETE používať primitívne typy** ako ```int```, ```long``` ale objekty ```Integer```, ```Long```, inak nebude fungovať vyhľadávanie. To používa ExampleMatcher, ktorý NULL objekty nevloží do DB dotazu. Pre primitívne typy ale nemôže použiť NULL, nastaví ich na hodnotu 0 a následne pridá do ```WHERE``` podmienky.
+!>**Upozornenie:** v dátovej entite **NESMIETE používať primitívne typy** ako ```int```, ```long``` ale objekty ```Integer```, ```Long```, inak nebude fungovať vyhľadávanie. To používa ExampleMatcher, ktorý NULL objekty nevloží do DB dotazu. Pre primitívne typy ale nemôže použiť NULL, nastaví ich na hodnotu 0 a následne pridá do ```WHERE``` podmienky.
 
 Komplexná ukážka aj s kontrolou práv, mazaním súborov a vykonaním špeciálnej akcie:
 
@@ -341,7 +340,7 @@ Ak potrebujete upraviť dáta pred uložením, alebo vykonať akciu po uložení
 
 Metóda ```public void afterSave(T entity, T saved)``` je volaná po uložení entity - objekt ```entity``` je pôvodný odoslaný objekt, ```saved``` je uložená verzia. Pri novom zázname sa ```ID``` nachádza len v ```saved``` entite. Ak používate metódy pre aktualizáciu cache nezabudnite implementovať aj metódu public ```void afterDelete(T entity, long id)``` vyvolanú po zmazaní záznamu.
 
-**UPOZORNENIE**: neodporúčame prepísať cez anotáciu ```@Override``` REST metódy, vždy prepisujte vo vašej triede ```xxxItem``` metódy.
+!>**Upozornenie:** neodporúčame prepísať cez anotáciu ```@Override``` REST metódy, vždy prepisujte vo vašej triede ```xxxItem``` metódy.
 
 Pri duplikovaní záznamu je potrebné prijatým dátam "zmazať" hodnotu ID atribútu. Typicky sa jedná o atribút s menom ```id```, ale nemusí to platiť vždy. Meno atribútu sa teda hľadá podľa nastavenej anotácie ```DataTableColumnType.ID```.
 
@@ -433,15 +432,15 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 Volaním metódy ```setForceReload(true);``` je možné vynútiť obnovenie údajov datatabuľky po uložení.
 
-Je to potrebné ak sa uložený objekt presunie do iného adresára a podobne. Ukážka je vo [WebpagesRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+Je to potrebné ak sa uložený objekt presunie do iného adresára a podobne. Ukážka je vo [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
 
 ## Číselníky pre select boxy
 
-Pre select boxy v editore a automatickú konverziu ID na hodnota (napr. ```templateId``` na meno šablóny) je vo WebJETe pridané rozšírenie ```PageImpl``` objektu [DatatablePageImpl.java](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), ktoré umožňuje posielať číselníkové dáta.
+Pre select boxy v editore a automatickú konverziu ID na hodnota (napr. ```templateId``` na meno šablóny) je vo WebJETe pridané rozšírenie ```PageImpl``` objektu [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), ktoré umožňuje posielať číselníkové dáta.
 
 Tieto sa automaticky nastavia do ```options``` objektu v columns definícii editor objektu a automaticky sa aj použijú pre prevod ID-hodnota.
 
-Príklad je v [TranslationKeyController.java](../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
+Príklad je v [TranslationKeyController.java](../../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
 
 ```java
     //najlepsie riesenie je prepisat metodu getOptions a doplnit page.addOptions metody
@@ -519,7 +518,7 @@ Pre vyhľadávanie podľa rozsahu dátumov je potrebné skombinovať vyhľadáva
 private Specification<T> getSpecFromRangeAndExample(Map<String, String> ranges, Example<T> example) {
 ```
 
-Podmienkou je, aby Spring DATA repozitár rozširoval aj ```JpaSpecificationExecutor```, príklad je v [RedirectsRepository](../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
+Podmienkou je, aby Spring DATA repozitár rozširoval aj ```JpaSpecificationExecutor```, príklad je v [RedirectsRepository](../../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
 
 ```java
 package sk.iway.iwcm.components.redirects;
@@ -533,11 +532,11 @@ public interface RedirectsRepository extends JpaRepository<RedirectBean, Long>, 
 }
 ```
 
-**POZOR:** všetky JPA repozitáre je nutné definovať ako public, inak nebudú dostupné v klientskych projektoch.
+!>**Upozornenie:** všetky JPA repozitáre je nutné definovať ako public, inak nebudú dostupné v klientskych projektoch.
 
 ### Špeciálne vyhľadávanie
 
-V prípade potreby vykonania špeciálneho vyhľadávania je možné prepísať metódu `addSpecSearch` v ktorej je možné implementovať špecifickú podmienku. Príklad je v [GroupSchedulerRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) kde sa vyhľadáva podľa mena používateľa aj podľa parametra:
+V prípade potreby vykonania špeciálneho vyhľadávania je možné prepísať metódu `addSpecSearch` v ktorej je možné implementovať špecifickú podmienku. Príklad je v [GroupSchedulerRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) kde sa vyhľadáva podľa mena používateľa aj podľa parametra:
 
 ```java
 @Override
@@ -556,7 +555,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-POZOR: JPA Repozitár musí dediť aj z ```JpaSpecificationExecutor```, príklad:
+!>**Upozornenie:** JPA Repozitár musí dediť aj z ```JpaSpecificationExecutor```, príklad:
 
 ```java
 @Repository
@@ -706,7 +705,7 @@ public class ContactPlaceEntity {
     ...
 ```
 
-vo forme výberového menu (číselníkova hodnota) a prenášate cez `page.addOptions` ID hodnoty a názov z REST služby je potrebné pri vyhľadávaní podľa ID nastaviť hľadanie vo vnorenej entite:
+vo forme výberového menu (číselníková hodnota) a prenášate cez `page.addOptions` ID hodnoty a názov z REST služby je potrebné pri vyhľadávaní podľa ID nastaviť hľadanie vo vnorenej entite:
 
 ```java
 @Override
@@ -805,7 +804,7 @@ Najčastejšie anotácie:
 @Past //zadamy datum musi byt v minulosti, aplikovatelne na Date objekty
 ```
 
-Zachytenie chybového hlásenia je implementované v triede [DatatableExceptionHandlerV2](../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde sa konvertuje objekt ```ConstraintViolation``` na text. Pre možnosť úpravy chybového hlásenia cez WebJET je hľadaný prekladový kľúč v metóde ```getErrorMessage```. Ak sa nájde, použije sa, inak sa použije štandardné hlásenie z ```javax.validation```.
+Zachytenie chybového hlásenia je implementované v triede [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde sa konvertuje objekt ```ConstraintViolation``` na text. Pre možnosť úpravy chybového hlásenia cez WebJET je hľadaný prekladový kľúč v metóde ```getErrorMessage```. Ak sa nájde, použije sa, inak sa použije štandardné hlásenie z ```javax.validation```.
 
 V prekladovom kľúči je možné použiť atribúty anotácie, napr. ```{min}``` alebo zadanú hodnotu ako ```${validatedValue}```.
 
@@ -858,9 +857,10 @@ Ak potrebujete špeciálne kontrolovať práva (napr. pri web stránkach povolen
 
 ## Vyvolanie chyby
 
-Programovo kontrolované chyby je potrebné ošetriť preťažením metódy ```validateEditor``` (viď príklad vyššie), kde môžete vykonať validácie pred uložením záznamu. Z parametra ```target.getAction()``` (DatatableRequest)  môžete identifikovať typ akcie. POZOR: validateEditor sa volá aj pre vymazanie, môžete ho testovať ako ```if ("remove".equals(target.getAction()) ...```.
+Programovo kontrolované chyby je potrebné ošetriť preťažením metódy ```validateEditor``` (viď príklad vyššie), kde môžete vykonať validácie pred uložením záznamu. Z parametra ```target.getAction()``` (DatatableRequest)  môžete identifikovať typ akcie.
+!>**Upozornenie:** validateEditor sa volá aj pre vymazanie, môžete ho testovať ako ```if ("remove".equals(target.getAction()) ...```.
 
-V prípade chyby detegovanej až pri uložení (napr. v metóde ```editItem```) môžete vyvolať všeobecné chybové hlásenie volaním metódy ```throwError(String error)``` alebo ```throwError(List<String> errors)```. Príklad je v [GroupsRestController](../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
+V prípade chyby detegovanej až pri uložení (napr. v metóde ```editItem```) môžete vyvolať všeobecné chybové hlásenie volaním metódy ```throwError(String error)``` alebo ```throwError(List<String> errors)```. Príklad je v [GroupsRestController](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
 
 ## Zabránenie zmazania / editácie záznamu
 
@@ -881,6 +881,12 @@ public boolean beforeDelete(ConfPreparedEntity entity) {
     return false;
 }
 ```
+
+## Export a import dát
+
+Pre test exportu dát je možné volať metódu `isExporting()`, ktorá vráti hodnotu `true` ak je práve vykonávaný export dát.
+
+Pre import je možné modifikovať/validovať údaje implementáciou metódy `preImportDataEdit`. Táto metóda je volaná pred samotným importom a je možné v nej dáta modifikovať. Príklad je v triede [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
 
 ## Rozširujúce verzie
 

@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CardPayTag.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.tags</a> &gt; <span class="el_source">CardPayTag.java</span></div><h1>CardPayTag.java</h1><pre class="source lang-java linenums">package sk.iway.tags;
 
-import cryptix.provider.key.RawSecretKey;
-import cryptix.util.core.Hex;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import xjava.security.Cipher;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.jsp.JspException;
 import javax.servlet.jsp.JspWriter;
 import javax.servlet.jsp.tagext.TagSupport;
+
+import com.google.crypto.tink.subtle.Hex;
+
 import java.security.MessageDigest;
 import java.util.Calendar;
 
@@ -24,7 +26,7 @@ import java.util.Calendar;
  *@created      Pondelok, 2004, marec 8
  *@modified     $Date: 2008/07/01 07:57:54 $
  */
-<span class="nc" id="L27">public class CardPayTag extends TagSupport</span>
+<span class="nc" id="L29">public class CardPayTag extends TagSupport</span>
 {
 	/**
 	 * Comment for &lt;code&gt;serialVersionUID&lt;/code&gt;
@@ -43,16 +45,16 @@ import java.util.Calendar;
 	@Override
 	public void release()
 	{
-<span class="nc" id="L46">		super.release();</span>
-<span class="nc" id="L47">		mid = null;</span>
-<span class="nc" id="L48">		key = null;</span>
-<span class="nc" id="L49">		amount = null;</span>
-<span class="nc" id="L50">		vs = null;</span>
-<span class="nc" id="L51">		cs = null;</span>
-<span class="nc" id="L52">		rurl = null;</span>
-<span class="nc" id="L53">		name = null;</span>
-<span class="nc" id="L54">		rem = null;</span>
-<span class="nc" id="L55">	}</span>
+<span class="nc" id="L48">		super.release();</span>
+<span class="nc" id="L49">		mid = null;</span>
+<span class="nc" id="L50">		key = null;</span>
+<span class="nc" id="L51">		amount = null;</span>
+<span class="nc" id="L52">		vs = null;</span>
+<span class="nc" id="L53">		cs = null;</span>
+<span class="nc" id="L54">		rurl = null;</span>
+<span class="nc" id="L55">		name = null;</span>
+<span class="nc" id="L56">		rem = null;</span>
+<span class="nc" id="L57">	}</span>
 
 	/**
 	 *  Description of the Method
@@ -63,174 +65,174 @@ import java.util.Calendar;
 	@Override
 	public final int doEndTag() throws JspException
 	{
-<span class="nc" id="L66">		pageContext.removeAttribute(&quot;cardPayTagReply&quot;);</span>
-<span class="nc" id="L67">		pageContext.removeAttribute(&quot;cardPayTagShowForm&quot;);</span>
+<span class="nc" id="L68">		pageContext.removeAttribute(&quot;cardPayTagReply&quot;);</span>
+<span class="nc" id="L69">		pageContext.removeAttribute(&quot;cardPayTagShowForm&quot;);</span>
 
 		try
 		{
-<span class="nc" id="L71">			JspWriter out = pageContext.getOut();</span>
-<span class="nc" id="L72">			amount = amount.replace(',', '.');</span>
-<span class="nc" id="L73">			String retazec = mid + amount + vs + cs + rurl;</span>
+<span class="nc" id="L73">			JspWriter out = pageContext.getOut();</span>
+<span class="nc" id="L74">			amount = amount.replace(',', '.');</span>
+<span class="nc" id="L75">			String retazec = mid + amount + vs + cs + rurl;</span>
 
-<span class="nc" id="L75">			Logger.debug(CardPayTag.class, &quot;CardPayTag&quot;);</span>
-<span class="nc" id="L76">			Logger.debug(CardPayTag.class, retazec);</span>
+<span class="nc" id="L77">			Logger.debug(CardPayTag.class, &quot;CardPayTag&quot;);</span>
+<span class="nc" id="L78">			Logger.debug(CardPayTag.class, retazec);</span>
 
-<span class="nc" id="L78">			String vsReply = pageContext.getRequest().getParameter(&quot;VS&quot;);</span>
-<span class="nc" id="L79">			String resReply = pageContext.getRequest().getParameter(&quot;RES&quot;);</span>
-<span class="nc" id="L80">			String signReply = pageContext.getRequest().getParameter(&quot;SIGN&quot;);</span>
+<span class="nc" id="L80">			String vsReply = pageContext.getRequest().getParameter(&quot;VS&quot;);</span>
+<span class="nc" id="L81">			String resReply = pageContext.getRequest().getParameter(&quot;RES&quot;);</span>
+<span class="nc" id="L82">			String signReply = pageContext.getRequest().getParameter(&quot;SIGN&quot;);</span>
 
-<span class="nc bnc" id="L82" title="All 6 branches missed.">			if (vsReply != null &amp;&amp; resReply != null &amp;&amp; signReply != null)</span>
+<span class="nc bnc" id="L84" title="All 6 branches missed.">			if (vsReply != null &amp;&amp; resReply != null &amp;&amp; signReply != null)</span>
 			{
 				//mame odpoved z TB
 
-<span class="nc" id="L86">				String mySign = getSign(out, vsReply + resReply, key);</span>
+<span class="nc" id="L88">				String mySign = getSign(out, vsReply + resReply, key);</span>
 
-<span class="nc bnc" id="L88" title="All 2 branches missed.">				if (signReply.equals(mySign))</span>
+<span class="nc bnc" id="L90" title="All 2 branches missed.">				if (signReply.equals(mySign))</span>
 				{
-<span class="nc" id="L90">					Logger.debug(CardPayTag.class, &quot;SEDI SIGN, reply=&quot;+resReply);</span>
-<span class="nc" id="L91">					pageContext.setAttribute(&quot;cardPayTagReply&quot;, resReply);</span>
+<span class="nc" id="L92">					Logger.debug(CardPayTag.class, &quot;SEDI SIGN, reply=&quot;+resReply);</span>
+<span class="nc" id="L93">					pageContext.setAttribute(&quot;cardPayTagReply&quot;, resReply);</span>
 				}
 				else
 				{
-<span class="nc" id="L95">					Logger.debug(CardPayTag.class, &quot;NESEDI SIGN&quot;);</span>
-<span class="nc" id="L96">					pageContext.setAttribute(&quot;cardPayTagReply&quot;, &quot;SIGN ERROR&quot;);</span>
+<span class="nc" id="L97">					Logger.debug(CardPayTag.class, &quot;NESEDI SIGN&quot;);</span>
+<span class="nc" id="L98">					pageContext.setAttribute(&quot;cardPayTagReply&quot;, &quot;SIGN ERROR&quot;);</span>
 				}
-<span class="nc" id="L98">			}</span>
+<span class="nc" id="L100">			}</span>
 			else
 			{
 				//generujeme formular
-<span class="nc" id="L102">				pageContext.setAttribute(&quot;cardPayTagShowForm&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L104">				pageContext.setAttribute(&quot;cardPayTagShowForm&quot;, &quot;true&quot;);</span>
 
 				//odstran diakritiku
-<span class="nc" id="L105">				name = DB.internationalToEnglish(name);</span>
-<span class="nc" id="L106">				String ipc = pageContext.getRequest().getRemoteHost();</span>
+<span class="nc" id="L107">				name = DB.internationalToEnglish(name);</span>
+<span class="nc" id="L108">				String ipc = pageContext.getRequest().getRemoteHost();</span>
 
-<span class="nc" id="L108">				String curr = &quot;703&quot;; //SKK</span>
-<span class="nc" id="L109">				Calendar cal = Calendar.getInstance();</span>
-<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (cal.get(Calendar.YEAR)&gt;=2009) curr = &quot;978&quot;; //EUR</span>
+<span class="nc" id="L110">				String curr = &quot;703&quot;; //SKK</span>
+<span class="nc" id="L111">				Calendar cal = Calendar.getInstance();</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">				if (cal.get(Calendar.YEAR)&gt;=2009) curr = &quot;978&quot;; //EUR</span>
 
-<span class="nc" id="L112">				String toHash = mid + amount + curr + vs + cs + rurl + ipc + name;</span>
-<span class="nc bnc" id="L113" title="All 2 branches missed.">				if (Tools.isEmpty(rem)==false)</span>
+<span class="nc" id="L114">				String toHash = mid + amount + curr + vs + cs + rurl + ipc + name;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (Tools.isEmpty(rem)==false)</span>
 				{
 					//toHash += rem;
 				}
-<span class="nc" id="L117">				String sign = getSign(out, toHash, key);</span>
+<span class="nc" id="L119">				String sign = getSign(out, toHash, key);</span>
 
 				//ok, mozeme vypisat hidden polozky formularu
-<span class="nc" id="L120">				out.write(&quot;&lt;input type='hidden' name='MID' value='&quot; + mid + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L121">				out.write(&quot;&lt;input type='hidden' name='AMT' value='&quot; + amount + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L122">				out.write(&quot;&lt;input type='hidden' name='CURR' value='&quot; + curr + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L123">				out.write(&quot;&lt;input type='hidden' name='VS' value='&quot; + vs + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L124">				out.write(&quot;&lt;input type='hidden' name='CS' value='&quot; + cs + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L125">				out.write(&quot;&lt;input type='hidden' name='RURL' value='&quot; + rurl + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L126">				out.write(&quot;&lt;input type='hidden' name='SIGN' value='&quot; + sign + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L127">				out.write(&quot;&lt;input type='hidden' name='IPC' value='&quot; + ipc + &quot;'&gt;\n&quot;);</span>
-<span class="nc" id="L128">				out.write(&quot;&lt;input type='hidden' name='NAME' value='&quot; + name + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L122">				out.write(&quot;&lt;input type='hidden' name='MID' value='&quot; + mid + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L123">				out.write(&quot;&lt;input type='hidden' name='AMT' value='&quot; + amount + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L124">				out.write(&quot;&lt;input type='hidden' name='CURR' value='&quot; + curr + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L125">				out.write(&quot;&lt;input type='hidden' name='VS' value='&quot; + vs + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L126">				out.write(&quot;&lt;input type='hidden' name='CS' value='&quot; + cs + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L127">				out.write(&quot;&lt;input type='hidden' name='RURL' value='&quot; + rurl + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L128">				out.write(&quot;&lt;input type='hidden' name='SIGN' value='&quot; + sign + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L129">				out.write(&quot;&lt;input type='hidden' name='IPC' value='&quot; + ipc + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L130">				out.write(&quot;&lt;input type='hidden' name='NAME' value='&quot; + name + &quot;'&gt;\n&quot;);</span>
 
-<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (Tools.isEmpty(rem)==false)</span>
+<span class="nc bnc" id="L132" title="All 2 branches missed.">				if (Tools.isEmpty(rem)==false)</span>
 				{
-<span class="nc" id="L132">					out.write(&quot;&lt;input type='hidden' name='REM' value='&quot; + rem + &quot;'&gt;\n&quot;);</span>
+<span class="nc" id="L134">					out.write(&quot;&lt;input type='hidden' name='REM' value='&quot; + rem + &quot;'&gt;\n&quot;);</span>
 				}
 
 			}
 		}
-<span class="nc" id="L137">		catch (Exception e)</span>
+<span class="nc" id="L139">		catch (Exception e)</span>
 		{
-<span class="nc" id="L139">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L140">		}</span>
-<span class="nc" id="L141">		return EVAL_PAGE;</span>
+<span class="nc" id="L141">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L142">		}</span>
+<span class="nc" id="L143">		return EVAL_PAGE;</span>
 	}
 
-	private String getSign(JspWriter out, String toHash, String key) throws Exception
+	public static String getSign(JspWriter out, String toHash, String key) throws Exception
 	{
-<span class="nc" id="L146">		MessageDigest sha = MessageDigest.getInstance(&quot;SHA-1&quot;);</span>
-<span class="nc" id="L147">		byte[] shaDigest = sha.digest(toHash.getBytes());</span>
+<span class="fc" id="L148">		MessageDigest sha = MessageDigest.getInstance(&quot;SHA-1&quot;);</span>
+<span class="fc" id="L149">		byte[] shaDigest = sha.digest(toHash.getBytes());</span>
 
 		//toto je iba vypis
-<span class="nc" id="L150">		String shaDigestString = Hex.dumpString(shaDigest);</span>
-<span class="nc" id="L151">		shaDigestString = shaDigestString.substring(0, 16).trim();</span>
-<span class="nc" id="L152">		Logger.debug(CardPayTag.class, &quot;toHash = [&quot; + toHash + &quot;]&lt;br&gt;&quot;);</span>
-<span class="nc" id="L153">		Logger.debug(CardPayTag.class, &quot;SHA-1 hash = [&quot; + shaDigestString + &quot;]&lt;br&gt;&quot;);</span>
+<span class="fc" id="L152">		String shaDigestString = Hex.encode(shaDigest);</span>
+<span class="fc" id="L153">		shaDigestString = shaDigestString.substring(0, 16).trim();</span>
+<span class="fc" id="L154">		Logger.debug(CardPayTag.class, &quot;toHash = [&quot; + toHash + &quot;]&lt;br&gt;&quot;);</span>
+<span class="fc" id="L155">		Logger.debug(CardPayTag.class, &quot;SHA-1 hash = [&quot; + shaDigestString + &quot;]&lt;br&gt;&quot;);</span>
 		//koniec vypisu
 
 		//key = &quot;testep01&quot;;
 
-<span class="nc" id="L158">		Cipher ecipher = Cipher.getInstance(&quot;DES&quot;, &quot;Cryptix&quot;);</span>
-<span class="nc" id="L159">		RawSecretKey desKey = new RawSecretKey(&quot;DES&quot;, key.getBytes());</span>
-<span class="nc" id="L160">		ecipher.initEncrypt(desKey);</span>
-<span class="nc" id="L161">		byte[] desCrypt  = ecipher.crypt(shaDigest, 0, 16);</span>
+<span class="fc" id="L160">		Cipher ecipher = Cipher.getInstance(&quot;DES&quot;);</span>
+<span class="fc" id="L161">		SecretKeySpec desKey = new SecretKeySpec(key.getBytes(), &quot;DES&quot;);</span>
+<span class="fc" id="L162">		ecipher.init(Cipher.ENCRYPT_MODE, desKey);</span>
+<span class="fc" id="L163">		byte[] desCrypt  = ecipher.doFinal(shaDigest, 0, 16);</span>
 
-<span class="nc" id="L163">		String desCryptString = Hex.dumpString(desCrypt);</span>
-<span class="nc" id="L164">		Logger.debug(CardPayTag.class, &quot;DES = [&quot; + desCryptString + &quot;]&lt;br&gt;&quot;);</span>
+<span class="fc" id="L165">		String desCryptString = Hex.encode(desCrypt);</span>
+<span class="fc" id="L166">		Logger.debug(CardPayTag.class, &quot;DES = [&quot; + desCryptString + &quot;]&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L166">		String sign = desCryptString.substring(0, 16).trim();</span>
-<span class="nc" id="L167">		return(sign);</span>
+<span class="fc" id="L168">		String sign = desCryptString.substring(0, 16).trim();</span>
+<span class="fc" id="L169">		return(sign.toUpperCase());</span>
 	}
 
 	public String getMid()
 	{
-<span class="nc" id="L172">		return mid;</span>
+<span class="nc" id="L174">		return mid;</span>
 	}
 	public void setMid(String mid)
 	{
-<span class="nc" id="L176">		this.mid = mid;</span>
-<span class="nc" id="L177">	}</span>
+<span class="nc" id="L178">		this.mid = mid;</span>
+<span class="nc" id="L179">	}</span>
 	public String getKey()
 	{
-<span class="nc" id="L180">		return key;</span>
+<span class="nc" id="L182">		return key;</span>
 	}
 	public void setKey(String key)
 	{
-<span class="nc" id="L184">		this.key = key;</span>
-<span class="nc" id="L185">	}</span>
+<span class="nc" id="L186">		this.key = key;</span>
+<span class="nc" id="L187">	}</span>
 	public String getAmount()
 	{
-<span class="nc" id="L188">		return amount;</span>
+<span class="nc" id="L190">		return amount;</span>
 	}
 	public void setAmount(String amount)
 	{
-<span class="nc" id="L192">		this.amount = amount;</span>
-<span class="nc" id="L193">	}</span>
+<span class="nc" id="L194">		this.amount = amount;</span>
+<span class="nc" id="L195">	}</span>
 	public String getVs()
 	{
-<span class="nc" id="L196">		return vs;</span>
+<span class="nc" id="L198">		return vs;</span>
 	}
 	public void setVs(String vs)
 	{
-<span class="nc" id="L200">		this.vs = vs;</span>
-<span class="nc" id="L201">	}</span>
+<span class="nc" id="L202">		this.vs = vs;</span>
+<span class="nc" id="L203">	}</span>
 	public String getCs()
 	{
-<span class="nc" id="L204">		return cs;</span>
+<span class="nc" id="L206">		return cs;</span>
 	}
 	public void setCs(String cs)
 	{
-<span class="nc" id="L208">		this.cs = cs;</span>
-<span class="nc" id="L209">	}</span>
+<span class="nc" id="L210">		this.cs = cs;</span>
+<span class="nc" id="L211">	}</span>
 	public String getRurl()
 	{
-<span class="nc" id="L212">		return rurl;</span>
+<span class="nc" id="L214">		return rurl;</span>
 	}
 	public void setRurl(String rurl)
 	{
-<span class="nc" id="L216">		this.rurl = rurl;</span>
-<span class="nc" id="L217">	}</span>
+<span class="nc" id="L218">		this.rurl = rurl;</span>
+<span class="nc" id="L219">	}</span>
 	public String getName()
 	{
-<span class="nc" id="L220">		return name;</span>
+<span class="nc" id="L222">		return name;</span>
 	}
 	public void setName(String name)
 	{
-<span class="nc" id="L224">		this.name = name;</span>
-<span class="nc" id="L225">	}</span>
+<span class="nc" id="L226">		this.name = name;</span>
+<span class="nc" id="L227">	}</span>
 	public String getRem()
 	{
-<span class="nc" id="L228">		return rem;</span>
+<span class="nc" id="L230">		return rem;</span>
 	}
 	public void setRem(String rem)
 	{
-<span class="nc" id="L232">		this.rem = rem;</span>
-<span class="nc" id="L233">	}</span>
+<span class="nc" id="L234">		this.rem = rem;</span>
+<span class="nc" id="L235">	}</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

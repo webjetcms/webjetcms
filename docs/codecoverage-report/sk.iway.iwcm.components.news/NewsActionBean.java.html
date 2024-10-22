@@ -443,8 +443,8 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L443">				int groupId = Tools.getIntValue(stu.nextToken(), -1);</span>
 <span class="pc bpc" id="L444" title="1 of 2 branches missed.">				if (groupId &gt; 0)</span>
 				{
-<span class="pc bpc" id="L446" title="1 of 2 branches missed.">					if (andCriteria == null) andCriteria = DatabaseCriteria.tokenizedIds(FieldEnum.PASSWORD_PROTECTED, groupId);</span>
-<span class="nc" id="L447">					else andCriteria.addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PASSWORD_PROTECTED, groupId));</span>
+<span class="fc bfc" id="L446" title="All 2 branches covered.">					if (andCriteria == null) andCriteria = DatabaseCriteria.tokenizedIds(FieldEnum.PASSWORD_PROTECTED, groupId);</span>
+<span class="fc" id="L447">					else andCriteria.addCriteria(DatabaseCriteria.tokenizedIds(FieldEnum.PASSWORD_PROTECTED, groupId));</span>
 				}
 <span class="fc" id="L449">			}</span>
 <span class="fc bfc" id="L450" title="All 2 branches covered.">			DatabaseCriteria orCriteria = (andCriteria != null ? or(isEmpty(FieldEnum.PASSWORD_PROTECTED), andCriteria) : isEmpty(FieldEnum.PASSWORD_PROTECTED));</span>
@@ -1851,4 +1851,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L1851">		this.removeDefaultDocs = removeDefaultDocs;</span>
 <span class="fc" id="L1852">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

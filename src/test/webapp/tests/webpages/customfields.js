@@ -87,3 +87,62 @@ Scenario('custom-fields-groups', ({ I, DT, DTE }) => {
     I.see("Pole B", "#groups-datatable_modal div.DTE_Field_Name_fieldB");
     I.see("Pole D", "#groups-datatable_modal div.DTE_Field_Name_fieldD");
 });
+
+Scenario("BUG custom-fields-webpage-prefix", ({I}) => {
+    I.amOnPage("/novy-adresar-01/volitelne-polia/?NO_WJTOOLBAR=true");
+    I.waitForText("text - A", 5, "p.noprefix-a");
+    I.waitForText("Temp Group Prefixed TEST", 5, "p.noprefix-test");
+});
+
+function checkCustomFieldsHeader(I, isCustom) {
+    if (isCustom) {
+        I.see("text - A", "#datatableInit_wrapper .datatableInit thead th.dt-th-fieldA");
+        I.see("select - B", "#datatableInit_wrapper .datatableInit thead th.dt-th-fieldB");
+    } else {
+        I.see("Pole A", "#datatableInit_wrapper .datatableInit thead th.dt-th-fieldA");
+        I.see("Pole B", "#datatableInit_wrapper .datatableInit thead th.dt-th-fieldB");
+    }
+}
+
+Scenario('custom-fields-list @singlethread', ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
+    DT.resetTable();
+    DT.showColumn("Pole A");
+    DT.showColumn("Pole B");
+
+    checkCustomFieldsHeader(I, false);
+    I.jstreeClick("Voliteľné polia");
+    checkCustomFieldsHeader(I, true);
+
+    //
+    I.say("Change sort order");
+    I.clickCss("#datatableInit_wrapper .datatableInit thead .dt-th-id");
+    checkCustomFieldsHeader(I, true);
+    I.clickCss("#datatableInit_wrapper .datatableInit thead .dt-th-id");
+    checkCustomFieldsHeader(I, true);
+
+    //
+    I.say("open webpage, yellow has different custom fields, it should not change header");
+    I.click("Yellow Subpage", "#datatableInit_wrapper");
+    DTE.waitForEditor();
+    I.click("#pills-dt-datatableInit-fields-tab");
+    I.see("temp-6 - A", "label[for=DTE_Field_fieldA]");
+    I.see("temp6-select - B", "label[for=DTE_Field_fieldB]");
+    DTE.cancel();
+    checkCustomFieldsHeader(I, true);
+
+    //
+    I.jstreeClick("Zobrazený v menu");
+    I.clickCss("#datatableInit_wrapper .datatableInit thead .dt-th-id");
+    checkCustomFieldsHeader(I, false);
+    I.clickCss("#datatableInit_wrapper .datatableInit thead .dt-th-id");
+    checkCustomFieldsHeader(I, false);
+
+    //
+    DT.resetTable();
+});
+
+Scenario('custom-fields-list-reset @singlethread', ({ I, DT }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
+    DT.resetTable();
+});

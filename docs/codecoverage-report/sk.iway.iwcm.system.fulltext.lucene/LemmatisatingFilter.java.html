@@ -23,29 +23,29 @@ import sk.iway.iwcm.Constants;
  */
 public class LemmatisatingFilter extends TokenFilter
 {
-<span class="nc" id="L26">	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);</span>
-<span class="nc" id="L27">	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);</span>
+<span class="fc" id="L26">	private final CharTermAttribute termAtt = addAttribute(CharTermAttribute.class);</span>
+<span class="fc" id="L27">	private final KeywordAttribute keywordAtt = addAttribute(KeywordAttribute.class);</span>
 	private String language;
 
 	public LemmatisatingFilter(Version matchVersion, TokenStream input, String language)
 	{
-<span class="nc" id="L32">		super(input);</span>
-<span class="nc" id="L33">		this.language = language;</span>
-<span class="nc" id="L34">	}</span>
+<span class="fc" id="L32">		super(input);</span>
+<span class="fc" id="L33">		this.language = language;</span>
+<span class="fc" id="L34">	}</span>
 
 	@Override
 	public boolean incrementToken() throws IOException
 	{
-<span class="nc bnc" id="L39" title="All 2 branches missed.">		if (input.incrementToken())</span>
+<span class="fc bfc" id="L39" title="All 2 branches covered.">		if (input.incrementToken())</span>
 		{
-<span class="nc bnc" id="L41" title="All 2 branches missed.">			if (!keywordAtt.isKeyword())</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">			if (!keywordAtt.isKeyword())</span>
 			{ // don't muck with already-keyworded terms
-<span class="nc" id="L43">				char[] buffer = termAtt.buffer();</span>
-<span class="nc" id="L44">				char[] stem = Lemmas.get(language, buffer, 0, termAtt.length());</span>
+<span class="fc" id="L43">				char[] buffer = termAtt.buffer();</span>
+<span class="fc" id="L44">				char[] stem = Lemmas.get(language, buffer, 0, termAtt.length());</span>
 				
-<span class="nc bnc" id="L46" title="All 2 branches missed.">				if (stem != null)</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">				if (stem != null)</span>
 				{
-<span class="nc bnc" id="L48" title="All 2 branches missed.">					if (Constants.getBoolean(&quot;luceneIndexingSkSynonymExpansion&quot;))</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">					if (Constants.getBoolean(&quot;luceneIndexingSkSynonymExpansion&quot;))</span>
 					{
 <span class="nc" id="L50">						char[] synonym = Synonyms.get(language, buffer, 0, termAtt.length());</span>
 <span class="nc bnc" id="L51" title="All 2 branches missed.">						if (synonym != null)</span>
@@ -55,19 +55,19 @@ public class LemmatisatingFilter extends TokenFilter
 					}
 				}
 				
-<span class="nc bnc" id="L58" title="All 2 branches missed.">				if (stem != null)</span>
+<span class="pc bpc" id="L58" title="1 of 2 branches missed.">				if (stem != null)</span>
 				{
-<span class="nc" id="L60">					termAtt.setEmpty();</span>
-<span class="nc bnc" id="L61" title="All 2 branches missed.">					for (char c : stem)</span>
-<span class="nc" id="L62">						termAtt.append(c);</span>
+<span class="fc" id="L60">					termAtt.setEmpty();</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">					for (char c : stem)</span>
+<span class="fc" id="L62">						termAtt.append(c);</span>
 				}
 			}
-<span class="nc" id="L65">			return true;</span>
+<span class="fc" id="L65">			return true;</span>
 		}
 		else
 		{
-<span class="nc" id="L69">			return false;</span>
+<span class="fc" id="L69">			return false;</span>
 		}
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

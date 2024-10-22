@@ -16,7 +16,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.commons.dbcp.ConfigurableDataSource;
 import org.eclipse.persistence.internal.helper.Helper;
 import org.eclipse.persistence.internal.localization.ToStringLocalization;
 import org.eclipse.persistence.internal.sessions.AbstractRecord;
@@ -31,6 +30,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
 import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 
 /**
@@ -150,8 +150,8 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
           {
 <span class="fc" id="L151">              setNestTime(0);</span>
 <span class="fc" id="L152">              setProfileTime(0);</span>
-<span class="fc" id="L153">              setOperationTimings(new Hashtable&lt;String, Long&gt;(5));</span>
-<span class="fc" id="L154">              setOperationStartTimes(new Hashtable&lt;String, Long&gt;(5));</span>
+<span class="fc" id="L153">              setOperationTimings(new Hashtable&lt;&gt;(5));</span>
+<span class="fc" id="L154">              setOperationStartTimes(new Hashtable&lt;&gt;(5));</span>
 <span class="fc" id="L155">              long profileEndTime = System.currentTimeMillis();</span>
 <span class="fc" id="L156">              long totalTimeIncludingProfiling = profileEndTime - profileStartTime;// Try to remove the profiling time from the total time.</span>
 <span class="fc" id="L157">              profile.setProfileTime(totalTimeIncludingProfiling - profile.getTotalTime());</span>
@@ -290,4 +290,4 @@ import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -41,114 +42,114 @@ public class UnusedFilesCleaner
 	private final String recipient;
 
 	public UnusedFilesCleaner(String rootDirectory, String recipient)
-<span class="nc" id="L44">	{</span>
-<span class="nc" id="L45">		this.rootDirectory = rootDirectory;</span>
-<span class="nc" id="L46">		this.recipient = recipient;</span>
-<span class="nc" id="L47">	}</span>
+<span class="nc" id="L45">	{</span>
+<span class="nc" id="L46">		this.rootDirectory = rootDirectory;</span>
+<span class="nc" id="L47">		this.recipient = recipient;</span>
+<span class="nc" id="L48">	}</span>
 
 	public static void main(String[] args){
 		try{
-<span class="nc" id="L51">			Logger.debug(UnusedFilesCleaner.class, &quot;About to run UnusedFilesCleaner&quot;);</span>
-<span class="nc" id="L52">			String rootDirectory = &quot;/files&quot;;</span>
-<span class="nc bnc" id="L53" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 0)</span>
-<span class="nc" id="L54">				rootDirectory = args[0];</span>
-<span class="nc" id="L55">			String recipient = null;</span>
-<span class="nc bnc" id="L56" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 1)</span>
-<span class="nc" id="L57">				recipient = args[1];</span>
+<span class="nc" id="L52">			Logger.debug(UnusedFilesCleaner.class, &quot;About to run UnusedFilesCleaner&quot;);</span>
+<span class="nc" id="L53">			String rootDirectory = &quot;/files&quot;;</span>
+<span class="nc bnc" id="L54" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 0)</span>
+<span class="nc" id="L55">				rootDirectory = args[0];</span>
+<span class="nc" id="L56">			String recipient = null;</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 1)</span>
+<span class="nc" id="L58">				recipient = args[1];</span>
 
-<span class="nc" id="L59">			boolean disableUnusedPages = true;</span>
-<span class="nc bnc" id="L60" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 2)</span>
-<span class="nc" id="L61">				disableUnusedPages = &quot;true&quot;.equals(args[2]);</span>
+<span class="nc" id="L60">			boolean disableUnusedPages = true;</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">			if (args != null &amp;&amp; args.length &gt; 2)</span>
+<span class="nc" id="L62">				disableUnusedPages = &quot;true&quot;.equals(args[2]);</span>
 
-<span class="nc" id="L63">			UnusedFilesCleaner cleaner = new UnusedFilesCleaner(rootDirectory, recipient);</span>
-<span class="nc" id="L64">			List&lt;DocDetails&gt; unusedPages = cleaner.getUnusedFiles();</span>
-<span class="nc" id="L65">			Logger.debug(UnusedFilesCleaner.class, &quot;UnusedFilesCleaner size=&quot;+unusedPages.size());</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">			if (unusedPages.size() == 0)</span>
+<span class="nc" id="L64">			UnusedFilesCleaner cleaner = new UnusedFilesCleaner(rootDirectory, recipient);</span>
+<span class="nc" id="L65">			List&lt;DocDetails&gt; unusedPages = cleaner.getUnusedFiles();</span>
+<span class="nc" id="L66">			Logger.debug(UnusedFilesCleaner.class, &quot;UnusedFilesCleaner size=&quot;+unusedPages.size());</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">			if (unusedPages.size() == 0)</span>
 			{
-<span class="nc" id="L68">				return;</span>
+<span class="nc" id="L69">				return;</span>
 			}
-<span class="nc bnc" id="L70" title="All 2 branches missed.">			if (disableUnusedPages) cleaner.disable(unusedPages);</span>
-<span class="nc" id="L71">			cleaner.notifyOfChange(unusedPages);</span>
-<span class="nc" id="L72">			DocDB.getInstance(true);</span>
-<span class="nc" id="L73">			Logger.debug(UnusedFilesCleaner.class, &quot;UnusedFilesCleaner finished&quot;);</span>
+<span class="nc bnc" id="L71" title="All 2 branches missed.">			if (disableUnusedPages) cleaner.disable(unusedPages);</span>
+<span class="nc" id="L72">			cleaner.notifyOfChange(unusedPages);</span>
+<span class="nc" id="L73">			DocDB.getInstance(true);</span>
+<span class="nc" id="L74">			Logger.debug(UnusedFilesCleaner.class, &quot;UnusedFilesCleaner finished&quot;);</span>
 		}
-<span class="nc" id="L75">		catch (Exception e){</span>
-<span class="nc" id="L76">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L77">		}</span>
-<span class="nc" id="L78">	}</span>
+<span class="nc" id="L76">		catch (Exception e){</span>
+<span class="nc" id="L77">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L78">		}</span>
+<span class="nc" id="L79">	}</span>
 
 	private void notifyOfChange(List&lt;DocDetails&gt; unusedPages)
 	{
-<span class="nc bnc" id="L82" title="All 2 branches missed.">		if (recipient == null)</span>
-<span class="nc" id="L83">			return;</span>
+<span class="nc bnc" id="L83" title="All 2 branches missed.">		if (recipient == null)</span>
+<span class="nc" id="L84">			return;</span>
 
-<span class="nc" id="L85">		Logger.printf(UnusedFilesCleaner.class, &quot;Sending email to %s&quot;, recipient);</span>
-<span class="nc" id="L86">		StringBuilder messageContent = new StringBuilder(&quot;Following file-pages were disabled due to no link pointing at them.&lt;br /&gt;&quot;);</span>
+<span class="nc" id="L86">		Logger.printf(UnusedFilesCleaner.class, &quot;Sending email to %s&quot;, recipient);</span>
+<span class="nc" id="L87">		StringBuilder messageContent = new StringBuilder(&quot;Following file-pages were disabled due to no link pointing at them.&lt;br /&gt;&quot;);</span>
 
-<span class="nc bnc" id="L88" title="All 2 branches missed.">		for (DocDetails disabled : unusedPages)</span>
-<span class="nc" id="L89">			messageContent.append(disabled.getExternalLink()).append(&quot;&lt;br /&gt;\n&quot;);</span>
+<span class="nc bnc" id="L89" title="All 2 branches missed.">		for (DocDetails disabled : unusedPages)</span>
+<span class="nc" id="L90">			messageContent.append(disabled.getExternalLink()).append(&quot;&lt;br /&gt;\n&quot;);</span>
 
-<span class="nc" id="L91">		new MailHelper().</span>
-<span class="nc" id="L92">			addRecipient(recipient).</span>
-<span class="nc" id="L93">			setFromEmail(recipient).</span>
-<span class="nc" id="L94">			setFromName(&quot;Pages automatically disabled&quot;).</span>
-<span class="nc" id="L95">			setSubject(&quot;Pages automatically disabled&quot;).</span>
-<span class="nc" id="L96">			setMessage(messageContent.toString()).</span>
-<span class="nc" id="L97">			send();</span>
-<span class="nc" id="L98">	}</span>
+<span class="nc" id="L92">		new MailHelper().</span>
+<span class="nc" id="L93">			addRecipient(recipient).</span>
+<span class="nc" id="L94">			setFromEmail(recipient).</span>
+<span class="nc" id="L95">			setFromName(&quot;Pages automatically disabled&quot;).</span>
+<span class="nc" id="L96">			setSubject(&quot;Pages automatically disabled&quot;).</span>
+<span class="nc" id="L97">			setMessage(messageContent.toString()).</span>
+<span class="nc" id="L98">			send();</span>
+<span class="nc" id="L99">	}</span>
 
 	private void disable(List&lt;DocDetails&gt; unusedPages)
 	{
-<span class="nc" id="L102">		Logger.debug(UnusedFilesCleaner.class, &quot;Disabling unused pages&quot;);</span>
-<span class="nc" id="L103">		StringBuilder disableSqlIn = new StringBuilder();</span>
-<span class="nc bnc" id="L104" title="All 2 branches missed.">		for(int i = 0; i &lt; unusedPages.size(); i++)</span>
+<span class="nc" id="L103">		Logger.debug(UnusedFilesCleaner.class, &quot;Disabling unused pages&quot;);</span>
+<span class="nc" id="L104">		StringBuilder disableSqlIn = new StringBuilder();</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">		for(int i = 0; i &lt; unusedPages.size(); i++)</span>
 		{
-<span class="nc" id="L106">			disableSqlIn.append(',').append(unusedPages.get(i).getDocId());</span>
+<span class="nc" id="L107">			disableSqlIn.append(',').append(unusedPages.get(i).getDocId());</span>
 			// SQL IN() containing &gt;10 000 ids would fire an exception similar to &quot;query too long&quot;
-<span class="nc bnc" id="L108" title="All 2 branches missed.">			if (i % 100 == 0)</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">			if (i % 100 == 0)</span>
 			{
-<span class="nc" id="L110">				disableBatch(disableSqlIn);</span>
-<span class="nc" id="L111">				disableSqlIn = new StringBuilder();</span>
+<span class="nc" id="L111">				disableBatch(disableSqlIn);</span>
+<span class="nc" id="L112">				disableSqlIn = new StringBuilder();</span>
 			}
 		}
-<span class="nc" id="L114">		disableBatch(disableSqlIn);</span>
-<span class="nc" id="L115">	}</span>
+<span class="nc" id="L115">		disableBatch(disableSqlIn);</span>
+<span class="nc" id="L116">	}</span>
 
 	private void disableBatch(StringBuilder disableSqlIn)
 	{
-<span class="nc bnc" id="L119" title="All 2 branches missed.">		if(disableSqlIn.length() == 0)</span>
-<span class="nc" id="L120">			return;</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if(disableSqlIn.length() == 0)</span>
+<span class="nc" id="L121">			return;</span>
 		//preceding &quot;,&quot;
-<span class="nc" id="L122">		disableSqlIn.deleteCharAt(0);</span>
-<span class="nc" id="L123">		String sql = &quot;UPDATE documents SET available = 0 WHERE doc_id IN(&quot;+disableSqlIn+&quot;)&quot;;</span>
-<span class="nc" id="L124">		Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;UnusedFileCleaner ran: &quot;+sql, -1, -1);</span>
-<span class="nc" id="L125">		new SimpleQuery().execute(sql);</span>
-<span class="nc" id="L126">	}</span>
+<span class="nc" id="L123">		disableSqlIn.deleteCharAt(0);</span>
+<span class="nc" id="L124">		String sql = &quot;UPDATE documents SET available = &quot;+DB.getBooleanSql(false)+&quot; WHERE doc_id IN(&quot;+disableSqlIn+&quot;)&quot;;</span>
+<span class="nc" id="L125">		Adminlog.add(Adminlog.TYPE_PAGE_UPDATE, &quot;UnusedFileCleaner ran: &quot;+sql, -1, -1);</span>
+<span class="nc" id="L126">		new SimpleQuery().execute(sql);</span>
+<span class="nc" id="L127">	}</span>
 
 	private List&lt;DocDetails&gt; getUnusedFiles()
 	{
-<span class="nc" id="L130">		List&lt;UnusedFile&gt; unused = FileTools.getDirFileUsage(rootDirectory, null);</span>
-<span class="nc" id="L131">		List&lt;DocDetails&gt; pagesOfUnusedFiles = new ArrayList&lt;DocDetails&gt;();</span>
+<span class="nc" id="L131">		List&lt;UnusedFile&gt; unused = FileTools.getDirFileUsage(rootDirectory, null);</span>
+<span class="nc" id="L132">		List&lt;DocDetails&gt; pagesOfUnusedFiles = new ArrayList&lt;&gt;();</span>
 		//map lookup is WAY faster than iterating through basicDocDetailsAll
-<span class="nc" id="L133">		Map&lt;String, Integer&gt; externalLinkToDocId = new HashMap&lt;String, Integer&gt;();</span>
-<span class="nc bnc" id="L134" title="All 2 branches missed.">		for (DocDetails doc : DocDB.getInstance().getBasicDocDetailsAll())</span>
-<span class="nc bnc" id="L135" title="All 4 branches missed.">			if (doc.isAvailable() &amp;&amp; isNotEmpty(doc.getExternalLink()))</span>
-<span class="nc" id="L136">				externalLinkToDocId.put(doc.getExternalLink(), doc.getDocId());</span>
+<span class="nc" id="L134">		Map&lt;String, Integer&gt; externalLinkToDocId = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		for (DocDetails doc : DocDB.getInstance().getBasicDocDetailsAll())</span>
+<span class="nc bnc" id="L136" title="All 4 branches missed.">			if (doc.isAvailable() &amp;&amp; isNotEmpty(doc.getExternalLink()))</span>
+<span class="nc" id="L137">				externalLinkToDocId.put(doc.getExternalLink(), doc.getDocId());</span>
 
-<span class="nc bnc" id="L138" title="All 2 branches missed.">		for (UnusedFile file : unused)</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		for (UnusedFile file : unused)</span>
 		{
-<span class="nc" id="L140">			String filePath = String.format(&quot;%s/%s&quot;, file.getVirtualParent(), file.getName());</span>
-<span class="nc" id="L141">			Integer docId = externalLinkToDocId.get(filePath);</span>
+<span class="nc" id="L141">			String filePath = String.format(&quot;%s/%s&quot;, file.getVirtualParent(), file.getName());</span>
+<span class="nc" id="L142">			Integer docId = externalLinkToDocId.get(filePath);</span>
 
-<span class="nc" id="L143">			Logger.debug(UnusedFilesCleaner.class, &quot;Testing: &quot;+filePath+&quot; docId=&quot;+docId+&quot; size=&quot;+pagesOfUnusedFiles.size());</span>
+<span class="nc" id="L144">			Logger.debug(UnusedFilesCleaner.class, &quot;Testing: &quot;+filePath+&quot; docId=&quot;+docId+&quot; size=&quot;+pagesOfUnusedFiles.size());</span>
 
-<span class="nc bnc" id="L145" title="All 2 branches missed.">			if (docId == null)</span>
-<span class="nc" id="L146">				continue;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">			if (docId == null)</span>
+<span class="nc" id="L147">				continue;</span>
 
-<span class="nc" id="L148">			pagesOfUnusedFiles.add(DocDB.getInstance().getBasicDocDetails(docId, false));</span>
-<span class="nc" id="L149">		}</span>
+<span class="nc" id="L149">			pagesOfUnusedFiles.add(DocDB.getInstance().getBasicDocDetails(docId, false));</span>
+<span class="nc" id="L150">		}</span>
 
-<span class="nc" id="L151">		return pagesOfUnusedFiles;</span>
+<span class="nc" id="L152">		return pagesOfUnusedFiles;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

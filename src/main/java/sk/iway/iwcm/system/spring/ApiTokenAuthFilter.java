@@ -68,7 +68,7 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 
 				Identity user = new Identity(UsersDB.getUser(login));
 
-				//pri REST volani nie je korektne setnuty RequestBean a audituje to nezmysly
+				//because SetCharacterEncoding filter was not called yet, we need to register data context to correctly call Adminlog (set URl, userId...)
 				SetCharacterEncodingFilter.registerDataContext(request);
 
 				Map<String, String> errors = new Hashtable<>();

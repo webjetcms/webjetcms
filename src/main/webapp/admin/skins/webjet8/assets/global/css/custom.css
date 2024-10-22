@@ -2007,13 +2007,13 @@ a.button100:link,
 a.button100:visited,
 .button220x20,
 .button150x20 {
-  background-color: #35aa47;
+  background-color: #0063FB;
   color: white;
   background-image: none !important;
   border-width: 0;
   box-shadow: none;
   filter: none;
-  font-size: 14px;
+  font-size: 16px;
   outline: medium none !important;
   padding: 7px 14px;
   text-shadow: none;
@@ -2024,6 +2024,8 @@ a.button100:visited,
   text-align: center;
   vertical-align: middle;
   white-space: nowrap;
+  border-radius: 6px !important;
+  font-family: 'Asap', sans-serif;
 }
 .poleMini,
 .poleKratke,
@@ -3338,7 +3340,7 @@ p.dragDropUploadContainerTip a {
   max-width: 400px;
 }
 .pixabayBox .paging .pages a {
-  color: #357ebd;
+  color: #0063FB;
   padding: 0 3px;
   font-weight: normal;
 }

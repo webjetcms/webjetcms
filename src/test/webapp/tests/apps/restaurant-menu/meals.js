@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('zakladne testy', async ({I, DataTables}) => {
+Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/restaurant-menu/admin/meals/");
     await DataTables.baseTest({
         dataTable: 'mealsDataTable',

@@ -2,7 +2,7 @@
 
 ## JPA entity
 
-> **tl;dr** Automatic generation of audit records from JPA entities (containing a list of changes in the form attribute\_name: old value -\&gt; new value) using a simple annotation `@EntityListeners(AuditEntityListener.class)`
+> **tl;dr** Automatic generation of audit records from JPA entities (containing a list of changes in the form attribute\_name: old value -> new value) using a simple annotation `@EntityListeners(AuditEntityListener.class)`
 
 Auditing changes to JPA entities can be automated by adding annotation `@EntityListeners(AuditEntityListener.class)`, where you set the type of audit record by annotating `@EntityListenersType(Adminlog.TYPE_GALLERY)`:
 

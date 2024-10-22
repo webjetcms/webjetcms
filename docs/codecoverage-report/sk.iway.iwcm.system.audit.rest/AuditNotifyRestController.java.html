@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.system.audit.jpa.AuditNotifyEntity;
 import sk.iway.iwcm.system.audit.jpa.AuditNotifyRepository;
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -24,18 +26,45 @@ public class AuditNotifyRestController extends DatatableRestControllerV2&lt;Audi
 
 	@Autowired
 	public AuditNotifyRestController(AuditNotifyRepository auditNotifyRepository, AuditService auditService) {
-<span class="fc" id="L27">		super(auditNotifyRepository);</span>
-<span class="fc" id="L28">		this.auditNotifyRepository = auditNotifyRepository;</span>
-<span class="fc" id="L29">		this.auditService = auditService;</span>
-<span class="fc" id="L30">	}</span>
+<span class="fc" id="L29">		super(auditNotifyRepository);</span>
+<span class="fc" id="L30">		this.auditNotifyRepository = auditNotifyRepository;</span>
+<span class="fc" id="L31">		this.auditService = auditService;</span>
+<span class="fc" id="L32">	}</span>
 
 	@Override
 	public Page&lt;AuditNotifyEntity&gt; getAllItems(Pageable pageable) {
-<span class="nc" id="L34">		DatatablePageImpl&lt;AuditNotifyEntity&gt; pages = new DatatablePageImpl&lt;&gt;(auditNotifyRepository.findAll(pageable));</span>
-<span class="nc" id="L35">		pages.addOptions(&quot;adminlogType&quot;, auditService.getTypes(getRequest()), &quot;label&quot;, &quot;value&quot;, false);</span>
+<span class="nc" id="L36">		DatatablePageImpl&lt;AuditNotifyEntity&gt; pages = new DatatablePageImpl&lt;&gt;(auditNotifyRepository.findAll(pageable));</span>
+<span class="nc" id="L37">		pages.addOptions(&quot;adminlogType&quot;, auditService.getTypes(getRequest()), &quot;label&quot;, &quot;value&quot;, false);</span>
 
-<span class="nc" id="L37">		return pages;</span>
+<span class="nc" id="L39">		return pages;</span>
 	}
 
+	@Override
+	public boolean beforeDelete(AuditNotifyEntity entity) {
+<span class="nc" id="L44">		beforeSave(entity);</span>
+<span class="nc" id="L45">		return true;</span>
+	}
+
+	@Override
+	public void beforeSave(AuditNotifyEntity entity) {
+		//we better refresh the cache because of deadlock in MS SQL
+<span class="nc" id="L51">		AdminlogNotifyManager.getNotifyEmails(Adminlog.TYPE_ADMINLOG_NOTIFY);</span>
+<span class="nc" id="L52">	}</span>
+
+	@Override
+	public void afterDelete(AuditNotifyEntity entity, long id) {
+<span class="nc" id="L56">		afterSave(entity, null);</span>
+<span class="nc" id="L57">	}</span>
+
+	@Override
+	public void afterDuplicate(AuditNotifyEntity entity, Long originalId) {
+<span class="nc" id="L61">		afterSave(entity, null);</span>
+<span class="nc" id="L62">	}</span>
+
+	@Override
+	public void afterSave(AuditNotifyEntity entity, AuditNotifyEntity saved) {
+<span class="nc" id="L66">		AdminlogNotifyManager.clearCache();</span>
+<span class="nc" id="L67">	}</span>
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -11,3 +11,5 @@ Pre prístup k menu položke Web stránky - značky potrebujete mať právo **We
 Značky sa zobrazujú v editore stránok v liste Perex, kde je možné ich jednoducho web stránke priradiť:
 
 ![](webpage-perex-groups.png)
+
+Značky sa štandardne zobrazujú ako zaškrtávacie polia, ak je ale definovaných viac ako 30 značiek, zobrazia sa z dôvodu prehľadnosti ako viac násobné výberové pole. Hodnota 30 sa dá zmeniť v konf. premennej `perexGroupsRenderAsSelect`.

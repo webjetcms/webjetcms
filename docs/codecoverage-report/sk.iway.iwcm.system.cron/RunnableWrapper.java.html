@@ -25,42 +25,47 @@ class RunnableWrapper implements Runnable
 	private final Class&lt;?&gt; clazz;
 	private final String[] args;
 	private final boolean audit;
+	private final Long id;
 
-	public RunnableWrapper(Class&lt;?&gt; clazz, String[] args, boolean audit)
-<span class="fc" id="L30">	{</span>
-<span class="fc" id="L31">		this.clazz = clazz;</span>
-<span class="fc" id="L32">		this.args = args;</span>
-<span class="fc" id="L33">		this.audit = audit;</span>
-<span class="fc" id="L34">	}</span>
+	public RunnableWrapper(Class&lt;?&gt; clazz, String[] args, boolean audit, Long id)
+<span class="fc" id="L31">	{</span>
+<span class="fc" id="L32">		this.clazz = clazz;</span>
+<span class="fc" id="L33">		this.args = args;</span>
+<span class="fc" id="L34">		this.audit = audit;</span>
+<span class="fc" id="L35">		this.id = id;</span>
+<span class="fc" id="L36">	}</span>
 
 	@Override
 	public void run()
 	{
 		try
 		{
-<span class="fc" id="L41">			Method main = clazz.getMethod(&quot;main&quot;, String[].class);</span>
-<span class="fc" id="L42">			Object[] arguments = new Object[]{args};</span>
+<span class="fc" id="L43">			Method main = clazz.getMethod(&quot;main&quot;, String[].class);</span>
+<span class="fc" id="L44">			Object[] arguments = new Object[]{args};</span>
 
-<span class="fc" id="L44">			StringBuilder argsString = new StringBuilder(&quot;&quot;);</span>
-<span class="pc bpc" id="L45" title="1 of 4 branches missed.">			if (args != null &amp;&amp; args.length&gt;0)</span>
+<span class="fc" id="L46">			StringBuilder argsString = new StringBuilder(&quot;&quot;);</span>
+<span class="pc bpc" id="L47" title="1 of 4 branches missed.">			if (args != null &amp;&amp; args.length&gt;0)</span>
 			{
-<span class="fc bfc" id="L47" title="All 2 branches covered.">				for (String arg : args)</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">				for (String arg : args)</span>
 				{
-<span class="fc bfc" id="L49" title="All 2 branches covered.">					if (argsString.length()&gt;0) argsString.append(' ');</span>
-<span class="fc" id="L50">					argsString.append(arg);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">					if (argsString.length()&gt;0) argsString.append(' ');</span>
+<span class="fc" id="L52">					argsString.append(arg);</span>
 				}
 			}
 
-<span class="fc bfc" id="L54" title="All 2 branches covered.">			if(audit)</span>
-<span class="fc" id="L55">				Adminlog.add(Adminlog.TYPE_CRON, String.format(&quot;Cron task executed: %s [%s]&quot;, clazz.getName(), argsString), -1, -1);</span>
-<span class="fc" id="L56">			main.invoke(null, arguments);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">			if(audit) {</span>
+<span class="fc" id="L57">				int auditId = -1;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">				if (id != null) auditId = id.intValue();</span>
+<span class="fc" id="L59">				Adminlog.add(Adminlog.TYPE_CRON, String.format(&quot;Cron task executed: %s [%s], id: %d&quot;, clazz.getName(), argsString, id), auditId, -1);</span>
+			}
+<span class="fc" id="L61">			main.invoke(null, arguments);</span>
 		}
-<span class="nc" id="L58">		catch (Exception e)</span>
+<span class="nc" id="L63">		catch (Exception e)</span>
 		{
-<span class="nc" id="L60">			sk.iway.iwcm.Logger.println(RunnableWrapper.class, &quot;---------FAILED TO LAUNCH A CRONTAB TASK-----------&quot;);</span>
-<span class="nc" id="L61">			sk.iway.iwcm.Logger.println(RunnableWrapper.class, clazz.getName());</span>
-<span class="nc" id="L62">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L63">		}</span>
-<span class="fc" id="L64">	}</span>
+<span class="nc" id="L65">			sk.iway.iwcm.Logger.println(RunnableWrapper.class, &quot;---------FAILED TO LAUNCH A CRONTAB TASK-----------&quot;);</span>
+<span class="nc" id="L66">			sk.iway.iwcm.Logger.println(RunnableWrapper.class, clazz.getName());</span>
+<span class="nc" id="L67">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L68">		}</span>
+<span class="fc" id="L69">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

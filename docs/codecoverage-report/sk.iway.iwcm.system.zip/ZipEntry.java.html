@@ -145,8 +145,8 @@ public class ZipEntry implements ZipConstants, Cloneable
 	 */
 	public void setTime(long time)
 	{
-<span class="nc" id="L148">		this.time = javaToDosTime(time);</span>
-<span class="nc" id="L149">	}</span>
+<span class="fc" id="L148">		this.time = javaToDosTime(time);</span>
+<span class="fc" id="L149">	}</span>
 
 	/**
 	 * Returns the modification time of the entry, or -1 if not specified.
@@ -392,14 +392,14 @@ public class ZipEntry implements ZipConstants, Cloneable
 	 */
 	private static long javaToDosTime(long time)
 	{
-<span class="nc" id="L395">		Date d = new Date(time);</span>
-<span class="nc" id="L396">		int year = d.getYear() + 1900;</span>
-<span class="nc bnc" id="L397" title="All 2 branches missed.">		if (year &lt; 1980)</span>
+<span class="fc" id="L395">		Date d = new Date(time);</span>
+<span class="fc" id="L396">		int year = d.getYear() + 1900;</span>
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">		if (year &lt; 1980)</span>
 		{
 <span class="nc" id="L399">			return (1 &lt;&lt; 21) | (1 &lt;&lt; 16);</span>
 		}
-<span class="nc" id="L401">		return (year - 1980) &lt;&lt; 25 | (d.getMonth() + 1) &lt;&lt; 21 | d.getDate() &lt;&lt; 16 | d.getHours() &lt;&lt; 11 | d.getMinutes() &lt;&lt; 5</span>
-<span class="nc" id="L402">					| d.getSeconds() &gt;&gt; 1;</span>
+<span class="fc" id="L401">		return (year - 1980) &lt;&lt; 25 | (d.getMonth() + 1) &lt;&lt; 21 | d.getDate() &lt;&lt; 16 | d.getHours() &lt;&lt; 11 | d.getMinutes() &lt;&lt; 5</span>
+<span class="fc" id="L402">					| d.getSeconds() &gt;&gt; 1;</span>
 	}
 
 	/**
@@ -430,4 +430,4 @@ public class ZipEntry implements ZipConstants, Cloneable
 		}
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

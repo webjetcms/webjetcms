@@ -19,7 +19,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
 <span class="fc" id="L19">    public GalleryJsTreeItem(IwcmFile f, String currentDir, GalleryDimensionRepository repository, Identity user) {</span>
 <span class="fc" id="L20">        setId(f.getVirtualPath());</span>
 <span class="fc bfc" id="L21" title="All 2 branches covered.">        setChildren(f.listFiles(IwcmFile::isDirectory).length &gt; 0);</span>
-<span class="fc" id="L22">        setIcon(&quot;fas fa-folder&quot;);</span>
+<span class="fc" id="L22">        setIcon(&quot;ti ti-folder-filled&quot;);</span>
 <span class="fc" id="L23">        setVirtualPath(f.getVirtualPath());</span>
 <span class="fc" id="L24">        JsTreeItemState jsTreeItemState = new JsTreeItemState();</span>
 
@@ -44,7 +44,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
 <span class="fc" id="L44">            galleryDimension = GalleryDimenstionRestController.getNewEntity(f.getVirtualPath());</span>
 
 
-<span class="fc" id="L47">            setIcon(&quot;far fa-folder&quot;);</span>
+<span class="fc" id="L47">            setIcon(&quot;ti ti-folder&quot;);</span>
         }
 <span class="pc bpc" id="L49" title="1 of 2 branches missed.">        if (Tools.isEmpty(galleryDimension.getName())) {</span>
 <span class="nc" id="L50">            galleryDimension.setName(f.getName());</span>
@@ -53,8 +53,8 @@ public class GalleryJsTreeItem extends JsTreeItem {
 <span class="fc" id="L53">        setGalleryDimension(galleryDimension);</span>
 <span class="fc" id="L54">        setText(galleryDimension.getName());</span>
 
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (GalleryDimenstionRestController.isFolderEditable(galleryDimension.getPath(), user)==false) {</span>
-<span class="nc" id="L57">            setIcon(&quot;fas fa-folder-times&quot;);</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (GalleryDimenstionRestController.isFolderEditable(galleryDimension.getPath(), user)==false) {</span>
+<span class="fc" id="L57">            setIcon(&quot;ti ti-folder-x&quot;);</span>
         }
 <span class="fc" id="L59">    }</span>
 
@@ -66,4 +66,4 @@ public class GalleryJsTreeItem extends JsTreeItem {
 <span class="fc" id="L66">        this.galleryDimension = galleryDimension;</span>
 <span class="fc" id="L67">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -12,7 +12,7 @@ Before(({ I, login }) => {
     I.amOnPage("/apps/response-header/admin/");
 });
 
-Scenario('zakladne testy', async ({I, DataTables}) => {
+Scenario('zakladne testy @baseTest', async ({I, DataTables}) => {
     await DataTables.baseTest({
         dataTable: 'responseHeadersDataTable',
         perms: 'cmp_response-header',
@@ -89,7 +89,7 @@ headers</pre>
 
 Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.amOnPage("/apps/http-hlavicky/?NO_WJTOOLBAR=true");
-    I.waitForText("content-language", "#response");
+    I.waitForText("content-language", 10, "#response");
     I.see("content-language: sk-SK");
     I.see("x-frame-options: SAMEORIGIN");
     I.see("x-webjet-header: root-folder");
@@ -102,7 +102,7 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.dontSee("x-webjet-suffix");
 
     I.amOnPage("/apps/http-hlavicky/podpriecinok/?NO_WJTOOLBAR=true");
-    I.waitForText("content-language", "#response");
+    I.waitForText("content-language", 10, "#response");
     I.dontSee("x-frame-options: SAMEORIGIN");
     I.dontSee("x-webjet-header: root-folder");
     I.see("x-frame-options: sub-folder");
@@ -116,7 +116,7 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.see("x-robots-tag: noindex, nofollow");
 
     I.amOnPage("/apps/http-hlavicky/podpriecinok/podstranka.html?NO_WJTOOLBAR=true");
-    I.waitForText("content-language", "#response");
+    I.waitForText("content-language", 10, "#response");
     //
     I.say("owerwrite template value by response-header app");
     I.see("content-language: cs-CZ");
@@ -134,16 +134,16 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
     I.see("x-robots-tag: index, follow");
 
     I.amOnPage("/apps/http-hlavicky/rest-volanie.html");
-    I.waitForText("content-language", "#response");
+    I.waitForText("content-language", 10, "#response");
     I.see("x-webjet-header: rest");
 
     //
     I.say("Test autoset from files folder");
     I.amOnPage("/files/en/http-headers.html");
-    I.waitForText("content-language", "#response");
+    I.waitForText("content-language", 10, "#response");
     I.see("content-language: en-GB");
 
     I.amOnPage("/files/cz/http-headers.html");
-    I.waitForText("content-language", "#response");
+    I.waitForText("content-language", 10, "#response");
     I.see("content-language: cs-CZ");
 });

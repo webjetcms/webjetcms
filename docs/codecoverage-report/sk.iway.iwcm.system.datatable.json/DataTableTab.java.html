@@ -19,15 +19,32 @@ public class DataTableTab {
     private String id;
     private String title;
     private boolean selected;
+    private boolean hideOnCreate;
     private String content;
 
-<span class="fc" id="L24">    public DataTableTab(DataTableColumn annotation, boolean selected) {</span>
-<span class="fc" id="L25">        setId(annotation.tab());</span>
-<span class="fc" id="L26">        String key = &quot;editor.tab.&quot; + annotation.tab();</span>
-<span class="fc" id="L27">        String translated = DataTableColumnsFactory.translate(key);</span>
-<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (key.equals(translated)) translated = annotation.tab();</span>
-<span class="fc" id="L29">        setTitle(translated);</span>
-<span class="fc" id="L30">        setSelected(selected);</span>
-<span class="fc" id="L31">    }</span>
+<span class="fc" id="L25">    public DataTableTab(String id, String title, boolean selected) {</span>
+<span class="fc" id="L26">        setId(id);</span>
+        String key;
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (title.contains(&quot;.&quot;)==false) key = &quot;editor.tab.&quot; + title;</span>
+<span class="fc" id="L29">        else key = title;</span>
+<span class="fc" id="L30">        String translated = DataTableColumnsFactory.translate(key);</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (key.equals(translated)) translated = title;</span>
+<span class="fc" id="L32">        setTitle(translated);</span>
+<span class="fc" id="L33">        setSelected(selected);</span>
+<span class="fc" id="L34">        hideOnCreate = false;</span>
+<span class="fc" id="L35">        content = null;</span>
+<span class="fc" id="L36">    }</span>
+
+    public DataTableTab(DataTableColumn annotation, boolean selected) {
+<span class="fc" id="L39">        this(annotation.tab(), annotation.tab(), selected);</span>
+<span class="fc" id="L40">    }</span>
+
+    public DataTableTab(sk.iway.iwcm.system.datatable.annotations.DataTableTab annotation) {
+<span class="fc" id="L43">        this(annotation.id(), annotation.title(), annotation.selected());</span>
+<span class="fc" id="L44">        setHideOnCreate(annotation.hideOnCreate());</span>
+<span class="fc" id="L45">        String content = annotation.content();</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        if (&quot;null&quot;.equals(content)) content = null;</span>
+<span class="fc" id="L47">        setContent(content);</span>
+<span class="fc" id="L48">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

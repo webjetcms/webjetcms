@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EnumerationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.enumerations.rest</a> &gt; <span class="el_source">EnumerationService.java</span></div><h1>EnumerationService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.enumerations.rest;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
+import sk.iway.iwcm.database.ComplexQuery;
+import sk.iway.iwcm.database.Mapper;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+
+public class EnumerationService {
+
+    private EnumerationService() {}
+
+    private static final String DELETED_PREFIX_KEY = &quot;enum_type.deleted_type_mark.js&quot;;
+    private static final String HIDDEN = &quot;hidden&quot;;
+    private static final String STRING_1 = &quot;string1&quot;;
+
+    private static class EnumBasic {
+        private Long id;
+        private String name;
+        private Boolean hidden;
+    
+<span class="fc" id="L28">        public EnumBasic(Long id, String name, Boolean hidden) {</span>
+<span class="fc" id="L29">            this.id = id;</span>
+<span class="fc" id="L30">            this.name = name;</span>
+<span class="fc" id="L31">            this.hidden = hidden;</span>
+<span class="fc" id="L32">        }</span>
+    
+        @SuppressWarnings(&quot;unused&quot;)
+<span class="fc" id="L35">        public Long getId() { return id; } //its is used in page.addOptions</span>
+<span class="fc" id="L36">        public String getName() { return name; }</span>
+<span class="fc" id="L37">        public Boolean getHidden() { return hidden; }</span>
+<span class="fc" id="L38">        public void setName(String name) { this.name = name; }</span>
+    }
+
+    public static void prepareEnumTypesOptions(DatatablePageImpl&lt;?&gt; page, Prop prop) {
+<span class="fc" id="L42">        List&lt;EnumBasic&gt; enumTypes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L43">        String prefixForHidden = prop.getText(DELETED_PREFIX_KEY);</span>
+<span class="fc" id="L44">        String sql = &quot;SELECT enumeration_type_id, name, hidden FROM enumeration_type&quot;;</span>
+<span class="fc" id="L45">		new ComplexQuery().setSql(sql).list(new Mapper&lt;EnumBasic&gt;() {</span>
+			@Override
+			public EnumBasic map(ResultSet rs) throws SQLException {
+<span class="fc" id="L48">                EnumBasic enumType = new EnumBasic(rs.getLong(&quot;enumeration_type_id&quot;), rs.getString(&quot;name&quot;), rs.getBoolean(HIDDEN));</span>
+
+<span class="fc bfc" id="L50" title="All 2 branches covered.">                if(Tools.isTrue(enumType.getHidden()))</span>
+<span class="fc" id="L51">                    enumType.setName(prefixForHidden + enumType.getName());</span>
+                    
+<span class="fc" id="L53">                enumTypes.add(enumType);</span>
+
+<span class="fc" id="L55">				return null;</span>
+			}
+		});
+
+<span class="fc" id="L59">        page.addDefaultOption(&quot;editorFields.childEnumTypeId&quot;, &quot;&quot;, &quot;-1&quot;);</span>
+<span class="fc" id="L60">        page.addOptions(&quot;editorFields.childEnumTypeId&quot;, enumTypes, &quot;name&quot;, &quot;id&quot;, false);</span>
+<span class="fc" id="L61">    }</span>
+
+    public static void prepareEnumDataByTypeOptions(DatatablePageImpl&lt;EnumerationDataBean&gt; page, Prop prop, Integer enumTypeId) {
+<span class="nc" id="L64">        List&lt;EnumBasic&gt; enumDatasByType = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L65">        String prefixForHidden = prop.getText(DELETED_PREFIX_KEY);</span>
+<span class="nc" id="L66">        String sql = &quot;SELECT enumeration_data_id, string1, hidden FROM enumeration_data WHERE enumeration_type_id=?&quot;;</span>
+<span class="nc" id="L67">        new ComplexQuery().setSql(sql).setParams(enumTypeId).list(new Mapper&lt;EnumBasic&gt;() {</span>
+			@Override
+			public EnumBasic map(ResultSet rs) throws SQLException {
+<span class="nc" id="L70">                EnumBasic enumType = new EnumBasic(rs.getLong(&quot;enumeration_data_id&quot;), rs.getString(STRING_1), rs.getBoolean(HIDDEN));</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">                if(Tools.isTrue(enumType.getHidden()))</span>
+<span class="nc" id="L73">                    enumType.setName(prefixForHidden + enumType.getName());</span>
+                    
+<span class="nc" id="L75">                enumDatasByType.add(enumType);</span>
+
+<span class="nc" id="L77">				return null;</span>
+			}
+		});
+
+<span class="nc" id="L81">        page.addDefaultOption(&quot;editorFields.parentEnumDataId&quot;, &quot;-&quot;, &quot;-1&quot;);</span>
+<span class="nc" id="L82">        page.addOptions(&quot;editorFields.parentEnumDataId&quot;, enumDatasByType, &quot;name&quot;, &quot;id&quot;, false);</span>
+<span class="nc" id="L83">    }</span>
+
+    public static List&lt;String&gt; getEnumDataAutocomplete(String wantedText, Integer typeId, String name, Prop prop) {
+<span class="fc" id="L86">        List&lt;String&gt; enumDataParent = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L87">        String prefixForHidden = prop.getText(DELETED_PREFIX_KEY);</span>
+<span class="fc" id="L88">        String sql = &quot;SELECT string1, hidden FROM enumeration_data WHERE string1 LIKE ? AND enumeration_type_id=?&quot;;</span>
+
+<span class="fc" id="L90">        List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L91">        params.add('%' + wantedText + '%');</span>
+<span class="fc" id="L92">        params.add(typeId);</span>
+        
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">        if(Tools.isNotEmpty(name)) {</span>
+            //String to exclude, entity CANT select itself
+<span class="fc" id="L96">            sql += &quot; AND NOT string1 = ?&quot;;</span>
+<span class="fc" id="L97">            params.add(name);</span>
+        }
+
+<span class="fc" id="L100">        new ComplexQuery().setSql(sql).setParams(params.toArray()).list(new Mapper&lt;EnumBasic&gt;() {</span>
+			@Override
+			public EnumBasic map(ResultSet rs) throws SQLException {
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">                if(rs.getBoolean(HIDDEN) == false) {</span>
+<span class="fc" id="L104">                    enumDataParent.add(rs.getString(STRING_1));</span>
+                } else {
+<span class="nc" id="L106">                    enumDataParent.add(prefixForHidden + rs.getString(STRING_1));</span>
+                }
+
+<span class="fc" id="L109">				return null;</span>
+			}
+		});
+
+<span class="fc" id="L113">        return enumDataParent;</span>
+    }
+
+    public static List&lt;String&gt; getEnumTypeAutocomplete(String wantedText, Prop prop) {
+<span class="fc" id="L117">        List&lt;String&gt; enumTypeChild = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L118">        String prefixForHidden = prop.getText(DELETED_PREFIX_KEY);</span>
+<span class="fc" id="L119">        String sql = &quot;SELECT name, hidden FROM enumeration_type WHERE name LIKE ?&quot;;</span>
+<span class="fc" id="L120">        new ComplexQuery().setSql(sql).setParams('%' + wantedText + '%').list(new Mapper&lt;EnumBasic&gt;() {</span>
+			@Override
+			public EnumBasic map(ResultSet rs) throws SQLException {
+<span class="fc bfc" id="L123" title="All 2 branches covered.">                if(rs.getBoolean(HIDDEN) == false) {</span>
+<span class="fc" id="L124">                    enumTypeChild.add(rs.getString(&quot;name&quot;));</span>
+                } else {
+<span class="fc" id="L126">                    enumTypeChild.add(prefixForHidden + rs.getString(&quot;name&quot;));</span>
+                }
+
+<span class="fc" id="L129">				return null;</span>
+			}
+		});
+
+<span class="fc" id="L133">        return enumTypeChild;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

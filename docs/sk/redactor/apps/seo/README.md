@@ -10,7 +10,7 @@ Táto časť zobrazuje štatistiku prístupov vyhľadávacích robotov na web s�
 
 ![](seo-admin-page.png)
 
-Obsiahnutá je taktiež tabuľka, ktorej stĺpec ```Názov servera``` nás po kliknutí presmeruje na detail štatistiky konkrétneho vyhľadávacieho robota.
+Obsiahnutá je taktiež tabuľka, ktorej stĺpec **Názov servera** nás po kliknutí presmeruje na detail štatistiky konkrétneho vyhľadávacieho robota.
 
 ![](seo-admin-details-page.png)
 
@@ -38,7 +38,7 @@ Táto časť zobrazuje štatistiku vyhľadávania zadefinovaných kľúčových 
 
 ![](seo-stat-keywords-page.png)
 
-Obsiahnutá datatabuľka obsahuje stĺpec ```Názov výrazu```, ktorý nás po kliknutí presmeruje na detail štatistiky konkrétneho kľúčového slova.
+Obsiahnutá datatabuľka obsahuje stĺpec **Názov výrazu**, ktorý nás po kliknutí presmeruje na detail štatistiky konkrétneho kľúčového slova.
 
 ![](seo-stat-keywords-detail-page.png)
 
@@ -48,7 +48,7 @@ Táto časť zobrazuje štatistiku pozícií a vývoj pozície kľúčových slo
 
 ![](seo-positions-page.png)
 
-Obsiahnutá datatabuľka obsahuje stĺpec ```Názov```, ktorý nás po kliknutí presmeruje na detail vývoja pozície konkrétneho kľúčového slova.
+Obsiahnutá datatabuľka obsahuje stĺpec **Názov**, ktorý nás po kliknutí presmeruje na detail vývoja pozície konkrétneho kľúčového slova.
 
 ![](seo-positions-details-page.png)
 

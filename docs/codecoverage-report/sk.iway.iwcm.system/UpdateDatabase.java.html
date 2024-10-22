@@ -34,7 +34,9 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
@@ -59,49 +61,52 @@ import sk.iway.iwcm.users.UsersDB;
  */
 public class UpdateDatabase
 {
-<span class="nc" id="L62">	protected UpdateDatabase() {</span>
+<span class="nc" id="L64">	protected UpdateDatabase() {</span>
 		//utility class
-<span class="nc" id="L64">	}</span>
+<span class="nc" id="L66">	}</span>
 
 	/**
 	 *  Description of the Method
 	 */
 	public static void update()
 	{
-<span class="fc" id="L71">		Logger.println(UpdateDatabase.class,&quot;----- Updating database [DBType=&quot;+Constants.DB_TYPE+&quot;] -----&quot;);</span>
+<span class="fc" id="L73">		Logger.println(UpdateDatabase.class,&quot;----- Updating database [DBType=&quot;+Constants.DB_TYPE+&quot;] -----&quot;);</span>
 		//aktualizuj databazu
-<span class="fc" id="L73">		autoUpdateDatabase();</span>
+<span class="fc" id="L75">		autoUpdateDatabase();</span>
 
 		//aktualizuj zlozitejsie veci
-<span class="fc" id="L76">		splitFullName();</span>
-<span class="fc" id="L77">		disabledItems();</span>
-<span class="fc" id="L78">		prepareSync();</span>
-<span class="fc" id="L79">		setRegDate();</span>
-<span class="fc" id="L80">		importMeniny();</span>
-<span class="fc" id="L81">		convertPerexGroups();</span>
-<span class="fc" id="L82">		fixGroupIdInStatViews();</span>
-<span class="fc" id="L83">		mediaGroupsUpdate();</span>
+<span class="fc" id="L78">		splitFullName();</span>
+<span class="fc" id="L79">		disabledItems();</span>
+<span class="fc" id="L80">		prepareSync();</span>
+<span class="fc" id="L81">		setRegDate();</span>
+<span class="fc" id="L82">		importMeniny();</span>
+<span class="fc" id="L83">		convertPerexGroups();</span>
+<span class="fc" id="L84">		fixGroupIdInStatViews();</span>
+<span class="fc" id="L85">		mediaGroupsUpdate();</span>
 
-<span class="fc" id="L85">		updateMediaDomainIdColumn();</span>
+<span class="fc" id="L87">		updateMediaDomainIdColumn();</span>
+<span class="fc" id="L88">		updateEmailsCampainDomainIdColumn();</span>
 
-<span class="fc" id="L87">		deletePoiClasses();</span>
+<span class="fc" id="L90">		deletePoiClasses();</span>
 
 		// upravi uz existujuce browserId, aby sa nepocitali do statistiky kvoli novym upravam v kode
-<span class="fc" id="L90">		UpdateDatabase.fixBrowserId();</span>
+<span class="fc" id="L93">		UpdateDatabase.fixBrowserId();</span>
 
-<span class="fc" id="L92">		disabledItemsConfigRights();</span>
+<span class="fc" id="L95">		disabledItemsConfigRights();</span>
 
-<span class="fc" id="L94">		updateStatViewsColumns();</span>
+<span class="fc" id="L97">		updateStatViewsColumns();</span>
 
-<span class="fc" id="L96">		updateStopwords();</span>
+<span class="fc" id="L99">		updateStopwords();</span>
 
-<span class="fc" id="L98">		zmluvyOrganizacieUpdate();</span>
+<span class="fc" id="L101">		zmluvyOrganizacieUpdate();</span>
 		//zatial nie, ponechame do WJ8 updateArchiveFormat();
 
-<span class="fc" id="L101">        setDefaultMapProvider();</span>
+<span class="fc" id="L104">        setDefaultMapProvider();</span>
 
-<span class="fc" id="L103">		Logger.println(UpdateDatabase.class,&quot;----- Database updated  -----&quot;);</span>
-<span class="fc" id="L104">	}</span>
+<span class="fc" id="L106">		statErrorAddDomainId();</span>
+
+<span class="fc" id="L108">		Logger.println(UpdateDatabase.class,&quot;----- Database updated  -----&quot;);</span>
+<span class="fc" id="L109">	}</span>
 
 	/*
 	private static void updateArchiveFormat(){
@@ -154,85 +159,85 @@ public class UpdateDatabase
 	private static void updateStopwords()
 	{
 
-<span class="fc" id="L157">		int databaseCount = new SimpleQuery().forInt(&quot;select count(*) from stopword&quot;);</span>
-<span class="fc" id="L158">		int fileCount = 0;</span>
+<span class="fc" id="L162">		int databaseCount = new SimpleQuery().forInt(&quot;select count(*) from stopword&quot;);</span>
+<span class="fc" id="L163">		int fileCount = 0;</span>
 
-<span class="pc bpc" id="L160" title="1 of 2 branches missed.">		if (FileTools.isFile(&quot;/WEB-INF/sql/stopwords.csv&quot;)==false) return;</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">		if (FileTools.isFile(&quot;/WEB-INF/sql/stopwords.csv&quot;)==false) return;</span>
 
 		Scanner scanner;
 		try
 		{
-<span class="fc" id="L165">			scanner = new Scanner(new File(Tools.getRealPath(&quot;/WEB-INF/sql/stopwords.csv&quot;)),&quot;UTF-8&quot;);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">			while (scanner.hasNextLine())</span>
+<span class="fc" id="L170">			scanner = new Scanner(new File(Tools.getRealPath(&quot;/WEB-INF/sql/stopwords.csv&quot;)),&quot;UTF-8&quot;);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">			while (scanner.hasNextLine())</span>
 			{
-<span class="fc" id="L168">				fileCount++;</span>
-<span class="fc" id="L169">				scanner.nextLine();</span>
+<span class="fc" id="L173">				fileCount++;</span>
+<span class="fc" id="L174">				scanner.nextLine();</span>
 			}
 		}
-<span class="nc" id="L172">		catch (FileNotFoundException e)</span>
+<span class="nc" id="L177">		catch (FileNotFoundException e)</span>
 		{
-<span class="nc" id="L174">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L175">			return;</span>
-<span class="fc" id="L176">		}</span>
+<span class="nc" id="L179">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L180">			return;</span>
+<span class="fc" id="L181">		}</span>
 
 		/*check count*/
 
-<span class="pc bpc" id="L180" title="1 of 2 branches missed.">		if (databaseCount != fileCount)</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">		if (databaseCount != fileCount)</span>
 		{
-<span class="nc" id="L182">			Connection db_conn = null;</span>
-<span class="nc" id="L183">			PreparedStatement ps = null;</span>
+<span class="nc" id="L187">			Connection db_conn = null;</span>
+<span class="nc" id="L188">			PreparedStatement ps = null;</span>
 			try
 			{
-<span class="nc" id="L186">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L191">				db_conn = DBPool.getConnection();</span>
 
 
-<span class="nc" id="L189">				ps = db_conn.prepareStatement(&quot;delete from stopword&quot;);</span>
-<span class="nc" id="L190">				ps.executeUpdate();</span>
-<span class="nc" id="L191">				ps.close();</span>
+<span class="nc" id="L194">				ps = db_conn.prepareStatement(&quot;delete from stopword&quot;);</span>
+<span class="nc" id="L195">				ps.executeUpdate();</span>
+<span class="nc" id="L196">				ps.close();</span>
 
-<span class="nc" id="L193">				ps = db_conn.prepareStatement(&quot;insert into stopword (word,language) values (?,?)&quot;);</span>
-<span class="nc" id="L194">				scanner.close();</span>
-<span class="nc" id="L195">				scanner = new Scanner(new File(Tools.getRealPath(&quot;/WEB-INF/sql/stopwords.csv&quot;)),&quot;UTF-8&quot;);</span>
+<span class="nc" id="L198">				ps = db_conn.prepareStatement(&quot;insert into stopword (word,language) values (?,?)&quot;);</span>
+<span class="nc" id="L199">				scanner.close();</span>
+<span class="nc" id="L200">				scanner = new Scanner(new File(Tools.getRealPath(&quot;/WEB-INF/sql/stopwords.csv&quot;)),&quot;UTF-8&quot;);</span>
 
-<span class="nc bnc" id="L197" title="All 2 branches missed.">				while (scanner.hasNext())</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">				while (scanner.hasNext())</span>
 				{
-<span class="nc" id="L199">					String line = scanner.nextLine();</span>
-<span class="nc" id="L200">					String[] split = line.split(&quot;;&quot;);</span>
-<span class="nc" id="L201">					String stopword = split[0].trim();</span>
-<span class="nc" id="L202">					String language = split[1].trim();</span>
-<span class="nc" id="L203">					ps.setString(1, stopword);</span>
-<span class="nc" id="L204">					ps.setString(2, language);</span>
-<span class="nc" id="L205">					ps.executeUpdate();</span>
-<span class="nc" id="L206">				}</span>
-<span class="nc" id="L207">				ps.close();</span>
-<span class="nc" id="L208">				db_conn.close();</span>
-<span class="nc" id="L209">				ps = null;</span>
-<span class="nc" id="L210">				db_conn = null;</span>
+<span class="nc" id="L204">					String line = scanner.nextLine();</span>
+<span class="nc" id="L205">					String[] split = line.split(&quot;;&quot;);</span>
+<span class="nc" id="L206">					String stopword = split[0].trim();</span>
+<span class="nc" id="L207">					String language = split[1].trim();</span>
+<span class="nc" id="L208">					ps.setString(1, stopword);</span>
+<span class="nc" id="L209">					ps.setString(2, language);</span>
+<span class="nc" id="L210">					ps.executeUpdate();</span>
+<span class="nc" id="L211">				}</span>
+<span class="nc" id="L212">				ps.close();</span>
+<span class="nc" id="L213">				db_conn.close();</span>
+<span class="nc" id="L214">				ps = null;</span>
+<span class="nc" id="L215">				db_conn = null;</span>
 			}
-<span class="nc" id="L212">			catch (Exception ex)</span>
+<span class="nc" id="L217">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L214">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L219">				sk.iway.iwcm.Logger.error(ex);</span>
 			}
 			finally
 			{
 				try
 				{
-<span class="nc bnc" id="L220" title="All 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L221">						ps.close();</span>
-<span class="nc bnc" id="L222" title="All 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L223">						db_conn.close();</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L226">						ps.close();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L228">						db_conn.close();</span>
 				}
-<span class="nc" id="L225">				catch (Exception ex2)</span>
+<span class="nc" id="L230">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L227">				}</span>
+<span class="nc" id="L232">				}</span>
 			}
 		}
-<span class="fc" id="L230">	}</span>
+<span class="fc" id="L235">	}</span>
 
 	public static void updateAfterInit()
 	{
-<span class="fc" id="L234">		configureModules();</span>
-<span class="fc" id="L235">	}</span>
+<span class="fc" id="L239">		configureModules();</span>
+<span class="fc" id="L240">	}</span>
 
 	/**
 	 * Automaticka aktualizacia databazy na zaklade XML suboru
@@ -240,25 +245,25 @@ public class UpdateDatabase
 	@SuppressWarnings(&quot;resource&quot;)
 	private static void autoUpdateDatabase(IwcmFile f, String dbName) throws IOException
 	{
-<span class="fc" id="L243">		Logger.println(UpdateDatabase.class,&quot;--&gt; updating from file: &quot; + f.getName());</span>
-<span class="fc" id="L244">		InputStream is = new IwcmInputStream(f);</span>
-<span class="fc" id="L245">		is = SyncDirAction.checkXmlForAttack(is);</span>
-<span class="fc" id="L246">		XMLDecoder decoder = new XMLDecoder(is, null, new WarningListener());</span>
-<span class="fc" id="L247">		Object objUpdates = decoder.readObject();</span>
+<span class="fc" id="L248">		Logger.println(UpdateDatabase.class,&quot;--&gt; updating from file: &quot; + f.getName());</span>
+<span class="fc" id="L249">		InputStream is = new IwcmInputStream(f);</span>
+<span class="fc" id="L250">		is = SyncDirAction.checkXmlForAttack(is);</span>
+<span class="fc" id="L251">		XMLDecoder decoder = new XMLDecoder(is, null, new WarningListener());</span>
+<span class="fc" id="L252">		Object objUpdates = decoder.readObject();</span>
 
-<span class="pc bpc" id="L249" title="1 of 2 branches missed.">		if (!(objUpdates instanceof List)) return;</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">		if (!(objUpdates instanceof List)) return;</span>
 
-<span class="fc" id="L251">		List&lt;?&gt; updates = (List&lt;?&gt;)objUpdates;</span>
-<span class="fc bfc" id="L252" title="All 2 branches covered.">		for (Object objUdb : updates)</span>
+<span class="fc" id="L256">		List&lt;?&gt; updates = (List&lt;?&gt;)objUpdates;</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">		for (Object objUdb : updates)</span>
 		{
 
-<span class="pc bpc" id="L255" title="1 of 2 branches missed.">			if (!(objUdb instanceof UpdateDBBean)) continue;</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">			if (!(objUdb instanceof UpdateDBBean)) continue;</span>
 
-<span class="fc" id="L257">			UpdateDBBean udb = (UpdateDBBean)objUdb;</span>
-<span class="fc" id="L258">			updateDB(udb, dbName);</span>
-<span class="fc" id="L259">		}</span>
-<span class="fc" id="L260">		is.close();</span>
-<span class="fc" id="L261">	}</span>
+<span class="fc" id="L262">			UpdateDBBean udb = (UpdateDBBean)objUdb;</span>
+<span class="fc" id="L263">			updateDB(udb, dbName);</span>
+<span class="fc" id="L264">		}</span>
+<span class="fc" id="L265">		is.close();</span>
+<span class="fc" id="L266">	}</span>
 
 	/**
 	 * Automaticka aktualizacia databazy na zaklade XML suboru
@@ -267,73 +272,73 @@ public class UpdateDatabase
 	{
 		try
 		{
-<span class="fc" id="L270">			IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql/autoupdate.xml&quot;));</span>
-<span class="fc" id="L271">			autoUpdateDatabase(f, &quot;iwcm&quot;);</span>
+<span class="fc" id="L275">			IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql/autoupdate.xml&quot;));</span>
+<span class="fc" id="L276">			autoUpdateDatabase(f, &quot;iwcm&quot;);</span>
 
-<span class="fc" id="L273">			f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql/autoupdate-&quot;+Constants.getInstallName()+&quot;.xml&quot;));</span>
-<span class="pc bpc" id="L274" title="1 of 2 branches missed.">			if (f.exists())</span>
+<span class="fc" id="L278">			f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql/autoupdate-&quot;+Constants.getInstallName()+&quot;.xml&quot;));</span>
+<span class="pc bpc" id="L279" title="1 of 2 branches missed.">			if (f.exists())</span>
 			{
-<span class="nc" id="L276">				autoUpdateDatabase(f, &quot;iwcm&quot;);</span>
+<span class="nc" id="L281">				autoUpdateDatabase(f, &quot;iwcm&quot;);</span>
 			}
 
 			//update pre webjet9 a dalsie podla skinu
-<span class="fc" id="L280">			f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql/autoupdate-&quot;+Constants.getString(&quot;defaultSkin&quot;)+&quot;.xml&quot;));</span>
-<span class="pc bpc" id="L281" title="1 of 2 branches missed.">			if (f.exists())</span>
+<span class="fc" id="L285">			f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql/autoupdate-&quot;+Constants.getString(&quot;defaultSkin&quot;)+&quot;.xml&quot;));</span>
+<span class="pc bpc" id="L286" title="1 of 2 branches missed.">			if (f.exists())</span>
 			{
-<span class="fc" id="L283">				autoUpdateDatabase(f, &quot;iwcm&quot;);</span>
+<span class="fc" id="L288">				autoUpdateDatabase(f, &quot;iwcm&quot;);</span>
 			}
 
-<span class="fc" id="L286">			IwcmFile dir = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql&quot;));</span>
-<span class="pc bpc" id="L287" title="1 of 2 branches missed.">			if (dir.isDirectory())</span>
+<span class="fc" id="L291">			IwcmFile dir = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/sql&quot;));</span>
+<span class="pc bpc" id="L292" title="1 of 2 branches missed.">			if (dir.isDirectory())</span>
 			{
-<span class="fc" id="L289">				IwcmFile[] files = dir.listFiles();</span>
-<span class="fc" id="L290">				int size = files.length;</span>
+<span class="fc" id="L294">				IwcmFile[] files = dir.listFiles();</span>
+<span class="fc" id="L295">				int size = files.length;</span>
 				int i;
-<span class="fc bfc" id="L292" title="All 2 branches covered.">				for (i=0; i&lt;size; i++)</span>
+<span class="fc bfc" id="L297" title="All 2 branches covered.">				for (i=0; i&lt;size; i++)</span>
 				{
-<span class="fc" id="L294">					f = files[i];</span>
-<span class="pc bpc" id="L295" title="2 of 4 branches missed.">					if (f.isFile() &amp;&amp; f.getName().startsWith(&quot;autoupdate-&quot;+Constants.getInstallName()))</span>
+<span class="fc" id="L299">					f = files[i];</span>
+<span class="pc bpc" id="L300" title="2 of 4 branches missed.">					if (f.isFile() &amp;&amp; f.getName().startsWith(&quot;autoupdate-&quot;+Constants.getInstallName()))</span>
 					{
-<span class="nc" id="L297">						int start = (&quot;autoupdate-&quot;+Constants.getInstallName()).length() + 1;</span>
-<span class="nc" id="L298">						int end = f.getName().length() - 4;</span>
-<span class="nc bnc" id="L299" title="All 2 branches missed.">						if (start&gt;end)</span>
-<span class="nc" id="L300">							continue;</span>
+<span class="nc" id="L302">						int start = (&quot;autoupdate-&quot;+Constants.getInstallName()).length() + 1;</span>
+<span class="nc" id="L303">						int end = f.getName().length() - 4;</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">						if (start&gt;end)</span>
+<span class="nc" id="L305">							continue;</span>
 
-<span class="nc" id="L302">						String dbName = f.getName().substring(start, end).trim();</span>
+<span class="nc" id="L307">						String dbName = f.getName().substring(start, end).trim();</span>
 
-<span class="nc" id="L304">						Logger.println(UpdateDatabase.class,&quot;--&gt; updating from file: &quot; + f.getName() + &quot; database: &quot; + dbName);</span>
-<span class="nc" id="L305">						autoUpdateDatabase(f, dbName);</span>
+<span class="nc" id="L309">						Logger.println(UpdateDatabase.class,&quot;--&gt; updating from file: &quot; + f.getName() + &quot; database: &quot; + dbName);</span>
+<span class="nc" id="L310">						autoUpdateDatabase(f, dbName);</span>
 					}
 				}
 			}
 		}
-<span class="nc" id="L310">		catch (Exception e)</span>
+<span class="nc" id="L315">		catch (Exception e)</span>
 		{
-<span class="nc" id="L312">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L313">		}</span>
-<span class="fc" id="L314">	}</span>
+<span class="nc" id="L317">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L318">		}</span>
+<span class="fc" id="L319">	}</span>
 
-<span class="fc" id="L316">	private static Set&lt;String&gt; allreadyExecutedUpdates = null;</span>
+<span class="fc" id="L321">	private static Set&lt;String&gt; allreadyExecutedUpdates = null;</span>
 	private static boolean isAllreadyUpdated(String note)
 	{
-<span class="fc bfc" id="L319" title="All 2 branches covered.">		if (allreadyExecutedUpdates==null)</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">		if (allreadyExecutedUpdates==null)</span>
 		{
-<span class="fc" id="L321">			List&lt;String&gt; notes = new SimpleQuery().forListString(&quot;SELECT note FROM &quot;+ConfDB.DB_TABLE_NAME);</span>
-<span class="fc" id="L322">			allreadyExecutedUpdates = new HashSet&lt;&gt;(notes);</span>
+<span class="fc" id="L326">			List&lt;String&gt; notes = new SimpleQuery().forListString(&quot;SELECT note FROM &quot;+ConfDB.DB_TABLE_NAME);</span>
+<span class="fc" id="L327">			allreadyExecutedUpdates = new HashSet&lt;&gt;(notes);</span>
 		}
 
-<span class="fc bfc" id="L325" title="All 2 branches covered.">		if (allreadyExecutedUpdates.contains(note)) return true;</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">		if (allreadyExecutedUpdates.contains(note)) return true;</span>
 
-<span class="fc" id="L327">		return false;</span>
+<span class="fc" id="L332">		return false;</span>
 	}
 
 	private static void saveSuccessUpdate(String note)
 	{
-<span class="nc" id="L332">		String sqlUpdate = &quot;INSERT INTO &quot;+ConfDB.DB_TABLE_NAME+&quot; (create_date, note) VALUES (?, ?)&quot;;</span>
-<span class="nc" id="L333">		new SimpleQuery().execute(sqlUpdate, new Timestamp(Tools.getNow()), note);</span>
+<span class="nc" id="L337">		String sqlUpdate = &quot;INSERT INTO &quot;+ConfDB.DB_TABLE_NAME+&quot; (create_date, note) VALUES (?, ?)&quot;;</span>
+<span class="nc" id="L338">		new SimpleQuery().execute(sqlUpdate, new Timestamp(Tools.getNow()), note);</span>
 
-<span class="nc bnc" id="L335" title="All 2 branches missed.">		if (allreadyExecutedUpdates != null) allreadyExecutedUpdates.add(note);</span>
-<span class="nc" id="L336">	}</span>
+<span class="nc bnc" id="L340" title="All 2 branches missed.">		if (allreadyExecutedUpdates != null) allreadyExecutedUpdates.add(note);</span>
+<span class="nc" id="L341">	}</span>
 
 	/**
 	 * Skontroluje, ci treba aktualizovat DB, ak ano, aktuzlizuje
@@ -342,180 +347,181 @@ public class UpdateDatabase
 	 */
 	private static boolean updateDB(UpdateDBBean udb, String dbName)
 	{
-<span class="pc bpc" id="L345" title="1 of 2 branches missed.">		if (isAllreadyUpdated(udb.getNote())) return true;</span>
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">		if (isAllreadyUpdated(udb.getNote())) return true;</span>
 
-<span class="nc" id="L347">		boolean ret = false;</span>
+<span class="nc" id="L352">		boolean ret = false;</span>
 
-<span class="nc" id="L349">		Connection db_conn = null;</span>
-<span class="nc" id="L350">		PreparedStatement ps = null;</span>
-<span class="nc" id="L351">		Statement sta = null;</span>
-<span class="nc" id="L352">		ResultSet rs = null;</span>
-<span class="nc" id="L353">		String sql = null;</span>
+<span class="nc" id="L354">		Connection db_conn = null;</span>
+<span class="nc" id="L355">		PreparedStatement ps = null;</span>
+<span class="nc" id="L356">		Statement sta = null;</span>
+<span class="nc" id="L357">		ResultSet rs = null;</span>
+<span class="nc" id="L358">		String sql = null;</span>
 		try
 		{
-<span class="nc" id="L356">			db_conn = DBPool.getConnection(dbName);</span>
+<span class="nc" id="L361">			db_conn = DBPool.getConnection(dbName);</span>
 
 			boolean updateSuccess;
-<span class="nc" id="L359">			Logger.println(UpdateDatabase.class,&quot;   &quot; + udb.getNote()+&quot; &quot;);</span>
+<span class="nc" id="L364">			Logger.println(UpdateDatabase.class,&quot;   &quot; + udb.getNote()+&quot; &quot;);</span>
 			//aktualizuj DB
-<span class="nc bnc" id="L361" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MYSQL)</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MYSQL)</span>
 			{
-<span class="nc" id="L363">				sql = udb.getMysql();</span>
+<span class="nc" id="L368">				sql = udb.getMysql();</span>
 			}
-<span class="nc bnc" id="L365" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+<span class="nc bnc" id="L370" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
 			{
-<span class="nc" id="L367">				sql = udb.getMssql();</span>
+<span class="nc" id="L372">				sql = udb.getMssql();</span>
 			}
-<span class="nc bnc" id="L369" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
 			{
-<span class="nc" id="L371">				sql = udb.getOracle();</span>
+<span class="nc" id="L376">				sql = udb.getOracle();</span>
 			}
-<span class="nc bnc" id="L373" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+<span class="nc bnc" id="L378" title="All 2 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_PGSQL)</span>
 			{
-<span class="nc" id="L375">				sql = udb.getPgsql();</span>
+<span class="nc" id="L380">				sql = udb.getPgsql();</span>
 			}
 
-<span class="nc" id="L378">			updateSuccess = true;</span>
-<span class="nc bnc" id="L379" title="All 2 branches missed.">			if (Tools.isNotEmpty(sql))</span>
+<span class="nc" id="L383">			updateSuccess = true;</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">			if (Tools.isNotEmpty(sql))</span>
 			{
-<span class="nc" id="L381">				StringTokenizer st = new StringTokenizer(sql, &quot;;&quot;);</span>
-<span class="nc" id="L382">				int counter = 1;</span>
-<span class="nc" id="L383">				int count = st.countTokens();</span>
-<span class="nc" id="L384">				Logger.println(UpdateDatabase.class, &quot;count=&quot;+count+&quot; &quot;);</span>
-<span class="nc" id="L385">				String defaultEngine = Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
-<span class="nc bnc" id="L386" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="nc" id="L386">				StringTokenizer st = new StringTokenizer(sql, &quot;;&quot;);</span>
+<span class="nc" id="L387">				int counter = 1;</span>
+<span class="nc" id="L388">				int count = st.countTokens();</span>
+<span class="nc" id="L389">				Logger.println(UpdateDatabase.class, &quot;count=&quot;+count+&quot; &quot;);</span>
+<span class="nc" id="L390">				String defaultEngine = Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+<span class="nc bnc" id="L391" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
 				{
 					try
 					{
 
-<span class="nc" id="L391">						sql = st.nextToken().trim();</span>
+<span class="nc" id="L396">						sql = st.nextToken().trim();</span>
 
 						//na public nodoch nevykonavam GRANT prikazy
-<span class="nc bnc" id="L394" title="All 4 branches missed.">						if (sql.indexOf(&quot;GRANT&quot;)!=-1 &amp;&amp; &quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;))) continue;</span>
+<span class="nc bnc" id="L399" title="All 4 branches missed.">						if (sql.indexOf(&quot;GRANT&quot;)!=-1 &amp;&amp; &quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;))) continue;</span>
 
-<span class="nc bnc" id="L396" title="All 2 branches missed.">						if (sql.contains(&quot;{CONSTRAIN:PK}&quot;)) {</span>
+<span class="nc bnc" id="L401" title="All 2 branches missed.">						if (sql.contains(&quot;{CONSTRAIN:PK}&quot;)) {</span>
 							//MSSQL nema drop constrain podla mena ale musi sa najskor ziskat z DB presny nazov, az potom sa da spravit drop
 							try {
-<span class="nc" id="L399">								String tableName = sql.substring(sql.indexOf(&quot;ALTER TABLE&quot;)+11, sql.indexOf(&quot;DROP CONSTRAINT&quot;)).trim();</span>
-<span class="nc" id="L400">								String constrainSql = &quot;SELECT name  FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'&quot;+tableName+&quot;'&quot;;</span>
-<span class="nc" id="L401">								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);</span>
-<span class="nc" id="L402">								sql = Tools.replace(sql, &quot;{CONSTRAIN:PK}&quot;, constrainKey);</span>
+<span class="nc" id="L404">								String tableName = sql.substring(sql.indexOf(&quot;ALTER TABLE&quot;)+11, sql.indexOf(&quot;DROP CONSTRAINT&quot;)).trim();</span>
+<span class="nc" id="L405">								String constrainSql = &quot;SELECT name  FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'&quot;+tableName+&quot;'&quot;;</span>
+<span class="nc" id="L406">								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);</span>
+<span class="nc" id="L407">								sql = Tools.replace(sql, &quot;{CONSTRAIN:PK}&quot;, constrainKey);</span>
 							}
-<span class="nc" id="L404">							catch (Exception ex) {</span>
-<span class="nc" id="L405">								Logger.error(UpdateDatabase.class, ex);</span>
-<span class="nc" id="L406">							}</span>
+<span class="nc" id="L409">							catch (Exception ex) {</span>
+<span class="nc" id="L410">								Logger.error(UpdateDatabase.class, ex);</span>
+<span class="nc" id="L411">							}</span>
 						}
 
-<span class="nc bnc" id="L409" title="All 4 branches missed.">						if (Tools.isNotEmpty(sql) &amp;&amp; sql.startsWith(&quot;//&quot;)==false)</span>
+<span class="nc bnc" id="L414" title="All 4 branches missed.">						if (Tools.isNotEmpty(sql) &amp;&amp; sql.startsWith(&quot;//&quot;)==false)</span>
 						{
-<span class="nc bnc" id="L411" title="All 2 branches missed.">							if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">							if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
 							{
-<span class="nc" id="L413">								sql = Tools.replace(sql, &quot;|&quot;, &quot;;&quot;);</span>
-<span class="nc" id="L414">								sql = Tools.replace(sql, &quot;;;&quot;, &quot;||&quot;);</span>
-<span class="nc bnc" id="L415" title="All 4 branches missed.">							} else if (Constants.DB_TYPE == Constants.DB_MYSQL &amp;&amp; &quot;myisam&quot;.equalsIgnoreCase(defaultEngine)==false) {</span>
-<span class="nc" id="L416">								sql = Tools.replace(sql, &quot;ENGINE=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
-<span class="nc" id="L417">								sql = Tools.replace(sql, &quot;engine=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
+<span class="nc" id="L418">								sql = Tools.replace(sql, &quot;|&quot;, &quot;;&quot;);</span>
+<span class="nc" id="L419">								sql = Tools.replace(sql, &quot;;;&quot;, &quot;||&quot;);</span>
+<span class="nc bnc" id="L420" title="All 4 branches missed.">							} else if (Constants.DB_TYPE == Constants.DB_MYSQL &amp;&amp; &quot;myisam&quot;.equalsIgnoreCase(defaultEngine)==false) {</span>
+<span class="nc" id="L421">								sql = Tools.replace(sql, &quot;ENGINE=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
+<span class="nc" id="L422">								sql = Tools.replace(sql, &quot;engine=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
 							}
-<span class="nc" id="L419">							Logger.println(UpdateDatabase.class, &quot;[&quot;+counter+&quot;/&quot;+count+&quot;] &quot;);</span>
-<span class="nc" id="L420">							counter++;</span>
+<span class="nc" id="L424">							Logger.println(UpdateDatabase.class, &quot;[&quot;+counter+&quot;/&quot;+count+&quot;] &quot;+sql);</span>
+<span class="nc" id="L425">							counter++;</span>
 
-<span class="nc" id="L422">							sta = db_conn.createStatement();</span>
-<span class="nc" id="L423">							sta.execute(sql);</span>
-<span class="nc" id="L424">							sta.close();</span>
+<span class="nc" id="L427">							sta = db_conn.createStatement();</span>
+<span class="nc" id="L428">							sta.execute(sql);</span>
+<span class="nc" id="L429">							sta.close();</span>
 
-<span class="nc" id="L426">							Logger.println(UpdateDatabase.class, &quot;[OK] &quot;);</span>
+<span class="nc" id="L431">							Logger.println(UpdateDatabase.class, &quot;[OK] &quot;);</span>
 
-<span class="nc bnc" id="L428" title="All 2 branches missed.">							if (sql.toLowerCase().indexOf(ConfDB.CONF_TABLE_NAME)!=-1) updateConstantsValue(sql);</span>
+<span class="nc bnc" id="L433" title="All 2 branches missed.">							if (sql.toLowerCase().indexOf(ConfDB.CONF_TABLE_NAME)!=-1) updateConstantsValue(sql);</span>
 						}
 
 					}
-<span class="nc" id="L432">					catch (SQLException e)</span>
+<span class="nc" id="L437">					catch (SQLException e)</span>
 					{
-<span class="nc" id="L434">						String message = e.getMessage().toLowerCase();</span>
+<span class="nc" id="L439">						String message = e.getMessage().toLowerCase();</span>
 						//POZOR: message je LOWER CASE, tak aj porovnanie musi byt
-<span class="nc" id="L436">						if (</span>
-<span class="nc bnc" id="L437" title="All 2 branches missed.">								message.contains(&quot;already exists&quot;) ||</span>
-<span class="nc bnc" id="L438" title="All 2 branches missed.">								message.contains(&quot;duplicate column name&quot;) ||</span>
-<span class="nc bnc" id="L439" title="All 2 branches missed.">								message.contains(&quot;is specified more than once&quot;) ||</span>
-<span class="nc bnc" id="L440" title="All 2 branches missed.">								message.contains(&quot;duplicate entry&quot;) ||</span>
-<span class="nc bnc" id="L441" title="All 2 branches missed.">								message.contains(&quot;already an object&quot;) ||</span>
-<span class="nc bnc" id="L442" title="All 2 branches missed.">								message.contains(&quot;tabuľke existuje&quot;) ||</span>
-<span class="nc bnc" id="L443" title="All 2 branches missed.">								message.contains(&quot;duplicate key&quot;) ||</span>
-<span class="nc bnc" id="L444" title="All 2 branches missed.">								message.contains(&quot;názov už používa existujúci objekt&quot;) ||</span>
-<span class="nc bnc" id="L445" title="All 2 branches missed.">								message.contains(&quot;už existuje&quot;) ||</span>
-<span class="nc bnc" id="L446" title="All 2 branches missed.">								message.contains(&quot;already used&quot;) ||</span>
-<span class="nc bnc" id="L447" title="All 2 branches missed.">								message.contains(&quot;porušenie jedinečného obmedzenia&quot;) ||</span>
-<span class="nc bnc" id="L448" title="All 2 branches missed.">								message.contains(&quot;already indexed&quot;) ||</span>
-<span class="nc bnc" id="L449" title="All 4 branches missed.">								(message.contains(&quot;can't drop column&quot;) &amp;&amp; message.contains(&quot;check that it exists&quot;)) ||</span>
-<span class="nc bnc" id="L450" title="All 4 branches missed.">								message.contains(&quot;ora-01442 &quot;) || message.contains(&quot;stĺpec, ktorý má byť modifikovaný na not null, je už not null&quot;) ||</span>
+<span class="nc" id="L441">						if (</span>
+<span class="nc bnc" id="L442" title="All 2 branches missed.">								message.contains(&quot;already exists&quot;) ||</span>
+<span class="nc bnc" id="L443" title="All 2 branches missed.">								message.contains(&quot;duplicate column name&quot;) ||</span>
+<span class="nc bnc" id="L444" title="All 2 branches missed.">								message.contains(&quot;is specified more than once&quot;) ||</span>
+<span class="nc bnc" id="L445" title="All 2 branches missed.">								message.contains(&quot;duplicate entry&quot;) ||</span>
+<span class="nc bnc" id="L446" title="All 2 branches missed.">								message.contains(&quot;already an object&quot;) ||</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">								message.contains(&quot;tabuľke existuje&quot;) ||</span>
+<span class="nc bnc" id="L448" title="All 2 branches missed.">								message.contains(&quot;duplicate key&quot;) ||</span>
+<span class="nc bnc" id="L449" title="All 2 branches missed.">								message.contains(&quot;názov už používa existujúci objekt&quot;) ||</span>
+<span class="nc bnc" id="L450" title="All 2 branches missed.">								message.contains(&quot;už existuje&quot;) ||</span>
+<span class="nc bnc" id="L451" title="All 2 branches missed.">								message.contains(&quot;already used&quot;) ||</span>
+<span class="nc bnc" id="L452" title="All 2 branches missed.">								message.contains(&quot;porušenie jedinečného obmedzenia&quot;) ||</span>
+<span class="nc bnc" id="L453" title="All 2 branches missed.">								message.contains(&quot;already indexed&quot;) ||</span>
+<span class="nc bnc" id="L454" title="All 4 branches missed.">								(message.contains(&quot;can't drop column&quot;) &amp;&amp; message.contains(&quot;check that it exists&quot;)) ||</span>
+<span class="nc bnc" id="L455" title="All 4 branches missed.">								message.contains(&quot;ora-01442 &quot;) || message.contains(&quot;stĺpec, ktorý má byť modifikovaný na not null, je už not null&quot;) ||</span>
 								//mssql premenovanie stlpca, ktory uz je premenovany
-<span class="nc bnc" id="L452" title="All 2 branches missed.">								message.contains(&quot;either the parameter @objname is ambiguous or the claimed @objtype (column) is wrong&quot;)</span>
+<span class="nc bnc" id="L457" title="All 2 branches missed.">								message.contains(&quot;either the parameter @objname is ambiguous or the claimed @objtype (column) is wrong&quot;) ||</span>
+<span class="nc bnc" id="L458" title="All 2 branches missed.">								message.contains(&quot;column to be modified to NULL cannot be modified to NULL&quot;)</span>
 
 							)
 						{
 							//uz existuje, je to OK
-<span class="nc" id="L457">							Logger.println(UpdateDatabase.class, &quot;[EXISTS] &quot;);</span>
-<span class="nc" id="L458">							Logger.debug(UpdateDatabase.class, e.getMessage());</span>
+<span class="nc" id="L463">							Logger.println(UpdateDatabase.class, &quot;[EXISTS] &quot;);</span>
+<span class="nc" id="L464">							Logger.debug(UpdateDatabase.class, e.getMessage());</span>
 						}
 						else
 						{
 							//Logger.System.out.println(&quot;SQL: &quot;+sql);
-<span class="nc" id="L463">							Logger.error(UpdateDatabase.class,String.format(&quot;note: %s, [FAIL], %nSQL: %s&quot;, udb.getNote(), sql));</span>
+<span class="nc" id="L469">							Logger.error(UpdateDatabase.class,String.format(&quot;note: %s, [FAIL], %nSQL: %s&quot;, udb.getNote(), sql));</span>
 							//sk.iway.iwcm.Logger.error(e);
-<span class="nc" id="L465">							sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L466">							updateSuccess = false;</span>
+<span class="nc" id="L471">							sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L472">							updateSuccess = false;</span>
 						}
 					}
 					finally
 					{
 						try
 						{
-<span class="nc bnc" id="L473" title="All 2 branches missed.">							if (sta != null)</span>
-<span class="nc" id="L474">								sta.close();</span>
+<span class="nc bnc" id="L479" title="All 2 branches missed.">							if (sta != null)</span>
+<span class="nc" id="L480">								sta.close();</span>
 						}
-<span class="nc" id="L476">						catch (Exception ex2)</span>
+<span class="nc" id="L482">						catch (Exception ex2)</span>
 						{
-<span class="nc" id="L478">						}</span>
-<span class="nc" id="L479">					}</span>
+<span class="nc" id="L484">						}</span>
+<span class="nc" id="L485">					}</span>
 				}
 			}
 
-<span class="nc bnc" id="L483" title="All 2 branches missed.">			if (updateSuccess)</span>
+<span class="nc bnc" id="L489" title="All 2 branches missed.">			if (updateSuccess)</span>
 			{
 				//zapis, ze je to aktualizovane
-<span class="nc" id="L486">				saveSuccessUpdate(udb.getNote());</span>
-<span class="nc" id="L487">				Logger.println(UpdateDatabase.class,&quot;[OK]&quot;);</span>
+<span class="nc" id="L492">				saveSuccessUpdate(udb.getNote());</span>
+<span class="nc" id="L493">				Logger.println(UpdateDatabase.class,&quot;[OK]&quot;);</span>
 			}
 
-<span class="nc" id="L490">			rs = null;</span>
-<span class="nc" id="L491">			ps = null;</span>
-<span class="nc" id="L492">			sta = null;</span>
+<span class="nc" id="L496">			rs = null;</span>
+<span class="nc" id="L497">			ps = null;</span>
+<span class="nc" id="L498">			sta = null;</span>
 		}
-<span class="nc" id="L494">		catch (Exception ex)</span>
+<span class="nc" id="L500">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L496">			Logger.error(UpdateDatabase.class,&quot;SQL: &quot; + sql);</span>
-<span class="nc" id="L497">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L498">			Logger.println(UpdateDatabase.class,udb.getNote() + &quot; [FAIL]&quot;);</span>
+<span class="nc" id="L502">			Logger.error(UpdateDatabase.class,&quot;SQL: &quot; + sql);</span>
+<span class="nc" id="L503">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L504">			Logger.println(UpdateDatabase.class,udb.getNote() + &quot; [FAIL]&quot;);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L504" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L505">					db_conn.close();</span>
-<span class="nc bnc" id="L506" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L507">					rs.close();</span>
-<span class="nc bnc" id="L508" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L509">					ps.close();</span>
-<span class="nc bnc" id="L510" title="All 2 branches missed.">				if (sta != null)</span>
-<span class="nc" id="L511">					sta.close();</span>
+<span class="nc bnc" id="L510" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L511">					db_conn.close();</span>
+<span class="nc bnc" id="L512" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L513">					rs.close();</span>
+<span class="nc bnc" id="L514" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L515">					ps.close();</span>
+<span class="nc bnc" id="L516" title="All 2 branches missed.">				if (sta != null)</span>
+<span class="nc" id="L517">					sta.close();</span>
 			}
-<span class="nc" id="L513">			catch (Exception ex2)</span>
+<span class="nc" id="L519">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L515">			}</span>
+<span class="nc" id="L521">			}</span>
 		}
 
-<span class="nc" id="L518">		return(ret);</span>
+<span class="nc" id="L524">		return(ret);</span>
 	}
 
 	/**
@@ -526,58 +532,58 @@ public class UpdateDatabase
 	{
 		try
 		{
-<span class="nc" id="L529">			ConfDetails conf = null;</span>
-<span class="nc bnc" id="L530" title="All 2 branches missed.">			if (sql.toLowerCase().indexOf(&quot;update &quot;+ConfDB.CONF_TABLE_NAME)!=-1)</span>
+<span class="nc" id="L535">			ConfDetails conf = null;</span>
+<span class="nc bnc" id="L536" title="All 2 branches missed.">			if (sql.toLowerCase().indexOf(&quot;update &quot;+ConfDB.CONF_TABLE_NAME)!=-1)</span>
 			{
 				//update
 				//UPDATE webjet_conf SET serverMonitoringEnable='false'
-<span class="nc" id="L534">				int setStart = sql.indexOf(&quot;SET &quot;);</span>
-<span class="nc bnc" id="L535" title="All 2 branches missed.">				if (setStart == -1) return;</span>
-<span class="nc" id="L536">				int rovnasa = sql.indexOf('=', setStart);</span>
-<span class="nc bnc" id="L537" title="All 2 branches missed.">				if (rovnasa &lt; setStart) return;</span>
+<span class="nc" id="L540">				int setStart = sql.indexOf(&quot;SET &quot;);</span>
+<span class="nc bnc" id="L541" title="All 2 branches missed.">				if (setStart == -1) return;</span>
+<span class="nc" id="L542">				int rovnasa = sql.indexOf('=', setStart);</span>
+<span class="nc bnc" id="L543" title="All 2 branches missed.">				if (rovnasa &lt; setStart) return;</span>
 
 				//ziskaj meno
-<span class="nc" id="L540">				String confName = sql.substring(setStart+4, rovnasa);</span>
-<span class="nc" id="L541">				conf = ConfDB.getVariable(confName);</span>
-<span class="nc" id="L542">			}</span>
+<span class="nc" id="L546">				String confName = sql.substring(setStart+4, rovnasa);</span>
+<span class="nc" id="L547">				conf = ConfDB.getVariable(confName);</span>
+<span class="nc" id="L548">			}</span>
 			else
 			{
 				//insert
 				//INSERT INTO webjet_conf (name, value) VALUES ('editorNewDocDefaultAvailableChecked', 'false')
-<span class="nc" id="L547">				int apostrofStart = sql.indexOf('\'');</span>
-<span class="nc bnc" id="L548" title="All 2 branches missed.">				if (apostrofStart == -1) return;</span>
-<span class="nc" id="L549">				int apostrofKoniec = sql.indexOf('\'', apostrofStart+1);</span>
-<span class="nc bnc" id="L550" title="All 2 branches missed.">				if (apostrofKoniec &lt; apostrofStart) return;</span>
+<span class="nc" id="L553">				int apostrofStart = sql.indexOf('\'');</span>
+<span class="nc bnc" id="L554" title="All 2 branches missed.">				if (apostrofStart == -1) return;</span>
+<span class="nc" id="L555">				int apostrofKoniec = sql.indexOf('\'', apostrofStart+1);</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">				if (apostrofKoniec &lt; apostrofStart) return;</span>
 
 				//ziskaj meno
-<span class="nc" id="L553">				String confName = sql.substring(apostrofStart+1, apostrofKoniec);</span>
-<span class="nc" id="L554">				conf = ConfDB.getVariable(confName);</span>
+<span class="nc" id="L559">				String confName = sql.substring(apostrofStart+1, apostrofKoniec);</span>
+<span class="nc" id="L560">				conf = ConfDB.getVariable(confName);</span>
 			}
 
-<span class="nc bnc" id="L557" title="All 4 branches missed.">			if (conf == null &amp;&amp; sql.contains(&quot;SET name='syncGroupAndWebpageTitle' WHERE name='groupCreateBlankWebpageAfterCreate'&quot;)) {</span>
+<span class="nc bnc" id="L563" title="All 4 branches missed.">			if (conf == null &amp;&amp; sql.contains(&quot;SET name='syncGroupAndWebpageTitle' WHERE name='groupCreateBlankWebpageAfterCreate'&quot;)) {</span>
 				//specialita rozdelenia konf. premennej
-<span class="nc" id="L559">				conf = ConfDB.getVariable(&quot;syncGroupAndWebpageTitle&quot;);</span>
-<span class="nc bnc" id="L560" title="All 2 branches missed.">				if (conf != null) {</span>
-<span class="nc" id="L561">					conf.setName(&quot;syncGroupAndWebpageTitle&quot;);</span>
+<span class="nc" id="L565">				conf = ConfDB.getVariable(&quot;syncGroupAndWebpageTitle&quot;);</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">				if (conf != null) {</span>
+<span class="nc" id="L567">					conf.setName(&quot;syncGroupAndWebpageTitle&quot;);</span>
 
 					//vytvor nanovo aj povodnu premennu, ta bola premenovana
-<span class="nc" id="L564">					ConfDB.setName(&quot;groupCreateBlankWebpageAfterCreate&quot;, conf.getValue());</span>
-<span class="nc bnc" id="L565" title="All 2 branches missed.">					if (ClusterDB.isServerRunningInClusterMode()) ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-groupCreateBlankWebpageAfterCreate&quot;);</span>
+<span class="nc" id="L570">					ConfDB.setName(&quot;groupCreateBlankWebpageAfterCreate&quot;, conf.getValue());</span>
+<span class="nc bnc" id="L571" title="All 2 branches missed.">					if (ClusterDB.isServerRunningInClusterMode()) ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-groupCreateBlankWebpageAfterCreate&quot;);</span>
 				}
 			}
 
-<span class="nc bnc" id="L569" title="All 2 branches missed.">			if (conf != null)</span>
+<span class="nc bnc" id="L575" title="All 2 branches missed.">			if (conf != null)</span>
 			{
-<span class="nc" id="L571">				Logger.debug(UpdateDatabase.class, &quot;Updating Constants name=&quot;+conf.getName()+&quot; value=&quot;+conf.getValue());</span>
-<span class="nc" id="L572">				ConfDB.setName(conf.getName(), conf.getValue());</span>
-<span class="nc bnc" id="L573" title="All 2 branches missed.">				if (ClusterDB.isServerRunningInClusterMode()) ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-&quot;+conf.getName());</span>
+<span class="nc" id="L577">				Logger.debug(UpdateDatabase.class, &quot;Updating Constants name=&quot;+conf.getName()+&quot; value=&quot;+conf.getValue());</span>
+<span class="nc" id="L578">				ConfDB.setName(conf.getName(), conf.getValue());</span>
+<span class="nc bnc" id="L579" title="All 2 branches missed.">				if (ClusterDB.isServerRunningInClusterMode()) ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-&quot;+conf.getName());</span>
 			}
 		}
-<span class="nc" id="L576">		catch (Exception e)</span>
+<span class="nc" id="L582">		catch (Exception e)</span>
 		{
-<span class="nc" id="L578">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L579">		}</span>
-<span class="nc" id="L580">	}</span>
+<span class="nc" id="L584">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L585">		}</span>
+<span class="nc" id="L586">	}</span>
 
 	/**
 	 * Konverzia pristupovych prav na novy format
@@ -585,157 +591,157 @@ public class UpdateDatabase
 	private static void disabledItems()
 	{
 		//najskor skontroluj, ci je uz vytvorena tabulka
-<span class="pc bpc" id="L588" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;disabled items pouzivatelov&quot;)==false) return;</span>
+<span class="pc bpc" id="L594" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;disabled items pouzivatelov&quot;)==false) return;</span>
 
-<span class="fc" id="L590">		String note = &quot;Konverzia pristupovych prav&quot;;</span>
-<span class="pc bpc" id="L591" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L596">		String note = &quot;Konverzia pristupovych prav&quot;;</span>
+<span class="pc bpc" id="L597" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L593">		Connection db_conn = null;</span>
-<span class="nc" id="L594">		PreparedStatement ps = null;</span>
-<span class="nc" id="L595">		ResultSet rs = null;</span>
+<span class="nc" id="L599">		Connection db_conn = null;</span>
+<span class="nc" id="L600">		PreparedStatement ps = null;</span>
+<span class="nc" id="L601">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L598">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L604">			db_conn = DBPool.getConnection();</span>
 
 			int i;
 			//nacitaj si zoznam userov
-<span class="nc" id="L602">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  users WHERE is_admin=?&quot;);</span>
-<span class="nc" id="L603">			ps.setBoolean(1, true);</span>
-<span class="nc" id="L604">			rs = ps.executeQuery();</span>
-<span class="nc" id="L605">			List&lt;Identity&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L608">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  users WHERE is_admin=?&quot;);</span>
+<span class="nc" id="L609">			ps.setBoolean(1, true);</span>
+<span class="nc" id="L610">			rs = ps.executeQuery();</span>
+<span class="nc" id="L611">			List&lt;Identity&gt; users = new ArrayList&lt;&gt;();</span>
 			boolean isMenu;
 			StringBuilder menus;
-<span class="nc bnc" id="L608" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc bnc" id="L614" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L610">				Identity user = new Identity();</span>
-<span class="nc" id="L611">				user.setUserId(rs.getInt(&quot;user_id&quot;));</span>
-<span class="nc" id="L612">				user.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
-<span class="nc" id="L613">				user.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
+<span class="nc" id="L616">				Identity user = new Identity();</span>
+<span class="nc" id="L617">				user.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L618">				user.setFirstName(DB.getDbString(rs, &quot;first_name&quot;));</span>
+<span class="nc" id="L619">				user.setLastName(DB.getDbString(rs, &quot;last_name&quot;));</span>
 				//davame to do company!!!
-<span class="nc" id="L615">				user.setCompany(DB.getDbString(rs, &quot;disabled_items&quot;));</span>
+<span class="nc" id="L621">				user.setCompany(DB.getDbString(rs, &quot;disabled_items&quot;));</span>
 
-<span class="nc" id="L617">				menus = new StringBuilder();</span>
-<span class="nc bnc" id="L618" title="All 2 branches missed.">				for (i = 0; i &lt; 15; i++)</span>
+<span class="nc" id="L623">				menus = new StringBuilder();</span>
+<span class="nc bnc" id="L624" title="All 2 branches missed.">				for (i = 0; i &lt; 15; i++)</span>
 				{
-<span class="nc" id="L620">					isMenu = rs.getBoolean(&quot;menu&quot; + i);</span>
+<span class="nc" id="L626">					isMenu = rs.getBoolean(&quot;menu&quot; + i);</span>
 					//user.setMenu(i, );
-<span class="nc bnc" id="L622" title="All 2 branches missed.">					if (isMenu)</span>
+<span class="nc bnc" id="L628" title="All 2 branches missed.">					if (isMenu)</span>
 					{
-<span class="nc" id="L624">						menus.append('1');</span>
+<span class="nc" id="L630">						menus.append('1');</span>
 					}
 					else
 					{
-<span class="nc" id="L628">						menus.append('0');</span>
+<span class="nc" id="L634">						menus.append('0');</span>
 					}
 				}
-<span class="nc" id="L631">				user.setAdress(menus.toString());</span>
+<span class="nc" id="L637">				user.setAdress(menus.toString());</span>
 
-<span class="nc" id="L633">				users.add(user);</span>
-<span class="nc" id="L634">			}</span>
-<span class="nc" id="L635">			rs.close();</span>
-<span class="nc" id="L636">			ps.close();</span>
+<span class="nc" id="L639">				users.add(user);</span>
+<span class="nc" id="L640">			}</span>
+<span class="nc" id="L641">			rs.close();</span>
+<span class="nc" id="L642">			ps.close();</span>
 
 			//vymaz tabulku prav
-<span class="nc" id="L639">			ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items&quot;);</span>
-<span class="nc" id="L640">			ps.execute();</span>
-<span class="nc" id="L641">			ps.close();</span>
+<span class="nc" id="L645">			ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items&quot;);</span>
+<span class="nc" id="L646">			ps.execute();</span>
+<span class="nc" id="L647">			ps.close();</span>
 
-<span class="nc" id="L643">			String[] menuNames = new String[15];</span>
-<span class="nc" id="L644">			menuNames[0] = &quot;menuWebpages&quot;;</span>
-<span class="nc" id="L645">			menuNames[1] = &quot;menuTemplates&quot;;</span>
-<span class="nc" id="L646">			menuNames[2] = &quot;menuUsers&quot;;</span>
-<span class="nc" id="L647">			menuNames[3] = &quot;menuStats&quot;;</span>
-<span class="nc" id="L648">			menuNames[4] = &quot;menuEmail&quot;;</span>
-<span class="nc" id="L649">			menuNames[5] = &quot;menuCalendar&quot;;</span>
-<span class="nc" id="L650">			menuNames[6] = &quot;menuForms&quot;;</span>
-<span class="nc" id="L651">			menuNames[7] = &quot;menu_7&quot;;</span>
-<span class="nc" id="L652">			menuNames[8] = &quot;editorMiniEdit&quot;;</span>
-<span class="nc" id="L653">			menuNames[9] = &quot;menuQa&quot;;</span>
-<span class="nc" id="L654">			menuNames[10] = &quot;menuFbrowser&quot;;</span>
-<span class="nc" id="L655">			menuNames[11] = &quot;menuInquiry&quot;;</span>
-<span class="nc" id="L656">			menuNames[12] = &quot;menuGallery&quot;;</span>
-<span class="nc" id="L657">			menuNames[13] = &quot;menu_13&quot;;</span>
-<span class="nc" id="L658">			menuNames[14] = &quot;menu_14&quot;;</span>
+<span class="nc" id="L649">			String[] menuNames = new String[15];</span>
+<span class="nc" id="L650">			menuNames[0] = &quot;menuWebpages&quot;;</span>
+<span class="nc" id="L651">			menuNames[1] = &quot;menuTemplates&quot;;</span>
+<span class="nc" id="L652">			menuNames[2] = &quot;menuUsers&quot;;</span>
+<span class="nc" id="L653">			menuNames[3] = &quot;menuStats&quot;;</span>
+<span class="nc" id="L654">			menuNames[4] = &quot;menuEmail&quot;;</span>
+<span class="nc" id="L655">			menuNames[5] = &quot;menuCalendar&quot;;</span>
+<span class="nc" id="L656">			menuNames[6] = &quot;menuForms&quot;;</span>
+<span class="nc" id="L657">			menuNames[7] = &quot;menu_7&quot;;</span>
+<span class="nc" id="L658">			menuNames[8] = &quot;editorMiniEdit&quot;;</span>
+<span class="nc" id="L659">			menuNames[9] = &quot;menuQa&quot;;</span>
+<span class="nc" id="L660">			menuNames[10] = &quot;menuFbrowser&quot;;</span>
+<span class="nc" id="L661">			menuNames[11] = &quot;menuInquiry&quot;;</span>
+<span class="nc" id="L662">			menuNames[12] = &quot;menuGallery&quot;;</span>
+<span class="nc" id="L663">			menuNames[13] = &quot;menu_13&quot;;</span>
+<span class="nc" id="L664">			menuNames[14] = &quot;menu_14&quot;;</span>
 
 			//ok, mame userov, naimportuj to do novej tabulky
 			StringTokenizer st;
 			String disabledItem;
-<span class="nc bnc" id="L663" title="All 2 branches missed.">			for (Identity user : users)</span>
+<span class="nc bnc" id="L669" title="All 2 branches missed.">			for (Identity user : users)</span>
 			{
-<span class="nc" id="L665">				Logger.println(UpdateDatabase.class,&quot;Konverujem prava: user_id=&quot;+user.getUserId()+&quot; name=&quot;+DB.internationalToEnglish(user.getFullName()));</span>
+<span class="nc" id="L671">				Logger.println(UpdateDatabase.class,&quot;Konverujem prava: user_id=&quot;+user.getUserId()+&quot; name=&quot;+DB.internationalToEnglish(user.getFullName()));</span>
 				//najskor zapis menu
 
-<span class="nc bnc" id="L668" title="All 2 branches missed.">				for (i = 0; i &lt; 15; i++)</span>
+<span class="nc bnc" id="L674" title="All 2 branches missed.">				for (i = 0; i &lt; 15; i++)</span>
 				{
-<span class="nc bnc" id="L670" title="All 4 branches missed.">					if (user.getAdress().charAt(i) == '0' &amp;&amp; menuNames[i].length()&gt;1)</span>
+<span class="nc bnc" id="L676" title="All 4 branches missed.">					if (user.getAdress().charAt(i) == '0' &amp;&amp; menuNames[i].length()&gt;1)</span>
 					{
-<span class="nc" id="L672">						ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
-<span class="nc" id="L673">						ps.setInt(1, user.getUserId());</span>
-<span class="nc" id="L674">						ps.setString(2, menuNames[i]);</span>
-<span class="nc" id="L675">						ps.execute();</span>
-<span class="nc" id="L676">						ps.close();</span>
+<span class="nc" id="L678">						ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L679">						ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L680">						ps.setString(2, menuNames[i]);</span>
+<span class="nc" id="L681">						ps.execute();</span>
+<span class="nc" id="L682">						ps.close();</span>
 					}
 				}
 
 				//teraz zapis disabled items - disabled items mame v company
-<span class="nc" id="L681">				st = new StringTokenizer(user.getCompany(), &quot;,&quot;);</span>
-<span class="nc bnc" id="L682" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="nc" id="L687">				st = new StringTokenizer(user.getCompany(), &quot;,&quot;);</span>
+<span class="nc bnc" id="L688" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L684">					disabledItem = st.nextToken();</span>
-<span class="nc bnc" id="L685" title="All 2 branches missed.">					if (disabledItem.length()&gt;1)</span>
+<span class="nc" id="L690">					disabledItem = st.nextToken();</span>
+<span class="nc bnc" id="L691" title="All 2 branches missed.">					if (disabledItem.length()&gt;1)</span>
 					{
-<span class="nc" id="L687">						ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
-<span class="nc" id="L688">						ps.setInt(1, user.getUserId());</span>
-<span class="nc" id="L689">						ps.setString(2, disabledItem);</span>
-<span class="nc" id="L690">						ps.execute();</span>
-<span class="nc" id="L691">						ps.close();</span>
+<span class="nc" id="L693">						ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L694">						ps.setInt(1, user.getUserId());</span>
+<span class="nc" id="L695">						ps.setString(2, disabledItem);</span>
+<span class="nc" id="L696">						ps.execute();</span>
+<span class="nc" id="L697">						ps.close();</span>
 					}
 				}
-<span class="nc" id="L694">			}</span>
+<span class="nc" id="L700">			}</span>
 
 			//zapis, ze sme to uz skonvertovali
-<span class="nc" id="L697">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L703">			saveSuccessUpdate(note);</span>
 
 			//dropni fields
-<span class="nc" id="L700">			String sql = &quot;ALTER TABLE  users DROP &quot;;</span>
-<span class="nc bnc" id="L701" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+<span class="nc" id="L706">			String sql = &quot;ALTER TABLE  users DROP &quot;;</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
 			{
-<span class="nc" id="L703">				sql = &quot;ALTER TABLE  users DROP COLUMN &quot;;</span>
+<span class="nc" id="L709">				sql = &quot;ALTER TABLE  users DROP COLUMN &quot;;</span>
 			}
 			//dropni menuXX
-<span class="nc bnc" id="L706" title="All 2 branches missed.">			for (i = 0; i &lt; 15; i++)</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">			for (i = 0; i &lt; 15; i++)</span>
 			{
-<span class="nc" id="L708">				ps = db_conn.prepareStatement(sql+&quot;menu&quot;+i);</span>
-<span class="nc" id="L709">				ps.execute();</span>
-<span class="nc" id="L710">				ps.close();</span>
+<span class="nc" id="L714">				ps = db_conn.prepareStatement(sql+&quot;menu&quot;+i);</span>
+<span class="nc" id="L715">				ps.execute();</span>
+<span class="nc" id="L716">				ps.close();</span>
 			}
 
-<span class="nc" id="L713">			ps = db_conn.prepareStatement(sql+&quot;disabled_items&quot;);</span>
-<span class="nc" id="L714">			ps.execute();</span>
-<span class="nc" id="L715">			ps.close();</span>
+<span class="nc" id="L719">			ps = db_conn.prepareStatement(sql+&quot;disabled_items&quot;);</span>
+<span class="nc" id="L720">			ps.execute();</span>
+<span class="nc" id="L721">			ps.close();</span>
 
 
-<span class="nc" id="L718">			rs = null;</span>
-<span class="nc" id="L719">			ps = null;</span>
+<span class="nc" id="L724">			rs = null;</span>
+<span class="nc" id="L725">			ps = null;</span>
 		}
-<span class="nc" id="L721">		catch (Exception ex)</span>
+<span class="nc" id="L727">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L723">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L729">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L729" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
-<span class="nc bnc" id="L730" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L731" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L735" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L737" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
-<span class="nc" id="L733">			catch (Exception ex2)</span>
+<span class="nc" id="L739">			catch (Exception ex2)</span>
 			{
 
-<span class="nc" id="L736">			}</span>
+<span class="nc" id="L742">			}</span>
 		}
-<span class="nc" id="L738">	}</span>
+<span class="nc" id="L744">	}</span>
 
 	/**
 	 * Rozdelenie celeho mena na titul, meno, priezvisko
@@ -743,81 +749,81 @@ public class UpdateDatabase
 	private static void splitFullName()
 	{
 		//najskor skontroluj, ci je uz vytvorena tabulka
-<span class="pc bpc" id="L746" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;rozdelenie full name na meno a priezvisko&quot;)==false) return;</span>
+<span class="pc bpc" id="L752" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;rozdelenie full name na meno a priezvisko&quot;)==false) return;</span>
 
-<span class="fc" id="L748">		String note = &quot;implemetacia rozdelenia full name&quot;;</span>
-<span class="pc bpc" id="L749" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L754">		String note = &quot;implemetacia rozdelenia full name&quot;;</span>
+<span class="pc bpc" id="L755" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L751">		Connection db_conn = null;</span>
-<span class="nc" id="L752">		PreparedStatement ps = null;</span>
-<span class="nc" id="L753">		ResultSet rs = null;</span>
+<span class="nc" id="L757">		Connection db_conn = null;</span>
+<span class="nc" id="L758">		PreparedStatement ps = null;</span>
+<span class="nc" id="L759">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L756">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L762">			db_conn = DBPool.getConnection();</span>
 
 			//nacitaj si zoznam userov
-<span class="nc" id="L759">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  users&quot;);</span>
-<span class="nc" id="L760">			rs = ps.executeQuery();</span>
-<span class="nc" id="L761">			List&lt;Identity&gt; users = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L762" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L765">			ps = db_conn.prepareStatement(&quot;SELECT * FROM  users&quot;);</span>
+<span class="nc" id="L766">			rs = ps.executeQuery();</span>
+<span class="nc" id="L767">			List&lt;Identity&gt; users = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L768" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L764">				Identity user = new Identity();</span>
-<span class="nc" id="L765">				user.setUserId(rs.getInt(&quot;user_id&quot;));</span>
-<span class="nc" id="L766">				user.splitFullName(DB.getDbString(rs, &quot;full_name&quot;));</span>
-<span class="nc" id="L767">				users.add(user);</span>
-<span class="nc" id="L768">			}</span>
-<span class="nc" id="L769">			rs.close();</span>
-<span class="nc" id="L770">			ps.close();</span>
+<span class="nc" id="L770">				Identity user = new Identity();</span>
+<span class="nc" id="L771">				user.setUserId(rs.getInt(&quot;user_id&quot;));</span>
+<span class="nc" id="L772">				user.splitFullName(DB.getDbString(rs, &quot;full_name&quot;));</span>
+<span class="nc" id="L773">				users.add(user);</span>
+<span class="nc" id="L774">			}</span>
+<span class="nc" id="L775">			rs.close();</span>
+<span class="nc" id="L776">			ps.close();</span>
 
 			//ok, mame userov, rozdel im meno a priezvisko
-<span class="nc bnc" id="L773" title="All 2 branches missed.">			for (Identity user : users)</span>
+<span class="nc bnc" id="L779" title="All 2 branches missed.">			for (Identity user : users)</span>
 			{
-<span class="nc" id="L775">				Logger.println(UpdateDatabase.class,&quot;Konverujem cele meno: user_id=&quot;+user.getUserId()+&quot; name=&quot;+DB.internationalToEnglish(user.getFullName()));</span>
+<span class="nc" id="L781">				Logger.println(UpdateDatabase.class,&quot;Konverujem cele meno: user_id=&quot;+user.getUserId()+&quot; name=&quot;+DB.internationalToEnglish(user.getFullName()));</span>
 
-<span class="nc" id="L777">				ps = db_conn.prepareStatement(&quot;UPDATE  users SET title=?, first_name=?, last_name=? WHERE user_id=?&quot;);</span>
-<span class="nc" id="L778">				ps.setString(1, user.getTitle());</span>
-<span class="nc" id="L779">				ps.setString(2, user.getFirstName());</span>
-<span class="nc" id="L780">				ps.setString(3, user.getLastName());</span>
-<span class="nc" id="L781">				ps.setInt(4, user.getUserId());</span>
-<span class="nc" id="L782">				ps.execute();</span>
-<span class="nc" id="L783">				ps.close();</span>
-<span class="nc" id="L784">			}</span>
+<span class="nc" id="L783">				ps = db_conn.prepareStatement(&quot;UPDATE  users SET title=?, first_name=?, last_name=? WHERE user_id=?&quot;);</span>
+<span class="nc" id="L784">				ps.setString(1, user.getTitle());</span>
+<span class="nc" id="L785">				ps.setString(2, user.getFirstName());</span>
+<span class="nc" id="L786">				ps.setString(3, user.getLastName());</span>
+<span class="nc" id="L787">				ps.setInt(4, user.getUserId());</span>
+<span class="nc" id="L788">				ps.execute();</span>
+<span class="nc" id="L789">				ps.close();</span>
+<span class="nc" id="L790">			}</span>
 
 			//zapis, ze sme to uz skonvertovali
-<span class="nc" id="L787">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L793">			saveSuccessUpdate(note);</span>
 
-<span class="nc" id="L789">			String sql = &quot;ALTER TABLE  users DROP full_name&quot;;</span>
-<span class="nc bnc" id="L790" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+<span class="nc" id="L795">			String sql = &quot;ALTER TABLE  users DROP full_name&quot;;</span>
+<span class="nc bnc" id="L796" title="All 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
 			{
-<span class="nc" id="L792">				sql = &quot;ALTER TABLE  users DROP COLUMN full_name&quot;;</span>
+<span class="nc" id="L798">				sql = &quot;ALTER TABLE  users DROP COLUMN full_name&quot;;</span>
 			}
 			//dropni full name
-<span class="nc" id="L795">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L796">			ps.execute();</span>
-<span class="nc" id="L797">			ps.close();</span>
+<span class="nc" id="L801">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L802">			ps.execute();</span>
+<span class="nc" id="L803">			ps.close();</span>
 
 
-<span class="nc" id="L800">			rs = null;</span>
-<span class="nc" id="L801">			ps = null;</span>
+<span class="nc" id="L806">			rs = null;</span>
+<span class="nc" id="L807">			ps = null;</span>
 		}
-<span class="nc" id="L803">		catch (Exception ex)</span>
+<span class="nc" id="L809">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L805">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L811">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L811" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
-<span class="nc bnc" id="L812" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L813" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L817" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
+<span class="nc bnc" id="L818" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L819" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
-<span class="nc" id="L815">			catch (Exception ex2)</span>
+<span class="nc" id="L821">			catch (Exception ex2)</span>
 			{
 
-<span class="nc" id="L818">			}</span>
+<span class="nc" id="L824">			}</span>
 		}
-<span class="nc" id="L820">	}</span>
+<span class="nc" id="L826">	}</span>
 
 	/**
 	 * Priprava synchronizacie medzi live a stage serverom
@@ -826,60 +832,60 @@ public class UpdateDatabase
 	private static void prepareSync()
 	{
 		//najskor skontroluj, ci je uz vytvorena tabulka
-<span class="pc bpc" id="L829" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;id a stav synchronizacie (status: 0=novy, 1=updated, 2=synchronized)&quot;)==false) return;</span>
+<span class="pc bpc" id="L835" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;id a stav synchronizacie (status: 0=novy, 1=updated, 2=synchronized)&quot;)==false) return;</span>
 
-<span class="fc" id="L831">		String note = &quot;priprava synchronizacie&quot;;</span>
-<span class="pc bpc" id="L832" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L837">		String note = &quot;priprava synchronizacie&quot;;</span>
+<span class="pc bpc" id="L838" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L834">		Connection db_conn = null;</span>
-<span class="nc" id="L835">		PreparedStatement ps = null;</span>
+<span class="nc" id="L840">		Connection db_conn = null;</span>
+<span class="nc" id="L841">		PreparedStatement ps = null;</span>
 		try
 		{
-<span class="nc" id="L838">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L844">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L840">			Logger.println(UpdateDatabase.class,&quot;PREPARE SYNC: groups&quot;);</span>
+<span class="nc" id="L846">			Logger.println(UpdateDatabase.class,&quot;PREPARE SYNC: groups&quot;);</span>
 
 			//groups
-<span class="nc" id="L843">			ps = db_conn.prepareStatement(&quot;UPDATE groups SET sync_id=group_id, sync_status=2&quot;);</span>
-<span class="nc" id="L844">			ps.execute();</span>
-<span class="nc" id="L845">			ps.close();</span>
+<span class="nc" id="L849">			ps = db_conn.prepareStatement(&quot;UPDATE groups SET sync_id=group_id, sync_status=2&quot;);</span>
+<span class="nc" id="L850">			ps.execute();</span>
+<span class="nc" id="L851">			ps.close();</span>
 
-<span class="nc" id="L847">			Logger.println(UpdateDatabase.class,&quot;PREPARE SYNC: documents&quot;);</span>
+<span class="nc" id="L853">			Logger.println(UpdateDatabase.class,&quot;PREPARE SYNC: documents&quot;);</span>
 
 			//	documents
-<span class="nc" id="L850">			ps = db_conn.prepareStatement(&quot;UPDATE documents SET sync_id=doc_id, sync_status=2&quot;);</span>
-<span class="nc" id="L851">			ps.execute();</span>
-<span class="nc" id="L852">			ps.close();</span>
+<span class="nc" id="L856">			ps = db_conn.prepareStatement(&quot;UPDATE documents SET sync_id=doc_id, sync_status=2&quot;);</span>
+<span class="nc" id="L857">			ps.execute();</span>
+<span class="nc" id="L858">			ps.close();</span>
 
-<span class="nc" id="L854">			Logger.println(UpdateDatabase.class,&quot;PREPARE SYNC: documents_history&quot;);</span>
+<span class="nc" id="L860">			Logger.println(UpdateDatabase.class,&quot;PREPARE SYNC: documents_history&quot;);</span>
 
 			//	documents_history
-<span class="nc" id="L857">			ps = db_conn.prepareStatement(&quot;UPDATE documents_history SET sync_id=history_id, sync_status=2&quot;);</span>
-<span class="nc" id="L858">			ps.execute();</span>
-<span class="nc" id="L859">			ps.close();</span>
+<span class="nc" id="L863">			ps = db_conn.prepareStatement(&quot;UPDATE documents_history SET sync_id=history_id, sync_status=2&quot;);</span>
+<span class="nc" id="L864">			ps.execute();</span>
+<span class="nc" id="L865">			ps.close();</span>
 
 			//zapis, ze sme to uz skonvertovali
-<span class="nc" id="L862">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L868">			saveSuccessUpdate(note);</span>
 
-<span class="nc" id="L864">			ps = null;</span>
+<span class="nc" id="L870">			ps = null;</span>
 		}
-<span class="nc" id="L866">		catch (Exception ex)</span>
+<span class="nc" id="L872">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L868">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L874">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L874" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
-<span class="nc bnc" id="L875" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
+<span class="nc bnc" id="L881" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
-<span class="nc" id="L877">			catch (Exception ex2)</span>
+<span class="nc" id="L883">			catch (Exception ex2)</span>
 			{
 
-<span class="nc" id="L880">			}</span>
+<span class="nc" id="L886">			}</span>
 		}
-<span class="nc" id="L882">	}</span>
+<span class="nc" id="L888">	}</span>
 
 	/**
 	 * Nastavi registracny datum pouzivatelom (podla last_logon, alebo na aktualny datum)
@@ -887,75 +893,75 @@ public class UpdateDatabase
 	 */
 	private static void setRegDate()
 	{
-<span class="fc" id="L890">		String note = &quot;nastavenie reg date pouzivatelov&quot;;</span>
-<span class="pc bpc" id="L891" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L896">		String note = &quot;nastavenie reg date pouzivatelov&quot;;</span>
+<span class="pc bpc" id="L897" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L893">		Connection db_conn = null;</span>
-<span class="nc" id="L894">		PreparedStatement ps = null;</span>
+<span class="nc" id="L899">		Connection db_conn = null;</span>
+<span class="nc" id="L900">		PreparedStatement ps = null;</span>
 		try
 		{
-<span class="nc" id="L897">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L898">			Logger.println(UpdateDatabase.class,&quot;Nastavenie reg date pouzivatelov&quot;);</span>
+<span class="nc" id="L903">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L904">			Logger.println(UpdateDatabase.class,&quot;Nastavenie reg date pouzivatelov&quot;);</span>
 
-<span class="nc" id="L900">			ps = db_conn.prepareStatement(&quot;UPDATE  users SET reg_date=last_logon WHERE reg_date IS NULL&quot;);</span>
-<span class="nc" id="L901">			ps.execute();</span>
-<span class="nc" id="L902">			ps.close();</span>
+<span class="nc" id="L906">			ps = db_conn.prepareStatement(&quot;UPDATE  users SET reg_date=last_logon WHERE reg_date IS NULL&quot;);</span>
+<span class="nc" id="L907">			ps.execute();</span>
+<span class="nc" id="L908">			ps.close();</span>
 
-<span class="nc" id="L904">			ps = db_conn.prepareStatement(&quot;UPDATE  users SET reg_date=? WHERE reg_date IS NULL&quot;);</span>
-<span class="nc" id="L905">			ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
-<span class="nc" id="L906">			ps.execute();</span>
-<span class="nc" id="L907">			ps.close();</span>
+<span class="nc" id="L910">			ps = db_conn.prepareStatement(&quot;UPDATE  users SET reg_date=? WHERE reg_date IS NULL&quot;);</span>
+<span class="nc" id="L911">			ps.setTimestamp(1, new Timestamp(Tools.getNow()));</span>
+<span class="nc" id="L912">			ps.execute();</span>
+<span class="nc" id="L913">			ps.close();</span>
 
 			//zapis, ze sme to uz skonvertovali
-<span class="nc" id="L910">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L916">			saveSuccessUpdate(note);</span>
 
-<span class="nc" id="L912">			ps = null;</span>
+<span class="nc" id="L918">			ps = null;</span>
 		}
-<span class="nc" id="L914">		catch (Exception ex)</span>
+<span class="nc" id="L920">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L916">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L922">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L922" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
-<span class="nc bnc" id="L923" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L928" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
+<span class="nc bnc" id="L929" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
-<span class="nc" id="L925">			catch (Exception ex2)</span>
+<span class="nc" id="L931">			catch (Exception ex2)</span>
 			{
 
-<span class="nc" id="L928">			}</span>
+<span class="nc" id="L934">			}</span>
 		}
-<span class="nc" id="L930">	}</span>
+<span class="nc" id="L936">	}</span>
 
 
 
 	private static void importMeniny()
 	{
 		//skontroluj ci existuje DB tabulka
-<span class="pc bpc" id="L937" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;kalendar s meninami&quot;)==false) return;</span>
+<span class="pc bpc" id="L943" title="1 of 2 branches missed.">		if (isAllreadyUpdated(&quot;kalendar s meninami&quot;)==false) return;</span>
 
-<span class="nc" id="L939">		String note = &quot;import kalendara menin z excelu&quot;;</span>
-<span class="nc bnc" id="L940" title="All 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="nc" id="L945">		String note = &quot;import kalendara menin z excelu&quot;;</span>
+<span class="nc bnc" id="L946" title="All 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
 		try
 		{
-<span class="nc" id="L944">			FileInputStream in = new FileInputStream(Tools.getRealPath(&quot;/WEB-INF/sql/meniny.xls&quot;));</span>
-<span class="nc" id="L945">			MeninyImport mi = new MeninyImport(in, null, null);</span>
-<span class="nc" id="L946">			Prop prop = Prop.getInstance(Constants.getServletContext(), &quot;sk&quot;, false);</span>
-<span class="nc" id="L947">			mi.doImport(prop);</span>
+<span class="nc" id="L950">			FileInputStream in = new FileInputStream(Tools.getRealPath(&quot;/WEB-INF/sql/meniny.xls&quot;));</span>
+<span class="nc" id="L951">			MeninyImport mi = new MeninyImport(in, null, null);</span>
+<span class="nc" id="L952">			Prop prop = Prop.getInstance(Constants.getServletContext(), &quot;sk&quot;, false);</span>
+<span class="nc" id="L953">			mi.doImport(prop);</span>
 
 			//zapis do DB, ze je to importnute
-<span class="nc" id="L950">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L956">			saveSuccessUpdate(note);</span>
 
-<span class="nc" id="L952">			in.close();</span>
+<span class="nc" id="L958">			in.close();</span>
 		}
-<span class="nc" id="L954">		catch (Exception ex)</span>
+<span class="nc" id="L960">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L956">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L957">		}</span>
-<span class="nc" id="L958">	}</span>
+<span class="nc" id="L962">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L963">		}</span>
+<span class="nc" id="L964">	}</span>
 
 	/**
 	 * Zkonvertuje perex_group v tab. documents z perex_group_name na
@@ -964,105 +970,105 @@ public class UpdateDatabase
 	 */
 	public static void convertPerexGroups()
 	{
-<span class="fc" id="L967">		String note = &quot;konverzia perex_group v tab. documents z name na id&quot;;</span>
-<span class="pc bpc" id="L968" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L973">		String note = &quot;konverzia perex_group v tab. documents z name na id&quot;;</span>
+<span class="pc bpc" id="L974" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L970">		Connection db_conn = null;</span>
-<span class="nc" id="L971">		PreparedStatement ps = null;</span>
-<span class="nc" id="L972">		ResultSet rs = null;</span>
+<span class="nc" id="L976">		Connection db_conn = null;</span>
+<span class="nc" id="L977">		PreparedStatement ps = null;</span>
+<span class="nc" id="L978">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L975">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L981">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L977">			Logger.println(UpdateDatabase.class,&quot;Converting perex_group&quot;);</span>
-<span class="nc" id="L978">			Map&lt;String, Integer&gt; perexGroups = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L979">			ps = db_conn.prepareStatement(&quot;SELECT * FROM perex_groups&quot;);</span>
-<span class="nc" id="L980">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L981" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L983">			Logger.println(UpdateDatabase.class,&quot;Converting perex_group&quot;);</span>
+<span class="nc" id="L984">			Map&lt;String, Integer&gt; perexGroups = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L985">			ps = db_conn.prepareStatement(&quot;SELECT * FROM perex_groups&quot;);</span>
+<span class="nc" id="L986">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L987" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L983">				perexGroups.put(DB.getDbString(rs, &quot;perex_group_name&quot;), Integer.valueOf(rs.getInt(&quot;perex_group_id&quot;)));</span>
+<span class="nc" id="L989">				perexGroups.put(DB.getDbString(rs, &quot;perex_group_name&quot;), Integer.valueOf(rs.getInt(&quot;perex_group_id&quot;)));</span>
 			}
-<span class="nc" id="L985">			rs.close();</span>
-<span class="nc" id="L986">			ps.close();</span>
+<span class="nc" id="L991">			rs.close();</span>
+<span class="nc" id="L992">			ps.close();</span>
 
-<span class="nc bnc" id="L988" title="All 2 branches missed.">			if (perexGroups.size() &gt; 0)</span>
+<span class="nc bnc" id="L994" title="All 2 branches missed.">			if (perexGroups.size() &gt; 0)</span>
 			{
 				String gName;
-<span class="nc" id="L991">				String perexGroupStr = null;</span>
+<span class="nc" id="L997">				String perexGroupStr = null;</span>
 				StringBuilder newPerexGroupStr;
 				StringTokenizer st;
-<span class="nc" id="L994">				List&lt;DocDetails&gt; groups = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1000">				List&lt;DocDetails&gt; groups = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L996">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE perex_group IS NOT NULL&quot;);</span>
-<span class="nc" id="L997">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L998" title="All 2 branches missed.">				while (rs.next())</span>
+<span class="nc" id="L1002">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents WHERE perex_group IS NOT NULL&quot;);</span>
+<span class="nc" id="L1003">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1004" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="nc" id="L1000">					DocDetails docDet = new DocDetails();</span>
-<span class="nc" id="L1001">					docDet.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
-<span class="nc" id="L1002">					docDet.setPerexGroupString(DB.getDbString(rs, &quot;perex_group&quot;));</span>
-<span class="nc" id="L1003">					groups.add(docDet);</span>
-<span class="nc" id="L1004">				}</span>
-<span class="nc" id="L1005">				rs.close();</span>
-<span class="nc" id="L1006">				ps.close();</span>
+<span class="nc" id="L1006">					DocDetails docDet = new DocDetails();</span>
+<span class="nc" id="L1007">					docDet.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L1008">					docDet.setPerexGroupString(DB.getDbString(rs, &quot;perex_group&quot;));</span>
+<span class="nc" id="L1009">					groups.add(docDet);</span>
+<span class="nc" id="L1010">				}</span>
+<span class="nc" id="L1011">				rs.close();</span>
+<span class="nc" id="L1012">				ps.close();</span>
 
-<span class="nc bnc" id="L1008" title="All 2 branches missed.">				for (DocDetails docDet : groups)</span>
+<span class="nc bnc" id="L1014" title="All 2 branches missed.">				for (DocDetails docDet : groups)</span>
 				{
-<span class="nc" id="L1010">					newPerexGroupStr = null;</span>
-<span class="nc" id="L1011">					perexGroupStr = docDet.getPerexGroupString();</span>
-<span class="nc" id="L1012">					st = new StringTokenizer(perexGroupStr, &quot;,&quot;);</span>
-<span class="nc bnc" id="L1013" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
+<span class="nc" id="L1016">					newPerexGroupStr = null;</span>
+<span class="nc" id="L1017">					perexGroupStr = docDet.getPerexGroupString();</span>
+<span class="nc" id="L1018">					st = new StringTokenizer(perexGroupStr, &quot;,&quot;);</span>
+<span class="nc bnc" id="L1019" title="All 2 branches missed.">					while (st.hasMoreTokens())</span>
 					{
-<span class="nc" id="L1015">						gName = st.nextToken().trim();</span>
-<span class="nc bnc" id="L1016" title="All 2 branches missed.">						if (perexGroups.get(gName) != null)</span>
+<span class="nc" id="L1021">						gName = st.nextToken().trim();</span>
+<span class="nc bnc" id="L1022" title="All 2 branches missed.">						if (perexGroups.get(gName) != null)</span>
 						{
-<span class="nc bnc" id="L1018" title="All 2 branches missed.">							if (newPerexGroupStr==null)</span>
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">							if (newPerexGroupStr==null)</span>
 							{
-<span class="nc" id="L1020">								newPerexGroupStr = new StringBuilder(&quot;,&quot;).append(perexGroups.get(gName)).append(',');</span>
+<span class="nc" id="L1026">								newPerexGroupStr = new StringBuilder(&quot;,&quot;).append(perexGroups.get(gName)).append(',');</span>
 							}
 							else
 							{
-<span class="nc" id="L1024">								newPerexGroupStr.append(perexGroups.get(gName)).append(',');</span>
+<span class="nc" id="L1030">								newPerexGroupStr.append(perexGroups.get(gName)).append(',');</span>
 							}
 						}
 					}
 					//Logger.println(UpdateDatabase.class,&quot;****\nDocID: &quot; +docDet.getDocId()+ &quot;\nold groups: &quot; +perexGroupStr+ &quot;\nnew groups; &quot; +newPerexGroupStr);
 
-<span class="nc bnc" id="L1030" title="All 2 branches missed.">					if (newPerexGroupStr!=null)</span>
+<span class="nc bnc" id="L1036" title="All 2 branches missed.">					if (newPerexGroupStr!=null)</span>
 					{
-<span class="nc" id="L1032">						ps = db_conn.prepareStatement(&quot;UPDATE documents SET perex_group=? WHERE doc_id=?&quot;);</span>
-<span class="nc" id="L1033">						ps.setString(1, newPerexGroupStr.toString());</span>
-<span class="nc" id="L1034">						ps.setInt(2, docDet.getDocId());</span>
-<span class="nc" id="L1035">						ps.execute();</span>
-<span class="nc" id="L1036">						ps.close();</span>
+<span class="nc" id="L1038">						ps = db_conn.prepareStatement(&quot;UPDATE documents SET perex_group=? WHERE doc_id=?&quot;);</span>
+<span class="nc" id="L1039">						ps.setString(1, newPerexGroupStr.toString());</span>
+<span class="nc" id="L1040">						ps.setInt(2, docDet.getDocId());</span>
+<span class="nc" id="L1041">						ps.execute();</span>
+<span class="nc" id="L1042">						ps.close();</span>
 					}
-<span class="nc" id="L1038">				}</span>
+<span class="nc" id="L1044">				}</span>
 				//Logger.println(UpdateDatabase.class,&quot;****&quot;);
 			}
 
 			//zapis, ze sme to uz skonvertovali
-<span class="nc" id="L1043">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L1049">			saveSuccessUpdate(note);</span>
 
-<span class="nc" id="L1045">			rs = null;</span>
-<span class="nc" id="L1046">			ps = null;</span>
+<span class="nc" id="L1051">			rs = null;</span>
+<span class="nc" id="L1052">			ps = null;</span>
 		}
-<span class="nc" id="L1048">		catch (Exception ex)</span>
+<span class="nc" id="L1054">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1050">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1056">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1056" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
-<span class="nc bnc" id="L1057" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L1058" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L1062" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
+<span class="nc bnc" id="L1063" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L1064" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
-<span class="nc" id="L1060">			catch (Exception ex2)</span>
+<span class="nc" id="L1066">			catch (Exception ex2)</span>
 			{
 
-<span class="nc" id="L1063">			}</span>
+<span class="nc" id="L1069">			}</span>
 		}
-<span class="nc" id="L1065">	}</span>
+<span class="nc" id="L1071">	}</span>
 
 	/**
 	 * ImportImpl cistej databazy
@@ -1071,104 +1077,104 @@ public class UpdateDatabase
 	@SuppressWarnings(&quot;java:S106&quot;)
 	public static String fillEmptyDatabaseMySQL()
 	{
-<span class="nc" id="L1074">		System.out.println(&quot;fillEmptyDatabaseMySQL&quot;);</span>
+<span class="nc" id="L1080">		System.out.println(&quot;fillEmptyDatabaseMySQL&quot;);</span>
 
-<span class="nc" id="L1076">		StringBuilder errMsg = null;</span>
+<span class="nc" id="L1082">		StringBuilder errMsg = null;</span>
 
-<span class="nc" id="L1078">		Connection db_conn = null;</span>
-<span class="nc" id="L1079">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1080">		ResultSet rs = null;</span>
-<span class="nc" id="L1081">		String sql = null;</span>
+<span class="nc" id="L1084">		Connection db_conn = null;</span>
+<span class="nc" id="L1085">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1086">		ResultSet rs = null;</span>
+<span class="nc" id="L1087">		String sql = null;</span>
 		try
 		{
 			//over, ci mame nejaku databazu
-<span class="nc" id="L1085">			boolean hasDatabase = false;</span>
+<span class="nc" id="L1091">			boolean hasDatabase = false;</span>
 
-<span class="nc" id="L1087">			System.out.println(&quot;fillEmptyDatabaseMySQL 1&quot;);</span>
+<span class="nc" id="L1093">			System.out.println(&quot;fillEmptyDatabaseMySQL 1&quot;);</span>
 
-<span class="nc" id="L1089">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1095">			db_conn = DBPool.getConnection();</span>
 			try
 			{
-<span class="nc" id="L1092">				ps = db_conn.prepareStatement(&quot;SHOW TABLES&quot;);</span>
-<span class="nc" id="L1093">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L1094" title="All 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L1098">				ps = db_conn.prepareStatement(&quot;SHOW TABLES&quot;);</span>
+<span class="nc" id="L1099">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1100" title="All 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="nc" id="L1096">					hasDatabase = true;</span>
+<span class="nc" id="L1102">					hasDatabase = true;</span>
 				}
 			}
 			finally
 			{
-<span class="nc bnc" id="L1101" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L1102" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L1107" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L1108" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
 
-<span class="nc" id="L1105">			System.out.println(&quot;fillEmptyDatabaseMySQL 2&quot;);</span>
+<span class="nc" id="L1111">			System.out.println(&quot;fillEmptyDatabaseMySQL 2&quot;);</span>
 
-<span class="nc" id="L1107">			System.out.println(&quot;hasDatabase=&quot;+hasDatabase);</span>
+<span class="nc" id="L1113">			System.out.println(&quot;hasDatabase=&quot;+hasDatabase);</span>
 
-<span class="nc bnc" id="L1109" title="All 2 branches missed.">			if (hasDatabase)</span>
+<span class="nc bnc" id="L1115" title="All 2 branches missed.">			if (hasDatabase)</span>
 			{
-<span class="nc" id="L1111">				return(null);</span>
+<span class="nc" id="L1117">				return(null);</span>
 			}
 
 			//	nacitaj obsah suboru
-<span class="nc" id="L1115">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web.sql&quot;, &quot;utf-8&quot;);</span>
-<span class="nc" id="L1116">			String defaultEngine = Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
+<span class="nc" id="L1121">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web.sql&quot;, &quot;utf-8&quot;);</span>
+<span class="nc" id="L1122">			String defaultEngine = Constants.getString(&quot;mariaDbDefaultEngine&quot;);</span>
 
 			//System.out.println(data);
 
-<span class="nc" id="L1120">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
+<span class="nc" id="L1126">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
 
-<span class="nc bnc" id="L1122" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L1128" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L1124">				sql = st.nextToken();</span>
-<span class="nc bnc" id="L1125" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
+<span class="nc" id="L1130">				sql = st.nextToken();</span>
+<span class="nc bnc" id="L1131" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
 				{
-<span class="nc bnc" id="L1127" title="All 2 branches missed.">					if (&quot;myisam&quot;.equalsIgnoreCase(defaultEngine)==false) {</span>
-<span class="nc" id="L1128">						sql = Tools.replace(sql, &quot;ENGINE=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
-<span class="nc" id="L1129">						sql = Tools.replace(sql, &quot;engine=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
+<span class="nc bnc" id="L1133" title="All 2 branches missed.">					if (&quot;myisam&quot;.equalsIgnoreCase(defaultEngine)==false) {</span>
+<span class="nc" id="L1134">						sql = Tools.replace(sql, &quot;ENGINE=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
+<span class="nc" id="L1135">						sql = Tools.replace(sql, &quot;engine=MyISAM&quot;, &quot;ENGINE=&quot;+defaultEngine);</span>
 					}
 
-<span class="nc" id="L1132">					System.out.println(&quot;Executing: &quot;+sql);</span>
+<span class="nc" id="L1138">					System.out.println(&quot;Executing: &quot;+sql);</span>
 
-<span class="nc" id="L1134">					ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L1135">					ps.execute();</span>
-<span class="nc" id="L1136">					ps.close();</span>
+<span class="nc" id="L1140">					ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1141">					ps.execute();</span>
+<span class="nc" id="L1142">					ps.close();</span>
 				}
 			}
 
-<span class="nc" id="L1140">			rs = null;</span>
-<span class="nc" id="L1141">			ps = null;</span>
+<span class="nc" id="L1146">			rs = null;</span>
+<span class="nc" id="L1147">			ps = null;</span>
 		}
-<span class="nc" id="L1143">		catch (Exception ex)</span>
+<span class="nc" id="L1149">		catch (Exception ex)</span>
 		{
-<span class="nc bnc" id="L1145" title="All 2 branches missed.">			if (ex.getMessage()!=null) errMsg = new StringBuilder(ex.getMessage());</span>
-<span class="nc bnc" id="L1146" title="All 4 branches missed.">			if (sql != null &amp;&amp; errMsg!=null)</span>
+<span class="nc bnc" id="L1151" title="All 2 branches missed.">			if (ex.getMessage()!=null) errMsg = new StringBuilder(ex.getMessage());</span>
+<span class="nc bnc" id="L1152" title="All 4 branches missed.">			if (sql != null &amp;&amp; errMsg!=null)</span>
 			{
-<span class="nc" id="L1148">				errMsg.append(&quot; - &quot;).append(sql);</span>
+<span class="nc" id="L1154">				errMsg.append(&quot; - &quot;).append(sql);</span>
 			}
-<span class="nc" id="L1150">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1151">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1156">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1157">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1157" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1158">					db_conn.close();</span>
-<span class="nc bnc" id="L1159" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1160">					rs.close();</span>
-<span class="nc bnc" id="L1161" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1162">					ps.close();</span>
+<span class="nc bnc" id="L1163" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1164">					db_conn.close();</span>
+<span class="nc bnc" id="L1165" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1166">					rs.close();</span>
+<span class="nc bnc" id="L1167" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1168">					ps.close();</span>
 			}
-<span class="nc" id="L1164">			catch (Exception ex2)</span>
+<span class="nc" id="L1170">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1166">			}</span>
+<span class="nc" id="L1172">			}</span>
 		}
 
-<span class="nc bnc" id="L1169" title="All 2 branches missed.">		if (errMsg == null) return null;</span>
+<span class="nc bnc" id="L1175" title="All 2 branches missed.">		if (errMsg == null) return null;</span>
 
-<span class="nc" id="L1171">		return(errMsg.toString());</span>
+<span class="nc" id="L1177">		return(errMsg.toString());</span>
 	}
 
 	/**
@@ -1177,88 +1183,88 @@ public class UpdateDatabase
 	 */
 	public static String fillEmptyDatabaseMSSQL()
 	{
-<span class="nc" id="L1180">		StringBuilder errMsg = new StringBuilder();</span>
+<span class="nc" id="L1186">		StringBuilder errMsg = new StringBuilder();</span>
 
-<span class="nc" id="L1182">		Connection db_conn = null;</span>
-<span class="nc" id="L1183">		Statement ps = null;</span>
-<span class="nc" id="L1184">		ResultSet rs = null;</span>
-<span class="nc" id="L1185">		String sql = null;</span>
+<span class="nc" id="L1188">		Connection db_conn = null;</span>
+<span class="nc" id="L1189">		Statement ps = null;</span>
+<span class="nc" id="L1190">		ResultSet rs = null;</span>
+<span class="nc" id="L1191">		String sql = null;</span>
 		try
 		{
 			//over, ci mame nejaku databazu
-<span class="nc" id="L1189">			boolean hasDatabase = false;</span>
+<span class="nc" id="L1195">			boolean hasDatabase = false;</span>
 
-<span class="nc" id="L1191">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1197">			db_conn = DBPool.getConnection();</span>
 			try
 			{
-<span class="nc" id="L1194">				ps = db_conn.createStatement();</span>
-<span class="nc" id="L1195">				rs = ps.executeQuery(&quot;SELECT * FROM &quot;+ConfDB.CONF_TABLE_NAME);</span>
-<span class="nc bnc" id="L1196" title="All 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L1200">				ps = db_conn.createStatement();</span>
+<span class="nc" id="L1201">				rs = ps.executeQuery(&quot;SELECT * FROM &quot;+ConfDB.CONF_TABLE_NAME);</span>
+<span class="nc bnc" id="L1202" title="All 2 branches missed.">				if (rs.next())</span>
 				{
 
 				}
-<span class="nc" id="L1200">				hasDatabase = true;</span>
+<span class="nc" id="L1206">				hasDatabase = true;</span>
 			}
-<span class="nc" id="L1202">			catch (Exception ex)</span>
+<span class="nc" id="L1208">			catch (Exception ex)</span>
 			{
 				//databaza nie je naplnena
 			}
 			finally
 			{
-<span class="nc bnc" id="L1208" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L1209" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L1214" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L1215" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
 
-<span class="nc bnc" id="L1212" title="All 2 branches missed.">			if (hasDatabase)</span>
+<span class="nc bnc" id="L1218" title="All 2 branches missed.">			if (hasDatabase)</span>
 			{
-<span class="nc" id="L1214">				return(null);</span>
+<span class="nc" id="L1220">				return(null);</span>
 			}
 
 			//	nacitaj obsah suboru
-<span class="nc" id="L1218">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web_mssql.sql&quot;, &quot;utf-8&quot;);</span>
-<span class="nc" id="L1219">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
-<span class="nc bnc" id="L1220" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc" id="L1224">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web_mssql.sql&quot;, &quot;utf-8&quot;);</span>
+<span class="nc" id="L1225">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
+<span class="nc bnc" id="L1226" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L1222">				sql = st.nextToken();</span>
-<span class="nc bnc" id="L1223" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
+<span class="nc" id="L1228">				sql = st.nextToken();</span>
+<span class="nc bnc" id="L1229" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
 				{
-<span class="nc" id="L1225">					Logger.println(UpdateDatabase.class,&quot;Executing: &quot;+sql);</span>
+<span class="nc" id="L1231">					Logger.println(UpdateDatabase.class,&quot;Executing: &quot;+sql);</span>
 
-<span class="nc" id="L1227">					ps = db_conn.createStatement();</span>
-<span class="nc" id="L1228">					ps.execute(sql);</span>
-<span class="nc" id="L1229">					ps.close();</span>
+<span class="nc" id="L1233">					ps = db_conn.createStatement();</span>
+<span class="nc" id="L1234">					ps.execute(sql);</span>
+<span class="nc" id="L1235">					ps.close();</span>
 				}
 			}
 
-<span class="nc" id="L1233">			rs = null;</span>
-<span class="nc" id="L1234">			ps = null;</span>
+<span class="nc" id="L1239">			rs = null;</span>
+<span class="nc" id="L1240">			ps = null;</span>
 		}
-<span class="nc" id="L1236">		catch (Exception ex)</span>
+<span class="nc" id="L1242">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1238">			errMsg.append(ex.getMessage());</span>
-<span class="nc bnc" id="L1239" title="All 2 branches missed.">			if (sql != null)</span>
+<span class="nc" id="L1244">			errMsg.append(ex.getMessage());</span>
+<span class="nc bnc" id="L1245" title="All 2 branches missed.">			if (sql != null)</span>
 			{
-<span class="nc" id="L1241">				errMsg.append(&quot; - &quot;).append(sql);</span>
+<span class="nc" id="L1247">				errMsg.append(&quot; - &quot;).append(sql);</span>
 			}
-<span class="nc" id="L1243">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1249">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1249" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1250">					db_conn.close();</span>
-<span class="nc bnc" id="L1251" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1252">					rs.close();</span>
-<span class="nc bnc" id="L1253" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1254">					ps.close();</span>
+<span class="nc bnc" id="L1255" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1256">					db_conn.close();</span>
+<span class="nc bnc" id="L1257" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1258">					rs.close();</span>
+<span class="nc bnc" id="L1259" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1260">					ps.close();</span>
 			}
-<span class="nc" id="L1256">			catch (Exception ex2)</span>
+<span class="nc" id="L1262">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1258">			}</span>
+<span class="nc" id="L1264">			}</span>
 		}
 
-<span class="nc" id="L1261">		return(errMsg.toString());</span>
+<span class="nc" id="L1267">		return(errMsg.toString());</span>
 	}
 
 	/**
@@ -1267,285 +1273,285 @@ public class UpdateDatabase
 	 */
 	public static String fillEmptyDatabaseOracle()
 	{
-<span class="nc" id="L1270">		Logger.println(UpdateDatabase.class,&quot;fillEmptyDatabaseOracle&quot;);</span>
+<span class="nc" id="L1276">		Logger.println(UpdateDatabase.class,&quot;fillEmptyDatabaseOracle&quot;);</span>
 
-<span class="nc" id="L1272">		StringBuilder errMsg = new StringBuilder();</span>
+<span class="nc" id="L1278">		StringBuilder errMsg = new StringBuilder();</span>
 
-<span class="nc" id="L1274">		Connection db_conn = null;</span>
-<span class="nc" id="L1275">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1276">		ResultSet rs = null;</span>
-<span class="nc" id="L1277">		String sql = null;</span>
+<span class="nc" id="L1280">		Connection db_conn = null;</span>
+<span class="nc" id="L1281">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1282">		ResultSet rs = null;</span>
+<span class="nc" id="L1283">		String sql = null;</span>
 		try
 		{
 			//over, ci mame nejaku databazu
-<span class="nc" id="L1281">			boolean hasDatabase = false;</span>
+<span class="nc" id="L1287">			boolean hasDatabase = false;</span>
 
-<span class="nc" id="L1283">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1289">			db_conn = DBPool.getConnection();</span>
 			try
 			{
-<span class="nc" id="L1286">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents&quot;);</span>
-<span class="nc" id="L1287">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L1288" title="All 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L1292">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents&quot;);</span>
+<span class="nc" id="L1293">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1294" title="All 2 branches missed.">				if (rs.next())</span>
 				{
 
 				}
-<span class="nc" id="L1292">				hasDatabase = true;</span>
+<span class="nc" id="L1298">				hasDatabase = true;</span>
 			}
-<span class="nc" id="L1294">			catch (Exception ex)</span>
+<span class="nc" id="L1300">			catch (Exception ex)</span>
 			{
 				//databaza nie je naplnena
 			}
 			finally
 			{
-<span class="nc bnc" id="L1300" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L1301" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L1306" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L1307" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
 
 			//Logger.println(UpdateDatabase.class,&quot;Oracle hasDatabase=&quot;+hasDatabase);
 
-<span class="nc bnc" id="L1306" title="All 2 branches missed.">			if (hasDatabase)</span>
+<span class="nc bnc" id="L1312" title="All 2 branches missed.">			if (hasDatabase)</span>
 			{
-<span class="nc" id="L1308">				return(null);</span>
+<span class="nc" id="L1314">				return(null);</span>
 			}
 
 			//	nacitaj obsah suboru
-<span class="nc" id="L1312">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web_oracle.sql&quot;, &quot;utf-8&quot;);</span>
-<span class="nc" id="L1313">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
+<span class="nc" id="L1318">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web_oracle.sql&quot;, &quot;utf-8&quot;);</span>
+<span class="nc" id="L1319">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
 			java.sql.Statement s;
-<span class="nc bnc" id="L1315" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L1321" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L1317">				sql = st.nextToken().trim();</span>
-<span class="nc bnc" id="L1318" title="All 4 branches missed.">				if (Tools.isNotEmpty(sql) &amp;&amp; sql.startsWith(&quot;#&quot;)==false)</span>
+<span class="nc" id="L1323">				sql = st.nextToken().trim();</span>
+<span class="nc bnc" id="L1324" title="All 4 branches missed.">				if (Tools.isNotEmpty(sql) &amp;&amp; sql.startsWith(&quot;#&quot;)==false)</span>
 				{
-<span class="nc" id="L1320">					sql = Tools.replace(sql, &quot;|&quot;, &quot;;&quot;);</span>
-<span class="nc" id="L1321">					Logger.println(UpdateDatabase.class,&quot;Executing: &quot;+sql);</span>
-<span class="nc bnc" id="L1322" title="All 2 branches missed.">					if (sql.indexOf(&quot;TRIGGER&quot;)!=-1)</span>
+<span class="nc" id="L1326">					sql = Tools.replace(sql, &quot;|&quot;, &quot;;&quot;);</span>
+<span class="nc" id="L1327">					Logger.println(UpdateDatabase.class,&quot;Executing: &quot;+sql);</span>
+<span class="nc bnc" id="L1328" title="All 2 branches missed.">					if (sql.indexOf(&quot;TRIGGER&quot;)!=-1)</span>
 					{
-<span class="nc" id="L1324">						sql = sql.replace('\n', ' ');</span>
-<span class="nc" id="L1325">						sql = sql.replace('\r', ' ');</span>
-<span class="nc" id="L1326">						sql = sql.replace('\t', ' ');</span>
+<span class="nc" id="L1330">						sql = sql.replace('\n', ' ');</span>
+<span class="nc" id="L1331">						sql = sql.replace('\r', ' ');</span>
+<span class="nc" id="L1332">						sql = sql.replace('\t', ' ');</span>
 					}
-<span class="nc" id="L1328">					s = db_conn.createStatement();</span>
-<span class="nc" id="L1329">					s.execute(sql);</span>
-<span class="nc" id="L1330">					s.close();</span>
-<span class="nc bnc" id="L1331" title="All 2 branches missed.">					if (Constants.getBoolean(&quot;jtdsCommit&quot;)) db_conn.commit();</span>
+<span class="nc" id="L1334">					s = db_conn.createStatement();</span>
+<span class="nc" id="L1335">					s.execute(sql);</span>
+<span class="nc" id="L1336">					s.close();</span>
+<span class="nc bnc" id="L1337" title="All 2 branches missed.">					if (Constants.getBoolean(&quot;jtdsCommit&quot;)) db_conn.commit();</span>
 				}
 			}
 
-<span class="nc" id="L1335">			rs = null;</span>
-<span class="nc" id="L1336">			ps = null;</span>
+<span class="nc" id="L1341">			rs = null;</span>
+<span class="nc" id="L1342">			ps = null;</span>
 		}
-<span class="nc" id="L1338">		catch (Exception ex)</span>
+<span class="nc" id="L1344">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1340">			errMsg.append(ex.getMessage());</span>
-<span class="nc bnc" id="L1341" title="All 2 branches missed.">			if (sql != null)</span>
+<span class="nc" id="L1346">			errMsg.append(ex.getMessage());</span>
+<span class="nc bnc" id="L1347" title="All 2 branches missed.">			if (sql != null)</span>
 			{
-<span class="nc" id="L1343">				errMsg.append(&quot; - &quot;).append(sql);</span>
+<span class="nc" id="L1349">				errMsg.append(&quot; - &quot;).append(sql);</span>
 			}
-<span class="nc" id="L1345">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1351">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1351" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1352">					db_conn.close();</span>
-<span class="nc bnc" id="L1353" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1354">					rs.close();</span>
-<span class="nc bnc" id="L1355" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1356">					ps.close();</span>
+<span class="nc bnc" id="L1357" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1358">					db_conn.close();</span>
+<span class="nc bnc" id="L1359" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1360">					rs.close();</span>
+<span class="nc bnc" id="L1361" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1362">					ps.close();</span>
 			}
-<span class="nc" id="L1358">			catch (Exception ex2)</span>
+<span class="nc" id="L1364">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1360">			}</span>
+<span class="nc" id="L1366">			}</span>
 		}
 
-<span class="nc" id="L1363">		return(errMsg.toString());</span>
+<span class="nc" id="L1369">		return(errMsg.toString());</span>
 	}
 
 	@SuppressWarnings(&quot;java:S106&quot;)
 	public static String fillEmptyDatabasePgSQL(String schema)
 	{
-<span class="nc" id="L1369">		System.out.println(&quot;fillEmptyDatabasePgSQL, schema=&quot;+schema);</span>
+<span class="nc" id="L1375">		System.out.println(&quot;fillEmptyDatabasePgSQL, schema=&quot;+schema);</span>
 
-<span class="nc" id="L1371">		StringBuilder errMsg = null;</span>
+<span class="nc" id="L1377">		StringBuilder errMsg = null;</span>
 
-<span class="nc" id="L1373">		Connection db_conn = null;</span>
-<span class="nc" id="L1374">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1375">		ResultSet rs = null;</span>
-<span class="nc" id="L1376">		String sql = null;</span>
+<span class="nc" id="L1379">		Connection db_conn = null;</span>
+<span class="nc" id="L1380">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1381">		ResultSet rs = null;</span>
+<span class="nc" id="L1382">		String sql = null;</span>
 		try
 		{
 			//over, ci mame nejaku databazu
-<span class="nc" id="L1380">			boolean hasDatabase = false;</span>
+<span class="nc" id="L1386">			boolean hasDatabase = false;</span>
 
-<span class="nc" id="L1382">			System.out.println(&quot;fillEmptyDatabasePgSQL 1&quot;);</span>
+<span class="nc" id="L1388">			System.out.println(&quot;fillEmptyDatabasePgSQL 1&quot;);</span>
 
-<span class="nc" id="L1384">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1390">			db_conn = DBPool.getConnection();</span>
 			try
 			{
-<span class="nc" id="L1387">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents&quot;);</span>
-<span class="nc" id="L1388">				rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L1389" title="All 2 branches missed.">				if (rs.next())</span>
+<span class="nc" id="L1393">				ps = db_conn.prepareStatement(&quot;SELECT * FROM documents&quot;);</span>
+<span class="nc" id="L1394">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1395" title="All 2 branches missed.">				if (rs.next())</span>
 				{
-<span class="nc" id="L1391">					hasDatabase = true;</span>
+<span class="nc" id="L1397">					hasDatabase = true;</span>
 				}
 			}
-<span class="nc" id="L1394">			catch (Exception ex)</span>
+<span class="nc" id="L1400">			catch (Exception ex)</span>
 			{
 				//databaza nie je naplnena
 			}
 			finally
 			{
-<span class="nc bnc" id="L1400" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L1401" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L1406" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L1407" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
 
-<span class="nc" id="L1404">			System.out.println(&quot;fillEmptyDatabasePgSQL 2&quot;);</span>
+<span class="nc" id="L1410">			System.out.println(&quot;fillEmptyDatabasePgSQL 2&quot;);</span>
 
-<span class="nc" id="L1406">			System.out.println(&quot;hasDatabase=&quot;+hasDatabase);</span>
+<span class="nc" id="L1412">			System.out.println(&quot;hasDatabase=&quot;+hasDatabase);</span>
 
-<span class="nc bnc" id="L1408" title="All 2 branches missed.">			if (hasDatabase)</span>
+<span class="nc bnc" id="L1414" title="All 2 branches missed.">			if (hasDatabase)</span>
 			{
-<span class="nc" id="L1410">				return(null);</span>
+<span class="nc" id="L1416">				return(null);</span>
 			}
 
 			//	nacitaj obsah suboru
-<span class="nc" id="L1414">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web_pgsql.sql&quot;, &quot;utf-8&quot;);</span>
+<span class="nc" id="L1420">			String data = FileTools.readFileContent(&quot;/WEB-INF/sql/blank_web_pgsql.sql&quot;, &quot;utf-8&quot;);</span>
 
 			//System.out.println(data);
 
-<span class="nc" id="L1418">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
+<span class="nc" id="L1424">			StringTokenizer st = new StringTokenizer(data, &quot;;&quot;);</span>
 
-<span class="nc bnc" id="L1420" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L1426" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L1422">				sql = st.nextToken();</span>
-<span class="nc bnc" id="L1423" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
+<span class="nc" id="L1428">				sql = st.nextToken();</span>
+<span class="nc bnc" id="L1429" title="All 2 branches missed.">				if (Tools.isNotEmpty(sql))</span>
 				{
-<span class="nc bnc" id="L1425" title="All 2 branches missed.">					if (&quot;webjet_cms&quot;.equals(schema)==false) {</span>
-<span class="nc" id="L1426">						sql = Tools.replace(sql, &quot;CREATE SCHEMA IF NOT EXISTS \&quot;webjet_cms\&quot;&quot;, &quot;CREATE SCHEMA IF NOT EXISTS \&quot;&quot;+schema+&quot;\&quot;&quot;);</span>
-<span class="nc" id="L1427">						sql = Tools.replace(sql, &quot;SCHEMA \&quot;webjet_cms\&quot;&quot;, &quot;SCHEMA \&quot;&quot;+schema+&quot;\&quot;&quot;);</span>
-<span class="nc" id="L1428">						sql = Tools.replace(sql, &quot;\&quot;webjet_cms\&quot;.&quot;, &quot;\&quot;&quot;+schema+&quot;\&quot;.&quot;);</span>
+<span class="nc bnc" id="L1431" title="All 2 branches missed.">					if (&quot;webjet_cms&quot;.equals(schema)==false) {</span>
+<span class="nc" id="L1432">						sql = Tools.replace(sql, &quot;CREATE SCHEMA IF NOT EXISTS \&quot;webjet_cms\&quot;&quot;, &quot;CREATE SCHEMA IF NOT EXISTS \&quot;&quot;+schema+&quot;\&quot;&quot;);</span>
+<span class="nc" id="L1433">						sql = Tools.replace(sql, &quot;SCHEMA \&quot;webjet_cms\&quot;&quot;, &quot;SCHEMA \&quot;&quot;+schema+&quot;\&quot;&quot;);</span>
+<span class="nc" id="L1434">						sql = Tools.replace(sql, &quot;\&quot;webjet_cms\&quot;.&quot;, &quot;\&quot;&quot;+schema+&quot;\&quot;.&quot;);</span>
 					}
 
-<span class="nc" id="L1431">					System.out.println(&quot;Executing: &quot;+sql);</span>
+<span class="nc" id="L1437">					System.out.println(&quot;Executing: &quot;+sql);</span>
 
-<span class="nc" id="L1433">					ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L1434">					ps.execute();</span>
-<span class="nc" id="L1435">					ps.close();</span>
+<span class="nc" id="L1439">					ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1440">					ps.execute();</span>
+<span class="nc" id="L1441">					ps.close();</span>
 				}
 			}
 
-<span class="nc" id="L1439">			rs = null;</span>
-<span class="nc" id="L1440">			ps = null;</span>
+<span class="nc" id="L1445">			rs = null;</span>
+<span class="nc" id="L1446">			ps = null;</span>
 		}
-<span class="nc" id="L1442">		catch (Exception ex)</span>
+<span class="nc" id="L1448">		catch (Exception ex)</span>
 		{
-<span class="nc bnc" id="L1444" title="All 2 branches missed.">			if (ex.getMessage()!=null) errMsg = new StringBuilder(ex.getMessage());</span>
-<span class="nc bnc" id="L1445" title="All 4 branches missed.">			if (sql != null &amp;&amp; errMsg!=null)</span>
+<span class="nc bnc" id="L1450" title="All 2 branches missed.">			if (ex.getMessage()!=null) errMsg = new StringBuilder(ex.getMessage());</span>
+<span class="nc bnc" id="L1451" title="All 4 branches missed.">			if (sql != null &amp;&amp; errMsg!=null)</span>
 			{
-<span class="nc" id="L1447">				errMsg.append(&quot; - &quot;).append(sql);</span>
+<span class="nc" id="L1453">				errMsg.append(&quot; - &quot;).append(sql);</span>
 			}
-<span class="nc" id="L1449">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1450">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1455">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1456">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1456" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1457">					db_conn.close();</span>
-<span class="nc bnc" id="L1458" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1459">					rs.close();</span>
-<span class="nc bnc" id="L1460" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1461">					ps.close();</span>
+<span class="nc bnc" id="L1462" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1463">					db_conn.close();</span>
+<span class="nc bnc" id="L1464" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1465">					rs.close();</span>
+<span class="nc bnc" id="L1466" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1467">					ps.close();</span>
 			}
-<span class="nc" id="L1463">			catch (Exception ex2)</span>
+<span class="nc" id="L1469">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1465">			}</span>
+<span class="nc" id="L1471">			}</span>
 		}
 
-<span class="nc bnc" id="L1468" title="All 2 branches missed.">		if (errMsg == null) return null;</span>
+<span class="nc bnc" id="L1474" title="All 2 branches missed.">		if (errMsg == null) return null;</span>
 
-<span class="nc" id="L1470">		return(errMsg.toString());</span>
+<span class="nc" id="L1476">		return(errMsg.toString());</span>
 	}
 
 	private static void configureModules()
 	{
-<span class="pc bpc" id="L1475" title="1 of 2 branches missed.">		if (&quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;)))</span>
+<span class="pc bpc" id="L1481" title="1 of 2 branches missed.">		if (&quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;)))</span>
 		{
-<span class="nc" id="L1477">			return;</span>
+<span class="nc" id="L1483">			return;</span>
 		}
 
-<span class="fc" id="L1480">		Connection db_conn = null;</span>
-<span class="fc" id="L1481">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1486">		Connection db_conn = null;</span>
+<span class="fc" id="L1487">		PreparedStatement ps = null;</span>
 		try
 		{
-<span class="fc" id="L1484">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L1490">			db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L1486">			ps = db_conn.prepareStatement(&quot;UPDATE user_disabled_items SET item_name=? WHERE item_name=?&quot;);</span>
-<span class="fc" id="L1487">			ps.setString(1, &quot;cmp_stat&quot;);</span>
-<span class="fc" id="L1488">			ps.setString(2, &quot;menuStats&quot;);</span>
-<span class="fc" id="L1489">			ps.execute();</span>
-<span class="fc" id="L1490">			ps.close();</span>
-<span class="fc" id="L1491">			ps = null;</span>
+<span class="fc" id="L1492">			ps = db_conn.prepareStatement(&quot;UPDATE user_disabled_items SET item_name=? WHERE item_name=?&quot;);</span>
+<span class="fc" id="L1493">			ps.setString(1, &quot;cmp_stat&quot;);</span>
+<span class="fc" id="L1494">			ps.setString(2, &quot;menuStats&quot;);</span>
+<span class="fc" id="L1495">			ps.execute();</span>
+<span class="fc" id="L1496">			ps.close();</span>
+<span class="fc" id="L1497">			ps = null;</span>
 
-<span class="fc" id="L1493">			ps = db_conn.prepareStatement(&quot;UPDATE user_disabled_items SET item_name=? WHERE item_name=?&quot;);</span>
-<span class="fc" id="L1494">			ps.setString(1, &quot;cmp_calendar&quot;);</span>
-<span class="fc" id="L1495">			ps.setString(2, &quot;menuCalendar&quot;);</span>
-<span class="fc" id="L1496">			ps.execute();</span>
-<span class="fc" id="L1497">			ps.close();</span>
-<span class="fc" id="L1498">			ps = null;</span>
+<span class="fc" id="L1499">			ps = db_conn.prepareStatement(&quot;UPDATE user_disabled_items SET item_name=? WHERE item_name=?&quot;);</span>
+<span class="fc" id="L1500">			ps.setString(1, &quot;cmp_calendar&quot;);</span>
+<span class="fc" id="L1501">			ps.setString(2, &quot;menuCalendar&quot;);</span>
+<span class="fc" id="L1502">			ps.execute();</span>
+<span class="fc" id="L1503">			ps.close();</span>
+<span class="fc" id="L1504">			ps = null;</span>
 
-<span class="fc" id="L1500">			ps = db_conn.prepareStatement(&quot;UPDATE user_disabled_items SET item_name=? WHERE item_name=?&quot;);</span>
-<span class="fc" id="L1501">			ps.setString(1, &quot;cmp_form&quot;);</span>
-<span class="fc" id="L1502">			ps.setString(2, &quot;menuForms&quot;);</span>
-<span class="fc" id="L1503">			ps.execute();</span>
-<span class="fc" id="L1504">			ps.close();</span>
-<span class="fc" id="L1505">			ps = null;</span>
+<span class="fc" id="L1506">			ps = db_conn.prepareStatement(&quot;UPDATE user_disabled_items SET item_name=? WHERE item_name=?&quot;);</span>
+<span class="fc" id="L1507">			ps.setString(1, &quot;cmp_form&quot;);</span>
+<span class="fc" id="L1508">			ps.setString(2, &quot;menuForms&quot;);</span>
+<span class="fc" id="L1509">			ps.execute();</span>
+<span class="fc" id="L1510">			ps.close();</span>
+<span class="fc" id="L1511">			ps = null;</span>
 
 			//zadisabluj moduly, ktore sa objavili prvy krat
-<span class="fc" id="L1508">			List&lt;ModuleInfo&gt; modules = Modules.getInstance().getAvailableModules();</span>
-<span class="fc bfc" id="L1509" title="All 2 branches covered.">			for (ModuleInfo mi : modules)</span>
+<span class="fc" id="L1514">			List&lt;ModuleInfo&gt; modules = Modules.getInstance().getAvailableModules();</span>
+<span class="fc bfc" id="L1515" title="All 2 branches covered.">			for (ModuleInfo mi : modules)</span>
 			{
-<span class="fc bfc" id="L1511" title="All 2 branches covered.">				if (mi.isDefaultDisabled())</span>
+<span class="fc bfc" id="L1517" title="All 2 branches covered.">				if (mi.isDefaultDisabled())</span>
 				{
-<span class="fc" id="L1513">					disableFirstTimeModule(mi.getItemKey(), db_conn);</span>
+<span class="fc" id="L1519">					disableFirstTimeModule(mi.getItemKey(), db_conn);</span>
 				}
-<span class="pc bpc" id="L1515" title="1 of 4 branches missed.">				if (mi.getSubmenus()!=null &amp;&amp; mi.getSubmenus().size()&gt;0)</span>
+<span class="pc bpc" id="L1521" title="1 of 4 branches missed.">				if (mi.getSubmenus()!=null &amp;&amp; mi.getSubmenus().size()&gt;0)</span>
 				{
-<span class="fc bfc" id="L1517" title="All 2 branches covered.">					for (ModuleInfo submi : mi.getSubmenus())</span>
+<span class="fc bfc" id="L1523" title="All 2 branches covered.">					for (ModuleInfo submi : mi.getSubmenus())</span>
 					{
-<span class="fc bfc" id="L1519" title="All 2 branches covered.">						if (submi.isDefaultDisabled()) disableFirstTimeModule(submi.getItemKey(), db_conn);</span>
-<span class="fc" id="L1520">					}</span>
+<span class="fc bfc" id="L1525" title="All 2 branches covered.">						if (submi.isDefaultDisabled()) disableFirstTimeModule(submi.getItemKey(), db_conn);</span>
+<span class="fc" id="L1526">					}</span>
 				}
-<span class="fc" id="L1522">			}</span>
+<span class="fc" id="L1528">			}</span>
 
-<span class="pc bpc" id="L1524" title="1 of 2 branches missed.">			if(db_conn != null)</span>
+<span class="pc bpc" id="L1530" title="1 of 2 branches missed.">			if(db_conn != null)</span>
 			{
-<span class="fc" id="L1526">				db_conn.close();</span>
-<span class="fc" id="L1527">				db_conn = null;</span>
+<span class="fc" id="L1532">				db_conn.close();</span>
+<span class="fc" id="L1533">				db_conn = null;</span>
 			}
 
 		}
-<span class="nc" id="L1531">		catch (Exception ex)</span>
+<span class="nc" id="L1537">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1533">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1539">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1539" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1540">					db_conn.close();</span>
-<span class="pc bpc" id="L1541" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1542">					ps.close();</span>
+<span class="pc bpc" id="L1545" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1546">					db_conn.close();</span>
+<span class="pc bpc" id="L1547" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1548">					ps.close();</span>
 			}
-<span class="nc" id="L1544">			catch (Exception ex2)</span>
+<span class="nc" id="L1550">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1546">			}</span>
+<span class="fc" id="L1552">			}</span>
 		}
-<span class="fc" id="L1548">	}</span>
+<span class="fc" id="L1554">	}</span>
 
 	/**
 	 * Zakaze modul vsetkym pouzivatelom, ak je to prva inicializacia modulu
@@ -1555,107 +1561,107 @@ public class UpdateDatabase
 	 */
 	private static void disableFirstTimeModule(String itemKey, Connection db_conn)
 	{
-<span class="fc" id="L1558">		String note = &quot;NEW MODULE: &quot;+itemKey;</span>
-<span class="pc bpc" id="L1559" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L1564">		String note = &quot;NEW MODULE: &quot;+itemKey;</span>
+<span class="pc bpc" id="L1565" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L1561">		List&lt;UserDetails&gt; changedUsers = ConfDB.disableMenuItemAll(itemKey);</span>
-<span class="nc" id="L1562">		Logger.println(UpdateDatabase.class,&quot;Disabling &quot; + itemKey + &quot; for all users (&quot;+changedUsers.size()+&quot;)&quot;);</span>
+<span class="nc" id="L1567">		List&lt;UserDetails&gt; changedUsers = ConfDB.disableMenuItemAll(itemKey);</span>
+<span class="nc" id="L1568">		Logger.println(UpdateDatabase.class,&quot;Disabling &quot; + itemKey + &quot; for all users (&quot;+changedUsers.size()+&quot;)&quot;);</span>
 
-<span class="nc" id="L1564">		saveSuccessUpdate(note);</span>
-<span class="nc" id="L1565">	}</span>
+<span class="nc" id="L1570">		saveSuccessUpdate(note);</span>
+<span class="nc" id="L1571">	}</span>
 
 	private static void fixGroupIdInStatViews()
 	{
 		//	otestuj, ci uz nebol importovany subor
-<span class="fc" id="L1570">		String note = &quot;nastavenie hodnot group_id pre tabulku stat_views&quot;;</span>
-<span class="pc bpc" id="L1571" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L1576">		String note = &quot;nastavenie hodnot group_id pre tabulku stat_views&quot;;</span>
+<span class="pc bpc" id="L1577" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L1573">		Connection db_conn = null;</span>
-<span class="nc" id="L1574">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1575">		ResultSet rs = null;</span>
+<span class="nc" id="L1579">		Connection db_conn = null;</span>
+<span class="nc" id="L1580">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1581">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L1578">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1584">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L1580">			String sql = &quot;SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, show_in_menu FROM documents ORDER BY doc_id ASC&quot;;</span>
+<span class="nc" id="L1586">			String sql = &quot;SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, show_in_menu FROM documents ORDER BY doc_id ASC&quot;;</span>
 
-<span class="nc" id="L1582">			ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L1583">			rs = ps.executeQuery();</span>
-<span class="nc" id="L1584">			List&lt;DocDetails&gt; list = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L1585" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L1588">			ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1589">			rs = ps.executeQuery();</span>
+<span class="nc" id="L1590">			List&lt;DocDetails&gt; list = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L1591" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L1587">				DocDetails doc = new DocDetails();</span>
-<span class="nc" id="L1588">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
-<span class="nc" id="L1589">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
-<span class="nc" id="L1590">				doc.setNavbar(DB.getDbString(rs, &quot;navbar&quot;));</span>
-<span class="nc" id="L1591">				doc.setExternalLink(DB.getDbString(rs, &quot;external_link&quot;));</span>
-<span class="nc" id="L1592">				doc.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
-<span class="nc" id="L1593">				doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
-<span class="nc" id="L1594">				doc.setAvailable(rs.getBoolean(&quot;available&quot;));</span>
-<span class="nc" id="L1595">				doc.setShowInMenu(rs.getBoolean(&quot;show_in_menu&quot;));</span>
+<span class="nc" id="L1593">				DocDetails doc = new DocDetails();</span>
+<span class="nc" id="L1594">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="nc" id="L1595">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="nc" id="L1596">				doc.setNavbar(DB.getDbString(rs, &quot;navbar&quot;));</span>
+<span class="nc" id="L1597">				doc.setExternalLink(DB.getDbString(rs, &quot;external_link&quot;));</span>
+<span class="nc" id="L1598">				doc.setGroupId(rs.getInt(&quot;group_id&quot;));</span>
+<span class="nc" id="L1599">				doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
+<span class="nc" id="L1600">				doc.setAvailable(rs.getBoolean(&quot;available&quot;));</span>
+<span class="nc" id="L1601">				doc.setShowInMenu(rs.getBoolean(&quot;show_in_menu&quot;));</span>
 
-<span class="nc" id="L1597">				list.add(doc);</span>
-<span class="nc" id="L1598">			}</span>
-<span class="nc" id="L1599">			rs.close();</span>
-<span class="nc" id="L1600">			ps.close();</span>
-<span class="nc" id="L1601">			rs = null;</span>
-<span class="nc" id="L1602">			ps = null;</span>
+<span class="nc" id="L1603">				list.add(doc);</span>
+<span class="nc" id="L1604">			}</span>
+<span class="nc" id="L1605">			rs.close();</span>
+<span class="nc" id="L1606">			ps.close();</span>
+<span class="nc" id="L1607">			rs = null;</span>
+<span class="nc" id="L1608">			ps = null;</span>
 
-<span class="nc" id="L1604">			int counter = 0;</span>
-<span class="nc" id="L1605">			int size = list.size();</span>
-<span class="nc" id="L1606">			DebugTimer timer = new DebugTimer(&quot;&quot;);</span>
-<span class="nc bnc" id="L1607" title="All 2 branches missed.">			for (DocDetails doc : list)</span>
+<span class="nc" id="L1610">			int counter = 0;</span>
+<span class="nc" id="L1611">			int size = list.size();</span>
+<span class="nc" id="L1612">			DebugTimer timer = new DebugTimer(&quot;&quot;);</span>
+<span class="nc bnc" id="L1613" title="All 2 branches missed.">			for (DocDetails doc : list)</span>
 			{
-<span class="nc" id="L1609">				counter++;</span>
-<span class="nc" id="L1610">				Logger.info(UpdateDatabase.class, &quot;Updating stat [&quot;+counter+&quot;/&quot;+size+&quot;]: docId=&quot;+doc.getDocId()+&quot; title=&quot;+DB.internationalToEnglish(doc.getTitle()));</span>
-<span class="nc" id="L1611">				ps = db_conn.prepareStatement(&quot;UPDATE stat_views SET group_id=? WHERE doc_id=?&quot;);</span>
-<span class="nc" id="L1612">				ps.setInt(1, doc.getGroupId());</span>
-<span class="nc" id="L1613">				ps.setInt(2, doc.getDocId());</span>
-<span class="nc" id="L1614">				ps.execute();</span>
-<span class="nc" id="L1615">				ps.close();</span>
-<span class="nc" id="L1616">				ps = null;</span>
+<span class="nc" id="L1615">				counter++;</span>
+<span class="nc" id="L1616">				Logger.info(UpdateDatabase.class, &quot;Updating stat [&quot;+counter+&quot;/&quot;+size+&quot;]: docId=&quot;+doc.getDocId()+&quot; title=&quot;+DB.internationalToEnglish(doc.getTitle()));</span>
+<span class="nc" id="L1617">				ps = db_conn.prepareStatement(&quot;UPDATE stat_views SET group_id=? WHERE doc_id=?&quot;);</span>
+<span class="nc" id="L1618">				ps.setInt(1, doc.getGroupId());</span>
+<span class="nc" id="L1619">				ps.setInt(2, doc.getDocId());</span>
+<span class="nc" id="L1620">				ps.execute();</span>
+<span class="nc" id="L1621">				ps.close();</span>
+<span class="nc" id="L1622">				ps = null;</span>
 
-<span class="nc" id="L1618">				ps = db_conn.prepareStatement(&quot;UPDATE stat_views SET last_group_id=? WHERE last_doc_id=?&quot;);</span>
-<span class="nc" id="L1619">				ps.setInt(1, doc.getGroupId());</span>
-<span class="nc" id="L1620">				ps.setInt(2, doc.getDocId());</span>
-<span class="nc" id="L1621">				ps.execute();</span>
-<span class="nc" id="L1622">				ps.close();</span>
-<span class="nc" id="L1623">				ps = null;</span>
+<span class="nc" id="L1624">				ps = db_conn.prepareStatement(&quot;UPDATE stat_views SET last_group_id=? WHERE last_doc_id=?&quot;);</span>
+<span class="nc" id="L1625">				ps.setInt(1, doc.getGroupId());</span>
+<span class="nc" id="L1626">				ps.setInt(2, doc.getDocId());</span>
+<span class="nc" id="L1627">				ps.execute();</span>
+<span class="nc" id="L1628">				ps.close();</span>
+<span class="nc" id="L1629">				ps = null;</span>
 
-<span class="nc" id="L1625">				Logger.info(UpdateDatabase.class, &quot; [OK] - &quot; + timer.getDiff() + &quot; ms&quot;);</span>
-<span class="nc" id="L1626">			}</span>
+<span class="nc" id="L1631">				Logger.info(UpdateDatabase.class, &quot; [OK] - &quot; + timer.getDiff() + &quot; ms&quot;);</span>
+<span class="nc" id="L1632">			}</span>
 
-<span class="nc" id="L1628">			db_conn.close();</span>
-<span class="nc" id="L1629">			ps = null;</span>
-<span class="nc" id="L1630">			db_conn = null;</span>
+<span class="nc" id="L1634">			db_conn.close();</span>
+<span class="nc" id="L1635">			ps = null;</span>
+<span class="nc" id="L1636">			db_conn = null;</span>
 
 			//zapis do DB, ze je to importnute
-<span class="nc" id="L1633">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L1639">			saveSuccessUpdate(note);</span>
 		}
-<span class="nc" id="L1635">		catch (Exception ex)</span>
+<span class="nc" id="L1641">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1637">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1643">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1643" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
-<span class="nc bnc" id="L1644" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
-<span class="nc bnc" id="L1645" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
+<span class="nc bnc" id="L1649" title="All 2 branches missed.">				if (db_conn!=null) db_conn.close();</span>
+<span class="nc bnc" id="L1650" title="All 2 branches missed.">				if (rs!=null) rs.close();</span>
+<span class="nc bnc" id="L1651" title="All 2 branches missed.">				if (ps!=null) ps.close();</span>
 			}
-<span class="nc" id="L1647">			catch (Exception ex2)</span>
+<span class="nc" id="L1653">			catch (Exception ex2)</span>
 			{
 
-<span class="nc" id="L1650">			}</span>
+<span class="nc" id="L1656">			}</span>
 		}
-<span class="nc" id="L1652">	}</span>
+<span class="nc" id="L1658">	}</span>
 
 	public static void deletePoiClasses()
 	{
-<span class="fc" id="L1656">		IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/classes/org/apache/poi/&quot;));</span>
-<span class="fc" id="L1657">		FileTools.deleteDirTree(f);</span>
-<span class="fc" id="L1658">	}</span>
+<span class="fc" id="L1662">		IwcmFile f = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/classes/org/apache/poi/&quot;));</span>
+<span class="fc" id="L1663">		FileTools.deleteDirTree(f);</span>
+<span class="fc" id="L1664">	}</span>
 
 	/**
 	 * Funkcia, ktora vsetky vyskyty browserId v existujuich tabulkach zvysi o konstantu 1 500 000, nad ktorou identifikujeme neprihlasenych pouzivatelov
@@ -1665,96 +1671,96 @@ public class UpdateDatabase
 	 */
 	public static void fixBrowserId()
 	{
-<span class="fc" id="L1668">		fixBrowserId(false);</span>
-<span class="fc" id="L1669">	}</span>
+<span class="fc" id="L1674">		fixBrowserId(false);</span>
+<span class="fc" id="L1675">	}</span>
 
 
 	public static void fixBrowserId(boolean forceUpdate)
 	{
-<span class="fc" id="L1674">		Connection db_conn = null;</span>
-<span class="fc" id="L1675">		PreparedStatement ps = null;</span>
-<span class="fc" id="L1676">		ResultSet rs = null;</span>
+<span class="fc" id="L1680">		Connection db_conn = null;</span>
+<span class="fc" id="L1681">		PreparedStatement ps = null;</span>
+<span class="fc" id="L1682">		ResultSet rs = null;</span>
 
-<span class="fc" id="L1678">		String note = &quot;14.3.2009 [kmarton] nastavenie spravnych hodnot browserId kvoli kompatibilite noveho kodu, ovplynuje tabulku stat_from a stat_views&quot;;</span>
+<span class="fc" id="L1684">		String note = &quot;14.3.2009 [kmarton] nastavenie spravnych hodnot browserId kvoli kompatibilite noveho kodu, ovplynuje tabulku stat_from a stat_views&quot;;</span>
 
 		try
 		{
-<span class="fc" id="L1682">			boolean found = false;</span>
+<span class="fc" id="L1688">			boolean found = false;</span>
 
-<span class="pc bpc" id="L1684" title="1 of 2 branches missed.">			if (forceUpdate == false)</span>
+<span class="pc bpc" id="L1690" title="1 of 2 branches missed.">			if (forceUpdate == false)</span>
 			{
 				//	otestuj, ci uz takato operacia neprebehla
-<span class="pc bpc" id="L1687" title="1 of 2 branches missed.">				if (isAllreadyUpdated(note)) found = true;</span>
+<span class="pc bpc" id="L1693" title="1 of 2 branches missed.">				if (isAllreadyUpdated(note)) found = true;</span>
 			}
 
-<span class="pc bpc" id="L1690" title="3 of 4 branches missed.">			if (found == true || Constants.getBoolean(&quot;updateDisableFixBrowserId&quot;))</span>
+<span class="pc bpc" id="L1696" title="3 of 4 branches missed.">			if (found == true || Constants.getBoolean(&quot;updateDisableFixBrowserId&quot;))</span>
 			{
-<span class="fc" id="L1692">				return;</span>
+<span class="fc" id="L1698">				return;</span>
 			}
 
-<span class="nc" id="L1695">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1701">			db_conn = DBPool.getConnection();</span>
 
 			//vygeneruje vsetky mozne nazvy tabuliek, ktore obsahuju browserId (hlavne parcionovane stat_views) a ulozi do Listu
-<span class="nc" id="L1698">			List&lt;String&gt; tableBrowserIdNames = UpdateDatabase.generateBrowserIdTableNames();</span>
+<span class="nc" id="L1704">			List&lt;String&gt; tableBrowserIdNames = UpdateDatabase.generateBrowserIdTableNames();</span>
 
-<span class="nc" id="L1700">			int count=1;</span>
+<span class="nc" id="L1706">			int count=1;</span>
 
-<span class="nc bnc" id="L1702" title="All 2 branches missed.">			for (String tableBrowserIdName : tableBrowserIdNames)</span>
+<span class="nc bnc" id="L1708" title="All 2 branches missed.">			for (String tableBrowserIdName : tableBrowserIdNames)</span>
 			{
-<span class="nc" id="L1704">				Logger.println(UpdateDatabase.class, &quot;Updating browserId in table &quot;+tableBrowserIdName+&quot; &quot;+count+&quot;/&quot;+tableBrowserIdNames.size());</span>
+<span class="nc" id="L1710">				Logger.println(UpdateDatabase.class, &quot;Updating browserId in table &quot;+tableBrowserIdName+&quot; &quot;+count+&quot;/&quot;+tableBrowserIdNames.size());</span>
 
-<span class="nc" id="L1706">				String sql = &quot;UPDATE &quot; + tableBrowserIdName + &quot; SET browser_id = browser_id + &quot; + Constants.getString(&quot;unloggedUserBrowserId&quot;) + &quot; WHERE browser_id &lt; &quot;+Constants.getString(&quot;loggedUserBrowserId&quot;);</span>
+<span class="nc" id="L1712">				String sql = &quot;UPDATE &quot; + tableBrowserIdName + &quot; SET browser_id = browser_id + &quot; + Constants.getString(&quot;unloggedUserBrowserId&quot;) + &quot; WHERE browser_id &lt; &quot;+Constants.getString(&quot;loggedUserBrowserId&quot;);</span>
 
 				try
 				{
-<span class="nc" id="L1710">					ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L1711">					int updated = ps.executeUpdate();</span>
-<span class="nc" id="L1712">					Logger.println(UpdateDatabase.class, &quot;Updated &quot;+tableBrowserIdName+&quot; &quot;+updated+&quot; rows&quot;);</span>
-<span class="nc" id="L1713">					ps.close();</span>
-<span class="nc" id="L1714">					ps = null;</span>
+<span class="nc" id="L1716">					ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L1717">					int updated = ps.executeUpdate();</span>
+<span class="nc" id="L1718">					Logger.println(UpdateDatabase.class, &quot;Updated &quot;+tableBrowserIdName+&quot; &quot;+updated+&quot; rows&quot;);</span>
+<span class="nc" id="L1719">					ps.close();</span>
+<span class="nc" id="L1720">					ps = null;</span>
 				}
-<span class="nc" id="L1716">				catch (Exception e)</span>
+<span class="nc" id="L1722">				catch (Exception e)</span>
 				{
 					// ak tabulka s danym nazvom neexistuje, vypise to a pokracuje
-<span class="nc" id="L1719">					Logger.info(UpdateDatabase.class, &quot;\nTable - &quot; + tableBrowserIdName + &quot; doesn't exist.\n&quot;);</span>
+<span class="nc" id="L1725">					Logger.info(UpdateDatabase.class, &quot;\nTable - &quot; + tableBrowserIdName + &quot; doesn't exist.\n&quot;);</span>
 					try
 					{
-<span class="nc bnc" id="L1722" title="All 2 branches missed.">						if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L1728" title="All 2 branches missed.">						if (ps != null) ps.close();</span>
 					}
-<span class="nc" id="L1724">					catch (Exception ex2) {}</span>
-<span class="nc" id="L1725">				}</span>
-<span class="nc" id="L1726">				count++;</span>
-<span class="nc" id="L1727">			}</span>
+<span class="nc" id="L1730">					catch (Exception ex2) {}</span>
+<span class="nc" id="L1731">				}</span>
+<span class="nc" id="L1732">				count++;</span>
+<span class="nc" id="L1733">			}</span>
 
-<span class="nc bnc" id="L1729" title="All 2 branches missed.">			if (forceUpdate == false)</span>
+<span class="nc bnc" id="L1735" title="All 2 branches missed.">			if (forceUpdate == false)</span>
 			{
-<span class="nc" id="L1731">				saveSuccessUpdate(note);</span>
+<span class="nc" id="L1737">				saveSuccessUpdate(note);</span>
 			}
 
-<span class="nc" id="L1734">			db_conn.close();</span>
-<span class="nc" id="L1735">			ps = null;</span>
-<span class="nc" id="L1736">			db_conn = null;</span>
+<span class="nc" id="L1740">			db_conn.close();</span>
+<span class="nc" id="L1741">			ps = null;</span>
+<span class="nc" id="L1742">			db_conn = null;</span>
 		}
-<span class="nc" id="L1738">		catch (Exception ex)</span>
+<span class="nc" id="L1744">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1740">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1746">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L1746" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1747">					rs.close();</span>
-<span class="pc bpc" id="L1748" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1749">					ps.close();</span>
-<span class="pc bpc" id="L1750" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1751">					db_conn.close();</span>
+<span class="pc bpc" id="L1752" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1753">					rs.close();</span>
+<span class="pc bpc" id="L1754" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1755">					ps.close();</span>
+<span class="pc bpc" id="L1756" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1757">					db_conn.close();</span>
 			}
-<span class="nc" id="L1753">			catch (Exception ex2)</span>
+<span class="nc" id="L1759">			catch (Exception ex2)</span>
 			{
-<span class="fc" id="L1755">			}</span>
+<span class="fc" id="L1761">			}</span>
 		}
-<span class="nc" id="L1757">	}</span>
+<span class="nc" id="L1763">	}</span>
 	/**
 	 * Funkcia, ktora vrati v Liste vsetky mozne nazvy tabuliek, ktore obsahuju browserId, ktore je potrebne zmenit
 	 * &lt;br /&gt; Ak je nastavena konstanta statEnableTablePartitioning na false, vratia sa iba tabulky stat_from a stat_views
@@ -1765,27 +1771,27 @@ public class UpdateDatabase
 	 */
 	private static List&lt;String&gt; generateBrowserIdTableNames()
 	{
-<span class="nc" id="L1768">		List&lt;String&gt; tableBrowserIdNames = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1774">		List&lt;String&gt; tableBrowserIdNames = new ArrayList&lt;&gt;();</span>
 
-<span class="nc" id="L1770">		tableBrowserIdNames.add(&quot;stat_from&quot;);</span>
-<span class="nc" id="L1771">		tableBrowserIdNames.add(&quot;stat_views&quot;);</span>
+<span class="nc" id="L1776">		tableBrowserIdNames.add(&quot;stat_from&quot;);</span>
+<span class="nc" id="L1777">		tableBrowserIdNames.add(&quot;stat_views&quot;);</span>
 
-<span class="nc bnc" id="L1773" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;statEnableTablePartitioning&quot;))</span>
-<span class="nc" id="L1774">			return tableBrowserIdNames;</span>
+<span class="nc bnc" id="L1779" title="All 2 branches missed.">		if (!Constants.getBoolean(&quot;statEnableTablePartitioning&quot;))</span>
+<span class="nc" id="L1780">			return tableBrowserIdNames;</span>
 
-<span class="nc" id="L1776">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1782">		Calendar cal = Calendar.getInstance();</span>
 
-<span class="nc bnc" id="L1778" title="All 2 branches missed.">		for (int year = 2000; year &lt; (cal.get(Calendar.YEAR)+1); year++)</span>
+<span class="nc bnc" id="L1784" title="All 2 branches missed.">		for (int year = 2000; year &lt; (cal.get(Calendar.YEAR)+1); year++)</span>
 		{
-<span class="nc bnc" id="L1780" title="All 2 branches missed.">			for (int month = 1; month &lt; 13; month++)</span>
+<span class="nc bnc" id="L1786" title="All 2 branches missed.">			for (int month = 1; month &lt; 13; month++)</span>
 			{
-<span class="nc" id="L1782">				tableBrowserIdNames.add(&quot;stat_views_&quot;+year+&quot;_&quot;+month);</span>
-<span class="nc bnc" id="L1783" title="All 4 branches missed.">				if ((year == cal.get(Calendar.YEAR)) &amp;&amp; (month == (cal.get(Calendar.MONTH)+1)))</span>
-<span class="nc" id="L1784">					break;</span>
+<span class="nc" id="L1788">				tableBrowserIdNames.add(&quot;stat_views_&quot;+year+&quot;_&quot;+month);</span>
+<span class="nc bnc" id="L1789" title="All 4 branches missed.">				if ((year == cal.get(Calendar.YEAR)) &amp;&amp; (month == (cal.get(Calendar.MONTH)+1)))</span>
+<span class="nc" id="L1790">					break;</span>
 			}
 		}
 
-<span class="nc" id="L1788">		return (tableBrowserIdNames);</span>
+<span class="nc" id="L1794">		return (tableBrowserIdNames);</span>
 	}
 
 	/**
@@ -1794,140 +1800,204 @@ public class UpdateDatabase
 	 */
 	public static void disabledItemsConfigRights()
 	{
-<span class="fc" id="L1797">		String note = &quot;11.01.2010 [jraska] rozdelenie pristupovych prav ovladacieho panela na jednotlive podkategorie&quot;;</span>
-<span class="pc bpc" id="L1798" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L1803">		String note = &quot;11.01.2010 [jraska] rozdelenie pristupovych prav ovladacieho panela na jednotlive podkategorie&quot;;</span>
+<span class="pc bpc" id="L1804" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L1800">		Connection db_conn = null;</span>
-<span class="nc" id="L1801">		PreparedStatement ps = null;</span>
-<span class="nc" id="L1802">		ResultSet rs = null;</span>
+<span class="nc" id="L1806">		Connection db_conn = null;</span>
+<span class="nc" id="L1807">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1808">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L1805">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1811">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L1807">			SimpleQuery sq = new SimpleQuery();</span>
-<span class="nc" id="L1808">			String [] newRights = {&quot;modUpdate&quot;,&quot;cmp_attributes&quot;,&quot;cmp_adminlog&quot;,&quot;edit_text&quot;,&quot;export_offline&quot;,&quot;cmp_clone_structure&quot;,&quot;cmp_data_deleting&quot;,&quot;cmp_server_monitoring&quot;,&quot;cmp_redirects&quot;,&quot;modRestart&quot;,&quot;cmp_crontab&quot;,&quot;make_zip_archive&quot;};</span>
+<span class="nc" id="L1813">			SimpleQuery sq = new SimpleQuery();</span>
+<span class="nc" id="L1814">			String [] newRights = {&quot;modUpdate&quot;,&quot;cmp_attributes&quot;,&quot;cmp_adminlog&quot;,&quot;edit_text&quot;,&quot;export_offline&quot;,&quot;cmp_clone_structure&quot;,&quot;cmp_data_deleting&quot;,&quot;cmp_server_monitoring&quot;,&quot;cmp_redirects&quot;,&quot;modRestart&quot;,&quot;cmp_crontab&quot;,&quot;make_zip_archive&quot;};</span>
 			//sq.execute(&quot;&quot;, newRights[0], newRights[1], newRights[2], newRights[3], newRights[4], newRights[5], newRights[6], newRights[7], newRights[8], newRights[9], newRights[10], newRights[11]);
-<span class="nc" id="L1810">			sq.execute(&quot;DELETE FROM user_disabled_items WHERE item_name IN (?,?,?,?,?,?,?,?,?,?,?,?)&quot;, (Object[])newRights);</span>
+<span class="nc" id="L1816">			sq.execute(&quot;DELETE FROM user_disabled_items WHERE item_name IN (?,?,?,?,?,?,?,?,?,?,?,?)&quot;, (Object[])newRights);</span>
 
-<span class="nc" id="L1812">			ps = db_conn.prepareStatement(&quot;SELECT user_id FROM user_disabled_items WHERE item_name=?&quot;);</span>
-<span class="nc" id="L1813">			ps.setString(1, &quot;menuConfig&quot;);</span>
-<span class="nc" id="L1814">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L1815" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L1818">			ps = db_conn.prepareStatement(&quot;SELECT user_id FROM user_disabled_items WHERE item_name=?&quot;);</span>
+<span class="nc" id="L1819">			ps.setString(1, &quot;menuConfig&quot;);</span>
+<span class="nc" id="L1820">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L1821" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L1817">				int user_id = rs.getInt(&quot;user_id&quot;);</span>
-<span class="nc bnc" id="L1818" title="All 2 branches missed.">				for(int i=0;i&lt;newRights.length;i++)</span>
+<span class="nc" id="L1823">				int user_id = rs.getInt(&quot;user_id&quot;);</span>
+<span class="nc bnc" id="L1824" title="All 2 branches missed.">				for(int i=0;i&lt;newRights.length;i++)</span>
 				{
-<span class="nc" id="L1820">					sq.execute(&quot;INSERT INTO user_disabled_items(user_id,item_name) VALUES(?,?)&quot;, user_id,newRights[i]);</span>
+<span class="nc" id="L1826">					sq.execute(&quot;INSERT INTO user_disabled_items(user_id,item_name) VALUES(?,?)&quot;, user_id,newRights[i]);</span>
 				}
 
-<span class="nc" id="L1823">			}</span>
-<span class="nc" id="L1824">			rs.close();</span>
-<span class="nc" id="L1825">			ps.close();</span>
-<span class="nc" id="L1826">			db_conn.close();</span>
-<span class="nc" id="L1827">			rs = null;</span>
-<span class="nc" id="L1828">			ps = null;</span>
-<span class="nc" id="L1829">			db_conn = null;</span>
+<span class="nc" id="L1829">			}</span>
+<span class="nc" id="L1830">			rs.close();</span>
+<span class="nc" id="L1831">			ps.close();</span>
+<span class="nc" id="L1832">			db_conn.close();</span>
+<span class="nc" id="L1833">			rs = null;</span>
+<span class="nc" id="L1834">			ps = null;</span>
+<span class="nc" id="L1835">			db_conn = null;</span>
 
 			//zapis do DB, ze je to importnute
-<span class="nc" id="L1832">			saveSuccessUpdate(note);</span>
+<span class="nc" id="L1838">			saveSuccessUpdate(note);</span>
 		}
-<span class="nc" id="L1834">		catch (Exception ex)</span>
+<span class="nc" id="L1840">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1836">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1842">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L1842" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L1843">					rs.close();</span>
-<span class="nc bnc" id="L1844" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L1845">					ps.close();</span>
-<span class="nc bnc" id="L1846" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L1847">					db_conn.close();</span>
+<span class="nc bnc" id="L1848" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L1849">					rs.close();</span>
+<span class="nc bnc" id="L1850" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L1851">					ps.close();</span>
+<span class="nc bnc" id="L1852" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L1853">					db_conn.close();</span>
 			}
-<span class="nc" id="L1849">			catch (Exception ex2)</span>
+<span class="nc" id="L1855">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L1851">			}</span>
+<span class="nc" id="L1857">			}</span>
 		}
-<span class="nc" id="L1853">	}</span>
+<span class="nc" id="L1859">	}</span>
 
 
 	public static void updateStatViewsColumns()
 	{
-<span class="fc" id="L1858">		String note = &quot;14.5.2010 [jeeff] pridanie novych stlpcov do stat_views&quot;;</span>
-<span class="pc bpc" id="L1859" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;updateDisableFixBrowserId&quot;) || isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L1864">		String note = &quot;14.5.2010 [jeeff] pridanie novych stlpcov do stat_views&quot;;</span>
+<span class="pc bpc" id="L1865" title="2 of 4 branches missed.">		if (Constants.getBoolean(&quot;updateDisableFixBrowserId&quot;) || isAllreadyUpdated(note)) return;</span>
 
-<span class="nc" id="L1861">		Connection db_conn = null;</span>
-<span class="nc" id="L1862">		PreparedStatement ps = null;</span>
+<span class="nc" id="L1867">		Connection db_conn = null;</span>
+<span class="nc" id="L1868">		PreparedStatement ps = null;</span>
 
-<span class="nc" id="L1864">		Calendar cal = Calendar.getInstance();</span>
-<span class="nc" id="L1865">		cal.add(Calendar.YEAR, 1);</span>
-<span class="nc" id="L1866">		long to = cal.getTimeInMillis();</span>
-<span class="nc" id="L1867">		cal.set(Calendar.YEAR, 2000);</span>
-<span class="nc" id="L1868">		cal.set(Calendar.DATE, 1);</span>
-<span class="nc" id="L1869">		cal.set(Calendar.MONTH, Calendar.JANUARY);</span>
-<span class="nc" id="L1870">		long from = cal.getTimeInMillis();</span>
+<span class="nc" id="L1870">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1871">		cal.add(Calendar.YEAR, 1);</span>
+<span class="nc" id="L1872">		long to = cal.getTimeInMillis();</span>
+<span class="nc" id="L1873">		cal.set(Calendar.YEAR, 2000);</span>
+<span class="nc" id="L1874">		cal.set(Calendar.DATE, 1);</span>
+<span class="nc" id="L1875">		cal.set(Calendar.MONTH, Calendar.JANUARY);</span>
+<span class="nc" id="L1876">		long from = cal.getTimeInMillis();</span>
 
-<span class="nc" id="L1872">		String[] suffixes = StatNewDB.getTableSuffix(from, to);</span>
-<span class="nc bnc" id="L1873" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="nc" id="L1878">		String[] suffixes = StatNewDB.getTableSuffix(from, to);</span>
+<span class="nc bnc" id="L1879" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
 			try
 			{
-<span class="nc" id="L1877">				Logger.println(UpdateDatabase.class, &quot;Updating stat_views columns &quot;+(s+1)+&quot;/&quot;+suffixes.length+&quot; &quot;+suffixes[s]);</span>
+<span class="nc" id="L1883">				Logger.println(UpdateDatabase.class, &quot;Updating stat_views columns &quot;+(s+1)+&quot;/&quot;+suffixes.length+&quot; &quot;+suffixes[s]);</span>
 
-<span class="nc" id="L1879">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L1885">				db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L1881">				StringBuilder sql = new StringBuilder(&quot;ALTER TABLE stat_views&quot;);</span>
-<span class="nc" id="L1882">				sql.append(suffixes[s]);</span>
-<span class="nc" id="L1883">				sql.append(' ');</span>
+<span class="nc" id="L1887">				StringBuilder sql = new StringBuilder(&quot;ALTER TABLE stat_views&quot;);</span>
+<span class="nc" id="L1888">				sql.append(suffixes[s]);</span>
+<span class="nc" id="L1889">				sql.append(' ');</span>
 
-<span class="nc bnc" id="L1885" title="All 2 branches missed.">				if (Constants.DB_TYPE==Constants.DB_ORACLE) sql.append(&quot;ADD (browser_ua_id INT, platform_id INT, subplatform_id INT, country VARCHAR(4))&quot;);</span>
-<span class="nc bnc" id="L1886" title="All 2 branches missed.">				else if (Constants.DB_TYPE==Constants.DB_MSSQL) sql.append(&quot;ADD browser_ua_id INT, platform_id INT, subplatform_id INT, country VARCHAR(4)&quot;);</span>
-<span class="nc" id="L1887">				else sql.append(&quot;ADD browser_ua_id INT, ADD platform_id INT, ADD subplatform_id INT, ADD country VARCHAR(4)&quot;);</span>
+<span class="nc bnc" id="L1891" title="All 2 branches missed.">				if (Constants.DB_TYPE==Constants.DB_ORACLE) sql.append(&quot;ADD (browser_ua_id INT, platform_id INT, subplatform_id INT, country VARCHAR(4))&quot;);</span>
+<span class="nc bnc" id="L1892" title="All 2 branches missed.">				else if (Constants.DB_TYPE==Constants.DB_MSSQL) sql.append(&quot;ADD browser_ua_id INT, platform_id INT, subplatform_id INT, country VARCHAR(4)&quot;);</span>
+<span class="nc" id="L1893">				else sql.append(&quot;ADD browser_ua_id INT, ADD platform_id INT, ADD subplatform_id INT, ADD country VARCHAR(4)&quot;);</span>
 
-<span class="nc" id="L1889">				ps = db_conn.prepareStatement(sql.toString());</span>
-<span class="nc" id="L1890">				ps.execute();</span>
-<span class="nc" id="L1891">				ps.close();</span>
-<span class="nc" id="L1892">				ps = null;</span>
+<span class="nc" id="L1895">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L1896">				ps.execute();</span>
+<span class="nc" id="L1897">				ps.close();</span>
+<span class="nc" id="L1898">				ps = null;</span>
 
 				//nastav prazdne hodnoty
-<span class="nc" id="L1895">				sql = new StringBuilder(&quot;UPDATE stat_views&quot;);</span>
-<span class="nc" id="L1896">				sql.append(suffixes[s]);</span>
-<span class="nc" id="L1897">				sql.append(&quot; SET browser_ua_id=0, platform_id=0, subplatform_id=0, country='unkn'&quot;);</span>
+<span class="nc" id="L1901">				sql = new StringBuilder(&quot;UPDATE stat_views&quot;);</span>
+<span class="nc" id="L1902">				sql.append(suffixes[s]);</span>
+<span class="nc" id="L1903">				sql.append(&quot; SET browser_ua_id=0, platform_id=0, subplatform_id=0, country='unkn'&quot;);</span>
 
-<span class="nc" id="L1899">				ps = db_conn.prepareStatement(sql.toString());</span>
-<span class="nc" id="L1900">				ps.execute();</span>
-<span class="nc" id="L1901">				ps.close();</span>
-<span class="nc" id="L1902">				db_conn.close();</span>
-<span class="nc" id="L1903">				ps = null;</span>
-<span class="nc" id="L1904">				db_conn = null;</span>
+<span class="nc" id="L1905">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L1906">				ps.execute();</span>
+<span class="nc" id="L1907">				ps.close();</span>
+<span class="nc" id="L1908">				db_conn.close();</span>
+<span class="nc" id="L1909">				ps = null;</span>
+<span class="nc" id="L1910">				db_conn = null;</span>
 			}
-<span class="nc" id="L1906">			catch (Exception ex)</span>
+<span class="nc" id="L1912">			catch (Exception ex)</span>
 			{
-<span class="nc bnc" id="L1908" title="All 4 branches missed.">				if (ex.getMessage().indexOf(&quot;exist&quot;)==-1 &amp;&amp; ex.getMessage().indexOf(&quot;duplicate&quot;)==-1)</span>
+<span class="nc bnc" id="L1914" title="All 4 branches missed.">				if (ex.getMessage().indexOf(&quot;exist&quot;)==-1 &amp;&amp; ex.getMessage().indexOf(&quot;duplicate&quot;)==-1)</span>
 				{
-<span class="nc" id="L1910">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1916">					sk.iway.iwcm.Logger.error(ex);</span>
 				}
 			}
 			finally
 			{
 				try
 				{
-<span class="nc bnc" id="L1917" title="All 2 branches missed.">					if (ps != null)</span>
-<span class="nc" id="L1918">						ps.close();</span>
-<span class="nc bnc" id="L1919" title="All 2 branches missed.">					if (db_conn != null)</span>
-<span class="nc" id="L1920">						db_conn.close();</span>
+<span class="nc bnc" id="L1923" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1924">						ps.close();</span>
+<span class="nc bnc" id="L1925" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1926">						db_conn.close();</span>
 				}
-<span class="nc" id="L1922">				catch (Exception ex2)</span>
+<span class="nc" id="L1928">				catch (Exception ex2)</span>
 				{
-<span class="nc" id="L1924">				}</span>
+<span class="nc" id="L1930">				}</span>
 			}
 		}
 
 		//zapis do DB, ze je to aktualizovane
-<span class="nc" id="L1929">		saveSuccessUpdate(note);</span>
-<span class="nc" id="L1930">	}</span>
+<span class="nc" id="L1935">		saveSuccessUpdate(note);</span>
+<span class="nc" id="L1936">	}</span>
+
+	public static void statErrorAddDomainId()
+	{
+<span class="fc" id="L1940">		String note = &quot;20.3.2024 [jeeff] stat_error add domain_id column&quot;;</span>
+<span class="pc bpc" id="L1941" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+
+<span class="nc" id="L1943">		Connection db_conn = null;</span>
+<span class="nc" id="L1944">		PreparedStatement ps = null;</span>
+
+<span class="nc" id="L1946">		Calendar cal = Calendar.getInstance();</span>
+<span class="nc" id="L1947">		cal.add(Calendar.YEAR, 1);</span>
+<span class="nc" id="L1948">		long to = cal.getTimeInMillis();</span>
+<span class="nc" id="L1949">		cal.set(Calendar.YEAR, 2000);</span>
+<span class="nc" id="L1950">		cal.set(Calendar.DATE, 1);</span>
+<span class="nc" id="L1951">		cal.set(Calendar.MONTH, Calendar.JANUARY);</span>
+<span class="nc" id="L1952">		long from = cal.getTimeInMillis();</span>
+
+<span class="nc" id="L1954">		String[] suffixes = StatNewDB.getTableSuffix(from, to);</span>
+<span class="nc bnc" id="L1955" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+		{
+			try
+			{
+<span class="nc" id="L1959">				Logger.println(UpdateDatabase.class, &quot;Add domain_id to stat_error&quot;+suffixes[s]+&quot; &quot;+(s+1)+&quot;/&quot;+suffixes.length);</span>
+
+<span class="nc" id="L1961">				db_conn = DBPool.getConnection();</span>
+
+<span class="nc" id="L1963">				StringBuilder sql = new StringBuilder(&quot;ALTER TABLE stat_error&quot;);</span>
+<span class="nc" id="L1964">				sql.append(suffixes[s]);</span>
+<span class="nc" id="L1965">				sql.append(' ');</span>
+
+<span class="nc" id="L1967">				sql.append(&quot;ADD domain_id INT DEFAULT 0 NOT NULL&quot;);</span>
+
+<span class="nc" id="L1969">				ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="nc" id="L1970">				ps.execute();</span>
+<span class="nc" id="L1971">				ps.close();</span>
+<span class="nc" id="L1972">				db_conn.close();</span>
+<span class="nc" id="L1973">				ps = null;</span>
+<span class="nc" id="L1974">				db_conn = null;</span>
+			}
+<span class="nc" id="L1976">			catch (Exception ex)</span>
+			{
+<span class="nc bnc" id="L1978" title="All 4 branches missed.">				if (ex.getMessage().indexOf(&quot;exist&quot;)==-1 &amp;&amp; ex.getMessage().indexOf(&quot;duplicate&quot;)==-1)</span>
+				{
+<span class="nc" id="L1980">					sk.iway.iwcm.Logger.error(ex);</span>
+				}
+			}
+			finally
+			{
+				try
+				{
+<span class="nc bnc" id="L1987" title="All 2 branches missed.">					if (ps != null)</span>
+<span class="nc" id="L1988">						ps.close();</span>
+<span class="nc bnc" id="L1989" title="All 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc" id="L1990">						db_conn.close();</span>
+				}
+<span class="nc" id="L1992">				catch (Exception ex2)</span>
+				{
+<span class="nc" id="L1994">				}</span>
+			}
+		}
+
+		//zapis do DB, ze je to aktualizovane
+<span class="nc" id="L1999">		saveSuccessUpdate(note);</span>
+<span class="nc" id="L2000">	}</span>
 
 	/**
 	 * Zmluvy - migracia do novej struktury, ak sa pouzivali zmluvy pred pridanim organizacie (#23935)
@@ -1935,185 +2005,253 @@ public class UpdateDatabase
 	public static void zmluvyOrganizacieUpdate()
 	{
 		//ak sa pouzivali zmluvy pred pridanim organizacie
-<span class="pc bpc" id="L1938" title="1 of 2 branches missed.">		if(Constants.getInt(&quot;zmluvyApproveGroupId&quot;) != -1)</span>
+<span class="pc bpc" id="L2008" title="1 of 2 branches missed.">		if(Constants.getInt(&quot;zmluvyApproveGroupId&quot;) != -1)</span>
 		{
-<span class="nc" id="L1940">			Logger.println(UpdateDatabase.class, &quot;(zmluvyOrganizacieUpdate) updating zmluvy, zmluvy_organizacia, zmluvy_organizacia_users, zmluvy_organizacia_approvers&quot;);</span>
+<span class="nc" id="L2010">			Logger.println(UpdateDatabase.class, &quot;(zmluvyOrganizacieUpdate) updating zmluvy, zmluvy_organizacia, zmluvy_organizacia_users, zmluvy_organizacia_approvers&quot;);</span>
 			try {
 				//ak existuje novy typ zmluv s pridanim organizacie
-<span class="nc" id="L1943">				Class.forName(&quot;sk.iway.iwcm.components.zmluvy.ZmluvyOrganizaciaBean&quot;);</span>
+<span class="nc" id="L2013">				Class.forName(&quot;sk.iway.iwcm.components.zmluvy.ZmluvyOrganizaciaBean&quot;);</span>
 				//ak mame zmluvy vo viacerych domenach, vytvorim pre kazdu domenu default organizaciu
 				@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L1946">				List&lt;Integer&gt; domeny = DB.queryForList(&quot;SELECT DISTINCT domain_id FROM zmluvy&quot;);</span>
-<span class="nc bnc" id="L1947" title="All 4 branches missed.">				if(domeny != null &amp;&amp; domeny.size() &gt; 0)</span>
+<span class="nc" id="L2016">				List&lt;Integer&gt; domeny = DB.queryForList(&quot;SELECT DISTINCT domain_id FROM zmluvy&quot;);</span>
+<span class="nc bnc" id="L2017" title="All 4 branches missed.">				if(domeny != null &amp;&amp; domeny.size() &gt; 0)</span>
 				{
-<span class="nc bnc" id="L1949" title="All 2 branches missed.">					for(Integer did : domeny)</span>
+<span class="nc bnc" id="L2019" title="All 2 branches missed.">					for(Integer did : domeny)</span>
 					{
-<span class="nc bnc" id="L1951" title="All 2 branches missed.">						if(did.intValue() &gt; 1)</span>
+<span class="nc bnc" id="L2021" title="All 2 branches missed.">						if(did.intValue() &gt; 1)</span>
 						{
-<span class="nc" id="L1953">							DB.execute(&quot;INSERT INTO zmluvy_organizacia (nazov, domain_id) VALUES (?, ?);&quot;, &quot;default&quot;, did);</span>
-<span class="nc" id="L1954">							int orgId = DB.queryForInt(&quot;SELECT MAX(zmluvy_organizacia_id) FROM zmluvy_organizacia&quot;);</span>
-<span class="nc" id="L1955">							DB.execute(&quot;UPDATE zmluvy SET organizacia_id = ? WHERE domain_id = ?&quot;, Integer.valueOf(orgId), did);</span>
+<span class="nc" id="L2023">							DB.execute(&quot;INSERT INTO zmluvy_organizacia (nazov, domain_id) VALUES (?, ?);&quot;, &quot;default&quot;, did);</span>
+<span class="nc" id="L2024">							int orgId = DB.queryForInt(&quot;SELECT MAX(zmluvy_organizacia_id) FROM zmluvy_organizacia&quot;);</span>
+<span class="nc" id="L2025">							DB.execute(&quot;UPDATE zmluvy SET organizacia_id = ? WHERE domain_id = ?&quot;, Integer.valueOf(orgId), did);</span>
 						}
-<span class="nc" id="L1957">					}</span>
+<span class="nc" id="L2027">					}</span>
 				}
 				@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L1960">				List&lt;Integer&gt; organizacie = DB.queryForList(&quot;SELECT zmluvy_organizacia_id FROM zmluvy_organizacia&quot;);</span>
+<span class="nc" id="L2030">				List&lt;Integer&gt; organizacie = DB.queryForList(&quot;SELECT zmluvy_organizacia_id FROM zmluvy_organizacia&quot;);</span>
 				//migrujem schvalovatelov zo skupiny definovanej v zmluvyApproveGroupId do tabulky zmluvy_organizacia_approvers
-<span class="nc bnc" id="L1962" title="All 2 branches missed.">				if(Constants.getInt(&quot;zmluvyApproveGroupId&quot;) &gt; 0)</span>
+<span class="nc bnc" id="L2032" title="All 2 branches missed.">				if(Constants.getInt(&quot;zmluvyApproveGroupId&quot;) &gt; 0)</span>
 				{
-<span class="nc" id="L1964">					List&lt;UserDetails&gt; approvers = UsersDB.getUsersByGroup(Constants.getInt(&quot;zmluvyApproveGroupId&quot;)); //vsetci schvalovatelia</span>
-<span class="nc bnc" id="L1965" title="All 4 branches missed.">					if(approvers != null &amp;&amp; approvers.size() &gt; 0)</span>
+<span class="nc" id="L2034">					List&lt;UserDetails&gt; approvers = UsersDB.getUsersByGroup(Constants.getInt(&quot;zmluvyApproveGroupId&quot;)); //vsetci schvalovatelia</span>
+<span class="nc bnc" id="L2035" title="All 4 branches missed.">					if(approvers != null &amp;&amp; approvers.size() &gt; 0)</span>
 					{
-<span class="nc bnc" id="L1967" title="All 2 branches missed.">						for(UserDetails u : approvers)</span>
+<span class="nc bnc" id="L2037" title="All 2 branches missed.">						for(UserDetails u : approvers)</span>
 						{
-<span class="nc bnc" id="L1969" title="All 2 branches missed.">							for(Integer oid : organizacie)</span>
-<span class="nc" id="L1970">								DB.execute(&quot;INSERT INTO zmluvy_organizacia_approvers (organizacia_id, user_id) VALUES (?, ?);&quot;, oid, Integer.valueOf(u.getUserId()));</span>
-<span class="nc" id="L1971">						}</span>
+<span class="nc bnc" id="L2039" title="All 2 branches missed.">							for(Integer oid : organizacie)</span>
+<span class="nc" id="L2040">								DB.execute(&quot;INSERT INTO zmluvy_organizacia_approvers (organizacia_id, user_id) VALUES (?, ?);&quot;, oid, Integer.valueOf(u.getUserId()));</span>
+<span class="nc" id="L2041">						}</span>
 					}
 				}
 				//ak sa pouzivali zmluvy (ratam aspon s troma, ak by niekto skusal vytvarat nejake testovacie), zmigrujem tych co maju prava na modul Zmluvy presunut do zmluvy_organizacia_users
-<span class="nc bnc" id="L1975" title="All 2 branches missed.">				if(DB.queryForInt(&quot;SELECT count(*) FROM zmluvy&quot;) &gt; 2)</span>
+<span class="nc bnc" id="L2045" title="All 2 branches missed.">				if(DB.queryForInt(&quot;SELECT count(*) FROM zmluvy&quot;) &gt; 2)</span>
 				{
-<span class="nc" id="L1977">					List&lt;UserDetails&gt; admins = UsersDB.getAdmins();</span>
-<span class="nc bnc" id="L1978" title="All 4 branches missed.">					if(admins != null &amp;&amp; admins.size() &gt; 0)</span>
+<span class="nc" id="L2047">					List&lt;UserDetails&gt; admins = UsersDB.getAdmins();</span>
+<span class="nc bnc" id="L2048" title="All 4 branches missed.">					if(admins != null &amp;&amp; admins.size() &gt; 0)</span>
 					{
-<span class="nc bnc" id="L1980" title="All 2 branches missed.">						for(UserDetails u : admins)</span>
+<span class="nc bnc" id="L2050" title="All 2 branches missed.">						for(UserDetails u : admins)</span>
 						{
-<span class="nc bnc" id="L1982" title="All 2 branches missed.">							if(DB.queryForInt(&quot;SELECT count(*) FROM user_disabled_items WHERE user_id=? AND item_name = ?&quot;, Integer.valueOf(u.getUserId()), &quot;cmp_zmluvy&quot;) == 0)</span>
-<span class="nc bnc" id="L1983" title="All 2 branches missed.">								for(Integer oid : organizacie)</span>
-<span class="nc" id="L1984">									DB.execute(&quot;INSERT INTO zmluvy_organizacia_users (organizacia_id, user_id) VALUES (?, ?);&quot;, oid, Integer.valueOf(u.getUserId()));</span>
-<span class="nc" id="L1985">						}</span>
+<span class="nc bnc" id="L2052" title="All 2 branches missed.">							if(DB.queryForInt(&quot;SELECT count(*) FROM user_disabled_items WHERE user_id=? AND item_name = ?&quot;, Integer.valueOf(u.getUserId()), &quot;cmp_zmluvy&quot;) == 0)</span>
+<span class="nc bnc" id="L2053" title="All 2 branches missed.">								for(Integer oid : organizacie)</span>
+<span class="nc" id="L2054">									DB.execute(&quot;INSERT INTO zmluvy_organizacia_users (organizacia_id, user_id) VALUES (?, ?);&quot;, oid, Integer.valueOf(u.getUserId()));</span>
+<span class="nc" id="L2055">						}</span>
 					}
 				}
 				//vymazem z premennych
-<span class="nc bnc" id="L1989" title="All 2 branches missed.">				if (ConfDB.deleteName(&quot;zmluvyApproveGroupId&quot;))</span>
+<span class="nc bnc" id="L2059" title="All 2 branches missed.">				if (ConfDB.deleteName(&quot;zmluvyApproveGroupId&quot;))</span>
 				{
-<span class="nc bnc" id="L1991" title="All 4 branches missed.">					if (Constants.deleteConstant(&quot;zmluvyApproveGroupId&quot;) &amp;&amp; ClusterDB.isServerRunningInClusterMode())</span>
-<span class="nc" id="L1992">						ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-zmluvyApproveGroupId&quot;);</span>
+<span class="nc bnc" id="L2061" title="All 4 branches missed.">					if (Constants.deleteConstant(&quot;zmluvyApproveGroupId&quot;) &amp;&amp; ClusterDB.isServerRunningInClusterMode())</span>
+<span class="nc" id="L2062">						ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-zmluvyApproveGroupId&quot;);</span>
 				}
-<span class="nc" id="L1994">			} catch( ClassNotFoundException e ) {</span>
+<span class="nc" id="L2064">			} catch( ClassNotFoundException e ) {</span>
 				//my class isn't there!
 			}
-<span class="nc" id="L1997">			catch( Exception ex ) {</span>
+<span class="nc" id="L2067">			catch( Exception ex ) {</span>
 				//asi nastala SQL chyba
-<span class="nc" id="L1999">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L2000">			}</span>
+<span class="nc" id="L2069">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L2070">			}</span>
 		}
-<span class="fc" id="L2002">	}</span>
+<span class="fc" id="L2072">	}</span>
 	public static void mediaGroupsUpdate()
 	{
-<span class="pc bpc" id="L2005" title="1 of 2 branches missed.">		if (&quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;))) return;</span>
+<span class="pc bpc" id="L2075" title="1 of 2 branches missed.">		if (&quot;public&quot;.equals(Constants.getString(&quot;clusterMyNodeType&quot;))) return;</span>
 
 		try
 		{
 			//tu si cachujeme vlozene media skupiny, nech nemusime po to chodit stale do DB
 
-<span class="fc" id="L2011">			Map&lt;String, Integer&gt; groupIdTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L2081">			Map&lt;String, Integer&gt; groupIdTable = new Hashtable&lt;&gt;();</span>
 
-<span class="fc" id="L2013">			int rows = DB.queryForInt(&quot;SELECT count(*) FROM media_group_to_media&quot;); // ak este nieje ziadny zaznam, spustim import</span>
-<span class="pc bpc" id="L2014" title="1 of 2 branches missed.">			if (rows == 0)</span>
+<span class="fc" id="L2083">			int rows = DB.queryForInt(&quot;SELECT count(*) FROM media_group_to_media&quot;); // ak este nieje ziadny zaznam, spustim import</span>
+<span class="pc bpc" id="L2084" title="1 of 2 branches missed.">			if (rows == 0)</span>
 			{
 				@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L2017">				List&lt;Number&gt; media = DB.queryForList(&quot;SELECT media_id FROM media&quot;);</span>
-<span class="nc bnc" id="L2018" title="All 4 branches missed.">				if (media != null &amp;&amp; media.size() &gt; 0)</span>
+<span class="nc" id="L2087">				List&lt;Number&gt; media = DB.queryForList(&quot;SELECT media_id FROM media&quot;);</span>
+<span class="nc bnc" id="L2088" title="All 4 branches missed.">				if (media != null &amp;&amp; media.size() &gt; 0)</span>
 				{
-<span class="nc bnc" id="L2020" title="All 2 branches missed.">					for (Number m : media)</span>
+<span class="nc bnc" id="L2090" title="All 2 branches missed.">					for (Number m : media)</span>
 					{
-<span class="nc" id="L2022">						String oldGroups = DB.queryForString(&quot;SELECT media_group FROM media WHERE media_id = ?&quot;, m);</span>
-<span class="nc bnc" id="L2023" title="All 2 branches missed.">						if (oldGroups != null)</span>
+<span class="nc" id="L2092">						String oldGroups = DB.queryForString(&quot;SELECT media_group FROM media WHERE media_id = ?&quot;, m);</span>
+<span class="nc bnc" id="L2093" title="All 2 branches missed.">						if (oldGroups != null)</span>
 						{
 							//String[] oldGroupsArray = oldGroups.split(&quot;,&quot;);
-<span class="nc" id="L2026">							String[] oldGroupsArray = Tools.getTokens(oldGroups, &quot;,&quot;, true);</span>
+<span class="nc" id="L2096">							String[] oldGroupsArray = Tools.getTokens(oldGroups, &quot;,&quot;, true);</span>
 
-<span class="nc bnc" id="L2028" title="All 2 branches missed.">							for (String g : oldGroupsArray)</span>
+<span class="nc bnc" id="L2098" title="All 2 branches missed.">							for (String g : oldGroupsArray)</span>
 							{
-<span class="nc" id="L2030">								Integer mediaGroupId = groupIdTable.get(g);</span>
-<span class="nc bnc" id="L2031" title="All 2 branches missed.">								if (mediaGroupId == null)</span>
+<span class="nc" id="L2100">								Integer mediaGroupId = groupIdTable.get(g);</span>
+<span class="nc bnc" id="L2101" title="All 2 branches missed.">								if (mediaGroupId == null)</span>
 								{
-<span class="nc" id="L2033">									int newGroupId = DB.queryForInt(&quot;SELECT media_group_id FROM media_groups WHERE media_group_name = ?&quot;, g);</span>
-<span class="nc bnc" id="L2034" title="All 2 branches missed.">									if (newGroupId == 0)</span>
+<span class="nc" id="L2103">									int newGroupId = DB.queryForInt(&quot;SELECT media_group_id FROM media_groups WHERE media_group_name = ?&quot;, g);</span>
+<span class="nc bnc" id="L2104" title="All 2 branches missed.">									if (newGroupId == 0)</span>
 									{
-<span class="nc" id="L2036">										DB.execute(&quot;INSERT INTO media_groups (media_group_id, media_group_name) VALUES (?, ?)&quot;, PkeyGenerator.getNextValue(&quot;MediaGroup&quot;), g);</span>
-<span class="nc" id="L2037">										Logger.info(UpdateDatabase.class, &quot;Vytvaram novu media skupinu: &quot; + g + &quot;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L2038">										newGroupId = DB.queryForInt(&quot;SELECT media_group_id FROM media_groups WHERE media_group_name = ?&quot;, g);</span>
+<span class="nc" id="L2106">										DB.execute(&quot;INSERT INTO media_groups (media_group_id, media_group_name) VALUES (?, ?)&quot;, PkeyGenerator.getNextValue(&quot;MediaGroup&quot;), g);</span>
+<span class="nc" id="L2107">										Logger.info(UpdateDatabase.class, &quot;Vytvaram novu media skupinu: &quot; + g + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L2108">										newGroupId = DB.queryForInt(&quot;SELECT media_group_id FROM media_groups WHERE media_group_name = ?&quot;, g);</span>
 									}
 									//vloz do cache pre dalsie pouzitie
-<span class="nc" id="L2041">									mediaGroupId = Integer.valueOf(newGroupId);</span>
-<span class="nc" id="L2042">									groupIdTable.put(g, mediaGroupId);</span>
+<span class="nc" id="L2111">									mediaGroupId = Integer.valueOf(newGroupId);</span>
+<span class="nc" id="L2112">									groupIdTable.put(g, mediaGroupId);</span>
 								}
 
 								try
 								{
 									//robime priamo insert, ak by bola duplicita, tak to padne, je to vyrazne rychlejsie ako neustale testovat ci uz zaznam existuje
-<span class="nc" id="L2048">									DB.execute(&quot;INSERT INTO media_group_to_media (media_group_id, media_id) VALUES (?,?)&quot;, mediaGroupId, m);</span>
-<span class="nc" id="L2049">									Logger.info(UpdateDatabase.class, &quot;Priradujem media skupinu: &quot; + g + &quot; ku mediu s ID &quot; + m + &quot;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L2050">								} catch (Exception ex) {}</span>
+<span class="nc" id="L2118">									DB.execute(&quot;INSERT INTO media_group_to_media (media_group_id, media_id) VALUES (?,?)&quot;, mediaGroupId, m);</span>
+<span class="nc" id="L2119">									Logger.info(UpdateDatabase.class, &quot;Priradujem media skupinu: &quot; + g + &quot; ku mediu s ID &quot; + m + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L2120">								} catch (Exception ex) {}</span>
 							}
 						}
-<span class="nc" id="L2053">					}</span>
+<span class="nc" id="L2123">					}</span>
 				}
 			}
 		}
-<span class="nc" id="L2057">		catch (Exception ex)</span>
+<span class="nc" id="L2127">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L2059">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L2060">		}</span>
-<span class="fc" id="L2061">	}</span>
+<span class="nc" id="L2129">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L2130">		}</span>
+<span class="fc" id="L2131">	}</span>
 
     /**
      * Nastavi map providera na GoogleMap ak je neprazdna konf. premenna googleMapsApiKey (lebo default je OpenStreetMap)
      */
     public static void setDefaultMapProvider()
     {
-<span class="fc" id="L2068">		String note = &quot;10.03.2018 [lbalat] nastavenie defaultneho map providera podla nastavenia googleMapsApiKey&quot;;</span>
-<span class="pc bpc" id="L2069" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L2138">		String note = &quot;10.03.2018 [lbalat] nastavenie defaultneho map providera podla nastavenia googleMapsApiKey&quot;;</span>
+<span class="pc bpc" id="L2139" title="1 of 2 branches missed.">		if (isAllreadyUpdated(note)) return;</span>
 
 		try
 		{
-<span class="nc bnc" id="L2073" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;googleMapsApiKey&quot;)))</span>
+<span class="nc bnc" id="L2143" title="All 2 branches missed.">			if (Tools.isNotEmpty(Constants.getString(&quot;googleMapsApiKey&quot;)))</span>
 			{
-<span class="nc" id="L2075">					SimpleQuery sq = new SimpleQuery();</span>
-<span class="nc" id="L2076">					sq.execute(&quot;INSERT INTO &quot; + ConfDB.CONF_TABLE_NAME + &quot; (name, value) VALUES ('mapProvider', 'GoogleMap')&quot;);</span>
+<span class="nc" id="L2145">					SimpleQuery sq = new SimpleQuery();</span>
+<span class="nc" id="L2146">					sq.execute(&quot;INSERT INTO &quot; + ConfDB.CONF_TABLE_NAME + &quot; (name, value) VALUES ('mapProvider', 'GoogleMap')&quot;);</span>
 			}
 		}
-<span class="nc" id="L2079">		catch (Exception ex)</span>
+<span class="nc" id="L2149">		catch (Exception ex)</span>
 		{
 			//ak to padlo, asi uz je konf. premenna mapProvider nastavena, nevadi, povazujeme za vybavene
-<span class="nc" id="L2082">		}</span>
+<span class="nc" id="L2152">		}</span>
 
-<span class="nc" id="L2084">		saveSuccessUpdate(note);</span>
-<span class="nc" id="L2085">    }</span>
+<span class="nc" id="L2154">		saveSuccessUpdate(note);</span>
+<span class="nc" id="L2155">    }</span>
 
 	public static void updateMediaDomainIdColumn() {
-<span class="fc" id="L2088">		String note = &quot;8.6.2023 [sivan] pridanie stlpcu domain_id do tabulky media&quot;;</span>
-<span class="pc bpc" id="L2089" title="2 of 4 branches missed.">		if(!Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) || isAllreadyUpdated(note)) return;</span>
+<span class="fc" id="L2158">		String note = &quot;8.6.2023 [sivan] pridanie stlpcu domain_id do tabulky media&quot;;</span>
+<span class="pc bpc" id="L2159" title="2 of 4 branches missed.">		if(!Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;) || isAllreadyUpdated(note)) return;</span>
 
 		try {
 			//We are using DISTINCT, because we set same domainid for all media records that obtain same media_fk_id (aka docId)
 			@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L2094">			List&lt;Number&gt; mediaFkIds = DB.queryForList(&quot;SELECT DISTINCT media_fk_id FROM media&quot;);</span>
+<span class="nc" id="L2164">			List&lt;Number&gt; mediaFkIds = DB.queryForList(&quot;SELECT DISTINCT media_fk_id FROM media&quot;);</span>
 
-<span class="nc bnc" id="L2096" title="All 2 branches missed.">			for(Number mediaFkId : mediaFkIds) {</span>
+<span class="nc bnc" id="L2166" title="All 2 branches missed.">			for(Number mediaFkId : mediaFkIds) {</span>
 
-<span class="nc" id="L2098">				DocDB docDB = DocDB.getInstance();</span>
-<span class="nc" id="L2099">				String domain = docDB.getDomain(mediaFkId.intValue());</span>
+<span class="nc" id="L2168">				DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L2169">				String domain = docDB.getDomain(mediaFkId.intValue());</span>
 
-<span class="nc" id="L2101">				Integer domainId = GroupsDB.getDomainId(domain);</span>
-<span class="nc bnc" id="L2102" title="All 2 branches missed.">				if(domainId == -1) domainId = 1;</span>
+<span class="nc" id="L2171">				Integer domainId = GroupsDB.getDomainId(domain);</span>
+<span class="nc bnc" id="L2172" title="All 2 branches missed.">				if(domainId == -1) domainId = 1;</span>
 
 				try {
 					//Set domain id based on media_fk_id (aka docId)
-<span class="nc" id="L2106">					DB.execute(&quot;UPDATE media SET domain_id = ? WHERE media_fk_id = ?&quot;, domainId, mediaFkId);</span>
-<span class="nc" id="L2107">					Logger.info(UpdateDatabase.class, &quot;Nastavujem media domainId = &quot; + domainId + &quot; pre docId = &quot; + mediaFkId + &quot; &lt;br&gt;&quot;);</span>
-<span class="nc" id="L2108">				} catch (Exception ex) {}</span>
-<span class="nc" id="L2109">			}</span>
+<span class="nc" id="L2176">					DB.execute(&quot;UPDATE media SET domain_id = ? WHERE media_fk_id = ?&quot;, domainId, mediaFkId);</span>
+<span class="nc" id="L2177">					Logger.info(UpdateDatabase.class, &quot;Nastavujem media domainId = &quot; + domainId + &quot; pre docId = &quot; + mediaFkId + &quot; &lt;br&gt;&quot;);</span>
+<span class="nc" id="L2178">				} catch (Exception ex) {}</span>
+<span class="nc" id="L2179">			}</span>
 
-<span class="nc" id="L2111">		} catch (Exception e) {</span>
-<span class="nc" id="L2112">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L2113">		}</span>
+<span class="nc" id="L2181">		} catch (Exception e) {</span>
+<span class="nc" id="L2182">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L2183">		}</span>
 
 		//zapis do DB, ze domain_id stlpec bol uz aktualizovany
-<span class="nc" id="L2116">		saveSuccessUpdate(note);</span>
-<span class="nc" id="L2117">	}</span>
+<span class="nc" id="L2186">		saveSuccessUpdate(note);</span>
+<span class="nc" id="L2187">	}</span>
+
+	public static void updateEmailsCampainDomainIdColumn() {
+<span class="fc" id="L2190">		String note = &quot;18.3.2024 [sivan] pridanie stlpcu domain_id do tabulky emails_campain&quot;;</span>
+<span class="pc bpc" id="L2191" title="1 of 2 branches missed.">		if(isAllreadyUpdated(note)) return;</span>
+
+		try {
+			@SuppressWarnings(&quot;unchecked&quot;)
+<span class="nc" id="L2195">			List&lt;String&gt; emailsCampainUrl = DB.queryForList(&quot;SELECT DISTINCT url FROM emails_campain&quot;);</span>
+
+<span class="nc bnc" id="L2197" title="All 2 branches missed.">			for(String url : emailsCampainUrl) {</span>
+<span class="nc" id="L2198">				int domainId = getDomainIdBasedOnUrl(url);</span>
+
+				try {
+					//Set domain id based on URL
+<span class="nc" id="L2202">					DB.execute(&quot;UPDATE emails_campain SET domain_id = ? WHERE url = ?&quot;, domainId, url);</span>
+<span class="nc" id="L2203">					Logger.info(UpdateDatabase.class, &quot;Setting emails_campain domainId = &quot; + domainId + &quot; for url = &quot; + url);</span>
+<span class="nc" id="L2204">				} catch (Exception ex) {}</span>
+
+				try {
+					//Set domain id based on URL
+<span class="nc" id="L2208">					DB.execute(&quot;UPDATE emails SET domain_id = ? WHERE url LIKE ?&quot;, domainId, url+&quot;%&quot;);</span>
+<span class="nc" id="L2209">					Logger.info(UpdateDatabase.class, &quot;Settings emails domainId = &quot; + domainId + &quot; for url = &quot; + url);</span>
+<span class="nc" id="L2210">				} catch (Exception ex) {}</span>
+<span class="nc" id="L2211">			}</span>
+
+<span class="nc" id="L2213">		} catch (Exception e) {</span>
+<span class="nc" id="L2214">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L2215">		}</span>
+
+		//zapis do DB, ze domain_id stlpec bol uz aktualizovany
+<span class="nc" id="L2218">		saveSuccessUpdate(note);</span>
+<span class="nc" id="L2219">	}</span>
+
+	private static int getDomainIdBasedOnUrl(String url) throws Exception {
+<span class="nc" id="L2222">		int domainId = 1;</span>
+<span class="nc bnc" id="L2223" title="All 2 branches missed.">		if( Tools.isNotEmpty(url) ) {</span>
+<span class="nc" id="L2224">			DocDetails doc = WebpagesService.getBasicDocFromUrl(url);</span>
+<span class="nc bnc" id="L2225" title="All 2 branches missed.">			if(doc != null) {</span>
+<span class="nc" id="L2226">				GroupDetails group = doc.getGroup();</span>
+<span class="nc bnc" id="L2227" title="All 2 branches missed.">				if(group != null) {</span>
+<span class="nc" id="L2228">					String domainName = group.getDomainName();</span>
+<span class="nc bnc" id="L2229" title="All 2 branches missed.">					if( Tools.isNotEmpty(domainName) ) {</span>
+<span class="nc" id="L2230">						domainId = GroupsDB.getDomainId(domainName);</span>
+<span class="nc bnc" id="L2231" title="All 2 branches missed.">						if(domainId &lt; 1) domainId = 1;</span>
+					}
+				}
+<span class="nc" id="L2234">			} else {</span>
+				try {
+					//get domainId from URL
+<span class="nc bnc" id="L2237" title="All 2 branches missed.">					if (url.startsWith(&quot;http&quot;)) {</span>
+<span class="nc" id="L2238">						int to = url.indexOf(&quot;/&quot;, 8);</span>
+<span class="nc bnc" id="L2239" title="All 2 branches missed.">						if (to==-1) to = url.indexOf(&quot;:&quot;, 8);</span>
+<span class="nc bnc" id="L2240" title="All 2 branches missed.">						if (to==-1) to = url.indexOf(&quot;?&quot;, 8);</span>
+
+<span class="nc" id="L2242">						String domainName = url.substring(url.indexOf(&quot;://&quot;)+3, to);</span>
+<span class="nc" id="L2243">						int portDelimiter = domainName.indexOf(&quot;:&quot;);</span>
+<span class="nc bnc" id="L2244" title="All 2 branches missed.">						if (portDelimiter &gt; 0) domainName = domainName.substring(0, portDelimiter);</span>
+
+<span class="nc" id="L2246">						domainId = GroupsDB.getDomainId(domainName);</span>
+					}
+<span class="nc" id="L2248">				} catch (Exception e) {</span>
+					//do nothing
+<span class="nc" id="L2250">				}</span>
+			}
+		}
+
+<span class="nc" id="L2254">		return domainId;</span>
+	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

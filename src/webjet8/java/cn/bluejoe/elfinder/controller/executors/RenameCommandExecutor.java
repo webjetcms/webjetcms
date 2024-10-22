@@ -8,6 +8,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.ServletContext;
@@ -32,12 +33,15 @@ public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
 		if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), fsi.getParent().getPath()))
 		{
+			// remove diacritics
+			name = IwcmFsVolume.removeSpecialChars(name, fsi);
+
 			FsItemEx dst = new FsItemEx(fsi.getParent(), name);
-			
+
 			//#20481 - po vystrihnuti/premenovani vytvori redirect
 			if(PasteCommandExecutor.isAllowedFolder(fsi.getPath(), Constants.getString("elfinderRedirectFolders")))
 				PasteCommandExecutor.createRedirect(fsi, fsi.getPath(), dst.getPath(), request);
-			
+
 			fsi.renameTo(dst);
 
 			json.put("added", new Object[] { getFsItemInfo(request, dst) });

@@ -36,9 +36,9 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 	private List&lt;CronTask&gt; loadFromDatabase()
 	{
 <span class="pc bpc" id="L38" title="1 of 2 branches missed.">		if (ClusterDB.isServerRunningInClusterMode()==false) return new ComplexQuery().setSql(&quot;SELECT * FROM crontab&quot;).list(CronDB.mapper);</span>
-		
-<span class="fc" id="L40">		return new ComplexQuery().setSql(&quot;SELECT * FROM crontab WHERE cluster_node IS NULL OR cluster_node = 'all' OR cluster_node = ?&quot;).</span>
+
+<span class="fc" id="L40">		return new ComplexQuery().setSql(&quot;SELECT * FROM crontab WHERE cluster_node IS NULL OR cluster_node = '' OR cluster_node = 'all' OR cluster_node = ?&quot;).</span>
 <span class="fc" id="L41">			setParams(Constants.getString(&quot;clusterMyNodeName&quot;)).list(CronDB.mapper);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

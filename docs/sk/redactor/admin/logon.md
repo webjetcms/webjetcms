@@ -10,7 +10,7 @@ v ktorej zadajte vaše prihlasovacie meno a heslo. Do prihlasovacieho dialógu j
 
 Kliknutím na odkaz **Zabudnuté heslo** sa zobrazí formulár na zmenu hesla. Zadajte vašu emailovú adresu, ak je evidovaná v systéme dostanete na email odkaz na zmenu hesla. Kliknite na odkaz v maile, ktorý ste dostali pre zobrazenie formuláru na zmenu hesla.
 
-Podľa nastavenia systému môže expirovať platnosť vášho hesla, alebo nemusí už spĺňať bezpečnostné požiadavky. Vtedy sa po zadaní správneho hesla zobrazí výzva na zadanie nového hesla:
+Podľa nastavenia systému môže exspirovať platnosť vášho hesla, alebo nemusí už spĺňať bezpečnostné požiadavky. Vtedy sa po zadaní správneho hesla zobrazí výzva na zadanie nového hesla:
 
 ![](logon-weak-password.png)
 
@@ -24,4 +24,4 @@ Odkaz na odhlásenie sa nachádza v hlavičke administrácie v pravej hornej ča
 
 Kliknutím na ikonu odhlásenia sa odhlásite z WebJET CMS. Z dôvodu bezpečnosti odporúčame, aby ste sa **vždy po skončení práce odhlásili** a nielen zatvorili okno v prehliadači.
 
-**Upozornenie:** pri menšej veľkosti okna sa nezobrazuje hlavička, kliknite na ikonu hamburger menu ![](icon-hamburger.png ":no-zoom") pre zobrazenie hlavičky.
+!>**Upozornenie:** pri menšej veľkosti okna sa nezobrazuje hlavička, kliknite na ikonu hamburger menu ![](icon-hamburger.png ":no-zoom") pre zobrazenie hlavičky.

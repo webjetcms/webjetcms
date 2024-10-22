@@ -285,14 +285,9 @@ public class Modules
 				//Logger.debug(Modules.class, "components["+i+"]="+components[i].getAbsolutePath()+" isDir="+components[i].isDirectory());
 				if (file.isDirectory())
 				{
-					if ("CVS".equals(file.getName()))
-		         {
-		            continue;
-		         }
-
 					for (int j=0; j<30; j++)
 					{
-		         	m = new ModuleInfo();
+		         		m = new ModuleInfo();
 						m.setNameKey(propertiesPrefix+file.getName()+".title");
 						m.setItemKey("cmp_"+file.getName());
 						m.setPath(baseDir+file.getName());
@@ -728,7 +723,7 @@ public class Modules
 			loadModule(sub);
 		}
 
-		ModuleInfo files = new ModuleInfo("menu.fbrowser", "menuFbrowser", "/admin/elFinder/index.jsp", null, true, true, "/admin/elFinder/", modVersions.get("menu.fbrowser"), 45).setGroup("files").setMenuIcon("folder");
+		ModuleInfo files = new ModuleInfo("menu.fbrowser", "menuFbrowser", "/admin/v9/files/index/", null, true, true, "/admin/elFinder/", modVersions.get("menu.fbrowser"), 45).setGroup("files").setMenuIcon("folder");
 
 		sub = new ModuleInfo();
 		sub.setNameKey("menu.fbrowser.deleteDirectory");

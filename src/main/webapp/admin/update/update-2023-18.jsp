@@ -320,6 +320,24 @@ static {
 	replaces.add(new OptionDto("far fa-check-circle", "ti ti-circle-check", null));
 	replaces.add(new OptionDto("fas fa-lock", "ti ti-lock-filled", null));
 	replaces.add(new OptionDto("fas fa-home", "ti ti-home", null));
+
+	replaces.add(new OptionDto("fa fa-snowflake", "ti ti-snowflake", null));
+	replaces.add(new OptionDto("fas fa-external-link-alt", "ti ti-external-link", null));
+	replaces.add(new OptionDto("fas fa-globe", "ti ti-map-pin", null));
+	replaces.add(new OptionDto("far fa-globe", "ti ti-map-pin-off", null));
+	replaces.add(new OptionDto("fas fa-eye-slash", "ti ti-eye-off", null));
+	replaces.add(new OptionDto("fas fa-chevron-down", "ti ti-chevron-down", null));
+	replaces.add(new OptionDto("fas fa-restroom", "ti ti-a-b", null));
+	replaces.add(new OptionDto("far fa-link-slash", "", null));
+	replaces.add(new OptionDto("fas fa-star", "ti ti-star", null));
+	replaces.add(new OptionDto("fas fa-map-marker-alt", "ti ti-map-pin", null));
+	replaces.add(new OptionDto("far fa-map-marker-alt-slash", "ti ti-map-pin-off", null));
+	replaces.add(new OptionDto("far fa-th-list", "ti ti-list-details", null));
+	replaces.add(new OptionDto("far fa-image", "ti ti-photo", null));
+	replaces.add(new OptionDto("far fa-retweet", "ti ti-repeat", null));
+	replaces.add(new OptionDto("far fa-camera", "ti ti-camera", null));
+	
+	replaces.add(new OptionDto("org.apache.commons.dbcp.ConfigurableDataSource", "sk.iway.iwcm.system.dbpool.ConfigurableDataSource", null));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException
@@ -411,6 +429,10 @@ private void checkDir(String url, boolean saveFile, boolean compileFile, JspWrit
 							content = Tools.replace(content, "uri=\"/WEB-INF/struts-html.tld\" prefix=\"html\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"");
 							content = Tools.replace(content, "prefix=\"html\" uri=\"/WEB-INF/struts-html.tld\"", "prefix=\"form\" uri=\"http://www.springframework.org/tags/form\"");
 						} else content = Tools.replace(content, "</html:form>", "</form>");
+
+						//fix FILE input type for upload
+						content = Tools.replace(content, "<html:file property=\"file\" styleClass=\"input\"", "<input type=\"file\" name=\"file\" class=\"input\"");
+						content = Tools.replace(content, "<html:file property=\"file\"", "<input type=\"file\" name=\"file\"");
 					}
 				}
 			}

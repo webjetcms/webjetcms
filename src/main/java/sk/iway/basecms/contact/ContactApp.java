@@ -44,7 +44,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {
-
     //Spring DATA repozitar
     @JsonIgnore
     private ContactRepository contactRepository;
@@ -53,7 +52,7 @@ public class ContactApp extends WebjetComponentAbstract {
      * Privatne vlastnosti s get/set-rami slúžia na prenesenie parametrov pageParams z !INCLUDE()! do triedy
      * Pomocou anotacie @DataTableColumn vytvarame pole pre nastavenie aplikacie
      */
-    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", editor = {
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, title = "components.contact.property.country" , tab = "basic", editor = {
         @DataTableColumnEditor(
             options = {
                 //klasicky option tag

@@ -160,11 +160,8 @@ public class GroupsService extends NotifyService {
      * @return
      */
     public static GroupDetails getTrashGroupDetails() {
-        Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-        String trashDirName = propSystem.getText("config.trash_dir");
         GroupsDB groupsDB = GroupsDB.getInstance();
-        GroupDetails trashGroupDetails = groupsDB.getCreateGroup(trashDirName);
-        return trashGroupDetails;
+        return groupsDB.getTrashGroup();
     }
 
     /**

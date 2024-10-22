@@ -199,6 +199,7 @@ public class EditorUtils {
         else dataAsc = (DB.internationalToEnglish(data).trim()).toLowerCase();
 
         dataAsc = EditorToolsForCore.removeHtmlTagsKeepLength(dataAsc);
+		dataAsc = Tools.replace(dataAsc, "&nbsp;", "      ");
 
         if (editedDoc != null)
         {

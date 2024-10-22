@@ -59,7 +59,7 @@ import sk.iway.iwcm.i18n.Prop;
 	{
 <span class="pc bpc" id="L60" title="1 of 2 branches missed.">		if (Tools.isEmpty(component)) return true;</span>
 
-<span class="pc bpc" id="L62" title="2 of 4 branches missed.">		if ((&quot; &quot;+Constants.getString(&quot;captchaComponents&quot;)+&quot; &quot;).indexOf(&quot; &quot;+component+&quot; &quot;)!=-1 || (&quot;,&quot;+Constants.getString(&quot;captchaComponents&quot;)+&quot;,&quot;).indexOf(&quot;,&quot;+component+&quot;,&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L62" title="1 of 4 branches missed.">		if ((&quot; &quot;+Constants.getString(&quot;captchaComponents&quot;)+&quot; &quot;).indexOf(&quot; &quot;+component+&quot; &quot;)!=-1 || (&quot;,&quot;+Constants.getString(&quot;captchaComponents&quot;)+&quot;,&quot;).indexOf(&quot;,&quot;+component+&quot;,&quot;)!=-1) return true;</span>
 <span class="fc" id="L63">		return false;</span>
 	}
 
@@ -241,32 +241,32 @@ import sk.iway.iwcm.i18n.Prop;
 	 */
 	public static boolean isReponseCorrect(HttpServletRequest httpServletRequest, String response)
 	{
-<span class="nc bnc" id="L244" title="All 2 branches missed.">		if (Tools.isEmpty(response)) return false;</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">		if (Tools.isEmpty(response)) return false;</span>
 
-<span class="nc" id="L246">		Boolean isResponseCorrect = Boolean.FALSE;</span>
+<span class="fc" id="L246">		Boolean isResponseCorrect = Boolean.FALSE;</span>
 		// remenber that we need an id to validate!
-<span class="nc" id="L248">		String captchaId = httpServletRequest.getSession().getId();</span>
+<span class="fc" id="L248">		String captchaId = httpServletRequest.getSession().getId();</span>
 		// retrieve the response
 		// Call the Service method
-<span class="nc bnc" id="L251" title="All 2 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;))) {</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;))) {</span>
 <span class="nc" id="L252">			return reCaptchaValidate(response);</span>
 		}
-<span class="nc bnc" id="L254" title="All 2 branches missed.">		else if (&quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">		else if (&quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
 		{
 <span class="nc" id="L256">			return reCaptchaValidate(httpServletRequest.getSession().getAttribute(&quot;sessionId&quot;));</span>
 		}
 		try
 		{
-<span class="nc" id="L260">			isResponseCorrect = CaptchaServiceSingleton.getInstance().testResponseForID(captchaId, response);</span>
+<span class="fc" id="L260">			isResponseCorrect = CaptchaServiceSingleton.getInstance().testResponseForID(captchaId, response);</span>
 			//Logger.debug(Captcha.class, &quot;ID=&quot;+captchaId+&quot;, response=&quot;+response+&quot;, correct=&quot;+isResponseCorrect);
 		}
 <span class="nc" id="L263">		catch (CaptchaServiceException e)</span>
 		{
 			// should not happen, may be thrown if the id is not valid
 <span class="nc" id="L266">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L267">		}</span>
-<span class="nc bnc" id="L268" title="All 2 branches missed.">		if (isResponseCorrect == null) isResponseCorrect = Boolean.FALSE;</span>
-<span class="nc" id="L269">		return isResponseCorrect.booleanValue();</span>
+<span class="fc" id="L267">		}</span>
+<span class="pc bpc" id="L268" title="1 of 2 branches missed.">		if (isResponseCorrect == null) isResponseCorrect = Boolean.FALSE;</span>
+<span class="fc" id="L269">		return isResponseCorrect.booleanValue();</span>
 	}
 
 	/**
@@ -278,7 +278,7 @@ import sk.iway.iwcm.i18n.Prop;
 	 */
 	public static void getImage(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) throws ServletException, IOException
 	{
-<span class="nc bnc" id="L281" title="All 4 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;)) || &quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))// pre reCaptcha nepotrebujeme</span>
+<span class="pc bpc" id="L281" title="2 of 4 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;)) || &quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))// pre reCaptcha nepotrebujeme</span>
 <span class="nc" id="L282">			return;</span>
 
 		// the output stream to render the captcha image as jpeg into
@@ -287,38 +287,38 @@ import sk.iway.iwcm.i18n.Prop;
 			// get the session id that will identify the generated captcha.
 			// the same id must be used to validate the response, the session id is
 			// a good candidate!
-<span class="nc" id="L290">			String captchaId = httpServletRequest.getSession().getId();</span>
+<span class="fc" id="L290">			String captchaId = httpServletRequest.getSession().getId();</span>
 			//Logger.debug(Captcha.class, &quot;Generating CAPTCHA for &quot;+captchaId);
 			// call the ImageCaptchaService getChallenge method
 
-<span class="nc" id="L294">			ByteArrayOutputStream jpegOutputStream = new ByteArrayOutputStream();</span>
-<span class="nc" id="L295">			BufferedImage challenge = CaptchaServiceSingleton.getInstance().getImageChallengeForID(captchaId, Locale.ENGLISH);</span>
-<span class="nc" id="L296">			ImageIO.write(challenge, &quot;jpg&quot;, jpegOutputStream);</span>
-<span class="nc" id="L297">			byte[] captchaChallengeAsJpeg = null;</span>
-<span class="nc" id="L298">			captchaChallengeAsJpeg = jpegOutputStream.toByteArray();</span>
+<span class="fc" id="L294">			ByteArrayOutputStream jpegOutputStream = new ByteArrayOutputStream();</span>
+<span class="fc" id="L295">			BufferedImage challenge = CaptchaServiceSingleton.getInstance().getImageChallengeForID(captchaId, Locale.ENGLISH);</span>
+<span class="fc" id="L296">			ImageIO.write(challenge, &quot;jpg&quot;, jpegOutputStream);</span>
+<span class="fc" id="L297">			byte[] captchaChallengeAsJpeg = null;</span>
+<span class="fc" id="L298">			captchaChallengeAsJpeg = jpegOutputStream.toByteArray();</span>
 
 
 			// flush it in the response
-<span class="nc" id="L302">			httpServletResponse.setHeader(&quot;Cache-Control&quot;, &quot;no-store&quot;);</span>
-<span class="nc" id="L303">			httpServletResponse.setHeader(&quot;Pragma&quot;, &quot;no-cache&quot;);</span>
-<span class="nc" id="L304">			httpServletResponse.setDateHeader(&quot;Expires&quot;, 0);</span>
-<span class="nc" id="L305">			httpServletResponse.setContentType(&quot;image/jpeg&quot;);</span>
-<span class="nc" id="L306">			ServletOutputStream responseOutputStream = httpServletResponse.getOutputStream();</span>
+<span class="fc" id="L302">			httpServletResponse.setHeader(&quot;Cache-Control&quot;, &quot;no-store&quot;);</span>
+<span class="fc" id="L303">			httpServletResponse.setHeader(&quot;Pragma&quot;, &quot;no-cache&quot;);</span>
+<span class="fc" id="L304">			httpServletResponse.setDateHeader(&quot;Expires&quot;, 0);</span>
+<span class="fc" id="L305">			httpServletResponse.setContentType(&quot;image/jpeg&quot;);</span>
+<span class="fc" id="L306">			ServletOutputStream responseOutputStream = httpServletResponse.getOutputStream();</span>
 
 
-<span class="nc" id="L309">			responseOutputStream.write(captchaChallengeAsJpeg);</span>
+<span class="fc" id="L309">			responseOutputStream.write(captchaChallengeAsJpeg);</span>
 
 			//use imageio to write image
 			//ImageIO.write(challenge, &quot;jpeg&quot;, responseOutputStream);
-<span class="nc" id="L313">			responseOutputStream.flush();</span>
-<span class="nc" id="L314">			responseOutputStream.close();</span>
+<span class="fc" id="L313">			responseOutputStream.flush();</span>
+<span class="fc" id="L314">			responseOutputStream.close();</span>
 		}
 <span class="nc" id="L316">		catch (CaptchaServiceException e)</span>
 		{
 <span class="nc" id="L318">			httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);</span>
 <span class="nc" id="L319">			return;</span>
-<span class="nc" id="L320">		}</span>
-<span class="nc" id="L321">	}</span>
+<span class="fc" id="L320">		}</span>
+<span class="fc" id="L321">	}</span>
 
 	/**
 	 * Vrati HTML kod captcha obrazku
@@ -327,10 +327,10 @@ import sk.iway.iwcm.i18n.Prop;
 	 */
 	public static String getImage(HttpServletRequest request)
 	{
-<span class="nc" id="L330">		Prop prop = Prop.getInstance(request);</span>
-<span class="nc bnc" id="L331" title="All 4 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;)) || &quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
+<span class="fc" id="L330">		Prop prop = Prop.getInstance(request);</span>
+<span class="pc bpc" id="L331" title="2 of 4 branches missed.">		if(&quot;invisible&quot;.equals(Constants.getString(&quot;captchaType&quot;)) || &quot;reCaptcha&quot;.equals(Constants.getString(&quot;captchaType&quot;)))</span>
 <span class="nc" id="L332">			return captchaDiv;</span>
-<span class="nc" id="L333">		return (&quot;&lt;img id=\&quot;wjcaptchaImg1\&quot; class=\&quot;captchaImage\&quot; src=\&quot;/captcha.jpg\&quot; onclick=\&quot;this.src='/captcha.jpg?rnd='+(new Date().getTime());\&quot; style=\&quot;cursor: pointer;\&quot; alt=\&quot;&quot;+prop.getText(&quot;captcha.imageAlt&quot;)+&quot;\&quot; title=\&quot;&quot;+prop.getText(&quot;captcha.imageAlt&quot;)+&quot;\&quot;/&gt;&quot;);</span>
+<span class="fc" id="L333">		return (&quot;&lt;img id=\&quot;wjcaptchaImg1\&quot; class=\&quot;captchaImage\&quot; src=\&quot;/captcha.jpg\&quot; onclick=\&quot;this.src='/captcha.jpg?rnd='+(new Date().getTime());\&quot; style=\&quot;cursor: pointer;\&quot; alt=\&quot;&quot;+prop.getText(&quot;captcha.imageAlt&quot;)+&quot;\&quot; title=\&quot;&quot;+prop.getText(&quot;captcha.imageAlt&quot;)+&quot;\&quot;/&gt;&quot;);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -2,7 +2,6 @@ Feature('apps.user-authorize');
 
 var randomText = null;
 var tempMailAddress = "webjetcms@fexpost.com";
-var tempMailPin = "264583092304377";
 let userName = "autotestApproveUser_";
 let password;
 let firstName = "firstName_";
@@ -22,7 +21,7 @@ Before(({ I }) => {
     }
 });
 
-function loginIN(I, password, correctPassword=false, checkText=true, userName="tester") {
+async function loginIN(I, password, correctPassword=false, checkText=true, userName="tester") {
     I.wait(1);
     I.fillField("username", userName);
     if (correctPassword) I.fillField("password", secret(password));
@@ -30,7 +29,18 @@ function loginIN(I, password, correctPassword=false, checkText=true, userName="t
     I.clickCss(".login-submit");
 
     if (checkText) {
-        if (correctPassword) I.see("tento text sa zobrazí len prihlásenému používateľovi.");
+        if (correctPassword){
+            let errorCount = await I.grabNumberOfVisibleElements('.error');
+            if (errorCount > 0){
+              let errorMessage = await I.grabTextFrom('.error');
+              if (errorMessage.includes('Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované')) {
+                I.wait(10.1);
+                I.fillField("password", secret(password));
+                I.clickCss(".login-submit");
+                }
+            }
+            I.waitForText("tento text sa zobrazí len prihlásenému používateľovi.");
+        }
         else I.dontSee("tento text sa zobrazí len prihlásenému používateľovi.");
     }
 }
@@ -42,9 +52,10 @@ const RegistrationType = {
 }
 
 /********  CASE A   ******/
-Scenario('Instant approval @singlethread', async ({ I, DT, DTE }) => {
+Scenario('Instant approval @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    await deleteAllStroredEmails(I);
+    TempMail.login("WebJetCMS");
+    await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
     //Prepare regiter form
@@ -57,7 +68,7 @@ Scenario('Instant approval @singlethread', async ({ I, DT, DTE }) => {
     //loginIN(I, password, correctPassword=false, checkText=true, userName="tester")
 
     //I am not registered YET
-        loginIN(I, password, false, true, userName);
+        await loginIN(I, password, false, true, userName);
     //Do a registration
         I.click(locate("#menu > li:nth-child(1) > a").withText("Registrácia"));
         register(I, false, RegistrationType.One);
@@ -67,14 +78,15 @@ Scenario('Instant approval @singlethread', async ({ I, DT, DTE }) => {
     //Remove
         removeUser(I, DT);
     //Verify emmail
-        await checkVerifyEmail(I, RegistrationType.One);
+        await checkVerifyEmail(I, TempMail, RegistrationType.One);
 });
 
 
 /********  CASE B   ******/
-Scenario('Email auth @singlethread', async ({ I, DT, DTE }) => {
+Scenario('Email auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    await deleteAllStroredEmails(I);
+    TempMail.login("WebJetCMS");
+    await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
     //Prepare regiter form
@@ -85,36 +97,39 @@ Scenario('Email auth @singlethread', async ({ I, DT, DTE }) => {
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
 
     //I am not registered YET
-        loginIN(I, password, false, true, userName);
+    await loginIN(I, password, false, true, userName);
     //Do a registration
         I.click(locate("#menu > li:nth-child(1) > a").withText("Registrácia"));
         register(I, false, RegistrationType.Two);
     //Check we CANT log YET
         I.click(locate("#menu > li.protected > a").withText("Zákaznícka zóna"));
         I.wait(10);
-        loginIN(I, password, false, true, userName);
+        await loginIN(I, password, false, true, userName);
 
     //DO a verification
-        let link = await checkVerifyEmail(I, RegistrationType.Two, 1);
+        let link = await checkVerifyEmail(I, TempMail, RegistrationType.Two, 1);
         I.amOnPage(link);
         I.see("Registračný formulár");
         I.see("Autorizácia používateľa úspešná. Teraz sa môžete prihlásiť.");
         I.dontSee("Používateľa sa nepodarilo autorizovať, skontrolujte prosím autorizačnú linku. Ak ste ju skopírovali z e-mailu, skontrolujte či je celá a či nie je zalomená na viac riadkov.");
     //Log in
+        I.say("For some reason there must be little wait. Like user is not yet in DB verified sooo login will fail");
+        I.wait(3);
         I.click(locate("#menu > li.protected > a").withText("Zákaznícka zóna"));
         //TODO error, user group is not set after verification
-        loginIN(I, password, true, true, userName);
+        await loginIN(I, password, true, true, userName);
     //Verify second mail
-        await checkVerifyEmail(I, RegistrationType.Two, 2);
+        await checkVerifyEmail(I, TempMail, RegistrationType.Two, 2);
 
     //Remove
         removeUser(I, DT);
 });
 
 /********  CASE C   ******/
-Scenario('Admin auth @singlethread', async ({ I, DT, DTE }) => {
+Scenario('Admin auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
     //Prepare for scenario by deleting old users and emails
-    await deleteAllStroredEmails(I);
+    TempMail.login("WebJetCMS");
+    await TempMail.destroyInbox();
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 
     //Prepare regiter form
@@ -125,7 +140,7 @@ Scenario('Admin auth @singlethread', async ({ I, DT, DTE }) => {
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
 
     //I am not registered YET
-        loginIN(I, password, false, true, userName);
+        await loginIN(I, password, false, true, userName);
     //Do a registration
         I.click(locate("#menu > li:nth-child(1) > a").withText("Registrácia"));
         register(I, false, RegistrationType.Three);
@@ -134,7 +149,7 @@ Scenario('Admin auth @singlethread', async ({ I, DT, DTE }) => {
     //Check we CANT log YET
         I.click(locate("#menu > li.protected > a").withText("Zákaznícka zóna"));
         I.wait(10);
-        loginIN(I, password, false, true, userName);
+        await loginIN(I, password, false, true, userName);
 
     //Approve user, with generated password in mail
         I.wait(15);
@@ -154,12 +169,12 @@ Scenario('Admin auth @singlethread', async ({ I, DT, DTE }) => {
         I.waitForElement("div.toast-message", 10);
         I.see("Autorizácia používateľa " + firstName + " " + lastName +  " (" + userName + "), bola úspešna.");
     //DO a verification
-        let generatedPassword = await checkVerifyEmail(I, RegistrationType.Three);
+        let generatedPassword = await checkVerifyEmail(I, TempMail, RegistrationType.Three);
         // I.say(generatedPassword);
     //Do login
         I.amOnPage('/logoff.do');
         I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
-        loginIN(I, generatedPassword, true, true, userName);
+        await loginIN(I, generatedPassword, true, true, userName);
     //Delete user
         removeUser(I, DT);
 });
@@ -168,8 +183,9 @@ Scenario('remove all old fexpost users @singlethread', async ({ I, DT, DTE }) =>
     await removeFexpostUsers(I, DT, DTE, tempMailAddress);
 });
 
-Scenario('remove all old fexpost emails @singlethread', async ({ I, DT }) => {
-    await deleteAllStroredEmails(I);
+Scenario('remove all old fexpost emails @singlethread', async ({ I, DT, TempMail }) => {
+    TempMail.login("WebJetCMS");
+    await TempMail.destroyInbox();
 });
 
 Scenario('delete cache objects to prevent logon form wrong password counting @singlethread', async ({ I }) => {
@@ -180,7 +196,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting @si
     I.closeOtherTabs();
 });
 
-Scenario('Test email sending after adding to userGroup @singlethread', async ({ I, DT, DTE }) => {
+Scenario('Test email sending after adding to userGroup @singlethread', async ({ I, DTE, TempMail }) => {
     I.relogin("admin");
 
     let userName = "autotest_sendinguserGroupMails_" + randomText;
@@ -203,12 +219,18 @@ Scenario('Test email sending after adding to userGroup @singlethread', async ({ 
 
     DTE.save();
 
-    //Open email - !! beware, can be false, depend is we call it allready
-    await openTempEmail(I, true);
+    //Open email - !! beware, can be false, depend is we call it already
+    TempMail.login("WebJetCMS");
+    await TempMail.openLatestEmail();
     I.see("Redaktori");
     I.see("Dobrý deň,");
     I.see("práve ste boli pridaný adminom do");
     I.see("skupiny Redaktori.");
+});
+
+Scenario('Remove left over emails @singlethread', async ({ TempMail }) => {
+    TempMail.login("WebJetCMS");
+    await TempMail.destroyInbox();
 });
 
 async function prepareRegistrationForm(I, DTE, registrationType) {
@@ -337,50 +359,25 @@ function register(I, isEmailUsed, registrationType) {
     }
 }
 
-async function openTempEmail(I) {
-    //Logg into tempMail page
-    I.amOnPage("https://tempmail.plus/en/#!mail");
-
-
-    //Set domain
-    I.clickCss("#domain");
-    I.wait(1);
-    I.click(locate("button.dropdown-item").withText("fexpost.com"));
-    //email name
-    I.fillField("#pre_button", "WebJetCMS");
-    I.clickCss("#pre_copy");
-
-    I.wait(2);
-    /*I.see("Inbox is protected by a PIN-code");
-    I.fillField("#pin", tempMailPin);
-    I.clickCss("#verify");
-    I.wait(2);*/
-
-    //Wait for mail 30 seconds
-    I.waitForElement('div.mail', 30);
-
-    //Open mail
-    I.clickCss("div.mail");
-}
-
-async function checkVerifyEmail(I, registrationType, phase=null) {
+async function checkVerifyEmail(I, TempMail, registrationType, phase=null) {
 
     //Open email
-    await openTempEmail(I);
+    TempMail.login("WebJetCMS");
+    await TempMail.openLatestEmail();
 
     if(registrationType == RegistrationType.One) {
-        checkVerifyEmail_One(I);
+        checkVerifyEmail_One(I, TempMail);
     } else if(registrationType == RegistrationType.Two) {
         if(phase == null) return;
-        else if(phase == 1) return checkVerifyEmail_Two_Phase_1(I);
-        else if(phase == 2) return checkVerifyEmail_Two_Phase_2(I);
+        else if(phase == 1) return checkVerifyEmail_Two_Phase_1(I, TempMail);
+        else if(phase == 2) return checkVerifyEmail_Two_Phase_2(I, TempMail);
     }
     else if(registrationType == RegistrationType.Three) {
-        return checkVerifyEmail_Three(I);
+        return checkVerifyEmail_Three(I, TempMail);
     }
 }
 
-async function checkVerifyEmail_One(I) {
+async function checkVerifyEmail_One(I, TempMail) {
     //Vefiry mail body context
     I.see("Prihlasovacie údaje na");
     I.see("Ďakujeme za registráciu na našom web sídle.");
@@ -389,10 +386,11 @@ async function checkVerifyEmail_One(I) {
     I.see("Heslo: " + password);
 
     //Remove email
-    await removeEmail(I);
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
 }
 
-async function checkVerifyEmail_Two_Phase_1(I) {
+async function checkVerifyEmail_Two_Phase_1(I, TempMail) {
     let authLink = "";
 
     //Vefiry mail body context
@@ -416,12 +414,13 @@ async function checkVerifyEmail_Two_Phase_1(I) {
     }
 
     //Remove email
-    await removeEmail(I);
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
 
     return authLink;
 }
 
-async function checkVerifyEmail_Two_Phase_2(I) {
+async function checkVerifyEmail_Two_Phase_2(I, TempMail) {
     //Vefiry mail body context
     I.see("Prihlasovacie údaje na");
     I.see("Ďakujeme za registráciu na našom web sídle.");
@@ -429,10 +428,11 @@ async function checkVerifyEmail_Two_Phase_2(I) {
     I.see("Prihlasovacie meno: " + userName);
 
     //Remove email
-    await removeEmail(I);
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
 }
 
-async function checkVerifyEmail_Three(I) {
+async function checkVerifyEmail_Three(I, TempMail) {
     let generatedPasswd = "";
 
     //Vefiry mail body context
@@ -459,19 +459,12 @@ async function checkVerifyEmail_Three(I) {
     }
 
     //Remove email
-    await removeEmail(I);
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
 
     return generatedPasswd;
 }
 
-async function removeEmail(I) {
-    I.clickCss("#delete_mail");
-    I.see("Do you really want to delete mail?");
-    I.clickCss("#confirm_mail");
-    I.wait(2);
-    I.see("Waiting for mails...");
-    I.dontSeeElement("div.mail");
-}
 /**
  * Remove all users with set email.
  * Need to remove them in case that email in login must be uniq and this user's are here maybe from failed test.
@@ -508,35 +501,3 @@ async function removeFexpostUsers(I, DT, DTE, emailAddress) {
     I.dontSee(emailAddress);
 }
 
-/**
- * Remove all old emails from inbox.
- * Need to remove them at start of Scenario. Scenario allways work with 1 email in inbox, more emails will make test fall.
- *
- * @param {*} I
- */
-async function deleteAllStroredEmails(I) {
-    I.say("Removing old emails from : " + tempMailAddress);
-
-    //Logg into tempMail page
-    I.amOnPage("https://tempmail.plus/en/#!mail");
-    I.wait(1);
-
-    //Set domain
-        I.clickCss("#domain");
-        I.wait(1);
-        I.click(locate("button.dropdown-item").withText("fexpost.com"));
-    //email name
-        I.fillField("#pre_button", "WebJetCMS");
-        I.clickCss("#pre_copy");
-
-    //If we see this eleent, there are email to delete
-    let numberOfEmails = await I.grabNumberOfVisibleElements("#delete");
-
-    if(numberOfEmails > 0) {
-        I.clickCss("#delete");
-        I.clickCss("#confirm");
-        I.wait(2);
-    }
-
-    I.see("Waiting for mails...");
-}

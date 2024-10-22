@@ -223,6 +223,39 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
+Podobne pre pridanie nového záznamu je možné nastaviť vlastné tlačidlá pomocou `createButtons` s možnosťou nezatvorenia editora po uložení záznamu:
+
+```javascript
+filePropertiesTable = WJ.DataTable({
+    url: ...,
+    ...
+    createButtons: [
+        {
+            text: '<i class="fal fa-check"></i> ' + WJ.translate('button.add'),
+            action: function() {
+                //console.log("SAVING NO CLOSE");
+                //action musime zachovat, lebo to editor pri ulozeni zmaze
+                let editorAction = this.s.action;
+                //console.log("editorAction=", editorAction);
+                let editor = this;
+                this.submit(
+                    //success callback
+                    function() {
+                        editor.s.action = editorAction;
+                    },
+                    //error callback
+                    null,
+                    //formatData function
+                    null,
+                    //hide editor after save
+                    false
+                );
+            }
+        }
+    ]
+});
+```
+
 ## Ukážky kódu
 
 ### Dynamická zmena hodnôt vo výberovom poli

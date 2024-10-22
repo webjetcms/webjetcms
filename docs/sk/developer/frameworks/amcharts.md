@@ -1,24 +1,7 @@
 # Amcharts
 
-Knižnica [amcharts](amcharts.com) sa používa na zobrazenie grafov. Pre WebJET máme zakúpenú komerčnú OEM verziu.
+Knižnica [amcharts](https://www.amcharts.com/) sa používa na zobrazenie grafov. Ak nechcete, aby sa v grafoch zobrazovalo Amcharts logo je možné zakúpiť licenciu a zadať jej hodnotu do konf. premennej `amchartLicense`. Ak máte komerčnú licenciu k WebJET CMS licencia je automaticky zadaná.
 
 ## Použitie
 
-V súbore [app.js](../../../src/main/webapp/admin/v9/src/js/app.js) je pripravená asynchrónna inicializácia amcharts. Tá zabezpečí, že knižnica sa načíta a inicializuje až v prípade potreby.
-
-Po inicializácii vyvolá udalosť ```WJ.initAmcharts.success``` na ```window``` objekte. Na túto udalosť je možné počúvať a následne už použiť objekt ```window.am4core``` cez ktorý je knižnica dostupná.
-
-Príklad použitia:
-
-```javascript
-window.initAmcharts().then(module => {
-
-    window.addEventListener("WJ.initAmcharts.success", function(e) {
-
-        // Create chart instance
-        //am4core je priamo dostupne, kedze je to window.am4core
-        var chart = am4core.create(divId, am4charts.XYChart);
-
-    });
-});
-```
+O inicializácií a použití sa dočítate v časti [Amcharts inicializácia](../frameworks/charts/frontend/README.md)

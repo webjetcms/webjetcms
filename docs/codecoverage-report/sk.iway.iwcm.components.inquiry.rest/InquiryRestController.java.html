@@ -48,42 +48,44 @@ public class InquiryRestController extends DatatableRestControllerV2&lt;InquiryE
 
 <span class="fc" id="L49">            entity = new InquiryEntity();</span>
 <span class="fc" id="L50">            processFromEntity(entity, ProcessItemAction.CREATE);</span>
-<span class="fc" id="L51">        } else entity = inquiryRepository.getById(id);</span>
-<span class="fc" id="L52">        return entity;</span>
+<span class="fc" id="L51">        } else {</span>
+<span class="fc" id="L52">            entity = inquiryRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);</span>
+        }
+<span class="fc" id="L54">        return entity;</span>
     }
 
     @Override
     public InquiryEntity processFromEntity(InquiryEntity entity, ProcessItemAction action) {
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if(entity.getEditorFields() == null) {</span>
-<span class="fc" id="L58">            InquiryEditorFields ief = new InquiryEditorFields();</span>
-<span class="fc" id="L59">            ief.fromInquiryEntity(entity, getProp(), action);</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        if(entity.getEditorFields() == null) {</span>
+<span class="fc" id="L60">            InquiryEditorFields ief = new InquiryEditorFields();</span>
+<span class="fc" id="L61">            ief.fromInquiryEntity(entity, getProp(), action);</span>
         }
 
-<span class="fc" id="L62">        return entity;</span>
+<span class="fc" id="L64">        return entity;</span>
     }
 
     @Override
     public void beforeSave(InquiryEntity entity) {
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (entity.getDomainId() == null) entity.setDomainId(CloudToolsForCore.getDomainId());</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (entity.getTotalClicks()==null) entity.setTotalClicks(0);</span>
-<span class="fc" id="L69">    }</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (entity.getDomainId() == null) entity.setDomainId(CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (entity.getTotalClicks()==null) entity.setTotalClicks(0);</span>
+<span class="fc" id="L71">    }</span>
 
     @Override
     public void afterSave(InquiryEntity entity, InquiryEntity saved) {
         //Check if we must permanently save tmp answers
-<span class="fc" id="L74">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
-<span class="fc" id="L75">        List&lt;InquiryAnswerEntity&gt; answersList = iar.findAllByQuestionIdAndDomainId(-user.getUserId(), CloudToolsForCore.getDomainId());</span>
-<span class="fc bfc" id="L76" title="All 2 branches covered.">        for(InquiryAnswerEntity answer : answersList) answer.setQuestionId(saved.getId().intValue());</span>
+<span class="fc" id="L76">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L77">        List&lt;InquiryAnswerEntity&gt; answersList = iar.findAllByQuestionIdAndDomainId(-user.getUserId(), CloudToolsForCore.getDomainId());</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        for(InquiryAnswerEntity answer : answersList) answer.setQuestionId(saved.getId().intValue());</span>
 
         //Update them
-<span class="fc" id="L79">        iar.saveAll(answersList);</span>
-<span class="fc" id="L80">    }</span>
+<span class="fc" id="L81">        iar.saveAll(answersList);</span>
+<span class="fc" id="L82">    }</span>
 
     //After question delete, delete all answers under this question
     @Override
     public void afterDelete(InquiryEntity entity, long id) {
-<span class="fc" id="L85">        iar.deleteAnswers(entity.getId().intValue(), CloudToolsForCore.getDomainId());</span>
-<span class="fc" id="L86">    }</span>
+<span class="fc" id="L87">        iar.deleteAnswers(entity.getId().intValue(), CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L88">    }</span>
 
     /**
      * Vrati zoznam uz existujucich skupin
@@ -93,16 +95,16 @@ public class InquiryRestController extends DatatableRestControllerV2&lt;InquiryE
     @GetMapping(&quot;/autocomplete&quot;)
     public List&lt;String&gt; getAutocomplete(@RequestParam String term) {
 
-<span class="fc" id="L96">        List&lt;String&gt; ac = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L98">        List&lt;String&gt; ac = new ArrayList&lt;&gt;();</span>
 
         //Get all where group name is like %term%, and distict because its autocomplete list and we dont want duplicity
-<span class="fc" id="L99">        List&lt;InquiryEntity&gt; groupNamesList =  inquiryRepository.findDistinctAllByQuestionGroupLikeAndDomainId(&quot;%&quot; + term + &quot;%&quot;, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L101">        List&lt;InquiryEntity&gt; groupNamesList =  inquiryRepository.findDistinctAllByQuestionGroupLikeAndDomainId(&quot;%&quot; + term + &quot;%&quot;, CloudToolsForCore.getDomainId());</span>
 
         //Loop gained entities and add group name to autcomplete list &quot;ac&quot;
-<span class="fc bfc" id="L102" title="All 2 branches covered.">        for(InquiryEntity entity : groupNamesList)</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            if (ac.contains(entity.getQuestionGroup()) == false) ac.add(entity.getQuestionGroup());</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for(InquiryEntity entity : groupNamesList)</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if (ac.contains(entity.getQuestionGroup()) == false) ac.add(entity.getQuestionGroup());</span>
 
-<span class="fc" id="L105">        return ac;</span>
+<span class="fc" id="L107">        return ac;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

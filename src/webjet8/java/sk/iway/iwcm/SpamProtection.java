@@ -598,4 +598,15 @@ public class SpamProtection
 			executor.shutdownNow();
 		}
 	}
+
+	/**
+	 * Clear all maps
+	 */
+	public static void clearAll() {
+		userTracking.clear();
+		userMinuteTracking.clear();
+		userMinitTracking.clear();
+		lastAccessedTime.clear();
+		lastAccessedTimeInMinit.clear();
+	}
 }

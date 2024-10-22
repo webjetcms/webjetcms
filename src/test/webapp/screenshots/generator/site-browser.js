@@ -11,10 +11,6 @@ Scenario('site-browser', async ({ I, DTE, Document }) => {
     I.wait(5);
 
     Document.editorComponentOpen();
-    I.waitForElement("#Tabs li.last.openLast");
-    I.wait(0.5);
-    I.click("#Tabs li.first a");
-
     Document.screenshot("/redactor/apps/site-browser/editor-dialog.png");
     I.switchTo();
 

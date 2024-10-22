@@ -58,24 +58,25 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     public String parse(HttpServletRequest request, HttpServletResponse response, String html) {
-        //this.request = request;
-<span class="fc" id="L62">        Map&lt;String, WebjetComponentInterface&gt; components = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L61">        Map&lt;String, WebjetComponentInterface&gt; components = new LinkedHashMap&lt;&gt;();</span>
 
-<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (Tools.isEmpty(html)) return html;</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (Tools.isEmpty(html)) return html;</span>
+
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (html.contains(&quot;!INCLUDE&quot;)==false) return html;</span>
 
         try {
             // parsuje komponenty a ich page params z html kodu
-<span class="fc" id="L68">            parseComponentsAndPageParams(html, components);</span>
+<span class="fc" id="L69">            parseComponentsAndPageParams(html, components);</span>
 
             // renderuje html kod z tried pre dane komponenty a nahradza v html kode include za html
-<span class="fc" id="L71">            html = renderComponents(request, response, html, components);</span>
+<span class="fc" id="L72">            html = renderComponents(request, response, html, components);</span>
         }
-<span class="nc" id="L73">        catch (Exception ex) {</span>
-<span class="nc" id="L74">            html = getErrorMessage(request, ex, html);</span>
-<span class="nc" id="L75">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L76">        }</span>
+<span class="nc" id="L74">        catch (Exception ex) {</span>
+<span class="nc" id="L75">            html = getErrorMessage(request, ex, html);</span>
+<span class="nc" id="L76">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L77">        }</span>
 
-<span class="fc" id="L78">        return html;</span>
+<span class="fc" id="L79">        return html;</span>
     }
 
     /**
@@ -86,7 +87,7 @@ import sk.iway.iwcm.users.UsersDB;
      */
     public void run(HttpServletRequest request, HttpServletResponse response) {
 
-<span class="fc" id="L89">        String[] attributes = {</span>
+<span class="fc" id="L90">        String[] attributes = {</span>
                 &quot;doc_data&quot;,
                 &quot;doc_header&quot;,
                 &quot;doc_footer&quot;,
@@ -99,19 +100,19 @@ import sk.iway.iwcm.users.UsersDB;
         };
 
         // nastavenie locale pre message source, aby sa pri validaciach pouzili spravne texty zo sablony
-<span class="fc" id="L102">        LocaleContextHolder.setLocale(request.getLocale());</span>
+<span class="fc" id="L103">        LocaleContextHolder.setLocale(request.getLocale());</span>
 
-<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (String attribute : attributes) {</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        for (String attribute : attributes) {</span>
 
             // vybratie html kodu z requestu
-<span class="fc" id="L107">            String html = getHtmlFromRequestAttribute(request, attribute);</span>
+<span class="fc" id="L108">            String html = getHtmlFromRequestAttribute(request, attribute);</span>
 
-<span class="fc" id="L109">            html = parse(request, response, html);</span>
+<span class="fc" id="L110">            html = parse(request, response, html);</span>
 
             // nastavenie html kodu spat do requestu
-<span class="fc" id="L112">            setHtmlToRequestAttribute(request, attribute, html);</span>
+<span class="fc" id="L113">            setHtmlToRequestAttribute(request, attribute, html);</span>
         }
-<span class="fc" id="L114">    }</span>
+<span class="fc" id="L115">    }</span>
 
     /**
      * Metóda parseComponentsAndPageParams slúži na parsovanie komponent tried a pageParams z !INCLUDE()!
@@ -120,30 +121,30 @@ import sk.iway.iwcm.users.UsersDB;
      */
     private void parseComponentsAndPageParams(String html, Map&lt;String, WebjetComponentInterface&gt; components) throws BeansException {
         // pattern od !INCLUDE do )!
-<span class="fc" id="L123">        Pattern pattern = Pattern.compile(&quot;!INCLUDE\\((.*?)\\)!&quot;);</span>
-<span class="fc" id="L124">        Matcher matcher = pattern.matcher(html);</span>
+<span class="fc" id="L124">        Pattern pattern = Pattern.compile(&quot;!INCLUDE\\((.*?)\\)!&quot;);</span>
+<span class="fc" id="L125">        Matcher matcher = pattern.matcher(html);</span>
 
-<span class="fc bfc" id="L126" title="All 2 branches covered.">        while (matcher.find()) {</span>
-<span class="fc" id="L127">            String group = matcher.group();</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        while (matcher.find()) {</span>
+<span class="fc" id="L128">            String group = matcher.group();</span>
 
-<span class="fc bfc" id="L129" title="All 2 branches covered.">            if (group.startsWith(&quot;!INCLUDE(/&quot;)) {</span>
+<span class="fc bfc" id="L130" title="All 2 branches covered.">            if (group.startsWith(&quot;!INCLUDE(/&quot;)) {</span>
                 //it's JSP component
-<span class="fc" id="L131">                continue;</span>
+<span class="fc" id="L132">                continue;</span>
             }
 
             // unescape pretoze html kod moze obsahovat &amp;quote;
-<span class="fc" id="L135">            String unescapedGroup = StringEscapeUtils.unescapeHtml(group);</span>
+<span class="fc" id="L136">            String unescapedGroup = StringEscapeUtils.unescapeHtml(group);</span>
 
-<span class="pc bpc" id="L137" title="1 of 2 branches missed.">            if (components.containsKey(group)) {</span>
-<span class="nc" id="L138">                continue;</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">            if (components.containsKey(group)) {</span>
+<span class="nc" id="L139">                continue;</span>
             }
 
-<span class="fc" id="L141">            WebjetComponentInterface component = parseComponentClass(unescapedGroup);</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">            if (component != null) {</span>
-<span class="fc" id="L143">                components.put(group, component);</span>
+<span class="fc" id="L142">            WebjetComponentInterface component = parseComponentClass(unescapedGroup);</span>
+<span class="pc bpc" id="L143" title="1 of 2 branches missed.">            if (component != null) {</span>
+<span class="fc" id="L144">                components.put(group, component);</span>
             }
-<span class="fc" id="L145">        }</span>
-<span class="fc" id="L146">    }</span>
+<span class="fc" id="L146">        }</span>
+<span class="fc" id="L147">    }</span>
 
     /**
      * Metóda parseComponentClass slúži na parsovanie triedy komponenty z !INCLUDE()!
@@ -152,21 +153,21 @@ import sk.iway.iwcm.users.UsersDB;
      * @throws BeansException
      */
     private WebjetComponentInterface parseComponentClass(String include) throws BeansException {
-<span class="fc" id="L155">        WebjetComponentInterface result = null;</span>
-<span class="fc" id="L156">        String componentClass = getComponentClass(include);</span>
-<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        if (componentClass != null) {</span>
+<span class="fc" id="L156">        WebjetComponentInterface result = null;</span>
+<span class="fc" id="L157">        String componentClass = getComponentClass(include);</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if (componentClass != null) {</span>
             // vyhladanie beanu s originalnym nazvom
-<span class="pc bpc" id="L159" title="1 of 2 branches missed.">            if (context.containsBean(componentClass)) {</span>
-<span class="fc" id="L160">                result = context.getBean(componentClass, WebjetComponentInterface.class);</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">            if (context.containsBean(componentClass)) {</span>
+<span class="fc" id="L161">                result = context.getBean(componentClass, WebjetComponentInterface.class);</span>
             }
 
             // vyhladanie beanu s nazvom s prvym pismenom malym
-<span class="pc bpc" id="L164" title="3 of 4 branches missed.">            if (result == null &amp;&amp; context.containsBean(firstToLower(componentClass))) {</span>
-<span class="nc" id="L165">                result = context.getBean(firstToLower(componentClass), WebjetComponentInterface.class);</span>
+<span class="pc bpc" id="L165" title="3 of 4 branches missed.">            if (result == null &amp;&amp; context.containsBean(firstToLower(componentClass))) {</span>
+<span class="nc" id="L166">                result = context.getBean(firstToLower(componentClass), WebjetComponentInterface.class);</span>
             }
         }
 
-<span class="fc" id="L169">        return result;</span>
+<span class="fc" id="L170">        return result;</span>
     }
 
     /**
@@ -175,19 +176,19 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     private String getComponentClass(String include) {
-<span class="fc" id="L178">        int start = include.indexOf(&quot;(&quot;);</span>
-<span class="fc" id="L179">        int end = include.indexOf(&quot;,&quot;);</span>
-<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (end == -1) end = include.indexOf(&quot;)&quot;);</span>
+<span class="fc" id="L179">        int start = include.indexOf(&quot;(&quot;);</span>
+<span class="fc" id="L180">        int end = include.indexOf(&quot;,&quot;);</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">        if (end == -1) end = include.indexOf(&quot;)&quot;);</span>
 
-<span class="pc bpc" id="L182" title="2 of 4 branches missed.">        if (end &gt; start &amp;&amp; end&gt;0) {</span>
+<span class="pc bpc" id="L183" title="2 of 4 branches missed.">        if (end &gt; start &amp;&amp; end&gt;0) {</span>
             // nazov triedy komponenty
-<span class="fc" id="L184">            String className = include.substring(start+1, end).trim();</span>
-<span class="fc" id="L185">            return className;</span>
+<span class="fc" id="L185">            String className = include.substring(start+1, end).trim();</span>
+<span class="fc" id="L186">            return className;</span>
         }
-<span class="nc" id="L187">        return null;</span>
+<span class="nc" id="L188">        return null;</span>
     }
 
-<span class="fc" id="L190">    private String redirectComponent = null;</span>
+<span class="fc" id="L191">    private String redirectComponent = null;</span>
 
     /**
      * Metóda renderComponents slúži na renderovanie komponent
@@ -196,76 +197,76 @@ import sk.iway.iwcm.users.UsersDB;
      * @throws Exception
      */
     private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html, Map&lt;String, WebjetComponentInterface&gt; components) throws Exception {
-<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (components.isEmpty()) {</span>
-<span class="fc" id="L200">            return html;</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (components.isEmpty()) {</span>
+<span class="fc" id="L201">            return html;</span>
         }
 
-<span class="fc bfc" id="L203" title="All 2 branches covered.">        for (Map.Entry&lt;String, WebjetComponentInterface&gt; entry : components.entrySet()) {</span>
-<span class="fc" id="L204">            String key = entry.getKey();</span>
-<span class="fc" id="L205">            WebjetComponentInterface v = entry.getValue();</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        for (Map.Entry&lt;String, WebjetComponentInterface&gt; entry : components.entrySet()) {</span>
+<span class="fc" id="L205">            String key = entry.getKey();</span>
+<span class="fc" id="L206">            WebjetComponentInterface v = entry.getValue();</span>
 
             PageParams pageParams;
-<span class="fc" id="L208">            int i = key.indexOf(&quot;,&quot;);</span>
-<span class="pc bpc" id="L209" title="1 of 2 branches missed.">            if (i&gt;0) pageParams = new PageParams(key.substring(i));</span>
-<span class="nc" id="L210">            else pageParams = new PageParams(&quot;&quot;);</span>
+<span class="fc" id="L209">            int i = key.indexOf(&quot;,&quot;);</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">            if (i&gt;0) pageParams = new PageParams(key.substring(i));</span>
+<span class="fc" id="L211">            else pageParams = new PageParams(&quot;&quot;);</span>
 
             /** Check if this app can be rendered in current device type (onlz if we checking device) **/
-<span class="fc" id="L213">            boolean render = canRenderForDevice(pageParams, request);</span>
+<span class="fc" id="L214">            boolean render = canRenderForDevice(pageParams, request);</span>
 
-<span class="fc bfc" id="L215" title="All 2 branches covered.">            if(render) {</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">            if(render) {</span>
                 /*** CACHE logic ***/
-<span class="fc" id="L217">                String rendered = null;</span>
+<span class="fc" id="L218">                String rendered = null;</span>
 
-<span class="fc" id="L219">                Cache cache = Cache.getInstance();</span>
-<span class="fc" id="L220">                String cacheKey = null;</span>
-<span class="fc" id="L221">                int cacheMinutes = 0;</span>
+<span class="fc" id="L220">                Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L221">                String cacheKey = null;</span>
+<span class="fc" id="L222">                int cacheMinutes = 0;</span>
 
                 //Is cache permitted ?
-<span class="fc bfc" id="L224" title="All 2 branches covered.">                if (isCacheEnabled(request, key)) {</span>
+<span class="fc bfc" id="L225" title="All 2 branches covered.">                if (isCacheEnabled(request, key)) {</span>
                     //Get cache time param
-<span class="fc" id="L226">                    cacheMinutes = pageParams.getIntValue(&quot;cacheMinutes&quot;, -1);</span>
+<span class="fc" id="L227">                    cacheMinutes = pageParams.getIntValue(&quot;cacheMinutes&quot;, -1);</span>
 
-<span class="pc bpc" id="L228" title="1 of 2 branches missed.">                    if(cacheMinutes &gt; 0) {</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">                    if(cacheMinutes &gt; 0) {</span>
                         //prepare cache key
-<span class="fc" id="L230">                        cacheKey = getCacheKey(key, request);</span>
+<span class="fc" id="L231">                        cacheKey = getCacheKey(key, request);</span>
 
-<span class="fc" id="L232">                        String cachedHtml = (String) cache.getObject(cacheKey);</span>
+<span class="fc" id="L233">                        String cachedHtml = (String) cache.getObject(cacheKey);</span>
 
                         //If html code is in cache, use it
-<span class="fc bfc" id="L235" title="All 2 branches covered.">                        if(Tools.isNotEmpty(cachedHtml)) {</span>
-<span class="fc" id="L236">                            rendered = cachedHtml;</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">                        if(Tools.isNotEmpty(cachedHtml)) {</span>
+<span class="fc" id="L237">                            rendered = cachedHtml;</span>
                         }
                     }
                 }
 
                 //If cache logic wasn't executed, render html code
-<span class="fc bfc" id="L242" title="All 2 branches covered.">                if(rendered == null) {</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">                if(rendered == null) {</span>
                     // render html kodu z triedy
-<span class="fc" id="L244">                    rendered = componentResolver.render(request, response, v, pageParams);</span>
+<span class="fc" id="L245">                    rendered = componentResolver.render(request, response, v, pageParams);</span>
 
                     // ak navratova hodnota obsahuje redirect
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">                    if (isRedirected(response)) {</span>
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">                    if (isRedirected(response)) {</span>
                         // nastavime nazov triedy pre vypis
-<span class="nc" id="L249">                        redirectComponent = v.getClass().getSimpleName();</span>
-<span class="nc" id="L250">                        return &quot;&quot;;</span>
+<span class="nc" id="L250">                        redirectComponent = v.getClass().getSimpleName();</span>
+<span class="nc" id="L251">                        return &quot;&quot;;</span>
                     }
 
-<span class="pc bpc" id="L253" title="1 of 4 branches missed.">                    if (cacheMinutes &gt; 0 &amp;&amp; cacheKey != null) {</span>
+<span class="pc bpc" id="L254" title="1 of 4 branches missed.">                    if (cacheMinutes &gt; 0 &amp;&amp; cacheKey != null) {</span>
                         //Save new rendered html code to cache
-<span class="fc" id="L255">                        cache.setObjectSeconds(cacheKey, rendered, cacheMinutes * 60, true);</span>
+<span class="fc" id="L256">                        cache.setObjectSeconds(cacheKey, rendered, cacheMinutes * 60, true);</span>
                     }
                 }
 
-<span class="pc bpc" id="L259" title="1 of 2 branches missed.">                if (rendered != null) {</span>
-<span class="fc" id="L260">                    html = Tools.replace(html, key, rendered);</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">                if (rendered != null) {</span>
+<span class="fc" id="L261">                    html = Tools.replace(html, key, rendered);</span>
                 }
-<span class="fc" id="L262">            } else {</span>
+<span class="fc" id="L263">            } else {</span>
                 //do not render component for current device type, remove it from html
-<span class="fc" id="L264">                html = Tools.replace(html, key, &quot;&quot;);</span>
+<span class="fc" id="L265">                html = Tools.replace(html, key, &quot;&quot;);</span>
             }
-<span class="fc" id="L266">        }</span>
+<span class="fc" id="L267">        }</span>
 
-<span class="fc" id="L268">        return html;</span>
+<span class="fc" id="L269">        return html;</span>
     }
 
     /**
@@ -277,28 +278,28 @@ import sk.iway.iwcm.users.UsersDB;
     private boolean canRenderForDevice(PageParams pageParams, HttpServletRequest request) {
 
         //We are checking device type only if we are not in preview mode (preview mode showing apps for all devices types)
-<span class="fc bfc" id="L280" title="All 2 branches covered.">        if (request.getAttribute(&quot;inPreviewMode&quot;) != null) return true;</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        if (request.getAttribute(&quot;inPreviewMode&quot;) != null) return true;</span>
 
-<span class="fc" id="L282">        String devices = pageParams.getValue(&quot;device&quot;, &quot;&quot;);</span>
-<span class="fc bfc" id="L283" title="All 2 branches covered.">        if (Tools.isEmpty(devices)) return true;</span>
+<span class="fc" id="L283">        String devices = pageParams.getValue(&quot;device&quot;, &quot;&quot;);</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">        if (Tools.isEmpty(devices)) return true;</span>
 
-<span class="fc" id="L285">        String[] devicesArr = Tools.getTokens(devices, &quot;+&quot;, true);</span>
+<span class="fc" id="L286">        String[] devicesArr = Tools.getTokens(devices, &quot;+&quot;, true);</span>
 
-<span class="fc" id="L287">        BrowserDetector browser = BrowserDetector.getInstance(request);</span>
-<span class="fc bfc" id="L288" title="All 2 branches covered.">        for (String device : devicesArr) {</span>
-<span class="fc bfc" id="L289" title="All 4 branches covered.">            if(&quot;pc&quot;.equalsIgnoreCase(device) &amp;&amp; browser.isDesktop()) {</span>
-<span class="fc" id="L290">                return true;</span>
+<span class="fc" id="L288">        BrowserDetector browser = BrowserDetector.getInstance(request);</span>
+<span class="fc bfc" id="L289" title="All 2 branches covered.">        for (String device : devicesArr) {</span>
+<span class="fc bfc" id="L290" title="All 4 branches covered.">            if(&quot;pc&quot;.equalsIgnoreCase(device) &amp;&amp; browser.isDesktop()) {</span>
+<span class="fc" id="L291">                return true;</span>
             }
-<span class="fc bfc" id="L292" title="All 4 branches covered.">            else if(&quot;tablet&quot;.equalsIgnoreCase(device) &amp;&amp; browser.isTablet()) {</span>
-<span class="fc" id="L293">                return true;</span>
+<span class="fc bfc" id="L293" title="All 4 branches covered.">            else if(&quot;tablet&quot;.equalsIgnoreCase(device) &amp;&amp; browser.isTablet()) {</span>
+<span class="fc" id="L294">                return true;</span>
             }
-<span class="pc bpc" id="L295" title="1 of 4 branches missed.">            else if(&quot;phone&quot;.equalsIgnoreCase(device) &amp;&amp; browser.isPhone()) {</span>
-<span class="nc" id="L296">                return true;</span>
-<span class="pc bpc" id="L297" title="1 of 2 branches missed.">            } else if (device.equalsIgnoreCase(browser.getBrowserDeviceType())) {</span>
-<span class="nc" id="L298">                return true;</span>
+<span class="pc bpc" id="L296" title="1 of 4 branches missed.">            else if(&quot;phone&quot;.equalsIgnoreCase(device) &amp;&amp; browser.isPhone()) {</span>
+<span class="nc" id="L297">                return true;</span>
+<span class="pc bpc" id="L298" title="1 of 2 branches missed.">            } else if (device.equalsIgnoreCase(browser.getBrowserDeviceType())) {</span>
+<span class="nc" id="L299">                return true;</span>
             }
         }
-<span class="fc" id="L301">        return false;</span>
+<span class="fc" id="L302">        return false;</span>
     }
 
     /**
@@ -311,18 +312,18 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     private boolean isCacheEnabled(HttpServletRequest request, String includeText) {
-<span class="fc bfc" id="L314" title="All 2 branches covered.">        if (&quot;true&quot;.equals(request.getParameter(&quot;_disableCache&quot;))) return false;</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">        if (&quot;true&quot;.equals(request.getParameter(&quot;_disableCache&quot;))) return false;</span>
 
-<span class="fc" id="L316">        Identity user = getUser(request);</span>
-<span class="pc bpc" id="L317" title="2 of 6 branches missed.">        if (user!=null &amp;&amp; user.isAdmin() &amp;&amp; Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false) return false;</span>
+<span class="fc" id="L317">        Identity user = getUser(request);</span>
+<span class="pc bpc" id="L318" title="2 of 6 branches missed.">        if (user!=null &amp;&amp; user.isAdmin() &amp;&amp; Constants.getBoolean(&quot;cacheStaticContentForAdmin&quot;)==false) return false;</span>
 
         //news komponenta nemoze cachovat ak ma parameter page
-<span class="pc bpc" id="L320" title="3 of 4 branches missed.">        if (request.getParameter(&quot;page&quot;)!=null &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;page&quot;))==false)</span>
+<span class="pc bpc" id="L321" title="3 of 4 branches missed.">        if (request.getParameter(&quot;page&quot;)!=null &amp;&amp; &quot;1&quot;.equals(request.getParameter(&quot;page&quot;))==false)</span>
         {
-<span class="nc" id="L322">            return false;</span>
+<span class="nc" id="L323">            return false;</span>
         }
 
-<span class="fc" id="L325">        return true;</span>
+<span class="fc" id="L326">        return true;</span>
     }
 
     /**
@@ -333,28 +334,28 @@ import sk.iway.iwcm.users.UsersDB;
      */
     private String getCacheKey(String key, HttpServletRequest request) {
         //Prepare cache key
-<span class="fc" id="L336">        StringBuilder cacheKeySB = new StringBuilder( key );</span>
-<span class="fc" id="L337">        String cacheKey = &quot;&quot;;</span>
-<span class="fc" id="L338">        int startIndex = cacheKeySB.indexOf(INCLUDE_START);</span>
+<span class="fc" id="L337">        StringBuilder cacheKeySB = new StringBuilder( key );</span>
+<span class="fc" id="L338">        String cacheKey = &quot;&quot;;</span>
+<span class="fc" id="L339">        int startIndex = cacheKeySB.indexOf(INCLUDE_START);</span>
         int includeEndIndex;
-<span class="fc" id="L340">        int failsafe = 0;</span>
+<span class="fc" id="L341">        int failsafe = 0;</span>
 
-<span class="pc bpc" id="L342" title="1 of 4 branches missed.">        while (startIndex != -1 &amp;&amp; failsafe &lt; 100) {</span>
-<span class="fc" id="L343">            failsafe++;</span>
-<span class="fc" id="L344">            includeEndIndex = cacheKeySB.indexOf(INCLUDE_END, startIndex);</span>
+<span class="pc bpc" id="L343" title="1 of 4 branches missed.">        while (startIndex != -1 &amp;&amp; failsafe &lt; 100) {</span>
+<span class="fc" id="L344">            failsafe++;</span>
+<span class="fc" id="L345">            includeEndIndex = cacheKeySB.indexOf(INCLUDE_END, startIndex);</span>
 
-<span class="pc bpc" id="L346" title="1 of 2 branches missed.">            if (includeEndIndex &lt; 0) {</span>
+<span class="pc bpc" id="L347" title="1 of 2 branches missed.">            if (includeEndIndex &lt; 0) {</span>
                 //nenasiel sa koniec
-<span class="nc" id="L348">                cacheKeySB.delete(0,startIndex+INCLUDE_START.length());</span>
-<span class="nc" id="L349">                startIndex = cacheKeySB.indexOf(INCLUDE_START);</span>
-<span class="nc" id="L350">                continue;</span>
+<span class="nc" id="L349">                cacheKeySB.delete(0,startIndex+INCLUDE_START.length());</span>
+<span class="nc" id="L350">                startIndex = cacheKeySB.indexOf(INCLUDE_START);</span>
+<span class="nc" id="L351">                continue;</span>
             }
 
-<span class="fc" id="L353">            cacheKey = &quot;writeTag_&quot; + cacheKeySB.substring(startIndex, includeEndIndex);</span>
-<span class="fc" id="L354">			cacheKey = Tools.replace(cacheKey, &quot;!DOC_ID!&quot;, request.getParameter(&quot;docid&quot;)) + &quot; ;&quot; + PageLng.getUserLng(request);</span>
+<span class="fc" id="L354">            cacheKey = &quot;writeTag_&quot; + cacheKeySB.substring(startIndex, includeEndIndex);</span>
+<span class="fc" id="L355">			cacheKey = Tools.replace(cacheKey, &quot;!DOC_ID!&quot;, request.getParameter(&quot;docid&quot;)) + &quot; ;&quot; + PageLng.getUserLng(request);</span>
         }
 
-<span class="fc" id="L357">        return cacheKey;</span>
+<span class="fc" id="L358">        return cacheKey;</span>
     }
 
     /**
@@ -363,68 +364,68 @@ import sk.iway.iwcm.users.UsersDB;
      * @return
      */
     private String firstToLower(String str) {
-<span class="nc" id="L366">        return Character.toLowerCase(str.charAt(0)) + str.substring(1);</span>
+<span class="nc" id="L367">        return Character.toLowerCase(str.charAt(0)) + str.substring(1);</span>
     }
 
     private String getHtmlFromRequestAttribute(HttpServletRequest request, String attribute) {
-<span class="pc bpc" id="L370" title="2 of 4 branches missed.">        if (attribute == null || request == null) return null;</span>
-<span class="fc" id="L371">        return (String) request.getAttribute(attribute);</span>
+<span class="pc bpc" id="L371" title="2 of 4 branches missed.">        if (attribute == null || request == null) return null;</span>
+<span class="fc" id="L372">        return (String) request.getAttribute(attribute);</span>
     }
 
     private void setHtmlToRequestAttribute(HttpServletRequest request, String attribute, String html) {
-<span class="fc" id="L375">        request.setAttribute(attribute, html);</span>
-<span class="fc" id="L376">    }</span>
+<span class="fc" id="L376">        request.setAttribute(attribute, html);</span>
+<span class="fc" id="L377">    }</span>
 
     /**
      * @return boolean či response obsahuje presmerovanie
      */
     public boolean isRedirected(HttpServletResponse response) {
-<span class="pc bpc" id="L382" title="1 of 2 branches missed.">        return getRedirectLocation(response) != null;</span>
+<span class="pc bpc" id="L383" title="1 of 2 branches missed.">        return getRedirectLocation(response) != null;</span>
     }
 
     /**
      * @return String hodnotu presmerovania alebo null
      */
     public String getRedirectLocation(HttpServletResponse response) {
-<span class="pc bpc" id="L389" title="1 of 2 branches missed.">        return response != null ? response.getHeader(&quot;Location&quot;) : null;</span>
+<span class="pc bpc" id="L390" title="1 of 2 branches missed.">        return response != null ? response.getHeader(&quot;Location&quot;) : null;</span>
     }
 
     /**
      * @return komponenta, ktorej hodnota vracia presmerovanie
      */
     public String getRedirectComponent() {
-<span class="nc" id="L396">        return redirectComponent;</span>
+<span class="nc" id="L397">        return redirectComponent;</span>
     }
 
     private String getErrorMessage(HttpServletRequest request, Exception ex, String include) {
-<span class="nc" id="L400">        Logger.debug(WebjetComponentParser.class,&quot;INCLUDE ERROR: &quot; + ex.getMessage());</span>
+<span class="nc" id="L401">        Logger.debug(WebjetComponentParser.class,&quot;INCLUDE ERROR: &quot; + ex.getMessage());</span>
 
-<span class="nc" id="L402">        StringBuilder content = new StringBuilder();</span>
-<span class="nc" id="L403">        Prop prop = Prop.getInstance();</span>
-<span class="nc" id="L404">        content.append(WriteTag.getErrorMessage(prop, &quot;writetag.error&quot;, getComponentClass(include)));</span>
+<span class="nc" id="L403">        StringBuilder content = new StringBuilder();</span>
+<span class="nc" id="L404">        Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L405">        content.append(WriteTag.getErrorMessage(prop, &quot;writetag.error&quot;, getComponentClass(include)));</span>
 
-<span class="nc" id="L406">        UserDetails user = getUser(request);</span>
-<span class="nc bnc" id="L407" title="All 6 branches missed.">        if (user != null &amp;&amp; user.isAdmin() &amp;&amp; request.getAttribute(&quot;writeTagDontShowError&quot;) == null)</span>
+<span class="nc" id="L407">        UserDetails user = getUser(request);</span>
+<span class="nc bnc" id="L408" title="All 6 branches missed.">        if (user != null &amp;&amp; user.isAdmin() &amp;&amp; request.getAttribute(&quot;writeTagDontShowError&quot;) == null)</span>
         {
-<span class="nc" id="L409">            StringWriter sw = new StringWriter();</span>
-<span class="nc" id="L410">            ex.printStackTrace(new PrintWriter(sw));</span>
-<span class="nc" id="L411">            String stack = sw.toString();</span>
+<span class="nc" id="L410">            StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L411">            ex.printStackTrace(new PrintWriter(sw));</span>
+<span class="nc" id="L412">            String stack = sw.toString();</span>
 
-<span class="nc" id="L413">            content.append(&quot;&lt;div class=\&quot;component-error\&quot; style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'&gt;&quot; + ResponseUtils.filter(ex.getMessage()) + &quot;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L414">            String stackTrace = ResponseUtils.filter(stack);</span>
-<span class="nc" id="L415">            content.append(stackTrace + &quot;&lt;/div&gt;&quot;);</span>
+<span class="nc" id="L414">            content.append(&quot;&lt;div class=\&quot;component-error\&quot; style='border:2px solid red; background-color: white; color: black; margin: 5px; white-space: pre;'&gt;&quot; + ResponseUtils.filter(ex.getMessage()) + &quot;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L415">            String stackTrace = ResponseUtils.filter(stack);</span>
+<span class="nc" id="L416">            content.append(stackTrace + &quot;&lt;/div&gt;&quot;);</span>
         }
 
-<span class="nc" id="L418">        Adminlog.add(Adminlog.TYPE_JSPERROR, &quot;ERROR: &quot; + include + &quot;\n\n&quot; + ex.getMessage(), -1, -1);</span>
+<span class="nc" id="L419">        Adminlog.add(Adminlog.TYPE_JSPERROR, &quot;ERROR: &quot; + include + &quot;\n\n&quot; + ex.getMessage(), -1, -1);</span>
 
-<span class="nc" id="L420">        return content.toString();</span>
+<span class="nc" id="L421">        return content.toString();</span>
     }
 
     /**
      * @return Optional prihlásený používateľ
      */
     private Identity getUser(HttpServletRequest request) {
-<span class="fc" id="L427">        return UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L428">        return UsersDB.getCurrentUser(request);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

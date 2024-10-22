@@ -140,9 +140,9 @@ public class RestaurantMenuEditorFields extends BaseEditorFields {
     public void toRestaurantMenuEntity(RestaurantMenuEntity originalEntity, RestaurantMenuMealsRepository rmmr) {
 <span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if(originalEntity.getEditorFields() == null) return;</span>
 
-<span class="fc" id="L143">        Optional&lt;RestaurantMenuMealsEntity&gt; selectedMeal = rmmr.findByIdAndDomainId(selectedMealId, CloudToolsForCore.getDomainId());</span>
+<span class="fc" id="L143">        Optional&lt;RestaurantMenuMealsEntity&gt; selectedMeal = rmmr.findFirstByIdAndDomainId(selectedMealId.longValue(), CloudToolsForCore.getDomainId());</span>
 <span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if(selectedMeal.isPresent()) originalEntity.setMeal( selectedMeal.get() );</span>
 <span class="nc" id="L145">        else throw new RuntimeException(&quot;Something went wrong - uknow meal&quot;);</span>
 <span class="fc" id="L146">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

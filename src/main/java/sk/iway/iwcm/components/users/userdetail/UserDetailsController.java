@@ -365,7 +365,7 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
     @Override
     public boolean beforeDelete(UserDetailsEntity entity) {
-        //Check that user is not trying delete user account, that is actually loged
+        //Check that user is not trying delete user account, that is actually logged
         if(entity.getId().intValue() == getUser().getUserId()) {
             throwError("user.self_delete_error");
             return false;
@@ -373,4 +373,13 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
 
         return true;
     }
+
+    @Override
+    public void beforeDuplicate(UserDetailsEntity entity) {
+        //Force random password generation -> null value can cause problems
+        if(entity.getPassword() == null || entity.getPassword().equals(UserTools.PASS_UNCHANGED)) {
+            entity.setPassword("random");
+            super.beforeDuplicate(entity);
+        }
+    }   
 }

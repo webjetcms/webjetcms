@@ -4,7 +4,7 @@ Sekcia Kalendárne udalosti -> Neschválené udalosti slúži na proces schvále
 
 ![](page.png)
 
-**Upozornenie:** po schválenie/zamietnutí udalosti sa táto udalosť už naďalej **nebude zobrazovať** v sekcií Neschválené udalosti, takže nebude mať možnosť zmeniť svoju voľbu. Udalosť však bude naďalej viditeľná v časti [Zoznam udalostí](../README.md).
+!>**Upozornenie:** po schválenie/zamietnutí udalosti sa táto udalosť už naďalej **nebude zobrazovať** v sekcií Neschválené udalosti, takže nebude mať možnosť zmeniť svoju voľbu. Udalosť však bude naďalej viditeľná v časti [Zoznam udalostí](../README.md).
 
 ## Schválenie udalosti
 

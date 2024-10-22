@@ -25,6 +25,7 @@ body { background-color: #f5f5f5; }
 div.results { background-color: white; padding: 5px; padding-top: 10px; }
 div.pixabayBox { margin: 0px; }
 .pixabayBox .imageSearch { padding: 10px; padding-top: 10px; }
+.pixabayBox .imageSearch .input-group-btn, .pixabayBox .imageSearch input.form-control { margin-left: 10px; }
 .pixabayBox .paging { padding-top: 10px; }
 div.no_results { color: red; font-weight: bold; text-align: center; }
 </style>
@@ -203,12 +204,12 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 					if (doc === undefined)
 					{
 						//sme v dialogu pre perex obrazok
-						elfinder = window.parent.elfinder.getElFinder();
+						elfinder = window.parent.elFinderInstance;
 					}
 					else
 					{
 						//sme v editore vlozenie obrazku
-						elfinder = doc.defaultView.elfinder.getElFinder();
+						elfinder = doc.defaultView.elFinderInstance;
 					}
 
 					var cwd = elfinder.cwd();
@@ -231,8 +232,12 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 									if (window.parent.CKEDITOR === undefined)
 									{
 										//sme v dialogu pre perex obrazok
-										window.parent.$("#file").val(data.virtualPath + "?v=" + new Date().getTime());
-										window.parent.$("ul.nav-tabs li:first a").click();
+										var inputElement = window.parent.$(".row:not(.template) input.elfinder-url-input");
+										//console.log("FILE: ", inputElement);
+										inputElement.val(data.virtualPath + "?v=" + new Date().getTime());
+										window.parent.$(".md-breadcrumb ul.nav li:first a").trigger("click");
+										window.parent.$(".md-breadcrumb ul.nav li.nav-item a.active").removeClass("active");
+										window.parent.$(".md-breadcrumb ul.nav li:first a").addClass("active");
 									}
 									else
 									{

@@ -30,6 +30,8 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -88,7 +90,9 @@ public class DocForumService {
         icons.add(new LabelValue("<i class=\"ti ti-circle-check\" style=\"color: #00be9f;\"></i> " + prop.getText("apps.forum.icon.confirmed"), "confirmed:true"));
         icons.add(new LabelValue("<i class=\"ti ti-circle-x\" style=\"color: #ff4b58;\"></i> " + prop.getText("apps.forum.icon.non_confirmed"), "confirmed:false"));
         icons.add(new LabelValue("<i class=\"ti ti-lock\" style=\"color: #000000;\"></i> " + prop.getText("apps.forum.icon.non_active"), "active:false"));
+        icons.add(new LabelValue("<i class=\"ti ti-lock-open\" style=\"color: #000000;\"></i> " + prop.getText("apps.forum.icon.active"), "active:true"));
         icons.add(new LabelValue("<i class=\"ti ti-trash\" style=\"color: #fabd00;\"></i> " + prop.getText("apps.forum.icon.deleted"), "deleted:true"));
+        icons.add(new LabelValue("<i class=\"ti ti-trash-off\" style=\"color: #fabd00;\"></i> " + prop.getText("apps.forum.icon.not_deleted"), "deleted:false"));
 
 		return icons;
 	}
@@ -105,13 +109,17 @@ public class DocForumService {
 	 * @throws IOException
 	 */
     public static String saveDocForum(HttpServletRequest request, HttpServletResponse response, DocForumEntity forumForm) {
-		DocForumRepository docForumRepository = Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+		DocForumRepository docForumRepository = getDocForumRepository();
 		HttpSession session = request.getSession();
 		Identity sender = (Identity) session.getAttribute(Constants.USER_KEY);
-		Prop prop = Prop.getInstance(request);
+
 		Integer domainId = Tools.getIntValue(DocDB.getDomain(request), 1);
 		int userId = -1;
 		String hashCode;
+
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		String language = rb.getLng();
+		Prop prop = Prop.getInstance(language);
 
 		if (sender == null || sender.isAdmin() == false) {
 			synchronized (DocForumRepository.class) {
@@ -119,7 +127,7 @@ public class DocForumService {
 				//v access logu servera sa zaznamy skutocne nasli viac krat, preco nikto netusi
 				String lastSessionText = (String)session.getAttribute("DocForumRepository.lastText");
 				if (lastSessionText!=null && lastSessionText.equals(forumForm.getQuestion())) {
-					request.setAttribute("permissionDenied", "sameText");
+					setPermissionDenied(request, "sameText");
 					return SAVE_FORUM_SUCCESS;
 				}
 
@@ -127,7 +135,7 @@ public class DocForumService {
 			}
 		}
 
-		//Get forum group akak setting
+		//Get forum group aka setting
 		ForumGroupEntity forumGroup = ForumGroupService.getForum(forumForm.getDocId(), true);
 
 		//Check if parent we answering to (if set) is active
@@ -140,7 +148,7 @@ public class DocForumService {
 
 				//Only admin can be exception for restriction
 				if(!isAdmin) {
-					request.setAttribute("errorKey", prop.getText("components.forum.active.error"));
+					setError(request, prop.getText("components.forum.active.error"));
 					return SAVE_FORUM_SUCCESS;
 				}
 			}
@@ -176,12 +184,12 @@ public class DocForumService {
 
 		if (forumGroupPerms != null && forumGroupPerms.canPostMessage(sender)==false) {
 			//nema dostatocne prava (kontrola user groups)
-			request.setAttribute("errorKey", "components.forum.wrong_user_groups_for_post");
+			setError(request, "components.forum.wrong_user_groups_for_post");
 			return SAVE_FORUM_SUCCESS;
 		}
 
 		if (ForumGroupService.isActive(forumForm.getDocId()) == false && (sender == null || sender.isAdmin() == false)) {
-			request.setAttribute("errorKey", "components.forum.forum_closed");
+			setError(request, "components.forum.forum_closed");
 			return SAVE_FORUM_SUCCESS;
 		}
 
@@ -199,7 +207,7 @@ public class DocForumService {
 		if ("true".equals(request.getParameter("forumAllowEmptyMessage"))==false &&
 			 (Tools.isEmpty(forumForm.getQuestion()) || Tools.isEmpty(plainQuestion)))
 		{
-			request.setAttribute("errorKey", "components.forum.error.questionEmpty");
+			setError(request, "components.forum.error.questionEmpty");
 			return SAVE_FORUM_SUCCESS;
 		}
 
@@ -236,7 +244,7 @@ public class DocForumService {
 		}
 
 		if (!SpamProtection.canPost("forum", forumForm.getQuestion(), request)) {
-			request.setAttribute("permissionDenied", "postLimit");
+			setPermissionDenied(request, "postLimit");
 			return SAVE_FORUM_SUCCESS;
 		}
 
@@ -355,104 +363,79 @@ public class DocForumService {
 		}
 
 		//Customize query
-		String simpleQuery = "SELECT user_id FROM document_forum WHERE forum_id IN (" + fIds + ")" + domainSql;
-		if(actionType == ActionType.DELETE) simpleQuery += " AND deleted < 1"; //Because change will affect only NON-Deleted forum's
-		else if(actionType == ActionType.RECOVER) simpleQuery += " AND deleted > 0"; //Because change will affect only Deleted forum's
-		else if(actionType == ActionType.APPROVE) simpleQuery += " AND confirmed < 1"; //Because change will affect only NON-Confirmed forum's
-		else if(actionType == ActionType.REJECT) simpleQuery += " AND confirmed > 0"; //Because change will affect only Confirmed forum's
-		else if(actionType == ActionType.LOCK) simpleQuery += " AND active > 0"; //Because change will affect only Active forum's
-		else if(actionType == ActionType.UNLOCK) simpleQuery += " AND active < 1"; //Because change will affect only NON-Active forum's
+		StringBuilder simpleQuery = new StringBuilder("SELECT user_id FROM document_forum WHERE forum_id IN (" + fIds + ")" + domainSql);
+		if(actionType == ActionType.DELETE) simpleQuery.append(" AND deleted < 1"); //Because change will affect only NON-Deleted forum's
+		else if(actionType == ActionType.RECOVER) simpleQuery.append(" AND deleted > 0"); //Because change will affect only Deleted forum's
+		else if(actionType == ActionType.APPROVE) simpleQuery.append(" AND confirmed < 1"); //Because change will affect only NON-Confirmed forum's
+		else if(actionType == ActionType.REJECT) simpleQuery.append(" AND confirmed > 0"); //Because change will affect only Confirmed forum's
+		else if(actionType == ActionType.LOCK) simpleQuery.append(" AND active > 0"); //Because change will affect only Active forum's
+		else if(actionType == ActionType.UNLOCK) simpleQuery.append(" AND active < 1"); //Because change will affect only NON-Active forum's
 
 		//Get users from affected forum's (those where I perform action)
 		List<Number> usersInForums = null;
 		try {
-			usersInForums = new SimpleQuery().forList(simpleQuery);
+			usersInForums = new SimpleQuery().forList(simpleQuery.toString());
 		} catch (Exception ex) {
 			sk.iway.iwcm.Logger.error(ex);
 			usersInForums = new ArrayList<>();
 			if (isAdmin == false) usersInForums.add(user.getUserId());
 		}
 
+		final String WHERE_FORUM_ID_IN = " WHERE forum_id IN (";
+		final String AND_USER_ID = " AND user_id=";
+
 		//PREPARE QUERY FOR THE ACTION
-		simpleQuery = "";
+		simpleQuery = new StringBuilder("");
 		if(actionType == ActionType.DELETE) {
-			//By constatnt decise if use SOFT delete or HARD delete
+			//By constant decide if use SOFT delete or HARD delete
 			if (Constants.getBoolean("forumReallyDeleteMessages"))
-				simpleQuery = "DELETE FROM document_forum WHERE forum_id IN (" + fIds + ")" + domainSql; //HARD DELETE
+				simpleQuery.append("DELETE FROM document_forum WHERE forum_id IN (").append(fIds).append(")").append(domainSql); //HARD DELETE
 			else
-				simpleQuery = "UPDATE document_forum SET deleted = "+DB.getBooleanSql(true)+" WHERE forum_id IN (" + fIds + ") " + domainSql; //SOFT DELETE (update)
+				simpleQuery.append("UPDATE document_forum SET deleted = ").append(DB.getBooleanSql(true)).append(WHERE_FORUM_ID_IN).append(fIds).append(") ").append(domainSql); //SOFT DELETE (update)
 
-			//Specification for user if is not admin
-			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
-
-			Logger.debug(DocForumService.class, "deleteMessage sql=" + simpleQuery);
 		} else if(actionType == ActionType.RECOVER) {
-			simpleQuery = "UPDATE document_forum SET deleted = "+DB.getBooleanSql(false)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
-
-			//Specification for user if is not admin
-			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
-
-			Logger.debug(DocForumService.class, "recoverMessage sql=" + simpleQuery);
+			simpleQuery.append("UPDATE document_forum SET deleted = ").append(DB.getBooleanSql(false)).append(WHERE_FORUM_ID_IN).append(fIds).append(")").append(domainSql);
+		} else if(actionType == ActionType.APPROVE) {
+			simpleQuery.append("UPDATE document_forum SET confirmed = ").append(DB.getBooleanSql(true)).append(WHERE_FORUM_ID_IN).append(fIds).append(")").append(domainSql);
+		} else if(actionType == ActionType.REJECT) {
+			simpleQuery.append("UPDATE document_forum SET confirmed = ").append(DB.getBooleanSql(false)).append(WHERE_FORUM_ID_IN).append(fIds).append(")").append(domainSql);
+		} else if(actionType == ActionType.LOCK) {
+			simpleQuery.append("UPDATE document_forum SET active = ").append(DB.getBooleanSql(false)).append(WHERE_FORUM_ID_IN).append(fIds).append(")").append(domainSql);
+		} else if(actionType == ActionType.UNLOCK) {
+			simpleQuery.append("UPDATE document_forum SET active = ").append(DB.getBooleanSql(true)).append(WHERE_FORUM_ID_IN).append(fIds).append(")").append(domainSql);
 		}
 
-		else if(actionType == ActionType.APPROVE) {
-			simpleQuery = "UPDATE document_forum SET confirmed = "+DB.getBooleanSql(true)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
-
-			//Specification for user if is not admin
-			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
-		}
-
-		else if(actionType == ActionType.REJECT) {
-			simpleQuery = "UPDATE document_forum SET confirmed = "+DB.getBooleanSql(false)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
-
-			//Specification for user if is not admin
-			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
-		}
-
-		else if(actionType == ActionType.LOCK) {
-			simpleQuery = "UPDATE document_forum SET active = "+DB.getBooleanSql(false)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
-
-			//Specification for user if is not admin
-			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
-		}
-
-		else if(actionType == ActionType.UNLOCK) {
-			simpleQuery = "UPDATE document_forum SET active = "+DB.getBooleanSql(true)+" WHERE forum_id IN (" + fIds + ")" + domainSql;
-
-			//Specification for user if is not admin
-			if(!isAdmin) simpleQuery += " AND user_id=" + user.getUserId();
-		}
+		// Specification for user if is not admin
+		if(!isAdmin) simpleQuery.append(AND_USER_ID).append(user.getUserId());
 
 		//PERFORM action AND save number of changed rows
-		Integer numberOfUpdated = new SimpleQuery().executeWithUpdateCount(simpleQuery);
+		Integer numberOfUpdated = new SimpleQuery().executeWithUpdateCount(simpleQuery.toString());
 
-		if(numberOfUpdated != null && numberOfUpdated > 0) {
-			if (usersInForums != null && usersInForums.isEmpty() == false) {
-				String loggerMsg = "";
-				String sqlSign = "";
+		if(numberOfUpdated != null && numberOfUpdated > 0 && usersInForums != null && usersInForums.isEmpty() == false) {
+			String loggerMsg = "";
+			String sqlSign = "";
 
-				if(actionType == ActionType.DELETE || actionType == ActionType.REJECT) {
-					//During DELETE / REJECT action, user's loosing rank, and forum loosing count
-					loggerMsg = "Lowering rank for user: ";
-					sqlSign = "-";
-				} else {
-					//During RECOVER / APPROVE action, user's retrieve rank, and forum retrieve count
-					loggerMsg = "Increasing rank for user: ";
-					sqlSign = "+";
-				}
-
-				//Update user rank
-				for (Number userId : usersInForums) {
-					Logger.debug(DocForumService.class, loggerMsg + userId.intValue());
-
-					//Only real user (-1 userId represent NOT logged user)
-					if(userId.intValue() > 0)
-						(new SimpleQuery()).execute("UPDATE users SET forum_rank=forum_rank" + sqlSign + "1 WHERE user_id=?", userId.intValue());
-				}
-
-				//Update webpage forum_count
-				(new SimpleQuery()).execute("UPDATE documents SET forum_count=forum_count" + sqlSign + "? WHERE doc_id=?", numberOfUpdated, docId);
+			if(actionType == ActionType.DELETE || actionType == ActionType.REJECT) {
+				//During DELETE / REJECT action, user's loosing rank, and forum loosing count
+				loggerMsg = "Lowering rank for user: ";
+				sqlSign = "-";
+			} else {
+				//During RECOVER / APPROVE action, user's retrieve rank, and forum retrieve count
+				loggerMsg = "Increasing rank for user: ";
+				sqlSign = "+";
 			}
+
+			//Update user rank
+			for (Number userId : usersInForums) {
+				Logger.debug(DocForumService.class, loggerMsg + userId.intValue());
+
+				//Only real user (-1 userId represent NOT logged user)
+				if(userId.intValue() > 0)
+					(new SimpleQuery()).execute("UPDATE users SET forum_rank=forum_rank" + sqlSign + "1 WHERE user_id=?", userId.intValue());
+			}
+
+			//Update webpage forum_count
+			(new SimpleQuery()).execute("UPDATE documents SET forum_count=forum_count" + sqlSign + "? WHERE doc_id=?", numberOfUpdated, docId);
 		}
 
 		DocForumEntity docForumEntity = getForumBean(forumId, true);
@@ -535,7 +518,7 @@ public class DocForumService {
 				return text;
 
 			//v prvom rade zmaz vsetky <FONT> a </FONT> tagy
-			Pattern fontPattern = Pattern.compile("<FONT .*?>",Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+			Pattern fontPattern = Pattern.compile("<FONT .*?>",Pattern.MULTILINE | Pattern.CASE_INSENSITIVE); //NOSONAR
 			Matcher fontMatcher = fontPattern.matcher(text);
 
 			while (fontMatcher.find()) {
@@ -546,7 +529,7 @@ public class DocForumService {
 			text = text.replace("</FONT>", "");
 
 			//potom samotne MsoNormal tagy
-			Pattern msTagPattern = Pattern.compile("<P.*?class=.?MsoNormal.*?>",Pattern.MULTILINE | Pattern.CASE_INSENSITIVE);
+			Pattern msTagPattern = Pattern.compile("<P.*?class=.?MsoNormal.*?>",Pattern.MULTILINE | Pattern.CASE_INSENSITIVE); //NOSONAR
 			Matcher msTagMatcher = msTagPattern.matcher(text);
 
 			while (msTagMatcher.find()) {
@@ -611,7 +594,7 @@ public class DocForumService {
 	 * @return
 	 */
 	public static DocForumEntity getForumBean(int forumId, boolean sortAscending) {
-		DocForumRepository docForumRepository = Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+		DocForumRepository docForumRepository = getDocForumRepository();
 		Integer domainId = CloudToolsForCore.getDomainId();
 
 		//Based on param sortAscending call getData
@@ -690,14 +673,14 @@ public class DocForumService {
 		if(docId > 0) {
 			List<DocForumEntity> unsorted = new ArrayList<>();
 			List<Integer> parentIds = new ArrayList<>(Arrays.asList(parentId));
-			HashSet<Integer> obtainnedParentIds = new HashSet<>(Arrays.asList(parentId));
+			HashSet<Integer> obtainedParentIds = new HashSet<>(Arrays.asList(parentId));
 			HashSet<Integer> obtainedChildIds = new HashSet<>();
 			Integer domainId = CloudToolsForCore.getDomainId();
 
-			DocForumRepository docForumRepository = Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+			DocForumRepository docForumRepository = getDocForumRepository();
 
 			//Get all relevant forum entities
-			List<DocForumIdAndParentId> entities = new ArrayList<>();
+			List<DocForumIdAndParentId> entities;
 
 			//Very special FIX -> only in case of calling ForumDB.getForumMessageParent (after forum search), we must include massage-board forum's with parent id < 0
 			//It's because we cant prepare link for forum in search, when we do not load allso root parent
@@ -712,16 +695,16 @@ public class DocForumService {
 				//To make answers work in simple forum
 				if (parentId == 0) parentIds.add(childParentId);
 
-				if (obtainnedParentIds.contains(childParentId))
+				if (obtainedParentIds.contains(childParentId))
 					obtainedChildIds.add(childForumId);
 				else if (obtainedChildIds.contains(childParentId)) {
 					obtainedChildIds.add(childForumId);
-					obtainnedParentIds.add(childParentId);
+					obtainedParentIds.add(childParentId);
 					parentIds.add(childParentId);
 				}
 			}
 
-			//Based of parent id's, gett all their child's entities
+			//Based of parent id's, get all their child's entities
 			List<DocForumEntity> childForums = new ArrayList<>();
 			if(sortAscending)
 				childForums.addAll( docForumRepository.getDocForumListAsc(docId, parentIds, deletedA||deletedB, confirmedA||confirmedB, domainId) );
@@ -805,7 +788,7 @@ public class DocForumService {
 	}
 
 	/**
-	 * Rekurzivne vyhlada forumId podtemy
+	 * Rekurzivne vyhlada forumId pod-temy
 	 *
 	 * @param msgList
 	 * @param parentId
@@ -832,11 +815,11 @@ public class DocForumService {
 	 * @param response
 	 * @return - path to file (forward)
 	 */
-	public static String uploadForumFile(CommonsMultipartFile uploadFile, HttpServletRequest request, HttpServletResponse response) {
+	public static String uploadForumFile(CommonsMultipartFile uploadFile, HttpServletRequest request) {
 		int forumId = Tools.getIntValue(request.getParameter("forumId") , -1);
 		if(forumId == -1 || uploadFile == null || uploadFile.isEmpty()) return null;
 
-		DocForumRepository docForumRepository = Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+		DocForumRepository docForumRepository = getDocForumRepository();
 		Optional<DocForumEntity> forumOpt = docForumRepository.findById((long) forumId);
 		if(!forumOpt.isPresent()) return null;
 
@@ -853,35 +836,35 @@ public class DocForumService {
 		//Check logged user
 		Identity user = UsersDB.getCurrentUser(request);
 		if (user == null) {
-			request.setAttribute("permissionDenied", "true");
+			setPermissionDenied(request, "true");
 			return SAVE_FORUM_SUCCESS;
 		}
 
-		//skontrolu, ci nahravam subor k mojmu prispevku
+		//Check if we upload file to MY post
 		if (docForum.getUserId() < 1 || docForum.getUserId() != user.getUserId()) {
-			request.setAttribute("permissionDenied", "true");
+			setPermissionDenied(request, "true");
 			return SAVE_FORUM_SUCCESS;
 		}
 
 		//Get upload limits
 		LabelValueDetails uploadLimits = ForumDB.getUploadLimits(docForum.getDocId(), request);
 		if (uploadLimits == null) {
-			request.setAttribute("permissionDenied", "true");
+			setPermissionDenied(request, "true");
 			return SAVE_FORUM_SUCCESS;
 		}
 
 		//Check uploaded file size limit
 		if (uploadLimits.getInt1() > 0 && (uploadLimits.getInt1() * 1024) < uploadedFile.getFileItem().getSize()) {
-			request.setAttribute("permissionDenied", "fileSize");
+			setPermissionDenied(request, "fileSize");
 			return SAVE_FORUM_SUCCESS;
 		}
 
-		//skontroluj prava na subory
+		//Check the file rights
 		String fileName = DocTools.removeChars(uploadedFile.getFileItem().getName()).toLowerCase();
 
 		//Check the suffix
 		if (fileName.endsWith(".jsp") || fileName.endsWith(".class")) {
-			request.setAttribute("permissionDenied", "true");
+			setPermissionDenied(request, "true");
 			return SAVE_FORUM_SUCCESS;
 		}
 
@@ -896,23 +879,20 @@ public class DocForumService {
 		}
 
 		if (!canUpload) {
-			request.setAttribute("permissionDenied", "fileType");
+			setPermissionDenied(request, "fileType");
 			return SAVE_FORUM_SUCCESS;
 		}
 
-		//ok, mozeme to nahrat
-		String baseDir = uploadLimits.getValue2();
-		if (baseDir == null) baseDir = "/files/forum/";
+		//ok, let upload image
+		String baseDir = "/images/apps/forum/";
 		baseDir = baseDir.replace('\\', '/');
 		if (baseDir.endsWith("/") == false) baseDir = baseDir + "/";
 		fileName = user.getUserId() + "-" + docForum.getId() + "-" + fileName;
 
 		File f = new File(Tools.getRealPath(baseDir + fileName));
-		if (f.getParentFile().exists() == false) {
-			if(f.getParentFile().mkdirs() == false) {
-				request.setAttribute("permissionDenied", "true");
-				return SAVE_FORUM_SUCCESS;
-			}
+		if (f.getParentFile().exists() == false && f.getParentFile().mkdirs() == false) {
+			setPermissionDenied(request, "true");
+			return SAVE_FORUM_SUCCESS;
 		}
 
 		boolean fileAllreadyExists = f.exists();
@@ -925,7 +905,6 @@ public class DocForumService {
 		while ((bytesRead = buffReader.read(buffer, 0, 8192)) != -1)
 			fos.write(buffer, 0, bytesRead);
 
-		//Logger.println(this,"read end");
 		buffReader.close();
 		fos.close();
 		uploadedFile.getFileItem().delete();
@@ -956,7 +935,7 @@ public class DocForumService {
 
 		Date lastPost = null;
 		int totalMessages = 0;
-		DocForumRepository docForumRepository = Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+		DocForumRepository docForumRepository = getDocForumRepository();
 		List<DocForumEntity> forums = docForumRepository.getForumStat(docId, false,  CloudToolsForCore.getDomainId());
 
 		for(DocForumEntity forum : forums) {
@@ -980,7 +959,6 @@ public class DocForumService {
 		//Params for query
 		List<Object> params = new ArrayList<>();
 		params.add(docId);
-		//Object[] params = {docId};
 
 		//Prepare sql query
 		String sql = "SELECT * FROM document_forum WHERE doc_id=? AND parent_id=-1" + CloudToolsForCore.getDomainIdSqlWhere(true);
@@ -998,7 +976,7 @@ public class DocForumService {
 			public DocForumEntity map(ResultSet rs) throws SQLException {
 				boolean isConfirmed = rs.getBoolean("confirmed");
 				if(onlyConfirmed && !isConfirmed) {
-					//If confired only but this one is not confimed
+					//If confirmed only but this one is not confirmed
 				} else {
 					DocForumEntity tmpEntity = rsToDocForumEntity(rs);
 
@@ -1050,10 +1028,23 @@ public class DocForumService {
 	}
 
 	public static DocForumEntity getLastMessage(int docId) {
-		DocForumRepository docForumRepository = Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+		DocForumRepository docForumRepository = getDocForumRepository();
 		Optional<DocForumEntity> optMsp = docForumRepository.findFirstByDocIdAndDomainIdOrderByQuestionDateDesc(docId, CloudToolsForCore.getDomainId());
 		if(optMsp.isPresent()) return optMsp.get();
 
 		return null;
+	}
+
+	private static DocForumRepository getDocForumRepository() {
+		return Tools.getSpringBean("docForumRepository", DocForumRepository.class);
+	}
+
+	private static void setError(HttpServletRequest request, String error) {
+		request.setAttribute("errorKey", error);
+	}
+
+	private static void setPermissionDenied(HttpServletRequest request, String error) {
+		Logger.debug(ForumDB.class, "Permission denied, error=" + error + " subject="+request.getParameter("subject"));
+		request.setAttribute("permissionDenied", error);
 	}
 }

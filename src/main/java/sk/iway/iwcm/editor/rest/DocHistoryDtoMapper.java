@@ -11,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.editor.PublicableForm;
+import sk.iway.iwcm.doc.DocHistory;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface DocHistoryDtoMapper {
@@ -26,9 +26,7 @@ public interface DocHistoryDtoMapper {
 
     @Mapping(source = "historySaveDate", target = "historySaveDate", qualifiedByName = "stringDateToLong")
     @Mapping(source = "publishStartStringExtra", target = "publishStartStringExtra", qualifiedByName = "stringDateToDate")
-    @Mapping(source = "docId", target = "id")
-    DocHistoryDto publicableFormToHistoryDto(PublicableForm doc);
-    List<DocHistoryDto> publicableFormToHistoryDtos(List<PublicableForm> docs);
+    DocHistoryDto docHistoryToHistoryDto(DocHistory doc);
 
     @Named("stringDateToLong")
     default Long stringDateToLong(String date) {

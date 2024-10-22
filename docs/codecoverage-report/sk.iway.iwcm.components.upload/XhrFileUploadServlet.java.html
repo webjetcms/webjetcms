@@ -25,139 +25,150 @@ import java.util.concurrent.ConcurrentHashMap;
 <span class="nc" id="L25">public class XhrFileUploadServlet extends HttpServlet</span>
 {
 	private static final long serialVersionUID = 1L;
-<span class="nc" id="L28">	private static final Map&lt;String,PathHolder&gt; temporary = new ConcurrentHashMap&lt;String, PathHolder&gt;();</span>
+<span class="fc" id="L28">	private static final Map&lt;String,PathHolder&gt; temporary = new ConcurrentHashMap&lt;&gt;();</span>
 
 	private static final String ALLOWED_EXTENSIONS = &quot;doc docx xls xlsx xml ppt pptx pdf jpeg jpg bmp tiff psd zip rar png mp4&quot;;
 
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+<span class="nc" id="L35">		Prop prop = Prop.getInstance();</span>
 		try {
-<span class="nc" id="L36">			String name = request.getParameter(&quot;name&quot;);</span>
-<span class="nc" id="L37">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, name from parameter: &quot;+name);</span>
-<span class="nc bnc" id="L38" title="All 2 branches missed.">			if (name == null) {</span>
-				//dropzone.js kompatibilita
-<span class="nc" id="L40">				Part filePart = request.getPart(&quot;file&quot;);</span>
-<span class="nc" id="L41">				name = filePart.getSubmittedFileName();</span>
-
-<span class="nc" id="L43">				Logger.debug(XhrFileUploadServlet.class, &quot;doPost, name from filePart: &quot;+name);</span>
-			}
-
-<span class="nc" id="L46">			String extension = FileTools.getFileExtension(name);</span>
-
-<span class="nc" id="L48">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, name=&quot;+name+&quot;, extension=&quot;+extension);</span>
-<span class="nc" id="L49">			List&lt;String&gt; allowedExtensions = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;xhrFileUploadAllowedExtensions&quot;, ALLOWED_EXTENSIONS), &quot; &quot;));</span>
-<span class="nc bnc" id="L50" title="All 4 branches missed.">			if (!allowedExtensions.contains(&quot;*&quot;) &amp;&amp; !allowedExtensions.contains(extension)) {</span>
-<span class="nc" id="L51">				Logger.debug(XhrFileUploadServlet.class, &quot;doPost, extension not allowed: &quot;+extension);</span>
-<span class="nc" id="L52">				XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
-<span class="nc" id="L53">				xhrFileUploadResponse.setError(Prop.getInstance().getText(&quot;components.forum.new.upload_not_allowed_filetype&quot;));</span>
-<span class="nc" id="L54">				xhrFileUploadResponse.setFile(name);</span>
-<span class="nc" id="L55">				xhrFileUploadResponse.setSuccess(false);</span>
-<span class="nc" id="L56">				setResponse(response, xhrFileUploadResponse);</span>
-<span class="nc" id="L57">				return;</span>
-			}
-
-<span class="nc" id="L60">			int chunk = Tools.getIntValue(request.getParameter(&quot;chunk&quot;), 0);</span>
-<span class="nc" id="L61">			int chunks = Tools.getIntValue(request.getParameter(&quot;chunks&quot;), 0);</span>
+<span class="nc" id="L37">			String name = request.getParameter(&quot;name&quot;);</span>
+<span class="nc" id="L38">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, name from parameter: &quot;+name);</span>
 
 			//dropzone.js kompatibilita
-<span class="nc bnc" id="L64" title="All 2 branches missed.">			if (request.getParameter(&quot;dzchunkindex&quot;) != null) chunk = Tools.getIntValue(request.getParameter(&quot;dzchunkindex&quot;), 0);</span>
-<span class="nc bnc" id="L65" title="All 2 branches missed.">			if (request.getParameter(&quot;dztotalchunkcount&quot;) != null) chunks = Tools.getIntValue(request.getParameter(&quot;dztotalchunkcount&quot;), 0);</span>
+<span class="nc" id="L41">			Part filePart = request.getPart(&quot;file&quot;);</span>
 
-<span class="nc" id="L67">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, chunk=&quot;+chunk+&quot;, chunks=&quot;+chunks);</span>
-<span class="nc" id="L68">			Part filePart = request.getPart(&quot;file&quot;);</span>
-
-<span class="nc" id="L70">			HttpSession session = request.getSession();</span>
-<span class="nc" id="L71">			PartialUploadHolder holder = (PartialUploadHolder) session.getAttribute(&quot;partialUploadFile-&quot; + name);</span>
-<span class="nc bnc" id="L72" title="All 4 branches missed.">			if (holder == null || chunk == 0) {</span>
-<span class="nc" id="L73">				holder = new PartialUploadHolder(chunks, name);</span>
-<span class="nc" id="L74">				session.setAttribute(&quot;partialUploadFile-&quot; + name, holder);</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">			if (filePart == null) {</span>
+<span class="nc" id="L44">				XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
+<span class="nc" id="L45">				xhrFileUploadResponse.setError(prop.getText(&quot;components.forum.new.upload_not_allowed_filetype&quot;));</span>
+<span class="nc" id="L46">				xhrFileUploadResponse.setFile(&quot;&quot;);</span>
+<span class="nc" id="L47">				xhrFileUploadResponse.setSuccess(false);</span>
+<span class="nc" id="L48">				setResponse(response, xhrFileUploadResponse);</span>
+<span class="nc" id="L49">				return;</span>
 			}
-<span class="nc" id="L76">			boolean isLast = false;</span>
-<span class="nc bnc" id="L77" title="All 4 branches missed.">			if (holder.getPartPaths().size() + 1 == holder.getChunks() || holder.getChunks() == 0) {</span>
+
+<span class="nc bnc" id="L52" title="All 2 branches missed.">			if (filePart.getSubmittedFileName() != null) {</span>
+<span class="nc" id="L53">				name = filePart.getSubmittedFileName();</span>
+			}
+
+<span class="nc" id="L56">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, name from filePart: &quot;+name);</span>
+
+<span class="nc" id="L58">			String extension = FileTools.getFileExtension(name);</span>
+
+<span class="nc" id="L60">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, name=&quot;+name+&quot;, extension=&quot;+extension);</span>
+<span class="nc" id="L61">			List&lt;String&gt; allowedExtensions = Tools.getStringListValue(Tools.getTokens(Constants.getString(&quot;xhrFileUploadAllowedExtensions&quot;, ALLOWED_EXTENSIONS), &quot; &quot;));</span>
+<span class="nc bnc" id="L62" title="All 4 branches missed.">			if (!allowedExtensions.contains(&quot;*&quot;) &amp;&amp; !allowedExtensions.contains(extension)) {</span>
+<span class="nc" id="L63">				Logger.debug(XhrFileUploadServlet.class, &quot;doPost, extension not allowed: &quot;+extension);</span>
+<span class="nc" id="L64">				XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
+<span class="nc" id="L65">				xhrFileUploadResponse.setError(prop.getText(&quot;components.forum.new.upload_not_allowed_filetype&quot;));</span>
+<span class="nc" id="L66">				xhrFileUploadResponse.setFile(name);</span>
+<span class="nc" id="L67">				xhrFileUploadResponse.setSuccess(false);</span>
+<span class="nc" id="L68">				setResponse(response, xhrFileUploadResponse);</span>
+<span class="nc" id="L69">				return;</span>
+			}
+
+<span class="nc" id="L72">			int chunk = Tools.getIntValue(request.getParameter(&quot;chunk&quot;), 0);</span>
+<span class="nc" id="L73">			int chunks = Tools.getIntValue(request.getParameter(&quot;chunks&quot;), 0);</span>
+
+			//dropzone.js kompatibilita
+<span class="nc bnc" id="L76" title="All 2 branches missed.">			if (request.getParameter(&quot;dzchunkindex&quot;) != null) chunk = Tools.getIntValue(request.getParameter(&quot;dzchunkindex&quot;), 0);</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (request.getParameter(&quot;dztotalchunkcount&quot;) != null) chunks = Tools.getIntValue(request.getParameter(&quot;dztotalchunkcount&quot;), 0);</span>
+
+<span class="nc" id="L79">			Logger.debug(XhrFileUploadServlet.class, &quot;doPost, chunk=&quot;+chunk+&quot;, chunks=&quot;+chunks);</span>
+
+<span class="nc" id="L81">			HttpSession session = request.getSession();</span>
+<span class="nc" id="L82">			PartialUploadHolder holder = (PartialUploadHolder) session.getAttribute(&quot;partialUploadFile-&quot; + name);</span>
+<span class="nc bnc" id="L83" title="All 4 branches missed.">			if (holder == null || chunk == 0) {</span>
+<span class="nc" id="L84">				holder = new PartialUploadHolder(chunks, name);</span>
+<span class="nc" id="L85">				session.setAttribute(&quot;partialUploadFile-&quot; + name, holder);</span>
+			}
+<span class="nc" id="L87">			boolean isLast = false;</span>
+<span class="nc bnc" id="L88" title="All 4 branches missed.">			if (holder.getPartPaths().size() + 1 == holder.getChunks() || holder.getChunks() == 0) {</span>
 				//je to posledny alebo jediny chunk
-<span class="nc" id="L79">				isLast = true;</span>
+<span class="nc" id="L90">				isLast = true;</span>
 			}
 
-<span class="nc" id="L82">			String suffix = FileTools.getFileExtension(name);</span>
+<span class="nc" id="L93">			String suffix = FileTools.getFileExtension(name);</span>
 
 			//zapisem data do docasneho suboru
-<span class="nc" id="L85">			File tempUploadFile = File.createTempFile(name, &quot;.&quot; + suffix);</span>
-<span class="nc" id="L86">			FileOutputStream tempFos = new FileOutputStream(tempUploadFile);</span>
-<span class="nc" id="L87">			InputStream tempIs = filePart.getInputStream();</span>
-<span class="nc" id="L88">			int read = 0;</span>
-<span class="nc" id="L89">			byte[] bytes = new byte[1024];</span>
-<span class="nc bnc" id="L90" title="All 2 branches missed.">			while ((read = tempIs.read(bytes)) != -1) {</span>
-<span class="nc" id="L91">				tempFos.write(bytes, 0, read);</span>
+<span class="nc" id="L96">			File tempUploadFile = File.createTempFile(name, &quot;.&quot; + suffix);</span>
+<span class="nc" id="L97">			FileOutputStream tempFos = new FileOutputStream(tempUploadFile);</span>
+<span class="nc" id="L98">			InputStream tempIs = filePart.getInputStream();</span>
+<span class="nc" id="L99">			int read = 0;</span>
+<span class="nc" id="L100">			byte[] bytes = new byte[1024];</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">			while ((read = tempIs.read(bytes)) != -1) {</span>
+<span class="nc" id="L102">				tempFos.write(bytes, 0, read);</span>
 			}
 
-<span class="nc" id="L94">			tempIs.close();</span>
-<span class="nc" id="L95">			tempFos.close();</span>
+<span class="nc" id="L105">			tempIs.close();</span>
+<span class="nc" id="L106">			tempFos.close();</span>
 
-<span class="nc" id="L97">			String filePartName = tempUploadFile.getAbsolutePath();//filePart.get//getName();</span>
-<span class="nc" id="L98">			holder.getPartPaths().add(chunk, filePartName);</span>
+<span class="nc" id="L108">			String filePartName = tempUploadFile.getAbsolutePath();//filePart.get//getName();</span>
+<span class="nc" id="L109">			holder.getPartPaths().add(chunk, filePartName);</span>
 
-<span class="nc" id="L100">			XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
-<span class="nc" id="L101">			xhrFileUploadResponse.setSuccess(true);</span>
-<span class="nc" id="L102">			xhrFileUploadResponse.setChunkUploaded(chunk);</span>
-<span class="nc" id="L103">			xhrFileUploadResponse.setSize(new File(filePartName).length());</span>
+<span class="nc" id="L111">			XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
+<span class="nc" id="L112">			xhrFileUploadResponse.setSuccess(true);</span>
+<span class="nc" id="L113">			xhrFileUploadResponse.setChunkUploaded(chunk);</span>
+<span class="nc" id="L114">			xhrFileUploadResponse.setSize(new File(filePartName).length());</span>
 
-<span class="nc bnc" id="L105" title="All 2 branches missed.">			if (isLast) {</span>
-<span class="nc" id="L106">				session.removeAttribute(&quot;partialUploadFile-&quot; + name);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">			if (isLast) {</span>
+<span class="nc" id="L117">				session.removeAttribute(&quot;partialUploadFile-&quot; + name);</span>
 				// mam posledny, spojim ich do jedneho
 
 				FileOutputStream fos;
 				FileInputStream fis;
 				byte[] fileBytes;
-<span class="nc" id="L112">				String random = RandomStringUtils.random(15, true, true);</span>
-<span class="nc" id="L113">				File tempfile = null;</span>
+<span class="nc" id="L123">				String random = RandomStringUtils.random(15, true, true);</span>
+<span class="nc" id="L124">				File tempfile = null;</span>
 				try {
-<span class="nc" id="L115">					tempfile = File.createTempFile(random, &quot;.&quot; + suffix);</span>
-<span class="nc" id="L116">					fos = new FileOutputStream(tempfile, true);</span>
-<span class="nc bnc" id="L117" title="All 2 branches missed.">					for (String chunkPath : holder.getPartPaths()) {</span>
-<span class="nc" id="L118">						File inputFile = new File(chunkPath);</span>
-<span class="nc" id="L119">						fis = new FileInputStream(inputFile);</span>
-<span class="nc" id="L120">						fileBytes = new byte[(int) inputFile.length()];</span>
-<span class="nc" id="L121">						fis.read(fileBytes, 0, (int) inputFile.length());</span>
-<span class="nc" id="L122">						fos.write(fileBytes);</span>
-<span class="nc" id="L123">						fos.flush();</span>
-<span class="nc" id="L124">						fileBytes = null;</span>
-<span class="nc" id="L125">						fis.close();</span>
-<span class="nc" id="L126">						fis = null;</span>
-<span class="nc" id="L127">						inputFile.delete();</span>
-<span class="nc" id="L128">					}</span>
-<span class="nc" id="L129">					fos.close();</span>
-<span class="nc" id="L130">					fos = null;</span>
+<span class="nc" id="L126">					tempfile = File.createTempFile(random, &quot;.&quot; + suffix);</span>
+<span class="nc" id="L127">					fos = new FileOutputStream(tempfile, true);</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">					for (String chunkPath : holder.getPartPaths()) {</span>
+<span class="nc" id="L129">						File inputFile = new File(chunkPath);</span>
+<span class="nc" id="L130">						fis = new FileInputStream(inputFile);</span>
+<span class="nc" id="L131">						fileBytes = new byte[(int) inputFile.length()];</span>
+<span class="nc" id="L132">						fis.read(fileBytes, 0, (int) inputFile.length());</span>
+<span class="nc" id="L133">						fos.write(fileBytes);</span>
+<span class="nc" id="L134">						fos.flush();</span>
+<span class="nc" id="L135">						fileBytes = null;</span>
+<span class="nc" id="L136">						fis.close();</span>
+<span class="nc" id="L137">						fis = null;</span>
+<span class="nc" id="L138">						inputFile.delete(); //NOSONAR</span>
+<span class="nc" id="L139">					}</span>
+<span class="nc" id="L140">					fos.close();</span>
+<span class="nc" id="L141">					fos = null;</span>
 
-<span class="nc" id="L132">					WebjetEvent&lt;File&gt; fileWebjetEvent = new WebjetEvent&lt;&gt;(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);</span>
-<span class="nc" id="L133">					fileWebjetEvent.publishEvent();</span>
+<span class="nc" id="L143">					WebjetEvent&lt;File&gt; fileWebjetEvent = new WebjetEvent&lt;&gt;(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);</span>
+<span class="nc" id="L144">					fileWebjetEvent.publishEvent();</span>
 
-<span class="nc bnc" id="L135" title="All 2 branches missed.">					if (request.getAttribute(&quot;xhrError&quot;) != null) {</span>
-<span class="nc" id="L136">						Logger.debug(XhrFileUploadServlet.class, &quot;doPost, xhrError, name=&quot;+name);</span>
-<span class="nc" id="L137">						xhrFileUploadResponse = new XhrFileUploadResponse();</span>
-<span class="nc" id="L138">						xhrFileUploadResponse.setFile(name);</span>
-<span class="nc" id="L139">						xhrFileUploadResponse.setSuccess(false);</span>
-<span class="nc" id="L140">						xhrFileUploadResponse.setError((String) request.getAttribute(&quot;xhrError&quot;));</span>
-<span class="nc" id="L141">						setResponse(response, xhrFileUploadResponse);</span>
-<span class="nc" id="L142">						return;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">					if (request.getAttribute(&quot;xhrError&quot;) != null) {</span>
+<span class="nc" id="L147">						Logger.debug(XhrFileUploadServlet.class, &quot;doPost, xhrError, name=&quot;+name);</span>
+<span class="nc" id="L148">						xhrFileUploadResponse = new XhrFileUploadResponse();</span>
+<span class="nc" id="L149">						xhrFileUploadResponse.setFile(name);</span>
+<span class="nc" id="L150">						xhrFileUploadResponse.setSuccess(false);</span>
+<span class="nc" id="L151">						xhrFileUploadResponse.setError((String) request.getAttribute(&quot;xhrError&quot;));</span>
+<span class="nc" id="L152">						setResponse(response, xhrFileUploadResponse);</span>
+<span class="nc" id="L153">						return;</span>
 					}
 
-<span class="nc" id="L145">					Logger.debug(XhrFileUploadServlet.class, &quot;doPost, success, name=&quot;+name+&quot;, key=&quot;+random);</span>
+<span class="nc" id="L156">					Logger.debug(XhrFileUploadServlet.class, &quot;doPost, success, name=&quot;+name+&quot;, key=&quot;+random);</span>
 
-<span class="nc" id="L147">					xhrFileUploadResponse.putName(name);</span>
-<span class="nc" id="L148">					xhrFileUploadResponse.putKey(random);</span>
+<span class="nc" id="L158">					xhrFileUploadResponse.putName(name);</span>
+<span class="nc" id="L159">					xhrFileUploadResponse.putKey(random);</span>
 
-<span class="nc" id="L150">					temporary.put(random, new PathHolder(name, tempfile.getAbsolutePath(), Tools.getNow()));</span>
-<span class="nc" id="L151">				} catch (IOException ioe) {</span>
-<span class="nc" id="L152">					sk.iway.iwcm.Logger.error(ioe);</span>
-<span class="nc" id="L153">				}</span>
-<span class="nc" id="L154">			} else {</span>
-<span class="nc" id="L155">				MultipartWrapper.slowdownUpload();</span>
+<span class="nc" id="L161">					temporary.put(random, new PathHolder(name, tempfile.getAbsolutePath(), Tools.getNow()));</span>
+<span class="nc" id="L162">				} catch (IOException ioe) {</span>
+<span class="nc" id="L163">					sk.iway.iwcm.Logger.error(ioe);</span>
+<span class="nc" id="L164">				}</span>
+<span class="nc" id="L165">			} else {</span>
+<span class="nc" id="L166">				MultipartWrapper.slowdownUpload();</span>
 			}
 
-<span class="nc" id="L158">			setResponse(response, xhrFileUploadResponse);</span>
+<span class="nc" id="L169">			setResponse(response, xhrFileUploadResponse);</span>
 		}
-<span class="nc" id="L160">		catch (Exception ex) {</span>
+<span class="nc" id="L171">		catch (Exception ex) {</span>
 			/*
 			if (ex.getClass().isAssignableFrom(IOException.class) &amp;&amp; ex.getMessage().contains(&quot;Unexpected EOF&quot;)) {
 				Logger.warn(XhrFileUploadServlet.class, &quot;User cancelled upload&quot;);
@@ -165,26 +176,26 @@ import java.util.concurrent.ConcurrentHashMap;
 				return;
 			}
 			 */
-<span class="nc" id="L168">			Logger.warn(XhrFileUploadServlet.class, ex.getMessage());</span>
-<span class="nc" id="L169">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L179">			Logger.warn(XhrFileUploadServlet.class, ex.getMessage());</span>
+<span class="nc" id="L180">			sk.iway.iwcm.Logger.error(ex);</span>
 
-<span class="nc" id="L171">			XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
-<span class="nc" id="L172">			xhrFileUploadResponse.setError(ex.getMessage());</span>
-<span class="nc" id="L173">			xhrFileUploadResponse.setSuccess(false);</span>
-<span class="nc" id="L174">			setResponse(response, xhrFileUploadResponse);</span>
-<span class="nc" id="L175">		}</span>
-<span class="nc" id="L176">	}</span>
+<span class="nc" id="L182">			XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();</span>
+<span class="nc" id="L183">			xhrFileUploadResponse.setError(prop.getText(&quot;components.docman.error.db&quot;));</span>
+<span class="nc" id="L184">			xhrFileUploadResponse.setSuccess(false);</span>
+<span class="nc" id="L185">			setResponse(response, xhrFileUploadResponse);</span>
+<span class="nc" id="L186">		}</span>
+<span class="nc" id="L187">	}</span>
 
 	private void setResponse(HttpServletResponse response, XhrFileUploadResponse xhrFileUploadResponse) {
 		try {
-<span class="nc" id="L180">			ObjectMapper mapper = new ObjectMapper();</span>
-<span class="nc" id="L181">			response.setContentType(&quot;application/json&quot;);</span>
-<span class="nc" id="L182">			response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
-<span class="nc" id="L183">			response.getWriter().write(mapper.writeValueAsString(xhrFileUploadResponse));</span>
-<span class="nc" id="L184">		} catch (IOException e) {</span>
-<span class="nc" id="L185">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L186">		}</span>
-<span class="nc" id="L187">	}</span>
+<span class="nc" id="L191">			ObjectMapper mapper = new ObjectMapper();</span>
+<span class="nc" id="L192">			response.setContentType(&quot;application/json&quot;);</span>
+<span class="nc" id="L193">			response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+<span class="nc" id="L194">			response.getWriter().write(mapper.writeValueAsString(xhrFileUploadResponse));</span>
+<span class="nc" id="L195">		} catch (IOException e) {</span>
+<span class="nc" id="L196">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L197">		}</span>
+<span class="nc" id="L198">	}</span>
 
 
 	/**
@@ -195,82 +206,84 @@ import java.util.concurrent.ConcurrentHashMap;
 	 * @return - nazov suboru
 	 * @throws IOException
 	 */
+	@SuppressWarnings(&quot;java:S1130&quot;)
 	public static String moveFile(String fileKey, String dir) throws IOException
 	{
-<span class="nc bnc" id="L200" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
 		{
-<span class="nc" id="L202">		    IwcmFile dirFile = new IwcmFile(dir);</span>
-<span class="nc" id="L203">		    String dirVirtualPath = dirFile.getVirtualPath();</span>
+<span class="nc" id="L214">		    IwcmFile dirFile = new IwcmFile(dir);</span>
+<span class="nc" id="L215">		    String dirVirtualPath = dirFile.getVirtualPath();</span>
 
-<span class="nc" id="L205">			String originalFilename = temporary.get(fileKey).getFileName();</span>
+<span class="nc" id="L217">			String originalFilename = temporary.get(fileKey).getFileName();</span>
 
-<span class="nc bnc" id="L207" title="All 4 branches missed.">			if (dirVirtualPath.startsWith(&quot;/images&quot;) || dirVirtualPath.startsWith(&quot;/files&quot;))</span>
+<span class="nc bnc" id="L219" title="All 4 branches missed.">			if (dirVirtualPath.startsWith(&quot;/images&quot;) || dirVirtualPath.startsWith(&quot;/files&quot;))</span>
             {
-<span class="nc" id="L209">                originalFilename = DB.internationalToEnglish(originalFilename);</span>
-<span class="nc" id="L210">                originalFilename = DocTools.removeCharsDir(originalFilename, true).toLowerCase();</span>
+<span class="nc" id="L221">                originalFilename = DB.internationalToEnglish(originalFilename);</span>
+<span class="nc" id="L222">                originalFilename = DocTools.removeCharsDir(originalFilename, true).toLowerCase();</span>
             }
 
-<span class="nc" id="L213">			String filename = originalFilename;</span>
-<span class="nc" id="L214">			IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());</span>
-<span class="nc bnc" id="L215" title="All 2 branches missed.">			if (!file.exists()) return null;</span>
-<span class="nc" id="L216">			IwcmFile dest = new IwcmFile(dir, originalFilename);</span>
-<span class="nc" id="L217">			int counter = 1;</span>
-<span class="nc bnc" id="L218" title="All 2 branches missed.">			while (dest.exists())</span>
+<span class="nc" id="L225">			String filename = originalFilename;</span>
+<span class="nc" id="L226">			IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">			if (!file.exists()) return null;</span>
+<span class="nc" id="L228">			IwcmFile dest = new IwcmFile(dir, originalFilename);</span>
+<span class="nc" id="L229">			int counter = 1;</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			while (dest.exists())</span>
 			{
-<span class="nc" id="L220">				filename = originalFilename + &quot;-&quot; + String.valueOf(counter);</span>
-<span class="nc bnc" id="L221" title="All 2 branches missed.">				if (originalFilename.contains(&quot;.&quot;))	filename = originalFilename.substring(0, originalFilename.lastIndexOf(&quot;.&quot;)) + &quot;-&quot; + String.valueOf(counter) + originalFilename.substring(originalFilename.lastIndexOf(&quot;.&quot;));</span>
-<span class="nc" id="L222">				dest = new IwcmFile(dir, filename);</span>
-<span class="nc" id="L223">				counter++;</span>
+<span class="nc" id="L232">				filename = originalFilename + &quot;-&quot; + counter;</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">				if (originalFilename.contains(&quot;.&quot;))	filename = originalFilename.substring(0, originalFilename.lastIndexOf(&quot;.&quot;)) + &quot;-&quot; + counter + originalFilename.substring(originalFilename.lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L234">				dest = new IwcmFile(dir, filename);</span>
+<span class="nc" id="L235">				counter++;</span>
 			}
 
-<span class="nc" id="L226">			Logger.debug(XhrFileUploadServlet.class, &quot;moveFile, Moving file &quot;+file.getAbsolutePath()+&quot;, to &quot;+dest.getAbsolutePath());</span>
-<span class="nc" id="L227">			FileTools.moveFile(file, dest);</span>
-<span class="nc" id="L228">			Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload (xhr), path=&quot; + dest.getVirtualPath(), -1, 1);</span>
-<span class="nc" id="L229">			return filename;</span>
+<span class="nc" id="L238">			Logger.debug(XhrFileUploadServlet.class, &quot;moveFile, Moving file &quot;+file.getAbsolutePath()+&quot;, to &quot;+dest.getAbsolutePath());</span>
+<span class="nc" id="L239">			FileTools.moveFile(file, dest);</span>
+<span class="nc" id="L240">			Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload (xhr), path=&quot; + dest.getVirtualPath(), -1, 1);</span>
+<span class="nc" id="L241">			return filename;</span>
 		}
-<span class="nc" id="L231">		return null;</span>
+<span class="nc" id="L243">		return null;</span>
 	}
 
+	@SuppressWarnings(&quot;java:S1130&quot;)
     public static String moveAndReplaceFile(String fileKey, String dir, String fileNameParam) throws IOException
     {
-<span class="nc" id="L236">        String fileName = fileNameParam;</span>
-<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (temporary.containsKey(fileKey))</span>
+<span class="nc" id="L249">        String fileName = fileNameParam;</span>
+<span class="nc bnc" id="L250" title="All 2 branches missed.">        if (temporary.containsKey(fileKey))</span>
         {
-<span class="nc" id="L239">            IwcmFile dirFile = new IwcmFile(dir);</span>
-<span class="nc" id="L240">            String dirVirtualPath = dirFile.getVirtualPath();</span>
+<span class="nc" id="L252">            IwcmFile dirFile = new IwcmFile(dir);</span>
+<span class="nc" id="L253">            String dirVirtualPath = dirFile.getVirtualPath();</span>
 
-<span class="nc bnc" id="L242" title="All 4 branches missed.">            if (dirVirtualPath.startsWith(&quot;/images&quot;) || dirVirtualPath.startsWith(&quot;/files&quot;))</span>
+<span class="nc bnc" id="L255" title="All 4 branches missed.">            if (dirVirtualPath.startsWith(&quot;/images&quot;) || dirVirtualPath.startsWith(&quot;/files&quot;))</span>
             {
-<span class="nc" id="L244">                fileName = DB.internationalToEnglish(fileName);</span>
-<span class="nc" id="L245">                fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
+<span class="nc" id="L257">                fileName = DB.internationalToEnglish(fileName);</span>
+<span class="nc" id="L258">                fileName = DocTools.removeCharsDir(fileName, true).toLowerCase();</span>
             }
 
-<span class="nc" id="L248">            IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());</span>
-<span class="nc bnc" id="L249" title="All 2 branches missed.">            if (!file.exists()) return null;</span>
-<span class="nc" id="L250">            IwcmFile dest = new IwcmFile(dir + fileName);</span>
+<span class="nc" id="L261">            IwcmFile file = new IwcmFile(temporary.get(fileKey).getTempPath());</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">            if (!file.exists()) return null;</span>
+<span class="nc" id="L263">            IwcmFile dest = new IwcmFile(dir + fileName);</span>
 
-<span class="nc bnc" id="L252" title="All 2 branches missed.">            if (dest.exists()) {</span>
-<span class="nc" id="L253">                dest.delete();</span>
+<span class="nc bnc" id="L265" title="All 2 branches missed.">            if (dest.exists()) {</span>
+<span class="nc" id="L266">                dest.delete();</span>
             }
 
-<span class="nc" id="L256">				Logger.debug(XhrFileUploadServlet.class, &quot;moveAndReplaceFile, Moving file &quot;+file.getAbsolutePath()+&quot;, to &quot;+dest.getAbsolutePath());</span>
-<span class="nc" id="L257">            FileTools.moveFile(file, dest);</span>
-<span class="nc" id="L258">            Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload (xhr), path=&quot; + dest.getVirtualPath(), -1, 1);</span>
+<span class="nc" id="L269">				Logger.debug(XhrFileUploadServlet.class, &quot;moveAndReplaceFile, Moving file &quot;+file.getAbsolutePath()+&quot;, to &quot;+dest.getAbsolutePath());</span>
+<span class="nc" id="L270">            FileTools.moveFile(file, dest);</span>
+<span class="nc" id="L271">            Adminlog.add(Adminlog.TYPE_FILE_UPLOAD, &quot;File upload (xhr), path=&quot; + dest.getVirtualPath(), -1, 1);</span>
 
-<span class="nc" id="L260">            return fileName;</span>
+<span class="nc" id="L273">            return fileName;</span>
         }
-<span class="nc" id="L262">        return null;</span>
+<span class="nc" id="L275">        return null;</span>
     }
 
 	public static boolean delete(String hash) {
-<span class="nc bnc" id="L266" title="All 2 branches missed.">		if (temporary.containsKey(hash))</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">		if (temporary.containsKey(hash))</span>
 		{
 
-<span class="nc" id="L269">			IwcmFile file = new IwcmFile(temporary.get(hash).getTempPath());</span>
-<span class="nc" id="L270">			return file.delete();</span>
+<span class="nc" id="L282">			IwcmFile file = new IwcmFile(temporary.get(hash).getTempPath());</span>
+<span class="nc" id="L283">			return file.delete();</span>
 		}
 
-<span class="nc" id="L273">		return false;</span>
+<span class="nc" id="L286">		return false;</span>
 	}
 
 	/**
@@ -280,11 +293,11 @@ import java.util.concurrent.ConcurrentHashMap;
 	 */
 	public static String getTempFileName(String fileKey)
 	{
-<span class="nc bnc" id="L283" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
 		{
-<span class="nc" id="L285">			return temporary.get(fileKey).getFileName();</span>
+<span class="nc" id="L298">			return temporary.get(fileKey).getFileName();</span>
 		}
-<span class="nc" id="L287">		return null;</span>
+<span class="nc" id="L300">		return null;</span>
 	}
 
 	/**
@@ -294,11 +307,11 @@ import java.util.concurrent.ConcurrentHashMap;
 	 */
 	public static String getTempFilePath(String fileKey)
 	{
-<span class="nc bnc" id="L297" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
+<span class="nc bnc" id="L310" title="All 2 branches missed.">		if (temporary.containsKey(fileKey))</span>
 		{
-<span class="nc" id="L299">			return temporary.get(fileKey).getTempPath();</span>
+<span class="nc" id="L312">			return temporary.get(fileKey).getTempPath();</span>
 		}
-<span class="nc" id="L301">		return null;</span>
+<span class="nc" id="L314">		return null;</span>
 	}
 
 
@@ -311,41 +324,41 @@ import java.util.concurrent.ConcurrentHashMap;
 		private List&lt;String&gt; partPaths;
 
 		public PartialUploadHolder(int chunks, String name)
-<span class="nc" id="L314">		{</span>
-<span class="nc" id="L315">			this.chunks = chunks;</span>
-<span class="nc" id="L316">			this.name = name;</span>
-<span class="nc" id="L317">			partPaths = new ArrayList&lt;&gt;(chunks);</span>
-<span class="nc" id="L318">		}</span>
+<span class="nc" id="L327">		{</span>
+<span class="nc" id="L328">			this.chunks = chunks;</span>
+<span class="nc" id="L329">			this.name = name;</span>
+<span class="nc" id="L330">			partPaths = new ArrayList&lt;&gt;(chunks);</span>
+<span class="nc" id="L331">		}</span>
 
 		public int getChunks()
 		{
-<span class="nc" id="L322">			return chunks;</span>
+<span class="nc" id="L335">			return chunks;</span>
 		}
 
 		public void setChunks(int chunks)
 		{
-<span class="nc" id="L327">			this.chunks = chunks;</span>
-<span class="nc" id="L328">		}</span>
+<span class="nc" id="L340">			this.chunks = chunks;</span>
+<span class="nc" id="L341">		}</span>
 
 		public String getName()
 		{
-<span class="nc" id="L332">			return name;</span>
+<span class="nc" id="L345">			return name;</span>
 		}
 
 		public void setName(String name)
 		{
-<span class="nc" id="L337">			this.name = name;</span>
-<span class="nc" id="L338">		}</span>
+<span class="nc" id="L350">			this.name = name;</span>
+<span class="nc" id="L351">		}</span>
 
 		public List&lt;String&gt; getPartPaths()
 		{
-<span class="nc" id="L342">			return partPaths;</span>
+<span class="nc" id="L355">			return partPaths;</span>
 		}
 
 		public void setPartPaths(List&lt;String&gt; partPaths)
 		{
-<span class="nc" id="L347">			this.partPaths = partPaths;</span>
-<span class="nc" id="L348">		}</span>
+<span class="nc" id="L360">			this.partPaths = partPaths;</span>
+<span class="nc" id="L361">		}</span>
 	}
 
 
@@ -356,35 +369,35 @@ import java.util.concurrent.ConcurrentHashMap;
 		private long timestamp;
 
 		public PathHolder(String fileName, String tempPath, long timestamp)
-<span class="nc" id="L359">		{</span>
-<span class="nc" id="L360">			this.fileName = fileName;</span>
-<span class="nc" id="L361">			this.timestamp = timestamp;</span>
-<span class="nc" id="L362">			this.tempPath = tempPath;</span>
-<span class="nc" id="L363">		}</span>
+<span class="nc" id="L372">		{</span>
+<span class="nc" id="L373">			this.fileName = fileName;</span>
+<span class="nc" id="L374">			this.timestamp = timestamp;</span>
+<span class="nc" id="L375">			this.tempPath = tempPath;</span>
+<span class="nc" id="L376">		}</span>
 		public String getFileName()
 		{
-<span class="nc" id="L366">			return fileName;</span>
+<span class="nc" id="L379">			return fileName;</span>
 		}
 		public void setFileName(String fileName)
 		{
-<span class="nc" id="L370">			this.fileName = fileName;</span>
-<span class="nc" id="L371">		}</span>
+<span class="nc" id="L383">			this.fileName = fileName;</span>
+<span class="nc" id="L384">		}</span>
 		public long getTimestamp()
 		{
-<span class="nc" id="L374">			return timestamp;</span>
+<span class="nc" id="L387">			return timestamp;</span>
 		}
 		public void setTimestamp(long timestamp)
 		{
-<span class="nc" id="L378">			this.timestamp = timestamp;</span>
-<span class="nc" id="L379">		}</span>
+<span class="nc" id="L391">			this.timestamp = timestamp;</span>
+<span class="nc" id="L392">		}</span>
 		public String getTempPath()
 		{
-<span class="nc" id="L382">			return tempPath;</span>
+<span class="nc" id="L395">			return tempPath;</span>
 		}
 		public void setTempPath(String tempPath)
 		{
-<span class="nc" id="L386">			this.tempPath = tempPath;</span>
-<span class="nc" id="L387">		}</span>
+<span class="nc" id="L399">			this.tempPath = tempPath;</span>
+<span class="nc" id="L400">		}</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

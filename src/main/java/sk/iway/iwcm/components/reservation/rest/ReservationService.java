@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.reservation.rest;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -10,36 +12,58 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.stereotype.Service;
-
+import sk.iway.iwcm.DateTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.reservation.jpa.ReservationEntity;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceEntity;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
 import sk.iway.iwcm.components.reservation.jpa.ReservationObjectTimesEntity;
 import sk.iway.iwcm.components.reservation.jpa.ReservationRepository;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
 import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UserGroupsDB;
+import sk.iway.iwcm.users.UsersDB;
 
-@Service
 public class ReservationService {
+
+    private final String emailAllDay;
+    private final String emailDateFrom;
+    private final String emailDateTo;
+    private final String emailNext2;
+    private final String emailNext3;
+
+    public ReservationService() {
+        this(Prop.getInstance());
+    }
+
+    public ReservationService(Prop prop) {
+        emailAllDay = prop.getText("reservation.reservations.email_for_all_day");
+        emailDateFrom = prop.getText("reservation.reservations.email_date_from");
+        emailDateTo = prop.getText("reservation.reservations.email_date_to");
+        emailNext2 = prop.getText("components.reservation.mail.next2");
+        emailNext3 = prop.getText("components.reservation.mail.next3");
+    }
 
     /**
      * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
      * Check this validation requirements :
      * 1. Reservation time from is < reservation time to (interval must have 1 minute at least)
-     * 2. Reservation time interval is >= minimal reservation time (in minutes) set in reservation object
+     * 2. Reservation time interval inutes) set in reservation object
      * 3. If reservation range reservationTimeFrom-reservationTimeTo fits inside of reservationObject range reservationTimeFrom-reservationTimeTo
-     *    (check it separetly for every day in date range dateFrom-DateTo because reservation object range can be different for every day in week)
+     *    (check it separately for every day in date range dateFrom-DateTo because reservation object range can be different for every day in week)
      * @param reservation reservation to check
-     * @param reservationObejct reservation object that we trying reservate
-     * @param reservationObjectTimes reservation obejct times list
+     * @param reservationObject reservation object that we trying reserve
      * @return If any of this validations are violated, text key with belonging error message is returned.
      *         Otherwise return null;
      */
-    public String checkReservationTimeRangeValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject,
-        List<ReservationObjectTimesEntity> reservationObjectTimes) {
+    public String checkReservationTimeRangeValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject) {
 
         //Compute day range (how many days we want reservate)
         long diffD = reservation.getDateTo().getTime() - reservation.getDateFrom().getTime();
@@ -81,8 +105,8 @@ public class ReservationService {
         if(reservationTimeFrom.getTime() >= reservationTimeTo.getTime()) return "reservation.reservations.time_range_in_bad_order.js";
 
         //Validate if time range is big enough (because reservation object has set a minimum time range set)
-        //Only if reservation object cant be reservate only for whole day
-        if(!reservationObject.getReservationForAllDay()) {
+        //Only if reservation object cant be reserve only for whole day
+        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
             long diffT = reservationTimeTo.getTime() - reservationTimeFrom.getTime();
             long reservationTimesRange = TimeUnit.MILLISECONDS.toMinutes(diffT);
             if(reservationTimesRange < reservationObject.getTimeUnit()) return "reservation.reservations.time_range_to_short.js";
@@ -94,8 +118,8 @@ public class ReservationService {
             Date objectTimeTo = reservationObject.getReservationTimeTo();
 
             //Loop reservationObjectTimes and check if our dayOfWeek have special reservation time
-            for(ReservationObjectTimesEntity objectTime : reservationObjectTimes) {
-                if(objectTime.getDay() == dayOfWeek) {
+            for(ReservationObjectTimesEntity objectTime : reservationObject.getReservationObjectTimeEntities()) {
+                if(objectTime.getDay().equals(dayOfWeek)) {
                     objectTimeFrom = objectTime.getTimeFrom();
                     objectTimeTo = objectTime.getTimeTo();
                     break;
@@ -107,7 +131,6 @@ public class ReservationService {
             if((objectTimeFrom.getTime() <= reservationTimeFrom.getTime())
             && (objectTimeTo.getTime() >= reservationTimeTo.getTime())) {
                 //"reservation" time range IS inside "reservation object" time range
-                continue;
             } else {
                 //"reservation" time range IS NOT inside "reservation object" time range
                 return "reservation.reservations.time_range_validity_error.js";
@@ -122,54 +145,52 @@ public class ReservationService {
      * !! Beware, reservation time must be already set into reservation date (date and time must be combined).
      * Check this validation requirements :
      * 1. Reservation date from is <= than reservation date to (if from = to reservation is for 1 day)
-     * 2. Reservation date from/to arent in past
-     * 3. Reservation overlaping validity, reservation can overlap with other reservations BUT max number of overlaps is set
-     *    by reservation object (we ccount ONLY already approved reservations)
+     * 2. Reservation date from/to are'nt in past
+     * 3. Reservation overlapping validity, reservation can overlap with other reservations BUT max number of overlaps is set
+     *    by reservation object (we count ONLY already approved reservations)
      * @param reservation reservation to check
-     * @param reservationObejct reservation object that we trying reservate
+     * @param reservationObject reservation object that we trying reserve
      * @param rr reservation repository (needed in proces of validation)
      * @return If any of this validations are violated, text key with belonging error message is returned.
      *         Otherwise return null;
      */
-    public String checkReservationOverlapingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObejct, ReservationRepository rr) {
+    public String checkReservationOverlappingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject, ReservationRepository rr) {
+
+        //validate date range
+        switch (DateTools.validateRange(reservation.getDateFrom(), reservation.getDateTo(), false) ){
+            case -1: return "datatable.error.fieldErrorMessage";
+            case 1 :return "reservation.reservations.range_in_past.js";
+            case 2: return "reservation.reservations.date_range_in_bad_order.js";
+            default:
+                break;
+        }
 
         Date reservationDateFrom = setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0);
-        Date reservationDateTo = setTimeOfDate(reservation.getDateTo(), 0, 0, 0, 0);
-
-        //Validate date range
-        if(reservationDateTo.before(reservationDateFrom)) return "reservation.reservations.date_range_in_bad_order.js";
-
-        //Reservation date from/to allready includes set time
-        //Validate date time range (if part or whole range is in past)
-        Date now = new Date();
-        if(reservation.getDateFrom().before(now) || reservation.getDateTo().before(now))
-            return "reservation.reservations.range_in_past.js";
-
         //Need set dateTo to edge of date (because we want all reservations, from whole day)
-        reservationDateTo = setTimeOfDate(reservation.getDateTo(), 23, 59, 59, 0);
+        Date reservationDateTo = setTimeOfDate(reservation.getDateTo(), 23, 59, 59, 0);
 
-        //Potentially overlaping reservations, days are overlaping BUT time does not have overlap
+        //Potentially overlapping reservations, days are overlapping BUT time does not have overlap
         // !! We are finding only ACCEPTED reservations
         //We dont count reservations is they are rejected or still waiting for acceptance
         List<ReservationEntity> potentiallyOverlappingReservations =
-            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObejct.getId().intValue(), CloudToolsForCore.getDomainId(), reservationDateTo, reservationDateFrom);
+            rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(reservationObject.getId(), CloudToolsForCore.getDomainId(), reservationDateTo, reservationDateFrom);
 
         //When we do EDIT on reservation, we must remove this reservation from list
         Long reservationId = reservation.getId();
         if(reservationId != null && reservationId > 0 && potentiallyOverlappingReservations != null)
-            potentiallyOverlappingReservations.removeIf(item -> item.getId() == reservationId);
+            potentiallyOverlappingReservations.removeIf(item -> item.getId().equals(reservationId) == true );
 
         //Now check if even time interval overlaps
         List<ReservationEntity> overlappingReservations = new ArrayList<>();
 
-        if(potentiallyOverlappingReservations != null && potentiallyOverlappingReservations.size() > 0) {
+        if(potentiallyOverlappingReservations != null && potentiallyOverlappingReservations.isEmpty() == false) {
             //Get reservation time in correct format (if we want compare times, date values must have set yyyy-mm-dd at same value "2000-01-01")
             Date reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateFrom());
             Date reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(reservation.getDateTo());
 
             for(ReservationEntity overlapReservation : potentiallyOverlappingReservations) {
                 //Need to convert date to same format where date is set to 2000-01-01 and time is untouched
-                //This way we can compare times (time saved in DB allready has this format)
+                //This way we can compare times (time saved in DB already has this format)
                 Date overlapFrom = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateFrom());
                 Date overlapTo = DefaultTimeValueConverter.getValidTimeValue(overlapReservation.getDateTo());
 
@@ -179,8 +200,8 @@ public class ReservationService {
         }
 
         /*
-         * Now we know that all reservations in List "overlapReservation" are overlaping with our new reservation, but
-         * we still must figure out if they are overlaping each other. Reason is we need compute max number of overlaps
+         * Now we know that all reservations in List "overlapReservation" are overlapping with our new reservation, but
+         * we still must figure out if they are overlapping each other. Reason is we need compute max number of overlaps
          * in same time. Reason is because every "reservationObject" has it own set max number of reservations in same time.
         */
 
@@ -204,11 +225,11 @@ public class ReservationService {
         }
 
         //+1 because 1 overlap means that there are 2 reservation in same time (2 overlaps means 3 reservation in same time etc)
-        if(overlappingReservations.size() > 0) maxOverlapCount++;
+        if(overlappingReservations.isEmpty() == false) maxOverlapCount++;
 
         //+1 because we want add new reservation (+1 our new reservation)
         //Validate if still can add our reservation (due to number limitation)
-        if((maxOverlapCount + 1) > reservationObejct.getMaxReservations())
+        if((maxOverlapCount + 1) > reservationObject.getMaxReservations())
             return "reservation.reservations.max_reservations_error.js";
 
         //No problem found so return null
@@ -216,13 +237,13 @@ public class ReservationService {
     }
 
     /**
-     * Prepare reservation to validation. First check if needed values arent null. Then set reservation date based on input value "isReservationForAllDay".
+     * Prepare reservation to validation. First check if needed values are not null. Then set reservation date based on input value "isReservationForAllDay".
      * If isReservationForAllDay is true, date is same but hh:mm:ss:ms are set to 0 (because reservation upon reservation object for whole day cant set other time then default).
      * If isReservationForAllDay is false, date is set as combination of date from reservation and time from reservationEditorFields.
      * @param reservation
      * @param isReservationForAllDay
      */
-    public void  prepareReservationToValidation(ReservationEntity reservation, Boolean isReservationForAllDay) {
+    public void prepareReservationToValidation(ReservationEntity reservation, boolean isReservationForAllDay) {
         //Check of values
         if(reservation.getDateFrom() == null || reservation.getDateTo() == null || reservation.getEditorFields() == null)
             throwError("html_area.insert_image.error_occured");
@@ -241,18 +262,22 @@ public class ReservationService {
             Date dateTimeFrom = DefaultTimeValueConverter.combineDateWithTime(reservation.getDateFrom(), reservation.getEditorFields().getReservationTimeFrom());
             Date dateTimeTo = DefaultTimeValueConverter.combineDateWithTime(reservation.getDateTo(), reservation.getEditorFields().getReservationTimeTo());
 
+            //Need to add 1 second, help with time compare
+            dateTimeFrom = new Date(dateTimeFrom.getTime() + 1000);
+
             reservation.setDateFrom(dateTimeFrom);
             reservation.setDateTo(dateTimeTo);
         }
     }
 
     /**
-     * Get reservation object "email accepter" and send send mail to notify accpter about new waiting reservation for thi reservation object.
-     * Email inludes link to this reservation wating for approve.
+     * Get reservation object "email accepter" and send mail to notify accepter about new waiting reservation for this reservation object.
+     * Email includes link to this reservation waiting for approve.
      * @param reservation
      * @param reservationObject
      */
-    public void sendAcceptationEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject, HttpServletRequest request) {
+    public void sendAcceptationEmail(ReservationEntity reservation, HttpServletRequest request) {
+        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();
         if(reservation == null || reservationObject == null) return;
         //Validate recipient email
         String recipientEmail = reservationObject.getEmailAccepter();
@@ -263,7 +288,7 @@ public class ReservationService {
             return;
         }
 
-        Prop prop = Prop.getInstance();
+        Prop prop = Prop.getInstance(request);
 		String senderName = notNull(reservation.getName()) + " " + notNull(reservation.getSurname());
 		String senderEmail = notNull(reservation.getEmail());
 		String reservationObjectName = notNull(reservationObject.getName());
@@ -274,44 +299,42 @@ public class ReservationService {
 		String subject = prop.getText("components.reservation.mail.title") + senderName + " - " + reservationObjectName;
 		String phoneNumber = notNull(reservation.getPhoneNumber());
 
-        String message = "";
-        if(reservationObject.getReservationForAllDay()) {
-            message = prop.getText("components.reservation.mail.greeting") + "<br /><br />" + senderName
-                + " (" + prop.getText("user.phone") + " )" + phoneNumber + " "
-                + prop.getText("components.reservation.mail.next") + " <b>" + reservationObjectName + "</b> "
-                + prop.getText("reservation.reservations.email_for_all_day") + " "
-                + prop.getText("reservation.reservations.email_date_from") + " " + dateFrom + " "
-                + prop.getText("reservation.reservations.email_date_to") + " " + dateTo + " "
-                + prop.getText("components.reservation.mail.next4") + "<br/> " + reservation.getPurpose() + " <br /><br />"
-                + prop.getText("components.reservation.mail.next5") + "<a href=\""+Tools.getBaseHref(request)+"/apps/reservation/admin&id=" + reservation.getId() + "\">"
-                + prop.getText("components.reservation.mail.accept") + "</a>";
-        } else {
-            message = prop.getText("components.reservation.mail.greeting") + "<br /><br />" + senderName
-                + " (" + prop.getText("user.phone") + " )" + phoneNumber + " "
-                + prop.getText("components.reservation.mail.next") + " <b>" + reservationObjectName + "</b> "
-                + prop.getText("reservation.reservations.email_date_from") + " " + dateFrom + " "
-                + prop.getText("reservation.reservations.email_date_to") + " " + dateTo + " "
-                + prop.getText("components.reservation.mail.next2") + " " + timeFrom + " "
-                + prop.getText("components.reservation.mail.next3") + " " + timeTo + " "
-                + prop.getText("components.reservation.mail.next4") + "<br/> " + reservation.getPurpose() + " <br /><br />"
-                + prop.getText("components.reservation.mail.next5") + "<a href=\""+Tools.getBaseHref(request)+"/apps/reservation/admin&id=" + reservation.getId() + "\">"
-                + prop.getText("components.reservation.mail.accept") + "</a>";
+        StringBuilder message = new StringBuilder();
+        message.append(prop.getText("components.reservation.mail.greeting")).append("<br /><br />").append(senderName);
+        message.append(" (").append(prop.getText("user.phone")).append(senderName).append(" )").append(phoneNumber).append(" ");
+        message.append(prop.getText("components.reservation.mail.next")).append(" <b>").append(reservationObjectName).append("</b> ");
+
+        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {
+            message.append(emailAllDay).append(" ");
         }
 
-		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message, null);
+        message.append(emailDateFrom).append(" ").append(dateFrom).append(" ");
+        message.append(emailDateTo).append(" ").append(dateTo).append(" ");
+
+        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
+            message.append(emailNext2).append(" ").append(timeFrom).append(" ");
+            message.append(emailNext3).append(" ").append(timeTo).append(" ");
+        }
+
+        message.append(prop.getText("components.reservation.mail.next4")).append("<br/> ").append(reservation.getPurpose()).append(" <br /><br />");
+        message.append(prop.getText("components.reservation.mail.next5")).append(" <a href=\"").append(Tools.getBaseHref(request)).append("/apps/reservation/admin/#dt-filter-id=").append(reservation.getId()).append("\">");
+        message.append(prop.getText("components.reservation.mail.accept")).append("</a>");
+
+		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message.toString(), null);
     }
 
     /**
-     * Send confirmation email to email adress set in reservation. Email subject and text is based on reservation "accepted" value where :
-     * (true, resevation was accepted),
+     * Send confirmation email to email address set in reservation. Email subject and text is based on reservation "accepted" value where :
+     * (true, reservation was accepted),
      * (false, reservation was rejected),
      * (null, reservation status was reset and reservation is waiting for approve)
      * @param reservation approved reservation
-     * @param reservationObject reservation object that reservation is trying reservate
+     * @param reservationObject reservation object that reservation is trying reserve
      * @param request HttpServletRequest instance
-     * @param loggedUserName full name of actualy logged user who change reservation accepted status
+     * @param loggedUserName full name of actually logged user who change reservation accepted status
      */
-    public void sendConfirmationEmail(ReservationEntity reservation, ReservationObjectEntity reservationObject, HttpServletRequest request, String loggedUserName) {
+    public void sendConfirmationEmail(ReservationEntity reservation, HttpServletRequest request, String loggedUserName) {
+        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();
         if(reservation == null || reservationObject == null) return;
         //Validate recipient email
         String recipientEmail = reservation.getEmail();
@@ -322,7 +345,7 @@ public class ReservationService {
             return;
         }
 
-        Prop prop = Prop.getInstance();
+        Prop prop = Prop.getInstance(request);
         String recipientName = notNull(reservation.getName() + " " + reservation.getSurname());
         String reservationObjectName = notNull(reservationObject.getName());
 		String senderName = notNull(reservation.getName() + reservation.getSurname());
@@ -340,34 +363,87 @@ public class ReservationService {
             subject = prop.getText("reservation.reservations.email_subject_reset");
             status = prop.getText("reservation.reservations.email_was_reset");
             endOfEmail = prop.getText("reservation.reservations.reset_end_of_email");
-        } else if(approved == true) {
+        } else if(Tools.isTrue(approved)) {
             subject = prop.getText("reservation.reservations.email_subject_accepted");
             status = prop.getText("reservation.reservations.email_was_accepted");
-        } else if(approved == false) {
+        } else if(Tools.isFalse(approved)) {
             subject =  prop.getText("reservation.reservations.email_subject_rejected");
             status = prop.getText("reservation.reservations.email_was_rejected");
         }
 
-        String message = "";
-        if(reservationObject.getReservationForAllDay()) {
-            message = prop.getText("reservation.reservations.email_greeting") + " " + recipientName + ",<br><br>"
-                + prop.getText("reservation.reservations.email_your_reservation") + " <b>" + reservationObjectName + "</b> "
-                + prop.getText("reservation.reservations.email_for_all_day") + " "
-                + prop.getText("reservation.reservations.email_date_from") + " " + dateFrom + " "
-                + prop.getText("reservation.reservations.email_date_to") + " " + dateTo + " ";
-        } else {
-            message = prop.getText("reservation.reservations.email_greeting") + " " + recipientName + ",<br><br>"
-                + prop.getText("reservation.reservations.email_your_reservation") + " <b>" + reservationObjectName + "</b> "
-                + prop.getText("reservation.reservations.email_date_from") + " " + dateFrom + " "
-                + prop.getText("reservation.reservations.email_date_to") + " " + dateTo + " "
-                + prop.getText("components.reservation.mail.next2") + " " + timeFrom + " "
-                + prop.getText("components.reservation.mail.next3") + " " + timeTo + " ";
+        StringBuilder message = new StringBuilder();
+        message.append(prop.getText("reservation.reservations.email_greeting")).append(" ").append(recipientName).append(",<br><br>");
+        message.append(prop.getText("reservation.reservations.email_your_reservation")).append(" <b>").append(reservationObjectName).append("</b> ");
+
+        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {
+            message.append(emailAllDay).append(" ");
         }
 
-        message += "<b>" + status + "<b/> : " + loggedUserName + " " + endOfEmail;
+        message.append(emailDateFrom).append(" ").append(dateFrom).append(" ");
+        message.append(emailDateTo).append(" ").append(dateTo).append(" ");
 
-		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message, null);
+        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
+            message.append(emailNext2).append(" ").append(timeFrom).append(" ");
+            message.append(emailNext3).append(" ").append(timeTo).append(" ");
+        }
+
+        message.append("<b>").append(status).append("<b/> : ").append(loggedUserName).append(" ").append(endOfEmail);
+
+		SendMail.send(senderName, senderEmail, recipientEmail, null, null, subject, message.toString(), null);
 	}
+
+    /**
+     * Send email to recipient (who created reservation) about created reservation. Email includes reservation details + info if reservation is approved or awaiting for acceptation.
+     *
+     * @param reservation - created reservation
+     * @param request - HttpServletRequest instance
+     */
+    public void sendCreatedReservationEmail(ReservationEntity reservation, HttpServletRequest request) {
+        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();
+        if(reservation == null || reservationObject == null) return;
+        //Validate recipient email
+        String recipientEmail = reservation.getEmail();
+        try {
+            InternetAddress emailAddr = new InternetAddress(recipientEmail);
+            emailAddr.validate();
+        } catch (AddressException ex) {
+            return;
+        }
+
+        Prop prop = Prop.getInstance(request);
+        String recipientName = notNull(reservation.getName() + " " + reservation.getSurname());
+        String reservationObjectName = notNull(reservationObject.getName());
+		String senderName = notNull(reservation.getName() + reservation.getSurname());
+		String senderEmail = "no-reply@"+Tools.getBaseHref(request).replace("https://", "").replace("http://", "").replace("www.", "");
+        String dateFrom = Tools.formatDate(reservation.getDateFrom());
+		String dateTo = Tools.formatDate(reservation.getDateTo());
+        String timeFrom = Tools.formatTime(reservation.getDateFrom());
+        String timeTo = Tools.formatTime(reservation.getDateTo());
+
+        StringBuilder message = new StringBuilder();
+        message.append(prop.getText("reservation.reservations.email_greeting")).append(" ").append(recipientName).append(",<br><br>");
+        message.append(prop.getText("reservation.reservations.email_your_reservation")).append(" <b>").append(reservationObjectName).append("</b> ");
+
+        if(Tools.isTrue(reservationObject.getReservationForAllDay())) {
+            message.append(emailAllDay).append(" ");
+        }
+
+        message.append(emailDateFrom).append(" ").append(dateFrom).append(" ");
+        message.append(emailDateTo).append(" ").append(dateTo).append(" ");
+
+        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
+            message.append(emailNext2).append(" ").append(timeFrom).append(" ");
+            message.append(emailNext3).append(" ").append(timeTo).append(" ");
+        }
+
+        if(reservationObject != null && Tools.isTrue(reservationObject.getMustAccepted()) && reservation.getAccepted() == null) {
+            message.append(prop.getText("components.reservation.was_created_and_waiting"));
+        } else {
+            message.append(prop.getText("components.reservation.was_created"));
+        }
+
+        SendMail.send(senderName, senderEmail, recipientEmail, null, null, prop.getText("components.reservation.saved_reservation_subject"), message.toString(), null);
+    }
 
     /**
      * Take input date and set his time part hh:mm:ss:ms using input params. If input date is null, null will be returned.
@@ -378,7 +454,7 @@ public class ReservationService {
      * @param milliseconds number of milliseconds we want to set into date
      * @return date where date part is same as input but time part is set based on input params
      */
-    private Date setTimeOfDate(Date date, int hours, int minutes, int seconds, int milliseconds) {
+    public static Date setTimeOfDate(Date date, int hours, int minutes, int seconds, int milliseconds) {
         if(date == null) return null;
         Calendar newDate = Calendar.getInstance();
         newDate.setTime(date);
@@ -390,12 +466,12 @@ public class ReservationService {
     }
 
     //Now validate if date range s1-e1 and range s2-e2 overlaps
-    //Formula ((s1 <= e2) && (s2 <= e1)) , if true, then two dates are overlaping
+    //Formula ((s1 <= e2) && (s2 <= e1)) , if true, then two dates are overlapping
 
     /**
-     * Validate if inteval s1-e1 and interval s2-e2 are overlaping using logical formula.
-     * Used formula ((s1 <= e2) && (s2 <= e1)), return true if they are overlaping.
-     * Intervals are overlaping even if one start when second ends (08:00-09:00 and 09:00-10:00).
+     * Validate if interval s1-e1 and interval s2-e2 are overlapping using logical formula.
+     * Used formula ((s1 <= e2) && (s2 <= e1)), return true if they are overlapping.
+     * Intervals are overlapping even if one start when second ends (08:00-09:00 and 09:00-10:00).
      * IF function is used to compare date values (intervals) representing TIME we want all the values to share same yyyy-mm-dd part and for this reason
      * with input param "prepareDates" set to true, every date part of value will be set to 2000-01-01, so we can compare times.
      * @param s1 date value representing START of FIRST interval
@@ -403,18 +479,17 @@ public class ReservationService {
      * @param s2 date value representing START of SECOND interval
      * @param e2 date value representing END of SECOND interval
      * @param prepareDates if true set date part of intervals to 2000-01-01, false/null - do nothing
-     * @return true - if interval are overlaping, otherwise false
+     * @return true - if interval are overlapping, otherwise false
      */
-    public Boolean checkOverlap(Date s1, Date e1, Date s2, Date e2, Boolean prepareDates) {
-        if(prepareDates != null && prepareDates != false) {
+    public boolean checkOverlap(Date s1, Date e1, Date s2, Date e2, Boolean prepareDates) {
+        if(Tools.isTrue(prepareDates)) {
             s1 = DefaultTimeValueConverter.getValidTimeValue(s1);
             e1 = DefaultTimeValueConverter.getValidTimeValue(e1);
             s2 = DefaultTimeValueConverter.getValidTimeValue(s2);
             e2 = DefaultTimeValueConverter.getValidTimeValue(e2);
         }
 
-        if((s1.getTime() <= e2.getTime()) && (s2.getTime() <= e1.getTime())) return true;
-        return false;
+        return ((s1.getTime() <= e2.getTime()) && (s2.getTime() <= e1.getTime())) == true ? true : false;
     }
 
     /**
@@ -434,6 +509,287 @@ public class ReservationService {
     public void throwError(String errorTextKey) {
         Prop prop = Prop.getInstance();
         String message = prop.getText(errorTextKey);
-        throw new RuntimeException(message);
+        throw new IllegalArgumentException(message);
+    }
+
+    /**
+     * Calculate price of reservation based on reservation object, reservation dateTime range and reservation object special prices.
+     * @param entity - reservation entity
+     * @param ror - ReservationObjectRepository instance
+     * @param ropr - ReservationObjectPriceRepository instance
+     * @return
+     */
+    public static BigDecimal calculateReservationPrice(ReservationEntity entity, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
+        if(entity == null) return new BigDecimal(-1);
+        if(entity.getEditorFields() == null) return new BigDecimal(-1);
+        return calculateReservationPrice(entity.getDateFrom(), entity.getDateTo(), entity.getEditorFields().getReservationTimeFrom(), entity.getEditorFields().getReservationTimeTo(), entity.getReservationObjectId(), userIdToPay, ror, ropr);
+    }
+
+    /**
+     * Calculate price of reservation based on reservation object, reservation dateTime range and reservation object special prices.
+     * @param dateFrom - start date of reservation
+     * @param dateTo - end date of reservation
+     * @param timeFrom - start time of reservation
+     * @param timeTo    - end time of reservation
+     * @param objectId - id of reservation object
+     * @param ror - ReservationObjectRepository instance
+     * @param ropr - ReservationObjectPriceRepository instance
+     * @return
+     */
+    public static BigDecimal calculateReservationPrice (Date dateFrom, Date dateTo, Date timeFrom, Date timeTo, Long objectId, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
+        return calculateReservationPrice(dateFrom.getTime(), dateTo.getTime(), timeFrom.getTime(), timeTo.getTime(), objectId, userIdToPay, ror, ropr);
+    }
+
+    /**
+     * Calculate price of reservation based on reservation object, reservation dateTime range and reservation object special prices.
+     * @param dateFrom - start date of reservation
+     * @param dateTo - end date of reservation
+     * @param timeFrom - start time of reservation
+     * @param timeTo    - end time of reservation
+     * @param objectId - id of reservation object
+     * @param ror - ReservationObjectRepository instance
+     * @param ropr - ReservationObjectPriceRepository instance
+     * @return
+     */
+    public static BigDecimal calculateReservationPrice (Long dateFrom, Long dateTo, Long timeFrom, Long timeTo, Long objectId, int userIdToPay, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {
+        if(dateFrom == null || dateTo == null || objectId == null) return new BigDecimal(-1);
+        ReservationObjectEntity reservationObject = ror.findFirstByIdAndDomainId(objectId, CloudToolsForCore.getDomainId()).orElse(null);
+        if(Tools.isTrue(reservationObject.getReservationForAllDay()) && (timeFrom == null || timeTo == null)) return new BigDecimal(-1);
+
+        List<ReservationObjectPriceEntity> prices = ropr.findAllByObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqual(objectId, CloudToolsForCore.getDomainId(), new Date(dateTo), new Date(dateFrom));
+        BigDecimal price = new BigDecimal(0);
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(dateFrom);
+        cal.set(Calendar.HOUR_OF_DAY, 12); //Set it to middle of day
+        while(cal.getTimeInMillis() < ReservationService.setTimeOfDate(new Date(dateTo), 23, 59, 0, 0).getTime()) {
+            BigDecimal specialPrice = null;
+            for(ReservationObjectPriceEntity priceEntity : prices) {
+                if(priceEntity.getDateFrom().before(cal.getTime()) && priceEntity.getDateTo().after(cal.getTime())) {
+                    specialPrice = priceEntity.getPrice();
+                    break;
+                }
+            }
+            if(Tools.isTrue(reservationObject.getReservationForAllDay())) {
+                if(specialPrice != null) price = price.add(specialPrice);
+                else price = price.add(reservationObject.getPriceForDay());
+            } else {
+                //Unit of time which is charged - IN MINUTES
+                BigDecimal timeUnit = new BigDecimal( reservationObject.getTimeUnit() );
+                BigDecimal defaultPriceForTimeUnit = reservationObject.getPriceForHour();
+                BigDecimal reservedTimeEveryDay = new BigDecimal( (timeTo - timeFrom + 1000) / (60 * 1000) );
+                if(specialPrice != null) {
+                    price = price.add( (reservedTimeEveryDay.divide(timeUnit, 2, RoundingMode.HALF_EVEN)).multiply(specialPrice) );
+                } else {
+                    price = price.add( (reservedTimeEveryDay.divide(timeUnit, 2, RoundingMode.HALF_EVEN)).multiply(defaultPriceForTimeUnit) );
+                }
+            }
+            //add day - move in range
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        }
+
+        //There can be DISCOUNT for certain user groups
+        UserGroupsDB ugdb = UserGroupsDB.getInstance();
+        return ugdb.calculatePrice(price, UsersDB.getUser(userIdToPay));
+    }
+
+    /**
+     * If reservation object needs ACCEPTATION and logged user is not accepter (or none is logged), set reservation accepted to null (waiting for acceptation) AND return false.
+     *
+     * ELSE set reservation accepted to true and return true.
+     *
+     * @param reservation
+     * @param request
+     * @return
+     */
+    public static boolean acceptation(ReservationEntity reservation, HttpServletRequest request) {
+        reservation.setAccepted(Boolean.TRUE);
+        ReservationObjectEntity reservationObject = reservation.getReservationObjectForReservation();
+        if(Tools.isTrue(reservationObject.getMustAccepted()) && reservationObject.getEmailAccepter() != null) {
+            Identity loggedUser = UsersDB.getCurrentUser(request);
+            if(loggedUser == null || loggedUser.getEmail().equals(reservationObject.getEmailAccepter()) == false) {
+                //Set to null, it means waiting for acceptation
+                reservation.setAccepted(null);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /************* MVC METHODS ***************************/
+
+    /**
+     * Get list of reservation objects for select (as options)/
+     * This reservation objects are filtered by domainId and reservationForAllDay = false.
+     * @return
+     */
+    public static List<LabelValueInteger> getReservationObjectSelectList() {
+        ReservationObjectRepository reservationObjectRepository = Tools.getSpringBean("reservationObjectRepository", ReservationObjectRepository.class);
+        List<ReservationObjectEntity> reservationObjects = reservationObjectRepository.findAllByDomainIdAndReservationForAllDayFalse(CloudToolsForCore.getDomainId());
+
+        List<LabelValueInteger> countries = new ArrayList<>();
+        for(ReservationObjectEntity ro : reservationObjects) {
+            countries.add(new LabelValueInteger(ro.getName(), ro.getId().intValue()));
+        }
+
+        return countries;
+    }
+
+    /**
+     * If this day have special time range (ReservationObjectTimesEntity) return it, otherwise return default time range (reservationObject).
+     * On top of that, remove Minutes/Seconds/MiliSeconds from date values.
+      *
+      * @param dateToCheck - date to check (if there is special time range for this day of week)
+      * @param reservationObject
+      * @return
+      */
+    public static Long[] getReservationTimeRange(Date dateToCheck, ReservationObjectEntity reservationObject) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(dateToCheck);
+        int dayOfweek = calendar.get(Calendar.DAY_OF_WEEK);
+        //Format day of week to our standart where Monday = 1, Tuesday = 2 ... Sunday = 7
+        dayOfweek = (dayOfweek - 1) == 0 ? 7 : (dayOfweek - 1);
+
+        ReservationObjectTimesEntity rote = null;
+        for(ReservationObjectTimesEntity entity : reservationObject.getReservationObjectTimeEntities()) {
+            if(entity.getDay() == dayOfweek) rote = entity;
+        }
+
+        if(rote != null)
+            return new Long[] {
+                prepareDateHourReservation(dateToCheck, rote.getTimeFrom()),
+                prepareDateHourReservation(dateToCheck, rote.getTimeTo())
+            };
+        else
+            return new Long[] {
+                prepareDateHourReservation(dateToCheck, reservationObject.getReservationTimeFrom()),
+                prepareDateHourReservation(dateToCheck, reservationObject.getReservationTimeTo())
+            };
+    }
+
+    /**
+     * Prepare reservation fo date-hour reservation style.
+     * @param date
+     * @param time
+     * @return
+     */
+    private static Long prepareDateHourReservation(Date date, Date time) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+
+        Calendar calTime = Calendar.getInstance();
+        calTime.setTime(time);
+
+        cal.set(Calendar.HOUR_OF_DAY, calTime.get(Calendar.HOUR_OF_DAY));
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTimeInMillis();
+    }
+
+    /**
+     * Get list of hours for table (reservation table) based on from-to date values.
+     * @param from
+     * @param to
+     * @return
+     */
+    public static List<String> getHoursForTable(Long from, Long to) {
+        List<String> hours = new ArrayList<>();
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(from);
+        for(int i = 0; i < ((to - from) / (60 * 60 * 1000)); i++) {
+            hours.add( Tools.formatTime(cal.getTimeInMillis()) );
+            cal.add(Calendar.HOUR_OF_DAY, 1);
+        }
+        return hours;
+    }
+
+    /**
+     * Used as object that is sent to FE for reservation table.
+     */
+    public static class ReservationTableCell {
+        private String id;
+        private String value;
+        private String cssClass;
+
+        public ReservationTableCell(String id, String value, String cssClass) {
+            this.id = id;
+            this.value = value;
+            this.cssClass = cssClass;
+        }
+
+        public String getId() { return id; }
+        public String getValue() { return value; }
+        public String getCssClass() { return cssClass; }
+    }
+
+    /**
+     * Prepare list of ReservationTableCell objects for reservation table.
+     * @param roe - reservation object entity
+     * @param rr - ReservationRepository
+     * @param from
+     * @param to
+     * @param supportedRange - range in which reservation can be made
+     * @return
+     */
+    public static List<ReservationTableCell> computeReservationUsageByHours(ReservationObjectEntity roe, ReservationRepository rr, Long from, Long to, Long[] supportedRange) {
+        List<ReservationTableCell> tableCellsList = new ArrayList<>();
+        int hoursDiff = (int)((to - from) / (60 * 60 * 1000));
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(from);
+        cal.set(Calendar.MINUTE, 30); //middle of hour
+
+        int isThere = 0;
+        List<ReservationEntity> reservations = rr.findAllByReservationObjectIdAndDomainIdAndDateFromLessThanEqualAndDateToGreaterThanEqualAndAcceptedTrue(roe.getId(), CloudToolsForCore.getDomainId(), new Date(to), new Date(from));
+        for(int i = 0; i < hoursDiff; i++) {
+            //Check if can make reservation in this time
+            if(cal.getTimeInMillis() < supportedRange[0] || cal.getTimeInMillis() > supportedRange[1])  {
+                tableCellsList.add(
+                    new ReservationTableCell(roe.getId() + "_" + cal.get(Calendar.HOUR_OF_DAY), "", "unsupported")
+                );
+                cal.add(Calendar.HOUR_OF_DAY, 1);
+                continue;
+            }
+
+            for(ReservationEntity re : reservations) {
+                if(re.getDateFrom().getTime() <= cal.getTimeInMillis() && re.getDateTo().getTime() >= cal.getTimeInMillis()) {
+                    isThere++;
+                }
+            }
+
+            boolean isActive = true;
+            if( (cal.getTimeInMillis() - 30*60*1000) < System.currentTimeMillis() ) isActive = false; //Minus 30 minutes, so it's start of hour
+            if(isThere >= roe.getMaxReservations()) isActive = false;
+            tableCellsList.add(
+                new ReservationTableCell(roe.getId() + "_" + cal.get(Calendar.HOUR_OF_DAY), isThere + "/" + roe.getMaxReservations(), (isActive == false ? "full" : "free"))
+            );
+
+            isThere = 0;
+            cal.add(Calendar.HOUR_OF_DAY, 1);
+        }
+
+        return tableCellsList;
+    }
+
+    public static int getUserToPay(String email, Long reservationId, ReservationRepository rr, HttpServletRequest request) {
+
+        if (reservationId != null && reservationId.longValue() > 0L) {
+            //Check if reservation exist -> if yes return userId of reservation
+            ReservationEntity reservation = rr.findFirstByIdAndDomainId(reservationId, CloudToolsForCore.getDomainId()).orElse(null);
+            if(reservation != null) return reservation.getUserId();
+        }
+
+        //Get user id -> of logged user
+        int userId = Tools.getUserId(request);
+        if (userId > 0) return userId;
+
+        if(Tools.isEmail(email)) {
+            //If user is NOT logged, try to find user by email
+            UserDetails userToPay = UsersDB.getUserByEmail(email);
+            if (userToPay != null) return userToPay.getUserId();
+        }
+
+        return -1;
     }
 }

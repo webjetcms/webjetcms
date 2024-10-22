@@ -8,13 +8,16 @@ V gradle projektoch stačí zadať verziu v build.gradle:
 
 ```gradle
 ext {
-    webjetVersion = "2024.0";
+    webjetVersion = "2024.18";
 }
 ```
 
-Pričom aktuálne existujú nasledovné verzie WebJET 2021:
+Pričom aktuálne existujú nasledovné verzie WebJET:
 
 - ```2024.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z master repozitára verzie 2024.0 skompilovaná s Java verzie 17.
+- ```2024.18``` - stabilizovaná verzia 2024.18, nepribúdajú do nej denné zmeny
+- ```2024.0.34``` - stabilizovaná verzia 2024.0.34 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- ```2024.0.21``` - stabilizovaná verzia 2024.0.21 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - ```2024.0.17``` - stabilizovaná verzia 2024.0.17 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - ```2024.0.9``` - stabilizovaná verzia 2024.0.9 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - ```2024.0``` - stabilizovaná verzia 2024.0 (technicky zhodná s 2023.52-java17), nepribúdajú do nej denné zmeny, skompilovaná s Java verzie 17.
@@ -80,7 +83,7 @@ dependencies {
 
 ## Zmeny pri prechode na GitHub/Maven Central verziu
 
-- V Maven Central je zmenené meno balíkov z `sk.iway` na `com.webjetcms` a pridaná je časť `libs`, ktorá kombinuje všetky `sk.iway` závislosti. V `build.gradle` upravte:
+- V Maven Central je zmenené meno balíkov z `sk.iway` na `com.webjetcms` a pridaná je časť `libs`, ktorá kombinuje všetky pôvodné `sk.iway` závislosti typu `struts,daisydiff,jtidy`. V `build.gradle` upravte:
 
 ```gradle
 repositories {
@@ -191,6 +194,8 @@ nastavte pre Tomcat nasledovné ```JAVA_OPTS```:
 JAVA_OPTS="$JAVA_OPTS --add-exports=java.naming/com.sun.jndi.ldap=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.base/java.security=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.management/javax.management=ALL-UNNAMED --add-opens=java.naming/javax.naming=ALL-UNNAMED"
 ```
 
+### Aktualizácia z Java verzie 8
+
 Ak ste prevádzkovali Tomcat ešte s Java verzie 8 môžu vzniknúť problémy s chýbajúcimi knižnicami (tie sú potrebné aj pre Java 11). Ak sa vám v logu objaví chyba ```java.lang.NoClassDefFoundError: javax/activation/DataSource```:
 
 ```
@@ -205,6 +210,25 @@ je potrebné do každej inštalácie WebJET CMS do priečinka ```WEB-INF/lib``` 
 jaxb-api-2.1.jar
 jaxb-runtime-3.0.0-M2.jar
 ```
+
+Ak ste používali WebJET verzie `8.0-8.6` - starší ako `08/2019`, alebo sa vám zobrazí pri štarte nasledovná chyba:
+
+```
+[10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.spirit.model.Media
+[10.09 13:48:16 {vubintra} {JpaTools}] JPA: adding class: sk.iway.iwcm.io.FileHistoryBean
+[10.09 13:48:16 {vubintra} {WebJETJavaSECMPInitializer}] initPersistenceUnits[iwcm], beans=82
+[10.09 13:48:16 {vubintra}]  [FAIL]
+java.lang.NullPointerException
+	at org.eclipse.persistence.internal.jpa.EntityManagerSetupImpl.predeploy(EntityManagerSetupImpl.java:2027)
+	at org.eclipse.persistence.internal.jpa.deployment.JPAInitializer.callPredeploy(JPAInitializer.java:100)
+	at sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer.initPersistenceUnits(WebJETJavaSECMPInitializer.java:307)
+	at sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer.initialize(WebJETJavaSECMPInitializer.java:134)
+	at sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer.getJavaSECMPInitializer(WebJETJavaSECMPInitializer.java:95)
+	at sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer.getJavaSECMPInitializer(WebJETJavaSECMPInitializer.java:61)
+	at sk.iway.iwcm.system.jpa.WebJETPersistenceProvider.createEntityManagerFactory(WebJETPersistenceProvider.java:32)
+```
+
+je potrebné aktualizovať knižnicu `eclipselink` a inicializačnú Java triedu, stiahnite si aktualizačný archív [jpa-wj82.zip](jpa-wj82.zip) a rozbaľte ho v koreňovom priečinku web aplikácie. Prepíšte súbor `eclipselink.jar` a `WebJETJavaSECMPInitializer.class`.
 
 ## Zmeny pri aktualizácii na 2023.18
 

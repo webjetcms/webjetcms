@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.system.cache.PersistentCacheBean;
+import sk.iway.iwcm.system.cache.PersistentCacheDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
@@ -20,21 +21,26 @@ public class PersistentCacheController extends DatatableRestControllerV2&lt;Pers
 
     @Autowired
     public PersistentCacheController(PersistentCacheService persistentCacheService, PersistentCacheRepository persistentCacheRepository) {
-<span class="fc" id="L23">        super(persistentCacheRepository);</span>
-<span class="fc" id="L24">        this.persistentCacheService = persistentCacheService;</span>
-<span class="fc" id="L25">    }</span>
+<span class="fc" id="L24">        super(persistentCacheRepository);</span>
+<span class="fc" id="L25">        this.persistentCacheService = persistentCacheService;</span>
+<span class="fc" id="L26">    }</span>
 
     @Override
     public Page&lt;PersistentCacheBean&gt; getAllItems(Pageable pageable) {
-<span class="nc" id="L29">        return persistentCacheService.getAllPersistentBeans(pageable);</span>
+<span class="fc" id="L30">        return persistentCacheService.getAllPersistentBeans(pageable);</span>
     }
 
     @Override
     public boolean processAction(PersistentCacheBean entity, String action) {
-<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (&quot;refresh&quot;.equals(action)) {</span>
-<span class="nc" id="L35">            return persistentCacheService.refreshPersistentCaches(entity);</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (&quot;refresh&quot;.equals(action)) {</span>
+<span class="nc" id="L36">            return persistentCacheService.refreshPersistentCaches(entity);</span>
         }
-<span class="nc" id="L37">        return false;</span>
+<span class="nc" id="L38">        return false;</span>
     }
+
+    @Override
+    public void beforeSave(PersistentCacheBean entity) {
+<span class="nc" id="L43">        entity.setDataType(PersistentCacheDB.TYPE_URLDOWNLOAD);</span>
+<span class="nc" id="L44">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

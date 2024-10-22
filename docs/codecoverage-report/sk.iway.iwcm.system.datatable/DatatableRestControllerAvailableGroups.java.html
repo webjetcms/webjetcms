@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DatatableRestControllerAvailableGroups.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.datatable</a> &gt; <span class="el_source">DatatableRestControllerAvailableGroups.java</span></div><h1>DatatableRestControllerAvailableGroups.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.datatable;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.GroupsDB;
+
+/**
+ * DatatableRestControllerAvailableGroups is a class that extends DatatableRestControllerV2 and adds the ability to filter
+ * entities based on the availableGroups coma separeted IDs of webpage groups.
+ * It is used for entities filtered by user perms for webpage groups.
+ * WARNING: you must use serverSide: false in datatable options, because it's not possible to filter by availableGroups on server side
+ */
+@SuppressWarnings(&quot;java:S119&quot;)
+public abstract class DatatableRestControllerAvailableGroups&lt;T, ID extends Serializable&gt; extends DatatableRestControllerV2&lt;T, ID&gt; {
+
+<span class="fc" id="L27">    private String idColumnName = &quot;id&quot;;</span>
+<span class="fc" id="L28">    private String availableGroupsColumnName = &quot;availableGroups&quot;;</span>
+
+    /**
+     * DT Constructor with default idColumnName and availableGroupsColumnName
+     * @param repo
+     * @param idColumnName - column name for entity ID, if null it's &quot;id&quot;
+     * @param availableGroupsColumnName - column name for comma separated available groups IDs, if null it's &quot;availableGroups&quot;
+     */
+    protected DatatableRestControllerAvailableGroups(JpaRepository&lt;T, Long&gt; repo, String idColumnName, String availableGroupsColumnName) {
+<span class="fc" id="L37">        super(repo);</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (idColumnName!=null) this.idColumnName = idColumnName;</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        if (availableGroupsColumnName!=null) this.availableGroupsColumnName = availableGroupsColumnName;</span>
+<span class="fc" id="L40">    }</span>
+
+    @Override
+    public Page&lt;T&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L44">        Page&lt;T&gt; page = new DatatablePageImpl&lt;&gt;(filterByPerms(getRepo().findAll()));</span>
+<span class="fc" id="L45">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L46">        return page;</span>
+    }
+
+    @Override
+    public void beforeSave(T entity) {
+<span class="pc bpc" id="L51" title="3 of 4 branches missed.">        if (InitServlet.isTypeCloud() &amp;&amp; CloudToolsForCore.isControllerDomain()==false) {</span>
+            //update availableGroups field in entity from editorFields
+<span class="nc" id="L53">            processToEntity(entity, ProcessItemAction.CREATE);</span>
+            //in multiweb force to set perms to root groups
+<span class="nc" id="L55">            BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+<span class="nc" id="L56">            String availableGroups = (String) bw.getPropertyValue(availableGroupsColumnName);</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">            if (Tools.isEmpty(availableGroups)) {</span>
+<span class="nc" id="L58">                bw.setPropertyValue(availableGroupsColumnName, CloudToolsForCore.getRootGroupIds());</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">                if (bw.isWritableProperty(&quot;editorFields&quot;)) bw.setPropertyValue(&quot;editorFields&quot;, null);</span>
+<span class="nc" id="L60">                processFromEntity(entity, ProcessItemAction.EDIT);</span>
+                //reset value, it will be set from editorFields, othervise it will duplicate IDs (perexGroup)
+<span class="nc bnc" id="L62" title="All 2 branches missed.">                if (bw.isWritableProperty(&quot;editorFields&quot;)) bw.setPropertyValue(availableGroupsColumnName, &quot;&quot;);</span>
+            }
+        }
+<span class="fc" id="L65">    }</span>
+
+    /**
+     * Filter entities by availableGroups
+     * @param all
+     * @return
+     */
+    public List&lt;T&gt; filterByPerms(List&lt;T&gt; all) {
+<span class="fc" id="L73">        List&lt;T&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (T entity : all) {</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (checkItemPerms(entity, null)) {</span>
+<span class="fc" id="L76">                filtered.add(entity);</span>
+            }
+<span class="fc" id="L78">        }</span>
+<span class="fc" id="L79">        return filtered;</span>
+    }
+
+    @Override
+    public boolean checkItemPerms(T entity, Long id) {
+
+<span class="fc" id="L85">        BeanWrapperImpl bw = new BeanWrapperImpl(entity);</span>
+<span class="fc" id="L86">        Number entityId = (Number) bw.getPropertyValue(idColumnName);</span>
+<span class="fc" id="L87">        String availableGroups = (String) bw.getPropertyValue(availableGroupsColumnName);</span>
+
+<span class="pc bpc" id="L89" title="2 of 8 branches missed.">        if ((InitServlet.isTypeCloud() || Constants.getBoolean(&quot;enableStaticFilesExternalDir&quot;)==true) &amp;&amp; entityId != null &amp;&amp; entityId.longValue()&gt;0) {</span>
+            //if it's empty AND it's NOT multiweb then it is available for all domains
+<span class="pc bpc" id="L91" title="1 of 4 branches missed.">            if (InitServlet.isTypeCloud()==false &amp;&amp; Tools.isEmpty(availableGroups)) return true;</span>
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">            if (GroupsDB.isGroupsEditable(getUser(), availableGroups)==false) return false;</span>
+<span class="fc" id="L94">            T old = getOneItem(entityId.longValue());</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            if (old != null) {</span>
+                //check also if original entity is editable, you can't just remove perms and edit entity which not belongs to you
+<span class="fc" id="L97">                BeanWrapperImpl bwOld = new BeanWrapperImpl(old);</span>
+<span class="fc" id="L98">                availableGroups = (String) bwOld.getPropertyValue(availableGroupsColumnName);</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                if (GroupsDB.isGroupsEditable(getUser(), availableGroups)==false) return false;</span>
+            }
+        }
+<span class="fc" id="L102">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

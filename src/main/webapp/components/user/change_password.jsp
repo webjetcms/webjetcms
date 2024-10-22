@@ -15,6 +15,7 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.database.SimpleQuery" %>
+<%@ page import="sk.iway.iwcm.users.UserChangePasswordService" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
@@ -71,17 +72,14 @@ if (includedIntoPage==false)
 					login = new Password().decrypt(login);
 					auth = new Password().decrypt(auth);
 
-					UserDetails user = UsersDB.getUser(login);
+					//Login handle
+					login = org.apache.struts.util.ResponseUtils.filter(login);
 
-					AdminlogBean log = new ComplexQuery().
-						setSql("SELECT * FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE log_type=? AND user_id = ? AND sub_id1 = ?").
-						setParams(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), Integer.valueOf(auth)).
-					 	singleResult(new Mapper<AdminlogBean>(){;
-							public AdminlogBean map(ResultSet rs) throws SQLException{
-								return new AdminlogBean(rs);
-							}
-					});
-
+					//Login CAN BE combination of more logins separated by UserChangePasswordService.LOGINS_SEPARATOR
+					String[] logins = Tools.getTokens(login, UserChangePasswordService.LOGINS_SEPARATOR);
+					request.setAttribute("logins", logins);
+					//Its important use the newest login (position 0), it match created AdminlogBean
+					AdminlogBean log = UserChangePasswordService.getChangePasswordAdminlogBean(logins[0], auth);
 
 					long timeAskedFor = log.getCreateDate().getTime();
 					long timeNow = System.currentTimeMillis();
@@ -93,8 +91,21 @@ if (includedIntoPage==false)
 						return;
 					}
 
-					if (Tools.isNotEmpty(request.getParameter("newPassword")))
+					UserDetails user = UsersDB.getUser(logins[0]);
+
+					//In case user use 2nd link to end action
+					if("cancelChangePasswordAction".equals(request.getParameter("act")) == true)
 					{
+						UserChangePasswordService.deleteChangePasswordAdminlogBean(user, auth);
+					}
+
+					String selectedLogin = request.getParameter("selectedLogin");
+					if (Tools.isNotEmpty(request.getParameter("newPassword")) && Tools.isNotEmpty(selectedLogin) && UserChangePasswordService.verifyLoginValue(login, selectedLogin, auth, request))
+					{
+						//Do a verification that this login can be used
+						//Then retrieve userToUpdate by selected login
+						UserDetails userToUpdate = UsersDB.getUser(selectedLogin);
+
 						String newPassword = request.getParameter("newPassword");
 						String retypePassword = request.getParameter("retypePassword");
 						ActionMessages errors = new ActionMessages();
@@ -103,7 +114,7 @@ if (includedIntoPage==false)
 						{
 							error(out, prop.getText("logon.password.passwords_not_the_same"));
 						}
-						else if(!Password.checkPassword(true, newPassword, user.isAdmin(), user.getUserId(), session, errors))
+						else if(!Password.checkPassword(true, newPassword, userToUpdate.isAdmin(), userToUpdate.getUserId(), session, errors))
 						{
 							request.setAttribute("errors", errors);
 						}
@@ -111,95 +122,103 @@ if (includedIntoPage==false)
 						{
 							if (Constants.getBoolean("passwordUseHash") && Tools.isEmpty(user.getSalt()))
 							{
-								user.setSalt(PasswordSecurity.generateSalt());
+								userToUpdate.setSalt(PasswordSecurity.generateSalt());
 							}
-							user.setPassword(newPassword);
-							UsersDB.saveUser(user);
+							userToUpdate.setPassword(newPassword);
+							UsersDB.saveUser(userToUpdate);
 							request.setAttribute("success", true);
-							//zmaz zaznam z audit tabulky (aby druhy krat linka nefungovala)
-							new SimpleQuery().execute("DELETE FROM "+ConfDB.ADMINLOG_TABLE_NAME+" WHERE log_type=? AND user_id=? AND sub_id1=?", Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), Integer.valueOf(auth).intValue());
+
+							//Here is not userToUpdate BUT user what is user on [0] position -> this one must be returned to remove AdminlogBean
+							UserChangePasswordService.deleteChangePasswordAdminlogBean(user, auth);
 						}
 					}
 				%>
-				<c:if test="${success}">
-					<p><strong><iwcm:text key="logon.password.change_successful" /></strong></p>
+				<c:if test='${"cancelChangePasswordAction" eq param.act}'>
+					<p><strong><iwcm:text key="logon.change_password.action_canceled" /></strong></p>
 				</c:if>
-				<logic:present name="errors">
-				<%-- --------DUPLICATED IN logon.jsp--------%>
-					<%
-						String constStr = "";
-						if(user != null && user.isAdmin()) constStr = "Admin";
-					%>
-					<p>
-						<iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
+				<c:if test='${"cancelChangePasswordAction" ne param.act}'>
+					<c:if test="${success}">
+						<p><strong><iwcm:text key="logon.password.change_successful" /></strong></p>
+					</c:if>
+					<logic:present name="errors">
+					<%-- --------DUPLICATED IN logon.jsp--------%>
+						<%
+							String constStr = "";
+							if(user != null && user.isAdmin()) constStr = "Admin";
+						%>
+						<p>
+							<iwcm:text key="useredit.change_password.nesplna_nastavenia"/>
+						</p>
 						<ul>
-						<%if(Constants.getInt("password"+constStr+"MinLength") > 0){%>
-						   <li><iwcm:text key="logon.change_password.min_length" param1='<%=""+Constants.getInt("password"+constStr+"MinLength")%>'/>.</li>
-					    <%}if(Constants.getInt("password"+constStr+"MinCountOfDigits") > 0){%>
-							<li><iwcm:text key="logon.change_password.count_of_digits" param1='<%=""+Constants.getInt("password"+constStr+"MinCountOfDigits")%>'/>.</li>
-						<%}if(Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0){%>
-							<li><iwcm:text key="logon.change_password.count_of_upper_case" param1='<%=""+Constants.getInt("password"+constStr+"MinUpperCaseLetters")%>'/>.</li>
-						<%}if(Constants.getInt("password"+constStr+"MinCountOfSpecialSigns") > 0){%>
-							<li><iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=""+Constants.getInt("password"+constStr+"MinCountOfSpecialSigns")%>'/>.</li>
-						<%}%>
-							<li><iwcm:text key="logon.change_password.used_in_history2"/></li>
+							<%if(Constants.getInt("password"+constStr+"MinLength") > 0){%>
+								<li><iwcm:text key="logon.change_password.min_length" param1='<%=""+Constants.getInt("password"+constStr+"MinLength")%>'/>.</li>
+							<%}if(Constants.getInt("password"+constStr+"MinCountOfDigits") > 0){%>
+								<li><iwcm:text key="logon.change_password.count_of_digits" param1='<%=""+Constants.getInt("password"+constStr+"MinCountOfDigits")%>'/>.</li>
+							<%}if(Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0){%>
+								<li><iwcm:text key="logon.change_password.count_of_upper_case" param1='<%=""+Constants.getInt("password"+constStr+"MinUpperCaseLetters")%>'/>.</li>
+							<%}if(Constants.getInt("password"+constStr+"MinCountOfSpecialSigns") > 0){%>
+								<li><iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=""+Constants.getInt("password"+constStr+"MinCountOfSpecialSigns")%>'/>.</li>
+							<%}%>
+								<li><iwcm:text key="logon.change_password.used_in_history2"/></li>
 						</ul>
-					</p>
-				</logic:present>
-				<c:if test="${!success}">
+					</logic:present>
+					<c:if test="${!success}">
+						<form action="<%=PathFilter.getOrigPath(request)%>" method="post">
+							<table border="0" cellpadding="2" style="width: 100%">
+								<tr>
+									<td><div class="form-group"><label class="control-label"><iwcm:text key="user.login"/>:</label></div></td>
+									<td>
+										<select class="form-group" id="selectedLogin" name="selectedLogin">
+											<c:forEach items="${logins}" var="loginOption">
+												<option value="${loginOption}">${loginOption}</option>
+											</c:forEach>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><div class="form-group"><label class="control-label"><iwcm:text key="logon.password.new_password"/>:</label></div></td>
+									<td>
+										<div class="form-group">
+											<input type="password" name="newPassword" maxlengt="64"/>
+											<br>
+											<span id="strength" ></span>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td><div class="form-group"><label class="control-label"><iwcm:text key="logon.password.retype_password"/>:</label></div></td>
+									<td><div class="form-group"><input type="password" name="retypePassword" maxlength="64"/></div></td>
+								</tr>
+								<tr>
+									<td colspan="2">
+										<div class="form-group text-center">
+											<input type="submit" class="button btn btn-info" value="<iwcm:text key="button.submit"/>"/>
+											<input type="hidden" name="login" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("login")) %>" />
+											<input type="hidden" name="auth" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("auth")) %>" />
+										</div>
+									</td>
+								</tr>
+							</table>
+						</form>
+						<script src="/components/_common/javascript/password_strenght.js.jsp?language=<%=lng%>" type="text/javascript"></script>
 
-					<form action="<%=PathFilter.getOrigPath(request)%>" method="post">
-						<table border="0" cellpadding="2" style="width: 100%">
-							<tr>
-								<td><div class="form-group"><label class="control-label"><iwcm:text key="user.login"/>:</label></div></td>
-								<td><div class="form-group"><%=org.apache.struts.util.ResponseUtils.filter(login)%></div></td>
-							</tr>
-							<tr>
-								<td><div class="form-group"><label class="control-label"><iwcm:text key="logon.password.new_password"/>:</label></div></td>
-								<td>
-									<div class="form-group">
-										<input type="password" name="newPassword"/>
-										<br>
-										<span id="strength" ></span>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td><div class="form-group"><label class="control-label"><iwcm:text key="logon.password.retype_password"/>:</label></div></td>
-								<td><div class="form-group"><input type="password" name="retypePassword"/></div></td>
-							</tr>
-							<tr>
-								<td colspan="2">
-									<div class="form-group text-center">
-										<input type="submit" class="button btn btn-info" value="<iwcm:text key="button.submit"/>"/>
-										<input type="hidden" name="login" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("login")) %>" />
-										<input type="hidden" name="auth" value="<%=org.apache.struts.util.ResponseUtils.filter(request.getParameter("auth")) %>" />
-									</div>
-								</td>
-							</tr>
-						</table>
-					</form>
-					<script src="/components/_common/javascript/password_strenght.js.jsp?language=<%=lng%>" type="text/javascript"></script>
+						<script>
+							$(document).ready(function(){
+								$('input[name=newPassword]').keyup(function () {
+									chceckPasswordStrenght($(this),0);
+								});
 
-					<script>
-						$(document).ready(function(){
-                            $('input[name=newPassword]').keyup(function () {
-                                chceckPasswordStrenght($(this),0);
-                            });
-
-						});
-
-					</script>
+							});
+						</script>
+					</c:if>
 				</c:if>
-				</c:catch>
-				<c:if test='<%=pageContext.getAttribute("exc") != null %>'>
-					<%error(out, Prop.getInstance(request).getText("logon.password.invalid_parameters")); %>
-				</c:if>
+			</c:catch>
+			<c:if test='<%=pageContext.getAttribute("exc") != null %>'>
+				<%error(out, Prop.getInstance(request).getText("logon.password.invalid_parameters")); %>
+			</c:if>
 
 	</div>
 </section>
-
-
 
 <% if (includedIntoPage==false) { %>
 	<jsp:include page="/components/bottom-public.jsp"/>

@@ -34,10 +34,10 @@ public class GroupsJsTreeItem extends JsTreeItem {
 <span class="fc" id="L34">    }</span>
 
     private String getIconPrivate(UserDetails user, boolean checkGroupsPerms) {
-<span class="fc" id="L37">        String faPrefix = &quot;fas&quot;;</span>
+<span class="fc" id="L37">        String tiSufix = &quot;-filled&quot;;</span>
 
 <span class="fc bfc" id="L39" title="All 2 branches covered.">        if (group.getMenuType()==GroupDetails.MENU_TYPE_HIDDEN) {</span>
-<span class="fc" id="L40">            faPrefix = &quot;far&quot;;</span>
+<span class="fc" id="L40">            tiSufix = &quot;&quot;;</span>
         }
 
 <span class="fc bfc" id="L43" title="All 2 branches covered.">        if (group.isInternal()) {</span>
@@ -45,15 +45,15 @@ public class GroupsJsTreeItem extends JsTreeItem {
         }
 
 <span class="fc bfc" id="L47" title="All 2 branches covered.">        if (Tools.isNotEmpty(group.getPasswordProtected())) {</span>
-<span class="fc" id="L48">            addTextIcon(&quot;fas fa-lock&quot;);</span>
+<span class="fc" id="L48">            addTextIcon(&quot;ti ti-lock-filled&quot;);</span>
         }
 
         //If user have allgroupPerm (for example cmp_stat_seeallgroups in stat section) we are showing all groups as editable
 <span class="fc bfc" id="L52" title="All 4 branches covered.">        if (checkGroupsPerms &amp;&amp; GroupsDB.isGroupEditable(user, group.getGroupId())==false) {</span>
-<span class="fc" id="L53">            return faPrefix+&quot; fa-folder-times&quot;;</span>
+<span class="fc" id="L53">            return &quot;ti ti-folder-x&quot;;</span>
         }
 
-<span class="fc" id="L56">        return faPrefix+&quot; fa-folder&quot;;</span>
+<span class="fc" id="L56">        return &quot;ti ti-folder&quot;+tiSufix;</span>
     }
 
     private JsTreeItemState getStatePrivate() {
@@ -72,4 +72,4 @@ public class GroupsJsTreeItem extends JsTreeItem {
 <span class="nc" id="L72">        this.group = group;</span>
 <span class="nc" id="L73">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

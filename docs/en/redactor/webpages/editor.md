@@ -6,7 +6,9 @@ If you go to create a new web page, you first need to set the correct directory 
 
 ## Tab contents
 
-The content tab displays the page text editor. Several types of editors are available, depending on the setting of the template group or template (Page Editor Type field). The following editor types are currently supported:
+In the "Content" tab you can edit the content of the web page itself. Page editing offers standard document content editing functions similar to those commonly used in MS Word and Excel. Most of the commands are accessed using the formatting buttons from the editor toolbar. Contextual functions are accessed by right-clicking over the appropriate page object, e.g. an image, table, selected block of text, etc.
+
+Several types of editors are available depending on the setting of the template group or template (Page Editor Type field). The following editor types are currently supported:
 - Standard - editor type `WYSIWYG`, a visual editor in which what you see on the screen is also saved. The work is similar to working in MS Word, where you can easily select text, set bold font, insert images, etc.
 - HTML editor - when opened, the HTML code of the page is displayed. It is designed for special pages whose code would be broken with an editor like `WYSIWYG`, e.g. bulk email pages that contain all HTML code, including the header and footer. In this case, the code is typically supplied from an external agency and is just embedded into the page without the need to change it.
 - Page Builder - mode of composing web pages from [prepared blocks](pagebuilder.md), allows you to easily edit blocks, add, move order, etc. It is designed to create complex web pages.
@@ -15,7 +17,7 @@ The content tab displays the page text editor. Several types of editors are avai
 
 The most important parameter of every web page is its title (headline). The title is entered in the text field in the Basic tab. If you create a new web page in an empty folder, the system automatically takes the title from the name of this folder. Otherwise, when you create a new web page, the text "New Web Page" is there, which of course you must change to a meaningful title that defines the content of the web page. The title is normally entered with both accents and spaces as plain text.
 
-In the "Content" tab you can edit the content of the web page itself. Page editing offers standard document content editing functions similar to those commonly used in MS Word and Excel. Most of the commands are accessed using the formatting buttons from the editor toolbar. Contextual functions are accessed by right-clicking over the appropriate page object, e.g. an image, table, selected block of text, etc.
+The folder home page has synchronized by default [the name of the web page with the name of the folder](group.md#synchronizácia-názvu-priečinka-a-web-stránky).
 
 ![](editor/tab-basic.png)
 

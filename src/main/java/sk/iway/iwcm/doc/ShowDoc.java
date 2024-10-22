@@ -361,6 +361,8 @@ private static String combineCss(String cssStyle)
             request.setAttribute("templates_group_id", tempGroupId);
         }
 
+        RequestBean.addTextKeyPrefix("temp-"+temp.getTempId(), false);
+
 		request.setAttribute("doc_temp_name", temp.getTempName());
 		request.setAttribute("template_id", Integer.toString(temp.getTempId()));
 		request.setAttribute("template_name", temp.getTempName());
@@ -1187,6 +1189,11 @@ private static String combineCss(String cssStyle)
 
         //nastavujem ContentLanguage podla sablony stranky
         String lng = Tools.isNotEmpty(group.getLng()) ? group.getLng() : temp.getLng();
+        String lngParam = Tools.getParameter(request, "language");
+        if (lngParam != null)
+        {
+            if (lngParam.length()==2 || lngParam.length()==3) lng = lngParam;
+        }
 
         PageLng.setUserLng(request, response, lng);
         //force:false to allow owerwrite content-language by ResponseHeaders app
@@ -1336,30 +1343,22 @@ private static String combineCss(String cssStyle)
         }
 
         String forward = temp.getForward();
-
-        if (request.getParameter("print") != null)
-        {
-            forward = "tmp_print";
-        }
+        boolean allowAdminForward = false;
 
         if (request.getParameter("forumiframe") != null)
         {
-            forward = "forumiframe";
+            forward = "/components/forum/iframe.jsp";
+            allowAdminForward = true;
+        }
+        if (request.getParameter("forwarddoccompare") != null)
+        {
+            forward = "/admin/tmp_compare_blank.jsp";
+            allowAdminForward = true;
         }
 
         if (request.getParameter("forward") != null && request.getParameter("forward").endsWith(".jsp"))
         {
             forward = request.getParameter("forward");
-        }
-
-        if (request.getParameter("forwarddoccompare") != null)
-        {
-            forward = "docCompareBlank";
-        }
-
-        if (request.getParameter("notemp") != null)
-        {
-            forward = "no_temp";
         }
 
         if (Constants.getBoolean("springEnableShowdoc"))
@@ -1387,25 +1386,27 @@ private static String combineCss(String cssStyle)
         //forward na JSP s designom
         if (forward.toLowerCase().endsWith(".jsp") || forward.toLowerCase().endsWith(".html"))
         {
-            //otestuj na nepovolene znaky
-            if ( FileBrowserTools.hasForbiddenSymbol(forward) )
-            {
-                forward = "tmp_generic.jsp";
-            }
+            if (allowAdminForward == false) {
+                //otestuj na nepovolene znaky
+                if (FileBrowserTools.hasForbiddenSymbol(forward) )
+                {
+                    forward = "tmp_generic.jsp";
+                }
 
-            request.setAttribute("template_forward", forward);
-            if (!temp.getForward().startsWith("/"))
-            {
-                //skontroluj, ci sablona skutocne existuje
+                request.setAttribute("template_forward", forward);
+                if (!temp.getForward().startsWith("/"))
+                {
+                    //skontroluj, ci sablona skutocne existuje
 
-                forward = getForward(request, prop, tempBrowserDetector, bd, forward);
-                if (forward == null) return;
+                    forward = getForward(request, prop, tempBrowserDetector, bd, forward);
+                    if (forward == null) return;
 
-                Logger.debug(this,"forward="+forward);
-            }
+                    Logger.debug(this,"forward="+forward);
+                }
 
-            if (!forward.startsWith("/templates")) {
-                forward = "/templates/"+forward;
+                if (forward.startsWith("/templates")==false) {
+                    forward = "/templates/"+forward;
+                }
             }
 
             IwcmFile forwardFile = getTemplateFile(forward);

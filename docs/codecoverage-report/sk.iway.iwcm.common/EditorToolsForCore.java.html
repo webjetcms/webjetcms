@@ -183,7 +183,7 @@ public class EditorToolsForCore {
 
         String dataAsc;
 
-<span class="pc bpc" id="L186" title="2 of 4 branches missed.">        if (isLucene || isRendered) dataAsc = data;</span>
+<span class="pc bpc" id="L186" title="1 of 4 branches missed.">        if (isLucene || isRendered) dataAsc = data;</span>
 <span class="fc" id="L187">        else dataAsc = (DB.internationalToEnglish(data).trim()).toLowerCase();</span>
 
 <span class="fc" id="L189">        dataAsc = removeHtmlTagsKeepLength(dataAsc);</span>
@@ -197,9 +197,9 @@ public class EditorToolsForCore {
 <span class="fc" id="L197">            titleAsc = Tools.replace(titleAsc, &quot;-&quot;, &quot; &quot;);</span>
 <span class="fc" id="L198">            titleAsc = Tools.replace(titleAsc, &quot;.&quot;, &quot; &quot;);</span>
 <span class="fc" id="L199">            titleAsc = Tools.replace(titleAsc, &quot;/&quot;, &quot; &quot;);</span>
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">            if (isLucene)</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">            if (isLucene)</span>
             {
-<span class="nc bnc" id="L202" title="All 2 branches missed.">                if (dataAsc.indexOf(ef.getTitle())==-1) dataAsc += &quot; &quot;+ef.getTitle()+&quot;\n&quot;;</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">                if (dataAsc.indexOf(ef.getTitle())==-1) dataAsc += &quot; &quot;+ef.getTitle()+&quot;\n&quot;;</span>
             }
             else
             {
@@ -234,7 +234,7 @@ public class EditorToolsForCore {
             }
 <span class="pc bpc" id="L235" title="1 of 4 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludePerex&quot;) &amp;&amp; Tools.isNotEmpty(ef.getHtmlData()))</span>
             {
-<span class="pc bpc" id="L237" title="1 of 2 branches missed.">                if (isLucene) dataAsc += (DB.internationalToEnglish(ef.getHtmlData()).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="fc bfc" id="L237" title="All 2 branches covered.">                if (isLucene) dataAsc += (DB.internationalToEnglish(ef.getHtmlData()).trim()).toLowerCase()+&quot;\n&quot;;</span>
 <span class="fc" id="L238">                else dataAsc += &quot;&lt;div style='display:none' class='fulltextPerex'&gt;&quot;+(DB.internationalToEnglish(ef.getHtmlData()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
             }
             //ak treba dopln atributy
@@ -386,7 +386,7 @@ public class EditorToolsForCore {
      */
     public static String removeHtmlTagsKeepLength(String html_text)
     {
-<span class="pc bpc" id="L389" title="1 of 2 branches missed.">        if (Tools.isEmpty(html_text)) return(&quot;&quot;);</span>
+<span class="fc bfc" id="L389" title="All 2 branches covered.">        if (Tools.isEmpty(html_text)) return(&quot;&quot;);</span>
 
         //Logger.debug(EditorDB.class, &quot;Html size: &quot;+html_text.length()+&quot; Html text: &quot;+html_text);
 
@@ -549,24 +549,24 @@ public class EditorToolsForCore {
      */
     public static EditForm fillEditFormFromFile(String dir, String file, boolean alsoData, Identity user)
     {
-<span class="fc" id="L552">        String realDir = &quot;&quot;;</span>
-<span class="fc" id="L553">        StringBuilder contextFile = new StringBuilder();</span>
-<span class="fc" id="L554">        EditForm editForm = new EditForm();</span>
+<span class="nc" id="L552">        String realDir = &quot;&quot;;</span>
+<span class="nc" id="L553">        StringBuilder contextFile = new StringBuilder();</span>
+<span class="nc" id="L554">        EditForm editForm = new EditForm();</span>
         try
         {
-<span class="pc bpc" id="L557" title="3 of 6 branches missed.">            if (user != null &amp;&amp; (&quot;jeeff&quot;.equals(user.getLoginName()) || &quot;lbalat&quot;.equals(user.getLoginName()))</span>
+<span class="nc bnc" id="L557" title="All 6 branches missed.">            if (user != null &amp;&amp; (&quot;jeeff&quot;.equals(user.getLoginName()) || &quot;lbalat&quot;.equals(user.getLoginName()))</span>
 <span class="nc bnc" id="L558" title="All 2 branches missed.">                        &amp;&amp; dir.indexOf(':') != -1)</span>
             {
 <span class="nc" id="L560">                realDir = dir;</span>
             }
             else
             {
-<span class="fc" id="L564">                realDir = Tools.getRealPath(dir);</span>
+<span class="nc" id="L564">                realDir = Tools.getRealPath(dir);</span>
             }
-<span class="fc bfc" id="L566" title="All 2 branches covered.">            if (file != null)</span>
+<span class="nc bnc" id="L566" title="All 2 branches missed.">            if (file != null)</span>
             {
-<span class="fc" id="L568">                IwcmFile f = new IwcmFile(realDir + File.separatorChar + file);</span>
-<span class="pc bpc" id="L569" title="2 of 4 branches missed.">                if (f.exists() &amp;&amp; alsoData)</span>
+<span class="nc" id="L568">                IwcmFile f = new IwcmFile(realDir + File.separatorChar + file);</span>
+<span class="nc bnc" id="L569" title="All 4 branches missed.">                if (f.exists() &amp;&amp; alsoData)</span>
                 {
 <span class="nc" id="L571">                    InputStreamReader isr = new InputStreamReader(new IwcmInputStream(realDir + File.separatorChar + file),</span>
                                 Constants.FILE_ENCODING);
@@ -586,22 +586,22 @@ public class EditorToolsForCore {
 <span class="nc" id="L586">                    isr.close();</span>
 <span class="nc" id="L587">                    editForm.setData(contextFile.toString());</span>
                 }
-<span class="fc" id="L589">                editForm.setFile(file);</span>
-<span class="fc" id="L590">                editForm.setOrigFile(file);</span>
-<span class="fc" id="L591">            }</span>
+<span class="nc" id="L589">                editForm.setFile(file);</span>
+<span class="nc" id="L590">                editForm.setOrigFile(file);</span>
+<span class="nc" id="L591">            }</span>
             else
             {
-<span class="fc" id="L594">                editForm.setData(&quot;&quot;);</span>
-<span class="fc" id="L595">                editForm.setFile(&quot;&quot;);</span>
-<span class="fc" id="L596">                editForm.setOrigFile(&quot;&quot;);</span>
+<span class="nc" id="L594">                editForm.setData(&quot;&quot;);</span>
+<span class="nc" id="L595">                editForm.setFile(&quot;&quot;);</span>
+<span class="nc" id="L596">                editForm.setOrigFile(&quot;&quot;);</span>
             }
-<span class="fc" id="L598">            editForm.setDir(dir);</span>
+<span class="nc" id="L598">            editForm.setDir(dir);</span>
         }
 <span class="nc" id="L600">        catch (Exception ex)</span>
         {
 <span class="nc" id="L602">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L603">        }</span>
-<span class="fc" id="L604">        return editForm;</span>
+<span class="nc" id="L603">        }</span>
+<span class="nc" id="L604">        return editForm;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -37,6 +37,7 @@ import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.common.UserTools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.ShowDoc;
@@ -64,14 +65,12 @@ import sk.iway.iwcm.users.UsersDB;
  *@created      Date: 16.10.2007 16:28:45
  *@modified     $Date: 2010/02/05 14:40:41 $
  */
-<span class="fc" id="L67">public class RegUserAction extends WebJETActionBean</span>
+<span class="fc" id="L68">public class RegUserAction extends WebJETActionBean</span>
 {
 	public static final String REQUIRE_AUTHORIZATION_AFTER_VERIFICATION = &quot;requireAuthorizationAfterVerification&quot;;
 
-<span class="fc" id="L71">	UserDetails usr = null;</span>
-<span class="fc" id="L72">	FileBean userImage = null;</span>
-
-<span class="fc" id="L74">	private String originalPassword = null;</span>
+<span class="fc" id="L72">	UserDetails usr = null;</span>
+<span class="fc" id="L73">	FileBean userImage = null;</span>
 
 	/**
 	 * Priprav udaje pouzivatela na zobrazenie vo formulari
@@ -79,38 +78,37 @@ import sk.iway.iwcm.users.UsersDB;
 	@Override
 	public void setContext(ActionBeanContext context)
 	{
-<span class="fc" id="L82">		super.setContext(context);</span>
+<span class="fc" id="L81">		super.setContext(context);</span>
 
-<span class="fc" id="L84">		Identity loggedUser = getCurrentUser();</span>
+<span class="fc" id="L83">		Identity loggedUser = getCurrentUser();</span>
 
-<span class="fc" id="L86">		usr = new UserDetails();</span>
-<span class="fc" id="L87">		Logger.debug(RegUserAction.class, &quot;Seesion: &quot;+getSession());</span>
-<span class="fc bfc" id="L88" title="All 2 branches covered.">		if (loggedUser != null)</span>
+<span class="fc" id="L85">		usr = new UserDetails();</span>
+<span class="fc" id="L86">		Logger.debug(RegUserAction.class, &quot;Seesion: &quot;+getSession());</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">		if (loggedUser != null)</span>
 		{
-<span class="fc" id="L90">			Logger.error(this,&quot;mam lognuteho usera&quot;);</span>
-<span class="fc" id="L91">			int id = Tools.getIntValue(context.getRequest().getParameter(&quot;usr.userId&quot;), -1);</span>
-<span class="pc bpc" id="L92" title="3 of 4 branches missed.">			if (getSession().getAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;)!=null &amp;&amp; id &gt; 0)</span>
+<span class="fc" id="L89">			Logger.error(this,&quot;mam lognuteho usera&quot;);</span>
+<span class="fc" id="L90">			int id = Tools.getIntValue(context.getRequest().getParameter(&quot;usr.userId&quot;), -1);</span>
+<span class="pc bpc" id="L91" title="3 of 4 branches missed.">			if (getSession().getAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;)!=null &amp;&amp; id &gt; 0)</span>
 			{
-<span class="nc" id="L94">				usr = UsersDB.getUser(id);</span>
+<span class="nc" id="L93">				usr = UsersDB.getUser(id);</span>
 				//getSession().removeAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;);
-<span class="nc" id="L96">				getRequest().setAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;, &quot;true&quot;);</span>
+<span class="nc" id="L95">				getRequest().setAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;, &quot;true&quot;);</span>
 			}
 			else
 			{
-<span class="fc" id="L100">				usr = UsersDB.getUser(loggedUser.getUserId());</span>
+<span class="fc" id="L99">				usr = UsersDB.getUser(loggedUser.getUserId());</span>
 			}
 		}
 
 		//toto tu treba kvoli UsersDB.getUser(loggedUser.getUserId()); - ak bol medzicasom zmazany z DB
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">		if (usr == null) usr = new UserDetails();</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">		if (usr == null) usr = new UserDetails();</span>
 
 		//nastavime hodnotu hesla na nezmenenu
-<span class="fc bfc" id="L108" title="All 2 branches covered.">		if (Tools.isNotEmpty(usr.getPassword()))</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">		if (Tools.isNotEmpty(usr.getPassword()))</span>
 		{
-<span class="fc" id="L110">			originalPassword = usr.getPassword();</span>
-<span class="fc" id="L111">			usr.setPassword(UserTools.PASS_UNCHANGED);</span>
+<span class="fc" id="L109">			usr.setPassword(UserTools.PASS_UNCHANGED);</span>
 		}
-<span class="fc" id="L113">	}</span>
+<span class="fc" id="L111">	}</span>
 
 	/**
 	 * Uloz udaje pouzivatela do databazy
@@ -119,707 +117,701 @@ import sk.iway.iwcm.users.UsersDB;
 	public Resolution bSubmit()
 	{
 		//tato metoda berie hodnotu podla session, takze sa pouzije spravny jazyk
-<span class="fc" id="L122">		Prop prop = Prop.getInstance(PageLng.getUserLng(getContext().getRequest()));</span>
+<span class="fc" id="L120">		Prop prop = Prop.getInstance(PageLng.getUserLng(getContext().getRequest()));</span>
 
-<span class="fc" id="L124">		Logger.debug(RegUserAction.class, &quot;---&gt; SAVE&quot;);</span>
-<span class="fc" id="L125">		PageParams pageParams = new PageParams(getRequest());</span>
-<span class="pc bpc" id="L126" title="1 of 2 branches missed.">		if (usr != null)</span>
+<span class="fc" id="L122">		Logger.debug(RegUserAction.class, &quot;---&gt; SAVE&quot;);</span>
+<span class="fc" id="L123">		PageParams pageParams = new PageParams(getRequest());</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">		if (usr != null)</span>
 		{
-<span class="fc" id="L128">			String groupIdsEditable = pageParams.getValue(&quot;groupIdsEditable&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(groupIdsEditable))</span>
+<span class="fc" id="L126">			String groupIdsEditable = pageParams.getValue(&quot;groupIdsEditable&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(groupIdsEditable))</span>
 			{
-<span class="nc" id="L131">				StringTokenizer st = new StringTokenizer(groupIdsEditable, &quot;,+; &quot;);</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="nc" id="L129">				StringTokenizer st = new StringTokenizer(groupIdsEditable, &quot;,+; &quot;);</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L134">					int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L135" title="All 2 branches missed.">					if (userGroupId&gt;0)</span>
+<span class="nc" id="L132">					int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">					if (userGroupId&gt;0)</span>
 					{
-<span class="nc" id="L137">						usr.removeFromGroup(userGroupId);</span>
+<span class="nc" id="L135">						usr.removeFromGroup(userGroupId);</span>
 					}
-<span class="nc" id="L139">				}</span>
+<span class="nc" id="L137">				}</span>
 			}
 
-<span class="fc" id="L142">			boolean requireApprove = false;</span>
-<span class="fc" id="L143">			boolean requireEmailVerificationByGroup = false;</span>
+<span class="fc" id="L140">			boolean requireApprove = false;</span>
+<span class="fc" id="L141">			boolean requireEmailVerificationByGroup = false;</span>
 
 			//MBO: po potvrdeni mailu, treba aby ho autorizoval admin
-<span class="fc" id="L146">			boolean requireAuthorizationAfterVerification = pageParams.getBooleanValue(&quot;requireAuthorizationAfterVerification&quot;, false);</span>
+<span class="fc" id="L144">			boolean requireAuthorizationAfterVerification = pageParams.getBooleanValue(&quot;requireAuthorizationAfterVerification&quot;, false);</span>
 
-<span class="fc" id="L148">			String groupIds = pageParams.getValue(&quot;groupIds&quot;, &quot;1&quot;);</span>
+<span class="fc" id="L146">			String groupIds = pageParams.getValue(&quot;groupIds&quot;, &quot;1&quot;);</span>
 			//pridame mu pozadovane skupiny
-<span class="fc" id="L150">			UserGroupsDB userGroupsDB = UserGroupsDB.getInstance(Constants.getServletContext(), true, &quot;iwcm&quot;);</span>
-<span class="fc" id="L151">			StringTokenizer st = new StringTokenizer(groupIds, &quot;,+; &quot;);</span>
-<span class="fc bfc" id="L152" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
+<span class="fc" id="L148">			UserGroupsDB userGroupsDB = UserGroupsDB.getInstance(Constants.getServletContext(), true, &quot;iwcm&quot;);</span>
+<span class="fc" id="L149">			StringTokenizer st = new StringTokenizer(groupIds, &quot;,+; &quot;);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">			while (st.hasMoreTokens())</span>
 			{
-<span class="fc" id="L154">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">				if (userGroupId&gt;0)</span>
+<span class="fc" id="L152">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">				if (userGroupId&gt;0)</span>
 				{
-<span class="fc" id="L157">					UserGroupDetails ugd = userGroupsDB.getUserGroup(userGroupId);</span>
-<span class="pc bpc" id="L158" title="1 of 4 branches missed.">					if (ugd!=null &amp;&amp; ugd.isAllowUserEdit())</span>
+<span class="fc" id="L155">					UserGroupDetails ugd = userGroupsDB.getUserGroup(userGroupId);</span>
+<span class="pc bpc" id="L156" title="1 of 4 branches missed.">					if (ugd!=null &amp;&amp; ugd.isAllowUserEdit())</span>
 					{
-<span class="fc" id="L160">						usr.addToGroup(userGroupId);</span>
-<span class="fc bfc" id="L161" title="All 4 branches covered.">						if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireApprove()) requireApprove = true;</span>
-<span class="pc bpc" id="L162" title="1 of 4 branches missed.">						if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireEmailVerification()) requireEmailVerificationByGroup = true;</span>
+<span class="fc" id="L158">						usr.addToGroup(userGroupId);</span>
+<span class="fc bfc" id="L159" title="All 4 branches covered.">						if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireApprove()) requireApprove = true;</span>
+<span class="pc bpc" id="L160" title="1 of 4 branches missed.">						if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireEmailVerification()) requireEmailVerificationByGroup = true;</span>
 					}
 				}
-<span class="fc" id="L165">			}</span>
+<span class="fc" id="L163">			}</span>
 
 			//pridame skupiny podla preferencii z formularu (ak nejake boli zadane)
-<span class="fc" id="L168">			String[] ugID = getRequest().getParameterValues(&quot;user_group_id&quot;);</span>
-<span class="pc bpc" id="L169" title="3 of 4 branches missed.">			if (ugID != null &amp;&amp; ugID.length &gt; 0)</span>
+<span class="fc" id="L166">			String[] ugID = getRequest().getParameterValues(&quot;user_group_id&quot;);</span>
+<span class="pc bpc" id="L167" title="3 of 4 branches missed.">			if (ugID != null &amp;&amp; ugID.length &gt; 0)</span>
 			{
-<span class="nc bnc" id="L171" title="All 2 branches missed.">				for (int i=0; i&lt;ugID.length; i++)</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">				for (int i=0; i&lt;ugID.length; i++)</span>
 				{
-<span class="nc" id="L173">					int userGroupId = Tools.getIntValue(ugID[i], -1);</span>
-<span class="nc bnc" id="L174" title="All 2 branches missed.">					if (userGroupId&gt;0)</span>
+<span class="nc" id="L171">					int userGroupId = Tools.getIntValue(ugID[i], -1);</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">					if (userGroupId&gt;0)</span>
 					{
-<span class="nc" id="L176">						UserGroupDetails ugd = userGroupsDB.getUserGroup(userGroupId);</span>
-<span class="nc bnc" id="L177" title="All 4 branches missed.">						if (ugd!=null &amp;&amp; ugd.isAllowUserEdit())</span>
+<span class="nc" id="L174">						UserGroupDetails ugd = userGroupsDB.getUserGroup(userGroupId);</span>
+<span class="nc bnc" id="L175" title="All 4 branches missed.">						if (ugd!=null &amp;&amp; ugd.isAllowUserEdit())</span>
 						{
-<span class="nc" id="L179">							usr.addToGroup(userGroupId);</span>
-<span class="nc bnc" id="L180" title="All 4 branches missed.">							if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireApprove()) requireApprove = true;</span>
+<span class="nc" id="L177">							usr.addToGroup(userGroupId);</span>
+<span class="nc bnc" id="L178" title="All 4 branches missed.">							if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireApprove()) requireApprove = true;</span>
 						}
-<span class="nc bnc" id="L182" title="All 2 branches missed.">						else if (ugd!=null)</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">						else if (ugd!=null)</span>
 						{
 							//aby sa nestalo, ze ho chcu zaregistrovat do nejakej skupiny, ktora ma nastavene approve ale zabudli nastavit allow user edit
-<span class="nc bnc" id="L185" title="All 4 branches missed.">							if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireApprove()) requireApprove = true;</span>
+<span class="nc bnc" id="L183" title="All 4 branches missed.">							if (usr.getUserId()&lt;1 &amp;&amp; ugd.isRequireApprove()) requireApprove = true;</span>
 						}
 					}
 				}
 			}
 
             //user &quot;dedi&quot; skupiny po userovi ktory ho vytvara
-<span class="pc bpc" id="L192" title="1 of 2 branches missed.">            if(getSession().getAttribute(&quot;RegUserAction.REMOVE_USER_GROUPS&quot;) != null)</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">            if(getSession().getAttribute(&quot;RegUserAction.REMOVE_USER_GROUPS&quot;) != null)</span>
             {
-<span class="nc" id="L194">                String[] removeFromGroups = Tools.getTokens(getSession().getAttribute(&quot;RegUserAction.REMOVE_USER_GROUPS&quot;)+&quot;&quot;, &quot;,&quot;);</span>
-<span class="nc bnc" id="L195" title="All 2 branches missed.">                for(String groupToRemove:removeFromGroups)</span>
+<span class="nc" id="L192">                String[] removeFromGroups = Tools.getTokens(getSession().getAttribute(&quot;RegUserAction.REMOVE_USER_GROUPS&quot;)+&quot;&quot;, &quot;,&quot;);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                for(String groupToRemove:removeFromGroups)</span>
                 {
-<span class="nc" id="L197">                    usr.removeFromGroup(Tools.getIntValue(groupToRemove, -1));</span>
+<span class="nc" id="L195">                    usr.removeFromGroup(Tools.getIntValue(groupToRemove, -1));</span>
                 }
             }
 
-<span class="pc bpc" id="L201" title="1 of 2 branches missed.">            if(getSession().getAttribute(&quot;RegUserAction.ADD_USER_GROUPS&quot;) != null)</span>
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">            if(getSession().getAttribute(&quot;RegUserAction.ADD_USER_GROUPS&quot;) != null)</span>
             {
-<span class="nc" id="L203">                String[] addFromGroups = Tools.getTokens(getSession().getAttribute(&quot;RegUserAction.ADD_USER_GROUPS&quot;)+&quot;&quot;, &quot;,&quot;);</span>
-<span class="nc bnc" id="L204" title="All 2 branches missed.">                for(String groupToAdd:addFromGroups)</span>
+<span class="nc" id="L201">                String[] addFromGroups = Tools.getTokens(getSession().getAttribute(&quot;RegUserAction.ADD_USER_GROUPS&quot;)+&quot;&quot;, &quot;,&quot;);</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">                for(String groupToAdd:addFromGroups)</span>
                 {
-<span class="nc" id="L206">                    usr.addToGroup(Tools.getIntValue(groupToAdd, -1));</span>
+<span class="nc" id="L204">                    usr.addToGroup(Tools.getIntValue(groupToAdd, -1));</span>
                 }
             }
 
-<span class="fc" id="L210">			boolean requireEmailVerification = pageParams.getBooleanValue(&quot;requireEmailVerification&quot;, false);</span>
-<span class="fc bfc" id="L211" title="All 2 branches covered.">			if (requireApprove) requireEmailVerification = false;</span>
+<span class="fc" id="L208">			boolean requireEmailVerification = pageParams.getBooleanValue(&quot;requireEmailVerification&quot;, false);</span>
+<span class="fc bfc" id="L209" title="All 2 branches covered.">			if (requireApprove) requireEmailVerification = false;</span>
 
-<span class="pc bpc" id="L213" title="1 of 2 branches missed.">			if (requireEmailVerificationByGroup)</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">			if (requireEmailVerificationByGroup)</span>
 			{
 				//tak predsa ano :)
-<span class="nc" id="L216">				requireEmailVerification=true;</span>
+<span class="nc" id="L214">				requireEmailVerification=true;</span>
 			}
 
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">			if (&quot;true&quot;.equals(getSession().getAttribute(&quot;RegUserAction.ALLWAYS_AUTHORIZE&quot;)))</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">			if (&quot;true&quot;.equals(getSession().getAttribute(&quot;RegUserAction.ALLWAYS_AUTHORIZE&quot;)))</span>
 			{
 				//toto tu je, ked sa cez web mozu spravovat pouzivatelia, vtedy po vytvoreni nechcem ani poslat email
-<span class="nc" id="L222">				requireApprove = false;</span>
+<span class="nc" id="L220">				requireApprove = false;</span>
 				//getSession().removeAttribute(&quot;RegUserAction.ALLWAYS_AUTHORIZE&quot;);
 			}
 
-<span class="fc bfc" id="L226" title="All 2 branches covered.">			usr.setAuthorized(!requireApprove);</span>
-<span class="fc bfc" id="L227" title="All 4 branches covered.">			if (usr.getUserId()&lt;1 &amp;&amp; requireEmailVerification) usr.setAuthorized(false);</span>
-<span class="fc" id="L228">			boolean isNewUser = true;</span>
-<span class="fc bfc" id="L229" title="All 2 branches covered.">			if (usr.getUserId()&gt;0) isNewUser = false;</span>
+<span class="fc bfc" id="L224" title="All 2 branches covered.">			usr.setAuthorized(!requireApprove);</span>
+<span class="fc bfc" id="L225" title="All 4 branches covered.">			if (usr.getUserId()&lt;1 &amp;&amp; requireEmailVerification) usr.setAuthorized(false);</span>
+<span class="fc" id="L226">			boolean isNewUser = true;</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">			if (usr.getUserId()&gt;0) isNewUser = false;</span>
 
-<span class="fc bfc" id="L231" title="All 2 branches covered.">			if (usr.getUserId()&lt;1) Adminlog.add(Adminlog.TYPE_USER_INSERT, &quot;New user :&quot;+ &quot;id= &quot; + usr.getUserId() + &quot;login= &quot; + usr.getLogin()+	&quot;name= &quot; + usr.getFirstName() +&quot; &quot;+usr.getLastName(), usr.getUserId(), -1);</span>
-<span class="fc" id="L232">			else  Adminlog.add(Adminlog.TYPE_USER_SAVE, &quot;Update user :&quot;+ &quot;id= &quot; + usr.getUserId() + &quot;login= &quot; + usr.getLogin()+	&quot;name= &quot; + usr.getFirstName() +&quot; &quot;+usr.getLastName(), usr.getUserId(), -1);</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">			if (usr.getUserId()&lt;1) Adminlog.add(Adminlog.TYPE_USER_INSERT, &quot;New user :&quot;+ &quot;id= &quot; + usr.getUserId() + &quot;login= &quot; + usr.getLogin()+	&quot;name= &quot; + usr.getFirstName() +&quot; &quot;+usr.getLastName(), usr.getUserId(), -1);</span>
+<span class="fc" id="L230">			else  Adminlog.add(Adminlog.TYPE_USER_SAVE, &quot;Update user :&quot;+ &quot;id= &quot; + usr.getUserId() + &quot;login= &quot; + usr.getLogin()+	&quot;name= &quot; + usr.getFirstName() +&quot; &quot;+usr.getLastName(), usr.getUserId(), -1);</span>
 
-<span class="fc" id="L234">			uploadFileProcedure();</span>
-			//v usr.password mame momentalne plain text heslo prijate zo Stripes formularu
-<span class="fc" id="L236">			String oldPassword = usr.getPassword();</span>
-<span class="pc bpc" id="L237" title="1 of 4 branches missed.">			if (originalPassword!=null &amp;&amp; UserTools.PASS_UNCHANGED.equals(usr.getPassword()))</span>
-			{
-<span class="fc" id="L239">				usr.setPassword(originalPassword);</span>
-			}
-<span class="pc bpc" id="L241" title="1 of 2 branches missed.">			else if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
-			{
-<span class="fc" id="L243">				usr.setSalt(PasswordSecurity.generateSalt());</span>
-<span class="fc" id="L244">				usr.setPassword(PasswordSecurity.calculateHash(usr.getPassword(), usr.getSalt()));</span>
-			}
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">			if (requireAuthorizationAfterVerification)</span>
+<span class="fc" id="L232">			uploadFileProcedure();</span>
+
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">			if (requireAuthorizationAfterVerification)</span>
 			{
 //				ulozi priznak do volneho pola
-<span class="nc" id="L249">				String infoemail = pageParams.getValue(&quot;infoemail&quot;, &quot;web@interway.sk&quot;);</span>
-<span class="nc" id="L250">				usr.setFieldE(REQUIRE_AUTHORIZATION_AFTER_VERIFICATION+&quot;-&quot;+infoemail);</span>
+<span class="nc" id="L237">				String infoemail = pageParams.getValue(&quot;infoemail&quot;, &quot;web@interway.sk&quot;);</span>
+<span class="nc" id="L238">				usr.setFieldE(REQUIRE_AUTHORIZATION_AFTER_VERIFICATION+&quot;-&quot;+infoemail);</span>
 			}
-<span class="fc" id="L252">			boolean saveOK = UsersDB.saveUser(usr);</span>
+<span class="fc" id="L240">			boolean saveOK = UsersDB.saveUser(usr);</span>
 
-<span class="fc" id="L254">			String messageKey = null;</span>
+<span class="fc" id="L242">			String originalPassword = &quot;&quot;;</span>
+<span class="fc bfc" id="L243" title="All 2 branches covered.">			if (isNewUser) {</span>
+<span class="fc" id="L244">				originalPassword = usr.getPassword();</span>
+			}
 
-<span class="pc bpc" id="L256" title="1 of 2 branches missed.">			if (saveOK)</span>
+<span class="fc" id="L247">			String messageKey = null;</span>
+
+<span class="pc bpc" id="L249" title="1 of 2 branches missed.">			if (saveOK)</span>
 			{
 				//ak mam defaultneho pouzivatela, zakazem podla neho pristupy na moduly
-<span class="fc bfc" id="L259" title="All 2 branches covered.">				if(isNewUser)</span>
+<span class="fc bfc" id="L252" title="All 2 branches covered.">				if(isNewUser)</span>
 				{
-<span class="fc" id="L261">					int defaultUserId = Constants.getInt(&quot;regUserDefaultUserId&quot;);</span>
-<span class="pc bpc" id="L262" title="1 of 2 branches missed.">					if(defaultUserId &gt; 0)</span>
+<span class="fc" id="L254">					int defaultUserId = Constants.getInt(&quot;regUserDefaultUserId&quot;);</span>
+<span class="pc bpc" id="L255" title="1 of 2 branches missed.">					if(defaultUserId &gt; 0)</span>
 					{
-<span class="nc" id="L264">						UserDetails defaultUser = UsersDB.getUser(defaultUserId);</span>
-<span class="nc bnc" id="L265" title="All 4 branches missed.">						if(defaultUser != null &amp;&amp; defaultUser.getUserId() &gt; 0) copyUserDisabledItems(defaultUser.getUserId(), usr.getUserId());</span>
+<span class="nc" id="L257">						UserDetails defaultUser = UsersDB.getUser(defaultUserId);</span>
+<span class="nc bnc" id="L258" title="All 4 branches missed.">						if(defaultUser != null &amp;&amp; defaultUser.getUserId() &gt; 0) copyUserDisabledItems(defaultUser.getUserId(), usr.getUserId());</span>
 					}
 				}
 
 				//treba poslat notifikaciu / schvalenie?
-<span class="fc" id="L270">				String infoemail = pageParams.getValue(&quot;infoemail&quot;, &quot;&quot;);</span>
+<span class="fc" id="L263">				String infoemail = pageParams.getValue(&quot;infoemail&quot;, &quot;&quot;);</span>
 
 				//aby sa v info maili neposlala info o schvaleni
-<span class="fc bfc" id="L273" title="All 4 branches covered.">				if (isNewUser &amp;&amp; requireEmailVerification) usr.setAuthorized(true);</span>
-<span class="pc bpc" id="L274" title="2 of 6 branches missed.">				if (isNewUser &amp;&amp; Tools.isEmail(infoemail) &amp;&amp; !requireAuthorizationAfterVerification) sendEmailToAdmin(infoemail);</span>
-<span class="fc bfc" id="L275" title="All 4 branches covered.">				if (isNewUser &amp;&amp; requireEmailVerification) usr.setAuthorized(false);</span>
+<span class="fc bfc" id="L266" title="All 4 branches covered.">				if (isNewUser &amp;&amp; requireEmailVerification) usr.setAuthorized(true);</span>
+<span class="pc bpc" id="L267" title="2 of 6 branches missed.">				if (isNewUser &amp;&amp; Tools.isEmail(infoemail) &amp;&amp; !requireAuthorizationAfterVerification) sendEmailToAdmin(infoemail);</span>
+<span class="fc bfc" id="L268" title="All 4 branches covered.">				if (isNewUser &amp;&amp; requireEmailVerification) usr.setAuthorized(false);</span>
 
 				//updatni usera v session
-<span class="fc" id="L278">				updateLoggedUser();</span>
+<span class="fc" id="L271">				updateLoggedUser();</span>
 
-<span class="fc" id="L280">				boolean doNotLoginUser = pageParams.getBooleanValue(&quot;doNotLoginUser&quot;, false);</span>
-<span class="pc bpc" id="L281" title="2 of 4 branches missed.">				if (pageParams.hasParameter(&quot;loginNewUser&quot;)) doNotLoginUser = !pageParams.getBooleanValue(&quot;loginNewUser&quot;, true);</span>
+<span class="fc" id="L273">				boolean doNotLoginUser = pageParams.getBooleanValue(&quot;doNotLoginUser&quot;, false);</span>
+<span class="pc bpc" id="L274" title="2 of 4 branches missed.">				if (pageParams.hasParameter(&quot;loginNewUser&quot;)) doNotLoginUser = !pageParams.getBooleanValue(&quot;loginNewUser&quot;, true);</span>
 				//existing users are allready logged
-<span class="fc bfc" id="L283" title="All 2 branches covered.">				if (isNewUser == false) doNotLoginUser = true;</span>
-<span class="fc" id="L284">				boolean sendUserWelcomeEmail = false;</span>
-<span class="fc bfc" id="L285" title="All 2 branches covered.">				if (usr.isAuthorized())</span>
+<span class="fc bfc" id="L276" title="All 2 branches covered.">				if (isNewUser == false) doNotLoginUser = true;</span>
+<span class="fc" id="L277">				boolean sendUserWelcomeEmail = false;</span>
+<span class="fc bfc" id="L278" title="All 2 branches covered.">				if (usr.isAuthorized())</span>
 				{
-<span class="fc bfc" id="L287" title="All 2 branches covered.">					if (isNewUser) {</span>
+<span class="fc bfc" id="L280" title="All 2 branches covered.">					if (isNewUser) {</span>
+<span class="pc bpc" id="L281" title="1 of 2 branches missed.">						if (doNotLoginUser==false)</span>
+						{
+<span class="fc" id="L283">							Identity user = (Identity)getSession().getAttribute(Constants.USER_KEY);</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">							if (user == null) LogonTools.logonUser(getRequest(), usr.getLogin(), originalPassword);</span>
+						}
+<span class="fc" id="L286">						sendUserWelcomeEmail = true;</span>
+
 <span class="pc bpc" id="L288" title="1 of 2 branches missed.">						if (doNotLoginUser==false)</span>
 						{
-<span class="fc" id="L290">							Identity user = (Identity)getSession().getAttribute(Constants.USER_KEY);</span>
-<span class="pc bpc" id="L291" title="1 of 2 branches missed.">							if (user == null) LogonTools.logonUser(getRequest(), usr.getLogin(), oldPassword);</span>
-						}
-<span class="fc" id="L293">						sendUserWelcomeEmail = true;</span>
-
-<span class="pc bpc" id="L295" title="1 of 2 branches missed.">						if (doNotLoginUser==false)</span>
-						{
-<span class="fc" id="L297">							messageKey = &quot;components.user.newuser.saveSuccess_logged&quot;;</span>
+<span class="fc" id="L290">							messageKey = &quot;components.user.newuser.saveSuccess_logged&quot;;</span>
 						}
 						else
 						{
-<span class="nc" id="L301">							messageKey = &quot;components.user.newuser.saveSuccess_notlogged&quot;;</span>
+<span class="nc" id="L294">							messageKey = &quot;components.user.newuser.saveSuccess_notlogged&quot;;</span>
 						}
 					} else {
-<span class="fc" id="L304">						messageKey = &quot;components.forum.bb.profile.save_success&quot;;</span>
+<span class="fc" id="L297">						messageKey = &quot;components.forum.bb.profile.save_success&quot;;</span>
 					}
 				}
 				else
 				{
 					//ak treba posli mu mail o registracii a ze to bude schvalene niekedy
-<span class="fc" id="L310">					int notAuthorizedEmailDocId = pageParams.getIntValue(&quot;notAuthorizedEmailDocId&quot;, -1);</span>
-<span class="pc bpc" id="L311" title="1 of 2 branches missed.">					if (isNewUser)</span>
+<span class="fc" id="L303">					int notAuthorizedEmailDocId = pageParams.getIntValue(&quot;notAuthorizedEmailDocId&quot;, -1);</span>
+<span class="pc bpc" id="L304" title="1 of 2 branches missed.">					if (isNewUser)</span>
 					{
-<span class="pc bpc" id="L313" title="1 of 2 branches missed.">						if (notAuthorizedEmailDocId&gt;0)</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">						if (notAuthorizedEmailDocId&gt;0)</span>
 						{
-<span class="nc" id="L315">							sendNotAuthorizedInfoEmail(usr.getUserId(), oldPassword, notAuthorizedEmailDocId, getRequest());</span>
-<span class="nc" id="L316">							messageKey = &quot;components.user.newuser.auth_email_sent&quot;;</span>
+<span class="nc" id="L308">							sendNotAuthorizedInfoEmail(usr.getUserId(), originalPassword, notAuthorizedEmailDocId, getRequest());</span>
+<span class="nc" id="L309">							messageKey = &quot;components.user.newuser.auth_email_sent&quot;;</span>
 						}
-<span class="fc bfc" id="L318" title="All 2 branches covered.">						else if (requireEmailVerification)</span>
+<span class="fc bfc" id="L311" title="All 2 branches covered.">						else if (requireEmailVerification)</span>
 						{
 							// MBO: aby som to jsp mohol mat includnute v stranke
-<span class="fc" id="L321">							String authUrl = Tools.getBaseHref(getRequest()) + pageParams.getValue(&quot;emailVerificationAuthorizationLink&quot;, &quot;/components/user/authorize.jsp&quot;);</span>
+<span class="fc" id="L314">							String authUrl = Tools.getBaseHref(getRequest()) + pageParams.getValue(&quot;emailVerificationAuthorizationLink&quot;, &quot;/components/user/authorize.jsp&quot;);</span>
 
 
-<span class="fc" id="L324">							int originalDocId = Tools.getDocId(getRequest());</span>
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">							if (originalDocId&lt;1) originalDocId = pageParams.getIntValue(&quot;originalDocId&quot;, -1);</span>
-<span class="pc bpc" id="L326" title="1 of 2 branches missed.">							if (originalDocId &gt; 0)</span>
+<span class="fc" id="L317">							int originalDocId = Tools.getDocId(getRequest());</span>
+<span class="pc bpc" id="L318" title="1 of 2 branches missed.">							if (originalDocId&lt;1) originalDocId = pageParams.getIntValue(&quot;originalDocId&quot;, -1);</span>
+<span class="pc bpc" id="L319" title="1 of 2 branches missed.">							if (originalDocId &gt; 0)</span>
 							{
-<span class="fc" id="L328">								String url = DocDB.getURLFromDocId(originalDocId, getRequest());</span>
-<span class="fc" id="L329">								authUrl = Tools.getBaseHref(getRequest()) + url;</span>
+<span class="fc" id="L321">								String url = DocDB.getURLFromDocId(originalDocId, getRequest());</span>
+<span class="fc" id="L322">								authUrl = Tools.getBaseHref(getRequest()) + url;</span>
 							}
-<span class="fc" id="L331">							authUrl = Tools.addParametersToUrlNoAmp(authUrl, &quot;userId=!LOGGED_USER_ID!&amp;hash=!AUTHORIZE_HASH!&quot;);</span>
+<span class="fc" id="L324">							authUrl = Tools.addParametersToUrlNoAmp(authUrl, &quot;userId=!LOGGED_USER_ID!&amp;hash=!AUTHORIZE_HASH!&quot;);</span>
 
-<span class="fc" id="L333">							DocDetails authDoc = new DocDetails();</span>
+<span class="fc" id="L326">							DocDetails authDoc = new DocDetails();</span>
 
-<span class="fc" id="L335">							authDoc.setAuthorId(usr.getUserId());</span>
-<span class="fc" id="L336">							authDoc.setAuthorEmail(usr.getEmail());</span>
-<span class="fc" id="L337">							authDoc.setAuthorName(usr.getFirstName()+&quot; &quot;+usr.getLastName());</span>
+<span class="fc" id="L328">							authDoc.setAuthorId(usr.getUserId());</span>
+<span class="fc" id="L329">							authDoc.setAuthorEmail(usr.getEmail());</span>
+<span class="fc" id="L330">							authDoc.setAuthorName(usr.getFirstName()+&quot; &quot;+usr.getLastName());</span>
 
-<span class="fc" id="L339">							authDoc.setTitle(prop.getText(&quot;components.user.requireEmailVerification.subject&quot;, Tools.getBaseHref(getRequest())));</span>
-<span class="fc" id="L340">							authDoc.setData(prop.getText(&quot;components.user.requireEmailVerification.body&quot;, Tools.getBaseHref(getRequest()), authUrl));</span>
+<span class="fc" id="L332">							authDoc.setTitle(prop.getText(&quot;components.user.requireEmailVerification.subject&quot;, Tools.getBaseHref(getRequest())));</span>
+<span class="fc" id="L333">							authDoc.setData(prop.getText(&quot;components.user.requireEmailVerification.body&quot;, Tools.getBaseHref(getRequest()), authUrl));</span>
 
-<span class="fc" id="L342">							boolean sendOK = sendNotAuthorizedInfoEmail(usr.getUserId(), oldPassword, authDoc, getRequest());</span>
-<span class="pc bpc" id="L343" title="1 of 2 branches missed.">							if (sendOK) messageKey = &quot;components.user.newuser.user_auth_email_sent&quot;;</span>
-<span class="nc" id="L344">							else messageKey = &quot;components.user.newuser.user_auth_email_NOTsent&quot;;</span>
-<span class="fc" id="L345">						}</span>
+<span class="fc" id="L335">							boolean sendOK = sendNotAuthorizedInfoEmail(usr.getUserId(), originalPassword, authDoc, getRequest());</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">							if (sendOK) messageKey = &quot;components.user.newuser.user_auth_email_sent&quot;;</span>
+<span class="nc" id="L337">							else messageKey = &quot;components.user.newuser.user_auth_email_NOTsent&quot;;</span>
+<span class="fc" id="L338">						}</span>
 						else
 						{
-<span class="fc" id="L348">							messageKey = &quot;components.user.newuser.auth_email_sent&quot;;</span>
+<span class="fc" id="L341">							messageKey = &quot;components.user.newuser.auth_email_sent&quot;;</span>
 						}
 					} else {
-<span class="nc" id="L351">						messageKey = &quot;groupedit.require_approve&quot;;</span>
+<span class="nc" id="L344">						messageKey = &quot;groupedit.require_approve&quot;;</span>
 					}
 				}
 
-<span class="pc bpc" id="L355" title="1 of 2 branches missed.">				if (messageKey != null)</span>
+<span class="pc bpc" id="L348" title="1 of 2 branches missed.">				if (messageKey != null)</span>
 				{
-<span class="fc" id="L357">					getContext().getMessages().add(new SimpleMessage(prop.getText(messageKey)));</span>
-<span class="fc" id="L358">					getRequest().setAttribute(&quot;regUserMessageKey&quot;, messageKey);</span>
+<span class="fc" id="L350">					getContext().getMessages().add(new SimpleMessage(prop.getText(messageKey)));</span>
+<span class="fc" id="L351">					getRequest().setAttribute(&quot;regUserMessageKey&quot;, messageKey);</span>
 				}
-<span class="fc" id="L360">				getRequest().setAttribute(&quot;RegUserActionsaveOK&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L353">				getRequest().setAttribute(&quot;RegUserActionsaveOK&quot;, &quot;true&quot;);</span>
 
 
 				//zapis redirect pre ajax
-<span class="fc" id="L364">				int successDocId = pageParams.getIntValue(&quot;successDocId&quot;, -1);</span>
-<span class="pc bpc" id="L365" title="1 of 2 branches missed.">				if (successDocId &gt; 0)</span>
+<span class="fc" id="L357">				int successDocId = pageParams.getIntValue(&quot;successDocId&quot;, -1);</span>
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">				if (successDocId &gt; 0)</span>
 				{
-<span class="nc" id="L367">					String ajaxRedirectCode = &quot;\nwindow.location.href='&quot;+DocDB.getInstance().getDocLink(successDocId, getRequest())+&quot;';\n&quot;;</span>
-<span class="nc" id="L368">					getRequest().setAttribute(&quot;ajaxRedirectCode&quot;, ajaxRedirectCode);</span>
+<span class="nc" id="L360">					String ajaxRedirectCode = &quot;\nwindow.location.href='&quot;+DocDB.getInstance().getDocLink(successDocId, getRequest())+&quot;';\n&quot;;</span>
+<span class="nc" id="L361">					getRequest().setAttribute(&quot;ajaxRedirectCode&quot;, ajaxRedirectCode);</span>
 				}
 
 				// after save interceptor
-<span class="fc" id="L372">				String interceptorClassName = Tools.getStringValue(Constants.getString(&quot;stripesUserAfterSaveClass&quot;),&quot;&quot;);</span>
-<span class="pc bpc" id="L373" title="1 of 2 branches missed.">				if (Tools.isEmpty(interceptorClassName))</span>
+<span class="fc" id="L365">				String interceptorClassName = Tools.getStringValue(Constants.getString(&quot;stripesUserAfterSaveClass&quot;),&quot;&quot;);</span>
+<span class="pc bpc" id="L366" title="1 of 2 branches missed.">				if (Tools.isEmpty(interceptorClassName))</span>
 				{
 					//ak nebol zadany nazov triedy, kukni do PP
-<span class="fc" id="L376">					interceptorClassName = pageParams.getValue(&quot;afterSaveInterceptor&quot;, &quot;&quot;);</span>
+<span class="fc" id="L369">					interceptorClassName = pageParams.getValue(&quot;afterSaveInterceptor&quot;, &quot;&quot;);</span>
 				}
 
-<span class="pc bpc" id="L379" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(interceptorClassName))</span>
+<span class="pc bpc" id="L372" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(interceptorClassName))</span>
 				{
 					try
 					{
 						@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L384">						Class&lt;? extends AfterRegUserSaveInterceptor&gt; interceptorClass = (Class&lt;? extends AfterRegUserSaveInterceptor&gt;) Class.forName(interceptorClassName);</span>
-<span class="nc" id="L385">						AfterRegUserSaveInterceptor interceptor = interceptorClass.getDeclaredConstructor().newInstance();</span>
-<span class="nc bnc" id="L386" title="All 2 branches missed.">						if (interceptor.intercept(usr, getRequest()))</span>
+<span class="nc" id="L377">						Class&lt;? extends AfterRegUserSaveInterceptor&gt; interceptorClass = (Class&lt;? extends AfterRegUserSaveInterceptor&gt;) Class.forName(interceptorClassName);</span>
+<span class="nc" id="L378">						AfterRegUserSaveInterceptor interceptor = interceptorClass.getDeclaredConstructor().newInstance();</span>
+<span class="nc bnc" id="L379" title="All 2 branches missed.">						if (interceptor.intercept(usr, getRequest()))</span>
 						{
 							//nastala zmena usera, uloz ho a updatni v session
-<span class="nc" id="L389">							UsersDB.saveUser(usr);</span>
-<span class="nc" id="L390">							updateLoggedUser();</span>
+<span class="nc" id="L382">							UsersDB.saveUser(usr);</span>
+<span class="nc" id="L383">							updateLoggedUser();</span>
 						}
-<span class="nc bnc" id="L392" title="All 2 branches missed.">						if (interceptor.shouldSendUserWelcomeEmail()!=null) sendUserWelcomeEmail = interceptor.shouldSendUserWelcomeEmail().booleanValue();</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">						if (interceptor.shouldSendUserWelcomeEmail()!=null) sendUserWelcomeEmail = interceptor.shouldSendUserWelcomeEmail().booleanValue();</span>
 					}
-<span class="nc" id="L394">					catch (Exception e)</span>
+<span class="nc" id="L387">					catch (Exception e)</span>
 					{
-<span class="nc" id="L396">						sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L397">					}</span>
+<span class="nc" id="L389">						sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L390">					}</span>
 				}
 
-<span class="fc bfc" id="L400" title="All 2 branches covered.">				if (sendUserWelcomeEmail) {</span>
+<span class="fc bfc" id="L393" title="All 4 branches covered.">				if (isNewUser &amp;&amp; sendUserWelcomeEmail) {</span>
 					//posli email
-<span class="fc" id="L402">					AuthorizeAction.sendInfoEmail(usr.getUserId(), oldPassword, null, getRequest());</span>
+<span class="fc" id="L395">					AuthorizeAction.sendInfoEmail(usr.getUserId(), originalPassword, null, getRequest());</span>
 				}
-<span class="fc" id="L404">			}</span>
+<span class="fc" id="L397">			}</span>
 			else
 			{
-<span class="nc" id="L407">				getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.user.newuser.errorSavingUser&quot;));</span>
+<span class="nc" id="L400">				getRequest().setAttribute(&quot;errorText&quot;, prop.getText(&quot;components.user.newuser.errorSavingUser&quot;));</span>
 			}
 		}
-<span class="fc" id="L410">		Logger.debug(RegUserAction.class, &quot;---&gt; SAVE - OK&quot;);</span>
-<span class="fc" id="L411">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
+<span class="fc" id="L403">		Logger.debug(RegUserAction.class, &quot;---&gt; SAVE - OK&quot;);</span>
+<span class="fc" id="L404">		return (new ForwardResolution(&quot;/components/maybeError.jsp&quot;));</span>
 	}
 
 	private void sendEmailToAdmin(String infoemail)
 	{
 		//id a heslo schvalovatela
-<span class="fc" id="L417">		int uid = -1;</span>
+<span class="fc" id="L410">		int uid = -1;</span>
 
-<span class="fc" id="L419">		Connection db_conn = null;</span>
-<span class="fc" id="L420">		PreparedStatement ps = null;</span>
-<span class="fc" id="L421">		ResultSet rs = null;</span>
+<span class="fc" id="L412">		Connection db_conn = null;</span>
+<span class="fc" id="L413">		PreparedStatement ps = null;</span>
+<span class="fc" id="L414">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L424">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L417">			db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L426">			ps = db_conn.prepareStatement(&quot;SELECT user_id, password FROM  users WHERE email=? AND is_admin=&quot;+DB.getBooleanSql(true)+&quot; ORDER BY user_id ASC&quot;);</span>
-<span class="fc" id="L427">			ps.setString(1, infoemail);</span>
-<span class="fc" id="L428">			rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L429" title="1 of 2 branches missed.">			if (rs.next())</span>
+<span class="fc" id="L419">			ps = db_conn.prepareStatement(&quot;SELECT user_id, password FROM  users WHERE email=? AND is_admin=&quot;+DB.getBooleanSql(true)+&quot; ORDER BY user_id ASC&quot;);</span>
+<span class="fc" id="L420">			ps.setString(1, infoemail);</span>
+<span class="fc" id="L421">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L422" title="1 of 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="nc" id="L431">				uid = rs.getInt(&quot;user_id&quot;);</span>
+<span class="nc" id="L424">				uid = rs.getInt(&quot;user_id&quot;);</span>
 			}
-<span class="fc" id="L433">			rs.close();</span>
-<span class="fc" id="L434">			ps.close();</span>
+<span class="fc" id="L426">			rs.close();</span>
+<span class="fc" id="L427">			ps.close();</span>
 
-<span class="fc" id="L436">			db_conn.close();</span>
-<span class="fc" id="L437">			rs = null;</span>
-<span class="fc" id="L438">			ps = null;</span>
-<span class="fc" id="L439">			db_conn = null;</span>
+<span class="fc" id="L429">			db_conn.close();</span>
+<span class="fc" id="L430">			rs = null;</span>
+<span class="fc" id="L431">			ps = null;</span>
+<span class="fc" id="L432">			db_conn = null;</span>
 		}
-<span class="nc" id="L441">		catch (Exception ex)</span>
+<span class="nc" id="L434">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L443">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L436">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L449" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L450">					rs.close();</span>
-<span class="pc bpc" id="L451" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L452">					ps.close();</span>
-<span class="pc bpc" id="L453" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L454">					db_conn.close();</span>
+<span class="pc bpc" id="L442" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L443">					rs.close();</span>
+<span class="pc bpc" id="L444" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L445">					ps.close();</span>
+<span class="pc bpc" id="L446" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L447">					db_conn.close();</span>
 			}
-<span class="nc" id="L456">			catch (Exception ex2)</span>
+<span class="nc" id="L449">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L458">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L459">			}</span>
+<span class="nc" id="L451">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L452">			}</span>
 		}
 
 		try
 		{
-<span class="fc" id="L464">			Prop prop = Prop.getInstance(getRequest());</span>
+<span class="fc" id="L457">			Prop prop = Prop.getInstance(getRequest());</span>
 
-<span class="fc" id="L466">			String url = Tools.getBaseHref(getRequest()) + &quot;/admin&quot;;</span>
+<span class="fc" id="L459">			String url = Tools.getBaseHref(getRequest()) + &quot;/admin&quot;;</span>
 
-<span class="fc" id="L468">			String message = prop.getText(&quot;reguser.new_registration&quot;) + &quot;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L461">			String message = prop.getText(&quot;reguser.new_registration&quot;) + &quot;&lt;br/&gt;&quot;;</span>
 
-<span class="fc bfc" id="L470" title="All 2 branches covered.">			if (!usr.isAuthorized())</span>
+<span class="fc bfc" id="L463" title="All 2 branches covered.">			if (!usr.isAuthorized())</span>
 			{
-<span class="fc" id="L472">				message += prop.getText(&quot;reguser.need_approve&quot;) + &quot; &quot;;</span>
-<span class="pc bpc" id="L473" title="2 of 4 branches missed.">				if (usr.getUserId() &gt; 0 &amp;&amp; uid &gt; 0)</span>
+<span class="fc" id="L465">				message += prop.getText(&quot;reguser.need_approve&quot;) + &quot; &quot;;</span>
+<span class="pc bpc" id="L466" title="2 of 4 branches missed.">				if (usr.getUserId() &gt; 0 &amp;&amp; uid &gt; 0)</span>
 				{
-<span class="nc" id="L475">					message += prop.getText(&quot;reguser.clink_on_link&quot;) + &quot;:&lt;br/&gt;&quot;;</span>
-<span class="nc" id="L476">					String authUrl = url + &quot;/v9/users/user-list/#dt-filter-id=&quot; + usr.getUserId() + &quot;&amp;dt-select=true&quot;;</span>
-<span class="nc" id="L477">					message += &quot;&lt;a href='&quot;+authUrl+&quot;'&gt;&quot;+authUrl+&quot;&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;&quot;;</span>
-<span class="nc" id="L478">				}</span>
+<span class="nc" id="L468">					message += prop.getText(&quot;reguser.clink_on_link&quot;) + &quot;:&lt;br/&gt;&quot;;</span>
+<span class="nc" id="L469">					String authUrl = url + &quot;/v9/users/user-list/#dt-filter-id=&quot; + usr.getUserId() + &quot;&amp;dt-select=true&quot;;</span>
+<span class="nc" id="L470">					message += &quot;&lt;a href='&quot;+authUrl+&quot;'&gt;&quot;+authUrl+&quot;&lt;/a&gt;&lt;br/&gt;&lt;br/&gt;&quot;;</span>
+<span class="nc" id="L471">				}</span>
 				else
 				{
-<span class="fc" id="L481">					message += &quot;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L474">					message += &quot;&lt;br/&gt;&quot;;</span>
 				}
 			}
 
-<span class="fc" id="L485">			message += &quot;   &quot; + prop.getText(&quot;reguser.firstname&quot;) + &quot;: &quot; + usr.getFirstName() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="fc" id="L486">			message += &quot;   &quot; + prop.getText(&quot;reguser.lastname&quot;) + &quot;: &quot; + usr.getLastName() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L487" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getCompany())) message += &quot;   &quot; + prop.getText(&quot;reguser.company&quot;) + &quot;: &quot; + usr.getCompany() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L488" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getAdress())) message += &quot;   &quot; + prop.getText(&quot;reguser.street&quot;) + &quot;: &quot; + usr.getAdress() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L489" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getCity())) message += &quot;   &quot; + prop.getText(&quot;reguser.city&quot;) + &quot;: &quot; + usr.getCity() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L490" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getZip())) message += &quot;   &quot; + prop.getText(&quot;reguser.zip&quot;) + &quot;: &quot; + usr.getZip() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L491" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getCountry())) message += &quot;   &quot; + prop.getText(&quot;reguser.country&quot;) + &quot;: &quot; + usr.getCountry() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="fc" id="L492">			message += &quot;   &quot; + prop.getText(&quot;reguser.email&quot;) + &quot;: &quot; + usr.getEmail() + &quot;&lt;br/&gt;&quot;;</span>
-<span class="pc bpc" id="L493" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getPhone())) message += &quot;   &quot; + prop.getText(&quot;reguser.phone&quot;) + &quot;: &quot; + usr.getPhone() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L478">			message += &quot;   &quot; + prop.getText(&quot;reguser.firstname&quot;) + &quot;: &quot; + usr.getFirstName() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L479">			message += &quot;   &quot; + prop.getText(&quot;reguser.lastname&quot;) + &quot;: &quot; + usr.getLastName() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L480" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getCompany())) message += &quot;   &quot; + prop.getText(&quot;reguser.company&quot;) + &quot;: &quot; + usr.getCompany() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L481" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getAdress())) message += &quot;   &quot; + prop.getText(&quot;reguser.street&quot;) + &quot;: &quot; + usr.getAdress() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L482" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getCity())) message += &quot;   &quot; + prop.getText(&quot;reguser.city&quot;) + &quot;: &quot; + usr.getCity() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L483" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getZip())) message += &quot;   &quot; + prop.getText(&quot;reguser.zip&quot;) + &quot;: &quot; + usr.getZip() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L484" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getCountry())) message += &quot;   &quot; + prop.getText(&quot;reguser.country&quot;) + &quot;: &quot; + usr.getCountry() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L485">			message += &quot;   &quot; + prop.getText(&quot;reguser.email&quot;) + &quot;: &quot; + usr.getEmail() + &quot;&lt;br/&gt;&quot;;</span>
+<span class="pc bpc" id="L486" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getPhone())) message += &quot;   &quot; + prop.getText(&quot;reguser.phone&quot;) + &quot;: &quot; + usr.getPhone() + &quot;&lt;br/&gt;&quot;;</span>
 
 			//skupiny kam je zaregistrovany
-<span class="fc" id="L496">			UserGroupsDB ugDB = UserGroupsDB.getInstance();</span>
-<span class="pc bpc" id="L497" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getUserGroupsIds())) message += &quot;   &quot; + prop.getText(&quot;user.admin.userGroups&quot;) + &quot;: &quot; + ugDB.convertIdsToNames(usr.getUserGroupsIds()) + &quot;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L489">			UserGroupsDB ugDB = UserGroupsDB.getInstance();</span>
+<span class="pc bpc" id="L490" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(usr.getUserGroupsIds())) message += &quot;   &quot; + prop.getText(&quot;user.admin.userGroups&quot;) + &quot;: &quot; + ugDB.convertIdsToNames(usr.getUserGroupsIds()) + &quot;&lt;br/&gt;&quot;;</span>
 
-<span class="fc" id="L499">			message += &quot;&lt;br/&gt;&lt;br/&gt;&quot;;</span>
+<span class="fc" id="L492">			message += &quot;&lt;br/&gt;&lt;br/&gt;&quot;;</span>
 
-<span class="fc" id="L501">			String toEmail = infoemail;</span>
-<span class="fc" id="L502">			String fromName = usr.getFullName();</span>
+<span class="fc" id="L494">			String toEmail = infoemail;</span>
+<span class="fc" id="L495">			String fromName = usr.getFullName();</span>
 
-<span class="fc" id="L504">			String subject = prop.getText(&quot;reguser.subject&quot;);</span>
+<span class="fc" id="L497">			String subject = prop.getText(&quot;reguser.subject&quot;);</span>
 
 			//tu sa nepouzije fromEmail, pretoze ak je email nedostupny
 			//vrati sa ziadatelovi delivery failed vratane linky na schvalenie...
-<span class="fc" id="L508">			SendMail.send(fromName, toEmail, toEmail, subject, message);</span>
+<span class="fc" id="L501">			SendMail.send(fromName, toEmail, toEmail, subject, message);</span>
 		}
-<span class="nc" id="L510">		catch (Exception ex)</span>
+<span class="nc" id="L503">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L512">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L513">		}</span>
-<span class="fc" id="L514">	}</span>
+<span class="nc" id="L505">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L506">		}</span>
+<span class="fc" id="L507">	}</span>
 
 	/**
 	 * Aktualizuje prihlaseneho pouzivatela podla formu
 	 */
 	private void updateLoggedUser()
 	{
-<span class="fc" id="L521">		Identity userIdentity = getCurrentUser();</span>
-<span class="pc bpc" id="L522" title="1 of 4 branches missed.">		if (userIdentity!=null &amp;&amp; userIdentity.getUserId()==usr.getUserId())</span>
+<span class="fc" id="L514">		Identity userIdentity = getCurrentUser();</span>
+<span class="pc bpc" id="L515" title="1 of 4 branches missed.">		if (userIdentity!=null &amp;&amp; userIdentity.getUserId()==usr.getUserId())</span>
 		{
 			//updatni usera
-<span class="fc" id="L525">			userIdentity.setTitle(usr.getTitle());</span>
-<span class="fc" id="L526">			userIdentity.setFirstName(usr.getFirstName());</span>
-<span class="fc" id="L527">			userIdentity.setLastName(usr.getLastName());</span>
-<span class="fc" id="L528">			userIdentity.setLoginName(usr.getLogin());</span>
-<span class="fc" id="L529">			userIdentity.setCompany(usr.getCompany());</span>
-<span class="fc" id="L530">			userIdentity.setAdress(usr.getAdress());</span>
-<span class="fc" id="L531">			userIdentity.setPSC(usr.getPSC());</span>
-<span class="fc" id="L532">			userIdentity.setCountry(usr.getCountry());</span>
-<span class="fc" id="L533">			userIdentity.setEmail(usr.getEmail());</span>
-<span class="fc" id="L534">			userIdentity.setPhone(usr.getPhone());</span>
-<span class="fc" id="L535">			userIdentity.setCity(usr.getCity());</span>
-<span class="fc" id="L536">			userIdentity.setFieldA(usr.getFieldA());</span>
-<span class="fc" id="L537">			userIdentity.setFieldB(usr.getFieldB());</span>
-<span class="fc" id="L538">			userIdentity.setFieldC(usr.getFieldC());</span>
-<span class="fc" id="L539">			userIdentity.setFieldD(usr.getFieldD());</span>
-<span class="fc" id="L540">			userIdentity.setFieldE(usr.getFieldE());</span>
+<span class="fc" id="L518">			userIdentity.setTitle(usr.getTitle());</span>
+<span class="fc" id="L519">			userIdentity.setFirstName(usr.getFirstName());</span>
+<span class="fc" id="L520">			userIdentity.setLastName(usr.getLastName());</span>
+<span class="fc" id="L521">			userIdentity.setLoginName(usr.getLogin());</span>
+<span class="fc" id="L522">			userIdentity.setCompany(usr.getCompany());</span>
+<span class="fc" id="L523">			userIdentity.setAdress(usr.getAdress());</span>
+<span class="fc" id="L524">			userIdentity.setPSC(usr.getPSC());</span>
+<span class="fc" id="L525">			userIdentity.setCountry(usr.getCountry());</span>
+<span class="fc" id="L526">			userIdentity.setEmail(usr.getEmail());</span>
+<span class="fc" id="L527">			userIdentity.setPhone(usr.getPhone());</span>
+<span class="fc" id="L528">			userIdentity.setCity(usr.getCity());</span>
+<span class="fc" id="L529">			userIdentity.setFieldA(usr.getFieldA());</span>
+<span class="fc" id="L530">			userIdentity.setFieldB(usr.getFieldB());</span>
+<span class="fc" id="L531">			userIdentity.setFieldC(usr.getFieldC());</span>
+<span class="fc" id="L532">			userIdentity.setFieldD(usr.getFieldD());</span>
+<span class="fc" id="L533">			userIdentity.setFieldE(usr.getFieldE());</span>
 
-<span class="fc" id="L542">			userIdentity.setDateOfBirth(usr.getDateOfBirth());</span>
-<span class="fc" id="L543">			userIdentity.setSexMale(usr.isSexMale());</span>
-<span class="fc" id="L544">			userIdentity.setPhoto(usr.getPhoto());</span>
-<span class="fc" id="L545">			userIdentity.setSignature(Html2Text.html2text(usr.getSignature()));</span>
+<span class="fc" id="L535">			userIdentity.setDateOfBirth(usr.getDateOfBirth());</span>
+<span class="fc" id="L536">			userIdentity.setSexMale(usr.isSexMale());</span>
+<span class="fc" id="L537">			userIdentity.setPhoto(usr.getPhoto());</span>
+<span class="fc" id="L538">			userIdentity.setSignature(Html2Text.html2text(usr.getSignature()));</span>
 
-<span class="pc bpc" id="L547" title="2 of 4 branches missed.">			if (usr.getPassword().length() &gt; 1 &amp;&amp; usr.getPassword().compareToIgnoreCase(UserTools.PASS_UNCHANGED) != 0)</span>
+<span class="pc bpc" id="L540" title="1 of 4 branches missed.">			if (usr.getPassword().length() &gt; 1 &amp;&amp; usr.getPassword().compareToIgnoreCase(UserTools.PASS_UNCHANGED) != 0)</span>
 			{
-<span class="fc" id="L549">				usr.setPassword(usr.getPassword());</span>
+<span class="fc" id="L542">				usr.setPassword(usr.getPassword());</span>
 			}
-<span class="fc" id="L551">			userIdentity.setFax(usr.getFax());</span>
-<span class="fc" id="L552">			userIdentity.setDeliveryCity(usr.getDeliveryCity());</span>
-<span class="fc" id="L553">			userIdentity.setDeliveryCompany(usr.getDeliveryCompany());</span>
-<span class="fc" id="L554">			userIdentity.setDeliveryCountry(usr.getDeliveryCountry());</span>
-<span class="fc" id="L555">			userIdentity.setDeliveryFirstName(usr.getDeliveryFirstName());</span>
-<span class="fc" id="L556">			userIdentity.setDeliveryLastName(usr.getDeliveryLastName());</span>
-<span class="fc" id="L557">			userIdentity.setDeliveryPhone(usr.getDeliveryPhone());</span>
-<span class="fc" id="L558">			userIdentity.setDeliveryPsc(usr.getDeliveryPsc());</span>
-<span class="fc" id="L559">			userIdentity.setDeliveryAdress(usr.getDeliveryAdress());</span>
+<span class="fc" id="L544">			userIdentity.setFax(usr.getFax());</span>
+<span class="fc" id="L545">			userIdentity.setDeliveryCity(usr.getDeliveryCity());</span>
+<span class="fc" id="L546">			userIdentity.setDeliveryCompany(usr.getDeliveryCompany());</span>
+<span class="fc" id="L547">			userIdentity.setDeliveryCountry(usr.getDeliveryCountry());</span>
+<span class="fc" id="L548">			userIdentity.setDeliveryFirstName(usr.getDeliveryFirstName());</span>
+<span class="fc" id="L549">			userIdentity.setDeliveryLastName(usr.getDeliveryLastName());</span>
+<span class="fc" id="L550">			userIdentity.setDeliveryPhone(usr.getDeliveryPhone());</span>
+<span class="fc" id="L551">			userIdentity.setDeliveryPsc(usr.getDeliveryPsc());</span>
+<span class="fc" id="L552">			userIdentity.setDeliveryAdress(usr.getDeliveryAdress());</span>
 
-<span class="fc" id="L561">			userIdentity.setUserGroupsIds(usr.getUserGroupsIds());</span>
+<span class="fc" id="L554">			userIdentity.setUserGroupsIds(usr.getUserGroupsIds());</span>
 
-<span class="fc" id="L563">			userIdentity.setPosition(usr.getPosition());</span>
-<span class="fc" id="L564">			userIdentity.setParentId(usr.getParentId());</span>
+<span class="fc" id="L556">			userIdentity.setPosition(usr.getPosition());</span>
+<span class="fc" id="L557">			userIdentity.setParentId(usr.getParentId());</span>
 		}
-<span class="fc" id="L566">	}</span>
+<span class="fc" id="L559">	}</span>
 
 	@ValidationMethod(on=&quot;bSubmit&quot;)
 	public void validation(ValidationErrors errors)
 	{
-<span class="fc" id="L571">		Logger.debug(RegUserAction.class, &quot;validation, errors=&quot;+errors);</span>
-<span class="fc" id="L572">		Prop prop = Prop.getInstance(PageLng.getUserLng(getRequest()));</span>
+<span class="fc" id="L564">		Logger.debug(RegUserAction.class, &quot;validation, errors=&quot;+errors);</span>
+<span class="fc" id="L565">		Prop prop = Prop.getInstance(PageLng.getUserLng(getRequest()));</span>
 
-<span class="fc" id="L574">		PageParams pageParams = new PageParams(getRequest());</span>
+<span class="fc" id="L567">		PageParams pageParams = new PageParams(getRequest());</span>
 
-		//toto tu musi byt, inak asi expirovala session
-<span class="pc bpc" id="L577" title="1 of 2 branches missed.">		if (pageParams.hasParameter(&quot;groupIds&quot;)==false)</span>
+		//toto tu musi byt, inak asi exspirovala session
+<span class="pc bpc" id="L570" title="1 of 2 branches missed.">		if (pageParams.hasParameter(&quot;groupIds&quot;)==false)</span>
 		{
-<span class="nc" id="L579">			errors.add(&quot;sessionExpired&quot;, new SimpleError(prop.getText(&quot;pageparams.session_expired&quot;)));</span>
+<span class="nc" id="L572">			errors.add(&quot;sessionExpired&quot;, new SimpleError(prop.getText(&quot;pageparams.session_expired&quot;)));</span>
 		}
 
-<span class="pc bpc" id="L582" title="1 of 2 branches missed.">		if (ShowDoc.getXssRedirectUrl(getRequest())!=null)</span>
+<span class="pc bpc" id="L575" title="1 of 2 branches missed.">		if (ShowDoc.getXssRedirectUrl(getRequest())!=null)</span>
 		{
-<span class="nc" id="L584">			errors.add(&quot;xssError&quot;, new SimpleError(prop.getText(&quot;system.xss.xss_notify&quot;)));</span>
+<span class="nc" id="L577">			errors.add(&quot;xssError&quot;, new SimpleError(prop.getText(&quot;system.xss.xss_notify&quot;)));</span>
 		}
 
-<span class="fc bfc" id="L587" title="All 2 branches covered.">		if (!SpamProtection.canPost(&quot;userform&quot;, null, getRequest()))</span>
-<span class="fc" id="L588">			errors.add(&quot;spamError&quot;, new SimpleError(prop.getText(&quot;checkform.fail_probablySpamBot&quot;)));</span>
+<span class="fc bfc" id="L580" title="All 2 branches covered.">		if (!SpamProtection.canPost(&quot;userform&quot;, null, getRequest()))</span>
+<span class="fc" id="L581">			errors.add(&quot;spamError&quot;, new SimpleError(prop.getText(&quot;checkform.fail_probablySpamBot&quot;)));</span>
 
-<span class="pc bpc" id="L590" title="1 of 2 branches missed.">		if	(!Captcha.validateResponse(getRequest(), getRequest().getParameter(&quot;g-recaptcha-response&quot;), &quot;userform&quot;))</span>
-<span class="nc" id="L591">			errors.add(&quot;captchaError&quot;, new SimpleError(prop.getText(&quot;captcha.nie.je.spravna&quot;)));</span>
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">		if	(!Captcha.validateResponse(getRequest(), getRequest().getParameter(&quot;g-recaptcha-response&quot;), &quot;userform&quot;))</span>
+<span class="nc" id="L584">			errors.add(&quot;captchaError&quot;, new SimpleError(prop.getText(&quot;captcha.nie.je.spravna&quot;)));</span>
 
 
-<span class="fc" id="L594">		String validateMethod = pageParams.getValue(&quot;validateMethod&quot;, null);</span>
-<span class="pc bpc" id="L595" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(validateMethod))</span>
+<span class="fc" id="L587">		String validateMethod = pageParams.getValue(&quot;validateMethod&quot;, null);</span>
+<span class="pc bpc" id="L588" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(validateMethod))</span>
 		{
-<span class="nc" id="L597">			int i = validateMethod.lastIndexOf('.');</span>
-<span class="nc" id="L598">			String validateClass = validateMethod.substring(0, i);</span>
-<span class="nc" id="L599">			validateMethod = validateMethod.substring(i+1);</span>
+<span class="nc" id="L590">			int i = validateMethod.lastIndexOf('.');</span>
+<span class="nc" id="L591">			String validateClass = validateMethod.substring(0, i);</span>
+<span class="nc" id="L592">			validateMethod = validateMethod.substring(i+1);</span>
 			//String
 			try
 			{
-<span class="nc" id="L603">				Class&lt;?&gt; c = Class.forName(validateClass);</span>
-<span class="nc" id="L604">				Object o = c.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L596">				Class&lt;?&gt; c = Class.forName(validateClass);</span>
+<span class="nc" id="L597">				Object o = c.getDeclaredConstructor().newInstance();</span>
 				Method m;
-<span class="nc" id="L606">				Class&lt;?&gt;[] parameterTypes = new Class[] {RegUserAction.class, ValidationErrors.class};</span>
-<span class="nc" id="L607">				Object[] arguments = new Object[] {this, errors};</span>
-<span class="nc" id="L608">				m = c.getMethod(validateMethod, parameterTypes);</span>
-<span class="nc" id="L609">				m.invoke(o, arguments);</span>
-<span class="nc" id="L610">				Logger.println(RegUserAction.class, &quot;errors=&quot;+errors);</span>
+<span class="nc" id="L599">				Class&lt;?&gt;[] parameterTypes = new Class[] {RegUserAction.class, ValidationErrors.class};</span>
+<span class="nc" id="L600">				Object[] arguments = new Object[] {this, errors};</span>
+<span class="nc" id="L601">				m = c.getMethod(validateMethod, parameterTypes);</span>
+<span class="nc" id="L602">				m.invoke(o, arguments);</span>
+<span class="nc" id="L603">				Logger.println(RegUserAction.class, &quot;errors=&quot;+errors);</span>
 			}
-<span class="nc" id="L612">			catch (Exception ex)</span>
+<span class="nc" id="L605">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L614">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L615">			}</span>
+<span class="nc" id="L607">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L608">			}</span>
 		}
 
-<span class="pc bpc" id="L618" title="1 of 2 branches missed.">		if (UserTools.USE_EMAIL_AS_LOGIN.equals(usr.getLogin()))</span>
+<span class="pc bpc" id="L611" title="1 of 2 branches missed.">		if (UserTools.USE_EMAIL_AS_LOGIN.equals(usr.getLogin()))</span>
 		{
-<span class="nc" id="L620">			usr.setLogin(usr.getEmail());</span>
+<span class="nc" id="L613">			usr.setLogin(usr.getEmail());</span>
 		}
 
 		//kontrola povinnych poli
 
-<span class="fc" id="L625">		String required = pageParams.getValue(&quot;required&quot;,&quot;login,password,firstName,lastName,email&quot;);</span>
-<span class="pc bpc" id="L626" title="1 of 2 branches missed.">		if (Tools.isEmpty(required)) required = &quot;login,password,email&quot;;</span>
+<span class="fc" id="L618">		String required = pageParams.getValue(&quot;required&quot;,&quot;login,password,firstName,lastName,email&quot;);</span>
+<span class="pc bpc" id="L619" title="1 of 2 branches missed.">		if (Tools.isEmpty(required)) required = &quot;login,password,email&quot;;</span>
 
 		//password2 nie je v UserDetails
-<span class="fc" id="L629">		required = Tools.replace(required, &quot;password2+&quot;, &quot;&quot;);</span>
+<span class="fc" id="L622">		required = Tools.replace(required, &quot;password2+&quot;, &quot;&quot;);</span>
 
-<span class="fc" id="L631">		StringTokenizer st = new StringTokenizer(required, &quot;,+;&quot;);</span>
-<span class="fc bfc" id="L632" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
+<span class="fc" id="L624">		StringTokenizer st = new StringTokenizer(required, &quot;,+;&quot;);</span>
+<span class="fc bfc" id="L625" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
 		{
-<span class="fc" id="L634">			String property = st.nextToken();</span>
+<span class="fc" id="L627">			String property = st.nextToken();</span>
 			try
 			{
-<span class="pc bpc" id="L637" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(property))</span>
+<span class="pc bpc" id="L630" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(property))</span>
 				{
-<span class="fc" id="L639">					String value = (String)BeanUtil.getPropertyValue(property, usr);</span>
-<span class="pc bpc" id="L640" title="1 of 2 branches missed.">					if (Tools.isEmpty(value))</span>
+<span class="fc" id="L632">					String value = (String)BeanUtil.getPropertyValue(property, usr);</span>
+<span class="pc bpc" id="L633" title="1 of 2 branches missed.">					if (Tools.isEmpty(value))</span>
 					{
-<span class="nc" id="L642">						errors.add(&quot;usr.&quot;+property, new SimpleError(Tools.replace(prop.getText(&quot;validation.required.valueNotPresent&quot;), &quot;{0}&quot;, prop.getText(&quot;components.user.newuser.&quot;+property))));</span>
+<span class="nc" id="L635">						errors.add(&quot;usr.&quot;+property, new SimpleError(Tools.replace(prop.getText(&quot;validation.required.valueNotPresent&quot;), &quot;{0}&quot;, prop.getText(&quot;components.user.newuser.&quot;+property))));</span>
 					}
 				}
 			}
-<span class="nc" id="L646">			catch (Exception ex)</span>
+<span class="nc" id="L639">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L648">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L649">			}</span>
-<span class="fc" id="L650">		}</span>
+<span class="nc" id="L641">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L642">			}</span>
+<span class="fc" id="L643">		}</span>
 
-<span class="pc bpc" id="L652" title="3 of 6 branches missed.">		if (Tools.isNotEmpty(usr.getEmail()) &amp;&amp; (usr.getEmail().indexOf('@') == -1 || usr.getEmail().indexOf('.') == -1))</span>
+<span class="pc bpc" id="L645" title="3 of 6 branches missed.">		if (Tools.isNotEmpty(usr.getEmail()) &amp;&amp; (usr.getEmail().indexOf('@') == -1 || usr.getEmail().indexOf('.') == -1))</span>
 		{
-<span class="nc" id="L654">			errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;userForm.err.email&quot;)));</span>
+<span class="nc" id="L647">			errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;userForm.err.email&quot;)));</span>
 		}
 
-<span class="pc bpc" id="L657" title="1 of 2 branches missed.">        if (getRequest().getAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;)==null)</span>
+<span class="pc bpc" id="L650" title="1 of 2 branches missed.">        if (getRequest().getAttribute(&quot;RegUserAction.ALLOW_SAVE_OTHER_USER&quot;)==null)</span>
         {
             // pre akukolvek zmenu pozaduj stare heslo
-<span class="fc bfc" id="L660" title="All 2 branches covered.">            if (this.usr.getUserId() &gt; 0)</span>
+<span class="fc bfc" id="L653" title="All 2 branches covered.">            if (this.usr.getUserId() &gt; 0)</span>
             {
                 try
                 {
-<span class="fc" id="L664">                    sk.iway.Password pass = new sk.iway.Password();</span>
-<span class="pc bpc" id="L665" title="1 of 2 branches missed.">                    if (!this.usr.isInUserGroup(Constants.getInt(&quot;socialMediaUserGroupId&quot;,-1))) {</span>
-<span class="pc bpc" id="L666" title="1 of 2 branches missed.">						if (Tools.isEmpty(this.usr.getOldPassword())) {</span>
-<span class="nc" id="L667">							errors.add(&quot;user.oldPassword&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.oldPassword&quot;)));</span>
-<span class="pc bpc" id="L668" title="2 of 4 branches missed.">						} else if (!(pass.encrypt(this.usr.getOldPassword()).equals(this.originalPassword) || PasswordSecurity.isPasswordCorrect(this.usr.getOldPassword(), this.usr.getSalt(), this.originalPassword))) { //NOSONAR</span>
+<span class="fc" id="L657">                    sk.iway.Password pass = new sk.iway.Password();</span>
+<span class="fc" id="L658">					String passwordHashDB = (new SimpleQuery()).forString(&quot;SELECT password FROM users WHERE user_id = ?&quot;, this.usr.getUserId());</span>
+<span class="fc" id="L659">					String passwordSaltDB = (new SimpleQuery()).forString(&quot;SELECT password_salt FROM users WHERE user_id = ?&quot;, this.usr.getUserId());</span>
+<span class="pc bpc" id="L660" title="1 of 2 branches missed.">                    if (!this.usr.isInUserGroup(Constants.getInt(&quot;socialMediaUserGroupId&quot;,-1))) {</span>
+<span class="fc bfc" id="L661" title="All 2 branches covered.">						if (Tools.isEmpty(this.usr.getOldPassword())) {</span>
+<span class="fc" id="L662">							errors.add(&quot;user.oldPassword&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.oldPassword&quot;)));</span>
+<span class="pc bpc" id="L663" title="2 of 4 branches missed.">						} else if (!(pass.encrypt(this.usr.getOldPassword()).equals(passwordHashDB) || PasswordSecurity.isPasswordCorrect(this.usr.getOldPassword(), passwordSaltDB, passwordHashDB))) { //NOSONAR</span>
 							//nerozlisujeme typ chyby
-<span class="nc" id="L670">							errors.add(&quot;user.oldPassword&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.oldPassword&quot;)));</span>
+<span class="nc" id="L665">							errors.add(&quot;user.oldPassword&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.oldPassword&quot;)));</span>
 						}
 					}
-<span class="nc" id="L673">                } catch (Exception ex)</span>
+<span class="nc" id="L668">                } catch (Exception ex)</span>
                 {
-<span class="nc" id="L675">                    sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L676">                }</span>
+<span class="nc" id="L670">                    sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L671">                }</span>
             }
         }
 
 		//pokial je heslo zadane, skontroluj ho podla nastavenych podmienok
-<span class="pc bpc" id="L681" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(usr.getPassword()))</span>
+<span class="pc bpc" id="L676" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(usr.getPassword()))</span>
 		{
 	    	//kontrola hesla podla nastavenych podmienok
-<span class="fc" id="L684">			String constStr = &quot;&quot;;</span>
-<span class="fc bfc" id="L685" title="All 2 branches covered.">			if(usr.isAdmin())</span>
+<span class="fc" id="L679">			String constStr = &quot;&quot;;</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">			if(usr.isAdmin())</span>
 			{
-<span class="fc" id="L687">				constStr = &quot;Admin&quot;;</span>
+<span class="fc" id="L682">				constStr = &quot;Admin&quot;;</span>
 			}
-<span class="fc" id="L689">			int dlzkaHesla = Constants.getInt(&quot;password&quot;+constStr+&quot;MinLength&quot;);</span>
-<span class="fc" id="L690">			int pocetZnakov = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfSpecialSigns&quot;);</span>
-<span class="fc" id="L691">			int pocetVelkychPismen = Constants.getInt(&quot;password&quot;+constStr+&quot;MinUpperCaseLetters&quot;);</span>
-<span class="fc" id="L692">			int pocetMalychPismen = Constants.getInt(&quot;password&quot;+constStr+&quot;MinLowerCaseLetters&quot;);</span>
-<span class="fc" id="L693">			int pocetCisel = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfDigits&quot;);</span>
+<span class="fc" id="L684">			int dlzkaHesla = Constants.getInt(&quot;password&quot;+constStr+&quot;MinLength&quot;);</span>
+<span class="fc" id="L685">			int pocetZnakov = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfSpecialSigns&quot;);</span>
+<span class="fc" id="L686">			int pocetVelkychPismen = Constants.getInt(&quot;password&quot;+constStr+&quot;MinUpperCaseLetters&quot;);</span>
+<span class="fc" id="L687">			int pocetMalychPismen = Constants.getInt(&quot;password&quot;+constStr+&quot;MinLowerCaseLetters&quot;);</span>
+<span class="fc" id="L688">			int pocetCisel = Constants.getInt(&quot;password&quot;+constStr+&quot;MinCountOfDigits&quot;);</span>
 
-<span class="pc bpc" id="L695" title="2 of 4 branches missed.">			if(Password.checkPassword(false, usr.getPassword(), usr.isAdmin(), usr.getUserId(), null, null) &amp;&amp; Password.equalsPasswords(usr.getPassword(), getRequest().getParameter(&quot;password2&quot;)))</span>
+<span class="pc bpc" id="L690" title="2 of 4 branches missed.">			if(Password.checkPassword(false, usr.getPassword(), usr.isAdmin(), usr.getUserId(), null, null) &amp;&amp; Password.equalsPasswords(usr.getPassword(), getRequest().getParameter(&quot;password2&quot;)))</span>
 			{
 				//ulozim iba zmenene hesla
-<span class="fc bfc" id="L698" title="All 2 branches covered.">				if(usr.getPassword().trim().compareToIgnoreCase(UserTools.PASS_UNCHANGED) != 0)</span>
+<span class="fc bfc" id="L693" title="All 2 branches covered.">				if(usr.getPassword().trim().compareToIgnoreCase(UserTools.PASS_UNCHANGED) != 0)</span>
 				{
-<span class="fc" id="L700">					Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, usr.getUserId(), &quot;RegUserAction - user (&quot;+usr.getLogin()+&quot;) successfully changed password&quot;, -1, -1);</span>
+<span class="fc" id="L695">					Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, usr.getUserId(), &quot;RegUserAction - user (&quot;+usr.getLogin()+&quot;) successfully changed password&quot;, -1, -1);</span>
 				}
 			}
 			else
 			{
-<span class="nc" id="L705">				String errorText = prop.getText(&quot;logon.change_password.nesplna_nastavenia&quot;)+&quot;&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L706" title="All 2 branches missed.">				if(dlzkaHesla &gt; 0)</span>
-<span class="nc" id="L707">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.min_length&quot;, String.valueOf(dlzkaHesla))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L708" title="All 2 branches missed.">				if(pocetVelkychPismen &gt; 0)</span>
-<span class="nc" id="L709">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_upper_case&quot;, String.valueOf(pocetVelkychPismen))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L710" title="All 2 branches missed.">				if(pocetMalychPismen &gt; 0)</span>
-<span class="nc" id="L711">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_lower_case&quot;, String.valueOf(pocetMalychPismen))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L712" title="All 2 branches missed.">				if(pocetCisel &gt; 0)</span>
-<span class="nc" id="L713">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_digits&quot;, String.valueOf(pocetCisel))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L714" title="All 2 branches missed.">				if(pocetZnakov &gt; 0)</span>
-<span class="nc" id="L715">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_special_sign&quot;, String.valueOf(pocetZnakov))+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L716" title="All 2 branches missed.">				if(!Password.equalsPasswords(usr.getPassword(), getRequest().getParameter(&quot;password2&quot;)))</span>
-<span class="nc" id="L717">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.password2&quot;)+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc bnc" id="L718" title="All 2 branches missed.">				if(PasswordsHistoryDB.getInstance().existsPassword(usr.getPassword(),usr.getUserId()))</span>
-<span class="nc" id="L719">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.used_in_history2&quot;)+&quot;.&lt;br/&gt;&quot;;</span>
-<span class="nc" id="L720">				errors.add(&quot;passwordError&quot;, new SimpleError(errorText));</span>
+<span class="nc" id="L700">				String errorText = prop.getText(&quot;logon.change_password.nesplna_nastavenia&quot;)+&quot;&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L701" title="All 2 branches missed.">				if(dlzkaHesla &gt; 0)</span>
+<span class="nc" id="L702">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.min_length&quot;, String.valueOf(dlzkaHesla))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">				if(pocetVelkychPismen &gt; 0)</span>
+<span class="nc" id="L704">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_upper_case&quot;, String.valueOf(pocetVelkychPismen))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L705" title="All 2 branches missed.">				if(pocetMalychPismen &gt; 0)</span>
+<span class="nc" id="L706">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_lower_case&quot;, String.valueOf(pocetMalychPismen))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L707" title="All 2 branches missed.">				if(pocetCisel &gt; 0)</span>
+<span class="nc" id="L708">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_digits&quot;, String.valueOf(pocetCisel))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">				if(pocetZnakov &gt; 0)</span>
+<span class="nc" id="L710">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.count_of_special_sign&quot;, String.valueOf(pocetZnakov))+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L711" title="All 2 branches missed.">				if(!Password.equalsPasswords(usr.getPassword(), getRequest().getParameter(&quot;password2&quot;)))</span>
+<span class="nc" id="L712">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.password2&quot;)+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc bnc" id="L713" title="All 2 branches missed.">				if(PasswordsHistoryDB.getInstance().existsPassword(usr.getPassword(),usr.getUserId()))</span>
+<span class="nc" id="L714">					errorText += &quot;- &quot;+prop.getText(&quot;logon.change_password.used_in_history2&quot;)+&quot;.&lt;br/&gt;&quot;;</span>
+<span class="nc" id="L715">				errors.add(&quot;passwordError&quot;, new SimpleError(errorText));</span>
 			}
 			//END kontrola hesla
 		}
 
 		//ak je nastavene heslo na text random, tak sa nahodne vygeneruje
-<span class="pc bpc" id="L726" title="1 of 2 branches missed.">		if (&quot;random&quot;.equals(usr.getPassword()))</span>
+<span class="pc bpc" id="L721" title="1 of 2 branches missed.">		if (&quot;random&quot;.equals(usr.getPassword()))</span>
 		{
 			//vygeneruj heslo
-<span class="nc" id="L729">			String password = Password.generatePassword(5);</span>
-<span class="nc" id="L730">			getRequest().getSession().setAttribute(&quot;randomGeneratedPassword&quot;, password);</span>
-			//PRA: heslo sa este raz hesovalo na riadku priblizne 193: usr.setPassword(PasswordSecurity.calculateHash(usr.getPassword(), usr.getSalt()));
-			//a tu sa hesovalo tiez, cize potom sa nedalo prihlasit
-			//usr.setPasswordPlain(password);
-<span class="nc" id="L734">			usr.setPassword(password);</span>
+<span class="nc" id="L724">			String password = Password.generatePassword(5);</span>
+<span class="nc" id="L725">			getRequest().getSession().setAttribute(&quot;randomGeneratedPassword&quot;, password);</span>
+<span class="nc" id="L726">			usr.setPassword(password);</span>
 		}
 
 		//aby vypisalo hlasku uz pri pokuse o zmenu mailu na taky ktory uz existuje
-<span class="pc bpc" id="L738" title="1 of 2 branches missed.">		if(&quot;cloud&quot;.equals(Constants.getInstallName()) )</span>
+<span class="pc bpc" id="L730" title="1 of 2 branches missed.">		if(&quot;cloud&quot;.equals(Constants.getInstallName()) )</span>
 		{
-<span class="nc" id="L740">			UserDetails userDetails = UsersDB.getUser(usr.getEmail());</span>
-<span class="nc bnc" id="L741" title="All 4 branches missed.">			if(userDetails  != null &amp;&amp; userDetails.getUserId() != usr.getUserId())</span>
+<span class="nc" id="L732">			UserDetails userDetails = UsersDB.getUser(usr.getEmail());</span>
+<span class="nc bnc" id="L733" title="All 4 branches missed.">			if(userDetails  != null &amp;&amp; userDetails.getUserId() != usr.getUserId())</span>
 			{
-<span class="nc" id="L743">				errors.add(&quot;user.email&quot;,new SimpleError(prop.getText(&quot;users.import.email_allready_exists&quot;, usr.getEmail())));</span>
+<span class="nc" id="L735">				errors.add(&quot;user.email&quot;,new SimpleError(prop.getText(&quot;users.import.email_allready_exists&quot;, usr.getEmail())));</span>
 			}
 		}
 
 		//kontrola ci to je vobec email
-<span class="pc bpc" id="L748" title="2 of 4 branches missed.">		if (required.contains(&quot;email&quot;) &amp;&amp; !Tools.isEmail(usr.getEmail()))</span>
-<span class="nc" id="L749">			errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;checkform.title.email&quot;)));</span>
+<span class="pc bpc" id="L740" title="2 of 4 branches missed.">		if (required.contains(&quot;email&quot;) &amp;&amp; !Tools.isEmail(usr.getEmail()))</span>
+<span class="nc" id="L741">			errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;checkform.title.email&quot;)));</span>
 
 		//kontrola ci to je vobec telefonne cislo
-<span class="pc bpc" id="L752" title="3 of 4 branches missed.">		if (required.contains(&quot;phone&quot;) &amp;&amp; !Tools.isPhoneNumber(usr.getPhone()))</span>
-<span class="nc" id="L753">			errors.add(&quot;usr.phone&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.phone&quot;)));</span>
+<span class="pc bpc" id="L744" title="3 of 4 branches missed.">		if (required.contains(&quot;phone&quot;) &amp;&amp; !Tools.isPhoneNumber(usr.getPhone()))</span>
+<span class="nc" id="L745">			errors.add(&quot;usr.phone&quot;, new SimpleError(prop.getText(&quot;components.user.newuser.wrong.phone&quot;)));</span>
 
 
 		//kontrola na existujuci login
-<span class="fc" id="L757">		boolean emailUnique = pageParams.getBooleanValue(&quot;emailUnique&quot;, false);</span>
+<span class="fc" id="L749">		boolean emailUnique = pageParams.getBooleanValue(&quot;emailUnique&quot;, false);</span>
 
-<span class="fc" id="L759">		Connection db_conn = null;</span>
-<span class="fc" id="L760">		PreparedStatement ps = null;</span>
-<span class="fc" id="L761">		ResultSet rs = null;</span>
+<span class="fc" id="L751">		Connection db_conn = null;</span>
+<span class="fc" id="L752">		PreparedStatement ps = null;</span>
+<span class="fc" id="L753">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L764">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L756">			db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L766">			int psCounter = 1;</span>
+<span class="fc" id="L758">			int psCounter = 1;</span>
 
-<span class="fc" id="L768">			String sql = &quot;SELECT user_id FROM  users WHERE login=?&quot;;</span>
-<span class="pc bpc" id="L769" title="1 of 2 branches missed.">			if (emailUnique) sql = &quot;SELECT user_id FROM  users WHERE (login=? OR email=?)&quot;;</span>
-<span class="fc bfc" id="L770" title="All 2 branches covered.">			if (usr.getUserId()&gt;0) sql +=&quot; AND user_id&lt;&gt;?&quot;;</span>
-<span class="fc" id="L771">			ps = db_conn.prepareStatement(sql);</span>
-<span class="fc" id="L772">			ps.setString(psCounter++, usr.getLogin());</span>
-<span class="pc bpc" id="L773" title="1 of 2 branches missed.">			if (emailUnique) ps.setString(psCounter++, usr.getEmail());</span>
-<span class="fc bfc" id="L774" title="All 2 branches covered.">			if (usr.getUserId()&gt;0)  ps.setInt(psCounter++, usr.getUserId());</span>
-<span class="fc" id="L775">			rs = ps.executeQuery();</span>
+<span class="fc" id="L760">			String sql = &quot;SELECT user_id FROM  users WHERE login=?&quot;;</span>
+<span class="pc bpc" id="L761" title="1 of 2 branches missed.">			if (emailUnique) sql = &quot;SELECT user_id FROM  users WHERE (login=? OR email=?)&quot;;</span>
+<span class="fc bfc" id="L762" title="All 2 branches covered.">			if (usr.getUserId()&gt;0) sql +=&quot; AND user_id&lt;&gt;?&quot;;</span>
+<span class="fc" id="L763">			ps = db_conn.prepareStatement(sql);</span>
+<span class="fc" id="L764">			ps.setString(psCounter++, usr.getLogin());</span>
+<span class="pc bpc" id="L765" title="1 of 2 branches missed.">			if (emailUnique) ps.setString(psCounter++, usr.getEmail());</span>
+<span class="fc bfc" id="L766" title="All 2 branches covered.">			if (usr.getUserId()&gt;0)  ps.setInt(psCounter++, usr.getUserId());</span>
+<span class="fc" id="L767">			rs = ps.executeQuery();</span>
 
-<span class="fc bfc" id="L777" title="All 2 branches covered.">			if (rs.next())</span>
+<span class="fc bfc" id="L769" title="All 2 branches covered.">			if (rs.next())</span>
 			{
-<span class="fc" id="L779">				Logger.debug(RegUserAction.class, &quot;RS userId=&quot;+rs.getInt(&quot;user_id&quot;));</span>
+<span class="fc" id="L771">				Logger.debug(RegUserAction.class, &quot;RS userId=&quot;+rs.getInt(&quot;user_id&quot;));</span>
 				//uz existuje
-<span class="pc bpc" id="L781" title="2 of 4 branches missed.">				if (usr.getLogin().equals(usr.getEmail()) || emailUnique)</span>
+<span class="pc bpc" id="L773" title="2 of 4 branches missed.">				if (usr.getLogin().equals(usr.getEmail()) || emailUnique)</span>
 				{
 					//login je ako email, ako login sa asi pouziva email adresa
-<span class="fc" id="L784">					errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;userForm.err.email_in_use&quot;)));</span>
+<span class="fc" id="L776">					errors.add(&quot;user.email&quot;, new SimpleError(prop.getText(&quot;userForm.err.email_in_use&quot;)));</span>
 				}
 				else
 				{
-<span class="nc" id="L788">					errors.add(&quot;user.login&quot;, new SimpleError(prop.getText(&quot;userForm.err.login_in_use&quot;)));</span>
+<span class="nc" id="L780">					errors.add(&quot;user.login&quot;, new SimpleError(prop.getText(&quot;userForm.err.login_in_use&quot;)));</span>
 				}
 			}
 
-<span class="fc" id="L792">			rs.close();</span>
-<span class="fc" id="L793">			ps.close();</span>
-<span class="fc" id="L794">			db_conn.close();</span>
+<span class="fc" id="L784">			rs.close();</span>
+<span class="fc" id="L785">			ps.close();</span>
+<span class="fc" id="L786">			db_conn.close();</span>
 
-<span class="fc" id="L796">			rs = null;</span>
-<span class="fc" id="L797">			ps = null;</span>
-<span class="fc" id="L798">			db_conn = null;</span>
+<span class="fc" id="L788">			rs = null;</span>
+<span class="fc" id="L789">			ps = null;</span>
+<span class="fc" id="L790">			db_conn = null;</span>
 		}
-<span class="nc" id="L800">		catch (Exception ex)</span>
+<span class="nc" id="L792">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L802">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L794">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L808" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L809">					rs.close();</span>
-<span class="pc bpc" id="L810" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L811">					ps.close();</span>
-<span class="pc bpc" id="L812" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L813">					db_conn.close();</span>
+<span class="pc bpc" id="L800" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L801">					rs.close();</span>
+<span class="pc bpc" id="L802" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L803">					ps.close();</span>
+<span class="pc bpc" id="L804" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L805">					db_conn.close();</span>
 			}
-<span class="nc" id="L815">			catch (Exception ex2)</span>
+<span class="nc" id="L807">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L817">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L818">			}</span>
+<span class="nc" id="L809">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L810">			}</span>
 		}
 
-<span class="fc" id="L821">		Logger.debug(RegUserAction.class, &quot;validation koniec, errors=&quot;+errors);</span>
-<span class="fc" id="L822">	}</span>
+<span class="fc" id="L813">		Logger.debug(RegUserAction.class, &quot;validation koniec, errors=&quot;+errors);</span>
+<span class="fc" id="L814">	}</span>
 
 	/**
 	 * Uload fotografie pouzivatela
@@ -827,178 +819,178 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private boolean uploadFileProcedure()
 	{
-<span class="fc" id="L830">		boolean ret = false;</span>
+<span class="fc" id="L822">		boolean ret = false;</span>
 		try
 		{
-<span class="pc bpc" id="L833" title="2 of 4 branches missed.">			if (usr != null &amp;&amp; userImage != null)</span>
+<span class="pc bpc" id="L825" title="2 of 4 branches missed.">			if (usr != null &amp;&amp; userImage != null)</span>
 			{
-<span class="nc" id="L835">				Logger.debug(RegUserAction.class, &quot;uploadFileProcedure, file=&quot;+userImage.getFileName());</span>
+<span class="nc" id="L827">				Logger.debug(RegUserAction.class, &quot;uploadFileProcedure, file=&quot;+userImage.getFileName());</span>
 				//Logger.println(this,&quot;Image uploading...&quot;);
 				//retrieve the file name
-<span class="nc" id="L838">				String fileName = userImage.getFileName().toLowerCase();</span>
+<span class="nc" id="L830">				String fileName = userImage.getFileName().toLowerCase();</span>
 
-<span class="nc bnc" id="L840" title="All 10 branches missed.">				if (fileName != null &amp;&amp; (fileName.endsWith(&quot;.jpg&quot;) || fileName.endsWith(&quot;.jpeg&quot;) || fileName.endsWith(&quot;.gif&quot;) || fileName.endsWith(&quot;.png&quot;)))</span>
+<span class="nc bnc" id="L832" title="All 10 branches missed.">				if (fileName != null &amp;&amp; (fileName.endsWith(&quot;.jpg&quot;) || fileName.endsWith(&quot;.jpeg&quot;) || fileName.endsWith(&quot;.gif&quot;) || fileName.endsWith(&quot;.png&quot;)))</span>
 				{
 					//premenujem subor
-<span class="nc" id="L843">					fileName = usr.getLogin()+ &quot;.jpg&quot;;</span>
+<span class="nc" id="L835">					fileName = usr.getLogin()+ &quot;.jpg&quot;;</span>
 
-<span class="nc" id="L845">					String realPath = null;</span>
+<span class="nc" id="L837">					String realPath = null;</span>
 
-<span class="nc" id="L847">					boolean dirExists = false;</span>
-<span class="nc" id="L848">					String actualDir = Constants.getString(&quot;imagesRootDir&quot;) + &quot;/&quot; + sk.iway.iwcm.Constants.getString(&quot;galleryDirName&quot;) + &quot;/user&quot;;</span>
-<span class="nc" id="L849">					String dirRealPath = Tools.getRealPath(actualDir);</span>
-<span class="nc bnc" id="L850" title="All 2 branches missed.">					if (dirRealPath != null)</span>
+<span class="nc" id="L839">					boolean dirExists = false;</span>
+<span class="nc" id="L840">					String actualDir = Constants.getString(&quot;imagesRootDir&quot;) + &quot;/&quot; + sk.iway.iwcm.Constants.getString(&quot;galleryDirName&quot;) + &quot;/user&quot;;</span>
+<span class="nc" id="L841">					String dirRealPath = Tools.getRealPath(actualDir);</span>
+<span class="nc bnc" id="L842" title="All 2 branches missed.">					if (dirRealPath != null)</span>
 					{
-<span class="nc" id="L852">						File fileDir = new File(dirRealPath);</span>
-<span class="nc bnc" id="L853" title="All 4 branches missed.">						if (fileDir.exists() &amp;&amp; fileDir.isDirectory())</span>
+<span class="nc" id="L844">						File fileDir = new File(dirRealPath);</span>
+<span class="nc bnc" id="L845" title="All 4 branches missed.">						if (fileDir.exists() &amp;&amp; fileDir.isDirectory())</span>
 						{
 
 						}
 						else
 						{
-<span class="nc" id="L859">							dirExists = fileDir.mkdirs();</span>
+<span class="nc" id="L851">							dirExists = fileDir.mkdirs();</span>
 						}
 
-<span class="nc bnc" id="L862" title="All 2 branches missed.">						if (dirExists)</span>
+<span class="nc bnc" id="L854" title="All 2 branches missed.">						if (dirExists)</span>
 						{
-<span class="nc" id="L864">							Logger.println(RegUserAction.class,&quot;Dir created&quot;);</span>
+<span class="nc" id="L856">							Logger.println(RegUserAction.class,&quot;Dir created&quot;);</span>
 						}
 					}
 
-<span class="nc" id="L868">					Prop prop = Prop.getInstance(Constants.getServletContext(), getRequest());</span>
-<span class="nc" id="L869">					Dimension[] dims = GalleryDB.getDimension(actualDir);</span>
+<span class="nc" id="L860">					Prop prop = Prop.getInstance(Constants.getServletContext(), getRequest());</span>
+<span class="nc" id="L861">					Dimension[] dims = GalleryDB.getDimension(actualDir);</span>
 
 					//ak sa jedna o obrazok
-<span class="nc bnc" id="L872" title="All 2 branches missed.">					if (fileName.length() &gt; 4)</span>
+<span class="nc bnc" id="L864" title="All 2 branches missed.">					if (fileName.length() &gt; 4)</span>
 					{
-<span class="nc" id="L874">						realPath = Tools.getRealPath(actualDir+&quot;/&quot;+fileName); //NOSONAR</span>
-<span class="nc bnc" id="L875" title="All 2 branches missed.">						if (realPath != null)</span>
+<span class="nc" id="L866">						realPath = Tools.getRealPath(actualDir+&quot;/&quot;+fileName); //NOSONAR</span>
+<span class="nc bnc" id="L867" title="All 2 branches missed.">						if (realPath != null)</span>
 						{
-<span class="nc" id="L877">							File f = new File(realPath);</span>
-<span class="nc bnc" id="L878" title="All 2 branches missed.">							if (f.exists())</span>
+<span class="nc" id="L869">							File f = new File(realPath);</span>
+<span class="nc bnc" id="L870" title="All 2 branches missed.">							if (f.exists())</span>
 							{
 
 							}
-<span class="nc" id="L882">							Logger.debug(RegUserAction.class, &quot;Saving photo to:&quot;+f.getAbsolutePath());</span>
+<span class="nc" id="L874">							Logger.debug(RegUserAction.class, &quot;Saving photo to:&quot;+f.getAbsolutePath());</span>
 
-<span class="nc" id="L884">							IwcmFsDB.writeFiletoDest(userImage.getInputStream(),f,(int)userImage.getSize());</span>
+<span class="nc" id="L876">							IwcmFsDB.writeFiletoDest(userImage.getInputStream(),f,(int)userImage.getSize());</span>
 
 							//ak existuje zmaz subor o_nazov, lebo by sa to znova updatlo zo stareho
-<span class="nc" id="L887">							File origFile = new File(Tools.getRealPath(actualDir+&quot;/o_&quot;+fileName));</span>
-<span class="nc bnc" id="L888" title="All 2 branches missed.">							if (origFile.exists())</span>
+<span class="nc" id="L879">							File origFile = new File(Tools.getRealPath(actualDir+&quot;/o_&quot;+fileName));</span>
+<span class="nc bnc" id="L880" title="All 2 branches missed.">							if (origFile.exists())</span>
 							{
-<span class="nc" id="L890">								Logger.debug(RegUserAction.class, &quot;Deleting orig file: &quot;+origFile.getAbsolutePath());</span>
-<span class="nc bnc" id="L891" title="All 2 branches missed.">								if(origFile.delete() == false) return false;</span>
+<span class="nc" id="L882">								Logger.debug(RegUserAction.class, &quot;Deleting orig file: &quot;+origFile.getAbsolutePath());</span>
+<span class="nc bnc" id="L883" title="All 2 branches missed.">								if(origFile.delete() == false) return false;</span>
 							}
 
 							//pridaj ho do galerie
-<span class="nc" id="L895">							Logger.debug(RegUserAction.class, &quot;Resizing photo:&quot;+realPath);</span>
-<span class="nc" id="L896">							GalleryDB.resizePictureImpl(dims, realPath, null, prop, GalleryDB.getResizeMode(actualDir));</span>
+<span class="nc" id="L887">							Logger.debug(RegUserAction.class, &quot;Resizing photo:&quot;+realPath);</span>
+<span class="nc" id="L888">							GalleryDB.resizePictureImpl(dims, realPath, null, prop, GalleryDB.getResizeMode(actualDir));</span>
 
-<span class="nc" id="L898">							usr.setPhoto(actualDir+ &quot;/&quot; +fileName);</span>
+<span class="nc" id="L890">							usr.setPhoto(actualDir+ &quot;/&quot; +fileName);</span>
 						}
 					}
 				}
 
-<span class="nc" id="L903">				ret = true;</span>
+<span class="nc" id="L895">				ret = true;</span>
 			}
 
 		}
-<span class="nc" id="L907">		catch (Exception ex)</span>
+<span class="nc" id="L899">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L909">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L910">		}</span>
+<span class="nc" id="L901">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L902">		}</span>
 
-<span class="fc" id="L912">		return (ret);</span>
+<span class="fc" id="L904">		return (ret);</span>
 	}
 
 	private static void copyUserDisabledItems(int originalUserId, int newUserId)
 	{
-<span class="nc" id="L917">		Connection db_conn = null;</span>
-<span class="nc" id="L918">		PreparedStatement ps = null;</span>
-<span class="nc" id="L919">		ResultSet rs = null;</span>
+<span class="nc" id="L909">		Connection db_conn = null;</span>
+<span class="nc" id="L910">		PreparedStatement ps = null;</span>
+<span class="nc" id="L911">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L922">			Map&lt;String, String&gt; permsTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L914">			Map&lt;String, String&gt; permsTable = new Hashtable&lt;&gt;();</span>
 
-<span class="nc" id="L924">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L925">			ps = db_conn.prepareStatement(&quot;SELECT item_name FROM user_disabled_items WHERE user_id=?&quot;);</span>
-<span class="nc" id="L926">			ps.setInt(1, originalUserId);</span>
-<span class="nc" id="L927">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L928" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="nc" id="L916">			db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L917">			ps = db_conn.prepareStatement(&quot;SELECT item_name FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L918">			ps.setInt(1, originalUserId);</span>
+<span class="nc" id="L919">			rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L920" title="All 2 branches missed.">			while (rs.next())</span>
 			{
-<span class="nc" id="L930">				permsTable.put(DB.getDbString(rs, &quot;item_name&quot;), &quot;1&quot;);</span>
+<span class="nc" id="L922">				permsTable.put(DB.getDbString(rs, &quot;item_name&quot;), &quot;1&quot;);</span>
 			}
-<span class="nc" id="L932">			rs.close();</span>
-<span class="nc" id="L933">			ps.close();</span>
+<span class="nc" id="L924">			rs.close();</span>
+<span class="nc" id="L925">			ps.close();</span>
 
-<span class="nc" id="L935">			ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items WHERE user_id=?&quot;);</span>
-<span class="nc" id="L936">			ps.setInt(1, newUserId);</span>
-<span class="nc" id="L937">			ps.execute();</span>
-<span class="nc" id="L938">			ps.close();</span>
+<span class="nc" id="L927">			ps = db_conn.prepareStatement(&quot;DELETE FROM user_disabled_items WHERE user_id=?&quot;);</span>
+<span class="nc" id="L928">			ps.setInt(1, newUserId);</span>
+<span class="nc" id="L929">			ps.execute();</span>
+<span class="nc" id="L930">			ps.close();</span>
 
-<span class="nc" id="L940">			ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
-<span class="nc" id="L941">			ps.setInt(1, newUserId);</span>
+<span class="nc" id="L932">			ps = db_conn.prepareStatement(&quot;INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L933">			ps.setInt(1, newUserId);</span>
 
-<span class="nc" id="L943">			Iterator&lt;String&gt; keys = permsTable.keySet().iterator();</span>
-<span class="nc bnc" id="L944" title="All 2 branches missed.">			while (keys.hasNext())</span>
+<span class="nc" id="L935">			Iterator&lt;String&gt; keys = permsTable.keySet().iterator();</span>
+<span class="nc bnc" id="L936" title="All 2 branches missed.">			while (keys.hasNext())</span>
 			{
-<span class="nc" id="L946">				String itemName = keys.next();</span>
+<span class="nc" id="L938">				String itemName = keys.next();</span>
 
-<span class="nc" id="L948">				ps.setString(2, itemName);</span>
-<span class="nc" id="L949">				ps.execute();</span>
+<span class="nc" id="L940">				ps.setString(2, itemName);</span>
+<span class="nc" id="L941">				ps.execute();</span>
 
-<span class="nc" id="L951">				Logger.debug(RegUserAction.class, &quot;copyUserDisabledItems userId=&quot;+newUserId+&quot; itemName=&quot;+itemName);</span>
-<span class="nc" id="L952">			}</span>
+<span class="nc" id="L943">				Logger.debug(RegUserAction.class, &quot;copyUserDisabledItems userId=&quot;+newUserId+&quot; itemName=&quot;+itemName);</span>
+<span class="nc" id="L944">			}</span>
 
-<span class="nc" id="L954">			ps.close();</span>
+<span class="nc" id="L946">			ps.close();</span>
 
-<span class="nc" id="L956">			db_conn.close();</span>
-<span class="nc" id="L957">			rs = null;</span>
-<span class="nc" id="L958">			ps = null;</span>
-<span class="nc" id="L959">			db_conn = null;</span>
+<span class="nc" id="L948">			db_conn.close();</span>
+<span class="nc" id="L949">			rs = null;</span>
+<span class="nc" id="L950">			ps = null;</span>
+<span class="nc" id="L951">			db_conn = null;</span>
 		}
-<span class="nc" id="L961">		catch (Exception ex)</span>
+<span class="nc" id="L953">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L963">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L955">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L969" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L970">					rs.close();</span>
-<span class="nc bnc" id="L971" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L972">					ps.close();</span>
-<span class="nc bnc" id="L973" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L974">					db_conn.close();</span>
+<span class="nc bnc" id="L961" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L962">					rs.close();</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L964">					ps.close();</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L966">					db_conn.close();</span>
 			}
-<span class="nc" id="L976">			catch (Exception ex2)</span>
+<span class="nc" id="L968">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L978">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L979">			}</span>
+<span class="nc" id="L970">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="nc" id="L971">			}</span>
 		}
-<span class="nc" id="L981">	}</span>
+<span class="nc" id="L973">	}</span>
 
 	public UserDetails getUsr()
 	{
-<span class="fc" id="L985">		return usr;</span>
+<span class="fc" id="L977">		return usr;</span>
 	}
 
 	public void setUser(UserDetails userDetails)
 	{
-<span class="nc" id="L990">		this.usr = userDetails;</span>
-<span class="nc" id="L991">	}</span>
+<span class="nc" id="L982">		this.usr = userDetails;</span>
+<span class="nc" id="L983">	}</span>
 
 	public FileBean getUserImage()
 	{
-<span class="nc" id="L995">		return userImage;</span>
+<span class="nc" id="L987">		return userImage;</span>
 	}
 
 	public void setUserImage(FileBean userImage)
 	{
-<span class="nc" id="L1000">		this.userImage = userImage;</span>
-<span class="nc" id="L1001">	}</span>
+<span class="nc" id="L992">		this.userImage = userImage;</span>
+<span class="nc" id="L993">	}</span>
 
 	/**
 	 * Odosle email o tom, ze sa caka na autorizaciu
@@ -1009,22 +1001,22 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public static boolean sendNotAuthorizedInfoEmail(int userId, String password, int docId, HttpServletRequest request)
 	{
-<span class="nc" id="L1012">		boolean emailSend = false;</span>
+<span class="nc" id="L1004">		boolean emailSend = false;</span>
 		try
 		{
-<span class="nc" id="L1015">			Logger.debug(RegUserAction.class, &quot;sendNotAuthorizedInfoEmail - userId=&quot;+userId);</span>
+<span class="nc" id="L1007">			Logger.debug(RegUserAction.class, &quot;sendNotAuthorizedInfoEmail - userId=&quot;+userId);</span>
 
-<span class="nc" id="L1017">			DocDB docDB = DocDB.getInstance();</span>
-<span class="nc" id="L1018">			DocDetails doc = docDB.getDoc(docId);</span>
+<span class="nc" id="L1009">			DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L1010">			DocDetails doc = docDB.getDoc(docId);</span>
 
-<span class="nc" id="L1020">			return sendNotAuthorizedInfoEmail(userId, password, doc, request);</span>
+<span class="nc" id="L1012">			return sendNotAuthorizedInfoEmail(userId, password, doc, request);</span>
 		}
-<span class="nc" id="L1022">		catch (Exception ex)</span>
+<span class="nc" id="L1014">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1024">			emailSend = false;</span>
-<span class="nc" id="L1025">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1016">			emailSend = false;</span>
+<span class="nc" id="L1017">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
-<span class="nc" id="L1027">		return(emailSend);</span>
+<span class="nc" id="L1019">		return(emailSend);</span>
 	}
 
 	/**
@@ -1036,64 +1028,64 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public static boolean sendNotAuthorizedInfoEmail(int userId, String password, DocDetails doc, HttpServletRequest request)
 	{
-<span class="fc" id="L1039">		boolean emailSend = false;</span>
+<span class="fc" id="L1031">		boolean emailSend = false;</span>
 		try
 		{
-<span class="fc" id="L1042">			Logger.debug(RegUserAction.class, &quot;sendNotAuthorizedInfoEmail - userId=&quot;+userId);</span>
+<span class="fc" id="L1034">			Logger.debug(RegUserAction.class, &quot;sendNotAuthorizedInfoEmail - userId=&quot;+userId);</span>
 
-<span class="fc" id="L1044">			UserDetails uform = UsersDB.getUser(userId);</span>
+<span class="fc" id="L1036">			UserDetails uform = UsersDB.getUser(userId);</span>
 
-<span class="pc bpc" id="L1046" title="3 of 6 branches missed.">			if (doc!=null &amp;&amp; uform.getEmail().length() &gt; 5 &amp;&amp; uform.getEmail().indexOf('@') &gt; 1)</span>
+<span class="pc bpc" id="L1038" title="3 of 6 branches missed.">			if (doc!=null &amp;&amp; uform.getEmail().length() &gt; 5 &amp;&amp; uform.getEmail().indexOf('@') &gt; 1)</span>
 			{
-<span class="fc" id="L1048">				String body = doc.getData();</span>
-<span class="fc" id="L1049">				String subject = doc.getTitle();</span>
+<span class="fc" id="L1040">				String body = doc.getData();</span>
+<span class="fc" id="L1041">				String subject = doc.getTitle();</span>
 
 				//	replacni !BR! za \n
-<span class="fc" id="L1052">				body = Tools.replace(body, &quot;!BR!&quot;, &quot;\n&quot;);</span>
-<span class="fc" id="L1053">				body = Tools.replace(body, &quot;!LOGIN_NAME!&quot;, uform.getLogin());</span>
-<span class="fc" id="L1054">				body = Tools.replace(body, &quot;!LOGGED_USER_LOGIN!&quot;, uform.getLogin());</span>
+<span class="fc" id="L1044">				body = Tools.replace(body, &quot;!BR!&quot;, &quot;\n&quot;);</span>
+<span class="fc" id="L1045">				body = Tools.replace(body, &quot;!LOGIN_NAME!&quot;, uform.getLogin());</span>
+<span class="fc" id="L1046">				body = Tools.replace(body, &quot;!LOGGED_USER_LOGIN!&quot;, uform.getLogin());</span>
 
-<span class="pc bpc" id="L1056" title="1 of 2 branches missed.">				if(!Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+<span class="pc bpc" id="L1048" title="1 of 2 branches missed.">				if(!Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
 				{
-<span class="nc" id="L1058">					body = Tools.replace(body, &quot;!PASSWORD!&quot;, uform.getPassword());</span>
-<span class="nc" id="L1059">					body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, uform.getPassword());</span>
+<span class="nc" id="L1050">					body = Tools.replace(body, &quot;!PASSWORD!&quot;, uform.getPassword());</span>
+<span class="nc" id="L1051">					body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, uform.getPassword());</span>
 				}
-<span class="pc bpc" id="L1061" title="1 of 2 branches missed.">				else if(Tools.isNotEmpty(password))</span>
+<span class="pc bpc" id="L1053" title="1 of 2 branches missed.">				else if(Tools.isNotEmpty(password))</span>
 				{
-<span class="fc" id="L1063">					body = Tools.replace(body, &quot;!PASSWORD!&quot;, password);</span>
-<span class="fc" id="L1064">					body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, password);</span>
+<span class="fc" id="L1055">					body = Tools.replace(body, &quot;!PASSWORD!&quot;, password);</span>
+<span class="fc" id="L1056">					body = Tools.replace(body, &quot;!LOGGED_USER_PASSWORD!&quot;, password);</span>
 				}
 
-<span class="fc" id="L1067">				body = Tools.replace(body, &quot;!TITLE!&quot;, uform.getTitle());</span>
-<span class="fc" id="L1068">				body = Tools.replace(body, &quot;!NAME!&quot;, uform.getFullName());</span>
-<span class="fc" id="L1069">				body = Tools.replace(body, &quot;!FIRST_NAME!&quot;, uform.getFirstName());</span>
-<span class="fc" id="L1070">				body = Tools.replace(body, &quot;!LAST_NAME!&quot;, uform.getLastName());</span>
-<span class="fc" id="L1071">				body = Tools.replace(body, &quot;!LOGGED_USER_NAME!&quot;, uform.getFullName());</span>
+<span class="fc" id="L1059">				body = Tools.replace(body, &quot;!TITLE!&quot;, uform.getTitle());</span>
+<span class="fc" id="L1060">				body = Tools.replace(body, &quot;!NAME!&quot;, uform.getFullName());</span>
+<span class="fc" id="L1061">				body = Tools.replace(body, &quot;!FIRST_NAME!&quot;, uform.getFirstName());</span>
+<span class="fc" id="L1062">				body = Tools.replace(body, &quot;!LAST_NAME!&quot;, uform.getLastName());</span>
+<span class="fc" id="L1063">				body = Tools.replace(body, &quot;!LOGGED_USER_NAME!&quot;, uform.getFullName());</span>
 
-<span class="fc" id="L1073">				body = Tools.replace(body, &quot;!LOGGED_USER_EMAIL!&quot;, uform.getEmail());</span>
-<span class="fc" id="L1074">				body = Tools.replace(body, &quot;!LOGGED_USER_COMPANY!&quot;, uform.getCompany());</span>
-<span class="fc" id="L1075">				body = Tools.replace(body, &quot;!LOGGED_USER_CITY!&quot;, uform.getCity());</span>
-<span class="fc" id="L1076">				body = Tools.replace(body, &quot;!LOGGED_USER_COUNTRY!&quot;, uform.getCountry());</span>
-<span class="fc" id="L1077">				body = Tools.replace(body, &quot;!LOGGED_USER_PHONE!&quot;, uform.getPhone());</span>
-<span class="fc" id="L1078">				body = Tools.replace(body, &quot;!LOGGED_USER_ZIP!&quot;, uform.getPSC());</span>
-<span class="fc" id="L1079">				body = Tools.replace(body, &quot;!LOGGED_USER_ID!&quot;, Integer.toString(uform.getUserId()));</span>
-<span class="fc" id="L1080">				String authorizeHash  = UsersDB.getGenerateAuthorizeHash(uform.getUserId());</span>
-<span class="pc bpc" id="L1081" title="1 of 2 branches missed.">				String hash = authorizeHash != null ? authorizeHash : &quot;&quot;;</span>
-<span class="fc" id="L1082">				body = Tools.replace(body, &quot;!AUTHORIZE_HASH!&quot;, hash);</span>
+<span class="fc" id="L1065">				body = Tools.replace(body, &quot;!LOGGED_USER_EMAIL!&quot;, uform.getEmail());</span>
+<span class="fc" id="L1066">				body = Tools.replace(body, &quot;!LOGGED_USER_COMPANY!&quot;, uform.getCompany());</span>
+<span class="fc" id="L1067">				body = Tools.replace(body, &quot;!LOGGED_USER_CITY!&quot;, uform.getCity());</span>
+<span class="fc" id="L1068">				body = Tools.replace(body, &quot;!LOGGED_USER_COUNTRY!&quot;, uform.getCountry());</span>
+<span class="fc" id="L1069">				body = Tools.replace(body, &quot;!LOGGED_USER_PHONE!&quot;, uform.getPhone());</span>
+<span class="fc" id="L1070">				body = Tools.replace(body, &quot;!LOGGED_USER_ZIP!&quot;, uform.getPSC());</span>
+<span class="fc" id="L1071">				body = Tools.replace(body, &quot;!LOGGED_USER_ID!&quot;, Integer.toString(uform.getUserId()));</span>
+<span class="fc" id="L1072">				String authorizeHash  = UsersDB.getGenerateAuthorizeHash(uform.getUserId());</span>
+<span class="pc bpc" id="L1073" title="1 of 2 branches missed.">				String hash = authorizeHash != null ? authorizeHash : &quot;&quot;;</span>
+<span class="fc" id="L1074">				body = Tools.replace(body, &quot;!AUTHORIZE_HASH!&quot;, hash);</span>
 
 				//uprav relativne cesty
-<span class="fc" id="L1085">				body = SendMail.createAbsolutePath(body, request);</span>
+<span class="fc" id="L1077">				body = SendMail.createAbsolutePath(body, request);</span>
 
 				//String body2 = new String(body.getBytes(&quot;windows-1250&quot;));
-<span class="fc" id="L1088">				emailSend = SendMail.send(doc.getAuthorName(), doc.getAuthorEmail(), uform.getEmail(), subject, body);</span>
+<span class="fc" id="L1080">				emailSend = SendMail.send(doc.getAuthorName(), doc.getAuthorEmail(), uform.getEmail(), subject, body);</span>
 			}
 		}
-<span class="nc" id="L1091">		catch (Exception ex)</span>
+<span class="nc" id="L1083">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L1093">			emailSend = false;</span>
-<span class="nc" id="L1094">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L1095">		}</span>
-<span class="fc" id="L1096">		return(emailSend);</span>
+<span class="nc" id="L1085">			emailSend = false;</span>
+<span class="nc" id="L1086">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1087">		}</span>
+<span class="fc" id="L1088">		return(emailSend);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

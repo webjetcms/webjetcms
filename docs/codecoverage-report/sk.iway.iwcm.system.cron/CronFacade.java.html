@@ -19,16 +19,21 @@ import sk.iway.iwcm.system.cluster.ClusterRefresher;
  *@created      Date: 9.7.2010 13:14:18
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-<span class="fc" id="L22">public class CronFacade</span>
+@SuppressWarnings(&quot;java:S6548&quot;)
+public class CronFacade
 {
-<span class="fc" id="L24">	private static final CronFacade instance = new CronFacade();</span>
+<span class="fc" id="L25">	private static final CronFacade INSTANCE = new CronFacade();</span>
 	private Scheduler schedulerCron;
 	private TaskSource source;
-<span class="fc" id="L27">	private volatile boolean running = false;</span>
+<span class="fc" id="L28">	private volatile boolean running = false;</span>
+
+<span class="fc" id="L30">	private CronFacade() {</span>
+		//singleton
+<span class="fc" id="L32">	}</span>
 
 	public static CronFacade getInstance()
 	{
-<span class="fc" id="L31">		return instance;</span>
+<span class="fc" id="L36">		return INSTANCE;</span>
 	}
 
 	/**
@@ -36,15 +41,15 @@ import sk.iway.iwcm.system.cluster.ClusterRefresher;
 	 */
 	public static CronFacade getInstance(boolean restart)
 	{
-<span class="nc bnc" id="L39" title="All 2 branches missed.">		if (restart)</span>
-<span class="nc" id="L40">			instance.start();</span>
-<span class="nc" id="L41">		return instance;</span>
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">		if (restart)</span>
+<span class="fc" id="L45">			INSTANCE.start();</span>
+<span class="fc" id="L46">		return INSTANCE;</span>
 	}
 
 	public void setTaskSource(TaskSource source)
 	{
-<span class="fc" id="L46">		this.source = source;</span>
-<span class="fc" id="L47">	}</span>
+<span class="fc" id="L51">		this.source = source;</span>
+<span class="fc" id="L52">	}</span>
 
 	/**
 	 * Causes cron4j scheduler to start the scheduling thread, executing tasks loaded from {@link TaskSource}.
@@ -55,45 +60,45 @@ import sk.iway.iwcm.system.cluster.ClusterRefresher;
 	 */
 	public synchronized void start()
 	{
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">		if (source == null)</span>
-<span class="nc" id="L59">			throw new IllegalStateException(&quot;Cron's task source not set. Please call setTaskSource() prior to calling start()&quot;);</span>
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">		if (source == null)</span>
+<span class="nc" id="L64">			throw new IllegalStateException(&quot;Cron's task source not set. Please call setTaskSource() prior to calling start()&quot;);</span>
 
 		try
 		{
-<span class="fc" id="L63">			stop();</span>
+<span class="fc" id="L68">			stop();</span>
 
-<span class="fc" id="L65">			schedulerCron = new Scheduler();</span>
+<span class="fc" id="L70">			schedulerCron = new Scheduler();</span>
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">			for(CronTask task : source.getTasks())</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">			for(CronTask task : source.getTasks())</span>
 			{
-<span class="fc bfc" id="L69" title="All 2 branches covered.">				if(task.isEnableTask() == false) continue;</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">				if(task.isEnableTask() == false) continue;</span>
 
 				try
 				{
-<span class="fc" id="L73">					Class&lt;?&gt; clazz = task.receiveClazz();</span>
-<span class="fc" id="L74">					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task.receiveArgs(),task.getAudit()));</span>
-<span class="fc" id="L75">					Logger.debug(WebjetDatabaseTaskSource.class, String.format(&quot;Cron task started {%s}: %s %s, with pattern %s&quot;, task.getId(), clazz.getName(), task.getParams(), task.receiveCronPattern()));</span>
+<span class="fc" id="L78">					Class&lt;?&gt; clazz = task.receiveClazz();</span>
+<span class="fc" id="L79">					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task.receiveArgs(),task.getAudit(), task.getId()));</span>
+<span class="fc" id="L80">					Logger.debug(WebjetDatabaseTaskSource.class, String.format(&quot;Cron task started {%s}: %s %s, with pattern %s&quot;, task.getId(), clazz.getName(), task.getParams(), task.receiveCronPattern()));</span>
 				}
-<span class="nc" id="L77">				catch (Exception e)</span>
+<span class="fc" id="L82">				catch (Exception e)</span>
 				{
-<span class="nc" id="L79">					sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L80">					sk.iway.iwcm.Logger.println(CronFacade.class, &quot;Cron ERROR &quot; + e.getMessage());</span>
-<span class="fc" id="L81">				}</span>
-<span class="fc" id="L82">			}</span>
+<span class="fc" id="L84">					sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L85">					sk.iway.iwcm.Logger.println(CronFacade.class, &quot;Cron ERROR &quot; + e.getMessage());</span>
+<span class="fc" id="L86">				}</span>
+<span class="fc" id="L87">			}</span>
 
-<span class="fc" id="L84">			schedulerCron.start();</span>
+<span class="fc" id="L89">			schedulerCron.start();</span>
 
-<span class="fc" id="L86">			running = true;</span>
-<span class="fc" id="L87">			sk.iway.iwcm.Logger.debug(CronFacade.class, &quot;Cron started!&quot;);</span>
-<span class="fc" id="L88">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Cron started!&quot;, -1, -1);</span>
+<span class="fc" id="L91">			running = true;</span>
+<span class="fc" id="L92">			sk.iway.iwcm.Logger.debug(CronFacade.class, &quot;Cron started!&quot;);</span>
+<span class="fc" id="L93">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Cron started!&quot;, -1, -1);</span>
 		}
-<span class="nc" id="L90">		catch (Exception e)</span>
+<span class="nc" id="L95">		catch (Exception e)</span>
 		{
-<span class="nc" id="L92">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L93">			sk.iway.iwcm.Logger.println(CronFacade.class, &quot;Cron start error: &quot;+e.getMessage());</span>
-<span class="nc" id="L94">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Cron start error: &quot;+e.getMessage(), -1, -1);</span>
-<span class="fc" id="L95">		}</span>
-<span class="fc" id="L96">	}</span>
+<span class="nc" id="L97">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L98">			sk.iway.iwcm.Logger.println(CronFacade.class, &quot;Cron start error: &quot;+e.getMessage());</span>
+<span class="nc" id="L99">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Cron start error: &quot;+e.getMessage(), -1, -1);</span>
+<span class="fc" id="L100">		}</span>
+<span class="fc" id="L101">	}</span>
 
 	/**
 	 * Stop the scheduling thread of cron4j, causing the scheduling process to cease.
@@ -101,21 +106,21 @@ import sk.iway.iwcm.system.cluster.ClusterRefresher;
 	 */
 	public synchronized void stop()
 	{
-<span class="fc bfc" id="L104" title="All 4 branches covered.">		if (schedulerCron != null &amp;&amp; running)</span>
+<span class="fc bfc" id="L109" title="All 4 branches covered.">		if (schedulerCron != null &amp;&amp; running)</span>
 		{
-<span class="fc" id="L106">			sk.iway.iwcm.Logger.println(CronFacade.class, &quot;Cron stop requested&quot;);</span>
-<span class="fc" id="L107">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Cron stop requested&quot;, -1, -1);</span>
-<span class="fc" id="L108">			schedulerCron.stop();</span>
+<span class="fc" id="L111">			sk.iway.iwcm.Logger.println(CronFacade.class, &quot;Cron stop requested&quot;);</span>
+<span class="fc" id="L112">			Adminlog.add(Adminlog.TYPE_CRON, &quot;Cron stop requested&quot;, -1, -1);</span>
+<span class="fc" id="L113">			schedulerCron.stop();</span>
 		}
-<span class="fc" id="L110">		running = false;</span>
-<span class="fc" id="L111">	}</span>
+<span class="fc" id="L115">		running = false;</span>
+<span class="fc" id="L116">	}</span>
 
 	/**
 	 * Launch a cron task OUTSIDE of cron environment, in a separate thread
 	 */
 	public synchronized void runSimpleTaskOnce(CronTask task) throws ClassNotFoundException
 	{
-<span class="fc" id="L118">		new Thread(new RunnableWrapper(task.receiveClazz(), task.receiveArgs(), task.getAudit())).start();</span>
-<span class="fc" id="L119">	}</span>
+<span class="fc" id="L123">		new Thread(new RunnableWrapper(task.receiveClazz(), task.receiveArgs(), task.getAudit(), task.getId())).start();</span>
+<span class="fc" id="L124">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

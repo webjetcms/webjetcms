@@ -3,13 +3,13 @@ package sk.iway.iwcm.components.reservation.jpa;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.reservation.rest.ReservationService;
 import sk.iway.iwcm.i18n.Prop;
@@ -40,6 +40,7 @@ public class ReservationEditorFields {
     //Hidden field, we just must know
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
+        title = "&nbsp;",
         hiddenEditor = true,
         hidden = true
     )
@@ -66,7 +67,8 @@ public class ReservationEditorFields {
         title = "reservation.reservations.info_title",
         visible = false,
         sortAfter = "dateTo",
-        tab = "basic"
+        tab = "basic",
+        className = "wrap"
     )
     private String infoLabel1;
 
@@ -81,7 +83,7 @@ public class ReservationEditorFields {
 
     @DataTableColumn(
         inputType = DataTableColumnType.RADIO,
-        title = "[[#{components.user.newuser.sexMale}]]",
+        title = "reservation.reservations.status",
         tab = "acceptation",
         editor = {
             @DataTableColumnEditor(
@@ -100,7 +102,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXTAREA,
         title = "reservation.reservations.info_title",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        className = "wrap"
     )
     private String infoLabel2;
 
@@ -113,6 +116,7 @@ public class ReservationEditorFields {
             @DataTableColumnEditor(
                 attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "reservation.reservations.reservation_object_times"),
+                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
                 }
             )
         }
@@ -123,7 +127,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="dayfull.tu",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        editor = @DataTableColumnEditor( attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled"))
     )
     private String reservationTimeRangeB;
 
@@ -131,7 +136,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="dayfull.we",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        editor = @DataTableColumnEditor( attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled"))
     )
     private String reservationTimeRangeC;
 
@@ -139,7 +145,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="dayfull.th",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        editor = @DataTableColumnEditor( attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled"))
     )
     private String reservationTimeRangeD;
 
@@ -147,7 +154,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="dayfull.fr",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        editor = @DataTableColumnEditor( attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled"))
     )
     private String reservationTimeRangeE;
 
@@ -155,7 +163,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="dayfull.sa",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        editor = @DataTableColumnEditor( attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled"))
     )
     private String reservationTimeRangeF;
 
@@ -163,7 +172,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXT,
         title="dayfull.su",
         visible = false,
-        tab = "basic"
+        tab = "basic",
+        editor = @DataTableColumnEditor( attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled"))
     )
     private String reservationTimeRangeG;
 
@@ -173,7 +183,7 @@ public class ReservationEditorFields {
         hidden = true,
         editor = { @DataTableColumnEditor(
             attr = {
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/reservation/reservation_object_price?objectId={reservationObjectId}"),
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/reservation/reservation-object-price?object-id={reservationObjectId}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,import,celledit,remove"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false")
@@ -182,7 +192,7 @@ public class ReservationEditorFields {
     })
     private List<ReservationObjectPriceEntity> objectPrices;
 
-    public void fromReservationEntity(ReservationEntity originalEntity, ProcessItemAction action, ReservationObjectRepository ror, HttpServletRequest request) {
+    public void fromReservationEntity(ReservationEntity originalEntity, ProcessItemAction action, HttpServletRequest request) {
 
         if(action != ProcessItemAction.GETALL) {
             //Set info label
@@ -193,7 +203,6 @@ public class ReservationEditorFields {
         if(action == ProcessItemAction.CREATE) {
             //Logged user
             Identity user = UsersDB.getCurrentUser(request);
-
             originalEntity.setName(user.getFirstName());
             originalEntity.setSurname(user.getLastName());
             originalEntity.setEmail(user.getEmail());
@@ -205,7 +214,7 @@ public class ReservationEditorFields {
             reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(8, 0);
             reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(16, 0);
 
-            //Set default reservation date on tomorow
+            //Set default reservation date on tomorrow
             Calendar cld = Calendar.getInstance();
             cld.setTime(new Date());
             cld.add(Calendar.DAY_OF_MONTH, 1);
@@ -217,54 +226,42 @@ public class ReservationEditorFields {
             reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());
         }
 
-        Integer reservationObjectId = originalEntity.getReservationObjectId();
-        if(reservationObjectId != null) {
-            try {
-                Optional<ReservationObjectEntity> selected = ror.findById(reservationObjectId.longValue());
-                if(selected.isPresent()) {
-                    selectedReservation = selected.get().getName();
-                    if(selected.get().getPassword() != null && !selected.get().getPassword().isEmpty()) needPasswordToDelete = true;
-                    else needPasswordToDelete = false;
-                }
-            } catch (Exception ex) {}
+        ReservationObjectEntity selected = originalEntity.getReservationObjectForReservation();
+        if(selected != null) {
+            selectedReservation = selected.getName();
+            if(selected.getPassword() != null && selected.getPassword().isEmpty() == false) needPasswordToDelete = Boolean.TRUE;
+            else needPasswordToDelete = Boolean.FALSE;
         }
 
         originalEntity.setEditorFields(this);
     }
 
-    public void toReservationEntity(ReservationEntity originalEntity, ReservationObjectEntity reservationObject, ReservationRepository rr,
-    List<ReservationObjectTimesEntity> reservationObjectTimes, List<ReservationEntity> otherReservations, HttpServletRequest request) {
+    public void toReservationEntity(ReservationEntity originalEntity, ReservationRepository rr, HttpServletRequest request, boolean skipPrepare) {
         //Set domain id for new entity
         if(originalEntity.getDomainId() == null) originalEntity.setDomainId(CloudToolsForCore.getDomainId());
 
-        String error = null;
-        ReservationService reservationService = new ReservationService();
-        reservationService.prepareReservationToValidation(originalEntity, reservationObject.getReservationForAllDay());
+        ReservationObjectEntity reservationObject = originalEntity.getReservationObjectForReservation();
 
-        //If reservationObject can be reservate only for whole day, we dont need to check time range (time range is set automatically)
-        if(!reservationObject.getReservationForAllDay()) {
+        String error = null;
+        ReservationService reservationService = new ReservationService(Prop.getInstance(request));
+        if(skipPrepare == false)
+            reservationService.prepareReservationToValidation(originalEntity, Tools.isTrue(reservationObject.getReservationForAllDay()) );
+
+        //If reservationObject can be reserve only for whole day, we dont need to check time range (time range is set automatically)
+        if(Tools.isFalse(reservationObject.getReservationForAllDay())) {
             //In this case we can select even time, so we need check time validity
-            error = reservationService.checkReservationTimeRangeValidity(originalEntity, reservationObject, reservationObjectTimes);
+            error = reservationService.checkReservationTimeRangeValidity(originalEntity, reservationObject);
             //Check if error was returned
             if(error != null) reservationService.throwError(error);
         }
 
-        //Validate reseravtion range
-        error = reservationService.checkReservationOverlapingValidity(originalEntity, reservationObject, rr);
+        //Validate reservation range
+        error = reservationService.checkReservationOverlappingValidity(originalEntity, reservationObject, rr);
         if(error != null) reservationService.throwError(error);
 
         //Now decide if reservation need acceptation or not
-        originalEntity.setAccepted(true);
-        if(reservationObject.getMustAccepted()) {
-            if(reservationObject.getEmailAccepter() != null) {
-                Identity loggedUser = UsersDB.getCurrentUser(request);
-                if(!loggedUser.getEmail().equals(reservationObject.getEmailAccepter())) {
-                    //Set to null, it means waiting for acceptation
-                    originalEntity.setAccepted(null);
-                    //Send mail
-                    reservationService.sendAcceptationEmail(originalEntity, reservationObject, request);
-                }
-            }
+        if(ReservationService.acceptation(originalEntity, request) == false)  {
+            // !! Send mail - > in after save because we dont have ID yet
         }
     }
 }

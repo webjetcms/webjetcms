@@ -6,7 +6,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('docatr-zakladne testy', async ({I, DataTables}) => {
+Scenario('docatr-zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/admin/v9/webpages/attributes/");
     await DataTables.baseTest({
         dataTable: 'attributesDataTable',

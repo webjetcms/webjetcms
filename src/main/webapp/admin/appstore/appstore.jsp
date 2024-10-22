@@ -21,6 +21,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 
 	int docId = Tools.getIntValue(Tools.getRequestParameter(request, "docId"), -1);
 	int groupId = Tools.getIntValue(Tools.getRequestParameter(request, "groupId"), -1);
+	String title = Tools.getRequestParameter(request, "title");
 
 %><!DOCTYPE html>
 <html>
@@ -148,9 +149,8 @@ $("document").ready(function()
 		$(".store .app").hide();
 
 		// zobrazim app podla premennej app
-	//$(".promoApp, .block-header").fadeOut();
+		//$(".promoApp, .block-header").fadeOut();
 		$(".menu,.promoApp, .block-header").fadeOut(function(){'fast',	$(".store").find("." + app).fadeIn();});
-
 
 		activeDetail = $(this).data("app-action");
 		// pre li nastavim classu selected
@@ -223,7 +223,7 @@ function componentClick(componentName, width, height)
 		height = 330;
 	}
 
-  	var url = '/components/'+componentName+'/editor_component.jsp?docId=<%=docId%>&groupId=<%=groupId%>';
+  	var url = '/components/'+componentName+'/editor_component.jsp?docId=<%=docId%>&groupId=<%=groupId%>&title='+encodeURIComponent('<%=title%>');
   	if(componentName.indexOf("/")==0) url = componentName;
   	window.location.href = url;
 }
@@ -237,17 +237,23 @@ function componentClick(componentName, width, height)
 		text-align: center;
 	}
 	div.menu-app .fa-icon {
-		font-size: 40px;
+		font-size: 42px;
+		line-height: 42px;
 		vertical-align: middle;
-		padding-top: 14px;
+		padding: 4px;
+		margin: 0px;
 	}
 	div.promoBox .fa-icon {
 		font-size: 52px;
-		line-height: 60px;
+		line-height: 52px;
+		padding: 4px;
+		margin: 0px;
 	}
 	div.app-info .fa-icon {
 		font-size: 60px;
-		line-height: 68px;
+		line-height: 60px;
+		padding: 4px;
+		margin: 0px;
 	}
 </style>
 
@@ -301,7 +307,7 @@ function componentClick(componentName, width, height)
 				<%
 				for (AppBean app : appsList)
 				{
-					if (!appstorePromoList.contains(app.getComponentClickAction()))
+					if (!appstorePromoList.contains(app.getComponentClickAction()) && !appstorePromoList.contains(app.getItemKey()))
 					{
 						continue;
 					}

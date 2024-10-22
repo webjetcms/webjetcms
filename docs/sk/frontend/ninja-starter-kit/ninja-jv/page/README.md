@@ -13,6 +13,7 @@
 | ${ninja.page.title} | *String* | Titulok stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke (```Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero```) |
 | ${ninja.page.perex} | *String* | Perex stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
 | ${ninja.page.perexPlace} | *String* | Perex miesto stránky s nahradenou medzerou za ```&nbsp;``` entitu po spojke |
+| ${ninja.abVariant} | *String* | Identifikátor reprezentujúci verziu stránka vo forme znaku a/b |
 
 !>**Poznámka**: náhradu medzery po spojke za ```&nbsp;``` entitu je možné nastaviť v konfiguračnej premennej ```ninjaNbspReplaceRegex```. Na prvom riadku je regex výraz, na druhom je text náhrady.
 
@@ -58,7 +59,7 @@ Použité v :ghost:<code>head.jsp</code>
 ```
 
 ## Url adresa *String*
-Url adresa webovej stránky bez parametrov vyskladaná z `${ninja.page.urlDomain}` + `${ninja.page.urlPath}`.
+Url adresa webovej stránky bez parametrov skladaná z `${ninja.page.urlDomain}` + `${ninja.page.urlPath}`.
 
 ```java
 ${ninja.page.url}
@@ -119,7 +120,7 @@ Použité v :ghost:<code>debug-info.jsp</code>
 ```
 
 ## Nastavenie indexovania *String*
-Ak má webová stranka zaškrtnuté `Prehľadávateľné` v záložke Rozšírené údaje, tak vrati hodnotu `index, follow`, ak nie tak `nofollow`. Hodnotu zaškrtnutia vracia metóda :carousel_horse: `isSearchable()`.
+Ak má webová stránka zaškrtnuté `Prehľadávateľné` v záložke Rozšírené údaje, tak vráti hodnotu `index, follow`, ak nie tak `nofollow`. Hodnotu zaškrtnutia vracia metóda :carousel_horse: `isSearchable()`.
 
 ```java
 ${ninja.page.robots}

@@ -25,7 +25,8 @@ public class DatabaseDeleteBean {
 
     @DataTableColumn(
             inputType = DataTableColumnType.ID,
-            title = "components.memory_cleanup.id"
+            title = "components.memory_cleanup.id",
+            filter = false
     )
     private Long id;
 

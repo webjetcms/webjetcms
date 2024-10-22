@@ -15,4 +15,7 @@ public @interface WebjetAppStore {
     String galleryImages() default "";
     String domainName() default "";
     boolean commonSettings() default true;
+    boolean[] custom() default {};
+    String itemKey() default "";
+    String componentPath() default ""; //If this APP is for old JSP components enter path to JSP file, eg. /components/gallery/gallery.jsp
 }

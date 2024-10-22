@@ -1,6 +1,6 @@
 # List of reservations
 
-The "Bookings" application includes a "Bookings List" node that allows you to create/edit/delete bookings, as well as import them from an Excel file and export them to an Excel/CSV file (or even print them immediately when exporting). The list also contains 3 buttons for approving/rejecting reservations, see section [Approval of reservations](#schvaľovanie-rezervácií).
+The "Bookings" application includes a "Bookings List" node that allows you to create/edit/delete bookings, as well as import them from an Excel file and export them to an Excel/CSV file (or even print them immediately when exporting). The list also contains 3 buttons to approve/reject/reset the booking, see section [Approval of reservations](#schvaľovanie-rezervácií).
 
 ![](reservation-datatable.png)
 
@@ -12,15 +12,22 @@ The "Basic" tab, as the name suggests, contains basic information about the rese
 
 ![](reservation-editor_basic_tab_1.png)
 
-The tab also contains a date selection from/to and a time selection from/to. There is one important thing to note about this selection. If you select days from 01.01.2022 to 03.01.2022 between 08:00 and 16:00, it does not mean that the booking starts on 01.01.2022 at 08:00 and lasts until 03.01.2022-16:00 and everything in that range is booked. NO. With these selected values, it means in practice that you book this reservation object from 08:00 to 16:00 for each day separately. The reason for this is simple, this way you can book an object at a specific time for multiple days without having to book the entire interval. If the booking interval for the object is set from 05:00 to 20:00, only the specified time interval is booked for each day and the rest of the interval is not booked, even if the booking lasts for example 3 days. Attention, if a booking object can be booked ONLY for the whole day [more info](../reservation-objects/README.md) the time selection option will be hidden and only the date selection in the from/to interval will be possible. In this case, the object is booked from 14:00 on the first day to 10:00 on the last day.
+The tab also contains a date selection from/to and a time selection from/to. There is one important thing to remember about this selection. If you select the days from 01/01/2022 to 03/01/2022 between 08:00 and 16:00, it does not mean that the booking starts on 01/01/2022 at 08:00 and lasts until 03/01/2022 at 16:00 and everything in that range is booked. NO. With these selected values, it means in practice that you book this reservation object from 08:00 to 16:00 for each day separately. The reason for this is simple, this way you can book an object at a specific time for multiple days without having to book the entire interval. If the booking interval for the object is set from 05:00 to 20:00, only the specified time interval is booked for each day and the rest of the interval is not booked, even if the booking lasts for example 3 days.
+
+**Notice**if the reservation object can be reserved [ONLY for the whole day](../reservation-objects/README.md) the following options will be hidden and unavailable:
+- time selection
+- an overview of the booking intervals of the facility for individual days
 
 ![](reservation-editor_basic_tab_2.png)
 
-Toggle "Show validity of reservation being created ?" when selected, reveals a text box informing you of the validity of the reservation. This means whether or not a reservation for the selected object can be created in the given range. More information about the possible states in this field is explained in the section [Validation of reservations](#validácia-rezervácií). Also, this field status is refreshed whenever the date, time or booking object is changed. If the reservation is valid the border of the text field turns green and if the reservation is not valid it turns red.
+Switch **Show the validity of the reservation being created ?** When selected, a text box will be revealed informing you of the validity of the reservation. This means whether or not a reservation for the selected object can be created in the given range. More information about the possible states in this field is explained in the section [Validation of reservations](#validácia-rezervácií). If the reservation is valid, the border of the text box will turn green and if the reservation is not valid, it will turn red.
+
+**Booking price** displays the current price of the booking being created. The price depends on the selected reservation object, the reservation interval and the special prices set for the reservation object.
+The booking status and the price of the reservation are updated whenever the date, time or reservation object is changed.
 
 ![](reservation-editor_basic_tab_3.png)
 
-At the bottom of the card you can see an overview with booking times for each day of the week. These times are set according to the currently selected booking object. This is a help when creating/editing a reservation if you don't remember exactly when a particular reservation object can be booked for a particular day of the week.
+At the bottom of the tab, you can see an overview with the booking intervals for each day of the week. These times are set according to the currently selected booking object. This is a help when creating/editing a reservation if you don't remember exactly when a particular reservation object can be booked for a particular day of the week.
 
 ![](reservation-editor_basic_tab_4.png)
 

@@ -49,52 +49,54 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableAsync
 //@EnableJpaRepositories
 //@EnableTransactionManagement
-@ComponentScan({&quot;sk.iway.iwcm.system.spring.components&quot;})
-<span class="fc" id="L53">public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity</span>
+@ComponentScan({
+    &quot;sk.iway.iwcm.system.spring.components&quot;
+})
+<span class="fc" id="L55">public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity</span>
 {
     @Autowired
     ApplicationContext applicationContext;
 
-<span class="fc" id="L58">    private static final Charset UTF8 = StandardCharsets.UTF_8;</span>
+<span class="fc" id="L60">    private static final Charset UTF8 = StandardCharsets.UTF_8;</span>
 
 //    @Value(&quot;${springfox.documentation.swagger.v2.path}&quot;)
 //    private String swagger2Endpoint;
     @Override
     public void configureSecurity(HttpSecurity http) throws Exception
     {
-<span class="fc" id="L65">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Configure security, http=&quot;+http);</span>
+<span class="fc" id="L67">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Configure security, http=&quot;+http);</span>
 
-<span class="fc" id="L67">        http</span>
-<span class="fc" id="L68">                .authorizeRequests()</span>
-<span class="fc" id="L69">                    .antMatchers(&quot;/private/rest/**&quot;,&quot;/webjars/**&quot;).authenticated()</span>
-<span class="fc" id="L70">                    .antMatchers(&quot;/swagger-ui**&quot;, &quot;/admin/rest/**&quot;).hasRole(&quot;Group_admin&quot;)</span>
+<span class="fc" id="L69">        http</span>
+<span class="fc" id="L70">                .authorizeHttpRequests()</span>
+<span class="fc" id="L71">                    .requestMatchers(&quot;/private/rest/**&quot;,&quot;/webjars/**&quot;).authenticated()</span>
+<span class="fc" id="L72">                    .requestMatchers(&quot;/swagger-ui**&quot;, &quot;/admin/rest/**&quot;).hasRole(&quot;Group_admin&quot;)</span>
                     //toto nemoze byt, pokazi to custom SpringConfig kde sa nastavuje security .anyRequest().permitAll()
                 /*.and()
                     .formLogin()
                     .loginPage(&quot;/admin/logon/&quot;)
                     .loginProcessingUrl(&quot;/admin/logon/&quot;)*/
-                 ;
-<span class="fc" id="L77">    }</span>
+                ;
+<span class="fc" id="L79">    }</span>
 
     @Bean
     public Docket api() {
-<span class="fc" id="L81">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Docket api()&quot;);</span>
-<span class="fc" id="L82">        return new Docket(DocumentationType.SWAGGER_2)</span>
-<span class="fc" id="L83">                .select()</span>
-<span class="fc" id="L84">                .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))</span>
-<span class="fc" id="L85">                .paths(PathSelectors.any())</span>
-<span class="fc" id="L86">                .build().apiInfo(apiInfo());</span>
+<span class="fc" id="L83">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; Docket api()&quot;);</span>
+<span class="fc" id="L84">        return new Docket(DocumentationType.SWAGGER_2)</span>
+<span class="fc" id="L85">                .select()</span>
+<span class="fc" id="L86">                .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))</span>
+<span class="fc" id="L87">                .paths(PathSelectors.any())</span>
+<span class="fc" id="L88">                .build().apiInfo(apiInfo());</span>
     }
 
     private ApiInfo apiInfo() {
-<span class="fc" id="L90">        return new ApiInfoBuilder()</span>
-<span class="fc" id="L91">                .title(&quot;WebJet API&quot;)</span>
-<span class="fc" id="L92">                .description(&quot;WebJet webservices&quot;)</span>
-<span class="fc" id="L93">                .version(&quot;&quot;)</span>
-<span class="fc" id="L94">                .license(&quot;&quot;)</span>
-<span class="fc" id="L95">                .licenseUrl(&quot;https://www.interway.sk/kontakt/&quot;)</span>
-<span class="fc" id="L96">                .contact(new Contact(&quot;Interway&quot;,&quot;http://www.interway.sk&quot;,&quot;web@interway.sk&quot;))</span>
-<span class="fc" id="L97">                .build();</span>
+<span class="fc" id="L92">        return new ApiInfoBuilder()</span>
+<span class="fc" id="L93">                .title(&quot;WebJet API&quot;)</span>
+<span class="fc" id="L94">                .description(&quot;WebJET services&quot;)</span>
+<span class="fc" id="L95">                .version(&quot;&quot;)</span>
+<span class="fc" id="L96">                .license(&quot;&quot;)</span>
+<span class="fc" id="L97">                .licenseUrl(&quot;https://www.interway.sk/kontakt/&quot;)</span>
+<span class="fc" id="L98">                .contact(new Contact(&quot;Interway&quot;,&quot;http://www.interway.sk&quot;,&quot;web@interway.sk&quot;))</span>
+<span class="fc" id="L99">                .build();</span>
     }
 
     /**
@@ -104,25 +106,25 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
      */
     @Bean
     PageableHandlerMethodArgumentResolverCustomizer sortCustomizer() {
-<span class="fc" id="L107">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; sortCustomizer()&quot;);</span>
-<span class="fc" id="L108">        return p -&gt; p.setMaxPageSize(Integer.MAX_VALUE);</span>
+<span class="fc" id="L109">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; sortCustomizer()&quot;);</span>
+<span class="fc" id="L110">        return p -&gt; p.setMaxPageSize(Integer.MAX_VALUE);</span>
     }
 
     @Override
     public void extendMessageConverters(List&lt;HttpMessageConverter&lt;?&gt;&gt; converters) {
-<span class="fc" id="L113">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureMessageConverters(), size=&quot;+converters.size());</span>
+<span class="fc" id="L115">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureMessageConverters(), size=&quot;+converters.size());</span>
 
-<span class="fc" id="L115">        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();</span>
-<span class="fc" id="L116">        List&lt;MediaType&gt; mediaTypes = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L117">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;plain&quot;, UTF8));</span>
-<span class="fc" id="L118">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;html&quot;, UTF8));</span>
-<span class="fc" id="L119">        mediaTypes.add(new MediaType(&quot;application&quot;, &quot;json&quot;, UTF8));</span>
-<span class="fc" id="L120">        stringConverter.setSupportedMediaTypes(mediaTypes);</span>
-<span class="fc" id="L121">        converters.add(stringConverter);</span>
+<span class="fc" id="L117">        StringHttpMessageConverter stringConverter = new StringHttpMessageConverter();</span>
+<span class="fc" id="L118">        List&lt;MediaType&gt; mediaTypes = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L119">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;plain&quot;, UTF8));</span>
+<span class="fc" id="L120">        mediaTypes.add(new MediaType(&quot;text&quot;, &quot;html&quot;, UTF8));</span>
+<span class="fc" id="L121">        mediaTypes.add(new MediaType(&quot;application&quot;, &quot;json&quot;, UTF8));</span>
+<span class="fc" id="L122">        stringConverter.setSupportedMediaTypes(mediaTypes);</span>
+<span class="fc" id="L123">        converters.add(stringConverter);</span>
 
         //aby isla tlac do PDF (application/octet-stream)
-<span class="fc" id="L124">        converters.add(new ResourceHttpMessageConverter(true));</span>
-<span class="fc" id="L125">    }</span>
+<span class="fc" id="L126">        converters.add(new ResourceHttpMessageConverter(true));</span>
+<span class="fc" id="L127">    }</span>
 
     /*
     JEEFF: nemozeme to mat async, lebo nam to potom robi problem na WebjetEvent - ON_START a AFTER_SAVE co sa vykonava asynchronne, co nechceme
@@ -140,37 +142,37 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
-<span class="fc" id="L143">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; addFormatters()&quot;);</span>
+<span class="fc" id="L145">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; addFormatters()&quot;);</span>
         //super.addFormatters(registry);
-<span class="fc" id="L145">        registry.addConverter(new DateConverter());</span>
-<span class="fc" id="L146">        registry.addConverter(new LongDateTimeConverter());</span>
-<span class="fc" id="L147">    }</span>
+<span class="fc" id="L147">        registry.addConverter(new DateConverter());</span>
+<span class="fc" id="L148">        registry.addConverter(new LongDateTimeConverter());</span>
+<span class="fc" id="L149">    }</span>
 
     @Bean
     public FreeMarkerConfigurer freemarkerConfig(HttpServletRequest request) {
-<span class="fc" id="L151">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; 1 freemarkerConfig()&quot;);</span>
+<span class="fc" id="L153">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; 1 freemarkerConfig()&quot;);</span>
 
-<span class="fc" id="L153">        FreeMarkerConfigurer freeMarkerConfigurer = new FreeMarkerConfigurer();</span>
-<span class="fc" id="L154">        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L155">        map.put(&quot;request&quot;, request);</span>
+<span class="fc" id="L155">        FreeMarkerConfigurer freeMarkerConfigurer = new FreeMarkerConfigurer();</span>
+<span class="fc" id="L156">        Map&lt;String, Object&gt; map = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L157">        map.put(&quot;request&quot;, request);</span>
         // z nejakeho dovodu robi problem pri inicializacii webjetu
 //        map.put(&quot;currentUser&quot;, UsersDB.getCurrentUser(session));
-<span class="fc" id="L158">        map.put(&quot;Tools&quot;, new Tools());</span>
-<span class="fc" id="L159">        map.put(&quot;WebjetHelpers&quot;, new FreemarkerHelpers(request));</span>
-<span class="fc" id="L160">        freeMarkerConfigurer.setFreemarkerVariables(map);</span>
-<span class="fc" id="L161">        freeMarkerConfigurer.setDefaultEncoding(&quot;windows-1250&quot;);</span>
+<span class="fc" id="L160">        map.put(&quot;Tools&quot;, new Tools());</span>
+<span class="fc" id="L161">        map.put(&quot;WebjetHelpers&quot;, new FreemarkerHelpers(request));</span>
+<span class="fc" id="L162">        freeMarkerConfigurer.setFreemarkerVariables(map);</span>
+<span class="fc" id="L163">        freeMarkerConfigurer.setDefaultEncoding(&quot;windows-1250&quot;);</span>
 
 
-<span class="fc" id="L164">        Properties settings = new Properties();</span>
-<span class="fc" id="L165">        settings.put(&quot;auto_import&quot;, &quot;spring.ftl as spring&quot;);</span>
-<span class="fc" id="L166">        settings.put(Configurable.NUMBER_FORMAT_KEY, &quot;computer&quot;); // vypisanie cisiel bez medzier</span>
+<span class="fc" id="L166">        Properties settings = new Properties();</span>
+<span class="fc" id="L167">        settings.put(&quot;auto_import&quot;, &quot;spring.ftl as spring&quot;);</span>
+<span class="fc" id="L168">        settings.put(Configurable.NUMBER_FORMAT_KEY, &quot;computer&quot;); // vypisanie cisiel bez medzier</span>
 //        settings.put(&quot;template_exception_handler&quot;, getFreemarkerExceptionHandler());
 //        settings.put(&quot;url_escaping_charset&quot;, WebConstants.CHAR_SET_UTF_8);
-<span class="fc" id="L169">        freeMarkerConfigurer.setFreemarkerSettings(settings);</span>
+<span class="fc" id="L171">        freeMarkerConfigurer.setFreemarkerSettings(settings);</span>
 
         // treba prazdny string, inac neresolvuje freemarker views
-<span class="fc" id="L172">        freeMarkerConfigurer.setTemplateLoaderPath(&quot;&quot;);</span>
-<span class="fc" id="L173">        return freeMarkerConfigurer;</span>
+<span class="fc" id="L174">        freeMarkerConfigurer.setTemplateLoaderPath(&quot;&quot;);</span>
+<span class="fc" id="L175">        return freeMarkerConfigurer;</span>
     }
 
     /**
@@ -179,9 +181,9 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
      */
     @Override
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
-<span class="fc" id="L182">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureDefaultServletHandling()&quot;);</span>
-<span class="fc" id="L183">        configurer.enable();</span>
-<span class="fc" id="L184">    }</span>
+<span class="fc" id="L184">        Logger.println(BaseSpringConfig.class, &quot;-------&gt; configureDefaultServletHandling()&quot;);</span>
+<span class="fc" id="L185">        configurer.enable();</span>
+<span class="fc" id="L186">    }</span>
 
     /* TOTO JE POTREBNE PRE TOMCAT 7 pretoze tam nie je WebjetComponentSpringConfig
     @Bean
@@ -231,4 +233,4 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
     }
     */
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

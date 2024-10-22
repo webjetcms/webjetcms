@@ -71,7 +71,8 @@ import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
         "sk.iway.iwcm.components.rating.jpa",
         "sk.iway.iwcm.components.restaurant_menu.jpa",
         "sk.iway.iwcm.components.quiz.jpa",
-        "sk.iway.iwcm.components.blog.jpa"
+        "sk.iway.iwcm.components.blog.jpa",
+        "sk.iway.iwcm.system.elfinder",
     }
 ) // package s repozitarmi
 public class V9JpaDBConfig {
@@ -130,7 +131,8 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.rating.jpa",
                             "sk.iway.iwcm.components.restaurant_menu.jpa",
                             "sk.iway.iwcm.components.quiz.jpa",
-                            "sk.iway.iwcm.components.blog.jpa"
+                            "sk.iway.iwcm.components.blog.jpa",
+                            "sk.iway.iwcm.system.elfinder"
         );
 
         Properties properties = new Properties();

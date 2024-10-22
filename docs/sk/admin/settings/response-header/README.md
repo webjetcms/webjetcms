@@ -12,13 +12,13 @@ Ak existuje viac hlavičiek s rovnakým názvom, použije sa hlavička s najdlh�
 
 Editor hlavičiek obsahuje polia:
 
-- `URL adresa` určuje, pre ktoré URL adresy sa definuje hlavička. Podporovaný je nasledovný zápis:
+- **URL adresa** určuje, pre ktoré URL adresy sa definuje hlavička. Podporovaný je nasledovný zápis:
     - `/folder/subfolder/` - hlavička sa generuje pre všetky URL, ktoré začínajú na zadanú hodnotu.
     - `^/path/subpath/$` - hlavička sa generuje pre presnú zhodu URL adresy.
     - `/path/subpath/*.pdf` alebo `/path/subpath/*.pdf,*.jpg` - hlavička sa generuje pre URL adresy začínajúce na `/path/subpath/` a končiace na `.pdf` alebo v druhom prípade aj pre `.jpg`.
-- `Názov hlavičky` udáva názov samotnej hlavičky, ktorá sa pridáva.
-- `Hodnota hlavičky` udáva hodnotu nastavenej hlavičky.
-- `Poznámka` doplnková informácia, napr. kto a kedy požadoval nastavenie danej hlavičky. Hodnota sa zobrazuje len v administrácii.
+- **Názov hlavičky** udáva názov samotnej hlavičky, ktorá sa pridáva.
+- **Hodnota hlavičky** udáva hodnotu nastavenej hlavičky.
+- **Poznámka** doplnková informácia, napr. kto a kedy požadoval nastavenie danej hlavičky. Hodnota sa zobrazuje len v administrácii.
 
 ![Editor](editor.png)
 

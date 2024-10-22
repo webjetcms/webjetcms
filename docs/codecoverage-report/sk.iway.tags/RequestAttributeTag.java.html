@@ -44,11 +44,11 @@ import javax.servlet.jsp.tagext.TagSupport;
       try
       {
 <span class="fc" id="L46">         Object value = ((HttpServletRequest) pageContext.getRequest()).getAttribute(name);</span>
-<span class="pc bpc" id="L47" title="1 of 2 branches missed.">         if (value != null)</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">         if (value != null)</span>
          {
-<span class="nc" id="L49">            String text = value.toString();</span>
+<span class="fc" id="L49">            String text = value.toString();</span>
             //text = new String(text.getBytes(), &quot;iso-8859-1&quot;);
-<span class="nc" id="L51">            pageContext.getOut().write(text);</span>
+<span class="fc" id="L51">            pageContext.getOut().write(text);</span>
          }
       }
 <span class="nc" id="L54">      catch (Exception e)</span>
@@ -69,4 +69,4 @@ import javax.servlet.jsp.tagext.TagSupport;
 <span class="fc" id="L69">   }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

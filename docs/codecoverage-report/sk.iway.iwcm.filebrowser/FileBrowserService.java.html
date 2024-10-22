@@ -45,28 +45,28 @@ import sk.iway.iwcm.users.UsersDB;
 	 * @return
 	 */
 	public static String editDir(String dir, Model model, HttpServletRequest request) {
-<span class="fc" id="L48">		UserDetails user = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L49">        boolean canUpload = user.isFolderWritable(&quot;/&quot;+dir);</span>
+<span class="nc" id="L48">		UserDetails user = UsersDB.getCurrentUser(request);</span>
+<span class="nc" id="L49">        boolean canUpload = user.isFolderWritable(&quot;/&quot;+dir);</span>
 
-<span class="pc bpc" id="L51" title="2 of 4 branches missed.">        if (Tools.isEmpty(dir) || canUpload==false) {</span>
+<span class="nc bnc" id="L51" title="All 4 branches missed.">        if (Tools.isEmpty(dir) || canUpload==false) {</span>
 <span class="nc" id="L52">            return SpringUrlMapping.redirectTo403();</span>
         }
 
-<span class="fc" id="L55">        IwcmFile f = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(dir));</span>
-<span class="fc" id="L56">        String dirName = f.getName();</span>
+<span class="nc" id="L55">        IwcmFile f = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(dir));</span>
+<span class="nc" id="L56">        String dirName = f.getName();</span>
 
-<span class="fc" id="L58">        UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
-<span class="fc" id="L59">        request.setAttribute(&quot;userGroupsList&quot;, userGroupsDB.getUserGroups());</span>
+<span class="nc" id="L58">        UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+<span class="nc" id="L59">        request.setAttribute(&quot;userGroupsList&quot;, userGroupsDB.getUserGroups());</span>
 
-<span class="fc" id="L61">        EditForm ef = new EditForm();</span>
-<span class="fc" id="L62">        ef.setDir(dirName);</span>
-<span class="fc" id="L63">        ef.setOrigDir(dir);</span>
+<span class="nc" id="L61">        EditForm ef = new EditForm();</span>
+<span class="nc" id="L62">        ef.setDir(dirName);</span>
+<span class="nc" id="L63">        ef.setOrigDir(dir);</span>
 
-<span class="fc" id="L65">        FileAtrDB.fillEditForm(ef);</span>
+<span class="nc" id="L65">        FileAtrDB.fillEditForm(ef);</span>
 
-<span class="fc" id="L67">        model.addAttribute(&quot;fbrowserEditForm&quot;, ef);</span>
+<span class="nc" id="L67">        model.addAttribute(&quot;fbrowserEditForm&quot;, ef);</span>
 
-<span class="fc" id="L69">        return &quot;/admin/fbrowser_dirprop&quot;;</span>
+<span class="nc" id="L69">        return &quot;/admin/fbrowser_dirprop&quot;;</span>
 	}
 
 	/**
@@ -78,36 +78,36 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
     public static String saveDir(EditForm form, HttpServletRequest request, HttpServletResponse response) {
         //Request check
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if(request == null) return SpringUrlMapping.redirectToLogon();</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if(request == null) return SpringUrlMapping.redirectToLogon();</span>
 
         //Get session +  check
-<span class="fc" id="L84">        HttpSession session = request.getSession();</span>
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">		if (session == null) return SpringUrlMapping.redirectToLogon();</span>
+<span class="nc" id="L84">        HttpSession session = request.getSession();</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (session == null) return SpringUrlMapping.redirectToLogon();</span>
 
         //Check logged user
-<span class="fc" id="L88">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
-<span class="pc bpc" id="L89" title="2 of 4 branches missed.">		if (user == null || !user.isAdmin()) return SpringUrlMapping.redirectToLogon();</span>
+<span class="nc" id="L88">		Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="nc bnc" id="L89" title="All 4 branches missed.">		if (user == null || !user.isAdmin()) return SpringUrlMapping.redirectToLogon();</span>
 
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">		if (user.isFolderWritable(form.getOrigDir() + &quot;/&quot;) == false)</span>
+<span class="nc bnc" id="L91" title="All 2 branches missed.">		if (user.isFolderWritable(form.getOrigDir() + &quot;/&quot;) == false)</span>
 <span class="nc" id="L92">			return SpringUrlMapping.redirect( &quot;fbrowser.browse.do?refreshLeft=true&amp;permsDenied=true&amp;dir=&quot; + form.getOrigDir() );</span>
 
 		//Delete old one and save new one
-<span class="fc" id="L95">		String dirUrl = form.getOrigDir();</span>
-<span class="fc" id="L96">		new SimpleQuery().execute(&quot;DELETE FROM dirprop WHERE dir_url = ?&quot;, dirUrl);</span>
+<span class="nc" id="L95">		String dirUrl = form.getOrigDir();</span>
+<span class="nc" id="L96">		new SimpleQuery().execute(&quot;DELETE FROM dirprop WHERE dir_url = ?&quot;, dirUrl);</span>
 
-<span class="fc" id="L98">		new SimpleQuery().execute(&quot;INSERT INTO dirprop (dir_url, index_fulltext, password_protected, logon_doc_id) VALUES (?, ?, ?, ?)&quot;,</span>
+<span class="nc" id="L98">		new SimpleQuery().execute(&quot;INSERT INTO dirprop (dir_url, index_fulltext, password_protected, logon_doc_id) VALUES (?, ?, ?, ?)&quot;,</span>
 			dirUrl,
-<span class="fc" id="L100">			form.isIndexFulltext(),</span>
-<span class="fc" id="L101">			form.getPasswordProtectedString(),</span>
-<span class="fc" id="L102">			form.getLogonDocId());</span>
+<span class="nc" id="L100">			form.isIndexFulltext(),</span>
+<span class="nc" id="L101">			form.getPasswordProtectedString(),</span>
+<span class="nc" id="L102">			form.getLogonDocId());</span>
 
 		//refreshni zoznam v PathFilter
-<span class="fc" id="L105">		PathFilter.reloadProtectedDirs();</span>
+<span class="nc" id="L105">		PathFilter.reloadProtectedDirs();</span>
 
-<span class="fc" id="L107">		String forward = &quot;/admin/fbrowser/dirprop/?saveok=true&amp;refreshLeft=true&amp;dir=&quot; + form.getOrigDir();</span>
+<span class="nc" id="L107">		String forward = &quot;/admin/fbrowser/dirprop/?saveok=true&amp;refreshLeft=true&amp;dir=&quot; + form.getOrigDir();</span>
 
 		//There is lack of /admin/ prefix
-<span class="fc" id="L110">		return SpringUrlMapping.redirect( Tools.sanitizeHttpHeaderParam(forward) );</span>
+<span class="nc" id="L110">		return SpringUrlMapping.redirect( Tools.sanitizeHttpHeaderParam(forward) );</span>
 	}
 
 	/**
@@ -118,40 +118,40 @@ import sk.iway.iwcm.users.UsersDB;
 	 * @return
 	 */
 	public static String editFile(String dir, Model model, HttpServletRequest request) {
-<span class="fc" id="L121">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L122" title="2 of 4 branches missed.">		if (user != null &amp;&amp; user.isAdmin())</span>
+<span class="nc" id="L121">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="nc bnc" id="L122" title="All 4 branches missed.">		if (user != null &amp;&amp; user.isAdmin())</span>
 		{
 		}
 		else
 		{
 <span class="nc" id="L127">			return SpringUrlMapping.redirectToLogon();</span>
 		}
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (user.isFolderWritable(dir)==false) return &quot;/admin/fbrowser_editor&quot;;</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">		if (user.isFolderWritable(dir)==false) return &quot;/admin/fbrowser_editor&quot;;</span>
 
-<span class="fc" id="L131">		String file = request.getParameter(&quot;file&quot;);</span>
+<span class="nc" id="L131">		String file = request.getParameter(&quot;file&quot;);</span>
 		// writeOutFile(dir,file);
-<span class="fc bfc" id="L133" title="All 2 branches covered.">		if (&quot;&quot;.equals(file))</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (&quot;&quot;.equals(file))</span>
 		{
 			// mame novy subor
-<span class="fc" id="L136">			file = null;</span>
+<span class="nc" id="L136">			file = null;</span>
 		}
-<span class="fc" id="L138">		boolean alsoData = true;</span>
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;prop&quot;)))</span>
+<span class="nc" id="L138">		boolean alsoData = true;</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">		if (&quot;yes&quot;.equals(request.getParameter(&quot;prop&quot;)))</span>
 		{
-<span class="fc" id="L141">			alsoData = false;</span>
+<span class="nc" id="L141">			alsoData = false;</span>
 		}
-<span class="fc" id="L143">		EditForm editForm = EditorToolsForCore.fillEditFormFromFile(dir, file, alsoData, user);</span>
-<span class="fc" id="L144">		model.addAttribute(&quot;fbrowserEditForm&quot;, editForm);</span>
-<span class="fc bfc" id="L145" title="All 2 branches covered.">		if (file != null)</span>
+<span class="nc" id="L143">		EditForm editForm = EditorToolsForCore.fillEditFormFromFile(dir, file, alsoData, user);</span>
+<span class="nc" id="L144">		model.addAttribute(&quot;fbrowserEditForm&quot;, editForm);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">		if (file != null)</span>
 		{
 			// atributy stranky
-<span class="fc" id="L148">			List&lt;?&gt; atrs = FileAtrDB.getAtributes(dir + &quot;/&quot; + file, request);</span>
-<span class="pc bpc" id="L149" title="1 of 2 branches missed.">			if (atrs.size() &gt; 0)</span>
+<span class="nc" id="L148">			List&lt;?&gt; atrs = FileAtrDB.getAtributes(dir + &quot;/&quot; + file, request);</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">			if (atrs.size() &gt; 0)</span>
 			{
 <span class="nc" id="L151">				request.setAttribute(&quot;atrs&quot;, atrs);</span>
 			}
 		}
-<span class="fc" id="L154">		return &quot;/admin/fbrowser_prop&quot;;</span>
+<span class="nc" id="L154">		return &quot;/admin/fbrowser_prop&quot;;</span>
 	}
 
 	/**
@@ -376,4 +376,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L376">		return SpringUrlMapping.redirect(url.toString());</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -4,10 +4,25 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('sitemap editor', async ({ I, DTE, Document }) => {
+Scenario('sitemap editor sitemap', async ({ I, DTE, Document }) => {
     let confLng = I.getConfLng();
     //Default let SK
-    let docId = ("en" === confLng) ? 81851 : 24217;
+    let docId;
+
+    switch (confLng) {
+        case 'sk':
+            docId = 24217;
+            break;
+        case 'en':
+            docId = 81851;
+            break;
+        case 'cs':
+            docId = 100093;
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
+    }
+    
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
     DTE.waitForEditor();
@@ -33,7 +48,9 @@ Scenario('sitemap editor', async ({ I, DTE, Document }) => {
         I.amOnPage("/apps/mapa-stranok/");
     } else if(("en" === confLng)) {
         I.amOnPage("/apps/sitemap/");
+    } else if(("cs" === confLng)) {
+        I.amOnPage("/apps/mapa-stranek/");
     }
     
-    Document.screenshotElement("div.sitemaptest", "/redactor/apps/sitemap/sitemap.png");
+    Document.screenshotElement(".sitemap", "/redactor/apps/sitemap/sitemap.png");
 });

@@ -57,7 +57,7 @@ and start the application server:
 gradlew appRun
 ```
 
-I recommend you to run each of the above commands in a separate Terminal (menu Terminal-\&gt;New Terminal). You can switch between running terminals in the `Terminal`.
+I recommend you to run each of the above commands in a separate Terminal (menu Terminal->New Terminal). You can switch between running terminals in the `Terminal`.
 
 ## Start testing
 
@@ -185,8 +185,8 @@ Scenario("prihlasenie zablokovane", ({ I }) => {
 	I.fillField("password", "wrongpassword");
 	I.click("login-submit");
 	I.see("Pre nesprávne zadané prihlasovacie údaje je prihlásenie na 10+ sekúnd zablokované");
-	I.say("Cakam 10 sekund na expirovanie zablokovanej IP adresy");
-	//je potrebne cakat 10 sekund na expirovanie zleho hesla
+	I.say("Cakam 10 sekund na exspirovanie zablokovanej IP adresy");
+	//je potrebne cakat 10 sekund na exspirovanie zleho hesla
 	I.wait(13);
 	//odkomentujte pre zobrazenie interaktivneho terminalu
 	//pause();

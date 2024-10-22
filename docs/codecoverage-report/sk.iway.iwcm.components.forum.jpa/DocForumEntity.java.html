@@ -64,9 +64,10 @@ import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
         editor = @DataTableColumnEditor(
             attr = @DataTableColumnEditorAttr(key = &quot;disabled&quot;, value = &quot;disabled&quot;)
         ),
-        filter = true
+        filter = true,
+        orderable = false
     )
-    private DocDetailsDto docDetails;
+    private transient DocDetailsDto docDetails;
 
     @Column(name = &quot;subject&quot;)
     @NotBlank
@@ -131,9 +132,9 @@ import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
     )
     private String authorEmail;
 
-<span class="fc" id="L134">    @Transient</span>
+<span class="fc" id="L135">    @Transient</span>
 	@DataTableColumnNested
-	private DocForumEditorFields editorFields = null;
+	private transient DocForumEditorFields editorFields = null;
 
     /* Adding ForumGroupEntity (DB tbale forum), it's used as forum setting's */
     @Transient
@@ -175,213 +176,215 @@ import sk.iway.iwcm.users.jpa.UserBasicDtoConverter;
     @Column(name = &quot;domain_id&quot;)
     private Integer domainId;
 
-<span class="fc" id="L178">    @Transient</span>
-    private FormFile uploadedFile = null;
+<span class="fc" id="L179">    @Transient</span>
+    private transient FormFile uploadedFile = null;
 
     @Transient
-    private String prefix;
+    private transient String prefix;
 
     @Transient
-    private Integer level;
+    private transient Integer level;
 
     @Transient
     @JsonProperty(access = JsonProperty.Access.READ_ONLY) //toto nepotrebujeme deserializovat pri post requeste
-    private UserBasicDto userDetails;
+    private transient UserBasicDto userDetails;
 
     //***************SPECIAL LOGIC METHODS***************************
     public void setDocDetails(DocDetailsDto docDetails) {
-<span class="fc" id="L193">        this.docDetails = docDetails;</span>
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">        if (docDetails != null) this.docId = docDetails.getDocId();</span>
-<span class="fc" id="L195">    }</span>
+<span class="fc" id="L194">        this.docDetails = docDetails;</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if (docDetails != null) this.docId = docDetails.getDocId();</span>
+<span class="fc" id="L196">    }</span>
 
     private boolean isAdmin(UserDetails user, ForumGroupEntity fge) {
         //If not set, try get from this entity
-<span class="fc bfc" id="L199" title="All 2 branches covered.">        if(fge == null) fge = getForumGroupEntity();</span>
+<span class="fc bfc" id="L200" title="All 2 branches covered.">        if(fge == null) fge = getForumGroupEntity();</span>
 
-<span class="pc bpc" id="L201" title="2 of 6 branches missed.">        if(user != null &amp;&amp; fge != null &amp;&amp; fge.isAdmin(user)) return true;</span>
+<span class="pc bpc" id="L202" title="2 of 6 branches missed.">        if(user != null &amp;&amp; fge != null &amp;&amp; fge.isAdmin(user)) return true;</span>
 
-<span class="pc bpc" id="L203" title="3 of 4 branches missed.">        if(user != null &amp;&amp; user.isAdmin()) return true;</span>
+<span class="pc bpc" id="L204" title="3 of 4 branches missed.">        if(user != null &amp;&amp; user.isAdmin()) return true;</span>
 
-<span class="fc" id="L205">        return false;</span>
+<span class="fc" id="L206">        return false;</span>
     }
 
     private boolean baseCheck(UserDetails user, ForumGroupEntity fge, boolean mustBeLogged) {
         //If not set, try get from this entity
-<span class="pc bpc" id="L210" title="1 of 2 branches missed.">        if(fge == null) fge = getForumGroupEntity();</span>
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        if(fge == null) fge = getForumGroupEntity();</span>
 
         //Must be logged -&gt; when perform delete and upload
-<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if(mustBeLogged) {</span>
+<span class="pc bpc" id="L214" title="1 of 2 branches missed.">        if(mustBeLogged) {</span>
             //Check if he is logged
-<span class="nc bnc" id="L215" title="All 2 branches missed.">            if(user == null) return false;</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if(user == null) return false;</span>
 
-            //When logged, he must be allso AUTHOR of the Forum
-<span class="nc bnc" id="L218" title="All 4 branches missed.">            if(getUserId() != null &amp;&amp; getUserId() != user.getUserId()) return false;</span>
+            //When logged, he must be also AUTHOR of the Forum
+<span class="nc bnc" id="L219" title="All 4 branches missed.">            if(getUserId() != null &amp;&amp; getUserId() != user.getUserId()) return false;</span>
         }
 
         //Check that whole DOC is active
-<span class="pc bpc" id="L222" title="2 of 4 branches missed.">        if(fge != null &amp;&amp; !fge.getActive()) return false;</span>
+<span class="pc bpc" id="L223" title="2 of 4 branches missed.">        if(fge != null &amp;&amp; !fge.getActive()) return false;</span>
 
         //Check if is allready deleted
-<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if(getDeleted()) return false;</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">        if(getDeleted()) return false;</span>
 
         //Must be active
-<span class="pc bpc" id="L228" title="1 of 2 branches missed.">        if(!getActive()) return false;</span>
+<span class="pc bpc" id="L229" title="1 of 2 branches missed.">        if(!getActive()) return false;</span>
 
         //Must be approved
-<span class="pc bpc" id="L231" title="1 of 2 branches missed.">        if(!getConfirmed()) return false;</span>
+<span class="pc bpc" id="L232" title="1 of 2 branches missed.">        if(!getConfirmed()) return false;</span>
 
-<span class="fc" id="L233">        return true;</span>
+<span class="fc" id="L234">        return true;</span>
     }
 
     public boolean canDelete(UserDetails user, int delMinutes) {
-<span class="fc" id="L237">        return canDelete(user, delMinutes, null);</span>
+<span class="fc" id="L238">        return canDelete(user, delMinutes, null);</span>
     }
 
     public boolean canDelete(UserDetails user, int delMinutes, ForumGroupEntity fge) {
         //ADMIN can do anything
-<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if(isAdmin(user, fge)) return true;</span>
+<span class="pc bpc" id="L243" title="1 of 2 branches missed.">        if(isAdmin(user, fge)) return true;</span>
 
         //If he is not admin, do all the test's
-<span class="nc bnc" id="L245" title="All 2 branches missed.">        if(!baseCheck(user, fge, true)) return false;</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        if(!baseCheck(user, fge, true)) return false;</span>
 
         //Question date must be set to compute limit range
-<span class="nc bnc" id="L248" title="All 2 branches missed.">		if (getQuestionDate() == null) return false;</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">		if (getQuestionDate() == null) return false;</span>
 
         //Delete can be performed only in specific range from create
-<span class="nc" id="L251">		long delTimeLimitMsec = getQuestionDate().getTime() + (delMinutes * 60L * 1000);</span>
-<span class="nc bnc" id="L252" title="All 2 branches missed.">		if(delTimeLimitMsec &gt; Tools.getNow()) return true;</span>
+<span class="nc" id="L252">		long delTimeLimitMsec = getQuestionDate().getTime() + (delMinutes * 60L * 1000);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">		if(delTimeLimitMsec &gt; Tools.getNow()) return true;</span>
 
         //It's all good
-<span class="nc" id="L255">		return false;</span>
+<span class="nc" id="L256">		return false;</span>
 	}
 
     public boolean canUpload(UserDetails user, LabelValueDetails uploadLimits) {
-<span class="nc" id="L259">        return canUpload(user, uploadLimits, null);</span>
+<span class="nc" id="L260">        return canUpload(user, uploadLimits, null);</span>
     }
 
     public boolean canUpload(UserDetails user, LabelValueDetails uploadLimits, ForumGroupEntity fge) {
         //ADMIN can do anything
-<span class="pc bpc" id="L264" title="1 of 2 branches missed.">        if(isAdmin(user, fge)) return true;</span>
+<span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if(isAdmin(user, fge)) return true;</span>
 
         //If he is not admin, do all the test's
-<span class="nc bnc" id="L267" title="All 2 branches missed.">        if(!baseCheck(user, fge, true)) return false;</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if(!baseCheck(user, fge, true)) return false;</span>
 
         //Upload limits must be set
-<span class="nc bnc" id="L270" title="All 2 branches missed.">        if(uploadLimits == null) return false;</span>
+<span class="nc bnc" id="L271" title="All 2 branches missed.">        if(uploadLimits == null) return false;</span>
 
         //It's all good
-<span class="nc" id="L273">		return true;</span>
+<span class="nc" id="L274">		return true;</span>
     }
 
 
     public boolean canPost() {
-<span class="nc" id="L278">        return canPost(null, null);</span>
+<span class="nc" id="L279">        return canPost(null, null);</span>
     }
 
     public boolean canPost(ForumGroupEntity fge) {
-<span class="nc" id="L282">        return canPost(fge, null);</span>
+<span class="nc" id="L283">        return canPost(fge, null);</span>
     }
 
     public boolean canPost(ForumGroupEntity fge, UserDetails user) {
         //ADMIN can do anything
-<span class="fc bfc" id="L287" title="All 2 branches covered.">        if(isAdmin(user, fge)) return true;</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">        if(isAdmin(user, fge)) return true;</span>
 
         //If he is not admin, do all the test's
-<span class="pc bpc" id="L290" title="1 of 2 branches missed.">        if(!baseCheck(user, fge, false)) return false;</span>
+<span class="pc bpc" id="L291" title="1 of 2 branches missed.">        if(!baseCheck(user, fge, false)) return false;</span>
 
-<span class="fc" id="L292">        return true;</span>
+<span class="fc" id="L293">        return true;</span>
     }
 
     public String getSubject() {
-<span class="pc bpc" id="L296" title="1 of 4 branches missed.">        if (subject == null || subject.trim().length() &lt; 1) {</span>
-<span class="fc" id="L297">            sk.iway.iwcm.i18n.Prop prop = sk.iway.iwcm.i18n.Prop.getInstance();</span>
-<span class="fc" id="L298">            return prop.getText(&quot;components.forum.empty_subject&quot;);</span>
+<span class="pc bpc" id="L297" title="1 of 4 branches missed.">        if (subject == null || subject.trim().length() &lt; 1) {</span>
+<span class="fc" id="L298">            sk.iway.iwcm.i18n.Prop prop = sk.iway.iwcm.i18n.Prop.getInstance();</span>
+<span class="fc" id="L299">            return prop.getText(&quot;components.forum.empty_subject&quot;);</span>
         }
 
-<span class="fc" id="L301">        return subject;</span>
+<span class="fc" id="L302">        return subject;</span>
     }
 
     public void setQuestion(String question) {
    	    //odfiltruj nepovolene veci
-<span class="fc" id="L306">   	    question = Tools.replaceIgnoreCase(question, &quot;script&quot;, &quot;&lt;span style='display: none;'&gt;s&lt;/span&gt;script&quot;);</span>
+<span class="fc" id="L307">   	    question = Tools.replaceIgnoreCase(question, &quot;script&quot;, &quot;&lt;span style='display: none;'&gt;s&lt;/span&gt;script&quot;);</span>
 
-<span class="fc" id="L308">        this.question = question;</span>
-<span class="fc" id="L309">    }</span>
+<span class="fc" id="L309">        this.question = question;</span>
+<span class="fc" id="L310">    }</span>
 
     public String getQuestionHtml() {
-<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        if (question == null)</span>
-<span class="nc" id="L313">            return (&quot;&quot;);</span>
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        if (question == null)</span>
+<span class="nc" id="L314">            return (&quot;&quot;);</span>
 
-<span class="fc" id="L315">        String ret = Tools.replace(question, &quot;&lt;&quot;, &quot;&amp;lt;&quot;);</span>
-<span class="fc" id="L316">        ret = Tools.replace(ret, &quot;\n&quot;, &quot;&lt;br&gt;&quot;);</span>
-<span class="fc" id="L317">        return (ret);</span>
+<span class="fc" id="L316">        String ret = Tools.replace(question, &quot;&lt;&quot;, &quot;&amp;lt;&quot;);</span>
+<span class="fc" id="L317">        ret = Tools.replace(ret, &quot;\n&quot;, &quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L318">        return (ret);</span>
     }
 
     public String getAuthorPhoto(String defaultPhoto) {
-<span class="fc" id="L321">        UserDetails tmp = UsersDB.getUser(getUserId());</span>
+<span class="fc" id="L322">        UserDetails tmp = UsersDB.getUser(getUserId());</span>
 
-<span class="fc bfc" id="L323" title="All 2 branches covered.">        if(tmp == null) tmp = new UserDetails();</span>
+<span class="fc bfc" id="L324" title="All 2 branches covered.">        if(tmp == null) tmp = new UserDetails();</span>
 
-<span class="fc" id="L325">        String authorPhoto = tmp.getPhoto();</span>
+<span class="fc" id="L326">        String authorPhoto = tmp.getPhoto();</span>
 
-<span class="pc bpc" id="L327" title="1 of 2 branches missed.">        if(Tools.isEmpty(authorPhoto)) return defaultPhoto;</span>
-<span class="nc" id="L328">        return GalleryDB.getImagePathOriginal(authorPhoto);</span>
+<span class="pc bpc" id="L328" title="1 of 2 branches missed.">        if(Tools.isEmpty(authorPhoto)) return defaultPhoto;</span>
+<span class="nc" id="L329">        return GalleryDB.getImagePathOriginal(authorPhoto);</span>
     }
 
     //******************METHODS for BACKWARD COMPATIBILITY*********************
     public boolean isConfirmed() {
-<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if(getConfirmed() == null) return false;</span>
-<span class="fc" id="L334">		return getConfirmed();</span>
+<span class="pc bpc" id="L334" title="1 of 2 branches missed.">        if(getConfirmed() == null) return false;</span>
+<span class="fc" id="L335">		return getConfirmed();</span>
 	}
 
     public boolean isSendNotif() {
-<span class="pc bpc" id="L338" title="1 of 2 branches missed.">		if(getSendAnswerNotif() == null) return false;</span>
-<span class="fc" id="L339">        return getSendAnswerNotif();</span>
+<span class="pc bpc" id="L339" title="1 of 2 branches missed.">		if(getSendAnswerNotif() == null) {</span>
+<span class="nc" id="L340">            return false;</span>
+        }
+<span class="fc" id="L342">        return getSendAnswerNotif();</span>
 	}
 
     public boolean isActive() {
-<span class="pc bpc" id="L343" title="1 of 2 branches missed.">        if(getActive() == null) return false;</span>
-<span class="fc" id="L344">		return getActive();</span>
+<span class="pc bpc" id="L346" title="1 of 2 branches missed.">        if(getActive() == null) return false;</span>
+<span class="fc" id="L347">		return getActive();</span>
 	}
 
     public boolean isDeleted() {
-<span class="pc bpc" id="L348" title="1 of 2 branches missed.">        if(getDeleted() == null) return false;</span>
-<span class="fc" id="L349">		return getDeleted();</span>
+<span class="pc bpc" id="L351" title="1 of 2 branches missed.">        if(getDeleted() == null) return false;</span>
+<span class="fc" id="L352">		return getDeleted();</span>
 	}
 
     public int getForumId() {
-<span class="pc bpc" id="L353" title="1 of 2 branches missed.">        if (getId() == null) return 0;</span>
-<span class="fc" id="L354">        return getId().intValue();</span>
+<span class="pc bpc" id="L356" title="1 of 2 branches missed.">        if (getId() == null) return 0;</span>
+<span class="fc" id="L357">        return getId().intValue();</span>
     }
 
     public String getQuestionDateDisplayDate() {
-<span class="pc bpc" id="L358" title="1 of 2 branches missed.">        if(getQuestionDate() == null) return &quot;&quot;;</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">        if(getQuestionDate() == null) return &quot;&quot;;</span>
 
-<span class="fc" id="L360">        return Tools.formatDate(getQuestionDate());</span>
+<span class="fc" id="L363">        return Tools.formatDate(getQuestionDate());</span>
     }
 
     public String getQuestionDateDisplayTime() {
-<span class="pc bpc" id="L364" title="1 of 2 branches missed.">        if(getQuestionDate() == null) return &quot;&quot;;</span>
+<span class="pc bpc" id="L367" title="1 of 2 branches missed.">        if(getQuestionDate() == null) return &quot;&quot;;</span>
 
-<span class="fc" id="L366">        return Tools.formatTime(getQuestionDate());</span>
+<span class="fc" id="L369">        return Tools.formatTime(getQuestionDate());</span>
     }
 
     public String getLastPost() {
-<span class="fc" id="L370">        return Tools.formatDateTime(getStatLastPost(), &quot;&quot;);</span>
+<span class="fc" id="L373">        return Tools.formatDateTime(getStatLastPost(), &quot;&quot;);</span>
 	}
 
     public UserBasicDto getUserDetails() {
-<span class="fc bfc" id="L374" title="All 4 branches covered.">        if (userId == null || userId &lt; 1) return null;</span>
-<span class="fc bfc" id="L375" title="All 2 branches covered.">        if (userDetails!=null) return userDetails;</span>
-<span class="fc" id="L376">        userDetails = new UserBasicDtoConverter().convertToEntityAttribute(userId);</span>
-<span class="fc" id="L377">        return userDetails;</span>
+<span class="fc bfc" id="L377" title="All 4 branches covered.">        if (userId == null || userId &lt; 1) return null;</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">        if (userDetails!=null) return userDetails;</span>
+<span class="fc" id="L379">        userDetails = new UserBasicDtoConverter().convertToEntityAttribute(userId);</span>
+<span class="fc" id="L380">        return userDetails;</span>
     }
 
     public DocDetailsDto getDocDetails() {
-<span class="pc bpc" id="L381" title="2 of 4 branches missed.">        if (docId == null || docId &lt; 1) return null;</span>
-<span class="fc bfc" id="L382" title="All 2 branches covered.">        if (docDetails!=null) return docDetails;</span>
-<span class="fc" id="L383">        docDetails = new DocDetailsConverter().convertToEntityAttribute(docId);</span>
-<span class="fc" id="L384">        return docDetails;</span>
+<span class="pc bpc" id="L384" title="2 of 4 branches missed.">        if (docId == null || docId &lt; 1) return null;</span>
+<span class="fc bfc" id="L385" title="All 2 branches covered.">        if (docDetails!=null) return docDetails;</span>
+<span class="fc" id="L386">        docDetails = new DocDetailsConverter().convertToEntityAttribute(docId);</span>
+<span class="fc" id="L387">        return docDetails;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

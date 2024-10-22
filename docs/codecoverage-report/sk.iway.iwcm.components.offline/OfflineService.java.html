@@ -33,6 +33,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -62,10 +63,10 @@ import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.zip.ZipEntry;
 import sk.iway.iwcm.system.zip.ZipOutputStream;
 
-<span class="nc" id="L65">public class OfflineService {</span>
-<span class="nc" id="L66">    Map&lt;String, String&gt; downloadedUrls = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L67">	List&lt;LabelValueDetails&gt; needDownloadUrlsList = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L68">	Map&lt;String, String&gt; allreadyHasInDownloadList = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L66">public class OfflineService {</span>
+<span class="fc" id="L67">    Map&lt;String, String&gt; downloadedUrls = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L68">	List&lt;LabelValueDetails&gt; needDownloadUrlsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L69">	Map&lt;String, String&gt; allreadyHasInDownloadList = new Hashtable&lt;&gt;();</span>
 	private static final int BUFFER = 8192;
 
 	public static final String CROP_START = &quot;&lt;!-- offline crop start --&gt;&quot;;
@@ -76,93 +77,93 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
          HttpServletRequest request,
          HttpServletResponse response) throws IOException
     {
-<span class="nc" id="L79">		Logger.println(OfflineAction.class,&quot;offlineAction&quot;);</span>
+<span class="fc" id="L80">		Logger.println(OfflineAction.class,&quot;offlineAction&quot;);</span>
 
 		//setni usera do servlet contextu, ten sa potom vybera v PathFilter (inak nie je mozne preniest login)
-<span class="nc" id="L82">		Constants.getServletContext().setAttribute(Constants.USER_KEY, user);</span>
+<span class="fc" id="L83">		Constants.getServletContext().setAttribute(Constants.USER_KEY, user);</span>
 
 
-<span class="nc" id="L85">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L86">		Prop prop = Prop.getInstance(request);</span>
 
-<span class="nc" id="L87">		response.setContentType(&quot;text/html; charset=&quot;+SetCharacterEncodingFilter.selectEncoding(request));</span>
-<span class="nc" id="L88">		PrintWriter out = response.getWriter();</span>
-<span class="nc" id="L89">		out.println(&quot;&lt;html&gt;&lt;head&gt;&lt;LINK rel='stylesheet' href='/admin/css/style.css'&gt;&lt;META http-equiv='Content-Type' content='text/html; charset=windows-1250'&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
-<span class="nc" id="L90">		out.println(&quot;&lt;h3&gt;&quot;+prop.getText(&quot;admin.offline.generating_html_please_wait&quot;)+&quot;&lt;/h3&gt;&quot;);</span>
-<span class="nc" id="L91">		out.flush();</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">		for (int i=0; i&lt;100; i++)</span>
+<span class="fc" id="L88">		response.setContentType(&quot;text/html; charset=&quot;+SetCharacterEncodingFilter.selectEncoding(request));</span>
+<span class="fc" id="L89">		PrintWriter out = response.getWriter();</span>
+<span class="fc" id="L90">		out.println(&quot;&lt;html&gt;&lt;head&gt;&lt;LINK rel='stylesheet' href='/admin/css/style.css'&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="fc" id="L91">		out.println(&quot;&lt;h3&gt;&quot;+prop.getText(&quot;admin.offline.generating_html_please_wait&quot;)+&quot;&lt;/h3&gt;&quot;);</span>
+<span class="fc" id="L92">		out.flush();</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">		for (int i=0; i&lt;100; i++)</span>
 		{
-<span class="nc" id="L94">			out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
-<span class="nc" id="L95">			out.flush();</span>
+<span class="fc" id="L95">			out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="fc" id="L96">			out.flush();</span>
 		}
 
 		//ziskaj si zoznam DocId
-<span class="nc" id="L99">		List&lt;DocDetails&gt; documents = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L100">		StringBuilder searchGroups = null;</span>
-<span class="nc" id="L101">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L102">		int groupId = -1;</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">		if(request.getParameter(&quot;groupId&quot;)!=null) groupId = Tools.getIntValue(request.getParameter(&quot;groupId&quot;), groupId);</span>
+<span class="fc" id="L100">		List&lt;DocDetails&gt; documents = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L101">		StringBuilder searchGroups = null;</span>
+<span class="fc" id="L102">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L103">		int groupId = -1;</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">		if(request.getParameter(&quot;groupId&quot;)!=null) groupId = Tools.getIntValue(request.getParameter(&quot;groupId&quot;), groupId);</span>
 
 //		najdi child grupy
-<span class="nc bnc" id="L106" title="All 2 branches missed.">		for (GroupDetails group : groupsDB.getGroupsTree(groupId, true, true))</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">		for (GroupDetails group : groupsDB.getGroupsTree(groupId, true, true))</span>
 		{
-<span class="nc bnc" id="L108" title="All 4 branches missed.">			if (group != null &amp;&amp; group.isInternal()==false)</span>
+<span class="pc bpc" id="L109" title="2 of 4 branches missed.">			if (group != null &amp;&amp; group.isInternal()==false)</span>
 			{
-<span class="nc bnc" id="L110" title="All 2 branches missed.">				if (searchGroups == null)</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">				if (searchGroups == null)</span>
 				{
-<span class="nc" id="L112">					searchGroups = new StringBuilder(Integer.toString(group.getGroupId()));</span>
+<span class="fc" id="L113">					searchGroups = new StringBuilder(Integer.toString(group.getGroupId()));</span>
 				}
 				else
 				{
-<span class="nc" id="L116">					searchGroups.append(&quot;,&quot; + group.getGroupId());</span>
+<span class="fc" id="L117">					searchGroups.append(&quot;,&quot; + group.getGroupId());</span>
 				}
 			}
-<span class="nc" id="L119">		}</span>
-<span class="nc" id="L120">		Connection db_conn = null;</span>
-<span class="nc" id="L121">		PreparedStatement ps = null;</span>
-<span class="nc" id="L122">		ResultSet rs = null;</span>
-<span class="nc" id="L123">		String query = &quot;&quot;;</span>
-<span class="nc bnc" id="L124" title="All 4 branches missed.">		if (groupId == -1 || searchGroups == null)</span>
-<span class="nc" id="L125">			query = &quot;SELECT doc_id, title, virtual_path FROM documents WHERE available=? ORDER BY doc_id&quot;;</span>
+<span class="fc" id="L120">		}</span>
+<span class="fc" id="L121">		Connection db_conn = null;</span>
+<span class="fc" id="L122">		PreparedStatement ps = null;</span>
+<span class="fc" id="L123">		ResultSet rs = null;</span>
+<span class="fc" id="L124">		String query = &quot;&quot;;</span>
+<span class="pc bpc" id="L125" title="2 of 4 branches missed.">		if (groupId == -1 || searchGroups == null)</span>
+<span class="nc" id="L126">			query = &quot;SELECT doc_id, title, virtual_path FROM documents WHERE available=? ORDER BY doc_id&quot;;</span>
 		else
-<span class="nc" id="L127">			query = &quot;SELECT doc_id, title, virtual_path FROM documents WHERE available=? AND group_id IN (&quot;+ searchGroups.toString() +&quot;) ORDER BY doc_id&quot;;</span>
+<span class="fc" id="L128">			query = &quot;SELECT doc_id, title, virtual_path FROM documents WHERE available=? AND group_id IN (&quot;+ searchGroups.toString() +&quot;) ORDER BY doc_id&quot;;</span>
 		try
 		{
-<span class="nc" id="L130">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L131">			ps = db_conn.prepareStatement(query);</span>
-<span class="nc" id="L132">			ps.setBoolean(1, true);</span>
-<span class="nc" id="L133">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L134" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="fc" id="L131">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L132">			ps = db_conn.prepareStatement(query);</span>
+<span class="fc" id="L133">			ps.setBoolean(1, true);</span>
+<span class="fc" id="L134">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="nc" id="L136">				DocDetails doc = new DocDetails();</span>
-<span class="nc" id="L137">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
-<span class="nc" id="L138">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
-<span class="nc" id="L139">				doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
-<span class="nc" id="L140">				documents.add(doc);</span>
-<span class="nc" id="L141">			}</span>
-<span class="nc" id="L142">			rs.close();</span>
-<span class="nc" id="L143">			ps.close();</span>
-<span class="nc" id="L144">			rs = null;</span>
-<span class="nc" id="L145">			ps = null;</span>
+<span class="fc" id="L137">				DocDetails doc = new DocDetails();</span>
+<span class="fc" id="L138">				doc.setDocId(rs.getInt(&quot;doc_id&quot;));</span>
+<span class="fc" id="L139">				doc.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="fc" id="L140">				doc.setVirtualPath(DB.getDbString(rs, &quot;virtual_path&quot;));</span>
+<span class="fc" id="L141">				documents.add(doc);</span>
+<span class="fc" id="L142">			}</span>
+<span class="fc" id="L143">			rs.close();</span>
+<span class="fc" id="L144">			ps.close();</span>
+<span class="fc" id="L145">			rs = null;</span>
+<span class="fc" id="L146">			ps = null;</span>
 		}
-<span class="nc" id="L147">		catch (Exception ex)</span>
+<span class="nc" id="L148">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L149">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L150">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="nc bnc" id="L155" title="All 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L156">					db_conn.close();</span>
-<span class="nc bnc" id="L157" title="All 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L158">					rs.close();</span>
-<span class="nc bnc" id="L159" title="All 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L160">					ps.close();</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L157">					db_conn.close();</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L159">					rs.close();</span>
+<span class="pc bpc" id="L160" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L161">					ps.close();</span>
 			}
-<span class="nc" id="L162">			catch (Exception ex2)</span>
+<span class="nc" id="L163">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L164">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L165">			}</span>
+<span class="nc" id="L165">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L166">			}</span>
 		}
 
 		//debug
@@ -172,169 +173,169 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 		doc.setTitle(&quot;main&quot;);
 		documents.add(doc);*/
 
-<span class="nc" id="L175">		String destination = &quot;/html&quot;;</span>
+<span class="fc" id="L176">		String destination = &quot;/html&quot;;</span>
 
-<span class="nc bnc" id="L177" title="All 2 branches missed.">		if(request.getParameter(&quot;destination&quot;)!=null) destination = request.getParameter(&quot;destination&quot;);</span>
+<span class="pc bpc" id="L178" title="1 of 2 branches missed.">		if(request.getParameter(&quot;destination&quot;)!=null) destination = request.getParameter(&quot;destination&quot;);</span>
 
-<span class="nc bnc" id="L179" title="All 2 branches missed.">		if(Tools.isEmpty(destination)){</span>
-<span class="nc" id="L180">			destination = &quot;/html&quot;;</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">		if(Tools.isEmpty(destination)){</span>
+<span class="nc" id="L181">			destination = &quot;/html&quot;;</span>
 		}
 		else
 		{
-<span class="nc" id="L184">			destination = destination.trim();</span>
-<span class="nc bnc" id="L185" title="All 2 branches missed.">			if(destination.charAt(0) != '/')</span>
-<span class="nc" id="L186">				destination = &quot;/&quot;+destination;</span>
+<span class="fc" id="L185">			destination = destination.trim();</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">			if(destination.charAt(0) != '/')</span>
+<span class="nc" id="L187">				destination = &quot;/&quot;+destination;</span>
 		}
 
-<span class="nc" id="L189">		HttpURLConnection.setFollowRedirects(false);</span>
+<span class="fc" id="L190">		HttpURLConnection.setFollowRedirects(false);</span>
 
 		String data;
 		File f;
 		OutputStreamWriter osw;
 
-<span class="nc" id="L195">		f = new File(Tools.getRealPath(destination));</span>
+<span class="fc" id="L196">		f = new File(Tools.getRealPath(destination));</span>
 
-<span class="nc bnc" id="L197" title="All 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 		{
-<span class="nc" id="L199">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1));</span>
+<span class="nc" id="L200">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1));</span>
 		}
 
-<span class="nc bnc" id="L202" title="All 2 branches missed.">		if (f.exists())</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">		if (f.exists())</span>
 		{
 			//vymaz obsah
-<span class="nc" id="L205">			File[] files = f.listFiles();</span>
+<span class="nc" id="L206">			File[] files = f.listFiles();</span>
 			int i;
-<span class="nc bnc" id="L207" title="All 2 branches missed.">			for (i=0; i&lt;files.length; i++)</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">			for (i=0; i&lt;files.length; i++)</span>
 			{
-<span class="nc bnc" id="L209" title="All 2 branches missed.">				if(files[i].delete() == false)</span>
-<span class="nc" id="L210">				   Logger.error(OfflineAction.class, &quot;Unable to delete file: &quot;+files[i].getName());</span>
+<span class="nc bnc" id="L210" title="All 2 branches missed.">				if(files[i].delete() == false)</span>
+<span class="nc" id="L211">				   Logger.error(OfflineAction.class, &quot;Unable to delete file: &quot;+files[i].getName());</span>
 			}
-<span class="nc" id="L212">		}</span>
+<span class="nc" id="L213">		}</span>
 		else
 		{
-<span class="nc bnc" id="L215" title="All 2 branches missed.">			if(f.mkdirs() == false)</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">			if(f.mkdirs() == false)</span>
 			{
-<span class="nc" id="L217">				out.println(&quot;Unable to cretate directory: &quot;+PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + &quot;html&quot;);</span>
-<span class="nc" id="L218">				out.println(&quot;&lt;br /&gt;Archive creation stopped&quot;);</span>
-<span class="nc" id="L219">				return;</span>
+<span class="nc" id="L218">				out.println(&quot;Unable to cretate directory: &quot;+PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + &quot;html&quot;);</span>
+<span class="nc" id="L219">				out.println(&quot;&lt;br /&gt;Archive creation stopped&quot;);</span>
+<span class="nc" id="L220">				return;</span>
 			}
 		}
 
-<span class="nc" id="L223">		String basePath = Tools.getBaseHrefLoopback(request);</span>
-<span class="nc" id="L224">		int flushCounter = 0;</span>
+<span class="fc" id="L224">		String basePath = Tools.getBaseHrefLoopback(request);</span>
+<span class="fc" id="L225">		int flushCounter = 0;</span>
 		String fileName;
 
-<span class="nc" id="L227">		downloadedUrls = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L228">		needDownloadUrlsList = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L229">		allreadyHasInDownloadList = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L228">		downloadedUrls = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L229">		needDownloadUrlsList = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L230">		allreadyHasInDownloadList = new Hashtable&lt;&gt;();</span>
 
-<span class="nc" id="L231">		TemplatesDB templatesDB = null;</span>
-<span class="nc" id="L232">		DocDB docDB = null;</span>
-<span class="nc" id="L233">		TemplateDetails td = null;</span>
-<span class="nc" id="L234">		String pageFcieFileName = null;</span>
-<span class="nc" id="L235">		File pageFcieFile = null;</span>
-<span class="nc" id="L236">		String pageFcieData = null;</span>
+<span class="fc" id="L232">		TemplatesDB templatesDB = null;</span>
+<span class="fc" id="L233">		DocDB docDB = null;</span>
+<span class="fc" id="L234">		TemplateDetails td = null;</span>
+<span class="fc" id="L235">		String pageFcieFileName = null;</span>
+<span class="fc" id="L236">		File pageFcieFile = null;</span>
+<span class="fc" id="L237">		String pageFcieData = null;</span>
 
 		//#11325: vypinam spam protection
-<span class="nc bnc" id="L239" title="All 4 branches missed.">   		if(ConfDB.setName(&quot;disableSpamProtectionForOffline&quot;, &quot;true&quot;) &amp;&amp; ClusterDB.isServerRunningInClusterMode()) {</span>
-<span class="nc" id="L240">   			ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-disableSpamProtectionForOffline&quot;);</span>
+<span class="pc bpc" id="L240" title="2 of 4 branches missed.">   		if(ConfDB.setName(&quot;disableSpamProtectionForOffline&quot;, &quot;true&quot;) &amp;&amp; ClusterDB.isServerRunningInClusterMode()) {</span>
+<span class="fc" id="L241">   			ClusterDB.addRefresh(&quot;sk.iway.iwcm.system.ConfDB-disableSpamProtectionForOffline&quot;);</span>
 		}
 
-<span class="nc" id="L243">		int counter = 0;</span>
-<span class="nc" id="L244">		int size = documents.size();</span>
-<span class="nc bnc" id="L245" title="All 2 branches missed.">		for (DocDetails doc : documents)</span>
+<span class="fc" id="L244">		int counter = 0;</span>
+<span class="fc" id="L245">		int size = documents.size();</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">		for (DocDetails doc : documents)</span>
 		{
-<span class="nc" id="L247">			counter++;</span>
+<span class="fc" id="L248">			counter++;</span>
 
 			//if (doc.getDocId() &gt; 100) continue;
 
-<span class="nc" id="L251">			out.println(&quot;[&quot;+counter+&quot;/&quot;+size+&quot;] id=&quot;+ doc.getDocId() + &quot; title=&quot; + doc.getTitle());</span>
-<span class="nc" id="L252">			Logger.println(OfflineAction.class,&quot;[&quot;+counter+&quot;/&quot;+size+&quot;] id=&quot;+ doc.getDocId() + &quot; title=&quot; + doc.getTitle());</span>
+<span class="fc" id="L252">			out.println(&quot;[&quot;+counter+&quot;/&quot;+size+&quot;] id=&quot;+ doc.getDocId() + &quot; title=&quot; + doc.getTitle());</span>
+<span class="fc" id="L253">			Logger.println(OfflineAction.class,&quot;[&quot;+counter+&quot;/&quot;+size+&quot;] id=&quot;+ doc.getDocId() + &quot; title=&quot; + doc.getTitle());</span>
 
 			try
 			{
-<span class="nc bnc" id="L256" title="All 2 branches missed.">				if (Tools.isEmpty(doc.getVirtualPath()))</span>
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">				if (Tools.isEmpty(doc.getVirtualPath()))</span>
 				{
-<span class="nc" id="L258">					data = downloadUrl(basePath + &quot;/showdoc.do?docid=&quot;+doc.getDocId(), request);</span>
+<span class="nc" id="L259">					data = downloadUrl(basePath + &quot;/showdoc.do?docid=&quot;+doc.getDocId(), request);</span>
 				}
 				else
 				{
-<span class="nc" id="L262">					data = downloadUrl(basePath + doc.getVirtualPath(), request);</span>
+<span class="fc" id="L263">					data = downloadUrl(basePath + doc.getVirtualPath(), request);</span>
 				}
 
-<span class="nc bnc" id="L265" title="All 2 branches missed.">				if (Tools.isNotEmpty(data))</span>
+<span class="pc bpc" id="L266" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(data))</span>
 				{
 					//uprav cesty
-<span class="nc" id="L268">					data = fixPath(data, basePath);</span>
+<span class="fc" id="L269">					data = fixPath(data, basePath);</span>
 
 					/*
 					 * /components/_common/javascript/page_functions.js.jsp?language=LNG stiahnem ako page_functions_LNG.js do destination a fixnem linky
 					 * ticket #11321
 					 */
-<span class="nc bnc" id="L274" title="All 2 branches missed.">					if(data.indexOf(&quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;) != -1)</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">					if(data.indexOf(&quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;) != -1)</span>
 					{
-<span class="nc bnc" id="L276" title="All 2 branches missed.">						if(templatesDB == null) templatesDB = TemplatesDB.getInstance();</span>
-<span class="nc bnc" id="L277" title="All 2 branches missed.">						if(docDB == null) docDB = DocDB.getInstance();</span>
-<span class="nc" id="L278">						td = templatesDB.getTemplate(docDB.getBasicDocDetails(doc.getDocId(), true).getTempId());</span>
-<span class="nc bnc" id="L279" title="All 4 branches missed.">						if(td != null &amp;&amp; td.getTempId() &gt; 0)</span>
+<span class="nc bnc" id="L277" title="All 2 branches missed.">						if(templatesDB == null) templatesDB = TemplatesDB.getInstance();</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">						if(docDB == null) docDB = DocDB.getInstance();</span>
+<span class="nc" id="L279">						td = templatesDB.getTemplate(docDB.getBasicDocDetails(doc.getDocId(), true).getTempId());</span>
+<span class="nc bnc" id="L280" title="All 4 branches missed.">						if(td != null &amp;&amp; td.getTempId() &gt; 0)</span>
 						{
-<span class="nc" id="L281">							pageFcieFileName = &quot;page_functions_&quot;+td.getLng()+&quot;.js&quot;;</span>
-<span class="nc" id="L282">							pageFcieFile = new File(Tools.getRealPath(destination + &quot;/&quot; + pageFcieFileName)); //NOSONAR</span>
-<span class="nc bnc" id="L283" title="All 2 branches missed.">							if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
-<span class="nc" id="L284">								pageFcieFile = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + File.separatorChar + pageFcieFile.getName());</span>
+<span class="nc" id="L282">							pageFcieFileName = &quot;page_functions_&quot;+td.getLng()+&quot;.js&quot;;</span>
+<span class="nc" id="L283">							pageFcieFile = new File(Tools.getRealPath(destination + &quot;/&quot; + pageFcieFileName)); //NOSONAR</span>
+<span class="nc bnc" id="L284" title="All 2 branches missed.">							if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="nc" id="L285">								pageFcieFile = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + File.separatorChar + pageFcieFile.getName());</span>
 
-<span class="nc bnc" id="L286" title="All 2 branches missed.">							if(pageFcieFile.exists() == false)</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">							if(pageFcieFile.exists() == false)</span>
 							{
-<span class="nc" id="L288">								pageFcieData = downloadUrl(basePath + &quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;+td.getLng(), request);</span>
-<span class="nc" id="L289">								osw = new OutputStreamWriter(new FileOutputStream(pageFcieFile), SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L290">								osw.write(pageFcieData);</span>
-<span class="nc" id="L291">								osw.close();</span>
+<span class="nc" id="L289">								pageFcieData = downloadUrl(basePath + &quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;+td.getLng(), request);</span>
+<span class="nc" id="L290">								osw = new OutputStreamWriter(new FileOutputStream(pageFcieFile), SetCharacterEncodingFilter.getEncoding());</span>
+<span class="nc" id="L291">								osw.write(pageFcieData);</span>
+<span class="nc" id="L292">								osw.close();</span>
 							}
 
-<span class="nc" id="L294">							data = Tools.replace(data, &quot;../components/_common/javascript/page_functions.js.jsp?language=&quot;+td.getLng(), pageFcieFileName);</span>
-<span class="nc" id="L295">							data = Tools.replace(data, &quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;+td.getLng(), pageFcieFileName);</span>
+<span class="nc" id="L295">							data = Tools.replace(data, &quot;../components/_common/javascript/page_functions.js.jsp?language=&quot;+td.getLng(), pageFcieFileName);</span>
+<span class="nc" id="L296">							data = Tools.replace(data, &quot;/components/_common/javascript/page_functions.js.jsp?language=&quot;+td.getLng(), pageFcieFileName);</span>
 						}
 					}
 
 					//uloz stranku
-<span class="nc" id="L300">					fileName = getFileName(&quot;showdoc.do?docid=&quot;+doc.getDocId());</span>
-<span class="nc" id="L301">					f = new File(Tools.getRealPath(destination + &quot;/&quot; + fileName)); //NOSONAR</span>
-<span class="nc bnc" id="L302" title="All 2 branches missed.">					if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L301">					fileName = getFileName(&quot;showdoc.do?docid=&quot;+doc.getDocId());</span>
+<span class="fc" id="L302">					f = new File(Tools.getRealPath(destination + &quot;/&quot; + fileName)); //NOSONAR</span>
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 					{
-<span class="nc" id="L304">						f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + File.separatorChar + f.getName());</span>
+<span class="nc" id="L305">						f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + File.separatorChar + f.getName());</span>
 					}
 
-<span class="nc" id="L307">					osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L308">					osw.write(data);</span>
-<span class="nc" id="L309">					osw.close();</span>
+<span class="fc" id="L308">					osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L309">					osw.write(data);</span>
+<span class="fc" id="L310">					osw.close();</span>
 
-<span class="nc" id="L311">					out.println(&quot; [OK]&quot;);</span>
+<span class="fc" id="L312">					out.println(&quot; [OK]&quot;);</span>
 
-<span class="nc" id="L313">					flushCounter++;</span>
-<span class="nc bnc" id="L314" title="All 2 branches missed.">					if (flushCounter%10==0)</span>
+<span class="fc" id="L314">					flushCounter++;</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">					if (flushCounter%10==0)</span>
 					{
-<span class="nc" id="L316">						out.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
-<span class="nc" id="L317">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
-<span class="nc" id="L318">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
-<span class="nc" id="L319">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
-<span class="nc" id="L320">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
-<span class="nc" id="L321">						out.flush();</span>
+<span class="fc" id="L317">						out.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L318">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="fc" id="L319">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="fc" id="L320">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="fc" id="L321">						out.println(&quot;&lt;!-- generating ---------------------------&gt;&quot;);</span>
+<span class="fc" id="L322">						out.flush();</span>
 					}
 
-<span class="nc" id="L324">					downloadedUrls.put(&quot;/showdoc.do?docid=&quot;+doc.getDocId(), destination + &quot;/&quot; + fileName);</span>
-<span class="nc bnc" id="L325" title="All 2 branches missed.">					if (Tools.isNotEmpty(doc.getVirtualPath()))</span>
+<span class="fc" id="L325">					downloadedUrls.put(&quot;/showdoc.do?docid=&quot;+doc.getDocId(), destination + &quot;/&quot; + fileName);</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(doc.getVirtualPath()))</span>
 					{
-<span class="nc" id="L327">						downloadedUrls.put(doc.getVirtualPath(), destination + &quot;/&quot; + fileName);</span>
+<span class="fc" id="L328">						downloadedUrls.put(doc.getVirtualPath(), destination + &quot;/&quot; + fileName);</span>
 					}
 				}
 			}
-<span class="nc" id="L331">			catch (Exception ex2)</span>
+<span class="nc" id="L332">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L333">				out.println(&quot;CHYBA: &quot;+ex2.getMessage());</span>
-<span class="nc" id="L334">			}</span>
+<span class="nc" id="L334">				out.println(&quot;CHYBA: &quot;+ex2.getMessage());</span>
+<span class="fc" id="L335">			}</span>
 
-<span class="nc" id="L336">			out.println(&quot;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L337">		}</span>
+<span class="fc" id="L337">			out.println(&quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L338">		}</span>
 
 		//if (1==1) return(null);
 
@@ -342,155 +343,155 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 		String link;
         String newLink;
 		LabelValueDetails lvd;
-<span class="nc" id="L345">		int i=0;</span>
-<span class="nc bnc" id="L346" title="All 2 branches missed.">		while (i &lt; needDownloadUrlsList.size())</span>
+<span class="fc" id="L346">		int i=0;</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">		while (i &lt; needDownloadUrlsList.size())</span>
 		{
-<span class="nc" id="L348">			lvd = needDownloadUrlsList.get(i++);</span>
+<span class="fc" id="L349">			lvd = needDownloadUrlsList.get(i++);</span>
 			try
 			{
-<span class="nc" id="L351">				link = lvd.getLabel();</span>
-<span class="nc bnc" id="L352" title="All 2 branches missed.">				if (link.indexOf(&quot;rnd=&quot;)!=-1)</span>
+<span class="fc" id="L352">				link = lvd.getLabel();</span>
+<span class="pc bpc" id="L353" title="1 of 2 branches missed.">				if (link.indexOf(&quot;rnd=&quot;)!=-1)</span>
 				{
 					//linka ma nahodny parameter, preskoc, lebo sa nam to zacykli
-<span class="nc" id="L355">					continue;</span>
+<span class="nc" id="L356">					continue;</span>
 				}
-<span class="nc bnc" id="L357" title="All 2 branches missed.">				if (link.indexOf(&quot;__fp=&quot;)!=-1)</span>
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">				if (link.indexOf(&quot;__fp=&quot;)!=-1)</span>
 				{
 					//linka na nejaky stripes form, preskoc
-<span class="nc" id="L360">					continue;</span>
+<span class="nc" id="L361">					continue;</span>
 				}
-<span class="nc bnc" id="L362" title="All 6 branches missed.">				if (link.indexOf(&quot;?d-&quot;)!=-1 &amp;&amp; (link.indexOf(&quot;-e=&quot;)!=-1 || link.indexOf(&quot;-p=&quot;)!=-1))</span>
+<span class="pc bpc" id="L363" title="5 of 6 branches missed.">				if (link.indexOf(&quot;?d-&quot;)!=-1 &amp;&amp; (link.indexOf(&quot;-e=&quot;)!=-1 || link.indexOf(&quot;-p=&quot;)!=-1))</span>
 				{
 					//linka na nejaky displaytag form, preskoc
-<span class="nc" id="L365">					continue;</span>
+<span class="nc" id="L366">					continue;</span>
 				}
-<span class="nc bnc" id="L367" title="All 2 branches missed.">				if (link.indexOf(&quot;forceBrowserDetector=&quot;)!=-1)</span>
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">				if (link.indexOf(&quot;forceBrowserDetector=&quot;)!=-1)</span>
 				{
 					//linka na inu vizualnu podobu, preskoc
-<span class="nc" id="L370">					continue;</span>
+<span class="nc" id="L371">					continue;</span>
 				}
-<span class="nc bnc" id="L372" title="All 4 branches missed.">				if (downloadedUrls.get(link)==null &amp;&amp; link.startsWith(&quot;/admin&quot;)==false)</span>
+<span class="pc bpc" id="L373" title="2 of 4 branches missed.">				if (downloadedUrls.get(link)==null &amp;&amp; link.startsWith(&quot;/admin&quot;)==false)</span>
 				{
 					//este to nie je stiahnute, treba stiahnut
-<span class="nc" id="L375">					newLink = lvd.getValue();</span>
-<span class="nc" id="L376">					out.println(&quot;&lt;br/&gt;NEED [&quot;+i+&quot;/&quot;+needDownloadUrlsList.size()+&quot;]: &quot; + link + &quot; -&gt; &quot; + newLink);</span>
-<span class="nc bnc" id="L377" title="All 2 branches missed.">					if (link.startsWith(&quot;../&quot;)) link = link.substring(2);</span>
-<span class="nc bnc" id="L378" title="All 2 branches missed.">					if (!link.startsWith(&quot;/&quot;)) link = &quot;/&quot; + link; //NOSONAR</span>
+<span class="fc" id="L376">					newLink = lvd.getValue();</span>
+<span class="fc" id="L377">					out.println(&quot;&lt;br/&gt;NEED [&quot;+i+&quot;/&quot;+needDownloadUrlsList.size()+&quot;]: &quot; + link + &quot; -&gt; &quot; + newLink);</span>
+<span class="pc bpc" id="L378" title="1 of 2 branches missed.">					if (link.startsWith(&quot;../&quot;)) link = link.substring(2);</span>
+<span class="fc bfc" id="L379" title="All 2 branches covered.">					if (!link.startsWith(&quot;/&quot;)) link = &quot;/&quot; + link; //NOSONAR</span>
 
-<span class="nc bnc" id="L380" title="All 8 branches missed.">					if (link.startsWith(&quot;/#&quot;) || link.startsWith(&quot;/files&quot;) || link.startsWith(&quot;/images&quot;) || link.startsWith(&quot;/jscripts&quot;) ||</span>
-<span class="nc bnc" id="L381" title="All 8 branches missed.">						 link.endsWith(&quot;.doc&quot;) || link.endsWith(&quot;.xls&quot;) || link.endsWith(&quot;.ppt&quot;) || link.endsWith(&quot;.pdf&quot;))</span>
+<span class="pc bpc" id="L381" title="2 of 8 branches missed.">					if (link.startsWith(&quot;/#&quot;) || link.startsWith(&quot;/files&quot;) || link.startsWith(&quot;/images&quot;) || link.startsWith(&quot;/jscripts&quot;) ||</span>
+<span class="pc bpc" id="L382" title="4 of 8 branches missed.">						 link.endsWith(&quot;.doc&quot;) || link.endsWith(&quot;.xls&quot;) || link.endsWith(&quot;.ppt&quot;) || link.endsWith(&quot;.pdf&quot;))</span>
 					{
-<span class="nc" id="L383">						downloadedUrls.put(link, link);</span>
-<span class="nc" id="L384">						continue;</span>
+<span class="fc" id="L384">						downloadedUrls.put(link, link);</span>
+<span class="fc" id="L385">						continue;</span>
 					}
 
 					//if (1==1) continue;
 
 					//	otestuj, ci to nie je existujuci subor
-<span class="nc" id="L390">					f = new File(Tools.getRealPath(link));</span>
-<span class="nc bnc" id="L391" title="All 2 branches missed.">					if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L391">					f = new File(Tools.getRealPath(link));</span>
+<span class="pc bpc" id="L392" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 					{
-<span class="nc" id="L393">						f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + link.replace('/', File.separatorChar));</span>
+<span class="nc" id="L394">						f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + link.replace('/', File.separatorChar));</span>
 					}
-<span class="nc" id="L395">					out.println(&quot;checking: &quot; + f.getAbsolutePath());</span>
-<span class="nc bnc" id="L396" title="All 2 branches missed.">					if (f.exists())</span>
+<span class="fc" id="L396">					out.println(&quot;checking: &quot; + f.getAbsolutePath());</span>
+<span class="fc bfc" id="L397" title="All 2 branches covered.">					if (f.exists())</span>
 					{
-<span class="nc" id="L398">						downloadedUrls.put(link, newLink);</span>
-<span class="nc" id="L399">						out.println(&quot; [EXISTING FILE OK]&lt;br&gt;&quot;);</span>
-<span class="nc" id="L400">						continue;</span>
+<span class="fc" id="L399">						downloadedUrls.put(link, newLink);</span>
+<span class="fc" id="L400">						out.println(&quot; [EXISTING FILE OK]&lt;br&gt;&quot;);</span>
+<span class="fc" id="L401">						continue;</span>
 					}
 
 
-<span class="nc" id="L404">					data = downloadUrl(basePath + link, request);</span>
-<span class="nc bnc" id="L405" title="All 2 branches missed.">					if (Tools.isNotEmpty(data))</span>
+<span class="fc" id="L405">					data = downloadUrl(basePath + link, request);</span>
+<span class="fc bfc" id="L406" title="All 2 branches covered.">					if (Tools.isNotEmpty(data))</span>
 					{
 						//	uprav cesty
-<span class="nc" id="L408">						data = fixPath(data, basePath);</span>
+<span class="fc" id="L409">						data = fixPath(data, basePath);</span>
 
 						//odstran nepotrebny HTML kod
-<span class="nc" id="L411">						data = cropData(data);</span>
+<span class="fc" id="L412">						data = cropData(data);</span>
 
-<span class="nc" id="L413">						f = new File(Tools.getRealPath( destination +&quot;/&quot; + newLink)); //NOSONAR</span>
-<span class="nc bnc" id="L414" title="All 2 branches missed.">						if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L414">						f = new File(Tools.getRealPath( destination +&quot;/&quot; + newLink)); //NOSONAR</span>
+<span class="pc bpc" id="L415" title="1 of 2 branches missed.">						if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 						{
-<span class="nc" id="L416">							f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + File.separatorChar + f.getName());</span>
+<span class="nc" id="L417">							f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + File.separatorChar + f.getName());</span>
 						}
 
-<span class="nc" id="L419">						osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L420">						osw.write(data);</span>
-<span class="nc" id="L421">						osw.close();</span>
+<span class="fc" id="L420">						osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L421">						osw.write(data);</span>
+<span class="fc" id="L422">						osw.close();</span>
 
-<span class="nc" id="L423">						out.println(&quot; [OK]&quot;);</span>
+<span class="fc" id="L424">						out.println(&quot; [OK]&quot;);</span>
 
-<span class="nc" id="L425">						downloadedUrls.put(link, newLink);</span>
+<span class="fc" id="L426">						downloadedUrls.put(link, newLink);</span>
 					}
 					else
 					{
-<span class="nc" id="L429">						out.println(&quot;--&gt; data is empty: &quot; + link);</span>
+<span class="fc" id="L430">						out.println(&quot;--&gt; data is empty: &quot; + link);</span>
 					}
-<span class="nc" id="L431">					out.println(&quot;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L432">					out.println(&quot;&lt;br&gt;&quot;);</span>
 				}
 				else
 				{
 					//out.println(&quot;UZ MAM: &quot; + link + &quot;&lt;br&gt;&quot;);
 				}
 			}
-<span class="nc" id="L438">			catch (Exception ex)</span>
+<span class="nc" id="L439">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L440">				out.println(&quot;&lt;span class='error'&gt;&quot;+ex.getMessage()+&quot;&lt;/span&gt;&quot;);</span>
-<span class="nc" id="L441">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L442">			}</span>
+<span class="nc" id="L441">				out.println(&quot;&lt;span class='error'&gt;&quot;+ex.getMessage()+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L442">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="pc" id="L443">			}</span>
 		}
 
 		//#11325: zapinam spam protection
-<span class="nc" id="L446">		ConfDB.deleteName(&quot;disableSpamProtectionForOffline&quot;);</span>
-<span class="nc" id="L447">		Constants.deleteConstant(&quot;disableSpamProtectionForOffline&quot;);</span>
+<span class="fc" id="L447">		ConfDB.deleteName(&quot;disableSpamProtectionForOffline&quot;);</span>
+<span class="fc" id="L448">		Constants.deleteConstant(&quot;disableSpamProtectionForOffline&quot;);</span>
 
-<span class="nc" id="L449">		Constants.getServletContext().removeAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L450">		Constants.getServletContext().removeAttribute(Constants.USER_KEY);</span>
 
 		//ak treba, vygeneruj not_available_on_cd.html
-<span class="nc" id="L452">		f = new File(Tools.getRealPath(destination +&quot;/not_available_on_cd.html&quot;));</span>
-<span class="nc bnc" id="L453" title="All 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L453">		f = new File(Tools.getRealPath(destination +&quot;/not_available_on_cd.html&quot;));</span>
+<span class="pc bpc" id="L454" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 		{
-<span class="nc" id="L455">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1)+ &quot;/not_available_on_cd.html&quot;);</span>
+<span class="nc" id="L456">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1)+ &quot;/not_available_on_cd.html&quot;);</span>
 		}
 
-<span class="nc bnc" id="L458" title="All 2 branches missed.">		if (f.exists()==false)</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">		if (f.exists()==false)</span>
 		{
-<span class="nc" id="L460">			data = &quot;&lt;html&gt;&lt;body&gt;&quot;+prop.getText(&quot;components.offline.notAvailableOnCD&quot;)+&quot;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
-<span class="nc" id="L461">			osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L462">			osw.write(data);</span>
-<span class="nc" id="L463">			osw.close();</span>
+<span class="fc" id="L461">			data = &quot;&lt;html&gt;&lt;body&gt;&quot;+prop.getText(&quot;components.offline.notAvailableOnCD&quot;)+&quot;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="fc" id="L462">			osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L463">			osw.write(data);</span>
+<span class="fc" id="L464">			osw.close();</span>
 		}
 
 		//	ak treba, vygeneruj blank.html
-<span class="nc" id="L467">		f = new File(Tools.getRealPath( destination+&quot;/blank.html&quot;));</span>
-<span class="nc bnc" id="L468" title="All 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L468">		f = new File(Tools.getRealPath( destination+&quot;/blank.html&quot;));</span>
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 		{
-<span class="nc" id="L470">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + &quot;/blank.html&quot;);</span>
+<span class="nc" id="L471">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + destination.substring(1) + &quot;/blank.html&quot;);</span>
 		}
 
-<span class="nc bnc" id="L473" title="All 2 branches missed.">		if (f.exists()==false)</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">		if (f.exists()==false)</span>
 		{
-<span class="nc" id="L475">			data = &quot;&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
-<span class="nc" id="L476">			osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L477">			osw.write(data);</span>
-<span class="nc" id="L478">			osw.close();</span>
+<span class="fc" id="L476">			data = &quot;&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="fc" id="L477">			osw = new OutputStreamWriter(new FileOutputStream(f), SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L478">			osw.write(data);</span>
+<span class="fc" id="L479">			osw.close();</span>
 		}
 
-<span class="nc" id="L481">		out.println(&quot;&lt;hr&gt;&quot; +prop.getText(&quot;admin.offline.generate_done&quot;)+ &quot;&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L482">		out.println(&quot;&lt;hr&gt;&quot; +prop.getText(&quot;admin.offline.generate_done&quot;)+ &quot;&lt;br&gt;&lt;br&gt;&quot;);</span>
 
-<span class="nc" id="L483">		String archiveDirs = request.getParameter(&quot;archiveDirs&quot;);</span>
-<span class="nc" id="L484">		String makeZipArchive = request.getParameter(&quot;makeZipArchive&quot;);</span>
-<span class="nc bnc" id="L485" title="All 6 branches missed.">		if (Tools.isNotEmpty(archiveDirs) &amp;&amp; Tools.isNotEmpty(makeZipArchive) &amp;&amp; &quot;yes&quot;.equals(makeZipArchive))</span>
+<span class="fc" id="L484">		String archiveDirs = request.getParameter(&quot;archiveDirs&quot;);</span>
+<span class="fc" id="L485">		String makeZipArchive = request.getParameter(&quot;makeZipArchive&quot;);</span>
+<span class="pc bpc" id="L486" title="3 of 6 branches missed.">		if (Tools.isNotEmpty(archiveDirs) &amp;&amp; Tools.isNotEmpty(makeZipArchive) &amp;&amp; &quot;yes&quot;.equals(makeZipArchive))</span>
 		{
-<span class="nc" id="L487">			makeZipArchive(Constants.getServletContext(), out, archiveDirs, basePath);</span>
+<span class="fc" id="L488">			makeZipArchive(Constants.getServletContext(), out, archiveDirs, basePath);</span>
 		}
 
-<span class="nc" id="L490">		out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="fc" id="L491">		out.println(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
 
-<span class="nc" id="L492">		HttpURLConnection.setFollowRedirects(true);</span>
-<span class="nc" id="L493">   }</span>
+<span class="fc" id="L493">		HttpURLConnection.setFollowRedirects(true);</span>
+<span class="fc" id="L494">   }</span>
 
 	/**
 	 * Vrati nazov suboru, pod ktorym bude stranka na disku
@@ -499,67 +500,67 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	 */
 	private String getFileName(String url)
 	{
-<span class="nc" id="L502">		String testUrl = url;</span>
-<span class="nc bnc" id="L503" title="All 2 branches missed.">		if (testUrl.startsWith(&quot;../&quot;))</span>
+<span class="fc" id="L503">		String testUrl = url;</span>
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">		if (testUrl.startsWith(&quot;../&quot;))</span>
 		{
-<span class="nc" id="L505">			testUrl = testUrl.substring(2);</span>
+<span class="nc" id="L506">			testUrl = testUrl.substring(2);</span>
 		}
-<span class="nc bnc" id="L507" title="All 2 branches missed.">		if (testUrl.startsWith(&quot;/&quot;)==false)</span>
+<span class="fc bfc" id="L508" title="All 2 branches covered.">		if (testUrl.startsWith(&quot;/&quot;)==false)</span>
 		{
-<span class="nc" id="L509">			testUrl = &quot;/&quot;+testUrl;</span>
+<span class="fc" id="L510">			testUrl = &quot;/&quot;+testUrl;</span>
 		}
 
-<span class="nc bnc" id="L512" title="All 4 branches missed.">		if (testUrl.startsWith(&quot;/files/&quot;) || testUrl.startsWith(&quot;/images/&quot;))</span>
+<span class="pc bpc" id="L513" title="1 of 4 branches missed.">		if (testUrl.startsWith(&quot;/files/&quot;) || testUrl.startsWith(&quot;/images/&quot;))</span>
 		{
 			//je to linka na subor, alebo obrazok
-<span class="nc" id="L515">			return(&quot;..&quot;+testUrl);</span>
+<span class="fc" id="L516">			return(&quot;..&quot;+testUrl);</span>
 		}
 
 		//otestuj, ci to nie je existujuci subor
-<span class="nc" id="L519">		File f = new File(Tools.getRealPath(testUrl));</span>
-<span class="nc bnc" id="L520" title="All 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L520">		File f = new File(Tools.getRealPath(testUrl));</span>
+<span class="pc bpc" id="L521" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 		{
-<span class="nc" id="L522">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + testUrl.replace('/', File.separatorChar));</span>
+<span class="nc" id="L523">			f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + testUrl.replace('/', File.separatorChar));</span>
 		}
 
-<span class="nc" id="L525">		Logger.println(OfflineAction.class,&quot;test: &quot; + testUrl + &quot; file=&quot;+f.getAbsolutePath() + &quot; ex=&quot;+f.exists());</span>
+<span class="fc" id="L526">		Logger.println(OfflineAction.class,&quot;test: &quot; + testUrl + &quot; file=&quot;+f.getAbsolutePath() + &quot; ex=&quot;+f.exists());</span>
 
-<span class="nc bnc" id="L527" title="All 2 branches missed.">		if (f.exists())</span>
+<span class="fc bfc" id="L528" title="All 2 branches covered.">		if (f.exists())</span>
 		{
-<span class="nc" id="L529">			return(&quot;..&quot;+testUrl);</span>
+<span class="fc" id="L530">			return(&quot;..&quot;+testUrl);</span>
 		}
 
-<span class="nc" id="L532">		int index = url.lastIndexOf('/');</span>
-<span class="nc bnc" id="L533" title="All 2 branches missed.">		if (index != -1)</span>
+<span class="fc" id="L533">		int index = url.lastIndexOf('/');</span>
+<span class="fc bfc" id="L534" title="All 2 branches covered.">		if (index != -1)</span>
 		{
-<span class="nc" id="L535">			url = url.substring(index+1);</span>
+<span class="fc" id="L536">			url = url.substring(index+1);</span>
 		}
 
 		try
 		{
-<span class="nc" id="L540">			url = URLDecoder.decode(url, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L541">			url = URLDecoder.decode(url, SetCharacterEncodingFilter.getEncoding());</span>
 		}
-<span class="nc" id="L542">		catch (UnsupportedEncodingException ex)</span>
+<span class="nc" id="L543">		catch (UnsupportedEncodingException ex)</span>
 		{
-<span class="nc" id="L544">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L545">		}</span>
+<span class="nc" id="L545">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L546">		}</span>
 
 		//odstran vsetky zle znaky
-<span class="nc" id="L548">		url = DocTools.removeChars(url);</span>
+<span class="fc" id="L549">		url = DocTools.removeChars(url);</span>
 
-<span class="nc" id="L550">		url = Tools.replace(url, &quot;showdoc.do_docid=&quot;, &quot;showdoc_&quot;);</span>
+<span class="fc" id="L551">		url = Tools.replace(url, &quot;showdoc.do_docid=&quot;, &quot;showdoc_&quot;);</span>
 
-<span class="nc" id="L552">		url = DB.internationalToEnglish(url.toLowerCase());</span>
+<span class="fc" id="L553">		url = DB.internationalToEnglish(url.toLowerCase());</span>
 
-<span class="nc bnc" id="L554" title="All 2 branches missed.">		if (url.indexOf(&quot;rnd=&quot;)!=-1)</span>
+<span class="pc bpc" id="L555" title="1 of 2 branches missed.">		if (url.indexOf(&quot;rnd=&quot;)!=-1)</span>
 		{
 			//stranka s nahodnym parametrom
-<span class="nc" id="L557">			url = url.substring(0, url.indexOf(&quot;rnd=&quot;));</span>
+<span class="nc" id="L558">			url = url.substring(0, url.indexOf(&quot;rnd=&quot;));</span>
 		}
 
-<span class="nc" id="L560">		url = url + &quot;.html&quot;;</span>
+<span class="fc" id="L561">		url = url + &quot;.html&quot;;</span>
 
-<span class="nc" id="L562">		return(url);</span>
+<span class="fc" id="L563">		return(url);</span>
 	}
 
 	/**
@@ -570,75 +571,75 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	private String fixPath(String data, String baseHref)
 	{
 		//odstran google analytics
-<span class="nc" id="L573">		data = Tools.replace(data, &quot;src=\&quot;http://www.google-analytics.com/urchin.js&quot;, &quot;&quot;);</span>
-<span class="nc" id="L574">		data = Tools.replace(data, &quot;src='http://www.google-analytics.com/urchin.js&quot;, &quot;&quot;);</span>
-<span class="nc" id="L575">		data = Tools.replace(data, &quot;urchinTracker();&quot;, &quot;&quot;);</span>
+<span class="fc" id="L574">		data = Tools.replace(data, &quot;src=\&quot;http://www.google-analytics.com/urchin.js&quot;, &quot;&quot;);</span>
+<span class="fc" id="L575">		data = Tools.replace(data, &quot;src='http://www.google-analytics.com/urchin.js&quot;, &quot;&quot;);</span>
+<span class="fc" id="L576">		data = Tools.replace(data, &quot;urchinTracker();&quot;, &quot;&quot;);</span>
 
 		//obrazky
-<span class="nc" id="L578">		data = Tools.replace(data, &quot;src='/&quot;, &quot;src='../&quot;);</span>
-<span class="nc" id="L579">		data = Tools.replace(data, &quot;src=\&quot;/&quot;, &quot;src=\&quot;../&quot;);</span>
-<span class="nc" id="L580">		data = Tools.replace(data, &quot;src=\&quot;images&quot;, &quot;src=\&quot;../images&quot;);</span>
-<span class="nc" id="L581">		data = Tools.replace(data, &quot;src='images&quot;, &quot;src='../images&quot;);</span>
-<span class="nc" id="L582">		data = Tools.replace(data, &quot;url(images/&quot;, &quot;url(../images/&quot;);</span>
-<span class="nc" id="L583">		data = Tools.replace(data, &quot;url(/images/&quot;, &quot;url(../images/&quot;);</span>
+<span class="fc" id="L579">		data = Tools.replace(data, &quot;src='/&quot;, &quot;src='../&quot;);</span>
+<span class="fc" id="L580">		data = Tools.replace(data, &quot;src=\&quot;/&quot;, &quot;src=\&quot;../&quot;);</span>
+<span class="fc" id="L581">		data = Tools.replace(data, &quot;src=\&quot;images&quot;, &quot;src=\&quot;../images&quot;);</span>
+<span class="fc" id="L582">		data = Tools.replace(data, &quot;src='images&quot;, &quot;src='../images&quot;);</span>
+<span class="fc" id="L583">		data = Tools.replace(data, &quot;url(images/&quot;, &quot;url(../images/&quot;);</span>
+<span class="fc" id="L584">		data = Tools.replace(data, &quot;url(/images/&quot;, &quot;url(../images/&quot;);</span>
 		//ak je tam nejaka JS funkcia, tam to treba spravit tiez
-<span class="nc" id="L585">		data = Tools.replace(data, &quot;'images/&quot;, &quot;'../images/&quot;);</span>
+<span class="fc" id="L586">		data = Tools.replace(data, &quot;'images/&quot;, &quot;'../images/&quot;);</span>
 		//linka vo Flashi
-<span class="nc" id="L587">		data = Tools.replace(data, &quot;VALUE=\&quot;/images/&quot;, &quot;VALUE=\&quot;../images/&quot;);</span>
-<span class="nc" id="L588">		data = Tools.replace(data, &quot;value=\&quot;/images/&quot;, &quot;value=\&quot;../images/&quot;);</span>
-<span class="nc" id="L589">		data = Tools.replace(data, &quot;value='/images/&quot;, &quot;value='../images/&quot;);</span>
-<span class="nc" id="L590">		data = Tools.replace(data, &quot;VALUE=\&quot;images/&quot;, &quot;VALUE=\&quot;../images/&quot;);</span>
-<span class="nc" id="L591">		data = Tools.replace(data, &quot;value=\&quot;flash/&quot;, &quot;value=\&quot;../flash/&quot;);</span>
-<span class="nc" id="L592">		data = Tools.replace(data, &quot;value=\&quot;/flash/&quot;, &quot;value=\&quot;../flash/&quot;);</span>
-<span class="nc" id="L593">		data = Tools.replace(data, &quot;data=\&quot;/images/&quot;, &quot;data=\&quot;../images/&quot;);</span>
-<span class="nc" id="L594">		data = Tools.replace(data, &quot;data='/images/&quot;, &quot;data='../images/&quot;);</span>
+<span class="fc" id="L588">		data = Tools.replace(data, &quot;VALUE=\&quot;/images/&quot;, &quot;VALUE=\&quot;../images/&quot;);</span>
+<span class="fc" id="L589">		data = Tools.replace(data, &quot;value=\&quot;/images/&quot;, &quot;value=\&quot;../images/&quot;);</span>
+<span class="fc" id="L590">		data = Tools.replace(data, &quot;value='/images/&quot;, &quot;value='../images/&quot;);</span>
+<span class="fc" id="L591">		data = Tools.replace(data, &quot;VALUE=\&quot;images/&quot;, &quot;VALUE=\&quot;../images/&quot;);</span>
+<span class="fc" id="L592">		data = Tools.replace(data, &quot;value=\&quot;flash/&quot;, &quot;value=\&quot;../flash/&quot;);</span>
+<span class="fc" id="L593">		data = Tools.replace(data, &quot;value=\&quot;/flash/&quot;, &quot;value=\&quot;../flash/&quot;);</span>
+<span class="fc" id="L594">		data = Tools.replace(data, &quot;data=\&quot;/images/&quot;, &quot;data=\&quot;../images/&quot;);</span>
+<span class="fc" id="L595">		data = Tools.replace(data, &quot;data='/images/&quot;, &quot;data='../images/&quot;);</span>
 
 		//flash
-<span class="nc" id="L597">		data = Tools.replace(data, &quot;&lt;PARAM NAME=\&quot;Movie\&quot; VALUE=\&quot;/&quot;, &quot;&lt;PARAM NAME=\&quot;Movie\&quot; VALUE=\&quot;../&quot;);</span>
-<span class="nc" id="L598">		data = Tools.replace(data, &quot;&lt;PARAM NAME=\&quot;Src\&quot; VALUE=\&quot;/&quot;, &quot;&lt;PARAM NAME=\&quot;Src\&quot; VALUE=\&quot;../&quot;);</span>
-<span class="nc" id="L599">		data = Tools.replace(data, &quot;/components/_common/preload.swf?path=/&quot;, &quot;../&quot;);</span>
+<span class="fc" id="L598">		data = Tools.replace(data, &quot;&lt;PARAM NAME=\&quot;Movie\&quot; VALUE=\&quot;/&quot;, &quot;&lt;PARAM NAME=\&quot;Movie\&quot; VALUE=\&quot;../&quot;);</span>
+<span class="fc" id="L599">		data = Tools.replace(data, &quot;&lt;PARAM NAME=\&quot;Src\&quot; VALUE=\&quot;/&quot;, &quot;&lt;PARAM NAME=\&quot;Src\&quot; VALUE=\&quot;../&quot;);</span>
+<span class="fc" id="L600">		data = Tools.replace(data, &quot;/components/_common/preload.swf?path=/&quot;, &quot;../&quot;);</span>
 
 		//subory
-<span class="nc" id="L602">		data = Tools.replace(data, &quot;href=\&quot;/files&quot;, &quot;href=\&quot;../files&quot;);</span>
-<span class="nc" id="L603">		data = Tools.replace(data, &quot;href='/files&quot;, &quot;href='../files&quot;);</span>
+<span class="fc" id="L603">		data = Tools.replace(data, &quot;href=\&quot;/files&quot;, &quot;href=\&quot;../files&quot;);</span>
+<span class="fc" id="L604">		data = Tools.replace(data, &quot;href='/files&quot;, &quot;href='../files&quot;);</span>
 
 		//javascript
-<span class="nc" id="L606">		data = Tools.replace(data, &quot;src=\&quot;jscripts/&quot;, &quot;src=\&quot;../jscripts/&quot;);</span>
-<span class="nc" id="L607">		data = Tools.replace(data, &quot;src='jscripts/&quot;, &quot;src='../jscripts/&quot;);</span>
+<span class="fc" id="L607">		data = Tools.replace(data, &quot;src=\&quot;jscripts/&quot;, &quot;src=\&quot;../jscripts/&quot;);</span>
+<span class="fc" id="L608">		data = Tools.replace(data, &quot;src='jscripts/&quot;, &quot;src='../jscripts/&quot;);</span>
 
 		//css
-<span class="nc" id="L610">		data = Tools.replace(data, &quot;href='/css&quot;, &quot;href='../css&quot;);</span>
-<span class="nc" id="L611">		data = Tools.replace(data, &quot;href=\&quot;/css&quot;, &quot;href=\&quot;../css&quot;);</span>
-<span class="nc" id="L612">		data = Tools.replace(data, &quot;href=\&quot;css&quot;, &quot;href=\&quot;../css&quot;);</span>
-<span class="nc" id="L613">		data = Tools.replace(data, &quot;href='css&quot;, &quot;href='../css&quot;);</span>
-<span class="nc" id="L614">		data = Tools.replace(data, &quot;@import /css&quot;, &quot;@import ../css&quot;);</span>
-<span class="nc" id="L615">		data = Tools.replace(data, &quot;@import '/css&quot;, &quot;@import '../css&quot;);</span>
-<span class="nc" id="L616">		data = Tools.replace(data, &quot;@import \&quot;/css&quot;, &quot;@import \&quot;../css&quot;);</span>
+<span class="fc" id="L611">		data = Tools.replace(data, &quot;href='/css&quot;, &quot;href='../css&quot;);</span>
+<span class="fc" id="L612">		data = Tools.replace(data, &quot;href=\&quot;/css&quot;, &quot;href=\&quot;../css&quot;);</span>
+<span class="fc" id="L613">		data = Tools.replace(data, &quot;href=\&quot;css&quot;, &quot;href=\&quot;../css&quot;);</span>
+<span class="fc" id="L614">		data = Tools.replace(data, &quot;href='css&quot;, &quot;href='../css&quot;);</span>
+<span class="fc" id="L615">		data = Tools.replace(data, &quot;@import /css&quot;, &quot;@import ../css&quot;);</span>
+<span class="fc" id="L616">		data = Tools.replace(data, &quot;@import '/css&quot;, &quot;@import '../css&quot;);</span>
+<span class="fc" id="L617">		data = Tools.replace(data, &quot;@import \&quot;/css&quot;, &quot;@import \&quot;../css&quot;);</span>
 
 		//odkazy
 		//Logger.println(OfflineAction.class,&quot;--&gt; &quot;);
 
-<span class="nc" id="L621">		ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());</span>
+<span class="fc" id="L622">		ByteArrayInputStream is = new ByteArrayInputStream(data.getBytes());</span>
 
 		// set tidy parameters
 		try {
-<span class="nc" id="L625">			Document doc = Jsoup.parse(is, SetCharacterEncodingFilter.getEncoding(), baseHref);</span>
-<span class="nc" id="L626">			data = extractLinks(doc, data);</span>
-<span class="nc" id="L627">		} catch (IOException e) {</span>
-<span class="nc" id="L628">			Logger.error(e);</span>
-<span class="nc" id="L629">		}</span>
+<span class="fc" id="L626">			Document doc = Jsoup.parse(is, SetCharacterEncodingFilter.getEncoding(), baseHref);</span>
+<span class="fc" id="L627">			data = extractLinks(doc, data);</span>
+<span class="nc" id="L628">		} catch (IOException e) {</span>
+<span class="nc" id="L629">			Logger.error(e);</span>
+<span class="fc" id="L630">		}</span>
 
 	   //uprav submity formularov
-<span class="nc" id="L632">	   data = Tools.replace(data, &quot;action='showdoc.do'&quot;, &quot;action='not_available_on_cd.html'&quot;);</span>
-<span class="nc" id="L633">	   data = Tools.replace(data, &quot;action='/showdoc.do'&quot;, &quot;action='not_available_on_cd.html'&quot;);</span>
-<span class="nc" id="L634">	   data = Tools.replace(data, &quot;action=\&quot;showdoc.do\&quot;&quot;, &quot;action=\&quot;not_available_on_cd.html\&quot;&quot;);</span>
-<span class="nc" id="L635">	   data = Tools.replace(data, &quot;action=\&quot;/showdoc.do\&quot;&quot;, &quot;action=\&quot;not_available_on_cd.html\&quot;&quot;);</span>
+<span class="fc" id="L633">	   data = Tools.replace(data, &quot;action='showdoc.do'&quot;, &quot;action='not_available_on_cd.html'&quot;);</span>
+<span class="fc" id="L634">	   data = Tools.replace(data, &quot;action='/showdoc.do'&quot;, &quot;action='not_available_on_cd.html'&quot;);</span>
+<span class="fc" id="L635">	   data = Tools.replace(data, &quot;action=\&quot;showdoc.do\&quot;&quot;, &quot;action=\&quot;not_available_on_cd.html\&quot;&quot;);</span>
+<span class="fc" id="L636">	   data = Tools.replace(data, &quot;action=\&quot;/showdoc.do\&quot;&quot;, &quot;action=\&quot;not_available_on_cd.html\&quot;&quot;);</span>
 
 	   //https redirecty v JS
-<span class="nc" id="L638">	   data = Tools.replace(data, &quot;if (window.location.href.indexOf(\&quot;http&quot;, &quot;if (false &amp;&amp; window.location.href.indexOf(\&quot;http&quot;);</span>
-<span class="nc" id="L639">	   data = Tools.replace(data, &quot;if (window.location.href.indexOf('http&quot;, &quot;if (false &amp;&amp; window.location.href.indexOf('http&quot;);</span>
+<span class="fc" id="L639">	   data = Tools.replace(data, &quot;if (window.location.href.indexOf(\&quot;http&quot;, &quot;if (false &amp;&amp; window.location.href.indexOf(\&quot;http&quot;);</span>
+<span class="fc" id="L640">	   data = Tools.replace(data, &quot;if (window.location.href.indexOf('http&quot;, &quot;if (false &amp;&amp; window.location.href.indexOf('http&quot;);</span>
 
-<span class="nc" id="L641">		return(data);</span>
+<span class="fc" id="L642">		return(data);</span>
 	}
 
 	/**
@@ -648,26 +649,26 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	 */
 	private String cropData(String data)
 	{
-<span class="nc" id="L651">		int failsafe = 0;</span>
-<span class="nc" id="L652">		int start = data.indexOf(CROP_START);</span>
-<span class="nc" id="L653">		int end = data.indexOf(CROP_END);</span>
+<span class="fc" id="L652">		int failsafe = 0;</span>
+<span class="fc" id="L653">		int start = data.indexOf(CROP_START);</span>
+<span class="fc" id="L654">		int end = data.indexOf(CROP_END);</span>
 
-<span class="nc bnc" id="L655" title="All 6 branches missed.">		while (start&gt;0 &amp;&amp; end &gt; start &amp;&amp; failsafe++&lt;50)</span>
+<span class="pc bpc" id="L656" title="5 of 6 branches missed.">		while (start&gt;0 &amp;&amp; end &gt; start &amp;&amp; failsafe++&lt;50)</span>
 		{
 			try
 			{
-<span class="nc" id="L659">				data = data.substring(0, start) + data.substring(end+CROP_END.length());</span>
+<span class="nc" id="L660">				data = data.substring(0, start) + data.substring(end+CROP_END.length());</span>
 
-<span class="nc" id="L661">				start = data.indexOf(CROP_START, start+1);</span>
-<span class="nc" id="L662">				end = data.indexOf(CROP_END, end+1);</span>
+<span class="nc" id="L662">				start = data.indexOf(CROP_START, start+1);</span>
+<span class="nc" id="L663">				end = data.indexOf(CROP_END, end+1);</span>
 			}
-<span class="nc" id="L664">			catch (Exception e)</span>
+<span class="nc" id="L665">			catch (Exception e)</span>
 			{
-<span class="nc" id="L666">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L667">			}</span>
+<span class="nc" id="L667">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L668">			}</span>
 		}
 
-<span class="nc" id="L670">		return data;</span>
+<span class="fc" id="L671">		return data;</span>
 	}
 
 	@SuppressWarnings(&quot;deprecation&quot;)
@@ -675,127 +676,125 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	{
 		try
 		{
-<span class="nc" id="L678">			Elements links = doc.select(&quot;a[href]&quot;); // a with href</span>
-<span class="nc bnc" id="L679" title="All 2 branches missed.">			for (Element e : links) {</span>
-<span class="nc" id="L680">				String link = e.attributes().get(&quot;href&quot;);</span>
+<span class="fc" id="L679">			Elements links = doc.select(&quot;a[href]&quot;); // a with href</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">			for (Element e : links) {</span>
+<span class="fc" id="L681">				String link = e.attributes().get(&quot;href&quot;);</span>
 
-<span class="nc bnc" id="L682" title="All 8 branches missed.">				if (link!=null &amp;&amp; Tools.isNotEmpty(link) &amp;&amp; link.toLowerCase().startsWith(&quot;http&quot;)==false &amp;&amp; link.toLowerCase().startsWith(&quot;mailto&quot;)==false)</span>
+<span class="pc bpc" id="L683" title="3 of 8 branches missed.">				if (link!=null &amp;&amp; Tools.isNotEmpty(link) &amp;&amp; link.toLowerCase().startsWith(&quot;http&quot;)==false &amp;&amp; link.toLowerCase().startsWith(&quot;mailto&quot;)==false)</span>
 				{
-<span class="nc" id="L684">					Logger.debug(OfflineAction.class, &quot;Extracting link: &quot; + link);</span>
+<span class="fc" id="L685">					Logger.debug(OfflineAction.class, &quot;Extracting link: &quot; + link);</span>
 
 					//	odstran zahradku
-<span class="nc bnc" id="L687" title="All 2 branches missed.">					if (link.indexOf('#')&gt;1)</span>
+<span class="pc bpc" id="L688" title="1 of 2 branches missed.">					if (link.indexOf('#')&gt;1)</span>
 					{
-<span class="nc" id="L689">						link = link.substring(0, link.indexOf('#'));</span>
+<span class="nc" id="L690">						link = link.substring(0, link.indexOf('#'));</span>
 					}
 
-					//TODO: osetri RND parameter
-
-<span class="nc" id="L694">					boolean isLinkDirect = false;</span>
+<span class="fc" id="L693">					boolean isLinkDirect = false;</span>
 					//otestuj, ci to nie je linka na nejaku skratenu cestu
-<span class="nc" id="L696">					DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L695">					DocDB docDB = DocDB.getInstance();</span>
 
-<span class="nc" id="L698">					int docId = docDB.getVirtualPathDocId(link);</span>
-<span class="nc bnc" id="L699" title="All 2 branches missed.">					if (docId &gt; 0)</span>
+<span class="fc" id="L697">					int docId = docDB.getVirtualPathDocId(link);</span>
+<span class="pc bpc" id="L698" title="1 of 2 branches missed.">					if (docId &gt; 0)</span>
 					{
-<span class="nc" id="L701">						String newLink = getFileName(&quot;showdoc.do?docid=&quot;+docId);</span>
-<span class="nc" id="L702">						Logger.debug(OfflineAction.class, &quot;Replacing link: link=&quot;+link+&quot; newLink=&quot;+newLink);</span>
-<span class="nc" id="L703">						data = replaceLink(data, link, newLink);</span>
-<span class="nc bnc" id="L704" title="All 2 branches missed.">						if (downloadedUrls.containsKey(link)==false)</span>
+<span class="nc" id="L700">						String newLink = getFileName(&quot;showdoc.do?docid=&quot;+docId);</span>
+<span class="nc" id="L701">						Logger.debug(OfflineAction.class, &quot;Replacing link: link=&quot;+link+&quot; newLink=&quot;+newLink);</span>
+<span class="nc" id="L702">						data = replaceLink(data, link, newLink);</span>
+<span class="nc bnc" id="L703" title="All 2 branches missed.">						if (downloadedUrls.containsKey(link)==false)</span>
 						{
 							//needDownloadUrlsList.add(new LabelValueDetails(link, newLink));
 
 							//je to linka na normalne docId, to nemusim stahovat, stiahne sa automaticky (ako vsetky ostatne docid)
-<span class="nc" id="L709">							downloadedUrls.put(link, newLink);</span>
-<span class="nc" id="L710">							Logger.println(OfflineAction.class,&quot;link DIRECT: &quot; + link + &quot; new:&quot;+newLink);</span>
+<span class="nc" id="L708">							downloadedUrls.put(link, newLink);</span>
+<span class="nc" id="L709">							Logger.println(OfflineAction.class,&quot;link DIRECT: &quot; + link + &quot; new:&quot;+newLink);</span>
 						}
-<span class="nc" id="L712">						isLinkDirect = true;</span>
+<span class="nc" id="L711">						isLinkDirect = true;</span>
 					}
 
-<span class="nc bnc" id="L715" title="All 2 branches missed.">					if (isLinkDirect == false)</span>
+<span class="pc bpc" id="L714" title="1 of 2 branches missed.">					if (isLinkDirect == false)</span>
 					{
 						//ziskaj docid
-<span class="nc" id="L718">						int start = link.indexOf(&quot;docid=&quot;);</span>
-<span class="nc bnc" id="L719" title="All 2 branches missed.">						if (start &gt; 0)</span>
+<span class="fc" id="L717">						int start = link.indexOf(&quot;docid=&quot;);</span>
+<span class="pc bpc" id="L718" title="1 of 2 branches missed.">						if (start &gt; 0)</span>
 						{
-<span class="nc" id="L721">							String tmp = link.substring(start);</span>
-<span class="nc" id="L722">							StringTokenizer st = new StringTokenizer(tmp, &quot;=&amp;'\&quot;, #&quot;);</span>
-<span class="nc bnc" id="L723" title="All 2 branches missed.">							if (st.countTokens()&lt;2)</span>
+<span class="nc" id="L720">							String tmp = link.substring(start);</span>
+<span class="nc" id="L721">							StringTokenizer st = new StringTokenizer(tmp, &quot;=&amp;'\&quot;, #&quot;);</span>
+<span class="nc bnc" id="L722" title="All 2 branches missed.">							if (st.countTokens()&lt;2)</span>
 							{
-<span class="nc" id="L725">								Logger.println(OfflineAction.class,&quot;zla linka: &quot; + tmp);</span>
+<span class="nc" id="L724">								Logger.println(OfflineAction.class,&quot;zla linka: &quot; + tmp);</span>
 							}
 							else
 							{
 								//preskocime docid=
-<span class="nc" id="L730">								st.nextToken();</span>
-<span class="nc" id="L731">								docId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L732" title="All 2 branches missed.">								if (docId &gt; 0)</span>
+<span class="nc" id="L729">								st.nextToken();</span>
+<span class="nc" id="L730">								docId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L731" title="All 2 branches missed.">								if (docId &gt; 0)</span>
 								{
-<span class="nc bnc" id="L734" title="All 2 branches missed.">									if (link.startsWith(&quot;javascript:&quot;))</span>
+<span class="nc bnc" id="L733" title="All 2 branches missed.">									if (link.startsWith(&quot;javascript:&quot;))</span>
 									{
-<span class="nc" id="L736">										Logger.println(OfflineAction.class,&quot;som JS&quot;);</span>
-<span class="nc bnc" id="L737" title="All 2 branches missed.">										if (link.indexOf(&quot;wjPopup&quot;)!=-1)</span>
+<span class="nc" id="L735">										Logger.println(OfflineAction.class,&quot;som JS&quot;);</span>
+<span class="nc bnc" id="L736" title="All 2 branches missed.">										if (link.indexOf(&quot;wjPopup&quot;)!=-1)</span>
 										{
-<span class="nc" id="L739">											Logger.println(OfflineAction.class,&quot;som wjPopup&quot;);</span>
+<span class="nc" id="L738">											Logger.println(OfflineAction.class,&quot;som wjPopup&quot;);</span>
 											//ok, je to popup, treba to preparsovat a ziskat len linku
-<span class="nc" id="L741">											start = link.indexOf(&quot;/showdoc.do&quot;);</span>
-<span class="nc" id="L742">											int end = link.indexOf(&quot;'&quot;, start+2);</span>
+<span class="nc" id="L740">											start = link.indexOf(&quot;/showdoc.do&quot;);</span>
+<span class="nc" id="L741">											int end = link.indexOf(&quot;'&quot;, start+2);</span>
 
-<span class="nc" id="L744">											Logger.println(OfflineAction.class,&quot;start=&quot;+start+&quot; end=&quot;+end);</span>
+<span class="nc" id="L743">											Logger.println(OfflineAction.class,&quot;start=&quot;+start+&quot; end=&quot;+end);</span>
 
-<span class="nc bnc" id="L746" title="All 4 branches missed.">											if (start &gt; 0 &amp;&amp; end &gt; start)</span>
+<span class="nc bnc" id="L745" title="All 4 branches missed.">											if (start &gt; 0 &amp;&amp; end &gt; start)</span>
 											{
-<span class="nc" id="L748">												link = link.substring(start, end);</span>
-<span class="nc" id="L749">												String newLink = getFileName(link);</span>
-<span class="nc" id="L750">												Logger.println(OfflineAction.class,&quot;link=&quot;+link+&quot; newLink=&quot;+newLink);</span>
-<span class="nc" id="L751">												data = replaceLink(data, link, newLink);</span>
+<span class="nc" id="L747">												link = link.substring(start, end);</span>
+<span class="nc" id="L748">												String newLink = getFileName(link);</span>
+<span class="nc" id="L749">												Logger.println(OfflineAction.class,&quot;link=&quot;+link+&quot; newLink=&quot;+newLink);</span>
+<span class="nc" id="L750">												data = replaceLink(data, link, newLink);</span>
 											}
-<span class="nc" id="L753">										}</span>
+<span class="nc" id="L752">										}</span>
 									}
 									else
 									{
-<span class="nc" id="L757">										String newLink = getFileName(link);</span>
-<span class="nc" id="L758">										data = replaceLink(data, link, newLink);</span>
-<span class="nc bnc" id="L759" title="All 2 branches missed.">										if (downloadedUrls.get(link)==null)</span>
+<span class="nc" id="L756">										String newLink = getFileName(link);</span>
+<span class="nc" id="L757">										data = replaceLink(data, link, newLink);</span>
+<span class="nc bnc" id="L758" title="All 2 branches missed.">										if (downloadedUrls.get(link)==null)</span>
 										{
-<span class="nc" id="L761">											addToDownloadList(link, newLink);</span>
+<span class="nc" id="L760">											addToDownloadList(link, newLink);</span>
 											//needDownloadUrlsList.add(new LabelValueDetails(link, newLink));
-<span class="nc" id="L763">											Logger.println(OfflineAction.class,&quot;link: &quot; + link + &quot; new:&quot;+newLink);</span>
-<span class="nc bnc" id="L764" title="All 2 branches missed.">											if (link.indexOf(&quot;2670400&quot;)!=-1)</span>
+<span class="nc" id="L762">											Logger.println(OfflineAction.class,&quot;link: &quot; + link + &quot; new:&quot;+newLink);</span>
+<span class="nc bnc" id="L763" title="All 2 branches missed.">											if (link.indexOf(&quot;2670400&quot;)!=-1)</span>
 											{
-<span class="nc" id="L766">												Logger.println(OfflineAction.class,&quot;===== MAM ====&quot;);</span>
-<span class="nc" id="L767">												Logger.println(OfflineAction.class,link + &quot;-&gt;&quot; + newLink);</span>
-<span class="nc" id="L768">												Logger.println(OfflineAction.class,&quot;==============&quot;);</span>
+<span class="nc" id="L765">												Logger.println(OfflineAction.class,&quot;===== MAM ====&quot;);</span>
+<span class="nc" id="L766">												Logger.println(OfflineAction.class,link + &quot;-&gt;&quot; + newLink);</span>
+<span class="nc" id="L767">												Logger.println(OfflineAction.class,&quot;==============&quot;);</span>
 											}
 										}
 									}
 								}
 							}
 
-<span class="nc" id="L775">						}</span>
-<span class="nc bnc" id="L776" title="All 6 branches missed.">						else if (link.toLowerCase().startsWith(&quot;javascript&quot;)==false &amp;&amp; &quot;/&quot;.equals(link)==false &amp;&amp; link.startsWith(&quot;www.&quot;)==false)</span>
+<span class="nc" id="L774">						}</span>
+<span class="pc bpc" id="L775" title="1 of 6 branches missed.">						else if (link.toLowerCase().startsWith(&quot;javascript&quot;)==false &amp;&amp; &quot;/&quot;.equals(link)==false &amp;&amp; link.startsWith(&quot;www.&quot;)==false)</span>
 						{
 							//ak to nie je ani javascript ani / (lebo sa potom nahradza &lt;/html&gt; ani www.nieco
 
 							//pridaj do zoznamu na download
-<span class="nc" id="L781">							String newLink = getFileName(link);</span>
-<span class="nc" id="L782">							data = replaceLink(data, link, newLink);</span>
-<span class="nc bnc" id="L783" title="All 2 branches missed.">							if (downloadedUrls.get(link)==null)</span>
+<span class="fc" id="L780">							String newLink = getFileName(link);</span>
+<span class="fc" id="L781">							data = replaceLink(data, link, newLink);</span>
+<span class="fc bfc" id="L782" title="All 2 branches covered.">							if (downloadedUrls.get(link)==null)</span>
 							{
-<span class="nc" id="L785">								addToDownloadList(link, newLink);</span>
+<span class="fc" id="L784">								addToDownloadList(link, newLink);</span>
 								//needDownloadUrlsList.add(new LabelValueDetails(link, newLink));
-<span class="nc" id="L787">								Logger.println(OfflineAction.class,&quot;link DIRECT: &quot; + link + &quot; new:&quot;+newLink);</span>
+<span class="fc" id="L786">								Logger.println(OfflineAction.class,&quot;link DIRECT: &quot; + link + &quot; new:&quot;+newLink);</span>
 							}
 						}
 					}
 				}
-<span class="nc" id="L792">			}</span>
+<span class="fc" id="L791">			}</span>
 		}
-<span class="nc" id="L794">		catch (Exception ex)</span>
+<span class="nc" id="L793">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L796">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L797">		}</span>
-<span class="nc" id="L798">		return(data);</span>
+<span class="nc" id="L795">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L796">		}</span>
+<span class="fc" id="L797">		return(data);</span>
 	}
 
 	/**
@@ -805,58 +804,58 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	 */
 	private void addToDownloadList(String link, String newLink)
 	{
-<span class="nc bnc" id="L808" title="All 4 branches missed.">		if (allreadyHasInDownloadList.get(link)==null &amp;&amp; link.startsWith(&quot;/admin/&quot;)==false)</span>
+<span class="pc bpc" id="L807" title="1 of 4 branches missed.">		if (allreadyHasInDownloadList.get(link)==null &amp;&amp; link.startsWith(&quot;/admin/&quot;)==false)</span>
 		{
-<span class="nc" id="L810">			needDownloadUrlsList.add(new LabelValueDetails(link, newLink));</span>
-<span class="nc" id="L811">			allreadyHasInDownloadList.put(link, newLink);</span>
+<span class="fc" id="L809">			needDownloadUrlsList.add(new LabelValueDetails(link, newLink));</span>
+<span class="fc" id="L810">			allreadyHasInDownloadList.put(link, newLink);</span>
 		}
-<span class="nc" id="L813">	}</span>
+<span class="fc" id="L812">	}</span>
 
 	private String replaceLink(String src, String oldStr, String newStr)
 	{
 		//pridaj na download
-<span class="nc bnc" id="L818" title="All 2 branches missed.">		if (downloadedUrls.get(oldStr)==null)</span>
+<span class="fc bfc" id="L817" title="All 2 branches covered.">		if (downloadedUrls.get(oldStr)==null)</span>
 		{
-<span class="nc" id="L820">			addToDownloadList(oldStr, newStr);</span>
+<span class="fc" id="L819">			addToDownloadList(oldStr, newStr);</span>
 			//needDownloadUrlsList.add(new LabelValueDetails(oldStr, newStr));
 		}
 
-<span class="nc bnc" id="L824" title="All 2 branches missed.">		if (src == null)</span>
+<span class="pc bpc" id="L823" title="1 of 2 branches missed.">		if (src == null)</span>
 		{
-<span class="nc" id="L826">			return (null);</span>
+<span class="nc" id="L825">			return (null);</span>
 		}
-<span class="nc bnc" id="L828" title="All 2 branches missed.">		if (src.indexOf(oldStr) == -1)</span>
+<span class="fc bfc" id="L827" title="All 2 branches covered.">		if (src.indexOf(oldStr) == -1)</span>
 		{
-<span class="nc" id="L830">			return (src);</span>
+<span class="fc" id="L829">			return (src);</span>
 		}
-<span class="nc" id="L832">		StringBuilder result = new StringBuilder(src.length() + 50);</span>
-<span class="nc" id="L833">		int startIndex = 0;</span>
-<span class="nc" id="L834">		int endIndex = src.indexOf(oldStr);</span>
-<span class="nc bnc" id="L835" title="All 2 branches missed.">		while (endIndex != -1)</span>
+<span class="fc" id="L831">		StringBuilder result = new StringBuilder(src.length() + 50);</span>
+<span class="fc" id="L832">		int startIndex = 0;</span>
+<span class="fc" id="L833">		int endIndex = src.indexOf(oldStr);</span>
+<span class="fc bfc" id="L834" title="All 2 branches covered.">		while (endIndex != -1)</span>
 		{
-<span class="nc bnc" id="L837" title="All 2 branches missed.">			if ((src.charAt(endIndex+oldStr.length())=='\'' ||</span>
-<span class="nc bnc" id="L838" title="All 2 branches missed.">				 src.charAt(endIndex+oldStr.length())=='&quot;' ||</span>
-<span class="nc bnc" id="L839" title="All 2 branches missed.">				 src.charAt(endIndex+oldStr.length())==' ' ||</span>
-<span class="nc bnc" id="L840" title="All 2 branches missed.">				 src.charAt(endIndex+oldStr.length())=='#') &amp;&amp;</span>
-<span class="nc bnc" id="L841" title="All 2 branches missed.">				 (src.charAt(endIndex-1)=='\'' ||</span>
-<span class="nc bnc" id="L842" title="All 2 branches missed.">				 src.charAt(endIndex-1)=='&quot;' ||</span>
-<span class="nc bnc" id="L843" title="All 2 branches missed.">				 src.charAt(endIndex-1)==' ' ||</span>
-<span class="nc bnc" id="L844" title="All 2 branches missed.">				 src.charAt(endIndex-1)=='#'))</span>
+<span class="fc bfc" id="L836" title="All 2 branches covered.">			if ((src.charAt(endIndex+oldStr.length())=='\'' ||</span>
+<span class="fc bfc" id="L837" title="All 2 branches covered.">				 src.charAt(endIndex+oldStr.length())=='&quot;' ||</span>
+<span class="pc bpc" id="L838" title="1 of 2 branches missed.">				 src.charAt(endIndex+oldStr.length())==' ' ||</span>
+<span class="pc bpc" id="L839" title="1 of 2 branches missed.">				 src.charAt(endIndex+oldStr.length())=='#') &amp;&amp;</span>
+<span class="fc bfc" id="L840" title="All 2 branches covered.">				 (src.charAt(endIndex-1)=='\'' ||</span>
+<span class="fc bfc" id="L841" title="All 2 branches covered.">				 src.charAt(endIndex-1)=='&quot;' ||</span>
+<span class="pc bpc" id="L842" title="1 of 2 branches missed.">				 src.charAt(endIndex-1)==' ' ||</span>
+<span class="pc bpc" id="L843" title="1 of 2 branches missed.">				 src.charAt(endIndex-1)=='#'))</span>
 			{
 				//replacujeme len kompletne linky, preto kontrolujeme koniec na '&quot;_
-<span class="nc" id="L847">				result.append(src.substring(startIndex, endIndex));</span>
-<span class="nc" id="L848">				result.append(newStr);</span>
-<span class="nc" id="L849">				startIndex = endIndex + oldStr.length();</span>
-<span class="nc" id="L850">				endIndex = src.indexOf(oldStr, startIndex);</span>
+<span class="fc" id="L846">				result.append(src.substring(startIndex, endIndex));</span>
+<span class="fc" id="L847">				result.append(newStr);</span>
+<span class="fc" id="L848">				startIndex = endIndex + oldStr.length();</span>
+<span class="fc" id="L849">				endIndex = src.indexOf(oldStr, startIndex);</span>
 			}
 			else
 			{
 				//preskakujeme
-<span class="nc" id="L855">				endIndex = src.indexOf(oldStr, endIndex+1);</span>
+<span class="fc" id="L854">				endIndex = src.indexOf(oldStr, endIndex+1);</span>
 			}
 		}
-<span class="nc" id="L858">		result.append(src.substring(startIndex, src.length()));</span>
-<span class="nc" id="L859">		return result.toString();</span>
+<span class="fc" id="L857">		result.append(src.substring(startIndex, src.length()));</span>
+<span class="fc" id="L858">		return result.toString();</span>
 	}
 
 
@@ -869,27 +868,27 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	 */
 	private void makeZipArchive(ServletContext servletContext, PrintWriter printWriter, String mainDirs, String basePath)
 	{
-<span class="nc bnc" id="L872" title="All 2 branches missed.">		if ((&quot;,&quot;+mainDirs+&quot;,&quot;).indexOf(&quot;,html,&quot;)==-1)</span>
+<span class="pc bpc" id="L871" title="1 of 2 branches missed.">		if ((&quot;,&quot;+mainDirs+&quot;,&quot;).indexOf(&quot;,html,&quot;)==-1)</span>
 		{
 			//html adresar sa musi archivovat, naviac na zaciatku neexistuje, takze ho tam
 			//pouzivatel ani nevie zadat
-<span class="nc" id="L876">			mainDirs = mainDirs + &quot;,html&quot;;</span>
+<span class="fc" id="L875">			mainDirs = mainDirs + &quot;,html&quot;;</span>
 		}
 
-<span class="nc" id="L879">		printWriter.println(&quot;&lt;b&gt;Archiving...&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
-<span class="nc" id="L880">		Logger.println(OfflineAction.class,&quot;Archiving...&quot;+mainDirs);</span>
+<span class="fc" id="L878">		printWriter.println(&quot;&lt;b&gt;Archiving...&lt;/b&gt;&lt;br&gt;&lt;br&gt;&quot;);</span>
+<span class="fc" id="L879">		Logger.println(OfflineAction.class,&quot;Archiving...&quot;+mainDirs);</span>
 		double time;
 		String outFilename;
 		String zipFilePath;
-<span class="nc" id="L884">		String[] archiveDirs = {&quot;css&quot;, &quot;files&quot;, &quot;images&quot;, &quot;jscripts&quot;,&quot;html&quot;};</span>
+<span class="fc" id="L883">		String[] archiveDirs = {&quot;css&quot;, &quot;files&quot;, &quot;images&quot;, &quot;jscripts&quot;,&quot;html&quot;};</span>
 		File f;
 		String zipDirPath;
 
 	   try
 		{
 
-<span class="nc" id="L891">			f = new File(Tools.getRealPath(&quot;/&quot;));</span>
-<span class="nc" id="L892">			zipDirPath = Tools.getRealPath(&quot;/&quot;);</span>
+<span class="fc" id="L890">			f = new File(Tools.getRealPath(&quot;/&quot;));</span>
+<span class="fc" id="L891">			zipDirPath = Tools.getRealPath(&quot;/&quot;);</span>
 
 			/*if (Tools.isNotEmpty(PathFilter.getCustomPath()))
 			{
@@ -899,209 +898,209 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 
 			//Logger.println(OfflineAction.class,&quot;zipDirPath: &quot;+zipDirPath);
 
-<span class="nc" id="L902">	   	SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
-<span class="nc" id="L903">	   	SimpleDateFormat timeFormat = new SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
-<span class="nc" id="L904">	   	long dateTime = Tools.getNow();</span>
+<span class="fc" id="L901">	   	SimpleDateFormat dateFormat = new SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="fc" id="L902">	   	SimpleDateFormat timeFormat = new SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
+<span class="fc" id="L903">	   	long dateTime = Tools.getNow();</span>
 	   	//poskladam nazov suboru
-<span class="nc" id="L906">	   	String fileName = &quot;offline-&quot; +Constants.getInstallName() +&quot;-&quot;+ dateFormat.format(new Timestamp(dateTime)) +&quot;-&quot;+ timeFormat.format(new Timestamp(dateTime)) +&quot;.zip&quot;;</span>
+<span class="fc" id="L905">	   	String fileName = &quot;offline-&quot; +Constants.getInstallName() +&quot;-&quot;+ dateFormat.format(new Timestamp(dateTime)) +&quot;-&quot;+ timeFormat.format(new Timestamp(dateTime)) +&quot;.zip&quot;;</span>
 
 	   	//z nazvu suboru vyhodim zakazane znaky
-<span class="nc" id="L909">	   	fileName = DocTools.removeChars(fileName);</span>
+<span class="fc" id="L908">	   	fileName = DocTools.removeChars(fileName);</span>
 	   //	if (!zipDirPath.startsWith(&quot;/&quot;))  zipDirPath = &quot;/&quot; + zipDirPath;
 	   //	if (!zipDirPath.endsWith(&quot;/&quot;))  zipDirPath = zipDirPath + &quot;/&quot;;
 
 	   	//poskladam cestu archivu
-<span class="nc" id="L914">	   	zipFilePath = zipDirPath + fileName;</span>
+<span class="fc" id="L913">	   	zipFilePath = zipDirPath + fileName;</span>
 
 	   	//Logger.println(OfflineAction.class,&quot;zipFilePath: &quot;+zipFilePath);
 
 	   	//vytvorime si ZIP file
 	      //outFilename = Tools.getRealPath(zipFilePath);
-<span class="nc" id="L920">	   	outFilename = zipFilePath;</span>
-<span class="nc" id="L921">	      ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outFilename));</span>
+<span class="fc" id="L919">	   	outFilename = zipFilePath;</span>
+<span class="fc" id="L920">	      ZipOutputStream zipOut = new ZipOutputStream(new FileOutputStream(outFilename));</span>
 
 	       //zmeriame cas operacie
-<span class="nc" id="L924">	       time = Tools.getNow();</span>
+<span class="fc" id="L923">	       time = Tools.getNow();</span>
 
-<span class="nc bnc" id="L926" title="All 2 branches missed.">	      if (Tools.isNotEmpty(mainDirs))</span>
+<span class="pc bpc" id="L925" title="1 of 2 branches missed.">	      if (Tools.isNotEmpty(mainDirs))</span>
 	   	{
 	   		//rozparsujeme si adresare, ktore sa budu archivovat
-<span class="nc" id="L929">		   	archiveDirs = RelatedPagesDB.getTokens(mainDirs, &quot;,&quot;);</span>
+<span class="fc" id="L928">		   	archiveDirs = RelatedPagesDB.getTokens(mainDirs, &quot;,&quot;);</span>
 	   	}
 
 	       //iterujeme po adresaroch a pridavame subory do ZIP-archivu
-<span class="nc bnc" id="L933" title="All 2 branches missed.">	       for (int i=0; i&lt;archiveDirs.length; i++)</span>
+<span class="fc bfc" id="L932" title="All 2 branches covered.">	       for (int i=0; i&lt;archiveDirs.length; i++)</span>
 	       {
-<span class="nc" id="L935">	       	getFilesFromDir(Tools.getRealPath(&quot;/&quot;+archiveDirs[i]), basePath, servletContext, zipOut, printWriter);</span>
+<span class="fc" id="L934">	       	getFilesFromDir(Tools.getRealPath(&quot;/&quot;+archiveDirs[i]), basePath, servletContext, zipOut, printWriter);</span>
 	       }
 
 	      //pridavam index.html pre offline verziu
          String data;
 
-<span class="nc" id="L941">         	fileName = &quot;index-offline.htm&quot;;</span>
-<span class="nc" id="L942">				data = &quot;&lt;!DOCTYPE HTML PUBLIC \&quot;-//W3C//DTD HTML 4.0 Frameset//EN\&quot;&gt;&quot;+</span>
+<span class="fc" id="L940">         	fileName = &quot;index-offline.htm&quot;;</span>
+<span class="fc" id="L941">				data = &quot;&lt;!DOCTYPE HTML PUBLIC \&quot;-//W3C//DTD HTML 4.0 Frameset//EN\&quot;&gt;&quot;+</span>
 						&quot;&lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;WebJet&lt;/TITLE&gt;&quot;+
 						&quot;&lt;META http-equiv=Content-Type content=\&quot;text/html; charset=windows-1250\&quot;&gt;&lt;/HEAD&gt;&quot;+
 						&quot;&lt;FRAMESET frameSpacing=0 frameBorder=0 cols=0,*&gt;&lt;FRAME src=\&quot;html/blank.htm\&quot; noResize&gt;&quot;+
-<span class="nc" id="L946">						&quot;&lt;FRAME name=RightMain src=\&quot;html/&quot; +getFileName(&quot;showdoc.do?docid=4&quot;)+ &quot;\&quot; scrolling=yes&gt;&quot;+</span>
-<span class="nc" id="L947">						&quot;&lt;NOFRAMES&gt;&lt;a href='html/&quot; +getFileName(&quot;showdoc.do?docid=4&quot;)+ &quot;'&gt;WebJet&lt;/a&gt;&quot;+</span>
+<span class="fc" id="L945">						&quot;&lt;FRAME name=RightMain src=\&quot;html/&quot; +getFileName(&quot;showdoc.do?docid=4&quot;)+ &quot;\&quot; scrolling=yes&gt;&quot;+</span>
+<span class="fc" id="L946">						&quot;&lt;NOFRAMES&gt;&lt;a href='html/&quot; +getFileName(&quot;showdoc.do?docid=4&quot;)+ &quot;'&gt;WebJet&lt;/a&gt;&quot;+</span>
 						&quot;&lt;/NOFRAMES&gt;&lt;/FRAMESET&gt;&lt;/HTML&gt;&quot;;
 
 				//uloz stranku
-<span class="nc" id="L951">				f = new File(Tools.getRealPath(&quot;/&quot; + fileName)); //NOSONAR</span>
-<span class="nc bnc" id="L952" title="All 2 branches missed.">				if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L950">				f = new File(Tools.getRealPath(&quot;/&quot; + fileName)); //NOSONAR</span>
+<span class="pc bpc" id="L951" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 				{
-<span class="nc" id="L954">					f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + f.getName());</span>
+<span class="nc" id="L953">					f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar + f.getName());</span>
 				}
 
 				 //Add ZIP entry to output stream.
-<span class="nc" id="L958">				 zipOut.putNextEntry(new ZipEntry(f.getAbsolutePath()));</span>
-<span class="nc" id="L959">		     	 zipOut.write(data.getBytes());</span>
+<span class="fc" id="L957">				 zipOut.putNextEntry(new ZipEntry(f.getAbsolutePath()));</span>
+<span class="fc" id="L958">		     	 zipOut.write(data.getBytes());</span>
 
 	          // Complete the entry
-<span class="nc" id="L962">	          zipOut.closeEntry();</span>
+<span class="fc" id="L961">	          zipOut.closeEntry();</span>
 
 
 			//pridavam blank.html pre offline verziu
-<span class="nc" id="L966">			data = &quot;&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
-<span class="nc" id="L967">				fileName = &quot;blank.htm&quot;;</span>
-<span class="nc" id="L968">				f = new File(Tools.getRealPath(&quot;/html/&quot; + fileName));</span>
-<span class="nc bnc" id="L969" title="All 2 branches missed.">				if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
+<span class="fc" id="L965">			data = &quot;&lt;html&gt;&lt;body&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="fc" id="L966">				fileName = &quot;blank.htm&quot;;</span>
+<span class="fc" id="L967">				f = new File(Tools.getRealPath(&quot;/html/&quot; + fileName));</span>
+<span class="pc bpc" id="L968" title="1 of 2 branches missed.">				if (Tools.isNotEmpty(PathFilter.getCustomPath()))</span>
 				{
-<span class="nc" id="L971">					f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar+ &quot;html&quot; + File.separatorChar + f.getName());</span>
+<span class="nc" id="L970">					f = new File(PathFilter.getCustomPath() + File.separatorChar + Constants.getInstallName() + File.separatorChar+ &quot;html&quot; + File.separatorChar + f.getName());</span>
 				}
 				 //Add ZIP entry to output stream.
-<span class="nc" id="L974">				 zipOut.putNextEntry(new ZipEntry(f.getAbsolutePath()));</span>
-<span class="nc" id="L975">		     	 zipOut.write(data.getBytes());</span>
+<span class="fc" id="L973">				 zipOut.putNextEntry(new ZipEntry(f.getAbsolutePath()));</span>
+<span class="fc" id="L974">		     	 zipOut.write(data.getBytes());</span>
 
 	          // Complete the entry
-<span class="nc" id="L978">	          zipOut.closeEntry();</span>
+<span class="fc" id="L977">	          zipOut.closeEntry();</span>
 
 	       // uzavretie ZIP suboru
-<span class="nc" id="L981">	       zipOut.close();</span>
-<span class="nc" id="L982">	       time = (Tools.getNow() - time)/1000D;</span>
-<span class="nc" id="L983">	       printWriter.println(&quot;&lt;br&gt;&lt;b&gt;Done!&lt;br&gt;Time left: &quot;+time+&quot; sec&lt;/b&gt;&quot;);</span>
-<span class="nc" id="L984">	       printWriter.println(&quot;&lt;br&gt;Archive filename: &lt;b&gt;&quot;+fileName+&quot;&lt;/b&gt;&quot;);</span>
+<span class="fc" id="L980">	       zipOut.close();</span>
+<span class="fc" id="L981">	       time = (Tools.getNow() - time)/1000D;</span>
+<span class="fc" id="L982">	       printWriter.println(&quot;&lt;br&gt;&lt;b&gt;Done!&lt;br&gt;Time left: &quot;+time+&quot; sec&lt;/b&gt;&quot;);</span>
+<span class="fc" id="L983">	       printWriter.println(&quot;&lt;br&gt;Archive filename: &lt;b&gt;&quot;+fileName+&quot;&lt;/b&gt;&quot;);</span>
 	   }
-<span class="nc" id="L986">	   catch (Exception e)</span>
+<span class="nc" id="L985">	   catch (Exception e)</span>
 		{
-<span class="nc" id="L988">	   	sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L989">		}</span>
-<span class="nc" id="L990">	}</span>
+<span class="nc" id="L987">	   	sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L988">		}</span>
+<span class="fc" id="L989">	}</span>
 
 
 	private void getFilesFromDir(String mainDir, String basePath, ServletContext servletContext, ZipOutputStream zipOut, PrintWriter printWriter)
 	{
-<span class="nc" id="L995">		byte[] buf = new byte[BUFFER];</span>
+<span class="fc" id="L994">		byte[] buf = new byte[BUFFER];</span>
 		FileInputStream in;
-<span class="nc" id="L997">		int scrollIndex = 0;</span>
+<span class="fc" id="L996">		int scrollIndex = 0;</span>
 
-<span class="nc bnc" id="L999" title="All 2 branches missed.">		if (mainDir.endsWith(&quot;/&quot;))</span>
+<span class="pc bpc" id="L998" title="1 of 2 branches missed.">		if (mainDir.endsWith(&quot;/&quot;))</span>
 		{
-<span class="nc" id="L1001">			mainDir = mainDir.substring(0, mainDir.length()-1);</span>
+<span class="nc" id="L1000">			mainDir = mainDir.substring(0, mainDir.length()-1);</span>
 		}
 		//Logger.println(OfflineAction.class,&quot;mainDir: &quot;+mainDir);
 
-<span class="nc" id="L1005">		String realPath = mainDir;</span>
-<span class="nc bnc" id="L1006" title="All 2 branches missed.">		if (realPath != null)</span>
+<span class="fc" id="L1004">		String realPath = mainDir;</span>
+<span class="pc bpc" id="L1005" title="1 of 2 branches missed.">		if (realPath != null)</span>
 		{
-<span class="nc" id="L1008">			File file = new File(realPath);</span>
+<span class="fc" id="L1007">			File file = new File(realPath);</span>
 			int size;
 			int i;
 
 			try
 			{
-<span class="nc" id="L1014">				Logger.println(OfflineAction.class,&quot;file name: &quot;+file.getAbsolutePath());</span>
-<span class="nc bnc" id="L1015" title="All 2 branches missed.">				if (file.isDirectory())</span>
+<span class="fc" id="L1013">				Logger.println(OfflineAction.class,&quot;file name: &quot;+file.getAbsolutePath());</span>
+<span class="pc bpc" id="L1014" title="1 of 2 branches missed.">				if (file.isDirectory())</span>
 				{
-<span class="nc" id="L1017">					File[] files = file.listFiles();</span>
-<span class="nc" id="L1018">					size = files.length;</span>
-<span class="nc bnc" id="L1019" title="All 2 branches missed.">					for (i=0; i&lt;size; i++)</span>
+<span class="fc" id="L1016">					File[] files = file.listFiles();</span>
+<span class="fc" id="L1017">					size = files.length;</span>
+<span class="fc bfc" id="L1018" title="All 2 branches covered.">					for (i=0; i&lt;size; i++)</span>
 					{
-<span class="nc" id="L1021">						file = files[i];</span>
+<span class="fc" id="L1020">						file = files[i];</span>
 
-<span class="nc bnc" id="L1023" title="All 2 branches missed.">						if (file.isDirectory())</span>
+<span class="pc bpc" id="L1022" title="1 of 2 branches missed.">						if (file.isDirectory())</span>
 						{
-<span class="nc bnc" id="L1025" title="All 2 branches missed.">							if (!file.getName().equalsIgnoreCase(&quot;cvs&quot;))</span>
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">							if (!file.getName().equalsIgnoreCase(&quot;cvs&quot;))</span>
 							{
-<span class="nc" id="L1027">								getFilesFromDir(mainDir+&quot;/&quot;+file.getName(), basePath, servletContext, zipOut, printWriter);</span>
+<span class="nc" id="L1026">								getFilesFromDir(mainDir+&quot;/&quot;+file.getName(), basePath, servletContext, zipOut, printWriter);</span>
 							}
 						}
 						else
 						{
-<span class="nc bnc" id="L1032" title="All 4 branches missed.">							if (file.getName().toLowerCase().indexOf(&quot;.cvsignore&quot;) == -1 &amp;&amp; !file.getName().toLowerCase().endsWith(&quot;.zip&quot;))</span>
+<span class="pc bpc" id="L1031" title="2 of 4 branches missed.">							if (file.getName().toLowerCase().indexOf(&quot;.cvsignore&quot;) == -1 &amp;&amp; !file.getName().toLowerCase().endsWith(&quot;.zip&quot;))</span>
 							{
-<span class="nc bnc" id="L1034" title="All 2 branches missed.">								if (printWriter != null)</span>
+<span class="pc bpc" id="L1033" title="1 of 2 branches missed.">								if (printWriter != null)</span>
 								{
-<span class="nc" id="L1036">									printWriter.println(&quot;Adding file: &quot;+file.getName()+&quot;&lt;br&gt;&quot;);</span>
-<span class="nc bnc" id="L1037" title="All 2 branches missed.">									if (scrollIndex &gt;= 15)</span>
+<span class="fc" id="L1035">									printWriter.println(&quot;Adding file: &quot;+file.getName()+&quot;&lt;br&gt;&quot;);</span>
+<span class="fc bfc" id="L1036" title="All 2 branches covered.">									if (scrollIndex &gt;= 15)</span>
 									{
-<span class="nc" id="L1039">										printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
-<span class="nc" id="L1040">										scrollIndex = 0;</span>
+<span class="fc" id="L1038">										printWriter.println(&quot;&lt;script language='javascript'&gt;window.scrollBy(0,1000);&lt;/script&gt;&quot;);</span>
+<span class="fc" id="L1039">										scrollIndex = 0;</span>
 									}
-<span class="nc" id="L1042">									printWriter.flush();</span>
-<span class="nc" id="L1043">									scrollIndex++;</span>
+<span class="fc" id="L1041">									printWriter.flush();</span>
+<span class="fc" id="L1042">									scrollIndex++;</span>
 								}
 
-<span class="nc bnc" id="L1046" title="All 2 branches missed.">								if (file.getName().toLowerCase().indexOf(&quot;.css&quot;) != -1)</span>
+<span class="pc bpc" id="L1045" title="1 of 2 branches missed.">								if (file.getName().toLowerCase().indexOf(&quot;.css&quot;) != -1)</span>
 								{
-<span class="nc" id="L1048">									StringBuilder sb = new StringBuilder();</span>
-<span class="nc" id="L1049">									String data = null;</span>
-<span class="nc" id="L1050">									in = new FileInputStream(file);</span>
-<span class="nc" id="L1051">									InputStreamReader inStr = new InputStreamReader(in, Constants.FILE_ENCODING);</span>
+<span class="nc" id="L1047">									StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L1048">									String data = null;</span>
+<span class="nc" id="L1049">									in = new FileInputStream(file);</span>
+<span class="nc" id="L1050">									InputStreamReader inStr = new InputStreamReader(in, Constants.FILE_ENCODING);</span>
 
-<span class="nc" id="L1053">									char[] buffer = new char[8000];</span>
-<span class="nc" id="L1054">									int n = 0;</span>
+<span class="nc" id="L1052">									char[] buffer = new char[8000];</span>
+<span class="nc" id="L1053">									int n = 0;</span>
 									while (true)
 									{
-<span class="nc" id="L1057">										 n = inStr.read(buffer);</span>
-<span class="nc bnc" id="L1058" title="All 2 branches missed.">										 if (n &lt; 1) break;</span>
-<span class="nc" id="L1059">										 sb.append(buffer, 0, n);</span>
+<span class="nc" id="L1056">										 n = inStr.read(buffer);</span>
+<span class="nc bnc" id="L1057" title="All 2 branches missed.">										 if (n &lt; 1) break;</span>
+<span class="nc" id="L1058">										 sb.append(buffer, 0, n);</span>
 									}
-<span class="nc" id="L1061">									in.close();</span>
-<span class="nc" id="L1062">									inStr.close();</span>
-<span class="nc" id="L1063">									data = sb.toString();</span>
+<span class="nc" id="L1060">									in.close();</span>
+<span class="nc" id="L1061">									inStr.close();</span>
+<span class="nc" id="L1062">									data = sb.toString();</span>
 
 									//uprav cesty
-<span class="nc" id="L1066">									data = fixPath(data, basePath);</span>
+<span class="nc" id="L1065">									data = fixPath(data, basePath);</span>
 
 									//Add ZIP entry to output stream.
-<span class="nc" id="L1069">									zipOut.putNextEntry(new ZipEntry(file.getAbsolutePath()));</span>
+<span class="nc" id="L1068">									zipOut.putNextEntry(new ZipEntry(file.getAbsolutePath()));</span>
 
 					            // Transfer bytes from the file to the ZIP file
-<span class="nc" id="L1072">									zipOut.write(data.getBytes());</span>
+<span class="nc" id="L1071">									zipOut.write(data.getBytes());</span>
 
-<span class="nc" id="L1074">								}</span>
+<span class="nc" id="L1073">								}</span>
 								else
 								{
-<span class="nc" id="L1077">									in = new FileInputStream(realPath + File.separatorChar + file.getName());</span>
+<span class="fc" id="L1076">									in = new FileInputStream(realPath + File.separatorChar + file.getName());</span>
 
 									//Add ZIP entry to output stream.
-<span class="nc" id="L1080">									zipOut.putNextEntry(new ZipEntry(file.getAbsolutePath()));</span>
+<span class="fc" id="L1079">									zipOut.putNextEntry(new ZipEntry(file.getAbsolutePath()));</span>
 
 					            // Transfer bytes from the file to the ZIP file
 					            int len;
-<span class="nc bnc" id="L1084" title="All 2 branches missed.">					            while ((len = in.read(buf)) &gt; 0)</span>
+<span class="fc bfc" id="L1083" title="All 2 branches covered.">					            while ((len = in.read(buf)) &gt; 0)</span>
 					            {
-<span class="nc" id="L1086">					            	zipOut.write(buf, 0, len);</span>
+<span class="fc" id="L1085">					            	zipOut.write(buf, 0, len);</span>
 					            }
 								}
 				            // Complete the entry
-<span class="nc" id="L1090">				            zipOut.closeEntry();</span>
-<span class="nc" id="L1091">				            in.close();</span>
+<span class="fc" id="L1089">				            zipOut.closeEntry();</span>
+<span class="fc" id="L1090">				            in.close();</span>
 							}
 						}
 					}
 				}
 			}
-<span class="nc" id="L1097">			catch (Exception e)</span>
+<span class="nc" id="L1096">			catch (Exception e)</span>
 			{
-<span class="nc" id="L1099">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L1100">			}</span>
+<span class="nc" id="L1098">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L1099">			}</span>
 		}
 
 
-<span class="nc" id="L1104">	}</span>
+<span class="fc" id="L1103">	}</span>
 
 	/**
 	 * Stiahnutie stranky s vyuzitim Jakarta HTTP Client (zvlada POST aj GET)
@@ -1113,140 +1112,140 @@ import sk.iway.iwcm.system.zip.ZipOutputStream;
 	public static String downloadUrl(String basePath, HttpServletRequest req)
 	{
 		//aby nas neodhlasilo
-<span class="nc bnc" id="L1116" title="All 2 branches missed.">		if (basePath.contains(&quot;/logoff.do&quot;)) return &quot;&quot;;</span>
+<span class="fc bfc" id="L1115" title="All 2 branches covered.">		if (basePath.contains(&quot;/logoff.do&quot;)) return &quot;&quot;;</span>
 
-<span class="nc" id="L1118">		String data = null;</span>
+<span class="fc" id="L1117">		String data = null;</span>
 
-<span class="nc" id="L1120">		HttpClient client = HttpClientBuilder.create().build();</span>
+<span class="fc" id="L1119">		HttpClient client = HttpClientBuilder.create().setSSLContext(Tools.doNotVerifyCertificates(null)).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();</span>
 
-<span class="nc" id="L1122">		Logger.println(OfflineAction.class,basePath);</span>
+<span class="fc" id="L1121">		Logger.println(OfflineAction.class,basePath);</span>
 		String name;
         String value;
 
-<span class="nc" id="L1126">	   HttpGet method = new HttpGet(basePath);</span>
+<span class="fc" id="L1125">	   HttpGet method = new HttpGet(basePath);</span>
 
-<span class="nc" id="L1128">      Enumeration&lt;String&gt; e = req.getHeaderNames();</span>
-<span class="nc bnc" id="L1129" title="All 2 branches missed.">		while (e.hasMoreElements())</span>
+<span class="fc" id="L1127">      Enumeration&lt;String&gt; e = req.getHeaderNames();</span>
+<span class="fc bfc" id="L1128" title="All 2 branches covered.">		while (e.hasMoreElements())</span>
 		{
-<span class="nc" id="L1131">			name = e.nextElement();</span>
-<span class="nc" id="L1132">			value = req.getHeader(name);</span>
-<span class="nc bnc" id="L1133" title="All 2 branches missed.">			if (&quot;host&quot;.equalsIgnoreCase(name))</span>
+<span class="fc" id="L1130">			name = e.nextElement();</span>
+<span class="fc" id="L1131">			value = req.getHeader(name);</span>
+<span class="fc bfc" id="L1132" title="All 2 branches covered.">			if (&quot;host&quot;.equalsIgnoreCase(name))</span>
 			{
 				//value = &quot;www2.ing.cz&quot;;
 				try
 				{
-<span class="nc" id="L1138">					URL url = new URL(basePath);</span>
-<span class="nc" id="L1139">					value = url.getHost();</span>
+<span class="fc" id="L1137">					URL url = new URL(basePath);</span>
+<span class="fc" id="L1138">					value = url.getHost();</span>
 				}
-<span class="nc" id="L1141">				catch (Exception ex)</span>
+<span class="nc" id="L1140">				catch (Exception ex)</span>
 				{
 
-<span class="nc" id="L1144">				}</span>
+<span class="fc" id="L1143">				}</span>
 			}
-<span class="nc bnc" id="L1146" title="All 2 branches missed.">			if (&quot;User-Agent&quot;.equalsIgnoreCase(name))</span>
+<span class="fc bfc" id="L1145" title="All 2 branches covered.">			if (&quot;User-Agent&quot;.equalsIgnoreCase(name))</span>
 			{
-<span class="nc" id="L1148">				value = value + &quot;; WebJET Offline&quot;; //NOSONAR</span>
+<span class="fc" id="L1147">				value = value + &quot;; WebJET Offline&quot;; //NOSONAR</span>
 			}
-<span class="nc" id="L1150">			method.setHeader(name, value);</span>
-<span class="nc" id="L1151">			Logger.println(OfflineAction.class,name+&quot;: &quot;+value);</span>
+<span class="fc" id="L1149">			method.setHeader(name, value);</span>
+<span class="fc" id="L1150">			Logger.println(OfflineAction.class,name+&quot;: &quot;+value);</span>
 		}
-<span class="nc" id="L1153">		method.setHeader(&quot;userInServletContext&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L1152">		method.setHeader(&quot;userInServletContext&quot;, &quot;true&quot;);</span>
 		//nastav dmail header, aby sa negeneroval inline editor
-<span class="nc" id="L1155">		method.setHeader(&quot;dmail&quot;, &quot;1&quot;);</span>
+<span class="fc" id="L1154">		method.setHeader(&quot;dmail&quot;, &quot;1&quot;);</span>
 
-<span class="nc" id="L1157">		String contentType = req.getContentType()+&quot;; charset=&quot;+req.getCharacterEncoding();</span>
-<span class="nc" id="L1158">		method.setHeader(&quot;Content-Type&quot;, contentType);</span>
-<span class="nc" id="L1159">		Logger.println(OfflineAction.class,&quot;header: Content-Type: &quot; + contentType);</span>
+<span class="fc" id="L1156">		String contentType = req.getContentType()+&quot;; charset=&quot;+req.getCharacterEncoding();</span>
+<span class="fc" id="L1157">		method.setHeader(&quot;Content-Type&quot;, contentType);</span>
+<span class="fc" id="L1158">		Logger.println(OfflineAction.class,&quot;header: Content-Type: &quot; + contentType);</span>
 
 		try {
-<span class="nc" id="L1162">			HttpResponse response = client.execute(method);</span>
+<span class="fc" id="L1161">			HttpResponse response = client.execute(method);</span>
 
 			// write out the response headers
-<span class="nc" id="L1165">			Logger.println(OfflineAction.class,&quot;*** Response ***&quot;);</span>
-<span class="nc" id="L1166">			Logger.println(OfflineAction.class,&quot;Status Line: &quot; + response.getStatusLine());</span>
-<span class="nc" id="L1167">			Header[] responseHeaders = response.getAllHeaders();</span>
+<span class="fc" id="L1164">			Logger.println(OfflineAction.class,&quot;*** Response ***&quot;);</span>
+<span class="fc" id="L1165">			Logger.println(OfflineAction.class,&quot;Status Line: &quot; + response.getStatusLine());</span>
+<span class="fc" id="L1166">			Header[] responseHeaders = response.getAllHeaders();</span>
 			Header h;
-<span class="nc" id="L1169">			String location = null;</span>
-<span class="nc bnc" id="L1170" title="All 2 branches missed.">			for (int i=0; i&lt;responseHeaders.length; i++)</span>
+<span class="fc" id="L1168">			String location = null;</span>
+<span class="fc bfc" id="L1169" title="All 2 branches covered.">			for (int i=0; i&lt;responseHeaders.length; i++)</span>
 			{
-<span class="nc" id="L1172">				h = responseHeaders[i];</span>
+<span class="fc" id="L1171">				h = responseHeaders[i];</span>
 				//Logger.print(this,responseHeaders[i]);
-<span class="nc bnc" id="L1174" title="All 4 branches missed.">				if (h.getName()!=null &amp;&amp; h.getValue() != null)</span>
+<span class="pc bpc" id="L1173" title="2 of 4 branches missed.">				if (h.getName()!=null &amp;&amp; h.getValue() != null)</span>
 				{
-<span class="nc" id="L1176">					Logger.println(OfflineAction.class,h.getName()+&quot;: &quot;+h.getValue());</span>
-<span class="nc bnc" id="L1177" title="All 2 branches missed.">					if (h.getName().equalsIgnoreCase(&quot;Location&quot;))</span>
+<span class="fc" id="L1175">					Logger.println(OfflineAction.class,h.getName()+&quot;: &quot;+h.getValue());</span>
+<span class="pc bpc" id="L1176" title="1 of 2 branches missed.">					if (h.getName().equalsIgnoreCase(&quot;Location&quot;))</span>
 					{
-<span class="nc" id="L1179">						location = h.getValue();</span>
+<span class="nc" id="L1178">						location = h.getValue();</span>
 					}
 					//res.setHeader(h.getName(), h.getValue());
 				}
 			}
 
-<span class="nc bnc" id="L1185" title="All 2 branches missed.">			if (location == null)</span>
+<span class="pc bpc" id="L1184" title="1 of 2 branches missed.">			if (location == null)</span>
 			{
 				try
 				{
-<span class="nc" id="L1189">					StringBuilder sb = new StringBuilder();</span>
-<span class="nc" id="L1190">					BufferedInputStream is = new BufferedInputStream(response.getEntity().getContent());</span>
-<span class="nc" id="L1191">					InputStreamReader in = new InputStreamReader(is, SetCharacterEncodingFilter.getEncoding());</span>
-<span class="nc" id="L1192">					char[] buffer = new char[8000];</span>
-<span class="nc" id="L1193">					int n = 0;</span>
+<span class="fc" id="L1188">					StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L1189">					BufferedInputStream is = new BufferedInputStream(response.getEntity().getContent());</span>
+<span class="fc" id="L1190">					InputStreamReader in = new InputStreamReader(is, SetCharacterEncodingFilter.getEncoding());</span>
+<span class="fc" id="L1191">					char[] buffer = new char[8000];</span>
+<span class="fc" id="L1192">					int n = 0;</span>
 					while (true)
 					{
-<span class="nc" id="L1196">						 n = in.read(buffer);</span>
-<span class="nc bnc" id="L1197" title="All 2 branches missed.">						 if (n &lt; 1) break;</span>
-<span class="nc" id="L1198">						 sb.append(buffer, 0, n);</span>
+<span class="fc" id="L1195">						 n = in.read(buffer);</span>
+<span class="fc bfc" id="L1196" title="All 2 branches covered.">						 if (n &lt; 1) break;</span>
+<span class="fc" id="L1197">						 sb.append(buffer, 0, n);</span>
 					}
-<span class="nc" id="L1200">					in.close();</span>
-<span class="nc" id="L1201">					data = sb.toString();</span>
+<span class="fc" id="L1199">					in.close();</span>
+<span class="fc" id="L1200">					data = sb.toString();</span>
 				}
-<span class="nc" id="L1203">				catch (IOException ex)</span>
+<span class="nc" id="L1202">				catch (IOException ex)</span>
 				{
-<span class="nc" id="L1205">					sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1206">				}</span>
+<span class="nc" id="L1204">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="pc" id="L1205">				}</span>
 			}
 			else
 			{
 				try
 				{
 					//	uprav location
-<span class="nc" id="L1213">					String baseHref = Tools.getBaseHrefLoopback(req);</span>
-<span class="nc bnc" id="L1214" title="All 2 branches missed.">					if (location.startsWith(baseHref))</span>
+<span class="nc" id="L1212">					String baseHref = Tools.getBaseHrefLoopback(req);</span>
+<span class="nc bnc" id="L1213" title="All 2 branches missed.">					if (location.startsWith(baseHref))</span>
 					{
-<span class="nc" id="L1216">						location = location.substring(location.indexOf('/', 9));</span>
+<span class="nc" id="L1215">						location = location.substring(location.indexOf('/', 9));</span>
 					}
-<span class="nc" id="L1218">					int start = location.indexOf(&quot;;jsessionid&quot;);</span>
-<span class="nc bnc" id="L1219" title="All 2 branches missed.">					if (start !=-1)</span>
+<span class="nc" id="L1217">					int start = location.indexOf(&quot;;jsessionid&quot;);</span>
+<span class="nc bnc" id="L1218" title="All 2 branches missed.">					if (start !=-1)</span>
 					{
-<span class="nc" id="L1221">						int end = location.indexOf('?', start);</span>
-<span class="nc bnc" id="L1222" title="All 2 branches missed.">						if (end &gt; start)</span>
+<span class="nc" id="L1220">						int end = location.indexOf('?', start);</span>
+<span class="nc bnc" id="L1221" title="All 2 branches missed.">						if (end &gt; start)</span>
 						{
-<span class="nc" id="L1224">							location = location.substring(0, start) + location.substring(end);</span>
+<span class="nc" id="L1223">							location = location.substring(0, start) + location.substring(end);</span>
 						}
 						else
 						{
-<span class="nc" id="L1228">							location = location.substring(0, start);</span>
+<span class="nc" id="L1227">							location = location.substring(0, start);</span>
 						}
 					}
-<span class="nc" id="L1231">					data = &quot;&lt;html&gt;&lt;body&gt;&lt;a href='&quot;+location+&quot;'&gt;&quot;+location+&quot;&lt;/a&gt;&lt;script language='JavaScript'&gt;window.location.href='&quot;+location+&quot;';&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="nc" id="L1230">					data = &quot;&lt;html&gt;&lt;body&gt;&lt;a href='&quot;+location+&quot;'&gt;&quot;+location+&quot;&lt;/a&gt;&lt;script language='JavaScript'&gt;window.location.href='&quot;+location+&quot;';&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
 				}
-<span class="nc" id="L1233">				catch (Exception ex)</span>
+<span class="nc" id="L1232">				catch (Exception ex)</span>
 				{
-<span class="nc" id="L1235">					data = &quot;&lt;html&gt;&lt;body&gt;&lt;a href='&quot;+location+&quot;'&gt;&quot;+location+&quot;&lt;/a&gt;&lt;script language='JavaScript'&gt;window.location.href='&quot;+location+&quot;';&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
-<span class="nc" id="L1236">				}</span>
+<span class="nc" id="L1234">					data = &quot;&lt;html&gt;&lt;body&gt;&lt;a href='&quot;+location+&quot;'&gt;&quot;+location+&quot;&lt;/a&gt;&lt;script language='JavaScript'&gt;window.location.href='&quot;+location+&quot;';&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;&quot;;</span>
+<span class="nc" id="L1235">				}</span>
 			}
-<span class="nc" id="L1238">		} catch (Exception ex) {</span>
-<span class="nc" id="L1239">			Logger.error(OfflineAction.class, ex);</span>
-<span class="nc" id="L1240">		}</span>
+<span class="nc" id="L1237">		} catch (Exception ex) {</span>
+<span class="nc" id="L1238">			Logger.error(OfflineAction.class, ex);</span>
+<span class="fc" id="L1239">		}</span>
 
 
 		//clean up the connection resources
-<span class="nc" id="L1244">		method.releaseConnection();</span>
+<span class="fc" id="L1243">		method.releaseConnection();</span>
 		//method.recycle();
 
 		//Logger.println(OfflineAction.class,data);
 
-<span class="nc" id="L1249">		return(data);</span>
+<span class="fc" id="L1248">		return(data);</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -78,7 +78,7 @@ private List<GroupDetails> editableGroups;
 
 všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie textu tlačidla v zozname adresárov. Pripravené sú kľúče ```editor.json.addPage``` pre pridanie web stránky a ```editor.json.addGroup``` pre pridanie adresára.
 
-> UPOZORNENIE: ak používate klientské stránkovanie (atribút ```serverSide: false```) tak je potrebné prázdne ```List<>``` objekty vrátiť ako ```null``` namiesto prázdneho poľa (inak sa v datatabuľke neaktualizuje hodnota po zmazaní všetkých adresárov/stránok zo zoznamu).
+> **Upozornenie:** ak používate klientské stránkovanie (atribút ```serverSide: false```) tak je potrebné prázdne ```List<>``` objekty vrátiť ako ```null``` namiesto prázdneho poľa (inak sa v datatabuľke neaktualizuje hodnota po zmazaní všetkých adresárov/stránok zo zoznamu).
 
 ## Možnosti className
 
@@ -103,7 +103,7 @@ všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie tex
 
 ```dt-tree-dir``` - vrátený JSON objekt typu ```DirTreeItem``` pre **výber adresára v súborovom systéme**
 
-```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**
+```dt-tree-dir-simple``` - vrátený **reťazec** s hodnotou pre **výber adresára v súborovom systéme**, možné zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")```
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
@@ -306,7 +306,7 @@ public class DirTreeItem extends JsTreeItem {
         setText(f.getName());
         setVirtualPath(f.getVirtualPath());
 
-        setIcon("fa fa-folder");
+        setIcon("ti ti-folder");
         setState(new JsTreeItemState());
 
         setType(JsTreeItemType.DIR);
@@ -358,7 +358,7 @@ public String getFullPath() {
 }
 ```
 
-**Upozornenie**: zobrazenie json stĺpcov sa ```renderuje``` až v prehliadači, vyhľadávanie v hodnote (zatiaľ) nie je možné použiť pri serverovom vyhľadávaní.
+!>**Upozornenie**: zobrazenie json stĺpcov sa ```renderuje``` až v prehliadači, vyhľadávanie v hodnote (zatiaľ) nie je možné použiť pri serverovom vyhľadávaní.
 
 Ak metódu ```getFullPath()``` nemôžete implementovať odporúčame použiť atribút ```hidden=true``` pre vypnutie zobrazenia json stĺpca v tabuľke. Môžete implementovať doplnkový atribút pre zobrazenie hodnoty v datatabuľke, ktorému nastavíte atribút ```hiddenEditor=true``` pre vypnutie atribútu v editore. Takto získate samostatný atribút pre editor a datatabuľku.
 

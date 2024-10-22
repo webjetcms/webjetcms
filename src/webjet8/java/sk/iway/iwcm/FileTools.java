@@ -513,6 +513,8 @@ public class FileTools
 		List<Column> cesty = new ArrayList<>();
 		cesty.addAll(dirRekurzia("/components/"+Constants.getInstallName()+"/", url));
 		cesty.addAll(dirRekurzia("/templates/", url));
+		cesty.addAll(dirRekurzia("/files/", url));
+		cesty.addAll(dirRekurzia("/images/", url));
 		cesty.addAll(dokumenty);
 
 		return(cesty);
@@ -528,27 +530,27 @@ public class FileTools
 		IwcmFile rootDir = new IwcmFile(Tools.getRealPath(rootURL));
 		IwcmFile[] files = rootDir.listFiles();
 		IwcmFile myFile;
-	   Column col;
+	   	Column col;
 		int i;
 		for (i=0; i<files.length; i++)
 		{
 			myFile = files[i];
-			if (myFile.isDirectory())
-			{
-				foundFiles.addAll(dirRekurzia(rootURL + myFile.getName() + "/", testPath));
-			}
-			else
-			{
-				//nacitanie suboru
-				String data = readFileContent(rootURL + myFile.getName());
-
-				if (data.indexOf(testPath)!=-1)
+			if(myFile.getPath().contains("node_modules") == false) {
+				if (myFile.isDirectory())
 				{
-					col = new Column();
-				   col.setColumn1(myFile.getName());
-				   col.setColumn2(rootURL + myFile.getName());
-				   foundFiles.add(col);
-
+					foundFiles.addAll(dirRekurzia(rootURL + myFile.getName() + "/", testPath));
+				}
+				else
+				{
+					//nacitanie suboru
+					String data = readFileContent(rootURL + myFile.getName());
+					if (data.indexOf(testPath)!=-1)
+					{
+						col = new Column();
+						col.setColumn1(myFile.getName());
+						col.setColumn2(rootURL + myFile.getName());
+						foundFiles.add(col);
+					}
 				}
 			}
 		}

@@ -34,8 +34,7 @@ public abstract class ExecutionTimeMonitor
 
 	private static SqlExecutionTimeMonitor sqlMonitor = new SqlExecutionTimeMonitor();
 
-	protected Map<String, ExecutionEntry> executionDurations = new ConcurrentHashMap<String, ExecutionEntry>();
-
+	protected Map<String, ExecutionEntry> executionDurations = new ConcurrentHashMap<>();
 
 	public static void recordSqlExecution(String sql, long timeTaken)
 	{
@@ -89,7 +88,7 @@ public abstract class ExecutionTimeMonitor
 
 	public void reset()
 	{
-		executionDurations = new ConcurrentHashMap<String, ExecutionEntry>();
+		executionDurations = new ConcurrentHashMap<>();
 	}
 
 	public void addExecutionRecord(String name, long timeTaken, long memoryDifference)
@@ -99,43 +98,43 @@ public abstract class ExecutionTimeMonitor
 
 		synchronized (executionDurations)
 		{
-			ExecutionEntry record = getRecord(name);
-			record.setNumberOfHits(record.getNumberOfHits() + 1);
-			record.setTotalTimeOfExecutions(record.getTotalTimeOfExecutions() + timeTaken);
+			ExecutionEntry entry = getRecord(name);
+			entry.setNumberOfHits(entry.getNumberOfHits() + 1);
+			entry.setTotalTimeOfExecutions(entry.getTotalTimeOfExecutions() + timeTaken);
 
-			if (record.getMaximumExecutionTime() < timeTaken)
-				record.setMaximumExecutionTime(timeTaken);
+			if (entry.getMaximumExecutionTime() < timeTaken)
+				entry.setMaximumExecutionTime(timeTaken);
 
-			if (record.getMinimumExecutionTime() > timeTaken)
-				record.setMinimumExecutionTime(timeTaken);
+			if (entry.getMinimumExecutionTime() > timeTaken)
+				entry.setMinimumExecutionTime(timeTaken);
 
 			if (memoryDifference > 0) {
 
-				record.setTotalMemoryConsumed(record.getTotalMemoryConsumed() + memoryDifference);
+				entry.setTotalMemoryConsumed(entry.getTotalMemoryConsumed() + memoryDifference);
 
-				record.setValidMemoryMeasurements(record.getValidMemoryMeasurements() + 1);
+				entry.setValidMemoryMeasurements(entry.getValidMemoryMeasurements() + 1);
 
-				if (memoryDifference > record.getMemoryConsumptionPeek())
-					record.setMemoryConsumptionPeek(memoryDifference);
+				if (memoryDifference > entry.getMemoryConsumptionPeek())
+					entry.setMemoryConsumptionPeek(memoryDifference);
 			}
 		}
 	}
 
 	protected ExecutionEntry getRecord(String name)
 	{
-		ExecutionEntry record;
+		ExecutionEntry entry;
 		name = generateEntryKeyFrom(name);
 
 		synchronized (executionDurations)
 		{
 			if (executionDurations.containsKey(name))
-				record = executionDurations.get(name);
+				entry = executionDurations.get(name);
 			else
-				record = new ExecutionEntry(name);
+				entry = new ExecutionEntry(name);
 
-			executionDurations.put(name, record);
+			executionDurations.put(name, entry);
 		}
-		return record;
+		return entry;
 	}
 
 	protected abstract String generateEntryKeyFrom(String name);
@@ -145,7 +144,7 @@ public abstract class ExecutionTimeMonitor
 		if (!Constants.getBoolean("serverMonitoringEnablePerformance"))
 			throw new IllegalStateException(Prop.getInstance().getText("components.monitoring.not_enabled"));
 
-		List<ExecutionEntry> stats = new ArrayList<ExecutionEntry>(executionDurations.values());
+		List<ExecutionEntry> stats = new ArrayList<>(executionDurations.values());
 		Collections.sort(stats);
 		return stats;
 	}

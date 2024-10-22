@@ -1,11 +1,16 @@
 package sk.iway.iwcm.components.gallery;
 
+import java.util.ArrayList;
+
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
@@ -22,10 +27,6 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.users.UsersDB;
-
-import java.util.ArrayList;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * GalleryRestController
@@ -44,9 +45,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     @Override
     public Page<GalleryEntity> getAllItems(Pageable pageable) {
         //getAll nie je povolene, vrati prazdne data, pouziva sa findBy podla adresara po kliknuti na stromovu strukturu
-        DatatablePageImpl<GalleryEntity> page = new DatatablePageImpl<>(new ArrayList<>());
-
-        return page;
+        return new DatatablePageImpl<>(new ArrayList<>());
     }
 
     /**
@@ -134,21 +133,19 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             if (Tools.isEmpty(name)) {
                 name = entity.getImageName();
             } else {
-                //pridaj priponu
-                name = name+entity.getImageName().substring(entity.getImageName().lastIndexOf("."));
+                //remove special chars and add extension
+                name = DocTools.removeChars(name, true).toLowerCase()+"."+FileTools.getFileExtension(entity.getImageName());
             }
 
-            String newName = DocTools.removeChars(name, true).toLowerCase();
-
-            if (FileTools.isFile(entity.getImagePath()+"/"+newName)) {
+            if (FileTools.isFile(entity.getImagePath()+"/"+name)) {
                 //subor uz existuje, musime zmenit nazov
-                int dot = newName.lastIndexOf(".");
+                int dot = name.lastIndexOf(".");
                 if (dot > 0) {
                     for (int i=1; i<100; i++) {
 
-                        String newNameTest = newName.substring(0, dot) + i + newName.substring(dot);
+                        String newNameTest = name.substring(0, dot) + i + name.substring(dot);
                         if (FileTools.isFile(entity.getImagePath()+"/"+newNameTest)==false) {
-                            newName = newNameTest;
+                            name = newNameTest;
                             break;
                         }
 
@@ -156,8 +153,8 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
                 }
             }
 
-            entity.setImageName(newName);
-            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(entity.getImagePath()+"/"+newName)));
+            entity.setImageName(name);
+            FileTools.copyFile(new IwcmFile(Tools.getRealPath(originalUrl)), new IwcmFile(Tools.getRealPath(entity.getImagePath()+"/"+name)));
         }
 
         entity.setId(null);

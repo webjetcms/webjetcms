@@ -26,11 +26,20 @@ Scenario('import-users', ({ I, Document }) => {
     I.click("button[data-dtbtn=import]");
     I.wait(1);
 
-    if("sk" === I.getConfLng()) {
-        I.click("Aktualizovať existujúce záznamy");
-    } else if("en" === I.getConfLng()) {
-        I.click("Update existing records");
+    switch (I.getConfLng()) {
+        case "sk":
+            I.click("Aktualizovať existujúce záznamy");
+            break;
+        case "en":
+            I.click("Update existing records");
+            break;
+        case "cs":
+            I.click("Aktualizovat existující záznamy");
+            break;
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
     }
+    
 
     Document.screenshot("/redactor/datatables/import-dialog.png", 1280, 500);
 });
@@ -43,17 +52,38 @@ Scenario('Import skip wrong data', ({ I, Document }) => {
 
     I.say("IF SkipWrong IS NOT checked, import will fail");
     insertFile(I, fileName, false);
-    I.waitForText("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
-    I.waitForText("email - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.");
+    switch (I.getConfLng()) {
+        case 'en':
+            I.waitForText("Error: some fields do not contain correct values.");
+            break;
+        case 'sk':
+            I.waitForText("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
+            break;
+        case 'cs':
+            I.waitForText("Chyba: některá pole neobsahují správné hodnoty. Zkontrolujte chyby u všech polí (i v jednotlivých kartách).");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${I.getConfLng()}`);
+    }
 
     Document.screenshotElement("div.DTE_Action_Edit", "/redactor/datatables/import_error.png");
     I.clickCss("#datatableImportModal > div > div > div.modal-footer > button.btn-outline-secondary");
 
     I.say("IF SkipWrong IS checked, import will NOT fail");
     insertFile(I, fileName, true);
-    I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
-    I.dontSee("email - Nesprávna emailová adresa. Zadajte email vo formáte meno@domena.");
-    I.dontSee("editorFields.login - Povinné pole. Zadajte aspoň jeden znak.");
+    switch (I.getConfLng()) {
+        case 'en':
+            I.dontSee("Error: some fields do not contain correct values.");
+            break;
+        case 'sk':
+            I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
+            break;
+        case 'cs':
+            I.dontSee("Chyba: některá pole neobsahují správné hodnoty. Zkontrolujte chyby u všech polí (i v jednotlivých kartách).");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${I.getConfLng()}`);
+    }
     I.waitForInvisible("#datatableImportModal");
 
     I.waitForElement("#toast-container-webjet");

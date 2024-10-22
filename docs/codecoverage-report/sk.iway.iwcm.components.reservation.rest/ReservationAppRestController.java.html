@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationAppRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.rest</a> &gt; <span class="el_source">ReservationAppRestController.java</span></div><h1>ReservationAppRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.rest;
+
+import java.math.BigDecimal;
+import java.util.Date;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectPriceRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationObjectRepository;
+import sk.iway.iwcm.components.reservation.jpa.ReservationRepository;
+import sk.iway.iwcm.system.jpa.DefaultTimeValueConverter;
+
+
+@RestController
+@RequestMapping(&quot;/rest/reservation-app&quot;)
+public class ReservationAppRestController {
+
+    private final ReservationRepository rr; 
+    private final ReservationObjectRepository ror;
+    private final ReservationObjectPriceRepository ropr;
+
+    @Autowired
+<span class="fc" id="L29">    public ReservationAppRestController(ReservationRepository rr, ReservationObjectRepository ror, ReservationObjectPriceRepository ropr) {</span>
+<span class="fc" id="L30">        this.rr = rr;</span>
+<span class="fc" id="L31">        this.ror = ror;</span>
+<span class="fc" id="L32">        this.ropr = ropr;</span>
+<span class="fc" id="L33">    }</span>
+    
+    @RequestMapping(value=&quot;/compute-reservation-price&quot;, params={&quot;reservation-date&quot;, &quot;time-range&quot;, &quot;object-id&quot;, &quot;email&quot;})
+    public BigDecimal computeReservationPrice(
+        @RequestParam(&quot;reservation-date&quot;) String reservationDateString,
+        @RequestParam(&quot;time-range&quot;) String timeRangeString,
+        @RequestParam(&quot;object-id&quot;) String objectId,
+        @RequestParam(&quot;email&quot;) String email,
+        HttpServletRequest request) {
+
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">            if(reservationDateString.matches(&quot;\\d{4}-\\d{2}-\\d{2}&quot;) == false) </span>
+<span class="nc" id="L44">                return new BigDecimal(-1);</span>
+
+<span class="fc" id="L46">            Date reservationDate = Tools.getDateFromString(reservationDateString, &quot;yyyy-MM-dd&quot;);</span>
+<span class="fc" id="L47">            String[] timeRange = timeRangeString.split(&quot;-&quot;);</span>
+<span class="fc" id="L48">            Date timeFrom = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[0]), 0);</span>
+<span class="fc" id="L49">            Date timeTo = DefaultTimeValueConverter.getValidTimeValue(Integer.valueOf(timeRange[1]), 0);</span>
+
+            //Its CREATE, reservationId is by default -1 
+<span class="fc" id="L52">            int userId = ReservationService.getUserToPay(email, Long.valueOf(-1), rr, request);</span>
+
+<span class="fc" id="L54">            return ReservationService.calculateReservationPrice(reservationDate, reservationDate, timeFrom, timeTo, Long.valueOf(objectId), userId, ror, ropr);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -26,6 +26,8 @@ if ((request.getParameter("id")==null || request.getParameter("userlngr")==null)
 			if (qs) {
 				link += qs;
 			}
+			var hash = window.location.hash;
+			if (hash.length>1) link += hash;
 			//console.log("Redirecting to: "+link);
 			window.location.href=link;
 		</script><%

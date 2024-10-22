@@ -38,14 +38,20 @@ public class AuditRestController extends DatatableRestControllerV2&lt;AuditLogEn
 	}
 
 	@Override
-	public AuditLogEntity editItem(AuditLogEntity entity, long logId) {
+	public AuditLogEntity insertItem(AuditLogEntity entity) {
 <span class="nc" id="L42">		throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
 <span class="nc" id="L43">        return null;</span>
 	}
 
 	@Override
+	public AuditLogEntity editItem(AuditLogEntity entity, long logId) {
+<span class="nc" id="L48">		throwError(&quot;datatables.error.recordIsNotEditable&quot;);</span>
+<span class="nc" id="L49">        return null;</span>
+	}
+
+	@Override
     public boolean beforeDelete(AuditLogEntity entity) {
-<span class="nc" id="L48">        return false;</span>
+<span class="nc" id="L54">        return false;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -22,187 +22,218 @@ import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.util.FsItemFilterUtils;
 import cn.bluejoe.elfinder.util.FsServiceUtils;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 
-<span class="fc" id="L26">public abstract class AbstractCommandExecutor implements CommandExecutor</span>
+<span class="fc" id="L27">public abstract class AbstractCommandExecutor implements CommandExecutor</span>
 {
 	protected void addChildren(Map&lt;String, FsItemEx&gt; map, FsItemEx fsi) throws IOException
 	{
-<span class="fc bfc" id="L30" title="All 2 branches covered.">		for (FsItemEx f : fsi.listChildren()) {</span>
-<span class="fc" id="L31">			map.put(f.getHash(), f);</span>
-<span class="fc" id="L32">		}</span>
-<span class="fc" id="L33">	}</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">		for (FsItemEx f : fsi.listChildren()) {</span>
+<span class="fc" id="L32">			map.put(f.getHash(), f);</span>
+<span class="fc" id="L33">		}</span>
+<span class="fc" id="L34">	}</span>
 
     protected FsItemFilter getRequestedFilter(HttpServletRequest request)
     {
-<span class="fc" id="L37">        String[] onlyMimes = request.getParameterValues(&quot;mimes[]&quot;);</span>
-<span class="pc bpc" id="L38" title="1 of 2 branches missed.">        if (onlyMimes == null)</span>
-<span class="fc" id="L39">            return FsItemFilterUtils.FILTER_ALL;</span>
+<span class="fc" id="L38">        String[] onlyMimes = request.getParameterValues(&quot;mimes[]&quot;);</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">        if (onlyMimes == null)</span>
+<span class="fc" id="L40">            return FsItemFilterUtils.FILTER_ALL;</span>
 
-<span class="nc" id="L41">        return FsItemFilterUtils.createMimeFilter(onlyMimes);</span>
+<span class="nc" id="L42">        return FsItemFilterUtils.createMimeFilter(onlyMimes);</span>
     }
 
 	protected void addSubfolders(Map&lt;String, FsItemEx&gt; map, FsItemEx fsi) throws IOException
 	{
-<span class="fc bfc" id="L46" title="All 2 branches covered.">		for (FsItemEx f : fsi.listChildren())</span>
+<span class="fc bfc" id="L47" title="All 2 branches covered.">		for (FsItemEx f : fsi.listChildren())</span>
 		{
-<span class="fc bfc" id="L48" title="All 2 branches covered.">			if (f.isFolder()) {</span>
-<span class="fc" id="L49">				map.put(f.getHash(), f);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">			if (f.isFolder()) {</span>
+<span class="fc" id="L50">				map.put(f.getHash(), f);</span>
 				//JEEFF addSubfolders(map, f);
 			}
-<span class="fc" id="L52">		}</span>
-<span class="fc" id="L53">	}</span>
+<span class="fc" id="L53">		}</span>
+<span class="fc" id="L54">	}</span>
 
-	protected void createAndCopy(FsItemEx src, FsItemEx dst) throws IOException
+	/**
+	 * Classic createAndCopy BUT set request is used to swap FOLDER PROPERTIES
+	 * 
+	 * @param src
+	 * @param dst
+	 * @param request
+	 * @throws IOException
+	 */
+	protected void createAndCopy(FsItemEx src, FsItemEx dst, HttpServletRequest request) throws IOException
 	{
-<span class="nc bnc" id="L57" title="All 2 branches missed.">		if (src.isFolder())</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (src.isFolder())</span>
 		{
-<span class="nc" id="L59">			createAndCopyFolder(src, dst);</span>
+<span class="nc" id="L68">			createAndCopyFolder(src, dst, request);</span>
 		}
 		else
 		{
-<span class="nc" id="L63">			createAndCopyFile(src, dst);</span>
+<span class="nc" id="L72">			createAndCopyFile(src, dst);</span>
 		}
-<span class="nc" id="L65">	}</span>
+<span class="nc" id="L74">	}</span>
+
+	protected void createAndCopy(FsItemEx src, FsItemEx dst) throws IOException
+	{
+<span class="nc" id="L78">		createAndCopy(src, dst, null);</span>
+<span class="nc" id="L79">	}</span>
 
 	protected void createAndCopyFile(FsItemEx src, FsItemEx dst) throws IOException
 	{
-<span class="nc" id="L69">		dst.createFile();</span>
-<span class="nc" id="L70">		InputStream is = src.openInputStream();</span>
-<span class="nc" id="L71">		OutputStream os = dst.openOutputStream();</span>
-<span class="nc" id="L72">		IOUtils.copy(is, os);</span>
-<span class="nc" id="L73">		is.close();</span>
-<span class="nc" id="L74">		os.close();</span>
-<span class="nc" id="L75">	}</span>
+<span class="nc" id="L83">		dst.createFile();</span>
+<span class="nc" id="L84">		InputStream is = src.openInputStream();</span>
+<span class="nc" id="L85">		OutputStream os = dst.openOutputStream();</span>
+<span class="nc" id="L86">		IOUtils.copy(is, os);</span>
+<span class="nc" id="L87">		is.close();</span>
+<span class="nc" id="L88">		os.close();</span>
+<span class="nc" id="L89">	}</span>
 
 	protected void createAndCopyFolder(FsItemEx src, FsItemEx dst) throws IOException
 	{
-<span class="nc" id="L79">		dst.createFolder();</span>
+<span class="nc" id="L93">		createAndCopyFolder(src, dst, null);</span>
+<span class="nc" id="L94">	}</span>
 
-<span class="nc bnc" id="L81" title="All 2 branches missed.">		for (FsItemEx c : src.listChildren())</span>
+	/**
+	 * Classic createAndCopyFolder BUT request is used to swap FOLDER PROPERTIES
+	 * 
+	 * @param src
+	 * @param dst
+	 * @param request
+	 * @throws IOException
+	 */
+	protected void createAndCopyFolder(FsItemEx src, FsItemEx dst, HttpServletRequest request) throws IOException
+	{
+<span class="nc" id="L106">		dst.createFolder();</span>
+
+<span class="nc bnc" id="L108" title="All 2 branches missed.">		if(request != null) {</span>
+<span class="nc" id="L109">			FolderPropertiesService.copyFolderProperties(src.getPath(), dst.getPath(), request);</span>
+		}
+
+<span class="nc bnc" id="L112" title="All 2 branches missed.">		for (FsItemEx c : src.listChildren())</span>
 		{
-<span class="nc bnc" id="L83" title="All 2 branches missed.">			if (c.isFolder())</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">			if (c.isFolder())</span>
 			{
-<span class="nc" id="L85">				createAndCopyFolder(c, new FsItemEx(dst, c.getName()));</span>
+<span class="nc" id="L116">				createAndCopyFolder(c, new FsItemEx(dst, c.getName()), request);</span>
 			}
 			else
 			{
-<span class="nc" id="L89">				createAndCopyFile(c, new FsItemEx(dst, c.getName()));</span>
+<span class="nc" id="L120">				createAndCopyFile(c, new FsItemEx(dst, c.getName()));</span>
 			}
-<span class="nc" id="L91">		}</span>
-<span class="nc" id="L92">	}</span>
+<span class="nc" id="L122">		}</span>
+<span class="nc" id="L123">	}</span>
 
 	@Override
 	public void execute(CommandExecutionContext ctx) throws Exception
 	{
-<span class="fc" id="L97">		FsService fileService = ctx.getFsServiceFactory().getFileService(ctx.getRequest(), ctx.getServletContext());</span>
-<span class="fc" id="L98">		execute(fileService, ctx.getRequest(), ctx.getResponse(), ctx.getServletContext());</span>
-<span class="fc" id="L99">	}</span>
+<span class="fc" id="L128">		FsService fileService = ctx.getFsServiceFactory().getFileService(ctx.getRequest(), ctx.getServletContext());</span>
+<span class="fc" id="L129">		execute(fileService, ctx.getRequest(), ctx.getResponse(), ctx.getServletContext());</span>
+<span class="fc" id="L130">	}</span>
 
 	public abstract void execute(FsService fsService, HttpServletRequest request, HttpServletResponse response,
 			ServletContext servletContext) throws Exception;
 
 	protected Object[] files2JsonArray(HttpServletRequest request, Collection&lt;FsItemEx&gt; list) throws IOException
 	{
-<span class="fc" id="L106">		List&lt;Map&lt;String, Object&gt;&gt; los = new ArrayList&lt;Map&lt;String, Object&gt;&gt;();</span>
-<span class="fc bfc" id="L107" title="All 2 branches covered.">		for (FsItemEx fi : list)</span>
+<span class="fc" id="L137">		List&lt;Map&lt;String, Object&gt;&gt; los = new ArrayList&lt;Map&lt;String, Object&gt;&gt;();</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">		for (FsItemEx fi : list)</span>
 		{
-<span class="fc" id="L109">			los.add(getFsItemInfo(request, fi));</span>
-<span class="fc" id="L110">		}</span>
+<span class="fc" id="L140">			los.add(getFsItemInfo(request, fi));</span>
+<span class="fc" id="L141">		}</span>
 
-<span class="fc" id="L112">		return los.toArray();</span>
+<span class="fc" id="L143">		return los.toArray();</span>
 	}
 
 	protected FsItemEx findCwd(FsService fsService, String target) throws IOException
 	{
 		//current selected directory
-<span class="fc" id="L118">		FsItemEx cwd = null;</span>
-<span class="pc bpc" id="L119" title="1 of 2 branches missed.">		if (target != null)</span>
+<span class="fc" id="L149">		FsItemEx cwd = null;</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">		if (target != null)</span>
 		{
-<span class="fc" id="L121">			cwd = findItem(fsService, target);</span>
+<span class="fc" id="L152">			cwd = findItem(fsService, target);</span>
 		}
 
-<span class="fc bfc" id="L124" title="All 2 branches covered.">		if (cwd == null)</span>
-<span class="fc" id="L125">			cwd = new FsItemEx(fsService.getVolumes()[0].getRoot(), fsService);</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">		if (cwd == null)</span>
+<span class="fc" id="L156">			cwd = new FsItemEx(fsService.getVolumes()[0].getRoot(), fsService);</span>
 
-<span class="fc" id="L127">		return cwd;</span>
+<span class="fc" id="L158">		return cwd;</span>
 	}
 
 	protected FsItemEx findItem(FsService fsService, String hash) throws IOException
 	{
-<span class="fc" id="L132">		return FsServiceUtils.findItem(fsService, hash);</span>
+<span class="fc" id="L163">		return FsServiceUtils.findItem(fsService, hash);</span>
 	}
 
 	protected Map&lt;String, Object&gt; getFsItemInfo(HttpServletRequest request, FsItemEx fsi) throws IOException
 	{
-<span class="fc" id="L137">		Map&lt;String, Object&gt; info = new HashMap&lt;String, Object&gt;();</span>
-<span class="fc" id="L138">		info.put(&quot;hash&quot;, fsi.getHash());</span>
-<span class="fc" id="L139">		info.put(&quot;mime&quot;, fsi.getMimeType());</span>
-<span class="fc" id="L140">		info.put(&quot;ts&quot;, fsi.getLastModified());</span>
-<span class="fc" id="L141">		info.put(&quot;size&quot;, fsi.getSize());</span>
-<span class="pc bpc" id="L142" title="1 of 2 branches missed.">		info.put(&quot;read&quot;, fsi.isReadable(fsi) ? 1 : 0);</span>
-<span class="fc bfc" id="L143" title="All 2 branches covered.">		info.put(&quot;write&quot;, fsi.isWritable(fsi) ? 1 : 0);</span>
-<span class="pc bpc" id="L144" title="1 of 2 branches missed.">		info.put(&quot;locked&quot;, fsi.isLocked(fsi) ? 1 : 0);</span>
+<span class="fc" id="L168">		Map&lt;String, Object&gt; info = new HashMap&lt;String, Object&gt;();</span>
+<span class="fc" id="L169">		info.put(&quot;hash&quot;, fsi.getHash());</span>
+<span class="fc" id="L170">		info.put(&quot;mime&quot;, fsi.getMimeType());</span>
+<span class="fc" id="L171">		info.put(&quot;ts&quot;, fsi.getLastModified());</span>
+<span class="fc" id="L172">		info.put(&quot;size&quot;, fsi.getSize());</span>
+<span class="pc bpc" id="L173" title="1 of 2 branches missed.">		info.put(&quot;read&quot;, fsi.isReadable(fsi) ? 1 : 0);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">		info.put(&quot;write&quot;, fsi.isWritable(fsi) ? 1 : 0);</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">		info.put(&quot;locked&quot;, fsi.isLocked(fsi) ? 1 : 0);</span>
 
-<span class="fc bfc" id="L146" title="All 2 branches covered.">		if (fsi.isRoot())</span>
+<span class="fc bfc" id="L177" title="All 2 branches covered.">		if (fsi.isRoot())</span>
 		{
-<span class="fc" id="L148">			info.put(&quot;name&quot;, fsi.getVolumnName());</span>
-<span class="fc" id="L149">			info.put(&quot;volumeid&quot;, fsi.getVolumeId());</span>
+<span class="fc" id="L179">			info.put(&quot;name&quot;, fsi.getVolumnName());</span>
+<span class="fc" id="L180">			info.put(&quot;volumeid&quot;, fsi.getVolumeId());</span>
 		}
 		else
 		{
-<span class="fc" id="L153">			info.put(&quot;name&quot;, fsi.getName());</span>
-<span class="fc" id="L154">			info.put(&quot;phash&quot;, fsi.getParent().getHash());</span>
+<span class="fc" id="L184">			info.put(&quot;name&quot;, fsi.getName());</span>
+<span class="fc" id="L185">			info.put(&quot;phash&quot;, fsi.getParent().getHash());</span>
 		}
 
-<span class="fc bfc" id="L157" title="All 2 branches covered.">		if (fsi.isFolder())</span>
+<span class="fc bfc" id="L188" title="All 2 branches covered.">		if (fsi.isFolder())</span>
 		{
-<span class="fc bfc" id="L159" title="All 2 branches covered.">			info.put(&quot;dirs&quot;, fsi.hasChildFolder() ? 1 : 0);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">			info.put(&quot;dirs&quot;, fsi.hasChildFolder() ? 1 : 0);</span>
 		}
 		
 		//jeeff - webjet - pridane URL pre integraciu s editorom
-<span class="fc" id="L163">		info.put(&quot;url&quot;, fsi.getPath());</span>
-<span class="fc" id="L164">		String virtualPath = sk.iway.iwcm.system.elfinder.FsService.getVirtualPath(fsi);</span>
-<span class="fc" id="L165">		info.put(&quot;virtualPath&quot;, virtualPath);</span>
+<span class="fc" id="L194">		info.put(&quot;url&quot;, fsi.getPath());</span>
+<span class="fc" id="L195">		String virtualPath = sk.iway.iwcm.system.elfinder.FsService.getVirtualPath(fsi);</span>
+<span class="fc" id="L196">		info.put(&quot;virtualPath&quot;, virtualPath);</span>
 
 		//jeeff - webjet URL pre thumb servlet
-<span class="fc bfc" id="L168" title="All 2 branches covered.">		if (fsi.getMimeType().startsWith(&quot;image&quot;))</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">		if (fsi.getMimeType().startsWith(&quot;image&quot;))</span>
 		{
-<span class="fc" id="L170">			info.put(&quot;tmb&quot;, virtualPath+&quot;?w=&quot;+fsi.getService().getServiceConfig().getTmbWidth()+&quot;&amp;v=&quot;+fsi.getLastModified());</span>
+<span class="fc" id="L201">			info.put(&quot;tmb&quot;, virtualPath+&quot;?w=&quot;+fsi.getService().getServiceConfig().getTmbWidth()+&quot;&amp;v=&quot;+fsi.getLastModified());</span>
 		}
 		
 		
-<span class="fc" id="L174">		info.put(&quot;sort_priority&quot;, sk.iway.iwcm.system.elfinder.FsService.getSortPriority(fsi));</span>
+<span class="fc" id="L205">		info.put(&quot;sort_priority&quot;, sk.iway.iwcm.system.elfinder.FsService.getSortPriority(fsi));</span>
 
-<span class="fc" id="L176">		return info;</span>
+<span class="fc" id="L207">		return info;</span>
 	}
 
 	protected String getMimeDisposition(String mime)
 	{
-<span class="nc" id="L181">		String[] parts = mime.split(&quot;/&quot;);</span>
-<span class="nc bnc" id="L182" title="All 4 branches missed.">		String disp = (&quot;image&quot;.equals(parts[0]) || &quot;text&quot;.equals(parts[0]) ? &quot;inline&quot; : &quot;attachments&quot;);</span>
-<span class="nc" id="L183">		return disp;</span>
+<span class="nc" id="L212">		String[] parts = mime.split(&quot;/&quot;);</span>
+<span class="nc bnc" id="L213" title="All 4 branches missed.">		String disp = (&quot;image&quot;.equals(parts[0]) || &quot;text&quot;.equals(parts[0]) ? &quot;inline&quot; : &quot;attachments&quot;);</span>
+<span class="nc" id="L214">		return disp;</span>
 	}
 
 	protected Map&lt;String, Object&gt; getOptions(HttpServletRequest request, FsItemEx cwd)
 	{
-<span class="fc" id="L188">		Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();</span>
-<span class="fc" id="L189">		map.put(&quot;path&quot;, cwd.getName());</span>
-<span class="fc" id="L190">		map.put(&quot;disabled&quot;, new String[0]);</span>
-<span class="fc" id="L191">		map.put(&quot;separator&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L192">		map.put(&quot;copyOverwrite&quot;, 1);</span>
-<span class="fc" id="L193">		map.put(&quot;archivers&quot;, getArchivers());</span>
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">		if (ContextFilter.isRunning(request)) map.put(&quot;tmbUrl&quot;, request.getContextPath() + &quot;/thumb&quot;);</span>
-<span class="fc" id="L195">		else map.put(&quot;tmbUrl&quot;, &quot;/thumb&quot;);</span>
+<span class="fc" id="L219">		Map&lt;String, Object&gt; map = new HashMap&lt;String, Object&gt;();</span>
+<span class="fc" id="L220">		map.put(&quot;path&quot;, cwd.getName());</span>
+<span class="fc" id="L221">		map.put(&quot;disabled&quot;, new String[0]);</span>
+<span class="fc" id="L222">		map.put(&quot;separator&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L223">		map.put(&quot;copyOverwrite&quot;, 1);</span>
+<span class="fc" id="L224">		map.put(&quot;archivers&quot;, getArchivers());</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">		if (ContextFilter.isRunning(request)) map.put(&quot;tmbUrl&quot;, request.getContextPath() + &quot;/thumb&quot;);</span>
+<span class="fc" id="L226">		else map.put(&quot;tmbUrl&quot;, &quot;/thumb&quot;);</span>
 
-<span class="fc" id="L197">		return map;</span>
+<span class="fc" id="L228">		return map;</span>
 	}
 	
 	protected Map&lt;String, List&lt;String&gt;&gt; getArchivers()
 	{
-<span class="fc" id="L202">		Map&lt;String, List&lt;String&gt;&gt; result = new HashMap&lt;String, List&lt;String&gt;&gt;();</span>
-<span class="fc" id="L203">		result.put(&quot;create&quot;, ArchiveCommandExecutor.getAllowedTypes());</span>
-<span class="fc" id="L204">		result.put(&quot;extract&quot;, ExtractCommandExecutor.getAllowedTypes());</span>
-<span class="fc" id="L205">		return result;</span>
+<span class="fc" id="L233">		Map&lt;String, List&lt;String&gt;&gt; result = new HashMap&lt;String, List&lt;String&gt;&gt;();</span>
+<span class="fc" id="L234">		result.put(&quot;create&quot;, ArchiveCommandExecutor.getAllowedTypes());</span>
+<span class="fc" id="L235">		result.put(&quot;extract&quot;, ExtractCommandExecutor.getAllowedTypes());</span>
+<span class="fc" id="L236">		return result;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

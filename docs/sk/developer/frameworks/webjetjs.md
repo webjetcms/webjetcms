@@ -72,7 +72,7 @@ Ak potrebujete zobraziť tlačidlo zadáte ho ako JSON pole:
     {
         "title":"Editovať poslednú verziu", //text tlacidla
         "cssClass":"btn btn-primary", //CSS trieda
-        "icon":"far fa-pencil", //FontAwesome ikona
+        "icon":"ti ti-pencil", //Tabler ikona
         "click":"editFromHistory(38, 33464)" //onclick funkcia
     }
 ]
@@ -145,9 +145,11 @@ Pomocou volania ```WJ.openIframeModal(options)``` je možné otvoriť dialógov�
 
 Dialógové okno má vlastné tlačidlo pre zatvorenie, v prípade potreby je možné využiť API volanie ```WJ.closeIframeModal()``` pre zatvorenie okna.
 
+Pre okná obsahujúce datatabuľku existuje funkcia `openIframeModalDatatable(options)` ktorá nastavuje funkcie `okclick` a `onload` pre volanie uloženia a korektné zatvorenie okna po uložení záznamu v data tabuľke. Nastavená výška je automaticky znížená podľa veľkosti okna.
+
 **Poznámky k implementácii**
 
-HTML kód dialógu je staticky vložený v súbore [iframe.pug](../../../src/main/webapp/admin/v9/views/modals/iframe.pug) a linkované do stránky v [layout.pug](../../../src/main/webapp/admin/v9/views/partials/layout.pug). Iframe sa teda opakovane používa pre rôzne dialógy. V premennej ```modalIframe``` je odkaz na inštanciu dialógu.
+HTML kód dialógu je staticky vložený v súbore [iframe.pug](../../../../src/main/webapp/admin/v9/views/modals/iframe.pug) a linkované do stránky v [layout.pug](../../../../src/main/webapp/admin/v9/views/partials/layout.pug). Iframe sa teda opakovane používa pre rôzne dialógy. V premennej ```modalIframe``` je odkaz na inštanciu dialógu.
 
 Problémové bolo použitie dialógu v datatables editore, ktorý sám o sebe je dialóg. Modal-backdrop nemal nastavený vhodný z-index a bol za oknom editora, čiže nekorektne poziciovaný (neprekryl editor). Pri otvorení iframe dialógu preto nastavujeme na elemente ```.modal-backdrop``` CSS triedu ```modalIframeShown```, ktorá korektne nastavuje ```z-index``` na backdrop elemente.
 
@@ -164,6 +166,7 @@ Príklad použitia ```WJ.openElFinder```:
 WJ.openElFinder({
     link: conf._input.val(),
     title: conf.label,
+    volumes: "images", //or link
     okclick: function(link) {
         //console.log("OK click");
         setValue(conf, link);
@@ -177,13 +180,13 @@ Príklad HTML kódu pre použitie ```onclick="WJ.openElFinderButton(this);"```:
 <div class="input-group">
   <div class="input-group-prepend">
     <span class="input-group-text has-image" style="background-image: url(/images/investicny-vklad/business-3175110_960_720.jpg);">
-      <i class="far fa-image"></i>
+      <i class="ti ti-photo"></i>
     </span>
   </div>
   <input id="DTE_Field_fieldE" maxlength="255" data-warninglength="" data-warningmessage="" value="/images/investicny-vklad/business-3175110_960_720.jpg" class="form-control" type="text">
   <div class="input-group-append">
     <button class="btn btn-outline-secondary" type="button" onclick="WJ.openElFinderButton(this);">
-      <i class="far fa-pencil"></i>
+      <i class="ti ti-pencil"></i>
     </button>
   </div>
 </div>
@@ -406,7 +409,7 @@ Ak potrebujete ukladať niektoré nastavenia používateľa môžete použiť ``
 
 Pre použitie je dostupné API pre JavaScript aj pre serverové spracovanie.
 
-**Upozornenie**: do nastavení neukladajte veľké objekty, nastavenia sú vkladané do HTML kódu administrácie a veľké objekty by neúmerne zväčšovali objem prenášaných dát.
+!>**Upozornenie**: do nastavení neukladajte veľké objekty, nastavenia sú vkladané do HTML kódu administrácie a veľké objekty by neúmerne zväčšovali objem prenášaných dát.
 
 ### Použitie na frontende
 
@@ -508,7 +511,7 @@ Ak potrebujete skryť počas nahrávania určitý blok môžete mu nastaviť CSS
 - ```WJ.translate(key, ...params)``` - Funkcia na [preklad kľúča na text](jstranslate.md).
 - ```WJ.openPopupDialog(url, width, height)``` - Otvorí vyskakovacie okno so zadaným URL a zadanou veľkosťou okna, odporúčame ale využiť [WJ.openIframeModal](#iframe-dialog) ak je to možné
 - ```WJ.urlAddPath(url, pathAppend)``` - Pridá do (rest) URL cestu, kontroluje, či v URL nie je ```?param``` - napr. ```WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')``` vznikne ```/admin/rest/tree/list?click=groups```.
-- ```WJ.urlAddParam(url, paramName, paramValue)``` - Pridá do URL parameter. Kontroluje, či v URL už nejaký parameter je, a podľa toho pridá ? alebo &.
+- ```WJ.urlAddParam(url, paramName, paramValue)``` - Pridá do URL parameter. Kontroluje, či v URL už nejaký parameter je, a podľa toho pridá ? alebo &, hodnotu ```paramValue``` zakóduje pomocou ```encodeURIComponent```.
 - ```WJ.urlUpdateParam(url, paramName, paramValue)``` - Aktualizuje zadaný parameter v URL adrese.
 - ```urlGetParam(name, queryString=null)``` - získa hodnotu parametra v URL adrese. Ak nie je zadaná hodnota `queryString` získa sa z `window.location.search`.
 - ```WJ.setJsonProperty(obj, path, value)``` - Nastaví (JSON) hodnotu v objekte podľa zadaného mena, akceptuje aj vnorené objekty typu ```editorFields.groupCopyDetails``` (ak ```editorFields``` zatiaľ neexistuje, vytvorí ho).
@@ -517,3 +520,5 @@ Ak potrebujete skryť počas nahrávania určitý blok môžete mu nastaviť CSS
 - ```WJ.htmlToText(htmlCode)``` - Skonvertuje zadaný HTML kód na čistý text. Interne vytvorí skrytý ```DIV``` element, ktorému nastaví HTML kód a následne z neho získa čistý text.
 - ```WJ.initTooltip($element)``` - Inicializuje na zadanom jQuery elemente (alebo kolekcii) ```tooltip``` s MarkDown podporou.
 - ```WJ.escapeHtml(string)``` - Nahradí nebezpečné znaky v HTML kóde za entity pre ich bezpečné vypísanie.
+- ```WJ.base64encode(text)``` - zakóduje algoritmom `base64` zadaný text s podporou znakov v `utf-8`.
+- ```WJ.base64decode(encodedText)``` - dekóduje algoritmom `base64` zadaný text s podporou znakov v `utf-8`.

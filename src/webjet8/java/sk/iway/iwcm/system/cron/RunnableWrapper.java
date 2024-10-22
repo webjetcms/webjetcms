@@ -25,12 +25,14 @@ class RunnableWrapper implements Runnable
 	private final Class<?> clazz;
 	private final String[] args;
 	private final boolean audit;
+	private final Long id;
 
-	public RunnableWrapper(Class<?> clazz, String[] args, boolean audit)
+	public RunnableWrapper(Class<?> clazz, String[] args, boolean audit, Long id)
 	{
 		this.clazz = clazz;
 		this.args = args;
 		this.audit = audit;
+		this.id = id;
 	}
 
 	@Override
@@ -51,8 +53,11 @@ class RunnableWrapper implements Runnable
 				}
 			}
 
-			if(audit)
-				Adminlog.add(Adminlog.TYPE_CRON, String.format("Cron task executed: %s [%s]", clazz.getName(), argsString), -1, -1);
+			if(audit) {
+				int auditId = -1;
+				if (id != null) auditId = id.intValue();
+				Adminlog.add(Adminlog.TYPE_CRON, String.format("Cron task executed: %s [%s], id: %d", clazz.getName(), argsString, id), auditId, -1);
+			}
 			main.invoke(null, arguments);
 		}
 		catch (Exception e)

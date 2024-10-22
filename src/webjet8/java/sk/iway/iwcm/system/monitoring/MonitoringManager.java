@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.dbcp.ConfigurableDataSource;
-
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
@@ -20,6 +18,7 @@ import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
 
 /**
  * MonitoringManager.java - trieda sluziaca na pracu v module Monitoring servera, metody na pracu s databazou
@@ -67,6 +66,11 @@ public class MonitoringManager
 
 	private static void countUsersOnAllNodes()
 	{
+		//if the public node doesn't perms to write to _conf_ table, then don't count users
+		if (Constants.getBoolean("monitoringEnableCountUsersOnAllNodes")==false) {
+			return;
+		}
+
 		String myClusterName = Constants.getString("clusterMyNodeName");
 		ConfDB.setName("statSessions-"+myClusterName, Integer.toString(SessionHolder.getTotalSessionsPerNode()));
 		ConfDB.setName("statDistinctUsers-"+myClusterName, Integer.toString(SessionHolder.getDistinctUsersCountPerNode()));

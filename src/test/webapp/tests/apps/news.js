@@ -129,3 +129,42 @@ Scenario('show perex groups by selected groupIds pageParams', async ({ I, DT, DT
 
     I.switchTo();
 });
+
+Scenario('Test of permissions and filtering select by permissions', async ({ I, DT }) => {
+    I.amOnPage("/apps/news/admin/");
+    DT.waitForLoader();
+
+    I.say("Check that user see folder to select");
+    I.click( locate("#pills-newsGroup-tab").find("button.dropdown-toggle") );
+    I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") ) );
+    I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/English/News") ) );
+
+    //
+    I.say('Check filtering by permissions');
+    I.relogin("tester2");
+    I.amOnPage("/apps/news/admin/");
+    DT.waitForLoader();
+
+    I.say("Check that user see folder to select");
+    I.click( locate("#pills-newsGroup-tab").find("button.dropdown-toggle") );
+    I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") ) );
+    I.dontSeeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/English/News") ) );
+
+    //
+    I.say("Check no perms");
+    I.relogin("jtester");
+    I.amOnPage("/apps/news/admin/");
+
+    I.say("Check that permission error is showed");
+    I.waitForElement("#toast-container-webjet");
+    I.see("Prístup na adresár zamietnutý", "#toast-container-webjet > .toast-error > .toast-message");
+
+    I.say("Check that user DONT have groups to select");
+    I.click( locate("#pills-newsGroup-tab").find("button.dropdown-toggle") );
+    const numberOfGroups = await I.grabNumberOfVisibleElements( locate("div.dropdown-menu").find( locate("a.dropdown-item > span") ) );
+    I.assertEqual(0, numberOfGroups, "ERROR - User should not see any group to select");
+});
+
+Scenario("logout", ({ I }) => {
+    I.logout();
+});

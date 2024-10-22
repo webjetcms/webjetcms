@@ -1,5 +1,6 @@
 package sk.iway.iwcm.users;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +12,7 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -114,6 +116,8 @@ public class UserGroupsDB extends DB
 				usrGroupDetails.setEmailDocId(rs.getInt("email_doc_id"));
 				usrGroupDetails.setAllowUserEdit(rs.getBoolean("allow_user_edit"));
 				usrGroupDetails.setRequireEmailVerification(rs.getBoolean("require_email_verification"));
+				usrGroupDetails.setPriceDiscount(rs.getInt("price_discount"));
+
 
 				userGroups.add(usrGroupDetails);
 			}
@@ -376,14 +380,14 @@ public class UserGroupsDB extends DB
 			db_conn = DBPool.getConnection();
 
 
-			String sql = "INSERT INTO  user_groups (user_group_name, user_group_type, user_group_comment, require_approve, email_doc_id, allow_user_edit) VALUES (?, ?, ?, ?, ?, ?)";
+			String sql = "INSERT INTO  user_groups (user_group_name, user_group_type, user_group_comment, require_approve, email_doc_id, allow_user_edit, price_discount) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
 			if (ugd.getUserGroupId()>0)
 			{
 				UserGroupDetails old = getInstance().getUserGroup(ugd.getUserGroupId());
 				BeanDiff diff = new BeanDiff().setNew(ugd).setOriginal(old);
 
-				sql = "UPDATE  user_groups SET user_group_name=?, user_group_type=?, user_group_comment=?, require_approve=?, email_doc_id=?, allow_user_edit=? WHERE user_group_id=?";
+				sql = "UPDATE  user_groups SET user_group_name=?, user_group_type=?, user_group_comment=?, require_approve=?, email_doc_id=?, allow_user_edit=?, price_discount=? WHERE user_group_id=?";
 				Adminlog.add(Adminlog.TYPE_USER_GROUP_UPDATE, "Update user groups name= : "+  ugd.getUserGroupName() + new BeanDiffPrinter(diff), ugd.getUserGroupId(), -1);
 			}
 			else
@@ -397,9 +401,10 @@ public class UserGroupsDB extends DB
 			ps.setBoolean(4, ugd.isRequireApprove());
 			ps.setInt(5, ugd.getEmailDocId());
 			ps.setBoolean(6, ugd.isAllowUserEdit());
+			ps.setInt(7, ugd.getPriceDiscount());
 			if (ugd.getUserGroupId()>0)
 			{
-				ps.setInt(7, ugd.getUserGroupId());
+				ps.setInt(8, ugd.getUserGroupId());
 			}
 			ps.execute();
 			ps.close();
@@ -534,5 +539,26 @@ public class UserGroupsDB extends DB
 			}
 		}
 		return false;
+	}
+
+	public BigDecimal calculatePrice(BigDecimal price, UserDetails user) {
+		BigDecimal newPrice = price;
+		int maxPriceDiscount = 0;
+		if(user != null) {
+			for (int groupId : Tools.getTokensInt(user.getUserGroupsIds(), ",")) {
+				UserGroupDetails group = getUserGroup(groupId);
+				if (group != null && group.getPriceDiscount() > maxPriceDiscount) {
+					maxPriceDiscount = group.getPriceDiscount();
+				}
+			}
+
+			if(maxPriceDiscount == 0) newPrice = price;
+			else if(maxPriceDiscount == 100) newPrice = BigDecimal.ZERO;
+			else newPrice = price.multiply(new BigDecimal(100 - maxPriceDiscount)).divide(new BigDecimal(100));
+		}
+
+		Logger.debug(UserGroupsDB.class, "calculatePrice: price=" + price + ", newPrice=" + newPrice + ", maxPriceDiscount=" + maxPriceDiscount + ", user=" + user);
+
+		return newPrice;
 	}
 }

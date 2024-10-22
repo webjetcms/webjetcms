@@ -2,6 +2,8 @@
 
 import java.util.StringTokenizer;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.io.RandomAccessReadBuffer;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
@@ -21,7 +23,7 @@ import sk.iway.iwcm.io.IwcmInputStream;
  *@created      Streda, 2004, január 21
  *@modified     $Date: 2004/01/27 17:48:00 $
  */
-<span class="nc" id="L24">public class PDF</span>
+<span class="nc" id="L26">public class PDF</span>
 {
 
 	/**
@@ -32,12 +34,12 @@ import sk.iway.iwcm.io.IwcmInputStream;
 	 */
 	public static String getText(String fileName)
 	{
-<span class="nc" id="L35">		StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L37">		StringBuilder sb = new StringBuilder();</span>
 		try
 		{
-<span class="nc" id="L38">			IwcmInputStream is = new IwcmInputStream(fileName);</span>
+<span class="nc" id="L40">			IwcmInputStream is = new IwcmInputStream(fileName);</span>
 
-<span class="nc" id="L40">			PDDocument pdfDocument = PDDocument.load(is, &quot;&quot;);</span>
+<span class="nc" id="L42">			PDDocument pdfDocument = Loader.loadPDF(new RandomAccessReadBuffer(is), &quot;&quot;);</span>
 	        try {
 	      	   /*
 	            if (pdfDocument.isEncrypted()) {
@@ -49,41 +51,41 @@ import sk.iway.iwcm.io.IwcmInputStream;
 	            }
 	            */
 
-<span class="nc" id="L52">	            PDFTextStripper stripper = new PDFTextStripper();</span>
+<span class="nc" id="L54">	            PDFTextStripper stripper = new PDFTextStripper();</span>
 
-<span class="nc" id="L54">				   stripper.setSortByPosition(false);</span>
-<span class="nc" id="L55">				   stripper.setSuppressDuplicateOverlappingText(true);</span>
+<span class="nc" id="L56">				   stripper.setSortByPosition(false);</span>
+<span class="nc" id="L57">				   stripper.setSuppressDuplicateOverlappingText(true);</span>
 
-<span class="nc" id="L57">				   String text = stripper.getText(pdfDocument);</span>
+<span class="nc" id="L59">				   String text = stripper.getText(pdfDocument);</span>
 
 				   //System.out.println(text);
 
-<span class="nc" id="L61">              StringTokenizer st = new StringTokenizer(text, &quot;\n&quot;);</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">              while (st.hasMoreTokens())</span>
+<span class="nc" id="L63">              StringTokenizer st = new StringTokenizer(text, &quot;\n&quot;);</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">              while (st.hasMoreTokens())</span>
               {
-<span class="nc" id="L64">                 String line = fixVerticalText(st.nextToken());</span>
-<span class="nc bnc" id="L65" title="All 2 branches missed.">                 if (Tools.isEmpty(line)) continue;</span>
-<span class="nc" id="L66">                 sb.append(line);</span>
-<span class="nc" id="L67">                 sb.append('\n');</span>
-<span class="nc" id="L68">              }</span>
+<span class="nc" id="L66">                 String line = fixVerticalText(st.nextToken());</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">                 if (Tools.isEmpty(line)) continue;</span>
+<span class="nc" id="L68">                 sb.append(line);</span>
+<span class="nc" id="L69">                 sb.append('\n');</span>
+<span class="nc" id="L70">              }</span>
 
                //sb.append(text);
 
 	        } finally {
-<span class="nc" id="L73">	            pdfDocument.close();</span>
+<span class="nc" id="L75">	            pdfDocument.close();</span>
 	        }
 
-<span class="nc bnc" id="L76" title="All 2 branches missed.">			try { if (is!=null) is.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">			try { if (is!=null) is.close(); } catch (Exception ex) { sk.iway.iwcm.Logger.error(ex); }</span>
 
-<span class="nc" id="L78">			return(sb.toString());</span>
+<span class="nc" id="L80">			return(sb.toString());</span>
 			//return (sw.getBuffer().toString());
 		}
-<span class="nc" id="L81">		catch (Exception ex)</span>
+<span class="nc" id="L83">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L83">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L85">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 
-<span class="nc" id="L86">		return (null);</span>
+<span class="nc" id="L88">		return (null);</span>
 	}
 
    /**
@@ -99,28 +101,28 @@ import sk.iway.iwcm.io.IwcmInputStream;
     */
 	private static String fixVerticalText(String line)
    {
-<span class="nc" id="L102">      line = line.trim();</span>
-<span class="nc bnc" id="L103" title="All 8 branches missed.">      if (line.length()&gt;25 || line.contains(&quot; &quot;) || line.contains(&quot;,&quot;) || line.contains(&quot;.&quot;)) return line;</span>
-<span class="nc bnc" id="L104" title="All 2 branches missed.">      if (line.length()&lt;3) return &quot;&quot;;</span>
+<span class="nc" id="L104">      line = line.trim();</span>
+<span class="nc bnc" id="L105" title="All 8 branches missed.">      if (line.length()&gt;25 || line.contains(&quot; &quot;) || line.contains(&quot;,&quot;) || line.contains(&quot;.&quot;)) return line;</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">      if (line.length()&lt;3) return &quot;&quot;;</span>
 
-<span class="nc" id="L106">      char lastChar = line.charAt(0);</span>
-<span class="nc" id="L107">      StringBuilder sb = new StringBuilder();</span>
-<span class="nc" id="L108">      sb.append(lastChar);</span>
-<span class="nc bnc" id="L109" title="All 2 branches missed.">      for (int i = 1; i&lt;line.length(); i++)</span>
+<span class="nc" id="L108">      char lastChar = line.charAt(0);</span>
+<span class="nc" id="L109">      StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L110">      sb.append(lastChar);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">      for (int i = 1; i&lt;line.length(); i++)</span>
       {
-<span class="nc" id="L111">         char ch = line.charAt(i);</span>
-<span class="nc bnc" id="L112" title="All 2 branches missed.">         if (lastChar != ch)</span>
+<span class="nc" id="L113">         char ch = line.charAt(i);</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">         if (lastChar != ch)</span>
          {
-<span class="nc" id="L114">            sb.append(ch);</span>
-<span class="nc" id="L115">            lastChar = ch;</span>
+<span class="nc" id="L116">            sb.append(ch);</span>
+<span class="nc" id="L117">            lastChar = ch;</span>
          }
       }
 
-<span class="nc" id="L119">      Logger.debug(PDF.class, &quot;fixVerticalText: line=&quot;+line+&quot; sb=&quot;+sb.toString());</span>
+<span class="nc" id="L121">      Logger.debug(PDF.class, &quot;fixVerticalText: line=&quot;+line+&quot; sb=&quot;+sb.toString());</span>
 
-<span class="nc bnc" id="L121" title="All 2 branches missed.">      if (sb.length()&lt;3) return &quot;&quot;;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">      if (sb.length()&lt;3) return &quot;&quot;;</span>
 
-<span class="nc" id="L123">      return sb.toString();</span>
+<span class="nc" id="L125">      return sb.toString();</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

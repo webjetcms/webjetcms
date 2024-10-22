@@ -302,7 +302,7 @@ public class Password
 
 		if(isLogonForm || (!isLogonForm && password.trim().compareToIgnoreCase(UserTools.PASS_UNCHANGED) == 0))
 		{
-			//skontroluj este expiraciu terajsieho hesla
+			//skontroluj este exspiraciu terajsieho hesla
 			if(!isLogonForm || (isLogonForm && jeChybneHeslo == false && session != null && session.getAttribute(Constants.USER_KEY+"_changepassword") == null))
 			{
 				if(vyprsanieHesla > 0)
@@ -311,10 +311,10 @@ public class Password
 					Calendar calExpiryDate = Calendar.getInstance();
 					calExpiryDate.setTimeInMillis(lastDate);
 					calExpiryDate.add(Calendar.DATE, vyprsanieHesla);
-					//expirovalo nam heslo
+					//exspirovalo nam heslo
 					if(Tools.getNow() > calExpiryDate.getTimeInMillis())
 					{
-						Logger.error(Password.class,"expirovalo heslo "+Tools.formatDateTime(calExpiryDate.getTimeInMillis()));
+						Logger.error(Password.class,"exspirovalo heslo "+Tools.formatDateTime(calExpiryDate.getTimeInMillis()));
 						jeChybneHeslo = true;
 					}
 				}

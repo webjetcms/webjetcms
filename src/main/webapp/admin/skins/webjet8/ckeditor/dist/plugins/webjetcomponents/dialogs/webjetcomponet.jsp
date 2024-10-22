@@ -3,6 +3,8 @@
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
+<%@ page import="sk.iway.iwcm.editor.appstore.AppManager" %>
+<%@ page import="java.util.Map" %>
 <%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
@@ -27,6 +29,7 @@ body { overflow: hidden; }
 <form id="componentForm" name="componentForm" method="post" action="" target="editorComponent" style="display: none">
     <input type="hidden" name="pageParams" id="pageParams"/>
     <input type="hidden" name="jspFileName" id="jspFileName"/>
+    <input type="hidden" name="title" id="title"/>
 </form>
 
 <script type="text/javascript">
@@ -38,12 +41,46 @@ body { overflow: hidden; }
 
     var docId = -1;
     var groupId = -1;
+    var title = null;
+
+    function getCkEditorInstanceElfinder() {
+        return editor;
+    }
+
+    function getPageNavbar() {
+        try {
+            var navbar = undefined;
+            if (window.parent.$) navbar = window.parent.$("#DTE_Field_navbar").val();
+            if (typeof navbar == "undefined") {
+                try {
+                    navbar = window.parent?.parent?.$("#DTE_Field_navbar").val(); //page builder - insert image
+                } catch (e) { }
+            }
+            if (typeof navbar == "undefined") {
+                try {
+                    navbar = window.parent?.opener?.parent?.$("#DTE_Field_navbar").val(); //page builder - background of element
+                } catch (e) { }
+            }
+
+            var ckInstance = getCkEditorInstanceElfinder();
+            if (typeof navbar == "undefined") navbar = ckInstance.element.$.form.navbar?.value;
+            if (typeof navbar == "undefined") navbar = ckInstance.element.$.form.title?.value;
+            //console.log("returning navbar=", navbar);
+            return navbar;
+        } catch (e) {
+            console.log(e);
+        }
+        return "";
+    }
 
     try {
         docId = parseInt(editor.element.$.form.docId.value);
         groupId = parseInt(editor.element.$.form.groupId.value);
+        title = getPageNavbar();
     } catch (e) {
     }
+
+    //console.log("docId=", docId, "groupId=", groupId, "title=", title, "form=", editor.element.$.form);
 
     function webjetOpenComponentEdit(html) {
         //console.log("webjetOpenComponentEdit, html=", html);
@@ -53,6 +90,24 @@ body { overflow: hidden; }
         var pageParams = "",
             jspFileName = "",
             componentName = "<%=componentName%>";
+
+        //replace JSP paths to Spring APP class names
+        var replaces = {};
+        <%
+        Map<String, String> classToJspReplaces = AppManager.getClassToJspReplaces(request);
+        for (String key : classToJspReplaces.keySet()) {
+            String value = classToJspReplaces.get(key);
+            %>
+            replaces["<%=key%>"] = "<%=value%>";
+            <%
+        }
+        %>
+
+        if (html != null) {
+            for (var key in replaces) {
+                html = html.replace(key, replaces[key]);
+            }
+        }
 
         if (html != null && html.indexOf("!INCLUDE") == 0) {
             var comFileName = "/comp";
@@ -111,7 +166,10 @@ body { overflow: hidden; }
                 var iframe = $('#editorComponent');
                 iframe
                     .after($('<input type="hidden" id="className" />').val(c))
-                    .after($('<input type="hidden" id="parameters" />').val(parameters));
+                    .after($('<input type="hidden" id="parameters" />').val(parameters))
+                    .after($('<input type="hidden" id="docId" />').val(docId))
+                    .after($('<input type="hidden" id="groupId" />').val(groupId))
+                    .after($('<input type="hidden" id="title" />').val(title));
                 iframe.attr('src', src);
                 return;
             }
@@ -127,9 +185,10 @@ body { overflow: hidden; }
             $("#componentForm").attr("action", "/components/" + componentName + "/editor_component.jsp?docId=" + docId + "&groupId=" + groupId);
             $("#pageParams").val(pageParams);
             $("#jspFileName").val(jspFileName);
+            $("#title").val(title);
             $("#componentForm").submit();
         } else {
-            $("#editorComponent").attr("src", "/admin/appstore/appstore.jsp?docId=" + docId + "&groupId=" + groupId);
+            $("#editorComponent").attr("src", "/admin/appstore/appstore.jsp?docId=" + docId + "&groupId=" + groupId + "&title="+encodeURIComponent(title));
         }
     }
 

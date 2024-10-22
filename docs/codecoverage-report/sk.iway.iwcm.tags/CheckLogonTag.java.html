@@ -142,28 +142,28 @@ import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
          {
 <span class="fc" id="L143">            boolean isAnyEnabled = false;</span>
 <span class="fc" id="L144">            String persmArr[] = Tools.getTokens(perms, &quot;|&quot;, true);</span>
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            for (String perm : persmArr)</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">            for (String perm : persmArr)</span>
             {
-<span class="pc bpc" id="L147" title="1 of 2 branches missed.">               if (MenuTag.isEnabledPerms(perms, user))</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">               if (MenuTag.isEnabledPerms(perms, user))</span>
                {
 <span class="fc" id="L149">                  isAnyEnabled = true;</span>
 <span class="fc" id="L150">                  break;</span>
                }
             }
 
-<span class="pc bpc" id="L154" title="1 of 2 branches missed.">            if (isAnyEnabled == false)</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            if (isAnyEnabled == false)</span>
             {
                try
                {
                   //user nema pravo na modul, presmeruj ho na /admin/ (ak sa este da)
-<span class="nc" id="L159">                  HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();</span>
-<span class="nc" id="L160">                  response.sendRedirect(&quot;/admin/403.jsp&quot;);</span>
+<span class="fc" id="L159">                  HttpServletResponse response = (HttpServletResponse) pageContext.getResponse();</span>
+<span class="fc" id="L160">                  response.sendRedirect(&quot;/admin/403.jsp&quot;);</span>
                }
 <span class="nc" id="L162">               catch (Exception e)</span>
                {
 
-<span class="nc" id="L165">               }</span>
-<span class="nc" id="L166">               return SKIP_PAGE;</span>
+<span class="fc" id="L165">               }</span>
+<span class="fc" id="L166">               return SKIP_PAGE;</span>
             }
          }
 
@@ -238,4 +238,4 @@ import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 <span class="fc" id="L238">   }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

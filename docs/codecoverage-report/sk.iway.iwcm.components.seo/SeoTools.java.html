@@ -4,11 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import net.htmlparser.jericho.Element;
-import net.htmlparser.jericho.HTMLElementName;
-import net.htmlparser.jericho.MasonTagTypes;
-import net.htmlparser.jericho.MicrosoftTagTypes;
-import net.htmlparser.jericho.Source;
+import sk.iway.Html2Text;
 
 @SuppressWarnings(&quot;java:S1659&quot;)
 public class SeoTools
@@ -16,9 +12,9 @@ public class SeoTools
 	private static List&lt;String&gt; middleSentences, maxSentences, middleWords, maxWords;
 	private static int sentencesCount, wordsCount, complexWordsCount;
 
-<span class="nc" id="L19">	protected SeoTools() {</span>
+<span class="nc" id="L15">	protected SeoTools() {</span>
 		//utility class
-<span class="nc" id="L21">	}</span>
+<span class="nc" id="L17">	}</span>
 
 	/**
 	 * Metoda vracia zoznam objektov typu Density, ktory je vhodny na zobrazenie v tabulke.
@@ -29,54 +25,52 @@ public class SeoTools
 	 */
 	public static List&lt;Density&gt; getKeywordDensityTable(String html, String [] keywords){
 
-<span class="nc" id="L32">		MicrosoftTagTypes.register();</span>
-<span class="nc" id="L33">		MasonTagTypes.register();</span>
-<span class="nc" id="L34">		Source source=new Source(html);</span>
+<span class="nc" id="L28">		Html2Text html2Text = new Html2Text(html);</span>
 
-<span class="nc" id="L36">		List&lt;Element&gt; h1Elements = source.getAllElements(HTMLElementName.H1);</span>
-<span class="nc" id="L37">		List&lt;Element&gt; h2Elements = source.getAllElements(HTMLElementName.H2);</span>
-<span class="nc" id="L38">		List&lt;Element&gt; h3Elements = source.getAllElements(HTMLElementName.H3);</span>
-<span class="nc" id="L39">		List&lt;Element&gt; strongElements = source.getAllElements(HTMLElementName.STRONG);</span>
-<span class="nc" id="L40">		List&lt;Element&gt; italicElements = source.getAllElements(HTMLElementName.EM);</span>
-<span class="nc" id="L41">		List&lt;Element&gt; linkElements = source.getAllElements(HTMLElementName.A);</span>
+<span class="nc" id="L30">		List&lt;String&gt; h1Elements = html2Text.getTextByElement(&quot;h1&quot;);</span>
+<span class="nc" id="L31">		List&lt;String&gt; h2Elements = html2Text.getTextByElement(&quot;h2&quot;);</span>
+<span class="nc" id="L32">		List&lt;String&gt; h3Elements = html2Text.getTextByElement(&quot;h3&quot;);</span>
+<span class="nc" id="L33">		List&lt;String&gt; strongElements = html2Text.getTextByElement(&quot;strong,b&quot;);</span>
+<span class="nc" id="L34">		List&lt;String&gt; italicElements = html2Text.getTextByElement(&quot;i,em&quot;);</span>
+<span class="nc" id="L35">		List&lt;String&gt; linkElements = html2Text.getTextByElement(&quot;a&quot;);</span>
 
-<span class="nc" id="L43">		List&lt;Density&gt; keywordDensityList = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L44" title="All 2 branches missed.">		for(String keyword : keywords){</span>
-<span class="nc" id="L45">			keyword = keyword.toLowerCase();</span>
-<span class="nc" id="L46">			Density keywordDensity = new Density(keyword);</span>
+<span class="nc" id="L37">		List&lt;Density&gt; keywordDensityList = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">		for(String keyword : keywords){</span>
+<span class="nc" id="L39">			keyword = keyword.toLowerCase();</span>
+<span class="nc" id="L40">			Density keywordDensity = new Density(keyword);</span>
 
-<span class="nc bnc" id="L48" title="All 2 branches missed.">			for(Element e : h1Elements){</span>
-<span class="nc" id="L49">				keywordDensity.incrementH1(countOccurences(e.toString().toLowerCase(), keyword));</span>
-<span class="nc" id="L50">			}</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">			for(String e : h1Elements){</span>
+<span class="nc" id="L43">				keywordDensity.incrementH1(countOccurences(e.toLowerCase(), keyword));</span>
+<span class="nc" id="L44">			}</span>
 
-<span class="nc bnc" id="L52" title="All 2 branches missed.">			for(Element e : h2Elements){</span>
-<span class="nc" id="L53">				keywordDensity.incrementH2(countOccurences(e.toString().toLowerCase(), keyword));</span>
-<span class="nc" id="L54">			}</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">			for(String e : h2Elements){</span>
+<span class="nc" id="L47">				keywordDensity.incrementH2(countOccurences(e.toLowerCase(), keyword));</span>
+<span class="nc" id="L48">			}</span>
 
-<span class="nc bnc" id="L56" title="All 2 branches missed.">			for(Element e : h3Elements){</span>
-<span class="nc" id="L57">				keywordDensity.incrementH3(countOccurences(e.toString().toLowerCase(), keyword));</span>
-<span class="nc" id="L58">			}</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">			for(String e : h3Elements){</span>
+<span class="nc" id="L51">				keywordDensity.incrementH3(countOccurences(e.toLowerCase(), keyword));</span>
+<span class="nc" id="L52">			}</span>
 
-<span class="nc bnc" id="L60" title="All 2 branches missed.">			for(Element e : strongElements){</span>
-<span class="nc" id="L61">				keywordDensity.incrementStrong(countOccurences(e.toString().toLowerCase(), keyword));</span>
-<span class="nc" id="L62">			}</span>
+<span class="nc bnc" id="L54" title="All 2 branches missed.">			for(String e : strongElements){</span>
+<span class="nc" id="L55">				keywordDensity.incrementStrong(countOccurences(e.toLowerCase(), keyword));</span>
+<span class="nc" id="L56">			}</span>
 
-<span class="nc bnc" id="L64" title="All 2 branches missed.">			for(Element e : italicElements){</span>
-<span class="nc" id="L65">				keywordDensity.incrementItalics(countOccurences(e.toString().toLowerCase(), keyword));</span>
-<span class="nc" id="L66">			}</span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">			for(String e : italicElements){</span>
+<span class="nc" id="L59">				keywordDensity.incrementItalics(countOccurences(e.toLowerCase(), keyword));</span>
+<span class="nc" id="L60">			}</span>
 
-<span class="nc bnc" id="L68" title="All 2 branches missed.">			for(Element e : linkElements){</span>
-<span class="nc" id="L69">				keywordDensity.incrementLink(countOccurences(e.toString().toLowerCase(), keyword));</span>
-<span class="nc" id="L70">			}</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">			for(String e : linkElements){</span>
+<span class="nc" id="L63">				keywordDensity.incrementLink(countOccurences(e.toLowerCase(), keyword));</span>
+<span class="nc" id="L64">			}</span>
 
 
-<span class="nc" id="L73">			keywordDensity.incrementAlltogether(countOccurences(html.toLowerCase(), keyword));</span>
+<span class="nc" id="L67">			keywordDensity.incrementAlltogether(countOccurences(html.toLowerCase(), keyword));</span>
 
-<span class="nc" id="L75">			keywordDensityList.add(keywordDensity);</span>
+<span class="nc" id="L69">			keywordDensityList.add(keywordDensity);</span>
 
 		}
 
-<span class="nc" id="L79">		return keywordDensityList;</span>
+<span class="nc" id="L73">		return keywordDensityList;</span>
 	}
 
 	/**
@@ -86,56 +80,56 @@ public class SeoTools
 	 * @return
 	 */
 	private static int countOccurences(String text, String keyword){
-<span class="nc" id="L89">		int count=0;</span>
-<span class="nc bnc" id="L90" title="All 2 branches missed.">		while(text.contains(keyword)){</span>
-<span class="nc" id="L91">			count++;</span>
-<span class="nc" id="L92">			text = text.replaceFirst(keyword, &quot;&quot;);</span>
+<span class="nc" id="L83">		int count=0;</span>
+<span class="nc bnc" id="L84" title="All 2 branches missed.">		while(text.contains(keyword)){</span>
+<span class="nc" id="L85">			count++;</span>
+<span class="nc" id="L86">			text = text.replaceFirst(keyword, &quot;&quot;);</span>
 		}
-<span class="nc" id="L94">		return count;</span>
+<span class="nc" id="L88">		return count;</span>
 	}
 
 	public static void countSentences(String html, int middle, int max){
-<span class="nc" id="L98">		middleSentences = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L99">		maxSentences = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L100">		html = html.replaceAll(&quot;\\&lt;[^&gt;]*&gt;&quot;,&quot;&quot;);</span>
-<span class="nc" id="L101">		html = html.replaceAll(&quot;\\![^!]*!&quot;,&quot;&quot;);</span>
-<span class="nc bnc" id="L102" title="All 4 branches missed.">		if(html != null &amp;&amp; html.contains(&quot;.&quot;)){</span>
-<span class="nc" id="L103">			String[] sentences = html.split(&quot;[.!?]&quot;);</span>
-<span class="nc" id="L104">			sentencesCount = sentences.length;</span>
-<span class="nc bnc" id="L105" title="All 2 branches missed.">			for(int i=0; i &lt; sentencesCount; i++){</span>
-<span class="nc" id="L106">				String[] words = sentences[i].split(&quot; &quot;);</span>
-<span class="nc bnc" id="L107" title="All 4 branches missed.">				if(words.length &gt;= middle &amp;&amp; words.length &lt; max){</span>
-<span class="nc" id="L108">					middleSentences.add(sentences[i]+&quot;.&quot;);</span>
+<span class="nc" id="L92">		middleSentences = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L93">		maxSentences = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L94">		html = html.replaceAll(&quot;\\&lt;[^&gt;]*&gt;&quot;,&quot;&quot;);</span>
+<span class="nc" id="L95">		html = html.replaceAll(&quot;\\![^!]*!&quot;,&quot;&quot;);</span>
+<span class="nc bnc" id="L96" title="All 4 branches missed.">		if(html != null &amp;&amp; html.contains(&quot;.&quot;)){</span>
+<span class="nc" id="L97">			String[] sentences = html.split(&quot;[.!?]&quot;);</span>
+<span class="nc" id="L98">			sentencesCount = sentences.length;</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">			for(int i=0; i &lt; sentencesCount; i++){</span>
+<span class="nc" id="L100">				String[] words = sentences[i].split(&quot; &quot;);</span>
+<span class="nc bnc" id="L101" title="All 4 branches missed.">				if(words.length &gt;= middle &amp;&amp; words.length &lt; max){</span>
+<span class="nc" id="L102">					middleSentences.add(sentences[i]+&quot;.&quot;);</span>
 				}
-<span class="nc bnc" id="L110" title="All 2 branches missed.">				if(words.length &gt;= max){</span>
-<span class="nc" id="L111">					maxSentences.add(sentences[i]+&quot;.&quot;);</span>
+<span class="nc bnc" id="L104" title="All 2 branches missed.">				if(words.length &gt;= max){</span>
+<span class="nc" id="L105">					maxSentences.add(sentences[i]+&quot;.&quot;);</span>
 				}
 			}
 		}
-<span class="nc" id="L115">	}</span>
+<span class="nc" id="L109">	}</span>
 
 	public static void countWords(String html, int middle, int max){
-<span class="nc" id="L118">		middleWords = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L119">		maxWords = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L120">		complexWordsCount = 0;</span>
-<span class="nc" id="L121">		html = html.replaceAll(&quot;\\&lt;[^&gt;]*&gt;&quot;,&quot;&quot;);</span>
-<span class="nc" id="L122">		html = html.replaceAll(&quot;\\![^!]*!&quot;,&quot;&quot;);</span>
-<span class="nc" id="L123">		html = html.replaceAll(&quot;[.!?]&quot;, &quot; &quot;);</span>
-<span class="nc bnc" id="L124" title="All 4 branches missed.">		if(html != null &amp;&amp; html.contains(&quot; &quot;)){</span>
-<span class="nc" id="L125">			String[] words = html.split(&quot; &quot;);</span>
-<span class="nc" id="L126">			wordsCount = words.length;</span>
-<span class="nc bnc" id="L127" title="All 2 branches missed.">			for(int i=0; i&lt; wordsCount; i++){	//prejde cez kazde slovo</span>
-<span class="nc bnc" id="L128" title="All 2 branches missed.">				if(getSyllableCount(words[i]) &gt; 2)</span>
-<span class="nc" id="L129">					complexWordsCount++;</span>
-<span class="nc bnc" id="L130" title="All 4 branches missed.">				if(words[i].length() &gt;= middle &amp;&amp; words[i].length() &lt; max){</span>
-<span class="nc" id="L131">					middleWords.add(words[i]);</span>
+<span class="nc" id="L112">		middleWords = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L113">		maxWords = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L114">		complexWordsCount = 0;</span>
+<span class="nc" id="L115">		html = html.replaceAll(&quot;\\&lt;[^&gt;]*&gt;&quot;,&quot;&quot;);</span>
+<span class="nc" id="L116">		html = html.replaceAll(&quot;\\![^!]*!&quot;,&quot;&quot;);</span>
+<span class="nc" id="L117">		html = html.replaceAll(&quot;[.!?]&quot;, &quot; &quot;);</span>
+<span class="nc bnc" id="L118" title="All 4 branches missed.">		if(html != null &amp;&amp; html.contains(&quot; &quot;)){</span>
+<span class="nc" id="L119">			String[] words = html.split(&quot; &quot;);</span>
+<span class="nc" id="L120">			wordsCount = words.length;</span>
+<span class="nc bnc" id="L121" title="All 2 branches missed.">			for(int i=0; i&lt; wordsCount; i++){	//prejde cez kazde slovo</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">				if(getSyllableCount(words[i]) &gt; 2)</span>
+<span class="nc" id="L123">					complexWordsCount++;</span>
+<span class="nc bnc" id="L124" title="All 4 branches missed.">				if(words[i].length() &gt;= middle &amp;&amp; words[i].length() &lt; max){</span>
+<span class="nc" id="L125">					middleWords.add(words[i]);</span>
 				}
-<span class="nc bnc" id="L133" title="All 2 branches missed.">				if(words[i].length() &gt;= max){</span>
-<span class="nc" id="L134">					maxWords.add(words[i]);</span>
+<span class="nc bnc" id="L127" title="All 2 branches missed.">				if(words[i].length() &gt;= max){</span>
+<span class="nc" id="L128">					maxWords.add(words[i]);</span>
 				}
 			}
 		}
-<span class="nc" id="L138">	}</span>
+<span class="nc" id="L132">	}</span>
 
 	/**
 	 * Analyzuje čitateľnosť textu
@@ -147,46 +141,46 @@ public class SeoTools
 	 * Index nad 20 majú len texty, pri ktorých pisateľ celkom ignoruje čitateľa.
 	 */
 	public static double textReadibility(){
-<span class="nc" id="L150">		return (0.4*(wordsCount/(double)sentencesCount)+100*(complexWordsCount/(double)wordsCount));</span>
+<span class="nc" id="L144">		return (0.4*(wordsCount/(double)sentencesCount)+100*(complexWordsCount/(double)wordsCount));</span>
 	}
 
 	public static List&lt;String&gt; getMiddleSentences(){
-<span class="nc" id="L154">		return middleSentences;</span>
+<span class="nc" id="L148">		return middleSentences;</span>
 	}
 
 	public static List&lt;String&gt; getMaxSentences(){
-<span class="nc" id="L158">		return maxSentences;</span>
+<span class="nc" id="L152">		return maxSentences;</span>
 	}
 
 	public static List&lt;String&gt; getMiddleWords(){
-<span class="nc" id="L162">		return middleWords;</span>
+<span class="nc" id="L156">		return middleWords;</span>
 	}
 
 	public static List&lt;String&gt; getMaxWords(){
-<span class="nc" id="L166">		return maxWords;</span>
+<span class="nc" id="L160">		return maxWords;</span>
 	}
 
 	private static int getSyllableCount(String word)
 	{
-<span class="nc" id="L171">		int syllableCount = 0;</span>
-<span class="nc" id="L172">		Scanner sc = new Scanner(word);</span>
-<span class="nc" id="L173">		sc.useDelimiter(&quot;[aeiouyáéíúóýô]+&quot;);</span>
+<span class="nc" id="L165">		int syllableCount = 0;</span>
+<span class="nc" id="L166">		Scanner sc = new Scanner(word);</span>
+<span class="nc" id="L167">		sc.useDelimiter(&quot;[aeiouyáéíúóýô]+&quot;);</span>
 
-<span class="nc bnc" id="L175" title="All 2 branches missed.">		while(sc.hasNext())</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">		while(sc.hasNext())</span>
 		{
-<span class="nc" id="L177">			syllableCount++;</span>
-<span class="nc" id="L178">			sc.next();</span>
+<span class="nc" id="L171">			syllableCount++;</span>
+<span class="nc" id="L172">			sc.next();</span>
 		}
 
-<span class="nc" id="L181">		sc.close();</span>
+<span class="nc" id="L175">		sc.close();</span>
 
-<span class="nc bnc" id="L183" title="All 12 branches missed.">		if(word.startsWith(&quot;a&quot;) || word.startsWith(&quot;e&quot;) || word.startsWith(&quot;i&quot;) || word.startsWith(&quot;o&quot;) || word.startsWith(&quot;u&quot;) || word.startsWith(&quot;á&quot;)</span>
-<span class="nc bnc" id="L184" title="All 8 branches missed.">					|| word.startsWith(&quot;é&quot;) || word.startsWith(&quot;í&quot;) || word.startsWith(&quot;ó&quot;) || word.startsWith(&quot;ú&quot;))</span>
+<span class="nc bnc" id="L177" title="All 12 branches missed.">		if(word.startsWith(&quot;a&quot;) || word.startsWith(&quot;e&quot;) || word.startsWith(&quot;i&quot;) || word.startsWith(&quot;o&quot;) || word.startsWith(&quot;u&quot;) || word.startsWith(&quot;á&quot;)</span>
+<span class="nc bnc" id="L178" title="All 8 branches missed.">					|| word.startsWith(&quot;é&quot;) || word.startsWith(&quot;í&quot;) || word.startsWith(&quot;ó&quot;) || word.startsWith(&quot;ú&quot;))</span>
 		{
-<span class="nc" id="L186">			syllableCount++;</span>
+<span class="nc" id="L180">			syllableCount++;</span>
 		}
 
-<span class="nc" id="L189">		return syllableCount;</span>
+<span class="nc" id="L183">		return syllableCount;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

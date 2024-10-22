@@ -1,10 +1,8 @@
 package sk.iway.iwcm.admin;
 
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -229,39 +227,34 @@ public class ThymeleafAdminController {
                //RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
                if (Constants.getServletContext().getAttribute("springContext")!=null)
                {
-                  ApplicationContext context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-                  AuthenticationManager authenticationManager = context.getBean("authenticationManagerBean", AuthenticationManager.class);
-                  if (authenticationManager != null)
-                  {
-                     Authentication authentication = WebjetAuthentificationProvider.authenticate(user);
-                     List<GrantedAuthority> grantedAuths = new ArrayList<>();
+                  Authentication authentication = WebjetAuthentificationProvider.authenticate(user);
+                  List<GrantedAuthority> grantedAuths = new ArrayList<>();
 
-                     for (GrantedAuthority ga : authentication.getAuthorities()) {
-                        if (ga instanceof SimpleGrantedAuthority) {
-                           SimpleGrantedAuthority sig = (SimpleGrantedAuthority)ga;
+                  for (GrantedAuthority ga : authentication.getAuthorities()) {
+                     if (ga instanceof SimpleGrantedAuthority) {
+                        SimpleGrantedAuthority sig = (SimpleGrantedAuthority)ga;
 
-                           boolean remove = false;
-                           for(String permission : permsArr) {
-                              String itemKey = WebjetSecurityService.normalizeUserGroupName(permission);
-                              String name = "ROLE_Permission_" + itemKey;
-                              if (sig.getAuthority().equals(name)) {
-                                 Logger.debug(ThymeleafAdminController.class, "Removing SPRING perm "+name);
-                                 remove = true;
-                              }
-                           }
-
-                           if (remove == false) {
-                              grantedAuths.add(ga);
+                        boolean remove = false;
+                        for(String permission : permsArr) {
+                           String itemKey = WebjetSecurityService.normalizeUserGroupName(permission);
+                           String name = "ROLE_Permission_" + itemKey;
+                           if (sig.getAuthority().equals(name)) {
+                              Logger.debug(ThymeleafAdminController.class, "Removing SPRING perm "+name);
+                              remove = true;
                            }
                         }
-                     }
 
-                     Authentication auth = new UsernamePasswordAuthenticationToken(
-                        user.getLogin(),
-                        "password",
-                        grantedAuths);
-                     SecurityContextHolder.getContext().setAuthentication(auth);
+                        if (remove == false) {
+                           grantedAuths.add(ga);
+                        }
+                     }
                   }
+
+                  Authentication auth = new UsernamePasswordAuthenticationToken(
+                     user.getLogin(),
+                     "password",
+                     grantedAuths);
+                  SecurityContextHolder.getContext().setAuthentication(auth);
                }
          }
          catch (Exception ex)

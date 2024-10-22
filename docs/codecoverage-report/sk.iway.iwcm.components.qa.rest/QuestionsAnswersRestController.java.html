@@ -51,38 +51,38 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2&lt
 
 <span class="fc bfc" id="L52" title="All 2 branches covered.">        if(id != -1) {</span>
             //ziskaj udaje volanim super.getOneItem aby sa korektne vykonalo porovnanie domain_id stlpca
-<span class="fc" id="L54">            QuestionsAnswersEntity entity = super.getOneItem(id);</span>
-
-            //Column answerToEmail is Transient, so we fill column with answer value in editor
-<span class="fc" id="L57">            entity.setAnswerToEmail(entity.getAnswer());</span>
-
-<span class="fc" id="L59">            return entity;</span>
+<span class="fc" id="L54">            return super.getOneItem(id);</span>
         }
 
         //novy zaznam, nastav hodnoty aktualne prihlaseneho usera
-<span class="fc" id="L63">        QuestionsAnswersEntity entity = new QuestionsAnswersEntity();</span>
+<span class="fc" id="L58">        QuestionsAnswersEntity entity = new QuestionsAnswersEntity();</span>
 
-<span class="fc" id="L65">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L60">        Identity user = UsersDB.getCurrentUser(getRequest());</span>
 
         //For new entity we fill User column using Identity of actual loged user
-<span class="fc" id="L68">        entity.setFromName(user.getFullName());</span>
-<span class="fc" id="L69">        entity.setFromEmail(user.getEmail());</span>
+<span class="fc" id="L63">        entity.setFromName(user.getFullName());</span>
+<span class="fc" id="L64">        entity.setFromEmail(user.getEmail());</span>
 
-<span class="fc" id="L71">        entity.setToName(user.getFullName());</span>
-<span class="fc" id="L72">        entity.setToEmail(user.getEmail());</span>
+<span class="fc" id="L66">        entity.setToName(user.getFullName());</span>
+<span class="fc" id="L67">        entity.setToEmail(user.getEmail());</span>
 
-<span class="fc" id="L74">        return entity;</span>
+<span class="fc" id="L69">        return entity;</span>
     }
 
     @Override
     public void beforeSave(QuestionsAnswersEntity entity) {
         //For new entity set question and answer date
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if (entity.getQuestionDate()==null) entity.setQuestionDate(new Date());</span>
-<span class="fc" id="L81">        entity.setAnswerDate(new Date());</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        if (Tools.isEmpty(entity.getHash())) entity.setHash(Password.generatePassword(16));</span>
-<span class="fc bfc" id="L83" title="All 2 branches covered.">        if (entity.getSortPriority()==null) entity.setSortPriority(questionsAnswersService.getNewPriority(entity.getGroupName()));</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (entity.getQuestionDate()==null) entity.setQuestionDate(new Date());</span>
+
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (Tools.isEmpty(entity.getHash())) entity.setHash(Password.generatePassword(16));</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (entity.getSortPriority()==null) entity.setSortPriority(questionsAnswersService.getNewPriority(entity.getGroupName()));</span>
+
         //ak sa vytvara otazka v admine nema toto nastavene, takze nastavime na true
-<span class="pc bpc" id="L85" title="1 of 2 branches missed.">        if (entity.getAllowPublishOnWeb()==null) entity.setAllowPublishOnWeb(Boolean.TRUE);</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (entity.getAllowPublishOnWeb()==null) entity.setAllowPublishOnWeb(Boolean.TRUE);</span>
+
+<span class="pc bpc" id="L83" title="3 of 4 branches missed.">        if(Tools.isNotEmpty(entity.getAnswerToEmail()) || Tools.isNotEmpty(entity.getAnswer())) {</span>
+<span class="fc" id="L84">            entity.setAnswerDate(new Date());</span>
+        }
 <span class="fc" id="L86">    }</span>
 
     @Override
@@ -129,4 +129,4 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2&lt
 <span class="fc" id="L129">        return ac;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

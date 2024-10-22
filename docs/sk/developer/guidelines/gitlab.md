@@ -12,7 +12,7 @@
     - [Implementácia novej požiadavky](#implementácia-novej-požiadavky)
     - [Release do produkcie](#release-do-produkcie)
     - [Oprava chyby v produkcii](#oprava-chyby-v-produkcii)
-    - [Spojenie (merge) branch](#spojenie-merge-branch)
+    - [Spojenie (`merge`) branch](#spojenie-merge-branch)
   - [Akceptovanie zmien (Merge Request)](#akceptovanie-zmien-merge-request)
     - [Ako a kedy vytvoriť Merge Request](#ako-a-kedy-vytvoriť-merge-request)
     - [Prechod z Work In Progress](#prechod-z-work-in-progress)
@@ -22,24 +22,24 @@
 
 <!-- /code_chunk_output -->
 
->**tl;dr** Vysvetlenie používania GIT: základné pojmy, filozofia práce, workflow. Fungovanie Merge Requestov v Gitlabe, kontrola kvality kódu.
+>**`tl;dr`** Vysvetlenie používania GIT: základné pojmy, filozofia práce, workflow. Fungovanie Merge Requestov v Gitlabe, kontrola kvality kódu.
 
 Gitlab je dostupný na adrese https://gitlab.web.iway.local. Ak ste doteraz pracovali len s SVN je potrebné si osvojiť hlavný rozdiel medzi SVN a GITom - **git je distribuovaný** verziovací softvér, každý  má na svojom počítači kópiu repozitára a môže s ním pracovať lokálne. Až keď máte prácu hotovú "pushnete" ju na vzdialený repozitár (na server).
 
 Základné pojmy:
 
-- git **clone** - prenesie (**naklonuje**) repozitár zo servera **na váš počítač**
-- git **commit** - odošle (**uloží**) vykonané zmeny **do vášho** lokálneho **repozitára**. Je to podobné ako v SVN, ale zmeny sa zatiaľ neodošlú na server. Commitovať si teda môžete aj rozpracovanú prácu podľa potreby.
-- git **branch** - vytvorí **novú vetvu v kóde**, viac v sekcii [Branching](#branching)
-- git **push** - **odošle** vaše zmeny (commity) **na server**
-- git **pull** - **aktualizuje** váš lokálny git repozitár **zo servera**
-- git **merge** - **spojí zmeny** medzi vetvami (branch) kódu
+- git `clone` - prenesie (**naklonuje**) repozitár zo servera **na váš počítač**
+- git `commit` - odošle (**uloží**) vykonané zmeny **do vášho** lokálneho **repozitára**. Je to podobné ako v SVN, ale zmeny sa zatiaľ neodošlú na server. Commitovať si teda môžete aj rozpracovanú prácu podľa potreby.
+- git `branch` - vytvorí **novú vetvu v kóde**, viac v sekcii [Branching](#branching)
+- git `push` - **odošle** vaše zmeny (commity) **na server**
+- git `pull` - **aktualizuje** váš lokálny git repozitár **zo servera**
+- git `merge` - **spojí zmeny** medzi vetvami (branch) kódu
 
 V tomto návode sa snažíme o "laické" vysvetlenie pojmov, takže ospravedlňte netechnické výrazy. Hovoríme o serveri, aj keď git je prakticky distribuovaný a môže mať dokonca viac serverov a iných závislostí. Typicky budeme používať nasledovné výrazy:
 
-- **local** - váš lokálny git repozitár - repozitár na vašom počítači
-- **server** (označovaný aj ako **origin**) - primárny git repozitár z ktorého ste vykonali git clone do vášho počítača
-- **upstream** - git repozitár, z ktorého je forknutý projekt na serveri
+- `local` - váš lokálny git repozitár - repozitár na vašom počítači
+- `server` (označovaný aj ako `origin`) - primárny git repozitár z ktorého ste vykonali git clone do vášho počítača
+- `upstream` - git repozitár, z ktorého je forknutý projekt na serveri
 
 Aby ste pochopili rozdiel medzi serverom a upstream uvedomte si nasledovnú situáciu:
 
@@ -52,17 +52,18 @@ graph TD;
     local[local - vaše lokálne úpravy]
 ```
 
-**Zákazník má upravenú verziu** WebJET NET ktorá je uložená v git repozitári na serveri. Táto verzia **vznikla rozvetvením (fork) z pôvodného WebJET NET repozitára**.
+**Zákazník má upravenú verziu** WebJET NET ktorá je uložená v git repozitári na serveri. Táto verzia **vznikla rozvetvením (`fork`) z pôvodného WebJET NET repozitára**.
 
 **Pre zákazníka** (na serveri) teda **programujete úpravy** pre daného klienta, môžete súbory meniť, mazať pridávať a **žiadno to neovplyvňuje vývoj "generického" produktu** WebJET NET. Vývoj produktu si žije vlastným životom, pridáva nové vlastnosti a funkcie. **Klient má zafixovanú verziu intranetu** zo servera.
 
-V určitý moment príde **požiadavka na aktualizáciu intranetu** zákazníka. V tom momente na vykonáte **pull aktuálneho kódu z upstream servera** a aktualizujete kód zákazníka podľa zmien na upstream serveri, čiže podľa vývoja generického produktu. Pri spájaní kódu z upstream servera a vášho kódu zákazníka môže vzniknúť tzv. merge conflict, vo vašom IDE sa vám zobrazí možnosť ponechať zmeny, alebo ich aktualizovať podľa upstream servera.
+V určitý moment príde **požiadavka na aktualizáciu intranetu** zákazníka. V tom momente na vykonáte **pull aktuálneho kódu z upstream servera** a aktualizujete kód zákazníka podľa zmien na upstream serveri, čiže podľa vývoja generického produktu. Pri spájaní kódu z `upstream` servera a vášho kódu zákazníka môže vzniknúť tzv. `merge conflict`, vo vašom IDE sa vám zobrazí možnosť ponechať zmeny, alebo ich aktualizovať podľa upstream servera.
 
 ## Inštalácia a nastavenie
 
 Pred prvým použitím Gitlabu je potrebné nainštalovať GIT klienta a vygenerovať šifrovacie kľúče, keďže do gitu sa pripájate s použitím SSH kľúčov.
 
-Podrobný manuál sa nachádza v [PDF dokumente na intranete](https://intra.iway.sk/files/dokumenty/webove-oddelenie/development/instalacia-git-vo-win.pdf). **POZOR** pri generovaní SSH kľúčov **neodporúčame zadávať heslo** (na screenshote je uvedené ako NejakeTvojeTajneHeslo007), pretože VS Code / git môže mať problém heslo zadať. Výhoda SSH kľúčov je práve v tom, že prináša komfort nezadávania hesla.
+Podrobný manuál sa nachádza v [PDF dokumente na intranete](https://intra.iway.sk/files/dokumenty/webove-oddelenie/development/instalacia-git-vo-win.pdf).
+!>**Upozornenie:** pri generovaní SSH kľúčov **neodporúčame zadávať heslo** (na screenshote je uvedené ako NejakeTvojeTajneHeslo007), pretože VS Code / git môže mať problém heslo zadať. Výhoda SSH kľúčov je práve v tom, že prináša komfort nezadávania hesla.
 
 V skratke si nainštalujte [GIT klienta pre windows](https://git-scm.com/download/win) a následne v programe **GitBash** (pre MacOS v termináli) si vygenerujte SSH kľúče zadaním príkazu:
 
@@ -118,9 +119,9 @@ Zvykom je meno projektu prefixovať menom kllienta. Je to praktické z toho dôv
 
 **Vo VS Code sa branche zobrazujú v ľavo dole**, kliknutím na meno branche sa vám zobrazí zoznam všetkých branch. Branche, ktoré už máte lokálne na počítači sú označené ako master, alebo feature/xxx, **tie ktoré sú na serveri začínajú na prefix origin** (napr. origin/master, origin/feature/xxx). Branche začínajúce na upstream sú tie, ktoré zastrešujú vývoj produktu (napr. upstream/master, upstream/feature/xxx).
 
-V okne **Source Control** sa vám zobrazuje zoznam zmenených súborov a kliknutím na ```...``` sa vám zobrazí ponuka (v okne sa 2x zobrazuje nadpis Source Control, kliknutie na ... je potrebné vpravo v druhom riadku nad poľom pre zadanie Commit Message).
+V okne `Source Control` sa vám zobrazuje zoznam zmenených súborov a kliknutím na ```...``` sa vám zobrazí ponuka (v okne sa 2x zobrazuje nadpis `Source Control`, kliknutie na ... je potrebné vpravo v druhom riadku nad poľom pre zadanie `Commit Message`).
 
-**V menu Commit** je možnosť Commit na **uloženie práce**, v **menu Pull, Push** sú možnosti Pull a Push pre **odoslanie na server (push)/aktualizáciu zo servera (pull)** a v **menu Branch** je možnosť **Merge Branch** na [spojenie branchí](#spojenie-merge-branch).
+**V menu `Commit`** je možnosť `Commit` na **uloženie práce**, v **menu `Pull`, `Push`** sú možnosti `Pull` a `Push` pre **odoslanie na server (`push`)/aktualizáciu zo servera (`pull`)** a v **menu `Branch`** je možnosť `Merge Branch` na [spojenie branchí](#spojenie-merge-branch).
 
 ## Branching
 
@@ -130,11 +131,11 @@ Predstavte si, že máte rozpracovanú nejakú väčšiu úpravu a zároveň dos
 
 Základnou požiadavkou je teda vytvorenie branche pre každú úlohu, ktorú riešite. Pre vývoj používame metodológiu gitlab flow (zvyčajne bez develop branche). Používame nasledovné mená branch-í:
 
-- **master** - hlavná brancha v ktorej sa nachádza len **schválený a otestovaný kód**. Master brancha **je zvyčajne chránená** a bežný vývojár do nej nemá právo pushnúť zmeny. Tie sa akceptujú cez tzv. [Merge request](#akceptovanie-zmien-merge-request)
-- **feature/xxxxx-nazov-tiketu** - brancha v ktorej sa implementuje požadovaná zmena v tikete xxxxx. Meno branche začína na prefix feature/ a pokračuje číslom tiketu/požiadavky a jej krátkym nazvom (pre lepší prehľad)
-- **release/yyyy.ww** - v branchi release sú uchované **produkčné (releasnuté) verzie** projektu. V reťazci ```yyyy.ww``` je číslo release, odporúčam používať formát rok.týždeň, číže napríklad 2020.43.
-- **hotfix/xxxxx-nazov-tiketu** - obsahuje **rýchle opravy (hotfix) produkčnej** verzie. Typická situácia je bug na produkcii, ktorý je potrebné rýchlo opraviť.
-- **develop** - pre niektoré projekty môže byť použitá aj develop brancha, ktorá **zastupuje rolu master branche a môže obsahovať aj rozpracované časti**, odporúčame ju ale nepoužívať, pretože skôr prináša chaos do vývoja.
+- `master` - hlavná brancha v ktorej sa nachádza len **schválený a otestovaný kód**. Master brancha **je zvyčajne chránená** a bežný vývojár do nej nemá právo pushnúť zmeny. Tie sa akceptujú cez tzv. [Merge request](#akceptovanie-zmien-merge-request)
+- `feature/xxxxx-nazov-tiketu` - brancha v ktorej sa implementuje požadovaná zmena v tikete xxxxx. Meno branche začína na prefix feature/ a pokračuje číslom tiketu/požiadavky a jej krátkym nazvom (pre lepší prehľad)
+- `release/yyyy.ww` - v branchi release sú uchované **produkčné (releasnuté) verzie** projektu. V reťazci ```yyyy.ww``` je číslo release, odporúčam používať formát rok.týždeň, číže napríklad 2020.43.
+- `hotfix/xxxxx-nazov-tiketu` - obsahuje **rýchle opravy (hotfix) produkčnej** verzie. Typická situácia je bug na produkcii, ktorý je potrebné rýchlo opraviť.
+- `develop` - pre niektoré projekty môže byť použitá aj develop brancha, ktorá **zastupuje rolu master branche a môže obsahovať aj rozpracované časti**, odporúčame ju ale nepoužívať, pretože skôr prináša chaos do vývoja.
 
 Ukážeme si niekoľko príkladov ako postupovať počas vývoja. **Pred** každým **vytvorením novej branche** si musíte uvedomiť, že **ju vytvárate ako novú vetvu** z **branche**, ktorú máte **práve otvorenú**. Typicky teda sa musíte vopred prepnúť do potrebnej branche z ktorej sa vetvíte a aj ju aktualizovať zo servera.
 
@@ -172,11 +173,11 @@ Ak nastane chyba na produkcii a je potrebné vykonať hotfix:
 
 Teraz máte na svojom počítači rovnaký kód ako je na serveri, môžete implementovať opravy podľa požiadavky. Opravu následne odošlite na server cez ```git push```.
 
-**POZOR:** zmeny v hotfix branchi je následne potrebné **spojiť (merge)** do danej **release branche a aj do master branche** (aby sa hotfix nestratil).
+!>**Upozornenie:** zmeny v hotfix branchi je následne potrebné **spojiť (merge)** do danej **release branche a aj do master branche** (aby sa hotfix nestratil).
 
 Na server vám následne stačí nasadiť len zmenené súbory. Po merge do release branch ale môžete nasadiť aj celú release branch.
 
-### Spojenie (merge) branch
+### Spojenie (`merge`) branch
 
 **Počas vývoja na feature/** branch môžete potrebovať **aktualizáciu kódu z master** branche (prípadne aj inej). Postupujte nasledovne:
 

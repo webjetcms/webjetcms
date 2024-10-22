@@ -42,7 +42,7 @@ function setSettings(I, checkedNames=null, treeWidth=4, galeria=false) {
     I.click("#jstree-settings-submit");
 }
 
-Scenario('zobrazenie ID a poradia', ({ I }) => {
+Scenario('zobrazenie ID a poradia @singlethread', ({ I }) => {
     //cisty stav
     I.say("cisty stav");
     setSettings(I);
@@ -72,7 +72,7 @@ Scenario('zobrazenie ID a poradia', ({ I }) => {
     I.see("Test stavov (30)", "#SomStromcek");
 });
 
-Scenario('zobrazenie web stranok', ({ I }) => {
+Scenario('zobrazenie web stranok @singlethread', ({ I }) => {
     //cisty stav
     I.say("cisty stav");
     setSettings(I);
@@ -96,7 +96,7 @@ Scenario('zobrazenie web stranok', ({ I }) => {
     I.see("Test BR<br>v nazve", "#SomStromcek");
 });
 
-Scenario('drag drop', ({ I, DTE }) => {
+Scenario('drag drop @singlethread', ({ I, DTE }) => {
     //zobrazenie stranok
     I.say("zobrazenie stranok");
     setSettings(I, ["showpages"]);
@@ -128,7 +128,7 @@ Scenario('drag drop', ({ I, DTE }) => {
     DTE.cancel();
 });
 
-Scenario("delete folder structure", ({ I }) => {
+Scenario("delete folder structure @singlethread", ({ I }) => {
     I.deleteFolderStructure(randomNumber);
 });
 
@@ -167,12 +167,7 @@ Scenario('Automaticke rozbalenie domeny-odhlasenie @singlethread', ({ I }) => {
     I.logout();
 });
 
-Scenario('Automaticke rozbalenie domeny-odhlasenie-2', ({ I }) => {
-    //odhlas sa, aby domena nezostala zapamatana pre dalsie testy
-    I.logout();
-});
-
-Scenario('jstree zobrazenie v datatabulke', ({ I, DT }) => {
+Scenario('jstree zobrazenie v datatabulke @singlethread', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
     //reset
@@ -209,7 +204,7 @@ Scenario('jstree zobrazenie v datatabulke', ({ I, DT }) => {
     I.dontSee("Tento nie je interný", "#groups-datatable");
 });
 
-Scenario('nastavenie sirky stlpcov', ({ I }) => {
+Scenario('nastavenie sirky stlpcov @singlethread', ({ I }) => {
     setSettings(I);
 
     I.seeElement(".tree-col.col-md-4");
@@ -264,13 +259,13 @@ Scenario('nastavenie sirky stlpcov', ({ I }) => {
     I.seeElement(".datatable-col.col-md-6");
 });
 
-Scenario('reset', ({ I }) => {
+Scenario('reset @singlethread', ({ I }) => {
     setSettings(I);
     I.amOnPage("/admin/v9/apps/gallery/");
     setSettings(I, null, 4, true);
 });
 
-Scenario('Slash in group name', ({ I, DT, DTE }) => {
+Scenario('Slash in group name @singlethread', ({ I, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.jstreeNavigate(["Test stavov"]);
@@ -313,9 +308,13 @@ Scenario('Slash in group name', ({ I, DT, DTE }) => {
 
     //there was no other way to do this except by this script, codecept always returns / as unencoded value
     //$(function() { $("#unescapedTitle").text("!REQUEST(doc_title)!"); });
-    I.waitForText("Lomka&#47;v nazve", "#unescapedTitle");
+    I.waitForText("Lomka&#47;v nazve", 10, "#unescapedTitle");
 });
 
-Scenario('reset 2', ({ I }) => {
+Scenario('reset 2 @singlethread', ({ I }) => {
+    I.jstreeReset();
+});
+
+Scenario('reset 2-nosingle', ({ I }) => {
     I.jstreeReset();
 });

@@ -2,7 +2,7 @@
 
 Pre zobrazenie iba špecifických konfiguračných premenných, na základe ich prefixu, môžete využiť prefix konfiguráciu. Ide o zjednodušenú verziu sekcie [Konfigurácia](../../admin/setup/configuration/README.md), kde sa zobrazujú konfiguračné premenné na základe zadaného prefixu.
 
-**Upozornenie:** prefixom filtrované konfiguračné premeny zobrazujú aj tie, ktoré sa neodlišujú od prednastavených hodnôt, čo je hlavný rozdiel oproti štandardnej sekcií Konfigurácia.
+!>**Upozornenie:** prefixom filtrované konfiguračné premeny zobrazujú aj tie, ktoré sa neodlišujú od prednastavených hodnôt, čo je hlavný rozdiel oproti štandardnej sekcií Konfigurácia.
 
 Implementácia tejto zjednodušenej verzie konfigurácie je ideálna v prípade, že chcete zobraziť iba tie konfiguračné hodnoty, ktoré priamo ovplyvnia konkrétnu sekciu či aplikáciu. Príklad môžete vidieť v sekcií [AB testovanie](../../redactor/apps/abtesting/abtesting.md) časť Konfigurácia. Táto časť zobrazuje všetky konfiguračné premenné, ktoré majú dopad práve na AB testovanie, čiže začínajú prefixom ``ABTesting``.
 
@@ -27,7 +27,7 @@ Príklad implementácie z ``AbTestingRestController``:
 
 Ako je zobrazené na ukážke vyššie, pre využitie stačí mať kontrolér, ktorý bude od abstraktného ```AbstractConfigurationController``` dediť. Táto rodičovská trieda má už implementovanú logiku, ktorá sa o všetko ostatné postará (získanie všetkých dát, získanie jedného záznamu, úprava záznamu).
 
-**Upozornenie:** pre fungovanie je potrebné zavolať konštruktor rodiča s týmito parametrami (prefix konfiguračných premenných, inštancia ``ConfDetailsMapper``).
+!>**Upozornenie:** pre fungovanie je potrebné zavolať konštruktor rodiča s týmito parametrami (prefix konfiguračných premenných, inštancia ``ConfDetailsMapper``).
 
 Povolená je iba akcia úpravy záznamu, všetky ostatné akcie ako pridanie/vymazanie/duplikovanie sú zakázané.
 

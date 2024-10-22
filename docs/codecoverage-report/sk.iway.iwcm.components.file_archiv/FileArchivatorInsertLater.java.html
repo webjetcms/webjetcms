@@ -1,399 +1,330 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileArchivatorInsertLater.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.file_archiv</a> &gt; <span class="el_source">FileArchivatorInsertLater.java</span></div><h1>FileArchivatorInsertLater.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.file_archiv;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.List;
-
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.io.IwcmFsDB;
-import sk.iway.iwcm.io.IwcmInputStream;
 
-<span class="nc" id="L19">public class FileArchivatorInsertLater</span>
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.List;
+
+<span class="nc" id="L14">public class FileArchivatorInsertLater</span>
 {
     public static void main(String[] args)
     {
         try
         {
-<span class="nc" id="L25">            List&lt;FileArchivatorBean&gt; filesToUpload = FileArchivatorDB.getFilesToUpload();</span>
+<span class="nc" id="L20">            List&lt;FileArchivatorBean&gt; filesToUpload = FileArchivatorDB.getFilesToUpload();</span>
 
-<span class="nc bnc" id="L27" title="All 2 branches missed.">            for(FileArchivatorBean fab : filesToUpload)</span>
+<span class="nc bnc" id="L22" title="All 2 branches missed.">            for(FileArchivatorBean fab : filesToUpload)</span>
             {
-                //subor, ktory sme sa v minulosti pokusili nahrat neuspesne
-<span class="nc bnc" id="L30" title="All 2 branches missed.">                if(fab.getUploaded()==-2)</span>
-<span class="nc" id="L31">                    continue;</span>
-<span class="nc" id="L32">                int stav = 0;</span>
-                //ulozime subor na nove miesto
-<span class="nc" id="L34">                String uniqueFileName = saveFile(fab);</span>
-<span class="nc" id="L35">                int oldId = fab.getId();</span>
-<span class="nc" id="L36">                String oldFileDir = fab.getFilePath();</span>
-<span class="nc bnc" id="L37" title="All 2 branches missed.">                if(uniqueFileName==null)</span>
-                {
-<span class="nc" id="L39">                    stav = 1;</span>
-<span class="nc" id="L40">                    fab.setUploaded(-2);</span>
-<span class="nc" id="L41">                    fab.save();</span>
+<span class="nc" id="L24">                RequestBean currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">                if (currentRequestBean == null) {</span>
+<span class="nc" id="L26">                    SetCharacterEncodingFilter.registerDataContext(null);</span>
+<span class="nc" id="L27">                    currentRequestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
                 }
-                else
+
+<span class="nc" id="L30">                int domainId = fab.getDomainId();</span>
+<span class="nc bnc" id="L31" title="All 2 branches missed.">                if (domainId &gt; -1) {</span>
+<span class="nc" id="L32">                    GroupDetails group = GroupsDB.getInstance().getGroup(domainId);</span>
+<span class="nc bnc" id="L33" title="All 2 branches missed.">                    if (group != null) {</span>
+<span class="nc" id="L34">                        currentRequestBean.setDomain(group.getDomainName());</span>
+                    }
+                }
+
+                //test if file exist's maybe it's on another cluster node
+<span class="nc" id="L39">                IwcmFile file = new IwcmFile(Tools.getRealPath(fab.getFilePath()+fab.getFileName()));</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">                if(!file.exists())</span>
                 {
-                    //ulozime novy zaznam o subore do DB
-<span class="nc bnc" id="L46" title="All 2 branches missed.">                    if(!saveBean(fab, uniqueFileName) )</span>
+                    //skip this file
+<span class="nc" id="L43">                    continue;</span>
+                }
+
+                //subor, ktory sme sa v minulosti pokusili nahrat neuspesne
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                if(fab.getUploaded()==-2)</span>
+<span class="nc" id="L48">                    continue;</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">                if(fab != null)</span>
+                {
+<span class="nc" id="L52">                    int stav = 0;</span>
+
+                    //ulozime subor na nove miesto
+<span class="nc" id="L55">                    String uniqueFileName = renameFile(fab);</span>
+
+<span class="nc bnc" id="L57" title="All 2 branches missed.">                    if(uniqueFileName==null)</span>
                     {
-<span class="nc" id="L48">                        stav = 2;</span>
-<span class="nc" id="L49">                        fab.setUploaded(-2);</span>
-<span class="nc" id="L50">                        fab.save();</span>
+<span class="nc" id="L59">                        stav = 1;</span>
+<span class="nc" id="L60">                        fab.setUploaded(-2);</span>
+<span class="nc" id="L61">                        fab.save();</span>
                     }
                     else
                     {
-                        //zmazeme stary subor a zaznam o nom z DB
-<span class="nc bnc" id="L55" title="All 2 branches missed.">                        if(!removeOld(oldId))</span>
-                        {
-<span class="nc" id="L57">                            stav = 3;</span>
-                        }
-                        else
-                        {
-                            //vymazeme prazdne priecinky
-<span class="nc bnc" id="L62" title="All 2 branches missed.">                            if(!removeEmptyDirs(oldFileDir, fab))</span>
-<span class="nc" id="L63">                                stav = 4;</span>
-                        }
+                        //vymazeme prazdne priecinky
+<span class="nc bnc" id="L66" title="All 2 branches missed.">                        if( !removeEmptyDirs(fab.getFilePath(), &quot;archiv_insert_later&quot;) )</span>
+<span class="nc" id="L67">                            stav = 4;</span>
                     }
-                }
-<span class="nc" id="L67">                sendMail(fab, stav);</span>
-<span class="nc" id="L68">            }</span>
-        }
-<span class="nc" id="L70">        catch (Exception e)</span>
-        {
-<span class="nc" id="L72">            StringWriter sw = new StringWriter();</span>
-<span class="nc" id="L73">            e.printStackTrace(new PrintWriter(sw));</span>
 
-<span class="nc" id="L75">            Adminlog.add(Adminlog.TYPE_CRON, &quot;FileArchivatorInsertLater error:&quot;+e.getMessage()+&quot;\n&quot;+sw.toString(), -1, -1);</span>
-<span class="nc" id="L76">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L70">                    sendMail(fab, stav);</span>
+                }
+<span class="nc" id="L72">            }</span>
+        }
+<span class="nc" id="L74">        catch (Exception e)</span>
+        {
+<span class="nc" id="L76">            StringWriter sw = new StringWriter();</span>
+<span class="nc" id="L77">            e.printStackTrace(new PrintWriter(sw));</span>
+
+<span class="nc" id="L79">            Adminlog.add(Adminlog.TYPE_CRON, &quot;FileArchivatorInsertLater error:&quot;+e.getMessage()+&quot;\n&quot;+sw.toString(), -1, -1);</span>
+<span class="nc" id="L80">            sk.iway.iwcm.Logger.error(e);</span>
         }
         finally
         {
-<span class="nc" id="L80">            Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix()+&quot;getWaitingFileList&quot;);</span>
+<span class="nc" id="L84">            Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix()+&quot;getWaitingFileList&quot;);</span>
         }
-<span class="nc" id="L82">    }</span>
+<span class="nc" id="L86">        SetCharacterEncodingFilter.unRegisterDataContext();</span>
+<span class="nc" id="L87">    }</span>
 
+    /**
+	 * zamena obsahu suborov dirPath+fileName &lt;-&gt; oldFileBean.getFilePath()+oldFileBean.getFileName()
+	 * BHR: musel som prerobit z Tools.renameFile, pretoze sa stalo, ze niekedy nezmazalo zdrojovy subor a teda sa premenovanie nedokoncilo
+	 */
+	public static String renameFile(FileArchivatorBean scheduledBean)
+	{
+        //String dirPath, String fileName, FileArchivatorBean oldFileBean
 
+        //get old bean
+<span class="nc" id="L98">        FileArchivatorBean oldFileBean = FileArchivatorDB.getInstance().getById(scheduledBean.getReferenceId());</span>
+
+<span class="nc bnc" id="L100" title="All 2 branches missed.">        if (oldFileBean == null) {</span>
+            //it's first file scheduled to publish
+<span class="nc" id="L102">            oldFileBean = new FileArchivatorBean();</span>
+<span class="nc" id="L103">            oldFileBean.setFileName(scheduledBean.getFileName());</span>
+<span class="nc" id="L104">            oldFileBean.setFilePath(newPath(scheduledBean.getFilePath()));</span>
+        }
+
+<span class="nc" id="L107">		boolean renamed = true;</span>
+<span class="nc" id="L108">		IwcmFile oldFile = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath()+oldFileBean.getFileName()));</span>
+<span class="nc" id="L109">		IwcmFile newFile = new IwcmFile(Tools.getRealPath(scheduledBean.getFilePath()+scheduledBean.getFileName()));</span>
+
+<span class="nc" id="L111">		String uniqueFileName = FileArchivatorKit.getUniqueFileName(oldFileBean.getFileName(), oldFileBean.getFilePath(), FileArchivatorKit.getDateStampAsString(oldFileBean.getDateInsert()));</span>
+<span class="nc" id="L112">        IwcmFile oldFileArchived = new IwcmFile(Tools.getRealPath(oldFileBean.getFilePath()+uniqueFileName));</span>
+		try
+		{
+			//copy old file to temp file for later usage
+<span class="nc bnc" id="L116" title="All 2 branches missed.">            if (oldFileBean.getId()&gt;0) {</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">                if(FileTools.copyFile(oldFile, oldFileArchived) == false)</span>
+                {
+<span class="nc" id="L119">                    Logger.error(FileArchivatorInsertLater.class, &quot;renameFile1: nepodarilo sa premenovat &quot;+oldFile.getVirtualPath()+&quot; &gt; &quot;+oldFileArchived.getVirtualPath());</span>
+<span class="nc" id="L120">                    renamed = false;</span>
+                }
+            }
+			//owerwrite old file with new file
+<span class="nc bnc" id="L124" title="All 2 branches missed.">			if(FileTools.copyFile(newFile, oldFile) == false)</span>
+			{
+<span class="nc" id="L126">				 Logger.error(FileArchivatorInsertLater.class, &quot;renameFile2: nepodarilo sa premenovat &quot;+newFile.getVirtualPath()+&quot; &gt; &quot;+oldFile.getVirtualPath());</span>
+<span class="nc" id="L127">				 renamed = false;</span>
+			}
+<span class="nc bnc" id="L129" title="All 2 branches missed.">            if (renamed) {</span>
+<span class="nc" id="L130">                scheduledBean.setFileName(oldFileBean.getFileName());</span>
+<span class="nc" id="L131">                scheduledBean.setFilePath(oldFileBean.getFilePath());</span>
+<span class="nc" id="L132">                scheduledBean.setUploaded(-1);</span>
+<span class="nc" id="L133">                scheduledBean.setReferenceId(-1);</span>
+<span class="nc" id="L134">                scheduledBean.save();</span>
+
+<span class="nc" id="L136">                Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, &quot;EDIT: File Archiv (Planovana aktualizacia existujuceho suboru) ulozenie:\n&quot;+scheduledBean.toString(true), scheduledBean.getId(), -1);</span>
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                if (oldFileBean.getId()&gt;0) {</span>
+<span class="nc" id="L139">                    oldFileBean.setFileName(uniqueFileName);</span>
+<span class="nc" id="L140">                    oldFileBean.setReferenceId(scheduledBean.getId());</span>
+<span class="nc" id="L141">                    oldFileBean.save();</span>
+<span class="nc" id="L142">                    FileArchivatorKit.reSetReference(oldFileBean.getId(), scheduledBean.getId());</span>
+                }
+
+                //delete newFile in archive folder
+<span class="nc" id="L146">			    newFile.delete();</span>
+<span class="nc" id="L147">                return oldFileBean.getFileName();</span>
+            }
+		}
+<span class="nc" id="L150">		catch(Exception e)</span>
+		{
+<span class="nc" id="L152">			renamed = false;</span>
+<span class="nc" id="L153">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L154">		}</span>
+
+<span class="nc" id="L156">        return null;</span>
+	}
 
     /**
      * vrati domenu na zaklade domainId
      */
     private static String getDomainByFab(FileArchivatorBean fab)
     {
-<span class="nc" id="L91">        String domainName = CloudToolsForCore.getDomainName();</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">        if(Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
+<span class="nc" id="L164">        String domainName = CloudToolsForCore.getDomainName();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if(Constants.getBoolean(&quot;multiDomainEnabled&quot;))</span>
         {
-<span class="nc" id="L94">            GroupDetails root = GroupsDB.getInstance().getGroup(fab.getDomainId());</span>
-<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (root != null) {</span>
-<span class="nc" id="L96">                return root.getDomainName();</span>
+<span class="nc" id="L167">            GroupDetails root = GroupsDB.getInstance().getGroup(fab.getDomainId());</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">            if (root != null) {</span>
+<span class="nc" id="L169">                return root.getDomainName();</span>
             }
         }
-<span class="nc" id="L99">        return domainName;</span>
-    }
-
-    /*private static String getDomainFolderName(String domain)
-    {
-        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;)==false)
-        {
-            return &quot;defaulthost&quot;;
-        }
-
-        domain = domain.toLowerCase();
-
-        if (domain.startsWith(&quot;www.&quot;)) domain = domain.substring(4);
-
-        if (domain.length() &gt; 3 &amp;&amp; &quot;cloud&quot;.equals(Constants.getInstallName()))
-        {
-            domain = domain.charAt(0)+File.separator+domain.charAt(1)+File.separator+domain.charAt(2)+File.separator+domain;
-        }
-
-        return domain;
-    }*/
-
-    /**
-     * ak je , aj ked ju nemam aktualne aktivnu.
-     */
-    public static String getRealPath(String virtualPath, String domain)
-    {
-<span class="nc bnc" id="L126" title="All 2 branches missed.">        if(virtualPath.startsWith(&quot;/&quot;) == false) virtualPath = &quot;/&quot;+virtualPath;</span>
-<span class="nc" id="L127">        String result = Tools.getRealPath(virtualPath);</span>
-        //aktivna domena nemusi sediet s tym kam ukladam
-<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (FilePathTools.isExternalDir(virtualPath))</span>
-        {
-<span class="nc" id="L131">            String domainBaseFolder = FilePathTools.getDomainBaseFolder(domain);</span>
-<span class="nc" id="L132">            IwcmFile file = new IwcmFile(domainBaseFolder, virtualPath);</span>
-<span class="nc" id="L133">            Logger.debug(FileArchivatorInsertLater.class, &quot;getRealPath, return=&quot;+file.getAbsolutePath()+&quot; virtualPath=&quot;+virtualPath);</span>
-
-<span class="nc" id="L135">            String path = file.getAbsolutePath();</span>
-<span class="nc bnc" id="L136" title="All 4 branches missed.">            if (virtualPath.endsWith(&quot;/&quot;) &amp;&amp; path.endsWith(File.separator)==false) path += File.separator;</span>
-<span class="nc" id="L137">            result = path;</span>
-        }
-
-<span class="nc" id="L140">        return result;</span>
-    }
-
-    /**
-     * ulozi subor na novu poziciu, vrati jeho novy nazov
-     *
-     * @param fab FileArchivatorBean
-     * @return String
-     */
-    private static String saveFile(FileArchivatorBean fab)
-    {
-<span class="nc" id="L151">        IwcmFile fOld = new IwcmFile(getRealPath(fab.getFilePath()+fab.getFileName(), getDomainByFab(fab)));</span>
-
-<span class="nc" id="L153">        String newPath = newPath(fab.getFilePath());</span>
-<span class="nc" id="L154">        String dateStamp = FileArchivatorKit.getDateStampAsString(fab.getDateInsert());</span>
-<span class="nc" id="L155">        String uniqueFileName = FileArchivatorKit.getUniqueFileName(fab.getFileName(), newPath, dateStamp);</span>
-
-<span class="nc" id="L157">        String realPath = getRealPath(newPath+uniqueFileName, getDomainByFab(fab));</span>
-<span class="nc" id="L158">        IwcmFile newFile = new IwcmFile(realPath);</span>
-        try
-        {
-<span class="nc" id="L161">            IwcmFsDB.writeFiletoDest(new IwcmInputStream(fOld),new File(newFile.getAbsolutePath()),Tools.safeLongToInt(fOld.getLength()));</span>
-        }
-<span class="nc" id="L163">        catch(IOException ioex)</span>
-        {
-            //indikuje chybu pri ukladani
-<span class="nc" id="L166">            uniqueFileName = null;</span>
-
-<span class="nc" id="L168">            Logger.debug(SaveFileAction.class, &quot;Nastala chyba '&quot;+ioex.getMessage()+&quot;' pri ukladani suboru &quot;+newFile.getPath());</span>
-<span class="nc" id="L169">            sk.iway.iwcm.Logger.error(ioex);</span>
-<span class="nc" id="L170">        }</span>
-<span class="nc" id="L171">        return uniqueFileName;</span>
-    }
-
-    /**
-     *  custom verzia z FileArchivatorKit kvoli getRealPath
-     */
-    public static boolean setFilePropertiesAfterUpload(String dirPath, String fileName, int oldId, FileArchivatorBean newFab)
-    {
-<span class="nc" id="L179">        newFab.setId(0);</span>
-<span class="nc" id="L180">        newFab.setFilePath(dirPath);</span>
-<span class="nc" id="L181">        newFab.setFileName(fileName);</span>
-<span class="nc" id="L182">        newFab.setUploaded(-1);</span>
-
-<span class="nc" id="L184">        String realPath = getRealPath(dirPath+fileName, getDomainByFab(newFab));</span>
-<span class="nc" id="L185">        IwcmFile iwcmFile = new IwcmFile(realPath);</span>
-<span class="nc bnc" id="L186" title="All 6 branches missed.">        if (!iwcmFile.exists() || !iwcmFile.isFile() || !iwcmFile.canRead()) return false;</span>
-<span class="nc" id="L187">        newFab.setMd5(FileArchivatorKit.getMD5(iwcmFile));</span>
-<span class="nc" id="L188">        newFab.setFileSize(iwcmFile.length());</span>
-
-<span class="nc" id="L190">        return FileArchivatorKit.setFilePropertiesAfterUpload(newFab, oldId, true, null);</span>
-    }
-
-    /**
-     * ulozi zaznam o subore do DB
-     *
-     * @param fab FileArchivatorBean
-     * @param uniqueFileName String
-     * @return true ak ulozene v poriadku
-     */
-    private static boolean saveBean(FileArchivatorBean fab, String uniqueFileName)
-    {
-<span class="nc" id="L202">        String dirPath = newPath(fab.getFilePath());</span>
-<span class="nc" id="L203">        int oldId = fab.getReferenceId();</span>
-
-        // zistime, ci referencovany subor uz nebol medzicasom prepisany. Ak ano, nahradime uz ten novsi
-<span class="nc bnc" id="L206" title="All 2 branches missed.">        if(oldId&gt;0)</span>
-        {
-<span class="nc" id="L208">            FileArchivatorBean referenceFab = FileArchivatorDB.getInstance().getById(oldId);</span>
-<span class="nc bnc" id="L209" title="All 4 branches missed.">            if( referenceFab!=null &amp;&amp; referenceFab.getReferenceId()&gt;0 )</span>
-<span class="nc" id="L210">                oldId = referenceFab.getReferenceId();</span>
-        }
-
-<span class="nc bnc" id="L213" title="All 2 branches missed.">        if(!setFilePropertiesAfterUpload(dirPath, uniqueFileName, oldId, fab))</span>
-        {
-<span class="nc" id="L215">            Logger.error(SaveFileAction.class, &quot;AfterUploadError !!! Property: &quot;+ uniqueFileName +&quot;,&quot;+oldId+&quot;,&quot;+fab.getUserId()+&quot;,&quot;+fab.getVirtualFileName()+&quot;,&quot;+fab.getValidFrom()+&quot;,&quot;+fab.getValidTo());</span>
-<span class="nc" id="L216">            return false;</span>
-        }
-<span class="nc" id="L218">        return true;</span>
-    }
-
-    /**
-     * vymaze stary subor a zaznam o nom z DB
-     *
-     * @param fabId int
-     * @return true ak odstrani v poriadku
-     */
-    private static boolean removeOld(int fabId)
-    {
-<span class="nc" id="L229">        boolean isSuccess = false;</span>
-<span class="nc" id="L230">        FileArchivatorBean fabToDelete = FileArchivatorDB.getInstance().getById(fabId);</span>
-<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (fabToDelete != null)</span>
-        {
-<span class="nc" id="L233">            IwcmFile iFile = new IwcmFile(getRealPath(fabToDelete.getFilePath() + fabToDelete.getFileName(), getDomainByFab(fabToDelete)));</span>
-<span class="nc bnc" id="L234" title="All 4 branches missed.">            if (iFile.exists() &amp;&amp; iFile.delete())</span>
-<span class="nc" id="L235">                isSuccess = true;</span>
-            else
-<span class="nc" id="L237">                Logger.debug(FileArchivatorDB.class, &quot;Subor :&quot; + fabToDelete.getFilePath() + fabToDelete.getFileName() + &quot; sa nepodarilo zmazat.&quot;);</span>
-        }
-<span class="nc bnc" id="L239" title="All 2 branches missed.">        if (fabToDelete == null) return false;</span>
-<span class="nc bnc" id="L240" title="All 4 branches missed.">        return isSuccess &amp;&amp; fabToDelete.delete() ;</span>
+<span class="nc" id="L172">        return domainName;</span>
     }
 
     private static String newPath(String oldPath)
     {
-<span class="nc" id="L245">        return oldPath.replace(FileArchivatorKit.getFullInsertLaterPath(), &quot;&quot;);</span>
+<span class="nc" id="L177">        return oldPath.replace(FileArchivatorKit.getFullInsertLaterPath(), &quot;&quot;);</span>
     }
 
-    private static void sendMail(FileArchivatorBean fileArchivatorBean, int stav)//Constants.getString(&quot;fileArchivFromMail&quot;);
+    private static void sendMail(FileArchivatorBean fileArchivatorBean, int stav)
     {
-<span class="nc" id="L250">        Prop prop = Prop.getInstance();</span>
+<span class="nc" id="L182">        Prop prop = Prop.getInstance();</span>
 
-<span class="nc" id="L252">        StringBuilder text = new StringBuilder();</span>
-<span class="nc" id="L253">        text.append(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
-<span class="nc" id="L254">        text.append(&quot;&lt;style&gt;&quot;);</span>
-<span class="nc" id="L255">        text.append(&quot;body{&quot;);</span>
-<span class="nc" id="L256">        text.append(&quot;font-family: Arial;&quot;);</span>
-<span class="nc" id="L257">        text.append(&quot;font-size: 11pt;&quot;);</span>
-<span class="nc" id="L258">        text.append('}');</span>
-<span class="nc" id="L259">        text.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
-<span class="nc" id="L260">        text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.nasledujici_soubor_bol_uspesne_nacitany&quot;)).append(&quot;:&lt;br/&gt;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L261" title="All 2 branches missed.">        if(stav!=0)</span>
-<span class="nc" id="L262">            text = new StringBuilder(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.pri_nahravani_suboru_nastala_nasledujuca_chyba&quot;)).append(&quot;: &quot;);</span>
-<span class="nc bnc" id="L263" title="All 2 branches missed.">        if(stav==1)</span>
-<span class="nc" id="L264">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.soubor_sa_nepodarilo_ulozit_na_disk&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L265" title="All 2 branches missed.">        if(stav==2)</span>
-<span class="nc" id="L266">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.zaznam_o_soubore_sa_nepodarilo_ulozit_do_databazy&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L267" title="All 2 branches missed.">        if(stav==3)</span>
-<span class="nc" id="L268">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.nepodarilo_sa_vymazat_docasny_soubor_alebo_zaznam_o_nom_z_databazy&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L269" title="All 2 branches missed.">        if(stav==4)</span>
-<span class="nc" id="L270">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.nepodarilo_se_vymazat_prazdne_adresare&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L184">        StringBuilder text = new StringBuilder();</span>
+<span class="nc" id="L185">        text.append(&quot;&lt;html&gt;&lt;head&gt;&quot;);</span>
+<span class="nc" id="L186">        text.append(&quot;&lt;style&gt;&quot;);</span>
+<span class="nc" id="L187">        text.append(&quot;body{&quot;);</span>
+<span class="nc" id="L188">        text.append(&quot;font-family: Arial;&quot;);</span>
+<span class="nc" id="L189">        text.append(&quot;font-size: 11pt;&quot;);</span>
+<span class="nc" id="L190">        text.append('}');</span>
+<span class="nc" id="L191">        text.append(&quot;&lt;/style&gt;&lt;/head&gt;&lt;body&gt;&quot;);</span>
+<span class="nc" id="L192">        text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.nasledujici_soubor_bol_uspesne_nacitany&quot;)).append(&quot;:&lt;br/&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">        if(stav!=0)</span>
+<span class="nc" id="L194">            text = new StringBuilder(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.pri_nahravani_suboru_nastala_nasledujuca_chyba&quot;)).append(&quot;: &quot;);</span>
+<span class="nc bnc" id="L195" title="All 2 branches missed.">        if(stav==1)</span>
+<span class="nc" id="L196">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.soubor_sa_nepodarilo_ulozit_na_disk&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if(stav==2)</span>
+<span class="nc" id="L198">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.zaznam_o_soubore_sa_nepodarilo_ulozit_do_databazy&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">        if(stav==3)</span>
+<span class="nc" id="L200">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.nepodarilo_sa_vymazat_docasny_soubor_alebo_zaznam_o_nom_z_databazy&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L201" title="All 2 branches missed.">        if(stav==4)</span>
+<span class="nc" id="L202">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.nepodarilo_se_vymazat_prazdne_adresare&quot;)).append(&quot;&lt;br/&gt;&lt;br/&gt;&quot;);</span>
 
-<span class="nc" id="L272">        FileArchivatorBean fab = fileArchivatorBean;</span>
-<span class="nc" id="L273">        String emails = fab.getEmails();</span>
+<span class="nc" id="L204">        FileArchivatorBean fab = fileArchivatorBean;</span>
+<span class="nc" id="L205">        String emails = fab.getEmails();</span>
         //Ak tento subor nie je novy, a je aktualizaciou starsieho suboru, potrebujeme vypisat v jeho vlastnosti.
-<span class="nc bnc" id="L275" title="All 2 branches missed.">        if(fab.getReferenceId() != -1)</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        if(fab.getReferenceId() != -1)</span>
         {
-<span class="nc" id="L277">            FileArchivatorBean fabByReference = FileArchivatorDB.getInstance().getById(fab.getReferenceId());</span>
+<span class="nc" id="L209">            FileArchivatorBean fabByReference = FileArchivatorDB.getInstance().getById(fab.getReferenceId());</span>
             // referencia na neho sameho s novym ID ale v archive
-<span class="nc bnc" id="L279" title="All 2 branches missed.">            if(fabByReference != null)</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            if(fabByReference != null)</span>
             {
-<span class="nc" id="L281">                fab = fabByReference;</span>
+<span class="nc" id="L213">                fab = fabByReference;</span>
                 //referencia na hlavny subor
-<span class="nc" id="L283">                fabByReference = FileArchivatorDB.getInstance().getById(fab.getReferenceId());</span>
-<span class="nc bnc" id="L284" title="All 2 branches missed.">                if(fabByReference != null)</span>
-<span class="nc" id="L285">                    fab = fabByReference;</span>
+<span class="nc" id="L215">                fabByReference = FileArchivatorDB.getInstance().getById(fab.getReferenceId());</span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">                if(fabByReference != null)</span>
+<span class="nc" id="L217">                    fab = fabByReference;</span>
             }
         }
 
-<span class="nc" id="L289">        String subject = prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.soubor_bol_uspesne_nahrany&quot;) +&quot; &quot;+ fab.getVirtualFileName();</span>
-<span class="nc bnc" id="L290" title="All 2 branches missed.">        if(stav!=0)</span>
-<span class="nc" id="L291">            subject = prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.pozor_nastala_chyba_pri_ukladani_souboru_&quot;) +&quot; &quot;+ fab.getVirtualFileName();</span>
+<span class="nc" id="L221">        String subject = prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.soubor_bol_uspesne_nahrany&quot;) +&quot; &quot;+ fab.getVirtualFileName();</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">        if(stav!=0)</span>
+<span class="nc" id="L223">            subject = prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.pozor_nastala_chyba_pri_ukladani_souboru_&quot;) +&quot; &quot;+ fab.getVirtualFileName();</span>
 
-<span class="nc" id="L293">        String dir = &quot;&quot;;</span>
-<span class="nc bnc" id="L294" title="All 2 branches missed.">        if(Tools.isNotEmpty(newPath(fab.getFilePath())))</span>
-<span class="nc" id="L295">            dir = newPath(fab.getFilePath());</span>
+<span class="nc" id="L225">        String dir = &quot;&quot;;</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        if(Tools.isNotEmpty(newPath(fab.getFilePath())))</span>
+<span class="nc" id="L227">            dir = newPath(fab.getFilePath());</span>
 
-<span class="nc bnc" id="L297" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getVirtualFileName()))</span>
-<span class="nc" id="L298">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.virtualne_meno&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L299">                     .append(fab.getVirtualFileName()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L300" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getFileName()))</span>
-<span class="nc" id="L301">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.realne_meno&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L302">                     .append(fab.getFileName()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L303" title="All 2 branches missed.">        if(Tools.isNotEmpty(dir))</span>
-<span class="nc" id="L304">            text.append(&quot;Adresář: &quot;).append(dir).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L305" title="All 2 branches missed.">        if(fab.getValidFrom()!=null)</span>
-<span class="nc" id="L306">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.datum_od&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L307">                     .append(Tools.formatDate(fab.getValidFrom())).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L308" title="All 2 branches missed.">        if(fab.getValidTo()!=null)</span>
-<span class="nc" id="L309">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.datum_od_1&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L310">                     .append(Tools.formatDate(fab.getValidTo())).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L311" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getProduct()))</span>
-<span class="nc" id="L312">            text.append(prop.getText(&quot;components.file_archiv.product&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L313">                     .append(fab.getProduct()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L314" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getCategory()))</span>
-<span class="nc" id="L315">            text.append(prop.getText(&quot;components.bazar.category&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L316">                     .append(fab.getCategory()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L317" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getProductCode()))</span>
-<span class="nc" id="L318">            text.append(prop.getText(&quot;components.file_archiv.code&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L319">                     .append(fab.getProductCode()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L320" title="All 2 branches missed.">        if(fab.getShowFile())</span>
-<span class="nc" id="L321">            text.append(prop.getText(&quot;editor.show&quot;)).append(&quot;:&quot;).append(prop.getText(&quot;qa.publishOnWeb.yes&quot;)).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getVirtualFileName()))</span>
+<span class="nc" id="L230">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.virtualne_meno&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L231">                     .append(fab.getVirtualFileName()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getFileName()))</span>
+<span class="nc" id="L233">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.realne_meno&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L234">                     .append(fab.getFileName()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">        if(Tools.isNotEmpty(dir))</span>
+<span class="nc" id="L236">            text.append(&quot;Adresář: &quot;).append(dir).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">        if(fab.getValidFrom()!=null)</span>
+<span class="nc" id="L238">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.datum_od&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L239">                     .append(Tools.formatDate(fab.getValidFrom())).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">        if(fab.getValidTo()!=null)</span>
+<span class="nc" id="L241">            text.append(prop.getText(&quot;components.file_archiv.FileArchivatorInsertLater.java.datum_od_1&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L242">                     .append(Tools.formatDate(fab.getValidTo())).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L243" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getProduct()))</span>
+<span class="nc" id="L244">            text.append(prop.getText(&quot;components.file_archiv.product&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L245">                     .append(fab.getProduct()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L246" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getCategory()))</span>
+<span class="nc" id="L247">            text.append(prop.getText(&quot;components.bazar.category&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L248">                     .append(fab.getCategory()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L249" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getProductCode()))</span>
+<span class="nc" id="L250">            text.append(prop.getText(&quot;components.file_archiv.code&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L251">                     .append(fab.getProductCode()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">        if(fab.getShowFile())</span>
+<span class="nc" id="L253">            text.append(prop.getText(&quot;editor.show&quot;)).append(&quot;:&quot;).append(prop.getText(&quot;qa.publishOnWeb.yes&quot;)).append(&quot;&lt;br/&gt;&quot;);</span>
 		else
-<span class="nc" id="L323">            text.append(prop.getText(&quot;editor.show&quot;)).append(&quot;:&quot;).append(prop.getText(&quot;qa.publishOnWeb.no&quot;)).append(&quot;&lt;br /&gt;&quot;);</span>
+<span class="nc" id="L255">            text.append(prop.getText(&quot;editor.show&quot;)).append(&quot;:&quot;).append(prop.getText(&quot;qa.publishOnWeb.no&quot;)).append(&quot;&lt;br /&gt;&quot;);</span>
 
 
-<span class="nc" id="L326">        text.append(prop.getText(&quot;components.banner.priority&quot;)).append(&quot;: &quot;)</span>
-<span class="nc" id="L327">                 .append(fab.getPriority()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc bnc" id="L328" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getReferenceToMain()))</span>
-<span class="nc" id="L329">            text.append(prop.getText(&quot;components.file_archiv.pattern&quot;)).append(&quot;: &quot;).append(fab.getReferenceToMain()).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="nc" id="L330">        text.append(prop.getText(&quot;components.file_archiv.reference&quot;)).append(&quot;: &quot;).append(fab.getReferenceId()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L258">        text.append(prop.getText(&quot;components.banner.priority&quot;)).append(&quot;: &quot;)</span>
+<span class="nc" id="L259">                 .append(fab.getPriority()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        if(Tools.isNotEmpty(fab.getReferenceToMain()))</span>
+<span class="nc" id="L261">            text.append(prop.getText(&quot;components.file_archiv.pattern&quot;)).append(&quot;: &quot;).append(fab.getReferenceToMain()).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="nc" id="L262">        text.append(prop.getText(&quot;components.file_archiv.reference&quot;)).append(&quot;: &quot;).append(fab.getReferenceId()).append(&quot;&lt;br/&gt;&quot;);</span>
 
-<span class="nc" id="L332">        String baseHref = &quot;http://&quot;+getDomainByFab(fab);</span>
+<span class="nc" id="L264">        String baseHref = &quot;http://&quot;+getDomainByFab(fab);</span>
 
-<span class="nc" id="L334">        text.append(&quot;&lt;br/&gt;&quot;).append(prop.getText(&quot;components.file_archiv.link_on_file&quot;)).append(&quot;: &lt;a href=\&quot;&quot;).append(baseHref).append(&quot;/&quot;)</span>
-<span class="nc" id="L335">                 .append(dir).append(fab.getFileName()).append(&quot;\&quot;&gt;&quot;).append(baseHref).append(&quot;/&quot;).append(dir).append(fab.getFileName())</span>
-<span class="nc" id="L336">                 .append(&quot;&lt;/a&gt;&quot;);</span>
+<span class="nc" id="L266">        text.append(&quot;&lt;br/&gt;&quot;).append(prop.getText(&quot;components.file_archiv.link_on_file&quot;)).append(&quot;: &lt;a href=\&quot;&quot;).append(baseHref).append(&quot;/&quot;)</span>
+<span class="nc" id="L267">                 .append(dir).append(fab.getFileName()).append(&quot;\&quot;&gt;&quot;).append(baseHref).append(&quot;/&quot;).append(dir).append(fab.getFileName())</span>
+<span class="nc" id="L268">                 .append(&quot;&lt;/a&gt;&quot;);</span>
 
-<span class="nc" id="L338">        text.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
+<span class="nc" id="L270">        text.append(&quot;&lt;/body&gt;&lt;/html&gt;&quot;);</span>
 
-<span class="nc" id="L340">        String fromName = prop.getText(&quot;components.file_archiv.title&quot;);</span>
-<span class="nc" id="L341">        String fromEmail = &quot;no-reply@&quot;+getDomainByFab(fab).replace(&quot;www.&quot;, &quot;&quot;);</span>
+<span class="nc" id="L272">        String fromName = prop.getText(&quot;components.file_archiv.title&quot;);</span>
+<span class="nc" id="L273">        String fromEmail = &quot;no-reply@&quot;+getDomainByFab(fab).replace(&quot;www.&quot;, &quot;&quot;);</span>
 
-<span class="nc bnc" id="L343" title="All 4 branches missed.">        if(Tools.isNotEmpty(Constants.getString(&quot;fileArchivFromMail&quot;)) &amp;&amp; Tools.isEmail(Constants.getString(&quot;fileArchivFromMail&quot;)))</span>
-<span class="nc" id="L344">            fromEmail = Constants.getString(&quot;fileArchivFromMail&quot;);</span>
+<span class="nc bnc" id="L275" title="All 4 branches missed.">        if(Tools.isNotEmpty(Constants.getString(&quot;fileArchivFromMail&quot;)) &amp;&amp; Tools.isEmail(Constants.getString(&quot;fileArchivFromMail&quot;)))</span>
+<span class="nc" id="L276">            fromEmail = Constants.getString(&quot;fileArchivFromMail&quot;);</span>
 
-<span class="nc bnc" id="L346" title="All 2 branches missed.">        if(Tools.isEmpty(emails))</span>
-<span class="nc" id="L347">            emails = Constants.getString(&quot;fileArchivSupportEmails&quot;);</span>
+<span class="nc bnc" id="L278" title="All 2 branches missed.">        if(Tools.isEmpty(emails))</span>
+<span class="nc" id="L279">            emails = Constants.getString(&quot;fileArchivSupportEmails&quot;);</span>
 
-<span class="nc" id="L349">        String[] emailsArray = Tools.getTokens(emails, &quot;,&quot;, true);</span>
-<span class="nc bnc" id="L350" title="All 2 branches missed.">        for (String recipient : emailsArray)</span>
-<span class="nc" id="L351">            SendMail.send(fromName, fromEmail, recipient,  subject, text.toString());</span>
-<span class="nc" id="L352">    }</span>
+<span class="nc" id="L281">        String[] emailsArray = Tools.getTokens(emails, &quot;,&quot;, true);</span>
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        for (String recipient : emailsArray)</span>
+<span class="nc" id="L283">            SendMail.send(fromName, fromEmail, recipient,  subject, text.toString());</span>
+<span class="nc" id="L284">    }</span>
 
     /**
      * vymaze vsetky prazdne priecinky od startDir po stopDir vratane
      *
-     * @param startDir String
-     * @param fab FileArchivatorBean - len kvoli domene
-     * @return true ak uspesne odstrani
+     * @param startDir
+     * @param stopDir
+     * @return
      */
-    public static boolean removeEmptyDirs(String startDir, FileArchivatorBean fab)
+    public static boolean removeEmptyDirs(String startDir, String stopDir)
     {
-        boolean result;
+<span class="nc" id="L295">        boolean result = true;</span>
 
-<span class="nc" id="L365">        String stopDir = &quot;archiv_insert_later&quot;;</span>
-<span class="nc bnc" id="L366" title="All 2 branches missed.">        if( Tools.isEmpty(startDir))</span>
-<span class="nc" id="L367">            return true;</span>
+<span class="nc bnc" id="L297" title="All 4 branches missed.">        if( Tools.isEmpty(startDir) || Tools.isEmpty(stopDir) )</span>
+<span class="nc" id="L298">            return result;</span>
 
-<span class="nc" id="L369">        IwcmFile startDirFile = new IwcmFile(getRealPath(startDir, getDomainByFab(fab)));</span>
-<span class="nc" id="L370">        IwcmFile stopDirFile = new IwcmFile(getRealPath(stopDir, getDomainByFab(fab)));</span>
+<span class="nc" id="L300">        IwcmFile startDirFile = new IwcmFile(Tools.getRealPath(startDir));</span>
+<span class="nc" id="L301">        IwcmFile stopDirFile = new IwcmFile(Tools.getRealPath(stopDir));</span>
 
-<span class="nc bnc" id="L372" title="All 2 branches missed.">        if(!startDirFile.isDirectory())</span>
-<span class="nc" id="L373">            return true;</span>
+<span class="nc bnc" id="L303" title="All 2 branches missed.">        if(!startDirFile.isDirectory())</span>
+<span class="nc" id="L304">            return result;</span>
 
-<span class="nc" id="L375">        int numberOfFiles = startDirFile.listFiles().length;</span>
+<span class="nc" id="L306">        int numberOfFiles = startDirFile.listFiles().length;</span>
 
-<span class="nc bnc" id="L377" title="All 2 branches missed.">        if(numberOfFiles!=0)</span>
-<span class="nc" id="L378">            return true;</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">        if(numberOfFiles!=0)</span>
+<span class="nc" id="L309">            return result;</span>
 
-<span class="nc" id="L380">        IwcmFile helpFile = startDirFile;</span>
-<span class="nc" id="L381">        IwcmFile deleteFile = startDirFile;</span>
+<span class="nc" id="L311">        IwcmFile helpFile = startDirFile;</span>
+<span class="nc" id="L312">        IwcmFile deleteFile = startDirFile;</span>
 
         //kym je adresar prazdny, alebo iba s jednym suborom - inym prazdnym Dirom
         //a sucasne jeho nazov nie je stopDir
-<span class="nc bnc" id="L385" title="All 4 branches missed.">        while( numberOfFiles&lt;=1 &amp;&amp; !helpFile.getName().equals(stopDirFile.getName()) )</span>
+<span class="nc bnc" id="L316" title="All 4 branches missed.">        while( numberOfFiles&lt;=1 &amp;&amp; !helpFile.getName().equals(stopDirFile.getName()) )</span>
         {
-<span class="nc" id="L387">            deleteFile = helpFile;</span>
-<span class="nc" id="L388">            helpFile = helpFile.getParentFile();</span>
-<span class="nc" id="L389">            numberOfFiles = helpFile.listFiles().length;</span>
+<span class="nc" id="L318">            deleteFile = helpFile;</span>
+<span class="nc" id="L319">            helpFile = helpFile.getParentFile();</span>
+<span class="nc" id="L320">            numberOfFiles = helpFile.listFiles().length;</span>
         }
 
         //rekurzivne vymaze vsetky subory nadol, vratane zadaneho adresara
-<span class="nc" id="L393">        result = FileTools.deleteDirTree(deleteFile);</span>
-<span class="nc" id="L394">        Logger.debug(FileArchivatorInsertLater.class, &quot;Vymazanie prazdnych adresarov, zaciatok(vratane): &quot;+deleteFile.getAbsolutePath());</span>
+<span class="nc" id="L324">        result = FileTools.deleteDirTree(deleteFile);</span>
+<span class="nc" id="L325">        Logger.debug(FileArchivatorInsertLater.class, &quot;Vymazanie prazdnych adresarov, zaciatok(vratane): &quot;+deleteFile.getAbsolutePath());</span>
 
-<span class="nc" id="L396">        return result;</span>
+<span class="nc" id="L327">        return result;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

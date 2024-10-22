@@ -11,8 +11,9 @@ import java.util.Date;
 public class CacheDto {
 
     @DataTableColumn(
-            inputType = {DataTableColumnType.ID},
-            title = "[[#{components.memory_cleanup.cache_objects.id}]]"
+        inputType = {DataTableColumnType.ID},
+        title = "[[#{components.memory_cleanup.cache_objects.id}]]",
+        filter = false
     )
     private Long id;
 

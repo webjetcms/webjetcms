@@ -4,7 +4,9 @@ import java.util.Date;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
 
 @Getter
@@ -21,48 +23,62 @@ public class FilterHeaderDto {
     private Integer webPageId;
     private String statType;
 
-<span class="fc" id="L24">    public FilterHeaderDto() {</span>
-<span class="fc" id="L25">        this.dateFrom = null;</span>
-<span class="fc" id="L26">        this.dateTo = null;</span>
-<span class="fc" id="L27">        this.rootGroupId = -1;</span>
-<span class="fc" id="L28">        this.filterBotsOut = false;</span>
-<span class="fc" id="L29">        this.chartType = ChartType.NOT_CHART;</span>
-<span class="fc" id="L30">        this.rootGroupIdQuery = &quot;&quot;;</span>
-<span class="fc" id="L31">        this.searchEngineName = &quot;&quot;;</span>
-<span class="fc" id="L32">        this.webPageId = -1;</span>
-<span class="fc" id="L33">        this.statType = &quot;days&quot;;</span>
-<span class="fc" id="L34">    }</span>
+<span class="fc" id="L26">    public FilterHeaderDto() {</span>
+<span class="fc" id="L27">        this.dateFrom = null;</span>
+<span class="fc" id="L28">        this.dateTo = null;</span>
+<span class="fc" id="L29">        this.rootGroupId = -1;</span>
+<span class="fc" id="L30">        this.filterBotsOut = false;</span>
+<span class="fc" id="L31">        this.chartType = ChartType.NOT_CHART;</span>
+<span class="fc" id="L32">        this.rootGroupIdQuery = &quot;&quot;;</span>
+<span class="fc" id="L33">        this.searchEngineName = &quot;&quot;;</span>
+<span class="fc" id="L34">        this.webPageId = -1;</span>
+<span class="fc" id="L35">        this.statType = &quot;days&quot;;</span>
+<span class="fc" id="L36">    }</span>
 
     public void setRootGroupId(Integer rootGroupId) {
-<span class="fc" id="L37">        this.rootGroupId = rootGroupId;</span>
-<span class="pc bpc" id="L38" title="1 of 4 branches missed.">        if(rootGroupId != null &amp;&amp; rootGroupId != -1)</span>
-<span class="fc" id="L39">            this.rootGroupIdQuery = groupIdToQuery(rootGroupId);</span>
-<span class="fc" id="L40">    }</span>
+<span class="fc" id="L39">        this.rootGroupId = rootGroupId;</span>
+<span class="pc bpc" id="L40" title="1 of 4 branches missed.">        if(rootGroupId != null &amp;&amp; rootGroupId != -1)</span>
+<span class="fc" id="L41">            this.rootGroupIdQuery = groupIdToQuery(rootGroupId);</span>
+<span class="fc" id="L42">    }</span>
 
     //Process rootGroupId into query + subTrees
     public static String groupIdToQuery(Integer groupId) {
-<span class="pc bpc" id="L44" title="1 of 4 branches missed.">        if(groupId == null || groupId == -1)</span>
-<span class="fc" id="L45">            return &quot;&quot;;</span>
+
+<span class="fc" id="L47">        groupId = CloudToolsForCore.fixRootGroupId(groupId);</span>
+
+<span class="pc bpc" id="L49" title="1 of 4 branches missed.">        if(groupId == null || groupId == -1)</span>
+<span class="fc" id="L50">            return &quot;&quot;;</span>
         else {
-<span class="fc" id="L47">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L48">            StringBuilder query = new StringBuilder();</span>
+<span class="fc" id="L52">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L53">            StringBuilder query = new StringBuilder();</span>
 
-<span class="fc" id="L50">            int[] rootGroups = {groupId};</span>
-<span class="fc" id="L51">            query.append(&quot; AND group_id IN(&quot; + groupId + &quot;, &quot;);</span>
-<span class="fc" id="L52">            int[] childsGroupIds = groupsDB.expandGroupIdsToChilds(rootGroups);</span>
-<span class="fc bfc" id="L53" title="All 2 branches covered.">            for(int i = 0; i &lt; childsGroupIds.length; i++)</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">                if(i == childsGroupIds.length - 1)</span>
-<span class="fc" id="L55">                    query.append(childsGroupIds[i] + &quot;&quot;);</span>
+<span class="fc" id="L55">            int[] rootGroups = {groupId};</span>
+<span class="fc" id="L56">            query.append(&quot; AND group_id IN(&quot; + groupId + &quot;, &quot;);</span>
+<span class="fc" id="L57">            int[] childsGroupIds = groupsDB.expandGroupIdsToChilds(rootGroups);</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">            for(int i = 0; i &lt; childsGroupIds.length; i++)</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">                if(i == childsGroupIds.length - 1)</span>
+<span class="fc" id="L60">                    query.append(childsGroupIds[i] + &quot;&quot;);</span>
                 else
-<span class="fc" id="L57">                    query.append(childsGroupIds[i] + &quot;, &quot;);</span>
-<span class="fc" id="L58">            query.append(&quot;) &quot;);</span>
+<span class="fc" id="L62">                    query.append(childsGroupIds[i] + &quot;, &quot;);</span>
+<span class="fc" id="L63">            query.append(&quot;) &quot;);</span>
 
-<span class="fc" id="L60">            return query.toString();</span>
+<span class="fc" id="L65">            return query.toString();</span>
         }
     }
 
     public String toString() {
-<span class="fc" id="L65">        return &quot;from=&quot;+Tools.formatDate(dateFrom)+&quot; to=&quot;+Tools.formatDate(dateTo)+&quot; rootGroup=&quot;+rootGroupId+&quot; filterBots=&quot;+filterBotsOut;</span>
+<span class="fc" id="L70">        return &quot;from=&quot;+Tools.formatDate(dateFrom)+&quot; to=&quot;+Tools.formatDate(dateTo)+&quot; rootGroup=&quot;+rootGroupId+&quot; filterBots=&quot;+filterBotsOut;</span>
+    }
+
+    public Integer getRootGroupId() {
+<span class="fc" id="L74">        return CloudToolsForCore.fixRootGroupId(rootGroupId);</span>
+    }
+
+    public String getRootGroupIdQuery() {
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) {</span>
+<span class="nc" id="L79">            return groupIdToQuery(getRootGroupId());</span>
+        }
+<span class="fc" id="L81">        return rootGroupIdQuery;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -88,7 +88,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
                             <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
                             <div class="input-icon">
                                 <i class="ti ti-key"></i>
-                                <input type="text" name="token" size="16" maxlength="40" class="form-control placeholder-no-fix" autocomplete="off"/>
+                                <input type="text" name="token" size="16" maxlength="64" class="form-control placeholder-no-fix" autocomplete="off"/>
                             </div>
                         </div>
                         <div class="form-actions">

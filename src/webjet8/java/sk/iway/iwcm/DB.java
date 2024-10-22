@@ -19,7 +19,6 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.RowSetDynaClass;
-import org.apache.commons.dbcp.DelegatingConnection;
 import org.apache.struts.util.ResponseUtils;
 
 import oracle.jdbc.driver.OracleConnection;
@@ -624,11 +623,7 @@ public class DB
 					Connection db_conn = ps.getConnection();
 
 					Connection nativeConn = null;
-					if (db_conn instanceof DelegatingConnection)
-					{
-						nativeConn = ((DelegatingConnection)db_conn).getInnermostDelegate();
-					}
-					else if (db_conn instanceof OracleConnection)
+					if (db_conn instanceof OracleConnection)
 					{
 						nativeConn = db_conn;
 					}
@@ -641,9 +636,7 @@ public class DB
 				   */
 					if (nativeConn != null)
 					{
-						Connection nativeCon = ((DelegatingConnection) db_conn).getInnermostDelegate();
-
-						CLOB tempClob = CLOB.createTemporary(nativeCon, true, CLOB.DURATION_SESSION);
+						CLOB tempClob = CLOB.createTemporary(nativeConn, true, CLOB.DURATION_SESSION);
 						// Open the temporary CLOB in readwrite mode to enable writing
 						tempClob.open(CLOB.MODE_READWRITE);
 						// Get the output stream to write

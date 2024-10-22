@@ -58,10 +58,11 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      * @return
      */
     public String parse(HttpServletRequest request, HttpServletResponse response, String html) {
-        //this.request = request;
         Map<String, WebjetComponentInterface> components = new LinkedHashMap<>();
 
         if (Tools.isEmpty(html)) return html;
+
+        if (html.contains("!INCLUDE")==false) return html;
 
         try {
             // parsuje komponenty a ich page params z html kodu

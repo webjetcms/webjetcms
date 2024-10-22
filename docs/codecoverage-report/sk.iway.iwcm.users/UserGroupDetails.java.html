@@ -30,18 +30,19 @@ import sk.iway.iwcm.Tools;
 <span class="fc" id="L30">	private int emailDocId = -1;</span>
 	private boolean allowUserEdit;
 <span class="fc" id="L32">	private boolean requireEmailVerification = false;</span>
+<span class="fc" id="L33">	private int priceDiscount = 0;</span>
 
 	public void reset(ActionMapping mapping, HttpServletRequest request)
 	{
 		//Logger.println(this,&quot;EditorForm: reset()&quot;);
-<span class="nc" id="L37">		requireApprove = false;</span>
-<span class="nc" id="L38">		allowUserEdit = false;</span>
-<span class="nc" id="L39">	}</span>
+<span class="nc" id="L38">		requireApprove = false;</span>
+<span class="nc" id="L39">		allowUserEdit = false;</span>
+<span class="nc" id="L40">	}</span>
 
 	public String getUserGroupNameComment()
 	{
-<span class="nc bnc" id="L43" title="All 2 branches missed.">		if (Tools.isEmpty(userGroupComment)) return userGroupName;</span>
-<span class="nc" id="L44">		return userGroupName + &quot; - &quot; + userGroupComment;</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">		if (Tools.isEmpty(userGroupComment)) return userGroupName;</span>
+<span class="fc" id="L45">		return userGroupName + &quot; - &quot; + userGroupComment;</span>
 	}
 
 	/**
@@ -51,7 +52,7 @@ import sk.iway.iwcm.Tools;
 	 */
 	public int getUserGroupId()
 	{
-<span class="fc" id="L54">		return userGroupId;</span>
+<span class="fc" id="L55">		return userGroupId;</span>
 	}
 
 	/**
@@ -61,8 +62,8 @@ import sk.iway.iwcm.Tools;
 	 */
 	public void setUserGroupId(int userGroupId)
 	{
-<span class="fc" id="L64">		this.userGroupId = userGroupId;</span>
-<span class="fc" id="L65">	}</span>
+<span class="fc" id="L65">		this.userGroupId = userGroupId;</span>
+<span class="fc" id="L66">	}</span>
 
 	/**
 	 *  Sets the userGroupName attribute of the UserGroupDetails object
@@ -71,8 +72,8 @@ import sk.iway.iwcm.Tools;
 	 */
 	public void setUserGroupName(String userGroupName)
 	{
-<span class="fc" id="L74">		this.userGroupName = userGroupName;</span>
-<span class="fc" id="L75">	}</span>
+<span class="fc" id="L75">		this.userGroupName = userGroupName;</span>
+<span class="fc" id="L76">	}</span>
 
 	/**
 	 *  Gets the userGroupName attribute of the UserGroupDetails object
@@ -81,76 +82,86 @@ import sk.iway.iwcm.Tools;
 	 */
 	public String getUserGroupName()
 	{
-<span class="fc" id="L84">		return userGroupName;</span>
+<span class="fc" id="L85">		return userGroupName;</span>
 	}
 	public int getUserGroupType()
 	{
-<span class="fc" id="L88">		return userGroupType;</span>
+<span class="fc" id="L89">		return userGroupType;</span>
 	}
 	public void setUserGroupType(int userGroupType)
 	{
-<span class="fc" id="L92">		this.userGroupType = userGroupType;</span>
-<span class="fc" id="L93">	}</span>
+<span class="fc" id="L93">		this.userGroupType = userGroupType;</span>
+<span class="fc" id="L94">	}</span>
 	public String getUserGroupComment()
 	{
-<span class="nc" id="L96">		return userGroupComment;</span>
+<span class="fc" id="L97">		return userGroupComment;</span>
 	}
 	public void setUserGroupComment(String userGroupComment)
 	{
-<span class="fc" id="L100">		this.userGroupComment = userGroupComment;</span>
-<span class="fc" id="L101">	}</span>
+<span class="fc" id="L101">		this.userGroupComment = userGroupComment;</span>
+<span class="fc" id="L102">	}</span>
 
 	/**
 	 * @return Returns the emailDocId.
 	 */
 	public int getEmailDocId()
 	{
-<span class="fc" id="L108">		return emailDocId;</span>
+<span class="fc" id="L109">		return emailDocId;</span>
 	}
 	/**
 	 * @param emailDocId The emailDocId to set.
 	 */
 	public void setEmailDocId(int emailDocId)
 	{
-<span class="fc" id="L115">		this.emailDocId = emailDocId;</span>
-<span class="fc" id="L116">	}</span>
+<span class="fc" id="L116">		this.emailDocId = emailDocId;</span>
+<span class="fc" id="L117">	}</span>
 	/**
 	 * @return Returns the requireApprove.
 	 */
 	public boolean isRequireApprove()
 	{
-<span class="fc" id="L122">		return requireApprove;</span>
+<span class="fc" id="L123">		return requireApprove;</span>
 	}
 	/**
 	 * @param requireApprove The requireApprove to set.
 	 */
 	public void setRequireApprove(boolean requireApprove)
 	{
-<span class="fc" id="L129">		this.requireApprove = requireApprove;</span>
-<span class="fc" id="L130">	}</span>
+<span class="fc" id="L130">		this.requireApprove = requireApprove;</span>
+<span class="fc" id="L131">	}</span>
 	/**
 	 * @return Returns the allowUserEdit.
 	 */
 	public boolean isAllowUserEdit()
 	{
-<span class="fc" id="L136">		return allowUserEdit;</span>
+<span class="fc" id="L137">		return allowUserEdit;</span>
 	}
 	/**
 	 * @param allowUserEdit The allowUserEdit to set.
 	 */
 	public void setAllowUserEdit(boolean allowUserEdit)
 	{
-<span class="fc" id="L143">		this.allowUserEdit = allowUserEdit;</span>
-<span class="fc" id="L144">	}</span>
+<span class="fc" id="L144">		this.allowUserEdit = allowUserEdit;</span>
+<span class="fc" id="L145">	}</span>
 
 	public boolean isRequireEmailVerification()
 	{
-<span class="fc" id="L148">		return requireEmailVerification;</span>
+<span class="fc" id="L149">		return requireEmailVerification;</span>
 	}
 
 	public void setRequireEmailVerification(boolean requireEmailVerification)
 	{
-<span class="fc" id="L153">		this.requireEmailVerification = requireEmailVerification;</span>
-<span class="fc" id="L154">	}</span>
+<span class="fc" id="L154">		this.requireEmailVerification = requireEmailVerification;</span>
+<span class="fc" id="L155">	}</span>
+
+	public int getPriceDiscount() {
+<span class="fc" id="L158">		return priceDiscount;</span>
+	}
+
+	public void setPriceDiscount(int priceDiscount) {
+<span class="pc bpc" id="L162" title="1 of 2 branches missed.">		if(priceDiscount &lt; 0) priceDiscount = 0;</span>
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">		else if(priceDiscount &gt; 100) priceDiscount = 100;</span>
+<span class="fc" id="L164">		this.priceDiscount = priceDiscount;</span>
+<span class="fc" id="L165">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

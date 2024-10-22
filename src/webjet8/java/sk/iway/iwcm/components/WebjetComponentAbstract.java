@@ -1,9 +1,14 @@
 package sk.iway.iwcm.components;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import sk.iway.iwcm.editor.rest.ComponentRequest;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.OptionDto;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -53,6 +58,20 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
      * Called every time a component is inserted into the page
      */
     public void init(HttpServletRequest request, HttpServletResponse response) {
+
+    }
+
+    /**
+     * Returns list of options for app editor in webpage
+     */
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        return null;
+    }
+
+    /**
+     * Initialization method for app editor in webpage
+     */
+    public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
 
     }
 

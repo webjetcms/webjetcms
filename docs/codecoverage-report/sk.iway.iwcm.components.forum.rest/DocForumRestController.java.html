@@ -88,8 +88,8 @@ public class DocForumRestController extends DatatableRestControllerV2&lt;DocForu
             //When it's edit
 <span class="fc" id="L89">            Boolean oldValue = (new SimpleQuery()).forBoolean(&quot;SELECT active FROM document_forum WHERE forum_id=? AND domain_id=?&quot;, entity.getId(), entity.getDomainId());</span>
             //If active value (actual) is different than old value in DB
-<span class="pc bpc" id="L91" title="2 of 4 branches missed.">            if(oldValue != null &amp;&amp; (oldValue != entity.getActive())) {</span>
-<span class="nc bnc" id="L92" title="All 2 branches missed.">                if(entity.getActive()) DocForumService.docForumRecursiveAction(DocForumService.ActionType.UNLOCK, entity.getId().intValue(), entity.getDocId(), getUser());</span>
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">            if(oldValue != null &amp;&amp; oldValue.equals(entity.getActive())) {</span>
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                if(Tools.isTrue(entity.getActive())) DocForumService.docForumRecursiveAction(DocForumService.ActionType.UNLOCK, entity.getId().intValue(), entity.getDocId(), getUser());</span>
 <span class="nc" id="L93">                else DocForumService.docForumRecursiveAction(DocForumService.ActionType.LOCK, entity.getId().intValue(), entity.getDocId(), getUser());</span>
             }
         }
@@ -109,18 +109,18 @@ public class DocForumRestController extends DatatableRestControllerV2&lt;DocForu
 
     @Override
     public boolean processAction(DocForumEntity entity, String action) {
-<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        if (&quot;recoverForum&quot;.equals(action)) {</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (&quot;recoverForum&quot;.equals(action)) {</span>
             //Restore soft-deleted forum's
 <span class="fc" id="L114">            setForceReload(true);</span>
 <span class="fc" id="L115">            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.RECOVER, entity.getId().intValue(), entity.getDocId(), getUser());</span>
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        } else if(&quot;approveForum&quot;.equals(action)) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        } else if(&quot;approveForum&quot;.equals(action)) {</span>
             //Approve forum's
-<span class="nc" id="L118">            setForceReload(true);</span>
-<span class="nc" id="L119">            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.APPROVE, entity.getId().intValue(), entity.getDocId(), getUser());</span>
-<span class="nc bnc" id="L120" title="All 2 branches missed.">        } else if(&quot;rejectForum&quot;.equals(action)) {</span>
+<span class="fc" id="L118">            setForceReload(true);</span>
+<span class="fc" id="L119">            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.APPROVE, entity.getId().intValue(), entity.getDocId(), getUser());</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        } else if(&quot;rejectForum&quot;.equals(action)) {</span>
             //Reject forum's
-<span class="nc" id="L122">            setForceReload(true);</span>
-<span class="nc" id="L123">            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.REJECT, entity.getId().intValue(), entity.getDocId(), getUser());</span>
+<span class="fc" id="L122">            setForceReload(true);</span>
+<span class="fc" id="L123">            return DocForumService.docForumRecursiveAction(DocForumService.ActionType.REJECT, entity.getId().intValue(), entity.getDocId(), getUser());</span>
         }
 
         //Unknown action
@@ -148,9 +148,8 @@ public class DocForumRestController extends DatatableRestControllerV2&lt;DocForu
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, DocForumEntity&gt; target, Identity currentUser, Errors errors, Long id, DocForumEntity entity) {
         //Validate that if we choose approving via email, email must be set and must have valid form !!
-<span class="pc bpc" id="L151" title="2 of 4 branches missed.">        if(entity.getForumGroupEntity() != null &amp;&amp; Boolean.TRUE.equals(entity.getForumGroupEntity().getMessageConfirmation()))</span>
-<span class="nc bnc" id="L152" title="All 2 branches missed.">            if(!Tools.isEmail( entity.getForumGroupEntity().getApproveEmail() ))</span>
-<span class="nc" id="L153">                errors.rejectValue(&quot;errorField.forumGroupEntity.approveEmail&quot;, null, getProp().getText(&quot;components.forum.message_confirmation.field_requested&quot;));</span>
-<span class="fc" id="L154">    }</span>
+<span class="pc bpc" id="L151" title="4 of 6 branches missed.">        if(entity.getForumGroupEntity() != null &amp;&amp; Tools.isTrue(entity.getForumGroupEntity().getMessageConfirmation()) &amp;&amp; Tools.isEmail( entity.getForumGroupEntity().getApproveEmail() ) == false)</span>
+<span class="nc" id="L152">            errors.rejectValue(&quot;errorField.forumGroupEntity.approveEmail&quot;, null, getProp().getText(&quot;components.forum.message_confirmation.field_requested&quot;));</span>
+<span class="fc" id="L153">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

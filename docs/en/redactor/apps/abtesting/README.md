@@ -54,9 +54,10 @@ Prepare a hypothesis that should improve the condition
 	- let's get more from the visitor
 	- social icons, newsletter
 	- bonus offer
+
 ## Creating a test
 
-To create a B version of the page, select the original version of the page and click on the icon <i class="fas fa-restroom" /> Save as AB test. You will then create a copy of the page, which will display an icon in the Status column <i class="fas fa-restroom" />. In version B, you can edit the text of the page to test the impact of the changes.
+To create a B version of the page, select the original version of the page and click on the icon <i class="ti ti-a-b"></i> Save as AB test. You will then create a copy of the page, which will display an icon in the Status column <i class="ti ti-a-b"></i>. In version B, you can edit the text of the page to test the impact of the changes.
 
 ![](datatable.png)
 
@@ -72,12 +73,4 @@ In the AB Testing application it is possible to set the ratio between A and B ve
 - even a reduction in conversion is a test success
 In the AB Testing application, the table displays a list of sites that have version B with the option to display a version comparison chart. If you do not have a 50:50 AB version ratio WebJET will also automatically perform a ratio recalculation of visits to each version so that the numbers can be compared.
 
-![](abtest2.png)
-
-## Possible configuration variables
-
-- `ABTesting` (default `false`) - after setting to `true` AB website testing is activated
-- `ABTestingRatio` (default `50:50`) - ratio of page generation between version A and B
-- `ABTestingName` (default `abtestvariant`) - a name that is added to the URL of the B version of the page to distinguish it - also used to trace the B version of the page
-- `ABTestingCookieName` (default `wjabtesting`) - name `cookie` used to remember the version of the test when `split` tests - if the display decides for option B, it is remembered in `cookie` with this name and accordingly the B versions of the pages will be provided hereafter
-- `ABTestingCookieDays` (default `30`) - number of days to remember the selected version in AB testing - cookie expiration time
+![](stat-percent.png)

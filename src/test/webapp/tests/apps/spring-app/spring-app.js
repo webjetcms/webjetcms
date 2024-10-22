@@ -90,3 +90,67 @@ Scenario('mvc aplikacia', async ({I, DataTables}) => {
     I.click("Upraviť", "div.container table.table tr:nth-child(2)");
     I.seeInField("name", "InterWay, a. s.");
 });
+
+function checkSpringAppTexts(I, lng) {
+    if ("sk"===lng) {
+        I.waitForText("Názov", 10, "table.table-contact-app tr th");
+        I.see("DIČ", "table.table-contact-app tr th")
+        I.see("Mesto", "table.table-contact-app tr th")
+        I.see("Nový kontakt", "a.btn.btn-primary");
+    } else if ("en"===lng) {
+        I.waitForText("Name", 10, "table.table-contact-app tr th");
+        I.see("VAT ID", "table.table-contact-app tr th")
+        I.see("City", "table.table-contact-app tr th")
+        I.see("New contact", "a.btn.btn-primary");
+    }
+}
+
+/**
+ * BUG: WebJET did not correctly set the language for the embedded Spring application when redirecting the form
+ */
+Scenario("Form with spring app forward", ({I}) => {
+    I.logout();
+
+    //SK
+    I.say("Testing SLOVAK version");
+    I.amOnPage("/apps/spring-app/kontakty/form-presmerovanim-spring-app.html");
+    I.click("Odoslať");
+    checkSpringAppTexts(I, "sk");
+
+    //spam bot wait
+    I.wait(30);
+
+    //EN
+    I.say("Testing ENGLISH version");
+    I.amOnPage("/en/apps/spring-app/contact/form-redirection-spring-app.html");
+    I.click("Submit");
+    checkSpringAppTexts(I, "en");
+});
+
+function checkSpringAppTextsInEditor(docId, lng, I, DTE) {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
+    DTE.waitForEditor();
+    I.wait(6);
+
+    //prepni sa do okna
+    I.switchTo();
+    I.wait(2);
+    I.switchTo('.cke_wysiwyg_frame.cke_reset');
+    I.wait(2);
+    I.switchTo("iframe.wj_component");
+
+    checkSpringAppTexts(I, lng);
+
+    I.switchTo();
+    DTE.cancel();
+}
+
+/**
+ * Verify spring app preview in webpages editor to have correct language
+ */
+Scenario("Spring app language in editor", ({I, DTE}) => {
+    I.relogin('admin');
+
+    checkSpringAppTextsInEditor(27032, "sk", I, DTE);
+    checkSpringAppTextsInEditor(105607, "en", I, DTE);
+});

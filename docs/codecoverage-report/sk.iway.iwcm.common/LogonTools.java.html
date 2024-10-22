@@ -652,13 +652,13 @@ public class LogonTools {
             //kontrola hesla podla nastavenych podmienok
 
             //nastavi nove heslo na aktualne
-<span class="pc bpc" id="L655" title="1 of 2 branches missed.">            if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null)</span>
+<span class="fc bfc" id="L655" title="All 2 branches covered.">            if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null)</span>
             {
-<span class="nc" id="L657">                String newPassword = request.getParameter(&quot;newPassword&quot;);</span>
-<span class="nc" id="L658">                String retypeNewPassword = request.getParameter(&quot;retypeNewPassword&quot;);</span>
-<span class="nc bnc" id="L659" title="All 2 branches missed.">                if(newPassword.equals(retypeNewPassword))</span>
+<span class="fc" id="L657">                String newPassword = request.getParameter(&quot;newPassword&quot;);</span>
+<span class="fc" id="L658">                String retypeNewPassword = request.getParameter(&quot;retypeNewPassword&quot;);</span>
+<span class="pc bpc" id="L659" title="1 of 2 branches missed.">                if(newPassword.equals(retypeNewPassword))</span>
                 {
-<span class="nc" id="L661">                    password = newPassword;</span>
+<span class="fc" id="L661">                    password = newPassword;</span>
                 }
                 else
                 {
@@ -675,42 +675,42 @@ public class LogonTools {
             }
             //END nastavi nove heslo na aktualne
 
-<span class="pc bpc" id="L678" title="1 of 2 branches missed.">            if(Password.checkPassword(true, password, passUser.isAdmin(), passUser.getUserId(), session, null))</span>
+<span class="fc bfc" id="L678" title="All 2 branches covered.">            if(Password.checkPassword(true, password, passUser.isAdmin(), passUser.getUserId(), session, null))</span>
             {
                 //updatnem heslo na nove
-<span class="pc bpc" id="L681" title="1 of 2 branches missed.">                if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null)</span>
+<span class="fc bfc" id="L681" title="All 2 branches covered.">                if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null)</span>
                 {
 
                     try
                     {
-<span class="nc" id="L686">                        Password pass = new Password();</span>
-<span class="nc" id="L687">                        String encryptedPassword = &quot;&quot;;</span>
-<span class="nc" id="L688">                        PasswordsHistoryBean passwordsHistoryBean = new PasswordsHistoryBean(user.getUserId(),&quot;&quot;,user.getSalt());</span>
-<span class="nc bnc" id="L689" title="All 2 branches missed.">                        if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
+<span class="fc" id="L686">                        Password pass = new Password();</span>
+<span class="fc" id="L687">                        String encryptedPassword = &quot;&quot;;</span>
+<span class="fc" id="L688">                        PasswordsHistoryBean passwordsHistoryBean = new PasswordsHistoryBean(user.getUserId(),&quot;&quot;, UsersDB.getSalt(user.getUserId()));</span>
+<span class="pc bpc" id="L689" title="1 of 2 branches missed.">                        if (Constants.getBoolean(&quot;passwordUseHash&quot;))</span>
                         {
-<span class="nc" id="L691">                            encryptedPassword = PasswordSecurity.calculateHash(password, user.getSalt());</span>
+<span class="fc" id="L691">                            encryptedPassword = PasswordSecurity.calculateHash(password, UsersDB.getSalt(user.getUserId()));</span>
                         }
                         else
                         {
 <span class="nc" id="L695">                            encryptedPassword = pass.encrypt(password);</span>
 <span class="nc" id="L696">                            passwordsHistoryBean.setSalt(&quot;&quot;);</span>
                         }
-<span class="nc" id="L698">                        passwordsHistoryBean.setPassword(encryptedPassword);</span>
-<span class="nc" id="L699">                        DB.execute(&quot;UPDATE users SET password=? WHERE user_id=?&quot;, encryptedPassword, Integer.valueOf(user.getUserId()));</span>
-<span class="nc" id="L700">                        passwordsHistoryBean.saveIfNotExistsAndDeleteOld();</span>
-<span class="nc" id="L701">                        Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), &quot;LogonTools - user (&quot;+user.getLogin()+&quot;) successfully changed password&quot;, -1, -1);</span>
+<span class="fc" id="L698">                        passwordsHistoryBean.setPassword(encryptedPassword);</span>
+<span class="fc" id="L699">                        DB.execute(&quot;UPDATE users SET password=? WHERE user_id=?&quot;, encryptedPassword, Integer.valueOf(user.getUserId()));</span>
+<span class="fc" id="L700">                        passwordsHistoryBean.saveIfNotExistsAndDeleteOld();</span>
+<span class="fc" id="L701">                        Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), &quot;LogonTools - user (&quot;+user.getLogin()+&quot;) successfully changed password&quot;, -1, -1);</span>
                     }
 <span class="nc" id="L703">                    catch (Exception ex)</span>
                     {
 <span class="nc" id="L705">                        sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L706">                    }</span>
+<span class="fc" id="L706">                    }</span>
                 }
 <span class="fc" id="L708">                session.removeAttribute(Constants.USER_KEY+&quot;_changepassword&quot;);</span>
             }
             else
             {
-<span class="nc" id="L712">                session.removeAttribute(Constants.USER_KEY);</span>
-<span class="nc" id="L713">                session.setAttribute(Constants.USER_KEY+&quot;_changepassword&quot;, passUser);</span>
+<span class="fc" id="L712">                session.removeAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L713">                session.setAttribute(Constants.USER_KEY+&quot;_changepassword&quot;, passUser);</span>
             }
             //END kontrola hesla
 
@@ -729,176 +729,182 @@ public class LogonTools {
 <span class="fc" id="L729">        List&lt;String&gt; errors = new ArrayList&lt;&gt;();</span>
 
         //15888 #11: akceptuje sa len submit cez HTTP POST
-<span class="pc bpc" id="L732" title="1 of 2 branches missed.">		if(&quot;post&quot;.equalsIgnoreCase(request.getMethod()) == false) return null;</span>
+<span class="pc bpc" id="L732" title="1 of 2 branches missed.">		if(&quot;post&quot;.equalsIgnoreCase(request.getMethod()) == false) {</span>
+<span class="nc" id="L733">            return null;</span>
+        }
 
         //session fixation ochrana
-<span class="fc" id="L735">        LogonTools.invalidateSessionOnFirstPost(request);</span>
+<span class="fc" id="L737">        LogonTools.invalidateSessionOnFirstPost(request);</span>
 
         //pravdepodobne submit nejakeho robota
-<span class="pc bpc" id="L738" title="2 of 4 branches missed.">        if (username == null || password == null) return null;</span>
+<span class="pc bpc" id="L740" title="2 of 4 branches missed.">        if (username == null || password == null) return null;</span>
 
-<span class="fc" id="L740">        String url = PathFilter.getOrigPath(request);</span>
-<span class="fc" id="L741">        HttpSession session = request.getSession();</span>
-<span class="fc" id="L742">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L742">        String url = PathFilter.getOrigPath(request);</span>
+<span class="fc" id="L743">        HttpSession session = request.getSession();</span>
+<span class="fc" id="L744">		Prop prop = Prop.getInstance(request);</span>
 
         //nemoze sa prihlasit lebo sa zle predtym prihlasil
-<span class="fc bfc" id="L745" title="All 2 branches covered.">		if(isLoginBlocked(request))</span>
+<span class="fc bfc" id="L747" title="All 2 branches covered.">		if(isLoginBlocked(request))</span>
 		{
-<span class="fc" id="L747">			Logger.error(LogonTools.class, prop.getText(&quot;logon.error.blocked&quot;));</span>
-<span class="fc" id="L748">			request.setAttribute(&quot;logon_message&quot;,prop.getText(&quot;logon.error.blocked&quot;));</span>
-<span class="fc" id="L749">			request.setAttribute(&quot;error.logon.user.blocked&quot;, &quot;true&quot;);</span>
-<span class="pc bpc" id="L750" title="1 of 2 branches missed.">			if (errors.contains(&quot;error.logon.user.blocked&quot;)==false) errors.add(&quot;error.logon.user.blocked&quot;);</span>
+<span class="fc" id="L749">			Logger.error(LogonTools.class, prop.getText(&quot;logon.error.blocked&quot;));</span>
+<span class="fc" id="L750">			request.setAttribute(&quot;logon_message&quot;,prop.getText(&quot;logon.error.blocked&quot;));</span>
+<span class="fc" id="L751">			request.setAttribute(&quot;error.logon.user.blocked&quot;, &quot;true&quot;);</span>
+<span class="pc bpc" id="L752" title="1 of 2 branches missed.">			if (errors.contains(&quot;error.logon.user.blocked&quot;)==false) errors.add(&quot;error.logon.user.blocked&quot;);</span>
 
-<span class="fc" id="L752">			Adminlog.add(Adminlog.TYPE_USER_LOGON,&quot;Logon attempt TIME BLOCKED, username: &quot; + username,-1,-1);</span>
-<span class="fc" id="L753">			return errors;</span>
+<span class="fc" id="L754">			Adminlog.add(Adminlog.TYPE_USER_LOGON,&quot;Logon attempt TIME BLOCKED, username: &quot; + username,-1,-1);</span>
+<span class="fc" id="L755">			return errors;</span>
 		}
 
-<span class="pc bpc" id="L756" title="1 of 2 branches missed.">        if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null)</span>
+<span class="fc bfc" id="L758" title="All 2 branches covered.">        if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null)</span>
 		{
-<span class="nc" id="L758">			String newPassword = request.getParameter(&quot;newPassword&quot;);</span>
-<span class="nc" id="L759">			String retypeNewPassword = request.getParameter(&quot;retypeNewPassword&quot;);</span>
+<span class="fc" id="L760">			String newPassword = request.getParameter(&quot;newPassword&quot;);</span>
+<span class="fc" id="L761">			String retypeNewPassword = request.getParameter(&quot;retypeNewPassword&quot;);</span>
 
-<span class="nc bnc" id="L761" title="All 4 branches missed.">			if(Tools.isEmpty(newPassword) || Tools.isEmpty(retypeNewPassword))</span>
+<span class="pc bpc" id="L763" title="2 of 4 branches missed.">			if(Tools.isEmpty(newPassword) || Tools.isEmpty(retypeNewPassword))</span>
 			{
-<span class="nc" id="L763">				errors.add(&quot;passwordsNotMatch&quot;);</span>
+<span class="nc" id="L765">				errors.add(&quot;passwordsNotMatch&quot;);</span>
 
-<span class="nc" id="L765">				Adminlog.add(Adminlog.TYPE_USER_LOGON,&quot;Logon attempt CHANGE PASSWORD REQUIRED, username: &quot; + username,-1,-1);</span>
-<span class="nc" id="L766">				return errors;</span>
+<span class="nc" id="L767">				Adminlog.add(Adminlog.TYPE_USER_LOGON,&quot;Logon attempt CHANGE PASSWORD REQUIRED, username: &quot; + username,-1,-1);</span>
+<span class="nc" id="L768">				return errors;</span>
 			}
 		}
 
-<span class="fc" id="L770">        errors = LogonTools.logonUser(request, username, password);</span>
+<span class="fc" id="L772">        errors = LogonTools.logonUser(request, username, password);</span>
 
         // Report any errors we have discovered back to the original form
-<span class="fc bfc" id="L773" title="All 2 branches covered.">		if (!errors.isEmpty())</span>
+<span class="fc bfc" id="L775" title="All 2 branches covered.">		if (!errors.isEmpty())</span>
 		{
-<span class="fc" id="L775">			Logger.error(LogonTools.class, &quot;su nejake chyby v logovacom formulari: &quot;+url);</span>
-<span class="fc" id="L776">			return errors;</span>
+<span class="fc" id="L777">			Logger.error(LogonTools.class, &quot;su nejake chyby v logovacom formulari: &quot;+url);</span>
+<span class="fc" id="L778">			return errors;</span>
 		}
 
-<span class="fc" id="L779">        Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L780" title="2 of 4 branches missed.">		if (user==null || user.isAuthorized()==false)</span>
+<span class="fc bfc" id="L781" title="All 2 branches covered.">        if(session.getAttribute(Constants.USER_KEY+&quot;_changepassword&quot;) != null) {</span>
+<span class="fc" id="L782">            return errors;</span>
+        }
+
+<span class="fc" id="L785">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L786" title="2 of 4 branches missed.">		if (user==null || user.isAuthorized()==false)</span>
 		{
             //there is allready logged user, so it means he doesnt' have permission to access this page
-<span class="nc" id="L783">            errors.add(&quot;editor.permsDenied&quot;);</span>
-<span class="nc" id="L784">			request.setAttribute(&quot;unauthorized&quot;, &quot;unauthorized&quot;);</span>
-<span class="nc" id="L785">			return errors;</span>
+<span class="nc" id="L789">            errors.add(&quot;editor.permsDenied&quot;);</span>
+<span class="nc" id="L790">			request.setAttribute(&quot;unauthorized&quot;, &quot;unauthorized&quot;);</span>
+<span class="nc" id="L791">			return errors;</span>
 		}
 
-<span class="fc" id="L788">        callLogonLogoffInterceptor(user, request);</span>
+<span class="fc" id="L794">        callLogonLogoffInterceptor(user, request);</span>
 
-<span class="fc" id="L790">        return errors;</span>
+<span class="fc" id="L796">        return errors;</span>
     }
 
     public static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
-<span class="fc" id="L795">		String afterLogon = Constants.getString(&quot;afterLogonMethod&quot;);</span>
-<span class="pc bpc" id="L796" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(afterLogon))</span>
+<span class="fc" id="L801">		String afterLogon = Constants.getString(&quot;afterLogonMethod&quot;);</span>
+<span class="pc bpc" id="L802" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(afterLogon))</span>
 		{
-<span class="nc" id="L798">			int i = afterLogon.lastIndexOf('.');</span>
-<span class="nc" id="L799">			String customClass = afterLogon.substring(0, i);</span>
-<span class="nc" id="L800">			afterLogon = afterLogon.substring(i+1);</span>
+<span class="nc" id="L804">			int i = afterLogon.lastIndexOf('.');</span>
+<span class="nc" id="L805">			String customClass = afterLogon.substring(0, i);</span>
+<span class="nc" id="L806">			afterLogon = afterLogon.substring(i+1);</span>
 			//String
 			try
 			{
-<span class="nc" id="L804">				Class&lt;?&gt; c = Class.forName(customClass);</span>
-<span class="nc" id="L805">				Object o = c.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L810">				Class&lt;?&gt; c = Class.forName(customClass);</span>
+<span class="nc" id="L811">				Object o = c.getDeclaredConstructor().newInstance();</span>
 				Method m;
-<span class="nc" id="L807">				Class&lt;?&gt;[] parameterTypes = new Class&lt;?&gt;[] {Identity.class, HttpServletRequest.class, HttpServletResponse.class};</span>
-<span class="nc" id="L808">				Object[] arguments = new Object[] {user, request, response};</span>
-<span class="nc" id="L809">				m = c.getMethod(afterLogon, parameterTypes);</span>
-<span class="nc" id="L810">				m.invoke(o, arguments);</span>
+<span class="nc" id="L813">				Class&lt;?&gt;[] parameterTypes = new Class&lt;?&gt;[] {Identity.class, HttpServletRequest.class, HttpServletResponse.class};</span>
+<span class="nc" id="L814">				Object[] arguments = new Object[] {user, request, response};</span>
+<span class="nc" id="L815">				m = c.getMethod(afterLogon, parameterTypes);</span>
+<span class="nc" id="L816">				m.invoke(o, arguments);</span>
 			}
-<span class="nc" id="L812">			catch (Exception ex)</span>
+<span class="nc" id="L818">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L814">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L815">			}</span>
+<span class="nc" id="L820">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L821">			}</span>
 		}
-<span class="fc" id="L817">	}</span>
+<span class="fc" id="L823">	}</span>
 
 	private static void callLogonLogoffInterceptor(UserDetails user, HttpServletRequest request)
 	{
-<span class="fc" id="L821">		String interceptorClassName = Constants.getString(&quot;stripesLogonLogoffInterceptorClass&quot;);</span>
+<span class="fc" id="L827">		String interceptorClassName = Constants.getString(&quot;stripesLogonLogoffInterceptorClass&quot;);</span>
 
-<span class="pc bpc" id="L823" title="2 of 4 branches missed.">		if (Tools.isEmpty(interceptorClassName) &amp;&amp; request.getAttribute(&quot;afterSaveInterceptor&quot;) != null) {</span>
-<span class="nc" id="L824">			interceptorClassName = Tools.getStringValue((String) request.getAttribute(&quot;afterSaveInterceptor&quot;), &quot;&quot;);</span>
+<span class="pc bpc" id="L829" title="2 of 4 branches missed.">		if (Tools.isEmpty(interceptorClassName) &amp;&amp; request.getAttribute(&quot;afterSaveInterceptor&quot;) != null) {</span>
+<span class="nc" id="L830">			interceptorClassName = Tools.getStringValue((String) request.getAttribute(&quot;afterSaveInterceptor&quot;), &quot;&quot;);</span>
 		}
 
-<span class="pc bpc" id="L827" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(interceptorClassName)) {</span>
+<span class="pc bpc" id="L833" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(interceptorClassName)) {</span>
 			try
 			{
 				@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L831">				Class&lt;? extends AfterLogonLogoffInterceptor&gt; interceptorClass = (Class&lt;? extends AfterLogonLogoffInterceptor&gt;) Class.forName(interceptorClassName);</span>
-<span class="nc" id="L832">				AfterLogonLogoffInterceptor interceptor = interceptorClass.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L837">				Class&lt;? extends AfterLogonLogoffInterceptor&gt; interceptorClass = (Class&lt;? extends AfterLogonLogoffInterceptor&gt;) Class.forName(interceptorClassName);</span>
+<span class="nc" id="L838">				AfterLogonLogoffInterceptor interceptor = interceptorClass.getDeclaredConstructor().newInstance();</span>
 
-<span class="nc" id="L834">				interceptor.logon(user, request);</span>
+<span class="nc" id="L840">				interceptor.logon(user, request);</span>
 			}
-<span class="nc" id="L836">			catch (Exception e)</span>
+<span class="nc" id="L842">			catch (Exception e)</span>
 			{
-<span class="nc" id="L838">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L839">			}</span>
+<span class="nc" id="L844">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L845">			}</span>
 		}
-<span class="fc" id="L841">	}</span>
+<span class="fc" id="L847">	}</span>
 
     public static int checkForAlarm(Identity user)
     {
         int userId;
-<span class="fc" id="L846">        int warning = -1;</span>
-<span class="fc" id="L847">        int docId = 0;</span>
+<span class="fc" id="L852">        int warning = -1;</span>
+<span class="fc" id="L853">        int docId = 0;</span>
 
-<span class="fc" id="L849">        int alarmId = 1;</span>
+<span class="fc" id="L855">        int alarmId = 1;</span>
         try
         {
-<span class="fc" id="L852">            userId = user.getUserId();</span>
-<span class="fc" id="L853">            Connection db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L858">            userId = user.getUserId();</span>
+<span class="fc" id="L859">            Connection db_conn = DBPool.getConnection();</span>
             try
             {
-<span class="fc" id="L856">                PreparedStatement ps = db_conn.prepareStatement(&quot;SELECT * FROM user_alarm WHERE user_id=?&quot;);</span>
+<span class="fc" id="L862">                PreparedStatement ps = db_conn.prepareStatement(&quot;SELECT * FROM user_alarm WHERE user_id=?&quot;); //NOSONAR</span>
                 try
                 {
-<span class="fc" id="L859">                    ps.setInt(1, userId);</span>
-<span class="fc" id="L860">                    ResultSet rs = ps.executeQuery();</span>
+<span class="fc" id="L865">                    ps.setInt(1, userId);</span>
+<span class="fc" id="L866">                    ResultSet rs = ps.executeQuery();</span>
                     try
                     {
-<span class="pc bpc" id="L863" title="1 of 2 branches missed.">                        if(rs.next())</span>
+<span class="pc bpc" id="L869" title="1 of 2 branches missed.">                        if(rs.next())</span>
                         {
-<span class="nc" id="L865">                            warning = rs.getInt(&quot;warning&quot;);</span>
+<span class="nc" id="L871">                            warning = rs.getInt(&quot;warning&quot;);</span>
                         }
                     }
-<span class="fc" id="L868">                    finally { rs.close(); }</span>
+<span class="fc" id="L874">                    finally { rs.close(); }</span>
                 }
-<span class="fc" id="L870">                finally { ps.close(); }</span>
+<span class="fc" id="L876">                finally { ps.close(); }</span>
 
-<span class="fc" id="L872">                ps = db_conn.prepareStatement(&quot;SELECT * FROM alarm_action WHERE alarm_id=?&quot;);</span>
+<span class="fc" id="L878">                ps = db_conn.prepareStatement(&quot;SELECT * FROM alarm_action WHERE alarm_id=?&quot;); //NOSONAR</span>
                 try
                 {
-<span class="fc" id="L875">                    ps.setInt(1, alarmId);</span>
-<span class="fc" id="L876">                    ResultSet rs = ps.executeQuery();</span>
+<span class="fc" id="L881">                    ps.setInt(1, alarmId);</span>
+<span class="fc" id="L882">                    ResultSet rs = ps.executeQuery();</span>
                     try
                     {
-<span class="pc bpc" id="L879" title="1 of 2 branches missed.">                        if(rs.next())</span>
+<span class="pc bpc" id="L885" title="1 of 2 branches missed.">                        if(rs.next())</span>
                         {
-<span class="nc" id="L881">                            docId = rs.getInt(&quot;doc_id&quot;);</span>
+<span class="nc" id="L887">                            docId = rs.getInt(&quot;doc_id&quot;);</span>
                         }
                     }
-<span class="fc" id="L884">                    finally { rs.close(); }</span>
+<span class="fc" id="L890">                    finally { rs.close(); }</span>
                 }
-<span class="fc" id="L886">                finally { ps.close(); }</span>
+<span class="fc" id="L892">                finally { ps.close(); }</span>
             }
-<span class="fc" id="L888">            finally { db_conn.close(); }</span>
+<span class="fc" id="L894">            finally { db_conn.close(); }</span>
 
-<span class="pc bpc" id="L890" title="1 of 2 branches missed.">            if(warning == 1)</span>
+<span class="pc bpc" id="L896" title="1 of 2 branches missed.">            if(warning == 1)</span>
             {
-<span class="nc" id="L892">                return docId;</span>
+<span class="nc" id="L898">                return docId;</span>
 
             }
             //Logger.println(this,&quot;WARNING: &quot;+ warning);
         }
-<span class="nc" id="L897">        catch (Exception ex)</span>
+<span class="nc" id="L903">        catch (Exception ex)</span>
         {
-<span class="nc" id="L899">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L900">        }</span>
-<span class="fc" id="L901">        return (0);</span>
+<span class="nc" id="L905">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L906">        }</span>
+<span class="fc" id="L907">        return (0);</span>
     }
 
     /**
@@ -907,32 +913,32 @@ public class LogonTools {
      */
     public static void invalidateSessionOnFirstPost(HttpServletRequest request)
     {
-<span class="pc bpc" id="L910" title="1 of 2 branches missed.">        if(&quot;post&quot;.equalsIgnoreCase(request.getMethod()) == false) return;</span>
+<span class="pc bpc" id="L916" title="1 of 2 branches missed.">        if(&quot;post&quot;.equalsIgnoreCase(request.getMethod()) == false) return;</span>
 
-<span class="fc" id="L912">        final String SESSION_KEY = &quot;session_fixation_invalidated&quot;;</span>
+<span class="fc" id="L918">        final String SESSION_KEY = &quot;session_fixation_invalidated&quot;;</span>
         //session fixation - pri prihlaseni vzdy generujeme novu session
-<span class="fc bfc" id="L914" title="All 2 branches covered.">        if (request.getSession().getAttribute(SESSION_KEY)==null)</span>
+<span class="fc bfc" id="L920" title="All 2 branches covered.">        if (request.getSession().getAttribute(SESSION_KEY)==null)</span>
         {
             //toto potrebujeme zachovat po destroyi session (session fixation)
-<span class="fc" id="L917">            String[] preservedSessionObjectNames = Tools.getTokens(Constants.getStringExecuteMacro(&quot;logonPreservedSessionObjects&quot;), &quot;,&quot;);</span>
-<span class="fc" id="L918">            Map&lt;String, Object&gt; preservedSessionObjects = new Hashtable&lt;&gt;();</span>
-<span class="fc bfc" id="L919" title="All 2 branches covered.">            for (String name : preservedSessionObjectNames)</span>
+<span class="fc" id="L923">            String[] preservedSessionObjectNames = Tools.getTokens(Constants.getStringExecuteMacro(&quot;logonPreservedSessionObjects&quot;), &quot;,&quot;);</span>
+<span class="fc" id="L924">            Map&lt;String, Object&gt; preservedSessionObjects = new Hashtable&lt;&gt;();</span>
+<span class="fc bfc" id="L925" title="All 2 branches covered.">            for (String name : preservedSessionObjectNames)</span>
             {
-<span class="fc" id="L921">                Object o = request.getSession().getAttribute(name);</span>
-<span class="fc bfc" id="L922" title="All 2 branches covered.">                if (o != null) preservedSessionObjects.put(name, o);</span>
+<span class="fc" id="L927">                Object o = request.getSession().getAttribute(name);</span>
+<span class="fc bfc" id="L928" title="All 2 branches covered.">                if (o != null) preservedSessionObjects.put(name, o);</span>
             }
 
-<span class="fc" id="L925">            request.getSession(false).invalidate();</span>
-<span class="fc" id="L926">            request.getSession().setAttribute(SESSION_KEY, 1);</span>
+<span class="fc" id="L931">            request.getSession(false).invalidate();</span>
+<span class="fc" id="L932">            request.getSession().setAttribute(SESSION_KEY, 1);</span>
 
             //preserve atributov
-<span class="fc bfc" id="L929" title="All 2 branches covered.">            for (String name : preservedSessionObjectNames)</span>
+<span class="fc bfc" id="L935" title="All 2 branches covered.">            for (String name : preservedSessionObjectNames)</span>
             {
-<span class="fc" id="L931">                Object o = preservedSessionObjects.get(name);</span>
-<span class="fc bfc" id="L932" title="All 2 branches covered.">                if (o != null) request.getSession().setAttribute(name, o);</span>
+<span class="fc" id="L937">                Object o = preservedSessionObjects.get(name);</span>
+<span class="fc bfc" id="L938" title="All 2 branches covered.">                if (o != null) request.getSession().setAttribute(name, o);</span>
             }
         }
-<span class="fc" id="L935">    }</span>
+<span class="fc" id="L941">    }</span>
 
     /**
      * Ulozi URL pred zobrazenim logon formu na ktoru sa po prihlaseni presmeruje
@@ -940,50 +946,50 @@ public class LogonTools {
      */
     public static void saveAfterLogonRedirect(HttpServletRequest request)
     {
-<span class="fc" id="L943">        HttpSession session = request.getSession();</span>
+<span class="fc" id="L949">        HttpSession session = request.getSession();</span>
 
-<span class="fc" id="L945">        Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L951">        Identity user = UsersDB.getCurrentUser(request);</span>
         //ak uz je prihlaseny user, neulozime (asi len nema prava)
-<span class="fc bfc" id="L947" title="All 2 branches covered.">        if (user != null) return;</span>
+<span class="fc bfc" id="L953" title="All 2 branches covered.">        if (user != null) return;</span>
 
         //ak uz mame nieco ulozene neprepiseme to
-<span class="fc bfc" id="L950" title="All 2 branches covered.">        if (session.getAttribute(&quot;adminAfterLogonRedirect&quot;)!=null) return;</span>
+<span class="fc bfc" id="L956" title="All 2 branches covered.">        if (session.getAttribute(&quot;adminAfterLogonRedirect&quot;)!=null) return;</span>
 
         //bereme orig_path, je potrebne toto volat zo vsetkych miest pred redirectom dalej
         //teoreticky by sa dal pouzit referer, ale skrz viacere presmerovania a bezpecnost to nemozeme pouzit
-<span class="fc" id="L954">        String origPath = (String)request.getAttribute(&quot;path_filter_orig_path&quot;);</span>
+<span class="fc" id="L960">        String origPath = (String)request.getAttribute(&quot;path_filter_orig_path&quot;);</span>
 
-<span class="fc" id="L956">        Logger.debug(LogonTools.class, &quot;adminAfterLogonRedirect=&quot;+session.getAttribute(&quot;adminAfterLogonRedirect&quot;));</span>
+<span class="fc" id="L962">        Logger.debug(LogonTools.class, &quot;adminAfterLogonRedirect=&quot;+session.getAttribute(&quot;adminAfterLogonRedirect&quot;));</span>
 
-<span class="pc bpc" id="L958" title="4 of 14 branches missed.">        if (origPath != null &amp;&amp; origPath.indexOf(&quot;logon&quot;)==-1 &amp;&amp; origPath.equals(&quot;/admin/&quot;)==false &amp;&amp; origPath.equals(&quot;/admin&quot;)==false &amp;&amp; origPath.indexOf(&quot;/admin/index.jsp&quot;)==-1 &amp;&amp; origPath.indexOf(&quot;/admin/welcome.jsp&quot;)==-1 &amp;&amp; session.getAttribute(&quot;adminAfterLogonRedirect&quot;)==null)</span>
+<span class="pc bpc" id="L964" title="3 of 14 branches missed.">        if (origPath != null &amp;&amp; origPath.indexOf(&quot;logon&quot;)==-1 &amp;&amp; origPath.equals(&quot;/admin/&quot;)==false &amp;&amp; origPath.equals(&quot;/admin&quot;)==false &amp;&amp; origPath.indexOf(&quot;/admin/index.jsp&quot;)==-1 &amp;&amp; origPath.indexOf(&quot;/admin/welcome.jsp&quot;)==-1 &amp;&amp; session.getAttribute(&quot;adminAfterLogonRedirect&quot;)==null)</span>
         {
             //ukladame iba taketo cesty, nech sa nam tam neulozi odkaz na css, js alebo nieco podobne
-<span class="pc bpc" id="L961" title="3 of 8 branches missed.">            if (origPath.endsWith(&quot;.do&quot;) || origPath.endsWith(&quot;.jsp&quot;) || origPath.endsWith(&quot;/&quot;) || origPath.endsWith(&quot;.action&quot;))</span>
+<span class="pc bpc" id="L967" title="3 of 8 branches missed.">            if (origPath.endsWith(&quot;.do&quot;) || origPath.endsWith(&quot;.jsp&quot;) || origPath.endsWith(&quot;/&quot;) || origPath.endsWith(&quot;.action&quot;))</span>
             {
-<span class="fc" id="L963">                Logger.debug(LogonTools.class, &quot;mainLink=&quot; + request.getParameter(&quot;mainLink&quot;));</span>
-<span class="pc bpc" id="L964" title="1 of 2 branches missed.">                if (request.getParameter(&quot;mainLink&quot;) != null)</span>
+<span class="fc" id="L969">                Logger.debug(LogonTools.class, &quot;mainLink=&quot; + request.getParameter(&quot;mainLink&quot;));</span>
+<span class="pc bpc" id="L970" title="1 of 2 branches missed.">                if (request.getParameter(&quot;mainLink&quot;) != null)</span>
                 {
-<span class="nc" id="L966">                    origPath = request.getParameter(&quot;mainLink&quot;);</span>
+<span class="nc" id="L972">                    origPath = request.getParameter(&quot;mainLink&quot;);</span>
                 }
                 else
                 {
-<span class="fc" id="L970">                    String QS = (String) request.getAttribute(&quot;path_filter_query_string&quot;);</span>
-<span class="fc bfc" id="L971" title="All 2 branches covered.">                    if (Tools.isNotEmpty(QS)) origPath = origPath + &quot;?&quot; + QS;</span>
+<span class="fc" id="L976">                    String QS = (String) request.getAttribute(&quot;path_filter_query_string&quot;);</span>
+<span class="fc bfc" id="L977" title="All 2 branches covered.">                    if (Tools.isNotEmpty(QS)) origPath = origPath + &quot;?&quot; + QS;</span>
                 }
 
-<span class="fc" id="L974">                Logger.debug(LogonTools.class, &quot;origPath=&quot; + origPath);</span>
-<span class="pc bpc" id="L975" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(origPath) &amp;&amp;</span>
-<span class="pc bpc" id="L976" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;welcome.jsp&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;refresher&quot;) == -1 &amp;&amp;</span>
-<span class="pc bpc" id="L977" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;FCKeditor&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;logon.jsp&quot;) == -1 &amp;&amp;</span>
-<span class="pc bpc" id="L978" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;ajax&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;/admin/todo/&quot;) == -1 &amp;&amp;</span>
-<span class="pc bpc" id="L979" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;combine.jsp&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;edituser.do&quot;) == -1 &amp;&amp;</span>
-<span class="pc bpc" id="L980" title="2 of 4 branches missed.">                        origPath.equals(&quot;/admin/index.jsp&quot;) == false &amp;&amp; origPath.equals(&quot;/admin/&quot;) == false)</span>
+<span class="fc" id="L980">                Logger.debug(LogonTools.class, &quot;origPath=&quot; + origPath);</span>
+<span class="pc bpc" id="L981" title="1 of 2 branches missed.">                if (Tools.isNotEmpty(origPath) &amp;&amp;</span>
+<span class="pc bpc" id="L982" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;welcome.jsp&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;refresher&quot;) == -1 &amp;&amp;</span>
+<span class="pc bpc" id="L983" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;FCKeditor&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;logon.jsp&quot;) == -1 &amp;&amp;</span>
+<span class="pc bpc" id="L984" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;ajax&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;/admin/todo/&quot;) == -1 &amp;&amp;</span>
+<span class="pc bpc" id="L985" title="2 of 4 branches missed.">                        origPath.indexOf(&quot;combine.jsp&quot;) == -1 &amp;&amp; origPath.indexOf(&quot;edituser.do&quot;) == -1 &amp;&amp;</span>
+<span class="pc bpc" id="L986" title="2 of 4 branches missed.">                        origPath.equals(&quot;/admin/index.jsp&quot;) == false &amp;&amp; origPath.equals(&quot;/admin/&quot;) == false)</span>
                 {
-<span class="fc" id="L982">                    session.setAttribute(&quot;adminAfterLogonRedirect&quot;, origPath);</span>
+<span class="fc" id="L988">                    session.setAttribute(&quot;adminAfterLogonRedirect&quot;, origPath);</span>
                 }
             }
         }
-<span class="fc" id="L986">    }</span>
+<span class="fc" id="L992">    }</span>
 
     /**
      * Nastavi usera do session a nastavi spring prava
@@ -992,27 +998,27 @@ public class LogonTools {
      */
     public static Authentication setUserToSession(HttpSession session, Identity user)
     {
-<span class="pc bpc" id="L995" title="1 of 2 branches missed.">        if (session != null) session.setAttribute(Constants.USER_KEY, user);</span>
+<span class="pc bpc" id="L1001" title="1 of 2 branches missed.">        if (session != null) session.setAttribute(Constants.USER_KEY, user);</span>
 
         try
         {
             //prihlasenie pre SPRING / REST
             //RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-<span class="pc bpc" id="L1001" title="1 of 2 branches missed.">            if (Constants.getServletContext().getAttribute(&quot;springContext&quot;)!=null)</span>
+<span class="pc bpc" id="L1007" title="1 of 2 branches missed.">            if (Constants.getServletContext().getAttribute(&quot;springContext&quot;)!=null)</span>
             {
                 //ApplicationContext context = (ApplicationContext) Constants.getServletContext().getAttribute(&quot;springContext&quot;);
                 //AuthenticationManager authenticationManager = context.getBean(&quot;authenticationManagerBean&quot;, AuthenticationManager.class);
-<span class="fc" id="L1005">                final Authentication authentication = WebjetAuthentificationProvider.authenticate(user);</span>
-<span class="fc" id="L1006">                SecurityContextHolder.getContext().setAuthentication(authentication);</span>
-<span class="fc" id="L1007">                return authentication;</span>
+<span class="fc" id="L1011">                final Authentication authentication = WebjetAuthentificationProvider.authenticate(user);</span>
+<span class="fc" id="L1012">                SecurityContextHolder.getContext().setAuthentication(authentication);</span>
+<span class="fc" id="L1013">                return authentication;</span>
             }
         }
-<span class="nc" id="L1010">        catch (Exception ex)</span>
+<span class="nc" id="L1016">        catch (Exception ex)</span>
         {
-<span class="nc" id="L1012">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1013">        }</span>
+<span class="nc" id="L1018">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1019">        }</span>
 
-<span class="nc" id="L1015">        return null;</span>
+<span class="nc" id="L1021">        return null;</span>
     }
 
     /**
@@ -1021,47 +1027,47 @@ public class LogonTools {
      * @return
      */
     public static boolean isLoginBlocked(HttpServletRequest request) {
-<span class="fc" id="L1024">        Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L1030">        Cache cache = Cache.getInstance();</span>
 
-<span class="fc" id="L1026">        String ipAddress = Tools.getRemoteIP(request);</span>
-<span class="fc" id="L1027">        String LOGON_BLOCKED_IP_CACHE_KEY = &quot;logon_ip_&quot;+ipAddress;</span>
-<span class="fc" id="L1028">        String LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_time&quot;;</span>
-<span class="fc" id="L1029">        String LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_count&quot;;</span>
+<span class="fc" id="L1032">        String ipAddress = Tools.getRemoteIP(request);</span>
+<span class="fc" id="L1033">        String LOGON_BLOCKED_IP_CACHE_KEY = &quot;logon_ip_&quot;+ipAddress;</span>
+<span class="fc" id="L1034">        String LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_time&quot;;</span>
+<span class="fc" id="L1035">        String LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_count&quot;;</span>
 
-<span class="fc" id="L1031">		Calendar cal = (Calendar)cache.getObject(LOGON_BLOCKED_IP_CACHE_KEY);</span>
-<span class="fc bfc" id="L1032" title="All 2 branches covered.">        if (cal != null) {</span>
-<span class="fc" id="L1033">            Logger.debug(LogonTools.class, &quot;Mam cal: &quot;+Tools.formatDateTimeSeconds(cal.getTimeInMillis()));</span>
+<span class="fc" id="L1037">		Calendar cal = (Calendar)cache.getObject(LOGON_BLOCKED_IP_CACHE_KEY);</span>
+<span class="fc bfc" id="L1038" title="All 2 branches covered.">        if (cal != null) {</span>
+<span class="fc" id="L1039">            Logger.debug(LogonTools.class, &quot;Mam cal: &quot;+Tools.formatDateTimeSeconds(cal.getTimeInMillis()));</span>
         }
 
         //#20489
-<span class="fc" id="L1037">		Calendar calDelay = (Calendar)cache.getObject(LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY);</span>
-<span class="pc bpc" id="L1038" title="2 of 6 branches missed.">		if(Constants.getInt(&quot;logonBlockedAfterUnsuccessCount&quot;) &gt; 0 &amp;&amp; Constants.getInt(&quot;logonLoginBlockedDelay&quot;) &gt; 0 &amp;&amp;</span>
-<span class="pc bpc" id="L1039" title="1 of 2 branches missed.">				(calDelay == null || calDelay.getTimeInMillis() &lt; Tools.getNow()))</span>
+<span class="fc" id="L1043">		Calendar calDelay = (Calendar)cache.getObject(LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY);</span>
+<span class="pc bpc" id="L1044" title="2 of 6 branches missed.">		if(Constants.getInt(&quot;logonBlockedAfterUnsuccessCount&quot;) &gt; 0 &amp;&amp; Constants.getInt(&quot;logonLoginBlockedDelay&quot;) &gt; 0 &amp;&amp;</span>
+<span class="pc bpc" id="L1045" title="1 of 2 branches missed.">				(calDelay == null || calDelay.getTimeInMillis() &lt; Tools.getNow()))</span>
 		{
-<span class="fc" id="L1041">			Integer userLogonCount = (Integer)cache.getObject(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY);</span>
-<span class="fc bfc" id="L1042" title="All 2 branches covered.">			if(userLogonCount != null)</span>
+<span class="fc" id="L1047">			Integer userLogonCount = (Integer)cache.getObject(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY);</span>
+<span class="fc bfc" id="L1048" title="All 2 branches covered.">			if(userLogonCount != null)</span>
 			{
-<span class="fc" id="L1044">				Logger.debug(LogonTools.class, &quot;Pokus cislo : &quot; + userLogonCount);</span>
+<span class="fc" id="L1050">				Logger.debug(LogonTools.class, &quot;Pokus cislo : &quot; + userLogonCount);</span>
 				//nastavime blokovanie na login (a je jedno, ze potom zada spravne heslo)
-<span class="pc bpc" id="L1046" title="1 of 2 branches missed.">				if( userLogonCount.intValue() &gt; Constants.getInt(&quot;logonBlockedAfterUnsuccessCount&quot;))</span>
+<span class="pc bpc" id="L1052" title="1 of 2 branches missed.">				if( userLogonCount.intValue() &gt; Constants.getInt(&quot;logonBlockedAfterUnsuccessCount&quot;))</span>
 				{
-<span class="nc" id="L1048">					Calendar cal3 = Calendar.getInstance();</span>
-<span class="nc" id="L1049">					cal3.add(Calendar.SECOND, Constants.getInt(&quot;logonLoginBlockedDelay&quot;));</span>
-<span class="nc" id="L1050">					Logger.debug(LogonTools.class, &quot;Blokujem ip &quot;+ipAddress+&quot; na &quot; + (Constants.getInt(&quot;logonLoginBlockedDelay&quot;)/60)+&quot; minut&quot;);</span>
-<span class="nc" id="L1051">					cal = cal3;</span>
+<span class="nc" id="L1054">					Calendar cal3 = Calendar.getInstance();</span>
+<span class="nc" id="L1055">					cal3.add(Calendar.SECOND, Constants.getInt(&quot;logonLoginBlockedDelay&quot;));</span>
+<span class="nc" id="L1056">					Logger.debug(LogonTools.class, &quot;Blokujem ip &quot;+ipAddress+&quot; na &quot; + (Constants.getInt(&quot;logonLoginBlockedDelay&quot;)/60)+&quot; minut&quot;);</span>
+<span class="nc" id="L1057">					cal = cal3;</span>
 				}
 			}
 		}
-<span class="pc bpc" id="L1055" title="3 of 6 branches missed.">		if(calDelay != null &amp;&amp; (cal == null || calDelay.getTimeInMillis() &gt; cal.getTimeInMillis()))</span>
+<span class="pc bpc" id="L1061" title="3 of 6 branches missed.">		if(calDelay != null &amp;&amp; (cal == null || calDelay.getTimeInMillis() &gt; cal.getTimeInMillis()))</span>
 		{
-<span class="fc" id="L1057">			cal = calDelay;</span>
+<span class="fc" id="L1063">			cal = calDelay;</span>
 		}
         //nemoze sa prihlasit lebo sa zle predtym prihlasil
-<span class="fc bfc" id="L1060" title="All 4 branches covered.">		if(cal != null &amp;&amp; cal.getTimeInMillis() &gt; Tools.getNow())</span>
+<span class="fc bfc" id="L1066" title="All 4 branches covered.">		if(cal != null &amp;&amp; cal.getTimeInMillis() &gt; Tools.getNow())</span>
 		{
-<span class="fc" id="L1062">            return true;</span>
+<span class="fc" id="L1068">            return true;</span>
         }
-<span class="fc" id="L1064">        return false;</span>
+<span class="fc" id="L1070">        return false;</span>
     }
 
     /**
@@ -1069,41 +1075,41 @@ public class LogonTools {
      * @param request
      */
     public static void setLoginBlocked(HttpServletRequest request) {
-<span class="fc" id="L1072">        Cache cache = Cache.getInstance();</span>
+<span class="fc" id="L1078">        Cache cache = Cache.getInstance();</span>
 
-<span class="fc" id="L1074">        String ipAddress = Tools.getRemoteIP(request);</span>
-<span class="fc" id="L1075">        String LOGON_BLOCKED_IP_CACHE_KEY = &quot;logon_ip_&quot;+ipAddress;</span>
-<span class="fc" id="L1076">        String LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_time&quot;;</span>
-<span class="fc" id="L1077">        String LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_count&quot;;</span>
+<span class="fc" id="L1080">        String ipAddress = Tools.getRemoteIP(request);</span>
+<span class="fc" id="L1081">        String LOGON_BLOCKED_IP_CACHE_KEY = &quot;logon_ip_&quot;+ipAddress;</span>
+<span class="fc" id="L1082">        String LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_time&quot;;</span>
+<span class="fc" id="L1083">        String LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY = &quot;logon_blocked_&quot;+ipAddress+&quot;_count&quot;;</span>
 
-<span class="pc bpc" id="L1079" title="1 of 2 branches missed.">        if (Constants.getInt(&quot;logonBlockedDelay&quot;)&gt;0)</span>
+<span class="pc bpc" id="L1085" title="1 of 2 branches missed.">        if (Constants.getInt(&quot;logonBlockedDelay&quot;)&gt;0)</span>
         {
-<span class="fc" id="L1081">            Calendar cal2=Calendar.getInstance();</span>
-<span class="fc" id="L1082">            cal2.add(Calendar.SECOND, Constants.getInt(&quot;logonBlockedDelay&quot;));</span>
-<span class="fc" id="L1083">            cache.setObjectSeconds(LOGON_BLOCKED_IP_CACHE_KEY, cal2, Constants.getInt(&quot;logonBlockedDelay&quot;)+10, false);</span>
+<span class="fc" id="L1087">            Calendar cal2=Calendar.getInstance();</span>
+<span class="fc" id="L1088">            cal2.add(Calendar.SECOND, Constants.getInt(&quot;logonBlockedDelay&quot;));</span>
+<span class="fc" id="L1089">            cache.setObjectSeconds(LOGON_BLOCKED_IP_CACHE_KEY, cal2, Constants.getInt(&quot;logonBlockedDelay&quot;)+10, false);</span>
         }
 
-<span class="fc" id="L1086">        Integer userLogonCount = (Integer)cache.getObject(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY);</span>
-<span class="fc bfc" id="L1087" title="All 2 branches covered.">        if(userLogonCount != null)</span>
+<span class="fc" id="L1092">        Integer userLogonCount = (Integer)cache.getObject(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY);</span>
+<span class="fc bfc" id="L1093" title="All 2 branches covered.">        if(userLogonCount != null)</span>
         {
-<span class="fc" id="L1089">            userLogonCount = Integer.valueOf(userLogonCount.intValue()+1);</span>
+<span class="fc" id="L1095">            userLogonCount = Integer.valueOf(userLogonCount.intValue()+1);</span>
 
-<span class="fc" id="L1091">            Logger.debug(LogonTools.class, &quot;Pokus cislo : &quot; + userLogonCount);</span>
-<span class="fc" id="L1092">            cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY, userLogonCount, Constants.getInt(&quot;logonLoginBlockedDelay&quot;), false);</span>
+<span class="fc" id="L1097">            Logger.debug(LogonTools.class, &quot;Pokus cislo : &quot; + userLogonCount);</span>
+<span class="fc" id="L1098">            cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY, userLogonCount, Constants.getInt(&quot;logonLoginBlockedDelay&quot;), false);</span>
             //nastavime blokovanie na login (a je jedno, ze potom zada spravne heslo)
-<span class="fc bfc" id="L1094" title="All 2 branches covered.">            if( userLogonCount &gt; Constants.getInt(&quot;logonBlockedAfterUnsuccessCount&quot;))</span>
+<span class="fc bfc" id="L1100" title="All 2 branches covered.">            if( userLogonCount &gt; Constants.getInt(&quot;logonBlockedAfterUnsuccessCount&quot;))</span>
             {
-<span class="fc" id="L1096">                Calendar cal3 = Calendar.getInstance();</span>
-<span class="fc" id="L1097">                cal3.add(Calendar.SECOND, Constants.getInt(&quot;logonLoginBlockedDelay&quot;));</span>
-<span class="fc" id="L1098">                Logger.debug(LogonTools.class, &quot;Blokujem ip &quot;+ipAddress+&quot; na &quot; + Constants.getInt(&quot;logonLoginBlockedDelay&quot;)+&quot; sekund&quot;);</span>
-<span class="fc" id="L1099">                cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY, cal3, Constants.getInt(&quot;logonLoginBlockedDelay&quot;), false);</span>
-<span class="fc" id="L1100">            }</span>
+<span class="fc" id="L1102">                Calendar cal3 = Calendar.getInstance();</span>
+<span class="fc" id="L1103">                cal3.add(Calendar.SECOND, Constants.getInt(&quot;logonLoginBlockedDelay&quot;));</span>
+<span class="fc" id="L1104">                Logger.debug(LogonTools.class, &quot;Blokujem ip &quot;+ipAddress+&quot; na &quot; + Constants.getInt(&quot;logonLoginBlockedDelay&quot;)+&quot; sekund&quot;);</span>
+<span class="fc" id="L1105">                cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_TIME_CACHE_KEY, cal3, Constants.getInt(&quot;logonLoginBlockedDelay&quot;), false);</span>
+<span class="fc" id="L1106">            }</span>
         }
         else
         {
             //Logger.debug(UsrLogonAction.class, &quot;Nastavujem pocet pokusov na : 1 a trvanie na &quot;+(Constants.getInt(&quot;logonLoginBlockedDelay&quot;) / 60)+&quot; minut&quot;);
-<span class="fc" id="L1105">            cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY, 1, Constants.getInt(&quot;logonLoginBlockedDelay&quot;), false);</span>
+<span class="fc" id="L1111">            cache.setObjectSeconds(LOGON_BLOCKED_USERNAME_COUNT_CACHE_KEY, 1, Constants.getInt(&quot;logonLoginBlockedDelay&quot;), false);</span>
         }
-<span class="fc" id="L1107">    }</span>
+<span class="fc" id="L1113">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

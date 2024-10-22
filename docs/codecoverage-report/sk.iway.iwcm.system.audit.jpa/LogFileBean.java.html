@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogFileBean.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.audit.jpa</a> &gt; <span class="el_source">LogFileBean.java</span></div><h1>LogFileBean.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.audit.jpa;
+
+import java.io.File;
+import java.util.Date;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+/**
+ * Bean to hold log files for DataTable
+ */
+@Getter
+@Setter
+public class LogFileBean {
+
+<span class="fc" id="L18">    public LogFileBean(File file, Long id) {</span>
+<span class="fc" id="L19">        this.file = file;</span>
+<span class="fc" id="L20">        this.id = id;</span>
+<span class="fc" id="L21">    }</span>
+
+    //Source file
+    private File file;
+
+	@DataTableColumn(inputType = DataTableColumnType.ID, title = &quot;ID&quot;, hidden = true)
+	private Long id;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;fbrowse.title&quot;,
+        renderFormatLinkTemplate = &quot;javascript:getAbsolutePath('{{absolutePath}}');&quot;
+    )
+	private String fileName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = &quot;fbrowse.size&quot;,
+        renderFormat = &quot;dt-format-filesize&quot;
+    )
+	private long size;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.DATETIME,
+        title = &quot;fbrowse.date&quot;
+    )
+	private Date lastChange;
+
+    public String getFileName() {
+<span class="fc" id="L50">        return this.file.getName();</span>
+    }
+
+    public String getAbsolutePath() {
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if (System.getProperty(&quot;os.name&quot;).indexOf(&quot;Windows&quot;) != -1) {</span>
+            //Need to replace all backslashes with double backslashes
+<span class="nc" id="L56">            return this.file.getAbsolutePath().replace(&quot;\\&quot;, &quot;\\\\&quot; );</span>
+        }
+
+<span class="fc" id="L59">        return this.file.getAbsolutePath();</span>
+    }
+
+    public long getSize() {
+<span class="fc" id="L63">        return this.file.length();</span>
+    }
+
+    public long getLastChange() {
+<span class="fc" id="L67">        return this.file.lastModified();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

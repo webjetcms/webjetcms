@@ -11,7 +11,13 @@
   - [Zoznam notifikácií](/sysadmin/audit/audit-notifications.md)
   - [Zmenené stránky](/sysadmin/audit/audit-changed-webpages.md)
   - [Čaká na publikovanie](/sysadmin/audit/audit-awaiting-publish-webpages.md)
+  - [Úrovne logovania](/sysadmin/audit/audit-log-levels.md)
+  - [Log súbory](/sysadmin/audit/audit-log-files.md)
   - [Posledné logy](/sysadmin/audit/memory-logging.md)
-- Monitorovanie servera
+- Prevádzka
   - [Monitorovanie servera](/sysadmin/monitoring/README.md)
+  - [Reštartovať](/sysadmin/restart.md)
   - [Výmena údajov uzlov clustra](/sysadmin/monitoring/nodes-logic.md)
+  - [Mazanie dát](/sysadmin/data-deleting/README.md)
+- Súbory
+  - [Zálohovanie systému](/sysadmin/files/backup/README.md)

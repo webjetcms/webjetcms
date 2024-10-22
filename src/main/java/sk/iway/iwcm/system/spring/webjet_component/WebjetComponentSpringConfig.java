@@ -13,6 +13,8 @@ import org.springframework.web.servlet.view.freemarker.FreeMarkerView;
 import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
+
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.system.spring.webjet_component.dialect.IwcmDialect;
@@ -101,6 +103,7 @@ public class WebjetComponentSpringConfig {
         templateResolver.setTemplateMode("HTML5");
         templateResolver.setOrder(0);
         templateResolver.setCacheable(false);
+        Logger.debug(WebjetComponentSpringConfig.class, "thymeleafTemplateResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         templateResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return templateResolver;
     }
@@ -112,6 +115,7 @@ public class WebjetComponentSpringConfig {
 
         ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
         viewResolver.setTemplateEngine(templateEngine());
+        Logger.debug(WebjetComponentSpringConfig.class, "thymeleafViewResolver SETTING ENCODING: "+Constants.getString("defaultEncoding"));
         viewResolver.setCharacterEncoding(SetCharacterEncodingFilter.getEncoding());
         return viewResolver;
     }

@@ -41,6 +41,30 @@ Vysvetlenie použitých piktogramov:
 - [x] +MultiWeb - overiť funkčnosť, doplniť potrebné práva (#56421, #56405, #56425).
 - [x] +Hromadný email - pridať podporu odhlásenia jedným klikom (#56409).
 - [ ] +Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
+- [x] +Vymeniť databázový pool za `HikariCP` (#56821).
+- [x] +Úrovne logovania - prerobiť na datatabuľku (#56833).
+- [x] +DBPool - prechod z `Apache DBCP` na `HikariCP` (#56821).
+- [x] Dokumentácia - preklad do Angličtiny (#56237,#56249,#56773).
+- [x] +Dokumentácia - preklad do Češtiny (#57033).
+- [x] +A/B Testovanie - vypnúť pre vyhľadávače/boty, indikovať verziu pre Ninja objekt (#56677).
+- [x] +Datatabuľky - možnosť preskočiť riadok pri importe keď je chybný (#56465).
+- [x] +Presmerovania - optimalizovať získanie presmerovania bez druhotného získavania presmerovacieho kódu z databázy (#53469).
+- [ ] +Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [x] +Galéria - pridať možnosť zmeniť veľkosť obrázka.
+- [ ] +Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru.
+- [x] +Indexovanie súborov - doplniť do Perex-Začiatok publikovania dátum poslednej zmeny súboru (#57177).
+- [ ] +Prekladové kľúče - do REST služby `/rest/properties/` pridať možnosť filtrovať kľúče podľa konf. premennej, aby nebolo možné verejne získať všetky kľúče z WebJET CMS.
+- [x] +Web stránky - auditovať úspešné časové publikovanie web stránky, možnosť poslať notifikáciu autorovi web stránky (#57173).
+- [x] +Zobrazovať informáciu o platnosti licencie 2 mesiace pred jej exspiráciou na úvodnej obrazovke (#57169).
+- [ ] +Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach.
+- [ ] +Audit - doplniť HTTP hlavičku `Referrer` aby bolo možné identifikovať pôvodnú stránku z ktorej bolo volanie vykonané.
+- [ ] +Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na true.
+- [ ] +V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
+- [ ] +Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
+- [ ] +Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.
+- [ ] +Galéria - pridať pole URL adresa zdroja obrázku s možnosťou zadať adresu, z ktorej sme obrázok získali, automaticky nastaviť pri použití foto banky.
+- [ ] +Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.
+- [ ] +Hromadný email - auditovať zmeny v skupinách používateľov.
 
 ## 2023.52 / 2024.0
 
@@ -57,21 +81,21 @@ Vysvetlenie použitých piktogramov:
 - [x] Web stránky - pridať možnosť obnovenia zmazaného priečinka tak, aby sa korektne nastavil web stránkam atribút `available` (#55937).
 - [ ] Prieskumník - upraviť do nového dizajnu, aktualizovať JS kód elfinder (#55849).
 - [x] Web stránky - pri vytváraní odkazov v dialógovom okne zapamätať posledný adresár a pri pridaní ďalšieho odkazu ho rovno použiť (#54953-29).
-- [ ] Kalendár udalostí - ak sa zadá udalosť v októbri na november kedy dochádza k posunu času zobrazuje sa s o hodinu posunutým časom.
+- [ ] Kalendár udalostí - ak sa zadá udalosť v októbri na november kedy dochádza k posunu času zobrazuje sa s o hodinu posunutým časom (#56857).
 - [ ] upraviť posielanie správ medzi administrátormi z vyskakovacieho okna na lepšie používateľské rozhranie.
 - [x] Aplikácie - zlepšiť opis každej aplikácie, aktualizovať obrázky aplikácie (#55293).
 - [x] Foto galéria - optimalizovať množstvo načítaných dát (#56093).
 - [x] Foto galéria - image editor sa inicializuje pri každom otvorení okna, upraviť, aby sa použil už existujúci editor (#55853).
-- [ ] Datatabuľky - do automatizovaného testu doplniť testovanie funkcie Duplikovať.
+- [x] Datatabuľky - do automatizovaného testu doplniť testovanie funkcie Duplikovať (#56849).
 - [ ] Banner - pridať možnosť používania šablón pre zobrazenie banneru, napr. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals.
-- [ ] Overiť ako fungujú SEO rozšírenia pre WordPress (napr. https://yoast.com/beginners-guide-yoast-seo/) a navrhnúť podobné riešenie pre WebJET CMS. Integrovať niečo ako https://github.com/thinhlam/seo-defect-checker do editora.
+- [ ] Overiť ako fungujú SEO rozšírenia pre WordPress (napr. https://yoast.com/beginners-guide-yoast-seo/) a navrhnúť podobné riešenie pre WebJET CMS. Integrovať niečo ako https://github.com/thinhlam/seo-defect-checker do editora (#56853).
 - [ ] Pridať blokom v PageBuilder-i nejaký data atribút s menom bloku a ten potom zobrazovať vo vlastnostiach bloku, aby sa dalo spätne identifikovať aký to je blok.
 - [ ] Na úvodnej obrazovke implementovať mini aplikáciu todo.
 - [ ] DT - po pridaní záznamu prestránkovať na stranu, kde sa záznam nachádza (typicky posledná strana)
 - [x] Editor - pridať možnosť zobraziť pre vybrané web stránky editor typu HTML, ktorý sa nebude dať prepnúť do WYSIWYG režimu. Použité na špeciálne stránky integrujúce rôzne JavaScript aplikácie alebo špeciálne komponenty. Vhodný editor je [Ace-code](https://www.npmjs.com/package/ace-code) (#56129).
 - [x] Fulltext - priečinok `files` vo web stránkach s indexom presunúť do karty System (54953-30).
 - [x] +Používatelia - zamedziť zmazaniu samého seba (#55917).
-- [ ] +Novinky - doplniť kontrolu práv na priečinok a zobraziť len také, na ktoré ma používateľ práva (#56661).
+- [x] +Novinky - doplniť kontrolu práv na priečinok a zobraziť len také, na ktoré ma používateľ práva (#56661).
 - [x] +Aplikácie - možnosť podmienene zobraziť aplikácie podľa typu zariadenia, implementovať genericky, nastaviteľné cez UI pre Banner (#55921).
 - [x] +Štatistika - obmedzenie zobrazených štatistík len na priečinky, na ktoré má používateľ právo (#55941).
 - [x] +Reštauračné menu - prerobiť aplikáciu do datatabuliek (#55945).
@@ -419,6 +443,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +úprava dokumentácie na formát ```docsify``` a presun na server http://docs.webjetcms.sk/ (#52384)
 - [x] +aktualizácia testovacieho frameworku codeceptjs na verziu 3.0.4 (#52444)
 
+<!-- deepmark-ignore-start -->
 <script type="text/javascript">
 setTimeout(function() {
     for (var node of document.querySelectorAll("input[type=checkbox]")) {
@@ -430,3 +455,4 @@ setTimeout(function() {
     }
 }, 100);
 </script>
+<!-- deepmark-ignore-end -->

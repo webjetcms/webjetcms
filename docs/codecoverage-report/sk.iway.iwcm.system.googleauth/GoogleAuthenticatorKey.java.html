@@ -31,16 +31,6 @@ import java.util.List;
 public final class GoogleAuthenticatorKey {
 
     /**
-     * The format string to generate the URL of a Google-provided QR bar code.
-     *
-     * @deprecated Use GoogleAuthenticatorQRGenerator instead.
-     */
-    @Deprecated
-    private static final String QR_FORMAT =
-            &quot;https://chart.googleapis.com/chart?chs=200x200&amp;chld=M%%7C0&amp;cht=qr&amp;&quot;
-                    + &quot;chl=otpauth://totp/%s@%s%%3Fsecret%%3D%s&quot;;
-
-    /**
      * The secret key in Base32 encoding.
      */
     private final String key;
@@ -64,29 +54,11 @@ public final class GoogleAuthenticatorKey {
      */
     /* package */ GoogleAuthenticatorKey(
             String secretKey, int code,
-<span class="nc" id="L67">            List&lt;Integer&gt; scratchCodes) {</span>
-<span class="nc" id="L68">        key = secretKey;</span>
-<span class="nc" id="L69">        verificationCode = code;</span>
-<span class="nc" id="L70">        this.scratchCodes = new ArrayList&lt;&gt;(scratchCodes);</span>
-<span class="nc" id="L71">    }</span>
-
-    /**
-     * Returns the URL of a Google-provided QR barcode to be loaded into the
-     * Google Authenticator application. The user scans this bar code with the
-     * application on their smart phones or manually enter the secret manually.
-     *
-     * @param user   the user to assign the secret key to.
-     * @param host   the host to assign the secret key to.
-     * @param secret the secret key in Base32 encoding.
-     * @return the URL of a Google-provided QR barcode to be loaded into the
-     * Google Authenticator application.
-     * @deprecated Use GoogleAuthenticatorQRGenerator##getOtpAuthURL instead.
-     */
-    @SuppressWarnings(&quot;deprecation, unused&quot;)
-    @Deprecated
-    public static String getQRBarcodeURL(String user, String host, String secret) {
-<span class="nc" id="L88">        return String.format(QR_FORMAT, user, host, secret);</span>
-    }
+<span class="fc" id="L57">            List&lt;Integer&gt; scratchCodes) {</span>
+<span class="fc" id="L58">        key = secretKey;</span>
+<span class="fc" id="L59">        verificationCode = code;</span>
+<span class="fc" id="L60">        this.scratchCodes = new ArrayList&lt;&gt;(scratchCodes);</span>
+<span class="fc" id="L61">    }</span>
 
     /**
      * Get the list of scratch codes.
@@ -94,7 +66,7 @@ public final class GoogleAuthenticatorKey {
      * @return the list of scratch codes.
      */
     public List&lt;Integer&gt; getScratchCodes() {
-<span class="nc" id="L97">        return scratchCodes;</span>
+<span class="fc" id="L69">        return scratchCodes;</span>
     }
 
     /**
@@ -103,7 +75,7 @@ public final class GoogleAuthenticatorKey {
      * @return the secret key in Base32 encoding.
      */
     public String getKey() {
-<span class="nc" id="L106">        return key;</span>
+<span class="fc" id="L78">        return key;</span>
     }
 
     /**
@@ -112,7 +84,7 @@ public final class GoogleAuthenticatorKey {
      * @return the verificationCode at time = 0 (the UNIX epoch).
      */
     public int getVerificationCode() {
-<span class="nc" id="L115">        return verificationCode;</span>
+<span class="nc" id="L87">        return verificationCode;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -90,7 +90,8 @@
                         'swJavaVendor': this.formatedData.swJavaVendor,
                         'swServerName': this.formatedData.swServerName,
                         'swServerOs': this.formatedData.swServerOs,
-                        'swServerOsVersion': this.formatedData.swServerOsVersion
+                        'swServerOsVersion': this.formatedData.swServerOsVersion,
+                        'licenseExpirationDate': this.formatedData.licenseExpirationDate
                     }
                 }
 

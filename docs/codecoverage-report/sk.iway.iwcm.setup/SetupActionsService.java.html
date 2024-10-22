@@ -480,7 +480,7 @@ public class SetupActionsService {
 <span class="nc bnc" id="L480" title="All 2 branches missed.">		if (&quot;com.mysql.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
 <span class="nc" id="L481">			url = &quot;jdbc:mysql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
 <span class="nc bnc" id="L482" title="All 2 branches missed.">		} else if (&quot;org.mariadb.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
-<span class="nc" id="L483">			url = &quot;jdbc:mysql://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
+<span class="nc" id="L483">			url = &quot;jdbc:mariadb://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;?&quot;+sForm.getDbParameters();</span>
 <span class="nc bnc" id="L484" title="All 2 branches missed.">		} else if (&quot;net.sourceforge.jtds.jdbc.Driver&quot;.equals(sForm.getDbDriver())) {</span>
 <span class="nc" id="L485">			url = &quot;jdbc:jtds:sqlserver://&quot;+sForm.getDbDomain()+port+&quot;/&quot;+sForm.getDbName()+&quot;;&quot;+sForm.getDbParameters();</span>
 <span class="nc bnc" id="L486" title="All 2 branches missed.">		} else if (&quot;oracle.jdbc.driver.OracleDriver&quot;.equals(sForm.getDbDriver())) {</span>
@@ -546,4 +546,4 @@ public class SetupActionsService {
 <span class="nc" id="L546">		model.addAttribute(&quot;dbCreateErrMsg&quot;, createErrMsg);</span>
 <span class="nc" id="L547">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

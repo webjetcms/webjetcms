@@ -421,7 +421,7 @@ public class UpdateDatabase
 								sql = Tools.replace(sql, "ENGINE=MyISAM", "ENGINE="+defaultEngine);
 								sql = Tools.replace(sql, "engine=MyISAM", "ENGINE="+defaultEngine);
 							}
-							Logger.println(UpdateDatabase.class, "["+counter+"/"+count+"] ");
+							Logger.println(UpdateDatabase.class, "["+counter+"/"+count+"] "+sql);
 							counter++;
 
 							sta = db_conn.createStatement();
@@ -454,7 +454,8 @@ public class UpdateDatabase
 								(message.contains("can't drop column") && message.contains("check that it exists")) ||
 								message.contains("ora-01442 ") || message.contains("stĺpec, ktorý má byť modifikovaný na not null, je už not null") ||
 								//mssql premenovanie stlpca, ktory uz je premenovany
-								message.contains("either the parameter @objname is ambiguous or the claimed @objtype (column) is wrong")
+								message.contains("either the parameter @objname is ambiguous or the claimed @objtype (column) is wrong") ||
+								message.contains("column to be modified to NULL cannot be modified to NULL")
 
 							)
 						{

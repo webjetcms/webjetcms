@@ -4,7 +4,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-import cryptix.util.core.Hex;
+import com.google.crypto.tink.subtle.Hex;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.users.PasswordSecurityAlgorithm;
 import sk.iway.iwcm.users.UnknownHashAlgorithm;
@@ -12,7 +13,7 @@ import sk.iway.iwcm.users.UnknownHashAlgorithm;
 /**
  * Hashovanie hesiel pomocou Sha-512 algoritmu
  */
-<span class="fc" id="L15">public class Sha512 implements PasswordSecurityAlgorithm {</span>
+<span class="fc" id="L16">public class Sha512 implements PasswordSecurityAlgorithm {</span>
 
     /**
 	 * Generates a random HEX string
@@ -21,9 +22,9 @@ import sk.iway.iwcm.users.UnknownHashAlgorithm;
 	 * @return {@link String} random hex string
 	 */
 	public String generateSalt() {
-<span class="nc" id="L24">		byte[] randomBytes = new byte[8];</span>
-<span class="nc" id="L25">		new SecureRandom().nextBytes(randomBytes);</span>
-<span class="nc" id="L26">		return Hex.toString(randomBytes).toLowerCase();</span>
+<span class="fc" id="L25">		byte[] randomBytes = new byte[8];</span>
+<span class="fc" id="L26">		new SecureRandom().nextBytes(randomBytes);</span>
+<span class="fc" id="L27">		return Hex.encode(randomBytes).toLowerCase();</span>
 	}
 
     /**
@@ -37,34 +38,34 @@ import sk.iway.iwcm.users.UnknownHashAlgorithm;
 	 */
 	public String calculateHash(String password, String salt)
 	{
-<span class="pc bpc" id="L40" title="1 of 2 branches missed.">		if (!salt.matches(&quot;^[0-9a-f]{16}$&quot;))</span>
-<span class="nc" id="L41">			throw new IllegalArgumentException(&quot;Salt has invalid form, not matching [0-9a-f]{16}&quot;);</span>
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">		if (!salt.matches(&quot;^[0-9a-f]{16}$&quot;))</span>
+<span class="nc" id="L42">			throw new IllegalArgumentException(&quot;Salt has invalid form, not matching [0-9a-f]{16}&quot;);</span>
 		try {
-<span class="fc" id="L43">			int passwordUseHashIterations = Constants.getInt(&quot;passwordUseHashIterations&quot;);</span>
+<span class="fc" id="L44">			int passwordUseHashIterations = Constants.getInt(&quot;passwordUseHashIterations&quot;);</span>
 
-<span class="pc bpc" id="L45" title="1 of 2 branches missed.">			if (passwordUseHashIterations &lt; 2) {</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">			if (passwordUseHashIterations &lt; 2) {</span>
 				//povodna marosova implementacia
-<span class="nc" id="L47">				MessageDigest hash = MessageDigest.getInstance(&quot;SHA-512&quot;);</span>
-<span class="nc" id="L48">				byte bytesHash[] = hash.digest((password+salt).getBytes());</span>
-<span class="nc" id="L49">				return Hex.toString(bytesHash).toLowerCase();</span>
+<span class="nc" id="L48">				MessageDigest hash = MessageDigest.getInstance(&quot;SHA-512&quot;);</span>
+<span class="nc" id="L49">				byte bytesHash[] = hash.digest((password+salt).getBytes());</span>
+<span class="nc" id="L50">				return Hex.encode(bytesHash).toLowerCase();</span>
 			} else {
 				//presne podla OWASP - https://www.owasp.org/index.php/Hashing_Java
-<span class="fc" id="L52">				MessageDigest digest = MessageDigest.getInstance(&quot;SHA-512&quot;);</span>
-<span class="fc" id="L53">				digest.reset();</span>
-<span class="fc" id="L54">				digest.update(salt.getBytes());</span>
-<span class="fc" id="L55">				byte[] input = digest.digest(password.getBytes());</span>
-<span class="fc bfc" id="L56" title="All 2 branches covered.">				for (int i = 0; i &lt; passwordUseHashIterations; i++) {</span>
-<span class="fc" id="L57">					digest.reset();</span>
-<span class="fc" id="L58">					input = digest.digest(input);</span>
+<span class="fc" id="L53">				MessageDigest digest = MessageDigest.getInstance(&quot;SHA-512&quot;);</span>
+<span class="fc" id="L54">				digest.reset();</span>
+<span class="fc" id="L55">				digest.update(salt.getBytes());</span>
+<span class="fc" id="L56">				byte[] input = digest.digest(password.getBytes());</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">				for (int i = 0; i &lt; passwordUseHashIterations; i++) {</span>
+<span class="fc" id="L58">					digest.reset();</span>
+<span class="fc" id="L59">					input = digest.digest(input);</span>
 				}
-<span class="fc" id="L60">				return Hex.toString(input).toLowerCase();</span>
+<span class="fc" id="L61">				return Hex.encode(input).toLowerCase();</span>
 			}
-<span class="nc" id="L62">		} catch (NoSuchAlgorithmException e) { throw new UnknownHashAlgorithm(); }</span>
+<span class="nc" id="L63">		} catch (NoSuchAlgorithmException e) { throw new UnknownHashAlgorithm(); }</span>
 	}
 
     public boolean isPasswordCorrect(String password, String salt, String hash) {
-<span class="fc" id="L66">        String calculated = calculateHash(password, salt);</span>
-<span class="fc" id="L67">        return calculated.equals(hash);</span>
+<span class="fc" id="L67">        String calculated = calculateHash(password, salt);</span>
+<span class="fc" id="L68">        return calculated.equals(hash);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

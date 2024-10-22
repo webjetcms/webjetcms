@@ -6,18 +6,15 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "sitemap": "node sitemapGenerator.js",
-    "translate": "node node_modules/deepmark/packages/deepmark/dist/bin.mjs translate --mode hybrid",
-    "postinstall": "npm install -g pnpm@8.15.7 && cd node_modules/deepmark/ && pnpm install && pnpm build:mehc && pnpm build:muhc && pnpm build:deepmark"
+    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid"
   },
   "author": "InterWay, a. s.",
   "license": "APACHE-2.0",
   "dependencies": {
+    "@webjetcms/deepmark": "^0.1.8",
     "fast-glob": "^3.3.2",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
     "xmlbuilder": "^15.1.1"
-  },
-  "devDependencies": {
-    "deepmark": "https://github.com/webjetcms/tools-deepmark/#feature/webjetcms-integration"
   }
 }

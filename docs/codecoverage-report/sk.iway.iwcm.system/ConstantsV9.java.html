@@ -21,7 +21,7 @@ public class ConstantsV9 {
 <span class="fc" id="L21">		Constants.setString(&quot;mariaDbDefaultEngine&quot;, &quot;InnoDB&quot;);</span>
 <span class="fc" id="L22">		Constants.setString(&quot;chunksQuantity&quot;, &quot;25&quot;);</span>
 <span class="fc" id="L23">		Constants.setString(&quot;propertiesAdminKeys&quot;,</span>
-				&quot;button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*&quot;);
+				&quot;button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*&quot;);
 <span class="fc" id="L25">		Constants.setInt(&quot;webpagesTreeAutoOpenLimit&quot;, 2);</span>
 <span class="fc" id="L26">		Constants.setString(&quot;deepl_auth_key&quot;, &quot;&quot;, &quot;translations&quot;, &quot;Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov&quot;);</span>
 <span class="fc" id="L27">		Constants.setString(&quot;deepl_api_url&quot;, &quot;https://api-free.deepl.com/v2/translate&quot;, &quot;translations&quot;, &quot;Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate&quot;);</span>
@@ -52,7 +52,7 @@ public class ConstantsV9 {
 				Constants.MOD_SECURITY,
 				&quot;Zoznam stlpcov v databaze, ktore mozu obsahovat HTML kod (nebudu pri citani escapovane specialne znaky). Pre zakaznicke projekty nastavte premennu xssHtmlAllowedFields&quot;);
 
-<span class="fc" id="L55">		Constants.setString(&quot;xsrfParamNameExceptionSystem&quot;, Constants.getString(&quot;xsrfParamNameExceptionSystem&quot;)+&quot;,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,rnd,login,auth&quot;);</span>
+<span class="fc" id="L55">		Constants.setString(&quot;xsrfParamNameExceptionSystem&quot;, Constants.getString(&quot;xsrfParamNameExceptionSystem&quot;)+&quot;,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act&quot;);</span>
 
 <span class="fc" id="L57">		Constants.setString(&quot;jpaToLowerFields&quot;, &quot;description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name&quot;, Constants.MOD_CONFIG, &quot;Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani&quot;);</span>
 
@@ -84,7 +84,32 @@ public class ConstantsV9 {
 
 <span class="fc" id="L85">		Constants.setString(&quot;webpagesFunctionsPerms&quot;, &quot;menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting&quot;, Constants.MOD_SECURITY, &quot;Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.&quot;);</span>
 <span class="fc" id="L86">		Constants.setString(&quot;bloggerAppPermissions&quot;, &quot;menuGallery,menuInquiry,cmp_quiz,cmp_form&quot;, &quot;blog&quot;, &quot;Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER&quot;);</span>
-<span class="fc" id="L87">	}</span>
+
+<span class="fc" id="L88">		Constants.setString(&quot;dmailListUnsubscribeBaseHref&quot;, &quot;&quot;, &quot;dmail&quot;, &quot;Zakladna URL adresa pre odhlasovanie sa z mailing listu. Ak je prazdna, tak sa pouzije URL adresa podla domeny odosielaneho emailu.&quot;);</span>
+
+<span class="fc" id="L90">		Constants.setString(&quot;uaParserYamlPath&quot;, &quot;&quot;, &quot;stat&quot;, &quot;Cesta k YAML suboru s konfiguraciou pre UA parser. Ak je prazdna, tak sa pouzije defaultna konfiguracia.&quot;);</span>
+<span class="fc" id="L91">		Constants.setBoolean(&quot;usersSplitByDomain&quot;, false, Constants.MOD_USER, &quot;Pri nastaveni na true su oddeleny pouzivatelia podla domen podobne ako v MultiWeb instalacii&quot;);</span>
+
+<span class="fc" id="L93">		Constants.setString(&quot;amchartLicense&quot;, &quot;&quot;, Constants.MOD_STAT, &quot;Licencny kluc pre amchart kniznicu&quot;);</span>
+
+<span class="fc" id="L95">		Constants.setBoolean(&quot;ABTestingAllowVariantUrl&quot;, false, &quot;abtest&quot;, &quot;Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html&quot;);</span>
+
+<span class="fc" id="L97">		Constants.setBoolean(&quot;forumAlwaysNotifyPageAuthor&quot;, false, Constants.MOD_CONFIG, &quot;Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.&quot;);</span>
+
+<span class="fc" id="L99">		Constants.setLong(&quot;licenseExpiryDate&quot;, 0L, Constants.MOD_STAT, &quot;Datum exspiracie licencie v milisekundach&quot;);</span>
+
+<span class="fc" id="L101">		Constants.setBoolean(&quot;monitoringEnableCountUsersOnAllNodes&quot;, true, &quot;server_monitoring;performance&quot;, &quot;Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions&quot;);</span>
+
+<span class="fc" id="L103">		Constants.setBoolean(&quot;webpagesNotifyAutorOnPublish&quot;, true, Constants.MOD_CONFIG, &quot;Nastavenie odosielania notifikacie autorovi pri publikovani stranky.&quot;);</span>
+
+<span class="fc" id="L105">		Constants.setInt(&quot;perexGroupsRenderAsSelect&quot;, 30, Constants.MOD_EDITOR, &quot;Počet perex skupín pri ktorom sa perex začne zobrazovať ako multiselect&quot;);</span>
+
+<span class="fc" id="L107">		Constants.setString(&quot;changePasswordPageUrlAdmin&quot;, &quot;/admin/logon/changePassword&quot;, Constants.MOD_USER, &quot;cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie&quot;);</span>
+
+<span class="fc" id="L109">		Constants.setInt(&quot;dashboardRecentSize&quot;, 8, &quot;dashboard&quot;, &quot;Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke&quot;);</span>
+
+<span class="fc" id="L111">		Constants.setInt(&quot;contentBlockTypeCount&quot;, 5, &quot;contentBlock&quot;, &quot;Pocet dostupnych typov blokov pre obsah&quot;);</span>
+<span class="fc" id="L112">	}</span>
 
 	/**
 	 * Returns coma separated value as Array
@@ -94,7 +119,7 @@ public class ConstantsV9 {
 	 */
 	@Deprecated
 	public static String[] getArray(String name) {
-<span class="nc" id="L97">		return Constants.getArray(name);</span>
+<span class="nc" id="L122">		return Constants.getArray(name);</span>
 	}
 
 	/**
@@ -104,14 +129,14 @@ public class ConstantsV9 {
 	 * @return
 	 */
 	public static String[] getArrayCached(String name, int cacheMinutes) {
-<span class="nc" id="L107">		String CACHE_KEY = name+&quot;.arrayCache-&quot;+cacheMinutes;</span>
-<span class="nc" id="L108">		Cache c = Cache.getInstance();</span>
-<span class="nc" id="L109">		String[] arr = (String[])c.getObject(CACHE_KEY);</span>
-<span class="nc bnc" id="L110" title="All 2 branches missed.">		if (arr == null) {</span>
-<span class="nc" id="L111">			arr = Constants.getArray(name);</span>
-<span class="nc" id="L112">			c.setObject(CACHE_KEY, arr, cacheMinutes);</span>
+<span class="nc" id="L132">		String CACHE_KEY = name+&quot;.arrayCache-&quot;+cacheMinutes;</span>
+<span class="nc" id="L133">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L134">		String[] arr = (String[])c.getObject(CACHE_KEY);</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (arr == null) {</span>
+<span class="nc" id="L136">			arr = Constants.getArray(name);</span>
+<span class="nc" id="L137">			c.setObject(CACHE_KEY, arr, cacheMinutes);</span>
 		}
-<span class="nc" id="L114">		return arr;</span>
+<span class="nc" id="L139">		return arr;</span>
 	}
 
 	/**
@@ -120,17 +145,17 @@ public class ConstantsV9 {
 	 * @return
 	 */
 	public static List&lt;ConfDetails&gt; getValuesStartsWith(String prefix) {
-<span class="nc" id="L123">		List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L124" title="All 2 branches missed.">		for (String key : Constants.getAllKeys()) {</span>
-<span class="nc bnc" id="L125" title="All 4 branches missed.">			if (key!=null &amp;&amp; key.startsWith(prefix)) {</span>
-<span class="nc" id="L126">				ConfDetails conf = new ConfDetails();</span>
-<span class="nc" id="L127">				conf.setName(key);</span>
-<span class="nc" id="L128">				conf.setValue(Constants.getString(key));</span>
-<span class="nc" id="L129">				filtered.add(conf);</span>
+<span class="nc" id="L148">		List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">		for (String key : Constants.getAllKeys()) {</span>
+<span class="nc bnc" id="L150" title="All 4 branches missed.">			if (key!=null &amp;&amp; key.startsWith(prefix)) {</span>
+<span class="nc" id="L151">				ConfDetails conf = new ConfDetails();</span>
+<span class="nc" id="L152">				conf.setName(key);</span>
+<span class="nc" id="L153">				conf.setValue(Constants.getString(key));</span>
+<span class="nc" id="L154">				filtered.add(conf);</span>
 			}
-<span class="nc" id="L131">		}</span>
-<span class="nc" id="L132">		return filtered;</span>
+<span class="nc" id="L156">		}</span>
+<span class="nc" id="L157">		return filtered;</span>
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

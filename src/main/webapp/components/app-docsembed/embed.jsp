@@ -17,15 +17,21 @@ taglib
 	String encoded = pageParams.getValue("url", "");
 	Base64 b64 = new Base64();
 	String decoded = new String(b64.decode(encoded.getBytes()));
-	System.out.println("decoded: " + decoded);
-	String width = pageParams.getValue("width", "900");
+	//System.out.println("decoded: " + decoded);
+	String width = pageParams.getValue("width", "100%");
 	String height = pageParams.getValue("height", "700");
 
 	int embedCounter = request.getAttribute("embedCounter") != null ? (Integer) request.getAttribute("embedCounter") : 0;
     embedCounter++;
     request.setAttribute("embedCounter", embedCounter);
 
+	if (Tools.isEmpty(decoded)) {
+		out.println("<div id='docsembed-"+embedCounter+"'><iframe width='100%' frameborder='0' src='data:text/html;charset=utf-8,%3Cdiv%3ENo%20preview%20available%3C/div%3E'></iframe></div>");
+		return;
+	}
+
 	if (decoded.indexOf("http")==-1) decoded = Tools.getBaseHref(request) + decoded;
+
 %>
 
 <script>

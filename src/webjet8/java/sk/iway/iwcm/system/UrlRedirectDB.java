@@ -3,10 +3,6 @@ package sk.iway.iwcm.system;
 import static sk.iway.iwcm.Tools.firstNonNull;
 import static sk.iway.iwcm.Tools.isNotEmpty;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Timestamp;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -82,50 +78,6 @@ public class UrlRedirectDB
 		return JpaTools.getEclipseLinkEntityManager().find(UrlRedirectBean.class, id);
 	}
 
-
-	// @TODO: bude potrebovat upravit, teraz nezohladnuje datum a cas, pouziva sa v sk.iway.iwcm.system.RedirectImport.saveRow
-	public static UrlRedirectBean getByOldUrl(String oldUrl)
-	{
-		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();
-		try
-		{
-			Expression condition = new ExpressionBuilder(UrlRedirectBean.class).get("oldUrl").equal(oldUrl);
-			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, condition);
-			manager.getTransaction().begin();
-			query.addDescendingOrdering("urlRedirectId");
-			Query q = manager.createQuery(query);
-			List<UrlRedirectBean> resultList = JpaDB.getResultList(q);
-			return resultList.size() > 0 ? resultList.get(0) : null;
-		}catch (NoResultException e){
-			return null;
-		}finally{
-			manager.close();
-		}
-	}
-
-	// @TODO: bude potrebovat upravit, teraz nezohladnuje datum a cas, pouziva sa v sk.iway.iwcm.system.RedirectImport.saveRow
-	public static UrlRedirectBean getByOldUrl(String oldUrl, String domain)
-	{
-		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();
-		try
-		{
-			ExpressionBuilder conditionBuilder = new ExpressionBuilder(UrlRedirectBean.class);
-			Expression condition = conditionBuilder.get("oldUrl").equal(oldUrl);
-			condition = condition.and(conditionBuilder.get("domainName").equal(domain));
-			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, condition);
-
-			manager.getTransaction().begin();
-			Query q = manager.createQuery(query);
-			List<UrlRedirectBean> resultList = JpaDB.getResultList(q);
-			return resultList.size() > 0 ? resultList.get(0) : null;
-		}catch (NoResultException e){
-			manager.getTransaction().rollback();
-			return null;
-		}finally{
-			manager.close();
-		}
-	}
-
 	/**
 	 * Prida redirect do databazy, z URL odstrani parametre ze znakom ? (ak tam nejake nebodaj su)
 	 * @param oldUrl
@@ -162,34 +114,51 @@ public class UrlRedirectDB
 	 */
 	public static String getRedirect(String oldUrl, String domainName)
 	{
+		UrlRedirectBean redirect = getRedirectBean(oldUrl, domainName);
+		if(redirect != null) return redirect.getNewUrl();
+		return null;
+	}
+
+	/**
+	 * Get's newest redirect for oldUrl and domainName or returns NULL if doesn't exist
+	 * @param oldUrl
+	 * @param domainName
+	 * @return
+	 */
+	public static UrlRedirectBean getRedirectBean(String oldUrl, String domainName)
+	{
+		//redirect's of old admin pages, always have precedense
 		String redirectURL = adminRedirects.get(oldUrl);
-		if (redirectURL!=null) return redirectURL;
+		if (redirectURL!=null) {
+			return new UrlRedirectBean(oldUrl, redirectURL, 302, "");
+		}
 
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb!=null && rb.isUserAdmin() && Tools.isNotEmpty(oldUrl)) {
-			//over ci sa nejedna o stare JSP
+			//redirect of old admin pages, always have precedense
 			String v9link = MenuService.replaceV9MenuLink(oldUrl);
-			if (v9link!=null && v9link.equals(oldUrl)==false) return v9link;
+			if (v9link!=null && v9link.equals(oldUrl)==false) return new UrlRedirectBean(oldUrl, v9link, 302, domainName);
 		}
 
+		UrlRedirectBean redirectBean;
 		if (Constants.getBoolean("multiDomainEnabled")==true && Tools.isNotEmpty(domainName))
 		{
-			redirectURL = getRedirectImpl(oldUrl, domainName);
-			if (redirectURL != null) return redirectURL;
+			redirectBean = getRedirectImpl(oldUrl, domainName);
+			if (redirectBean != null) return redirectBean;
 			//stare WebJETy negenerovali / na konci adresara
-			if (oldUrl.indexOf('^')==-1) redirectURL = getRedirectImpl(oldUrl+"/", domainName);
-			if (redirectURL != null) return redirectURL;
+			if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + "/", domainName);
+			if (redirectBean != null) return redirectBean;
 		}
 		else
 		{
 			//failsafe pre standardny WebJET - hladanie bez ohladu na domenu
-			redirectURL = getRedirectImpl(oldUrl, "");
-			if (redirectURL != null) return redirectURL;
+			redirectBean = getRedirectImpl(oldUrl, "");
+			if (redirectBean != null) return redirectBean;
 		}
 
 		//stare WebJETy negenerovali / na konci adresara
-		if (oldUrl.indexOf('^')==-1) redirectURL = getRedirectImpl(oldUrl+"/", "");
-		if (redirectURL != null) return redirectURL;
+		if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + "/", "");
+		if (redirectBean != null) return redirectBean;
 
 		if (oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
 		{
@@ -198,7 +167,7 @@ public class UrlRedirectDB
 			String newUrl = oldUrl+"/";
 			if (docDB.getDocIdFromURLImpl(newUrl, domainName)>0)
 			{
-				return newUrl;
+				return new UrlRedirectBean(oldUrl, newUrl, 302, domainName);
 			}
 		}
 
@@ -274,7 +243,7 @@ public class UrlRedirectDB
 		return affected;
 	}
 
-	private static String getRedirectImpl(String oldUrl, String domainName)
+	private static UrlRedirectBean getRedirectImpl(String oldUrl, String domainName)
 	{
 		try
 		{
@@ -289,8 +258,9 @@ public class UrlRedirectDB
 
 				domainName = firstNonNull(domainName, "");
 				oldUrl = normalizeUrl(oldUrl);
-				Map<String, Map<String,String>> redirects = getCachedRedirects();
-				if (redirects != null) return redirects.containsKey(domainName) ? redirects.get(domainName).get(oldUrl) : null;
+				Map<String, Map<String, UrlRedirectBean>> redirects = getCachedRedirects();
+				if (redirects == null) return null;
+				return redirects.get(domainName).get(oldUrl);
 			}
 
 			String params = null;
@@ -315,13 +285,15 @@ public class UrlRedirectDB
 
 				if (params != null) newUrl.append('?').append(params);
 
-				return(newUrl.toString());
+				UrlRedirectBean redirect = new UrlRedirectBean(urlRedirect.getOldUrl(), newUrl.toString(), urlRedirect.getRedirectCode(), urlRedirect.getDomainName());
+				return redirect;
 			}
 
 			String regExpURL = regExpRedirect(oldUrl, domainName);
-			if (params != null)
-				regExpURL += '?'+ params;
-			return regExpURL;
+			if (regExpURL != null) {
+				if (params != null) regExpURL += '?'+ params;
+				return new UrlRedirectBean(oldUrl, regExpURL, 302, domainName);
+			}
 		}
 		catch (Exception e){
 			sk.iway.iwcm.Logger.error(e);
@@ -329,67 +301,45 @@ public class UrlRedirectDB
 		return(null);
 	}
 
-
-	private static synchronized Map<String, Map<String,String>> reloadCache()
-	{
+	private static synchronized Map<String, Map<String, UrlRedirectBean>> reloadCache() {
 		Cache c = Cache.getInstance();
 		c.setObject(TIMESTAMP_OF_LAST_RUN, new Date().getTime(), TIMESTAMP_VALID_IN_MINUTES);
 		Date date = getDateOfNextChange();
 		c.setObject(TIMESTAMP_OF_NEXT_RUN, date.getTime(), TIMESTAMP_VALID_IN_MINUTES);
 
-		Map<String, Map<String,String>> redirects = new HashMap<>();
+		Map<String, Map<String, UrlRedirectBean>> redirects = new HashMap<>();
 
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			db_conn = DBPool.getConnection();
-			String query = "SELECT domain_name, old_url, new_url FROM url_redirect WHERE publish_date <= ? OR publish_date IS NULL ORDER BY publish_date DESC, insert_date DESC";
+		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();
+		try {
+			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get("publish_date").lessThanEqual( new java.sql.Time(new Date().getTime()) );
+			conditions = conditions.or( new ExpressionBuilder().get("publish_date").isNull() );
+
+			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);
 			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
-				query = "SELECT domain_name, old_url, new_url FROM url_redirect WHERE publish_date <= ? OR publish_date IS NULL ORDER BY publish_date DESC NULLS LAST, insert_date DESC NULLS LAST";
+				query.addOrdering(new ExpressionBuilder().get("publishDate").descending().nullsLast());
+				query.addOrdering(new ExpressionBuilder().get("insertDate").descending().nullsLast());
+			} else {
+				query.addOrdering(new ExpressionBuilder().get("publishDate").descending());
+				query.addOrdering(new ExpressionBuilder().get("insertDate").descending());
 			}
-			ps = db_conn.prepareStatement(query);
-			ps.setTime(1, new java.sql.Time(new Date().getTime()));
-			rs = ps.executeQuery();
-			while (rs.next())
-			{
-				String domain = firstNonNull(DB.getDbString(rs, "domain_name"), "");
-				String oldUrl = DB.getDbString(rs, "old_url");
-				String newUrl = DB.getDbString(rs, "new_url");
 
-				if (!redirects.containsKey(domain))
-					redirects.put(domain, new HashMap<>());
+			List<UrlRedirectBean> list = JpaDB.getResultList(manager.createQuery(query));
 
-				oldUrl = normalizeUrl(oldUrl);
-				if (!redirects.get(domain).containsKey(oldUrl))
-					redirects.get(domain).put(oldUrl, newUrl);
+			for (UrlRedirectBean b : list) {
+				String domain = b.getDomainName();
+				if (!redirects.containsKey(domain)) redirects.put(domain, new HashMap<>());
+				String oldUrl = normalizeUrl(b.getOldUrl());
+				if (redirects.get(domain).containsKey(oldUrl)==false) {
+					UrlRedirectBean redirect = new UrlRedirectBean(oldUrl, b.getNewUrl(), b.getRedirectCode(), b.getDomainName());
+					redirects.get(domain).put(oldUrl, redirect);
+				}
+
 			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-			}
+
+		} catch (Exception e){
+
+		}finally{
+			if (manager != null) manager.close();
 		}
 
 		ServletContext context = Constants.getServletContext();
@@ -405,51 +355,31 @@ public class UrlRedirectDB
 	private static boolean isReloadNecessary() {
 		boolean result = false;
 
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			db_conn = DBPool.getConnection();
-			String query = "SELECT url_redirect_id FROM url_redirect WHERE publish_date >= ? ORDER BY publish_date DESC, insert_date DESC";
-			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
-				query = "SELECT url_redirect_id FROM url_redirect WHERE publish_date >= ? ORDER BY publish_date DESC NULLS LAST, insert_date DESC NULLS LAST";
-			}
-			ps = db_conn.prepareStatement(query);
+		JpaEntityManager manager = JpaTools.getEclipseLinkEntityManager();
+		try {
+			org.eclipse.persistence.expressions.Expression conditions = new ExpressionBuilder().get("publish_date").greaterThanEqual( new java.sql.Time(new Date().getTime()) );
 
-			ps.setTimestamp(1, new Timestamp(new Date().getTime()));
-			rs = ps.executeQuery();
-			if (rs.next())
-				result = true;
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
+			ReadAllQuery query = new ReadAllQuery(UrlRedirectBean.class, conditions);
+			if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
+				query.addOrdering(new ExpressionBuilder().get("publishDate").descending().nullsLast());
+				query.addOrdering(new ExpressionBuilder().get("insertDate").descending().nullsLast());
+			} else {
+				query.addOrdering(new ExpressionBuilder().get("publishDate").descending());
+				query.addOrdering(new ExpressionBuilder().get("insertDate").descending());
 			}
-			catch (Exception ex2)
-			{
-			}
+
+			List<UrlRedirectBean> list = JpaDB.getResultList(manager.createQuery(query));
+			manager.close();
+
+			if(list.size() > 0) result = true;
+		} catch (NoResultException e){
+			return result;
+		} finally{
+			manager.close();
 		}
+
 		return result;
 	}
-
 
 	protected static String normalizeUrl(String oldUrl)
 	{
@@ -609,10 +539,10 @@ public class UrlRedirectDB
 			return;
 		String domain = firstNonNull(oldRedirect.getDomainName(), "");
 
-		Map<String, Map<String,String>> cachedRedirects = getCachedRedirects();
+		Map<String, Map<String,UrlRedirectBean>> cachedRedirects = getCachedRedirects();
 
 		if (cachedRedirects != null) {
-			Map<String, String> cacheForThisDomain = cachedRedirects.get(domain);
+			Map<String, UrlRedirectBean> cacheForThisDomain = cachedRedirects.get(domain);
 			cacheForThisDomain.remove(normalizeUrl(oldRedirect.getOldUrl()));
 		}
 	}
@@ -626,7 +556,7 @@ public class UrlRedirectDB
 		if (!getCachedRedirects().containsKey(domain))
 			getCachedRedirects().put(domain, new HashMap<>());
 
-		getCachedRedirects().get(domain).put(normalizeUrl(redirect.getOldUrl()), redirect.getNewUrl());
+		getCachedRedirects().get(domain).put(normalizeUrl(redirect.getOldUrl()), redirect);
 	}
 
 
@@ -653,7 +583,13 @@ public class UrlRedirectDB
 		if (!Constants.getBoolean("cacheUrlRedirects"))
 			return;
 
-		Map<String, String> oldRedirects = getCachedRedirects().get(oldDomain);
+		Map<String, UrlRedirectBean> oldRedirects = getCachedRedirects().get(oldDomain);
+
+		//swap domain name in lists elements
+		for (UrlRedirectBean b : oldRedirects.values()) {
+			b.setDomainName(newDomain);
+		}
+
 		getCachedRedirects().remove(oldDomain);
 		if (getCachedRedirects().get(newDomain) == null)
 			getCachedRedirects().put(newDomain, new HashMap<>());
@@ -661,11 +597,11 @@ public class UrlRedirectDB
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Map<String, Map<String,String>> getCachedRedirects()
+	private static Map<String, Map<String, UrlRedirectBean>> getCachedRedirects()
 	{
 		ServletContext context = Constants.getServletContext();
 		// domain => [old url => new url]
-		Map<String, Map<String,String>> redirects = (Map<String, Map<String, String>>) context.getAttribute(CACHED_REDIRECTS);
+		Map<String, Map<String, UrlRedirectBean>> redirects = (Map<String, Map<String, UrlRedirectBean>>) context.getAttribute(CACHED_REDIRECTS);
 
 		//context.setAttribute(CACHED_FUTURE_REDIRECTS, findFutureRedirects());
 		if (redirects == null)
@@ -673,7 +609,7 @@ public class UrlRedirectDB
 			synchronized (UrlRedirectDB.class)
 			{
 				//double check
-				redirects = (Map<String, Map<String, String>>) context.getAttribute(CACHED_REDIRECTS);
+				redirects = (Map<String, Map<String, UrlRedirectBean>>) context.getAttribute(CACHED_REDIRECTS);
 				if (redirects == null)
 				{
 					redirects = reloadCache();

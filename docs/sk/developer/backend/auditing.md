@@ -2,7 +2,7 @@
 
 ## JPA entity
 
-> **tl;dr** Automatické generovanie auditných záznamov z JPA entít (obsahujúcich zoznam zmien vo forme meno_atribútu: stará hodnota -> nová hodnota) pomocou jednoduchej anotácie ```@EntityListeners(AuditEntityListener.class)```
+>Automatické generovanie auditných záznamov z JPA entít (obsahujúcich zoznam zmien vo forme meno_atribútu: stará hodnota -> nová hodnota) pomocou jednoduchej anotácie ```@EntityListeners(AuditEntityListener.class)```
 
 Auditing zmien v JPA entitách je možné automatizovať pridaním anotácie ```@EntityListeners(AuditEntityListener.class)```, pričom typ auditného záznamu nastavíte anotáciou ```@EntityListenersType(Adminlog.TYPE_GALLERY)```:
 
@@ -26,7 +26,7 @@ v metóde ```private String getChangedProperties(Object entity)``` sa získa zoz
 
 **Získanie aktuálneho beanu na porovnanie** z databázy pred zápisom zmien je pomerne komplikované. Vyriešené to je **získaním nového EntityManagera** a načítaním objektu s týmto novým EntityManagerom. Objekty manažované cez SpringData s týmto problémom netrpeli, ale štandardné JPA entity sa vrámci aktuálnej session vracali z databázy zmenené na nové hodnoty. Je to spôsoboné tým, že SpringData používa vlastný EntityManager.
 
-V konfiguračnej premennej ```auditHideProperties``` je zoznam atribútov, ktoré sa v audite nahradia značkou *****. Predvolene je nastavený atribút ```password,password2,password_salt```, v konfigurácii ale môžete pridať **ďalšie citlivé atribúty, ktoré nechcete mať zobrazené v audite**.
+V konfiguračnej premennej ```auditHideProperties``` je zoznam atribútov, ktoré sa v audite nahradia značkou `*****`. Predvolene je nastavený atribút ```password,password2,password_salt```, v konfigurácii ale môžete pridať **ďalšie citlivé atribúty, ktoré nechcete mať zobrazené v audite**.
 
 Príklad auditu novo vytvorenej entity:
 

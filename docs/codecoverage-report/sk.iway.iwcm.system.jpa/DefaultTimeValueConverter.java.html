@@ -84,19 +84,24 @@ import javax.persistence.Converter;
      */
     public static Date combineDateWithTime(Date date, Date time) {
 <span class="pc bpc" id="L86" title="2 of 4 branches missed.">        if(date == null || time == null)  return null;</span>
+<span class="fc" id="L87">        return combineDateWithTime(date.getTime(), time.getTime());</span>
+    }
 
-<span class="fc" id="L88">        Calendar dateInstance = Calendar.getInstance();</span>
-<span class="fc" id="L89">        dateInstance.setTime(date);</span>
-<span class="fc" id="L90">        Calendar timeInstance = Calendar.getInstance();</span>
-<span class="fc" id="L91">        timeInstance.setTime(time);</span>
+    public static Date combineDateWithTime(long date, long time) {
+<span class="pc bpc" id="L91" title="2 of 4 branches missed.">        if(date &lt; 0 || time &lt; 0)  return null;</span>
+
+<span class="fc" id="L93">        Calendar dateInstance = Calendar.getInstance();</span>
+<span class="fc" id="L94">        dateInstance.setTimeInMillis(date);</span>
+<span class="fc" id="L95">        Calendar timeInstance = Calendar.getInstance();</span>
+<span class="fc" id="L96">        timeInstance.setTimeInMillis(time);</span>
 
         //Move hh:mm:ss from time to date
-<span class="fc" id="L94">        dateInstance.set(Calendar.HOUR_OF_DAY, timeInstance.get(Calendar.HOUR_OF_DAY));</span>
-<span class="fc" id="L95">        dateInstance.set(Calendar.MINUTE, timeInstance.get(Calendar.MINUTE));</span>
-<span class="fc" id="L96">        dateInstance.set(Calendar.SECOND, timeInstance.get(Calendar.SECOND));</span>
-<span class="fc" id="L97">        dateInstance.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L99">        dateInstance.set(Calendar.HOUR_OF_DAY, timeInstance.get(Calendar.HOUR_OF_DAY));</span>
+<span class="fc" id="L100">        dateInstance.set(Calendar.MINUTE, timeInstance.get(Calendar.MINUTE));</span>
+<span class="fc" id="L101">        dateInstance.set(Calendar.SECOND, timeInstance.get(Calendar.SECOND));</span>
+<span class="fc" id="L102">        dateInstance.set(Calendar.MILLISECOND, 0);</span>
 
-<span class="fc" id="L99">        return dateInstance.getTime();</span>
+<span class="fc" id="L104">        return dateInstance.getTime();</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

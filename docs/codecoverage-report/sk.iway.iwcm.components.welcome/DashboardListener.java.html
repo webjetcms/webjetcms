@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>DashboardListener.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.welcome</a> &gt; <span class="el_source">DashboardListener.java</span></div><h1>DashboardListener.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.welcome;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,7 @@ import sk.iway.iwcm.users.UsersDB;
  * Doplna data pre admin cast, pocuva na URL /admin/v9/dashboard/
  */
 @Component
-<span class="fc" id="L39">public class DashboardListener {</span>
+<span class="fc" id="L40">public class DashboardListener {</span>
     /**
      * Pripravi data pre overview/welcome obrazovku, zatial taketo skarede natvrdo
      * riesenie
@@ -47,88 +48,87 @@ import sk.iway.iwcm.users.UsersDB;
     @EventListener(condition = &quot;#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' &amp;&amp; event.source.page=='dashboard'&quot;)
     protected void setOverviewData(final WebjetEvent&lt;ThymeleafEvent&gt; event) {
         try {
-<span class="fc" id="L50">            DebugTimer dt = new DebugTimer(&quot;DashboardListener&quot;);</span>
+<span class="fc" id="L51">            DebugTimer dt = new DebugTimer(&quot;DashboardListener&quot;);</span>
 
-<span class="fc" id="L52">            ModelMap model = event.getSource().getModel();</span>
-<span class="fc" id="L53">            HttpServletRequest request = event.getSource().getRequest();</span>
-<span class="fc" id="L54">            Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L53">            ModelMap model = event.getSource().getModel();</span>
+<span class="fc" id="L54">            HttpServletRequest request = event.getSource().getRequest();</span>
+<span class="fc" id="L55">            Identity user = UsersDB.getCurrentUser(request);</span>
 
             // backdata
-<span class="fc" id="L57">            WelcomeDataBean backData = WelcomeDataBackTime.getWelcomeDataBackTime();</span>
-<span class="fc" id="L58">            model.addAttribute(&quot;overviewBackData&quot;, JsonTools.objectToJSON(backData));</span>
-<span class="fc" id="L59">            dt.diff(&quot;After backData&quot;);</span>
+<span class="fc" id="L58">            WelcomeDataBean backData = WelcomeDataBackTime.getWelcomeDataBackTime();</span>
+<span class="fc" id="L59">            model.addAttribute(&quot;overviewBackData&quot;, JsonTools.objectToJSON(backData));</span>
+<span class="fc" id="L60">            dt.diff(&quot;After backData&quot;);</span>
 
             // prihlaseny admini
-<span class="fc" id="L62">            List&lt;UserDto&gt; admins = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L63" title="All 2 branches covered.">            if (user.isEnabledItem(&quot;welcomeShowLoggedAdmins&quot;)) {</span>
-<span class="fc" id="L64">                Set&lt;Integer&gt; allreadyAddedUserIds = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L65">                List&lt;SessionDetails&gt; sessions = SessionHolder.getInstance().getList();</span>
-<span class="fc bfc" id="L66" title="All 2 branches covered.">                for (SessionDetails session : sessions) {</span>
-<span class="pc bpc" id="L67" title="1 of 4 branches missed.">                    if (session.getLoggedUserId() &gt; 0 &amp;&amp; session.isAdmin()) {</span>
-<span class="fc" id="L68">                        Integer userId = Integer.valueOf(session.getLoggedUserId());</span>
-<span class="fc bfc" id="L69" title="All 2 branches covered.">                        if (allreadyAddedUserIds.contains(userId))</span>
-<span class="fc" id="L70">                            continue;</span>
+<span class="fc" id="L63">            List&lt;UserDto&gt; admins = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            if (user.isEnabledItem(&quot;welcomeShowLoggedAdmins&quot;)) {</span>
+<span class="fc" id="L65">                Set&lt;Integer&gt; allreadyAddedUserIds = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L66">                List&lt;SessionDetails&gt; sessions = SessionHolder.getInstance().getList();</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                for (SessionDetails session : sessions) {</span>
+<span class="pc bpc" id="L68" title="1 of 4 branches missed.">                    if (session.getLoggedUserId() &gt; 0 &amp;&amp; session.isAdmin()) {</span>
+<span class="fc" id="L69">                        Integer userId = Integer.valueOf(session.getLoggedUserId());</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                        if (allreadyAddedUserIds.contains(userId))</span>
+<span class="fc" id="L71">                            continue;</span>
 
-<span class="fc" id="L72">                        UserDetails u = UsersDB.getUser(session.getLoggedUserId());</span>
-<span class="pc bpc" id="L73" title="1 of 2 branches missed.">                        if (u != null) {</span>
-<span class="fc" id="L74">                            UserDto admin = new UserDto(u);</span>
-<span class="fc" id="L75">                            admins.add(admin);</span>
-<span class="fc" id="L76">                            allreadyAddedUserIds.add(userId);</span>
+<span class="fc" id="L73">                        UserDetails u = UsersDB.getUser(session.getLoggedUserId());</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">                        if (u != null) {</span>
+<span class="fc" id="L75">                            UserDto admin = new UserDto(u);</span>
+<span class="fc" id="L76">                            admins.add(admin);</span>
+<span class="fc" id="L77">                            allreadyAddedUserIds.add(userId);</span>
                         }
                     }
-<span class="fc" id="L79">                }</span>
+<span class="fc" id="L80">                }</span>
             }
-<span class="fc" id="L81">            model.addAttribute(&quot;overviewAdmins&quot;, JsonTools.objectToJSON(admins));</span>
-<span class="fc" id="L82">            dt.diff(&quot;After admins&quot;);</span>
+<span class="fc" id="L82">            model.addAttribute(&quot;overviewAdmins&quot;, JsonTools.objectToJSON(admins));</span>
+<span class="fc" id="L83">            dt.diff(&quot;After admins&quot;);</span>
 
-            //zoznam todo poloziek
-<span class="fc" id="L85">            model.addAttribute(&quot;overviewTodo&quot;, new ToDoDB().getToDo(Tools.getUserId(request)));</span>
-<span class="fc" id="L86">            dt.diff(&quot;After ToDo&quot;);</span>
-
-<span class="fc" id="L88">            int size = 8;</span>
+<span class="fc" id="L85">            int size = Constants.getInt(&quot;dashboardRecentSize&quot;);</span>
 
             // posledne stranky
-<span class="fc" id="L91">            List&lt;DocDetails&gt; recentPages = AdminTools.getMyRecentPages(user, size);</span>
-<span class="fc" id="L92">            List&lt;DocDetailsDto&gt; recentPagesDto = recentPages.stream().map(p -&gt; new DocDetailsDto(p))</span>
-<span class="fc" id="L93">                    .collect(Collectors.toList());</span>
-<span class="fc" id="L94">            model.addAttribute(&quot;overviewRecentPages&quot;, JsonTools.objectToJSON(recentPagesDto));</span>
-<span class="fc" id="L95">            dt.diff(&quot;After recent pages&quot;);</span>
+<span class="fc" id="L88">            List&lt;DocDetails&gt; recentPages = AdminTools.getMyRecentPages(user, size);</span>
+<span class="fc" id="L89">            List&lt;DocDetailsDto&gt; recentPagesDto = recentPages.stream().map(DocDetailsDto::new)</span>
+<span class="fc" id="L90">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L91">            model.addAttribute(&quot;overviewRecentPages&quot;, JsonTools.objectToJSON(recentPagesDto));</span>
+<span class="fc" id="L92">            dt.diff(&quot;After recent pages&quot;);</span>
 
             // zmenene stranky
-<span class="fc" id="L98">            List&lt;DocDetails&gt; changedPages = AdminTools.getRecentPages(40, user);</span>
-<span class="fc" id="L99">            List&lt;DocDetailsDto&gt; changedPagesDto = changedPages.stream().limit(size).map(p -&gt; new DocDetailsDto(p))</span>
-<span class="fc" id="L100">                    .collect(Collectors.toList());</span>
-<span class="fc" id="L101">            model.addAttribute(&quot;overviewChangedPages&quot;, JsonTools.objectToJSON(changedPagesDto));</span>
-<span class="fc" id="L102">            dt.diff(&quot;After changed pages&quot;);</span>
+<span class="fc" id="L95">            List&lt;DocDetails&gt; changedPages = AdminTools.getRecentPages(40, user);</span>
+<span class="fc" id="L96">            List&lt;DocDetailsDto&gt; changedPagesDto = changedPages.stream().limit(size).map(DocDetailsDto::new)</span>
+<span class="fc" id="L97">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L98">            model.addAttribute(&quot;overviewChangedPages&quot;, JsonTools.objectToJSON(changedPagesDto));</span>
+<span class="fc" id="L99">            dt.diff(&quot;After changed pages&quot;);</span>
 
             // audit
-<span class="fc" id="L105">            List&lt;AdminlogBean&gt; adminlog = Adminlog.getLastEvents(size);</span>
+<span class="fc" id="L102">            List&lt;AdminlogBean&gt; adminlog = Adminlog.getLastEvents(size);</span>
             List&lt;AuditDto&gt; adminlogDto;
-<span class="fc bfc" id="L107" title="All 2 branches covered.">            if (user.isEnabledItem(&quot;cmp_adminlog&quot;)) adminlogDto = adminlog.stream().map(p -&gt; new AuditDto(p)).collect(Collectors.toList());</span>
-<span class="fc" id="L108">            else adminlogDto = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L109">            model.addAttribute(&quot;overviewAdminlog&quot;, JsonTools.objectToJSON(adminlogDto));</span>
-<span class="fc" id="L110">            dt.diff(&quot;After adminlog&quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            if (user.isEnabledItem(&quot;cmp_adminlog&quot;)) adminlogDto = adminlog.stream().map(AuditDto::new).collect(Collectors.toList());</span>
+<span class="fc" id="L105">            else adminlogDto = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L106">            model.addAttribute(&quot;overviewAdminlog&quot;, JsonTools.objectToJSON(adminlogDto));</span>
+<span class="fc" id="L107">            dt.diff(&quot;After adminlog&quot;);</span>
 
-            // todo
-<span class="fc" id="L113">            List&lt;ToDoBean&gt; todos = (new ToDoDB()).getToDo(user.getUserId());</span>
-<span class="fc" id="L114">            model.addAttribute(&quot;overviewTodo&quot;, JsonTools.objectToJSON(todos));</span>
-<span class="fc" id="L115">            dt.diff(&quot;After todo&quot;);</span>
+            // to do
+<span class="fc" id="L110">            List&lt;ToDoBean&gt; todos = (new ToDoDB()).getToDo(user.getUserId());</span>
+<span class="fc" id="L111">            model.addAttribute(&quot;overviewTodo&quot;, JsonTools.objectToJSON(todos));</span>
+<span class="fc" id="L112">            dt.diff(&quot;After todo&quot;);</span>
 
             //ak existuje subor /WEB-INF/update/error-log.txt tak zobrazime link nanho
-<span class="fc" id="L118">            IwcmFile logFile = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/update/error-log.txt&quot;));</span>
-<span class="fc" id="L119">            IwcmFile tmpLogFile = new IwcmFile(Tools.getRealPath(&quot;/files/protected/admin/error-log.txt&quot;));</span>
-<span class="fc" id="L120">            boolean showErrorLog = false;</span>
-<span class="pc bpc" id="L121" title="1 of 2 branches missed.">            if(logFile.exists())</span>
+<span class="fc" id="L115">            IwcmFile logFile = new IwcmFile(Tools.getRealPath(&quot;/WEB-INF/update/error-log.txt&quot;));</span>
+<span class="fc" id="L116">            IwcmFile tmpLogFile = new IwcmFile(Tools.getRealPath(&quot;/files/protected/admin/error-log.txt&quot;));</span>
+<span class="fc" id="L117">            boolean showErrorLog = false;</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">            if(logFile.exists())</span>
             {
-<span class="nc" id="L123">                FileTools.copyFile(logFile, tmpLogFile);</span>
-<span class="nc" id="L124">                showErrorLog = true;</span>
+<span class="nc" id="L120">                FileTools.copyFile(logFile, tmpLogFile);</span>
+<span class="nc" id="L121">                showErrorLog = true;</span>
             }
-<span class="fc" id="L126">            model.addAttribute(&quot;showErrorLog&quot;, showErrorLog);</span>
-<span class="fc" id="L127">            dt.diff(&quot;After error log&quot;);</span>
+<span class="fc" id="L123">            model.addAttribute(&quot;showErrorLog&quot;, showErrorLog);</span>
+<span class="fc" id="L124">            dt.diff(&quot;After error log&quot;);</span>
 
             //check minimal java version
-<span class="fc" id="L130">            int requiredJavaVersion = Constants.getInt(&quot;javaMinimalVersion&quot;);</span>
-<span class="fc" id="L131">            String currentJavaVersion = System.getProperty(&quot;java.version&quot;);</span>
+<span class="fc" id="L127">            int requiredJavaVersion = Constants.getInt(&quot;javaMinimalVersion&quot;);</span>
+<span class="fc" id="L128">            String currentJavaVersion = System.getProperty(&quot;java.version&quot;);</span>
+<span class="pc bpc" id="L129" title="1 of 4 branches missed.">            if (&quot;tester&quot;.equals(user.getLogin()) &amp;&amp; request.getParameter(&quot;javaVersion&quot;) != null) {</span>
+<span class="nc" id="L130">                currentJavaVersion = request.getParameter(&quot;javaVersion&quot;);</span>
+            }
 <span class="pc bpc" id="L132" title="2 of 4 branches missed.">            if (Tools.isNotEmpty(currentJavaVersion) &amp;&amp; requiredJavaVersion &gt; 0) {</span>
 <span class="fc" id="L133">                int i = currentJavaVersion.indexOf(&quot;.&quot;);</span>
 <span class="pc bpc" id="L134" title="1 of 2 branches missed.">                if (i &gt; 0) {</span>
@@ -141,9 +141,28 @@ import sk.iway.iwcm.users.UsersDB;
                 }
             }
 
-<span class="nc" id="L144">        } catch (JsonProcessingException e) {</span>
-<span class="nc" id="L145">            Logger.error(DashboardListener.class, e);</span>
-<span class="fc" id="L146">        }</span>
-<span class="fc" id="L147">    }</span>
+            //Warning to license expiration date coming in 2 months
+<span class="fc" id="L145">            Long expirationDate = Constants.getLong(&quot;licenseExpiryDate&quot;);</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if(expirationDate &gt; 0L) {</span>
+<span class="fc" id="L147">                Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L148">                cal.add(Calendar.MONTH, 2);</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                if(cal.getTimeInMillis() &gt;= expirationDate)</span>
+                {
+<span class="fc" id="L151">                    Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L152">                    String message = prop.getText(&quot;overview.license.expirationWarning&quot;, Tools.formatDate(expirationDate));</span>
+<span class="fc" id="L153">                    model.addAttribute(&quot;licenceExpirationWarningText&quot;, message);</span>
+                }
+            }
+
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;useAmazonSES&quot;)) {</span>
+<span class="nc" id="L158">                Prop prop = Prop.getInstance(request);</span>
+<span class="nc" id="L159">                String message = prop.getText(&quot;overview.useAmazonSES.deprecated&quot;);</span>
+<span class="nc" id="L160">                model.addAttribute(&quot;amazonSesWarningText&quot;, message);</span>
+            }
+
+<span class="nc" id="L163">        } catch (JsonProcessingException e) {</span>
+<span class="nc" id="L164">            Logger.error(DashboardListener.class, e);</span>
+<span class="fc" id="L165">        }</span>
+<span class="fc" id="L166">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

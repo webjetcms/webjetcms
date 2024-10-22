@@ -7,6 +7,8 @@ import org.displaytag.filter.ExportDelegate;
 import org.displaytag.tags.TableTag;
 import org.displaytag.tags.TableTagParameters;
 import org.springframework.context.ApplicationContext;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.common.PdfTools;
 import sk.iway.iwcm.components.proxy.Proxy;
@@ -60,7 +62,7 @@ import java.util.regex.Pattern;
  *@modified     $Date: 2003/07/29 17:13:02 $
  */
 
-public class SetCharacterEncodingFilter implements Filter
+public class SetCharacterEncodingFilter extends OncePerRequestFilter
 {
 
    // ----------------------------------------------------- Instance Variables
@@ -70,13 +72,7 @@ public class SetCharacterEncodingFilter implements Filter
     *  The default character encoding to set for requests that pass through this
     *  filter.
     */
-   protected static String encoding = "windows-1250";
-
-   /**
-    *  The filter configuration object we are associated with. If this value is
-    *  null, this filter instance is not currently configured.
-    */
-   protected FilterConfig filterConfig = null;
+   protected static String encoding = "utf-8";
 
    public static final String PDF_PRINT_PARAM = "_printAsPdf";
 
@@ -94,7 +90,6 @@ public class SetCharacterEncodingFilter implements Filter
 	 */
 	@Override
 	public void destroy() {
-		this.filterConfig = null;
 		requests.clear();
 
 		Map<EntityManagerFactory, EntityManager> map = threadEntityManagers.get();
@@ -302,22 +297,29 @@ public class SetCharacterEncodingFilter implements Filter
     *@exception  ServletException  if a servlet error occurs
     */
    @Override
-   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
+   public void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
          FilterChain chain)
           throws IOException, ServletException
    {
+	String KEY = "SetCharacterEncodingFilter.doFilter";
+	if (request.getAttribute(KEY) != null) {
+		chain.doFilter(request, response);
+		return;
+	}
+	request.setAttribute(KEY, "1");
+	//Logger.debug(SetCharacterEncodingFilter.class, "doFilterInternal, url="+request.getRequestURI());
+
    	long startTime = System.currentTimeMillis();
    	MemoryMeasurement memoryConsumed = new MemoryMeasurement();
    	try
    	{
-   		HttpServletRequest req = (HttpServletRequest) servletRequest;
-   		String path = req.getRequestURI();
+   		String path = request.getRequestURI();
    		String pathNoContext = path;
-		if (ContextFilter.isRunning(req)) pathNoContext = ContextFilter.removeContextPath(req.getContextPath(), path);
+		if (ContextFilter.isRunning(request)) pathNoContext = ContextFilter.removeContextPath(request.getContextPath(), path);
 
 		if (Logger.isLevel(Logger.DEBUG)) {
 			if (pathNoContext != null && pathNoContext.indexOf("/images/") == -1 && pathNoContext.indexOf("/css/") == -1 && pathNoContext.indexOf("/scripts/") == -1 && pathNoContext.endsWith(".gif") == false && pathNoContext.endsWith(".png") == false && pathNoContext.startsWith("/admin/refresher.jsp") == false && pathNoContext.startsWith("/components/messages/refresher-ac.jsp") == false) {
-				Logger.debug(SetCharacterEncodingFilter.class, req.getMethod() + " " + path + (req.getQueryString() != null ? "?" + req.getQueryString() : ""));
+				Logger.debug(SetCharacterEncodingFilter.class, request.getMethod() + " " + DocDB.getDomain(request) + path + (request.getQueryString() != null ? "?" + request.getQueryString() : ""));
 			}
 		}
 
@@ -327,29 +329,27 @@ public class SetCharacterEncodingFilter implements Filter
 
 		//POZOR PRED TYMTO MIESTOM NESMIE BYT ZIADNE CITANIE PARAMETROV!!!!!!!
 	    // Select and set (if needed) the character encoding to be used
-	    String currentEncoding = selectEncoding(servletRequest);
+	    String currentEncoding = selectEncoding(request);
 	    if (currentEncoding != null)
 	    {
-	    	servletRequest.setCharacterEncoding(currentEncoding);
+	    	request.setCharacterEncoding(currentEncoding);
 	    }
 
-	    registerDataContext(req);
+	    registerDataContext(request);
 	   	//System.out.println("SetCharacterEncodingFilter.doFilter");
 
 		if (pathNoContext.startsWith("/wjerrorpages/")
 						|| ( InitServlet.isWebjetInitialized()==false && (pathNoContext.startsWith("/templates/")) )
 						|| ( InitServlet.isWebjetInitialized()==false && (pathNoContext.startsWith("/components/_common/combine.jsp")) )
 		) {
-			Constants.setServletContext(servletRequest.getServletContext());
-			servletRequest.getRequestDispatcher(pathNoContext).forward(servletRequest, servletResponse);
+			Constants.setServletContext(request.getServletContext());
+			request.getRequestDispatcher(pathNoContext).forward(request, response);
 			return;
 		}
 
    		if (InitServlet.isWebjetInitialized()==false)
    		{
-   			HttpServletResponse res = (HttpServletResponse)servletResponse;
-
-   			printDbErrorMessage(pathNoContext, req, res);
+   			printDbErrorMessage(pathNoContext, request, response);
 
    			return;
    		}
@@ -357,16 +357,16 @@ public class SetCharacterEncodingFilter implements Filter
 	      //aby mem.jsp bolo dostupne v kazdej situacii bez ohladu na DB spojenia
 	      if (pathNoContext.startsWith("/admin/mem2.jsp"))
 	      {
-	      	servletRequest.getRequestDispatcher(pathNoContext).forward(servletRequest, servletResponse);
+	      	request.getRequestDispatcher(pathNoContext).forward(request, response);
 	      	return;
 	      }
 
 	      //toto bypasne pathFilter
-			if (PathFilter.bypassPath(path, servletRequest))
+			if (PathFilter.bypassPath(path, request))
 			{
 				Logger.debug(SetCharacterEncodingFilter.class, "PathFilter.bypass: " + path);
-				req.setAttribute("PathFilter.bypass", "true");
-				chain.doFilter(servletRequest, servletResponse);
+				request.setAttribute("PathFilter.bypass", "true");
+				chain.doFilter(request, response);
 				return;
 			}
 
@@ -378,23 +378,21 @@ public class SetCharacterEncodingFilter implements Filter
 			catch (NullPointerException npe)
 			{
 				//nastala chyba pripojenia do DB
-				HttpServletResponse res = (HttpServletResponse)servletResponse;
-   			printDbErrorMessage(pathNoContext, req, res);
+   				printDbErrorMessage(pathNoContext, request, response);
    			return;
 			}
 
-			Identity user = (Identity)req.getSession().getAttribute(Constants.USER_KEY);
-			if (AuthenticationFilter.weTrustIIS() && Tools.getUserPrincipal(req) != null &&
-						Tools.isNotEmpty(Tools.getUserPrincipal(req).getName()))
+			Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
+			if (AuthenticationFilter.weTrustIIS() && Tools.getUserPrincipal(request) != null &&
+						Tools.isNotEmpty(Tools.getUserPrincipal(request).getName()))
 			{
-				HttpServletResponse res = (HttpServletResponse) servletResponse;
-				if (isLoggedAsSomeoneElse(req, user))
+				if (isLoggedAsSomeoneElse(request, user))
 				{
 					Logger.debug(getClass(), "Redirecting user - logged in ambigously - " + user.getLogin());
 					String pathQS = path;
-					if (Tools.isNotEmpty(req.getQueryString())) pathQS = path + "?" + req.getQueryString();
-					res.sendRedirect( Tools.addParameterToUrlNoAmp(AuthenticationFilter.getForbiddenURL(), "origUrl", pathQS));
-					LogonTools.setUserToSession(req.getSession(), null);
+					if (Tools.isNotEmpty(request.getQueryString())) pathQS = path + "?" + request.getQueryString();
+					response.sendRedirect( Tools.addParameterToUrlNoAmp(AuthenticationFilter.getForbiddenURL(), "origUrl", pathQS));
+					LogonTools.setUserToSession(request.getSession(), null);
 					return;
 				}
 
@@ -402,7 +400,7 @@ public class SetCharacterEncodingFilter implements Filter
 				{
 					//skontroluj, ci nie sme nahodou forbidden stranka
 					String pathQS = path;
-					if (Tools.isNotEmpty(req.getQueryString())) pathQS = path + "?" + req.getQueryString();
+					if (Tools.isNotEmpty(request.getQueryString())) pathQS = path + "?" + request.getQueryString();
 
 					//ak sa nejedna o forbidden stranku, skus prihlasenie
 					if (pathQS.equals(AuthenticationFilter.getForbiddenURL())==false)
@@ -411,7 +409,7 @@ public class SetCharacterEncodingFilter implements Filter
 						{
 							Logger.debug(SetCharacterEncodingFilter.class, "Actual URL: " + pathQS + " forbiddenURL: " + AuthenticationFilter.getForbiddenURL());
 
-							user = logUserInViaNtlm(req, res);
+							user = logUserInViaNtlm(request, response);
 						}
 						catch (RedirectedException re)
 						{
@@ -434,7 +432,7 @@ public class SetCharacterEncodingFilter implements Filter
 			{
 				Logger.debug(SetCharacterEncodingFilter.class, "Forwarding to proxy: "+proxy.getRemoteServer());
 
-				Proxy.service(proxy, req, (HttpServletResponse)servletResponse);
+				Proxy.service(proxy, request, response);
 
 				return;
 			}
@@ -448,20 +446,18 @@ public class SetCharacterEncodingFilter implements Filter
 				}
 				else
 				{
-					((HttpServletResponse) servletResponse).setStatus(HttpServletResponse.SC_FORBIDDEN);
-					req.getRequestDispatcher("/403.jsp").forward(req, servletResponse);
+					response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+					request.getRequestDispatcher("/403.jsp").forward(request, response);
 					return;
 				}
 			}
 
 			//nastavenie security headrov
-			setCommonHeaders((HttpServletResponse) servletResponse, (HttpServletRequest) servletRequest);
+			setCommonHeaders(response, request);
 
-			if ("true".equals(servletRequest.getParameter(PDF_PRINT_PARAM)) && "true".equals(servletRequest.getParameter(PDF_PRINT_PARAM+"No"))==false)
+			if ("true".equals(request.getParameter(PDF_PRINT_PARAM)) && "true".equals(request.getParameter(PDF_PRINT_PARAM+"No"))==false)
 	      {
 	         Logger.debug( SetCharacterEncodingFilter.class, "------------> ROBIM EXPORT PRE PDF");
-	         HttpServletRequest request = (HttpServletRequest) servletRequest;
-	         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
 	         WJResponseWrapper wrapper = new WJResponseWrapper(response,request);
 
@@ -484,25 +480,28 @@ public class SetCharacterEncodingFilter implements Filter
 	         //content = CoBrand.getCleanBodyIncludeStartEnd(content, "<body", "</body>");
 
 	         response.setContentType("application/pdf");
-	         StringBuilder fileName = new StringBuilder("export.pdf");
-	         try
-	         {
-	         	int docId = DocDB.getDocIdFromURL(path, DocDB.getDomain(request));
-		         if(docId > 0)
-		         	request.setAttribute("docId", Integer.toString(docId));
+			 if ("true".equals(request.getParameter(PDF_PRINT_PARAM+"NoAttachment"))==false) {
+				StringBuilder fileName = new StringBuilder("export.pdf");
+				try
+				{
+					int docId = DocDB.getDocIdFromURL(path, DocDB.getDomain(request));
+					if(docId > 0)
+						request.setAttribute("docId", Integer.toString(docId));
 
-	         	String pathTmp = path.endsWith("/") ? path.substring(0, path.length()-1) : path;
-	         	fileName = new StringBuilder(pathTmp.substring(pathTmp.lastIndexOf('/')+1));
-	         	if (fileName.indexOf(".")!=-1) fileName = new StringBuilder(fileName.substring(0, fileName.lastIndexOf("."))).append(".pdf");
-	         	else fileName.append(".pdf");
-	         } catch (Exception ex) {}
-	         response.setHeader("Content-Disposition", "attachment; filename=" + fileName.toString());
+					String pathTmp = path.endsWith("/") ? path.substring(0, path.length()-1) : path;
+					fileName = new StringBuilder(pathTmp.substring(pathTmp.lastIndexOf('/')+1));
+					if (fileName.indexOf(".")!=-1) fileName = new StringBuilder(fileName.substring(0, fileName.lastIndexOf("."))).append(".pdf");
+					else fileName.append(".pdf");
+				} catch (Exception ex) {}
+
+				response.setHeader("Content-Disposition", "attachment; filename=" + fileName.toString());
+			 }
 
 	         setCommonHeaders(response, request);
 
 	         //ak to islo napriamo tak to zhadzovalo IIS ISAPI filter!!!
 	         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	         PdfTools.renderHtmlCode(content, baos, req);
+	         PdfTools.renderHtmlCode(content, baos, request);
 
 	         response.setContentLength(baos.size());
 	         response.getOutputStream().write(baos.toByteArray());
@@ -511,12 +510,11 @@ public class SetCharacterEncodingFilter implements Filter
 
 	         return;
 	      }
-			else if (servletRequest.getParameter(TableTagParameters.PARAMETER_EXPORTING) != null)
+			else if (request.getParameter(TableTagParameters.PARAMETER_EXPORTING) != null)
 	      {
 			Logger.debug( SetCharacterEncodingFilter.class, "------------> ROBIM EXPORT PRE DISPLAYTAG");
-	         HttpServletRequest request = (HttpServletRequest) servletRequest;
 
-	         BufferedResponseWrapper wrapper = new BufferedResponseWrapper13Impl((HttpServletResponse) servletResponse);
+	         BufferedResponseWrapper wrapper = new BufferedResponseWrapper13Impl(response);
 
 	         Map<String, Boolean> contentBean = new HashMap<>(4);
 	         contentBean.put(TableTagParameters.BEAN_BUFFER, Boolean.TRUE);
@@ -528,7 +526,7 @@ public class SetCharacterEncodingFilter implements Filter
 
 	         chain.doFilter(request, wrapper);
 
-	         ExportDelegate.writeExport((HttpServletResponse) servletResponse, servletRequest, wrapper);
+	         ExportDelegate.writeExport(response, request, wrapper);
 
 	      }
 			else
@@ -539,7 +537,7 @@ public class SetCharacterEncodingFilter implements Filter
 		         //Logger.println(this,"Editor start");
 		         java.util.Date startDate = new java.util.Date();
 
-		         servletRequest.setAttribute("generationStartDate", startDate);
+		         request.setAttribute("generationStartDate", startDate);
 		      }
 		      catch (Exception ex)
 		      {
@@ -547,23 +545,23 @@ public class SetCharacterEncodingFilter implements Filter
 		      }
 
 		      // Pass control on to the next filter
-		      chain.doFilter(servletRequest, servletResponse);
+		      chain.doFilter(request, response);
 	      }
 
 			long timeTaken = System.currentTimeMillis() - startTime;
 			if(Constants.getBoolean("serverMonitoringEnablePerformance"))
-				savePerformanceMeasure((HttpServletRequest) servletRequest, timeTaken, memoryConsumed.diff());
+				savePerformanceMeasure(request, timeTaken, memoryConsumed.diff());
    	}
    	finally
    	{
    		//to robi niekedy problem aj mimo cloudu, takze racej rusim if (InitServlet.isTypeCloud()==false) requests.remove(Thread.currentThread().getId());
    		closeEntityManagers();
    		//kontrola serializovatelnosti session
-			if(Constants.getBoolean("enableSessionSerializableCheck") && Tools.getServerName((HttpServletRequest)servletRequest).indexOf("iwcm.interway.sk")!= -1)
+			if(Constants.getBoolean("enableSessionSerializableCheck") && Tools.getServerName(request).indexOf("iwcm.interway.sk")!= -1)
 			{
 				try
 				{
-					checkSessionSerializable(servletRequest);
+					checkSessionSerializable(request);
 				}
 				catch (ObjectNotSerializableException e)
 				{
@@ -751,55 +749,49 @@ public class SetCharacterEncodingFilter implements Filter
     *@exception  ServletException  Description of the Exception
     */
 	@Override
-   public void init(FilterConfig filterConfig) throws ServletException
+   public void initFilterBean() throws ServletException
    {
 		try
 		{
-
-	      this.filterConfig = filterConfig;
-	      SetCharacterEncodingFilter.encoding = filterConfig.getInitParameter("encoding"); //NOSONAR
-
-	   	//skus to precitat zo suboru
-	   	File dir = new File(filterConfig.getServletContext().getRealPath("/wjerrorpages/"));
-	   	if (dir!=null && dir.exists() && dir.canRead())
-	   	{
-	   		for (File f : dir.listFiles())
-				{
-					//podpora pre dberror-en.html atd
-					if (f.isFile() && f.getName().startsWith("dberror"))
+			//skus to precitat zo suboru
+			File dir = new File(getServletContext().getRealPath("/wjerrorpages/"));
+			if (dir!=null && dir.exists() && dir.canRead())
+			{
+				for (File f : dir.listFiles())
 					{
-						String key = "";
-						int dot = f.getName().indexOf(".");
-						int i = f.getName().indexOf("-");
-						if (i > 0 && dot > i) key = f.getName().substring(i+1, dot);
-
-						try
+						//podpora pre dberror-en.html atd
+						if (f.isFile() && f.getName().startsWith("dberror"))
 						{
-							StringBuilder contextFile = new StringBuilder();
-							InputStreamReader isr = new InputStreamReader(new FileInputStream(f), SetCharacterEncodingFilter.encoding);
-							char[] buff = new char[64000];
-							int len;
-							while ((len = isr.read(buff)) != -1)
+							String key = "";
+							int dot = f.getName().indexOf(".");
+							int i = f.getName().indexOf("-");
+							if (i > 0 && dot > i) key = f.getName().substring(i+1, dot);
+
+							try
 							{
-								contextFile.append(buff, 0, len);
-							}
-							isr.close();
+								StringBuilder contextFile = new StringBuilder();
+								InputStreamReader isr = new InputStreamReader(new FileInputStream(f), SetCharacterEncodingFilter.encoding);
+								char[] buff = new char[64000];
+								int len;
+								while ((len = isr.read(buff)) != -1)
+								{
+									contextFile.append(buff, 0, len);
+								}
+								isr.close();
 
-							SetCharacterEncodingFilter.dbErrorMessageText.put(key, contextFile.toString());
-						}
-						catch (Exception ex)
-						{
-							String emt = filterConfig.getInitParameter("dbErrorMessageText");
-							if (Tools.isNotEmpty(emt)) SetCharacterEncodingFilter.dbErrorMessageText.put("", emt);
+								SetCharacterEncodingFilter.dbErrorMessageText.put(key, contextFile.toString());
+							}
+							catch (Exception ex)
+							{
+
+							}
 						}
 					}
-				}
-	   	}
-	   	else
-	   	{
-	   		String emt = filterConfig.getInitParameter("dbErrorMessageText");
-	         if (Tools.isNotEmpty(emt)) SetCharacterEncodingFilter.dbErrorMessageText.put("", emt);
-	   	}
+			}
+			else
+			{
+
+			}
 		}
 		catch (Exception ex)
 		{

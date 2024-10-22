@@ -3,6 +3,7 @@ package sk.iway.iwcm.doc.ninja;
 import net.sourceforge.stripes.mock.MockHttpServletResponse;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
+import sk.iway.iwcm.components.abtesting.ABTesting;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.i18n.Prop;
@@ -151,7 +152,7 @@ public class Ninja {
         if (tempGroup != null) {
             String templateFolderName = tempGroup.getDirectory();
             if (Tools.isNotEmpty(templateFolderName) && !("/".equals(templateFolderName))) {
-                path = "/templates/"+templateFolderName+"/";
+                path = "/templates/"+templateFolderName+"/"; //NOSONAR
             }
         }
 
@@ -184,7 +185,7 @@ public class Ninja {
 
     /* =========== Nahrada medzery za nbsp za spojkou ============= */
     private static void initNbspReplacement() {
-        String ninjaNbspReplaceRegex[] = Tools.getTokens(Constants.getString("ninjaNbspReplaceRegex"), "\n");
+        String[] ninjaNbspReplaceRegex = Tools.getTokens(Constants.getString("ninjaNbspReplaceRegex"), "\n");
         if (ninjaNbspReplaceRegex!=null && ninjaNbspReplaceRegex.length==2) {
             nbspPattern = Pattern.compile(ninjaNbspReplaceRegex[0], Pattern.CASE_INSENSITIVE);
             nbspReplacement = ninjaNbspReplaceRegex[1];
@@ -246,7 +247,7 @@ public class Ninja {
             return "";
         }
 
-        String includeFileName = "/components/_common/thymeleaf/write.jsp";
+        String includeFileName = "/components/_common/thymeleaf/write.jsp"; //NOSONAR
         request.setAttribute("thymeleaf_write_name", component);
 
         return executeJsp(includeFileName);
@@ -273,5 +274,23 @@ public class Ninja {
         }
 
         return "";
+    }
+
+    /**
+     * Get AB variant from request attribute or from URL
+     * @return - a or b depending on the ABTesing variant
+     */
+    public String getAbVariant() {
+
+        if(request == null) return "a";
+
+        String variant = (String)request.getAttribute("ABTestingVariant");
+        if (variant == null) {
+            if (page != null && page.getDoc() != null) {
+                return ABTesting.getVariantFromUrl(page.getDoc().getVirtualPath());
+            }
+        }
+
+        return variant == null ? "a" : variant;
     }
 }

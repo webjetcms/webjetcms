@@ -411,7 +411,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 
 <span class="fc" id="L412">		StringTokenizer st = new StringTokenizer(getPasswordProtected(), &quot;,&quot;);</span>
 		int id;
-<span class="pc bpc" id="L414" title="1 of 2 branches missed.">		while (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L414" title="All 2 branches covered.">		while (st.hasMoreTokens())</span>
 		{
 <span class="fc" id="L416">			id = Tools.getIntValue(st.nextToken(), -1);</span>
 <span class="pc bpc" id="L417" title="1 of 4 branches missed.">			if (id &gt; 0 &amp;&amp; user.isInUserGroup(id))</span>
@@ -420,7 +420,7 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 			}
 		}
 
-<span class="nc" id="L423">		return(false);</span>
+<span class="fc" id="L423">		return(false);</span>
 	}
 
 	public boolean isAvailableForUserGroup(int userGroupId)
@@ -1131,14 +1131,14 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 <span class="fc bfc" id="L1131" title="All 2 branches covered.">		if (user == null) return(menuType);</span>
 
 		//skontroluj, ci je user v niektorej z tychto skupin
-<span class="pc bpc" id="L1134" title="1 of 2 branches missed.">		if (isAvailableForUser(user))</span>
+<span class="fc bfc" id="L1134" title="All 2 branches covered.">		if (isAvailableForUser(user))</span>
 		{
 			//Logger.debug(GroupDetails.class, this.getGroupIdName()+&quot; logged:&quot;+loggedMenuType);
 <span class="fc" id="L1137">			return(loggedMenuType);</span>
 		}
 
 		//Logger.debug(GroupDetails.class, this.getGroupIdName()+&quot; final return:&quot;+menuType);
-<span class="nc" id="L1141">		return(menuType);</span>
+<span class="fc" id="L1141">		return(menuType);</span>
 	}
 
 	/**
@@ -1178,13 +1178,13 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 
 <span class="fc" id="L1179">		Identity user = UsersDB.getCurrentUser(session);</span>
 		//Not logged
-<span class="pc bpc" id="L1181" title="1 of 4 branches missed.">		if(user == null || loggedShowInSitemap == null) {</span>
+<span class="fc bfc" id="L1181" title="All 4 branches covered.">		if(user == null || loggedShowInSitemap == null) {</span>
 			//0 - same as menu
-<span class="pc bpc" id="L1183" title="1 of 2 branches missed.">			if(showInSitemap == null) return getMenuType(session);</span>
-<span class="nc" id="L1184">			return showInSitemap.intValue();</span>
+<span class="fc bfc" id="L1183" title="All 2 branches covered.">			if(showInSitemap == null) return getMenuType(session);</span>
+<span class="fc" id="L1184">			return showInSitemap.intValue();</span>
 		}
 
 <span class="fc" id="L1187">		return loggedShowInSitemap.intValue();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

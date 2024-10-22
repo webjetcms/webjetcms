@@ -39,6 +39,9 @@ import java.util.Set;
 	private boolean deleteOldData;
 	private String importMode;
 
+	//if true, wrong data will be skipped during import
+	private boolean skipWrongData;
+
 	//set of columns in excel import (filled in export-import.js during xlsx parsing)
 	private Set&lt;String&gt; importedColumns;
 
@@ -47,15 +50,15 @@ import java.util.Set;
 	private String globalError;
 
 	 public boolean isInsert() {
-<span class="fc" id="L50">		  return &quot;create&quot;.equals(action);</span>
+<span class="fc" id="L53">		  return &quot;create&quot;.equals(action);</span>
 	 }
 
 	 public boolean isUpdate() {
-<span class="fc" id="L54">		  return &quot;edit&quot;.equals(action);</span>
+<span class="fc" id="L57">		  return &quot;edit&quot;.equals(action);</span>
 	 }
 
 	 public boolean isDelete() {
-<span class="fc" id="L58">		  return &quot;remove&quot;.equals(action);</span>
+<span class="fc" id="L61">		  return &quot;remove&quot;.equals(action);</span>
 	 }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

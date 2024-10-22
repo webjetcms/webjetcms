@@ -8,8 +8,13 @@ import javax.persistence.Entity;
 import javax.persistence.EntityListeners;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.TableGenerator;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -30,7 +35,7 @@ public class ReservationObjectTimesEntity implements Serializable {
     private Long id;
 
     @Column(name = "object_id")
-    private Integer objectId;
+    private Long objectId;
 
     @Column(name = "cas_od")
     private Date timeFrom;
@@ -43,4 +48,10 @@ public class ReservationObjectTimesEntity implements Serializable {
 
     @Column(name = "domain_id")
     private Integer domainId;
+
+    @ManyToOne
+	@JsonBackReference(value="reservationObjectForTime")
+	@JoinColumn(name="object_id", insertable = false, updatable = false)
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private ReservationObjectEntity reservationObjectForTime;
 }

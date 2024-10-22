@@ -10,6 +10,8 @@ Scenario('approving', ({I, DT, Document}) => {
         I.amOnPage("/admin/approve.jsp?historyid=6951&docid=6031");
     } else if("en" === I.getConfLng()) {
         I.amOnPage("/admin/approve.jsp?docid=81853&historyid=129353");
+    } else if("cs" === I.getConfLng()) {
+        I.amOnPage("/admin/approve.jsp?docid=100207&historyid=164174")
     }
     
     Document.screenshot("/redactor/webpages/approve/approve-form.png");

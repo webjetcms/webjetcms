@@ -5,7 +5,7 @@ Before(({ I, login }) => {
      I.amOnPage("/admin/v9/users/user-groups/");
 });
 
-Scenario('user-groups-zakladne testy', async ({ I, DataTables }) => {
+Scenario('user-groups-zakladne testy @baseTest', async ({ I, DataTables }) => {
      await DataTables.baseTest({
           dataTable: 'userGroupsDataTable',
           perms: 'user.admin.userGroups',
@@ -13,7 +13,7 @@ Scenario('user-groups-zakladne testy', async ({ I, DataTables }) => {
      });
 });
 
-Scenario('vybrany email docid', async ({ I, DataTables }) => {
+Scenario('vybrany email docid @baseTest', async ({ I, DataTables }) => {
      await DataTables.baseTest({
           dataTable: 'userGroupsDataTable',
           perms: 'user.admin.userGroups',

@@ -187,8 +187,8 @@
 <div class="box_tab box_tab_thin left" style="min-width: 900px;">
 	<ul class="tab_menu" id="Tabs">
 		<li class="first openFirst">
-			<a href="#" onclick="showHideTab('1');openTabNum=1" id="tabLink1">Vaše</a></li>
-		<li><a href="#" onclick="showHideTab('2');openTabNum=2;loadDirPreview(document.getElementById('DirNameSelect'));" id="tabLink2">Všeobecné</a></li>
+			<a href="#" onclick="showHideTab('1');openTabNum=1" id="tabLink1"><iwcm:text key="components.htmlbox.tabs.yours"/></a></li>
+		<li><a href="#" onclick="showHideTab('2');openTabNum=2;loadDirPreview(document.getElementById('DirNameSelect'));" id="tabLink2"><iwcm:text key="components.htmlbox.tabs.common"/></a></li>
 	</ul>
 </div>
 <div class="tab-pane toggle_content tab-pane-fullheight">

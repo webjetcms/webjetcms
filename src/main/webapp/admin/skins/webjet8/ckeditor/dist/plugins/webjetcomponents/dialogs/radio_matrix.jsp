@@ -31,7 +31,7 @@ int matrixCols = Tools.getIntValue(Tools.getRequestParameter(request, "matrixCol
 </div>
 
 <div class="tab-pane toggle_content tab-pane-fullheight">
-	<div class="tab-page" id="tabMenu1" style="display: block; width: 676px;">
+	<div class="tab-page" id="tabMenu1" style="display: block; height: auto;">
 		<form class="settingsForm" name="settingsForm">
 
 			<div class="col-sm-12">
@@ -84,7 +84,7 @@ int matrixCols = Tools.getIntValue(Tools.getRequestParameter(request, "matrixCol
 		</form>
 	</div>
 
-	<div class="tab-page" id="tabMenu2" style="max-width: 780px; overflow: auto; padding-right: 0px;">
+	<div class="tab-page" id="tabMenu2" style="overflow: auto; padding-right: 0px; height: auto !important;">
 		<form class="rbmatrixForm" name="rbmatrixForm">
 			<div class="col-sm-12" style="padding-top: 15px;">
 				<div class="form-group">

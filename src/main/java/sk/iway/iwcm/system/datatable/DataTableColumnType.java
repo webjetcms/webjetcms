@@ -54,6 +54,10 @@ public enum DataTableColumnType {
      */
     BOOLEAN,
     /**
+     * Checkbox with title on right side
+     */
+    BOOLEAN_TEXT,
+    /**
      * Typ pola checkbox
      */
     CHECKBOX,
@@ -109,4 +113,20 @@ public enum DataTableColumnType {
      * Atributy stranky
      */
     ATTRS,
+    /**
+     * input type="color"
+     */
+    COLOR,
+    /**
+     * IFRAME type, String value will be used as URL, can contains placeholders
+     */
+    IFRAME,
+    /**
+     * it will encode/decode value to/from base64
+     */
+    BASE64,
+    /**
+     * Static text (no input field)
+     */
+    STATIC_TEXT,
 }

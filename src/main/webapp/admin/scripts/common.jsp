@@ -263,7 +263,7 @@ function openElFinderDialogWindow(form, elementName, requestedImageDir, volume="
 	if (form != null && elementName != null) {
 		url = url + "?form=" + form;
 		url = url + "&elementName=" + encodeURIComponent(elementName);
-		url = url + "&volume=" + encodeURIComponent(volume);
+		url = url + "&volumes=" + encodeURIComponent(volume);
 
         try {
             var link = null;

@@ -63,6 +63,11 @@ public class LayoutBean {
         return json;
     }
 
+    public String getDataTableTabs(String className) throws JsonProcessingException {
+        String json = new DataTableColumnsFactory(className).getTabsJson();
+        return json;
+    }
+
     public String getUserDto() throws JsonProcessingException {
         return JsonTools.objectToJSON(new UserDto(getUser()));
     }
@@ -83,7 +88,7 @@ public class LayoutBean {
     public static boolean isPerexGroupsRenderAsSelect() {
         //ak existuje viac ako 30 perex skupin renderuj to ako multiselect
         int count = DocDB.getInstance().getPerexGroups().size();
-        if (count > 30) return true;
+        if (count > Constants.getInt("perexGroupsRenderAsSelect")) return true;
         return false;
     }
 }

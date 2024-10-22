@@ -1915,7 +1915,7 @@ public class BannerDB
 	}
 
 	/**
-	 * Zistuje platnost baneru, ci je aktivny, banerovu expiraciu, ci nieje prekoreceny pocet zobrazeni
+	 * Zistuje platnost baneru, ci je aktivny, banerovu exspiraciu, ci nieje prekoreceny pocet zobrazeni
 	 * @param banner
 	 * @return
 	 */

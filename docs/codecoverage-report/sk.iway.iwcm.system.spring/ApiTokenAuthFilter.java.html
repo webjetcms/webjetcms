@@ -68,7 +68,7 @@ import sk.iway.iwcm.users.UsersDB;
 
 <span class="fc" id="L69">				Identity user = new Identity(UsersDB.getUser(login));</span>
 
-				//pri REST volani nie je korektne setnuty RequestBean a audituje to nezmysly
+				//because SetCharacterEncoding filter was not called yet, we need to register data context to correctly call Adminlog (set URl, userId...)
 <span class="fc" id="L72">				SetCharacterEncodingFilter.registerDataContext(request);</span>
 
 <span class="fc" id="L74">				Map&lt;String, String&gt; errors = new Hashtable&lt;&gt;();</span>
@@ -92,4 +92,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L92">		return false;</span>
 	}
  }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

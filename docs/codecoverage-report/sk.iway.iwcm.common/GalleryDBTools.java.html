@@ -86,9 +86,9 @@ public class GalleryDBTools {
     {
         // comand line :   convert '*.jpg' -crop 120x120+10+5 -resize 105x20  thumbnail%03d.png
 
-<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (!to.getParentFile().exists())</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (!to.getParentFile().exists())</span>
         {
-<span class="nc" id="L91">            to.getParentFile().mkdirs();</span>
+<span class="fc" id="L91">            to.getParentFile().mkdirs();</span>
         }
 
         //zakladna ochrana pred code injection
@@ -181,7 +181,7 @@ public class GalleryDBTools {
 
 <span class="fc bfc" id="L182" title="All 2 branches covered.">            if (imageQuality &gt;= 90) scaleType = Image.SCALE_SMOOTH;</span>
 <span class="pc bpc" id="L183" title="1 of 2 branches missed.">            else if (imageQuality &gt;= 85) scaleType = Image.SCALE_AREA_AVERAGING;</span>
-<span class="pc bpc" id="L184" title="1 of 2 branches missed.">            else if (imageQuality &gt;= 80) scaleType = Image.SCALE_REPLICATE;</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">            else if (imageQuality &gt;= 80) scaleType = Image.SCALE_REPLICATE;</span>
 <span class="pc bpc" id="L185" title="1 of 2 branches missed.">            else if (imageQuality &gt; 0) scaleType = Image.SCALE_FAST;</span>
 
 <span class="pc bpc" id="L187" title="1 of 2 branches missed.">            if (originalBufferedImage.getWidth() &gt; 2000)</span>
@@ -250,9 +250,9 @@ public class GalleryDBTools {
 <span class="fc" id="L250">            ImageWriter writer = null;</span>
 
 <span class="fc" id="L252">            String format = &quot;jpg&quot;;</span>
-<span class="pc bpc" id="L253" title="1 of 2 branches missed.">            if (from.getAbsolutePath().endsWith(&quot;.png&quot;))</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">            if (from.getAbsolutePath().endsWith(&quot;.png&quot;))</span>
             {
-<span class="nc" id="L255">                format = &quot;png&quot;;</span>
+<span class="fc" id="L255">                format = &quot;png&quot;;</span>
             }
             else
             {
@@ -351,4 +351,4 @@ public class GalleryDBTools {
 <span class="nc" id="L351">        return GalleryToolsForCore.getImagePathOriginal(fullPath);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

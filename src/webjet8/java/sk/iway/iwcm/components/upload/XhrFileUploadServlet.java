@@ -32,13 +32,24 @@ public class XhrFileUploadServlet extends HttpServlet
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
+		Prop prop = Prop.getInstance();
 		try {
 			String name = request.getParameter("name");
 			Logger.debug(XhrFileUploadServlet.class, "doPost, name from parameter: "+name);
 
 			//dropzone.js kompatibilita
 			Part filePart = request.getPart("file");
-			if (filePart != null && filePart.getSubmittedFileName() != null) {
+
+			if (filePart == null) {
+				XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
+				xhrFileUploadResponse.setError(prop.getText("components.forum.new.upload_not_allowed_filetype"));
+				xhrFileUploadResponse.setFile("");
+				xhrFileUploadResponse.setSuccess(false);
+				setResponse(response, xhrFileUploadResponse);
+				return;
+			}
+
+			if (filePart.getSubmittedFileName() != null) {
 				name = filePart.getSubmittedFileName();
 			}
 
@@ -51,7 +62,7 @@ public class XhrFileUploadServlet extends HttpServlet
 			if (!allowedExtensions.contains("*") && !allowedExtensions.contains(extension)) {
 				Logger.debug(XhrFileUploadServlet.class, "doPost, extension not allowed: "+extension);
 				XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
-				xhrFileUploadResponse.setError(Prop.getInstance().getText("components.forum.new.upload_not_allowed_filetype"));
+				xhrFileUploadResponse.setError(prop.getText("components.forum.new.upload_not_allowed_filetype"));
 				xhrFileUploadResponse.setFile(name);
 				xhrFileUploadResponse.setSuccess(false);
 				setResponse(response, xhrFileUploadResponse);
@@ -124,7 +135,7 @@ public class XhrFileUploadServlet extends HttpServlet
 						fileBytes = null;
 						fis.close();
 						fis = null;
-						inputFile.delete();
+						inputFile.delete(); //NOSONAR
 					}
 					fos.close();
 					fos = null;
@@ -169,7 +180,7 @@ public class XhrFileUploadServlet extends HttpServlet
 			sk.iway.iwcm.Logger.error(ex);
 
 			XhrFileUploadResponse xhrFileUploadResponse = new XhrFileUploadResponse();
-			xhrFileUploadResponse.setError(ex.getMessage());
+			xhrFileUploadResponse.setError(prop.getText("components.docman.error.db"));
 			xhrFileUploadResponse.setSuccess(false);
 			setResponse(response, xhrFileUploadResponse);
 		}
@@ -195,6 +206,7 @@ public class XhrFileUploadServlet extends HttpServlet
 	 * @return - nazov suboru
 	 * @throws IOException
 	 */
+	@SuppressWarnings("java:S1130")
 	public static String moveFile(String fileKey, String dir) throws IOException
 	{
 		if (temporary.containsKey(fileKey))
@@ -217,8 +229,8 @@ public class XhrFileUploadServlet extends HttpServlet
 			int counter = 1;
 			while (dest.exists())
 			{
-				filename = originalFilename + "-" + String.valueOf(counter);
-				if (originalFilename.contains("."))	filename = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + "-" + String.valueOf(counter) + originalFilename.substring(originalFilename.lastIndexOf("."));
+				filename = originalFilename + "-" + counter;
+				if (originalFilename.contains("."))	filename = originalFilename.substring(0, originalFilename.lastIndexOf(".")) + "-" + counter + originalFilename.substring(originalFilename.lastIndexOf("."));
 				dest = new IwcmFile(dir, filename);
 				counter++;
 			}
@@ -231,6 +243,7 @@ public class XhrFileUploadServlet extends HttpServlet
 		return null;
 	}
 
+	@SuppressWarnings("java:S1130")
     public static String moveAndReplaceFile(String fileKey, String dir, String fileNameParam) throws IOException
     {
         String fileName = fileNameParam;

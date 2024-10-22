@@ -16,7 +16,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
-import org.apache.commons.dbcp.ConfigurableDataSource;
 import org.eclipse.persistence.internal.helper.Helper;
 import org.eclipse.persistence.internal.localization.ToStringLocalization;
 import org.eclipse.persistence.internal.sessions.AbstractRecord;
@@ -31,6 +30,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
 import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 
 /**
@@ -150,8 +150,8 @@ public class WebJETPerformanceProfiler extends PerformanceProfiler
           {
               setNestTime(0);
               setProfileTime(0);
-              setOperationTimings(new Hashtable<String, Long>(5));
-              setOperationStartTimes(new Hashtable<String, Long>(5));
+              setOperationTimings(new Hashtable<>(5));
+              setOperationStartTimes(new Hashtable<>(5));
               long profileEndTime = System.currentTimeMillis();
               long totalTimeIncludingProfiling = profileEndTime - profileStartTime;// Try to remove the profiling time from the total time.
               profile.setProfileTime(totalTimeIncludingProfiling - profile.getTotalTime());

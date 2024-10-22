@@ -26,15 +26,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.struts.util.ResponseUtils;
-import org.mcavallo.opencloud.Tag;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.seo.SeoManager;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
@@ -64,47 +65,47 @@ public class StatDB extends DB
 	public static final String SESSION_GROUP_IDS_QUERY = &quot;stat_session_groupids_query&quot;;
 	public static final String SESSION_GROUP_ID = &quot;stat_session_groupid&quot;;
 
-<span class="fc" id="L67">	private static final Hashtable&lt;String, String&gt; searchEnginesTable = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L68">	private static final Hashtable&lt;String, String&gt; searchEnginesTable = new Hashtable&lt;&gt;();</span>
 
 	static
 	{
-<span class="fc" id="L71">		searchEnginesTable.put(&quot;google.com&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L72">		searchEnginesTable.put(&quot;google.cz&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L73">		searchEnginesTable.put(&quot;google.sk&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L74">		searchEnginesTable.put(&quot;google.co.uk&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L75">		searchEnginesTable.put(&quot;google.at&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L76">		searchEnginesTable.put(&quot;google.de&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L77">		searchEnginesTable.put(&quot;google.pl&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L78">		searchEnginesTable.put(&quot;seznam.cz&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L79">		searchEnginesTable.put(&quot;centrum.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L80">		searchEnginesTable.put(&quot;atlas.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L81">		searchEnginesTable.put(&quot;webfast.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L82">		searchEnginesTable.put(&quot;idnes.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L83">		searchEnginesTable.put(&quot;redbox.cz&quot;, &quot;qs&quot;);</span>
-<span class="fc" id="L84">		searchEnginesTable.put(&quot;quick.cz&quot;, &quot;ftxt_query&quot;);</span>
-<span class="fc" id="L85">		searchEnginesTable.put(&quot;volny.cz&quot;, &quot;search&quot;);</span>
-<span class="fc" id="L86">		searchEnginesTable.put(&quot;tiscali.cz&quot;, &quot;query&quot;);</span>
-<span class="fc" id="L87">		searchEnginesTable.put(&quot;zoznam.sk&quot;, &quot;s&quot;);</span>
-<span class="fc" id="L88">		searchEnginesTable.put(&quot;altavista.com&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L89">		searchEnginesTable.put(&quot;yahoo.com&quot;, &quot;p;utf-8&quot;);</span>
-<span class="fc" id="L90">		searchEnginesTable.put(&quot;morfeo.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L91">		searchEnginesTable.put(&quot;jyxo.cz&quot;, &quot;s&quot;);</span>
-<span class="fc" id="L92">		searchEnginesTable.put(&quot;caramba.cz&quot;, &quot;Text&quot;);</span>
-<span class="fc" id="L93">		searchEnginesTable.put(&quot;katedrala.cz&quot;, &quot;KeyWords&quot;);</span>
-<span class="fc" id="L94">		searchEnginesTable.put(&quot;toplist.cz&quot;, &quot;search&quot;);</span>
-<span class="fc" id="L95">		searchEnginesTable.put(&quot;zona.cz&quot;, &quot;TERMS&quot;);</span>
-<span class="fc" id="L96">		searchEnginesTable.put(&quot;dmoz.org&quot;, &quot;search&quot;);</span>
-<span class="fc" id="L97">		searchEnginesTable.put(&quot;msn.com&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L98">		searchEnginesTable.put(&quot;zoohoo.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L99">		searchEnginesTable.put(&quot;icq.com&quot;, &quot;q;utf-8&quot;);</span>
-<span class="fc" id="L100">		searchEnginesTable.put(&quot;yo.cz&quot;, &quot;q&quot;);</span>
-<span class="fc" id="L101">		searchEnginesTable.put(&quot;ask.com&quot;, &quot;query&quot;);</span>
-<span class="fc" id="L102">		searchEnginesTable.put(&quot;aol.com&quot;, &quot;query&quot;);</span>
-<span class="fc" id="L103">		searchEnginesTable.put(&quot;hotbot.com&quot;, &quot;query&quot;);</span>
-<span class="fc" id="L104">		searchEnginesTable.put(&quot;lycos.com&quot;, &quot;query&quot;);</span>
-<span class="fc" id="L105">		searchEnginesTable.put(&quot;overture.com&quot;, &quot;Keywords&quot;);</span>
-<span class="fc" id="L106">		searchEnginesTable.put(&quot;mamma.com&quot;, &quot;query&quot;);</span>
-<span class="fc" id="L107">		searchEnginesTable.put(&quot;azet.sk&quot;, &quot;sq&quot;);</span>
+<span class="fc" id="L72">		searchEnginesTable.put(&quot;google.com&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L73">		searchEnginesTable.put(&quot;google.cz&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L74">		searchEnginesTable.put(&quot;google.sk&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L75">		searchEnginesTable.put(&quot;google.co.uk&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L76">		searchEnginesTable.put(&quot;google.at&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L77">		searchEnginesTable.put(&quot;google.de&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L78">		searchEnginesTable.put(&quot;google.pl&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L79">		searchEnginesTable.put(&quot;seznam.cz&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L80">		searchEnginesTable.put(&quot;centrum.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L81">		searchEnginesTable.put(&quot;atlas.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L82">		searchEnginesTable.put(&quot;webfast.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L83">		searchEnginesTable.put(&quot;idnes.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L84">		searchEnginesTable.put(&quot;redbox.cz&quot;, &quot;qs&quot;);</span>
+<span class="fc" id="L85">		searchEnginesTable.put(&quot;quick.cz&quot;, &quot;ftxt_query&quot;);</span>
+<span class="fc" id="L86">		searchEnginesTable.put(&quot;volny.cz&quot;, &quot;search&quot;);</span>
+<span class="fc" id="L87">		searchEnginesTable.put(&quot;tiscali.cz&quot;, &quot;query&quot;);</span>
+<span class="fc" id="L88">		searchEnginesTable.put(&quot;zoznam.sk&quot;, &quot;s&quot;);</span>
+<span class="fc" id="L89">		searchEnginesTable.put(&quot;altavista.com&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L90">		searchEnginesTable.put(&quot;yahoo.com&quot;, &quot;p;utf-8&quot;);</span>
+<span class="fc" id="L91">		searchEnginesTable.put(&quot;morfeo.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L92">		searchEnginesTable.put(&quot;jyxo.cz&quot;, &quot;s&quot;);</span>
+<span class="fc" id="L93">		searchEnginesTable.put(&quot;caramba.cz&quot;, &quot;Text&quot;);</span>
+<span class="fc" id="L94">		searchEnginesTable.put(&quot;katedrala.cz&quot;, &quot;KeyWords&quot;);</span>
+<span class="fc" id="L95">		searchEnginesTable.put(&quot;toplist.cz&quot;, &quot;search&quot;);</span>
+<span class="fc" id="L96">		searchEnginesTable.put(&quot;zona.cz&quot;, &quot;TERMS&quot;);</span>
+<span class="fc" id="L97">		searchEnginesTable.put(&quot;dmoz.org&quot;, &quot;search&quot;);</span>
+<span class="fc" id="L98">		searchEnginesTable.put(&quot;msn.com&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L99">		searchEnginesTable.put(&quot;zoohoo.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L100">		searchEnginesTable.put(&quot;icq.com&quot;, &quot;q;utf-8&quot;);</span>
+<span class="fc" id="L101">		searchEnginesTable.put(&quot;yo.cz&quot;, &quot;q&quot;);</span>
+<span class="fc" id="L102">		searchEnginesTable.put(&quot;ask.com&quot;, &quot;query&quot;);</span>
+<span class="fc" id="L103">		searchEnginesTable.put(&quot;aol.com&quot;, &quot;query&quot;);</span>
+<span class="fc" id="L104">		searchEnginesTable.put(&quot;hotbot.com&quot;, &quot;query&quot;);</span>
+<span class="fc" id="L105">		searchEnginesTable.put(&quot;lycos.com&quot;, &quot;query&quot;);</span>
+<span class="fc" id="L106">		searchEnginesTable.put(&quot;overture.com&quot;, &quot;Keywords&quot;);</span>
+<span class="fc" id="L107">		searchEnginesTable.put(&quot;mamma.com&quot;, &quot;query&quot;);</span>
+<span class="fc" id="L108">		searchEnginesTable.put(&quot;azet.sk&quot;, &quot;sq&quot;);</span>
 	}
 
 	/**
@@ -117,7 +118,7 @@ public class StatDB extends DB
 
 	public static StatDB getInstance()
 	{
-<span class="fc" id="L120">		return(getInstance(false));</span>
+<span class="fc" id="L121">		return(getInstance(false));</span>
 	}
 
 	/**
@@ -126,29 +127,29 @@ public class StatDB extends DB
 	public static StatDB getInstance(boolean force_refresh)
 	{
 		//try to get it from server space
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">		if (force_refresh == false)</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">		if (force_refresh == false)</span>
 		{
-<span class="fc" id="L131">			StatDB statDB = (StatDB)Constants.getServletContext().getAttribute(STAT_DB_KEY);</span>
-<span class="fc bfc" id="L132" title="All 2 branches covered.">			if (statDB != null)</span>
+<span class="fc" id="L132">			StatDB statDB = (StatDB)Constants.getServletContext().getAttribute(STAT_DB_KEY);</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">			if (statDB != null)</span>
 			{
 				//Logger.println(this,&quot;DocDB: getting from server space&quot;);
-<span class="fc" id="L135">				return (statDB);</span>
+<span class="fc" id="L136">				return (statDB);</span>
 			}
 		}
-<span class="fc" id="L138">		synchronized (StatDB.class)</span>
+<span class="fc" id="L139">		synchronized (StatDB.class)</span>
 		{
-<span class="pc bpc" id="L140" title="1 of 2 branches missed.">			if (force_refresh)</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">			if (force_refresh)</span>
 			{
-<span class="nc" id="L142">				return (new StatDB());</span>
+<span class="nc" id="L143">				return (new StatDB());</span>
 			}
 			else
 			{
-<span class="fc" id="L146">				StatDB statDB = (StatDB)Constants.getServletContext().getAttribute(STAT_DB_KEY);</span>
-<span class="pc bpc" id="L147" title="1 of 2 branches missed.">				if (statDB == null)</span>
+<span class="fc" id="L147">				StatDB statDB = (StatDB)Constants.getServletContext().getAttribute(STAT_DB_KEY);</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">				if (statDB == null)</span>
 				{
-<span class="fc" id="L149">					statDB = new StatDB();</span>
+<span class="fc" id="L150">					statDB = new StatDB();</span>
 				}
-<span class="fc" id="L151">				return statDB;</span>
+<span class="fc" id="L152">				return statDB;</span>
 			}
 		}
 
@@ -159,165 +160,165 @@ public class StatDB extends DB
 	 *  Constructor for the StatDB object
 	 */
 	private StatDB()
-<span class="fc" id="L162">	{</span>
-<span class="fc" id="L163">		Logger.println(this,&quot;StatDB: constructor [&quot;+Constants.getInstallName()+&quot;]&quot;);</span>
+<span class="fc" id="L163">	{</span>
+<span class="fc" id="L164">		Logger.println(this,&quot;StatDB: constructor [&quot;+Constants.getInstallName()+&quot;]&quot;);</span>
 
 		//nacitaj hash tabulky z DB
-<span class="fc" id="L166">		reloadCacheTables();</span>
+<span class="fc" id="L167">		reloadCacheTables();</span>
 
 		//save us to server space
-<span class="fc" id="L169">		Constants.getServletContext().setAttribute(STAT_DB_KEY, this);</span>
-<span class="fc" id="L170">	}</span>
+<span class="fc" id="L170">		Constants.getServletContext().setAttribute(STAT_DB_KEY, this);</span>
+<span class="fc" id="L171">	}</span>
 
 	private void reloadCacheTables()
 	{
-<span class="fc" id="L174">		Map&lt;String, Integer&gt; valueToIdTableLocal = new Hashtable&lt;&gt;();</span>
-<span class="fc" id="L175">		Map&lt;String, Integer&gt; valueLCToIdTableLocal = new Hashtable&lt;&gt;();</span>
-<span class="fc" id="L176">		Map&lt;Integer, String&gt; idToValueTableLocal = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L175">		Map&lt;String, Integer&gt; valueToIdTableLocal = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L176">		Map&lt;String, Integer&gt; valueLCToIdTableLocal = new Hashtable&lt;&gt;();</span>
+<span class="fc" id="L177">		Map&lt;Integer, String&gt; idToValueTableLocal = new Hashtable&lt;&gt;();</span>
 
-<span class="fc" id="L178">		Connection db_conn = null;</span>
-<span class="fc" id="L179">		PreparedStatement ps = null;</span>
-<span class="fc" id="L180">		ResultSet rs = null;</span>
+<span class="fc" id="L179">		Connection db_conn = null;</span>
+<span class="fc" id="L180">		PreparedStatement ps = null;</span>
+<span class="fc" id="L181">		ResultSet rs = null;</span>
 		try
 		{
-<span class="fc" id="L183">			Logger.debug(StatDB.class, &quot;reading table stat_keys&quot;);</span>
+<span class="fc" id="L184">			Logger.debug(StatDB.class, &quot;reading table stat_keys&quot;);</span>
 
-<span class="fc" id="L185">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L186">			ps = db_conn.prepareStatement(&quot;SELECT * FROM stat_keys&quot;);</span>
-<span class="fc" id="L187">			rs = ps.executeQuery();</span>
-<span class="fc bfc" id="L188" title="All 2 branches covered.">			while (rs.next())</span>
+<span class="fc" id="L186">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L187">			ps = db_conn.prepareStatement(&quot;SELECT * FROM stat_keys&quot;); //NOSONAR</span>
+<span class="fc" id="L188">			rs = ps.executeQuery();</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="fc" id="L190">				String value = rs.getString(&quot;value&quot;);</span>
-<span class="fc" id="L191">				int id = rs.getInt(&quot;stat_keys_id&quot;);</span>
+<span class="fc" id="L191">				String value = rs.getString(&quot;value&quot;);</span>
+<span class="fc" id="L192">				int id = rs.getInt(&quot;stat_keys_id&quot;);</span>
 
 				//pre istotu, aby sa nestala nejaka duplicita
-<span class="pc bpc" id="L194" title="1 of 2 branches missed.">				if (valueToIdTableLocal.get(value)==null)</span>
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">				if (valueToIdTableLocal.get(value)==null)</span>
 				{
-<span class="fc" id="L196">					valueToIdTableLocal.put(value, id);</span>
-<span class="fc" id="L197">					valueLCToIdTableLocal.put(value.toLowerCase(), id);</span>
-<span class="fc" id="L198">					idToValueTableLocal.put(id, value);</span>
+<span class="fc" id="L197">					valueToIdTableLocal.put(value, id);</span>
+<span class="fc" id="L198">					valueLCToIdTableLocal.put(value.toLowerCase(), id);</span>
+<span class="fc" id="L199">					idToValueTableLocal.put(id, value);</span>
 				}
-<span class="fc" id="L200">			}</span>
-<span class="fc" id="L201">			rs.close();</span>
-<span class="fc" id="L202">			ps.close();</span>
-<span class="fc" id="L203">			db_conn.close();</span>
-<span class="fc" id="L204">			rs = null;</span>
-<span class="fc" id="L205">			ps = null;</span>
-<span class="fc" id="L206">			db_conn = null;</span>
+<span class="fc" id="L201">			}</span>
+<span class="fc" id="L202">			rs.close();</span>
+<span class="fc" id="L203">			ps.close();</span>
+<span class="fc" id="L204">			db_conn.close();</span>
+<span class="fc" id="L205">			rs = null;</span>
+<span class="fc" id="L206">			ps = null;</span>
+<span class="fc" id="L207">			db_conn = null;</span>
 		}
-<span class="nc" id="L208">		catch (Exception ex)</span>
+<span class="nc" id="L209">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L210">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L211">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L216" title="1 of 2 branches missed.">				if (rs != null)</span>
-<span class="nc" id="L217">					rs.close();</span>
-<span class="pc bpc" id="L218" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L219">					ps.close();</span>
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="nc" id="L221">					db_conn.close();</span>
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">				if (rs != null)</span>
+<span class="nc" id="L218">					rs.close();</span>
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L220">					ps.close();</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="nc" id="L222">					db_conn.close();</span>
 			}
-<span class="nc" id="L223">			catch (Exception ex2)</span>
+<span class="nc" id="L224">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L225">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L226">			}</span>
+<span class="nc" id="L226">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L227">			}</span>
 		}
 
-<span class="fc" id="L229">		valueToIdTable = valueToIdTableLocal;</span>
-<span class="fc" id="L230">		valueLCToIdTable = valueLCToIdTableLocal;</span>
-<span class="fc" id="L231">		idToValueTable = idToValueTableLocal;</span>
-<span class="fc" id="L232">	}</span>
+<span class="fc" id="L230">		valueToIdTable = valueToIdTableLocal;</span>
+<span class="fc" id="L231">		valueLCToIdTable = valueLCToIdTableLocal;</span>
+<span class="fc" id="L232">		idToValueTable = idToValueTableLocal;</span>
+<span class="fc" id="L233">	}</span>
 
 	public int getSetValue(String value)
 	{
-<span class="fc" id="L236">		value = DB.prepareString(value, 64);</span>
-<span class="pc bpc" id="L237" title="1 of 2 branches missed.">		if (value == null) value = &quot;&quot;;</span>
-<span class="fc" id="L238">		value = value.trim();</span>
+<span class="fc" id="L237">		value = DB.prepareString(value, 64);</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">		if (value == null) value = &quot;&quot;;</span>
+<span class="fc" id="L239">		value = value.trim();</span>
 
-<span class="pc bpc" id="L240" title="3 of 4 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE &amp;&amp; Tools.isEmpty(value)) value = &quot;-&quot;;</span>
+<span class="pc bpc" id="L241" title="3 of 4 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE &amp;&amp; Tools.isEmpty(value)) value = &quot;-&quot;;</span>
 
-<span class="fc" id="L242">		Integer id = valueToIdTable.get(value);</span>
-<span class="pc bpc" id="L243" title="1 of 2 branches missed.">		if (id != null) return id.intValue();</span>
+<span class="fc" id="L243">		Integer id = valueToIdTable.get(value);</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">		if (id != null) return id.intValue();</span>
 		//ak nebolo najdene v primarnej hladaj bez ohladu na case
-<span class="nc" id="L245">		id = valueLCToIdTable.get(value.toLowerCase());</span>
-<span class="nc bnc" id="L246" title="All 2 branches missed.">		if (id != null) return id.intValue();</span>
+<span class="nc" id="L246">		id = valueLCToIdTable.get(value.toLowerCase());</span>
+<span class="nc bnc" id="L247" title="All 2 branches missed.">		if (id != null) return id.intValue();</span>
 
 		//nebolo najdene, musime zapisat do DB
-<span class="nc" id="L249">		synchronized (StatDB.class)</span>
+<span class="nc" id="L250">		synchronized (StatDB.class)</span>
 		{
 			//double check
-<span class="nc" id="L252">			id = valueToIdTable.get(value);</span>
-<span class="nc bnc" id="L253" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
-<span class="nc" id="L254">			id = valueLCToIdTable.get(value.toLowerCase());</span>
-<span class="nc bnc" id="L255" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
+<span class="nc" id="L253">			id = valueToIdTable.get(value);</span>
+<span class="nc bnc" id="L254" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
+<span class="nc" id="L255">			id = valueLCToIdTable.get(value.toLowerCase());</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
 
 			//skus najst v databaze aktualnu hodnotu, mozno ju zapisal medzi tym iny cluster node
-<span class="nc" id="L258">			int statKeysId = (new SimpleQuery()).forInt(&quot;SELECT stat_keys_id FROM stat_keys WHERE value=?&quot;, value);</span>
-<span class="nc bnc" id="L259" title="All 2 branches missed.">			if (statKeysId &lt; 1)</span>
+<span class="nc" id="L259">			int statKeysId = (new SimpleQuery()).forInt(&quot;SELECT stat_keys_id FROM stat_keys WHERE value=?&quot;, value);</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">			if (statKeysId &lt; 1)</span>
 			{
-<span class="nc" id="L261">				statKeysId = PkeyGenerator.getNextValue(&quot;stat_keys&quot;);</span>
+<span class="nc" id="L262">				statKeysId = PkeyGenerator.getNextValue(&quot;stat_keys&quot;);</span>
 
-<span class="nc" id="L263">				Connection db_conn = null;</span>
-<span class="nc" id="L264">				PreparedStatement ps = null;</span>
+<span class="nc" id="L264">				Connection db_conn = null;</span>
+<span class="nc" id="L265">				PreparedStatement ps = null;</span>
 				try
 				{
-<span class="nc" id="L267">					Logger.debug(StatDB.class, &quot;setting stat_keys new value: id=&quot;+statKeysId+&quot; value=&quot;+value);</span>
+<span class="nc" id="L268">					Logger.debug(StatDB.class, &quot;setting stat_keys new value: id=&quot;+statKeysId+&quot; value=&quot;+value);</span>
 
-<span class="nc" id="L269">					db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L270">					ps = db_conn.prepareStatement(&quot;INSERT INTO stat_keys (stat_keys_id, value) VALUES (?, ?)&quot;);</span>
+<span class="nc" id="L270">					db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L271">					ps = db_conn.prepareStatement(&quot;INSERT INTO stat_keys (stat_keys_id, value) VALUES (?, ?)&quot;);</span>
 
-<span class="nc" id="L272">					ps.setInt(1, statKeysId);</span>
-<span class="nc" id="L273">					ps.setString(2, value);</span>
-<span class="nc" id="L274">					ps.execute();</span>
-<span class="nc" id="L275">					ps.close();</span>
-<span class="nc" id="L276">					db_conn.close();</span>
-<span class="nc" id="L277">					ps = null;</span>
-<span class="nc" id="L278">					db_conn = null;</span>
+<span class="nc" id="L273">					ps.setInt(1, statKeysId);</span>
+<span class="nc" id="L274">					ps.setString(2, value);</span>
+<span class="nc" id="L275">					ps.execute();</span>
+<span class="nc" id="L276">					ps.close();</span>
+<span class="nc" id="L277">					db_conn.close();</span>
+<span class="nc" id="L278">					ps = null;</span>
+<span class="nc" id="L279">					db_conn = null;</span>
 				}
-<span class="nc" id="L280">				catch (Exception ex)</span>
+<span class="nc" id="L281">				catch (Exception ex)</span>
 				{
-<span class="nc" id="L282">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L283">					sk.iway.iwcm.Logger.error(ex);</span>
 				}
 				finally
 				{
 					try
 					{
-<span class="nc bnc" id="L288" title="All 2 branches missed.">						if (ps != null)</span>
-<span class="nc" id="L289">							ps.close();</span>
-<span class="nc bnc" id="L290" title="All 2 branches missed.">						if (db_conn != null)</span>
-<span class="nc" id="L291">							db_conn.close();</span>
+<span class="nc bnc" id="L289" title="All 2 branches missed.">						if (ps != null)</span>
+<span class="nc" id="L290">							ps.close();</span>
+<span class="nc bnc" id="L291" title="All 2 branches missed.">						if (db_conn != null)</span>
+<span class="nc" id="L292">							db_conn.close();</span>
 					}
-<span class="nc" id="L293">					catch (Exception ex2)</span>
+<span class="nc" id="L294">					catch (Exception ex2)</span>
 					{
-<span class="nc" id="L295">					}</span>
+<span class="nc" id="L296">					}</span>
 				}
 			}
 
 			//reloadni data
-<span class="nc" id="L300">			reloadCacheTables();</span>
+<span class="nc" id="L301">			reloadCacheTables();</span>
 
 			//pouzijeme radsej hodnotu z cache, mohla nastat Duplicate Entry exception a tym padom je hodnota statKeysId zla
-<span class="nc" id="L303">			id = valueToIdTable.get(value);</span>
-<span class="nc bnc" id="L304" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
+<span class="nc" id="L304">			id = valueToIdTable.get(value);</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
 			//ak nebolo najdene v primarnej hladaj bez ohladu na case
-<span class="nc" id="L306">			id = valueLCToIdTable.get(value.toLowerCase());</span>
-<span class="nc bnc" id="L307" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
+<span class="nc" id="L307">			id = valueLCToIdTable.get(value.toLowerCase());</span>
+<span class="nc bnc" id="L308" title="All 2 branches missed.">			if (id != null) return id.intValue();</span>
 
-<span class="nc" id="L309">			return statKeysId;</span>
+<span class="nc" id="L310">			return statKeysId;</span>
 		}
 	}
 
 	public String getValue(int id)
 	{
-<span class="fc" id="L315">		String value = idToValueTable.get(id);</span>
-<span class="fc bfc" id="L316" title="All 2 branches covered.">		if (value == null) return &quot;???&quot;;</span>
+<span class="fc" id="L316">		String value = idToValueTable.get(id);</span>
+<span class="fc bfc" id="L317" title="All 2 branches covered.">		if (value == null) return &quot;???&quot;;</span>
 
-<span class="pc bpc" id="L318" title="3 of 4 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE &amp;&amp; &quot;-&quot;.equals(value)) value = &quot;&quot;;</span>
+<span class="pc bpc" id="L319" title="3 of 4 branches missed.">		if (Constants.DB_TYPE==Constants.DB_ORACLE &amp;&amp; &quot;-&quot;.equals(value)) value = &quot;&quot;;</span>
 
-<span class="fc" id="L320">		return value;</span>
+<span class="fc" id="L321">		return value;</span>
 	}
 
 	/**
@@ -325,8 +326,8 @@ public class StatDB extends DB
 	 */
 	public static int getStatKeyId(String value)
 	{
-<span class="fc" id="L328">		StatDB statDB = StatDB.getInstance();</span>
-<span class="fc" id="L329">		return statDB.getSetValue(value);</span>
+<span class="fc" id="L329">		StatDB statDB = StatDB.getInstance();</span>
+<span class="fc" id="L330">		return statDB.getSetValue(value);</span>
 	}
 
 	/**
@@ -334,8 +335,8 @@ public class StatDB extends DB
 	 */
 	public static String getStatKeyValue(int id)
 	{
-<span class="fc" id="L337">		StatDB statDB = StatDB.getInstance();</span>
-<span class="fc" id="L338">		return ResponseUtils.filter(statDB.getValue(id));</span>
+<span class="fc" id="L338">		StatDB statDB = StatDB.getInstance();</span>
+<span class="fc" id="L339">		return ResponseUtils.filter(statDB.getValue(id));</span>
 	}
 
 	/**
@@ -343,87 +344,87 @@ public class StatDB extends DB
 	 */
 	public static String getYearTimeSQL(java.util.Date from, java.util.Date to, boolean where)
 	{
-<span class="fc" id="L346">		String ret = &quot;&quot;;</span>
-<span class="pc bpc" id="L347" title="2 of 4 branches missed.">		if (from == null || to == null)</span>
+<span class="fc" id="L347">		String ret = &quot;&quot;;</span>
+<span class="pc bpc" id="L348" title="2 of 4 branches missed.">		if (from == null || to == null)</span>
 		{
-<span class="nc" id="L349">			return (ret);</span>
+<span class="nc" id="L350">			return (ret);</span>
 		}
 		int s_year;
 		int e_year;
 		int s_week;
 		int e_week;
-<span class="fc" id="L355">		GregorianCalendar cal = (GregorianCalendar) Calendar.getInstance();</span>
-<span class="fc" id="L356">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
-<span class="fc" id="L357">		cal.setTime(from);</span>
-<span class="fc" id="L358">		s_year = cal.get(Calendar.YEAR);</span>
-<span class="fc" id="L359">		s_week = cal.get(Calendar.WEEK_OF_YEAR);</span>
-<span class="pc bpc" id="L360" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.JANUARY &amp;&amp; s_week&gt;50) s_week = 1;</span>
-<span class="fc" id="L361">		cal.setTime(to);</span>
-<span class="fc" id="L362">		e_year = cal.get(Calendar.YEAR);</span>
-<span class="fc" id="L363">		e_week = cal.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="fc" id="L356">		GregorianCalendar cal = (GregorianCalendar) Calendar.getInstance();</span>
+<span class="fc" id="L357">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L358">		cal.setTime(from);</span>
+<span class="fc" id="L359">		s_year = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L360">		s_week = cal.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="pc bpc" id="L361" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.JANUARY &amp;&amp; s_week&gt;50) s_week = 1;</span>
+<span class="fc" id="L362">		cal.setTime(to);</span>
+<span class="fc" id="L363">		e_year = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L364">		e_week = cal.get(Calendar.WEEK_OF_YEAR);</span>
 
 		//SimpleDateFormat sdf = new SimpleDateFormat(Constants.getDATE_TIME_FORMAT(&quot;iwcm&quot;));
 
-<span class="pc bpc" id="L367" title="1 of 2 branches missed.">		if (s_year != e_year)</span>
+<span class="pc bpc" id="L368" title="1 of 2 branches missed.">		if (s_year != e_year)</span>
 		{
 			//toto je specialny pripad, musime to robit takto...
-<span class="nc" id="L370">			cal.setTime(from);</span>
-<span class="nc" id="L371">			ret = &quot; ( &quot;;</span>
-<span class="nc" id="L372">			StringBuilder retBuf = new StringBuilder(ret);</span>
-<span class="nc bnc" id="L373" title="All 2 branches missed.">			while (cal.getTime().getTime() &lt;= to.getTime())</span>
+<span class="nc" id="L371">			cal.setTime(from);</span>
+<span class="nc" id="L372">			ret = &quot; ( &quot;;</span>
+<span class="nc" id="L373">			StringBuilder retBuf = new StringBuilder(ret);</span>
+<span class="nc bnc" id="L374" title="All 2 branches missed.">			while (cal.getTime().getTime() &lt;= to.getTime())</span>
 			{
-<span class="nc bnc" id="L375" title="All 2 branches missed.">				if (retBuf.length() &gt; 5)</span>
+<span class="nc bnc" id="L376" title="All 2 branches missed.">				if (retBuf.length() &gt; 5)</span>
 				{
 					//uz sme nieco pridali
-<span class="nc" id="L378">					retBuf.append(&quot; OR &quot;);</span>
+<span class="nc" id="L379">					retBuf.append(&quot; OR &quot;);</span>
 				}
 
-<span class="nc" id="L381">				s_year = cal.get(Calendar.YEAR);</span>
-<span class="nc" id="L382">				s_week = cal.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="nc" id="L382">				s_year = cal.get(Calendar.YEAR);</span>
+<span class="nc" id="L383">				s_week = cal.get(Calendar.WEEK_OF_YEAR);</span>
 
-<span class="nc bnc" id="L384" title="All 2 branches missed.">				if (cal.get(Calendar.MONTH)==Calendar.DECEMBER)</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">				if (cal.get(Calendar.MONTH)==Calendar.DECEMBER)</span>
 				{
 					//ak nam hlasi v decembri 1. tyzden, hlasi to uz tyzden z nasledovneho roka
-<span class="nc bnc" id="L387" title="All 2 branches missed.">					if (s_week == 1)</span>
+<span class="nc bnc" id="L388" title="All 2 branches missed.">					if (s_week == 1)</span>
 					{
-<span class="nc" id="L389">						s_year = s_year+1;</span>
+<span class="nc" id="L390">						s_year = s_year+1;</span>
 					}
 				}
-<span class="nc bnc" id="L392" title="All 2 branches missed.">				if (cal.get(Calendar.MONTH)==Calendar.JANUARY)</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">				if (cal.get(Calendar.MONTH)==Calendar.JANUARY)</span>
 				{
 					//ak nam hlasi v janurari vysoky tyzden, hlasi to este tyzden z minuleho roka
-<span class="nc bnc" id="L395" title="All 2 branches missed.">					if (s_week &gt; 50)</span>
+<span class="nc bnc" id="L396" title="All 2 branches missed.">					if (s_week &gt; 50)</span>
 					{
-<span class="nc" id="L397">						s_year = s_year-1;</span>
+<span class="nc" id="L398">						s_year = s_year-1;</span>
 					}
 				}
 
 
-<span class="nc" id="L402">				retBuf.append(&quot; (year=&quot;).append(s_year).append(&quot; AND week=&quot;).append(s_week).append(&quot; ) &quot;);</span>
+<span class="nc" id="L403">				retBuf.append(&quot; (year=&quot;).append(s_year).append(&quot; AND week=&quot;).append(s_week).append(&quot; ) &quot;);</span>
 
 				//Logger.println(this,sdf.format(cal.getTime()) + &quot; (year=&quot;+s_year+&quot; AND week=&quot;+s_week+&quot; ) &quot;);
 
 				//zvys hodnotu
-<span class="nc" id="L407">				cal.add(Calendar.DAY_OF_YEAR, 7);</span>
+<span class="nc" id="L408">				cal.add(Calendar.DAY_OF_YEAR, 7);</span>
 				//Logger.println(this,cal.toString());
 
 			}
-<span class="nc" id="L411">			ret = retBuf.toString();</span>
-<span class="nc" id="L412">			ret += &quot; ) &quot;;</span>
-<span class="nc" id="L413">		}</span>
+<span class="nc" id="L412">			ret = retBuf.toString();</span>
+<span class="nc" id="L413">			ret += &quot; ) &quot;;</span>
+<span class="nc" id="L414">		}</span>
 		else
 		{
-<span class="fc" id="L416">			ret = &quot; year&gt;=&quot; + s_year + &quot; AND week&gt;=&quot; + s_week + &quot; AND year&lt;=&quot; + e_year + &quot; AND week&lt;=&quot; + e_week;</span>
+<span class="fc" id="L417">			ret = &quot; year&gt;=&quot; + s_year + &quot; AND week&gt;=&quot; + s_week + &quot; AND year&lt;=&quot; + e_year + &quot; AND week&lt;=&quot; + e_week;</span>
 		}
-<span class="pc bpc" id="L418" title="1 of 2 branches missed.">		if (where)</span>
+<span class="pc bpc" id="L419" title="1 of 2 branches missed.">		if (where)</span>
 		{
-<span class="fc" id="L420">			ret = &quot; WHERE&quot; + ret;</span>
+<span class="fc" id="L421">			ret = &quot; WHERE&quot; + ret;</span>
 		}
 		else
 		{
-<span class="nc" id="L424">			ret = &quot; AND&quot; + ret;</span>
+<span class="nc" id="L425">			ret = &quot; AND&quot; + ret;</span>
 		}
-<span class="fc" id="L426">		return (ret);</span>
+<span class="fc" id="L427">		return (ret);</span>
 	}
 
 	/**
@@ -431,15 +432,29 @@ public class StatDB extends DB
 	 */
 	public static String getRootGroupWhere(String column, int rootGroupId)
 	{
-<span class="fc bfc" id="L434" title="All 2 branches covered.">		if (rootGroupId &lt; 1)</span>
+<span class="pc bpc" id="L435" title="1 of 2 branches missed.">		if (InitServlet.isTypeCloud())</span>
 		{
-<span class="fc" id="L436">			return(&quot;&quot;);</span>
+<span class="nc bnc" id="L437" title="All 2 branches missed.">            if (rootGroupId&lt;1)</span>
+			{
+<span class="nc" id="L439">                rootGroupId = CloudToolsForCore.getDomainId();</span>
+            } else {
+<span class="nc" id="L441">                GroupDetails group = GroupsDB.getInstance().getGroup(rootGroupId);</span>
+<span class="nc bnc" id="L442" title="All 4 branches missed.">                if (group==null || group.getDomainName().equals(CloudToolsForCore.getDomainName())==false)</span>
+				{
+<span class="nc" id="L444">                    rootGroupId = CloudToolsForCore.getDomainId();</span>
+                }
+            }
+        }
+
+<span class="fc bfc" id="L449" title="All 2 branches covered.">		if (rootGroupId &lt; 1)</span>
+		{
+<span class="fc" id="L451">			return(&quot;&quot;);</span>
 		}
 		//najdi child grupy
-<span class="fc" id="L439">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L440">		List&lt;GroupDetails&gt; searchGroupsArray = groupsDB.getGroupsTree(rootGroupId, true, true);</span>
+<span class="fc" id="L454">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L455">		List&lt;GroupDetails&gt; searchGroupsArray = groupsDB.getGroupsTree(rootGroupId, true, true);</span>
 
-<span class="fc" id="L442">		return getRootGroupWhereHelp(column, searchGroupsArray);</span>
+<span class="fc" id="L457">		return getRootGroupWhereHelp(column, searchGroupsArray);</span>
 	}
 
 	/**
@@ -447,21 +462,21 @@ public class StatDB extends DB
 	 */
 	public static String getRootGroupWhere(String column, String groupIds)
 	{
-<span class="pc bpc" id="L450" title="2 of 4 branches missed.">		if (Tools.isEmpty(groupIds) || &quot;-1&quot;.equals(groupIds))</span>
+<span class="pc bpc" id="L465" title="2 of 4 branches missed.">		if (Tools.isEmpty(groupIds) || &quot;-1&quot;.equals(groupIds))</span>
 		{
-<span class="fc" id="L452">			return(&quot;&quot;);</span>
+<span class="fc" id="L467">			return(&quot;&quot;);</span>
 		}
 
 		//najdi child grupy
-<span class="nc" id="L456">		int[] groupsIdArray = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
-<span class="nc" id="L457">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="nc" id="L458">		List&lt;GroupDetails&gt; searchGroupsArray = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L459" title="All 2 branches missed.">		for(int groupId: groupsIdArray)</span>
+<span class="nc" id="L471">		int[] groupsIdArray = Tools.getTokensInt(groupIds, &quot;,&quot;);</span>
+<span class="nc" id="L472">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L473">		List&lt;GroupDetails&gt; searchGroupsArray = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">		for(int groupId: groupsIdArray)</span>
 		{
-<span class="nc" id="L461">			searchGroupsArray.addAll(groupsDB.getGroupsTree(groupId, true, true));</span>
+<span class="nc" id="L476">			searchGroupsArray.addAll(groupsDB.getGroupsTree(groupId, true, true));</span>
 		}
 
-<span class="nc" id="L464">		return getRootGroupWhereHelp(column, searchGroupsArray);</span>
+<span class="nc" id="L479">		return getRootGroupWhereHelp(column, searchGroupsArray);</span>
 	}
 
 	/**
@@ -472,60 +487,60 @@ public class StatDB extends DB
 	 */
 	private static String getRootGroupWhereHelp(String column, List&lt;GroupDetails&gt; searchGroupsArray)
 	{
-<span class="fc" id="L475">		String ret = &quot;&quot;;</span>
+<span class="fc" id="L490">		String ret = &quot;&quot;;</span>
 		try
 		{
-<span class="fc" id="L478">			StringBuilder searchGroups = null;</span>
-<span class="fc bfc" id="L479" title="All 2 branches covered.">			for (GroupDetails group : searchGroupsArray)</span>
+<span class="fc" id="L493">			StringBuilder searchGroups = null;</span>
+<span class="fc bfc" id="L494" title="All 2 branches covered.">			for (GroupDetails group : searchGroupsArray)</span>
 			{
-<span class="pc bpc" id="L481" title="1 of 2 branches missed.">				if (group != null)</span>
+<span class="pc bpc" id="L496" title="1 of 2 branches missed.">				if (group != null)</span>
 				{
-<span class="fc bfc" id="L483" title="All 2 branches covered.">					if (searchGroups == null)</span>
+<span class="fc bfc" id="L498" title="All 2 branches covered.">					if (searchGroups == null)</span>
 					{
-<span class="fc" id="L485">						searchGroups = new StringBuilder(Integer.toString(group.getGroupId()));</span>
+<span class="fc" id="L500">						searchGroups = new StringBuilder(Integer.toString(group.getGroupId()));</span>
 					}
 					else
 					{
-<span class="fc" id="L489">						searchGroups.append(&quot;,&quot;).append(group.getGroupId());</span>
+<span class="fc" id="L504">						searchGroups.append(&quot;,&quot;).append(group.getGroupId());</span>
 					}
 				}
-<span class="fc" id="L492">			}</span>
-<span class="pc bpc" id="L493" title="1 of 2 branches missed.">			if (searchGroups != null)</span>
+<span class="fc" id="L507">			}</span>
+<span class="pc bpc" id="L508" title="1 of 2 branches missed.">			if (searchGroups != null)</span>
 			{
-<span class="fc" id="L495">				ret = &quot; AND &quot; + column + &quot; IN (&quot;+searchGroups.toString()+&quot;) &quot;;</span>
+<span class="fc" id="L510">				ret = &quot; AND &quot; + column + &quot; IN (&quot;+searchGroups.toString()+&quot;) &quot;;</span>
 			}
 		}
-<span class="nc" id="L498">		catch (Exception ex)</span>
+<span class="nc" id="L513">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L500">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L501">		}</span>
+<span class="nc" id="L515">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L516">		}</span>
 
-<span class="fc" id="L503">		return(ret);</span>
+<span class="fc" id="L518">		return(ret);</span>
 	}
 
 	public static void addAdmin(HttpServletRequest request)
 	{
 		//zaloguje pracu admina
-<span class="fc" id="L509">		Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L510">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
-<span class="fc" id="L511">		cal.setTime(new java.util.Date());</span>
-<span class="fc" id="L512">		int year = cal.get(Calendar.YEAR);</span>
-<span class="fc" id="L513">		int week = cal.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="fc" id="L524">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L525">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L526">		cal.setTime(new java.util.Date());</span>
+<span class="fc" id="L527">		int year = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L528">		int week = cal.get(Calendar.WEEK_OF_YEAR);</span>
 
 		//ak nam hlasi v decembri 1. tyzden, hlasi to uz tyzden z nasledovneho roka
-<span class="pc bpc" id="L516" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.DECEMBER &amp;&amp; week == 1)</span>
+<span class="pc bpc" id="L531" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.DECEMBER &amp;&amp; week == 1)</span>
 		{
-<span class="nc" id="L518">				year++;</span>
+<span class="nc" id="L533">				year++;</span>
 		}
 		//ak nam hlasi v janurari vysoky tyzden, hlasi to este tyzden z minuleho roka
-<span class="pc bpc" id="L521" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.JANUARY &amp;&amp; week &gt; 50)</span>
+<span class="pc bpc" id="L536" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.JANUARY &amp;&amp; week &gt; 50)</span>
 		{
-<span class="nc" id="L523">			year--;</span>
+<span class="nc" id="L538">			year--;</span>
 		}
 
 		//zalogujeme logon
-<span class="fc" id="L527">		addStatUserLogon(year, week, request);</span>
-<span class="fc" id="L528">	}</span>
+<span class="fc" id="L542">		addStatUserLogon(year, week, request);</span>
+<span class="fc" id="L543">	}</span>
 
 	/**
 	 *  prida zaznam do statistiky
@@ -533,50 +548,50 @@ public class StatDB extends DB
 	public static void add(HttpSession session, HttpServletRequest request, HttpServletResponse response, int docId)
 	{
 		//nezalogujeme pri odoslani emailu
-<span class="fc" id="L536">		String dmail = request.getHeader(&quot;dmail&quot;);</span>
-<span class="pc bpc" id="L537" title="2 of 4 branches missed.">		if (dmail != null || &quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
+<span class="fc" id="L551">		String dmail = request.getHeader(&quot;dmail&quot;);</span>
+<span class="pc bpc" id="L552" title="1 of 4 branches missed.">		if (dmail != null || &quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
 		{
-<span class="nc" id="L539">			return;</span>
+<span class="fc" id="L554">			return;</span>
 		}
 
-<span class="fc" id="L542">		Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L543">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
-<span class="fc" id="L544">		cal.setTime(new java.util.Date());</span>
-<span class="fc" id="L545">		int year = cal.get(Calendar.YEAR);</span>
-<span class="fc" id="L546">		int week = cal.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="fc" id="L557">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L558">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L559">		cal.setTime(new java.util.Date());</span>
+<span class="fc" id="L560">		int year = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L561">		int week = cal.get(Calendar.WEEK_OF_YEAR);</span>
 
 		//ak nam hlasi v decembri 1. tyzden, hlasi to uz tyzden z nasledovneho roka
-<span class="pc bpc" id="L549" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.DECEMBER &amp;&amp; week == 1)</span>
+<span class="pc bpc" id="L564" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.DECEMBER &amp;&amp; week == 1)</span>
 		{
-<span class="nc" id="L551">				year++;</span>
+<span class="nc" id="L566">				year++;</span>
 		}
 		//ak nam hlasi v janurari vysoky tyzden, hlasi to este tyzden z minuleho roka
-<span class="pc bpc" id="L554" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.JANUARY &amp;&amp; week &gt; 50)</span>
+<span class="pc bpc" id="L569" title="3 of 4 branches missed.">		if (cal.get(Calendar.MONTH)==Calendar.JANUARY &amp;&amp; week &gt; 50)</span>
 		{
-<span class="nc" id="L556">			year--;</span>
+<span class="nc" id="L571">			year--;</span>
 		}
 
-<span class="fc" id="L559">		int lastDocId = -1;</span>
-<span class="fc bfc" id="L560" title="All 2 branches covered.">		if (session.getAttribute(&quot;stat_last_time&quot;) == null)</span>
+<span class="fc" id="L574">		int lastDocId = -1;</span>
+<span class="fc bfc" id="L575" title="All 2 branches covered.">		if (session.getAttribute(&quot;stat_last_time&quot;) == null)</span>
 		{
-<span class="fc" id="L562">			session.setAttribute(&quot;serverName&quot;, DBPool.getDBName(request));</span>
+<span class="fc" id="L577">			session.setAttribute(&quot;serverName&quot;, DBPool.getDBName(request));</span>
 		}
 		else
 		{
 			try
 			{
-<span class="fc" id="L568">				lastDocId = ((Integer) session.getAttribute(&quot;stat_last_doc_id&quot;)).intValue();</span>
+<span class="fc" id="L583">				lastDocId = ((Integer) session.getAttribute(&quot;stat_last_doc_id&quot;)).intValue();</span>
 			}
-<span class="pc" id="L570">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="pc" id="L585">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 		}
 
-<span class="fc" id="L573">		BrowserDetector browser = BrowserDetector.getInstance(request);</span>
+<span class="fc" id="L588">		BrowserDetector browser = BrowserDetector.getInstance(request);</span>
 
-<span class="fc" id="L575">		int groupId = Tools.getIntValue((String)request.getAttribute(&quot;group_id&quot;), 0);</span>
-<span class="fc bfc" id="L576" title="All 2 branches covered.">		if (groupId == 0) {</span>
-<span class="fc" id="L577">			DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
-<span class="pc bpc" id="L578" title="1 of 2 branches missed.">			if (doc != null) {</span>
-<span class="fc" id="L579">				groupId = doc.getGroupId();</span>
+<span class="fc" id="L590">		int groupId = Tools.getIntValue((String)request.getAttribute(&quot;group_id&quot;), 0);</span>
+<span class="fc bfc" id="L591" title="All 2 branches covered.">		if (groupId == 0) {</span>
+<span class="fc" id="L592">			DocDetails doc = DocDB.getInstance().getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L593" title="1 of 2 branches missed.">			if (doc != null) {</span>
+<span class="fc" id="L594">				groupId = doc.getGroupId();</span>
 			}
 		}
 
@@ -585,100 +600,123 @@ public class StatDB extends DB
 		{
 			//vypnutie logovania pre zadane IP
 			//vypnutie logovania ak je povodna a nova stranka rovnaka (refresh)
-<span class="pc bpc" id="L588" title="1 of 4 branches missed.">			if (browser.isStatIpAllowed()==false || docId == lastDocId)</span>
+<span class="pc bpc" id="L603" title="1 of 4 branches missed.">			if (browser.isStatIpAllowed()==false || docId == lastDocId)</span>
 			{
 				//zalogujeme iba logon
-<span class="fc" id="L591">				addStatUserLogon(year, week, request);</span>
-<span class="pc bpc" id="L592" title="1 of 2 branches missed.">				if (browser.isStatIpAllowed())</span>
+<span class="fc" id="L606">				addStatUserLogon(year, week, request);</span>
+<span class="pc bpc" id="L607" title="1 of 2 branches missed.">				if (browser.isStatIpAllowed())</span>
 				{
-<span class="fc" id="L594">					addStatSearchEngine(request, docId, groupId);</span>
+<span class="fc" id="L609">					addStatSearchEngine(request, docId, groupId);</span>
 				}
-<span class="fc" id="L596">				return;</span>
+<span class="fc" id="L611">				return;</span>
 			}
 		}
-<span class="pc" id="L599">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="pc" id="L614">		catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 
 		//ok
 		try
 		{
-<span class="fc" id="L604">			session.setAttribute(&quot;stat_last_time&quot;, Double.valueOf(cal.getTime().getTime()));</span>
-<span class="fc" id="L605">			session.setAttribute(&quot;stat_last_doc_id&quot;, Integer.valueOf(docId));</span>
+<span class="fc" id="L619">			session.setAttribute(&quot;stat_last_time&quot;, Double.valueOf(cal.getTime().getTime()));</span>
+<span class="fc" id="L620">			session.setAttribute(&quot;stat_last_doc_id&quot;, Integer.valueOf(docId));</span>
 
 			// setni data pre SessionListener - toto nefunguje vo WebSphere
-<span class="fc" id="L608">			SessionHolder holder = SessionHolder.getInstance();</span>
-<span class="fc" id="L609">			holder.setLastDocId(session.getId(), docId);</span>
+<span class="fc" id="L623">			SessionHolder holder = SessionHolder.getInstance();</span>
+<span class="fc" id="L624">			holder.setLastDocId(session.getId(), docId);</span>
 
-<span class="pc bpc" id="L611" title="1 of 2 branches missed.">			if (browser.isStatUserAgentAllowed())</span>
+<span class="fc bfc" id="L626" title="All 2 branches covered.">			if (browser.isStatUserAgentAllowed())</span>
 			{
-<span class="fc" id="L613">				addStatFrom(session, request, response, browser, docId, groupId);</span>
-<span class="fc" id="L614">				addStatSearchEngine(request, docId, groupId);</span>
+<span class="fc" id="L628">				addStatFrom(session, request, response, browser, docId, groupId);</span>
+<span class="fc" id="L629">				addStatSearchEngine(request, docId, groupId);</span>
 			}
 			else
 			{
-<span class="nc" id="L618">				request.setAttribute(&quot;StatDB.isSearchEngine&quot;, &quot;true&quot;);</span>
-<span class="nc" id="L619">				session.setMaxInactiveInterval(20);</span>
+<span class="fc" id="L633">				request.setAttribute(&quot;StatDB.isSearchEngine&quot;, &quot;true&quot;);</span>
+<span class="fc" id="L634">				session.setMaxInactiveInterval(20);</span>
 			}
 			/**
 			 * stat_views sa uklada pre vsetkych navstevnikov stranky, rozdeluju sa na zaklade browser_id
 			 */
-<span class="fc" id="L624">			addStatViews(session, request, response, docId, lastDocId, browser);</span>
-<span class="fc" id="L625">			addStatUserLogon(year, week, request);</span>
+<span class="fc" id="L639">			addStatViews(session, request, response, docId, lastDocId, browser);</span>
+<span class="fc" id="L640">			addStatUserLogon(year, week, request);</span>
 		}
-<span class="nc" id="L627">		catch (Exception ex)</span>
+<span class="nc" id="L642">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L629">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L630">		}</span>
-<span class="fc" id="L631">	}</span>
+<span class="nc" id="L644">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L645">		}</span>
+<span class="fc" id="L646">	}</span>
 
 	/**
 	 * Zapise chybu do databazy
 	 */
 	public static void addError(String url, String queryString)
 	{
-<span class="pc bpc" id="L638" title="1 of 2 branches missed.">		if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
+<span class="pc bpc" id="L653" title="1 of 2 branches missed.">		if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
 		{
-<span class="nc" id="L640">			return;</span>
+<span class="nc" id="L655">			return;</span>
 		}
 
-<span class="pc bpc" id="L643" title="1 of 2 branches missed.">		if (Tools.isEmpty(url)) return;</span>
-<span class="fc bfc" id="L644" title="All 2 branches covered.">		if (queryString == null) queryString = &quot;&quot;;</span>
+<span class="pc bpc" id="L658" title="1 of 2 branches missed.">		if (Tools.isEmpty(url)) return;</span>
+<span class="fc bfc" id="L659" title="All 2 branches covered.">		if (queryString == null) queryString = &quot;&quot;;</span>
 
-<span class="fc" id="L646">		Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L647">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
-<span class="fc" id="L648">		int year = cal.get(Calendar.YEAR);</span>
-<span class="fc" id="L649">		int week = cal.get(Calendar.WEEK_OF_YEAR);</span>
-<span class="fc" id="L650">		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week};</span>
+<span class="fc" id="L661">		url = removeJsessionId(url);</span>
+<span class="fc" id="L662">		queryString = removeJsessionId(queryString);</span>
 
-<span class="fc" id="L652">		String update = &quot;UPDATE stat_error&quot;+StatNewDB.getTableSuffix(&quot;stat_error&quot;)+&quot; SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week=?&quot;;</span>
-<span class="fc" id="L653">		String insert = &quot;INSERT INTO stat_error&quot;+StatNewDB.getTableSuffix(&quot;stat_error&quot;)+&quot; (url, query_string, year, week, count) VALUES (?, ?, ?, ?, 1)&quot;;</span>
+<span class="fc" id="L664">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L665">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L666">		int year = cal.get(Calendar.YEAR);</span>
+<span class="fc" id="L667">		int week = cal.get(Calendar.WEEK_OF_YEAR);</span>
+<span class="fc" id="L668">		Object[] params = new Object[]{DB.prepareString(url, 255), DB.prepareString(queryString, 255), year, week, CloudToolsForCore.getDomainId()};</span>
 
-<span class="fc" id="L655">		StatWriteBuffer.addUpdateInsertPair(update, insert, &quot;stat_error&quot;, params);</span>
-<span class="fc" id="L656">	}</span>
+<span class="fc" id="L670">		String update = &quot;UPDATE stat_error&quot;+StatNewDB.getTableSuffix(&quot;stat_error&quot;)+&quot; SET count=count+1 WHERE url=? AND query_string=? AND year=? AND week=? AND domain_id=?&quot;;</span>
+<span class="fc" id="L671">		String insert = &quot;INSERT INTO stat_error&quot;+StatNewDB.getTableSuffix(&quot;stat_error&quot;)+&quot; (url, query_string, year, week, domain_id, count) VALUES (?, ?, ?, ?, ?, 1)&quot;;</span>
 
-<span class="fc" id="L658">	private static Map&lt;String, String&gt; languageDomainTable = null;</span>
+<span class="fc" id="L673">		StatWriteBuffer.addUpdateInsertPair(update, insert, &quot;stat_error&quot;, params);</span>
+<span class="fc" id="L674">	}</span>
+
+	/**
+	 * Removes JSESSIONID from URL
+	 * @param url
+	 * @return
+	 */
+	protected static String removeJsessionId(String url) {
+<span class="fc bfc" id="L682" title="All 2 branches covered.">		if (Tools.isEmpty(url)) return url;</span>
+
+<span class="fc" id="L684">		int i = url.indexOf(&quot;;jsessionid&quot;);</span>
+<span class="fc bfc" id="L685" title="All 2 branches covered.">		if (i != -1) {</span>
+<span class="fc" id="L686">			int j = url.indexOf(&quot;?&quot;, i);</span>
+<span class="fc bfc" id="L687" title="All 2 branches covered.">			if (j == -1) {</span>
+<span class="fc" id="L688">				url = url.substring(0, i);</span>
+			} else {
+<span class="fc" id="L690">				url = url.substring(0, i) + url.substring(j);</span>
+			}
+		}
+<span class="fc" id="L693">		return url;</span>
+	}
+
+<span class="fc" id="L696">	private static Map&lt;String, String&gt; languageDomainTable = null;</span>
 	/**
 	 * Ziska tabulku mapovania jazyka na domenu
 	 * @return
 	 */
 	public static Map&lt;String, String&gt; getLanguageDomainTable()
 	{
-<span class="nc" id="L665">		synchronized (StatDB.class)</span>
+<span class="nc" id="L703">		synchronized (StatDB.class)</span>
 		{
-<span class="nc bnc" id="L667" title="All 2 branches missed.">			if (languageDomainTable!=null) return languageDomainTable;</span>
+<span class="nc bnc" id="L705" title="All 2 branches missed.">			if (languageDomainTable!=null) return languageDomainTable;</span>
 
-<span class="nc" id="L669">			languageDomainTable = new Hashtable&lt;&gt;();</span>
-<span class="nc" id="L670">			String[] data = Constants.getString(&quot;statLanguageDomain&quot;).split(&quot;,&quot;);</span>
-<span class="nc bnc" id="L671" title="All 2 branches missed.">			for (int i=0; i&lt;data.length; i++)</span>
+<span class="nc" id="L707">			languageDomainTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L708">			String[] data = Constants.getString(&quot;statLanguageDomain&quot;).split(&quot;,&quot;);</span>
+<span class="nc bnc" id="L709" title="All 2 branches missed.">			for (int i=0; i&lt;data.length; i++)</span>
 			{
-<span class="nc" id="L673">				String[] pair = data[i].split(&quot;=&quot;);</span>
-<span class="nc bnc" id="L674" title="All 2 branches missed.">				if (pair.length==2)</span>
+<span class="nc" id="L711">				String[] pair = data[i].split(&quot;=&quot;);</span>
+<span class="nc bnc" id="L712" title="All 2 branches missed.">				if (pair.length==2)</span>
 				{
-<span class="nc" id="L676">					languageDomainTable.put(pair[0], pair[1]);</span>
+<span class="nc" id="L714">					languageDomainTable.put(pair[0], pair[1]);</span>
 				}
 			}
-<span class="nc" id="L679">		}</span>
+<span class="nc" id="L717">		}</span>
 		//kvoli performance toto nechcem - return languageDomainTable == null ? null : (Map&lt;String, String&gt;) languageDomainTable.clone();
-<span class="nc" id="L681">		return languageDomainTable;</span>
+<span class="nc" id="L719">		return languageDomainTable;</span>
 	}
 
 	/**
@@ -688,184 +726,184 @@ public class StatDB extends DB
 	public static void setLanguageDomainTable(Map&lt;String, String&gt; newLanguageDomainTable)
 	{
 		//do NOT clone() this, callers may modify the content!
-<span class="nc" id="L691">		StatDB.languageDomainTable = newLanguageDomainTable;</span>
-<span class="nc" id="L692">	}</span>
+<span class="nc" id="L729">		StatDB.languageDomainTable = newLanguageDomainTable;</span>
+<span class="nc" id="L730">	}</span>
 
 	/**
 	 * prida do statistiky prihlasenie usera
 	 */
 	private static void addStatUserLogon(int year, int week, HttpServletRequest request)
 	{
-<span class="fc" id="L699">		boolean cookiesEnabled = Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies());</span>
+<span class="fc" id="L737">		boolean cookiesEnabled = Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies());</span>
 
-<span class="fc" id="L701">		HttpSession session = request.getSession();</span>
+<span class="fc" id="L739">		HttpSession session = request.getSession();</span>
 
-<span class="fc" id="L703">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
+<span class="fc" id="L741">		Identity user = (Identity)session.getAttribute(Constants.USER_KEY);</span>
 		//nezalogujeme usera pri odoslani emailu
-<span class="pc bpc" id="L705" title="2 of 6 branches missed.">		if (user==null || user.isAuthorized()==false || request.getHeader(&quot;dmail&quot;) != null)</span>
+<span class="pc bpc" id="L743" title="2 of 6 branches missed.">		if (user==null || user.isAuthorized()==false || request.getHeader(&quot;dmail&quot;) != null)</span>
 		{
-<span class="fc" id="L707">			return;</span>
+<span class="fc" id="L745">			return;</span>
 		}
 
-<span class="fc" id="L710">		Calendar cal = Calendar.getInstance();</span>
-<span class="fc" id="L711">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
+<span class="fc" id="L748">		Calendar cal = Calendar.getInstance();</span>
+<span class="fc" id="L749">		cal.setFirstDayOfWeek(Calendar.MONDAY);</span>
 		//zaokruhlenie kvoli DB modelu a UPDATE WHERE logon_time=?
-<span class="fc" id="L713">		cal.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L751">		cal.set(Calendar.MILLISECOND, 0);</span>
 
-<span class="fc" id="L715">		Long logonTime = (Long) session.getAttribute(LOGON_TIME);</span>
-<span class="fc bfc" id="L716" title="All 2 branches covered.">		if (logonTime != null)</span>
+<span class="fc" id="L753">		Long logonTime = (Long) session.getAttribute(LOGON_TIME);</span>
+<span class="fc bfc" id="L754" title="All 2 branches covered.">		if (logonTime != null)</span>
 		{
-<span class="pc bpc" id="L718" title="2 of 4 branches missed.">			if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)) || cookiesEnabled==false)</span>
+<span class="pc bpc" id="L756" title="2 of 4 branches missed.">			if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)) || cookiesEnabled==false)</span>
 			{
-<span class="fc" id="L720">				return;</span>
+<span class="fc" id="L758">				return;</span>
 			}
 
-<span class="nc" id="L723">			long now = cal.getTime().getTime();</span>
-<span class="nc" id="L724">			int viewMinutes = (int)((now - logonTime.longValue()) / 60000);</span>
-<span class="nc" id="L725">			String sql = &quot;UPDATE stat_userlogon SET views=views+1, view_minutes=? WHERE logon_time=? AND user_id=?&quot;;</span>
-<span class="nc" id="L726">			StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, viewMinutes, new Timestamp(logonTime.longValue()), user.getUserId());</span>
-<span class="nc" id="L727">		}</span>
+<span class="nc" id="L761">			long now = cal.getTime().getTime();</span>
+<span class="nc" id="L762">			int viewMinutes = (int)((now - logonTime.longValue()) / 60000);</span>
+<span class="nc" id="L763">			String sql = &quot;UPDATE stat_userlogon SET views=views+1, view_minutes=? WHERE logon_time=? AND user_id=?&quot;;</span>
+<span class="nc" id="L764">			StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, viewMinutes, new Timestamp(logonTime.longValue()), user.getUserId());</span>
+<span class="nc" id="L765">		}</span>
 		else
 		{
-<span class="fc" id="L730">			logonTime = Long.valueOf(cal.getTime().getTime());</span>
+<span class="fc" id="L768">			logonTime = Long.valueOf(cal.getTime().getTime());</span>
 
-<span class="fc" id="L732">			String sql = &quot;UPDATE users SET last_logon=? WHERE user_id=?&quot;;</span>
-<span class="fc" id="L733">			StatWriteBuffer.add(sql, &quot;users&quot;, new Timestamp(logonTime.longValue()), user.getUserId());</span>
-<span class="fc" id="L734">			session.setAttribute(LOGON_TIME, logonTime);</span>
+<span class="fc" id="L770">			String sql = &quot;UPDATE users SET last_logon=? WHERE user_id=?&quot;;</span>
+<span class="fc" id="L771">			StatWriteBuffer.add(sql, &quot;users&quot;, new Timestamp(logonTime.longValue()), user.getUserId());</span>
+<span class="fc" id="L772">			session.setAttribute(LOGON_TIME, logonTime);</span>
 
-<span class="pc bpc" id="L736" title="1 of 2 branches missed.">			if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
+<span class="pc bpc" id="L774" title="1 of 2 branches missed.">			if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
 			{
-<span class="nc" id="L738">				return;</span>
+<span class="nc" id="L776">				return;</span>
 			}
 
-<span class="pc bpc" id="L741" title="1 of 2 branches missed.">			if (cookiesEnabled) {</span>
-<span class="nc" id="L742">				sql = &quot;INSERT INTO stat_userlogon (year, week, user_id, views, logon_time, view_minutes, hostname) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
-<span class="nc" id="L743">				StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, year, week, user.getUserId(), 1, new Timestamp(logonTime.longValue()), 0, Tools.getRemoteHost(request));</span>
+<span class="pc bpc" id="L779" title="1 of 2 branches missed.">			if (cookiesEnabled) {</span>
+<span class="nc" id="L780">				sql = &quot;INSERT INTO stat_userlogon (year, week, user_id, views, logon_time, view_minutes, hostname) VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L781">				StatWriteBuffer.add(sql, &quot;stat_userlogon&quot;, year, week, user.getUserId(), 1, new Timestamp(logonTime.longValue()), 0, Tools.getRemoteHost(request));</span>
 			}
 		}
-<span class="fc" id="L746">	}</span>
+<span class="fc" id="L784">	}</span>
 
 	private static void addStatSearchEngine(HttpServletRequest request, int docId, int groupId)
 	{
-<span class="pc bpc" id="L750" title="1 of 2 branches missed.">		if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
+<span class="pc bpc" id="L788" title="1 of 2 branches missed.">		if (&quot;none&quot;.equals(Constants.getString(&quot;statMode&quot;)))</span>
 		{
-<span class="nc" id="L752">			return;</span>
+<span class="nc" id="L790">			return;</span>
 		}
 
-<span class="fc" id="L755">		String referer = request.getHeader(&quot;referer&quot;);</span>
+<span class="fc" id="L793">		String referer = request.getHeader(&quot;referer&quot;);</span>
 
-<span class="pc bpc" id="L757" title="1 of 4 branches missed.">		if (referer == null || referer.length() &lt;= 10)</span>
-<span class="fc" id="L758">			return;</span>
+<span class="pc bpc" id="L795" title="1 of 4 branches missed.">		if (referer == null || referer.length() &lt;= 10)</span>
+<span class="fc" id="L796">			return;</span>
 
-<span class="fc" id="L760">		referer = referer.replace(&quot;http://&quot;, &quot;&quot;).replace(&quot;https://&quot;, &quot;&quot;);</span>
+<span class="fc" id="L798">		referer = referer.replace(&quot;http://&quot;, &quot;&quot;).replace(&quot;https://&quot;, &quot;&quot;);</span>
 
 		//rozparsuj referer a najdi domenu 2 urovne
-<span class="fc" id="L763">		int i = referer.indexOf('/');</span>
-<span class="fc" id="L764">		String host = null;</span>
-<span class="fc" id="L765">		String query = null;</span>
-<span class="pc bpc" id="L766" title="1 of 2 branches missed.">		if (i &gt; 0)</span>
+<span class="fc" id="L801">		int i = referer.indexOf('/');</span>
+<span class="fc" id="L802">		String host = null;</span>
+<span class="fc" id="L803">		String query = null;</span>
+<span class="pc bpc" id="L804" title="1 of 2 branches missed.">		if (i &gt; 0)</span>
 		{
-<span class="fc" id="L768">			host = referer.substring(0, i);</span>
+<span class="fc" id="L806">			host = referer.substring(0, i);</span>
 
-<span class="pc bpc" id="L770" title="1 of 2 branches missed.">			if (host.equals(Tools.getServerName(request)))</span>
+<span class="pc bpc" id="L808" title="1 of 2 branches missed.">			if (host.equals(Tools.getServerName(request)))</span>
 			{
 				//ak je to odkaz z nasej stranky, preskakujeme
-<span class="nc" id="L773">				return;</span>
+<span class="nc" id="L811">				return;</span>
 			}
 
 			//uprav to, aby bola len domena 2 urovne
-<span class="fc" id="L777">			StringTokenizer st = new StringTokenizer(host, &quot;.&quot;);</span>
-<span class="fc" id="L778">			int len = st.countTokens();</span>
-<span class="pc bpc" id="L779" title="1 of 2 branches missed.">			if (len &gt; 2)</span>
+<span class="fc" id="L815">			StringTokenizer st = new StringTokenizer(host, &quot;.&quot;);</span>
+<span class="fc" id="L816">			int len = st.countTokens();</span>
+<span class="pc bpc" id="L817" title="1 of 2 branches missed.">			if (len &gt; 2)</span>
 			{
-<span class="fc" id="L781">				int counter = 0;</span>
-<span class="fc" id="L782">				host = null;</span>
+<span class="fc" id="L819">				int counter = 0;</span>
+<span class="fc" id="L820">				host = null;</span>
 				String tmp;
-<span class="fc bfc" id="L784" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
+<span class="fc bfc" id="L822" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
 				{
-<span class="fc" id="L786">					tmp = st.nextToken();</span>
-<span class="fc bfc" id="L787" title="All 2 branches covered.">					if (counter++ &gt; len-3)</span>
+<span class="fc" id="L824">					tmp = st.nextToken();</span>
+<span class="fc bfc" id="L825" title="All 2 branches covered.">					if (counter++ &gt; len-3)</span>
 					{
-<span class="fc bfc" id="L789" title="All 2 branches covered.">						if (host==null)</span>
+<span class="fc bfc" id="L827" title="All 2 branches covered.">						if (host==null)</span>
 						{
-<span class="fc" id="L791">							host = tmp;</span>
+<span class="fc" id="L829">							host = tmp;</span>
 						}
 						else
 						{
-<span class="fc" id="L795">							host = host + &quot;.&quot; + tmp; //NOSONAR</span>
+<span class="fc" id="L833">							host = host + &quot;.&quot; + tmp; //NOSONAR</span>
 						}
 					}
 				}
 			}
 
-<span class="fc" id="L801">			query = referer.substring(i+1);</span>
-<span class="fc" id="L802">			i = query.indexOf('?');</span>
-<span class="fc bfc" id="L803" title="All 2 branches covered.">			if (i!=-1)</span>
+<span class="fc" id="L839">			query = referer.substring(i+1);</span>
+<span class="fc" id="L840">			i = query.indexOf('?');</span>
+<span class="fc bfc" id="L841" title="All 2 branches covered.">			if (i!=-1)</span>
 			{
-<span class="fc" id="L805">				query = query.substring(i+1);</span>
+<span class="fc" id="L843">				query = query.substring(i+1);</span>
 			}
 		}
 		//Logger.println(this,&quot;host=&quot;+host);
 		//Logger.println(this,&quot;query=&quot;+query);
 
-<span class="pc bpc" id="L811" title="2 of 4 branches missed.">		if (host==null || query==null)</span>
+<span class="pc bpc" id="L849" title="2 of 4 branches missed.">		if (host==null || query==null)</span>
 		{
-<span class="nc" id="L813">			return;</span>
+<span class="nc" id="L851">			return;</span>
 		}
 
-<span class="fc" id="L816">		String variable = searchEnginesTable.get(host);</span>
-<span class="pc bpc" id="L817" title="2 of 4 branches missed.">		if (variable == null &amp;&amp; host.indexOf(&quot;google.&quot;)!=-1)</span>
+<span class="fc" id="L854">		String variable = searchEnginesTable.get(host);</span>
+<span class="pc bpc" id="L855" title="2 of 4 branches missed.">		if (variable == null &amp;&amp; host.indexOf(&quot;google.&quot;)!=-1)</span>
 		{
-<span class="nc" id="L819">			variable = searchEnginesTable.get(&quot;google.com&quot;);</span>
+<span class="nc" id="L857">			variable = searchEnginesTable.get(&quot;google.com&quot;);</span>
 		}
-<span class="pc bpc" id="L821" title="1 of 2 branches missed.">		if (variable != null)</span>
+<span class="pc bpc" id="L859" title="1 of 2 branches missed.">		if (variable != null)</span>
 		{
-<span class="nc" id="L823">			String encoding = &quot;windows-1250&quot;;</span>
-<span class="nc" id="L824">			int index = variable.indexOf(';');</span>
-<span class="nc bnc" id="L825" title="All 2 branches missed.">			if (index !=-1)</span>
+<span class="nc" id="L861">			String encoding = &quot;windows-1250&quot;;</span>
+<span class="nc" id="L862">			int index = variable.indexOf(';');</span>
+<span class="nc bnc" id="L863" title="All 2 branches missed.">			if (index !=-1)</span>
 			{
-<span class="nc" id="L827">				encoding = variable.substring(index+1);</span>
-<span class="nc" id="L828">				variable = variable.substring(0, index);</span>
+<span class="nc" id="L865">				encoding = variable.substring(index+1);</span>
+<span class="nc" id="L866">				variable = variable.substring(0, index);</span>
 			}
 
-<span class="nc" id="L831">			Logger.println(StatDB.class,&quot;v=&quot;+variable+&quot; e=&quot;+encoding);</span>
+<span class="nc" id="L869">			Logger.println(StatDB.class,&quot;v=&quot;+variable+&quot; e=&quot;+encoding);</span>
 
-<span class="nc" id="L833">			String searchTerm = null;</span>
+<span class="nc" id="L871">			String searchTerm = null;</span>
 			//rozparsuj query a najdi tam variable
-<span class="nc" id="L835">			StringTokenizer st = new StringTokenizer(query, &quot;&amp;&quot;);</span>
+<span class="nc" id="L873">			StringTokenizer st = new StringTokenizer(query, &quot;&amp;&quot;);</span>
 			String token;
-<span class="nc bnc" id="L837" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
+<span class="nc bnc" id="L875" title="All 2 branches missed.">			while (st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L839">				token = st.nextToken();</span>
-<span class="nc bnc" id="L840" title="All 2 branches missed.">				if (token.startsWith(variable+&quot;=&quot;))</span>
+<span class="nc" id="L877">				token = st.nextToken();</span>
+<span class="nc bnc" id="L878" title="All 2 branches missed.">				if (token.startsWith(variable+&quot;=&quot;))</span>
 				{
-<span class="nc" id="L842">					searchTerm = token.substring(token.indexOf('=')+1);</span>
-<span class="nc" id="L843">					break;</span>
+<span class="nc" id="L880">					searchTerm = token.substring(token.indexOf('=')+1);</span>
+<span class="nc" id="L881">					break;</span>
 				}
 			}
 
-<span class="nc bnc" id="L847" title="All 2 branches missed.">			if (Tools.isNotEmpty(searchTerm))</span>
+<span class="nc bnc" id="L885" title="All 2 branches missed.">			if (Tools.isNotEmpty(searchTerm))</span>
 			{
-<span class="nc" id="L849">				Logger.println(StatDB.class,&quot;searchTerm=&quot;+searchTerm);</span>
+<span class="nc" id="L887">				Logger.println(StatDB.class,&quot;searchTerm=&quot;+searchTerm);</span>
 				//skus to zdekodovat
 				try
 				{
-<span class="nc" id="L853">					searchTerm = URLDecoder.decode(searchTerm, encoding);</span>
+<span class="nc" id="L891">					searchTerm = URLDecoder.decode(searchTerm, encoding);</span>
 				}
-<span class="nc" id="L855">				catch (UnsupportedEncodingException e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc" id="L893">				catch (UnsupportedEncodingException e) {sk.iway.iwcm.Logger.error(e);}</span>
 
-<span class="nc" id="L857">				String remoteHost = &quot;0.0.0.0&quot;;</span>
-<span class="nc bnc" id="L858" title="All 2 branches missed.">				if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())) remoteHost = Tools.getRemoteHost(request);</span>
+<span class="nc" id="L895">				String remoteHost = &quot;0.0.0.0&quot;;</span>
+<span class="nc bnc" id="L896" title="All 2 branches missed.">				if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())) remoteHost = Tools.getRemoteHost(request);</span>
 
 				//ok, mame. Zapiseme do databazy
-<span class="nc" id="L861">				String sql = &quot;INSERT INTO stat_searchengine&quot;+StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;)+&quot; (search_date, server, query, doc_id, remote_host, group_id) VALUES (?, ?, ?, ?, ?, ?)&quot;;</span>
-<span class="nc" id="L862">				StatWriteBuffer.add(sql, &quot;stat_searchengine&quot;, new Timestamp(getCurrentTime(request)), DB.prepareString(host, 16), DB.prepareString(searchTerm, 64), docId, remoteHost, groupId);</span>
+<span class="nc" id="L899">				String sql = &quot;INSERT INTO stat_searchengine&quot;+StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;)+&quot; (search_date, server, query, doc_id, remote_host, group_id) VALUES (?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="nc" id="L900">				StatWriteBuffer.add(sql, &quot;stat_searchengine&quot;, new Timestamp(getCurrentTime(request)), DB.prepareString(host, 16), DB.prepareString(searchTerm, 64), docId, remoteHost, groupId);</span>
 
-<span class="nc" id="L864">				request.setAttribute(&quot;statDB.searchEngine.host&quot;, host);</span>
-<span class="nc" id="L865">				request.setAttribute(&quot;statDB.searchEngine.searchTerm&quot;, searchTerm);</span>
+<span class="nc" id="L902">				request.setAttribute(&quot;statDB.searchEngine.host&quot;, host);</span>
+<span class="nc" id="L903">				request.setAttribute(&quot;statDB.searchEngine.searchTerm&quot;, searchTerm);</span>
 			}
 		}
-<span class="fc" id="L868">	}</span>
+<span class="fc" id="L906">	}</span>
 
 
 	/**
@@ -877,21 +915,21 @@ public class StatDB extends DB
 	 */
 	public static void addStatSearchLocal(String searchTerm, int docId, HttpServletRequest request)
 	{
-<span class="nc bnc" id="L880" title="All 2 branches missed.">		if (Tools.isEmpty(searchTerm)) return;</span>
+<span class="pc bpc" id="L918" title="1 of 2 branches missed.">		if (Tools.isEmpty(searchTerm)) return;</span>
 
-<span class="nc" id="L882">		DocDB docDB = DocDB.getInstance();</span>
-<span class="nc" id="L883">		int groupId = 0;</span>
-<span class="nc" id="L884">		DocDetails doc = docDB.getBasicDocDetails(docId, false);</span>
-<span class="nc bnc" id="L885" title="All 2 branches missed.">		if (doc != null) groupId = doc.getGroupId();</span>
+<span class="fc" id="L920">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L921">		int groupId = 0;</span>
+<span class="fc" id="L922">		DocDetails doc = docDB.getBasicDocDetails(docId, false);</span>
+<span class="pc bpc" id="L923" title="1 of 2 branches missed.">		if (doc != null) groupId = doc.getGroupId();</span>
 
-<span class="nc" id="L887">		Logger.debug(StatDB.class,&quot;searchTerm=&quot;+searchTerm);</span>
+<span class="fc" id="L925">		Logger.debug(StatDB.class,&quot;searchTerm=&quot;+searchTerm);</span>
 
-<span class="nc" id="L889">		String remoteHost = &quot;0.0.0.0&quot;;</span>
-<span class="nc bnc" id="L890" title="All 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())) remoteHost = Tools.getRemoteHost(request);</span>
+<span class="fc" id="L927">		String remoteHost = &quot;0.0.0.0&quot;;</span>
+<span class="pc bpc" id="L928" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())) remoteHost = Tools.getRemoteHost(request);</span>
 
-<span class="nc" id="L892">		String sql = &quot;INSERT INTO stat_searchengine&quot;+StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;)+&quot; (search_date, server, query, doc_id, remote_host, group_id) VALUES (?, ?, ?, ?, ?, ?)&quot;;</span>
-<span class="nc" id="L893">		StatWriteBuffer.add(sql, &quot;stat_searchengine&quot;, new Timestamp(getCurrentTime(request)), DB.prepareString(&quot;WebJET&quot;, 16), DB.prepareString(searchTerm, 64), docId, remoteHost, groupId);</span>
-<span class="nc" id="L894">	}</span>
+<span class="fc" id="L930">		String sql = &quot;INSERT INTO stat_searchengine&quot;+StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;)+&quot; (search_date, server, query, doc_id, remote_host, group_id) VALUES (?, ?, ?, ?, ?, ?)&quot;;</span>
+<span class="fc" id="L931">		StatWriteBuffer.add(sql, &quot;stat_searchengine&quot;, new Timestamp(getCurrentTime(request)), DB.prepareString(&quot;WebJET&quot;, 16), DB.prepareString(searchTerm, 64), docId, remoteHost, groupId);</span>
+<span class="fc" id="L932">	}</span>
 
 	/**
 	 * Gets map of &lt;query,count&gt; from specified timespan
@@ -904,64 +942,64 @@ public class StatDB extends DB
 	 */
 	private static Map&lt;String, Number&gt; getSearchQueriesData(java.util.Date from, java.util.Date to, int maxSize, String addToQuery, String groupIdsQuery)
 	{
-<span class="nc" id="L907">		Logger.debug(StatDB.class, &quot;Getting search queries data...&quot;);</span>
-<span class="nc bnc" id="L908" title="All 2 branches missed.">		if (groupIdsQuery==null) groupIdsQuery = &quot;&quot;;</span>
+<span class="nc" id="L945">		Logger.debug(StatDB.class, &quot;Getting search queries data...&quot;);</span>
+<span class="nc bnc" id="L946" title="All 2 branches missed.">		if (groupIdsQuery==null) groupIdsQuery = &quot;&quot;;</span>
 		int i;
 
-<span class="nc" id="L911">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L949">		Map&lt;String, Number&gt; map = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L913">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
-<span class="nc bnc" id="L914" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="nc" id="L951">		String[] suffixes = StatNewDB.getTableSuffix(&quot;stat_searchengine&quot;, from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L952" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
-<span class="nc" id="L916">			Connection db_conn = null;</span>
-<span class="nc" id="L917">			PreparedStatement ps = null;</span>
-<span class="nc" id="L918">			ResultSet rs = null;</span>
+<span class="nc" id="L954">			Connection db_conn = null;</span>
+<span class="nc" id="L955">			PreparedStatement ps = null;</span>
+<span class="nc" id="L956">			ResultSet rs = null;</span>
 			try
 			{
-<span class="nc" id="L921">				db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L922">				String sql = &quot;SELECT query, COUNT(query) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 &quot; + groupIdsQuery;</span>
-<span class="nc" id="L923">			   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
+<span class="nc" id="L959">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L960">				String sql = &quot;SELECT query, COUNT(query) AS total FROM stat_searchengine&quot;+suffixes[s]+&quot; WHERE doc_id &gt;= 0 &quot; + groupIdsQuery;</span>
+<span class="nc" id="L961">			   sql += &quot; AND search_date &gt;= ? AND search_date &lt;= ? &quot;;</span>
 
-<span class="nc bnc" id="L925" title="All 2 branches missed.">				if(addToQuery!=null)	sql += addToQuery;</span>
+<span class="nc bnc" id="L963" title="All 2 branches missed.">				if(addToQuery!=null)	sql += addToQuery;</span>
 
-<span class="nc" id="L927">				sql += &quot; GROUP BY query&quot;;</span>
-<span class="nc" id="L928">				sql += &quot; ORDER BY total DESC&quot;;</span>
+<span class="nc" id="L965">				sql += &quot; GROUP BY query&quot;;</span>
+<span class="nc" id="L966">				sql += &quot; ORDER BY total DESC&quot;;</span>
 
 
-<span class="nc" id="L931">				ps = StatNewDB.prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L969">				ps = StatNewDB.prepareStatement(db_conn, sql);</span>
 
-<span class="nc" id="L933">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
-<span class="nc" id="L934">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L971">				ps.setTimestamp(1, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L972">				ps.setTimestamp(2, new Timestamp(to.getTime()));</span>
 
-<span class="nc" id="L936">				rs = ps.executeQuery();</span>
+<span class="nc" id="L974">				rs = ps.executeQuery();</span>
 
-<span class="nc" id="L938">				i = 0;</span>
-<span class="nc bnc" id="L939" title="All 4 branches missed.">				while (rs.next() &amp;&amp; i++ &lt; maxSize)</span>
+<span class="nc" id="L976">				i = 0;</span>
+<span class="nc bnc" id="L977" title="All 4 branches missed.">				while (rs.next() &amp;&amp; i++ &lt; maxSize)</span>
 				{
-<span class="nc" id="L941">					String key = DB.prepareString(getDbString(rs, &quot;query&quot;), 25);</span>
-<span class="nc" id="L942">					Number currentValue = map.get(key);</span>
+<span class="nc" id="L979">					String key = DB.prepareString(getDbString(rs, &quot;query&quot;), 25);</span>
+<span class="nc" id="L980">					Number currentValue = map.get(key);</span>
 
-<span class="nc bnc" id="L944" title="All 2 branches missed.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
-<span class="nc" id="L945">					else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
-<span class="nc" id="L946">				}</span>
-<span class="nc" id="L947">				rs.close();</span>
-<span class="nc" id="L948">				ps.close();</span>
-<span class="nc" id="L949">				db_conn.close();</span>
-<span class="nc" id="L950">				db_conn = null;</span>
-<span class="nc" id="L951">				rs = null;</span>
-<span class="nc" id="L952">				ps = null;</span>
+<span class="nc bnc" id="L982" title="All 2 branches missed.">					if (currentValue == null) map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)));</span>
+<span class="nc" id="L983">					else map.put(key, Integer.valueOf(rs.getInt(&quot;total&quot;)+currentValue.intValue()));</span>
+<span class="nc" id="L984">				}</span>
+<span class="nc" id="L985">				rs.close();</span>
+<span class="nc" id="L986">				ps.close();</span>
+<span class="nc" id="L987">				db_conn.close();</span>
+<span class="nc" id="L988">				db_conn = null;</span>
+<span class="nc" id="L989">				rs = null;</span>
+<span class="nc" id="L990">				ps = null;</span>
 			}
-<span class="nc" id="L954">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
+<span class="nc" id="L992">			catch (Exception ex){sk.iway.iwcm.Logger.error(ex);}</span>
 			finally{
 				try{
-<span class="nc bnc" id="L957" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
-<span class="nc bnc" id="L958" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
-<span class="nc bnc" id="L959" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
-<span class="nc" id="L960">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
+<span class="nc bnc" id="L995" title="All 2 branches missed.">					if (rs != null) rs.close();</span>
+<span class="nc bnc" id="L996" title="All 2 branches missed.">					if (ps != null) ps.close();</span>
+<span class="nc bnc" id="L997" title="All 2 branches missed.">					if (db_conn != null) db_conn.close();</span>
+<span class="nc" id="L998">				}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}</span>
 			}
 		}
-<span class="nc" id="L963">		Logger.debug(StatDB.class, &quot;Done Getting search queries data. Dataset size: &quot; + map.size());</span>
-<span class="nc" id="L964">		return map;</span>
+<span class="nc" id="L1001">		Logger.debug(StatDB.class, &quot;Done Getting search queries data. Dataset size: &quot; + map.size());</span>
+<span class="nc" id="L1002">		return map;</span>
 	}
 
 	/**
@@ -979,7 +1017,7 @@ public class StatDB extends DB
 	 */
 	public static long getBrowserId(HttpServletRequest request, HttpServletResponse response)
 	{
-<span class="fc" id="L982">		return getBrowserId(request, response, null);</span>
+<span class="fc" id="L1020">		return getBrowserId(request, response, null);</span>
 	}
 
 	/**
@@ -997,104 +1035,102 @@ public class StatDB extends DB
 	 */
 	public static long getBrowserId(HttpServletRequest request, HttpServletResponse response, BrowserDetector browser)
 	{
-<span class="fc" id="L1000">		long browserId = 0;</span>
+<span class="fc" id="L1038">		long browserId = 0;</span>
+<span class="fc" id="L1039">		HttpSession session = request.getSession();</span>
 
-<span class="pc bpc" id="L1002" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false)</span>
+		/**
+		 * ak je to vyhladavaci stroj, priradi mu jeho ID v tabulke seo_engines
+		 */
+<span class="fc bfc" id="L1044" title="All 2 branches covered.">		if (browser == null) browser = BrowserDetector.getInstance(request);</span>
+<span class="fc bfc" id="L1045" title="All 2 branches covered.">		if (!browser.isStatUserAgentAllowed())</span>
 		{
-<span class="fc" id="L1004">			Cookie[] cookies = request.getCookies();</span>
-<span class="fc bfc" id="L1005" title="All 2 branches covered.">			if (cookies != null)</span>
+<span class="fc" id="L1047">			browserId = SeoManager.getSearchEngineId(browser.getBrowserName() + &quot; &quot; + browser.getBrowserVersion());</span>
+<span class="pc bpc" id="L1048" title="1 of 2 branches missed.">			if (session != null) session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
+		}
+
+<span class="pc bpc" id="L1051" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false)</span>
+		{
+<span class="fc" id="L1053">			Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L1054" title="All 2 branches covered.">			if (cookies != null)</span>
 			{
-<span class="fc bfc" id="L1007" title="All 2 branches covered.">				for (Cookie c : cookies)</span>
+<span class="fc bfc" id="L1056" title="All 2 branches covered.">				for (Cookie c : cookies)</span>
 				{
-<span class="pc bpc" id="L1009" title="1 of 2 branches missed.">					if (&quot;statBrowserIdNew&quot;.equals(c.getName()))</span>
+<span class="pc bpc" id="L1058" title="1 of 2 branches missed.">					if (&quot;statBrowserIdNew&quot;.equals(c.getName()))</span>
 					{
 						//zmaz statBrowserIdNew cookie
-<span class="nc" id="L1012">						Cookie statBrowserIdNew = new Cookie(&quot;statBrowserIdNew&quot;, &quot;0&quot;);</span>
-<span class="nc" id="L1013">						statBrowserIdNew.setPath(&quot;/&quot;);</span>
-<span class="nc" id="L1014">						statBrowserIdNew.setMaxAge(0);</span>
-<span class="nc" id="L1015">						statBrowserIdNew.setHttpOnly(true);</span>
-<span class="nc bnc" id="L1016" title="All 4 branches missed.">						if (Tools.isSecure(request) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;strictTransportSecurity&quot;)))</span>
+<span class="nc" id="L1061">						Cookie statBrowserIdNew = new Cookie(&quot;statBrowserIdNew&quot;, &quot;0&quot;);</span>
+<span class="nc" id="L1062">						statBrowserIdNew.setPath(&quot;/&quot;);</span>
+<span class="nc" id="L1063">						statBrowserIdNew.setMaxAge(0);</span>
+<span class="nc" id="L1064">						statBrowserIdNew.setHttpOnly(true);</span>
+<span class="nc bnc" id="L1065" title="All 4 branches missed.">						if (Tools.isSecure(request) &amp;&amp; Tools.isNotEmpty(Constants.getString(&quot;strictTransportSecurity&quot;)))</span>
 						{
-<span class="nc" id="L1018">							statBrowserIdNew.setSecure(true);</span>
+<span class="nc" id="L1067">							statBrowserIdNew.setSecure(true);</span>
 						}
-<span class="nc" id="L1020">						response.addCookie(statBrowserIdNew);</span>
+<span class="nc" id="L1069">						response.addCookie(statBrowserIdNew);</span>
 					}
 				}
 			}
 
-<span class="fc" id="L1025">			return browserId;</span>
+<span class="fc" id="L1074">			return browserId;</span>
 		}
 
-<span class="nc" id="L1028">		HttpSession session = request.getSession();</span>
-
-<span class="nc bnc" id="L1030" title="All 2 branches missed.">		if (session != null)</span>
+<span class="nc bnc" id="L1077" title="All 2 branches missed.">		if (session != null)</span>
 		{
-<span class="nc" id="L1032">			Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
+<span class="nc" id="L1079">			Identity user = (Identity) session.getAttribute(Constants.USER_KEY);</span>
 
 			/**
 			 * ak je to prihlaseny pouzivatel, tak sa mu priradi browserId ako konstanta + jeho userId
 			 */
-<span class="nc bnc" id="L1037" title="All 4 branches missed.">			if (user != null &amp;&amp; Constants.getBoolean(&quot;useUserIdAsBrowserId&quot;))</span>
+<span class="nc bnc" id="L1084" title="All 4 branches missed.">			if (user != null &amp;&amp; Constants.getBoolean(&quot;useUserIdAsBrowserId&quot;))</span>
 			{
-<span class="nc" id="L1039">				browserId = Constants.getInt(&quot;loggedUserBrowserId&quot;) + user.getUserId() + 0L;</span>
-<span class="nc" id="L1040">				session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
+<span class="nc" id="L1086">				browserId = Constants.getInt(&quot;loggedUserBrowserId&quot;) + user.getUserId() + 0L;</span>
+<span class="nc" id="L1087">				session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
 
-<span class="nc" id="L1042">				return(browserId);</span>
+<span class="nc" id="L1089">				return(browserId);</span>
 			}
 
 			/**
 			 * Teraz sa pokusime vydolovat browserId z session
 			 */
-<span class="nc bnc" id="L1048" title="All 2 branches missed.">			if (session.getAttribute(&quot;statFromBrowserId&quot;) != null)</span>
+<span class="nc bnc" id="L1095" title="All 2 branches missed.">			if (session.getAttribute(&quot;statFromBrowserId&quot;) != null)</span>
 			{
 				try
 				{
-<span class="nc" id="L1052">					browserId = ( (Long)session.getAttribute(&quot;statFromBrowserId&quot;)).longValue();</span>
+<span class="nc" id="L1099">					browserId = ( (Long)session.getAttribute(&quot;statFromBrowserId&quot;)).longValue();</span>
 
-<span class="nc bnc" id="L1054" title="All 2 branches missed.">					if (Tools.getCookieValue(request.getCookies(), &quot;statBrowserIdNew&quot;, null)!=null)</span>
+<span class="nc bnc" id="L1101" title="All 2 branches missed.">					if (Tools.getCookieValue(request.getCookies(), &quot;statBrowserIdNew&quot;, null)!=null)</span>
 					{
 						//ak uz ma cookie setnutu, tak rovno poslime, ak nema, musime dole setnut aj cookie, deje sa ked akceptuje statisticke cookie neskor
-<span class="nc" id="L1057">						return (browserId);</span>
+<span class="nc" id="L1104">						return (browserId);</span>
 					}
 				}
-<span class="nc" id="L1060">				catch (RuntimeException ex)</span>
+<span class="nc" id="L1107">				catch (RuntimeException ex)</span>
 				{
-<span class="nc" id="L1062">					sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L1063">				}</span>
-			}
-
-			/**
-			 * ak je to vyhladavaci stroj, priradi mu jeho ID v tabulke seo_engines
-			 */
-<span class="nc bnc" id="L1069" title="All 2 branches missed.">			if (browser == null) browser = BrowserDetector.getInstance(request);</span>
-<span class="nc bnc" id="L1070" title="All 2 branches missed.">			if (!browser.isStatUserAgentAllowed())</span>
-			{
-<span class="nc" id="L1072">				browserId = SeoManager.getSearchEngineId(browser.getBrowserName() + &quot; &quot; + browser.getBrowserVersion());</span>
-<span class="nc" id="L1073">				session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
-<span class="nc" id="L1074">				return (browserId);</span>
+<span class="nc" id="L1109">					sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1110">				}</span>
 			}
 		}
 
 		/**
 		 * Iba v pripade neregistrovaneho pouzivatela, sa vyskusa, ci nema nahodou ulozene browserId v cookies
 		 */
-<span class="nc" id="L1081">		Cookie[] cookies = request.getCookies();</span>
-<span class="nc bnc" id="L1082" title="All 2 branches missed.">		if (cookies != null)</span>
+<span class="nc" id="L1117">		Cookie[] cookies = request.getCookies();</span>
+<span class="nc bnc" id="L1118" title="All 2 branches missed.">		if (cookies != null)</span>
 		{
-<span class="nc" id="L1084">			int cLen = cookies.length;</span>
-<span class="nc" id="L1085">			String cValue = null;</span>
+<span class="nc" id="L1120">			int cLen = cookies.length;</span>
+<span class="nc" id="L1121">			String cValue = null;</span>
 
-<span class="nc bnc" id="L1087" title="All 2 branches missed.">			for (int k = 0; k &lt; cLen; k++)</span>
+<span class="nc bnc" id="L1123" title="All 2 branches missed.">			for (int k = 0; k &lt; cLen; k++)</span>
 			{
-<span class="nc bnc" id="L1089" title="All 2 branches missed.">				if (&quot;statBrowserIdNew&quot;.equals(cookies[k].getName()))</span>
+<span class="nc bnc" id="L1125" title="All 2 branches missed.">				if (&quot;statBrowserIdNew&quot;.equals(cookies[k].getName()))</span>
 				{
-<span class="nc" id="L1091">					cValue = Tools.URLDecode(cookies[k].getValue());</span>
+<span class="nc" id="L1127">					cValue = Tools.URLDecode(cookies[k].getValue());</span>
 				}
 				//Logger.println(this,&quot;cookie Name: &quot;+cookies[k].getName()+&quot;  value: &quot;+cookies[k].getValue());
 			}
-<span class="nc bnc" id="L1095" title="All 2 branches missed.">			if (Tools.isNotEmpty(cValue))</span>
+<span class="nc bnc" id="L1131" title="All 2 branches missed.">			if (Tools.isNotEmpty(cValue))</span>
 			{
-<span class="nc" id="L1097">				browserId = Tools.getIntValue(cValue, -1);</span>
+<span class="nc" id="L1133">				browserId = Tools.getIntValue(cValue, -1);</span>
 			}
 		}
 
@@ -1102,55 +1138,55 @@ public class StatDB extends DB
 		 * Ak vyslo browserId mensie ako konstanta pre neregistrovanych pouzivatelov, vygenerujeme nove Id.
 		 * Tato situacia by nemala nikdy nastat, lebo pre registrovanych sa browserId pocita ako konstanta + userId
 		 * a takisto pre vyhladavacie stroje. Situacia moze nastat ak sa SEO modul nasadil az po urcitej chvili
-		 * pouzivania WebJET-u a v cookies su ulozene stare hodnoty, kedze cookies expiruje az po dvoch mesiacoch.
+		 * pouzivania WebJET-u a v cookies su ulozene stare hodnoty, kedze cookies exspiruje az po dvoch mesiacoch.
 		 */
-<span class="nc bnc" id="L1107" title="All 2 branches missed.">		if (browserId &lt; Constants.getInt(&quot;unloggedUserBrowserId&quot;))</span>
+<span class="nc bnc" id="L1143" title="All 2 branches missed.">		if (browserId &lt; Constants.getInt(&quot;unloggedUserBrowserId&quot;))</span>
 		{
-<span class="nc" id="L1109">			Logger.debug(StatDB.class, &quot;Generating sbid: &quot; + Tools.getRemoteIP(request)+&quot; ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
-<span class="nc" id="L1110">			browserId = Constants.getInt(&quot;unloggedUserBrowserId&quot;) + PkeyGenerator.getNextValueAsLong(&quot;stat_browser_id&quot;); // pre neregnuteho usera sa vygeneruje cislo &gt; Constants.getInt(&quot;unloggedUserBrowserId&quot;)</span>
+<span class="nc" id="L1145">			Logger.debug(StatDB.class, &quot;Generating sbid: &quot; + Tools.getRemoteIP(request)+&quot; ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
+<span class="nc" id="L1146">			browserId = Constants.getInt(&quot;unloggedUserBrowserId&quot;) + PkeyGenerator.getNextValueAsLong(&quot;stat_browser_id&quot;); // pre neregnuteho usera sa vygeneruje cislo &gt; Constants.getInt(&quot;unloggedUserBrowserId&quot;)</span>
 		}
 
-<span class="nc bnc" id="L1113" title="All 2 branches missed.">		if (response != null)</span>
+<span class="nc bnc" id="L1149" title="All 2 branches missed.">		if (response != null)</span>
 		{
 			//	uloz do cookies
-<span class="nc" id="L1116">			Cookie statBrowserIdNew = new Cookie(&quot;statBrowserIdNew&quot;, Long.toString(browserId));</span>
-<span class="nc" id="L1117">			statBrowserIdNew.setPath(&quot;/&quot;);</span>
-<span class="nc" id="L1118">			statBrowserIdNew.setMaxAge(60 * 24 * 3600);</span>
-<span class="nc" id="L1119">			statBrowserIdNew.setHttpOnly(true);</span>
-<span class="nc" id="L1120">			Tools.addCookie(statBrowserIdNew, response,request);</span>
+<span class="nc" id="L1152">			Cookie statBrowserIdNew = new Cookie(&quot;statBrowserIdNew&quot;, Long.toString(browserId));</span>
+<span class="nc" id="L1153">			statBrowserIdNew.setPath(&quot;/&quot;);</span>
+<span class="nc" id="L1154">			statBrowserIdNew.setMaxAge(60 * 24 * 3600);</span>
+<span class="nc" id="L1155">			statBrowserIdNew.setHttpOnly(true);</span>
+<span class="nc" id="L1156">			Tools.addCookie(statBrowserIdNew, response,request);</span>
 		}
 
-<span class="nc bnc" id="L1123" title="All 2 branches missed.">		if (session != null) session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
+<span class="nc bnc" id="L1159" title="All 2 branches missed.">		if (session != null) session.setAttribute(&quot;statFromBrowserId&quot;, Long.valueOf(browserId));</span>
 
-<span class="nc" id="L1125">		return(browserId);</span>
+<span class="nc" id="L1161">		return(browserId);</span>
 	}
 
 	public static long getSessionId(HttpServletRequest request)
 	{
-<span class="fc" id="L1130">		long sessionId = 0;</span>
+<span class="fc" id="L1166">		long sessionId = 0;</span>
 
-<span class="fc" id="L1132">		HttpSession session = request.getSession();</span>
-<span class="pc bpc" id="L1133" title="1 of 4 branches missed.">		if (session != null &amp;&amp; session.getAttribute(&quot;statFromSessionId&quot;) != null)</span>
+<span class="fc" id="L1168">		HttpSession session = request.getSession();</span>
+<span class="pc bpc" id="L1169" title="1 of 4 branches missed.">		if (session != null &amp;&amp; session.getAttribute(&quot;statFromSessionId&quot;) != null)</span>
 		{
 			try
 			{
-<span class="fc" id="L1137">				sessionId = ( (Long)session.getAttribute(&quot;statFromSessionId&quot;)).longValue();</span>
+<span class="fc" id="L1173">				sessionId = ( (Long)session.getAttribute(&quot;statFromSessionId&quot;)).longValue();</span>
 			}
-<span class="nc" id="L1139">			catch (RuntimeException ex)</span>
+<span class="nc" id="L1175">			catch (RuntimeException ex)</span>
 			{
-<span class="nc" id="L1141">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L1142">			}</span>
+<span class="nc" id="L1177">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L1178">			}</span>
 		}
 
-<span class="fc bfc" id="L1145" title="All 2 branches covered.">		if (sessionId &lt; 1)</span>
+<span class="fc bfc" id="L1181" title="All 2 branches covered.">		if (sessionId &lt; 1)</span>
 		{
-<span class="fc" id="L1147">			Logger.debug(StatDB.class, &quot;Generating ssid: &quot;+Tools.getRemoteIP(request)+&quot; ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
-<span class="fc" id="L1148">			sessionId = PkeyGenerator.getNextValueAsLong(&quot;stat_session_id&quot;);</span>
+<span class="fc" id="L1183">			Logger.debug(StatDB.class, &quot;Generating ssid: &quot;+Tools.getRemoteIP(request)+&quot; ua=&quot;+request.getHeader(&quot;User-Agent&quot;));</span>
+<span class="fc" id="L1184">			sessionId = PkeyGenerator.getNextValueAsLong(&quot;stat_session_id&quot;);</span>
 		}
 
-<span class="pc bpc" id="L1151" title="1 of 2 branches missed.">		if (session != null) session.setAttribute(&quot;statFromSessionId&quot;, Long.valueOf(sessionId));</span>
+<span class="pc bpc" id="L1187" title="1 of 2 branches missed.">		if (session != null) session.setAttribute(&quot;statFromSessionId&quot;, Long.valueOf(sessionId));</span>
 
-<span class="fc" id="L1153">		return(sessionId);</span>
+<span class="fc" id="L1189">		return(sessionId);</span>
 	}
 
 	/**
@@ -1159,139 +1195,139 @@ public class StatDB extends DB
 	public static void addStatFrom(HttpSession session, HttpServletRequest request, HttpServletResponse response, BrowserDetector browser, int docId, int groupId)
 	{
 
-<span class="fc" id="L1162">		long browserId = getBrowserId(request, response, browser);</span>
-<span class="fc" id="L1163">		long sessionId = getSessionId(request);</span>
+<span class="fc" id="L1198">		long browserId = getBrowserId(request, response, browser);</span>
+<span class="fc" id="L1199">		long sessionId = getSessionId(request);</span>
 
 		//Logger.println(this,&quot;browserId= &quot;+browserId+ &quot;  sessionId= &quot;+sessionId);
 
-<span class="fc" id="L1167">		String referer = request.getHeader(&quot;referer&quot;);</span>
+<span class="fc" id="L1203">		String referer = request.getHeader(&quot;referer&quot;);</span>
 		//Logger.println(this,&quot;referer=&quot;+referer);
-<span class="pc bpc" id="L1169" title="1 of 4 branches missed.">		if (Tools.isEmpty(referer) || referer.length()&lt;10)</span>
+<span class="pc bpc" id="L1205" title="1 of 4 branches missed.">		if (Tools.isEmpty(referer) || referer.length()&lt;10)</span>
 		{
-<span class="fc" id="L1171">			return;</span>
+<span class="fc" id="L1207">			return;</span>
 		}
 
 		//if (referer.startsWith(&quot;http://&quot;))
-<span class="pc bpc" id="L1175" title="1 of 2 branches missed.">		if (referer.indexOf(&quot;//&quot;) &gt; 2)</span>
+<span class="pc bpc" id="L1211" title="1 of 2 branches missed.">		if (referer.indexOf(&quot;//&quot;) &gt; 2)</span>
 		{
-<span class="fc" id="L1177">			referer = referer.substring(referer.indexOf(&quot;//&quot;) + 2);</span>
+<span class="fc" id="L1213">			referer = referer.substring(referer.indexOf(&quot;//&quot;) + 2);</span>
 		}
 		//Logger.println(this,&quot;referer=&quot;+referer);
-<span class="fc" id="L1180">		int i = referer.indexOf('/');</span>
-<span class="fc" id="L1181">		String host = null;</span>
-<span class="fc" id="L1182">		String url = null;</span>
-<span class="fc" id="L1183">		String statNoReferer = Constants.getString(&quot;statNoReferer&quot;);</span>
+<span class="fc" id="L1216">		int i = referer.indexOf('/');</span>
+<span class="fc" id="L1217">		String host = null;</span>
+<span class="fc" id="L1218">		String url = null;</span>
+<span class="fc" id="L1219">		String statNoReferer = Constants.getString(&quot;statNoReferer&quot;);</span>
 
-<span class="pc bpc" id="L1185" title="1 of 2 branches missed.">		if (i &gt; 0)</span>
+<span class="pc bpc" id="L1221" title="1 of 2 branches missed.">		if (i &gt; 0)</span>
 		{
-<span class="fc" id="L1187">			host = referer.substring(0, i);</span>
-<span class="fc" id="L1188">			host = Tools.replace(host, &quot;http://&quot;, &quot;&quot;);</span>
-<span class="fc" id="L1189">			host = Tools.replace(host, &quot;https://&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L1190" title="1 of 2 branches missed.">			if (host.indexOf(&quot;:&quot;)!=-1) host = host.substring(0, host.indexOf(&quot;:&quot;));</span>
+<span class="fc" id="L1223">			host = referer.substring(0, i);</span>
+<span class="fc" id="L1224">			host = Tools.replace(host, &quot;http://&quot;, &quot;&quot;);</span>
+<span class="fc" id="L1225">			host = Tools.replace(host, &quot;https://&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L1226" title="1 of 2 branches missed.">			if (host.indexOf(&quot;:&quot;)!=-1) host = host.substring(0, host.indexOf(&quot;:&quot;));</span>
 
-<span class="fc" id="L1192">			url = referer.substring(i);</span>
+<span class="fc" id="L1228">			url = referer.substring(i);</span>
 			//Logger.println(this,&quot;host: &quot;+host+&quot;  url: &quot;+url);
 
 			//ak je to odkaz z nasej stranky, preskakujeme
-<span class="pc bpc" id="L1196" title="1 of 2 branches missed.">			if (host.equals(Tools.getServerName(request))) return;</span>
+<span class="pc bpc" id="L1232" title="1 of 2 branches missed.">			if (host.equals(Tools.getServerName(request))) return;</span>
 
 			//pridaj aj forwarded-for
-<span class="fc" id="L1199">			String forwardedFor = request.getHeader(&quot;x-forwarded-host&quot;);</span>
-<span class="pc bpc" id="L1200" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(forwardedFor))</span>
+<span class="fc" id="L1235">			String forwardedFor = request.getHeader(&quot;x-forwarded-host&quot;);</span>
+<span class="pc bpc" id="L1236" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(forwardedFor))</span>
 			{
-<span class="nc bnc" id="L1202" title="All 2 branches missed.">				if (host.equals(forwardedFor)) return;</span>
+<span class="nc bnc" id="L1238" title="All 2 branches missed.">				if (host.equals(forwardedFor)) return;</span>
 			}
 
-<span class="fc" id="L1205">			String[] statNoRefs = getTokens(statNoReferer, &quot;,&quot;);</span>
-<span class="pc bpc" id="L1206" title="1 of 2 branches missed.">			if (statNoRefs.length &gt; 0)</span>
+<span class="fc" id="L1241">			String[] statNoRefs = getTokens(statNoReferer, &quot;,&quot;);</span>
+<span class="pc bpc" id="L1242" title="1 of 2 branches missed.">			if (statNoRefs.length &gt; 0)</span>
 			{
-<span class="nc bnc" id="L1208" title="All 2 branches missed.">				for(int ind=0; ind&lt;statNoRefs.length; ind++)</span>
+<span class="nc bnc" id="L1244" title="All 2 branches missed.">				for(int ind=0; ind&lt;statNoRefs.length; ind++)</span>
 				{
-<span class="nc bnc" id="L1210" title="All 2 branches missed.">					if (host.equals(statNoRefs[ind]))</span>
+<span class="nc bnc" id="L1246" title="All 2 branches missed.">					if (host.equals(statNoRefs[ind]))</span>
 					{
 						//ak je to odkaz z nasej stranky, preskakujeme
-<span class="nc" id="L1213">						return;</span>
+<span class="nc" id="L1249">						return;</span>
 					}
 				}
 			}
 		}
 
-<span class="pc bpc" id="L1219" title="2 of 4 branches missed.">		if (Tools.isEmpty(host) || Tools.isEmpty(url))</span>
+<span class="pc bpc" id="L1255" title="2 of 4 branches missed.">		if (Tools.isEmpty(host) || Tools.isEmpty(url))</span>
 		{
-<span class="nc" id="L1221">			return;</span>
+<span class="nc" id="L1257">			return;</span>
 		}
 
 		//ok, mame. Zapiseme do databazy
-<span class="fc" id="L1225">		String sql = &quot;INSERT INTO stat_from&quot;+StatNewDB.getTableSuffix(&quot;stat_from&quot;)+&quot; (browser_id, session_id, referer_server_name, referer_url, from_time, doc_id, group_id) &quot; +</span>
+<span class="fc" id="L1261">		String sql = &quot;INSERT INTO stat_from&quot;+StatNewDB.getTableSuffix(&quot;stat_from&quot;)+&quot; (browser_id, session_id, referer_server_name, referer_url, from_time, doc_id, group_id) &quot; +</span>
 		&quot;VALUES (?, ?, ?, ?, ?, ?, ?)&quot;;
-<span class="fc" id="L1227">		StatWriteBuffer.add(sql, &quot;stat_from&quot;, browserId, sessionId, DB.prepareString(host, 254), DB.prepareString(url, 254), new Timestamp(getCurrentTime(request)), docId, groupId);</span>
-<span class="fc" id="L1228">	}</span>
+<span class="fc" id="L1263">		StatWriteBuffer.add(sql, &quot;stat_from&quot;, browserId, sessionId, DB.prepareString(host, 254), DB.prepareString(url, 254), new Timestamp(getCurrentTime(request)), docId, groupId);</span>
+<span class="fc" id="L1264">	}</span>
 
 	/**
 	 * Zapis statistiky do stat_views
 	 */
 	public static void addStatViews(HttpSession session, HttpServletRequest request, HttpServletResponse response, int docId, int lastDocId, BrowserDetector browser)
 	{
-<span class="pc bpc" id="L1235" title="2 of 6 branches missed.">		if (docId &lt; 1 || &quot;old&quot;.equals(Constants.getString(&quot;statMode&quot;)) || request==null)</span>
+<span class="pc bpc" id="L1271" title="2 of 6 branches missed.">		if (docId &lt; 1 || &quot;old&quot;.equals(Constants.getString(&quot;statMode&quot;)) || request==null)</span>
 		{
-<span class="fc" id="L1237">			return;</span>
+<span class="fc" id="L1273">			return;</span>
 		}
 
 		//GDPR nemozeme sledovat statistiku, kym nam to nepovoli navstevnik
-<span class="fc" id="L1241">		boolean mustAnonymize = false;</span>
-<span class="pc bpc" id="L1242" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
+<span class="fc" id="L1277">		boolean mustAnonymize = false;</span>
+<span class="pc bpc" id="L1278" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
 
-<span class="pc bpc" id="L1244" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;statEnableDocCount&quot;))</span>
+<span class="pc bpc" id="L1280" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;statEnableDocCount&quot;))</span>
 		{
 			//aktualizuj celkovy pocet videni stranky
-<span class="nc" id="L1247">			String sql = &quot;UPDATE documents SET views_total=views_total+1 WHERE doc_id=?&quot;;</span>
-<span class="nc" id="L1248">			List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L1249">			params.add(docId);</span>
-<span class="nc" id="L1250">			StatWriteBuffer.add(sql, &quot;documents&quot;, params.toArray());</span>
+<span class="nc" id="L1283">			String sql = &quot;UPDATE documents SET views_total=views_total+1 WHERE doc_id=?&quot;;</span>
+<span class="nc" id="L1284">			List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L1285">			params.add(docId);</span>
+<span class="nc" id="L1286">			StatWriteBuffer.add(sql, &quot;documents&quot;, params.toArray());</span>
 		}
 
-<span class="fc" id="L1253">		long browserId = getBrowserId(request, response, browser);</span>
-<span class="fc" id="L1254">		long sessionId = getSessionId(request);</span>
+<span class="fc" id="L1289">		long browserId = getBrowserId(request, response, browser);</span>
+<span class="fc" id="L1290">		long sessionId = getSessionId(request);</span>
 
 		//it's search bot, save correct browserId
-<span class="pc bpc" id="L1257" title="3 of 4 branches missed.">		if (browserId&gt;0 &amp;&amp; browserId &lt; Constants.getInt(&quot;loggedUserBrowserId&quot;)) mustAnonymize = false;</span>
+<span class="pc bpc" id="L1293" title="1 of 4 branches missed.">		if (browserId&gt;0 &amp;&amp; browserId &lt; Constants.getInt(&quot;loggedUserBrowserId&quot;)) mustAnonymize = false;</span>
 
-<span class="fc" id="L1259">		DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L1295">		DocDB docDB = DocDB.getInstance();</span>
 
-<span class="fc" id="L1261">		String tableName = &quot;stat_views&quot;;</span>
-<span class="fc" id="L1262">		Calendar cal = Calendar.getInstance();</span>
-<span class="pc bpc" id="L1263" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)==true)</span>
+<span class="fc" id="L1297">		String tableName = &quot;stat_views&quot;;</span>
+<span class="fc" id="L1298">		Calendar cal = Calendar.getInstance();</span>
+<span class="pc bpc" id="L1299" title="1 of 2 branches missed.">		if (Constants.getBoolean(&quot;statEnableTablePartitioning&quot;)==true)</span>
 		{
-<span class="fc" id="L1265">			tableName = tableName + &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
+<span class="fc" id="L1301">			tableName = tableName + &quot;_&quot;+cal.get(Calendar.YEAR)+&quot;_&quot;+(cal.get(Calendar.MONTH)+1);</span>
 		}
 
 		//ok, mame. Zapiseme do databazy
-<span class="fc" id="L1269">		String sql = &quot;INSERT INTO &quot;+tableName+&quot; (browser_id, session_id, doc_id, last_doc_id, view_time, group_id, last_group_id, browser_ua_id, platform_id, subplatform_id, country) &quot; +</span>
+<span class="fc" id="L1305">		String sql = &quot;INSERT INTO &quot;+tableName+&quot; (browser_id, session_id, doc_id, last_doc_id, view_time, group_id, last_group_id, browser_ua_id, platform_id, subplatform_id, country) &quot; +</span>
 		&quot;VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;;
-<span class="fc" id="L1271">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L1272">		params.add(browserId);</span>
-<span class="fc" id="L1273">		params.add(sessionId);</span>
-<span class="fc" id="L1274">		params.add(docId);</span>
-<span class="fc" id="L1275">		params.add(lastDocId);</span>
-<span class="fc" id="L1276">		params.add(new Timestamp(getCurrentTime(mustAnonymize)));</span>
-<span class="fc" id="L1277">		params.add(docDB.getBasicDocDetails(docId, true).getGroupId());</span>
-<span class="fc" id="L1278">		params.add(docDB.getBasicDocDetails(lastDocId, true).getGroupId());</span>
-<span class="pc bpc" id="L1279" title="2 of 4 branches missed.">		if (browser == null || mustAnonymize)</span>
+<span class="fc" id="L1307">		List&lt;Object&gt; params = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L1308">		params.add(browserId);</span>
+<span class="fc" id="L1309">		params.add(sessionId);</span>
+<span class="fc" id="L1310">		params.add(docId);</span>
+<span class="fc" id="L1311">		params.add(lastDocId);</span>
+<span class="fc" id="L1312">		params.add(new Timestamp(getCurrentTime(mustAnonymize)));</span>
+<span class="fc" id="L1313">		params.add(docDB.getBasicDocDetails(docId, true).getGroupId());</span>
+<span class="fc" id="L1314">		params.add(docDB.getBasicDocDetails(lastDocId, true).getGroupId());</span>
+<span class="pc bpc" id="L1315" title="1 of 2 branches missed.">		if (browser == null)</span>
 		{
-<span class="fc" id="L1281">			params.add(0);</span>
-<span class="fc" id="L1282">			params.add(0);</span>
-<span class="fc" id="L1283">			params.add(0);</span>
-<span class="fc" id="L1284">			params.add(&quot;unkn&quot;);</span>
+<span class="nc" id="L1317">			params.add(0);</span>
+<span class="nc" id="L1318">			params.add(0);</span>
+<span class="nc" id="L1319">			params.add(0);</span>
+<span class="nc" id="L1320">			params.add(&quot;unkn&quot;);</span>
 		}
 		else
 		{
-<span class="nc" id="L1288">			params.add(browser.getBrowserUaId());</span>
-<span class="nc" id="L1289">			params.add(browser.getPlatformId());</span>
-<span class="nc" id="L1290">			params.add(browser.getSubplatformId());</span>
-<span class="nc" id="L1291">			params.add(browser.getCountry());</span>
+<span class="fc" id="L1324">			params.add(browser.getBrowserUaId());</span>
+<span class="fc" id="L1325">			params.add(browser.getPlatformId());</span>
+<span class="fc" id="L1326">			params.add(browser.getSubplatformId());</span>
+<span class="fc" id="L1327">			params.add(browser.getCountry());</span>
 		}
-<span class="fc" id="L1293">		StatWriteBuffer.add(sql, &quot;stat_views&quot;, params.toArray());</span>
-<span class="fc" id="L1294">	}</span>
+<span class="fc" id="L1329">		StatWriteBuffer.add(sql, &quot;stat_views&quot;, params.toArray());</span>
+<span class="fc" id="L1330">	}</span>
 
 	/**
 	 * Vrati pole typu String, s jednotlivymi polozkami v retazci, ak sa retazec neda rozdelit, vrati prazdne pole
@@ -1301,26 +1337,26 @@ public class StatDB extends DB
 	 */
 	public static String[] getTokens(String groups, String delimiter)
 	{
-<span class="fc" id="L1304">		String[] ret = new String[0];</span>
+<span class="fc" id="L1340">		String[] ret = new String[0];</span>
 		StringTokenizer st;
-<span class="fc" id="L1306">		int i = 0;</span>
+<span class="fc" id="L1342">		int i = 0;</span>
 		try
 		{
-<span class="pc bpc" id="L1309" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(groups))</span>
+<span class="pc bpc" id="L1345" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(groups))</span>
 			{
-<span class="nc" id="L1311">				st = new StringTokenizer(groups, delimiter);</span>
-<span class="nc" id="L1312">				ret = new String[st.countTokens()];</span>
-<span class="nc bnc" id="L1313" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="nc" id="L1347">				st = new StringTokenizer(groups, delimiter);</span>
+<span class="nc" id="L1348">				ret = new String[st.countTokens()];</span>
+<span class="nc bnc" id="L1349" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L1315">					ret[i++] = st.nextToken().trim();</span>
+<span class="nc" id="L1351">					ret[i++] = st.nextToken().trim();</span>
 				}
 			}
 		}
-<span class="nc" id="L1319">		catch (Exception e)</span>
+<span class="nc" id="L1355">		catch (Exception e)</span>
 		{
-<span class="nc" id="L1321">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L1322">		}</span>
-<span class="fc" id="L1323">		return(ret);</span>
+<span class="nc" id="L1357">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L1358">		}</span>
+<span class="fc" id="L1359">		return(ret);</span>
 
 	}
 
@@ -1330,21 +1366,21 @@ public class StatDB extends DB
 	@SuppressWarnings(&quot;java:S2293&quot;)
 	public static &lt;K, V extends Number&gt; Map&lt;K, V&gt; sortByValue(Map&lt;K, V&gt; map)
 	{
-<span class="fc" id="L1333">		List&lt;Map.Entry&lt;K, V&gt;&gt; list = new LinkedList&lt;Map.Entry&lt;K, V&gt;&gt;(map.entrySet());</span>
-<span class="fc" id="L1334">		Collections.sort(list, new Comparator&lt;Map.Entry&lt;K, V&gt;&gt;()</span>
-<span class="fc" id="L1335">		{</span>
+<span class="fc" id="L1369">		List&lt;Map.Entry&lt;K, V&gt;&gt; list = new LinkedList&lt;Map.Entry&lt;K, V&gt;&gt;(map.entrySet());</span>
+<span class="fc" id="L1370">		Collections.sort(list, new Comparator&lt;Map.Entry&lt;K, V&gt;&gt;()</span>
+<span class="fc" id="L1371">		{</span>
 			@Override
 			public int compare(Map.Entry&lt;K, V&gt; o1, Map.Entry&lt;K, V&gt; o2)
 			{
-<span class="fc" id="L1339">				return (o2.getValue().intValue() - o1.getValue().intValue());</span>
+<span class="fc" id="L1375">				return (o2.getValue().intValue() - o1.getValue().intValue());</span>
 			}
 		});
-<span class="fc" id="L1342">		Map&lt;K, V&gt; result = new LinkedHashMap&lt;K, V&gt;();</span>
-<span class="fc bfc" id="L1343" title="All 2 branches covered.">		for (Map.Entry&lt;K, V&gt; entry : list)</span>
+<span class="fc" id="L1378">		Map&lt;K, V&gt; result = new LinkedHashMap&lt;K, V&gt;();</span>
+<span class="fc bfc" id="L1379" title="All 2 branches covered.">		for (Map.Entry&lt;K, V&gt; entry : list)</span>
 		{
-<span class="fc" id="L1345">			result.put(entry.getKey(), entry.getValue());</span>
-<span class="fc" id="L1346">		}</span>
-<span class="fc" id="L1347">		return result;</span>
+<span class="fc" id="L1381">			result.put(entry.getKey(), entry.getValue());</span>
+<span class="fc" id="L1382">		}</span>
+<span class="fc" id="L1383">		return result;</span>
 	}
 
 	/**
@@ -1353,21 +1389,21 @@ public class StatDB extends DB
 	@SuppressWarnings(&quot;java:S2293&quot;)
 	public static &lt;K extends Comparable&lt;K&gt;, V&gt; Map&lt;K, V&gt; sortByKey(Map&lt;K, V&gt; map)
 	{
-<span class="nc" id="L1356">		List&lt;Map.Entry&lt;K, V&gt;&gt; list = new LinkedList&lt;Map.Entry&lt;K, V&gt;&gt;(map.entrySet());</span>
-<span class="nc" id="L1357">		Collections.sort(list, new Comparator&lt;Map.Entry&lt;K, V&gt;&gt;()</span>
-<span class="nc" id="L1358">		{</span>
+<span class="nc" id="L1392">		List&lt;Map.Entry&lt;K, V&gt;&gt; list = new LinkedList&lt;Map.Entry&lt;K, V&gt;&gt;(map.entrySet());</span>
+<span class="nc" id="L1393">		Collections.sort(list, new Comparator&lt;Map.Entry&lt;K, V&gt;&gt;()</span>
+<span class="nc" id="L1394">		{</span>
 			@Override
 			public int compare(Map.Entry&lt;K, V&gt; o1, Map.Entry&lt;K, V&gt; o2)
 			{
-<span class="nc" id="L1362">				return (o2.getKey().compareTo(o1.getKey()));</span>
+<span class="nc" id="L1398">				return (o2.getKey().compareTo(o1.getKey()));</span>
 			}
 		});
-<span class="nc" id="L1365">		Map&lt;K, V&gt; result = new LinkedHashMap&lt;K, V&gt;();</span>
-<span class="nc bnc" id="L1366" title="All 2 branches missed.">		for (Map.Entry&lt;K, V&gt; entry : list)</span>
+<span class="nc" id="L1401">		Map&lt;K, V&gt; result = new LinkedHashMap&lt;K, V&gt;();</span>
+<span class="nc bnc" id="L1402" title="All 2 branches missed.">		for (Map.Entry&lt;K, V&gt; entry : list)</span>
 		{
-<span class="nc" id="L1368">			result.put(entry.getKey(), entry.getValue());</span>
-<span class="nc" id="L1369">		}</span>
-<span class="nc" id="L1370">		return result;</span>
+<span class="nc" id="L1404">			result.put(entry.getKey(), entry.getValue());</span>
+<span class="nc" id="L1405">		}</span>
+<span class="nc" id="L1406">		return result;</span>
 	}
 
 	/**
@@ -1379,39 +1415,43 @@ public class StatDB extends DB
 	 *
 	 * @throws IllegalArgumentException when maxTags or daysFrom are negative or zero, or searchUrlBase is null
 	 */
-	public static Collection&lt;Tag&gt; getSearchCloudTags(int maxTags, int daysFrom, String searchUrlBase) throws IllegalArgumentException
+	public static Collection&lt;Column&gt; getSearchCloudTags(int maxTags, int daysFrom, String searchUrlBase) throws IllegalArgumentException
 	{
-<span class="nc bnc" id="L1384" title="All 2 branches missed.">		if(maxTags &lt; 1)</span>
+<span class="nc bnc" id="L1420" title="All 2 branches missed.">		if(maxTags &lt; 1)</span>
 		{
-<span class="nc" id="L1386">			throw new IllegalArgumentException(&quot;maxTags must be positive number&quot;);</span>
+<span class="nc" id="L1422">			throw new IllegalArgumentException(&quot;maxTags must be positive number&quot;);</span>
 		}
-<span class="nc bnc" id="L1388" title="All 2 branches missed.">		if(daysFrom &lt; 1)</span>
+<span class="nc bnc" id="L1424" title="All 2 branches missed.">		if(daysFrom &lt; 1)</span>
 		{
-<span class="nc" id="L1390">			throw new IllegalArgumentException(&quot;daysFrom must be positive number&quot;);</span>
+<span class="nc" id="L1426">			throw new IllegalArgumentException(&quot;daysFrom must be positive number&quot;);</span>
 		}
-<span class="nc bnc" id="L1392" title="All 2 branches missed.">		if(searchUrlBase == null)</span>
+<span class="nc bnc" id="L1428" title="All 2 branches missed.">		if(searchUrlBase == null)</span>
 		{
-<span class="nc" id="L1394">			throw new IllegalArgumentException(&quot;searchUrlBase must not be null&quot;);</span>
+<span class="nc" id="L1430">			throw new IllegalArgumentException(&quot;searchUrlBase must not be null&quot;);</span>
 		}
 
-<span class="nc" id="L1397">		Collection&lt;Tag&gt; tags = Collections.emptyList();</span>
+<span class="nc" id="L1433">		Collection&lt;Column&gt; tags = Collections.emptyList();</span>
 
-<span class="nc" id="L1399">		Calendar to = Calendar.getInstance();</span>
-<span class="nc" id="L1400">		Calendar from = Calendar.getInstance();</span>
-<span class="nc" id="L1401">		from.add(Calendar.DAY_OF_YEAR, -daysFrom);</span>
+<span class="nc" id="L1435">		Calendar to = Calendar.getInstance();</span>
+<span class="nc" id="L1436">		Calendar from = Calendar.getInstance();</span>
+<span class="nc" id="L1437">		from.add(Calendar.DAY_OF_YEAR, -daysFrom);</span>
 
-<span class="nc" id="L1403">		Map&lt;String, Number&gt; map = getSearchQueriesData(from.getTime(), to.getTime(), maxTags, &quot;&quot;, &quot;&quot;);</span>
+<span class="nc" id="L1439">		Map&lt;String, Number&gt; map = getSearchQueriesData(from.getTime(), to.getTime(), maxTags, &quot;&quot;, &quot;&quot;);</span>
 
-<span class="nc bnc" id="L1405" title="All 2 branches missed.">		if(map.size() &gt; 0)</span>
+<span class="nc bnc" id="L1441" title="All 2 branches missed.">		if(map.size() &gt; 0)</span>
 		{
-<span class="nc" id="L1407">			tags = new ArrayList&lt;&gt;(map.size());</span>
-<span class="nc bnc" id="L1408" title="All 2 branches missed.">			for(Map.Entry&lt;String, Number&gt; entry : map.entrySet())</span>
+<span class="nc" id="L1443">			tags = new ArrayList&lt;&gt;(map.size());</span>
+<span class="nc bnc" id="L1444" title="All 2 branches missed.">			for(Map.Entry&lt;String, Number&gt; entry : map.entrySet())</span>
 			{
-<span class="nc" id="L1410">				tags.add(new Tag(entry.getKey(),searchUrlBase+entry.getKey(),entry.getValue().doubleValue()));</span>
-<span class="nc" id="L1411">			}</span>
+<span class="nc" id="L1446">				Column col = new Column();</span>
+<span class="nc" id="L1447">				col.setColumn1(entry.getKey());</span>
+<span class="nc" id="L1448">				col.setColumn2(searchUrlBase+entry.getKey());</span>
+<span class="nc" id="L1449">				col.setDoubleColumn1(entry.getValue().doubleValue());</span>
+<span class="nc" id="L1450">				tags.add(col);</span>
+<span class="nc" id="L1451">			}</span>
 		}
 
-<span class="nc" id="L1414">		return tags;</span>
+<span class="nc" id="L1454">		return tags;</span>
 	}
 
 	/**
@@ -1420,9 +1460,9 @@ public class StatDB extends DB
 	 * @return
 	 */
 	private static long getCurrentTime(HttpServletRequest request) {
-<span class="fc" id="L1423">		boolean mustAnonymize = false;</span>
-<span class="pc bpc" id="L1424" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
-<span class="fc" id="L1425">		return getCurrentTime(mustAnonymize);</span>
+<span class="fc" id="L1463">		boolean mustAnonymize = false;</span>
+<span class="pc bpc" id="L1464" title="1 of 2 branches missed.">		if (Tools.canSetCookie(&quot;statisticke&quot;, request.getCookies())==false) mustAnonymize = true;</span>
+<span class="fc" id="L1465">		return getCurrentTime(mustAnonymize);</span>
 	}
 
 	/**
@@ -1431,17 +1471,17 @@ public class StatDB extends DB
 	 * @return
 	 */
 	private static long getCurrentTime(boolean mustAnonymize) {
-<span class="fc" id="L1434">		Calendar calendar = Calendar.getInstance();</span>
+<span class="fc" id="L1474">		Calendar calendar = Calendar.getInstance();</span>
 
-<span class="pc bpc" id="L1436" title="1 of 2 branches missed.">		if (mustAnonymize==false) return calendar.getTimeInMillis();</span>
+<span class="fc bfc" id="L1476" title="All 2 branches covered.">		if (mustAnonymize==false) return calendar.getTimeInMillis();</span>
 
-<span class="fc" id="L1438">		int unroundedMinutes = calendar.get(Calendar.MINUTE);</span>
-<span class="fc" id="L1439">		calendar.set(Calendar.SECOND, 0);</span>
-<span class="fc" id="L1440">		calendar.set(Calendar.MILLISECOND, 0);</span>
-<span class="fc" id="L1441">		int mod = unroundedMinutes % 15;</span>
-<span class="fc bfc" id="L1442" title="All 2 branches covered.">		calendar.add(Calendar.MINUTE, mod &lt; 8 ? -mod : (15-mod));</span>
+<span class="fc" id="L1478">		int unroundedMinutes = calendar.get(Calendar.MINUTE);</span>
+<span class="fc" id="L1479">		calendar.set(Calendar.SECOND, 0);</span>
+<span class="fc" id="L1480">		calendar.set(Calendar.MILLISECOND, 0);</span>
+<span class="fc" id="L1481">		int mod = unroundedMinutes % 15;</span>
+<span class="fc bfc" id="L1482" title="All 2 branches covered.">		calendar.add(Calendar.MINUTE, mod &lt; 8 ? -mod : (15-mod));</span>
 
-<span class="fc" id="L1444">		return calendar.getTimeInMillis();</span>
+<span class="fc" id="L1484">		return calendar.getTimeInMillis();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

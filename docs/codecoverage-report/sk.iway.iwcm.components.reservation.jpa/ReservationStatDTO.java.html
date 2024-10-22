@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReservationStatDTO.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.reservation.jpa</a> &gt; <span class="el_source">ReservationStatDTO.java</span></div><h1>ReservationStatDTO.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.reservation.jpa;
+
+import java.math.BigDecimal;
+
+import lombok.Getter;
+import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+
+@Getter
+@Setter
+<span class="fc" id="L12">public class ReservationStatDTO {</span>
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;reguser.fullname&quot;
+    )
+	private String userName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title=&quot;reservation.reservation_object.selected_object&quot;
+    )
+	private String reservationObjectName;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;reservation.reservation_stat.numberOfReservations&quot;
+    )
+    private Integer numberOfReservations;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        title=&quot;reservation.reservation_stat.totalPrice&quot;
+    )
+    private BigDecimal totalPrice;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;reservation.reservation_stat.numberOfReservedDays&quot;
+    )
+    private Integer numberOfReservedDays;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        title=&quot;reservation.reservation_stat.averageIntervalInDays&quot;
+    )
+    private BigDecimal averageIntervalInDays;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        title=&quot;reservation.reservation_stat.totalReservedHours&quot;
+    )
+	private BigDecimal totalReservedHours;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.NUMBER,
+        renderFormat = &quot;dt-format-number--decimal&quot;,
+        title=&quot;reservation.reservation_stat.averageTimePerDay&quot;
+    )
+    private BigDecimal averageTimePerDay;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

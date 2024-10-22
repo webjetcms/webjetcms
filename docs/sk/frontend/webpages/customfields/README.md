@@ -13,6 +13,7 @@ Adresár:
 Názvy Pole A - Pole X je možné zmeniť v konfigurácii v časti editácia textov. Stačí modifikovať kľúče:
 
 - ```editor.field_x``` - pre web stránku
+- ```temp-ID.editor.field_x``` - pre web stránku so šablónou `ID`, napr. `temp-3.editor.field_a` zmení názov voľného poľa A len pre web stránky, ktoré používajú šablónu s `ID` 3.
 - ```groupedit.field_x``` - pre adresár
 - ```user.field_x``` - pre používateľa
 - ```components.qa.field_x``` - pre aplikáciu Otázky a odpovede
@@ -27,7 +28,7 @@ Polia sa štandardne zobrazujú ako textové, pomocou zmeny definície cez prekl
 
 ![](webpages.png)
 
-POZOR: **nastavenie typu** sa musí nastaviť vždy pre predvolený jazyk (nastavený v konfiguračnej premennej ```defaultLanguage```), aj keď WebJET je používaný v inom jazyku.
+!>**Upozornenie:**, **nastavenie typu** sa musí nastaviť vždy pre predvolený jazyk (nastavený v konfiguračnej premennej ```defaultLanguage```), aj keď WebJET je používaný v inom jazyku.
 
 ### Text
 
@@ -35,7 +36,7 @@ POZOR: **nastavenie typu** sa musí nastaviť vždy pre predvolený jazyk (nasta
 
 Typ poľa ```text``` je štandardné textové pole. Je ale možné limitovať maximálnu veľkosť poľa a aj po zadanom počte znakov zobraziť varovanie:
 
-- ```editor.field_x.type=text``` - štandardné textové pole
+- ```editor.field_x.type=text``` - štandardné textové pole s veľkosťou maximálne 255 znakov
 - ```editor.field_x.type=text-10``` - štandardné textové pole s veľkosťou maximálne 10 znakov
 - ```editor.field_x.type=text-160, warningLength-50``` - štandardné textové pole s veľkosťou maximálne 160 znakov, po zadaní 50 znakov sa zobrazí varovanie o prekročení odporúčanej dĺžky textu (napr. pole opis Google odporúča mať dlhé 50-160 znakov)
 

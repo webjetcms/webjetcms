@@ -67,4 +67,23 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
     public List<DocHistory> findByDocIdInActual(@Param("docIds")List<Integer> docIds);
 
     public Optional<DocHistory> findTopByDocIdOrderBySaveDateDesc(Integer docId);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE DocHistory dh SET dh.actual = :actual, dh.syncStatus = 1 WHERE dh.id IN :historyIds")
+    public void updateActualAndSyncStatus(@Param("actual")boolean actual, @Param("historyIds")int[] historyIds);
+
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE DocHistory dh SET dh.publicable = :publicable, dh.actual = :actual, dh.approvedBy = :approvedBy, dh.syncStatus = 1, dh.available = :available WHERE dh.id = :historyId")
+    public void updatePublicableAndActual(@Param("publicable")boolean publicable, @Param("actual")boolean actual, @Param("approvedBy")int approvedBy, @Param("available")boolean available, @Param("historyId")int historyId);
+
+    @Query(value = "SELECT dh.publicable FROM DocHistory dh WHERE dh.docId = :docIds")
+    public List<Boolean> getPublicableByDocIdIn(@Param("docIds")Integer docIds);
+
+    @Query(value = "SELECT dh.id FROM DocHistory dh WHERE dh.docId = :docIds")
+    public Optional<List<Integer>> getHisotryIdsByDocIdIn(@Param("docIds") Integer docIds);
+
+    @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.publicable = true AND ( dh.awaitingApprove IS NULL OR dh.awaitingApprove = '' )")
+    public Optional<List<DocHistory>> getPublicableThatAreNotAwaitingToApprove();
 }

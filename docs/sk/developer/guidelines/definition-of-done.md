@@ -25,7 +25,7 @@ Manuálne je potrebné vykonať testy exportu a importu dát datatabuľky:
 
 Pri každej zmene sa zamyslite, či vám je jasný dôvod tejto zmeny a či vám bude jasný aj o rok a hlavne, či bude jasný inému programátorovi. Nezrozumiteľné zmeny je nutné komentovať priamo v zdrojovom kóde - dokumentácia a komentáre v zdrojovom kóde idú ruka v ruke spolu a môžu byť na prvý pohľad duplicitné. To ale nevadí, dokumentáciu píšte viac slovne, komentáre viac technicky.
 
-**UPOZORNENIE:** prístup k zdrojovému kódu nemusia mať všetci vývojári, dokumentácia je dostupná aj pre klientov, ktorý majú záujem programovať vlastnosti pre WebJET. Dokumentácia musí byť natoľko obsiahla, aby umožňovala použiť danú komponentu aj bez zdrojových kódov.
+!>**Upozornenie:** prístup k zdrojovému kódu nemusia mať všetci vývojári, dokumentácia je dostupná aj pre klientov, ktorý majú záujem programovať vlastnosti pre WebJET. Dokumentácia musí byť natoľko obsiahla, aby umožňovala použiť danú komponentu aj bez zdrojových kódov.
 
 Odporúčam vám mať **otvorené okno vyhľadávania** v ```docs``` priečinku, a keď vidíte v ```Changes``` liste zmenu v nejakej premennej/konfigurácii/objekte, tak ju vyhľadáte v dokumentácii (priečinok ./docs). Ak ju nájdete, text doplníte o zmenu, ak nenájdete, doplníte celý opis zmeny.
 

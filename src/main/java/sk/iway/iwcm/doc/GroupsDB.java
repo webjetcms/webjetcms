@@ -42,6 +42,7 @@ import static sk.iway.iwcm.Tools.isEmpty;
  *@created      $Date: 2004/03/25 17:36:09 $
  *@modified     $Date: 2004/03/25 17:36:09 $
  */
+@SuppressWarnings({"java:S6905"})
 public class GroupsDB extends DB
 {
 
@@ -2692,7 +2693,7 @@ public class GroupsDB extends DB
 	}
 
 	private static void deleteGroupsApprove(String groups) {
-		(new SimpleQuery()).execute("DELETE FROM groups_approve WHERE group_id IN (?)", groups);
+		(new SimpleQuery()).execute("DELETE FROM groups_approve WHERE group_id IN ("+groups+")");
 	}
 
 	/**
@@ -2723,29 +2724,26 @@ public class GroupsDB extends DB
 
 		try
 		{
-			if (group!=null && publishEvents) (new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_DELETE)).publishEvent();
+			if (group!=null && publishEvents) {
+				(new WebjetEvent<GroupDetails>(group, WebjetEventType.ON_DELETE)).publishEvent();
+			}
 
 			//	zmazanie grupy
 			db_conn = DBPool.getConnection();
 
 			// zisti ci sme v adresari /System/Trash (kos), ak nie presun, inak vymaz
-         String navbarNoHref = groupsDB.getURLPath(groupId);
-         Logger.debug(GroupsDB.class, "MAZEM: " + navbarNoHref);
+			Logger.debug(GroupsDB.class, "MAZEM: " + group);
 
-         //tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
-         Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
-         String trashDirName = propSystem.getText("config.trash_dir");
-         GroupDetails trashGroupDetails = null;
-         boolean disableHistory = Constants.getBoolean("editorDisableHistory");
-         boolean foundSystemDir = false;
-         if (disableHistory == false) trashGroupDetails = groupsDB.getCreateGroup(trashDirName);
+			boolean foundSystemDir = false;
+			GroupDetails trashGroupDetails = null;
+			boolean disableHistory = Constants.getBoolean("editorDisableHistory");
+			if (disableHistory == false)  {
+				trashGroupDetails = groupsDB.getTrashGroup();
+			}
 
-      	if (permanentlyDelete || trashGroupDetails==null || DB.internationalToEnglish(navbarNoHref.toLowerCase()).startsWith(DB.internationalToEnglish(groupsDB.getURLPath(trashGroupDetails.getGroupId())).toLowerCase()) ||
-				trashGroupDetails.getGroupId()==groupId || trashDirName.equals(groupsDB.getURLPath(groupId)))
-        {
-      		//TODO: kontrola prav na mazanie stranok v adresari
-
-      		// ziskaj zoznam groups (tejto a podskupin)
+			if (permanentlyDelete || trashGroupDetails == null || trashGroupDetails.getGroupId()==groupId || groupsDB.isInTrash(groupId))
+			{
+      			// ziskaj zoznam groups (tejto a podskupin)
 				StringBuilder groups = new StringBuilder();
 				//List subGroups = groupsDB.getGroups(my_form.getGroupId());
 				List<GroupDetails> subGroups = groupsDB.getGroupsTree(groupId, includeParent, true);
@@ -2781,10 +2779,10 @@ public class GroupsDB extends DB
 					deleteGroupsApprove(groups.toString());
 				}
 
-				Adminlog.add(Adminlog.TYPE_GROUP, "Delete group: " + navbarNoHref, groupId, -1);
-		}
-      	else
-      	{
+				Adminlog.add(Adminlog.TYPE_GROUP, "Delete group: " + group, groupId, -1);
+			}
+			else
+			{
       		// presun adresar do trashu
 				String sql = "UPDATE groups SET parent_group_id=?, sync_status=1 WHERE group_id=?";
 				ps = db_conn.prepareStatement(sql);
@@ -2794,7 +2792,7 @@ public class GroupsDB extends DB
 				ps.close();
 				ps = null;
 
-				Adminlog.add(Adminlog.TYPE_GROUP, "Delete group (move to trash): " + navbarNoHref, groupId, -1);
+				Adminlog.add(Adminlog.TYPE_GROUP, "Delete group (move to trash): " + group, groupId, -1);
 
 				//refresh cache
 				groupsDB.findGroup(groupId).setParentGroupId( trashGroupDetails.getGroupId() );
@@ -2824,9 +2822,9 @@ public class GroupsDB extends DB
 
 				//aktualizuj FT stplce
 				DocDB.updateFileNameField(groupId);
-      	}
+      		}
 
-      	//ak sa jedna o system adresar, refreshnem zoznam tychto stranok
+      		//ak sa jedna o system adresar, refreshnem zoznam tychto stranok
 			if(foundSystemDir) groupsDB.getAllSystemFolders(true);
 
 			db_conn.close();
@@ -3349,8 +3347,6 @@ public class GroupsDB extends DB
 	 */
 	public GroupDetails getLocalSystemGroup()
 	{
-		//TODO: doplnit nejake cachovania hladania ID daneho adresara, aby sme ho mohli potom vratit okamzite z cache / hash tabulky
-
 		String groupName = "System";
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb == null)
@@ -4120,4 +4116,37 @@ public class GroupsDB extends DB
 		}
 		return listParentGroups;
 	}
+
+	/**
+	 * Returns GroupDetails of /System/Trash folder, for multidomain returns domain specific Trash folder
+	 * @return
+	 */
+	public GroupDetails getTrashGroup() {
+		//tu sa vytvara adresar podla default jazyka, nie podla prihlaseneho pouzivatela!
+		Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+		String trashDirName = propSystem.getText("config.trash_dir");
+		GroupDetails trashGroupDetails = getCreateGroup(trashDirName);
+		return trashGroupDetails;
+	}
+
+	/**
+	 * Check if group is in trash
+	 * @param groupId
+	 * @return
+	 */
+	public boolean isInTrash(int groupId) {
+		String path = getPath(groupId);
+		GroupDetails group = getGroup(groupId);
+		if (group == null) return true;
+
+		//do not use getTrashGroup() here because it needs Request/Request bean to create missing trash group in domain folder
+		Prop propSystem = Prop.getInstance(Constants.getString("defaultLanguage"));
+		String trashDirName = propSystem.getText("config.trash_dir");
+
+		boolean isInTrash =
+			DB.internationalToEnglish(path).toLowerCase().startsWith(DB.internationalToEnglish(trashDirName).toLowerCase());
+
+		return isInTrash;
+	}
+
 }

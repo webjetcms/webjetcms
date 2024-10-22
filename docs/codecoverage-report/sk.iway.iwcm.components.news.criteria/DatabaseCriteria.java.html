@@ -423,13 +423,13 @@ public class DatabaseCriteria implements Criteria
 	 */
 	public DatabaseCriteria addCriteria(DatabaseCriteria crit)
 	{
-<span class="nc bnc" id="L426" title="All 2 branches missed.">		if (this.getValue() instanceof List)</span>
+<span class="pc bpc" id="L426" title="1 of 2 branches missed.">		if (this.getValue() instanceof List)</span>
 		{
 			@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L429">			List&lt;DatabaseCriteria&gt; critList = (List&lt;DatabaseCriteria&gt;)this.getValue();</span>
-<span class="nc" id="L430">			critList.add(crit);</span>
+<span class="fc" id="L429">			List&lt;DatabaseCriteria&gt; critList = (List&lt;DatabaseCriteria&gt;)this.getValue();</span>
+<span class="fc" id="L430">			critList.add(crit);</span>
 		}
-<span class="nc" id="L432">		return this;</span>
+<span class="fc" id="L432">		return this;</span>
 	}
 
 
@@ -527,4 +527,4 @@ public class DatabaseCriteria implements Criteria
 	}
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

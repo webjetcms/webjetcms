@@ -1,6 +1,7 @@
 const { I } = inject();
 const DT = require("./DT");
 const DTE = require("./DTE");
+const Apps = require("./Apps");
 
 /**
  * Funkcie pre pracu s Dokumentami
@@ -59,7 +60,7 @@ module.exports = {
         I.switchTo();
         I.switchTo(".cke_dialog_ui_iframe");
         I.switchTo("#editorComponent");
-        callback(this, I, DT, DTE);
+        callback(this, I, DT, DTE, Apps);
       }
 
       this.screenshot(path);
@@ -78,7 +79,14 @@ module.exports = {
         I.wait(2);
       }
 
-      I.saveElementScreenshot(selector, "../../../build/test/screenshots/actual/"+screenshotFileName);
+      let path = "../../../build/test/screenshots/actual/";
+      //If platform is windows, edit path (or screens will not be saved)
+      if(process.platform == "win32") {
+        path = path.replace(/\//gi, '\\');
+      }
+
+      if (typeof selector != "undefined" && selector != null) I.saveElementScreenshot(selector, path + screenshotFileName);
+      else I.saveScreenshot(path + screenshotFileName);
 
       if (windowResized) I.wjSetDefaultWindowSize();
 
@@ -156,6 +164,7 @@ module.exports = {
     I.waitForElement("iframe.wj_component", 10);
     I.wait(3);
     I.clickCss("iframe.wj_component");
+    I.wait(3);
 
     I.switchTo();
     I.switchTo(".cke_dialog_ui_iframe");
@@ -180,5 +189,18 @@ module.exports = {
       window.scrollbarMain.scrollIntoView($(selector)[0])
     }, {selector});
     I.wait(1);
+  },
+
+  /**
+   * On iwcm.interway.sk host change domain. Before click on link grab current URL:
+   * let currentUrl = await I.grabCurrentUrl();
+   * @param {*} currentUrl
+   */
+  async fixLocalhostUrl(currentUrl) {
+    if(currentUrl.includes("iwcm.interway.sk") || currentUrl.includes("localhost")) {
+        currentUrl = await I.grabCurrentUrl();
+        //get URL part after domain
+        I.amOnPage(currentUrl.substring(currentUrl.indexOf("/", 10)));
+    }
   },
 }

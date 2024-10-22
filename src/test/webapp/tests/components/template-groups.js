@@ -5,7 +5,7 @@ Before(({ I, login }) => {
     I.amOnPage("/admin/v9/templates/temps-groups-list");
 });
 
-Scenario('template-groups-zakladne testy', async ({ I, DataTables }) => {
+Scenario('template-groups-zakladne testy @baseTest', async ({ I, DataTables }) => {
     I.see("Názov skupiny");
     await DataTables.baseTest({
         dataTable: 'tempsGroupsListTable',

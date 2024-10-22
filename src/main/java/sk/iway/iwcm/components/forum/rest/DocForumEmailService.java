@@ -18,7 +18,7 @@ import sk.iway.iwcm.users.UsersDB;
 /**
  * Handle sending notification email's abou forum.
  *
- * Email's -> Approving forum, New added forum, New added forumas response (answer) to existing forum
+ * Email's -> Approving forum, New added forum, New added forums response (answer) to existing forum
  */
 public class DocForumEmailService {
 
@@ -40,8 +40,20 @@ public class DocForumEmailService {
 	private String docData = "";
 	private String docUrl;
 
-	//Inicialize if user is LOGGED and his email is SAME as sender email in forum form
+	private String pageOwnerEmail;
+
+	//Initialize if user is LOGGED and his email is SAME as sender email in forum form
 	private boolean senderIsLogged = false;
+
+	private static final String MESSAGE_PART_TABLE = "<table border='0' cellpadding='0' cellspacing='0'>";
+	private static final String MESSAGE_PART_TR_TD_TOP = "<tr><td style='vertical-align: top;'>";
+	private static final String MESSAGE_PART_ETABLE = "</table>";
+	private static final String MESSAGE_PART_ETD_TD = ": </td><td>";
+	private static final String MESSAGE_PART_TR_TD = "<tr><td>";
+	private static final String MESSAGE_PART_ETD_ETR = "</td></tr>";
+	private static final String MESSAGE_PART_EA_EP = "</a></p>";
+
+	private final String emailAnswerSubject;
 
 	public DocForumEmailService(DocForumEntity forumForm, ForumGroupEntity forumGroup, HttpServletRequest request, Prop prop) {
 		this.prop = prop;
@@ -54,6 +66,8 @@ public class DocForumEmailService {
 		this.header = prop.getText("components.forum.hlavicka");
 		this.footer = prop.getText("components.forum.paticka");
 		this.baseHref = Tools.getBaseHref(request);
+
+		this.emailAnswerSubject = prop.getText("components.forum.email_answer_subject");
 
 		prepareSupportValues();
 	}
@@ -86,6 +100,7 @@ public class DocForumEmailService {
 			docTitle = doc.getTitle();
 			docData = doc.getData();
 			if (Tools.isNotEmpty(doc.getVirtualPath())) docUrl = doc.getVirtualPath();
+			pageOwnerEmail = doc.getAuthorEmail();
 		}
 	}
 
@@ -105,15 +120,15 @@ public class DocForumEmailService {
 				message.append("DocID: ").append(forumFormDocId);
 			message.append("</p>");
 
-			message.append("<table border='0' cellpadding='0' cellspacing='0'>");
-				message.append("<tr><td style='vertical-align: top;'>").append(prop.getText("components.forum.message_name")).append(": </td><td>").append(docTitle).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.author")).append(": </td><td>").append(fromNameGlobal).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.message_text")).append(": </td><td>").append(" " + forumForm.getQuestion()).append("</td></tr>");
-			message.append("</table>");
+			message.append(MESSAGE_PART_TABLE);
+				message.append(MESSAGE_PART_TR_TD_TOP).append(prop.getText("components.forum.message_name")).append(MESSAGE_PART_ETD_TD).append(docTitle).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.author")).append(MESSAGE_PART_ETD_TD).append(fromNameGlobal).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.message_text")).append(MESSAGE_PART_ETD_TD).append(" " + forumForm.getQuestion()).append(MESSAGE_PART_ETD_ETR);
+			message.append(MESSAGE_PART_ETABLE);
 
 			message.append("<p>");
 				message.append(prop.getText("components.forum.message_approve_link")).append(": <a href='").append(approveLink).append("'>").append(approveLink).append("</a><br/>");
-			message.append("</a></p>");
+			message.append(MESSAGE_PART_EA_EP);
 		message.append(footer);
 
 		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText("components.forum.approve.subject"), message.toString());
@@ -125,7 +140,7 @@ public class DocForumEmailService {
 	 *
 	 * @param fromEmail
 	 * @param toEmail
-	 * @param messageLink - link taht will be included in email body
+	 * @param messageLink - link that will be included in email body
 	 */
 	private void sendNotificationEmail(String fromEmail, String toEmail, String messageLink) {
 		StringBuilder message = new StringBuilder(header);
@@ -133,20 +148,20 @@ public class DocForumEmailService {
 				message.append(prop.getText("components.forum.email_subject")).append(".<br/>");
 			message.append("</p>");
 
-			message.append("<table border='0' cellpadding='0' cellspacing='0'>");
-				message.append("<tr><td style='vertical-align: top;'>").append(prop.getText("components.forum.message_name")).append(": </td><td>").append(docTitle).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.author")).append(": </td><td>").append(fromNameGlobal).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.message_text")).append(": </td><td>").append(" " + forumForm.getQuestion()).append("</td></tr>");
-			message.append("</table>");
+			message.append(MESSAGE_PART_TABLE);
+				message.append(MESSAGE_PART_TR_TD_TOP).append(prop.getText("components.forum.message_name")).append(MESSAGE_PART_ETD_TD).append(docTitle).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.author")).append(MESSAGE_PART_ETD_TD).append(fromNameGlobal).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.message_text")).append(MESSAGE_PART_ETD_TD).append(" " + forumForm.getQuestion()).append(MESSAGE_PART_ETD_ETR);
+			message.append(MESSAGE_PART_ETABLE);
 
-			message.append("<p>").append(prop.getText("components.forum.open_forum")).append(": <br/><a href='").append(messageLink).append("'>").append(messageLink).append("</a></p>");
+			message.append("<p>").append(prop.getText("components.forum.open_forum")).append(": <br/><a href='").append(messageLink).append("'>").append(messageLink).append(MESSAGE_PART_EA_EP);
 		message.append(footer);
 
 		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText("components.forum.email_subject"), message.toString());
 	}
 
 	/**
-	 * Send notification email, abou ned added forum, that is response to allready existing forum.
+	 * Send notification email, abou ned added forum, that is response to already existing forum.
 	 * Body of email (message) will be generated.
 	 *
 	 * @param fromEmail
@@ -156,20 +171,20 @@ public class DocForumEmailService {
 	 */
 	private void sendNotificationAnswerEmail(String fromEmail, String toEmail, String messageLink, DocForumEntity docForumEntity) {
 		StringBuilder message = new StringBuilder(header);
-			message.append("<p>").append(prop.getText("components.forum.email_answer_subject")).append(".</p>");
+			message.append("<p>").append(emailAnswerSubject).append(".</p>");
 
-			message.append("<table border='0' cellpadding='0' cellspacing='0'>");
-				message.append("<tr><td style='vertical-align: top;'>").append(prop.getText("components.forum.answer_message_name")).append(": </td><td>").append(docForumEntity.getSubject()).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.email_your_question")).append(": </td><td>").append(docForumEntity.getQuestion()).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.email_answer")).append(": </td><td>").append(forumForm.getSubject()).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.answer_author")).append(": </td><td>").append(fromNameGlobal).append("</td></tr>");
-				message.append("<tr><td>").append(prop.getText("components.forum.answer_text")).append(": </td><td>").append(forumForm.getQuestion()).append("</td></tr>");
-			message.append("</table>");
+			message.append(MESSAGE_PART_TABLE);
+				message.append(MESSAGE_PART_TR_TD_TOP).append(prop.getText("components.forum.answer_message_name")).append(MESSAGE_PART_ETD_TD).append(docForumEntity.getSubject()).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.email_your_question")).append(MESSAGE_PART_ETD_TD).append(docForumEntity.getQuestion()).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.email_answer")).append(MESSAGE_PART_ETD_TD).append(forumForm.getSubject()).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.answer_author")).append(MESSAGE_PART_ETD_TD).append(fromNameGlobal).append(MESSAGE_PART_ETD_ETR);
+				message.append(MESSAGE_PART_TR_TD).append(prop.getText("components.forum.answer_text")).append(MESSAGE_PART_ETD_TD).append(forumForm.getQuestion()).append(MESSAGE_PART_ETD_ETR);
+			message.append(MESSAGE_PART_ETABLE);
 
-			message.append("<p>").append(prop.getText("components.forum.open_forum")).append(": <br/><a href='").append(messageLink).append("'>").append(messageLink).append("</a></p>");
+			message.append("<p>").append(prop.getText("components.forum.open_forum")).append(": <br/><a href='").append(messageLink).append("'>").append(messageLink).append(MESSAGE_PART_EA_EP);
 		message.append(footer);
 
-		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText("components.forum.email_answer_subject"), message.toString());
+		SendMail.send(fromNameGlobal, fromEmail, toEmail, emailAnswerSubject, message.toString());
 	}
 
 	/**
@@ -183,7 +198,7 @@ public class DocForumEmailService {
 	 */
 	private void sendEmailByMessageKey(String fromEmail, String toEmail, String messageKey, String messageLink) {
 		String message = prop.getText(messageKey, messageLink, docTitle, docData, fromEmailGlobal, forumForm.getQuestion());
-		SendMail.send(fromNameGlobal, fromEmail, toEmail, prop.getText("components.forum.email_answer_subject"), message);
+		SendMail.send(fromNameGlobal, fromEmail, toEmail, emailAnswerSubject, message);
 	}
 
 	/**
@@ -210,8 +225,8 @@ public class DocForumEmailService {
 	 * IF forum does not need to be required -> send notif email's based on another params (more details in this fn).
 	 */
 	public void sendForumEmails() {
-		//Check if forummust be approved first
-		if(forumGroup.getMessageConfirmation() && Tools.isEmail(forumGroup.getApproveEmail()) && !forumForm.getConfirmed()) {
+		//Check if forum must be approved first
+		if(Tools.isTrue(forumGroup.getMessageConfirmation()) && Tools.isEmail(forumGroup.getApproveEmail()) && !Tools.isTrue(forumForm.getConfirmed())) {
 			//FORUM is not Approved, send approving request email
 			sendApproveEmail(fromEmailGlobal, forumGroup.getApproveEmail());
 		} else  {
@@ -236,14 +251,14 @@ public class DocForumEmailService {
 				if (messageKeyVerify.equals(messageText) == false) messageKey = messageKeyVerify;
 			}
 
-			//NOTIFICATION EMAIL - NEW ADDED COMENT to forum (IT'S ANSWERS to another forum comment)
+			//NOTIFICATION EMAIL - NEW ADDED COMMENT to forum (IT'S ANSWERS to another forum comment)
 			boolean answerEmailWasSend = false;
 			String toParentEmail = "";
 			if(forumForm.getParentId() > 0) {
 				DocForumEntity docForumEntity = DocForumService.getForumBean(forumForm.getParentId().intValue(), true);
 				if (docForumEntity != null && docForumEntity.isSendNotif() && Tools.isEmail(docForumEntity.getAuthorEmail())) {
 					toParentEmail = docForumEntity.getAuthorEmail();
-					//If FROM email and TO email are same, do not send email -> we dont need inform user who answer to his own commnet
+					//If FROM email and TO email are same, do not send email -> we don't need inform user who answer to his own comment
 					if(senderIsLogged && !fromEmailGlobal.equals(toParentEmail)) {
 						if (messageKey != null)
 							sendEmailByMessageKey(fromEmailGlobal, toParentEmail, messageKey, messageLink);
@@ -255,17 +270,26 @@ public class DocForumEmailService {
 				}
 			}
 
-			//NOTIFICATION EMAIL - NEW ADDED COMENT to forum
+			//NOTIFICATION EMAIL - NEW ADDED COMMENT to forum
 			String toNotifyEmail = forumGroup.getNotifEmail();
-			//If answer email was send AND receiver email is same as notifycation email DO NOT send notification email (it would be excesive)
+			//If answer email was send AND receiver email is same as notification email DO NOT send notification email (it would be excessive)
 			if(Tools.isEmail(toNotifyEmail) && !( answerEmailWasSend && toNotifyEmail.equals(toParentEmail))) {
-				//If FROM email and TO email are same, do not send email -> we dont need inform user who answer to topic
+				//If FROM email and TO email are same, do not send email -> we don't need inform user who answer to topic
 				if(senderIsLogged && !fromEmailGlobal.equals(toNotifyEmail)) {
 					if (messageKey != null)
 						sendEmailByMessageKey(fromEmailGlobal, toNotifyEmail, messageKey, messageLink);
 					else
 						sendNotificationEmail(fromEmailGlobal, toNotifyEmail, messageLink);
 				}
+			}
+
+			//NOTIFICATION EMAIL - NEW ADDED COMMENT to forum - TO OWNER OF PAGE
+			//Send only if owner of page isn't same as sender of forum form
+			if(Tools.isEmail(pageOwnerEmail) && (Tools.isTrue(forumGroup.getNotifyPageAuthor()) || Constants.getBoolean("forumAlwaysNotifyPageAuthor")) && !pageOwnerEmail.equals(fromEmailGlobal)) {
+				if (messageKey != null)
+					sendEmailByMessageKey(fromEmailGlobal, pageOwnerEmail, messageKey, messageLink);
+				else
+					sendNotificationEmail(fromEmailGlobal, pageOwnerEmail, messageLink);
 			}
 		}
 	}

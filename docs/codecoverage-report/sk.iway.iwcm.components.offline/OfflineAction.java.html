@@ -25,46 +25,46 @@ import sk.iway.iwcm.users.UsersDB;
  *@modified     $Date: 2010/02/09 08:39:12 $
  */
 @WebServlet(name = &quot;offlineServlet&quot;, urlPatterns = {&quot;/admin/offline.do&quot;})
-<span class="nc" id="L28">public class OfflineAction extends HttpServlet</span>
+<span class="fc" id="L28">public class OfflineAction extends HttpServlet</span>
 {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-<span class="nc" id="L33">        Logger.println(OfflineAction.class,&quot;DeleteServlet  CALLED - GET&quot;);</span>
-<span class="nc" id="L34">        execute(request,response);</span>
-<span class="nc" id="L35">    }</span>
+<span class="fc" id="L33">        Logger.println(OfflineAction.class,&quot;DeleteServlet  CALLED - GET&quot;);</span>
+<span class="fc" id="L34">        execute(request,response); //NOSONAR</span>
+<span class="fc" id="L35">    }</span>
 
 	@Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 <span class="nc" id="L40">        Logger.println(OfflineAction.class,&quot;DeleteServlet  CALLED - POST&quot;);</span>
-<span class="nc" id="L41">        execute(request,response);</span>
+<span class="nc" id="L41">        execute(request,response); //NOSONAR</span>
 <span class="nc" id="L42">    }</span>
 
-	public void execute(
+	private void execute(
          HttpServletRequest request,
          HttpServletResponse response)
          throws IOException
    {
-<span class="nc" id="L49">		Logger.println(OfflineAction.class,&quot;offlineAction&quot;);</span>
+<span class="fc" id="L49">		Logger.println(OfflineAction.class,&quot;offlineAction&quot;);</span>
 
-<span class="nc" id="L51">		HttpSession session = request.getSession();</span>
-<span class="nc bnc" id="L52" title="All 2 branches missed.">		if (session == null)</span>
+<span class="fc" id="L51">		HttpSession session = request.getSession();</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">		if (session == null)</span>
 		{
 <span class="nc" id="L54">			response.sendRedirect(&quot;/admin/&quot;);</span>
 <span class="nc" id="L55">			return;</span>
 		}
 
-<span class="nc" id="L58">		Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="nc bnc" id="L59" title="All 4 branches missed.">		if (user == null || user.isAdmin()==false)</span>
+<span class="fc" id="L58">		Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L59" title="3 of 6 branches missed.">		if (user == null || user.isAdmin()==false || user.isDisabledItem(&quot;export_offline&quot;))</span>
 		{
 <span class="nc" id="L61">			response.sendRedirect(&quot;/admin/&quot;);</span>
 <span class="nc" id="L62">			return;</span>
 		}
 
-<span class="nc" id="L65">		OfflineService service = new OfflineService();</span>
-<span class="nc" id="L66">		service.execute(user, request, response);</span>
-<span class="nc" id="L67">   }</span>
+<span class="fc" id="L65">		OfflineService service = new OfflineService();</span>
+<span class="fc" id="L66">		service.execute(user, request, response);</span>
+<span class="fc" id="L67">   }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -74,3 +74,48 @@ Scenario('Excel import-zmazanie', ({I, DT}) => {
     I.see("Záznamy 0 až 0 z 0");
 });
 
+Scenario('testovanie app - Kontakty', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Kontakty', '#apps-contact-title');
+
+    const defaultParams = {
+        country: 'sk'
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.see('ZOZNAM KONTAKTOV', 'h3')
+    I.see('Bratislava', 'tr')
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        country:'cz',
+    };
+
+    DTE.selectOption('country', 'Česká republika');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.see('ZOZNAM KONTAKTOV', 'h3');
+    I.dontSee('Bratislava', 'tr');
+    I.see('Praha', 'tr');
+});
+
+Scenario('testovanie app - Kontakty - close other tabs', async ({ I, Apps }) => {
+    I.closeOtherTabs();
+});
+

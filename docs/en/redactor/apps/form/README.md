@@ -53,22 +53,34 @@ It is possible to set some hidden values to the form that will affect its proces
 - `formmail_sendUserInfoDocId` - if it is set to docId value of some web page, then after successful saving of the form, an email with the text of the web page is sent to the visitor's email (from the email / email field). This can be, for example, a thank you for filling out the form, or further instructions on how to proceed.
 - `isPdfVersion` - if set to true, the system will also generate a PDF version of the form after saving it to the directory `/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf`, where the value `ID_FORMULARU` Is `id` form in the database.
 
+## Confirm email address settings
+
+The form can be set **confirmation of email address**. You can confirm that the form has been sent by clicking on the link in the email and therefore `double opt-in`. **Verify** that the visitor who has filled in the form has entered **a valid email address**.
+
+It needs to be set up:
+
+1. In the properties of the form, you need to select the option **Require confirmation of consent by e-mail**.
+2. Create a page for confirmation of consent, the application ```!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!``` must be inserted in it, which will confirm the consent based on the parameters in the database. The page can be used for several different forms, it can have a URL e.g. `/double-optin-confirmation/`.
+3. Create a page with e-mail text, e.g. "To confirm the validity of the email address, click on the following link" and insert a link to the page where there will be a confirmation of consent. The link must contain parameters `!FORM_ID!,!OPTIN_HASH!`, i.e. e.g. `/double-optin-confirmation/?formId=!FORM_ID!&hash=!OPTIN_HASH!`. Set the ID of this page in the Doc ID field of the notification for the user.
+
+After clicking on the link in the email, the Date of confirmation of consent field will be set in the form, so you can identify the forms that have the consent confirmed.
+
 ## Possible configuration variables
 
-- `formmailAllowedRecipients` - List of email addresses to which forms can be sent, for example: `@interway.sk,podpora@demo.webjet.sk`. Blank by default, which means that the form can be sent to any address
-- `formMailEncoding` - character set for sending emails from forms. Defaults to blank, which means that the same character encoding is used as is set for web pages.
-- `spamProtection` - if set to `true`, spam protection will be enabled in forms. By default set to `true`.
-- `spamProtectionJavascript` - if set to `all` (all forms will be protected) or `formmail` (only forms sent to email will be protected), the forms will be protected `javascriptom`, to deactivate the function you need to enter `none`. Default set to `all`.
-- `spamProtectionSendInterval` - the time in seconds during which the form cannot be resent to the email. By default set to 30.
-- `spamProtectionDisabledIPs` - a comma-separated list of IP address beginnings (or a character `*` for all) for which spam protection is disabled.
-- `formMailSendPlainText` - if set to `true` the email from the form is sent as plain text (not HTML format).
-- `formMailRenderRadioCheckboxText` - if set to `true` will display selection and checkboxes as text `[X]` or `[ ]`.
-- `formMailCropForm` - if set to `true` only the part wrapped in `tagov` Form.
-- `formmailHttpsDomains` - A comma-separated list of domains for which forms will always be sent over a secure httpS connection.
-- `checkFormValidateOnInit` - Setting the validation of the form when initializing it, when set to `false` the entire form is not validated when displayed, when set to `true` is validated.
-- `formMailFixedSenderEmail` - If it is set to the email address, it is used as a fixed value of the sender's email address. Unlike `emailProtectionSenderEmail` does not set the original email in the field `reply-to`so that the sender is not notified of any misdelivery (which may sometimes be necessary for security reasons).
-- `formmailShowClassicErrorMessage` - If it is set to `true` will display the classic form validation message at the top of the form instead of the message next to each field.
-- `formmailScrollTopAfterSend` - If it is set to `true` scrolls the page to the top of the form after submission (to show the submission message).
-- `formmailResetFormAfterSend` - If it is set to `true` after successful submission, the form is cleared.
-- `formmailSendUserInfoSenderName` - It will be sent as the sender's name in the email when the page is sent according to the specified `formmail_sendUserInfoDocId`. If empty, the name of the author of the page whose content is being sent to the email is sent.
-- `formmailSendUserInfoSenderEmail` - It will be sent as the sender's email in the email when the page is sent according to the specified `formmail_sendUserInfoDocId`. If it is empty, an email is sent to the author of the page whose content is being sent to the email. (default value: , current value: )
+- `formmailAllowedRecipients`. Blank by default, which means that the form can be sent to any address`@interway.sk,podpora@demo.webjet.sk` - character set for sending emails from forms. Defaults to blank, which means that the same character encoding is used as is set for web pages.
+- `formMailEncoding` - if set to&#x20;
+- `spamProtection`, spam protection will be enabled in forms. By default set to `true`.`true` - if set to&#x20;
+- `spamProtectionJavascript` (all forms will be protected) or `all` (only forms sent to email will be protected), the forms will be protected `formmail`, to deactivate the function you need to enter `javascriptom`. Default set to `none`.`all` - the time in seconds during which the form cannot be resent to the email. By default set to 30.
+- `spamProtectionSendInterval` - a comma-separated list of IP address beginnings (or a character&#x20;
+- `spamProtectionDisabledIPs` for all) for which spam protection is disabled.`*` - if set to&#x20;
+- `formMailSendPlainText` the email from the form is sent as plain text (not HTML format).`true` - if set to&#x20;
+- `formMailRenderRadioCheckboxText` will display selection and checkboxes as text `true` or `[X]`.`[ ]` - if set to&#x20;
+- `formMailCropForm` only the part wrapped in `true` Form.`tagov` - A comma-separated list of domains for which forms will always be sent over a secure httpS connection.
+- `formmailHttpsDomains` - Setting the validation of the form when initializing it, when set to&#x20;
+- `checkFormValidateOnInit` the entire form is not validated when displayed, when set to `false` is validated.`true` - If it is set to the email address, it is used as a fixed value of the sender's email address. Unlike&#x20;
+- `formMailFixedSenderEmail` does not set the original email in the field `emailProtectionSenderEmail`so that the sender is not notified of any misdelivery (which may sometimes be necessary for security reasons).`reply-to` - If it is set to&#x20;
+- `formmailShowClassicErrorMessage` will display the classic form validation message at the top of the form instead of the message next to each field.`true` - If it is set to&#x20;
+- `formmailScrollTopAfterSend` scrolls the page to the top of the form after submission (to show the submission message).`true` - If it is set to&#x20;
+- `formmailResetFormAfterSend` after successful submission, the form is cleared.`true` - It will be sent as the sender's name in the email when the page is sent according to the specified&#x20;
+- `formmailSendUserInfoSenderName`. If empty, the name of the author of the page whose content is being sent to the email is sent.`formmail_sendUserInfoDocId` - It will be sent as the sender's email in the email when the page is sent according to the specified.
+- `formmailSendUserInfoSenderEmail`. If it is empty, an email is sent to the author of the page whose content is being sent to the email.

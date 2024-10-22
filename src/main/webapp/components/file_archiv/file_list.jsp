@@ -334,7 +334,7 @@ List<FileArchivatorBean> waitingFab = FileArchivatorDB.getWaitingFileList();
 %>
 
 <display:table class="sort_table" name="fileArchiveList" defaultsort="1" pagesize="20" export="true" defaultorder="descending"  uid="row">
-<% 
+<%
 if(row != null)
 {
 	rowFab = (FileArchivatorBean)row;
@@ -436,7 +436,7 @@ if(row != null)
 </display:table>
 	</div>
 	<div id="tabMenu2" class="tab-pane tab-page">
-		<iframe id="componentIframeWindowTab" name="componentIframeWindowTab" style="width: 100%; min-height: 510px; height: auto; background: none;" src="/admin/iframe_blank.jsp"></iframe>
+		<iframe id="componentIframeWindowTab" name="componentIframeWindowTab" style="width: 100%; min-height: 510px; height: auto; background: none;" src="/admin/iframe_blank.jsp" frameborder="0"></iframe>
 	</div>
 
 </div>

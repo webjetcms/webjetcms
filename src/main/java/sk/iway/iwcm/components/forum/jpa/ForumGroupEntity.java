@@ -208,6 +208,9 @@ public class ForumGroupEntity implements Serializable {
     @Size(max = 128)
     private String addmessageGroups;
 
+    @Column(name = "notify_page_author")
+    private Boolean notifyPageAuthor;
+
     @Column(name = "domain_id")
     private Integer domainId;
 

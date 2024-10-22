@@ -12,6 +12,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 
 import org.apache.struts.util.ResponseUtils;
 
@@ -29,10 +30,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 //@EntityListenersType(Adminlog.TYPE_PROP_UPDATE)
 @Setter
 @Getter
-<span class="fc" id="L32">public class TranslationKeyEntity {</span>
+<span class="fc" id="L33">public class TranslationKeyEntity {</span>
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY, generator = &quot;S_webjet_properties&quot;)
-    @DataTableColumn(inputType = {DataTableColumnType.ID}, className = &quot;not-export&quot;)
+    @DataTableColumn(inputType = {DataTableColumnType.ID}, className = &quot;not-export&quot;, filter = false)
     private Long id;
 
     @Column(name = &quot;prop_key&quot;)
@@ -46,6 +47,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 
     //Field is not showed but used to get translation key language
     @Column(name = &quot;lng&quot;)
+    @Size(min = 2, max = 3)
     private String lng;
 
     @Column(name = &quot;update_date&quot;)
@@ -60,7 +62,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     })
     private Date updateDate;
 
-<span class="fc" id="L63">    @Transient</span>
+<span class="fc" id="L65">    @Transient</span>
     @DataTableColumnNested
     private TranslationKeyEditorFields editorFields = null;
 
@@ -70,10 +72,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
      * originalValue's represent's original value of transation key load from file (can be same)
     */
 
-<span class="fc" id="L73">    @Transient</span>
+<span class="fc" id="L75">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
     )
     private String fieldA = &quot;&quot;; //aby sme pri exporte nemali Nevyplnene ale prazdnu hodnotu v jazykoch kde kluc nie je zadany
@@ -92,10 +94,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueA;
 
-<span class="fc" id="L95">    @Transient</span>
+<span class="fc" id="L97">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
     )
     private String fieldB = &quot;&quot;;
@@ -114,10 +116,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueB;
 
-<span class="fc" id="L117">    @Transient</span>
+<span class="fc" id="L119">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldC = &quot;&quot;;
@@ -136,10 +138,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueC;
 
-<span class="fc" id="L139">    @Transient</span>
+<span class="fc" id="L141">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldD = &quot;&quot;;
@@ -158,10 +160,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueD;
 
-<span class="fc" id="L161">    @Transient</span>
+<span class="fc" id="L163">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldE = &quot;&quot;;
@@ -180,10 +182,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueE;
 
-<span class="fc" id="L183">    @Transient</span>
+<span class="fc" id="L185">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldF = &quot;&quot;;
@@ -202,10 +204,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueF;
 
-<span class="fc" id="L205">    @Transient</span>
+<span class="fc" id="L207">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldG = &quot;&quot;;
@@ -224,10 +226,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueG;
 
-<span class="fc" id="L227">    @Transient</span>
+<span class="fc" id="L229">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldH = &quot;&quot;;
@@ -246,10 +248,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueH;
 
-<span class="fc" id="L249">    @Transient</span>
+<span class="fc" id="L251">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldI = &quot;&quot;;
@@ -268,10 +270,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     )
     private String originalValueI;
 
-<span class="fc" id="L271">    @Transient</span>
+<span class="fc" id="L273">    @Transient</span>
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
-        className = &quot;wrap&quot;,
+        className = &quot;wrap show-html&quot;,
         filter = true
         )
     private String fieldJ = &quot;&quot;;
@@ -291,10 +293,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
     private String originalValueJ;
 
     public String getKey() {
-<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (key==null) return null;</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">        if (key==null) return null;</span>
         //ochrana pred XSS ak kluc nie je citany z DB nie je chraneny
-<span class="pc bpc" id="L296" title="2 of 4 branches missed.">        if (key.contains(&quot;&lt;&quot;) || key.contains(&quot;&gt;&quot;)) return ResponseUtils.filter(key).trim();</span>
-<span class="fc" id="L297">        return key.trim();</span>
+<span class="pc bpc" id="L298" title="2 of 4 branches missed.">        if (key.contains(&quot;&lt;&quot;) || key.contains(&quot;&gt;&quot;)) return ResponseUtils.filter(key).trim();</span>
+<span class="fc" id="L299">        return key.trim();</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

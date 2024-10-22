@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>FileUsageRestController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.system.elfinder</a> &gt; <span class="el_source">FileUsageRestController.java</span></div><h1>FileUsageRestController.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.system.elfinder;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.stat.Column;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
+import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+
+@RestController
+@Datatable
+@RequestMapping(&quot;/admin/rest/elfinder/file-usage&quot;)
+@PreAuthorize(&quot;@WebjetSecurityService.hasPermission('cmp_elfinder')&quot;)
+public class FileUsageRestController extends DatatableRestControllerV2&lt;FileUsageDTO, Long&gt; {
+    
+    @Autowired
+    public FileUsageRestController() {
+<span class="fc" id="L28">        super(null);</span>
+<span class="fc" id="L29">    }</span>
+
+    @Override
+    public Page&lt;FileUsageDTO&gt; getAllItems(Pageable pageable) {
+<span class="fc" id="L33">        String filePath = getRequest().getParameter(&quot;filePath&quot;);</span>
+<span class="fc" id="L34">        List&lt;FileUsageDTO&gt; entities = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">        if(Tools.isEmpty(filePath) == true) {</span>
+<span class="nc" id="L37">            return new DatatablePageImpl&lt;&gt;( new ArrayList&lt;&gt;() );</span>
+        } else {
+<span class="fc bfc" id="L39" title="All 2 branches covered.">            for(Column column : FileTools.getFileUsage(filePath)) {</span>
+<span class="fc" id="L40">                entities.add( new FileUsageDTO(column.getColumn1(), column.getColumn2(), column.getIntColumn1()) );</span>
+<span class="fc" id="L41">            }</span>
+        }   
+
+<span class="fc" id="L44">        return new DatatablePageImpl&lt;&gt;( entities );</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -46,15 +46,15 @@ window.jstree = somStromcek.jstree({
 ```
 
 Metóda [init()](#init) zabezpečí: <a id="init-algo"></a>
-1. Vyparsuje z url adresy prehliadača pomocou [Tools.getUrlQuery()](tools.md#geturlquery) search query za otáznikom
-2. Vyberie z vyparsovaného objektu kľúč `docid` ak sme ho pred tým nezmenili pomocou [idKeyName](#idkeyname)
-3. Hodnotu z `docid` setne pomocou setteru [id](#id)
-4. Setter [id](#id) resetne triedu do new stavu a overí vstup: <a id="id-algo"></a>
-    1. Ak je vstup nevalidný, tak v DEV prostredí vypíše hlášku o nevalidnom vstupe a preruší sa vykonanie
-        1. Trieda sa prepne do stavu `Not Ready & Iddle`, čaká na zavolanie setteru [id](#id)
-    2. Ak je vstup validný vykoná sa request na API, ktorého defaultnú adresu môžeme zmeniť pomocou [apiUrl](#apiurl)
-        1. Uložia sa prijaté dáta do triedy aby sa s nimi mohlo pracovať
-        2. Trieda sa prepne do stavu `Ready & Iddle` a čaká na zavolanie [next()](#next) alebo [id](#id)
+- Vyparsuje z url adresy prehliadača pomocou [Tools.getUrlQuery()](tools.md#geturlquery) search query za otáznikom
+- Vyberie z vyparsovaného objektu kľúč `docid` ak sme ho pred tým nezmenili pomocou [idKeyName](#idkeyname)
+- Hodnotu z `docid` setne pomocou setteru [id](#id)
+- Setter [id](#id) resetne triedu do new stavu a overí vstup: <a id="id-algo"></a>
+    - Ak je vstup nevalidný, tak v DEV prostredí vypíše hlášku o nevalidnom vstupe a preruší sa vykonanie
+        - Trieda sa prepne do stavu `Not Ready & Iddle`, čaká na zavolanie setteru [id](#id)
+    - Ak je vstup validný vykoná sa request na API, ktorého defaultnú adresu môžeme zmeniť pomocou [apiUrl](#apiurl)
+        - Uložia sa prijaté dáta do triedy aby sa s nimi mohlo pracovať
+        - Trieda sa prepne do stavu `Ready & Iddle` a čaká na zavolanie [next()](#next) alebo [id](#id)
 
 ---
 
@@ -70,7 +70,7 @@ Wo **WebJET** prebieha volanie v súbore [app-init.js](https://github.com/webjet
 3. Po vybratí (_select node_) uzla `/listener: select_node.jstree`
 
 ---
-**Upozornenie:**
+!>**Upozornenie:**
 V prípade ak chceme externe nastavovať [id](#id) je dobré pred tým použiť metódu [loaded()](#loaded),
 v ktorej môžeme volať [next()](#next) a testovať [notFound](#notfound).
 ```javascript

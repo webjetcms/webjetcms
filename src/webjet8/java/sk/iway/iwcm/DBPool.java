@@ -1,12 +1,12 @@
 package sk.iway.iwcm;
 
+import com.zaxxer.hikari.HikariDataSource;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -32,18 +32,16 @@ import javax.sql.DataSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import oracle.jdbc.OracleConnection;
-import oracle.ucp.jdbc.PoolDataSourceFactory;
-import org.apache.commons.dbcp.ConfigurableDataSource;
-import org.apache.commons.dbcp.WebJETAbandonedDataSource;
-import org.apache.commons.dbcp.WebJetUcpDataSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.xml.sax.SAXParseException;
 
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.dbpool.ConfigurableDataSource;
+import sk.iway.iwcm.system.dbpool.WebJetHikariDataSource;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
@@ -101,7 +99,6 @@ public class DBPool
 	 * Nacitanie konfiguracie z poolman.xml (aj ked sa pouziva DBCP)
 	 *
 	 */
-	@SuppressWarnings("deprecation")
 	private synchronized void initialize()
 	{
 		dataSourcesTable = new Hashtable<>();
@@ -114,19 +111,14 @@ public class DBPool
 		String username;
 		String password;
 		String url;
-		String provider;
 
 		int initialSize;
 		int minActive;
 		int maxActive;
 
-		boolean fastConnnectionFailOverEnabled = false;
-		String ONSConfiguration = "";
-		boolean validateConnectionOnBorrow = false;
 		String autoCommit = "false";
 
 		int removeAbandonedTimeout;
-		int maxWait;
 
 		int counter = 0;
 
@@ -144,7 +136,7 @@ public class DBPool
 		String data = readFileContent(customPoolmanPath);
 
 		StringBuilder availableDatabases = null;
-		if (data != null)
+		if (data != null && data.contains("poolman"))
 		{
 			try
 			{
@@ -175,8 +167,7 @@ public class DBPool
 							minActive = 0;
 							maxActive = 50;
 
-							removeAbandonedTimeout = 600;
-							maxWait = 60; //60 sekund
+							removeAbandonedTimeout = 5*60;
 
 							dbname = XmlUtils.getFirstChildValue(n, "dbname");
 
@@ -201,18 +192,13 @@ public class DBPool
 							url = XmlUtils.getFirstChildValue(n, "url");
 							username = XmlUtils.getFirstChildValue(n, "username");
 							password = XmlUtils.getFirstChildValue(n, "password");
-							provider = XmlUtils.getFirstChildValue(n, "provider");
 							initialSize = getIntValue(XmlUtils.getFirstChildValue(n, "initialConnections"), initialSize);
 							minActive = getIntValue(XmlUtils.getFirstChildValue(n, "minimumSize"), minActive);
 							maxActive = getIntValue(XmlUtils.getFirstChildValue(n, "maximumSize"), maxActive);
 
-							fastConnnectionFailOverEnabled = getBooleanValue(XmlUtils.getFirstChildValue(n, "fastConnnectionFailOverEnabled"), fastConnnectionFailOverEnabled);
-							validateConnectionOnBorrow = getBooleanValue(XmlUtils.getFirstChildValue(n, "validateConnectionOnBorrow"), validateConnectionOnBorrow);
-							ONSConfiguration = getStringValue(XmlUtils.getFirstChildValue(n, "ONSConfiguration"), ONSConfiguration);
 							autoCommit = getStringValue(XmlUtils.getFirstChildValue(n, "autoCommit"), autoCommit);
 
 							removeAbandonedTimeout = getIntValue(XmlUtils.getFirstChildValue(n, "connectionTimeout"), removeAbandonedTimeout);
-							maxWait = getIntValue(XmlUtils.getFirstChildValue(n, "userTimeout"), maxWait);
 
 							Logger.println(this,"DATA SET from XML ["+dbname+"], maxActive="+maxActive);
 
@@ -284,68 +270,38 @@ public class DBPool
 
 							if (password == null) password = "";
 							password = decryptPassword(password);
-							if (isEmpty(provider)) provider = "dbcp";
 
-							if("ucp".equalsIgnoreCase(provider)) {
-								ds = new WebJetUcpDataSource(PoolDataSourceFactory.getPoolDataSource(), dbname);
-								WebJetUcpDataSource source = (WebJetUcpDataSource)ds;
+							HikariDataSource hs = new HikariDataSource();
+							hs.setLeakDetectionThreshold(removeAbandonedTimeout*1000l);
 
-								source.setConnectionProperty(OracleConnection.CONNECTION_PROPERTY_AUTOCOMMIT, "false");
-
-								Logger.println(DBPool.class, "Using UCP");
-
-                                if(fastConnnectionFailOverEnabled) {
-                                	source.setFastConnectionFailoverEnabled(true);
-									Logger.println(DBPool.class, "UCP fastConnnectionFailOverEnabled=" + fastConnnectionFailOverEnabled);
-								}
-
-								if(isNotEmpty(ONSConfiguration)) {
-									source.setONSConfiguration(ONSConfiguration);
-									Logger.println(DBPool.class, "UCP ONSConfiguration=" + ONSConfiguration);
-								}
-
-								if (driver.contains("oracle")) {
-									source.setConnectionProperty("SetBigStringTryClob", "true");
-									Logger.println(DBPool.class, "UCP SetBigStringTryClob=" + true);
-								}
-
-								if(validateConnectionOnBorrow) {
-									source.setValidateConnectionOnBorrow(true);
-									Logger.println(DBPool.class, "UCP validateConnectionOnBorrow=" + validateConnectionOnBorrow);
-								}
-
-								source.setInitialPoolSize(initialSize);
-								Logger.println(DBPool.class, "UCP initialPoolSize=" + initialSize);
-
-								source.setMinPoolSize(minActive);
-								Logger.println(DBPool.class, "UCP minPoolSize=" + minActive);
-
-								source.setMaxPoolSize(maxActive);
-								Logger.println(DBPool.class, "UCP maxPoolSize=" + maxActive);
-
+							//for jdbc4 drivers we use isValid(), for older drivers we use testQuery
+							String testQuery = XmlUtils.getFirstChildValue(n, "testQuery");
+							if (driver.contains("jtds") && Tools.isEmpty(testQuery)) testQuery = "SELECT 1";
+							if ("true".equals(testQuery)) testQuery = "SELECT 1";
+							if (testQuery != null && testQuery.length()>1) {
+								Logger.println(DBPool.class, "Setting testQuery="+testQuery+" driver="+driver);
+								hs.setConnectionTestQuery(testQuery);
 							}
-							else
-							{
-								ds = new WebJETAbandonedDataSource();
-								WebJETAbandonedDataSource source = (WebJETAbandonedDataSource)ds;
-								source.setMaxActive(maxActive);
-								Logger.println(this,"max idle="+source.getMaxIdle());
-								source.setMaxIdle(3);
 
-								source.setRemoveAbandoned(true);
-								source.setRemoveAbandonedTimeout(removeAbandonedTimeout);
-								source.setLogAbandoned(true);
-								Logger.println(this,"getRemoveAbandonedTimeout="+source.getRemoveAbandonedTimeout());
+							ds = new WebJetHikariDataSource(hs);
 
-								source.setDefaultAutoCommit(true);
-								if (driver.contains("oracle"))
-									source.addConnectionProperty("SetBigStringTryClob", "true");
+							WebJetHikariDataSource source = (WebJetHikariDataSource)ds;
 
-								source.setAccessToUnderlyingConnectionAllowed(true);
-								source.setPoolPreparedStatements(false);
+							Logger.println(DBPool.class, "Using HikariCP");
+							source.setInitialPoolSize(initialSize);
+							Logger.println(DBPool.class, "HikariCP initialPoolSize=" + initialSize);
 
-								source.setMaxWait(1000L*maxWait);
+							source.setMinPoolSize(minActive);
+							Logger.println(DBPool.class, "HikariCP minPoolSize=" + minActive);
+
+							source.setMaxPoolSize(maxActive);
+							Logger.println(DBPool.class, "HikariCP maxPoolSize=" + maxActive);
+
+							if (driver.contains("oracle")) {
+								source.setConnectionProperty("SetBigStringTryClob", "true");
+								Logger.println(DBPool.class, "HikariCP SetBigStringTryClob=" + true);
 							}
+
 
 							//okrem Oracle mozeme robit takyto validation query
 							ds.setPreferredTestQuery("SELECT 1");
@@ -375,6 +331,9 @@ public class DBPool
 						}
 					}
 				}
+			}
+			catch (SAXParseException ex) {
+				Logger.error(DBPool.class, customPoolmanPath+" is not valid XML file");
 			}
 			catch (Exception ex)
 			{
@@ -425,8 +384,6 @@ public class DBPool
 			Logger.println(this,"   Active:" + ds.getNumActive()+" Idle:"+ds.getNumIdle());
 			try
 			{
-				PrintWriter pw = new PrintWriter(System.out); //NOSONAR
-				ds.printStackTraces(pw);
 				ds.destroy();
 			}
 			catch (SQLException e)
@@ -470,7 +427,6 @@ public class DBPool
 			{
 				ConfigurableDataSource ds = dataSourcesTable.get(key);
 				Logger.debug(this,"DBPool["+key+"] active: " + ds.getNumActive()+" idle="+ds.getNumIdle());
-				ds.printStackTraces();
 			}
 			catch (Exception e)
 			{
@@ -605,17 +561,13 @@ public class DBPool
 					  {
 							if(hasPrintedStackTrace.compareAndSet(false, true))
 							{
-								cds.printStackTraces();
-								StringWriter sw = new StringWriter();
-								cds.printStackTraces(new PrintWriter(sw));
 								RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-								if(rb != null && Tools.isNotEmpty(rb.getDomain()) && "iwcm.interway.sk".equals(rb.getDomain()) == false)
+								if(rb != null && Tools.isNotEmpty(rb.getDomain()))
 								{
 									AdminlogNotifyManager.sendNotification(Adminlog.TYPE_SQLERROR, rb, DB.getDbTimestamp(Tools.getNow()),
 															"Na domene " + rb.getDomain() + (ClusterDB.isServerRunningInClusterMode() ? ", node: "+Constants.getString("clusterMyNodeName") : "") +
 															" bol pravdepodobne dosiahnuty maximalny pocet DB spojeni pre dbName: "+dbName+". " +
-															"Treba preverit ci nenastavaju DB leaky, alebo ci netreba zvysit maximumSize alebo nastavit korektne socketTimeout v poolman.xml. " +
-															"V logoch by mal byt DB stackTrace - vyhladat 'Printing stack traces'\n\nexception: "+ex+"\n\nstackTraces: "+sw.toString(), false);
+															"Treba preverit ci nenastavaju DB leaky, alebo ci netreba zvysit maximumSize alebo nastavit korektne socketTimeout v poolman.xml.", false);
 								}
 							}
 					  }

@@ -199,8 +199,8 @@ import sk.iway.iwcm.users.UsersDB;
             }
 
 <span class="fc bfc" id="L201" title="All 2 branches covered.">            if (Tools.isNotEmpty(user.getEditableGroups())) {</span>
-<span class="pc bpc" id="L202" title="1 of 2 branches missed.">                if (GroupsDB.isGroupViewable(user, system.getGroupId())) hasSystemTab = true;</span>
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">                if (GroupsDB.isGroupViewable(user, trash.getGroupId())) hasTrashTab = true;</span>
+<span class="pc bpc" id="L202" title="2 of 4 branches missed.">                if (GroupsDB.isGroupEditable(user, system.getGroupId()) || GroupsDB.isGroupViewable(user, system.getGroupId())) hasSystemTab = true;</span>
+<span class="pc bpc" id="L203" title="2 of 4 branches missed.">                if (GroupsDB.isGroupEditable(user, trash.getGroupId()) || GroupsDB.isGroupViewable(user, trash.getGroupId())) hasTrashTab = true;</span>
             }
 <span class="fc bfc" id="L205" title="All 2 branches covered.">            if (Tools.isNotEmpty(user.getEditablePages())) {</span>
                     //prejdi zoznam web stranok a over, ci tam nie je System alebo Kos
@@ -268,7 +268,7 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L268">        groupsOriginal.addAll(groups);</span>
 
 <span class="fc bfc" id="L270" title="All 2 branches covered.">        for (JsTreeItem item : groupsOriginal) {</span>
-<span class="fc bfc" id="L271" title="All 2 branches covered.">            if (item instanceof GroupsJsTreeItem) {</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">            if (item instanceof GroupsJsTreeItem) {</span>
 <span class="fc" id="L272">                GroupsJsTreeItem gitem = (GroupsJsTreeItem)item;</span>
 
 <span class="pc bpc" id="L274" title="1 of 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(gitem.getParent())) {</span>
@@ -294,9 +294,9 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L294">                    expandGroups(groups, parentGroups, lastGroupId, position+1, user, showPages, click, request);</span>
                 }
             }
-<span class="fc bfc" id="L297" title="All 2 branches covered.">            if (item instanceof DocumentsJsTreeItem) {</span>
-<span class="fc" id="L298">                DocumentsJsTreeItem ditem = (DocumentsJsTreeItem)item;</span>
-<span class="pc bpc" id="L299" title="3 of 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(ditem.getParent())) {</span>
+<span class="pc bpc" id="L297" title="1 of 2 branches missed.">            if (item instanceof DocumentsJsTreeItem) {</span>
+<span class="nc" id="L298">                DocumentsJsTreeItem ditem = (DocumentsJsTreeItem)item;</span>
+<span class="nc bnc" id="L299" title="All 4 branches missed.">                if (position == 0 &amp;&amp; Tools.isEmpty(ditem.getParent())) {</span>
 <span class="nc" id="L300">                     ditem.setParent(&quot;#&quot;);</span>
                 }
             }
@@ -347,4 +347,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L347">        return lastGroupId;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

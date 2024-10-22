@@ -2,11 +2,21 @@
 
 import java.util.Date;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EntityListeners;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.PrePersist;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.validation.constraints.NotBlank;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ActiveRecordRepository;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
@@ -25,7 +35,13 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL_BLACKLIST)
-<span class="fc" id="L28">public class UnsubscribedEntity extends ActiveRecordRepository {</span>
+<span class="fc" id="L38">public class UnsubscribedEntity extends ActiveRecordRepository {</span>
+
+    //Set entity domain id
+	@PrePersist
+	public void prePersist() {
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">		if(domainId == null) domainId = CloudToolsForCore.getDomainId();</span>
+<span class="fc" id="L44">	}</span>
 
     @Id
     @Column(name = &quot;emails_unsubscribed_id&quot;)
@@ -58,8 +74,12 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     )
 	private Date createDate;
 
+    @Column(name = &quot;domain_id&quot;)
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
+    private Integer domainId;
+
     public void setId(Long id) {
-<span class="fc" id="L62">        this.id = id;</span>
-<span class="fc" id="L63">    }</span>
+<span class="fc" id="L82">        this.id = id;</span>
+<span class="fc" id="L83">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -8,12 +8,11 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.beanutils.BeanUtils;
-
+import sk.iway.iwcm.helpers.BeanDiff;
+import sk.iway.iwcm.helpers.BeanDiffPrinter;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 
@@ -144,6 +143,7 @@ public class Adminlog
 	public static final int TYPE_SEO = 310;
 	public static final int TYPE_RESTAURANT_MENU = 311;
 	public static final int TYPE_QUIZ = 312;
+	public static final int TYPE_FILE_ARCHIVE = 313;
 
 	/*
 	public static final int TYPE_HEAT_MAP_CLEAN = 940;
@@ -269,11 +269,11 @@ public class Adminlog
 	 */
 	public static void add(int logType, int userId, String description, int subId1, int subId2, Timestamp timestamp)
 	{
-<span class="nc" id="L272">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
-<span class="nc bnc" id="L273" title="All 2 branches missed.">		if (requestBean == null) requestBean = new RequestBean();</span>
-<span class="nc bnc" id="L274" title="All 2 branches missed.">		if (userId &gt; 0) requestBean.setUserId(userId);</span>
-<span class="nc" id="L275">		add(logType, requestBean, description, subId1, subId2, timestamp);</span>
-<span class="nc" id="L276">	}</span>
+<span class="fc" id="L272">		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();</span>
+<span class="pc bpc" id="L273" title="1 of 2 branches missed.">		if (requestBean == null) requestBean = new RequestBean();</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">		if (userId &gt; 0) requestBean.setUserId(userId);</span>
+<span class="fc" id="L275">		add(logType, requestBean, description, subId1, subId2, timestamp);</span>
+<span class="fc" id="L276">	}</span>
 
 	/**
 	 * Pridanie zaznamu do adminlogu AK SA POUZIVATEL ZMENIL OD ZACIATKU REQUESTU
@@ -328,8 +328,8 @@ public class Adminlog
 	private static void add(int logType, RequestBean requestBean, String descriptionParam, int subId1, int subId2, Timestamp timestamp)
 	{
 <span class="fc" id="L330">		StringBuilder localhostAppend = null;</span>
-<span class="pc bpc" id="L331" title="1 of 4 branches missed.">		if (requestBean == null || Tools.isEmpty(requestBean.getRemoteIP())) {</span>
-<span class="pc bpc" id="L332" title="1 of 2 branches missed.">			if (requestBean == null) requestBean = new RequestBean();</span>
+<span class="fc bfc" id="L331" title="All 4 branches covered.">		if (requestBean == null || Tools.isEmpty(requestBean.getRemoteIP())) {</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">			if (requestBean == null) requestBean = new RequestBean();</span>
 
 			try {
 <span class="fc" id="L335">				localhostAppend = new StringBuilder();</span>
@@ -382,123 +382,128 @@ public class Adminlog
 			}
 		}
 
+		//add auditValues from RequestBean
+<span class="pc bpc" id="L386" title="1 of 2 branches missed.">        if (requestBean != null) {</span>
+<span class="fc" id="L387">            description = description + getRequestBeanAuditLog(requestBean);</span>
+        }
 
-<span class="fc" id="L386">		boolean writeToAuditLog = true;</span>
+
+<span class="fc" id="L391">		boolean writeToAuditLog = true;</span>
 
 		try
 		{
-<span class="pc bpc" id="L390" title="3 of 4 branches missed.">			if (logType==TYPE_JSPERROR &amp;&amp; description.indexOf(&quot;Cannot create a session after the response has been committed&quot;)!=-1) writeToAuditLog = false;</span>
+<span class="pc bpc" id="L395" title="3 of 4 branches missed.">			if (logType==TYPE_JSPERROR &amp;&amp; description.indexOf(&quot;Cannot create a session after the response has been committed&quot;)!=-1) writeToAuditLog = false;</span>
 		}
-<span class="nc" id="L392">		catch (Exception e)</span>
+<span class="nc" id="L397">		catch (Exception e)</span>
 		{
-<span class="nc" id="L394">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L395">		}</span>
+<span class="nc" id="L399">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L400">		}</span>
 
-<span class="pc bpc" id="L397" title="1 of 2 branches missed.">		if (writeToAuditLog)</span>
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">		if (writeToAuditLog)</span>
 		{
 			try
 			{
 				//debug
-<span class="fc" id="L402">				Logger.debug(Adminlog.class, description + &quot; subId1=&quot;+subId1+&quot; subId2=&quot;+subId2);</span>
+<span class="fc" id="L407">				Logger.debug(Adminlog.class, description + &quot; subId1=&quot;+subId1+&quot; subId2=&quot;+subId2);</span>
 
-<span class="fc" id="L404">				Connection db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L409">				Connection db_conn = DBPool.getConnection();</span>
 				try
 				{
-<span class="fc" id="L407">					PreparedStatement ps = db_conn.prepareStatement(&quot;INSERT INTO &quot; + ConfDB.ADMINLOG_TABLE_NAME+&quot; (log_type, user_id, ip, hostname, create_date, description, sub_id1, sub_id2) VALUES (?, ?, ?, ?, ?, ?, ?, ?)&quot;);</span>
+<span class="fc" id="L412">					PreparedStatement ps = db_conn.prepareStatement(&quot;INSERT INTO &quot; + ConfDB.ADMINLOG_TABLE_NAME+&quot; (log_type, user_id, ip, hostname, create_date, description, sub_id1, sub_id2) VALUES (?, ?, ?, ?, ?, ?, ?, ?)&quot;);</span>
 					try
 					{
-<span class="fc" id="L410">						int index = 1;</span>
-<span class="fc" id="L411">						ps.setInt(index++, logType);</span>
-<span class="fc" id="L412">						ps.setInt(index++, requestBean.getUserId());</span>
-<span class="fc" id="L413">						ps.setString(index++, requestBean.getRemoteIP());</span>
-<span class="fc" id="L414">						ps.setString(index++, requestBean.getRemoteHost());</span>
+<span class="fc" id="L415">						int index = 1;</span>
+<span class="fc" id="L416">						ps.setInt(index++, logType);</span>
+<span class="fc" id="L417">						ps.setInt(index++, requestBean.getUserId());</span>
+<span class="fc" id="L418">						ps.setString(index++, requestBean.getRemoteIP());</span>
+<span class="fc" id="L419">						ps.setString(index++, requestBean.getRemoteHost());</span>
 
-<span class="fc" id="L416">						ps.setTimestamp(index++, timestamp);</span>
+<span class="fc" id="L421">						ps.setTimestamp(index++, timestamp);</span>
 
-<span class="fc" id="L418">						String descriptionLocal = DB.prepareString(description, 60000);</span>
+<span class="fc" id="L423">						String descriptionLocal = DB.prepareString(description, 60000);</span>
 
-<span class="fc" id="L420">						String nodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
-<span class="fc" id="L421">                        descriptionLocal += &quot;\n&quot;;</span>
-<span class="fc bfc" id="L422" title="All 2 branches covered.">						if (Tools.isNotEmpty(nodeName))</span>
+<span class="fc" id="L425">						String nodeName = Constants.getString(&quot;clusterMyNodeName&quot;);</span>
+<span class="fc" id="L426">                        descriptionLocal += &quot;\n&quot;;</span>
+<span class="fc bfc" id="L427" title="All 2 branches covered.">						if (Tools.isNotEmpty(nodeName))</span>
 						{
-<span class="fc" id="L424">                            descriptionLocal += &quot;\nnode:&quot;+nodeName;</span>
+<span class="fc" id="L429">                            descriptionLocal += &quot;\nnode:&quot;+nodeName;</span>
 						}
-<span class="fc bfc" id="L426" title="All 2 branches covered.">						if (Tools.isNotEmpty(requestBean.getUrl()))</span>
+<span class="fc bfc" id="L431" title="All 2 branches covered.">						if (Tools.isNotEmpty(requestBean.getUrl()))</span>
 						{
-<span class="fc" id="L428">                            descriptionLocal += &quot;\nURI: &quot;+requestBean.getUrl();</span>
-<span class="pc bpc" id="L429" title="1 of 4 branches missed.">							if (Tools.isNotEmpty(requestBean.getQueryString()) &amp;&amp; requestBean.getUrl().equals(&quot;/admin/logon.do&quot;)==false) descriptionLocal += &quot;?&quot;+requestBean.getQueryString();</span>
+<span class="fc" id="L433">                            descriptionLocal += &quot;\nURI: &quot;+requestBean.getUrl();</span>
+<span class="pc bpc" id="L434" title="1 of 4 branches missed.">							if (Tools.isNotEmpty(requestBean.getQueryString()) &amp;&amp; requestBean.getUrl().equals(&quot;/admin/logon.do&quot;)==false) descriptionLocal += &quot;?&quot;+requestBean.getQueryString();</span>
 						}
-<span class="fc bfc" id="L431" title="All 2 branches covered.">						if (Tools.isNotEmpty(requestBean.getDomain()))</span>
+<span class="fc bfc" id="L436" title="All 2 branches covered.">						if (Tools.isNotEmpty(requestBean.getDomain()))</span>
 						{
-<span class="fc" id="L433">                            descriptionLocal += &quot;\nDomain: &quot;+requestBean.getDomain();</span>
+<span class="fc" id="L438">                            descriptionLocal += &quot;\nDomain: &quot;+requestBean.getDomain();</span>
 						}
-<span class="fc bfc" id="L435" title="All 2 branches covered.">						if (Tools.isNotEmpty(requestBean.getUserAgent()))</span>
+<span class="fc bfc" id="L440" title="All 2 branches covered.">						if (Tools.isNotEmpty(requestBean.getUserAgent()))</span>
 						{
-<span class="fc" id="L437">                            descriptionLocal += &quot;\nUser-Agent: &quot;+requestBean.getUserAgent();</span>
+<span class="fc" id="L442">                            descriptionLocal += &quot;\nUser-Agent: &quot;+requestBean.getUserAgent();</span>
 						}
-<span class="pc bpc" id="L439" title="1 of 4 branches missed.">						if (localhostAppend!=null &amp;&amp; localhostAppend.length()&gt;0)</span>
+<span class="pc bpc" id="L444" title="1 of 4 branches missed.">						if (localhostAppend!=null &amp;&amp; localhostAppend.length()&gt;0)</span>
 						{
-<span class="fc" id="L441">							descriptionLocal += &quot;\n&quot;+localhostAppend.toString();</span>
+<span class="fc" id="L446">							descriptionLocal += &quot;\n&quot;+localhostAppend.toString();</span>
 						}
 
-<span class="fc" id="L444">						DB.setClob(ps, index++, DB.prepareString(descriptionLocal, 65000));</span>
+<span class="fc" id="L449">						DB.setClob(ps, index++, DB.prepareString(descriptionLocal, 65000));</span>
 
-<span class="fc" id="L446">						ps.setInt(index++, subId1);</span>
-<span class="fc" id="L447">						ps.setInt(index++, subId2);</span>
+<span class="fc" id="L451">						ps.setInt(index++, subId1);</span>
+<span class="fc" id="L452">						ps.setInt(index++, subId2);</span>
 
-<span class="fc" id="L449">						ps.execute();</span>
+<span class="fc" id="L454">						ps.execute();</span>
 					}
-<span class="fc" id="L451">					finally { ps.close(); }</span>
+<span class="fc" id="L456">					finally { ps.close(); }</span>
 				}
-<span class="fc" id="L453">				finally { db_conn.close(); }</span>
+<span class="fc" id="L458">				finally { db_conn.close(); }</span>
 			}
-<span class="nc" id="L455">			catch (Exception ex)</span>
+<span class="nc" id="L460">			catch (Exception ex)</span>
 			{
-<span class="nc" id="L457">				sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L458">			}</span>
+<span class="nc" id="L462">				sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L463">			}</span>
 		}
 
-<span class="pc bpc" id="L461" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;adminlogCustomLogger&quot;)))</span>
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">		if (Tools.isNotEmpty(Constants.getString(&quot;adminlogCustomLogger&quot;)))</span>
 		{
 			try
 			{
 				@SuppressWarnings(&quot;rawtypes&quot;)
-<span class="nc" id="L466">				Class loggerClass = Class.forName(Constants.getString(&quot;adminlogCustomLogger&quot;));</span>
-<span class="nc bnc" id="L467" title="All 4 branches missed.">				if (loggerClass!=null &amp;&amp; AdminlogCustomLogger.class.isAssignableFrom(loggerClass))</span>
+<span class="nc" id="L471">				Class loggerClass = Class.forName(Constants.getString(&quot;adminlogCustomLogger&quot;));</span>
+<span class="nc bnc" id="L472" title="All 4 branches missed.">				if (loggerClass!=null &amp;&amp; AdminlogCustomLogger.class.isAssignableFrom(loggerClass))</span>
 				{
 					@SuppressWarnings(&quot;unchecked&quot;)
-<span class="nc" id="L470">					AdminlogCustomLogger logger = (AdminlogCustomLogger)loggerClass.getDeclaredConstructor().newInstance();</span>
+<span class="nc" id="L475">					AdminlogCustomLogger logger = (AdminlogCustomLogger)loggerClass.getDeclaredConstructor().newInstance();</span>
 					//sem musi ist descriptionParam, pretoze description uz obsahuje aj parametre (ak je prazdny description pridaju sa, to v TB handlujeme zvlast)
-<span class="nc" id="L472">					logger.addLog(logType, requestBean, descriptionParam, timestamp);</span>
+<span class="nc" id="L477">					logger.addLog(logType, requestBean, descriptionParam, timestamp);</span>
 				}
 			}
-<span class="nc" id="L475">			catch (Exception e)</span>
+<span class="nc" id="L480">			catch (Exception e)</span>
 			{
-<span class="nc" id="L477">				sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L478">			}</span>
+<span class="nc" id="L482">				sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L483">			}</span>
 		}
 
 		try
 		{
 			//Logovanie do suboru
-<span class="fc" id="L484">			AdminlogFile.write(timestamp, requestBean, logType, description);</span>
+<span class="fc" id="L489">			AdminlogFile.write(timestamp, requestBean, logType, description);</span>
 			//AdminlogTB.write(timestamp, requestBean, logType, description);
 		}
-<span class="nc" id="L487">		catch (Exception e)</span>
+<span class="nc" id="L492">		catch (Exception e)</span>
 		{
-<span class="nc" id="L489">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L490">		}</span>
+<span class="nc" id="L494">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L495">		}</span>
 
 		try
 		{
 			//Poslanie notifikacie
-<span class="fc" id="L495">			AdminlogNotifyManager.sendNotification(logType, requestBean, timestamp, description, writeToAuditLog); // posle notifikacny email, ak je nastaveny</span>
+<span class="fc" id="L500">			AdminlogNotifyManager.sendNotification(logType, requestBean, timestamp, description, writeToAuditLog); // posle notifikacny email, ak je nastaveny</span>
 		}
-<span class="nc" id="L497">		catch (Exception e)</span>
+<span class="nc" id="L502">		catch (Exception e)</span>
 		{
-<span class="nc" id="L499">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L500">		}</span>
-<span class="fc" id="L501">	}</span>
+<span class="nc" id="L504">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L505">		}</span>
+<span class="fc" id="L506">	}</span>
 
 	/**
 	 * Vrati datum posledneho zaznamu daneho typu pre daneho pouzivatela
@@ -508,37 +513,66 @@ public class Adminlog
 	 */
 	public static long getLastDate(int logType, int userId)
 	{
-<span class="nc" id="L511">		long lastDate = 0;</span>
+<span class="nc" id="L516">		long lastDate = 0;</span>
 		try
 		{
-<span class="nc" id="L514">			Connection db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L519">			Connection db_conn = DBPool.getConnection();</span>
 			try
 			{
-<span class="nc" id="L517">				PreparedStatement ps = db_conn.prepareStatement(&quot;SELECT max(create_date) as create_date FROM &quot;+ConfDB.ADMINLOG_TABLE_NAME+&quot; WHERE user_id=? AND log_type=?&quot;);</span>
+<span class="nc" id="L522">				PreparedStatement ps = db_conn.prepareStatement(&quot;SELECT max(create_date) as create_date FROM &quot;+ConfDB.ADMINLOG_TABLE_NAME+&quot; WHERE user_id=? AND log_type=?&quot;);</span>
 				try
 				{
-<span class="nc" id="L520">					ps.setInt(1, userId);</span>
-<span class="nc" id="L521">					ps.setInt(2, logType);</span>
-<span class="nc" id="L522">					ResultSet rs = ps.executeQuery();</span>
+<span class="nc" id="L525">					ps.setInt(1, userId);</span>
+<span class="nc" id="L526">					ps.setInt(2, logType);</span>
+<span class="nc" id="L527">					ResultSet rs = ps.executeQuery();</span>
 					try
 					{
-<span class="nc bnc" id="L525" title="All 2 branches missed.">						if (rs.next())</span>
+<span class="nc bnc" id="L530" title="All 2 branches missed.">						if (rs.next())</span>
 						{
-<span class="nc" id="L527">							Timestamp ts = rs.getTimestamp(&quot;create_date&quot;);</span>
-<span class="nc bnc" id="L528" title="All 2 branches missed.">							if (ts != null) lastDate = ts.getTime();</span>
+<span class="nc" id="L532">							Timestamp ts = rs.getTimestamp(&quot;create_date&quot;);</span>
+<span class="nc bnc" id="L533" title="All 2 branches missed.">							if (ts != null) lastDate = ts.getTime();</span>
 						}
 					}
-<span class="nc" id="L531">					finally { rs.close(); }</span>
+<span class="nc" id="L536">					finally { rs.close(); }</span>
 				}
-<span class="nc" id="L533">				finally { ps.close(); }</span>
+<span class="nc" id="L538">				finally { ps.close(); }</span>
 			}
-<span class="nc" id="L535">			finally { db_conn.close(); }</span>
+<span class="nc" id="L540">			finally { db_conn.close(); }</span>
 		}
-<span class="nc" id="L537">		catch (Exception ex)</span>
+<span class="nc" id="L542">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L539">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L540">		}</span>
-<span class="nc" id="L541">		return(lastDate);</span>
+<span class="nc" id="L544">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L545">		}</span>
+<span class="nc" id="L546">		return(lastDate);</span>
+	}
+
+	/**
+	 * Returns changelog text for given object
+	 * @param id - ID of object OR NULL/-1 if new object
+	 * @param newObj - changed object
+	 * @param originalObj - original object allready saved in DB or NULL if new object
+	 * @return
+	 */
+	public static String getChangelog(Long id, Object newObj, Object originalObj) {
+<span class="fc" id="L557">		String changes = Adminlog.getPojoZmeny(newObj, originalObj);</span>
+<span class="fc" id="L558">		String title = &quot;CREATE:&quot;;</span>
+<span class="fc bfc" id="L559" title="All 2 branches covered.">		if (originalObj != null)</span>
+		{
+<span class="fc" id="L561">			title = &quot;UPDATE:&quot;;</span>
+		}
+<span class="fc" id="L563">		return title + &quot;\nid: &quot; + id + &quot;\n&quot; + changes;</span>
+	}
+
+	/**
+	 * Returns changelog text for DELETE of given object (prints all properties)
+	 * @param id
+	 * @param obj
+	 * @return
+	 */
+	public static String getChangelogDelete(Long id, Object obj) {
+<span class="fc" id="L573">		String changes = Adminlog.getPojoZmeny(obj, null);</span>
+<span class="fc" id="L574">		String title = &quot;DELETE:&quot;;</span>
+<span class="fc" id="L575">		return title + &quot;\nid: &quot; + id + &quot;\n&quot; + changes;</span>
 	}
 
 	/**
@@ -547,24 +581,17 @@ public class Adminlog
 	 * @param o1Original
 	 * @return
 	 */
-	public static String getPojoZmeny(Object o1, Object o1Original)
+	public static String getPojoZmeny(Object newObj, Object originalObj)
 	{
-<span class="nc" id="L552">		Map&lt;String, String&gt; properties = new HashMap&lt;&gt;();</span>
-		try
-		{
-<span class="nc" id="L555">			BeanUtils.populate(o1, properties);</span>
-		}
-<span class="nc" id="L557">		catch (Exception ex)</span>
-		{
-
-<span class="nc" id="L560">		}</span>
-
-<span class="nc" id="L562">		return null;</span>
+<span class="pc bpc" id="L586" title="1 of 2 branches missed.">        if(newObj == null)</span>
+<span class="nc" id="L587">            return &quot;Bez zmeny&quot;;</span>
+<span class="fc" id="L588">        BeanDiff diff = new BeanDiff().setNew(newObj).setOriginal(originalObj);</span>
+<span class="fc" id="L589">        return new BeanDiffPrinter(diff).toString();</span>
 	}
 
 	public static List&lt;AdminlogBean&gt; searchAdminlog(int[] logTypes, int logTypeFrom, int logTypeTo, int userId, long createdFrom, long createdTo, String description, int subId1, int subId2, String ip, String hostname)
 	{
-<span class="nc" id="L567">		return searchAdminlog(logTypes, logTypeFrom, logTypeTo, userId, createdFrom, createdTo, description, subId1, subId2, ip, hostname, -1);</span>
+<span class="fc" id="L594">		return searchAdminlog(logTypes, logTypeFrom, logTypeTo, userId, createdFrom, createdTo, description, subId1, subId2, ip, hostname, -1);</span>
 	}
 
 	/**
@@ -585,220 +612,220 @@ public class Adminlog
 	 */
 	public static List&lt;AdminlogBean&gt; searchAdminlog(int[] logTypes, int logTypeFrom, int logTypeTo, int userId, long createdFrom, long createdTo, String description, int subId1, int subId2, String ip, String hostname, int logIdGreaterThan)
 	{
-<span class="nc" id="L588">		List&lt;AdminlogBean&gt; logy = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L615">		List&lt;AdminlogBean&gt; logy = new ArrayList&lt;&gt;();</span>
 
 		try
 		{
-<span class="nc" id="L592">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM &quot;).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
-<span class="nc" id="L593">			StringBuilder where = new StringBuilder();</span>
-<span class="nc bnc" id="L594" title="All 2 branches missed.">			if (logTypes.length&gt;0)</span>
+<span class="fc" id="L619">			StringBuilder sql = new StringBuilder(&quot;SELECT * FROM &quot;).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
+<span class="fc" id="L620">			StringBuilder where = new StringBuilder();</span>
+<span class="pc bpc" id="L621" title="1 of 2 branches missed.">			if (logTypes.length&gt;0)</span>
 			{
-<span class="nc" id="L596">				where.append(&quot; AND log_type IN (&quot;);</span>
-<span class="nc bnc" id="L597" title="All 2 branches missed.">				for (int i=0; i&lt;logTypes.length; i++)</span>
+<span class="fc" id="L623">				where.append(&quot; AND log_type IN (&quot;);</span>
+<span class="fc bfc" id="L624" title="All 2 branches covered.">				for (int i=0; i&lt;logTypes.length; i++)</span>
 				{
-<span class="nc bnc" id="L599" title="All 2 branches missed.">					if (i&gt;0) where.append(',');</span>
-<span class="nc" id="L600">					where.append(logTypes[i]);</span>
+<span class="pc bpc" id="L626" title="1 of 2 branches missed.">					if (i&gt;0) where.append(',');</span>
+<span class="fc" id="L627">					where.append(logTypes[i]);</span>
 				}
-<span class="nc" id="L602">				where.append(')');</span>
+<span class="fc" id="L629">				where.append(')');</span>
 			}
-<span class="nc bnc" id="L604" title="All 2 branches missed.">			if (logTypeFrom != -1)</span>
+<span class="pc bpc" id="L631" title="1 of 2 branches missed.">			if (logTypeFrom != -1)</span>
 			{
-<span class="nc" id="L606">				where.append(&quot; AND log_type&gt;=&quot;).append(logTypeFrom);</span>
+<span class="nc" id="L633">				where.append(&quot; AND log_type&gt;=&quot;).append(logTypeFrom);</span>
 			}
-<span class="nc bnc" id="L608" title="All 2 branches missed.">			if (logTypeTo != -1)</span>
+<span class="pc bpc" id="L635" title="1 of 2 branches missed.">			if (logTypeTo != -1)</span>
 			{
-<span class="nc" id="L610">				where.append(&quot; AND log_type&lt;=&quot;).append(logTypeTo);</span>
+<span class="nc" id="L637">				where.append(&quot; AND log_type&lt;=&quot;).append(logTypeTo);</span>
 			}
-<span class="nc bnc" id="L612" title="All 2 branches missed.">			if (userId != 0)</span>
+<span class="pc bpc" id="L639" title="1 of 2 branches missed.">			if (userId != 0)</span>
 			{
-<span class="nc bnc" id="L614" title="All 2 branches missed.">				if (userId&lt;0)</span>
+<span class="pc bpc" id="L641" title="1 of 2 branches missed.">				if (userId&lt;0)</span>
 				{
-<span class="nc" id="L616">					userId = -userId;</span>
-<span class="nc" id="L617">					where.append(&quot; AND user_id&lt;&gt;&quot;).append(userId);</span>
+<span class="nc" id="L643">					userId = -userId;</span>
+<span class="nc" id="L644">					where.append(&quot; AND user_id&lt;&gt;&quot;).append(userId);</span>
 				}
 				else
 				{
-<span class="nc" id="L621">					where.append(&quot; AND user_id=&quot;).append(userId);</span>
+<span class="fc" id="L648">					where.append(&quot; AND user_id=&quot;).append(userId);</span>
 				}
 			}
-<span class="nc bnc" id="L624" title="All 2 branches missed.">			if (createdFrom &gt; 0)</span>
+<span class="pc bpc" id="L651" title="1 of 2 branches missed.">			if (createdFrom &gt; 0)</span>
 			{
-<span class="nc" id="L626">				where.append(&quot; AND create_date&gt;=?&quot;);</span>
+<span class="nc" id="L653">				where.append(&quot; AND create_date&gt;=?&quot;);</span>
 			}
-<span class="nc bnc" id="L628" title="All 2 branches missed.">			if (createdTo &gt; 0)</span>
+<span class="pc bpc" id="L655" title="1 of 2 branches missed.">			if (createdTo &gt; 0)</span>
 			{
-<span class="nc" id="L630">				where.append(&quot; AND create_date&lt;=?&quot;);</span>
+<span class="nc" id="L657">				where.append(&quot; AND create_date&lt;=?&quot;);</span>
 			}
-<span class="nc bnc" id="L632" title="All 2 branches missed.">			if (Tools.isNotEmpty(description))</span>
+<span class="pc bpc" id="L659" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(description))</span>
 			{
-<span class="nc bnc" id="L634" title="All 4 branches missed.">				if (description.charAt(0)=='!' &amp;&amp; description.length()&gt;2)</span>
+<span class="pc bpc" id="L661" title="3 of 4 branches missed.">				if (description.charAt(0)=='!' &amp;&amp; description.length()&gt;2)</span>
 				{
-<span class="nc" id="L636">					description = description.substring(1);</span>
-<span class="nc" id="L637">					where.append(&quot; AND description NOT LIKE ?&quot;);</span>
+<span class="nc" id="L663">					description = description.substring(1);</span>
+<span class="nc" id="L664">					where.append(&quot; AND description NOT LIKE ?&quot;);</span>
 				}
-<span class="nc bnc" id="L639" title="All 4 branches missed.">				else if (description.startsWith(&quot;NOT&quot;) &amp;&amp; description.length()&gt;3)</span>
+<span class="pc bpc" id="L666" title="3 of 4 branches missed.">				else if (description.startsWith(&quot;NOT&quot;) &amp;&amp; description.length()&gt;3)</span>
                 {
-<span class="nc" id="L641">                    description = description.substring(3).trim();</span>
-<span class="nc" id="L642">                    where.append(&quot; AND description NOT LIKE ?&quot;);</span>
+<span class="nc" id="L668">                    description = description.substring(3).trim();</span>
+<span class="nc" id="L669">                    where.append(&quot; AND description NOT LIKE ?&quot;);</span>
                 }
 				else
 				{
-<span class="nc" id="L646">					where.append(&quot; AND description LIKE ?&quot;);</span>
+<span class="fc" id="L673">					where.append(&quot; AND description LIKE ?&quot;);</span>
 				}
 			}
-<span class="nc bnc" id="L649" title="All 2 branches missed.">			if (subId1 != -1)</span>
+<span class="pc bpc" id="L676" title="1 of 2 branches missed.">			if (subId1 != -1)</span>
 			{
-<span class="nc" id="L651">				where.append(&quot; AND sub_id1=&quot;).append(subId1);</span>
+<span class="nc" id="L678">				where.append(&quot; AND sub_id1=&quot;).append(subId1);</span>
 			}
-<span class="nc bnc" id="L653" title="All 2 branches missed.">			if (subId2 != -1)</span>
+<span class="pc bpc" id="L680" title="1 of 2 branches missed.">			if (subId2 != -1)</span>
 			{
-<span class="nc" id="L655">				where.append(&quot; AND sub_id2=&quot;).append(subId2);</span>
+<span class="nc" id="L682">				where.append(&quot; AND sub_id2=&quot;).append(subId2);</span>
 			}
-<span class="nc bnc" id="L657" title="All 2 branches missed.">			if (Tools.isNotEmpty(ip))</span>
+<span class="pc bpc" id="L684" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(ip))</span>
 			{
-<span class="nc bnc" id="L659" title="All 4 branches missed.">				if (ip.charAt(0)=='!' &amp;&amp; ip.length()&gt;2)</span>
+<span class="nc bnc" id="L686" title="All 4 branches missed.">				if (ip.charAt(0)=='!' &amp;&amp; ip.length()&gt;2)</span>
 				{
-<span class="nc" id="L661">					ip = ip.substring(1);</span>
-<span class="nc" id="L662">					where.append(&quot; AND ip NOT LIKE ?&quot;);</span>
+<span class="nc" id="L688">					ip = ip.substring(1);</span>
+<span class="nc" id="L689">					where.append(&quot; AND ip NOT LIKE ?&quot;);</span>
 				}
 				else
 				{
-<span class="nc" id="L666">					where.append(&quot; AND ip LIKE ?&quot;);</span>
+<span class="nc" id="L693">					where.append(&quot; AND ip LIKE ?&quot;);</span>
 				}
 			}
-<span class="nc bnc" id="L669" title="All 2 branches missed.">			if (Tools.isNotEmpty(hostname))</span>
+<span class="pc bpc" id="L696" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(hostname))</span>
 			{
-<span class="nc bnc" id="L671" title="All 4 branches missed.">				if (hostname.charAt(0)=='!' &amp;&amp; hostname.length()&gt;2)</span>
+<span class="nc bnc" id="L698" title="All 4 branches missed.">				if (hostname.charAt(0)=='!' &amp;&amp; hostname.length()&gt;2)</span>
 				{
-<span class="nc" id="L673">					hostname = hostname.substring(1);</span>
-<span class="nc" id="L674">					where.append(&quot; AND hostname NOT LIKE ?&quot;);</span>
+<span class="nc" id="L700">					hostname = hostname.substring(1);</span>
+<span class="nc" id="L701">					where.append(&quot; AND hostname NOT LIKE ?&quot;);</span>
 				}
 				else
 				{
-<span class="nc" id="L678">					where.append(&quot; AND hostname LIKE ?&quot;);</span>
+<span class="nc" id="L705">					where.append(&quot; AND hostname LIKE ?&quot;);</span>
 				}
 			}
-<span class="nc bnc" id="L681" title="All 2 branches missed.">			if (logIdGreaterThan != -1)</span>
+<span class="pc bpc" id="L708" title="1 of 2 branches missed.">			if (logIdGreaterThan != -1)</span>
 			{
-<span class="nc" id="L683">				where.append(&quot; AND log_id&gt;=&quot;).append(logIdGreaterThan);</span>
+<span class="nc" id="L710">				where.append(&quot; AND log_id&gt;=&quot;).append(logIdGreaterThan);</span>
 			}
 
 
-<span class="nc bnc" id="L687" title="All 2 branches missed.">			if (Tools.isNotEmpty(where))</span>
+<span class="pc bpc" id="L714" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(where))</span>
 			{
 				//odstranime prve AND
-<span class="nc" id="L690">				sql.append(&quot; WHERE &quot;).append(where.substring(4).trim());</span>
+<span class="fc" id="L717">				sql.append(&quot; WHERE &quot;).append(where.substring(4).trim());</span>
 			}
 
-<span class="nc" id="L693">			sql.append(&quot; ORDER BY log_id DESC&quot;);</span>
+<span class="fc" id="L720">			sql.append(&quot; ORDER BY log_id DESC&quot;);</span>
 
-<span class="nc" id="L695">			Logger.debug(Adminlog.class, &quot;adminlog sql: &quot; + sql);</span>
+<span class="fc" id="L722">			Logger.debug(Adminlog.class, &quot;adminlog sql: &quot; + sql);</span>
 
-<span class="nc" id="L697">			Connection db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L724">			Connection db_conn = DBPool.getConnection();</span>
 			try
 			{
-<span class="nc" id="L700">				PreparedStatement ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L727">				PreparedStatement ps = db_conn.prepareStatement(sql.toString());</span>
 				try
 				{
-<span class="nc" id="L703">					int psCounter = 1;</span>
-<span class="nc bnc" id="L704" title="All 2 branches missed.">					if (createdFrom &gt; 0)</span>
+<span class="fc" id="L730">					int psCounter = 1;</span>
+<span class="pc bpc" id="L731" title="1 of 2 branches missed.">					if (createdFrom &gt; 0)</span>
 					{
-<span class="nc" id="L706">						ps.setTimestamp(psCounter++, new Timestamp(createdFrom));</span>
+<span class="nc" id="L733">						ps.setTimestamp(psCounter++, new Timestamp(createdFrom));</span>
 					}
-<span class="nc bnc" id="L708" title="All 2 branches missed.">					if (createdTo &gt; 0)</span>
+<span class="pc bpc" id="L735" title="1 of 2 branches missed.">					if (createdTo &gt; 0)</span>
 					{
-<span class="nc" id="L710">						ps.setTimestamp(psCounter++, new Timestamp(createdTo));</span>
+<span class="nc" id="L737">						ps.setTimestamp(psCounter++, new Timestamp(createdTo));</span>
 					}
-<span class="nc bnc" id="L712" title="All 2 branches missed.">					if (Tools.isNotEmpty(description))</span>
+<span class="pc bpc" id="L739" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(description))</span>
 					{
-<span class="nc" id="L714">						ps.setString(psCounter++, &quot;%&quot;+description+&quot;%&quot;);</span>
+<span class="fc" id="L741">						ps.setString(psCounter++, &quot;%&quot;+description+&quot;%&quot;);</span>
 					}
-<span class="nc bnc" id="L716" title="All 2 branches missed.">					if (Tools.isNotEmpty(ip))</span>
+<span class="pc bpc" id="L743" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(ip))</span>
 					{
-<span class="nc" id="L718">						ps.setString(psCounter++, &quot;%&quot;+ip+&quot;%&quot;);</span>
+<span class="nc" id="L745">						ps.setString(psCounter++, &quot;%&quot;+ip+&quot;%&quot;);</span>
 					}
-<span class="nc bnc" id="L720" title="All 2 branches missed.">					if (Tools.isNotEmpty(hostname))</span>
+<span class="pc bpc" id="L747" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(hostname))</span>
 					{
-<span class="nc" id="L722">						ps.setString(psCounter++, &quot;%&quot;+hostname+&quot;%&quot;);</span>
+<span class="nc" id="L749">						ps.setString(psCounter++, &quot;%&quot;+hostname+&quot;%&quot;);</span>
 					}
 
-<span class="nc" id="L725">					ResultSet rs = ps.executeQuery();</span>
+<span class="fc" id="L752">					ResultSet rs = ps.executeQuery();</span>
 					try
 					{
 						AdminlogBean ab;
-<span class="nc bnc" id="L729" title="All 2 branches missed.">						while (rs.next())</span>
+<span class="pc bpc" id="L756" title="1 of 2 branches missed.">						while (rs.next())</span>
 						{
-<span class="nc" id="L731">							ab = new AdminlogBean(rs);</span>
-<span class="nc" id="L732">							logy.add(ab);</span>
+<span class="nc" id="L758">							ab = new AdminlogBean(rs);</span>
+<span class="nc" id="L759">							logy.add(ab);</span>
 						}
 					}
-<span class="nc" id="L735">					finally { rs.close(); }</span>
+<span class="fc" id="L762">					finally { rs.close(); }</span>
 				}
-<span class="nc" id="L737">				finally { ps.close(); }</span>
+<span class="fc" id="L764">				finally { ps.close(); }</span>
 			}
-<span class="nc" id="L739">			finally { db_conn.close(); }</span>
+<span class="fc" id="L766">			finally { db_conn.close(); }</span>
 		}
-<span class="nc" id="L741">		catch (Exception ex)</span>
+<span class="nc" id="L768">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L743">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L744">		}</span>
+<span class="nc" id="L770">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L771">		}</span>
 
-<span class="nc" id="L746">		return(logy);</span>
+<span class="fc" id="L773">		return(logy);</span>
 	}
 
 	public static List&lt;AdminlogBean&gt; getLastEvents(int size)
 	{
-<span class="fc" id="L751">		Connection db_conn = null;</span>
-<span class="fc" id="L752">		PreparedStatement ps = null;</span>
-<span class="fc" id="L753">		ResultSet rs = null;</span>
-<span class="fc" id="L754">		List&lt;AdminlogBean&gt; logy = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L755">		String ADMINLOG_FIELDS_NODATA = &quot;SELECT * FROM &quot;;</span>
-<span class="fc" id="L756">		String ADMINLOG_ORDER_BY_DOCS_ID = &quot; ORDER BY log_id DESC&quot;;</span>
+<span class="fc" id="L778">		Connection db_conn = null;</span>
+<span class="fc" id="L779">		PreparedStatement ps = null;</span>
+<span class="fc" id="L780">		ResultSet rs = null;</span>
+<span class="fc" id="L781">		List&lt;AdminlogBean&gt; logy = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L782">		String ADMINLOG_FIELDS_NODATA = &quot;SELECT * FROM &quot;;</span>
+<span class="fc" id="L783">		String ADMINLOG_ORDER_BY_DOCS_ID = &quot; ORDER BY log_id DESC&quot;;</span>
 		try
 		{
-<span class="fc" id="L759">			StringBuilder sql = null;</span>
-<span class="pc bpc" id="L760" title="1 of 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
+<span class="fc" id="L786">			StringBuilder sql = null;</span>
+<span class="pc bpc" id="L787" title="1 of 2 branches missed.">			if (Constants.DB_TYPE == Constants.DB_MSSQL)</span>
 			{
-<span class="nc" id="L762">				sql = new StringBuilder(&quot;SELECT TOP &quot;).append(size).append(&quot; * FROM &quot;).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
-<span class="nc" id="L763">				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);</span>
+<span class="nc" id="L789">				sql = new StringBuilder(&quot;SELECT TOP &quot;).append(size).append(&quot; * FROM &quot;).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
+<span class="nc" id="L790">				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);</span>
 			}
-<span class="pc bpc" id="L765" title="3 of 4 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
+<span class="pc bpc" id="L792" title="3 of 4 branches missed.">			else if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL)</span>
 			{
-<span class="fc" id="L767">				sql = new StringBuilder(ADMINLOG_FIELDS_NODATA).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
-<span class="fc" id="L768">				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);</span>
-<span class="fc" id="L769">				sql.append(&quot; LIMIT &quot;).append(size);</span>
+<span class="fc" id="L794">				sql = new StringBuilder(ADMINLOG_FIELDS_NODATA).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
+<span class="fc" id="L795">				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);</span>
+<span class="fc" id="L796">				sql.append(&quot; LIMIT &quot;).append(size);</span>
 			}
 			else
 			{
 				//oracle
-<span class="nc" id="L774">				sql = new StringBuilder(ADMINLOG_FIELDS_NODATA).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
-<span class="nc" id="L775">				sql.append(&quot; WHERE rownum &lt; &quot;).append(size);</span>
-<span class="nc" id="L776">				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);</span>
+<span class="nc" id="L801">				sql = new StringBuilder(ADMINLOG_FIELDS_NODATA).append(ConfDB.ADMINLOG_TABLE_NAME);</span>
+<span class="nc" id="L802">				sql.append(&quot; WHERE rownum &lt; &quot;).append(size);</span>
+<span class="nc" id="L803">				sql.append(ADMINLOG_ORDER_BY_DOCS_ID);</span>
 			}
-<span class="fc" id="L778">			db_conn = DBPool.getConnection();</span>
-<span class="fc" id="L779">			ps = db_conn.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);</span>
-<span class="fc" id="L780">			rs = ps.executeQuery();</span>
+<span class="fc" id="L805">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L806">			ps = db_conn.prepareStatement(sql.toString(), ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);</span>
+<span class="fc" id="L807">			rs = ps.executeQuery();</span>
 			try
 			{
 				AdminlogBean ab;
-<span class="fc bfc" id="L784" title="All 2 branches covered.">				while (rs.next())</span>
+<span class="fc bfc" id="L811" title="All 2 branches covered.">				while (rs.next())</span>
 				{
-<span class="fc" id="L786">					ab = new AdminlogBean(rs);</span>
-<span class="fc" id="L787">					logy.add(ab);</span>
+<span class="fc" id="L813">					ab = new AdminlogBean(rs);</span>
+<span class="fc" id="L814">					logy.add(ab);</span>
 				}
 			}
 			finally
 			{
-<span class="fc" id="L792">				rs.close();</span>
-<span class="fc" id="L793">				ps.close();</span>
-<span class="fc" id="L794">				db_conn.close();</span>
+<span class="fc" id="L819">				rs.close();</span>
+<span class="fc" id="L820">				ps.close();</span>
+<span class="fc" id="L821">				db_conn.close();</span>
 			}
 		}
-<span class="nc" id="L797">		catch (Exception ex)</span>
+<span class="nc" id="L824">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L799">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L800">		}</span>
-<span class="fc" id="L801">		return logy;</span>
+<span class="nc" id="L826">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L827">		}</span>
+<span class="fc" id="L828">		return logy;</span>
 	}
 
 	/**
@@ -806,7 +833,41 @@ public class Adminlog
 	 * @return
 	 */
 	public static Integer[] getTypes() {
-<span class="fc" id="L809">		return TYPY_ARRAY;</span>
+<span class="fc" id="L836">		return TYPY_ARRAY;</span>
+	}
+
+	/**
+	 * Format RequestBean.auditValues to String
+	 * @param requestBean
+	 * @return
+	 */
+	public static String getRequestBeanAuditLog(RequestBean requestBean) {
+		//add auditValues from RequestBean
+<span class="fc" id="L846">		StringBuilder log = new StringBuilder();</span>
+<span class="pc bpc" id="L847" title="1 of 2 branches missed.">        if (requestBean != null) {</span>
+<span class="fc" id="L848">            Map&lt;String, String[]&gt; auditValues = requestBean.getAuditValues(false);</span>
+<span class="pc bpc" id="L849" title="1 of 4 branches missed.">            if (auditValues != null &amp;&amp; auditValues.size() &gt; 0) {</span>
+<span class="fc bfc" id="L850" title="All 2 branches covered.">                for (Map.Entry&lt;String, String[]&gt; entry : auditValues.entrySet()) {</span>
+<span class="fc" id="L851">                    String key = entry.getKey();</span>
+<span class="fc" id="L852">                    String[] values = entry.getValue();</span>
+<span class="pc bpc" id="L853" title="2 of 4 branches missed.">                    if (values != null &amp;&amp; values.length &gt; 0) {</span>
+<span class="pc bpc" id="L854" title="1 of 2 branches missed.">                        if (log.length() &gt; 0) log.append(&quot;\n&quot;);</span>
+<span class="fc" id="L855">                        log.append(key).append(&quot;: &quot;);</span>
+<span class="fc bfc" id="L856" title="All 2 branches covered.">                        for (int i = 0; i &lt; values.length; i++) {</span>
+<span class="pc bpc" id="L857" title="1 of 2 branches missed.">                            if (i &gt; 0) log.append(&quot;, &quot;);</span>
+<span class="fc" id="L858">                            log.append(values[i]);</span>
+                        }
+                    }
+<span class="fc" id="L861">                }</span>
+<span class="pc bpc" id="L862" title="1 of 2 branches missed.">				if (log.length() &gt; 0) {</span>
+<span class="fc" id="L863">					log.insert(0, '\n');</span>
+<span class="fc" id="L864">					log.append(&quot;\n&quot;);</span>
+				}
+
+<span class="fc" id="L867">                auditValues.clear();</span>
+            }
+        }
+<span class="fc" id="L870">		return log.toString();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -13,7 +13,7 @@ Vytvorte stránku ```/prihlasenie-do-mailingu.html``` s nasledovným HTML kódom
 
 Pri vkladaní aplikácie pre prihlásenie môžete použiť jednoduchší formulár pre registráciu do hromadného emailu. Zobrazuje len pole pre zadanie emailovej adresy, je vhodné ho vložiť do pätičky stránky.
 
-Registruje do všetkých emailových skupín, ktoré majú zapnutú možnosť ```Povoliť pridávanie/odoberanie zo skupiny samotným používateľom``` a ```Vyžadovať potvrdenie e-mailovej adresy```. Neobsahuje ```captcha``` element, preto je vyžadované zapnuté potvrdenie e-mailovej adresy. Formulár využíva ```Bootstrap v5``` pre zobrazenie formuláru a dialógového okna.
+Registruje do všetkých emailových skupín, ktoré majú zapnutú možnosť **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom** a **Vyžadovať potvrdenie e-mailovej adresy**. Neobsahuje ```captcha``` element, preto je vyžadované zapnuté potvrdenie e-mailovej adresy. Formulár využíva ```Bootstrap v5``` pre zobrazenie formuláru a dialógového okna.
 
 ## Odhlásenie
 
@@ -38,9 +38,9 @@ Naviac v schránke `gmail` sa tlačidlo na odhlásenie zobrazí len v prípade, 
 
 Ak potrebujete modifikovať text emailu, ktorý je zaslaný pre potvrdenie prihlásenia / odhlásenia môžete modifikovať štandardný HTML kód v konfigurácii systému v časti Editácia textov. Kľúče s textami sú ```dmail.subscribe.bodyNew``` pre prihlásenie a ```dmail.unsubscribe.bodyNew``` pre odhlásenie.
 
-Ak text potrebujete formátovať pokročilým spôsobom, je možné vytvoriť web stránku vo WebJETe s textom emailov. Aplikáciam ```subscribe.jsp a unsubscibe.jsp``` môžete pridať parameter ```emailBodyId``` s ID stránky s textom emailu. Stránka môže vyzerať nasledovne:
+Ak text potrebujete formátovať pokročilým spôsobom, je možné vytvoriť web stránku vo WebJETe s textom emailov. Aplikáciám ```subscribe.jsp a unsubscibe.jsp``` môžete pridať parameter ```emailBodyId``` s ID stránky s textom emailu. Stránka môže vyzerať nasledovne:
 
-```html
+```
 Váž. p. !name!,
 
 ďakujeme vám za záujem dostávať náš newsletter. Prosím potvrďte vašu voľbu kliknutím na nasledovnú linku:

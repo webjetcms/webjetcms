@@ -1,0 +1,45 @@
+ <div class="sidebar-section">Webový designér</div>
+
+- [:point\_left: Zpět na úvod](/?back)
+- Šablony
+  - [Způsob zobrazení stránky](/frontend/templates/README.md)
+  - [Šablony](/frontend/templates/templates.md)
+  - [Skupiny šablon](/frontend/templates/template-groups.md)
+  - [Nastavení šablon](/frontend/setup/README.md)
+- Volitelná pole
+  - [Nastavení](/frontend/webpages/customfields/README.md)
+- Šablony Thymeleaf
+  - [Úvod](/frontend/thymeleaf/README.md)
+  - [Atributy, podmínky a cykly](/frontend/thymeleaf/statements.md)
+  - [Štítky WebJET CMS](/frontend/thymeleaf/tags.md)
+  - [Seznam dostupných atributů](/frontend/thymeleaf/webjet-objects.md)
+  - [Nahrazení textu](/frontend/thymeleaf/text-replaces.md)
+- Šablony JSP
+  - [Základní šablona](/frontend/jsp/README.md)
+- Startovací sada Ninja
+  - [Úvod](/frontend/ninja-starter-kit/README.md)
+  - [Nastavení](/frontend/ninja-starter-kit/temp-group/README.md)
+  - [Základní kód](/frontend/ninja-starter-kit/ninja-bp/README.md)
+  - Dostupné objekty
+    - [Informace o webu](/frontend/ninja-starter-kit/ninja-jv/page/README.md)
+    - [Informace o šabloně](/frontend/ninja-starter-kit/ninja-jv/temp/README.md)
+    - [Informace o projektu](/frontend/ninja-starter-kit/ninja-jv/temp-group/README.md)
+    - [Informace o zařízení](/frontend/ninja-starter-kit/ninja-jv/user-agent/README.md)
+    - [Informace o systému WebJET CMS](/frontend/ninja-starter-kit/ninja-jv/webjet/README.md)
+    - [Režim ladění](/frontend/ninja-starter-kit/ninja-jv/debug/README.md)
+  - JavaScript
+    - [Nastavení](/frontend/ninja-starter-kit/ninja-js/settings/README.md)
+    - [Události](/frontend/ninja-starter-kit/ninja-js/events/README.md)
+    - [Funkce](/frontend/ninja-starter-kit/ninja-js/functions/README.md)
+  - Styly
+    - [Nomenklatura](/frontend/ninja-starter-kit/ninja-cs/naming/README.md)
+- Přizpůsobení aplikací
+  - [Úprava souboru JSP](/frontend/customize-apps/README.md)
+- PageBuilder
+  - [Úvod](/frontend/page-builder/README.md)
+  - [Nastavení](/frontend/page-builder/settings.md)
+  - [Bloky](/frontend/page-builder/blocks.md)
+- Výňatky
+  - [Vzorové šablony](/frontend/examples/README.md)
+  - [Holá šablona](/frontend/examples/template-bare/README.md)
+  - [Kreativní šablona](/frontend/examples/templates-creative/README.md)

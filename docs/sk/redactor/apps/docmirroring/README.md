@@ -17,7 +17,7 @@ ineGroupId1,ineGroupId2:poznamka inej domeny
 
 pričom ako ```groupId-sk,groupId-en,groupId-cz``` zadávate ID adresára v sekcii Web stránky. Pri viac doménovom WebJETe môžete zadať viac riadkov konfigurácie - každú doménu na nový riadok. Zadané ID adresárov môžu, ale nemusia byť koreňové adresáre vo WebJETe.
 
-Za znak ```:``` je možné zadať poznámku, napr meno domény a podobne.
+Za znak ```:``` je možné zadať poznámku, napr. meno domény a podobne.
 
 ## Priebeh zrkadlenia
 
@@ -86,9 +86,9 @@ V používateľoch teda vytvorte nového (virtuálneho) používateľa s právam
 
 Automatický preklad už existujúcej stránky sa vykoná za nasledovných podmienok:
 
-1.  Ak konfiguračná premenná `structureMirroringAutoTranslatorLogin` je nastavená a daný používateľ existuje v databáze.
-    1.  A autor cieľovej stránky je zhodný s `structureMirroringAutoTranslatorLogin` - čiže stránka zatiaľ nebola korigovaná skutočným používateľom.
-2. Ak konfiguračná premenná `structureMirroringAutoTranslatorLogin` nie je nastavená, alebo v databáze sa nenachádza užívateľ s takýmto prihlasovacím menom, tak sa rozhoduje na základe toho, či je stránka zobrazená. Automatický preklad sa spustí iba v jazykových verziách, ktoré **nie sú zatiaľ zobrazené**, čiže majú hodnotu `available` nastavenú na `false`.
+- Ak konfiguračná premenná `structureMirroringAutoTranslatorLogin` je nastavená a daný používateľ existuje v databáze.
+  - A autor cieľovej stránky je zhodný s `structureMirroringAutoTranslatorLogin` - čiže stránka zatiaľ nebola korigovaná skutočným používateľom.
+- Ak konfiguračná premenná `structureMirroringAutoTranslatorLogin` nie je nastavená, alebo v databáze sa nenachádza užívateľ s takýmto prihlasovacím menom, tak sa rozhoduje na základe toho, či je stránka zobrazená. Automatický preklad sa spustí iba v jazykových verziách, ktoré **nie sú zatiaľ zobrazené**, čiže majú hodnotu `available` nastavenú na `false`.
 
 Pri nastavenej hodnote `structureMirroringAutoTranslatorLogin` je teda detekcia spoľahlivejšia, pretože aj ešte nezverejnenú verziu web stránky mohol už iný používateľ opraviť/korigovať, ale ešte ju nezverejnil. Pri vašej zmene by nastalo prepísanie textu, čo je neželaný stav. Odporúčame vytvoriť (virtuálneho) používateľa a jeho prihlasovacie meno nastaviť do `structureMirroringAutoTranslatorLogin` pre spoľahlivejšiu detekciu zmien.
 

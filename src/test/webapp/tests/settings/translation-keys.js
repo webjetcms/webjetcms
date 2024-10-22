@@ -15,7 +15,7 @@ Before(({ I, login }) =>{
     }
 });
 
-Scenario('zakladne testy', async ({ I, DataTables }) =>{
+Scenario('zakladne testy @baseTest', async ({ I, DataTables }) =>{
     I.see("Kľúč");
     let options = await DataTables.baseTest({
         dataTable: 'translationKeysTable',
@@ -262,7 +262,7 @@ Scenario("vyhladavanie zacina na/konci na", ({ I, DT }) => {
 
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.filter("key", "qa.r", "Začína na");
-    I.see("qa.result.ok");
+    I.waitForText("qa.result.ok", 120);
     I.dontSee("components.qa.");
 
     DT.filter("key", ".answer", "Končí na");

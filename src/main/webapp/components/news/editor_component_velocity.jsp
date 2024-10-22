@@ -138,6 +138,11 @@ button.template-cancel {
 button.btn:focus {
 	box-shadow: none !important;
 }
+div.tools i.ti.ti-chevron-down {
+	font-size: 20px;
+	margin-left: -8px;
+	line-height: 34px;
+}
 </style>
 
 <script type="text/javascript" src="/admin/scripts/common.jsp"></script>
@@ -923,7 +928,7 @@ function escapeHtml(unsafe) {
 									<button type="button" class="btn btn-primary template-cancel"><iwcm:text key="components.news.cancel_template" /></button>
 									<c:if test="${actionBean.canEdit}">
 										<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-											<span class="fa fa-sort-down"></span>
+											<i class="ti ti-chevron-down"></i>
 											<span class="sr-only"><iwcm:text key="components.news.new_template" /></span>
 										</button>
 										<ul class="dropdown-menu">
@@ -1177,7 +1182,7 @@ function escapeHtml(unsafe) {
 					<button type="button" class="btn btn-primary template-cancel"><iwcm:text key="components.news.cancel_template" /></button>
 					<c:if test="${actionBean.canEdit}">
 						<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							<span class="fa fa-sort-down"></span>
+							<i class="ti ti-chevron-down"></i>
 							<span class="sr-only"><iwcm:text key="components.news.new_template" /></span>
 						</button>
 						<ul class="dropdown-menu">

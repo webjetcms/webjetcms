@@ -147,3 +147,12 @@ Scenario("edit from searchall", ({ I, DT, DTE }) => {
 
     I.closeCurrentTab();
 });
+
+Scenario("show HTML value for show-html columns", ({ I, DT }) => {
+    I.relogin('admin');
+    I.amOnPage("/admin/v9/settings/translation-keys/");
+    DT.waitForLoader();
+    DT.filter("key", "admin.update.databaseNotUpdatedToWebJET7");
+    I.waitForText("admin.update.databaseNotUpdatedToWebJET7", 10, "#datatableInit tbody");
+    I.see("<a href=\"/admin/update/update_webjet7.jsp", "#datatableInit tbody");
+});

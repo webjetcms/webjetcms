@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.CryptoFactory;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
@@ -37,65 +39,65 @@ public class FormsController extends DatatableRestControllerV2&lt;FormsEntity, L
 
     @Autowired
     public FormsController(FormsRepository formsRepository, FormsServiceImpl formsService) {
-<span class="fc" id="L40">        super(formsRepository);</span>
-<span class="fc" id="L41">        this.formsService = formsService;</span>
-<span class="fc" id="L42">    }</span>
+<span class="fc" id="L42">        super(formsRepository);</span>
+<span class="fc" id="L43">        this.formsService = formsService;</span>
+<span class="fc" id="L44">    }</span>
 
     @Override
     public Page&lt;FormsEntity&gt; getAllItems(Pageable pageable) {
-<span class="fc" id="L46">        Page&lt;FormsEntity&gt; page = new DatatablePageImpl&lt;&gt;(formsService.getFormsList(getUser()));</span>
-<span class="fc" id="L47">        return page;</span>
+<span class="fc" id="L48">        Page&lt;FormsEntity&gt; page = new DatatablePageImpl&lt;&gt;(formsService.getFormsList(getUser()));</span>
+<span class="fc" id="L49">        return page;</span>
     }
 
     @Override
     public FormsEntity getOneItem(long id) {
-<span class="nc" id="L52">        FormsEntity entity = formsService.getById(id);</span>
-<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (entity == null) return null;</span>
-<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (formsService.isFormAccessible(entity.getFormName(), getUser())) return entity;</span>
-<span class="nc" id="L55">        return null;</span>
+<span class="nc" id="L54">        FormsEntity entity = formsService.getById(id);</span>
+<span class="nc bnc" id="L55" title="All 2 branches missed.">        if (entity == null) return null;</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (formsService.isFormAccessible(entity.getFormName(), getUser())) return entity;</span>
+<span class="nc" id="L57">        return null;</span>
     }
 
     @GetMapping(path = &quot;/columns/{formName}&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
     public FormColumns getColumnNames(@PathVariable String formName) {
-<span class="fc" id="L60">        return formsService.getColumnNames(formName, getUser());</span>
+<span class="fc" id="L62">        return formsService.getColumnNames(formName, getUser());</span>
     }
 
     @GetMapping(path = &quot;/data/{formName}&quot;, produces = MediaType.APPLICATION_JSON_VALUE)
     public Page&lt;FormsEntity&gt; getSubList(@PathVariable String formName, @RequestParam Map&lt;String, String&gt; params, Pageable pageable) {
         Page&lt;FormsEntity&gt; data;
-<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (getRequest().getParameter(&quot;size&quot;)==null) data = formsService.findInDataByColumns(formName, getUser(), params, null);</span>
-<span class="fc" id="L67">        else data = formsService.findInDataByColumns(formName, getUser(), params, pageable);</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (getRequest().getParameter(&quot;size&quot;)==null) data = formsService.findInDataByColumns(formName, getUser(), params, null);</span>
+<span class="fc" id="L69">        else data = formsService.findInDataByColumns(formName, getUser(), params, pageable);</span>
 
-<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (&quot;true&quot;.equals(getRequest().getParameter(&quot;export&quot;))) {</span>
-<span class="nc" id="L70">            formsService.setExportDate(data.getContent());</span>
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (&quot;true&quot;.equals(getRequest().getParameter(&quot;export&quot;))) {</span>
+<span class="nc" id="L72">            formsService.setExportDate(data.getContent());</span>
         }
 
-<span class="fc" id="L73">        return data;</span>
+<span class="fc" id="L75">        return data;</span>
     }
 
     @GetMapping(path = &quot;/data/{formName}/search/findByColumns&quot;)
     public Page&lt;FormsEntity&gt; findInDataByColumns(@PathVariable String formName, @RequestParam Map&lt;String, String&gt; params, Pageable pageable, FormsEntity search) {
 
-<span class="fc" id="L79">        Page&lt;FormsEntity&gt; data = formsService.findInDataByColumns(formName, getUser(), params, pageable);</span>
+<span class="fc" id="L81">        Page&lt;FormsEntity&gt; data = formsService.findInDataByColumns(formName, getUser(), params, pageable);</span>
 
-<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if (&quot;true&quot;.equals(getRequest().getParameter(&quot;export&quot;))) {</span>
-<span class="nc" id="L82">            formsService.setExportDate(data.getContent());</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (&quot;true&quot;.equals(getRequest().getParameter(&quot;export&quot;))) {</span>
+<span class="nc" id="L84">            formsService.setExportDate(data.getContent());</span>
         }
 
-<span class="fc" id="L85">        return data;</span>
+<span class="fc" id="L87">        return data;</span>
     }
 
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
 	@PostMapping(value = &quot;/data/{formName}/editor&quot;, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity&lt;DatatableResponse&lt;FormsEntity&gt;&gt; handleEditorFormDetail(@PathVariable String formName, HttpServletRequest request, @RequestBody DatatableRequest&lt;Long, FormsEntity&gt; datatableRequest) {
-<span class="fc" id="L91">        return super.handleEditor(request, datatableRequest);</span>
+<span class="fc" id="L93">        return super.handleEditor(request, datatableRequest);</span>
     }
 
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
 	@PostMapping(value = &quot;/data/{formName}/action/{action}&quot;)
     @Override
 	public ResponseEntity&lt;DatatableResponse&lt;FormsEntity&gt;&gt; action(@PathVariable String action, @RequestParam(value = &quot;ids[]&quot;) Long[] ids) {
-<span class="nc" id="L98">        return super.action(action, ids);</span>
+<span class="nc" id="L100">        return super.action(action, ids);</span>
     }
 
     /**
@@ -105,57 +107,70 @@ public class FormsController extends DatatableRestControllerV2&lt;FormsEntity, L
     @GetMapping(path=&quot;/regexps&quot;)
     @PreAuthorize(value = &quot;@WebjetSecurityService.isAdmin()&quot;)
     public List&lt;LabelValue&gt; getAllRegularExpression() {
-<span class="fc" id="L108">        Prop prop = getProp();</span>
-<span class="fc" id="L109">        List&lt;LabelValue&gt; regexps = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L110">        List&lt;String[]&gt; all = FormDB.getInstance().getAllRegularExpression();</span>
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        for (String[] regexp : all) {</span>
-<span class="fc" id="L112">            regexps.add(new LabelValue(prop.getText(regexp[0]), regexp[1]));</span>
-<span class="fc" id="L113">        }</span>
-<span class="fc" id="L114">        return regexps;</span>
+<span class="fc" id="L110">        Prop prop = getProp();</span>
+<span class="fc" id="L111">        List&lt;LabelValue&gt; regexps = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L112">        List&lt;String[]&gt; all = FormDB.getInstance().getAllRegularExpression();</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        for (String[] regexp : all) {</span>
+<span class="fc" id="L114">            regexps.add(new LabelValue(prop.getText(regexp[0]), regexp[1]));</span>
+<span class="fc" id="L115">        }</span>
+<span class="fc" id="L116">        return regexps;</span>
     }
 
     @GetMapping(path=&quot;/html&quot;)
     public String getHtml(@RequestParam long id) {
-<span class="fc" id="L119">        FormsEntity entity = formsService.getById(id);</span>
-<span class="pc bpc" id="L120" title="2 of 4 branches missed.">        if (entity == null || Tools.isEmpty(entity.getFormName())) return null;</span>
+<span class="fc" id="L121">        FormsEntity entity = formsService.getById(id);</span>
+<span class="pc bpc" id="L122" title="2 of 4 branches missed.">        if (entity == null || Tools.isEmpty(entity.getFormName())) return null;</span>
 
-<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        if (formsService.isFormAccessible(entity.getFormName(), getUser())==false) return null;</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (formsService.isFormAccessible(entity.getFormName(), getUser())==false) return null;</span>
 
         //html kod necitame v entite, musime ziskat takto
-<span class="fc" id="L125">        String html = (new SimpleQuery()).forString(&quot;SELECT html FROM forms WHERE id=?&quot;, id);</span>
-<span class="fc" id="L126">        return CryptoFactory.decrypt(html);</span>
+<span class="fc" id="L127">        String html = (new SimpleQuery()).forString(&quot;SELECT html FROM forms WHERE id=?&quot;, id);</span>
+<span class="fc" id="L128">        html = CryptoFactory.decrypt(html);</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if (html.contains(&quot;&lt;body&quot;)==false) {</span>
+<span class="fc" id="L130">            html = Tools.replace(html, &quot;\n&quot;, &quot;\n&lt;br/&gt;&quot;);</span>
+        }
+<span class="fc" id="L132">        return html;</span>
     }
 
     @Override
     public FormsEntity editItem(FormsEntity entity, long id) {
-<span class="nc" id="L131">        String note = entity.getNote();</span>
+<span class="nc" id="L137">        String note = entity.getNote();</span>
 
-<span class="nc" id="L133">        formsService.updateNote(note, id);</span>
+<span class="nc" id="L139">        formsService.updateNote(note, id);</span>
 
-<span class="nc" id="L135">        return formsService.getById(id);</span>
+<span class="nc" id="L141">        return formsService.getById(id);</span>
     }
 
     @Override
     public boolean deleteItem(FormsEntity entity, long id) {
-<span class="fc" id="L140">        return formsService.deleteItem(entity, id);</span>
+<span class="fc" id="L146">        return formsService.deleteItem(entity, id);</span>
     }
 
     @Override
     public boolean processAction(FormsEntity entity, String action) {
-<span class="nc" id="L145">        String formName = entity.getFormName();</span>
-<span class="nc bnc" id="L146" title="All 2 branches missed.">        if (&quot;archiveForm&quot;.equals(action)) {</span>
-<span class="nc" id="L147">            boolean success = FormDB.setFormName(formName, &quot;Archiv-&quot;+formName);</span>
-<span class="nc" id="L148">            Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, &quot;Archivacia formularu: &quot;+formName, -1, -1);</span>
-<span class="nc" id="L149">            return success;</span>
-<span class="nc bnc" id="L150" title="All 4 branches missed.">        } else if (&quot;archiveFormDetail&quot;.equals(action) &amp;&amp; entity.getId()!=null) {</span>
-<span class="nc" id="L151">            String idsQuery = String.valueOf(entity.getId());</span>
-<span class="nc" id="L152">            int smallestId = entity.getId().intValue();</span>
-<span class="nc" id="L153">            boolean success = FormDB.setFormName(formName, &quot;Archiv-&quot;+formName, (&quot; AND id IN (&quot; + idsQuery + &quot;)&quot;), smallestId, false);</span>
-<span class="nc" id="L154">			Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, &quot;Archivacia formularu: &quot;+formName, -1, -1);</span>
+<span class="nc" id="L151">        String formName = entity.getFormName();</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">        if (&quot;archiveForm&quot;.equals(action)) {</span>
+<span class="nc" id="L153">            boolean success = FormDB.setFormName(formName, &quot;Archiv-&quot;+formName);</span>
+<span class="nc" id="L154">            Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, &quot;Archivacia formularu: &quot;+formName, -1, -1);</span>
 <span class="nc" id="L155">            return success;</span>
+<span class="nc bnc" id="L156" title="All 4 branches missed.">        } else if (&quot;archiveFormDetail&quot;.equals(action) &amp;&amp; entity.getId()!=null) {</span>
+<span class="nc" id="L157">            String idsQuery = String.valueOf(entity.getId());</span>
+<span class="nc" id="L158">            int smallestId = entity.getId().intValue();</span>
+<span class="nc" id="L159">            boolean success = FormDB.setFormName(formName, &quot;Archiv-&quot;+formName, (&quot; AND id IN (&quot; + idsQuery + &quot;)&quot;), smallestId, false);</span>
+<span class="nc" id="L160">			Adminlog.add(Adminlog.TYPE_FORM_ARCHIVE, &quot;Archivacia formularu: &quot;+formName, -1, -1);</span>
+<span class="nc" id="L161">            return success;</span>
         }
-<span class="nc" id="L157">        return false;</span>
+<span class="nc" id="L163">        return false;</span>
     }
 
+    @Override
+    public boolean checkItemPerms(FormsEntity entity, Long id) {
+<span class="pc bpc" id="L168" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) {</span>
+<span class="nc bnc" id="L169" title="All 2 branches missed.">            if (entity.getDomainId()!=CloudToolsForCore.getDomainId()) return false;</span>
+<span class="nc" id="L170">            FormsEntity old = getRepo().getById(entity.getId());</span>
+<span class="nc bnc" id="L171" title="All 4 branches missed.">            if (old != null &amp;&amp; old.getDomainId()!=CloudToolsForCore.getDomainId()) return false;</span>
+        }
+<span class="fc" id="L173">        return true;</span>
+    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

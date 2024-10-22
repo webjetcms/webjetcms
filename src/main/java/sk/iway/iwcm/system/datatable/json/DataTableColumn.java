@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
@@ -107,7 +108,7 @@ public class DataTableColumn {
         DataTableColumnType[] inputType = annotation.inputType();
         if (inputType.length > 0) {
             for (DataTableColumnType type : inputType) {
-                setPropertiesFromType(type, annotation);
+                setPropertiesFromType(type, annotation, prop);
             }
         }
 
@@ -126,8 +127,15 @@ public class DataTableColumn {
 
             if(titleArr.length > 1)
                 title = prop.getTextWithParams(titleArr[0], Arrays.copyOfRange(titleArr, 1, titleArr.length));
-            else
-                title = prop.getText(annotation.title());
+            else {
+                if (inputType!=null && inputType.length==1 && inputType[0].equals(DataTableColumnType.BOOLEAN_TEXT)) {
+                    //title will be as option for checkbox
+                    title = "&nbsp;";
+                } else {
+                    title = prop.getText(annotation.title());
+                }
+            }
+
 
             // skus implementovat zapis z pug suboru
             title = DataTableColumnsFactory.translate(title);
@@ -137,6 +145,13 @@ public class DataTableColumn {
             String titleKey = "components." + toLowerUnderscore(controller.getSimpleName()) + "." + toLowerUnderscore(field.getName());
             title = prop.getText(titleKey);
             if (titleKey.equals(title)) title = Tools.replace(toLowerUnderscore(field.getName()), "_", " ");
+        }
+
+        if (inputType.length > 0 && inputType[0] == DataTableColumnType.STATIC_TEXT) {
+            if (Tools.isNotEmpty(title)) {
+                editor.addAttr("data-value", title);
+            }
+            title = "&nbsp;";
         }
 
         if (hidden == null && (Tools.isEmpty(title) || "&nbsp;".equals(title))) {
@@ -194,7 +209,7 @@ public class DataTableColumn {
                 this.filter = Boolean.FALSE;
             }
         } else if (className!=null && className.contains("todo")) {
-            //ak ma className todo tiez nezobraz filter, na 99% nefunguje
+            //ak ma className to do tiez nezobraz filter, na 99% nefunguje
             this.filter = Boolean.FALSE;
         }
 
@@ -273,7 +288,7 @@ public class DataTableColumn {
      * @param dataTableColumnType - {@link DataTableColumnType} - nastaveny v
      *                            anotacii inputType
      */
-    private void setPropertiesFromType(DataTableColumnType dataTableColumnType, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
+    private void setPropertiesFromType(DataTableColumnType dataTableColumnType, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation, Prop prop) {
         if (dataTableColumnType == DataTableColumnType.ID) {
             if (Tools.isEmpty(data)) {
                 data = "id";
@@ -432,6 +447,19 @@ public class DataTableColumn {
             editor.setType("checkbox");
         }
 
+        if (dataTableColumnType == DataTableColumnType.BOOLEAN_TEXT) {
+            renderFormat = "dt-format-boolean-true";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("checkbox");
+            if (editor.getOptions() == null) {
+                List<LabelValue> options = new ArrayList<>();
+                options.add(new LabelValue(prop.getText(annotation.title()), "true"));
+                editor.setOptions(options);
+            }
+        }
+
         if (dataTableColumnType == DataTableColumnType.CHECKBOX) {
             renderFormat = "dt-format-checkbox";
             if (editor == null) {
@@ -523,6 +551,39 @@ public class DataTableColumn {
                 editor = new DataTableColumnEditor();
             }
             editor.setType("attrs");
+        }
+
+        if (dataTableColumnType == DataTableColumnType.COLOR) {
+            renderFormat = "dt-format-color";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("color");
+        }
+
+        if (dataTableColumnType == DataTableColumnType.IFRAME) {
+            renderFormat = "dt-format-iframe";
+
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("iframe");
+        }
+
+        if (dataTableColumnType == DataTableColumnType.BASE64) {
+            renderFormat = "dt-format-base64";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("base64");
+        }
+
+        if (dataTableColumnType == DataTableColumnType.STATIC_TEXT) {
+            renderFormat = "dt-format-static-text";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("staticText");
         }
     }
 

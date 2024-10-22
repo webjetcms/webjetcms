@@ -45,7 +45,7 @@ import javax.servlet.ServletException;
  *@created      Sobota, 2003, október 25
  *@modified     $Date: 2003/10/27 07:44:55 $
  */
-<span class="nc" id="L48">public class DiskMultiPartRequestHandler</span>
+<span class="fc" id="L48">public class DiskMultiPartRequestHandler</span>
 {
 
    private List&lt;FileItem&gt; files;
@@ -60,7 +60,7 @@ import javax.servlet.ServletException;
     */
    public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException
    {
-<span class="nc" id="L63">		ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());</span>
+<span class="fc" id="L63">		ServletFileUpload upload = new ServletFileUpload(new DiskFileItemFactory());</span>
 <span class="nc" id="L64">		files = upload.parseRequest(request);</span>
 <span class="nc bnc" id="L65" title="All 2 branches missed.">		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, &quot;DiskMultiPartRequestHandler.handleRequest, files=&quot;+files.size());</span>
 
@@ -160,4 +160,4 @@ import javax.servlet.ServletException;
 <span class="nc" id="L160">		}</span>
 <span class="nc" id="L161">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

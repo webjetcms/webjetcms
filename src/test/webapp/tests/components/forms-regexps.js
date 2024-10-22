@@ -4,7 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('from-regexps zakladne testy', async ({I, DataTables}) => {
+Scenario('from-regexps zakladne testy @baseTest', async ({I, DataTables}) => {
     I.amOnPage("/apps/form/admin/regexps/");
     await DataTables.baseTest({
         dataTable: 'regExpDataTable',

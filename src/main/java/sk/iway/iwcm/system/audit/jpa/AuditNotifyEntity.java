@@ -42,8 +42,7 @@ public class AuditNotifyEntity {
 
 	@Size(max = 255)
 	@Column(name = "text")
-	@DataTableColumn(inputType = DataTableColumnType.TEXT, renderFormat = "dt-format-text", editor = {
-			@DataTableColumnEditor(type = "text") })
+	@DataTableColumn(inputType = DataTableColumnType.TEXTAREA)
 	private String text;
 
 	@Size(max = 255)

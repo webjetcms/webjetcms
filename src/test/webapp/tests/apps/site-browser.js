@@ -1,5 +1,9 @@
 Feature('apps.site-browser');
 
+Before(({ I, login }) => {
+    login('admin');
+});
+
 var container = "div.site_browse";
 
 function testRootFolder(I) {
@@ -38,4 +42,53 @@ Scenario('site-browser-webpage', ({I}) => {
     I.say("Cant't spoof URL");
     I.amOnPage('/apps/site-browser/?actualDir=/files/test-stavov/site-browser/../../');
     testRootFolder(I);
+});
+
+Scenario('testovanie app - Zobrazenie súborov', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Zobrazenie súborov', '#components-site_browser-title');
+
+    const defaultParams = {
+        rootDir: '',
+        target: '_blank',
+        showActualDir: 'true'
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    I.say('Default parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.see('Adresár: /');
+    I.see('Apps');
+
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        rootDir: '/files/archiv',
+        target: '_self',
+        showActualDir: 'false'
+    };
+    I.clickCss('button.btn-vue-jstree-item-edit');
+    I.click(locate(".jstree-anchor").withText("archiv"));
+    //I.click('apps','.jstree-anchor');
+    DTE.fillField('target', changedParams.target);
+    DTE.clickSwitch('showActualDir_0');
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+
+    I.say('Changed parameters visual testing');
+    I.clickCss('button.btn.btn-warning.btn-preview');
+    I.switchToNextTab();
+
+    I.dontSee('Adresár:');
+    I.see('tarifa.pdf');
+    I.see("zsd_faq_fakturacia-poplatkov-od-2014.pdf");
+    I.see('Files');
 });

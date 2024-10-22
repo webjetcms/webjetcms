@@ -57,49 +57,49 @@ public class LuceneQuery
 
 
 	public LuceneQuery(Indexed indexed)
-<span class="nc" id="L60">	{</span>
-<span class="nc" id="L61">		this.indexed = indexed;</span>
-<span class="nc bnc" id="L62" title="All 2 branches missed.">		if (indexed != null ){</span>
-<span class="nc" id="L63">			searcher = IndexSearcherBuilder.build(indexed.language());</span>
-<span class="nc" id="L64">			this.language = indexed.language();</span>
+<span class="fc" id="L60">	{</span>
+<span class="fc" id="L61">		this.indexed = indexed;</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">		if (indexed != null ){</span>
+<span class="fc" id="L63">			searcher = IndexSearcherBuilder.build(indexed.language());</span>
+<span class="fc" id="L64">			this.language = indexed.language();</span>
 		}
 		else
 		{
 <span class="nc" id="L68">			searcher = IndexSearcherBuilder.build(AdminTools.defaultLanguage());</span>
 <span class="nc" id="L69">			this.language = AdminTools.defaultLanguage();</span>
 		}
-<span class="nc" id="L71">	}</span>
+<span class="fc" id="L71">	}</span>
 
 	public List&lt;Document&gt; documents(String query, List&lt;Query&gt; rangeQueries)
 	{
 
-<span class="nc" id="L76">			boolean hasCriteria = Tools.isNotEmpty(query);</span>
-<span class="nc bnc" id="L77" title="All 2 branches missed.">			if (indexed!=null)</span>
+<span class="fc" id="L76">			boolean hasCriteria = Tools.isNotEmpty(query);</span>
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">			if (indexed!=null)</span>
 			{
-<span class="nc bnc" id="L79" title="All 2 branches missed.">				if(hasCriteria) query += &quot; AND &quot;;</span>
-<span class="nc" id="L80">				query += &quot; type:&quot;+indexed.name();</span>
-<span class="nc" id="L81">				hasCriteria = true;</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">				if(hasCriteria) query += &quot; AND &quot;;</span>
+<span class="fc" id="L80">				query += &quot; type:&quot;+indexed.name();</span>
+<span class="fc" id="L81">				hasCriteria = true;</span>
 			}
-<span class="nc bnc" id="L83" title="All 2 branches missed.">			if(hasCriteria) query += &quot; AND &quot;;</span>
-<span class="nc" id="L84">			query+= &quot; NOT(data:&quot;+LuceneUtils.EMPTY+&quot;)&quot;;</span>
-<span class="nc" id="L85">			hasCriteria = true;</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">			if(hasCriteria) query += &quot; AND &quot;;</span>
+<span class="fc" id="L84">			query+= &quot; NOT(data:&quot;+LuceneUtils.EMPTY+&quot;)&quot;;</span>
+<span class="fc" id="L85">			hasCriteria = true;</span>
 
 			try
 			{
-<span class="nc" id="L89">				QueryParser parser = new WebJETQueryParser(Version.LUCENE_30, Indexed.defaultField(), AnalyzerFactory.getAnalyzer(Version.LUCENE_31,this.language));</span>
+<span class="fc" id="L89">				QueryParser parser = new WebJETQueryParser(Version.LUCENE_30, Indexed.defaultField(), AnalyzerFactory.getAnalyzer(Version.LUCENE_31,this.language));</span>
 				//QueryParser parser = new QueryParser(Version.LUCENE_30, Indexed.defaultField(), new CustomAnalyzer(Version.LUCENE_31,this.language));
-<span class="nc" id="L91">				parsedQuery = parser.parse(query);</span>
+<span class="fc" id="L91">				parsedQuery = parser.parse(query);</span>
 
 				/**
 				 * MHA 2013-09-25 13:03
 				 * hotfix na 14379 komentare 16  a 17, nevedno preco, queryparser nastavi occur pre clause na fora na MUST a potom sa nenajdu ziadne aktuality
 				 * pritom pri skladani query sa pred klauzulu s forami ci tiketami dava OR tak neviem preco to takto sparsuje..
 				 **/
-<span class="nc bnc" id="L98" title="All 2 branches missed.">				if (parsedQuery instanceof BooleanQuery) {</span>
-<span class="nc" id="L99">				    BooleanQuery booleanQuery = (BooleanQuery) parsedQuery;</span>
-<span class="nc" id="L100">				    BooleanClause[] clauses = booleanQuery.getClauses();</span>
-<span class="nc bnc" id="L101" title="All 2 branches missed.">				    for (int i = 0; i &lt; clauses.length; i++) {</span>
-<span class="nc bnc" id="L102" title="All 4 branches missed.">				   	 if(clauses[i].getQuery().toString().contains(&quot;type:forums&quot;) || clauses[i].getQuery().toString().contains(&quot;type:tickets&quot;))</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">				if (parsedQuery instanceof BooleanQuery) {</span>
+<span class="fc" id="L99">				    BooleanQuery booleanQuery = (BooleanQuery) parsedQuery;</span>
+<span class="fc" id="L100">				    BooleanClause[] clauses = booleanQuery.getClauses();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">				    for (int i = 0; i &lt; clauses.length; i++) {</span>
+<span class="pc bpc" id="L102" title="2 of 4 branches missed.">				   	 if(clauses[i].getQuery().toString().contains(&quot;type:forums&quot;) || clauses[i].getQuery().toString().contains(&quot;type:tickets&quot;))</span>
 <span class="nc" id="L103">				   		 clauses[i].setOccur(BooleanClause.Occur.SHOULD);</span>
 				    }
 				}
@@ -110,24 +110,24 @@ public class LuceneQuery
 				bq.add(groupIdTerm, BooleanClause.Occur.MUST);
 				*/
 
-<span class="nc" id="L113">				TopFieldDocs topFieldDocs = null;</span>
+<span class="fc" id="L113">				TopFieldDocs topFieldDocs = null;</span>
 
-<span class="nc bnc" id="L115" title="All 2 branches missed.">				if (sort == null)</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">				if (sort == null)</span>
 				{
-<span class="nc" id="L117">					sort = new Sort();</span>
+<span class="fc" id="L117">					sort = new Sort();</span>
 				}
 
-<span class="nc bnc" id="L120" title="All 4 branches missed.">				if(rangeQueries != null &amp;&amp; rangeQueries.size()&gt;0)</span>
+<span class="pc bpc" id="L120" title="3 of 4 branches missed.">				if(rangeQueries != null &amp;&amp; rangeQueries.size()&gt;0)</span>
 				{
 <span class="nc" id="L122">					rangeQueries.add(parsedQuery);</span>
 <span class="nc" id="L123">					parsedQuery = parsedQuery.combine(rangeQueries.toArray(new Query[]{}));</span>
 				}
 
-<span class="nc" id="L126">				Logger.debug(getClass(), &quot;Lucene query: &quot; + parsedQuery.toString());</span>
-<span class="nc" id="L127">				topFieldDocs = searcher.search(parsedQuery, new CachingWrapperFilter(new QueryWrapperFilter(parsedQuery)), Tools</span>
-<span class="nc" id="L128">							.getIntValue(Constants.getString(&quot;luceneResultsLimit&quot;), 100), sort);</span>
-<span class="nc" id="L129">				int i = 0;</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">				if (topFieldDocs.totalHits &gt; 0)</span>
+<span class="fc" id="L126">				Logger.debug(getClass(), &quot;Lucene query: &quot; + parsedQuery.toString());</span>
+<span class="fc" id="L127">				topFieldDocs = searcher.search(parsedQuery, new CachingWrapperFilter(new QueryWrapperFilter(parsedQuery)), Tools</span>
+<span class="fc" id="L128">							.getIntValue(Constants.getString(&quot;luceneResultsLimit&quot;), 100), sort);</span>
+<span class="fc" id="L129">				int i = 0;</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">				if (topFieldDocs.totalHits &gt; 0)</span>
 				{
 <span class="nc" id="L132">					List&lt;Document&gt; documents = new ArrayList&lt;Document&gt;();</span>
 <span class="nc bnc" id="L133" title="All 2 branches missed.">					while (i &lt; topFieldDocs.scoreDocs.length)</span>
@@ -152,15 +152,15 @@ public class LuceneQuery
 			}
 			finally
 			{
-<span class="nc" id="L155">				close();</span>
+<span class="fc" id="L155">				close();</span>
 			}
-<span class="nc" id="L157">			return Collections.emptyList();</span>
+<span class="fc" id="L157">			return Collections.emptyList();</span>
 
 	}
 
 	public List&lt;Document&gt; documents(String query)
 	{
-<span class="nc" id="L163">		return documents(query, null);</span>
+<span class="fc" id="L163">		return documents(query, null);</span>
 	}
 
 	/**
@@ -182,7 +182,7 @@ public class LuceneQuery
 
 	private void close()
 	{
-<span class="nc" id="L185">			IndexSearcherBuilder.close(this.language);</span>
-<span class="nc" id="L186">	}</span>
+<span class="fc" id="L185">			IndexSearcherBuilder.close(this.language);</span>
+<span class="fc" id="L186">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -11,7 +11,7 @@ import org.mapstruct.factory.Mappers;
 
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.editor.PublicableForm;
+import sk.iway.iwcm.doc.DocHistory;
 
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface DocHistoryDtoMapper {
@@ -26,23 +26,21 @@ public interface DocHistoryDtoMapper {
 
     @Mapping(source = &quot;historySaveDate&quot;, target = &quot;historySaveDate&quot;, qualifiedByName = &quot;stringDateToLong&quot;)
     @Mapping(source = &quot;publishStartStringExtra&quot;, target = &quot;publishStartStringExtra&quot;, qualifiedByName = &quot;stringDateToDate&quot;)
-    @Mapping(source = &quot;docId&quot;, target = &quot;id&quot;)
-    DocHistoryDto publicableFormToHistoryDto(PublicableForm doc);
-    List&lt;DocHistoryDto&gt; publicableFormToHistoryDtos(List&lt;PublicableForm&gt; docs);
+    DocHistoryDto docHistoryToHistoryDto(DocHistory doc);
 
     @Named(&quot;stringDateToLong&quot;)
     default Long stringDateToLong(String date) {
-<span class="fc" id="L35">        long timestamp = DB.getTimestamp(date);</span>
+<span class="fc" id="L33">        long timestamp = DB.getTimestamp(date);</span>
         //Logger.debug(DocHistoryDtoMapper.class, &quot;stringDateToLong, date=&quot;+date+&quot; timestamp=&quot;+timestamp);
-<span class="fc" id="L37">        return Long.valueOf(timestamp);</span>
+<span class="fc" id="L35">        return Long.valueOf(timestamp);</span>
     }
 
     @Named(&quot;stringDateToDate&quot;)
     default Date stringDateToDate(String date) {
-<span class="fc" id="L42">        long timestamp = DB.getTimestamp(date);</span>
+<span class="fc" id="L40">        long timestamp = DB.getTimestamp(date);</span>
         //Logger.debug(DocHistoryDtoMapper.class, &quot;stringDateToDate, date=&quot;+date+&quot; timestamp=&quot;+timestamp);
-<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (timestamp &gt; 1000) return new Date(timestamp);</span>
-<span class="fc" id="L45">        return null;</span>
+<span class="fc bfc" id="L42" title="All 2 branches covered.">        if (timestamp &gt; 1000) return new Date(timestamp);</span>
+<span class="fc" id="L43">        return null;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -212,8 +212,10 @@ public class IwayProperties extends Hashtable<String, String>
    {
    	//jeeff: musel som to urobit takto kvoli handlingu roznych kodovani, malo to interne problem s kodovanim suborov
    	IwcmInputStream fis = new IwcmInputStream(f);
+      if (f.getName().contains("-webjet9.properties")) encoding = "utf-8"; //load in utf-8
    	String newEncoding = load(fis);
    	fis.close();
+      if (f.getName().contains("-webjet9.properties")) encoding = "windows-1250"; //back to default windows-1250
 
    	if (Tools.isNotEmpty(newEncoding))
    	{

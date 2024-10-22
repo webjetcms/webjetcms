@@ -16,13 +16,16 @@ Scenario("Permission check", ({ I, DT }) => {
     DT.checkPerms("cmp_adminlog", "/admin/v9/apps/audit-changed-webpages/");
 });
 
-Scenario("Permission check menuWebpages", ({ I, DT }) => {
-    I.amOnPage("/admin/v9/apps/audit-changed-webpages/?removePerm=menuWebpages");
-    DT.filter("title", pageTitle);
-    DT.checkTableRow("changedWebPagesDataTable", 1, [pageDocId, null, pageTitle, "Tester Playwright", null, "/Test stavov/"+pageTitle]);
+Scenario("logout 1", ({ I }) => {
+    I.logout();
 });
 
-Scenario("logout", ({ I }) => {
+Scenario("Permission check menuWebpages", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/apps/audit-changed-webpages/?removePerm=menuWebpages");
+    I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
+});
+
+Scenario("logout 2", ({ I }) => {
     I.logout();
 });
 

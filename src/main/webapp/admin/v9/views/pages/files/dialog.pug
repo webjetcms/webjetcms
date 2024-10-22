@@ -1,0 +1,505 @@
+extends ../../partials/iframe
+
+block content
+
+    head
+        meta(http-equiv="X-UA-Compatible", content="IE=edge")
+        meta(http-equiv="Content-Type," content="text/html; charset=[(${encoding})]")
+
+        script(type="text/javascript", src='/components/calendar/popcalendar.jsp')
+
+    include jsinclude
+        script.
+            var editor = null;
+            var lastDocId = -1;
+            var lastGroupId = -1;
+            var elFinderInstance;
+
+            //ThymeLeaf variables
+            let elfinderMetadataEnabled = [(${elfinderMetadataEnabled})];
+            let elfinderFileArchiveEnabled = [(${elfinderFileArchiveEnabled})];
+            let haveFileIndexerPerm = [(${haveFileIndexerPerm})];
+            let volumes = "[(${volumes})]";
+            var actualFile = "[(${actualFile})]";
+
+            $("#file").ready( function() {
+                $('#file').val(actualFile);
+            });
+
+            let commands = [
+                'archive', 'back', 'copy', 'cut', 'download', 'duplicate', 'edit', 'extract',
+                'forward', 'getfile', 'help', 'home', 'info', 'mkdir', 'mkfile', 'netmount',
+                'open', 'paste', 'quicklook', 'reload', 'rename', 'resize', 'rm',
+                'sort', 'up', 'upload', 'view',
+                'wjedit', 'wjfilearchive', 'wjsearch', 'wjfileopen', 'wjfileupdate', 'wjfileprops', 'wjdirprops', 'wjeditswitch'
+            ];
+
+            let files = [
+                'wjeditswitch', 'wjfileopen', 'wjfileupdate',
+                '|',
+                'quicklook',
+                '|',
+                'download',
+                '|',
+                'copy', 'cut', 'paste', 'duplicate',
+                '|',
+                'rm',
+                '|',
+                'rename',
+                '|',
+                'archive', 'extract',
+                '|',
+                'info', 'wjfileprops', 'wjdirprops'
+            ];
+
+            let toolbar = [
+                ['back', 'up', 'forward'],
+                ['paste', 'cut', 'copy'],
+                ['upload', 'mkdir', 'reload'],
+                ['view', 'sort'], ['wjsearch'],
+                ['download'],
+                ['quicklook', 'info'],
+                ['wjeditswitch', 'duplicate', 'rm', 'rename'],
+                ['extract', 'archive'],
+                ['wjfilearchive']
+            ];
+
+            if(elfinderMetadataEnabled === true) {
+                commands.push('wjmetadata');
+                files.push('wjmetadata');
+            }
+
+            function initializeElfinder() {
+                var customData = {volumes: volumes};
+
+                customData.wjmetadata = {
+                    metadata: {
+                        enabled: elfinderMetadataEnabled,
+                        title: '[[\#{components.elfinder.wjmetadata.metadata.title}]]',
+                        iframe: '/components/elfinder/metadata/admin_metadata_form.jsp'
+                    },
+                    fileArchive: {
+                        enabled: elfinderFileArchiveEnabled,
+                        title: '[[\#{components.elfinder.wjmetadata.fileArchive.title}]]',
+                        iframe: '/components/elfinder/metadata/admin_metadata_fielarchive_form.jsp',
+                        root: "/" + "[(${archivPath})]"
+                    }
+                }
+
+                try {
+                        var ckEditorInstance = getCkEditorInstanceElfinder();
+                        if (typeof ckEditorInstance != "undefined")
+                        {
+                            var docId = ckEditorInstance.element.$.form.docId.value;
+                            var groupId = ckEditorInstance.element.$.form.groupId.value;
+                            var title = getPageNavbar();
+                            customData.volumes = volumes;
+                            customData.docId = docId;
+                            customData.groupId = groupId;
+                            customData.title = title;
+                            lastDocId = docId;
+                            lastGroupId = groupId;
+                        }
+                }
+                catch (e) { console.log(e); }
+
+                if (window.location.href.indexOf("hideLinkInput=true")!=-1) $("#linkInput").hide();
+
+                elFinderInstance = $('#finder').elfinder({
+                    url: '/admin/elfinder-connector/',
+                    enableByMouseOver: false,
+                    width: '100%',
+                    rememberLastDir: [(${rememberLastDir})],
+                    uploadOverwrite: true,
+                    customData: customData,
+                    requestType: 'post',
+                    handlers: {
+                        select: function(event, elfinderInstance) {
+                            // file, directory, fileDirectory, files, directories, filesDirectories
+                            var selectMode = "[(${selectMode})]";
+                            var selected = event.data.selected;
+                            var inputs = $('div.inputs');
+                            var rows = [];
+                            var completed = 0;
+
+                            if ((selectMode == 'file' || selectMode == 'directory' || selectMode == 'fileDirectory') && selected.length > 0)
+                            {
+                                var files = elfinderInstance.selectedFiles();
+                                //v nazve musi byt znak bodka - prevencia pred vybratim adresara klikanim v strome
+                                if (files.length == 1 && (files[0].hash.indexOf("_doc_group")!=-1 || files[0].virtualPath.indexOf(".")!=-1))
+                                {
+                                    var row = inputs.find('.row.template').hide().clone();
+                                    row.removeClass('template').show();
+                                    var label = row.find('label');
+                                    var input = row.find('input');
+                                    var val = files[0].virtualPath;
+                                    val = val.replace("////", "/");
+                                    val = val.replace("///", "/");
+                                    val = val.replace("//", "/");
+                                    input.val(val);
+                                    rows.push(row);
+                                    htmlCompleted();
+                                }
+                            }
+                            else if ((selectMode == 'files' || selectMode == 'directories' || selectMode == 'filesDirectories') && selected.length > 0) {
+                                $.each(selected, function(i, v){
+                                    getData(v, function(data){
+                                        completed++;
+                                        if (isDataOk(data)) {
+                                            var row = inputs.find('.row.template').hide().clone();
+                                            row.removeClass('template').show();
+                                            var input = row.find('input');
+                                            var val = data.cwd.virtualPath;
+                                            val = val.replace("////", "/");
+                                            val = val.replace("///", "/");
+                                            val = val.replace("//", "/");
+                                            input.val(val);
+                                            rows.push(row);
+                                        }
+                                        if (completed == selected.length) {
+                                            htmlCompleted();
+                                        }
+                                    });
+                                });
+                            }
+                            else if (selected.length > 0) {
+                                console.warn('SelectMode ' + selectMode + ' not defined');
+                            }
+
+                            function htmlCompleted() {
+                                if (rows.length > 0) {
+                                    inputs.find('div.row:not(.template)').remove();
+                                    $.each(rows, function(i, v){
+                                        var label = v.find('label');
+                                        var input = v.find('input');
+                                        if (rows.length > 1) {
+                                            label.attr('for', 'file' + i).text(label.text() + ' ' + (i + 1));
+                                            input.attr('id', 'file' + i);
+                                        }
+                                        inputs.append(v);
+                                    })
+                                }
+                            }
+
+                            function isDataOk(data) {
+                                if (data.cwd == null || data.cwd.mime == null) {
+                                    return false;
+                                }
+                                if ((selectMode == 'file' || selectMode == 'files') && data.cwd.mime == 'directory') {
+                                    return false;
+                                }
+                                if ((selectMode == 'directory' || selectMode == 'directories') && data.cwd.mime != 'directory') {
+                                    return false;
+                                }
+                                return true;
+                            }
+
+                            function getData(target, callback) {
+                                var data = {
+                                    cmd: 'open',
+                                    target: target,
+                                    '_': new Date().getTime()
+                                }
+                                $.ajax({
+                                    url: '/admin/elfinder-connector/',
+                                    data: data,
+                                    dataType: 'json',
+                                    success: function(data){
+                                        callback(data);
+                                    }
+                                });
+                            }
+                        },
+                        upload: function (event) {
+                            if (event.type == "upload") {
+                                var data = event.data;
+                                var added = data.added;
+                                if (added != null && added.length > 0) {
+                                    var file = added.slice(-1)[0];
+                                    $('#file').val(file.virtualPath);
+                                }
+                            }
+                            var added = typeof event.data != 'undefined' && event.data.added != 'undefined' ? event.data.added : null;
+                            elFinderInstance.exec("wjmetadata", added);
+                        },
+                        beforeUpload: function(files) {
+                            filesRespository = files;
+
+                            var cwdHash = elFinderInstance.cwd().hash;
+                            var allFiles = elFinderInstance.files();
+                            var filesInFolder = [];
+
+                            $.each(allFiles, function(key, value){
+                                if (value.phash != null && value.phash == cwdHash) {
+                                    filesInFolder.push(value.name);
+                                }
+                            });
+
+                            var filesToUpload = files.input ? files.input.files : files.files;
+
+                            if (files.input) {
+                                filesToUpload = files.input.files;
+                            }
+
+                            if (files.files && files.files.files) {
+                                filesToUpload = files.files.files;
+                            }
+
+                            var filesToAction = [];
+                            $.each(filesToUpload, function(i, v)
+                            {
+                                if (v.name != undefined)
+                                {
+                                    var name = getName(v.name).toLowerCase();
+                                    if ($.inArray(name, filesInFolder) != -1) {
+                                        filesToAction.push(name);
+                                    }
+                                }
+                            });
+
+                            if (filesToAction.length > 0) {
+                                openDialog(filesToAction, files);
+                            }
+                            else {
+                                return elFinderInstance.uploadFiles(files);
+                            }
+
+                            function openDialog(filesToSend, files) {
+                                var confirmText = "[[\#{elfinder.upload.confirm}]]";
+                                confirmText = confirmText.replace('{1}', filesToSend.join(", \n"));
+                                if (confirm(confirmText)) {
+                                    var originalOptions = jQuery.extend(true, {}, elFinderInstance.options.customData);
+                                    elFinderInstance.options.customData.replace = true;
+                                    var ret = elFinderInstance.uploadFiles(filesRespository);
+                                    elFinderInstance.options.customData = originalOptions;
+                                    elFinderInstance.optsCustomData = customData;
+                                    elFinderInstance.customData = customData;
+                                    return ret;
+                                }
+                                else {
+                                    return elFinderInstance.uploadFiles(filesRespository);
+                                }
+                            }
+
+                            function getName(name)
+                            {
+                                var ret = WJ.internationalToEnglish(name);
+                                ret = ret.toLowerCase();
+                                ret = ret.trim();
+                                ret = ret.replace(new RegExp(" +", 'g'), "-");
+                                ret = ret.replace(new RegExp("\\.+", 'g'), ".");
+                                ret = ret.replace(new RegExp("\\-+", 'g'), "-");
+                                ret = ret.replace(new RegExp("[^a-zA-Z/_0-9\\-\\.\=]", 'g'),"");
+                                ret = ret.replace("---", "-");
+                                ret = ret.replace("--", "-");
+                                ret = ret.replace("____", "_");
+                                ret = ret.replace("___", "_");
+                                ret = ret.replace("__", "_");
+                                ret = ret.replace("__", "_");
+                                ret = ret.replace("_-_", "-");
+                                ret = ret.replace("-_", "-");
+                                ret = ret.replace("_-", "-");
+                                ret = ret.replace("-.-", "-");
+                                ret = ret.replace("-.html", ".html");
+                                ret = ret.replace("-.jpg", ".jpg");
+                                ret = ret.replace("-.doc", ".doc");
+                                ret = ret.replace("-.xls", ".xls");
+                                ret = ret.replace("-.pdf", ".pdf");
+                                ret = ret.replace("-.", "-");
+                                ret = ret.replace(".-", "-");
+                                ret = ret.replace("./", "/");
+                                ret = ret.replace("-/", "/");
+
+                                return ret;
+                            }
+                            return false;
+                        },
+                        add: function(event, elfinderInstance) {
+                            processEventReload(event, elfinderInstance);
+                        },
+                        remove: function(event, elfinderInstance) {
+                            processEventReload(event, elfinderInstance);
+                        },
+                        change: function(event, elfinderInstance) {
+                            processEventReload(event, elfinderInstance);
+                        },
+                    },
+                    lang: window.userLng,
+                    baseUrl: "/admin/elFinder/", //Needed for loading main css style (theme)
+                    onlyClassicFileUpload: true,
+                    commands: commands,
+                    contextmenu: {
+                        files: files
+                    },
+                    commandsOptions: {
+                        wjedit: {
+                            editors: [{
+                                    mimes: ['text/plain', 'text/html', 'text/jsp', 'text/javascript', 'text/css', 'text/xml', 'text/x-js', 'text/markdown'],
+                                    load: function(textarea) {
+                                        var ta = $(textarea),
+                                            taBase = ta.parent(),
+                                            dialog = taBase.parent();
+                                        editor = CodeMirror.fromTextArea(textarea, {
+                                            lineNumbers: true,
+                                            styleActiveLine: true,
+                                            matchBrackets: true,
+                                            extraKeys: {
+                                                "F11": function(cm) {
+                                                    cm.setOption("fullScreen", !cm.getOption("fullScreen"));
+                                                },
+                                                "Esc": function(cm) {
+                                                if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false);
+                                                },
+                                                "Alt-F": "findPersistent"
+                                            },
+                                            mode: "application/x-ejs",
+                                            theme: "eclipse"
+                                        });
+                                        resizeElfinderDialog(textarea);
+                                    },
+                                    close: function(textarea, instance) {
+                                    },
+                                    save: function(textarea, editorX) {
+                                        textarea.value = editor.getValue();
+                                    }
+                                }
+                            ]
+                        },
+                        paste: {
+                            moveConfirm: [(${layout.getConstant('elfinderMoveConfirm')})]
+                        }
+                    },
+                    ui: ['toolbar', 'tree', 'path', 'stat'],
+                    uiOptions: {
+                        toolbar: toolbar
+                    }
+                })[0].elfinder;
+
+                var toolbarFixApplied = false;
+                elFinderInstance.bind('lazydone', function(event) {
+                    if (!toolbarFixApplied) {
+                        toolbarFixApplied = true;
+                        elfinderTabClick("file");
+                        var actualUrl = $("#file").val();
+                        if (actualUrl != "") {
+                            setTimeout(function() {
+                                try {
+                                    openElfinderInFolder(actualUrl);
+                                } catch (e) {}
+                            }, 500);
+                        } else {
+                            setTimeout(function () {
+                                openDefaultImageFolder(false);
+                            }, 500);
+                        }
+                    }
+                });
+
+                //HIDE grip icon for resizing elfinder
+                $("div.ui-icon-gripsmall-diagonal-se").css('display', 'none');
+            }
+
+            function Ok()
+            {
+                var form = "[(${form})]";
+                var elementName = "[(${elementName})]";
+                var callback = "[(${callback})]";
+
+                var result = false;
+                if (callback != '') {
+                    if (typeof window.parent.opener[callback] != 'undefined') {
+                        var inputs = $('div.inputs');
+                        var results = [];
+                        $.each(inputs.find('.row:not(.template)'), function(i,v){
+                            results.push($(this).find('input').val());
+                        });
+                        if (results.length==0)
+                        {
+                            var val = $("#file").val();
+                            if ("" != val) results.push(val);
+                        }
+                        window.parent.opener[callback](results);
+                        result = true;
+                    }
+                }
+                if (form != "" && elementName != "")
+                {
+                    var val = $('div.inputs').find('.row:not(.template)').find('input').val();
+                    //aby bolo mozne do inputu priamo napisat www.webjet.sk
+                    if (typeof val == "undefined") val = $("#file").val();
+                    if ("ckEditorDialog"==form)
+                    {
+                        var dialog = null;
+                        //wj8 vs wj9
+                        if (window.parent.opener != null) dialog = window.parent.opener.CKEDITOR.dialog.getCurrent();
+                        else dialog = window.parent.CKEDITOR.dialog.getCurrent();
+                        var tabNamePair = elementName.split(":");
+                        var element = dialog.getContentElement(tabNamePair[0], tabNamePair[1]);
+                        element.setValue(val);
+                        result = true;
+                    }
+                    else
+                    {
+                        var element = window.parent.opener.$('form[name="' + form + '"] input[name="' + elementName + '"]');
+                        if (element.length > 0)
+                        {
+                            element.val(val);
+                            try{
+                            element.trigger('change').trigger('blur');
+                            }catch (err){}
+                            result = true;
+                        }
+                        else
+                        {
+                            var element = $(window.parent.opener[form].elements[elementName]);
+                            element.val(val);
+                            try{
+                                element.trigger('change').trigger('blur');
+                            }catch (err){}
+                            result =  true;
+                        }
+                    }
+                }
+                return result;
+            }
+
+        .tabbable.tabbable-custom.tabbable-full-width.tabbable-elfinder
+            .md-breadcrumb
+                ul.nav( role='tablist')
+                    li.nav-item(role='presentation')
+                        a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
+                            | [[\#{fbrowse.file}]]
+            #finder [[\#{divpopup-blank.wait_please}]]
+            #pixabay(style='display: none;')
+                iframe#wjImagePixabayIframeElement(style='width: 100%; height: 480px; border: 0px;' src='/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp' border='0')
+        #linkInput.inputs.container-fluid
+            .row.template
+                .form-group.col-sm-12
+                    label.control-label.block(for='file') [[\#{editor.media.link}]]
+                    input#file.form-control.elfinder-url-input(name='file')
+
+    script.
+        let tabs = $(".tabbable > .md-breadcrumb > ul.nav");
+        if( [(${pixabayEnabled})] == true) {
+            tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
+            tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'pixabay\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor.photobank}]]</a></li>' );
+        } else {
+            tabs.append( '<li class=\"nav-item last\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
+        }
+
+    #elfinder-modal.modal.fade(tabindex='-1' role='dialog' aria-labelledby='elfinder-modal')
+        .modal-dialog(role='document')
+            .modal-content
+            .modal-header
+                button.close(type='button' data-dismiss='modal' aria-label='Close')
+                    span(aria-hidden='true') &times;
+                h4#modalLabel.modal-title [[\#{fbrowser.dirprop.dir}]]
+            .modal-body
+            .modal-footer
+                button.btn.btn-default.closeModal(type='button' data-dismiss='modal') [[\#{webpages.modal.close}]]
+                select.btn.form-control.action(name='action' style='display: inline-block; width: 150px;')
+                    option.bSubmit(value='bSubmit') [[\#{fbrowse.save_button}]]
+                    option.bUsage(value='bUsage') [[\#{fbrowse.usage_button}]]
+                    option.showHistory(value='showHistory') [[\#{groupslist.show_history}]]
+                button.btn.btn-primary.submit(type='button' name='submit') [[\#{elfinder.dirprops.save}]]
+

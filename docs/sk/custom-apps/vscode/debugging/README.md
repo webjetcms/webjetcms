@@ -46,7 +46,7 @@ gretty {
 
 V minulosti bolo možné použiť aj parameter ```managedClassReload = true```, ten ale používa knižnicu, ktorá nemá podporu v Java 11 a viac, ak ho v projekte máte nastavené, zmažte ho z konfigurácie gretty.
 
-**UPOZORNENIE:** ak máte otvorený súbor, ktorý obsahuje chybu (napr. html, alebo aj JavaScript) nespustí sa debug režim korektne, respektíve po spustení servera sa odpojí. VS Code zjavne nerozlišuje v akom type súboru je chyba, nesmiete mať pri spustení otvorený súbor, ktorého karta je zobrazená červenou farbou.
+!>**Upozornenie:** ak máte otvorený súbor, ktorý obsahuje chybu (napr. html, alebo aj JavaScript) nespustí sa debug režim korektne, respektíve po spustení servera sa odpojí. VS Code zjavne nerozlišuje v akom type súboru je chyba, nesmiete mať pri spustení otvorený súbor, ktorého karta je zobrazená červenou farbou.
 
 ## Nastavenie pre JavaScript debug
 

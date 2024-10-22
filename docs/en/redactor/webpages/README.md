@@ -55,34 +55,34 @@ The list of web pages also offers a special icon ![](recover-button.png ":no-zoo
 ### Special icons
 
 The Data table in the page list contains the following special icons:
-- <i class="far fa-eye fa-btn" role="presentation" /> - Show page - after selecting one or more lines and clicking on the icon, the selected web page will open in a new window/tab.
-- <i class="fas fa-restroom fa-btn" role="presentation" /> - Save as AB test - creates a B version of the page for [AB testing](../apps/abtesting/README.md).
-- <i class="far fa-chart-line fa-btn" role="presentation" /> - Page Statistics - displays [traffic](../apps/stat/README.md) marked web page.
-- <i class="far fa-link-slash fa-btn" role="presentation" /> - Check for links and blank pages - checks [validity of links](linkcheck.md) in the pages in the current folder and subfolders, displays pages that have no text entered.
+- <i class="ti ti-eye fa-btn" role="presentation"></i> - Show page - after selecting one or more lines and clicking on the icon, the selected web page will open in a new window/tab.
+- <i class="ti ti-a-b fa-btn" role="presentation"></i> - Save as AB test - creates a B version of the page for [AB testing](../apps/abtesting/README.md).
+- <i class="ti ti-chart-line fa-btn" role="presentation"></i> - Page Statistics - displays [traffic](../apps/stat/README.md) marked web page.
+- <i class="ti ti-link-off fa-btn" role="presentation"></i> - Check for links and blank pages - checks [validity of links](linkcheck.md) in the pages in the current folder and subfolders, displays pages that have no text entered.
 - ![](icon-recursive.png ":no-zoom") - Show web pages from subdirectories - switch the switch to the on position to show web pages from subdirectories in the table
 
 ### Icons and colours in the tree structure and page list
 
 The following types of icons and colors can be displayed in the folder and page tree structure:
-- <i class="fas fa-folder" role="presentation" /> full folder icon = folder is displayed in the menu
-- <i class="far fa-folder" role="presentation" /> empty folder icon = not shown in the menu
-- <i class="fas fa-map-marker-alt" role="presentation" /> the page is displayed in the menu
-- <i class="far fa-map-marker-alt-slash" role="presentation" /> the page is not displayed in the menu
-- <i class="fas fa-folder-times" role="presentation" /> you don't have edit/delete permissions on the folder, you won't even see any list of web pages in that folder (even if the folder actually contains web pages). This is used when you only have permissions on any of the subfolders.
-- <i class="fas fa-lock" role="presentation" /> lock = only available for logged in visitor
+- <i class="ti ti-folder-filled" role="presentation"></i> full folder icon = folder is displayed in the menu
+- <i class="ti ti-folder" role="presentation"></i> empty folder icon = not shown in the menu
+- <i class="ti ti-map-pin" role="presentation"></i> the page is displayed in the menu
+- <i class="ti ti-map-pin-off" role="presentation"></i> the page is not displayed in the menu
+- <i class="ti ti-folder-x" role="presentation"></i> you don't have edit/delete permissions on the folder, you won't even see any list of web pages in that folder (even if the folder actually contains web pages). This is used when you only have permissions on any of the subfolders.
+- <i class="ti ti-lock" role="presentation"></i> lock = only available for logged in visitor
 - <span style="color: #FF4B58">red colour</span> = unavailable to the public (internal directory) or page with display disabled
-- <i class="fas fa-star" />, **bold font** = main page of the directory
-- <i class="fas fa-external-link-alt" /> out arrow = page is redirected
-- <i class="fas fa-eye-slash" /> crossed out eye = page not searchable
-- <i class="fas fa-restroom" /> B variant of the application page [AB testing](../apps/abtesting/README.md)
+- <i class="ti ti-star"></i>, **bold font** = main page of the directory
+- <i class="ti ti-external-link"></i> out arrow = page is redirected
+- <i class="ti ti-eye-off"></i> crossed out eye = page not searchable
+- <i class="ti ti-a-b"></i> B variant of the application page [AB testing](../apps/abtesting/README.md)
 
 ## Setting the tree structure view
 
-If necessary, you can click on the icon in the tree structure <i class="far fa-wrench" /> Settings to display the settings dialog box:
+If necessary, you can click on the icon in the tree structure <i class="ti ti-adjustments-horizontal"></i> Settings to display the settings dialog box:
 - `ID` - It will also display the directory ID in the form #ID before the name. This display is useful if you need to manually enter a folder ID into an application, or if you are migrating pages between environments and need to quickly check the settings of embedded applications.
-- `Poradie usporiadania` - After the name, display the order of the arrangement in the form (order).
-- `Web Stránky` - It also displays web pages in the tree structure. **Warning:** reduces performance and data loading speed. We recommend enabling this option only if you need to move web pages using the `Drag&Drop`.
-- `Priečinky stromovej štruktúry ako tabuľku` - Displays the Folders tab in the datatable. Allows you to use datatable features such as bulk operations, duplicate, cell editing, etc. with tree structure folders.
-- `Pomer šírky stĺpcov strom:tabuľka` - Sets the ratio of the column widths of the displayed tree structure and datatable for better use of monitor width. The default ratio is 4:8. Warning: some ratios and inappropriate monitor size may cause the toolbar/buttons to display incorrectly.
+- `Sort order` - After the name, display the order of the arrangement in the form (order).
+- `Web pages` - It also displays web pages in the tree structure. **Warning:** reduces performance and data loading speed. We recommend enabling this option only if you need to move web pages using the `Drag&Drop`.
+- `Tree structure folders as a table` - Displays the Folders tab in the datatable. Allows you to use datatable features such as bulk operations, duplicate, cell editing, etc. with tree structure folders.
+- `Width ratio of tree:table columns` - Sets the ratio of the column widths of the displayed tree structure and datatable for better use of monitor width. The default ratio is 4:8. Warning: some ratios and inappropriate monitor size may cause the toolbar/buttons to display incorrectly.
 
 ![](jstree-settings.png)

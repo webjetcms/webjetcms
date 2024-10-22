@@ -4,7 +4,7 @@ Licenčné číslo pre WebJET sa zadáva v sekcii Nastavenia/Konfigurácia do ko
 
 ## Nesprávne licenčné číslo
 
-Ak WebJET obsahuje licenčné číslo s expirovaným dátumom platnosti, nesprávnym doménovým menom, alebo licenčné číslo je nesprávne zadané, zobrazí sa po prihlásení do administrácie možnosť aktualizovať licenčné číslo, v logoch servera sa pri štarte zobrazí:
+Ak WebJET obsahuje licenčné číslo s exspirovaným dátumom platnosti, nesprávnym doménovým menom, alebo licenčné číslo je nesprávne zadané, zobrazí sa po prihlásení do administrácie možnosť aktualizovať licenčné číslo, v logoch servera sa pri štarte zobrazí:
 
 ```log
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - -----------------------------------------------
@@ -43,3 +43,9 @@ pre Oracle použite zápis:
 ```sql
 UPDATE webjet_conf SET value='xxx' WHERE name='license';
 ```
+
+## Exspirácia licencie
+
+WebJET vie automatický zistiť blížiaci sa koniec platnosti Vaše licencie. Ak zistí, že platnosť licencie vyprší do 2 (alebo menej) mesiacov, zobrazí upozornenie v úvodnej časti.
+
+![](license-expiration-notification.png)

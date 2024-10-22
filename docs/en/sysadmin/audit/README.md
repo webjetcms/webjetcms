@@ -22,8 +22,8 @@ Each audit record automatically records the date and time, the ID of the logged-
 - `DATA_DELETING` - records the execution of the data deletion in Settings-Data deletion. Records the key that was deleted in the cache, or `ALL` to delete everything. When deleting the image cache, it records the path to the directory. When deleting the persistent cache, records the record ID.
 - `DMAIL` - Bulk email application
 - `DMAIL_AUTOSENDER` - used in the special situation of automatic sending of bulk email
-- `DMAIL_BLACKLIST` - change in Bulk email-\&gt;Unsubscribed emails
-- `DMAIL_DOMAINLIMITS` - change in Bulk email-\&gt;Domain limits
+- `DMAIL_BLACKLIST` - change in Bulk email->Unsubscribed emails
+- `DMAIL_DOMAINLIMITS` - change in Bulk email->Domain limits
 - `EXPORT_WEBJET` - not used
 - `EXPORT` - data export operations (add, change, delete data export)
 - `FILE_CREATE` - create a file or directory, record the path
@@ -35,7 +35,7 @@ Each audit record automatically records the date and time, the ID of the logged-
 - `FORM_ARCHIVE` - archiving the form, records the name of the form
 - `FORM_DELETE` - form deletion, records the name of the form and possibly the ID if it is a deletion of a single record
 - `FORM_EXPORT` - export of the form via the Export tab, currently universal export via buttons under the table is not recorded. The date of the last export is determined by this record for the ability to export since the last export.
-- `FORM_REGEXP` - change in Forms-\&gt;Regular expressions
+- `FORM_REGEXP` - change in Forms->Regular expressions
 - `FORM_VIEW` - not used
 - `FORUM_SAVE` - detects the detection of vulgarity in the discussion forum
 - `FORUM` - operations in the Discussion app
@@ -66,7 +66,7 @@ Each audit record automatically records the date and time, the ID of the logged-
 - `PEREX_GROUP_CREATE` - create a perex group, record its name
 - `PEREX_GROUP_DELETE` - deleting a group's perex, records its name and ID
 - `PEREX_GROUP_UPDATE` - change the perex of a group, record its name
-- `PERSISTENT_CACHE` - change in Data deletion-\&gt;Persistent cache objects
+- `PERSISTENT_CACHE` - change in Data deletion->Persistent cache objects
 - `PROP_DELETE` - deleting the translation text, records the language and key
 - `PROP_UPDATE` - editing the translation text (in the Settings section), records the language, key and value
 - `PROXY` - proxy application operations

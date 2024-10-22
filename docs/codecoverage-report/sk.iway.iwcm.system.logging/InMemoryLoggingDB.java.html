@@ -126,10 +126,11 @@ public class InMemoryLoggingDB {
     }
 
     public static void setQueueSize(int size) {
-<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (queue.maxSize()!=size) {</span>
-<span class="fc" id="L130">            Logger.debug(InMemoryLoggingDB.class, &quot;Reseting queue size to &quot;+size+&quot; originalSize=&quot;+queue.maxSize());</span>
-<span class="fc" id="L131">            queue = new CircularFifoQueue&lt;&gt;(size);</span>
+<span class="pc bpc" id="L129" title="1 of 2 branches missed.">        if (size &lt; 1) size = 200;</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (queue.maxSize()!=size) {</span>
+<span class="fc" id="L131">            Logger.debug(InMemoryLoggingDB.class, &quot;Reseting queue size to &quot;+size+&quot; originalSize=&quot;+queue.maxSize());</span>
+<span class="fc" id="L132">            queue = new CircularFifoQueue&lt;&gt;(size);</span>
         }
-<span class="fc" id="L133">    }</span>
+<span class="fc" id="L134">    }</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

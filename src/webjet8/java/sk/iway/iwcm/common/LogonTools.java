@@ -729,7 +729,9 @@ public class LogonTools {
         List<String> errors = new ArrayList<>();
 
         //15888 #11: akceptuje sa len submit cez HTTP POST
-		if("post".equalsIgnoreCase(request.getMethod()) == false) return null;
+		if("post".equalsIgnoreCase(request.getMethod()) == false) {
+            return null;
+        }
 
         //session fixation ochrana
         LogonTools.invalidateSessionOnFirstPost(request);
@@ -775,6 +777,10 @@ public class LogonTools {
 			Logger.error(LogonTools.class, "su nejake chyby v logovacom formulari: "+url);
 			return errors;
 		}
+
+        if(session.getAttribute(Constants.USER_KEY+"_changepassword") != null) {
+            return errors;
+        }
 
         Identity user = UsersDB.getCurrentUser(request);
 		if (user==null || user.isAuthorized()==false)
@@ -853,7 +859,7 @@ public class LogonTools {
             Connection db_conn = DBPool.getConnection();
             try
             {
-                PreparedStatement ps = db_conn.prepareStatement("SELECT * FROM user_alarm WHERE user_id=?");
+                PreparedStatement ps = db_conn.prepareStatement("SELECT * FROM user_alarm WHERE user_id=?"); //NOSONAR
                 try
                 {
                     ps.setInt(1, userId);
@@ -869,7 +875,7 @@ public class LogonTools {
                 }
                 finally { ps.close(); }
 
-                ps = db_conn.prepareStatement("SELECT * FROM alarm_action WHERE alarm_id=?");
+                ps = db_conn.prepareStatement("SELECT * FROM alarm_action WHERE alarm_id=?"); //NOSONAR
                 try
                 {
                     ps.setInt(1, alarmId);

@@ -168,10 +168,10 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 		{
 <span class="nc" id="L169">			_volumes = new FsVolume[4];</span>
 
-<span class="nc" id="L171">			counter = addLibraryVolume(counter);</span>
-<span class="nc" id="L172">			counter = addFsVolume(counter);</span>
-<span class="nc" id="L173">			counter = addDocGroupVolume(counter);</span>
-<span class="nc" id="L174">			counter = addActualPageVolume(counter);</span>
+<span class="nc" id="L171">			counter = addActualPageVolume(counter);</span>
+<span class="nc" id="L172">			counter = addLibraryVolume(counter);</span>
+<span class="nc" id="L173">			counter = addFsVolume(counter);</span>
+<span class="nc" id="L174">			counter = addDocGroupVolume(counter);</span>
 		}
 
 		//moze tam byt null, prepocitaj
@@ -463,7 +463,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 	 */
 	private Collection&lt;FsItemEx&gt; findRecursively(FsItemFilter filter, FsItem root, boolean recursive, Set&lt;String&gt; duplicityCheck)
 	{
-<span class="fc" id="L466">		List&lt;FsItemEx&gt; results = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="fc" id="L466">		List&lt;FsItemEx&gt; results = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L467">		FsVolume vol = root.getVolume();</span>
 <span class="fc" id="L468">		FsItem[] childrens = vol.listChildren(root);</span>
 <span class="fc bfc" id="L469" title="All 2 branches covered.">		for (int i=0; i&lt;childrens.length; i++) {</span>
@@ -491,4 +491,4 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 <span class="fc" id="L491">		return results;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

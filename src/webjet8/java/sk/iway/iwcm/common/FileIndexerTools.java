@@ -272,11 +272,6 @@ public class FileIndexerTools {
     {
         url = Tools.replace(url, "//", "/");
         Logger.debug(FileIndexerTools.class,"indexFile(url="+url+" user="+user+")");
-        if (!url.startsWith("/files/") || url.endsWith("/upload") || url.startsWith("/files/protected/"))
-		{
-			 Logger.error(FileIndexerTools.class,"url musi zacinat na /files/ a nesmie koncit na /upload: "+url);
-			 return false;
-		}
 
         if (shouldIndexFile(url) == false) {
             Logger.debug(FileIndexerTools.class, "File is in non indexable dir: " + url);
@@ -406,7 +401,6 @@ public class FileIndexerTools {
                         }
 
                         IwcmFile f = new IwcmFile(realPath);
-                        long length = f.length();
 
                         //uz sme na konci, dirName je uz fileName
                         Logger.println(FileIndexer.class,"Vytvaram stranku: " + dirName);
@@ -423,7 +417,7 @@ public class FileIndexerTools {
                             doc = new DocDetails();
                         }
 
-                        //suborom nastavujem rovnaku pripritu ako je priorita adresara
+                        //suborom nastavujem rovnaku prioritu ako je priorita adresara
                         doc.setGroupId(parentDirId);
                         doc.setAuthorId(user.getUserId());
                         doc.setSortPriority(group.getSortPriority());
@@ -431,7 +425,9 @@ public class FileIndexerTools {
                         doc.setData(data);
                         doc.setExternalLink(url);
                         doc.setVirtualPath(url+".html");
-                        doc.setNavbar(title +  " ("+Tools.formatFileSize(length)+")");
+                        doc.setNavbar(title +  " ("+Tools.formatFileSize(f.length())+")");
+                        // Publish start as last modified date of the file
+                        doc.setPublishStartString( Tools.formatDateTimeSeconds( f.lastModified() ) );
 
                         boolean searchable = fab == null || fab.getShowFile();
                         doc.setSearchable(searchable);
@@ -717,6 +713,16 @@ public class FileIndexerTools {
      * @return
      */
     private static boolean shouldIndexFile(String fileUrl) {
+
+        if (!fileUrl.startsWith("/files/") || fileUrl.endsWith("/upload") || fileUrl.startsWith("/files/protected/"))
+		{
+			return false;
+		}
+
+        if (fileUrl.contains(Constants.getString("fileArchivInsertLaterDirPath")))
+        {
+            return false;
+        }
 
         String testDir = fileUrl;
 

@@ -1,6 +1,5 @@
-"use strict";
 /**
- * @class elFinder command "download".
+ * @class elFinder command "download". 
  * Download selected files.
  * Only for new api
  *
@@ -8,14 +7,17 @@
  **/
 elFinder.prototype.commands.zipdl = function() {};
 elFinder.prototype.commands.download = function() {
+	"use strict";
 	var self   = this,
 		fm     = this.fm,
+		czipdl = null,
 		zipOn  = false,
 		mixed  = false,
+		dlntf  = false,
+		cpath  = window.location.pathname || '/',
 		filter = function(hashes, inExec) {
-			var czipdl = (fm.api > 2)? fm.getCommand('zipdl') : null,
-				volumeid, mixedCmd;
-
+			var volumeid, mixedCmd;
+			
 			if (czipdl !== null) {
 				if (fm.searchStatus.state > 1) {
 					mixed = fm.searchStatus.mixed;
@@ -33,11 +35,11 @@ elFinder.prototype.commands.download = function() {
 
 			if (mixed) {
 				mixedCmd = czipdl? 'zipdl' : 'download';
-				hashes = $.map(hashes, function(h) {
+				hashes = $.grep(hashes, function(h) {
 					var f = fm.file(h),
-						res = (! f || (! czipdl && f.mime === 'directory') || ! fm.isCommandEnabled(mixedCmd, h))? null : h;
+						res = (! f || (! czipdl && f.mime === 'directory') || ! fm.isCommandEnabled(mixedCmd, h))? false : true;
 					if (f && inExec && ! res) {
-						$('#' + fm.cwdHash2Id(f.hash)).trigger('unselect');
+						fm.cwdHash2Elm(f.hash).trigger('unselect');
 					}
 					return res;
 				});
@@ -49,38 +51,37 @@ elFinder.prototype.commands.download = function() {
 					return [];
 				}
 			}
-
-			return $.map(self.files(hashes), function(f) {
-				var res = (! f.read || (! zipOn && f.mime == 'directory')) ? null : f;
+			
+			return $.grep(self.files(hashes), function(f) { 
+				var res = (! f.read || (! zipOn && f.mime == 'directory')) ? false : true;
 				if (inExec && ! res) {
-					$('#' + fm.cwdHash2Id(f.hash)).trigger('unselect');
+					fm.cwdHash2Elm(f.hash).trigger('unselect');
 				}
 				return res;
 			});
 		};
-
+	
 	this.linkedCmds = ['zipdl'];
-
+	
 	this.shortcuts = [{
 		pattern     : 'shift+enter'
 	}];
-
-	this.getstate = function(sel) {
-		var sel    = this.hashes(sel),
+	
+	this.getstate = function(select) {
+		var sel    = this.hashes(select),
 			cnt    = sel.length,
 			maxReq = this.options.maxRequests || 10,
-			czipdl = (fm.api > 2)? fm.getCommand('zipdl') : null,
 			mixed  = false,
 			croot  = '';
-
+		
 		if (cnt < 1) {
 			return -1;
 		}
 		cnt = filter(sel).length;
-
+		
 		return  (cnt && (zipOn || (cnt <= maxReq && ((!fm.UA.IE && !fm.UA.Mobile) || cnt == 1))) ? 0 : -1);
 	};
-
+	
 	fm.bind('contextmenu', function(e){
 		var fm = self.fm,
 			helper = null,
@@ -89,7 +90,7 @@ elFinder.prototype.commands.download = function() {
 				var link = file.url || fm.url(file.hash);
 				return {
 					icon: 'link',
-					node: $('<a/>')
+					node: $('<a></a>')
 						.attr({href: link, target: '_blank', title: fm.i18n('link')})
 						.text(file.name)
 						.on('mousedown click touchstart touchmove touchend contextmenu', function(e){
@@ -101,7 +102,7 @@ elFinder.prototype.commands.download = function() {
 							if (dt) {
 								var icon  = function(f) {
 										var mime = f.mime, i, tmb = fm.tmb(f);
-										i = '<div class="elfinder-cwd-icon '+fm.mime2class(mime)+' ui-corner-all"/>';
+										i = '<div class="elfinder-cwd-icon '+fm.mime2class(mime)+' ui-corner-all"></div>';
 										if (tmb) {
 											i = $(i).addClass(tmb.className).css('background-image', "url('"+tmb.url+"')").get(0).outerHTML;
 										}
@@ -134,7 +135,7 @@ elFinder.prototype.commands.download = function() {
 					var node;
 					self.extra = {
 						icon: 'link',
-						node: $('<a/>')
+						node: $('<a></a>')
 							.attr({href: '#', title: fm.i18n('getLink'), draggable: 'false'})
 							.text(file.name)
 							.on('click touchstart', function(e){
@@ -164,17 +165,22 @@ elFinder.prototype.commands.download = function() {
 					};
 					node = self.extra.node;
 					node.ready(function(){
-						setTimeout(function(){
+						requestAnimationFrame(function(){
 							node.parent().addClass('ui-state-disabled').css('pointer-events', 'auto');
-						}, 10);
+						});
 					});
 				}
 			}
 		}
+	}).one('open', function() {
+		if (fm.api >= 2.1012) {
+			czipdl = fm.getCommand('zipdl');
+		}
+		dlntf = fm.cookieEnabled && fm.api > 2.1038 && !fm.isCORS;
 	});
-
-	this.exec = function(hashes) {
-		var hashes  = this.hashes(hashes),
+	
+	this.exec = function(select) {
+		var hashes  = this.hashes(select),
 			fm      = this.fm,
 			base    = fm.options.url,
 			files   = filter(hashes, true),
@@ -188,59 +194,109 @@ elFinder.prototype.commands.download = function() {
 				return function() {
 					var dfd = $.Deferred(),
 						root = fm.file(fm.root(hashes[0])),
-						volName = root? ' ('+(root.i18 || root.name)+')' : '';
+						single = (hashes.length === 1),
+						volName = root? (root.i18 || root.name) : null,
+						dir, dlName, phash;
+					if (single) {
+						if (dir = fm.file(hashes[0])) {
+							dlName = (dir.i18 || dir.name);
+						}
+					} else {
+						$.each(hashes, function() {
+							var d = fm.file(this);
+							if (d && (!phash || phash === d.phash)) {
+								phash = d.phash;
+							} else {
+								phash = null;
+								return false;
+							}
+						});
+						if (phash && (dir = fm.file(phash))) {
+							dlName = (dir.i18 || dir.name) + '-' + hashes.length;
+						}
+					}
+					if (dlName) {
+						volName = dlName;
+					}
+					volName && (volName = ' (' + volName + ')');
 					fm.request({
 						data : {cmd : 'zipdl', targets : hashes},
 						notify : {type : 'zipdl', cnt : 1, hideCnt : true, msg : fm.i18n('ntfzipdl') + volName},
 						cancel : true,
+						eachCancel : true,
 						preventDefault : true
 					}).done(function(e) {
-						var zipdl, dialog, btn = {}, dllink, form, iframe,
-							uniq = 'dlw' + (+new Date());
+						var zipdl, dialog, btn = {}, dllink, form, iframe, m,
+							uniq = 'dlw' + (+new Date()),
+							zipdlFn = function(url) {
+								dllink = $('<a></a>')
+									.attr('href', url)
+									.attr('download', fm.escape(dlName))
+									.on('click', function() {
+										dfd.resolve();
+										dialog && dialog.elfinderdialog('destroy');
+									});
+								if (linkdl) {
+									dllink.attr('target', '_blank')
+										.append('<span class="elfinder-button-icon elfinder-button-icon-download"></span>'+fm.escape(dlName));
+									btn[fm.i18n('btnCancel')] = function() {
+										dialog.elfinderdialog('destroy');
+									};
+									dialog = self.fmDialog(dllink, {
+										title: fm.i18n('link'),
+										buttons: btn,
+										width: '200px',
+										destroyOnClose: true,
+										close: function() {
+											(dfd.state() !== 'resolved') && dfd.resolve();
+										}
+									});
+								} else {
+									click(dllink.hide().appendTo('body').get(0));
+									dllink.remove();
+								}
+							};
 						if (e.error) {
 							fm.error(e.error);
 							dfd.resolve();
 						} else if (e.zipdl) {
 							zipdl = e.zipdl;
-							if (linkdl || (!html5dl && fm.UA.Mobile)) {
+							if (dlName) {
+								m = fm.splitFileExtention(zipdl.name || '');
+								dlName += m[1]? ('.' + m[1]) : '.zip';
+							} else {
+								dlName = zipdl.name;
+							}
+							if (html5dl || linkdl) {
 								url = fm.options.url + (fm.options.url.indexOf('?') === -1 ? '?' : '&')
 								+ 'cmd=zipdl&download=1';
-								$.each([hashes[0], zipdl.file, zipdl.name, zipdl.mime], function(key, val) {
+								$.each([hashes[0], zipdl.file, dlName, zipdl.mime], function(key, val) {
 									url += '&targets%5B%5D='+encodeURIComponent(val);
 								});
-								$.each(fm.options.customData, function(key, val) {
+								$.each(fm.customData, function(key, val) {
 									url += '&'+encodeURIComponent(key)+'='+encodeURIComponent(val);
 								});
-								url += '&'+encodeURIComponent(zipdl.name);
-								dllink = $('<a/>')
-									.attr('href', url)
-									.attr('download', encodeURIComponent(zipdl.name))
-									.attr('target', '_blank')
-									.on('click', function() {
-										dfd.resolve();
-										dialog.elfinderdialog('destroy');
-									})
-									.append('<span class="elfinder-button-icon elfinder-button-icon-download"></span>'+fm.escape(zipdl.name));
-								btn[fm.i18n('btnCancel')] = function() {
-									dialog.elfinderdialog('destroy');
-								};
-								dialog = fm.dialog(dllink, {
-									title: fm.i18n('link'),
-									buttons: btn,
-									width: '200px',
-									destroyOnClose: true,
-									close: function() {
-										(dfd.state() !== 'resolved') && dfd.resolve();
-									}
-								});
+								url += '&'+encodeURIComponent(dlName);
+								if (fm.hasParrotHeaders()) {
+									fm.getBinaryByUrl({url: url}, function(blob) {
+										if (blob instanceof Blob) {
+											url = (window.URL || window.webkitURL).createObjectURL(blob);
+											zipdlFn(url);
+										} else {
+											fm.error(['errUploadTransfer', fm.i18n('kindZIP')]);
+										}
+									});
+								} else {
+									zipdlFn(url);
+								}
 							} else {
-								form = $('<form action="'+fm.options.url+'" method="post" target="'+uniq+'" style="display:none"/>')
+								form = $('<form action="'+fm.options.url+'" method="post" target="'+uniq+'" style="display:none"></form>')
 								.append('<input type="hidden" name="cmd" value="zipdl"/>')
 								.append('<input type="hidden" name="download" value="1"/>');
-								$.each([hashes[0], zipdl.file, zipdl.name, zipdl.mime], function(key, val) {
+								$.each([hashes[0], zipdl.file, dlName, zipdl.mime], function(key, val) {
 									form.append('<input type="hidden" name="targets[]" value="'+fm.escape(val)+'"/>');
 								});
-								$.each(fm.options.customData, function(key, val) {
+								$.each(fm.customData, function(key, val) {
 									form.append('<input type="hidden" name="'+key+'" value="'+fm.escape(val)+'"/>');
 								});
 								form.attr('target', uniq).appendTo('body');
@@ -251,7 +307,7 @@ elFinder.prototype.commands.download = function() {
 										dfd.resolve();
 										setTimeout(function() {
 											iframe.remove();
-										}, fm.UA.Firefox? 20000 : 1000); // give mozilla 20 sec file to be saved
+										}, 20000); // give 20 sec file to be saved
 									});
 							}
 						}
@@ -262,19 +318,53 @@ elFinder.prototype.commands.download = function() {
 					return dfd.promise();
 				};
 			},
-			link, html5dl;
-
+			// use MouseEvent to click element for Safari etc
+			click = function(a) {
+				var clickEv;
+				if (typeof MouseEvent === 'function') {
+					clickEv = new MouseEvent('click');
+				} else {
+					clickEv = document.createEvent('MouseEvents');
+					clickEv.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+				}
+				fm.pauseUnloadCheck(true);
+				a.dispatchEvent(clickEv);
+			},
+			checkCookie = function(id) {
+				var name = 'elfdl' + id,
+					parts;
+				parts = document.cookie.split(name + "=");
+				if (parts.length === 2) {
+					ntftm && clearTimeout(ntftm);
+					document.cookie = name + '=; path=' + cpath + '; max-age=0';
+					closeNotify();
+				} else {
+					setTimeout(function() { checkCookie(id); }, 200);
+				}
+			},
+			closeNotify = function() {
+				if (fm.ui.notify.children('.elfinder-notify-download').length) {
+					fm.notify({
+						type : 'download',
+						cnt : -1
+					});
+				}
+			},
+			reqids = [],
+			link, html5dl, fileCnt, clickEv, cid, ntftm, reqid, getUrlDfrd, urls;
+			
 		if (!files.length) {
 			return dfrd.reject();
 		}
-
-		link = $('<a>').hide().appendTo($('body'));
+		
+		fileCnt = $.grep(files, function(f) { return f.mime === 'directory'? false : true; }).length;
+		link = $('<a>').hide().appendTo('body');
 		html5dl = (typeof link.get(0).download === 'string');
-
-		if (zipOn && (files.length > 1 || files[0].mime === 'directory')) {
+		
+		if (zipOn && (fileCnt !== files.length || fileCnt >= (this.options.minFilesZipdl || 1))) {
 			link.remove();
+			linkdl = (!html5dl && fm.UA.Mobile);
 			if (mixed) {
-				linkdl = fm.UA.Mobile;
 				targets = {};
 				$.each(files, function(i, f) {
 					var p = f.hash.split('_', 2);
@@ -284,6 +374,9 @@ elFinder.prototype.commands.download = function() {
 						targets[p[0]].push(f.hash);
 					}
 				});
+				if (!linkdl && fm.UA.Mobile && Object.keys(targets).length > 1) {
+					linkdl = true;
+				}
 			} else {
 				targets = [ $.map(files, function(f) { return f.hash; }) ];
 			}
@@ -294,38 +387,79 @@ elFinder.prototype.commands.download = function() {
 			);
 			return dfrd;
 		} else {
-			for (i = 0; i < files.length; i++) {
-				url = fm.openUrl(files[i].hash, true);
-				if (html5dl) {
-					link.attr('href', url)
-					.attr('download', encodeURIComponent(files[i].name))
-					.attr('target', '_blank')
-					.get(0).click();
-				} else {
-					if (fm.UA.Mobile) {
-						setTimeout(function(){
-							if (! window.open(url)) {
-								fm.error('errPopup');
-							}
-						}, 100);
+			reqids = [];
+			getUrlDfrd = $.Deferred().done(function(urls) {
+				for (i = 0; i < urls.length; i++) {
+					url = urls[i];
+					if (dlntf && url.substr(0, fm.options.url.length) === fm.options.url) {
+						reqid = fm.getRequestId();
+						reqids.push(reqid);
+						url += '&cpath=' + cpath + '&reqid=' + reqid;
+						ntftm = setTimeout(function() {
+							fm.notify({
+								type : 'download',
+								cnt : 1,
+								cancel : (fm.UA.IE || fm.UA.Edge)? void(0) : function() {
+									if (reqids.length) {
+										$.each(reqids, function() {
+											fm.request({
+												data: {
+													cmd: 'abort',
+													id: this
+												},
+												preventDefault: true
+											});
+										});
+									}
+									reqids = [];
+								}
+							});
+						}, fm.notifyDelay);
+						checkCookie(reqid);
+					}
+					if (html5dl) {
+						click(link.attr('href', url)
+							.attr('download', fm.escape(files[i].name))
+							.get(0)
+						);
 					} else {
-						var hash = escapeOutput(files[i].hash);
-						iframes += '<iframe class="downloader" id="downloader-' + hash +'" style="display:none" src="'+url+'"/>';
+						if (fm.UA.Mobile) {
+							setTimeout(function(){
+								if (! window.open(url)) {
+									fm.error('errPopup');
+									ntftm && cleaerTimeout(ntftm);
+									closeNotify();
+								}
+							}, 100);
+						} else {
+							iframes += '<iframe class="downloader" id="downloader-' + files[i].hash+'" style="display:none" src="'+url+'"></iframe>';
+						}
 					}
 				}
-			}
-			link.remove();
-			$(iframes)
-				.appendTo('body')
-				.ready(function() {
-					setTimeout(function() {
-						$(iframes).each(function() {
-							$('#' + $(this).attr('id')).remove();
-						});
-					}, fm.UA.Firefox? (20000 + (10000 * i)) : 1000); // give mozilla 20 sec + 10 sec for each file to be saved
+				link.remove();
+				$(iframes)
+					.appendTo('body')
+					.ready(function() {
+						setTimeout(function() {
+							$(iframes).each(function() {
+								$('#' + $(this).attr('id')).remove();
+							});
+						}, 20000 + (10000 * i)); // give 20 sec + 10 sec for each file to be saved
+					});
+				fm.trigger('download', {files : files});
+				dfrd.resolve();
+			});
+			fileCnt = files.length;
+			urls = [];
+			for (i = 0; i < files.length; i++) {
+				fm.openUrl(files[i].hash, true, function(v) {
+					v && urls.push(v);
+					if (--fileCnt < 1) {
+						getUrlDfrd.resolve(urls);
+					}
 				});
-			fm.trigger('download', {files : files});
-			return dfrd.resolve();
+			}
+			return dfrd;
 		}
 	};
 

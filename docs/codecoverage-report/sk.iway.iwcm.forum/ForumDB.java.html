@@ -930,13 +930,13 @@ public class ForumDB
 <span class="pc bpc" id="L930" title="1 of 2 branches missed.">				if (userGroupId &gt; 0)</span>
 				{
 <span class="fc" id="L932">					String fileTypes = pageParams.getValue(&quot;allowedFileTypes-&quot; + userGroupId, null);</span>
-<span class="pc bpc" id="L933" title="1 of 2 branches missed.">					if (fileTypes != null) allowedFileTypes = fileTypes;</span>
+<span class="fc bfc" id="L933" title="All 2 branches covered.">					if (fileTypes != null) allowedFileTypes = fileTypes;</span>
 
 <span class="fc" id="L935">					int fileSize = pageParams.getIntValue(&quot;allowedFileSizeKB-&quot; + userGroupId, 0);</span>
-<span class="pc bpc" id="L936" title="1 of 2 branches missed.">					if (fileSize &gt; 0) allowedFileSizeKB = fileSize;</span>
+<span class="fc bfc" id="L936" title="All 2 branches covered.">					if (fileSize &gt; 0) allowedFileSizeKB = fileSize;</span>
 
 <span class="fc" id="L938">					String uploadDir = pageParams.getValue(&quot;fileUploadDir-&quot; + userGroupId, null);</span>
-<span class="pc bpc" id="L939" title="1 of 2 branches missed.">					if (uploadDir != null) fileUploadDir = uploadDir;</span>
+<span class="fc bfc" id="L939" title="All 2 branches covered.">					if (uploadDir != null) fileUploadDir = uploadDir;</span>
 				}
 <span class="fc" id="L941">			}</span>
 		}
@@ -1195,4 +1195,4 @@ public class ForumDB
 		//public static Map&lt;String, String&gt; getForumRanks(int userGroup)
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

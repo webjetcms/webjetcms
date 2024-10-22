@@ -19,16 +19,21 @@ import sk.iway.iwcm.system.cluster.ClusterRefresher;
  *@created      Date: 9.7.2010 13:14:18
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
+@SuppressWarnings("java:S6548")
 public class CronFacade
 {
-	private static final CronFacade instance = new CronFacade();
+	private static final CronFacade INSTANCE = new CronFacade();
 	private Scheduler schedulerCron;
 	private TaskSource source;
 	private volatile boolean running = false;
 
+	private CronFacade() {
+		//singleton
+	}
+
 	public static CronFacade getInstance()
 	{
-		return instance;
+		return INSTANCE;
 	}
 
 	/**
@@ -37,8 +42,8 @@ public class CronFacade
 	public static CronFacade getInstance(boolean restart)
 	{
 		if (restart)
-			instance.start();
-		return instance;
+			INSTANCE.start();
+		return INSTANCE;
 	}
 
 	public void setTaskSource(TaskSource source)
@@ -71,7 +76,7 @@ public class CronFacade
 				try
 				{
 					Class<?> clazz = task.receiveClazz();
-					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task.receiveArgs(),task.getAudit()));
+					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task.receiveArgs(),task.getAudit(), task.getId()));
 					Logger.debug(WebjetDatabaseTaskSource.class, String.format("Cron task started {%s}: %s %s, with pattern %s", task.getId(), clazz.getName(), task.getParams(), task.receiveCronPattern()));
 				}
 				catch (Exception e)
@@ -115,6 +120,6 @@ public class CronFacade
 	 */
 	public synchronized void runSimpleTaskOnce(CronTask task) throws ClassNotFoundException
 	{
-		new Thread(new RunnableWrapper(task.receiveClazz(), task.receiveArgs(), task.getAudit())).start();
+		new Thread(new RunnableWrapper(task.receiveClazz(), task.receiveArgs(), task.getAudit(), task.getId())).start();
 	}
 }

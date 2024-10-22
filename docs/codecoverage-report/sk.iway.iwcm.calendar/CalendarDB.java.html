@@ -62,12 +62,12 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private static String getParamAttribute(String name, HttpServletRequest request)
 	{
-<span class="nc" id="L65">		String ret = request.getParameter(name);</span>
-<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (ret == null)</span>
+<span class="fc" id="L65">		String ret = request.getParameter(name);</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (ret == null)</span>
 		{
-<span class="nc" id="L68">			ret = (String) request.getAttribute(name);</span>
+<span class="fc" id="L68">			ret = (String) request.getAttribute(name);</span>
 		}
-<span class="nc" id="L70">		return (ret);</span>
+<span class="fc" id="L70">		return (ret);</span>
 	}
 
 	/**
@@ -79,12 +79,12 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private static int getParamAttributeInt(String name, HttpServletRequest request)
 	{
-<span class="nc" id="L82">		String tmp = getParamAttribute(name, request);</span>
-<span class="nc" id="L83">		int i = -1;</span>
+<span class="fc" id="L82">		String tmp = getParamAttribute(name, request);</span>
+<span class="fc" id="L83">		int i = -1;</span>
 
 		try
 		{
-<span class="nc bnc" id="L87" title="All 2 branches missed.">			if (tmp != null)</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">			if (tmp != null)</span>
 			{
 <span class="nc" id="L89">				i = Integer.parseInt(tmp);</span>
 			}
@@ -92,8 +92,8 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L92">		catch (Exception ex)</span>
 		{
 <span class="nc" id="L94">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L95">		}</span>
-<span class="nc" id="L96">		return (i);</span>
+<span class="fc" id="L95">		}</span>
+<span class="fc" id="L96">		return (i);</span>
 	}
 
 	/**
@@ -104,31 +104,31 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public static List&lt;CalendarDetails&gt; getEvents(HttpServletRequest request)
 	{
-<span class="nc" id="L107">		List&lt;CalendarDetails&gt; events = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L108">		Connection db_conn = null;</span>
-<span class="nc" id="L109">		PreparedStatement ps = null;</span>
-<span class="nc" id="L110">		ResultSet rs = null;</span>
+<span class="fc" id="L107">		List&lt;CalendarDetails&gt; events = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L108">		Connection db_conn = null;</span>
+<span class="fc" id="L109">		PreparedStatement ps = null;</span>
+<span class="fc" id="L110">		ResultSet rs = null;</span>
 		try
 		{
 			//ziskaj udaje z db
-<span class="nc" id="L114">			db_conn = DBPool.getConnection(request);</span>
-<span class="nc" id="L115">			StringBuilder sql = new StringBuilder(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND date_to &gt;= ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
+<span class="fc" id="L114">			db_conn = DBPool.getConnection(request);</span>
+<span class="fc" id="L115">			StringBuilder sql = new StringBuilder(&quot;SELECT c.*, ct.name FROM calendar c, calendar_types ct WHERE c.type_id=ct.type_id AND date_to &gt;= ?&quot;+CloudToolsForCore.getDomainIdSqlWhere(true, &quot;c&quot;));</span>
 
-<span class="nc" id="L117">			long now = (new java.util.Date()).getTime();</span>
-<span class="nc" id="L118">			now = now - 86400000;</span>
-<span class="nc" id="L119">			long end = 0;</span>
+<span class="fc" id="L117">			long now = (new java.util.Date()).getTime();</span>
+<span class="fc" id="L118">			now = now - 86400000;</span>
+<span class="fc" id="L119">			long end = 0;</span>
 
-<span class="nc bnc" id="L121" title="All 2 branches missed.">			if (getParamAttribute(&quot;calAllEvents&quot;, request) != null)</span>
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">			if (getParamAttribute(&quot;calAllEvents&quot;, request) != null)</span>
 			{
 				//chce vsetky zaznamy uplne od zaciatku
-<span class="nc" id="L124">				now = 1000;</span>
+<span class="fc" id="L124">				now = 1000;</span>
 			}
-<span class="nc bnc" id="L126" title="All 2 branches missed.">			if (getParamAttribute(&quot;calStart&quot;, request) != null)</span>
+<span class="pc bpc" id="L126" title="1 of 2 branches missed.">			if (getParamAttribute(&quot;calStart&quot;, request) != null)</span>
 			{
 				//chce zaznamy od datumu
 <span class="nc" id="L129">				now = DB.getTimestamp(getParamAttribute(&quot;calStart&quot;, request), &quot;0:00&quot;, DBPool.getDBName(request));</span>
 			}
-<span class="nc bnc" id="L131" title="All 2 branches missed.">			if (getParamAttribute(&quot;calEnd&quot;, request) != null)</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">			if (getParamAttribute(&quot;calEnd&quot;, request) != null)</span>
 			{
 				//chce zaznamy od datumu
 <span class="nc" id="L134">				end = DB.getTimestamp(getParamAttribute(&quot;calEnd&quot;, request), &quot;23:59&quot;, DBPool.getDBName(request));</span>
@@ -136,89 +136,89 @@ import sk.iway.iwcm.users.UsersDB;
 			}
 
 			int i;
-<span class="nc" id="L139">			i = getParamAttributeInt(&quot;calTypeId&quot;, request);</span>
-<span class="nc bnc" id="L140" title="All 2 branches missed.">			if (i &gt; 0)</span>
+<span class="fc" id="L139">			i = getParamAttributeInt(&quot;calTypeId&quot;, request);</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">			if (i &gt; 0)</span>
 			{
 <span class="nc" id="L142">				sql.append(&quot; AND c.type_id = ?&quot;);</span>
 			}
-<span class="nc" id="L144">			String typNazvy = getParamAttribute(&quot;typyNazvy&quot;, request);</span>
-<span class="nc" id="L145">			StringBuilder typyInSQL = new StringBuilder(&quot; AND ct.name IN (&quot;);</span>
-<span class="nc" id="L146">			List&lt;String&gt; typyIn = null;</span>
-<span class="nc bnc" id="L147" title="All 2 branches missed.">			if (Tools.isNotEmpty(typNazvy))</span>
+<span class="fc" id="L144">			String typNazvy = getParamAttribute(&quot;typyNazvy&quot;, request);</span>
+<span class="fc" id="L145">			StringBuilder typyInSQL = new StringBuilder(&quot; AND ct.name IN (&quot;);</span>
+<span class="fc" id="L146">			List&lt;String&gt; typyIn = null;</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(typNazvy))</span>
 			{
-<span class="nc" id="L149">				StringTokenizer st = new StringTokenizer(typNazvy, &quot;,+&quot;);</span>
-<span class="nc bnc" id="L150" title="All 2 branches missed.">				while (st.hasMoreTokens())</span>
+<span class="fc" id="L149">				StringTokenizer st = new StringTokenizer(typNazvy, &quot;,+&quot;);</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">				while (st.hasMoreTokens())</span>
 				{
-<span class="nc" id="L152">					String nazov = DB.removeSlashes(st.nextToken());</span>
-<span class="nc bnc" id="L153" title="All 2 branches missed.">					if (Tools.isNotEmpty(nazov))</span>
+<span class="fc" id="L152">					String nazov = DB.removeSlashes(st.nextToken());</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">					if (Tools.isNotEmpty(nazov))</span>
 					{
-<span class="nc bnc" id="L155" title="All 2 branches missed.">						if (typyIn == null)</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">						if (typyIn == null)</span>
 						{
-<span class="nc" id="L157">							typyIn = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L158">							typyIn.add(nazov);</span>
-<span class="nc" id="L159">							typyInSQL.append(&quot;?&quot;);</span>
+<span class="fc" id="L157">							typyIn = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L158">							typyIn.add(nazov);</span>
+<span class="fc" id="L159">							typyInSQL.append(&quot;?&quot;);</span>
 						}
 						else
 						{
-<span class="nc" id="L163">							typyIn.add(nazov);	//pripravim si hodnoty do IN</span>
-<span class="nc" id="L164">							typyInSQL.append(&quot;,?&quot;);</span>
+<span class="fc" id="L163">							typyIn.add(nazov);	//pripravim si hodnoty do IN</span>
+<span class="fc" id="L164">							typyInSQL.append(&quot;,?&quot;);</span>
 						}
 					}
-<span class="nc" id="L167">				}</span>
-<span class="nc" id="L168">				typyInSQL.append(&quot;)&quot;);</span>
-<span class="nc bnc" id="L169" title="All 4 branches missed.">				if (typyIn!=null &amp;&amp; typyIn.size() &gt; 0)</span>
+<span class="fc" id="L167">				}</span>
+<span class="fc" id="L168">				typyInSQL.append(&quot;)&quot;);</span>
+<span class="pc bpc" id="L169" title="2 of 4 branches missed.">				if (typyIn!=null &amp;&amp; typyIn.size() &gt; 0)</span>
 				{
-<span class="nc" id="L171">					sql.append(typyInSQL);	//pridam IN SQL</span>
+<span class="fc" id="L171">					sql.append(typyInSQL);	//pridam IN SQL</span>
 				}
 			}
-<span class="nc bnc" id="L174" title="All 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
 			{
-<span class="nc" id="L176">				sql.append(&quot; AND approve = ?&quot;);</span>
+<span class="fc" id="L176">				sql.append(&quot; AND approve = ?&quot;);</span>
 			}
 
-<span class="nc bnc" id="L179" title="All 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
+<span class="pc bpc" id="L179" title="1 of 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
 			{
 <span class="nc" id="L181">				sql.append(&quot; AND suggest = ?&quot;);</span>
 			}
-<span class="nc" id="L183">			sql.append(&quot; ORDER BY date_from&quot;);</span>
-<span class="nc" id="L184">			Logger.debug(CalendarDB.class, &quot;sql=&quot;+sql.toString());</span>
-<span class="nc" id="L185">			int psIndex = 1;</span>
-<span class="nc" id="L186">			ps = db_conn.prepareStatement(sql.toString());</span>
-<span class="nc" id="L187">			ps.setTimestamp(psIndex++, new Timestamp(now));</span>
-<span class="nc bnc" id="L188" title="All 2 branches missed.">			if (end &gt; 0) ps.setTimestamp(psIndex++, new Timestamp(end));</span>
-<span class="nc" id="L189">			Logger.debug(CalendarDB.class, &quot;date_to: &quot; + new Timestamp(end));</span>
-<span class="nc bnc" id="L190" title="All 2 branches missed.">			if(i &gt; 0)</span>
+<span class="fc" id="L183">			sql.append(&quot; ORDER BY date_from&quot;);</span>
+<span class="fc" id="L184">			Logger.debug(CalendarDB.class, &quot;sql=&quot;+sql.toString());</span>
+<span class="fc" id="L185">			int psIndex = 1;</span>
+<span class="fc" id="L186">			ps = db_conn.prepareStatement(sql.toString());</span>
+<span class="fc" id="L187">			ps.setTimestamp(psIndex++, new Timestamp(now));</span>
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">			if (end &gt; 0) ps.setTimestamp(psIndex++, new Timestamp(end));</span>
+<span class="fc" id="L189">			Logger.debug(CalendarDB.class, &quot;date_to: &quot; + new Timestamp(end));</span>
+<span class="pc bpc" id="L190" title="1 of 2 branches missed.">			if(i &gt; 0)</span>
 			{
 <span class="nc" id="L192">				ps.setInt(psIndex++, i);</span>
 			}
-<span class="nc bnc" id="L194" title="All 4 branches missed.">			if (typyIn != null &amp;&amp; typyIn.size() &gt; 0)</span>
+<span class="pc bpc" id="L194" title="2 of 4 branches missed.">			if (typyIn != null &amp;&amp; typyIn.size() &gt; 0)</span>
 			{
-<span class="nc bnc" id="L196" title="All 2 branches missed.">				for(String s: typyIn)</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">				for(String s: typyIn)</span>
 				{
-<span class="nc" id="L198">					ps.setString(psIndex++, s);	//postupne nastavim hodnoty do IN</span>
-<span class="nc" id="L199">				}</span>
+<span class="fc" id="L198">					ps.setString(psIndex++, s);	//postupne nastavim hodnoty do IN</span>
+<span class="fc" id="L199">				}</span>
 			}
-<span class="nc bnc" id="L201" title="All 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">			if(request.getAttribute(&quot;showApprove&quot;) != null)</span>
 			{
-<span class="nc bnc" id="L203" title="All 2 branches missed.">				int showApprove = &quot;1&quot;.equals(getParamAttribute(&quot;showApprove&quot;, request)) ? 1 : 0;</span>
-<span class="nc" id="L204">				ps.setInt(psIndex++, showApprove);</span>
+<span class="pc bpc" id="L203" title="1 of 2 branches missed.">				int showApprove = &quot;1&quot;.equals(getParamAttribute(&quot;showApprove&quot;, request)) ? 1 : 0;</span>
+<span class="fc" id="L204">				ps.setInt(psIndex++, showApprove);</span>
 			}
-<span class="nc bnc" id="L206" title="All 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
+<span class="pc bpc" id="L206" title="1 of 2 branches missed.">			if(request.getAttribute(&quot;suggest&quot;) != null)</span>
 <span class="nc" id="L207">				ps.setBoolean(psIndex++, (Boolean)request.getAttribute(&quot;suggest&quot;));</span>
 			//if (Tools.isNotEmpty(typyIn)) ps.setString(psIndex++, typyIn);
-<span class="nc" id="L209">			rs = ps.executeQuery();</span>
+<span class="fc" id="L209">			rs = ps.executeQuery();</span>
 			CalendarDetails cal;
-<span class="nc bnc" id="L211" title="All 2 branches missed.">			while (rs.next())</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">			while (rs.next())</span>
 			{
-<span class="nc" id="L213">				cal = new CalendarDetails();</span>
-<span class="nc" id="L214">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
-<span class="nc" id="L215">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
-<span class="nc" id="L216">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
+<span class="fc" id="L213">				cal = new CalendarDetails();</span>
+<span class="fc" id="L214">				cal.setCalendarId(rs.getInt(&quot;calendar_id&quot;));</span>
+<span class="fc" id="L215">				cal.setTitle(DB.getDbString(rs, &quot;title&quot;));</span>
+<span class="fc" id="L216">				cal.setDescription(DB.getDbString(rs, &quot;description&quot;));</span>
 
 				try
 				{
 					//ak je tam len cislo, je to docId
-<span class="nc bnc" id="L221" title="All 4 branches missed.">					if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
+<span class="pc bpc" id="L221" title="1 of 4 branches missed.">					if (cal.getDescription().length() &gt; 0 &amp;&amp; cal.getDescription().length() &lt; 4)</span>
 					{
 <span class="nc" id="L223">						int docId = Integer.parseInt(cal.getDescription().trim());</span>
 <span class="nc bnc" id="L224" title="All 2 branches missed.">						if (docId &gt; 0)</span>
@@ -235,39 +235,39 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L235">				catch (Exception ex)</span>
 				{
 					//sk.iway.iwcm.Logger.error(ex);
-<span class="nc" id="L238">				}</span>
+<span class="fc" id="L238">				}</span>
 
-<span class="nc" id="L240">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
-<span class="nc" id="L241">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
-<span class="nc" id="L242">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
-<span class="nc" id="L243">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
-<span class="nc" id="L244">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
-<span class="nc" id="L245">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
-<span class="nc" id="L246">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
-<span class="nc" id="L247">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
-<span class="nc" id="L248">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
-<span class="nc" id="L249">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
-<span class="nc" id="L250">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
-<span class="nc" id="L251">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
-<span class="nc" id="L252">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
-<span class="nc" id="L253">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
-<span class="nc" id="L254">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
-<span class="nc" id="L255">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
-<span class="nc" id="L256">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
-<span class="nc" id="L257">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
-<span class="nc" id="L258">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
-<span class="nc" id="L259">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
-<span class="nc" id="L260">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
-<span class="nc" id="L261">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
-<span class="nc" id="L262">				events.add(cal);</span>
+<span class="fc" id="L240">				cal.setFrom(rs.getTimestamp(&quot;date_from&quot;));</span>
+<span class="fc" id="L241">				cal.setTo(rs.getTimestamp(&quot;date_to&quot;));</span>
+<span class="fc" id="L242">				cal.setTypeId(rs.getInt(&quot;type_id&quot;));</span>
+<span class="fc" id="L243">				cal.setType(DB.getDbString(rs, &quot;name&quot;));</span>
+<span class="fc" id="L244">				cal.setTimeRange(DB.getDbString(rs, &quot;time_range&quot;));</span>
+<span class="fc" id="L245">				cal.setArea(DB.getDbString(rs, &quot;area&quot;));</span>
+<span class="fc" id="L246">				cal.setCity(DB.getDbString(rs, &quot;city&quot;));</span>
+<span class="fc" id="L247">				cal.setAddress(DB.getDbString(rs, &quot;address&quot;));</span>
+<span class="fc" id="L248">				cal.setInfo1(DB.getDbString(rs, &quot;info_1&quot;));</span>
+<span class="fc" id="L249">				cal.setInfo2(DB.getDbString(rs, &quot;info_2&quot;));</span>
+<span class="fc" id="L250">				cal.setInfo3(DB.getDbString(rs, &quot;info_3&quot;));</span>
+<span class="fc" id="L251">				cal.setInfo4(DB.getDbString(rs, &quot;info_4&quot;));</span>
+<span class="fc" id="L252">				cal.setInfo5(DB.getDbString(rs, &quot;info_5&quot;));</span>
+<span class="fc" id="L253">				cal.setNotifyHoursBefore(rs.getInt(&quot;notify_hours_before&quot;));</span>
+<span class="fc" id="L254">				cal.setNotifyEmails(DB.getDbString(rs, &quot;notify_emails&quot;));</span>
+<span class="fc" id="L255">				cal.setNotifySender(DB.getDbString(rs, &quot;notify_sender&quot;));</span>
+<span class="fc" id="L256">				cal.setNotifyIntrotext(DB.getDbString(rs, &quot;notify_introtext&quot;));</span>
+<span class="fc" id="L257">				cal.setNotifySendSMS(rs.getBoolean(&quot;notify_sendsms&quot;));</span>
+<span class="fc" id="L258">				cal.setLng(DB.getDbString(rs, &quot;lng&quot;));</span>
+<span class="fc" id="L259">				cal.setCreatorId(rs.getInt(&quot;creator_id&quot;));</span>
+<span class="fc" id="L260">				cal.setApprove(rs.getInt(&quot;approve&quot;));</span>
+<span class="fc" id="L261">				cal.setSuggest(rs.getBoolean(&quot;suggest&quot;));</span>
+<span class="fc" id="L262">				events.add(cal);</span>
 			}
 
-<span class="nc" id="L265">			rs.close();</span>
-<span class="nc" id="L266">			ps.close();</span>
-<span class="nc" id="L267">			db_conn.close();</span>
-<span class="nc" id="L268">			rs = null;</span>
-<span class="nc" id="L269">			ps = null;</span>
-<span class="nc" id="L270">			db_conn = null;</span>
+<span class="fc" id="L265">			rs.close();</span>
+<span class="fc" id="L266">			ps.close();</span>
+<span class="fc" id="L267">			db_conn.close();</span>
+<span class="fc" id="L268">			rs = null;</span>
+<span class="fc" id="L269">			ps = null;</span>
+<span class="fc" id="L270">			db_conn = null;</span>
 		}
 <span class="nc" id="L272">		catch (Exception ex)</span>
 		{
@@ -277,20 +277,20 @@ import sk.iway.iwcm.users.UsersDB;
 		{
 			try
 			{
-<span class="nc bnc" id="L280" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">				if (rs != null)</span>
 <span class="nc" id="L281">					rs.close();</span>
-<span class="nc bnc" id="L282" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="pc bpc" id="L282" title="1 of 2 branches missed.">				if (ps != null)</span>
 <span class="nc" id="L283">					ps.close();</span>
-<span class="nc bnc" id="L284" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">				if (db_conn != null)</span>
 <span class="nc" id="L285">					db_conn.close();</span>
 			}
 <span class="nc" id="L287">			catch (Exception ex2)</span>
 			{
 <span class="nc" id="L289">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L290">			}</span>
+<span class="fc" id="L290">			}</span>
 		}
 
-<span class="nc" id="L293">		return (events);</span>
+<span class="fc" id="L293">		return (events);</span>
 	}
 
 	public static CalendarDetails getEvent(int calendarId, HttpServletRequest request)
@@ -771,38 +771,38 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	public static String getMeniny(String lng, int offset)
 	{
-<span class="nc" id="L774">		String name = &quot;&quot;;</span>
+<span class="fc" id="L774">		String name = &quot;&quot;;</span>
 
-<span class="nc" id="L776">		Connection db_conn = null;</span>
-<span class="nc" id="L777">		PreparedStatement ps = null;</span>
-<span class="nc" id="L778">		ResultSet rs = null;</span>
+<span class="fc" id="L776">		Connection db_conn = null;</span>
+<span class="fc" id="L777">		PreparedStatement ps = null;</span>
+<span class="fc" id="L778">		ResultSet rs = null;</span>
 		try
 		{
-<span class="nc" id="L781">			Calendar cal = Calendar.getInstance();</span>
-<span class="nc bnc" id="L782" title="All 2 branches missed.">			if (offset != 0)</span>
+<span class="fc" id="L781">			Calendar cal = Calendar.getInstance();</span>
+<span class="pc bpc" id="L782" title="1 of 2 branches missed.">			if (offset != 0)</span>
 			{
 <span class="nc" id="L784">				cal.add(Calendar.DAY_OF_YEAR, offset);</span>
 			}
 
 			//Logger.println(this,&quot;meniny: &quot; + cal.get(Calendar.DAY_OF_MONTH) + &quot;.&quot;+(cal.get(Calendar.MONTH) + 1)+&quot; [&quot;+lng);
 
-<span class="nc" id="L789">			db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L790">			ps = db_conn.prepareStatement(&quot;SELECT * FROM calendar_name_in_year WHERE lng=? AND day=? AND month=?&quot;);</span>
-<span class="nc" id="L791">			ps.setString(1, lng);</span>
-<span class="nc" id="L792">			ps.setInt(2, cal.get(Calendar.DAY_OF_MONTH));</span>
-<span class="nc" id="L793">			ps.setInt(3, cal.get(Calendar.MONTH) + 1);</span>
-<span class="nc" id="L794">			rs = ps.executeQuery();</span>
-<span class="nc bnc" id="L795" title="All 2 branches missed.">			if (rs.next())</span>
+<span class="fc" id="L789">			db_conn = DBPool.getConnection();</span>
+<span class="fc" id="L790">			ps = db_conn.prepareStatement(&quot;SELECT * FROM calendar_name_in_year WHERE lng=? AND day=? AND month=?&quot;);</span>
+<span class="fc" id="L791">			ps.setString(1, lng);</span>
+<span class="fc" id="L792">			ps.setInt(2, cal.get(Calendar.DAY_OF_MONTH));</span>
+<span class="fc" id="L793">			ps.setInt(3, cal.get(Calendar.MONTH) + 1);</span>
+<span class="fc" id="L794">			rs = ps.executeQuery();</span>
+<span class="pc bpc" id="L795" title="1 of 2 branches missed.">			if (rs.next())</span>
 			{
-<span class="nc" id="L797">				name = DB.getDbString(rs, &quot;name&quot;);</span>
+<span class="fc" id="L797">				name = DB.getDbString(rs, &quot;name&quot;);</span>
 			}
 
-<span class="nc" id="L800">			rs.close();</span>
-<span class="nc" id="L801">			ps.close();</span>
-<span class="nc" id="L802">			db_conn.close();</span>
-<span class="nc" id="L803">			rs = null;</span>
-<span class="nc" id="L804">			ps = null;</span>
-<span class="nc" id="L805">			db_conn = null;</span>
+<span class="fc" id="L800">			rs.close();</span>
+<span class="fc" id="L801">			ps.close();</span>
+<span class="fc" id="L802">			db_conn.close();</span>
+<span class="fc" id="L803">			rs = null;</span>
+<span class="fc" id="L804">			ps = null;</span>
+<span class="fc" id="L805">			db_conn = null;</span>
 		}
 <span class="nc" id="L807">		catch (Exception ex)</span>
 		{
@@ -812,20 +812,20 @@ import sk.iway.iwcm.users.UsersDB;
 		{
 			try
 			{
-<span class="nc bnc" id="L815" title="All 2 branches missed.">				if (db_conn != null)</span>
+<span class="pc bpc" id="L815" title="1 of 2 branches missed.">				if (db_conn != null)</span>
 <span class="nc" id="L816">					db_conn.close();</span>
-<span class="nc bnc" id="L817" title="All 2 branches missed.">				if (rs != null)</span>
+<span class="pc bpc" id="L817" title="1 of 2 branches missed.">				if (rs != null)</span>
 <span class="nc" id="L818">					rs.close();</span>
-<span class="nc bnc" id="L819" title="All 2 branches missed.">				if (ps != null)</span>
+<span class="pc bpc" id="L819" title="1 of 2 branches missed.">				if (ps != null)</span>
 <span class="nc" id="L820">					ps.close();</span>
 			}
 <span class="nc" id="L822">			catch (Exception ex2)</span>
 			{
 <span class="nc" id="L824">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="nc" id="L825">			}</span>
+<span class="fc" id="L825">			}</span>
 		}
 
-<span class="nc" id="L828">		return(name);</span>
+<span class="fc" id="L828">		return(name);</span>
 	}
 
 	/**
@@ -2673,4 +2673,4 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="nc" id="L2673">		return true;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

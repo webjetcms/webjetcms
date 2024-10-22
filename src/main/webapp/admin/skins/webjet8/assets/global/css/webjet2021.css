@@ -30,7 +30,7 @@ body:not(.page-builder) div.input-group span.input-group-btn .btn {
     border-top-right-radius: 6px !important;
     border-bottom-right-radius: 6px !important;
     vertical-align: middle;
-    padding-top: 8px;
+    padding-top: 0px;
     background-color: white;
     color: #13151B !important;
     border-left-width: 0px;
@@ -294,6 +294,10 @@ div.menu-wrapper a:hover, div.menu-wrapper a:focus {
 body:not(.page-builder) .form-control, body:not(.page-builder) .btn, body:not(.page-builder) div.exportlinks a, body:not(.page-builder) input.inputtext, body:not(.page-builder) select {
     border-radius: 6px !important;
 }
+button.btn.template-cancel {
+    border-top-right-radius: 0px !important;
+    border-bottom-right-radius: 0px !important;
+}
 .input-group>.input-group-append>.btn {
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
@@ -350,9 +354,11 @@ table.sort_table tbody tr:hover td {
 }
 .table.table-wj tr.odd td, table.sort_table tr.odd td {
     background: none !important;
+    background-color: white !important;
 }
 .table.table-wj tr.even td, table.sort_table tr.even td {
     background: none !important;
+    background-color: white !important;
 }
 
 span.pagelinks strong, span.pagelinks a {
@@ -1017,12 +1023,12 @@ a.cke_dialog_ui_button span.cke_dialog_ui_button {
 }
 
 .fab {
-    font-family: 'Font Awesome 6 Pro';
+    font-family: "tabler-icons";
     font-weight: 400;
 }
 
 .dropdown-submenu > a:after {
-    font-family: 'Font Awesome 6 Pro';
+    font-family: "tabler-icons";
 }
 
 .tab-pane .tab-page .row {

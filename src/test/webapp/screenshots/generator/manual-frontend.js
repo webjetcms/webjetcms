@@ -19,14 +19,17 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
         I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=383");
     } else if("en" === confLng) {
         I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=439");
+    } else if("cs" === confLng) {
+        I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=383");
     }
+
 
     DT.waitForLoader();
     DTE.cancel();
 
     //korenovy priecinok
     I.jstreeClick("Slovensky");
-    I.click("i.fa-pencil", "div.tree-col");
+    I.click(".ti.ti-pencil", "div.tree-col");
     DTE.waitForEditor("groups-datatable");
     Document.screenshot("/frontend/examples/template-bare/group-editor.png");
     I.click("#pills-dt-groups-datatable-template-tab");
@@ -91,6 +94,9 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
         I.amOnPage("/sk/?NO_WJTOOLBAR=true");
     } else if("en" === confLng) {
         I.amOnPage("/en/bare-en.html?NO_WJTOOLBAR=true");
+    } else if("cs" === confLng) {
+        //TODO prepare CS version
+        I.amOnPage("/sk/?NO_WJTOOLBAR=true");
     }
     Document.screenshot("/frontend/examples/template-bare/barepage.png", 1000, 1190);
 
@@ -191,6 +197,8 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
         I.amOnPage("/sk/?NO_WJTOOLBAR=true");
     } else if("en" === confLng) {
         I.amOnPage("/sk/?NO_WJTOOLBAR=true&language=en");
+    } else if("cs" === confLng) {
+        I.amOnPage("/sk/?NO_WJTOOLBAR=true");
     }
     
     I.pressKey("ArrowDown");

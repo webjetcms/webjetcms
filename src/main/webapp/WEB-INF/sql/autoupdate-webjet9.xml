@@ -1189,5 +1189,199 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.04.2024</string></void>
+                <void property="desc"><string>Pridanie stlpca id do dirprop tabulky</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE dirprop DROP PRIMARY KEY;
+                        ALTER TABLE dirprop ADD id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE dirprop DROP CONSTRAINT {CONSTRAIN:PK};
+                        ALTER TABLE dirprop ADD id INT IDENTITY(1,1) PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE dirprop DROP primary key;
+                        CREATE SEQUENCE S_dirprop START WITH 1;
+                        CREATE TRIGGER T_dirprop BEFORE INSERT ON dirprop
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_dirprop.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                        ALTER TABLE dirprop ADD id INT DEFAULT S_dirprop.NEXTVAL NOT NULL;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE dirprop DROP CONSTRAINT IF EXISTS idx_80884_primary RESTRICT;
+                        ALTER TABLE dirprop DROP CONSTRAINT IF EXISTS idx_51567_primary RESTRICT;
+                        CREATE SEQUENCE S_dirprop START WITH 1;
+                        ALTER TABLE dirprop ADD id INT DEFAULT NEXTVAL('S_dirprop') NOT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>20.06.2024</string></void>
+                <void property="desc"><string>reservation - pridanie stĺpca price</string></void>
+                <void property="mysql"><string>ALTER TABLE reservation ADD price decimal(10,2)</string></void>
+                <void property="mssql"><string>ALTER TABLE reservation ADD price decimal(10,2)</string></void>
+                <void property="oracle"><string>ALTER TABLE reservation ADD price decimal(10,2)</string></void>
+                <void property="pgsql"><string>ALTER TABLE reservation ADD price NUMERIC(10, 2)</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>18.6.2024</string></void>
+                <void property="desc"><string>cookies - update domain_id for not multidomain webs</string></void>
+                <void property="mysql"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+                <void property="mssql"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+                <void property="oracle"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+                <void property="pgsql"><string>UPDATE cookies SET domain_id=1 WHERE domain_id=0</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>30.07.2024</string></void>
+                <void property="desc"><string>file_history - pridanie domain_id</string></void>
+                <void property="mysql"><string>ALTER TABLE file_history ADD domain_id INT(11) DEFAULT 1 NOT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE file_history ADD domain_id int DEFAULT 1 NOT NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE file_history ADD domain_id INT DEFAULT 1 NOT NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE file_history ADD domain_id INT DEFAULT 1 NOT NULL</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>7.8.2024</string></void>
+                <void property="desc"><string>pgsql - groups_scheduler fixes</string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE groups_scheduler ALTER COLUMN show_in_navbar TYPE INTEGER USING show_in_navbar::integer;
+                    ALTER TABLE groups_scheduler ALTER COLUMN show_in_sitemap TYPE INTEGER USING show_in_sitemap::integer;
+                    ALTER TABLE groups_scheduler ALTER COLUMN logged_show_in_navbar TYPE INTEGER USING logged_show_in_navbar::integer;
+                    ALTER TABLE groups_scheduler ALTER COLUMN logged_show_in_sitemap TYPE INTEGER USING logged_show_in_sitemap::integer;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>29.07.2024</string></void>
+                <void property="desc"><string>Nastav stlpec name v tabuľke enumeration_type ako required-pgsql</string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE enumeration_type ALTER COLUMN name TYPE VARCHAR(255);
+                    ALTER TABLE enumeration_type ALTER COLUMN name SET NOT NULL;
+                </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>29.07.2024</string></void>
+                <void property="desc"><string>Nastav stlpec name v tabuľke enumeration_type ako required.</string></void>
+                <void property="mysql"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR(255) NOT NULL;</string></void>
+                <void property="mssql"><string>ALTER TABLE enumeration_type ALTER COLUMN name NVARCHAR(255) NOT NULL;</string></void>
+                <void property="oracle"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR2(255) NOT NULL;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>23.07.2024</string></void>
+                <void property="desc"><string>Pridanie boolean stlpca notify_page_author do tabulky forum.</string></void>
+                <void property="mysql"><string>ALTER TABLE forum ADD notify_page_author tinyint(1) NULL DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE forum ADD notify_page_author INT NULL DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE forum ADD notify_page_author SMALLINT NULL DEFAULT 0;</string></void>
+                <void property="pgsql"><string>ALTER TABLE forum ADD notify_page_author BOOLEAN NULL DEFAULT FALSE;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>07.08.2024</string></void>
+                <void property="desc"><string>reservation - pridanie stlpca user_id</string></void>
+                <void property="mysql"><string>ALTER TABLE reservation ADD user_id INT(11) DEFAULT -1 NOT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE reservation ADD user_id int DEFAULT -1 NOT NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE reservation ADD user_id INT DEFAULT -1 NOT NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE reservation ADD user_id INT DEFAULT -1 NOT NULL</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>07.08.2024</string></void>
+                <void property="desc"><string>user_groups - pridanie stlpca price_discount</string></void>
+                <void property="mysql"><string>ALTER TABLE user_groups ADD price_discount INT(11) DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE user_groups ADD price_discount int DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE user_groups ADD price_discount INT DEFAULT 0</string></void>
+                <void property="pgsql"><string>ALTER TABLE user_groups ADD price_discount INT DEFAULT 0</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>sivan</string></void>
+             <void property="date"><string>19.09.2024</string></void>
+             <void property="desc"><string>gallery - zmena typu stlpca author</string></void>
+             <void property="mysql"><string>ALTER TABLE gallery MODIFY author TEXT;</string></void>
+             <void property="mssql"><string>ALTER TABLE gallery ALTER COLUMN author NTEXT;</string></void>
+             <void property="oracle">
+                <string>
+                    ALTER TABLE gallery ADD (author2 CLOB);
+                    UPDATE gallery SET author2=author;
+                    ALTER TABLE gallery DROP COLUMN author;
+                    ALTER TABLE gallery RENAME COLUMN author2 TO author;
+                </string>
+             </void>
+             <void property="pgsql"><string>ALTER TABLE gallery ALTER COLUMN author TYPE TEXT;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+             <void property="author"><string>lbalat</string></void>
+             <void property="date"><string>18.10.2024</string></void>
+             <void property="desc"><string>adminlog_notify - zmena typu stlpca text</string></void>
+             <void property="mysql"><string>ALTER TABLE adminlog_notify MODIFY text TEXT;</string></void>
+             <void property="mssql"><string>ALTER TABLE adminlog_notify ALTER COLUMN text NTEXT;</string></void>
+             <void property="oracle">
+                <string>
+                    ALTER TABLE adminlog_notify ADD (text2 CLOB);
+                    UPDATE adminlog_notify SET text2=text;
+                    ALTER TABLE adminlog_notify DROP COLUMN text;
+                    ALTER TABLE adminlog_notify RENAME COLUMN text2 TO text;
+                </string>
+             </void>
+             <void property="pgsql"><string>ALTER TABLE adminlog_notify ALTER COLUMN text TYPE TEXT;</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

@@ -736,6 +736,11 @@ public class InitServlet extends HttpServlet
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringRepository.class");
 		files.add("/WEB-INF/classes/sk/iway/iwcm/components/monitoring/MonitoringRestController.class");
 
+		files.add("/WEB-INF/classes/sk/iway/iwcm/system/StrutsRedirectServlet.class");
+
+		files.add("/admin/elFinder/js/i18n/elfinder.cs.js.jsp");
+		files.add("/admin/elFinder/js/i18n/elfinder.sk.js.jsp");
+
 		for (String file : files)
 		{
 			File f = new File(sc.getRealPath(file));

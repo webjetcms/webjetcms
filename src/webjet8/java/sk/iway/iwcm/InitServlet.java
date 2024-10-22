@@ -10,7 +10,6 @@ import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -20,12 +19,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
-import javax.sql.DataSource;
-
-import org.apache.commons.dbcp.ConfigurableDataSource;
 
 import sk.iway.iwcm.components.crypto.Rijndael;
 import sk.iway.iwcm.dmail.Sender;
@@ -68,7 +65,7 @@ public class InitServlet extends HttpServlet
 	 */
 	private static final long serialVersionUID = 3175770407979840865L;
 
-	private static String actualVersion = "2024.18.{minor.number} {build.date}";
+	private static String actualVersion = "{major.number}.{minor.number} {build.date}";
 
 	private static final int DOMAIN_LEN = 10;
 
@@ -83,7 +80,7 @@ public class InitServlet extends HttpServlet
 
 	private static final Date SERVER_START_DATETIME = new Date();
 
-	private transient ClusterRefresher clusterRefresher = null;
+	private static transient ClusterRefresher clusterRefresher = null;
 
 	private static String contextDbName = null;
 
@@ -95,30 +92,42 @@ public class InitServlet extends HttpServlet
 	@Override
 	public void init() throws ServletException
 	{
+		//not used anymore, initialized from spring on start
+		if (isWebjetInitialized()) {
+			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
+		}
+	}
+
+
+	public static boolean initializeWebJET(ServletContext servletContext) {
 		DebugTimer dt = new DebugTimer("InitServlet.init");
 
-		Logger.debug(getClass(),"init start");
-		setContextDbName(getServletContext().getInitParameter("webjetDbname"));
-		Logger.debug(getClass(),"contextDbName="+contextDbName);
+		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
+		Constants.setServletContext(servletContext);
+
+		Logger.debug(InitServlet.class,"init start");
+		setContextDbName(servletContext.getInitParameter("webjetDbname"));
+		Logger.debug(InitServlet.class,"contextDbName="+contextDbName);
 		Constants.clearValues();
 		//inicializuj casti pre nove verzie WebJETu
 		ConstantsV9.clearValuesWebJet9();
 
-		String dbName = getInitParameter("dbName");
+		String dbName = getInitParameter("dbName", null, servletContext);
 		//Constants.addDomains(dbName, domains);
 
 		if (dbName == null || dbName.length() < 1)
 		{
 			dbName = "iwcm";
 		}
-		Logger.println(this, "dbName="+dbName);
+		Logger.println(InitServlet.class, "dbName="+dbName);
 
-		Logger.println(this, "-----------------------------------------------");
-		Logger.println(this, "WebJET initializing, root: " + getServletContext().getRealPath("/"));
-		Logger.println(this, "");
+		Logger.println(InitServlet.class, "-----------------------------------------------");
+		Logger.println(InitServlet.class, "WebJET initializing, root: " + servletContext.getRealPath("/"));
+		Logger.println(InitServlet.class, "");
 
 		int days_remaining = 0;
 		setLicenseId(-1);
+		long licenseExpiryDate = 0;
 		String modulesEnableList = null;
 
 		//automaticke nastavenie JarPackaging ak existuje JAR subor (aby sa dala DB pouzivat aj pri standardnom vyvoji vo WJ)
@@ -128,19 +137,20 @@ public class InitServlet extends HttpServlet
 		try
 		{
 			//toto potrebujeme nastavit pred DB inicializaciou
-			String mariaDbDefaultEngine = getInitParameter("mariaDbDefaultEngine", null);
+			String mariaDbDefaultEngine = getInitParameter("mariaDbDefaultEngine", null, servletContext);
 			if (Tools.isNotEmpty(mariaDbDefaultEngine)) Constants.setString("mariaDbDefaultEngine", mariaDbDefaultEngine);
 
-			Logger.println(this,"Checking database connection: ");
+			Logger.println(InitServlet.class,"Checking database connection: ");
 			db_conn = DBPool.getConnection(dbName);
 			if (db_conn == null)
 			{
-				Logger.println(this,"   Database connection: [FAILED]");
-				Logger.println(this,"ERROR: Server halted (Database connection failed).");
-				return;
+				Logger.println(InitServlet.class,"   Database connection: [FAILED]");
+				Logger.println(InitServlet.class,"ERROR: Server halted (Database connection failed).");
+				Logger.println(InitServlet.class,"Open http://localhost/wjerrorpages/setup/setup to setup WebJET");
+				return false;
 			}
 
-			Logger.println(this,"   Database connection: [OK]");
+			Logger.println(InitServlet.class,"   Database connection: [OK]");
 
 			//String serverType = getInitParameter("serverType", db_conn);
 
@@ -152,16 +162,16 @@ public class InitServlet extends HttpServlet
 			try
 			{
 				//nastavenie proxy
-				String proxyHost = getInitParameter("proxyHost", databaseValues);
+				String proxyHost = getInitParameter("proxyHost", databaseValues, servletContext);
 
 				if (proxyHost != null && proxyHost.length() > 1)
 				{
-					int proxyPort = Tools.getIntValue(getInitParameter("proxyPort", databaseValues), 0);
-					String proxyUser = getInitParameter("proxyUser", databaseValues);
-					String proxyPassword = getInitParameter("proxyPassword", databaseValues);
-					String proxyHostsException = getInitParameter("proxyHostsException", databaseValues);
-					String proxyHostHttps = getInitParameter("proxyHostHttps", databaseValues);
-					int proxyPortHttps = Tools.getIntValue(getInitParameter("proxyPortHttps", databaseValues), 0);
+					int proxyPort = Tools.getIntValue(getInitParameter("proxyPort", databaseValues, servletContext), 0);
+					String proxyUser = getInitParameter("proxyUser", databaseValues, servletContext);
+					String proxyPassword = getInitParameter("proxyPassword", databaseValues, servletContext);
+					String proxyHostsException = getInitParameter("proxyHostsException", databaseValues, servletContext);
+					String proxyHostHttps = getInitParameter("proxyHostHttps", databaseValues, servletContext);
+					int proxyPortHttps = Tools.getIntValue(getInitParameter("proxyPortHttps", databaseValues, servletContext), 0);
 
 					//ak mame prazdne pouzi rovnake ako pre http, ak chceme vypnut httpS proxy treba v konfigu nastavit host na X a port na 1, vtedy sa nepouzije
 					if (Tools.isEmpty(proxyHostHttps)) proxyHostHttps = proxyHost;
@@ -179,17 +189,17 @@ public class InitServlet extends HttpServlet
 			try
 			{
 				if (databaseValues.size() < 1) {
-					Logger.println(this,"ERROR: not configured");
+					Logger.println(InitServlet.class,"ERROR: not configured");
 					webjetConfigured = false; //NOSONAR
 					throw new Exception("Not configured");
 				}
 				webjetConfigured = true; //NOSONAR
 
-				String license = getInitParameter("license", databaseValues);
+				String license = getInitParameter("license", databaseValues, servletContext);
 
 				if (license == null || license.length() < 10)
 				{
-					Logger.println(this,"ERROR: missing license");
+					Logger.println(InitServlet.class,"ERROR: missing license");
 					throw new Exception("Missing license");
 				}
 
@@ -218,16 +228,16 @@ public class InitServlet extends HttpServlet
 					}
 					if (pos < 1 || len < 1)
 					{
-						Logger.println(this,"ERROR: wrong license");
+						Logger.println(InitServlet.class,"ERROR: wrong license");
 						throw new Exception();
 					}
 					//ziskaj podstring
 					StringBuilder licData = new StringBuilder(license.substring(pos+2, pos+len+2));
-					//Logger.println(this,"licData="+licData);
+					//Logger.println(InitServlet.class,"licData="+licData);
 
 					//uprav license
 					license = license.substring(2, pos+2) + license.substring(pos+len+2);
-					//Logger.println(this,"license="+license);
+					//Logger.println(InitServlet.class,"license="+license);
 
 					licData.append("                               ");
 					if (licData.charAt(0)=='0') Constants.setString("wjVersion", "B");
@@ -243,9 +253,9 @@ public class InitServlet extends HttpServlet
 				}
 
 				//dekoduj licenciu
-				//Logger.println(this,"---->"+license);
+				//Logger.println(InitServlet.class,"---->"+license);
 				String decoded = decrypt(license);
-				//Logger.println(this,"====>"+decoded);
+				//Logger.println(InitServlet.class,"====>"+decoded);
 				String[] domainDecoded = new String[1];
 				domainDecoded[0] = decoded.substring(0, DOMAIN_LEN);
 
@@ -263,7 +273,7 @@ public class InitServlet extends HttpServlet
 				String s_month = s_date.substring(0, 1);
 				String s_year = "20" + s_date.substring(1);
 
-				//Logger.println(this,"m="+s_month+" y="+s_year+" decoded="+decoded);
+				//Logger.println(InitServlet.class,"m="+s_month+" y="+s_year+" decoded="+decoded);
 
 				int month;
 				if (s_month.compareTo("A") == 0)
@@ -299,7 +309,9 @@ public class InitServlet extends HttpServlet
 				//InitServlet.calendarValidUntil = cal;
 
 				SimpleDateFormat formatter = new SimpleDateFormat(Constants.getString("dateTimeFormat"));
-				Logger.println(this,"License is valid until: " + formatter.format(cal.getTime()));
+				Logger.println(InitServlet.class,"License is valid until: " + formatter.format(cal.getTime()));
+
+				licenseExpiryDate = cal.getTimeInMillis();
 
 				long l_license = cal.getTime().getTime();
 
@@ -307,16 +319,16 @@ public class InitServlet extends HttpServlet
 
 				if (diff < 0)
 				{
-					Logger.println(this,"ERROR: License is out of date, please contact\n  InterWay (www.interway.sk)\n  for new license.");
-					return;
+					Logger.println(InitServlet.class,"ERROR: License is out of date, please contact\n  InterWay (www.interway.sk)\n  for new license.");
+					return false;
 				}
 
 				days_remaining = (int) (diff / 86400000L);
-				Logger.println(this,"Remaining: " + days_remaining + " days");
+				Logger.println(InitServlet.class,"Remaining: " + days_remaining + " days");
 
 				if (days_remaining < 29)
 				{
-					Logger.println(this,"License will expire soon, please contact\n  InterWay (www.interway.sk)\n  for new license.");
+					Logger.println(InitServlet.class,"License will expire soon, please contact\n  InterWay (www.interway.sk)\n  for new license.");
 				}
 
 				String sLicId = decoded.substring(DOMAIN_LEN + 3);
@@ -340,8 +352,8 @@ public class InitServlet extends HttpServlet
 				boolean connectSuccess = false;
 				try
 				{
-					Logger.println(this,"Verifying license, please wait...");
-					String pDocRoot = URLEncoder.encode(getServletContext().getRealPath("/")+";"+dbName+";"+getInitParameter("installName", databaseValues), "windows-1250");
+					Logger.println(InitServlet.class,"Verifying license, please wait...");
+					String pDocRoot = URLEncoder.encode(servletContext.getRealPath("/")+";"+dbName+";"+getInitParameter("installName", databaseValues, servletContext), "windows-1250");
 					String urlStr = "http://license.interway.sk/verify.do?id=" + num + "&sdt=" + l_now + "&docRoot=" + pDocRoot;
 					//System.out.println(urlStr);
 					URL url = new URL(urlStr);
@@ -405,19 +417,19 @@ public class InitServlet extends HttpServlet
 
 					if (sum != serverChalenge)
 					{
-						Logger.println(this,"ERROR: server challenge different!");
+						Logger.println(InitServlet.class,"ERROR: server challenge different!");
 						throw new Exception();
 					}
 
 					if (!serverDomain.endsWith(InitServlet.domain[0]))
 					{
-						Logger.println(this,"ERROR: invalid domain!");
+						Logger.println(InitServlet.class,"ERROR: invalid domain!");
 						throw new Exception();
 					}
 
 					if (serverValid == false)
 					{
-						Logger.println(this,"ERROR: license is invalid");
+						Logger.println(InitServlet.class,"ERROR: license is invalid");
 						throw new Exception();
 					}
 				}
@@ -426,18 +438,26 @@ public class InitServlet extends HttpServlet
 				InitServlet.setValid(true);
 
 				//nacitaj dalsie licencie, ak existuju
-				String licenseDomains = getInitParameter("licenseDomains", databaseValues);
+				String licenseDomains = getInitParameter("licenseDomains", databaseValues, servletContext);
 				if (Tools.isNotEmpty(licenseDomains))
 				{
 					List<String> domainList = new ArrayList<>();
 					domainList.add(domainDecoded[0]);
-					String[] licenseDomainsArr = Tools.getTokens(licenseDomains, ",\n");
-					for (String domainKey : licenseDomainsArr)
+					String[] licenseDomainsArr = Tools.getTokens(licenseDomains, ",\n", true);
+					for (String row : licenseDomainsArr)
 					{
-						if (domainKey.indexOf(":")>0) domainKey = domainKey.substring(domainKey.indexOf(":")+1); //NOSONAR
-						//System.out.println("domainKey="+domainKey);
-						decoded = decrypt(domainKey);
-						domainList.add(decoded);
+						try
+						{
+							String domainKey = row;
+							if (domainKey.indexOf(":")>0) domainKey = domainKey.substring(domainKey.indexOf(":")+1); //NOSONAR
+							if (Tools.isNotEmpty(domainKey))
+							{
+								decoded = decrypt(domainKey);
+								if (Tools.isNotEmpty(decoded)) domainList.add(decoded);
+							}
+						} catch (Exception ex) {
+							sk.iway.iwcm.Logger.error(InitServlet.class, "ERROR decoding license "+row+": "+ex.getMessage());
+						}
 					}
 					domainDecoded = domainList.toArray(new String[0]);
 					setDomain(domainDecoded);
@@ -445,7 +465,7 @@ public class InitServlet extends HttpServlet
 
 				for (i = 0; i<InitServlet.domain.length; i++)
 				{
-					Logger.println(this, "License domain: " + InitServlet.domain[i]);
+					Logger.println(InitServlet.class, "License domain: " + InitServlet.domain[i]);
 				}
 			}
 			catch (Exception ex)
@@ -455,41 +475,43 @@ public class InitServlet extends HttpServlet
 					Constants.setString("wjVersion", "O");
 					InitServlet.setValid(true);
 
-					Logger.println(this,"License: OpenSource/Community");
+					Logger.println(InitServlet.class,"License: OpenSource/Community");
 
 					String[] domainDecoded = new String[1];
 					domainDecoded[0] = "";
 					setDomain(domainDecoded);
 				} else if ("Not configured".equals(ex.getMessage())) {
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					Logger.println(this,"ERROR: Server not configured.");
-					return;
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"ERROR: Server not configured.");
+					Logger.println(InitServlet.class,"Open http://localhost/wjerrorpages/setup/setup to setup WebJET");
+					return false;
 				} else {
 					sk.iway.iwcm.Logger.error(ex);
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					Logger.println(this,"ERROR: Server halted (license is not valid).");
-					return;
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"ERROR: Server halted (license is not valid).");
+					Logger.println(InitServlet.class,"Update license on http://localhost/wjerrorpages/setup/license");
+					return false;
 				}
 			}
 
-			String installName = getInitParameter("installName", databaseValues);
+			String installName = getInitParameter("installName", databaseValues, servletContext);
 			if (installName == null || installName.trim().length() < 1)
 			{
 				try
 				{
-					String path = getServletContext().getRealPath("/");
+					String path = servletContext.getRealPath("/");
 					if (path != null)
 					{
 						File f = new File(path);
@@ -504,24 +526,28 @@ public class InitServlet extends HttpServlet
 				{
 					sk.iway.iwcm.Logger.error(ex);
 				}
-				Logger.println(this,"guesing install name: "+installName);
+				Logger.println(InitServlet.class,"guesing install name: "+installName);
 			}
 
 			Constants.setInstallName(installName);
 			Logger.setInstallName(installName);
 
+			if ("O".equals(Constants.getString("wjVersion"))==false) {
+				Constants.setString("amchartLicense", ConfDB.tryDecrypt("encr"+"ypted:f4a06"+"45be29a4d976"+"9f5f8683d106619"));
+			}
+
 			dt.diff("Before loadConstants");
-			loadConstants(databaseValues);
+			loadConstants(databaseValues, servletContext);
 			dt.diff("After loadConstants");
 
-			String clusterMyNodeName = getInitParameter("clusterMyNodeName");
+			String clusterMyNodeName = getInitParameter("clusterMyNodeName", null, servletContext);
 			int webjetNodeId = Tools.getIntValue(System.getProperty("webjetNodeId"), -1);
 			if (webjetNodeId==-1) webjetNodeId = Tools.getIntValue(System.getenv("webjetNodeId"), -1);
-			if (webjetNodeId==-1) webjetNodeId = Tools.getIntValue(getInitParameter("webjetNodeId", null),-1);
+			if (webjetNodeId==-1) webjetNodeId = Tools.getIntValue(getInitParameter("webjetNodeId", null, servletContext),-1);
 			if (Tools.isEmpty(clusterMyNodeName) && webjetNodeId>=0)
 			{
 				clusterMyNodeName = "node"+webjetNodeId;
-				Logger.println(this,"INIT: pkeyGenOffset="+webjetNodeId);
+				Logger.println(InitServlet.class,"INIT: pkeyGenOffset="+webjetNodeId);
 				Constants.setInt("pkeyGenOffset", webjetNodeId);
 			}
 			//v dockeri v rezime auto pouzijeme hostname ako nodeId
@@ -554,13 +580,13 @@ public class InitServlet extends HttpServlet
 			}
 			if (Tools.isNotEmpty(clusterMyNodeName))
 			{
-				Logger.println(this,"INIT: clusterMyNodeName="+clusterMyNodeName);
+				Logger.println(InitServlet.class,"INIT: clusterMyNodeName="+clusterMyNodeName);
 				Constants.setString("clusterMyNodeName", clusterMyNodeName);
 				ClusterDB.cleanup();
 			}
 			else Constants.setString("clusterMyNodeName", "");
 
-			String clusterMyNodeType = getInitParameter("clusterMyNodeType");
+			String clusterMyNodeType = getInitParameter("clusterMyNodeType", null, servletContext);
 			if (Tools.isEmpty(clusterMyNodeType) && "public".equals(System.getProperty("webjetNodeType")))
 			{
 				clusterMyNodeType = "public";
@@ -570,24 +596,24 @@ public class InitServlet extends HttpServlet
 
 			if (Tools.isNotEmpty(clusterMyNodeType))
 			{
-				Logger.println(this,"INIT: clusterMyNodeType="+clusterMyNodeType);
+				Logger.println(InitServlet.class,"INIT: clusterMyNodeType="+clusterMyNodeType);
 				Constants.setString("clusterMyNodeType", clusterMyNodeType);
 			}
 			else Constants.setString("clusterMyNodeType", "full");
 
 			//aby sme v clustri mohli mat admin cast za NTLM autorizaciou
-			String NTLMDomainController = getInitParameter("NTLMDomainController");
+			String NTLMDomainController = getInitParameter("NTLMDomainController", null, servletContext);
 			if (Tools.isNotEmpty(NTLMDomainController))
 			{
-				Logger.println(this,"INIT: NTLMDomainController="+NTLMDomainController);
+				Logger.println(InitServlet.class,"INIT: NTLMDomainController="+NTLMDomainController);
 				Constants.setString("NTLMDomainController", NTLMDomainController);
 			}
 
 			//v clustri mozeme mat tuto hodnotu pre niektore nody rozdielnu
-			String baseHrefLoopback = getInitParameter("baseHrefLoopback");
+			String baseHrefLoopback = getInitParameter("baseHrefLoopback", null, servletContext);
 			if (Tools.isNotEmpty(baseHrefLoopback))
 			{
-				Logger.println(this,"INIT: baseHrefLoopback="+baseHrefLoopback);
+				Logger.println(InitServlet.class,"INIT: baseHrefLoopback="+baseHrefLoopback);
 				Constants.setString("baseHrefLoopback", baseHrefLoopback);
 			}
 
@@ -595,11 +621,11 @@ public class InitServlet extends HttpServlet
 			String luceneIndexDir = System.getProperty("webjetLuceneIndexDir");
 			if (Tools.isNotEmpty(luceneIndexDir))
 			{
-				Logger.println(this,"INIT: luceneIndexDir="+luceneIndexDir);
+				Logger.println(InitServlet.class,"INIT: luceneIndexDir="+luceneIndexDir);
 				Constants.setString("luceneIndexDir", luceneIndexDir);
 			}
 
-			Logger.println(this,"Constants loaded");
+			Logger.println(InitServlet.class,"Constants loaded");
 			dt.diff("Constants loaded");
 
 			Logger.setWJLogLevel(Constants.getString("logLevel"));
@@ -657,11 +683,11 @@ public class InitServlet extends HttpServlet
 				ukoncena inicializacia Stripes balickov
 				*/
 
-			if ("false".equals(getInitParameter("useSMTPServer")))
+			if ("false".equals(getInitParameter("useSMTPServer", null, servletContext)))
 			{
 				Constants.setString("useSMTPServer","false");
 			}
-			else if ("true".equals(getInitParameter("useSMTPServer")))
+			else if ("true".equals(getInitParameter("useSMTPServer", null, servletContext)))
 			{
 				//we must explicitly check true because of empty/other value
 				Constants.setString("useSMTPServer","true");
@@ -670,17 +696,18 @@ public class InitServlet extends HttpServlet
 			String smtpServer = System.getProperty("webjetSmtpServer");
 			if (Tools.isNotEmpty(smtpServer))
 			{
-				Logger.println(this,"INIT: smtpServer="+smtpServer);
+				Logger.println(InitServlet.class,"INIT: smtpServer="+smtpServer);
 				Constants.setString("smtpServer", smtpServer);
 			}
 
-			Constants.setServletContext(getServletContext());
+			Constants.setServletContext(servletContext);
 
 			loadVersion();
 
-			Constants.setString("defaultEncoding", SetCharacterEncodingFilter.encoding);
+			//override web.xml value with Constants property because now Spring is loaded before SetCharacterEncodingFilter and we need the value in WebjetComponentSpringConfig to initialize resolvers
+			SetCharacterEncodingFilter.encoding = Constants.getString("defaultEncoding");
 			Logger.println(InitServlet.class, "Setting defaultEncoding to "+Constants.getString("defaultEncoding"));
-			Logger.println(this,"update database call");
+			Logger.println(InitServlet.class,"update database call");
 
 			dt.diff("before update database");
 			UpdateDatabase.update();
@@ -698,9 +725,9 @@ public class InitServlet extends HttpServlet
 					//posli email
 					StringBuilder emailBody = new StringBuilder();
 
-					Logger.println(this, "get hostname");
+					Logger.println(InitServlet.class, "get hostname");
 					String serverName = InetAddress.getLocalHost().getHostName();
-					Logger.println(this, "get hostname done");
+					Logger.println(InitServlet.class, "get hostname done");
 					emailBody.append("ServerName: ").append(serverName).append('\n');
 					//emailBody += "ServerIP: " + InetAddress.getLocalHost().getHostAddress() + "\n";
 
@@ -720,7 +747,7 @@ public class InitServlet extends HttpServlet
 					emailBody.append("Remaining: ").append(days_remaining).append('\n');
 					emailBody.append("LicenseID: ").append(licenseId).append('\n');
 					emailBody.append("Domain: ").append(InitServlet.domain[0]).append('\n');
-					emailBody.append("Web root: ").append(getServletContext().getRealPath("/")).append('\n');
+					emailBody.append("Web root: ").append(servletContext.getRealPath("/")).append('\n');
 					emailBody.append("user: ").append(System.getProperty("user.name")).append('\n');
 					String logInstallNameSuffix = "";
 					if (Tools.isNotEmpty(Constants.getLogInstallName())) logInstallNameSuffix = "/"+Constants.getLogInstallName();
@@ -735,7 +762,7 @@ public class InitServlet extends HttpServlet
 		catch (Exception ex)
 		{
 			sk.iway.iwcm.Logger.error(ex);
-			Logger.println(this,"   Database connection: [FAILED]");
+			Logger.println(InitServlet.class,"   Database connection: [FAILED]");
 		}
 		finally
 		{
@@ -751,7 +778,7 @@ public class InitServlet extends HttpServlet
 
 		Logger.println(InitServlet.class, "Initializing pkey generator");
 
-		Constants.setServletContext(getServletContext());
+		Constants.setServletContext(servletContext);
 
 		//inicializuj PkeyGenerator
 		PkeyGenerator.getInstance();
@@ -762,7 +789,7 @@ public class InitServlet extends HttpServlet
 		Sender sender = Sender.getInstance();
 		if (sender!=null && sender.getToSendCount() > 0)
 		{
-			Logger.println(this,"Emails in queue: " + sender.getToSendCount());
+			Logger.println(InitServlet.class,"Emails in queue: " + sender.getToSendCount());
 		}
 
 		dt.diff("after sender");
@@ -794,7 +821,7 @@ public class InitServlet extends HttpServlet
 		}
 		catch (RuntimeException ex2)
 		{
-			Logger.println(this," [FAIL]");
+			Logger.println(InitServlet.class," [FAIL]");
 			sk.iway.iwcm.Logger.error(ex2);
 		}
 
@@ -807,7 +834,7 @@ public class InitServlet extends HttpServlet
 		String clusterNodeName = Constants.getString("clusterMyNodeName");
 
 		StringBuilder logMessage = new StringBuilder();
-		logMessage.append("InitServlet: ").append(getServletContext().getRealPath("/")).append("\n");
+		logMessage.append("InitServlet: ").append(servletContext.getRealPath("/")).append("\n");
 		logMessage.append("user: ").append(System.getProperty("user.name")).append("\n");
 		if (Tools.isNotEmpty(clusterNodeName)) logMessage.append("node:").append(clusterNodeName).append("\n");
 		logMessage.append("version: ").append(getActualVersionLong());
@@ -843,7 +870,7 @@ public class InitServlet extends HttpServlet
 			sk.iway.iwcm.Logger.error(e);
 		}
 
-		//Logger.println(this,"---------------- INIT DONE --------------");
+		//Logger.println(InitServlet.class,"---------------- INIT DONE --------------");
 
 		dt.diff("Init done");
 
@@ -852,9 +879,6 @@ public class InitServlet extends HttpServlet
 		PathFilter.prepareTemplates();
 
 		FileCache.init();
-
-		Logger.println(this,"---------------- INIT DONE, version: "+getActualVersionLong()+" --------------");
-
 
 		/*Logger.println(InitServlet.class, "ZISKAVAM 3 DB SPOJENIA A NEZATVARAM");
 		DBPool.getConnection();
@@ -870,11 +894,11 @@ public class InitServlet extends HttpServlet
 		//zavolanie localconf pri lokalnom developmente
 		if (FileTools.isFile("/localconf.jsp"))
 		{
-			Logger.println(this,"VOLAM localconf.jsp");
+			Logger.println(InitServlet.class,"VOLAM localconf.jsp");
 			//String localconf = Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp");
 			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp"), 30000);
 			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk/localconf.jsp"), 35000);
-			//Logger.println(this,"VOLAM localconf.jsp, vystup:\n"+localconf);
+			//Logger.println(InitServlet.class,"VOLAM localconf.jsp, vystup:\n"+localconf);
 		}
 
 		//aby sa inicializoval SK properties subor za kazdych okolnosti (je default)
@@ -883,9 +907,13 @@ public class InitServlet extends HttpServlet
 		//delete old struts-config.xml if we user jar packaging
 		deleteOldStrutsConfig();
 
+		Constants.setLong("licenseExpiryDate", licenseExpiryDate);
+
 		dt.diff("DONE");
 
 		setWebjetInitialized(true);
+
+		return true;
 	}
 
 	/**
@@ -896,9 +924,9 @@ public class InitServlet extends HttpServlet
 	{
 		setWebjetInitialized(false);
 
-		Logger.println(this,"Destroying Cron4j");
+		Logger.println(InitServlet.class,"Destroying Cron4j");
 		CronFacade.getInstance().stop();
-		Logger.println(this,"Cron 4j destroyed");
+		Logger.println(InitServlet.class,"Cron 4j destroyed");
 
 		Sender sender = Sender.getInstance();
 		if (sender != null)
@@ -911,35 +939,21 @@ public class InitServlet extends HttpServlet
 		if (clusterRefresher != null)
 		{
 			clusterRefresher.cancelTask();
-			clusterRefresher = null;
+			clusterRefresher = null; //NOSONAR
 		}
 
 		//JRASKA destroy JPA
 		DBPool.jpaDestroy();
-
-		try
-		{
-			DataSource ds = DBPool.getInstance().getDataSource("iwcm");
-			if (ds instanceof ConfigurableDataSource)
-			{
-				ConfigurableDataSource cds = (ConfigurableDataSource)ds;
-				cds.printStackTraces();
-			}
-		}
-		catch (SQLException e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-
 		DBPool.getInstance().destroy(false);
 	}
 
 	/**
 	 * Nahra z properties suboru aktualnu verziu podla build time
 	 */
-	private void loadVersion()
+	private static void loadVersion()
 	{
 		String buildDate = "";
+		String majorVersion = "???";
 		String minorVersion = "";
 		try
 		{
@@ -948,6 +962,7 @@ public class InitServlet extends HttpServlet
 			prop.load(propFile);
 
 			buildDate = prop.getProperty("build.date");
+			majorVersion = prop.getProperty("major.number");
 			minorVersion = prop.getProperty("minor.number");
 		}
 		catch (Exception e)
@@ -956,10 +971,11 @@ public class InitServlet extends HttpServlet
 		}
 
 		setActualVersion(Tools.replace(InitServlet.actualVersion, "{build.date}", buildDate));
+		setActualVersion(Tools.replace(InitServlet.actualVersion, "{major.number}", majorVersion));
 		setActualVersion(Tools.replace(InitServlet.actualVersion, "{minor.number}", minorVersion));
 	}
 
-	private Map<String, String> getDatabaseValues(Connection db_conn)
+	private static Map<String, String> getDatabaseValues(Connection db_conn)
 	{
 		Map<String, String> databaseValues = new Hashtable<>();
 		try
@@ -988,56 +1004,56 @@ public class InitServlet extends HttpServlet
 		return databaseValues;
 	}
 
-	public void loadConstants(Map<String, String> databaseValues)
+	public static void loadConstants(Map<String, String> databaseValues, ServletContext servletContext)
 	{
 		try
 		{
 			Map<String, String> skipValues = new Hashtable<>();
 
-			int i = getInt("rootGroupId", databaseValues);
+			int i = getInt("rootGroupId", databaseValues, servletContext);
 			skipValues.put("rootGroupId", "true");
 			if (i > 0)
 			{
 				Constants.setInt("rootGroupId", i);
 			}
-			i = getInt("tempGroupId", databaseValues);
+			i = getInt("tempGroupId", databaseValues, servletContext);
 			skipValues.put("tempGroupId", "true");
 			if (i > 0)
 			{
 				Constants.setInt("tempGroupId", i);
 			}
-			i = getInt("menuGroupId", databaseValues);
+			i = getInt("menuGroupId", databaseValues, servletContext);
 			skipValues.put("menuGroupId", "true");
 			if (i > 0)
 			{
 				Constants.setInt("menuGroupId", i);
 			}
-			i = getInt("headerFooterGroupId", databaseValues);
+			i = getInt("headerFooterGroupId", databaseValues, servletContext);
 			skipValues.put("headerFooterGroupId", "true");
 			if (i > 0)
 			{
 				Constants.setInt("headerFooterGroupId", i);
 			}
-			i = getInt("newDocumentId", databaseValues);
+			i = getInt("newDocumentId", databaseValues, servletContext);
 			skipValues.put("newDocumentId", "true");
 			Constants.setInt("newDocumentId", i);
 
 			//pkeyGenerator
-			i = getInt("pkeyGenIncrement", databaseValues);
+			i = getInt("pkeyGenIncrement", databaseValues, servletContext);
 			skipValues.put("pkeyGenIncrement", "true");
 			if (i > 0)
 			{
 				Constants.setInt("pkeyGenIncrement", i);
 			}
 			//nacitame z web.xml kedze v clustri je spolocna DB
-			i = Tools.getIntValue(getInitParameter("pkeyGenOffset"), 0);
+			i = Tools.getIntValue(getInitParameter("pkeyGenOffset", null, servletContext), 0);
 			skipValues.put("pkeyGenOffset", "true");
 			if (i > 0)
 			{
 				Constants.setInt("pkeyGenOffset", i);
 			}
 
-			String linkType = getInitParameter("linkType", databaseValues);
+			String linkType = getInitParameter("linkType", databaseValues, servletContext);
 			skipValues.put("linkType", "true");
 			if (linkType != null && linkType.equalsIgnoreCase("html"))
 			{
@@ -1048,7 +1064,7 @@ public class InitServlet extends HttpServlet
 				Constants.setInt("linkType", Constants.LINK_TYPE_DOCID);
 			}
 
-			String param = getInitParameter("imagesRootDir", databaseValues);
+			String param = getInitParameter("imagesRootDir", databaseValues, servletContext);
 			skipValues.put("imagesRootDir", "true");
 			if (param != null && param.length() > 0)
 			{
@@ -1059,7 +1075,7 @@ public class InitServlet extends HttpServlet
 				Constants.setString("imagesRootDir", param);
 			}
 
-			param = getInitParameter("galleryDirName", databaseValues);
+			param = getInitParameter("galleryDirName", databaseValues, servletContext);
 			skipValues.put("galleryDirName", "true");
 			if (param != null && param.length() > 0)
 			{
@@ -1070,7 +1086,7 @@ public class InitServlet extends HttpServlet
 				Constants.setString("galleryDirName", param);
 			}
 
-			param = getInitParameter("filesRootDir", databaseValues);
+			param = getInitParameter("filesRootDir", databaseValues, servletContext);
 			skipValues.put("filesRootDir", "true");
 			if (param != null && param.length() > 0)
 			{
@@ -1081,35 +1097,35 @@ public class InitServlet extends HttpServlet
 				Constants.setString("filesRootDir", param);
 			}
 
-			param = getInitParameter("adminCheckUserGroups", databaseValues);
+			param = getInitParameter("adminCheckUserGroups", databaseValues, servletContext);
 			skipValues.put("adminCheckUserGroups", "true");
 			if (param != null && param.length() > 0)
 			{
 				Constants.setBoolean("adminCheckUserGroups", param);
 			}
 
-			param = getInitParameter("adminRequireSSL", databaseValues);
+			param = getInitParameter("adminRequireSSL", databaseValues, servletContext);
 			skipValues.put("adminRequireSSL", "true");
 			if (param != null && param.length() > 0)
 			{
 				Constants.setBoolean("adminRequireSSL", param);
 			}
 
-			param = getInitParameter("exportFlash", databaseValues);
+			param = getInitParameter("exportFlash", databaseValues, servletContext);
 			skipValues.put("exportFlash", "true");
 			if (param != null && param.length() > 0)
 			{
 				Constants.setBoolean("exportFlash", param);
 			}
 
-			param = getInitParameter("exportDocsHtml", databaseValues);
+			param = getInitParameter("exportDocsHtml", databaseValues, servletContext);
 			skipValues.put("exportDocsHtml", "true");
 			if (param != null && param.length() > 0)
 			{
 				Constants.setBoolean("exportDocsHtml", param);
 			}
 
-			param = getInitParameter("editorEnableXHTML", databaseValues);
+			param = getInitParameter("editorEnableXHTML", databaseValues, servletContext);
 			skipValues.put("editorEnableXHTML", "true");
 			if (param != null && param.length() > 0)
 			{
@@ -1117,7 +1133,7 @@ public class InitServlet extends HttpServlet
 			}
 
 			//Ak je true, vsetky nazvy konstant sa budu menit na domena-nazovKonstanty (pouzitelne napr. pri multiwebe)
-			if("true".equals(getInitParameter("constantsAliasSearch", databaseValues)))
+			if("true".equals(getInitParameter("constantsAliasSearch", databaseValues, servletContext)))
 				Constants.setConstantsAliasSearch(true);
 			else
 				Constants.setConstantsAliasSearch(false);
@@ -1138,7 +1154,7 @@ public class InitServlet extends HttpServlet
 				}
 				else
 				{
-					Logger.println(this,"skipping: " + name);
+					Logger.println(InitServlet.class,"skipping: " + name);
 				}
 			}
 
@@ -1189,11 +1205,11 @@ public class InitServlet extends HttpServlet
 			//iteruj cez names a nahraj hodnoty z web.xml / databazy
 			for (LabelValueDetails lvd : names)
 			{
-				value = getInitParameter(lvd.getLabel(), databaseValues);
+				value = getInitParameter(lvd.getLabel(), databaseValues, servletContext);
 				if (value != null)
 				{
 					//?? je to INT?
-					//Logger.println(this,"INIT SYSPROP/ENV: " + lvd.getLabel()+"="+value);
+					//Logger.println(InitServlet.class,"INIT SYSPROP/ENV: " + lvd.getLabel()+"="+value);
 					if ("true".equals(value) || "false".equals(value))
 					{
 						boolean boolValue = false;
@@ -1245,7 +1261,7 @@ public class InitServlet extends HttpServlet
 			}
 			else
 			{
-				//Logger.println(this,"verify: domain="+domain+" request="+request.getServerName());
+				//Logger.println(InitServlet.class,"verify: domain="+domain+" request="+request.getServerName());
 				for (int i = 0; i < domain.length; i++) {
 					if (serverName.endsWith(domain[i])) {
 						return (true);
@@ -1264,9 +1280,9 @@ public class InitServlet extends HttpServlet
 	 *@param  name  Description of the Parameter
 	 *@return       The int value
 	 */
-	private int getInt(String name, Map<String, String> databaseValues)
+	private static int getInt(String name, Map<String, String> databaseValues, ServletContext servletContext)
 	{
-		String value = getInitParameter(name, databaseValues);
+		String value = getInitParameter(name, databaseValues, servletContext);
 		if (value != null)
 		{
 			try
@@ -1276,14 +1292,14 @@ public class InitServlet extends HttpServlet
 			}
 			catch (Exception ex)
 			{
-				Logger.error(this,"ERROR: Init param " + name + " must contain NUMBER");
+				Logger.error(InitServlet.class,"ERROR: Init param " + name + " must contain NUMBER");
 				return (-1);
 			}
 		}
 		return (-1);
 	}
 
-	private String getInitParameter(String name, Map<String, String> databaseValues)
+	private static String getInitParameter(String name, Map<String, String> databaseValues, ServletContext servletContext)
 	{
 		String value = null;
 		String source = null;
@@ -1319,34 +1335,18 @@ public class InitServlet extends HttpServlet
 			source = "ENV webjet_";
 		}
 
-		//moznost nastavenia custom hodnoty cez web.xml ako webjet-NAZOV_PREMENNEJ
-		String valueCustom = getInitParameter("webjet-"+name);
-		if (Tools.isNotEmpty(valueCustom))
-		{
-			value = valueCustom;
-			source = "InitParameter webjet-";
-		}
-
 		//moznost nastavenia custom hodnoty v <Content elemente server.xml <Parameter name="webjet_XXX" value="vvv" override="true"/>
-		String valueContext = getServletContext().getInitParameter("webjet_"+name);
+		String valueContext = servletContext.getInitParameter("webjet_"+name);
 		if (Tools.isNotEmpty(valueContext))
 		{
 			value = valueContext;
 			source = "InitParameter-context webjet_";
 		}
 
-		if (value==null)
-		{
-			value = getInitParameter(name);
-			if (value != null)
-			{
-				Logger.println(this,"INIT (xml): " + name + "=" + value);
-			}
-		}
-		else
+		if (value!=null)
 		{
 			source = " ("+source+")";
-			Logger.println(this,"INIT"+source+": " + name + "=" + value);
+			Logger.println(InitServlet.class,"INIT"+source+": " + name + "=" + value);
 		}
 
 		//value - is considered as empty
@@ -1365,7 +1365,7 @@ public class InitServlet extends HttpServlet
 	 *@param  right   Description of the Parameter
 	 *@return         Description of the Return Value
 	 */
-	private String align(String text, int length, boolean right)
+	private static String align(String text, int length, boolean right)
 	{
 		if (right)
 		{
@@ -1400,7 +1400,7 @@ public class InitServlet extends HttpServlet
 	 *@return                heslo
 	 *@exception  Exception  Description of the Exception
 	 */
-	private String decrypt(String password) throws Exception
+	private static String decrypt(String password) throws Exception
 	{
 		StringBuilder sb = new StringBuilder();
 		sb.append("5f456cad56789c6d51b8987b");
@@ -1584,7 +1584,7 @@ public class InitServlet extends HttpServlet
 		return SERVER_START_DATETIME;
 	}
 
-	private void deleteOldStrutsConfig() {
+	private static void deleteOldStrutsConfig() {
 		try {
 			String virtualPath = "/WEB-INF/struts-config.xml"; //NOSONAR
 			if (Constants.getBoolean("enableJspJarPackaging") && JarPackaging.isJarPackaging(virtualPath)==false) {
@@ -1603,7 +1603,7 @@ public class InitServlet extends HttpServlet
 	 * @param hostname
 	 * @return
 	 */
-	private String trimHostname(String hostname) {
+	private static String trimHostname(String hostname) {
 		if (Tools.isEmpty(hostname)) return hostname;
 
 		if (Constants.getBoolean("clusterHostnameTrimFromEnd") && hostname.length()>16) {

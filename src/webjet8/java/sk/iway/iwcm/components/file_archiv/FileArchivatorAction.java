@@ -84,7 +84,7 @@ public class FileArchivatorAction extends WebJETActionBean
 		boolean saved = fab.save();
 		if(saved)
         {
-            Adminlog.add(Adminlog.TYPE_FILE_EDIT,"File Archiv zmeny:"+changes,-1,-1);
+            Adminlog.add(Adminlog.TYPE_FILE_ARCHIVE, "UPDATE: File Archiv zmeny:"+changes, fab.getId(), -1);
         }
 		return (new ForwardResolution("/components/reloadParentClose.jsp"));
 	}

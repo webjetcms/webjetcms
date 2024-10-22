@@ -60,7 +60,7 @@ Scenario('nastavenie filtra, zmazanie filtra', ({ I, DT }) => {
     clearFilter(I, "logType");
 
     I.say("vybereme inu hodnotu a overime, ze sa zvolila");
-    DT.filterSelect("logType", "AUDIT_NOTIFY");
+    DT.filterSelect("logType", "Helpdesk");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.wait(2);
     clearFilter(I, "logType");
@@ -68,13 +68,13 @@ Scenario('nastavenie filtra, zmazanie filtra', ({ I, DT }) => {
     I.say("skus prejst na stranku 5 a vyskusaj zmenit selector");
     I.click({css: "ul.pagination li:nth-child(6) a"});
     I.wait(2);
-    DT.filterSelect("logType", "AUDIT_NOTIFY");
+    DT.filterSelect("logType", "Helpdesk");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.wait(2);
     clearFilter(I, "logType");
 
     I.say("vybereme inu hodnotu a overime, ze sa zvolila");
-    DT.filterSelect("logType", "AUDIT_NOTIFY");
+    DT.filterSelect("logType", "Helpdesk");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.wait(2);
     clearFilter(I, "logType");
@@ -208,7 +208,7 @@ Scenario('Check contains,startswith,endswith,equals', ({ I, DT }) => {
     I.dontSee("Cenník", "#mediaTable tbody");
 });
 
-Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DT, DTE, Document }) => {
+Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DTE, Document }) => {
     //pri druhom zobrazeni DT v editore bol bug, kedy sa zle zobrazia selecty
     I.amOnPage("/admin/v9/users/user-groups/?id=2");
     DTE.waitForEditor("userGroupsDataTable");
@@ -222,4 +222,26 @@ Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DT, DTE, Document
     I.click("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
     await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 5);
+});
+
+Scenario('BUG-set selectpickerbinded after fields visibility change', ({ I, DT }) => {
+    var selector = "#datatableInit_wrapper .dataTables_scrollHeadInner th.dt-th-fieldA select.filter-input-prepend.selectpickerbinded";
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    DT.resetTable();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=21686");
+    DT.waitForLoader();
+    I.jstreeClick("Voliteľné polia");
+    DT.showColumn("text - A");
+
+    I.waitForElement(selector, 10);
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=7625");
+
+    I.waitForElement(selector, 10);
+});
+
+Scenario("reset table", ({ I, DT }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/");
+    DT.resetTable();
 });

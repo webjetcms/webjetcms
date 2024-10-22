@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sk"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TemplateGroupsService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">webjet8v9</a> &gt; <a href="index.source.html" class="el_package">sk.iway.iwcm.components.template_groups</a> &gt; <span class="el_source">TemplateGroupsService.java</span></div><h1>TemplateGroupsService.java</h1><pre class="source lang-java linenums">package sk.iway.iwcm.components.template_groups;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.templates.TemplateDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesGroupBean;
 import sk.iway.iwcm.doc.TemplatesGroupDB;
 import sk.iway.iwcm.i18n.IwayProperties;
@@ -15,94 +19,143 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.i18n.PropDB;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
-<span class="fc" id="L24">public class TemplateGroupsService {</span>
+public class TemplateGroupsService {
+
+    TemplateDetailsService templateDetailsService;
+
+    @Autowired
+<span class="fc" id="L37">    public TemplateGroupsService(TemplateDetailsService templateDetailsService) {</span>
+<span class="fc" id="L38">        this.templateDetailsService = templateDetailsService;</span>
+<span class="fc" id="L39">    }</span>
 
     List&lt;TemplatesGroupBean&gt; getAllTemplateGroups(HttpServletRequest request) {
-<span class="fc" id="L27">        List&lt;TemplatesGroupBean&gt; temp = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L28">        String lng = getLng(request);</span>
+<span class="fc" id="L42">        List&lt;TemplatesGroupBean&gt; temp = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L43">        String lng = getLng(request);</span>
 
-<span class="fc" id="L30">        IwayProperties prop = Prop.getChangedProperties(lng, &quot;temp-group-&quot;);</span>
-<span class="fc" id="L31">        List&lt;TemplatesGroupBean&gt; templateGroupBeans = TemplatesGroupDB.getAllTemplatesGroupsWithCount();</span>
+<span class="fc" id="L45">        IwayProperties prop = Prop.getChangedProperties(lng, &quot;temp-group-&quot;);</span>
+<span class="fc" id="L46">        List&lt;TemplatesGroupBean&gt; templateGroupBeans = filterByUser(TemplatesGroupDB.getAllTemplatesGroupsWithCount(), UsersDB.getCurrentUser(request));</span>
 
-<span class="fc bfc" id="L33" title="All 2 branches covered.">        for (TemplatesGroupBean item : templateGroupBeans) {</span>
-<span class="fc" id="L34">            item.setProjectName(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.name&quot;));</span>
-<span class="fc" id="L35">            item.setProjectAuthor(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.author&quot;));</span>
-<span class="fc" id="L36">            item.setProjectCopyright(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.copyright&quot;));</span>
-<span class="fc" id="L37">            item.setProjectDeveloper(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.developer&quot;));</span>
-<span class="fc" id="L38">            item.setProjectGenerator(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.generator&quot;));</span>
-<span class="fc" id="L39">            item.setProjectFieldA(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.a&quot;));</span>
-<span class="fc" id="L40">            item.setProjectFieldB(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.b&quot;));</span>
-<span class="fc" id="L41">            item.setProjectFieldC(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.c&quot;));</span>
-<span class="fc" id="L42">            item.setProjectFieldD(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.d&quot;));</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        for (TemplatesGroupBean item : templateGroupBeans) {</span>
+<span class="fc" id="L49">            item.setProjectName(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.name&quot;));</span>
+<span class="fc" id="L50">            item.setProjectAuthor(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.author&quot;));</span>
+<span class="fc" id="L51">            item.setProjectCopyright(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.copyright&quot;));</span>
+<span class="fc" id="L52">            item.setProjectDeveloper(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.developer&quot;));</span>
+<span class="fc" id="L53">            item.setProjectGenerator(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.generator&quot;));</span>
+<span class="fc" id="L54">            item.setProjectFieldA(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.a&quot;));</span>
+<span class="fc" id="L55">            item.setProjectFieldB(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.b&quot;));</span>
+<span class="fc" id="L56">            item.setProjectFieldC(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.c&quot;));</span>
+<span class="fc" id="L57">            item.setProjectFieldD(prop.getProperty(&quot;temp-group-&quot; + item.getId() + &quot;.project.field.d&quot;));</span>
 
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">            if (InitServlet.isTypeCloud()) {</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">            if (InitServlet.isTypeCloud()) {</span>
                 //Pre MULTIWEB mozeme zobrazit len nepriradene sablony (id=1) alebo tie, ktore zacinaju na nas domainalias
-<span class="nc bnc" id="L46" title="All 4 branches missed.">                if (item.getId() == 1 || item.getProjectName().toLowerCase().startsWith(MultiDomainFilter.getDomainAlias(DocDB.getDomain(request)))) {</span>
-<span class="nc" id="L47">                    temp.add(item);</span>
+<span class="nc bnc" id="L61" title="All 4 branches missed.">                if (item.getId() == 1 || item.getProjectName().toLowerCase().startsWith(MultiDomainFilter.getDomainAlias(DocDB.getDomain(request)))) {</span>
+<span class="nc" id="L62">                    temp.add(item);</span>
                 }
             } else {
-<span class="fc" id="L50">                temp.add(item);</span>
+<span class="fc" id="L65">                temp.add(item);</span>
             }
-<span class="fc" id="L52">        }</span>
+<span class="fc" id="L67">        }</span>
 
-<span class="fc" id="L54">        return temp;</span>
+<span class="fc" id="L69">        return temp;</span>
+    }
+
+    /**
+     * If user has only perms for some folders/domains returns only template groups used in his available templates
+     * @param user
+     * @return
+     */
+    public List&lt;TemplatesGroupBean&gt; getTemplateGroups(UserDetails user) {
+<span class="fc" id="L78">        List&lt;TemplatesGroupBean&gt; all = TemplatesGroupDB.getAllTemplatesGroups();</span>
+<span class="fc" id="L79">        return filterByUser(all, user);</span>
+    }
+
+    /**
+     * If user has only perms for some folders/domains show only template groups used in his available templates
+     * @param all
+     * @param user
+     * @return
+     */
+    public List&lt;TemplatesGroupBean&gt; filterByUser(List&lt;TemplatesGroupBean&gt; all, UserDetails user) {
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (Tools.isEmpty(user.getEditableGroups(true))) return all;</span>
+
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        if (CloudToolsForCore.isControllerDomain()) return all;</span>
+
+<span class="nc" id="L93">        List&lt;TemplatesGroupBean&gt; filtered = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L95">        List&lt;TemplateDetails&gt; temps = templateDetailsService.getAllTemplateDetails(user);</span>
+<span class="nc" id="L96">        Set&lt;Long&gt; tempGroupIds = new HashSet&lt;&gt;();</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (TemplateDetails temp : temps) {</span>
+<span class="nc" id="L98">            tempGroupIds.add(temp.getTemplatesGroupId());</span>
+<span class="nc" id="L99">        }</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        for (TemplatesGroupBean group : all) {</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">            if (tempGroupIds.contains(group.getId())) {</span>
+<span class="nc" id="L103">                filtered.add(group);</span>
+            }
+<span class="nc" id="L105">        }</span>
+
+<span class="nc" id="L107">        return filtered;</span>
     }
 
     TemplatesGroupBean saveTemplateGroup(TemplatesGroupBean templateGroupBean, HttpServletRequest request) {
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) {</span>
-<span class="nc" id="L59">            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));</span>
+<span class="pc bpc" id="L111" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) {</span>
+<span class="nc" id="L112">            String domainAlias = MultiDomainFilter.getDomainAlias(DocDB.getDomain(request));</span>
             //Pre MULTIWEB mozeme zobrazit len tie, ktore zacinaju na domainalias
-<span class="nc bnc" id="L61" title="All 2 branches missed.">            if (!templateGroupBean.getProjectName().toLowerCase().startsWith(domainAlias)) {</span>
-<span class="nc" id="L62">                templateGroupBean.setProjectName(domainAlias + &quot;-&quot; + templateGroupBean.getProjectName());</span>
+<span class="nc bnc" id="L114" title="All 2 branches missed.">            if (!templateGroupBean.getProjectName().toLowerCase().startsWith(domainAlias)) {</span>
+<span class="nc" id="L115">                templateGroupBean.setProjectName(domainAlias + &quot;-&quot; + templateGroupBean.getProjectName());</span>
             }
         }
 
-<span class="fc" id="L66">        TemplatesGroupBean optionalTemplatesGroupBean = TemplatesGroupDB.getTemplatesGroupByName(templateGroupBean.getName());</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (null != optionalTemplatesGroupBean) {</span>
-<span class="nc" id="L68">            return null;</span>
+<span class="fc" id="L119">        TemplatesGroupBean optionalTemplatesGroupBean = TemplatesGroupDB.getTemplatesGroupByName(templateGroupBean.getName());</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (null != optionalTemplatesGroupBean) {</span>
+<span class="nc" id="L121">            return null;</span>
         }
 
-<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (TemplatesGroupDB.getInstance().save(templateGroupBean)) {</span>
-<span class="fc" id="L72">            String prefix = &quot;temp-group-&quot; + templateGroupBean.getId() + &quot;.project&quot;;</span>
-<span class="fc" id="L73">            IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (TemplatesGroupDB.getInstance().save(templateGroupBean)) {</span>
+<span class="fc" id="L125">            String prefix = &quot;temp-group-&quot; + templateGroupBean.getId() + &quot;.project&quot;;</span>
+<span class="fc" id="L126">            IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);</span>
             // defaultne vytvaram novu skupinu pre vychodzi jazyk
-<span class="fc" id="L75">            PropDB.save(null, iwayProperties, getLng(request), prefix, null, true);</span>
+<span class="fc" id="L128">            PropDB.save(null, iwayProperties, getLng(request), prefix, null, true);</span>
 
-<span class="fc" id="L77">            Prop.getInstance(true);</span>
+<span class="fc" id="L130">            Prop.getInstance(true);</span>
         }
 
-<span class="fc" id="L80">        return templateGroupBean;</span>
+<span class="fc" id="L133">        return templateGroupBean;</span>
     }
 
     TemplatesGroupBean editTemplateGroupBean(TemplatesGroupBean templateGroupBean, long id, HttpServletRequest request) {
-<span class="fc" id="L84">        String lng = getLng(request);</span>
-<span class="fc" id="L85">        templateGroupBean.setTemplatesGroupId(id);</span>
-<span class="fc" id="L86">        TemplatesGroupBean optionalTemplateGroupBean = TemplatesGroupDB.getInstance().getById(templateGroupBean.getId());</span>
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        if (null == optionalTemplateGroupBean) {</span>
-<span class="nc" id="L88">            return null;</span>
+<span class="fc" id="L137">        String lng = getLng(request);</span>
+<span class="fc" id="L138">        templateGroupBean.setTemplatesGroupId(id);</span>
+<span class="fc" id="L139">        TemplatesGroupBean optionalTemplateGroupBean = TemplatesGroupDB.getInstance().getById(templateGroupBean.getId());</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (null == optionalTemplateGroupBean) {</span>
+<span class="nc" id="L141">            return null;</span>
         }
 
-<span class="pc bpc" id="L91" title="1 of 2 branches missed.">        if (templateGroupBean.save()) {</span>
-<span class="fc" id="L92">            String prefix = &quot;temp-group-&quot; + templateGroupBean.getId() + &quot;.project&quot;;</span>
-<span class="fc" id="L93">            IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);</span>
-<span class="fc" id="L94">            PropDB.save(null, iwayProperties, lng, prefix, null, false);</span>
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (templateGroupBean.save()) {</span>
+<span class="fc" id="L145">            String prefix = &quot;temp-group-&quot; + templateGroupBean.getId() + &quot;.project&quot;;</span>
+<span class="fc" id="L146">            IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);</span>
+<span class="fc" id="L147">            PropDB.save(null, iwayProperties, lng, prefix, null, false);</span>
 
-<span class="fc" id="L96">            Prop.getInstance(true);</span>
+<span class="fc" id="L149">            Prop.getInstance(true);</span>
         }
 
-<span class="fc" id="L99">        return templateGroupBean;</span>
+<span class="fc" id="L152">        return templateGroupBean;</span>
     }
 
     boolean deleteTemplateGroupBean(long id) {
-<span class="fc" id="L103">        String prefixForDelete = &quot;temp-group-&quot; + id + &quot;.project&quot;;</span>
-<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (TemplatesGroupDB.delete(id)) {</span>
-<span class="fc" id="L105">            new SimpleQuery().execute(&quot;DELETE FROM &quot; + ConfDB.PROPERTIES_TABLE_NAME + &quot; WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;,</span>
+<span class="fc" id="L156">        String prefixForDelete = &quot;temp-group-&quot; + id + &quot;.project&quot;;</span>
+<span class="pc bpc" id="L157" title="1 of 2 branches missed.">        if (TemplatesGroupDB.delete(id)) {</span>
+<span class="fc" id="L158">            new SimpleQuery().execute(&quot;DELETE FROM &quot; + ConfDB.PROPERTIES_TABLE_NAME + &quot; WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?)&quot;,</span>
                     prefixForDelete + &quot;.name&quot;,
                     prefixForDelete + &quot;.author&quot;,
                     prefixForDelete + &quot;.copyright&quot;,
@@ -113,72 +166,72 @@ import java.util.List;
                     prefixForDelete + &quot;.field.c&quot;,
                     prefixForDelete + &quot;.field.d&quot;);
 
-<span class="fc" id="L116">            return true;</span>
+<span class="fc" id="L169">            return true;</span>
         }
 
-<span class="nc" id="L119">        return false;</span>
+<span class="nc" id="L172">        return false;</span>
     }
 
     private IwayProperties mapIwayProperties(TemplatesGroupBean templatesGroupBean) {
-<span class="fc" id="L123">        IwayProperties iwayProperties = new IwayProperties();</span>
-<span class="fc" id="L124">        iwayProperties.setProperty(&quot;name&quot;, templatesGroupBean.getProjectName());</span>
-<span class="fc" id="L125">        iwayProperties.setProperty(&quot;author&quot;, templatesGroupBean.getProjectAuthor());</span>
-<span class="fc" id="L126">        iwayProperties.setProperty(&quot;copyright&quot;, templatesGroupBean.getProjectCopyright());</span>
-<span class="fc" id="L127">        iwayProperties.setProperty(&quot;developer&quot;, templatesGroupBean.getProjectDeveloper());</span>
-<span class="fc" id="L128">        iwayProperties.setProperty(&quot;generator&quot;, templatesGroupBean.getProjectGenerator());</span>
-<span class="fc" id="L129">        iwayProperties.setProperty(&quot;field.a&quot;, templatesGroupBean.getProjectFieldA());</span>
-<span class="fc" id="L130">        iwayProperties.setProperty(&quot;field.b&quot;, templatesGroupBean.getProjectFieldB());</span>
-<span class="fc" id="L131">        iwayProperties.setProperty(&quot;field.c&quot;, templatesGroupBean.getProjectFieldC());</span>
-<span class="fc" id="L132">        iwayProperties.setProperty(&quot;field.d&quot;, templatesGroupBean.getProjectFieldD());</span>
+<span class="fc" id="L176">        IwayProperties iwayProperties = new IwayProperties();</span>
+<span class="fc" id="L177">        iwayProperties.setProperty(&quot;name&quot;, templatesGroupBean.getProjectName());</span>
+<span class="fc" id="L178">        iwayProperties.setProperty(&quot;author&quot;, templatesGroupBean.getProjectAuthor());</span>
+<span class="fc" id="L179">        iwayProperties.setProperty(&quot;copyright&quot;, templatesGroupBean.getProjectCopyright());</span>
+<span class="fc" id="L180">        iwayProperties.setProperty(&quot;developer&quot;, templatesGroupBean.getProjectDeveloper());</span>
+<span class="fc" id="L181">        iwayProperties.setProperty(&quot;generator&quot;, templatesGroupBean.getProjectGenerator());</span>
+<span class="fc" id="L182">        iwayProperties.setProperty(&quot;field.a&quot;, templatesGroupBean.getProjectFieldA());</span>
+<span class="fc" id="L183">        iwayProperties.setProperty(&quot;field.b&quot;, templatesGroupBean.getProjectFieldB());</span>
+<span class="fc" id="L184">        iwayProperties.setProperty(&quot;field.c&quot;, templatesGroupBean.getProjectFieldC());</span>
+<span class="fc" id="L185">        iwayProperties.setProperty(&quot;field.d&quot;, templatesGroupBean.getProjectFieldD());</span>
 
-<span class="fc" id="L134">        return iwayProperties;</span>
+<span class="fc" id="L187">        return iwayProperties;</span>
     }
 
     List&lt;LabelValueDetails&gt; getDirectories(){
-<span class="fc" id="L138">        List&lt;LabelValueDetails&gt; listOfDirectories = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L191">        List&lt;LabelValueDetails&gt; listOfDirectories = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L140" title="All 2 branches covered.">        for (String dirName : FileTools.getDirsNames(&quot;/templates/&quot;)) {</span>
-<span class="fc" id="L141">            listOfDirectories.add(new LabelValueDetails(&quot;/templates/&quot; + dirName, removeInstallName(dirName)) );</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        for (String dirName : FileTools.getDirsNames(&quot;/templates/&quot;)) {</span>
+<span class="fc" id="L194">            listOfDirectories.add(new LabelValueDetails(&quot;/templates/&quot; + dirName, removeInstallName(dirName)) );</span>
             //pridaj aj dalsiu uroven adresarov
-<span class="fc bfc" id="L143" title="All 2 branches covered.">            for (String subDirName : FileTools.getDirsNames(&quot;/templates/&quot; + dirName)) {</span>
-<span class="fc" id="L144">                listOfDirectories.add(new LabelValueDetails(&quot;/templates/&quot; + dirName + &quot;/&quot; + subDirName, removeInstallName(dirName+&quot;/&quot;+subDirName)) );</span>
-<span class="fc" id="L145">            }</span>
-<span class="fc" id="L146">        }</span>
+<span class="fc bfc" id="L196" title="All 2 branches covered.">            for (String subDirName : FileTools.getDirsNames(&quot;/templates/&quot; + dirName)) {</span>
+<span class="fc" id="L197">                listOfDirectories.add(new LabelValueDetails(&quot;/templates/&quot; + dirName + &quot;/&quot; + subDirName, removeInstallName(dirName+&quot;/&quot;+subDirName)) );</span>
+<span class="fc" id="L198">            }</span>
+<span class="fc" id="L199">        }</span>
 
-<span class="fc" id="L148">        return listOfDirectories;</span>
+<span class="fc" id="L201">        return listOfDirectories;</span>
     }
 
     private String removeInstallName(String path) {
-<span class="fc" id="L152">        String installName = Constants.getInstallName();</span>
-<span class="fc" id="L153">        String logInstallName = Constants.getLogInstallName();</span>
-<span class="pc bpc" id="L154" title="1 of 2 branches missed.">        if (Tools.isEmpty(logInstallName)) logInstallName = installName;</span>
+<span class="fc" id="L205">        String installName = Constants.getInstallName();</span>
+<span class="fc" id="L206">        String logInstallName = Constants.getLogInstallName();</span>
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">        if (Tools.isEmpty(logInstallName)) logInstallName = installName;</span>
 
         //ak nezacina na installName ani na logInstallName je to v poriadku
-<span class="pc bpc" id="L157" title="1 of 4 branches missed.">        if (path.startsWith(installName)==false &amp;&amp; path.startsWith(logInstallName)==false) return path;</span>
+<span class="pc bpc" id="L210" title="1 of 4 branches missed.">        if (path.startsWith(installName)==false &amp;&amp; path.startsWith(logInstallName)==false) return path;</span>
 
         //z nejakeho dovodu sa presna zhoda uklada ako /
-<span class="pc bpc" id="L160" title="3 of 8 branches missed.">        if (path.equals(installName) || path.equals(installName+&quot;/&quot;) || path.equals(logInstallName) || path.equals(logInstallName+&quot;/&quot;)) return &quot;/&quot;;</span>
+<span class="pc bpc" id="L213" title="3 of 8 branches missed.">        if (path.equals(installName) || path.equals(installName+&quot;/&quot;) || path.equals(logInstallName) || path.equals(logInstallName+&quot;/&quot;)) return &quot;/&quot;;</span>
 
         //odstran logInstallName / installName a vrat bez toho, combine to tam automaticky pouzije
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (path.startsWith(logInstallName+&quot;/&quot;)) return path.substring(logInstallName.length()+1);</span>
-<span class="nc" id="L164">        return path.substring(installName.length()+1);</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">        if (path.startsWith(logInstallName+&quot;/&quot;)) return path.substring(logInstallName.length()+1);</span>
+<span class="nc" id="L217">        return path.substring(installName.length()+1);</span>
     }
 
     public List&lt;LabelValueDetails&gt; getInlineEditors(Prop prop){
-<span class="fc" id="L168">        List&lt;LabelValueDetails&gt; listOfInlineEditors = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L169">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.standard.js&quot;), &quot;&quot;));</span>
-<span class="fc" id="L170">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.html.js&quot;), &quot;html&quot;));</span>
-<span class="fc" id="L171">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.page_builder.js&quot;), &quot;pageBuilder&quot;));</span>
-<span class="fc" id="L172">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.grid_editor.js&quot;), &quot;gridEditor&quot;));</span>
+<span class="fc" id="L221">        List&lt;LabelValueDetails&gt; listOfInlineEditors = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L222">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.standard.js&quot;), &quot;&quot;));</span>
+<span class="fc" id="L223">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.html.js&quot;), &quot;html&quot;));</span>
+<span class="fc" id="L224">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.page_builder.js&quot;), &quot;pageBuilder&quot;));</span>
+<span class="fc" id="L225">        listOfInlineEditors.add(new LabelValueDetails(prop.getText(&quot;editor.type_select.grid_editor.js&quot;), &quot;gridEditor&quot;));</span>
 
-<span class="fc" id="L174">        return listOfInlineEditors;</span>
+<span class="fc" id="L227">        return listOfInlineEditors;</span>
     }
 
     private String getLng(HttpServletRequest request) {
-<span class="fc" id="L178">        String lng = request.getParameter(&quot;breadcrumbLanguage&quot;);</span>
-<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (Tools.isEmpty(lng)) lng = Prop.getLngForJavascript(request);</span>
-<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (&quot;cs&quot;.equals(lng)) lng = &quot;cz&quot;;</span>
-<span class="fc" id="L181">        return lng;</span>
+<span class="fc" id="L231">        String lng = request.getParameter(&quot;breadcrumbLanguage&quot;);</span>
+<span class="fc bfc" id="L232" title="All 2 branches covered.">        if (Tools.isEmpty(lng)) lng = Prop.getLngForJavascript(request);</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">        if (&quot;cs&quot;.equals(lng)) lng = &quot;cz&quot;;</span>
+<span class="fc" id="L234">        return lng;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

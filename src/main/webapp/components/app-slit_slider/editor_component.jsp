@@ -13,8 +13,6 @@ taglib prefix="iway"
 	<iwcm:checkLogon admin="true" perms="cmp_app-slit_slider"/>
 <%
 	request.setAttribute("cmpName", "app-slit_slider");
-	String lng = PageLng.getUserLng(request);
-	pageContext.setAttribute("lng", lng);
 	String paramPageParams = Tools.getRequestParameterUnsafe(request, "pageParams");
 	if (Tools.isNotEmpty(paramPageParams)) {
 		request.setAttribute("includePageParams", paramPageParams);
@@ -105,8 +103,8 @@ var editorItemFields = {
         onkeydown:""
     },
     redirectUrl: {
-        title: '<iwcm:text key="components.news.redirectAfterClick" />',
-        description: "Zadajte adresu stránky, alebo kliknite na ikonu na konci riadku pre jej výber",
+        title: "<iwcm:text key="components.news.redirectAfterClick"/>",
+        description: "<iwcm:text key="components.news.redirectLinkHelp"/>",
         type: "conditionalText",
         classes: "editorRight"
     }

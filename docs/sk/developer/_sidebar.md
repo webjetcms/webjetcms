@@ -55,13 +55,14 @@
     - [Upozornenie o konflikte](/developer/datatables-editor/editor-locking.md)
 - Testovanie
     - [Testovanie](/developer/testing/README.md)
+    - [Preklady textov](/developer/testing/i18n.md)
     - [Automatické testovanie DataTables](/developer/testing/datatable.md)
     - [DataTables - testovanie importu](/developer/testing/datatable-import.md)
     - [Generovanie screenshotov dokumentácie](/developer/testing/screenshots.md)
     - [Reporty cez Allure](/developer/testing/allure.md)
     - [Pokrytie kódom](/developer/testing/codecoverage.md)
     - [Paralelné spustenie testov](/developer/testing/parallel.md)
-- [Preklad dokumnentácie](/developer/documentation-translate/README.md)
+- [Preklad dokumentácie](/developer/documentation-translate/README.md)
 - Ukážkový kód
   - [PugJS aplikácia](/developer/frameworks/example.md)
 - Backend

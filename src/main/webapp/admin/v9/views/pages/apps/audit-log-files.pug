@@ -1,0 +1,78 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'audit-log-files',
+        [
+            [ '/admin/v9/apps/audit-log-files/', '[[#{audit_log_files.title}]]', true],
+            [ '#filter', '{filter}', false]
+        ]
+    )
+
+    script.
+        var logFilesDataTable;
+        let url = "/admin/rest/audit/log-files";
+        let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.LogFileBean")})];
+
+        function sanitizeFileName(fileName) {
+            //just for better doc screenshots
+            let i = fileName.indexOf("/Documents.nosync");
+            if (i > 0) fileName = fileName.substring(i+17);
+            fileName = fileName.replace('/webjet8v9/', '/webjetcms/');
+            return WJ.escapeHtml(fileName);
+        }
+
+        window.getAbsolutePath = function (absolutePath) {
+            let fileName = sanitizeFileName(absolutePath.split("//").pop());
+
+            var width = Math.floor($(window).width()*0.94);
+            var height = Math.floor($(window).height()*0.90) - 60;
+
+            WJ.openIframeModal({
+                url: "/admin/tail.jsp?file=" + encodeURIComponent(absolutePath) + "&iframed=true",
+                width: width,
+                height: height,
+                closeButtonPosition: "close-button-over",
+                buttonTitleKey: "button.cancel",
+                title: fileName
+            });
+        }
+
+        window.domReady.add(function () {
+            //presun filter do hlavicky
+            $("#pills-filter-tab").html("");
+            $("div#logFilesDataTable_extfilter").appendTo("#pills-filter-tab");
+            $("div#logFilesDataTable_extfilter").css('display', 'block');
+
+            $.ajax({
+                url: '/admin/rest/audit/log-files/log-dir',
+                success: function (data) {
+                    $("#absolutePath").html(sanitizeFileName(data));
+                }
+            });
+
+            var order = [];
+            order.push([2, 'desc']);
+
+            logFilesDataTable = WJ.DataTable({
+                url: url,
+                serverSide: false,
+                columns: columns,
+                order: order
+            });
+
+            logFilesDataTable.hideButton('create');
+            logFilesDataTable.hideButton('edit');
+            logFilesDataTable.hideButton('duplicate');
+            logFilesDataTable.hideButton('remove');
+            logFilesDataTable.hideButton('import');
+            logFilesDataTable.hideButton('export');
+            logFilesDataTable.hideButton('celledit');
+        });
+
+    div#logFilesDataTable_extfilter(style='display:none;')
+        div.row(style='padding-left:15px')
+            p#absolutePath
+
+    <table class="datatableInit table"></table>

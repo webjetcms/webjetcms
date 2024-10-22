@@ -13,7 +13,7 @@ import sk.iway.iwcm.doc.PerexGroupBean;
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PerexGroupBeanToPerexGroupsEntityMapper {
 
-<span class="fc" id="L16">    PerexGroupBeanToPerexGroupsEntityMapper INSTANCE = Mappers.getMapper(PerexGroupBeanToPerexGroupsEntityMapper.class);</span>
+<span class="nc" id="L16">    PerexGroupBeanToPerexGroupsEntityMapper INSTANCE = Mappers.getMapper(PerexGroupBeanToPerexGroupsEntityMapper.class);</span>
 
     @Mapping(source = &quot;perexGroupId&quot;, target = &quot;id&quot;, qualifiedByName = &quot;intToLong&quot;)
     @Mapping(source = &quot;relatedPages&quot;, target = &quot;relatedPages&quot;, qualifiedByName = &quot;tokensToString&quot;)
@@ -22,13 +22,13 @@ public interface PerexGroupBeanToPerexGroupsEntityMapper {
 
     @Named(&quot;intToLong&quot;)
     default Long intToLong(int id) {
-<span class="fc" id="L25">        return Long.valueOf(id);</span>
+<span class="nc" id="L25">        return Long.valueOf(id);</span>
     }
 
     @Named(&quot;tokensToString&quot;)
     default String intToLong(String[] relatedPages) {
-<span class="pc bpc" id="L30" title="1 of 2 branches missed.">        if(relatedPages.length &lt; 1) return &quot;&quot;;</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if(relatedPages.length &lt; 1) return &quot;&quot;;</span>
 <span class="nc" id="L31">        return String.join(&quot;,&quot;, relatedPages);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

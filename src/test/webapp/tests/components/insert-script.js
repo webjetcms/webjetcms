@@ -5,7 +5,7 @@ Before(({ I, login }) => {
      I.amOnPage("/admin/v9/apps/insert-script#/");
 });
 
-Scenario('insert script-zakladne testy', async ({ I, DataTables}) => {
+Scenario('insert script-zakladne testy @baseTest', async ({ I, DataTables}) => {
      I.waitForText('Zoznam skriptov', 5);
      await DataTables.baseTest({
           dataTable: 'insertScriptTable',
@@ -14,7 +14,7 @@ Scenario('insert script-zakladne testy', async ({ I, DataTables}) => {
      });
 });
 
-Scenario('pridanie platnosti od-do do upravovaneho zaznamu', async ({ I, DataTables, DT }) => {
+Scenario('pridanie platnosti od-do do upravovaneho zaznamu @baseTest', async ({ I, DataTables, DT }) => {
      await DataTables.baseTest({
           dataTable: 'insertScriptTable',
           requiredFields: ['name', 'position'],
@@ -63,7 +63,7 @@ Scenario('pridanie platnosti od-do do upravovaneho zaznamu', async ({ I, DataTab
      });
 });
 
-Scenario('pridanie adresara a webstranky do edit zaznamu', async ({ I, DataTables, DT }) => {
+Scenario('pridanie adresara a webstranky do edit zaznamu @baseTest', async ({ I, DataTables, DT }) => {
      await DataTables.baseTest({
           dataTable: 'insertScriptTable',
           requiredFields: ['name', 'position'],
@@ -104,7 +104,7 @@ Scenario('pridanie adresara a webstranky do edit zaznamu', async ({ I, DataTable
      });
 });
 
-Scenario('pridanie sriptu do edit zaznamu', async ({ I, DataTables, DT }) => {
+Scenario('pridanie sriptu do edit zaznamu @baseTest', async ({ I, DataTables, DT }) => {
      await DataTables.baseTest({
           dataTable: 'insertScriptTable',
           requiredFields: ['name', 'position'],
@@ -133,7 +133,7 @@ Scenario('pridanie sriptu do edit zaznamu', async ({ I, DataTables, DT }) => {
      });
 });
 
-Scenario('zmena hodnoty cookie', async ({ I, DataTables, DT, DTE }) => {
+Scenario('zmena hodnoty cookie @baseTest', async ({ I, DataTables, DT, DTE }) => {
      await DataTables.baseTest({
           dataTable: 'insertScriptTable',
           requiredFields: ['name', 'position'],
@@ -228,7 +228,7 @@ function testAlwaysIncluded(I, page) {
 
      //datumovo obmedzene
      I.seeInSource("//Platny skript s casovo obmedzenou platnostou");
-     I.dontSeeInSource("//Expirovany skript v minulosti");
+     I.dontSeeInSource("//Exspirovany skript v minulosti");
      I.dontSeeInSource("//Neplatny skript s casovo obmedzenou platnostou");
      I.seeInSource("//Platny planovany skript");
 

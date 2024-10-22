@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 @Getter
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
-@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_SENDMAIL)
+@EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_DMAIL)
 @SecondaryTable(name = &quot;emails&quot;, pkJoinColumns=@PrimaryKeyJoinColumn(name=&quot;email_id&quot;, referencedColumnName=&quot;email_id&quot;))
 <span class="fc" id="L32">public class StatClicksEntity extends ActiveRecordRepository implements Serializable {</span>
 
@@ -87,4 +87,4 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 <span class="nc" id="L87">		this. id = id;</span>
 <span class="nc" id="L88">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

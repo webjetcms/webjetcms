@@ -131,7 +131,7 @@ public class JarPackaging
          //musime pouzit File, lebo IwcmFile by bolo nazad zacyklenie!!!
          //TODO: nejaka cache, asi idealne na cele isJarPackaging
 <span class="fc" id="L133">         File f = new File(Tools.getRealPath(virtualPath));</span>
-<span class="pc bpc" id="L134" title="1 of 2 branches missed.">         if (f.exists()) return false;</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">         if (f.exists()) return false;</span>
 
          //subor neexistuje, takze je to v jarku
 <span class="fc" id="L137">         return true;</span>
@@ -296,4 +296,4 @@ public class JarPackaging
 <span class="fc" id="L296">      return locations;</span>
    }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

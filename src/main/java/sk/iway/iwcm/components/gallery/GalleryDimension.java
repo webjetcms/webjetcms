@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.persistence.*;
 
+import com.drew.lang.annotations.NotNull;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import sk.iway.iwcm.Tools;
@@ -90,6 +91,7 @@ public class GalleryDimension {
     private String resizeMode;
 
     @Column(name = "image_width")
+    @NotNull
     @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
         title = "gallery.image_width",
@@ -107,6 +109,7 @@ public class GalleryDimension {
     private Integer imageWidth = 160;
 
     @Column(name = "image_height")
+    @NotNull
     @DataTableColumn(
         inputType = DataTableColumnType.NUMBER,
         title = "gallery.image_height",
@@ -116,6 +119,7 @@ public class GalleryDimension {
     private Integer imageHeight = 120;
 
     @Column(name = "normal_width")
+    @NotNull
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT_NUMBER,
         title = "gallery.image_width",
@@ -133,6 +137,7 @@ public class GalleryDimension {
     private Integer normalWidth = 750;
 
     @Column(name = "normal_height")
+    @NotNull
     @DataTableColumn(
         inputType = DataTableColumnType.TEXT_NUMBER,
         title = "gallery.image_height",
@@ -193,7 +198,8 @@ public class GalleryDimension {
                     @DataTableColumnEditorAttr(key = "60%", value = "60"),
                     @DataTableColumnEditorAttr(key = "70%", value = "70"),
                     @DataTableColumnEditorAttr(key = "80%", value = "80"),
-                    @DataTableColumnEditorAttr(key = "90%", value = "90")
+                    @DataTableColumnEditorAttr(key = "90%", value = "90"),
+                    @DataTableColumnEditorAttr(key = "100%", value = "100")
                 }
             )
         }

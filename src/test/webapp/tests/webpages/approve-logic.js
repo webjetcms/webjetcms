@@ -853,7 +853,7 @@ async function updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlTe
     }
 
     //close notification (if exists) about latest page change
-    I.clickIfVisible("#toast-container-webjet div.toast-warning button.toast-close-button")
+    await I.clickIfVisible("#toast-container-webjet div.toast-warning button.toast-close-button")
 
     //Fill page
     await DTE.fillCkeditor(insertText);

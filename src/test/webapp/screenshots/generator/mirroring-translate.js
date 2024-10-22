@@ -78,11 +78,20 @@ function removePage(I, DT, pageName, confLng, all = false) {
     
     I.click(remove_webButton);
 
-    if("sk" === confLng) {
-        I.click("Zmazať", "div.DTE_Action_Remove");
-        I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    } else if("en" === confLng) { 
-        I.click("Delete", "div.DTE_Action_Remove");
-        I.see("No matching records found");
+    switch (confLng) {
+        case 'sk':
+            I.click("Zmazať", "div.DTE_Action_Remove");
+            I.see("Nenašli sa žiadne vyhovujúce záznamy");
+            break;
+        case 'en':
+            I.click("Delete", "div.DTE_Action_Remove");
+            I.see("No matching records found");
+            break;
+        case 'cs':
+            I.click("Smazat", "div.DTE_Action_Remove");
+            I.see("Nenašly se žádné vyhovující záznamy");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 }

@@ -480,7 +480,7 @@ public class SetupActionsService {
 		if ("com.mysql.jdbc.Driver".equals(sForm.getDbDriver())) {
 			url = "jdbc:mysql://"+sForm.getDbDomain()+port+"/"+sForm.getDbName()+"?"+sForm.getDbParameters();
 		} else if ("org.mariadb.jdbc.Driver".equals(sForm.getDbDriver())) {
-			url = "jdbc:mysql://"+sForm.getDbDomain()+port+"/"+sForm.getDbName()+"?"+sForm.getDbParameters();
+			url = "jdbc:mariadb://"+sForm.getDbDomain()+port+"/"+sForm.getDbName()+"?"+sForm.getDbParameters();
 		} else if ("net.sourceforge.jtds.jdbc.Driver".equals(sForm.getDbDriver())) {
 			url = "jdbc:jtds:sqlserver://"+sForm.getDbDomain()+port+"/"+sForm.getDbName()+";"+sForm.getDbParameters();
 		} else if ("oracle.jdbc.driver.OracleDriver".equals(sForm.getDbDriver())) {

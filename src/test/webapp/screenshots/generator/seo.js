@@ -13,7 +13,7 @@ function setDates(I, filterName) {
     //pockaj na loader pre grafy
     I.waitForInvisible("#loader", 20);
 
-    if("sk" === confLng) {
+    if("sk" === confLng || "cs" === confLng) {
         within(filterName, () => {
             I.fillField({css: "input.dt-filter-from-dayDate"}, "01.07.2021");
             I.fillField({css: "input.dt-filter-to-dayDate"}, "30.07.2021");
@@ -91,13 +91,20 @@ Scenario("seo - screenshots webpage", ({ I, Document, DTE }) => {
 
     I.forceClickCss("#components-seo-title");
     I.wait(3);
-
-    if("sk" === confLng) {
-        I.click("Vložiť do stránky");
-    } else if("en" === confLng) { 
-        I.click("Add to page");
+    switch (confLng) {
+        case 'sk':
+            I.click("Vložiť do stránky");
+            break;
+        case 'en':
+            I.click("Add to page");
+            break;
+        case 'cs':
+            I.click("Vložit do stránky");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
-
+    
     I.wait(10);
 
     Document.screenshot("/redactor/apps/seo/seo-app.png");

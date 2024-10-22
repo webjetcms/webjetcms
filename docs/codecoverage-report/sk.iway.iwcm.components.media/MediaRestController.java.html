@@ -47,7 +47,7 @@ public class MediaRestController extends DatatableRestControllerV2&lt;Media, Lon
 
     private final MediaRepository mediaRepository;
     private final MediaGroupRepository mediaGroupRepository;
-<span class="fc" id="L50">    private final String DOCUMENTS_TABLE_NAME = &quot;documents&quot;;</span>
+    private static final String DOCUMENTS_TABLE_NAME = &quot;documents&quot;;
 
     @Autowired
     public MediaRestController(MediaRepository mediaRepository, MediaGroupRepository mediaGroupRepository) {
@@ -169,7 +169,7 @@ public class MediaRestController extends DatatableRestControllerV2&lt;Media, Lon
             try {
                 //sme vo vsetkych mediach, ak medium existuje, zachovajme datum
 <span class="pc bpc" id="L171" title="1 of 4 branches missed.">                if (entity.getId()!=null &amp;&amp; entity.getId()&gt;0) {</span>
-<span class="fc" id="L172">                    Media current = mediaRepository.getById(entity.getId());</span>
+<span class="fc" id="L172">                    Media current = mediaRepository.findFirstByIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId()).orElse(null);</span>
 <span class="pc bpc" id="L173" title="1 of 2 branches missed.">                    if (current != null) date = current.getLastUpdate();</span>
 <span class="pc bpc" id="L174" title="2 of 4 branches missed.">                } else if (entity.getMediaFkId()!=null &amp;&amp; DOCUMENTS_TABLE_NAME.equals(entity.getMediaFkTableName())) {</span>
                     //skus podla poslednej zmeny web stranky
@@ -197,7 +197,7 @@ public class MediaRestController extends DatatableRestControllerV2&lt;Media, Lon
         //set empty Media entity (without setting, creating dialog will not show but don't throw any error)
 <span class="fc bfc" id="L198" title="All 2 branches covered.">        if(entity == null) {</span>
 <span class="fc" id="L199">            entity = new Media();</span>
-<span class="fc" id="L200">            entity.setGroups(new ArrayList&lt;MediaGroupBean&gt;());</span>
+<span class="fc" id="L200">            entity.setGroups(new ArrayList&lt;&gt;());</span>
 <span class="fc" id="L201">            entity.setMediaFkTableName(&quot;&quot;);</span>
 <span class="fc" id="L202">            entity.setMediaFkId(-1);</span>
 <span class="fc" id="L203">            entity.setMediaLink(&quot;&quot;);</span>
@@ -225,7 +225,7 @@ public class MediaRestController extends DatatableRestControllerV2&lt;Media, Lon
             }
         }
 
-<span class="pc bpc" id="L228" title="1 of 4 branches missed.">        if (entity.getMediaFkId()!=null &amp;&amp; entity.getMediaFkId() &gt; 0) checkPerms(entity.getMediaFkId());</span>
+<span class="fc bfc" id="L228" title="All 4 branches covered.">        if (entity.getMediaFkId()!=null &amp;&amp; entity.getMediaFkId() &gt; 0) checkPerms(entity.getMediaFkId());</span>
 
 <span class="fc" id="L230">        return processFromEntity(entity, ProcessItemAction.GETONE);</span>
     }
@@ -279,56 +279,55 @@ public class MediaRestController extends DatatableRestControllerV2&lt;Media, Lon
 
 <span class="fc" id="L280">            DocDetails doc = entity.getEditorFields().getDocDetails();</span>
 
-<span class="pc bpc" id="L282" title="1 of 2 branches missed.">            if(doc == null) valid = false;</span>
-<span class="fc bfc" id="L283" title="All 2 branches covered.">            else if(doc.getDocId() &lt; 0) valid = false;</span>
+<span class="pc bpc" id="L282" title="1 of 4 branches missed.">            if(doc == null || doc.getDocId() &lt; 0) valid = false;</span>
 
-<span class="fc bfc" id="L285" title="All 2 branches covered.">            if(!valid) errors.rejectValue(&quot;errorField.editorFields.docDetails&quot;, null, getProp().getText(&quot;media.doc_tree_select.required&quot;));</span>
+<span class="fc bfc" id="L284" title="All 2 branches covered.">            if(!valid) errors.rejectValue(&quot;errorField.editorFields.docDetails&quot;, null, getProp().getText(&quot;media.doc_tree_select.required&quot;));</span>
 
             //also show validate error for title
-<span class="fc bfc" id="L288" title="All 2 branches covered.">            if (Tools.isEmpty(entity.getMediaTitleSk())) errors.rejectValue(&quot;errorField.mediaTitleSk&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="fc bfc" id="L287" title="All 2 branches covered.">            if (Tools.isEmpty(entity.getMediaTitleSk())) errors.rejectValue(&quot;errorField.mediaTitleSk&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
         }
-<span class="fc" id="L290">    }</span>
+<span class="fc" id="L289">    }</span>
 
     /**
      * Returns true if call is from all media page
      * @return
      */
     private boolean isCallerFromAllMedia() {
-<span class="fc" id="L297">        return &quot;true&quot;.equals(getRequest().getParameter(&quot;isCalledFromTable&quot;));</span>
+<span class="fc" id="L296">        return &quot;true&quot;.equals(getRequest().getParameter(&quot;isCalledFromTable&quot;));</span>
     }
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;Media&gt; root, CriteriaBuilder builder) {
-<span class="fc" id="L302">        super.addSpecSearch(params, predicates, root, builder);</span>
-<span class="fc" id="L303">        int groupId = Tools.getIntValue(params.get(&quot;searchEditorFields.groups&quot;), -1);</span>
-<span class="fc bfc" id="L304" title="All 2 branches covered.">        if (groupId &gt; 0) {</span>
-<span class="fc" id="L305">            predicates.add(builder.equal(root.join(&quot;groups&quot;).get(&quot;id&quot;), groupId));</span>
+<span class="fc" id="L301">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L302">        int groupId = Tools.getIntValue(params.get(&quot;searchEditorFields.groups&quot;), -1);</span>
+<span class="fc bfc" id="L303" title="All 2 branches covered.">        if (groupId &gt; 0) {</span>
+<span class="fc" id="L304">            predicates.add(builder.equal(root.join(&quot;groups&quot;).get(&quot;id&quot;), groupId));</span>
         }
-<span class="fc" id="L307">        String docTitle = params.get(&quot;searchEditorFields.docDetails&quot;);</span>
-<span class="fc bfc" id="L308" title="All 2 branches covered.">        if (Tools.isNotEmpty(docTitle)) {</span>
-<span class="fc" id="L309">            SpecSearch&lt;Media&gt; specSearch = new SpecSearch&lt;&gt;();</span>
-<span class="fc" id="L310">            specSearch.addSpecSearchDocFullPath(docTitle, &quot;mediaFkId&quot;, predicates, root, builder);</span>
+<span class="fc" id="L306">        String docTitle = params.get(&quot;searchEditorFields.docDetails&quot;);</span>
+<span class="fc bfc" id="L307" title="All 2 branches covered.">        if (Tools.isNotEmpty(docTitle)) {</span>
+<span class="fc" id="L308">            SpecSearch&lt;Media&gt; specSearch = new SpecSearch&lt;&gt;();</span>
+<span class="fc" id="L309">            specSearch.addSpecSearchDocFullPath(docTitle, &quot;mediaFkId&quot;, predicates, root, builder);</span>
         }
-<span class="fc" id="L312">    }</span>
+<span class="fc" id="L311">    }</span>
 
     @Override
     public Media processFromEntity(Media entity, ProcessItemAction action) {
         //GetOneItem call super, and super call this with null entity !
-<span class="fc bfc" id="L317" title="All 2 branches covered.">        if(entity == null) return entity;</span>
+<span class="fc bfc" id="L316" title="All 2 branches covered.">        if(entity == null) return entity;</span>
 
         //Prepare instance of editor fields
-<span class="fc" id="L320">        MediaEditorFields mef = new MediaEditorFields();</span>
+<span class="fc" id="L319">        MediaEditorFields mef = new MediaEditorFields();</span>
 
         //Set &quot;volitelne polia&quot;
-<span class="fc" id="L323">        mef.setFieldsDefinition( mef.getFields(entity, &quot;components.media&quot;, 'F') );</span>
+<span class="fc" id="L322">        mef.setFieldsDefinition( mef.getFields(entity, &quot;components.media&quot;, 'F') );</span>
 
         //Perform from action
-<span class="fc" id="L326">        mef.fromMedia(entity);</span>
+<span class="fc" id="L325">        mef.fromMedia(entity);</span>
 
         //Set prepared editor fields
-<span class="fc" id="L329">        entity.setEditorFields(mef);</span>
-<span class="fc" id="L330">        return entity;</span>
+<span class="fc" id="L328">        entity.setEditorFields(mef);</span>
+<span class="fc" id="L329">        return entity;</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

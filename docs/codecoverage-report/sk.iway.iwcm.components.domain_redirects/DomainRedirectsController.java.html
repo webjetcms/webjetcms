@@ -2,17 +2,26 @@
 
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.domainRedirects.DomainRedirectBean;
 import sk.iway.iwcm.components.domainRedirects.DomainRedirectDB;
+import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
 @RestController
@@ -23,36 +32,91 @@ public class DomainRedirectsController extends DatatableRestControllerV2&lt;Doma
 
     @Autowired
     public DomainRedirectsController() {
-<span class="fc" id="L26">        super(null);</span>
-<span class="fc" id="L27">    }</span>
+<span class="fc" id="L35">        super(null);</span>
+<span class="fc" id="L36">    }</span>
 
     @Override
     public Page&lt;DomainRedirectBean&gt; getAllItems(Pageable pageable) {
-<span class="fc" id="L31">        List&lt;DomainRedirectBean&gt; listedBeans = DomainRedirectDB.getAllRedirects();</span>
-<span class="fc" id="L32">        return new PageImpl&lt;&gt;(listedBeans);</span>
+        List&lt;DomainRedirectBean&gt; listedBeans;
+<span class="pc bpc" id="L41" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) listedBeans = DomainRedirectDB.getRedirectByDestDomain(CloudToolsForCore.getDomainName());</span>
+<span class="fc" id="L42">        else listedBeans = DomainRedirectDB.getAllRedirects();</span>
+<span class="fc" id="L43">        return new PageImpl&lt;&gt;(listedBeans);</span>
     }
 
     @Override
     public DomainRedirectBean getOneItem(long id) {
-<span class="nc" id="L37">        return DomainRedirectDB.getRedirect((int) id);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        if (id &lt; 1) {</span>
+<span class="fc" id="L49">            DomainRedirectBean bean = new DomainRedirectBean();</span>
+<span class="fc" id="L50">            bean.setRedirectTo(CloudToolsForCore.getDomainName());</span>
+<span class="fc" id="L51">            return bean;</span>
+        }
+<span class="nc" id="L53">        return DomainRedirectDB.getRedirect((int) id);</span>
     }
 
     @Override
     public DomainRedirectBean insertItem(DomainRedirectBean entity) {
-<span class="fc" id="L42">        DomainRedirectDB.insert(entity);</span>
-<span class="fc" id="L43">        return entity;</span>
+<span class="fc" id="L58">        DomainRedirectDB.insert(entity);</span>
+<span class="fc" id="L59">        return entity;</span>
     }
 
     @Override
     public DomainRedirectBean editItem(DomainRedirectBean entity, long id) {
-<span class="fc" id="L48">        entity.setRedirectId((int)id);</span>
-<span class="fc" id="L49">        return DomainRedirectDB.update(entity);</span>
+<span class="fc" id="L64">        entity.setRedirectId((int)id);</span>
+<span class="fc" id="L65">        return DomainRedirectDB.update(entity);</span>
     }
 
     @Override
     public boolean deleteItem(DomainRedirectBean domainRedirectBean, long id){
-<span class="fc" id="L54">        DomainRedirectDB.delete((int)id);</span>
-<span class="fc" id="L55">        return true;</span>
+<span class="fc" id="L70">        DomainRedirectDB.delete((int)id);</span>
+<span class="fc" id="L71">        return true;</span>
     }
+
+    @Override
+    public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, DomainRedirectBean&gt; target,
+            Identity user, Errors errors, Long id, DomainRedirectBean entity) {
+
+<span class="fc" id="L78">        isDomainValid(entity, errors);</span>
+<span class="fc" id="L79">    }</span>
+
+    @Override
+    public boolean beforeDelete(DomainRedirectBean entity) {
+<span class="fc" id="L83">        return isDomainValid(entity, null);</span>
+    }
+
+    @Override
+    public void beforeSave(DomainRedirectBean entity) {
+<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        if (isDomainValid(entity, null)==false) throwConstraintViolation(getProp().getText(&quot;components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu&quot;));</span>
+<span class="fc" id="L89">    }</span>
+
+    private boolean isDomainValid(DomainRedirectBean entity, Errors errors) {
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()==false) return true;</span>
+
+<span class="nc" id="L94">        boolean isValid = true;</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">        if (entity.getRedirectTo().contains(CloudToolsForCore.getDomainName())==false)</span>
+        {
+<span class="nc" id="L97">            isValid = false;</span>
+        }
+
+        //check existing row in database for domainName
+<span class="nc bnc" id="L101" title="All 4 branches missed.">        if (entity.getRedirectId()!=null &amp;&amp; entity.getRedirectId().intValue()&gt;0) {</span>
+<span class="nc" id="L102">            String currentDomain = (new SimpleQuery()).forString(&quot;SELECT redirect_to FROM domain_redirects WHERE redirect_id=?&quot;, entity.getRedirectId());</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">            if (currentDomain.equals(CloudToolsForCore.getDomainName())==false) {</span>
+<span class="nc" id="L104">                isValid = false;</span>
+            }
+        }
+
+<span class="nc bnc" id="L108" title="All 4 branches missed.">        if (isValid==false &amp;&amp; errors != null) errors.rejectValue(&quot;errorField.redirectTo&quot;, &quot;403&quot;, Prop.getInstance().getText(&quot;components.file_archiv.file_rename.nemate_pravo_na_tuto_editaciu&quot;));</span>
+
+<span class="nc" id="L110">        return isValid;</span>
+    }
+
+    @Override
+    public boolean checkItemPerms(DomainRedirectBean entity, Long id) {
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (InitServlet.isTypeCloud()) {</span>
+<span class="nc" id="L116">            return isDomainValid(entity, null);</span>
+        }
+<span class="fc" id="L118">        return true;</span>
+    }
+
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

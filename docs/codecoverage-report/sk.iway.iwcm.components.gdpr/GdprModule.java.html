@@ -25,7 +25,7 @@ import sk.iway.iwcm.i18n.Prop;
 
     @Override
     public String toString() {
-<span class="pc bpc" id="L28" title="3 of 4 branches missed.">        String lng = (SetCharacterEncodingFilter.getCurrentRequestBean() != null &amp;&amp; SetCharacterEncodingFilter.getCurrentRequestBean().getLng() != null) ? SetCharacterEncodingFilter.getCurrentRequestBean().getLng() : &quot;sk&quot;;</span>
+<span class="pc bpc" id="L28" title="2 of 4 branches missed.">        String lng = (SetCharacterEncodingFilter.getCurrentRequestBean() != null &amp;&amp; SetCharacterEncodingFilter.getCurrentRequestBean().getLng() != null) ? SetCharacterEncodingFilter.getCurrentRequestBean().getLng() : &quot;sk&quot;;</span>
 <span class="fc" id="L29">        Prop prop = Prop.getInstance(lng);</span>
 <span class="fc" id="L30">        return prop.getText(&quot;components.gdpr.module.&quot;+this.name().toLowerCase());</span>
     }
@@ -130,4 +130,4 @@ import sk.iway.iwcm.i18n.Prop;
 <span class="fc" id="L130">        return sb.toString();</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

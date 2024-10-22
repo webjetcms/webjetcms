@@ -87,6 +87,11 @@ if (request.getParameter("rootForumId")==null)
 {
    //vydedukuj
    GroupDetails actualGroup = (GroupDetails)request.getAttribute("pageGroupDetails");
+
+   //Fix - when creating new page, actualGroup is null (doest not exist yet)
+   //User we not see previu of app but at least it wont throw exception
+   if(actualGroup == null) return;
+
    GroupDetails parentGroup = GroupsDB.getInstance().getGroup(actualGroup.getParentGroupId());
    if (parentGroup != null) rootForumId = parentGroup.getDefaultDocId();
 }
@@ -351,7 +356,7 @@ if(!isAjaxCall)
 	<div class="row mobile-fix">
 		<div class="col-md-2 col-xs-12">
 			<% if (canPostNewTopic) { %>
-			<a class="btn btn-primary btn-sm" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<%=parentId%>&type=mb&rootForumId=<%=rootForumId%>&docid=<%=docId%>&language=<%=lng%>');" title="<iwcm:text key="components.forum.new_topic"/>">
+			<a class="btn btn-primary btn-sm btn-forum-new-topic" href="javascript:openWJDialog('forum', '/components/forum/new.jsp?parent=<%=parentId%>&type=mb&rootForumId=<%=rootForumId%>&docid=<%=docId%>&language=<%=lng%>');" title="<iwcm:text key="components.forum.new_topic"/>">
 				<!--span class="btn-label"><i class="fa fa-pencil-square-o"></i></span-->
 				<iwcm:text key="components.forum.new_topic"/>
 			</a>

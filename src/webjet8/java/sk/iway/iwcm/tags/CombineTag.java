@@ -23,10 +23,10 @@ import sk.iway.iwcm.i18n.Prop;
  *@author       $Author: jeeff $
  *@created      $Date: 2015/05/11 16:02:38 $
  */
-
+@SuppressWarnings({"java:S1104", "java:S3008", "java:S1444"})
 public final class CombineTag extends BodyTagSupport
 {
-	private static Date VERSION_DATETIME = new Date();
+	private static Date versionDateTime = new Date();
 
 	private static final long serialVersionUID = -7352999434842740830L;
 
@@ -103,7 +103,8 @@ public final class CombineTag extends BodyTagSupport
 	public static String FILES_ADMIN_INLINE_CSS = "/components/_common/admin/inline/inline.css," +
 			"/admin/webpages/page-builder/style/style.css," +
 			"/admin/webpages/page-builder/style/jquery.minicolors.css," +
-			"/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css";
+			"/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/samples/contents.css," +
+			"/admin/v9/dist/css/vendor-inline.style.css";
 
 	//set oznacuje schovany zoznam suborov pre kombinovanie
 	private String set = null;
@@ -142,50 +143,50 @@ public final class CombineTag extends BodyTagSupport
 			StringBuilder tag = new StringBuilder();
 			long v = getVersion();
 
-			String set = getSet();
+			String filesToCombine = getSet();
 
-			if (Tools.isEmpty(set))
+			if (Tools.isEmpty(filesToCombine))
 			{
 				BodyContent bc = getBodyContent();
 				String body = bc.getString();
 				if (Tools.isNotEmpty(body))
 				{
-					set = body;
+					filesToCombine = body;
 				}
 			}
 
-			set = removeCrLf(set);
+			filesToCombine = removeCrLf(filesToCombine);
 
-			set = Tools.replace(set, "USERLANG", Tools.replace(lng, "cz", "cs"));
+			filesToCombine = Tools.replace(filesToCombine, "USERLANG", Tools.replace(lng, "cz", "cs"));
 
 			String baseCss = (String)request.getAttribute("base_css_link_nocombine");
 			String cssLink = (String)request.getAttribute("css_link_nocombine");
 
 			if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))
 			{
-				set = Tools.replace(set, "base_css_link", removeCrLf(baseCss));
-				set = Tools.replace(set, "css_link", removeCrLf(cssLink));
+				filesToCombine = Tools.replace(filesToCombine, "base_css_link", removeCrLf(baseCss));
+				filesToCombine = Tools.replace(filesToCombine, "css_link", removeCrLf(cssLink));
 			}
 
 			if (combineEnabled)
 			{
 
 
-				if (set.startsWith("admin"))
+				if (filesToCombine.startsWith("admin"))
 				{
 					//zobrazenie v admin casti
 					if ("css".equals(getType()))
 					{
-						tag.append("<link href=\"/admin/scripts/combine.jsp?t=css&amp;set=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>");
+						tag.append("<link href=\"/admin/scripts/combine.jsp?t=css&amp;set=").append(filesToCombine).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>");
 					}
 					else
 					{
 						//MBO: ak vlozi jQuery tak to setne aj do req aby sa uz znova nedal vlozit cez Tool.insertJquery
-						if (set!=null && set.startsWith("adminJqueryJs"))
+						if (filesToCombine!=null && filesToCombine.startsWith("adminJqueryJs"))
 						{
 							Tools.insertJQuery(request);
 						}
-						tag.append("<script src=\"/admin/scripts/combine.jsp?t=js&amp;set=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>");
+						tag.append("<script src=\"/admin/scripts/combine.jsp?t=js&amp;set=").append(filesToCombine).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>");
 					}
 				}
 				else
@@ -193,27 +194,27 @@ public final class CombineTag extends BodyTagSupport
 					//zobrazenie na beznej web stranke
 					if ("css".equals(getType()))
 					{
-						if ("tempCss".equals(set))
+						if ("tempCss".equals(filesToCombine))
 						{
 							if (Tools.isNotEmpty(baseCss) || Tools.isNotEmpty(cssLink))
 							{
-								set = baseCss;
-								if (Tools.isEmpty(set)) set = cssLink;
-								else if (Tools.isNotEmpty(cssLink)) set = set + ","+cssLink;
+								filesToCombine = baseCss;
+								if (Tools.isEmpty(filesToCombine)) filesToCombine = cssLink;
+								else if (Tools.isNotEmpty(cssLink)) filesToCombine = filesToCombine + ","+cssLink;
 							}
 						}
 
-						tag.append("<link href=\"/components/_common/combine.jsp?t=css&amp;f=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>");
+						tag.append("<link href=\"/components/_common/combine.jsp?t=css&amp;f=").append(filesToCombine).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" rel=\"stylesheet\" type=\"text/css\"/>");
 					}
 					else
 					{
-						tag.append("<script src=\"/components/_common/combine.jsp?t=js&amp;f=").append(set).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>");
+						tag.append("<script src=\"/components/_common/combine.jsp?t=js&amp;f=").append(filesToCombine).append("&amp;v=").append(v).append("&amp;lng=").append(lng).append("\" type=\"text/javascript\"></script>");
 					}
 				}
 			}
 			else
 			{
-				String files[] = Tools.getTokens( Tools.replace(getFiles(set), "USERLANG", Tools.replace(lng, "cz", "cs")), ",\n");
+				String[] files = Tools.getTokens( Tools.replace(getFiles(filesToCombine), "USERLANG", Tools.replace(lng, "cz", "cs")), ",\n");
 				for (String file : files)
 				{
 					if ("css".equals(getType()))
@@ -368,16 +369,16 @@ public final class CombineTag extends BodyTagSupport
 	 */
 	public static long getVersion()
 	{
-		return VERSION_DATETIME.getTime();
+		return versionDateTime.getTime();
 	}
 
 	public static void setVersion(long version)
 	{
-		VERSION_DATETIME = new Date(version);
+		versionDateTime = new Date(version);
 	}
 
 	public static void resetVersion()
 	{
-		VERSION_DATETIME = new Date();
+		versionDateTime = new Date();
 	}
 }

@@ -43,6 +43,10 @@ import * as fieldTypeWysiwyg from './field-type-wysiwyg';
 import * as fieldTypeJsTree from './field-type-jstree';
 import * as fieldTypeSelectEditable from './field-type-select-editable';
 import * as fieldTypeAttrs from './field-type-attrs';
+import * as fieldTypeIframe from './field-type-iframe';
+import * as fieldTypeColor from './field-type-color';
+import * as fieldTypeBase64 from './field-type-base64';
+import * as fieldTypeStaticText from './field-type-static-text';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
@@ -132,11 +136,15 @@ export const dataTableInit = options => {
     DATA.lastExportColumnName = (typeof options.lastExportColumnName !== "undefined") ? options.lastExportColumnName : null;
     DATA.byIdExportColumnName = (typeof options.byIdExportColumnName !== "undefined") ? options.byIdExportColumnName : null;
     DATA.editorButtons = options.editorButtons ? options.editorButtons : '<i class="ti ti-check"></i> ' + WJ.translate('button.save');
+    DATA.createButtons = options.createButtons ? options.createButtons : '<i class="ti ti-check"></i> ' + WJ.translate('button.add');
     DATA.keyboardSave = (typeof options.keyboardSave !== "undefined") ? options.keyboardSave : true;
     DATA.stateSave = (typeof options.stateSave !== "undefined") ? options.stateSave : true;
     DATA.autoHeight = (typeof options.autoHeight !== "undefined") ? options.autoHeight : true;
     DATA.customFieldsUpdateColumns = (typeof options.customFieldsUpdateColumns !== "undefined") ? options.customFieldsUpdateColumns : false;
     DATA.customFieldsUpdateColumnsPreserveVisibility = (typeof options.customFieldsUpdateColumnsPreserveVisibility !== "undefined") ? options.customFieldsUpdateColumnsPreserveVisibility : false;
+
+    //false - we don't want to hash filter for this datatable
+    DATA.initHashFilter = (typeof options.initHashFilter !== "undefined") ? options.initHashFilter : true;
 
     //nastavenie predvoleneho vyhladavania
     DATA.defaultSearch = (typeof options.defaultSearch !== "undefined") ? options.defaultSearch : null;
@@ -144,6 +152,9 @@ export const dataTableInit = options => {
     //uklada automaticku velkost strany (prva polozka)
     DATA.autoPageLength = 10;
     DATA.autoPageLengthTitle = DATA.autoPageLength;
+
+    //allow editor locking notifications
+    DATA.editorLocking = (typeof options.editorLocking !== "undefined") ? options.editorLocking : true;
 
     //console.log("options=", options);
 
@@ -329,206 +340,6 @@ export const dataTableInit = options => {
         }
     }
 
-    /**
-     * Aktualizuje select v hlavicke/editore, nastavi optiony podla posledneho ajax requestu
-     * @param {*} fieldName
-     * @returns
-     */
-    function updateFilterSelect(fieldName) {
-        var fieldNameSelector = fieldName;
-        if (fieldNameSelector.indexOf(".")!=-1) fieldNameSelector = fieldNameSelector.replace(/\./gi, "\\.");
-        var select = $("select.dt-filter-" + fieldNameSelector)[0];
-        var currentValue = $(select).val();
-        //console.log("updateFilterSelect, fieldNameSelector=", fieldNameSelector, " select=", select, "currentValue=", currentValue);
-
-        if (typeof select != "undefined") {
-            //zrus vsetky options
-            select.options.length = 0;
-            select.add(new Option("", ""));
-            //pridaj options podla DATA objektu
-            for (var index in DATA.columns) {
-                //console.log("index: ", index);
-                if (DATA.columns[index].data === fieldName) {
-                    for (var optionIndex in DATA.columns[index].editor.options) {
-                        var dataOption = DATA.columns[index].editor.options[optionIndex];
-                        //prazdnu hodnotu sme pridali uz hore, preskoc
-                        if (optionIndex==0 && dataOption.label=="" && dataOption.value=="") continue;
-                        //console.log("option 2: ", dataOption);
-                        var option = new Option(dataOption.label, dataOption.value);
-                        if ("editorFields.statusIcons"===fieldName) {
-                            option.setAttribute("data-content", dataOption.label);
-                            //console.log("Set data attribute, option=", option);
-                        }
-                        select.add(option);
-                    }
-                    break;
-                }
-            }
-
-            if (currentValue != null) $(select).val(currentValue);
-
-            if (typeof $(select).data("selectpicker") !== "undefined") {
-                //console.log("Updating selectpicker 2");
-                $(select).selectpicker('refresh');
-            }
-        }
-
-        let dteSelect = $("#DTE_Field_"+fieldNameSelector);
-        //console.log("dteSelect=", dteSelect);
-        if (typeof dteSelect.data("selectpicker") !== "undefined") {
-            setTimeout(()=>{
-                //console.log("Updating selectpicker DTE timeout ", dteSelect);
-                dteSelect.selectpicker('refresh');
-            }, 100);
-        }
-    }
-
-    /**
-     * Nastavi select/date pickre na DT hlavicke a vyvola jej pozicie podla DT (sirky stlpcov)
-     */
-    function fixDatatableHeaderInputs() {
-        //console.log("fixDatatableHeaderInputs, DATA=", DATA);
-
-        $('#' + DATA.id + '_wrapper select.filter-input').each(function(index, element) {
-            //console.log("testing select, this=", this);
-            let $this = $(this);
-
-            if ($this.hasClass("selectpickerbinded")) return;
-            $this.addClass("selectpickerbinded");
-
-            //console.log("Setting selectpicker ", this);
-            $this.selectpicker(DT_SELECTPICKER_OPTS);
-
-            //mozno sa len pridal do hlavicky, nastav optiony
-            //console.log("Aktualizujem optiony, this=", this.options.length);
-            if (this.options.length<1) {
-                let name = $this.data("dt-name");
-                //console.log("name=", name);
-                if (typeof name != "undefined" && name != null) {
-                    updateFilterSelect(name);
-                }
-            }
-        });
-        $('#' + DATA.id + '_wrapper select.filter-input-prepend, #' + DATA.id + '_extfilter select.filter-input-prepend').each(function(index, element) {
-            let $this = $(this);
-            if ($this.hasClass("selectpickerbinded")) return;
-            $this.addClass("selectpickerbinded");
-
-            //console.log("Setting selectpicker ", this);
-            $this.selectpicker(DT_SELECTPICKER_OPTS_NOSEARCH);
-        });
-
-        $('#' + DATA.id + '_wrapper .datepicker, #' + DATA.id + '_extfilter .datepicker').each(function (key, dateInput) {
-            let $this = $(dateInput);
-            if ($this.hasClass("datepickerbinded")) return;
-            $this.addClass("datepickerbinded");
-
-            $this.on("change", function() {
-                if ($this.val() != "") $this.addClass("has-value");
-                else $this.removeClass("has-value");
-
-                TABLE.columns.adjust();
-                TABLE.fixedHeader.adjust();
-            });
-
-            //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
-            new $.fn.dataTable.Editor.DateTime($this, {
-                format: 'L',
-                momentLocale: window.userLng,
-                locale: window.userLng,
-                keyInput: false,
-                i18n: EDITOR.i18n.datetime,
-                onChange: function() {
-                    $this.trigger("change");
-                }
-            });
-        });
-
-        $('#' + DATA.id + '_wrapper .datetimepicker, #' + DATA.id + '_extfilter .datetimepicker').each(function (key, dateInput) {
-            let $this = $(dateInput);
-            if ($this.hasClass("datepickerbinded")) return;
-            $this.addClass("datepickerbinded");
-
-            $this.on("change", function() {
-                //to prevent UI change with clicking on filter button
-                setTimeout(()=> {
-                    if ($this.val() != "") $this.addClass("has-value");
-                    else $this.removeClass("has-value");
-
-                    TABLE.columns.adjust();
-                    TABLE.fixedHeader.adjust();
-                }, 100);
-            });
-
-            //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
-            new $.fn.dataTable.Editor.DateTime($this, {
-                format: 'L HH:mm',
-                momentLocale: window.userLng,
-                locale: window.userLng,
-                keyInput: false,
-                i18n: EDITOR.i18n.datetime,
-                onChange: function() {
-                    $this.trigger("change");
-                }
-            });
-        });
-
-        $('.timehmpicker').each(function (key, dateInput) {
-            let $this = $(dateInput);
-            if ($this.hasClass("datepickerbinded")) return;
-            $this.addClass("datepickerbinded");
-
-            $this.on("change", function() {
-                if ($this.val() != "") $this.addClass("has-value");
-                else $this.removeClass("has-value");
-
-                TABLE.columns.adjust();
-                TABLE.fixedHeader.adjust();
-            });
-
-            //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
-            new $.fn.dataTable.Editor.DateTime($this, {
-                format: 'HH:mm',
-                momentLocale: window.userLng,
-                locale: window.userLng,
-                keyInput: false,
-                i18n: EDITOR.i18n.datetime,
-                onChange: function() {
-                    $this.trigger("change");
-                }
-            });
-        });
-
-        $('.timehmspicker').each(function (key, dateInput) {
-            let $this = $(dateInput);
-            if ($this.hasClass("datepickerbinded")) return;
-            $this.addClass("datepickerbinded");
-
-            $this.on("change", function() {
-                if ($this.val() != "") $this.addClass("has-value");
-                else $this.removeClass("has-value");
-
-                TABLE.columns.adjust();
-                TABLE.fixedHeader.adjust();
-            });
-
-            //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
-            new $.fn.dataTable.Editor.DateTime($this, {
-                format: 'HH:mm:ss',
-                momentLocale: window.userLng,
-                locale: window.userLng,
-                keyInput: false,
-                i18n: EDITOR.i18n.datetime,
-                onChange: function() {
-                    $this.trigger("change");
-                }
-            });
-        });
-
-        TABLE.columns.adjust();
-        TABLE.fixedHeader.adjust();
-    }
-
     function updateOptionsFromJson(json) {
         //console.log("updateOptionsFromJson, json=", json);
         //spracuj prichadzajuce options
@@ -563,7 +374,7 @@ export const dataTableInit = options => {
                         //console.log(e);
                     }
                     //aktualizuj select box v hlavicke
-                    updateFilterSelect(fieldName);
+                    dtWJ.updateFilterSelect(DATA, fieldName);
                 }
             }
 
@@ -576,7 +387,7 @@ export const dataTableInit = options => {
 
         if (DATA.customFieldsUpdateColumns===true && json.length>0) {
             let fieldsDefinition = json[0]?.editorFields?.fieldsDefinition;
-            if (typeof fieldsDefinition != "undefined") {
+            if (typeof fieldsDefinition != "undefined" && fieldsDefinition != null) {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
                 let isChange = false;
@@ -1157,8 +968,27 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.wysiwyg = fieldTypeWysiwyg.typeWysiwyg();
         $.fn.dataTable.Editor.fieldTypes.jsTree = fieldTypeJsTree.typeJsTree();
         $.fn.dataTable.Editor.fieldTypes.attrs = fieldTypeAttrs.typeAttrs();
+        $.fn.dataTable.Editor.fieldTypes.iframe = fieldTypeIframe.typeIframe();
+        $.fn.dataTable.Editor.fieldTypes.color = fieldTypeColor.typeColor();
+        $.fn.dataTable.Editor.fieldTypes.base64 = fieldTypeBase64.typeBase64();
+        $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
 
         fieldTypeSelectEditable.typeSelectEditable();
+
+        $.fn.dataTable.ext.buttons.edit.action = function (e, dt, node, config) {
+            //console.log("edit.action config=", config, "e=", e);
+            var editor = config.editor;
+            var rows = $("#"+editor.TABLE.DATA.id+" tr.selected");
+            //fetch will be done before this call, so use just wjEdit
+            editor.TABLE.wjEdit(rows);
+        };
+
+        $.fn.dataTable.ext.buttons.create.action = function (e, dt, node, config) {
+            //console.log("create.action config=", config, "e=", e);
+            var editor = config.editor;
+            var rows = $("#"+editor.TABLE.DATA.id+" tr.selected");
+            editor.TABLE.wjCreate(rows);
+        };
 
         //editRefresh button
         $.fn.dataTable.ext.buttons.editRefresh = {
@@ -1743,7 +1573,7 @@ export const dataTableInit = options => {
                 if (editorWasOpened === false || DATA.tabsFolders == null || DATA.tabsFolders.length<1) {
                     //toto musime nanovo vykonat aj ked nemame karty, lebo si to DTed pregeneruje
 
-                    $.each($('#' + DATA.id + '_modal .DTE_Form_Content').find('[data-dt-field-headline]'), function (key, el) {
+                    $.each($('#' + DATA.id + '_modal .DTE_Body').find('[data-dt-field-headline]'), function (key, el) {
 
                         var headlineText = $(el).attr("data-dt-field-headline");
 
@@ -1752,7 +1582,7 @@ export const dataTableInit = options => {
                         }
                     });
 
-                    $.each($('#' + DATA.id + '_modal .DTE_Form_Content').find('[data-dt-field-full-headline]'), function (key, el) {
+                    $.each($('#' + DATA.id + '_modal .DTE_Body').find('[data-dt-field-full-headline]'), function (key, el) {
 
                         var headlineText = $(el).attr("data-dt-field-full-headline");
 
@@ -1761,7 +1591,7 @@ export const dataTableInit = options => {
                         }
                     });
 
-                    $('#' + DATA.id + '_modal .DTE_Form_Content [data-toggle*="tooltip"]').tooltip({
+                    $('#' + DATA.id + '_modal .DTE_Body [data-toggle*="tooltip"]').tooltip({
                         placement: 'top',
                         trigger: 'hover',
                         html: true
@@ -2066,20 +1896,29 @@ export const dataTableInit = options => {
                     columnText: function ( dt, idx, title ) {
                         //console.log("columnText, dt=", dt, "idx=", idx, "title=", title, "columns=", DATA.columns);
                         let columnText = title;
+
+                        //find original index in DATA.columns
+                        let dataIdx = idx;
+                        for (let i = 0; i < DATA.columns.length; i++) {
+                            if (DATA.columns[i].data == dt.column(idx).dataSrc()) {
+                                dataIdx = i;
+                                break;
+                            }
+                        }
+
                         try {
-                            //zober aktualny title
-                            columnText = DATA.columns[idx].title;
+                            //zober aktualny title namiesto fieldA...
+                            //columnText = title+"-"+DATA.columns[dataIdx].title+"-"+dataIdx+"-"+idx;
+                            columnText = DATA.columns[dataIdx].title;
                             //console.log("columnText=", columnText, "data=", DATA.columns[idx]);
                         } catch (e) {}
 
-                        let tab = DATA.columns[idx]?.editor?.tab;
+                        let tab = DATA.columns[dataIdx]?.editor?.tab;
                         //console.log("tab=", tab);
 
-                        if (idx == 0) {
-                            window.colvisLastTab = "";
-                            window.colvisLastHeadline = "";
-                        }
                         let tabTitle = "";
+                        //use default tab title if there is just one tab as default
+                        if (DATA.tabsFolders.length==1) tabTitle = WJ.translate('datatable.tab.basic');
                         if (typeof tab != "undefined") {
                             //ziskaj meno tabu
                             tabTitle = tab;
@@ -2090,33 +1929,30 @@ export const dataTableInit = options => {
                                 }
                             }
                         }
-                        if (window.colvisLastTab != tabTitle) {
-                            //ked sa zmeni tab resetni lastHeadline
-                            window.colvisLastTab = tabTitle;
-                            window.colvisLastHeadline = "";
-                        }
 
-                        //nadpis
                         let headline = "";
-                        if (DATA.columns[idx]?.editor?.attr) headline =  DATA.columns[idx].editor.attr["data-dt-field-headline"];
+
+                        //search backward, find headline on current tab
+                        for (let i = dataIdx; i >= 0; i--) {
+                            if (tab == DATA.columns[i]?.editor?.tab && DATA.columns[i]?.editor?.attr) headline =  DATA.columns[i].editor.attr["data-dt-field-headline"];
+                            if (typeof headline != "undefined" && headline != null && headline!="") break;
+                        }
                         //console.log("headline=", headline);
                         if (typeof headline == "undefined") headline = "";
                         if (tabTitle == headline) headline = "";
                         if (columnText == headline) headline = "";
-                        if (headline != "") window.colvisLastHeadline = headline;
 
                         //tooltip
                         let tooltipHtml = "";
                         let tooltipText = "";
-                        if (DATA.columns[idx]?.editor?.message) tooltipText =  DATA.columns[idx].editor.message;
+                        if (DATA.columns[dataIdx]?.editor?.message) tooltipText =  DATA.columns[dataIdx].editor.message;
                         if (typeof tooltipText != "undefined" && tooltipText != "") {
                             tooltipHtml = `<span class="btn btn-link btn-tooltip" data-toggle="tooltip" title="${tooltipText}"><i class="ti ti-info-circle"></i></span>`;
                         }
 
-                        let colvisLastHeadline = window.colvisLastHeadline;
-                        if (colvisLastHeadline != "") colvisLastHeadline = colvisLastHeadline + "&nbsp;";
+                        if (headline != "") headline = headline + "&nbsp;";
 
-                        columnText = `<span class="tab-title">${tabTitle}</span><span class="tab-columntext"><span class="tab-headline">${colvisLastHeadline}</span><span class="column-title">${columnText}</span></span><span class="btn-tooltip">${tooltipHtml}</span>`;
+                        columnText = `<span class="tab-title">${tabTitle}</span><span class="tab-columntext"><span class="tab-headline">${headline}</span><span class="column-title">${columnText}</span></span><span class="btn-tooltip">${tooltipHtml}</span>`;
 
                         return columnText;
                     },
@@ -2159,8 +1995,8 @@ export const dataTableInit = options => {
                             className: 'colvis-postfix btn-primary dt-close-modal',
                             action: function(e, dt, node, config) {
                                 window.dataTableCellVisibilityService.buildConfigDataFromObject(dt.editor().TABLE);
-                                //console.log("Zmena stlpcov, fixujem selecty");
-                                fixDatatableHeaderInputs();
+                                //console.log("Zmena stlpcov, fixujem selecty, dt=", dt.editor(), "config=", config);
+                                dtWJ.fixDatatableHeaderInputs(dt.editor().TABLE);
                             }
                         },
                         {
@@ -2435,8 +2271,8 @@ export const dataTableInit = options => {
 
             initComplete: function (settings, json) {
 
-                //console.log("initComplete, selectPicker");
-                fixDatatableHeaderInputs();
+                //console.log("initComplete, TABLE=", TABLE.DATA.id);
+                dtWJ.fixDatatableHeaderInputs(TABLE);
 
                 $('#' + DATA.id + '_wrapper [data-toggle*="tooltip"]').tooltip({
                     placement: 'top',
@@ -2574,6 +2410,14 @@ export const dataTableInit = options => {
                     }
                 },
                 {
+                    targets: "dt-format-filesize",
+                    className: "dt-style-number",
+                    type: "num",
+                    render: function (td, type, rowData, row) {
+                        return dtConfig.renderNumberDecimal(td, type, rowData, row, "0.00 b");
+                    }
+                },
+                {
                     targets: "dt-format-date",
                     type: "num",
                     render: function (td, type, rowData, row) {
@@ -2704,8 +2548,15 @@ export const dataTableInit = options => {
                 html = `
                 <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
                     <i class="ti ti-square-check"></i>
-                </button>
-                <input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
+                </button>`;
+                if (DATA.serverSide === false) {
+                    html += `<div style="display: none">
+                        <select class="filter-input-prepend">
+                            <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>"><i class="ti ti-arrow-bar-left"></i> ${WJ.translate('datatables.select.equals.js')}</option>
+                        </select>
+                    </div>`;
+                }
+                html += `<input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
                 `;
             }
 
@@ -2775,7 +2626,7 @@ export const dataTableInit = options => {
                 if (typeof options != "undefined" && options != null && options.length>0) {
                     //ak mame definovane data priamo v JSON definicii musime ich inicializovat
                     setTimeout(function() {
-                        updateFilterSelect(fieldName);
+                        dtWJ.updateFilterSelect(DATA, fieldName);
                     }, 300);
                 }
                 html += '</select>';
@@ -2785,8 +2636,20 @@ export const dataTableInit = options => {
 
             var filterHtml = inputGroupBefore + html + inputGroupAfter;
             //console.log("filter["+i+"] typeof=", typeof DATA.columns[i].filter);
-            if (typeof DATA.columns[i].filter === "undefined" || DATA.columns[i].filter === true) $(this).html(filterHtml);
-            else $(this).html("");
+            if (typeof DATA.columns[i].filter === "undefined" || DATA.columns[i].filter === true) {
+                $(this).html(filterHtml);
+            } else {
+                if ($(this).hasClass("dt-format-selector")) {
+                    html = `
+                    <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
+                        <i class="ti ti-square-check"></i>
+                    </button>
+                    `;
+                    $(this).html(inputGroupBefore + html + "</div></form>");
+                } else {
+                    $(this).html("");
+                }
+            }
 
             if (extfilterExists) {
                 //console.log("Setting ext filter for ", fieldName, " html: ", filterHtml);
@@ -3036,7 +2899,7 @@ export const dataTableInit = options => {
                         //console.log("sourceData=", sourceData);
 
                         if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
-                            if ("Access is denied" === sourceData.error) {
+                            if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error) {
                                 WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
                                 return;
                             } else {
@@ -3488,6 +3351,14 @@ export const dataTableInit = options => {
         $('#' + DATA.id + '_wrapper [data-dtbtn=celledit]').removeClass("enabled");
     }
 
+    TABLE.wjCreate = function () {
+        //console.log("wjCreate");
+        EDITOR.create(
+            '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+            DATA.createButtons
+        );
+    }
+
     TABLE.wjEdit = function (row) {
         //console.log("wjEdit, row=", row);
         EDITOR.edit(row, {
@@ -3497,7 +3368,7 @@ export const dataTableInit = options => {
     }
 
     TABLE.wjEditFetch = function (row) {
-        //console.log("EDITING ROW, row=", row, "id=", row[0].id);
+        //console.log("wjEditFetch, EDITING ROW, row=", row, "id=", row[0].id);
         let dataBeforeFetch = null;
         if (typeof row[0].id != "undefined" && row[0].id!="") dataBeforeFetch = TABLE.row("#"+row[0].id).data();
         if (DATA.fetchOnEdit) {
@@ -3534,6 +3405,7 @@ export const dataTableInit = options => {
             }
         });
     }
+    TABLE.updateOptionsFromJson = updateOptionsFromJson;
 
     TABLE.calculateAutoPageLength = calculateAutoPageLength;
 
@@ -3555,8 +3427,10 @@ export const dataTableInit = options => {
     if (DATA.idAutoOpener===true) {
         TABLE.datatableOpener.init();
     } else {
-        //initialize just hash filter on table
-        TABLE.datatableOpener.initHashFilter();
+        if(DATA.initHashFilter == true) {
+            //initialize just hash filter on table
+            TABLE.datatableOpener.initHashFilter();
+        }
     }
 
     //nastav tooltip na export a import tlacidlo, BS5 nevie mat naraz toggle dialog aj title
@@ -3566,7 +3440,7 @@ export const dataTableInit = options => {
     }, 500);
 
     //bindni upozornenie o konflikte editacie zaznamu viacerymi pouzivatelmi
-    dtWJ.bindEditorLocking(EDITOR);
+    if (DATA.editorLocking) dtWJ.bindEditorLocking(EDITOR);
 
     //bindni CTRL+S na ulozenie
     dtWJ.bindKeyboardSave(EDITOR);

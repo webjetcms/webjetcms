@@ -1,0 +1,25 @@
+include ../pug/mixins
+
+doctype html
+html.pg-iframe(lang=WPD.lng)
+
+  head
+    include ./head
+    include ../modals/datatables-data-import
+    include ../modals/datatables-data-export
+    include ../modals/iframe
+
+  body
+
+    div.ly-page-wrapper
+
+        div(id="toast-container-logoff" class="toast-container toast-top-full-width")
+
+        div.ly-sidebar
+            div.menu-wrapper(data-scrollbar)
+
+        div.ly-content-wrapper
+            div.ly-content(data-scrollbar)
+                div.ly-container.container
+
+                    block content

@@ -80,104 +80,101 @@ public class MenuService {
         }
 <span class="fc" id="L81">        String[][] icons = {</span>
             //welcome
-            { &quot;welcome&quot;, &quot;far fa-chart-pie-alt&quot; },
-            { &quot;cmp_stat&quot;, &quot;far fa-chart-bar&quot; },
-            { &quot;cmp_server_monitoring&quot;, &quot;far fa-chart-line&quot; },
-            { &quot;cmp_adminlog&quot;, &quot;far fa-file-search&quot; },
-            { &quot;cmp_in-memory-logging&quot;, &quot;far fa-fast-backward&quot; },
-            { &quot;cmp_adminlog_logging&quot;, &quot;far fa-files&quot; },
-            { &quot;menuMessages&quot;, &quot;far fa-envelope-open-text&quot; },
-            { &quot;welcomeShowLoggedAdmins&quot;, &quot;far fa-user-shield&quot; },
+            { &quot;welcome&quot;, &quot;ti ti-home&quot; },
+            { &quot;cmp_stat&quot;, &quot;ti ti-chart-area-line&quot; },
+            { &quot;cmp_server_monitoring&quot;, &quot;ti ti-device-heart-monitor&quot; },
+            { &quot;cmp_adminlog&quot;, &quot;ti ti-shield-search&quot; },
+            { &quot;cmp_in-memory-logging&quot;, &quot;ti ti-player-skip-back&quot; },
+            { &quot;cmp_adminlog_logging&quot;, &quot;ti ti-files&quot; },
+            { &quot;menuMessages&quot;, &quot;ti ti-mail-opened&quot; },
+            { &quot;welcomeShowLoggedAdmins&quot;, &quot;ti ti-user-shield&quot; },
             //website
-            { &quot;menuWebpages&quot;, &quot;far fa-file-alt&quot; },
-            { &quot;cmp_clone_structure&quot;, &quot;far fa-copy&quot; },
-            { &quot;cmp_attributes&quot;, &quot;far fa-file-invoice&quot; },
-            { &quot;cmp_redirects&quot;, &quot;far fa-file-upload&quot; },
-            { &quot;export_offline&quot;, &quot;far fa-download&quot; },
-            { &quot;editorMiniEdit&quot;, &quot;far fa-filter&quot; },
-            { &quot;editorFullMenu&quot;, &quot;far fa-box-full&quot; },
-            { &quot;addPage&quot;, &quot;far fa-plus&quot; },
-            { &quot;pageSave&quot;, &quot;far fa-save&quot; },
-            { &quot;pageSaveAs&quot;, &quot;far fa-copy&quot; },
-            { &quot;deletePage&quot;, &quot;far fa-trash-alt&quot; },
-            { &quot;editDir&quot;, &quot;far fa-pencil&quot; },
-            { &quot;addSubdir&quot;, &quot;far fa-plus&quot; },
-            { &quot;deleteDir&quot;, &quot;far fa-trash-alt&quot; },
-            { &quot;editor_edit_perex&quot;, &quot;far fa-hashtag&quot; },
-            { &quot;editor_edit_media_all&quot;, &quot;fa fa-file-medical&quot;},
-            { &quot;editor_edit_media_group&quot;, &quot;far fa-file-medical&quot; },
-            { &quot;editor_show_hidden_folders&quot;, &quot;fad fa-folders&quot; },
-            { &quot;cmp_sync&quot;, &quot;far fa-sync&quot; },
-            { &quot;imageEditor&quot;, &quot;far fa-image-polaroid&quot; },
+            { &quot;menuWebpages&quot;, &quot;ti ti-file-text&quot; },
+            { &quot;cmp_clone_structure&quot;, &quot;ti ti-copy&quot; },
+            { &quot;cmp_attributes&quot;, &quot;ti ti-file-invoice&quot; },
+            { &quot;cmp_redirects&quot;, &quot;ti ti-external-link&quot; },
+            { &quot;export_offline&quot;, &quot;ti ti-database-export&quot; },
+            { &quot;editorMiniEdit&quot;, &quot;ti ti-filter&quot; },
+            { &quot;editorFullMenu&quot;, &quot;ti ti-box-padding&quot; },
+            { &quot;addPage&quot;, &quot;ti ti-plus&quot; },
+            { &quot;pageSave&quot;, &quot;ti ti-device-floppy&quot; },
+            { &quot;pageSaveAs&quot;, &quot;ti ti-copy&quot; },
+            { &quot;deletePage&quot;, &quot;ti ti-trash&quot; },
+            { &quot;editDir&quot;, &quot;ti ti-pencil&quot; },
+            { &quot;addSubdir&quot;, &quot;ti ti-plus&quot; },
+            { &quot;deleteDir&quot;, &quot;ti ti-trash&quot; },
+            { &quot;editor_edit_perex&quot;, &quot;ti ti-hash&quot; },
+            { &quot;editor_show_hidden_folders&quot;, &quot;ti ti-folders&quot; },
+            { &quot;cmp_sync&quot;, &quot;ti ti-refresh&quot; },
+            { &quot;imageEditor&quot;, &quot;ti ti-polaroid&quot; },
             //news
-            { &quot;cmp_blog&quot;, &quot;far fa-comment-alt-lines&quot; },
-            { &quot;cmp_news&quot;, &quot;far fa-newspaper&quot; },
-            { &quot;cmp_diskusia&quot;, &quot;far fa-comments-alt&quot; },
-            { &quot;components.news.edit_templates&quot;, &quot;fal fa-layer-group&quot; },
+            { &quot;cmp_blog&quot;, &quot;ti ti-article&quot; },
+            { &quot;cmp_news&quot;, &quot;ti ti-news&quot; },
+            { &quot;cmp_diskusia&quot;, &quot;ti ti-messages&quot; },
+            { &quot;components.news.edit_templates&quot;, &quot;ti ti-stack-2&quot; },
             //apps
-            { &quot;cmp_abtesting&quot;, &quot;far fa-analytics&quot; },
-            { &quot;menuEmail&quot;, &quot;far fa-envelope&quot; },
-            { &quot;cmp_calendar&quot;, &quot;far fa-calendar&quot; },
-            { &quot;cmp_form&quot;, &quot;far fa-book&quot; },
-            { &quot;menuInquiry&quot;, &quot;far fa-poll&quot; },
-            { &quot;menuQa&quot;, &quot;far fa-question-circle&quot; },
-            { &quot;menuGallery&quot;, &quot;far fa-photo-video&quot; },
-            { &quot;menuGDPR&quot;, &quot;far fa-shield-alt&quot; },
-            { &quot;menuGDPRDelete&quot;, &quot;far fa-trash-alt&quot; },
-            { &quot;menuGDPRregexp&quot;, &quot;far fa-print-search&quot; },
-            { &quot;menuBanner&quot;, &quot;far fa-ad&quot; },
-            { &quot;cmp_insert_script&quot;, &quot;far fa-file-code&quot; },
-            { &quot;cmp_basket&quot;, &quot;far fa-shopping-basket&quot; },
-            { &quot;cmp_enumerations&quot;, &quot;far fa-th-list&quot; },
-            { &quot;cmp_proxy&quot;, &quot;far fa-dungeon&quot; },
-            { &quot;cmp_reservation&quot;, &quot;far fa-calendar-check&quot; },
-            { &quot;cmp_restaurant_menu&quot;, &quot;far fa-utensils&quot; },
-            { &quot;cmp_seo&quot;, &quot;fab fa-searchengin&quot; },
-            { &quot;cmp_tooltip&quot;, &quot;far fa-question-circle&quot; },
-            { &quot;cmp_export&quot;, &quot;far fa-cloud-download&quot; },
-            { &quot;cmp_quiz&quot;, &quot;far fa-question-square&quot; },
-            { &quot;cmp_calendar_approve&quot;, &quot;far fa-thumbs-up&quot; },
-            { &quot;cmp_banner_add&quot;, &quot;far fa-plus&quot; },
-            { &quot;cmp_banner_seeall&quot;, &quot;far fa-ballot&quot; },
-            { &quot;cmp_insert_script&quot;, &quot;far fa-file-code&quot; },
-            { &quot;cmp_menu&quot;, &quot;far fa-ellipsis-v&quot; },
-            { &quot;sharedIcons&quot;, &quot;far fa-share-square&quot; },
-            { &quot;cmp_content-block&quot;, &quot;far fa-shapes&quot; },
+            { &quot;cmp_abtesting&quot;, &quot;ti ti-a-b&quot; },
+            { &quot;menuEmail&quot;, &quot;ti ti-mail&quot; },
+            { &quot;cmp_calendar&quot;, &quot;ti ti-calendar-month&quot; },
+            { &quot;cmp_form&quot;, &quot;ti ti-forms&quot; },
+            { &quot;menuInquiry&quot;, &quot;ti ti-chart-histogram&quot; },
+            { &quot;menuQa&quot;, &quot;ti ti-help&quot; },
+            { &quot;menuGallery&quot;, &quot;ti ti-photo&quot; },
+            { &quot;menuGDPR&quot;, &quot;ti ti-shield-half&quot; },
+            { &quot;menuGDPRDelete&quot;, &quot;ti ti-trash&quot; },
+            { &quot;menuGDPRregexp&quot;, &quot;ti ti-devices-search&quot; },
+            { &quot;menuBanner&quot;, &quot;ti ti-ad&quot; },
+            { &quot;cmp_basket&quot;, &quot;ti ti-shopping-bag&quot; },
+            { &quot;cmp_enumerations&quot;, &quot;ti ti-table&quot; },
+            { &quot;cmp_proxy&quot;, &quot;ti ti-network&quot; },
+            { &quot;cmp_reservation&quot;, &quot;ti ti-calendar-check&quot; },
+            { &quot;cmp_restaurant_menu&quot;, &quot;ti ti-tools-kitchen-2&quot; },
+            { &quot;cmp_seo&quot;, &quot;ti ti-seo&quot; },
+            { &quot;cmp_tooltip&quot;, &quot;ti ti-help&quot; },
+            { &quot;cmp_export&quot;, &quot;ti ti-database-export&quot; },
+            { &quot;cmp_quiz&quot;, &quot;ti ti-message-circle-question&quot; },
+            { &quot;cmp_calendar_approve&quot;, &quot;ti ti-thumb-up&quot; },
+            { &quot;cmp_banner_add&quot;, &quot;ti ti-plus&quot; },
+            { &quot;cmp_banner_seeall&quot;, &quot;ti ti-notes&quot; },
+            { &quot;cmp_insert_script&quot;, &quot;ti ti-code&quot; },
+            { &quot;cmp_menu&quot;, &quot;ti ti-dots-vertical&quot; },
+            { &quot;sharedIcons&quot;, &quot;ti ti-share-2&quot; },
+            { &quot;cmp_content-block&quot;, &quot;ti ti-triangle-square-circle&quot; },
             //files
-            { &quot;menuFbrowser&quot;, &quot;far fa-folder-tree&quot; },
-            { &quot;cmp_file_archiv&quot;, &quot;far fa-archive&quot; },
-            { &quot;make_zip_archive&quot;, &quot;far fa-cabinet-filing&quot; },
-            { &quot;fbrowser_delete_directory&quot;, &quot;far fa-trash-alt&quot; },
-            { &quot;menuFileArchivExportFiles&quot;, &quot;far fa-upload&quot; },
-            { &quot;menuFileArchivImportFiles&quot;, &quot;far fa-download&quot; },
-            { &quot;menuFileArchivManagerCategory&quot;, &quot;far fa-tasks-alt&quot; },
-            { &quot;cmp_fileArchiv_edit_del_rollback&quot;, &quot;far fa-pencil&quot; },
-            { &quot;cmp_fileArchiv_advanced_settings&quot;, &quot;far fa-wrench&quot; },
-            { &quot;editor_unlimited_upload&quot;, &quot;far fa-infinity&quot; },
+            { &quot;menuFbrowser&quot;, &quot;ti ti-folders&quot; },
+            { &quot;cmp_file_archiv&quot;, &quot;ti ti-archive&quot; },
+            { &quot;make_zip_archive&quot;, &quot;ti ti-server-bolt&quot; },
+            { &quot;fbrowser_delete_directory&quot;, &quot;ti ti-trash&quot; },
+            { &quot;menuFileArchivExportFiles&quot;, &quot;ti ti-upload&quot; },
+            { &quot;menuFileArchivImportFiles&quot;, &quot;ti ti-download&quot; },
+            { &quot;menuFileArchivManagerCategory&quot;, &quot;ti ti-subtask&quot; },
+            { &quot;cmp_fileArchiv_edit_del_rollback&quot;, &quot;ti ti-pencil&quot; },
+            { &quot;cmp_fileArchiv_advanced_settings&quot;, &quot;ti ti-tool&quot; },
+            { &quot;editor_unlimited_upload&quot;, &quot;ti ti-infinity&quot; },
             //templates
-            { &quot;menuTemplates&quot;, &quot;far fa-window-maximize&quot; },
-            { &quot;menuTemplatesGroup&quot;, &quot;far fa-layer-group&quot; },
+            { &quot;menuTemplates&quot;, &quot;ti ti-template&quot; },
+            { &quot;menuTemplatesGroup&quot;, &quot;ti ti-layers-subtract&quot; },
             //users
-            { &quot;menuUsers&quot;, &quot;far fa-user-friends&quot; },
-            { &quot;user.admin.userGroups&quot;, &quot;far fa-users&quot; },
-            { &quot;users.perm_groups&quot;, &quot;far fa-gavel&quot; },
-            { &quot;users.edit_admins&quot;, &quot;far fa-user-shield&quot; },
-            { &quot;users.edit_public_users&quot;, &quot;far fa-user-friends&quot; },
+            { &quot;menuUsers&quot;, &quot;ti ti-users&quot; },
+            { &quot;user.admin.userGroups&quot;, &quot;ti ti-users-group&quot; },
+            { &quot;users.perm_groups&quot;, &quot;ti ti-user-shield&quot; },
+            { &quot;users.edit_admins&quot;, &quot;ti ti-shield-cog&quot; },
+            { &quot;users.edit_public_users&quot;, &quot;ti ti-users-group&quot; },
             //config
-            { &quot;menuConfig&quot;, &quot;far fa-sliders-v-square&quot; },
-            { &quot;edit_text&quot;, &quot;far fa-key&quot; },
-            { &quot;cmp_data_deleting&quot;, &quot;far fa-database&quot; },
-            { &quot;cmp_crontab&quot;, &quot;far fa-repeat&quot; },
-            { &quot;modUpdate&quot;, &quot;far fa-cloud-download&quot; },
-            { &quot;modRestart&quot;, &quot;far fa-power-off&quot; },
-            { &quot;conf.show_all_variables&quot;, &quot;far fa-user-shield&quot; },
-            { &quot;prop.show_all_texts&quot;, &quot;far fa-user-shield&quot; },
-            { &quot;replaceAll&quot;, &quot;far fa-search&quot; }
+            { &quot;menuConfig&quot;, &quot;ti ti-adjustments&quot; },
+            { &quot;edit_text&quot;, &quot;ti ti-language&quot; },
+            { &quot;cmp_data_deleting&quot;, &quot;ti ti-database&quot; },
+            { &quot;cmp_crontab&quot;, &quot;ti ti-settings-automation&quot; },
+            { &quot;modUpdate&quot;, &quot;ti ti-cloud-download&quot; },
+            { &quot;modRestart&quot;, &quot;ti ti-power&quot; },
+            { &quot;conf.show_all_variables&quot;, &quot;ti ti-user-shield&quot; },
+            { &quot;prop.show_all_texts&quot;, &quot;ti ti-user-shield&quot; },
+            { &quot;replaceAll&quot;, &quot;ti ti-search&quot; }
         };
-<span class="fc bfc" id="L177" title="All 2 branches covered.">        for (String[] pair : icons) {</span>
-<span class="fc" id="L178">            iconsMap.put(pair[0], pair[1]);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        for (String[] pair : icons) {</span>
+<span class="fc" id="L175">            iconsMap.put(pair[0], pair[1]);</span>
         }
-<span class="fc" id="L180">        String[][] order = {</span>
+<span class="fc" id="L177">        String[][] order = {</span>
             //welcome
             { &quot;cmp_adminlog&quot;, &quot;7041&quot; },
             //website
@@ -187,10 +184,10 @@ public class MenuService {
             //news
             { &quot;cmp_blog&quot;, &quot;3030&quot; }
         };
-<span class="fc bfc" id="L190" title="All 2 branches covered.">        for (String[] pair : order) {</span>
-<span class="fc" id="L191">            menuOrderMap.put(pair[0], Tools.getIntValue(pair[1], 0));</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">        for (String[] pair : order) {</span>
+<span class="fc" id="L188">            menuOrderMap.put(pair[0], Tools.getIntValue(pair[1], 0));</span>
         }
-<span class="fc" id="L193">        String[][] linkReplaces = {</span>
+<span class="fc" id="L190">        String[][] linkReplaces = {</span>
             //{ &quot;&quot;, &quot;&quot;},
             //welcome
             { &quot;/admin/&quot;, &quot;/admin/v9/&quot;},
@@ -249,6 +246,7 @@ public class MenuService {
             { &quot;/components/data_deleting/admin_deleting_audit.jsp&quot;, &quot;/admin/v9/settings/database-delete/&quot;},
             { &quot;/components/data_deleting/admin_deleting_cache.jsp&quot;, &quot;/admin/v9/settings/cache-objects/&quot;},
             { &quot;/components/data_deleting/admin_deleting_persistentcache.jsp&quot;, &quot;/admin/v9/settings/persistent-cache-objects/&quot;},
+            { &quot;/components/data_deleting/admin_deleting_imgcache.jsp&quot;, &quot;&quot;},
             { &quot;/admin/prop_search.jsp&quot;, &quot;/admin/v9/settings/translation-keys/&quot;},
             { &quot;javascript:WJ.openPopupDialog('/admin/prop_edit.jsp?key=&amp;lng=&amp;value=');&quot;, &quot;&quot;},
             { &quot;/admin/prop_export-import.jsp&quot;, &quot;&quot;},
@@ -314,33 +312,40 @@ public class MenuService {
             { &quot;/components/blog/blog_admin.jsp&quot;, &quot;/apps/blog/admin/bloggers/&quot;},
 
             { &quot;/components/abtesting/admin_abtesting.jsp&quot;, &quot;/apps/abtesting/admin/&quot;},
+
+            { &quot;/admin/elFinder/&quot;, &quot;/admin/v9/files/index/&quot;},
+            { &quot;/admin/elFinder/dialog.jsp&quot;, &quot;/admin/v9/files/dialog&quot;},
+            { &quot;/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp&quot;, &quot;/admin/v9/files/wj_link&quot;},
+            { &quot;/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_image.jsp&quot;, &quot;/admin/v9/files/wj_image&quot;},
+
+            {&quot;/admin/adminlog/logging/&quot;, &quot;/admin/v9/apps/audit-log-levels/&quot;}
         };
-<span class="fc bfc" id="L318" title="All 2 branches covered.">        for (String[] pair : linkReplaces) {</span>
-<span class="fc" id="L319">            menuLinkReplaces.put(pair[0], pair[1]);</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        for (String[] pair : linkReplaces) {</span>
+<span class="fc" id="L324">            menuLinkReplaces.put(pair[0], pair[1]);</span>
         }
-<span class="fc" id="L321">        String[][] leftMenuNameKeyReplaces = {</span>
+<span class="fc" id="L326">        String[][] leftMenuNameKeyReplaces = {</span>
             {&quot;stat_menu.days&quot;, &quot;components.stat.visits&quot;}
         };
-<span class="fc bfc" id="L324" title="All 2 branches covered.">        for (String[] pair : leftMenuNameKeyReplaces) {</span>
-<span class="fc" id="L325">            leftMenuNameKeyMap.put(pair[0], pair[1]);</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">        for (String[] pair : leftMenuNameKeyReplaces) {</span>
+<span class="fc" id="L330">            leftMenuNameKeyMap.put(pair[0], pair[1]);</span>
         }
-<span class="fc" id="L327">    }</span>
+<span class="fc" id="L332">    }</span>
 
-<span class="fc" id="L329">    public MenuService(HttpServletRequest request) {</span>
+<span class="fc" id="L334">    public MenuService(HttpServletRequest request) {</span>
 
-<span class="fc" id="L331">        this.user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L332" title="1 of 2 branches missed.">        if (this.user == null) return;</span>
-<span class="fc" id="L333">        this.prop = Prop.getInstance(request);</span>
-<span class="fc" id="L334">        this.lng = Prop.getLng(request, false);</span>
+<span class="fc" id="L336">        this.user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L337" title="1 of 2 branches missed.">        if (this.user == null) return;</span>
+<span class="fc" id="L338">        this.prop = Prop.getInstance(request);</span>
+<span class="fc" id="L339">        this.lng = Prop.getLng(request, false);</span>
 
         //ziskaj standardny zoznam modulov
-<span class="fc" id="L337">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getUserMenuItems(user);</span>
-<span class="fc" id="L338">        customItems = Modules.filterDomain(allModules, DocDB.getDomain(request));</span>
+<span class="fc" id="L342">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getUserMenuItems(user);</span>
+<span class="fc" id="L343">        customItems = Modules.filterDomain(allModules, DocDB.getDomain(request));</span>
 
-<span class="fc" id="L340">        sortModules(customItems);</span>
+<span class="fc" id="L345">        sortModules(customItems);</span>
 
-<span class="fc" id="L342">        generateMenu();</span>
-<span class="fc" id="L343">    }</span>
+<span class="fc" id="L347">        generateMenu();</span>
+<span class="fc" id="L348">    }</span>
 
     /**
      * Usporiada zoznam ModuleInfo podla WJ9 menuOrder (volanim getMenuOrder)
@@ -348,23 +353,23 @@ public class MenuService {
      */
     private static void sortModules(List&lt;ModuleInfo&gt; customItems) {
         //usortuj ich podla noveho sortingu
-<span class="fc" id="L351">        Collections.sort(customItems, new Comparator&lt;ModuleInfo&gt;()</span>
-<span class="fc" id="L352">        {</span>
+<span class="fc" id="L356">        Collections.sort(customItems, new Comparator&lt;ModuleInfo&gt;()</span>
+<span class="fc" id="L357">        {</span>
             @Override
             public int compare(ModuleInfo m1, ModuleInfo m2)
             {
-<span class="fc" id="L356">                int order = getMenuOrder(m1) - getMenuOrder(m2);</span>
-<span class="fc bfc" id="L357" title="All 2 branches covered.">                if (order == 0)</span>
+<span class="fc" id="L361">                int order = getMenuOrder(m1) - getMenuOrder(m2);</span>
+<span class="fc bfc" id="L362" title="All 2 branches covered.">                if (order == 0)</span>
                 {
-<span class="fc" id="L359">                   order = m1.getNameKey().compareTo(m2.getNameKey());</span>
+<span class="fc" id="L364">                   order = m1.getNameKey().compareTo(m2.getNameKey());</span>
                 }
-<span class="fc" id="L361">                return (order);</span>
+<span class="fc" id="L366">                return (order);</span>
             }
         });
-<span class="fc" id="L364">    }</span>
+<span class="fc" id="L369">    }</span>
 
     public List&lt;MenuBean&gt; getMenu() {
-<span class="fc" id="L367">        return menu;</span>
+<span class="fc" id="L372">        return menu;</span>
     }
 
     /**
@@ -372,12 +377,12 @@ public class MenuService {
      */
     private static String getGroup9(ModuleInfo m)
     {
-<span class="fc" id="L375">        String group = groupsMap.get(m.getItemKey());</span>
-<span class="fc bfc" id="L376" title="All 2 branches covered.">        if (group == null) group = m.getGroup();</span>
+<span class="fc" id="L380">        String group = groupsMap.get(m.getItemKey());</span>
+<span class="fc bfc" id="L381" title="All 2 branches covered.">        if (group == null) group = m.getGroup();</span>
 
         //Logger.debug(MenuService.class, &quot;getGroupV9, key: &quot;+m.getItemKey()+&quot; group:&quot;+group+&quot; sort:&quot;+m.getMenuOrder());
 
-<span class="fc" id="L380">        return group;</span>
+<span class="fc" id="L385">        return group;</span>
     }
 
     /**
@@ -385,7 +390,7 @@ public class MenuService {
      */
     private static String getIcon9(ModuleInfo m)
     {
-<span class="fc" id="L388">        return getIcon9(m.getItemKey(), m.getMenuIcon());</span>
+<span class="fc" id="L393">        return getIcon9(m.getItemKey(), m.getMenuIcon());</span>
     }
 
     /**
@@ -396,10 +401,10 @@ public class MenuService {
      */
     private static String getIcon9(String itemKey, String defaultIcon)
     {
-<span class="fc" id="L399">        String icon = iconsMap.get(itemKey);</span>
-<span class="fc bfc" id="L400" title="All 2 branches covered.">        if (icon == null) icon = &quot;fa fa-&quot;+defaultIcon;</span>
+<span class="fc" id="L404">        String icon = iconsMap.get(itemKey);</span>
+<span class="fc bfc" id="L405" title="All 2 branches covered.">        if (icon == null) icon = &quot;ti ti-&quot;+defaultIcon;</span>
 
-<span class="fc" id="L402">        return icon;</span>
+<span class="fc" id="L407">        return icon;</span>
     }
 
     /**
@@ -409,10 +414,10 @@ public class MenuService {
      */
     private static int getMenuOrder(ModuleInfo m)
     {
-<span class="fc" id="L412">        Integer sortOrder = menuOrderMap.get(m.getItemKey());</span>
-<span class="fc bfc" id="L413" title="All 2 branches covered.">        if (sortOrder != null) return sortOrder.intValue();</span>
+<span class="fc" id="L417">        Integer sortOrder = menuOrderMap.get(m.getItemKey());</span>
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        if (sortOrder != null) return sortOrder.intValue();</span>
 
-<span class="fc" id="L415">        return m.getMenuOrder();</span>
+<span class="fc" id="L420">        return m.getMenuOrder();</span>
     }
 
     /**
@@ -422,10 +427,10 @@ public class MenuService {
      */
     private static String getMenuLinkV9(ModuleInfo m)
     {
-<span class="fc" id="L425">        String href = m.getLeftMenuLink();</span>
-<span class="fc" id="L426">        href = Tools.replace(href, &quot;openPopupDialogFromLeftMenu(&quot;, &quot;WJ.openPopupDialog(&quot;);</span>
-<span class="fc" id="L427">        href = replaceV9MenuLink(href);</span>
-<span class="fc" id="L428">        return href;</span>
+<span class="fc" id="L430">        String href = m.getLeftMenuLink();</span>
+<span class="fc" id="L431">        href = Tools.replace(href, &quot;openPopupDialogFromLeftMenu(&quot;, &quot;WJ.openPopupDialog(&quot;);</span>
+<span class="fc" id="L432">        href = replaceV9MenuLink(href);</span>
+<span class="fc" id="L433">        return href;</span>
     }
 
     /**
@@ -434,9 +439,9 @@ public class MenuService {
      * @return
      */
     public static String replaceV9MenuLink(String v8link) {
-<span class="fc" id="L437">        String link = menuLinkReplaces.get(v8link);</span>
-<span class="fc bfc" id="L438" title="All 2 branches covered.">        if (link != null) return link;</span>
-<span class="fc" id="L439">        return v8link;</span>
+<span class="fc" id="L442">        String link = menuLinkReplaces.get(v8link);</span>
+<span class="fc bfc" id="L443" title="All 2 branches covered.">        if (link != null) return link;</span>
+<span class="fc" id="L444">        return v8link;</span>
     }
 
     /**
@@ -445,9 +450,9 @@ public class MenuService {
      * @return
      */
     public static String getLeftMenuNameKeyV9(String nameKey) {
-<span class="fc" id="L448">        String key = leftMenuNameKeyMap.get(nameKey);</span>
-<span class="fc bfc" id="L449" title="All 2 branches covered.">        if (key != null) return key;</span>
-<span class="fc" id="L450">        return nameKey;</span>
+<span class="fc" id="L453">        String key = leftMenuNameKeyMap.get(nameKey);</span>
+<span class="fc bfc" id="L454" title="All 2 branches covered.">        if (key != null) return key;</span>
+<span class="fc" id="L455">        return nameKey;</span>
     }
 
     /**
@@ -456,42 +461,42 @@ public class MenuService {
      * @return
      */
     public static List&lt;MenuBean&gt; getRootItems(Prop prop) {
-<span class="fc" id="L459">        List&lt;MenuBean&gt; roots = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L464">        List&lt;MenuBean&gt; roots = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L461">        roots.add((new MenuBean()).setGroup(&quot;welcome&quot;).setText(prop.getText(&quot;menu.root.welcome&quot;)).setIcon(&quot;fa far fa-home&quot;));</span>
-<span class="fc" id="L462">        roots.add((new MenuBean()).setGroup(&quot;website&quot;).setText(prop.getText(&quot;menu.root.websites&quot;)).setIcon(&quot;fa fal fa-copy&quot;));</span>
-<span class="fc" id="L463">        roots.add((new MenuBean()).setGroup(&quot;news&quot;).setText(prop.getText(&quot;menu.root.news&quot;)).setIcon(&quot;fa fal fa-edit&quot;));</span>
-<span class="fc" id="L464">        roots.add((new MenuBean()).setGroup(&quot;components&quot;).setText(prop.getText(&quot;components.modules.title&quot;)).setIcon(&quot;fa fal fa-cube&quot;));</span>
-<span class="fc" id="L465">        roots.add((new MenuBean()).setGroup(&quot;files&quot;).setText(prop.getText(&quot;menu.root.files&quot;)).setIcon(&quot;fa fal fa-folder-open&quot;));</span>
-<span class="fc" id="L466">        roots.add((new MenuBean()).setGroup(&quot;templates&quot;).setText(prop.getText(&quot;menu.root.templates&quot;)).setIcon(&quot;fa fal fa-layer-group&quot;));</span>
-<span class="fc" id="L467">        roots.add((new MenuBean()).setGroup(&quot;users&quot;).setText(prop.getText(&quot;menu.root.users&quot;)).setIcon(&quot;fa fal fa-user&quot;));</span>
-<span class="fc" id="L468">        roots.add((new MenuBean()).setGroup(&quot;config&quot;).setText(prop.getText(&quot;menu.root.config&quot;)).setIcon(&quot;fa fal fa-cog&quot;));</span>
+<span class="fc" id="L466">        roots.add((new MenuBean()).setGroup(&quot;welcome&quot;).setText(prop.getText(&quot;menu.root.welcome&quot;)).setIcon(&quot;ti ti-home&quot;));</span>
+<span class="fc" id="L467">        roots.add((new MenuBean()).setGroup(&quot;website&quot;).setText(prop.getText(&quot;menu.root.websites&quot;)).setIcon(&quot;ti ti-file-text&quot;));</span>
+<span class="fc" id="L468">        roots.add((new MenuBean()).setGroup(&quot;news&quot;).setText(prop.getText(&quot;menu.root.news&quot;)).setIcon(&quot;ti ti-edit&quot;));</span>
+<span class="fc" id="L469">        roots.add((new MenuBean()).setGroup(&quot;components&quot;).setText(prop.getText(&quot;components.modules.title&quot;)).setIcon(&quot;ti ti-apps&quot;));</span>
+<span class="fc" id="L470">        roots.add((new MenuBean()).setGroup(&quot;files&quot;).setText(prop.getText(&quot;menu.root.files&quot;)).setIcon(&quot;ti ti-folder-open&quot;));</span>
+<span class="fc" id="L471">        roots.add((new MenuBean()).setGroup(&quot;templates&quot;).setText(prop.getText(&quot;menu.root.templates&quot;)).setIcon(&quot;ti ti-layout&quot;));</span>
+<span class="fc" id="L472">        roots.add((new MenuBean()).setGroup(&quot;users&quot;).setText(prop.getText(&quot;menu.root.users&quot;)).setIcon(&quot;ti ti-users&quot;));</span>
+<span class="fc" id="L473">        roots.add((new MenuBean()).setGroup(&quot;config&quot;).setText(prop.getText(&quot;menu.root.config&quot;)).setIcon(&quot;ti ti-settings&quot;));</span>
 
-<span class="fc" id="L470">        return roots;</span>
+<span class="fc" id="L475">        return roots;</span>
     }
 
     /**
      * Vygeneruje menu do menu objektu
      */
     private void generateMenu() {
-<span class="fc" id="L477">        menu = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L482">        menu = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L479">        menu.addAll(getRootItems(prop));</span>
+<span class="fc" id="L484">        menu.addAll(getRootItems(prop));</span>
 
-<span class="fc bfc" id="L481" title="All 2 branches covered.">        for (MenuBean rootItem : menu) {</span>
+<span class="fc bfc" id="L486" title="All 2 branches covered.">        for (MenuBean rootItem : menu) {</span>
             // out.println(renderLeftMenu(group, customItems, actualMenuPath, user, prop));
-<span class="fc" id="L483">            addMenuItems(rootItem);</span>
-<span class="fc" id="L484">        }</span>
+<span class="fc" id="L488">            addMenuItems(rootItem);</span>
+<span class="fc" id="L489">        }</span>
 
-<span class="fc" id="L486">        List&lt;MenuBean&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L491">        List&lt;MenuBean&gt; filtered = new ArrayList&lt;&gt;();</span>
         //remove empty root items
-<span class="fc bfc" id="L488" title="All 2 branches covered.">        for (MenuBean rootItem : menu) {</span>
-<span class="fc bfc" id="L489" title="All 2 branches covered.">            if (rootItem.getChildrens().isEmpty()==false) {</span>
-<span class="fc" id="L490">                filtered.add(rootItem);</span>
+<span class="fc bfc" id="L493" title="All 2 branches covered.">        for (MenuBean rootItem : menu) {</span>
+<span class="fc bfc" id="L494" title="All 2 branches covered.">            if (rootItem.getChildrens().isEmpty()==false) {</span>
+<span class="fc" id="L495">                filtered.add(rootItem);</span>
             }
-<span class="fc" id="L492">        }</span>
-<span class="fc" id="L493">        menu = filtered;</span>
-<span class="fc" id="L494">    }</span>
+<span class="fc" id="L497">        }</span>
+<span class="fc" id="L498">        menu = filtered;</span>
+<span class="fc" id="L499">    }</span>
 
     /**
      * K root polozke doplnit 2. a 3. uroven menu
@@ -499,68 +504,68 @@ public class MenuService {
      */
     private void addMenuItems(MenuBean rootItem) {
 
-<span class="fc" id="L502">        List&lt;MenuBean&gt; childrens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L507">        List&lt;MenuBean&gt; childrens = new ArrayList&lt;&gt;();</span>
 
-<span class="fc bfc" id="L504" title="All 2 branches covered.">        for (ModuleInfo m : customItems) {</span>
-<span class="fc bfc" id="L505" title="All 2 branches covered.">            if (rootItem.getGroup().equals(getGroup9(m)) == false) continue;</span>
+<span class="fc bfc" id="L509" title="All 2 branches covered.">        for (ModuleInfo m : customItems) {</span>
+<span class="fc bfc" id="L510" title="All 2 branches covered.">            if (rootItem.getGroup().equals(getGroup9(m)) == false) continue;</span>
 
-<span class="fc bfc" id="L507" title="All 2 branches covered.">            if (m.getItemKey().equalsIgnoreCase(&quot;menuTemplates&quot;)) {</span>
+<span class="fc bfc" id="L512" title="All 2 branches covered.">            if (m.getItemKey().equalsIgnoreCase(&quot;menuTemplates&quot;)) {</span>
                 //tohto subpolozky vynasame ako hlavne polozky menu
-<span class="fc" id="L509">                List&lt;ModuleInfo&gt; subMenus = filterNoLink(m.getSubmenus(user), user);</span>
-<span class="fc bfc" id="L510" title="All 2 branches covered.">                for (ModuleInfo sub : subMenus) {</span>
-<span class="fc" id="L511">                    MenuBean children = (new MenuBean())</span>
-<span class="fc" id="L512">                        .setGroup(rootItem.getGroup())</span>
-<span class="fc" id="L513">                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))</span>
-<span class="fc" id="L514">                        .setHref(getMenuLinkV9(sub))</span>
-<span class="fc" id="L515">                        .setIcon(getIcon9(sub.getItemKey(), m.getMenuIcon()));</span>
+<span class="fc" id="L514">                List&lt;ModuleInfo&gt; subMenus = filterNoLink(m.getSubmenus(user), user);</span>
+<span class="fc bfc" id="L515" title="All 2 branches covered.">                for (ModuleInfo sub : subMenus) {</span>
+<span class="fc" id="L516">                    MenuBean children = (new MenuBean())</span>
+<span class="fc" id="L517">                        .setGroup(rootItem.getGroup())</span>
+<span class="fc" id="L518">                        .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))</span>
+<span class="fc" id="L519">                        .setHref(getMenuLinkV9(sub))</span>
+<span class="fc" id="L520">                        .setIcon(getIcon9(sub.getItemKey(), m.getMenuIcon()));</span>
 
-<span class="fc" id="L517">                        List&lt;MenuBean&gt; thirdChildrens = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L518">                        children.setChildrens(thirdChildrens);</span>
+<span class="fc" id="L522">                        List&lt;MenuBean&gt; thirdChildrens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L523">                        children.setChildrens(thirdChildrens);</span>
 
-<span class="fc" id="L520">                        childrens.add(children);</span>
-<span class="fc" id="L521">                }</span>
-<span class="fc" id="L522">            } else {</span>
-<span class="fc" id="L523">                MenuBean children = (new MenuBean())</span>
-<span class="fc" id="L524">                .setGroup(rootItem.getGroup())</span>
-<span class="fc" id="L525">                .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())))</span>
-<span class="fc" id="L526">                .setHref(getMenuLinkV9(m))</span>
-<span class="fc" id="L527">                .setIcon(getIcon9(m));</span>
+<span class="fc" id="L525">                        childrens.add(children);</span>
+<span class="fc" id="L526">                }</span>
+<span class="fc" id="L527">            } else {</span>
+<span class="fc" id="L528">                MenuBean children = (new MenuBean())</span>
+<span class="fc" id="L529">                .setGroup(rootItem.getGroup())</span>
+<span class="fc" id="L530">                .setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())))</span>
+<span class="fc" id="L531">                .setHref(getMenuLinkV9(m))</span>
+<span class="fc" id="L532">                .setIcon(getIcon9(m));</span>
 //                .setCustom(m.isCustom());
 
-<span class="fc" id="L530">                List&lt;MenuBean&gt; thirdChildrens = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L531">                List&lt;ModuleInfo&gt; subMenus = filterNoLink(m.getSubmenus(user), user);</span>
+<span class="fc" id="L535">                List&lt;MenuBean&gt; thirdChildrens = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L536">                List&lt;ModuleInfo&gt; subMenus = filterNoLink(m.getSubmenus(user), user);</span>
 
-<span class="fc bfc" id="L533" title="All 4 branches covered.">                if (subMenus.size()==1 &amp;&amp; children.getHref().equals(getMenuLinkV9(subMenus.get(0)))) {</span>
+<span class="fc bfc" id="L538" title="All 4 branches covered.">                if (subMenus.size()==1 &amp;&amp; children.getHref().equals(getMenuLinkV9(subMenus.get(0)))) {</span>
                     //v submenu je len 1 polozka a zhoduje sa s parentom, toto nebudeme renderovat
                 } else {
-<span class="fc bfc" id="L536" title="All 2 branches covered.">                    for (ModuleInfo sub : subMenus) {</span>
-<span class="fc" id="L537">                        MenuBean third = (new MenuBean())</span>
-<span class="fc" id="L538">                            .setGroup(rootItem.getGroup())</span>
-<span class="fc" id="L539">                            .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))</span>
-<span class="fc" id="L540">                            .setHref(getMenuLinkV9(sub));</span>
+<span class="fc bfc" id="L541" title="All 2 branches covered.">                    for (ModuleInfo sub : subMenus) {</span>
+<span class="fc" id="L542">                        MenuBean third = (new MenuBean())</span>
+<span class="fc" id="L543">                            .setGroup(rootItem.getGroup())</span>
+<span class="fc" id="L544">                            .setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())))</span>
+<span class="fc" id="L545">                            .setHref(getMenuLinkV9(sub));</span>
 
-<span class="fc" id="L542">                        thirdChildrens.add(third);</span>
-<span class="fc" id="L543">                    }</span>
+<span class="fc" id="L547">                        thirdChildrens.add(third);</span>
+<span class="fc" id="L548">                    }</span>
                 }
 
-<span class="fc bfc" id="L546" title="All 4 branches covered.">                if (children.getHref().contains(&quot;void()&quot;) &amp;&amp; thirdChildrens.isEmpty()) {</span>
+<span class="fc bfc" id="L551" title="All 4 branches covered.">                if (children.getHref().contains(&quot;void()&quot;) &amp;&amp; thirdChildrens.isEmpty()) {</span>
                     //ak hlavny item ma javascript:void linku a nema ziadnych childov nezobrazime
                 } else {
-<span class="fc" id="L549">                    childrens.add(children);</span>
+<span class="fc" id="L554">                    childrens.add(children);</span>
                 }
-<span class="fc" id="L551">                children.setChildrens(thirdChildrens);</span>
+<span class="fc" id="L556">                children.setChildrens(thirdChildrens);</span>
             }
-<span class="fc" id="L553">        }</span>
+<span class="fc" id="L558">        }</span>
 
-<span class="fc bfc" id="L555" title="All 2 branches covered.">        if (rootItem.getGroup().equals(&quot;components&quot;)) {</span>
+<span class="fc bfc" id="L560" title="All 2 branches covered.">        if (rootItem.getGroup().equals(&quot;components&quot;)) {</span>
             //aplikacie sortni podla abecedy
-<span class="fc" id="L557">            Locale loc = LayoutService.getUserLocale(lng);</span>
-<span class="fc" id="L558">            Collator coll = Collator.getInstance(loc);</span>
-<span class="fc" id="L559">            childrens = childrens.stream().sorted(Comparator.comparing(MenuBean::isCustom).reversed().thenComparing(MenuBean::getText, coll)).collect(Collectors.toList());</span>
+<span class="fc" id="L562">            Locale loc = LayoutService.getUserLocale(lng);</span>
+<span class="fc" id="L563">            Collator coll = Collator.getInstance(loc);</span>
+<span class="fc" id="L564">            childrens = childrens.stream().sorted(Comparator.comparing(MenuBean::isCustom).reversed().thenComparing(MenuBean::getText, coll)).collect(Collectors.toList());</span>
         }
 
-<span class="fc" id="L562">        rootItem.setChildrens(childrens);</span>
-<span class="fc" id="L563">    }</span>
+<span class="fc" id="L567">        rootItem.setChildrens(childrens);</span>
+<span class="fc" id="L568">    }</span>
 
     /**
      * Odfiltruje menu polozky, ktore obsahuju prazdne javascript:void() alebo na ktore pouzivatel nema pravo
@@ -569,26 +574,26 @@ public class MenuService {
      * @return
      */
     private static List&lt;ModuleInfo&gt; filterNoLink(List&lt;ModuleInfo&gt; list, Identity user) {
-<span class="fc" id="L572">        List&lt;ModuleInfo&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L577">        List&lt;ModuleInfo&gt; filtered = new ArrayList&lt;&gt;();</span>
 
-<span class="pc bpc" id="L574" title="1 of 2 branches missed.">        if (list == null)</span>
-<span class="nc" id="L575">            return filtered;</span>
+<span class="pc bpc" id="L579" title="1 of 2 branches missed.">        if (list == null)</span>
+<span class="nc" id="L580">            return filtered;</span>
 
-<span class="fc bfc" id="L577" title="All 2 branches covered.">        for (ModuleInfo m : list) {</span>
-<span class="pc bpc" id="L578" title="1 of 2 branches missed.">            if (Tools.isEmpty(m.getLeftMenuLink()))</span>
-<span class="nc" id="L579">                continue;</span>
-<span class="pc bpc" id="L580" title="2 of 4 branches missed.">            if (m.getLeftMenuLink().contains(&quot;javascript:void()&quot;) || getMenuLinkV9(m).contains(&quot;javascript:void()&quot;))</span>
-<span class="nc" id="L581">                continue;</span>
+<span class="fc bfc" id="L582" title="All 2 branches covered.">        for (ModuleInfo m : list) {</span>
+<span class="pc bpc" id="L583" title="1 of 2 branches missed.">            if (Tools.isEmpty(m.getLeftMenuLink()))</span>
+<span class="nc" id="L584">                continue;</span>
+<span class="pc bpc" id="L585" title="2 of 4 branches missed.">            if (m.getLeftMenuLink().contains(&quot;javascript:void()&quot;) || getMenuLinkV9(m).contains(&quot;javascript:void()&quot;))</span>
+<span class="nc" id="L586">                continue;</span>
 
-<span class="fc bfc" id="L583" title="All 4 branches covered.">            if (Tools.isNotEmpty(m.getItemKey()) &amp;&amp; user.isEnabledItem(m.getItemKey())==false)</span>
-<span class="fc" id="L584">                continue;</span>
+<span class="pc bpc" id="L588" title="1 of 4 branches missed.">            if (Tools.isNotEmpty(m.getItemKey()) &amp;&amp; user.isEnabledItem(m.getItemKey())==false)</span>
+<span class="nc" id="L589">                continue;</span>
 
-<span class="fc bfc" id="L586" title="All 2 branches covered.">            if (Tools.isEmpty(getMenuLinkV9(m))) continue;</span>
+<span class="fc bfc" id="L591" title="All 2 branches covered.">            if (Tools.isEmpty(getMenuLinkV9(m))) continue;</span>
 
-<span class="fc" id="L588">            filtered.add(m);</span>
-<span class="fc" id="L589">        }</span>
+<span class="fc" id="L593">            filtered.add(m);</span>
+<span class="fc" id="L594">        }</span>
 
-<span class="fc" id="L591">        return filtered;</span>
+<span class="fc" id="L596">        return filtered;</span>
     }
 
     // -------------- ZOBRAZENIE PRAV --------------------------------------------------------
@@ -601,125 +606,125 @@ public class MenuService {
      * @return
      */
     public static List&lt;JsTreeItem&gt; getAllPermissions() {
-<span class="fc" id="L604">        List&lt;JsTreeItem&gt; perms = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L605">        Prop prop = Prop.getInstance();</span>
+<span class="fc" id="L609">        List&lt;JsTreeItem&gt; perms = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L610">        Prop prop = Prop.getInstance();</span>
 
-<span class="fc" id="L607">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getAvailableModules();</span>
-<span class="fc" id="L608">        sortModules(allModules);</span>
+<span class="fc" id="L612">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getAvailableModules();</span>
+<span class="fc" id="L613">        sortModules(allModules);</span>
 
         //ziskaj zoznam skupin prav a sprav hashtabulku CSS tried
-<span class="fc" id="L611">        List&lt;PermissionGroupBean&gt; permGroups = (new PermissionGroupDB()).getAll();</span>
-<span class="fc" id="L612">        HashMap&lt;String, StringBuilder&gt; permGroupsClasses = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L613" title="All 2 branches covered.">        for (PermissionGroupBean group : permGroups) {</span>
-<span class="fc bfc" id="L614" title="All 2 branches covered.">            for (String permName : group.getPermissionNames()) {</span>
-<span class="fc" id="L615">                permName = getPermsIdWithPrefix(permName);</span>
-<span class="fc" id="L616">                StringBuilder classes = permGroupsClasses.get(permName);</span>
-<span class="fc bfc" id="L617" title="All 2 branches covered.">                if (classes == null) {</span>
-<span class="fc" id="L618">                    classes = new StringBuilder();</span>
-<span class="fc" id="L619">                    classes.append(&quot; permgroup&quot;);</span>
-<span class="fc" id="L620">                    permGroupsClasses.put(permName, classes);</span>
+<span class="fc" id="L616">        List&lt;PermissionGroupBean&gt; permGroups = (new PermissionGroupDB()).getAll();</span>
+<span class="fc" id="L617">        HashMap&lt;String, StringBuilder&gt; permGroupsClasses = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L618" title="All 2 branches covered.">        for (PermissionGroupBean group : permGroups) {</span>
+<span class="fc bfc" id="L619" title="All 2 branches covered.">            for (String permName : group.getPermissionNames()) {</span>
+<span class="fc" id="L620">                permName = getPermsIdWithPrefix(permName);</span>
+<span class="fc" id="L621">                StringBuilder classes = permGroupsClasses.get(permName);</span>
+<span class="fc bfc" id="L622" title="All 2 branches covered.">                if (classes == null) {</span>
+<span class="fc" id="L623">                    classes = new StringBuilder();</span>
+<span class="fc" id="L624">                    classes.append(&quot; permgroup&quot;);</span>
+<span class="fc" id="L625">                    permGroupsClasses.put(permName, classes);</span>
                 }
-<span class="fc" id="L622">                classes.append(&quot; permgroup-&quot;).append(group.getId());</span>
-<span class="fc" id="L623">            }</span>
-<span class="fc" id="L624">        }</span>
+<span class="fc" id="L627">                classes.append(&quot; permgroup-&quot;).append(group.getId());</span>
+<span class="fc" id="L628">            }</span>
+<span class="fc" id="L629">        }</span>
 
-<span class="fc" id="L626">        List&lt;MenuBean&gt; roots = MenuService.getRootItems(prop);</span>
-<span class="fc bfc" id="L627" title="All 2 branches covered.">        for (MenuBean root : roots) {</span>
-<span class="fc" id="L628">            JsTreeItem rootItem = new JsTreeItem();</span>
-<span class="fc" id="L629">            rootItem.setId(getPermsIdWithPrefix(root.getGroup())+&quot;-leaf&quot;);</span>
-<span class="fc" id="L630">            rootItem.setText(root.getText());</span>
-<span class="fc" id="L631">            rootItem.setIcon(root.getIcon());</span>
-<span class="fc" id="L632">            rootItem.setParent(&quot;#&quot;);</span>
+<span class="fc" id="L631">        List&lt;MenuBean&gt; roots = MenuService.getRootItems(prop);</span>
+<span class="fc bfc" id="L632" title="All 2 branches covered.">        for (MenuBean root : roots) {</span>
+<span class="fc" id="L633">            JsTreeItem rootItem = new JsTreeItem();</span>
+<span class="fc" id="L634">            rootItem.setId(getPermsIdWithPrefix(root.getGroup())+&quot;-leaf&quot;);</span>
+<span class="fc" id="L635">            rootItem.setText(root.getText());</span>
+<span class="fc" id="L636">            rootItem.setIcon(root.getIcon());</span>
+<span class="fc" id="L637">            rootItem.setParent(&quot;#&quot;);</span>
 
-<span class="fc" id="L634">            perms.add(rootItem);</span>
+<span class="fc" id="L639">            perms.add(rootItem);</span>
 
-<span class="fc" id="L636">            perms.addAll(getAllPermissionsChildren(rootItem, allModules, permGroupsClasses, prop));</span>
-<span class="fc" id="L637">        }</span>
+<span class="fc" id="L641">            perms.addAll(getAllPermissionsChildren(rootItem, allModules, permGroupsClasses, prop));</span>
+<span class="fc" id="L642">        }</span>
 
-<span class="fc" id="L639">        return perms;</span>
+<span class="fc" id="L644">        return perms;</span>
     }
 
     /**
      * Prida 2. a 3. uroven prav pre zobrazenie vsetkych prav v editacii pouzivatela
      */
     private static List&lt;JsTreeItem&gt; getAllPermissionsChildren(JsTreeItem rootItem, List&lt;ModuleInfo&gt; allModules, HashMap&lt;String, StringBuilder&gt; permGroupsClasses, Prop prop) {
-<span class="fc" id="L646">        List&lt;JsTreeItem&gt; childs = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L647">        Set&lt;String&gt; checkDuplicity = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L651">        List&lt;JsTreeItem&gt; childs = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L652">        Set&lt;String&gt; checkDuplicity = new HashSet&lt;&gt;();</span>
 
-<span class="fc bfc" id="L649" title="All 2 branches covered.">        for (ModuleInfo m : allModules) {</span>
-<span class="pc bpc" id="L650" title="2 of 8 branches missed.">            if ((m.isUserItem()==false &amp;&amp; (m.getSubmenus()==null || m.getSubmenus().isEmpty())) || m.getItemKey().length()&lt;3) continue;</span>
+<span class="fc bfc" id="L654" title="All 2 branches covered.">        for (ModuleInfo m : allModules) {</span>
+<span class="pc bpc" id="L655" title="2 of 8 branches missed.">            if ((m.isUserItem()==false &amp;&amp; (m.getSubmenus()==null || m.getSubmenus().isEmpty())) || m.getItemKey().length()&lt;3) continue;</span>
 
-<span class="fc bfc" id="L652" title="All 2 branches covered.">            if (rootItem.getId().equals(getPermsIdWithPrefix(getGroup9(m))+&quot;-leaf&quot;) == false) continue;</span>
+<span class="fc bfc" id="L657" title="All 2 branches covered.">            if (rootItem.getId().equals(getPermsIdWithPrefix(getGroup9(m))+&quot;-leaf&quot;) == false) continue;</span>
 
-<span class="fc" id="L654">            JsTreeItem child = new JsTreeItem();</span>
-<span class="fc" id="L655">            child.setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())));</span>
-<span class="fc" id="L656">            child.setParent(rootItem.getId());</span>
-<span class="fc" id="L657">            child.setId(getPermsIdWithPrefix(m.getItemKey()));</span>
-<span class="fc" id="L658">            child.setIcon(getIcon9(m));</span>
+<span class="fc" id="L659">            JsTreeItem child = new JsTreeItem();</span>
+<span class="fc" id="L660">            child.setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())));</span>
+<span class="fc" id="L661">            child.setParent(rootItem.getId());</span>
+<span class="fc" id="L662">            child.setId(getPermsIdWithPrefix(m.getItemKey()));</span>
+<span class="fc" id="L663">            child.setIcon(getIcon9(m));</span>
 
-<span class="fc" id="L660">            childs.add(child);</span>
+<span class="fc" id="L665">            childs.add(child);</span>
 
-<span class="pc bpc" id="L662" title="1 of 4 branches missed.">            if (m.getSubmenus()!=null &amp;&amp; m.getSubmenus().isEmpty()==false)</span>
+<span class="pc bpc" id="L667" title="1 of 4 branches missed.">            if (m.getSubmenus()!=null &amp;&amp; m.getSubmenus().isEmpty()==false)</span>
 			{
                 //pridaj subemnu polozky
-<span class="fc" id="L665">                boolean hasItem = false;</span>
-<span class="fc bfc" id="L666" title="All 2 branches covered.">                for (ModuleInfo sub : m.getSubmenus()) {</span>
-<span class="pc bpc" id="L667" title="2 of 8 branches missed.">                    if (sub.isAvailable()==false || sub.isUserItem()==false || sub.getItemKey()==null || sub.getItemKey().length()&lt;3) continue;</span>
+<span class="fc" id="L670">                boolean hasItem = false;</span>
+<span class="fc bfc" id="L671" title="All 2 branches covered.">                for (ModuleInfo sub : m.getSubmenus()) {</span>
+<span class="pc bpc" id="L672" title="2 of 8 branches missed.">                    if (sub.isAvailable()==false || sub.isUserItem()==false || sub.getItemKey()==null || sub.getItemKey().length()&lt;3) continue;</span>
 
                     //v Zoznam web stranok preskakujeme Editacia media skupin, lebo to mame separatne ako polozku
-<span class="fc bfc" id="L670" title="All 4 branches covered.">                    if (&quot;editor_edit_media_group&quot;.equals(sub.getItemKey()) &amp;&amp; &quot;menuWebpages&quot;.equals(m.getItemKey())) continue;</span>
+<span class="fc bfc" id="L675" title="All 4 branches covered.">                    if (&quot;editor_edit_media_group&quot;.equals(sub.getItemKey()) &amp;&amp; &quot;menuWebpages&quot;.equals(m.getItemKey())) continue;</span>
                     //v Zoznam web stranok preskakujeme Editacia znaciek, lebo to mame separatne ako polozku
-<span class="pc bpc" id="L672" title="1 of 4 branches missed.">                    if (&quot;editor_edit_perex&quot;.equals(sub.getItemKey()) &amp;&amp; &quot;menuWebpages&quot;.equals(m.getItemKey())) continue;</span>
+<span class="pc bpc" id="L677" title="1 of 4 branches missed.">                    if (&quot;editor_edit_perex&quot;.equals(sub.getItemKey()) &amp;&amp; &quot;menuWebpages&quot;.equals(m.getItemKey())) continue;</span>
 
                     //skratene menu v editore - editorMiniEdit je inverzne pravo, otacame ho na iny typ
-<span class="fc bfc" id="L675" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(sub.getItemKey())) {</span>
-<span class="fc" id="L676">                        ModuleInfo subNew = new ModuleInfo();</span>
-<span class="fc" id="L677">                        subNew.setItemKey(&quot;editorFullMenu&quot;);</span>
-<span class="fc" id="L678">                        subNew.setLeftMenuNameKey(&quot;user.editorFullMenu&quot;);</span>
-<span class="fc" id="L679">                        sub = subNew;</span>
+<span class="fc bfc" id="L680" title="All 2 branches covered.">                    if (&quot;editorMiniEdit&quot;.equals(sub.getItemKey())) {</span>
+<span class="fc" id="L681">                        ModuleInfo subNew = new ModuleInfo();</span>
+<span class="fc" id="L682">                        subNew.setItemKey(&quot;editorFullMenu&quot;);</span>
+<span class="fc" id="L683">                        subNew.setLeftMenuNameKey(&quot;user.editorFullMenu&quot;);</span>
+<span class="fc" id="L684">                        sub = subNew;</span>
                     }
 
-<span class="fc bfc" id="L682" title="All 2 branches covered.">                    if (hasItem==false) {</span>
+<span class="fc bfc" id="L687" title="All 2 branches covered.">                    if (hasItem==false) {</span>
                         //mame aspon jednu polozku, child teda nie je pouzivany ako vyber ale ako uzol stromu
                         //pridame ho znova akoby prvu polozku submenu
-<span class="fc" id="L685">                        child.setId(child.getId()+&quot;-leaf&quot;);</span>
-<span class="fc" id="L686">                        child.setText(child.getText());</span>
-<span class="fc" id="L687">                        addPermGroupClasses(child, permGroupsClasses);</span>
+<span class="fc" id="L690">                        child.setId(child.getId()+&quot;-leaf&quot;);</span>
+<span class="fc" id="L691">                        child.setText(child.getText());</span>
+<span class="fc" id="L692">                        addPermGroupClasses(child, permGroupsClasses);</span>
 
                         //pridaj povodnu polozku ako prvy child (ak to je userItem)
-<span class="fc bfc" id="L690" title="All 2 branches covered.">                        if (m.isUserItem()) {</span>
-<span class="fc" id="L691">                            JsTreeItem subItem = new JsTreeItem();</span>
-<span class="fc" id="L692">                            subItem.setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())));</span>
-<span class="fc" id="L693">                            subItem.setParent(child.getId());</span>
-<span class="fc" id="L694">                            subItem.setId(getPermsIdWithPrefix(m.getItemKey()));</span>
-<span class="fc" id="L695">                            subItem.setIcon(getIcon9(m));</span>
-<span class="fc" id="L696">                            addPermGroupClasses(subItem, permGroupsClasses);</span>
+<span class="fc bfc" id="L695" title="All 2 branches covered.">                        if (m.isUserItem()) {</span>
+<span class="fc" id="L696">                            JsTreeItem subItem = new JsTreeItem();</span>
+<span class="fc" id="L697">                            subItem.setText(prop.getText(getLeftMenuNameKeyV9(m.getLeftMenuNameKey())));</span>
+<span class="fc" id="L698">                            subItem.setParent(child.getId());</span>
+<span class="fc" id="L699">                            subItem.setId(getPermsIdWithPrefix(m.getItemKey()));</span>
+<span class="fc" id="L700">                            subItem.setIcon(getIcon9(m));</span>
+<span class="fc" id="L701">                            addPermGroupClasses(subItem, permGroupsClasses);</span>
 
-<span class="fc" id="L698">                            childs.add(subItem);</span>
+<span class="fc" id="L703">                            childs.add(subItem);</span>
                         }
 
-<span class="fc" id="L701">                        hasItem = true;</span>
+<span class="fc" id="L706">                        hasItem = true;</span>
                     }
-<span class="fc" id="L703">                    JsTreeItem subItem = new JsTreeItem();</span>
-<span class="fc" id="L704">                    subItem.setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())));</span>
-<span class="fc" id="L705">                    subItem.setParent(child.getId());</span>
-<span class="fc" id="L706">                    subItem.setId(getPermsIdWithPrefix(sub.getItemKey()));</span>
-<span class="fc" id="L707">                    subItem.setIcon(getIcon9(sub));</span>
-<span class="fc" id="L708">                    addPermGroupClasses(subItem, permGroupsClasses);</span>
+<span class="fc" id="L708">                    JsTreeItem subItem = new JsTreeItem();</span>
+<span class="fc" id="L709">                    subItem.setText(prop.getText(getLeftMenuNameKeyV9(sub.getLeftMenuNameKey())));</span>
+<span class="fc" id="L710">                    subItem.setParent(child.getId());</span>
+<span class="fc" id="L711">                    subItem.setId(getPermsIdWithPrefix(sub.getItemKey()));</span>
+<span class="fc" id="L712">                    subItem.setIcon(getIcon9(sub));</span>
+<span class="fc" id="L713">                    addPermGroupClasses(subItem, permGroupsClasses);</span>
 
-<span class="fc bfc" id="L710" title="All 2 branches covered.">                    if (checkDuplicity.contains(subItem.getId())==false) {</span>
-<span class="fc" id="L711">                        childs.add(subItem);</span>
-<span class="fc" id="L712">                        checkDuplicity.add(subItem.getId());</span>
+<span class="fc bfc" id="L715" title="All 2 branches covered.">                    if (checkDuplicity.contains(subItem.getId())==false) {</span>
+<span class="fc" id="L716">                        childs.add(subItem);</span>
+<span class="fc" id="L717">                        checkDuplicity.add(subItem.getId());</span>
                     } else {
-<span class="fc" id="L714">                        Logger.debug(MenuService.class, &quot;duplicity: &quot;+subItem.getId());</span>
+<span class="fc" id="L719">                        Logger.debug(MenuService.class, &quot;duplicity: &quot;+subItem.getId());</span>
                     }
-<span class="fc" id="L716">                }</span>
-<span class="fc bfc" id="L717" title="All 2 branches covered.">                if (hasItem==false) addPermGroupClasses(child, permGroupsClasses);</span>
-<span class="fc" id="L718">            } else {</span>
-<span class="fc" id="L719">                addPermGroupClasses(child, permGroupsClasses);</span>
+<span class="fc" id="L721">                }</span>
+<span class="fc bfc" id="L722" title="All 2 branches covered.">                if (hasItem==false) addPermGroupClasses(child, permGroupsClasses);</span>
+<span class="fc" id="L723">            } else {</span>
+<span class="fc" id="L724">                addPermGroupClasses(child, permGroupsClasses);</span>
             }
-<span class="fc" id="L721">        }</span>
-<span class="fc" id="L722">        return childs;</span>
+<span class="fc" id="L726">        }</span>
+<span class="fc" id="L727">        return childs;</span>
     }
 
     /**
@@ -728,11 +733,11 @@ public class MenuService {
      * @param permGroupsClasses
      */
     private static void addPermGroupClasses(JsTreeItem item, HashMap&lt;String, StringBuilder&gt; permGroupsClasses) {
-<span class="fc" id="L731">        StringBuilder classes = permGroupsClasses.get(item.getId());</span>
-<span class="fc bfc" id="L732" title="All 2 branches covered.">        if (classes != null) {</span>
-<span class="fc" id="L733">            item.addLiClass(classes.toString());</span>
+<span class="fc" id="L736">        StringBuilder classes = permGroupsClasses.get(item.getId());</span>
+<span class="fc bfc" id="L737" title="All 2 branches covered.">        if (classes != null) {</span>
+<span class="fc" id="L738">            item.addLiClass(classes.toString());</span>
         }
-<span class="fc" id="L735">    }</span>
+<span class="fc" id="L740">    }</span>
 
     private static final String PERM_PREFIX = &quot;perms_&quot;;
     /**
@@ -741,7 +746,7 @@ public class MenuService {
      * @return
      */
     public static String getPermsIdWithPrefix(String id) {
-<span class="fc" id="L744">        return PERM_PREFIX+id;</span>
+<span class="fc" id="L749">        return PERM_PREFIX+id;</span>
     }
 
     /**
@@ -750,8 +755,8 @@ public class MenuService {
      * @return
      */
     public static String removePermsIdPrefix(String perms) {
-<span class="pc bpc" id="L753" title="1 of 2 branches missed.">        if (perms.startsWith(PERM_PREFIX)) return perms.substring(PERM_PREFIX.length());</span>
-<span class="nc" id="L754">        return perms;</span>
+<span class="pc bpc" id="L758" title="1 of 2 branches missed.">        if (perms.startsWith(PERM_PREFIX)) return perms.substring(PERM_PREFIX.length());</span>
+<span class="nc" id="L759">        return perms;</span>
     }
 
     /**
@@ -762,26 +767,26 @@ public class MenuService {
     public static String getPerms(String url) {
 
         //normalizuj linku
-<span class="fc" id="L765">        String normalized = url;</span>
-<span class="fc bfc" id="L766" title="All 2 branches covered.">        if (normalized.startsWith(&quot;/&quot;)==false) normalized = &quot;/&quot;+normalized;</span>
-<span class="fc" id="L767">        normalized = Tools.replace(normalized, &quot;//&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L768">        normalized = Tools.replace(normalized, &quot;/dist/views/&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L770">        String normalized = url;</span>
+<span class="fc bfc" id="L771" title="All 2 branches covered.">        if (normalized.startsWith(&quot;/&quot;)==false) normalized = &quot;/&quot;+normalized;</span>
+<span class="fc" id="L772">        normalized = Tools.replace(normalized, &quot;//&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L773">        normalized = Tools.replace(normalized, &quot;/dist/views/&quot;, &quot;/&quot;);</span>
 
-<span class="fc" id="L770">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getModules();</span>
-<span class="fc bfc" id="L771" title="All 2 branches covered.">        for (ModuleInfo m : allModules) {</span>
-<span class="fc bfc" id="L772" title="All 2 branches covered.">            if (checkLink(m, normalized)) return m.getItemKey();</span>
+<span class="fc" id="L775">        List&lt;ModuleInfo&gt; allModules = Modules.getInstance().getModules();</span>
+<span class="fc bfc" id="L776" title="All 2 branches covered.">        for (ModuleInfo m : allModules) {</span>
+<span class="fc bfc" id="L777" title="All 2 branches covered.">            if (checkLink(m, normalized)) return m.getItemKey();</span>
 
-<span class="fc bfc" id="L774" title="All 2 branches covered.">            if (m.getSubmenus()!=null) {</span>
-<span class="fc bfc" id="L775" title="All 2 branches covered.">                for (ModuleInfo sm : m.getSubmenus()) {</span>
-<span class="fc bfc" id="L776" title="All 2 branches covered.">                    if (checkLink(sm, normalized)) {</span>
-<span class="fc bfc" id="L777" title="All 2 branches covered.">                        if (Tools.isNotEmpty(sm.getItemKey())) return sm.getItemKey();</span>
-<span class="fc" id="L778">                        return m.getItemKey();</span>
+<span class="fc bfc" id="L779" title="All 2 branches covered.">            if (m.getSubmenus()!=null) {</span>
+<span class="fc bfc" id="L780" title="All 2 branches covered.">                for (ModuleInfo sm : m.getSubmenus()) {</span>
+<span class="fc bfc" id="L781" title="All 2 branches covered.">                    if (checkLink(sm, normalized)) {</span>
+<span class="fc bfc" id="L782" title="All 2 branches covered.">                        if (Tools.isNotEmpty(sm.getItemKey())) return sm.getItemKey();</span>
+<span class="fc" id="L783">                        return m.getItemKey();</span>
                     }
-<span class="fc" id="L780">                }</span>
+<span class="fc" id="L785">                }</span>
             }
-<span class="fc" id="L782">        }</span>
+<span class="fc" id="L787">        }</span>
 
-<span class="fc" id="L784">        return null;</span>
+<span class="fc" id="L789">        return null;</span>
     }
 
     /**
@@ -792,12 +797,12 @@ public class MenuService {
      */
     private static boolean checkLink(ModuleInfo m, String normalized) {
 
-<span class="fc bfc" id="L795" title="All 4 branches covered.">        if (m.getLeftMenuLink().equalsIgnoreCase(normalized) || m.getLeftMenuLink().equalsIgnoreCase(normalized+&quot;/&quot;)) return true;</span>
+<span class="fc bfc" id="L800" title="All 4 branches covered.">        if (m.getLeftMenuLink().equalsIgnoreCase(normalized) || m.getLeftMenuLink().equalsIgnoreCase(normalized+&quot;/&quot;)) return true;</span>
 
         //pre prehlad
-<span class="fc bfc" id="L798" title="All 4 branches covered.">        if (getMenuLinkV9(m).equalsIgnoreCase(normalized) || getMenuLinkV9(m).equalsIgnoreCase(normalized+&quot;/&quot;)) return true;</span>
+<span class="fc bfc" id="L803" title="All 4 branches covered.">        if (getMenuLinkV9(m).equalsIgnoreCase(normalized) || getMenuLinkV9(m).equalsIgnoreCase(normalized+&quot;/&quot;)) return true;</span>
 
-<span class="fc" id="L800">        return false;</span>
+<span class="fc" id="L805">        return false;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

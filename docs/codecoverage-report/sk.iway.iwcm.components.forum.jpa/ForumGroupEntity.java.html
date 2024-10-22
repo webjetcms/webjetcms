@@ -208,6 +208,9 @@ import sk.iway.iwcm.users.UserDetails;
     @Size(max = 128)
     private String addmessageGroups;
 
+    @Column(name = &quot;notify_page_author&quot;)
+    private Boolean notifyPageAuthor;
+
     @Column(name = &quot;domain_id&quot;)
     private Integer domainId;
 
@@ -217,21 +220,21 @@ import sk.iway.iwcm.users.UserDetails;
 	 * @return
 	 */
 	public boolean canPostMessage(UserDetails user) {
-<span class="pc bpc" id="L220" title="1 of 2 branches missed.">		if (Tools.isEmpty(getAddmessageGroups())) return true;</span>
-<span class="nc bnc" id="L221" title="All 2 branches missed.">		if (user == null) return(false);</span>
+<span class="pc bpc" id="L223" title="1 of 2 branches missed.">		if (Tools.isEmpty(getAddmessageGroups())) return true;</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">		if (user == null) return(false);</span>
 		
-<span class="nc" id="L223">		String ids = getAddmessageGroups();</span>
-<span class="nc bnc" id="L224" title="All 2 branches missed.">		if(Tools.isNotEmpty(ids)) </span>
+<span class="nc" id="L226">		String ids = getAddmessageGroups();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">		if(Tools.isNotEmpty(ids)) </span>
 		{
-<span class="nc" id="L226">			StringTokenizer st = new StringTokenizer(ids,&quot;,+&quot;);</span>
-<span class="nc bnc" id="L227" title="All 2 branches missed.">			while(st.hasMoreTokens())</span>
+<span class="nc" id="L229">			StringTokenizer st = new StringTokenizer(ids,&quot;,+&quot;);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">			while(st.hasMoreTokens())</span>
 			{
-<span class="nc" id="L229">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L230" title="All 2 branches missed.">				if (userGroupId &lt; 1) continue;</span>
-<span class="nc bnc" id="L231" title="All 2 branches missed.">				if(user.isInUserGroup(userGroupId)) return true;</span>
-<span class="nc" id="L232">			}</span>
+<span class="nc" id="L232">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">				if (userGroupId &lt; 1) continue;</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">				if(user.isInUserGroup(userGroupId)) return true;</span>
+<span class="nc" id="L235">			}</span>
 		}
-<span class="nc" id="L234">		return false;</span>
+<span class="nc" id="L237">		return false;</span>
 	}
 
     /**
@@ -241,39 +244,39 @@ import sk.iway.iwcm.users.UserDetails;
 	 */
 	public boolean isAdmin(UserDetails user) {
 
-<span class="fc bfc" id="L244" title="All 2 branches covered.">		if (user == null) return(false);</span>
-<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        if (user.isAdmin()) return true;</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">		if (user == null) return(false);</span>
+<span class="pc bpc" id="L248" title="1 of 2 branches missed.">        if (user.isAdmin()) return true;</span>
 		
-<span class="nc" id="L247">        String ids = getAdminGroups();</span>
-<span class="nc bnc" id="L248" title="All 2 branches missed.">		if(Tools.isNotEmpty(ids))  {</span>
-<span class="nc" id="L249">			StringTokenizer st = new StringTokenizer(ids,&quot;,+&quot;);</span>
-<span class="nc bnc" id="L250" title="All 2 branches missed.">			while(st.hasMoreTokens()) {</span>
-<span class="nc" id="L251">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
-<span class="nc bnc" id="L252" title="All 2 branches missed.">				if (userGroupId &lt; 1) continue;</span>
-<span class="nc bnc" id="L253" title="All 2 branches missed.">				if(user.isInUserGroup(userGroupId)) return true;</span>
-<span class="nc" id="L254">			}</span>
+<span class="nc" id="L250">        String ids = getAdminGroups();</span>
+<span class="nc bnc" id="L251" title="All 2 branches missed.">		if(Tools.isNotEmpty(ids))  {</span>
+<span class="nc" id="L252">			StringTokenizer st = new StringTokenizer(ids,&quot;,+&quot;);</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">			while(st.hasMoreTokens()) {</span>
+<span class="nc" id="L254">				int userGroupId = Tools.getIntValue(st.nextToken(), -1);</span>
+<span class="nc bnc" id="L255" title="All 2 branches missed.">				if (userGroupId &lt; 1) continue;</span>
+<span class="nc bnc" id="L256" title="All 2 branches missed.">				if(user.isInUserGroup(userGroupId)) return true;</span>
+<span class="nc" id="L257">			}</span>
 		}
-<span class="nc" id="L256">		return false;</span>
+<span class="nc" id="L259">		return false;</span>
 	}
 
     public boolean isActive() {
-<span class="pc bpc" id="L260" title="1 of 2 branches missed.">		if(getActive() == null) return false;</span>
-<span class="fc" id="L261">        return getActive();</span>
+<span class="pc bpc" id="L263" title="1 of 2 branches missed.">		if(getActive() == null) return false;</span>
+<span class="fc" id="L264">        return getActive();</span>
 	}
 
     public boolean isMessageConfirmation() {
-<span class="nc bnc" id="L265" title="All 2 branches missed.">        if(getMessageConfirmation() == null) return false;</span>
-<span class="nc" id="L266">		return getMessageConfirmation();</span>
+<span class="nc bnc" id="L268" title="All 2 branches missed.">        if(getMessageConfirmation() == null) return false;</span>
+<span class="nc" id="L269">		return getMessageConfirmation();</span>
 	}
 
     public boolean isMessageBoard() {
-<span class="nc bnc" id="L270" title="All 2 branches missed.">        if(getMessageBoard() == null) return false;</span>
-<span class="nc" id="L271">		return getMessageBoard();</span>
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        if(getMessageBoard() == null) return false;</span>
+<span class="nc" id="L274">		return getMessageBoard();</span>
 	}
 
     public boolean isAdvertisementType() {
-<span class="pc bpc" id="L275" title="1 of 2 branches missed.">        if(getAdvertisementType() == null) return false;</span>
-<span class="fc" id="L276">		return getAdvertisementType();</span>
+<span class="pc bpc" id="L278" title="1 of 2 branches missed.">        if(getAdvertisementType() == null) return false;</span>
+<span class="fc" id="L279">		return getAdvertisementType();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

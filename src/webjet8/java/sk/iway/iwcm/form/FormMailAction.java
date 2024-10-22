@@ -1017,6 +1017,9 @@ public class FormMailAction extends HttpServlet
 		boolean spamProtectionEnabled = true;
 		if (temp != null) spamProtectionEnabled = temp.isDisableSpamProtection()==false;
 
+		//conf value overrides everything
+		if (Constants.getBoolean("spamProtection")==false) spamProtectionEnabled = false;
+
 		//DETEKCIA SPAMU
 		boolean isCaptchOk = true;
 		if (spamProtectionEnabled) {
@@ -1795,9 +1798,8 @@ public class FormMailAction extends HttpServlet
 			}
 		} //else isSpam
 
-
-
 		String param = "formsend=true";
+		if ("true".equals(request.getParameter("doubleOptIn"))) param = "formsend=trueDoubleOptIn";
 
 		StringBuilder forward = new StringBuilder(forwardDefault);
 		if (failStatus!=null)

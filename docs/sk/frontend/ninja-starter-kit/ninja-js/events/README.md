@@ -11,7 +11,7 @@
 | onResizeWidth() |  |
 | onResizeHeight() |  |
 
-## on{deviceName}()
+## `on{deviceName}()`
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop
 
 Udalosť sa zavolá (s omeškaním podľa nastavenia `fireTime`) ak:
@@ -34,7 +34,7 @@ Breakpointy sa preberajú z CSS štýlov, ktoré sú nastavené vo `_variables.s
 - 991px < **onLaptop()** < 1200px 
 - 1199px < **onDesktop()**
 
-## on{deviceName}Blink()
+## `on{deviceName}Blink()`
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop
 
 Udalosť sa zavolá za rovnakých podmienok ako on{deviceName}() až na to, že táto udalosť sa volá mnoho krát, nie len raz. Ak užívateľ zmení viac krát šírku a stále je v rozmezí pre {deviceName}, udalosť sa zakaždým zavolá. Pri udalosti o*{deviceName}() by sa to už viac krát nezavolalo. 
@@ -54,7 +54,7 @@ Breakpointy sa preberajú z CSS štýlov, ktoré sú nastavené vo `_variables.s
 - 991px < **onLaptopBlink()** < 1200px 
 - 1199px < **onDesktopBlink()**
 
-## on{deviceName}Up()
+## `on{deviceName}Up()`
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~
 
 Udalosť sa zavolá (s omeškaním podľa nastavenia `fireTime`) ak:
@@ -76,7 +76,7 @@ Breakpointy sa preberajú z CSS štýlov, ktoré sú nastavené vo `_variables.s
 - 991px < **onTabletUp()**
 - 1199px < **onLaptopUp()**
 
-## on{deviceName}UpBlink()
+## `on{deviceName}UpBlink()`
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~
 
 Udalosť sa zavolá za rovnakých podmienok ako on{deviceName}Up() až na to, že táto udalosť sa volá mnoho krát, nie len raz. Ak užívateľ zmení viac krát šírku a stále je väčšia ako {deviceName}, udalosť sa zakaždým zavolá. Pri udalosti o*{deviceName}Up() by sa to už viac krát nezavolalo. 
@@ -95,7 +95,7 @@ Breakpointy sa preberajú z CSS štýlov, ktoré sú nastavené vo `_variables.s
 - 991px < **onTabletUpBlink()**
 - 1199px < **onLaptopUpBlink()**
 
-## on{deviceName}Down()
+## `on{deviceName}Down()`
 {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop
 
 Udalosť sa zavolá (s omeškaním podľa nastavenia `fireTime`) ak:
@@ -117,7 +117,7 @@ Breakpointy sa preberajú z CSS štýlov, ktoré sú nastavené vo `_variables.s
 - **onLaptopDown()** < 992px 
 - **onDesktopDown()** < 1200px
 
-## on{deviceName}DownBlink()
+## `on{deviceName}DownBlink()`
 {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop
 
 Udalosť sa zavolá za rovnakých podmienok ako on{deviceName}Down() až na to, že táto udalosť sa volá mnoho krát, nie len raz. Ak užívateľ zmení viac krát šírku a stále je menšia ako {deviceName}, udalosť sa zakaždým zavolá. Pri udalosti o*{deviceName}Down() by sa to už viac krát nezavolalo. 
@@ -136,7 +136,7 @@ Breakpointy sa preberajú z CSS štýlov, ktoré sú nastavené vo `_variables.s
 - **onLaptopDownBlink()** < 992px 
 - **onDesktopDownBlink()** < 1200px
 
-## onResize()
+## `onResize()`
 Udalosť sa zavolá (s omeškaním podľa nastavenia `fireTime`) ak sa zmení veľkosť obrazovky. 
 
 ```javascript
@@ -147,7 +147,7 @@ Nina.init({
 });
 ```
 
-## onResizeWidth()
+## `onResizeWidth()`
 Udalosť sa zavolá (s omeškaním podľa nastavenia `fireTime`) ak sa zmení šírka obrazovky. 
 
 ```javascript
@@ -158,7 +158,7 @@ Nina.init({
 });
 ```
 
-## onResizeHeight()
+## `onResizeHeight()`
 Udalosť sa zavolá (s omeškaním podľa nastavenia `fireTime`) ak sa zmení výška obrazovky. 
 
 ```javascript

@@ -22,16 +22,16 @@ import sk.iway.iwcm.io.IwcmFsDB;
 
 	public static boolean removeMetadata(IwcmFile file)
 	{
-<span class="nc" id="L25">		String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
-<span class="nc" id="L26">		String metadataRemoverParams = Constants.getString(&quot;metadataRemoverParams&quot;);</span>
-<span class="nc" id="L27">		String metadataRemoverExtensions = Constants.getString(&quot;metadataRemoverExtensions&quot;);</span>
+<span class="fc" id="L25">		String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
+<span class="fc" id="L26">		String metadataRemoverParams = Constants.getString(&quot;metadataRemoverParams&quot;);</span>
+<span class="fc" id="L27">		String metadataRemoverExtensions = Constants.getString(&quot;metadataRemoverExtensions&quot;);</span>
 
-<span class="nc" id="L29">		boolean result = false;</span>
+<span class="fc" id="L29">		boolean result = false;</span>
 
 
 		try
 		{
-<span class="nc bnc" id="L34" title="All 2 branches missed.">			if (Tools.isNotEmpty(metadataRemoverCommand))</span>
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">			if (Tools.isNotEmpty(metadataRemoverCommand))</span>
 			{
 <span class="nc" id="L36">				File f = new File(metadataRemoverCommand);</span>
 <span class="nc bnc" id="L37" title="All 4 branches missed.">				if (f.exists() &amp;&amp; f.canRead())</span>
@@ -111,8 +111,8 @@ import sk.iway.iwcm.io.IwcmFsDB;
 <span class="nc" id="L111">		catch (Exception ex)</span>
 		{
 <span class="nc" id="L113">			sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L114">		}</span>
-<span class="nc" id="L115">		return result;</span>
+<span class="fc" id="L114">		}</span>
+<span class="fc" id="L115">		return result;</span>
 	}
 
 	public static void waitForGfs()
@@ -132,4 +132,4 @@ import sk.iway.iwcm.io.IwcmFsDB;
 		}
 <span class="nc" id="L133">	}</span>
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

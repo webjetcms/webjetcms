@@ -3,6 +3,7 @@ package sk.iway.demo8;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 
 import java.lang.reflect.InvocationHandler;
@@ -12,11 +13,13 @@ import java.lang.reflect.Proxy;
 import java.util.random.RandomGeneratorFactory;
 import java.util.stream.IntStream;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestController
 public class DemoRestController
 {
 	@GetMapping(path={"/demo-test"})
-	public String test()
+	public String test(HttpServletRequest request)
 	{
 		final StringBuilder result = new StringBuilder();
 		result.append("Demo OK ").append(Constants.getInstallName()).append("\n<br>").append("\n<br>");
@@ -55,6 +58,9 @@ public class DemoRestController
 		result.append("<b>2. Invoke Default Methods From Proxy Instances</b>").append("\n<br>");
 		result.append("Vysledok by mal byt world, je: ").append(r);
 		result.append("\n<br>").append("\n<br>");
+
+		String name = Tools.getParameter(request, "name");
+		result.append("\n<p class='name-request'>").append(name).append("</p>");
 
 		return result.toString();
 	}

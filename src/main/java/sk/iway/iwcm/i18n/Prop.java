@@ -52,7 +52,7 @@ public class Prop
 	//pre interne ucely instancie, pretoze po vytvoreni instancie tato uz nemala informaciu o jazyku !!
 	private final String language;
 
-	private static ConcurrentHashMap<String, Set<MissingKeysDto>> missingTexts = new ConcurrentHashMap<String, Set<MissingKeysDto>>();
+	private static ConcurrentHashMap<String, Set<MissingKeysDto>> missingTexts = new ConcurrentHashMap<>();
 
 	private static long lastUpdate;
 
@@ -370,7 +370,9 @@ public class Prop
 			}
 
 			//if key is missing first time, add new MissingKeysDto variable into set of missing keys
-			if(!present) missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
+			if(!present) {
+				missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
+			}
 
 			//try defaultLanguage property
             String defaultLanguage = Constants.getString("defaultLanguage");

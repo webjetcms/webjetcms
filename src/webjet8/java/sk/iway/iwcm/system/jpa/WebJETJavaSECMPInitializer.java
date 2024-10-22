@@ -5,6 +5,7 @@ import static sk.iway.iwcm.Tools.isEmpty;
 import java.io.File;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -174,13 +175,7 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
               Archive archive = PersistenceUnitProcessor.getArchiveFactory(loader).createArchive(puRootURL, descriptor, null);
               pars.add(archive);
           }
-      } catch (java.io.IOException exc){
-          //clean up first
-          for (Archive archive : pars) {
-              archive.close();
-          }
-          throw PersistenceUnitLoadingException.exceptionSearchingForPersistenceResources(loader, exc);
-      } catch (URISyntaxException exc) {
+      } catch (java.io.IOException|URISyntaxException exc){
           //clean up first
           for (Archive archive : pars) {
               archive.close();
@@ -299,11 +294,13 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
 
 	      	Properties properties = new Properties();
 	      	String driverClassName = "";
-				try
-				{
-					driverClassName = DriverManager.getDriver(ds.getConnection().getMetaData().getURL()).getClass().getName();
-				}
-				catch (SQLException e){sk.iway.iwcm.Logger.error(e);}
+            try
+            {
+                Connection connection = ds.getConnection();
+                driverClassName = DriverManager.getDriver(connection.getMetaData().getURL()).getClass().getName();
+                connection.close();
+            }
+            catch (SQLException e){sk.iway.iwcm.Logger.error(e);}
 
 	      	String jpaTargetDatabase = TargetDatabase.Auto;
 	      	if(driverClassName.contains("com.mysql.jdbc.Driver") || driverClassName.contains("mariadb")) {

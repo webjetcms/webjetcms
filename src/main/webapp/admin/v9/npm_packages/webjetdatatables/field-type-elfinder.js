@@ -24,9 +24,11 @@ export function typeElfinder() {
 
             var prependHtmlCode = "";
             var isImage = false;
+            var volumes = "link";
             if (conf.className != null && conf.className.indexOf("image")!=-1) {
                 isImage = true;
                 prependHtmlCode = '<span class="input-group-text"><i class="ti ti-photo"></i></span>';
+                volumes = "images";
                 //console.log("is image class=", conf.className);
             }
 
@@ -49,7 +51,8 @@ export function typeElfinder() {
                 input.name = conf.data;
                 WJ.openElFinder({
                     link: conf._input.val(),
-                    title: conf.label,
+                    closeButtonPosition: "close-button-over",
+                    volumes: volumes,
                     okclick: function(link) {
                         //console.log("OK click");
                         setValue(conf, link);

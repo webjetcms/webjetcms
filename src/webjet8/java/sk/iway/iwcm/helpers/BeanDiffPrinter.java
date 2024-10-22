@@ -46,10 +46,15 @@ public class BeanDiffPrinter
 			{
 				output.append('\n').
 					append(change.getKey()).
-					append(": ").
-					append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
+					append(": ");
+
+				if (diff.hasOriginal()) {
+					output.append(StringUtils.abbreviate(change.getValue().valueBefore.toString(), 100)).
 					append(" => ").
 					append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+				} else {
+					output.append(StringUtils.abbreviate(change.getValue().valueAfter.toString(), 100));
+				}
 			}
 
 			return output.toString();

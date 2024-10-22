@@ -234,4 +234,4 @@ It is true that the administrator can do anything while working with the forum, 
 - sees all forums, even the deleted and unapproved ones (not visible to normal users)
 - in a simple discussion can add posts and reply to posts without limit (the user is limited by the forum or post status)
 - in a multi-topic discussion can reply/quote/upload/delete unlimitedly (the user is limited by the state of the forum, replies/quotes etc...)
-Admin's only limitation is the fact that he can't see deleted/unapproved replies/quotes (aka posts) in a multi-topic discussion. The reason for this is so that these posts don't get in the way of him reading the discussion. The admin still has the option to edit such posts. You can read more about these edits in [](#akcie-nad-fórami-a-príspevkami).
+Admin's only limitation is the fact that he can't see deleted/unapproved replies/quotes (aka posts) in a multi-topic discussion. The reason for this is so that these posts don't get in the way of him reading the discussion. The admin still has the option to edit such posts. You can read more about these edits in ['Actions over forums and posts'](#akcie-nad-fórami-a-príspevkami).

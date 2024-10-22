@@ -10,7 +10,7 @@ Zobrazenie položky v navigačnej lište je závislé od nastavenia poľa Naviga
 - Zobraziť - položka sa v navigačnej lište zobrazí.
 - Nezobraziť - položka sa v navigačnej lište nezobrazí (a to vrátane pod-priečinkov).
 
-Pri možnosti zobraziť môžete ešte zobrazenej web stránke nastaviť možnosť zobrazenia (typicky sa jedná o poslenú položku v navigačnej lište). Tá je rovnako v karte Navigácia a obsahuje možnosti:
+Pri možnosti zobraziť môžete ešte zobrazenej web stránke nastaviť možnosť zobrazenia (typicky sa jedná o poslednú položku v navigačnej lište). Tá je rovnako v karte Navigácia a obsahuje možnosti:
 
 - Zobraziť - web stránka sa v navigačnej lište zobrazí.
 - Nezobraziť - web stránka sa v navigačnej lište nezobrazí.

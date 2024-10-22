@@ -65,41 +65,43 @@ public class FileBrowserTools {
         {
 <span class="fc" id="L66">            return(false);</span>
         }
+        //in html folder we have valid files with name showdoc.dodocid=1234.html, allow this
+<span class="fc" id="L69">        name = name.replace(&quot;showdoc.dodocid=&quot; , &quot;&quot;);</span>
 
         //	kontrola zakazanych znakov v adrese
-<span class="fc" id="L70">        name = name.toLowerCase();</span>
-<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (String fSymbol : forbiddenSymbols)</span>
+<span class="fc" id="L72">        name = name.toLowerCase();</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        for (String fSymbol : forbiddenSymbols)</span>
         {
-<span class="fc bfc" id="L73" title="All 2 branches covered.">            if (name.indexOf(fSymbol) != -1)</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            if (name.indexOf(fSymbol) != -1)</span>
             {
-<span class="fc" id="L75">                return(true);</span>
+<span class="fc" id="L77">                return(true);</span>
             }
-<span class="fc" id="L77">        }</span>
-<span class="fc" id="L78">        return(false);</span>
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">        return(false);</span>
     }
 
     public static IwcmFile cleanMetadata(InputStream is, int length , String filename, boolean closeIs)
     {
 
 
-<span class="nc" id="L85">        String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
-<span class="nc bnc" id="L86" title="All 2 branches missed.">        if (Tools.isNotEmpty(metadataRemoverCommand))</span>
+<span class="nc" id="L87">        String metadataRemoverCommand = Constants.getString(&quot;metadataRemoverCommand&quot;);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        if (Tools.isNotEmpty(metadataRemoverCommand))</span>
         {
 
             try
             {
-<span class="nc" id="L91">                File tempFile = File.createTempFile(&quot;dragDropUpload&quot;, filename);</span>
-<span class="nc" id="L92">                IwcmFile tempIwcm = new IwcmFile(tempFile);</span>
-<span class="nc" id="L93">                IwcmFsDB.writeFiletoDest(is, tempFile, length, closeIs);</span>
-<span class="nc" id="L94">                MetadataCleaner.removeMetadata(tempIwcm);</span>
-<span class="nc" id="L95">                return tempIwcm;</span>
+<span class="nc" id="L93">                File tempFile = File.createTempFile(&quot;dragDropUpload&quot;, filename);</span>
+<span class="nc" id="L94">                IwcmFile tempIwcm = new IwcmFile(tempFile);</span>
+<span class="nc" id="L95">                IwcmFsDB.writeFiletoDest(is, tempFile, length, closeIs);</span>
+<span class="nc" id="L96">                MetadataCleaner.removeMetadata(tempIwcm);</span>
+<span class="nc" id="L97">                return tempIwcm;</span>
 
-<span class="nc" id="L97">            } catch (IOException e)</span>
+<span class="nc" id="L99">            } catch (IOException e)</span>
             {
-<span class="nc" id="L99">                sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L101">                sk.iway.iwcm.Logger.error(e);</span>
             }
         }
-<span class="nc" id="L102">        return null;</span>
+<span class="nc" id="L104">        return null;</span>
     }
 
     /**
@@ -107,14 +109,14 @@ public class FileBrowserTools {
      * Znaky cita z konfiguracnej premennje FileBrowserTools.forbiddenSymbols, ktora je zoznam oddeleny ciarkou
      */
     private static void addForbidenSymbolsFromConfig() {
-<span class="fc" id="L110">        String[] configuredForbiddenSymbols = Constants.getArray(&quot;FileBrowserTools.forbiddenSymbols&quot;);</span>
-<span class="pc bpc" id="L111" title="2 of 4 branches missed.">        if(configuredForbiddenSymbols != null &amp;&amp; configuredForbiddenSymbols.length &gt; 0) {</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">            for (String configuredForbiddenSymbol : configuredForbiddenSymbols)</span>
+<span class="fc" id="L112">        String[] configuredForbiddenSymbols = Constants.getArray(&quot;FileBrowserTools.forbiddenSymbols&quot;);</span>
+<span class="pc bpc" id="L113" title="2 of 4 branches missed.">        if(configuredForbiddenSymbols != null &amp;&amp; configuredForbiddenSymbols.length &gt; 0) {</span>
+<span class="fc bfc" id="L114" title="All 2 branches covered.">            for (String configuredForbiddenSymbol : configuredForbiddenSymbols)</span>
             {
-<span class="fc" id="L114">                forbiddenSymbols.add(configuredForbiddenSymbol);</span>
+<span class="fc" id="L116">                forbiddenSymbols.add(configuredForbiddenSymbol);</span>
             }
         }
-<span class="fc" id="L117">    }</span>
+<span class="fc" id="L119">    }</span>
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

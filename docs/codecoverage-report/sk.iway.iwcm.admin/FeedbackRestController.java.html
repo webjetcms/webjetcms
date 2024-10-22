@@ -35,78 +35,76 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L35">        String recipient = Constants.getString(&quot;problemReportEmail&quot;);</span>
 
         //Create mail helper
-<span class="fc" id="L38">        MailHelper mailHelper = new MailHelper();</span>
-
-        //Set default params
-<span class="fc" id="L41">        mailHelper.setSubject(&quot;Spätná väzba k WebJET CMS - &quot; + Tools.getServerName(request));</span>
-<span class="fc" id="L42">        mailHelper.setRecipients(recipient);</span>
+<span class="fc" id="L38">        MailHelper mailHelper = new MailHelper()</span>
+<span class="fc" id="L39">            .setSubject(&quot;Spätná väzba k WebJET CMS - &quot; + Tools.getServerName(request))</span>
+<span class="fc" id="L40">            .setToEmail(recipient);</span>
 
         //Get params from request
-<span class="fc" id="L45">        Map&lt;String, String[]&gt; params =  request.getParameterMap();</span>
+<span class="fc" id="L43">        Map&lt;String, String[]&gt; params =  request.getParameterMap();</span>
 
         //Handle text
-<span class="fc" id="L48">        StringBuilder feedbackText = new StringBuilder();</span>
-<span class="fc" id="L49">        feedbackText.append(&quot;&lt;p&gt;&quot;)</span>
-<span class="fc" id="L50">            .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), &quot;\n&quot;, &quot;&lt;br/&gt;\n&quot;))</span>
-<span class="fc" id="L51">            .append(&quot;&lt;/p&gt;\n&lt;p&gt;&quot;);</span>
+<span class="fc" id="L46">        StringBuilder feedbackText = new StringBuilder();</span>
+<span class="fc" id="L47">        feedbackText.append(&quot;&lt;p&gt;&quot;)</span>
+<span class="fc" id="L48">            .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), &quot;\n&quot;, &quot;&lt;br/&gt;\n&quot;))</span>
+<span class="fc" id="L49">            .append(&quot;&lt;/p&gt;\n&lt;p&gt;&quot;);</span>
 
         //Handle isAnonymous
-<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if(!params.get(isAnonymousKey)[0].equals(&quot;true&quot;)) {</span>
-<span class="fc" id="L55">            Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if(!params.get(isAnonymousKey)[0].equals(&quot;true&quot;)) {</span>
+<span class="fc" id="L53">            Identity user = UsersDB.getCurrentUser(request);</span>
 
             //Use user name and email
-<span class="fc" id="L58">            mailHelper.setFromName(user.getFullName());</span>
-<span class="fc" id="L59">            mailHelper.setFromEmail(user.getEmail());</span>
+<span class="fc" id="L56">            mailHelper.setFromName(user.getFullName());</span>
+<span class="fc" id="L57">            mailHelper.setFromEmail(user.getEmail());</span>
 
             //Add info about sender (user) to feedback text
-<span class="fc" id="L62">            feedbackText.append(&quot;Login: &quot; + ResponseUtils.filter(user.getLogin()) + &quot;&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L63">            feedbackText.append(&quot;Name: &quot; + ResponseUtils.filter(user.getFullName()) + &quot;&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L64">            feedbackText.append(&quot;Email: &quot; + ResponseUtils.filter(user.getEmail()) + &quot;&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L65">            feedbackText.append(&quot;User-Agent: &quot; + ResponseUtils.filter(request.getHeader(&quot;User-Agent&quot;)) + &quot;&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L66">        } else {</span>
+<span class="fc" id="L60">            feedbackText.append(&quot;Login: &quot; + ResponseUtils.filter(user.getLogin()) + &quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L61">            feedbackText.append(&quot;Name: &quot; + ResponseUtils.filter(user.getFullName()) + &quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L62">            feedbackText.append(&quot;Email: &quot; + ResponseUtils.filter(user.getEmail()) + &quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L63">            feedbackText.append(&quot;User-Agent: &quot; + ResponseUtils.filter(request.getHeader(&quot;User-Agent&quot;)) + &quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L64">        } else {</span>
             //Set anonymous
-<span class="nc" id="L68">            mailHelper.setFromName(&quot;Anonymous&quot;);</span>
-<span class="nc" id="L69">            mailHelper.setFromEmail(getFirstEmail(recipient));</span>
+<span class="nc" id="L66">            mailHelper.setFromName(&quot;Anonymous&quot;);</span>
+<span class="nc" id="L67">            mailHelper.setFromEmail(getFirstEmail(recipient));</span>
         }
 
         //Add more info
-<span class="fc" id="L73">        feedbackText.append(&quot;Domain: &quot;).append(ResponseUtils.filter(Tools.getServerName(request))).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L74">        feedbackText.append(&quot;IP: &quot;).append(ResponseUtils.filter(Tools.getRemoteIP(request))).append(&quot;&lt;br/&gt;&quot;);</span>
-<span class="fc" id="L75">        feedbackText.append(&quot;Date: &quot;).append(ResponseUtils.filter(Tools.formatDateTimeSeconds(Tools.getNow()))).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L71">        feedbackText.append(&quot;Domain: &quot;).append(ResponseUtils.filter(Tools.getServerName(request))).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L72">        feedbackText.append(&quot;IP: &quot;).append(ResponseUtils.filter(Tools.getRemoteIP(request))).append(&quot;&lt;br/&gt;&quot;);</span>
+<span class="fc" id="L73">        feedbackText.append(&quot;Date: &quot;).append(ResponseUtils.filter(Tools.formatDateTimeSeconds(Tools.getNow()))).append(&quot;&lt;br/&gt;&quot;);</span>
 
-<span class="fc" id="L77">        feedbackText.append(&quot;\n&lt;/p&gt;&quot;);</span>
+<span class="fc" id="L75">        feedbackText.append(&quot;\n&lt;/p&gt;&quot;);</span>
 
         //Set feddback text to email
-<span class="fc" id="L80">        mailHelper.setMessage(feedbackText.toString());</span>
+<span class="fc" id="L78">        mailHelper.setMessage(feedbackText.toString());</span>
 
         //Handle files
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if(params.get(filesKeys) != null) {</span>
-<span class="nc bnc" id="L84" title="All 2 branches missed.">            for(String fileKey : params.get(filesKeys)) {</span>
+<span class="pc bpc" id="L81" title="1 of 2 branches missed.">        if(params.get(filesKeys) != null) {</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            for(String fileKey : params.get(filesKeys)) {</span>
 
                 //Get file path
-<span class="nc" id="L87">                String filePath = AdminUploadServlet.getTempFilePath(fileKey);</span>
+<span class="nc" id="L85">                String filePath = AdminUploadServlet.getTempFilePath(fileKey);</span>
 
-<span class="nc" id="L89">                IwcmFile file = new IwcmFile(filePath);</span>
+<span class="nc" id="L87">                IwcmFile file = new IwcmFile(filePath);</span>
 
                 //Add file path to email
-<span class="nc" id="L92">                mailHelper.addAttachment(file);</span>
+<span class="nc" id="L90">                mailHelper.addAttachment(file);</span>
 
             }
         }
 
         //Chceck
-<span class="pc bpc" id="L98" title="1 of 4 branches missed.">        if(SpamProtection.canPost(&quot;form&quot;, feedbackText.toString(), request) &amp;&amp; mailHelper.send()) {</span>
+<span class="pc bpc" id="L96" title="1 of 4 branches missed.">        if(SpamProtection.canPost(&quot;form&quot;, feedbackText.toString(), request) &amp;&amp; mailHelper.send()) {</span>
             //Delete temporal files
-<span class="pc bpc" id="L100" title="1 of 2 branches missed.">            if(params.get(filesKeys) != null) {</span>
-<span class="nc bnc" id="L101" title="All 2 branches missed.">                for(String fileKey : params.get(filesKeys)) {</span>
-<span class="nc" id="L102">                    AdminUploadServlet.deleteTempFile(fileKey);</span>
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">            if(params.get(filesKeys) != null) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">                for(String fileKey : params.get(filesKeys)) {</span>
+<span class="nc" id="L100">                    AdminUploadServlet.deleteTempFile(fileKey);</span>
                 }
             }
         } else {
-<span class="fc" id="L106">            throw new IllegalArgumentException(&quot;Sending mail failed.&quot;);</span>
+<span class="fc" id="L104">            throw new IllegalArgumentException(&quot;Sending mail failed.&quot;);</span>
         }
 
-<span class="fc" id="L109">        return &quot;OK&quot;;</span>
+<span class="fc" id="L107">        return &quot;OK&quot;;</span>
     }
 
     /**
@@ -116,12 +114,12 @@ import sk.iway.iwcm.users.UsersDB;
 	 */
 	private static String getFirstEmail(String emails)
 	{
-<span class="nc bnc" id="L119" title="All 2 branches missed.">		if (Tools.isEmpty(emails)) return &quot;&quot;;</span>
+<span class="nc bnc" id="L117" title="All 2 branches missed.">		if (Tools.isEmpty(emails)) return &quot;&quot;;</span>
 
-<span class="nc" id="L121">		String emailsArr[] = Tools.getTokens(emails, &quot;,&quot;, true);</span>
-<span class="nc bnc" id="L122" title="All 2 branches missed.">		if (emailsArr.length&gt;0) return emailsArr[0];</span>
+<span class="nc" id="L119">		String[] emailsArr = Tools.getTokens(emails, &quot;,&quot;, true);</span>
+<span class="nc bnc" id="L120" title="All 2 branches missed.">		if (emailsArr.length&gt;0) return emailsArr[0];</span>
 
-<span class="nc" id="L124">		return &quot;&quot;;</span>
+<span class="nc" id="L122">		return &quot;&quot;;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

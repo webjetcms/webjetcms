@@ -1,6 +1,11 @@
 {
     "news": [
         {
+            "title": "Verzia 2024.40",
+            "perex": "Vo verzii 2024.40 Prieskumník prináša **potvrdenie pri presune súborov drag&drop**, čím sa znižuje riziko chýb. Editor obrázkov umožňuje nastavenie **veľkosti a orezanie podľa šablón**, čo uľahčuje úpravy. Nastavenia viacerých **aplikácií** boli prepracované do **nového dizajnu**. Autor stránky dostáva **notifikácie pri časovom publikovaní a pridaní príspevku** do fóra. Nová aplikácia pre rezervácie umožňuje **jednoduché rezervovanie objektov** a ponúka štatistiky pre lepšiu správu. Vylepšili sme PageBuilder a opravili chyby v Archíve súborov pre lepšiu stabilitu.",
+            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202440"
+        },
+        {
             "title": "Verzia 2024.18",
             "perex": "WebJET 2024.18 obsahuje **novú sadu ikon**, Formulár ľahko doplnený o **pokročilé nastavenia** (príjemcovia, presmerovania...), do nového dizajnu sú prerobené aplikácie AB Testovanie, Audit (čaká na publikovanie, zmenené stránky), Blog, Dotazníky, Kalendár udalostí (schvaľovanie). Pridáva **podporu inštalácie typu MultiWeb** (oddelenie údajov domén) v Šablónach, Hromadnom e-maile a ďalších aplikáciách. Nová knižnica na **detekciu prehliadačov**, v Štatistika-Prehliadače dôjde k drobným rozdielom, ale údaje o prehliadači anonymizovane zaznamenávame aj bez Cookies súhlasu.",
             "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202418"

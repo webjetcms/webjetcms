@@ -244,29 +244,31 @@ public class ConfDB
 
 	public static boolean setName(String nameParam, String value)
 	{
+		if (Tools.isEmpty(nameParam)) return false;
+
+		//do not save these values
+		boolean saveToDb = true;
+		if (isOnlyLocalConfig(nameParam)) saveToDb = false;
+
 		boolean ret = false;
 		Connection db_conn = null;
 		PreparedStatement psInsert = null;
 		try
 		{
-			String name = null;
-			if (nameParam != null) {
-				name = cleanTextRemoveNonPrintableCharacters(nameParam);
-			}
+			String name = cleanTextRemoveNonPrintableCharacters(nameParam);
 
 			//vyvolaj event
 			ConfDetails conf = null;
-			if (name != null && value != null) {
+			if (value != null) {
 				 conf = new ConfDetails(name, value);
 			}
 			if (conf != null) (new WebjetEvent<ConfDetails>(conf, WebjetEventType.ON_START)).publishEvent();
 
-			//nacitaj data z DB
-			db_conn = DBPool.getConnection();
-			//editacia DB _conf_
-
-			if (name != null && value != null)
+			if (value != null && saveToDb)
 			{
+				//nacitaj data z DB
+				db_conn = DBPool.getConnection();
+
 				String sqlUpdate = "UPDATE " + ConfDB.CONF_TABLE_NAME + " SET value=?, date_changed=? WHERE name=?";
 				if (SetCharacterEncodingFilter.getCurrentRequestBean() != null &&
 					SetCharacterEncodingFilter.getCurrentRequestBean().getUserId() > 0)
@@ -298,10 +300,10 @@ public class ConfDB
 				ret = true;
 				//refreshni hodnotu v Constants, odporucany je ale aj tak restart
 
-				setConstantValueImpl(name, value);
+				db_conn.close();
+				db_conn = null;
 			}
-			db_conn.close();
-			db_conn = null;
+			setConstantValueImpl(name, value);
 
 			if (conf != null) (new WebjetEvent<ConfDetails>(conf, WebjetEventType.AFTER_SAVE)).publishEvent();
 		}
@@ -327,6 +329,7 @@ public class ConfDB
 
 	private static void setConstantValueImpl(String name, String valueParam)
 	{
+		if (valueParam == null) return;
 		String value = tryDecrypt(valueParam);
 
 		if ("linkType".equals(name))
@@ -375,7 +378,7 @@ public class ConfDB
 			//nacitaj data z DB
 			db_conn = DBPool.getConnection();
 
-			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE is_admin=?");
+			ps = db_conn.prepareStatement("SELECT * FROM  users WHERE is_admin=?"); //NOSONAR
 			ps.setBoolean(1, true);
 			rs = ps.executeQuery();
 			while (rs.next())
@@ -394,9 +397,9 @@ public class ConfDB
 			boolean found;
 			for (UserDetails user : users)
 			{
-				ps = db_conn.prepareStatement("SELECT * FROM user_disabled_items WHERE user_id=? AND item_name=?");
+				ps = db_conn.prepareStatement("SELECT * FROM user_disabled_items WHERE user_id=? AND item_name=?"); //NOSONAR
 				ps.setInt(1, user.getUserId());
-				ps.setString(2, menuItemName);
+				ps.setString(2, menuItemName); //NOSONAR
 				rs = ps.executeQuery();
 				found = false;
 				if (rs.next())
@@ -409,9 +412,9 @@ public class ConfDB
 				ps = null;
 				if (!found)
 				{
-					ps = db_conn.prepareStatement("INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)");
+					ps = db_conn.prepareStatement("INSERT INTO user_disabled_items (user_id, item_name) VALUES (?, ?)"); //NOSONAR
 					ps.setInt(1, user.getUserId());
-					ps.setString(2, menuItemName);
+					ps.setString(2, menuItemName); //NOSONAR
 					ps.execute();
 					ps.close();
 					ps = null;
@@ -574,6 +577,13 @@ public class ConfDB
     public static void refreshVariable(String name)
 	 {
 	 	 String value = new SimpleQuery().forString("SELECT value FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?",name);
+		 if (value == null) {
+			int count = new SimpleQuery().forInt("SELECT COUNT(*) FROM " + ConfDB.CONF_TABLE_NAME + " WHERE name=?",name);
+			if (count > 0) {
+				//ak je v DB ale hodnota je null tak ju nastavime na prazdny retazec
+				value = "";
+			}
+		 }
 		 setConstantValueImpl(name, value);
     }
 
@@ -596,7 +606,9 @@ public class ConfDB
 
     public static boolean setNamePrepared(String name, String value, Date datePrepared)
  	{
- 		boolean ret = false;
+		if (isOnlyLocalConfig(name)) return true;
+
+		boolean ret = false;
  		Connection db_conn = null;
  		PreparedStatement psInsert = null;
  		try
@@ -779,5 +791,16 @@ public class ConfDB
 			}
 		}
 		return (null);
+	}
+
+	/**
+	 * Check if name is localOnly - not saved to DB and synchronized across cluster
+	 * @param name - conf. name
+	 * @return
+	 */
+	public static boolean isOnlyLocalConfig(String name)
+	{
+		if ("licenseExpiryDate".equals(name)) return true;
+		return false;
 	}
 }

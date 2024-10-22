@@ -7,6 +7,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.*,sk.iway.iwcm.common.DocTools"
 %><%@ page import="sk.iway.iwcm.components.export.ExportDatBean"%><%@page import="sk.iway.iwcm.components.export.ExportDatDB"
 %><%@ page import="sk.iway.iwcm.doc.DocDB,sk.iway.iwcm.doc.DocDetails,sk.iway.iwcm.i18n.Prop" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
+%><%@page import="sk.iway.iwcm.system.UrlRedirectBean"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@page import="sk.iway.iwcm.io.IwcmFile"%><%
 
 //otestuj ci existuje nahrada za tuto stranku
@@ -224,41 +225,37 @@ if(null != exportDatBean){
 
 
 
-String redirectURL = null;
+UrlRedirectBean redirectBean = null;
 
 //znak ^ sa interne spracovava ako ? kvoli handlingu parametrov (aka exact match)
 boolean redirectIncludingQuery = false;
 if (Tools.isNotEmpty(queryString))
 {
-	redirectURL = UrlRedirectDB.getRedirect(path+"^"+queryString, DocDB.getDomain(request));
-	if (Tools.isNotEmpty(redirectURL)) redirectIncludingQuery = true;
+	redirectBean = UrlRedirectDB.getRedirectBean(path+"^"+queryString, DocDB.getDomain(request));
+	if (redirectBean != null) redirectIncludingQuery = true;
 }
-if (Tools.isEmpty(redirectURL)) redirectURL = UrlRedirectDB.getRedirect(path, DocDB.getDomain(request));
+if (redirectBean == null) redirectBean = UrlRedirectDB.getRedirectBean(path, DocDB.getDomain(request));
 
-if (Constants.getBoolean("multiDomainEnabled")==true && Tools.isEmpty(redirectURL))
+if (Constants.getBoolean("multiDomainEnabled")==true && redirectBean == null)
 {
-	redirectURL = UrlRedirectDB.getRedirect(MultiDomainFilter.fixDomainPaths(path, request), DocDB.getDomain(request));
+	redirectBean = UrlRedirectDB.getRedirectBean(MultiDomainFilter.fixDomainPaths(path, request), DocDB.getDomain(request));
 }
 
-if (Tools.isNotEmpty(redirectURL))
+if (redirectBean != null)
 {
-	int statusCode = 301;
-	try {
-		statusCode = (new sk.iway.iwcm.database.SimpleQuery()).forInt("SELECT redirect_code FROM url_redirect WHERE old_url=? ORDER BY insert_date DESC", path);
-		if (statusCode<1) statusCode = (new sk.iway.iwcm.database.SimpleQuery()).forInt("SELECT redirect_code FROM url_redirect WHERE old_url=? ORDER BY insert_date DESC", path+"/");
-	} catch (Exception ex) {}
-	if (statusCode<1) statusCode=301;
-	response.setStatus(statusCode);
+	response.setStatus(redirectBean.getRedirectCode());
+	String newUrl = redirectBean.getNewUrl();
+	System.out.println("redirectBean1="+redirectBean.getUrlRedirectId()+" path="+path+" newUrl="+newUrl);
 
-	if (redirectIncludingQuery==false && Tools.isNotEmpty(queryString)) redirectURL = Tools.addParametersToUrlNoAmp(redirectURL, queryString);
+	if (redirectIncludingQuery==false && Tools.isNotEmpty(queryString)) newUrl = Tools.addParametersToUrlNoAmp(newUrl, queryString);
 
-	if (redirectURL.toLowerCase().startsWith("http")==false) redirectURL = Tools.getBaseHref(request)+redirectURL;
+	if (newUrl.toLowerCase().startsWith("http")==false) newUrl = Tools.getBaseHref(request) + newUrl;
 
-	response.setHeader("Location", redirectURL);
+	response.setHeader("Location", newUrl);
 	%>
-	<html><script>window.location.href='<%=redirectURL%>';</script></html>
+	<html><script>window.location.href='<%=newUrl%>';</script></html>
 	<%
-	System.out.println("SOM STRANKA 404, redirecting to:"+redirectURL);
+	System.out.println("SOM STRANKA 404, redirecting to:" + newUrl);
 	return;
 }
 
@@ -306,7 +303,7 @@ if ("/components/gdpr/jscripts/jquery.cookie.js".equals(path)) {
 }
 
 path = path.toLowerCase();
-if (path.endsWith(".gif") || path.endsWith(".jpg") || path.endsWith(".png") || path.endsWith(".js") || path.endsWith(".swf") || path.endsWith(".ico") || path.endsWith(".css") || path.endsWith(".ttf") || path.endsWith(".eot") || path.endsWith(".woff2") || path.endsWith(".woff"))
+if (path.endsWith(".gif") || path.endsWith(".jpg") || path.endsWith(".png") || path.endsWith(".svg") || path.endsWith(".js") || path.endsWith(".swf") || path.endsWith(".ico") || path.endsWith(".css") || path.endsWith(".ttf") || path.endsWith(".eot") || path.endsWith(".woff2") || path.endsWith(".woff"))
 {
 	Logger.warn("404.jsp", "404 ("+Constants.getInstallName()+"): " + path+"?"+request.getQueryString());
 	//posli rovno chybu 404 do prehliadaca

@@ -11,4 +11,7 @@ import lombok.Setter;
 public class ComponentRequest {
     private String className;
     private String parameters;
+    private int docId;
+    private int groupId;
+    private String pageTitle;
 }

@@ -3,12 +3,14 @@
 import java.security.KeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
-import cryptix.provider.key.RawSecretKey;
-import cryptix.util.core.Hex;
-import xjava.security.Cipher;
-import xjava.security.IllegalBlockSizeException;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
+
+import com.google.crypto.tink.subtle.Hex;
 
 /**
  *  DefaultHashCalculator.java
@@ -29,27 +31,24 @@ import xjava.security.IllegalBlockSizeException;
  *@created      Date: 27.8.2009 18:52:31
  *@modified     $Date: 2009/08/27 17:10:01 $
  */
-<span class="nc" id="L32">class DefaultHashCalculator</span>
+<span class="nc" id="L34">class DefaultHashCalculator</span>
 {
 	static String calculateHash(String toBeEncrypted, String privateKey)
 	{
-<span class="nc" id="L36">		String sign = &quot;&quot;;</span>
+<span class="fc" id="L38">		String sign = &quot;&quot;;</span>
 		try
 		{
-<span class="nc" id="L39">			MessageDigest hash = MessageDigest.getInstance(&quot;SHA-1&quot;);</span>
-<span class="nc" id="L40">			byte bytesHash[] = hash.digest(toBeEncrypted.getBytes());</span>
-<span class="nc" id="L41">			Cipher des = Cipher.getInstance(&quot;DES/ECB&quot;, &quot;Cryptix&quot;);</span>
+<span class="fc" id="L41">			MessageDigest hash = MessageDigest.getInstance(&quot;SHA-1&quot;);</span>
+<span class="fc" id="L42">			byte[] bytesHash = hash.digest(toBeEncrypted.getBytes());</span>
+<span class="fc" id="L43">			Cipher des = Cipher.getInstance(&quot;DES/ECB/NoPadding&quot;);</span>
 
-<span class="nc" id="L43">			des.initEncrypt(new RawSecretKey(&quot;DES&quot;, privateKey.getBytes()));</span>
-<span class="nc" id="L44">			byte bytesSIGN[] = des.crypt(bytesHash, 0, 8);</span>
-<span class="nc" id="L45">			sign = Hex.dumpString(bytesSIGN);</span>
+<span class="fc" id="L45">			des.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(privateKey.getBytes(), &quot;DES&quot;));</span>
+<span class="fc" id="L46">			byte[] bytesSIGN = des.doFinal(bytesHash, 0, 8);</span>
+<span class="fc" id="L47">			sign = Hex.encode(bytesSIGN);</span>
 		}
-<span class="nc" id="L47">		catch (NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}</span>
-<span class="nc" id="L48">		catch (NoSuchProviderException e){sk.iway.iwcm.Logger.error(e);}</span>
-<span class="nc" id="L49">		catch (KeyException e){sk.iway.iwcm.Logger.error(e);}</span>
-<span class="nc" id="L50">		catch (IllegalBlockSizeException e){sk.iway.iwcm.Logger.error(e);}</span>
+<span class="pc" id="L49">		catch (NoSuchPaddingException|IllegalBlockSizeException|BadPaddingException|KeyException|NoSuchAlgorithmException e){sk.iway.iwcm.Logger.error(e);}</span>
 
-<span class="nc" id="L52">		return sign.trim();</span>
+<span class="fc" id="L51">		return sign.trim().toUpperCase();</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

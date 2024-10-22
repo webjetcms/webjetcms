@@ -17,19 +17,19 @@ import org.displaytag.properties.MediaTypeEnum;
  *@created      Date: 18.2.2011 14:50:58
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-<span class="nc" id="L20">public class BooleanDecorator implements DisplaytagColumnDecorator</span>
+<span class="fc" id="L20">public class BooleanDecorator implements DisplaytagColumnDecorator</span>
 {
 	@Override
 	public String decorate(Object columnValue, PageContext arg1, MediaTypeEnum arg2)
 	{
-<span class="nc bnc" id="L25" title="All 2 branches missed.">		if(columnValue != null) </span>
+<span class="pc bpc" id="L25" title="1 of 2 branches missed.">		if(columnValue != null) </span>
 		{
-<span class="nc bnc" id="L27" title="All 2 branches missed.">			if ( columnValue instanceof Boolean)</span>
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">			if ( columnValue instanceof Boolean)</span>
 			{
-<span class="nc" id="L29">				boolean truefalse = (Boolean) columnValue;</span>
+<span class="fc" id="L29">				boolean truefalse = (Boolean) columnValue;</span>
 				//Logger.println(BooleanDecorator.class, columnValue.getClass().toString());
-<span class="nc bnc" id="L31" title="All 2 branches missed.">				if(truefalse){</span>
-<span class="nc" id="L32">					return &quot;&lt;span class=\&quot;glyphicon glyphicon-ok-circle\&quot; aria-hidden=\&quot;true\&quot;&gt;&lt;/span&gt;&quot;;</span>
+<span class="pc bpc" id="L31" title="1 of 2 branches missed.">				if(truefalse){</span>
+<span class="fc" id="L32">					return &quot;&lt;span class=\&quot;glyphicon glyphicon-ok-circle\&quot; aria-hidden=\&quot;true\&quot;&gt;&lt;/span&gt;&quot;;</span>
 				}
 				else{
 <span class="nc" id="L35">					return &quot;&lt;span class=\&quot;glyphicon glyphicon-ban-circle\&quot; aria-hidden=\&quot;true\&quot;&gt;&lt;/span&gt; &quot;;</span>
@@ -43,4 +43,4 @@ import org.displaytag.properties.MediaTypeEnum;
 <span class="nc" id="L43">		return &quot;&amp;nbsp;&quot;;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

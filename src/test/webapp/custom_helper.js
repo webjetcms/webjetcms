@@ -77,6 +77,10 @@ class CustomWebjetHelper extends Helper {
   async getTotalRows() {
     const I = this.helpers['Playwright'];
     var text = await I.grabTextFrom("div.dataTables_info");
+    if (text.indexOf("(")>=0) {
+      //Záznamy 1 až 6 z 6 (vyfiltrované spomedzi 25 záznamov)
+      text = text.substring(0, text.indexOf("(")-1).trim();
+    }
     //console.log("TEXT=", text);
     var i = text.lastIndexOf(" ");
     var count = parseInt(text.substring(i+1).replace(",", ""));

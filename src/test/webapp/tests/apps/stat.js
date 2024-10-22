@@ -240,6 +240,31 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.dontSeeElement( locate("div#SomStromcek > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
 });
 
+
+Scenario('testovanie app - Monitoring kliknutí', async ({ I, DTE, Apps }) => {
+    Apps.insertApp('Monitoring kliknutí', '#components-stat-title');
+
+    const defaultParams = {
+        container: 'div.mainContainer'
+    };
+
+    await Apps.assertParams(defaultParams);
+
+    Apps.openAppEditor();
+
+    const changedParams = {
+        container: 'body'
+    };
+
+    DTE.fillField('container', changedParams.container);
+
+    I.switchTo();
+    I.clickCss('.cke_dialog_ui_button_ok')
+
+    await Apps.assertParams(changedParams);
+});
+
+
 Scenario("logoff", ({ I }) => {
     I.logout();
 });

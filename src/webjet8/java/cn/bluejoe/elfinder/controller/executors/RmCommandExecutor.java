@@ -14,6 +14,7 @@ import cn.bluejoe.elfinder.service.FsService;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 import sk.iway.iwcm.users.UsersDB;
 
 public class RmCommandExecutor extends AbstractJsonCommandExecutor
@@ -34,12 +35,17 @@ public class RmCommandExecutor extends AbstractJsonCommandExecutor
 
 			FsItemEx ftgt = super.findItem(fsService, target);
 			boolean deleted = false;
+			boolean isFolder = ftgt.isFolder();
 			if (user!=null && UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))
 			{
 				deleted = ftgt.delete();
 				if (deleted)
 				{
 					removed.add(ftgt.getHash());
+
+					if(isFolder == true) {
+						FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);
+					}
 				}
 			}
 

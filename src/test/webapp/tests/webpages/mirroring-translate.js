@@ -48,14 +48,19 @@ async function testTranslation(I, DT, DTE, useAutotranslator) {
         docTitleEN = "Good morning - A - " + randomText;
 
         I.amOnPage("/admin/v9/webpages/web-pages-list/");
+        DT.waitForLoader();
+        DT.resetTable();
     } else {
         I.say("Versioon WITHout autoTranslator");
         // Set
         await setConfValues(I, DT, DTE, "");
-        I.amOnPage("/admin/v9/webpages/web-pages-list/");
 
         docTitleSK = "Dobré ráno - B - " + randomText;
         docTitleEN = "Good morning - B - " + randomText;
+
+        I.amOnPage("/admin/v9/webpages/web-pages-list/");
+        DT.waitForLoader();
+        DT.resetTable();
     }
 
     //Select DOMAIN
@@ -141,10 +146,12 @@ async function deleteDocWithCheck(I, DT, DTE, docNameA, docNameB) {
     I.wait(0.5);
     I.jstreeClick("preklad_sk");
     DT.filter("title", docNameA);
+    I.waitForText("Záznamy 1 až 1 z 1", 10, "#datatableInit_wrapper .dataTables_info");
     I.see(docNameA);
+    I.wait(1);
 
     // Delete SK version
-    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("td.dt-select-td");
     I.click(remove_webButton);
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();

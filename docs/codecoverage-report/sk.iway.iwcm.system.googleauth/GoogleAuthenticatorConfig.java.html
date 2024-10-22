@@ -13,12 +13,12 @@
  */
 import java.util.concurrent.TimeUnit;
 
-<span class="nc" id="L16">public class GoogleAuthenticatorConfig {</span>
-<span class="nc" id="L17">    private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);</span>
-<span class="nc" id="L18">    private int windowSize = 3;</span>
-<span class="nc" id="L19">    private int codeDigits = 6;</span>
-<span class="nc" id="L20">    private int keyModulus = (int) Math.pow(10, codeDigits);</span>
-<span class="nc" id="L21">    private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;</span>
+<span class="fc" id="L16">public class GoogleAuthenticatorConfig {</span>
+<span class="fc" id="L17">    private long timeStepSizeInMillis = TimeUnit.SECONDS.toMillis(30);</span>
+<span class="fc" id="L18">    private int windowSize = 3;</span>
+<span class="fc" id="L19">    private int codeDigits = 6;</span>
+<span class="fc" id="L20">    private int keyModulus = (int) Math.pow(10, codeDigits);</span>
+<span class="fc" id="L21">    private KeyRepresentation keyRepresentation = KeyRepresentation.BASE32;</span>
 
     /**
      * Returns the key module.
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
      * @return the key module.
      */
     public int getKeyModulus() {
-<span class="nc" id="L29">        return keyModulus;</span>
+<span class="fc" id="L29">        return keyModulus;</span>
     }
 
     /**
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
      * @return the key representation.
      */
     public KeyRepresentation getKeyRepresentation() {
-<span class="nc" id="L38">        return keyRepresentation;</span>
+<span class="fc" id="L38">        return keyRepresentation;</span>
     }
 
     /**
@@ -55,7 +55,7 @@ import java.util.concurrent.TimeUnit;
      * @return the time step size in milliseconds.
      */
     public long getTimeStepSizeInMillis() {
-<span class="nc" id="L58">        return timeStepSizeInMillis;</span>
+<span class="fc" id="L58">        return timeStepSizeInMillis;</span>
     }
 
     /**
@@ -129,4 +129,4 @@ import java.util.concurrent.TimeUnit;
         }
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

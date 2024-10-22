@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.dmail.DmailUtil;
 import sk.iway.iwcm.dmail.Sender;
@@ -41,104 +43,141 @@ public class EmailsRestController extends DatatableRestControllerV2&lt;EmailsEnt
     private final CampaingsRepository campaingsRepository;
     private final StatClicksRepository statClicksRepository;
 
+    private static final String NEW_LINE = &quot;&lt;br&gt;&lt;br&gt;&quot;;
+
     @Autowired
     public EmailsRestController(EmailsRepository emailsRepository, CampaingsRepository campaingsRepository, StatClicksRepository statClicksRepository) {
-<span class="fc" id="L46">        super(emailsRepository);</span>
-<span class="fc" id="L47">        this.emailsRepository = emailsRepository;</span>
-<span class="fc" id="L48">        this.campaingsRepository = campaingsRepository;</span>
-<span class="fc" id="L49">        this.statClicksRepository = statClicksRepository;</span>
-<span class="fc" id="L50">    }</span>
+<span class="fc" id="L50">        super(emailsRepository);</span>
+<span class="fc" id="L51">        this.emailsRepository = emailsRepository;</span>
+<span class="fc" id="L52">        this.campaingsRepository = campaingsRepository;</span>
+<span class="fc" id="L53">        this.statClicksRepository = statClicksRepository;</span>
+<span class="fc" id="L54">    }</span>
 
     @Override
     public Page&lt;EmailsEntity&gt; getAllItems(Pageable pageable) {
 
-<span class="fc" id="L55">        DatatablePageImpl&lt;EmailsEntity&gt; page = null;</span>
+<span class="fc" id="L59">        DatatablePageImpl&lt;EmailsEntity&gt; page = null;</span>
 
-<span class="fc" id="L57">        String selectType = getRequest().getParameter(&quot;selectType&quot;);</span>
-<span class="fc" id="L58">        Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter(&quot;campainId&quot;), -1));</span>
-<span class="fc bfc" id="L59" title="All 2 branches covered.">        if (campainId&lt;1L) campainId = (long)-getUser().getUserId();</span>
+<span class="fc" id="L61">        String selectType = getRequest().getParameter(&quot;selectType&quot;);</span>
+<span class="fc" id="L62">        Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter(&quot;campainId&quot;), -1));</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (campainId&lt;1L) campainId = (long)-getUser().getUserId();</span>
 
-<span class="pc bpc" id="L61" title="2 of 4 branches missed.">        if(selectType != null &amp;&amp; !selectType.isEmpty()) {</span>
-<span class="fc bfc" id="L62" title="All 2 branches covered.">            if(selectType.equals(&quot;recipients&quot;)) {</span>
-<span class="fc" id="L63">                page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAllByCampainId(campainId, pageable));</span>
-<span class="pc bpc" id="L64" title="1 of 2 branches missed.">            } else if(selectType.equals(&quot;opens&quot;)) {</span>
-<span class="fc" id="L65">                page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAllByCampainIdAndSeenDateIsNotNull(campainId, pageable));</span>
+<span class="pc bpc" id="L65" title="2 of 4 branches missed.">        if(selectType != null &amp;&amp; !selectType.isEmpty()) {</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            if(selectType.equals(&quot;recipients&quot;)) {</span>
+<span class="fc" id="L67">                page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAllByCampainIdAndDomainId(campainId, CloudToolsForCore.getDomainId() , pageable));</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">            } else if(selectType.equals(&quot;opens&quot;)) {</span>
+<span class="fc" id="L69">                page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAllByCampainIdAndDomainIdAndSeenDateIsNotNull(campainId, CloudToolsForCore.getDomainId(), pageable));</span>
             }
         } else {
-<span class="nc" id="L68">            page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAll(pageable));</span>
+<span class="nc" id="L72">            page = new DatatablePageImpl&lt;&gt;(emailsRepository.findAll(pageable));</span>
         }
 
-<span class="fc" id="L71">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L75">        processFromEntity(page, ProcessItemAction.GETALL);</span>
 
-<span class="fc" id="L73">        return page;</span>
+<span class="fc" id="L77">        return page;</span>
     }
 
     @Override
     public EmailsEntity editItem(EmailsEntity entity, long id) {
-        //In editor can be put more than one email adress
-<span class="fc" id="L79">        String[] emailsToInsert = Tools.getTokens(entity.getRecipientEmail(), &quot;, ;\n&quot;, true);</span>
+        /*Extract email - ONLY IF importing
+         * Example: from &quot;Janko Tester &lt;tester@test.sk&gt;&quot; do JUST &quot;tester@test.sk&quot;
+        */
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if(isImporting() == true) {</span>
+<span class="fc" id="L86">            entity.setRecipientEmail( DmailUtil.parseEmailFromNameEmailFormat(entity.getRecipientEmail()) );</span>
+        }
+
+        //Now remove unwanted characters
+<span class="fc" id="L90">        entity.setRecipientEmail( entity.getRecipientEmail().replaceAll(&quot;[&lt;&gt;]&quot;, &quot;&quot;) );</span>
+
+        //In editor can be put more than one email adress BUT if it's IMPORT action it's allways 1 email
+        String[] emailsToInsert;
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if(isImporting() == true) {</span>
+<span class="fc" id="L95">            emailsToInsert = new String[]{entity.getRecipientEmail()};</span>
+        } else {
+<span class="fc" id="L97">            emailsToInsert = Tools.getTokens(entity.getRecipientEmail(), &quot;,;\n\s&quot;, true);</span>
+        }
 
         //This is replacement for raw/hand insert of emails (not thru CSV/Excel)
-<span class="fc" id="L82">        Set&lt;String&gt; emailsTable = new HashSet&lt;&gt;();</span>
-<span class="fc" id="L83">        Set&lt;String&gt; unsubscribedEmails = DmailUtil.getUnsubscribedEmails();</span>
+<span class="fc" id="L101">        Set&lt;String&gt; emailsTable = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L102">        Set&lt;String&gt; unsubscribedEmails = DmailUtil.getUnsubscribedEmails();</span>
 
-<span class="fc" id="L85">        Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter(&quot;campainId&quot;), -1));</span>
-<span class="fc" id="L86">        CampaingsEntity campaign = null;</span>
-<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (campainId&gt;0L) campaign = campaingsRepository.getById(campainId);</span>
+<span class="fc" id="L104">        Long campainId = Long.valueOf(Tools.getIntValue(getRequest().getParameter(&quot;campainId&quot;), -1));</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">        CampaingsEntity campaign = (campainId &gt; 0L) ? campaingsRepository.getById(campainId) : null;</span>
 
         //Load allready pushed emails in DB
-<span class="fc bfc" id="L90" title="All 2 branches covered.">        for (String email : emailsRepository.getAllCampainEmails(CampaingsRestController.getCampaignId(campaign, getUser()))) {</span>
-<span class="fc" id="L91">            emailsTable.add(email.toLowerCase());</span>
-<span class="fc" id="L92">        }</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        for (String email : emailsRepository.getAllCampainEmails( CampaingsRestController.getCampaignId(campaign, getUser()), CloudToolsForCore.getDomainId()) ) {</span>
+<span class="fc" id="L109">            emailsTable.add(email.toLowerCase());</span>
+<span class="fc" id="L110">        }</span>
 
-<span class="fc" id="L94">        EmailsEntity saved = null;</span>
+        //Skip wrong one so import can continue
+        //Prepare message for user
+<span class="fc bfc" id="L114" title="All 2 branches covered.">        boolean skipWrongEmails = isImporting() == true ? isSkipWrongData() : entity.isSkipWrongEmails();</span>
+<span class="fc" id="L115">        StringBuilder warningMsg = new StringBuilder(&quot;&quot;);</span>
 
         //Check if emailsToInsert are valid
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        for(String recipientEmail : emailsToInsert) {</span>
+<span class="fc" id="L118">        EmailsEntity saved = null;</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">        for(String recipientEmail : emailsToInsert) {</span>
 
             //Get rid of white-spaces (for safety reason)
-<span class="fc" id="L100">            recipientEmail = recipientEmail.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
+<span class="fc" id="L122">            recipientEmail = recipientEmail.replaceAll(&quot;\\s+&quot;,&quot;&quot;);</span>
+
+            //Validate email
+<span class="fc bfc" id="L125" title="All 2 branches covered.">            if(Tools.isEmail(recipientEmail) == false) {</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                if(skipWrongEmails == false) {</span>
+<span class="nc" id="L127">                    throwError( getProp().getText(&quot;email_validation.error.invalid&quot;, recipientEmail) );</span>
+                } else {
+                    //Skip
+<span class="fc" id="L130">                    warningMsg.append( getProp().getText(&quot;email_validation.error.invalid&quot;, recipientEmail) ).append(NEW_LINE);</span>
+<span class="fc" id="L131">                    continue;</span>
+                }
+            }
 
             //Protection against unsubscribed email addresses
-<span class="fc bfc" id="L103" title="All 2 branches covered.">            if(unsubscribedEmails.contains(recipientEmail.toLowerCase())) continue;</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">            if(unsubscribedEmails.contains(recipientEmail.toLowerCase())) {</span>
+<span class="fc" id="L137">                warningMsg.append( getProp().getText(&quot;emails.error.unsubscribed&quot;, recipientEmail) ).append(NEW_LINE);</span>
+<span class="fc" id="L138">                continue;</span>
+            }
 
             //Email duplicity protection
-<span class="fc bfc" id="L106" title="All 2 branches covered.">            if(emailsTable.contains(recipientEmail.toLowerCase())) {</span>
-<span class="pc bpc" id="L107" title="3 of 6 branches missed.">                if (emailsToInsert.length==1 &amp;&amp; (entity.getId()!=null &amp;&amp; entity.getId()&gt;0)) {</span>
+<span class="fc bfc" id="L142" title="All 2 branches covered.">            if(emailsTable.contains(recipientEmail.toLowerCase())) {</span>
+<span class="pc bpc" id="L143" title="3 of 6 branches missed.">                if (emailsToInsert.length==1 &amp;&amp; (entity.getId()!=null &amp;&amp; entity.getId()&gt;0)) {</span>
                     //ak je v zozname len jeden email a uz ma v DB idecko, tak pokracuj, ulozime jeho zmeny
                 } else {
-                    continue;
+<span class="fc" id="L146">                    warningMsg.append( getProp().getText(&quot;emails.error.duplicit_or_exist&quot;, recipientEmail) ).append(NEW_LINE);</span>
+<span class="fc" id="L147">                    continue;</span>
                 }
             }
 
             EmailsEntity emailToInsert;
-<span class="fc bfc" id="L115" title="All 2 branches covered.">            if (emailsToInsert.length==1) emailToInsert = entity;</span>
-<span class="fc" id="L116">            else emailToInsert = new EmailsEntity(recipientEmail, entity.getRecipientName());</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (emailsToInsert.length==1) emailToInsert = entity;</span>
+<span class="fc" id="L153">            else emailToInsert = new EmailsEntity(recipientEmail, entity.getRecipientName());</span>
 
-<span class="fc" id="L118">            boolean isValid = prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);</span>
-<span class="pc bpc" id="L119" title="1 of 2 branches missed.">            if (isValid) {</span>
+<span class="fc" id="L155">            boolean prepareSuccess = prepareEmailForInsert(campaign, getUser().getUserId(), emailToInsert);</span>
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">            if(prepareSuccess == false) continue;</span>
 
-                //Save entity into DB
-<span class="fc bfc" id="L122" title="All 2 branches covered.">                if (saved == null) saved = emailsRepository.save(emailToInsert);</span>
-<span class="fc" id="L123">                else emailsRepository.save(emailToInsert);</span>
+            //Save entity into DB
+<span class="fc bfc" id="L159" title="All 2 branches covered.">            if (saved == null) saved = emailsRepository.save(emailToInsert);</span>
+<span class="fc" id="L160">            else emailsRepository.save(emailToInsert);</span>
 
-                //Update emails table (because there can be duplicity in excel)
-<span class="fc" id="L126">                emailsTable.add(recipientEmail);</span>
-            } else {
-<span class="nc" id="L128">                addNotify(new NotifyBean(getProp().getText(&quot;datatables.error.title.js&quot;), getProp().getText(&quot;datatable.error.importRow&quot;, String.valueOf(getLastImportedRow().intValue()+1), &quot;`&quot;+recipientEmail)+&quot;` &quot;+getProp().getText(&quot;components.dmail.emailIsNotValid&quot;), NotifyType.ERROR));</span>
-            }
+            //Update emails table (because there can be duplicity in excel)
+<span class="fc" id="L163">            emailsTable.add(recipientEmail.toLowerCase());</span>
         }
 
-<span class="fc" id="L132">        setForceReload(true);</span>
+<span class="fc" id="L166">        setForceReload(true);</span>
 
-<span class="fc" id="L134">        return saved;</span>
+        //Show warning message
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        if(warningMsg.length() &gt; 0) {</span>
+<span class="fc" id="L170">            addNotify(new NotifyBean(getProp().getText(&quot;emails.error.title&quot;), warningMsg.toString(), NotifyType.WARNING));</span>
+        }
+
+<span class="fc" id="L173">        return saved;</span>
     }
 
     @Override
     public EmailsEntity insertItem(EmailsEntity entity) {
         //Insert item fn is override and dont save any entity
         //Save step is allready made in beforeSave fn
-<span class="fc" id="L141">        return editItem(entity, -1);</span>
+<span class="fc" id="L180">        return editItem(entity, -1);</span>
     }
 
     /**
@@ -150,96 +189,94 @@ public class EmailsRestController extends DatatableRestControllerV2&lt;EmailsEnt
     public static boolean prepareEmailForInsert(CampaingsEntity campaign, int loggedUserId, EmailsEntity entity) {
 
         //trimni email adresu
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());</span>
+<span class="pc bpc" id="L192" title="1 of 2 branches missed.">        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().trim());</span>
 
         //sprav lower case
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());</span>
-
-<span class="pc bpc" id="L158" title="1 of 2 branches missed.">        if(Tools.isEmail(entity.getRecipientEmail())==false) {</span>
-<span class="nc" id="L159">            return false;</span>
-        }
+<span class="pc bpc" id="L195" title="1 of 2 branches missed.">        if (entity.getRecipientEmail()!=null) entity.setRecipientEmail(entity.getRecipientEmail().toLowerCase());</span>
 
         //Get email recipient(user) using email
-<span class="fc" id="L163">        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">        if(recipient == null) {</span>
-<span class="fc" id="L165">            entity.setRecipientUserId(-1);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(&quot;- -&quot;);</span>
+<span class="fc" id="L198">        UserDetails recipient = UsersDB.getUserByEmail(entity.getRecipientEmail(), 600);</span>
+<span class="fc bfc" id="L199" title="All 2 branches covered.">        if(recipient == null) {</span>
+<span class="fc" id="L200">            entity.setRecipientUserId(-1);</span>
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(&quot;- -&quot;);</span>
         }
         else {
-<span class="fc" id="L169">            entity.setRecipientUserId(recipient.getUserId());</span>
-<span class="fc bfc" id="L170" title="All 2 branches covered.">            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(recipient.getFullName());</span>
+            //Check if user is valid
+<span class="fc bfc" id="L205" title="All 2 branches covered.">            if(UserDetailsService.isUserDisabled(recipient) == true) return false;</span>
+
+<span class="fc" id="L207">            entity.setRecipientUserId(recipient.getUserId());</span>
+<span class="fc bfc" id="L208" title="All 2 branches covered.">            if(Tools.isEmpty(entity.getRecipientName())) entity.setRecipientName(recipient.getFullName());</span>
         }
 
         //Set create values
-<span class="fc bfc" id="L174" title="All 2 branches covered.">        if (campaign == null) {</span>
-<span class="fc" id="L175">            entity.setCampainId((long)-loggedUserId);</span>
-<span class="fc" id="L176">            entity.setUrl(&quot;&quot;);</span>
-<span class="fc" id="L177">            entity.setSubject(&quot;&quot;);</span>
-<span class="fc" id="L178">            entity.setSenderName(&quot;&quot;);</span>
-<span class="fc" id="L179">            entity.setSenderEmail(&quot;&quot;);</span>
-<span class="fc" id="L180">            entity.setCreatedByUserId(loggedUserId);</span>
+<span class="pc bpc" id="L212" title="1 of 6 branches missed.">        if (campaign == null || campaign.getId()==null || campaign.getId().longValue()&lt;1) {</span>
+<span class="fc" id="L213">            entity.setCampainId((long)-loggedUserId);</span>
+<span class="fc" id="L214">            entity.setUrl(&quot;&quot;);</span>
+<span class="fc" id="L215">            entity.setSubject(&quot;&quot;);</span>
+<span class="fc" id="L216">            entity.setSenderName(&quot;&quot;);</span>
+<span class="fc" id="L217">            entity.setSenderEmail(&quot;&quot;);</span>
+<span class="fc" id="L218">            entity.setCreatedByUserId(loggedUserId);</span>
         } else {
-<span class="fc" id="L182">            entity.setCampainId(campaign.getId());</span>
-<span class="fc" id="L183">            entity.setUrl(campaign.getUrl());</span>
-<span class="fc" id="L184">            entity.setSubject(campaign.getSubject());</span>
-<span class="fc" id="L185">            entity.setSenderName(campaign.getSenderName());</span>
-<span class="fc" id="L186">            entity.setSenderEmail(campaign.getSenderEmail());</span>
-<span class="fc" id="L187">            entity.setCreatedByUserId(loggedUserId);</span>
-
-<span class="pc bpc" id="L189" title="1 of 4 branches missed.">            if (campaign.getId()==null || campaign.getId().longValue()&lt;1) {</span>
-<span class="fc" id="L190">                entity.setCreatedByUserId(-loggedUserId);</span>
-            }
+<span class="fc" id="L220">            entity.setCampainId(campaign.getId());</span>
+<span class="fc" id="L221">            entity.setUrl(campaign.getUrl());</span>
+<span class="fc" id="L222">            entity.setSubject(campaign.getSubject());</span>
+<span class="fc" id="L223">            entity.setSenderName(campaign.getSenderName());</span>
+<span class="fc" id="L224">            entity.setSenderEmail(campaign.getSenderEmail());</span>
+<span class="fc" id="L225">            entity.setCreatedByUserId(loggedUserId);</span>
         }
 
-<span class="fc" id="L194">        entity.setCreateDate(new Date());</span>
-<span class="fc" id="L195">        entity.setRetry(0);</span>
+<span class="fc" id="L228">        entity.setCreateDate(new Date());</span>
+<span class="fc" id="L229">        entity.setRetry(0);</span>
 
-<span class="pc bpc" id="L197" title="1 of 4 branches missed.">        if (entity.getId()==null || entity.getId().longValue()&lt;1) {</span>
-<span class="fc" id="L198">            entity.setDisabled(true);</span>
+        //Set domainId
+<span class="fc" id="L232">        entity.setDomainId( CloudToolsForCore.getDomainId() );</span>
+
+<span class="pc bpc" id="L234" title="1 of 4 branches missed.">        if (entity.getId()==null || entity.getId().longValue()&lt;1) {</span>
+<span class="fc" id="L235">            entity.setDisabled(true);</span>
         }
 
-<span class="fc" id="L201">        return true;</span>
+<span class="fc" id="L238">        return true;</span>
     }
 
     @Override
     public boolean beforeDelete(EmailsEntity entity) {
-<span class="nc" id="L206">        statClicksRepository.deleteByEmailId(entity.getId());</span>
-<span class="nc" id="L207">        return true;</span>
+<span class="fc" id="L243">        statClicksRepository.deleteByEmailId( entity.getId() );</span>
+<span class="fc" id="L244">        return true;</span>
     }
 
     @Override
     public EmailsEntity processFromEntity(EmailsEntity entity, ProcessItemAction action) {
 
-<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (entity == null) return null;</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        if (entity == null) return null;</span>
 
-<span class="fc" id="L215">        Prop prop = getProp();</span>
-<span class="fc" id="L216">        String keyPrefix = &quot;components.dmail.campaings.email.status.&quot;;</span>
+<span class="fc" id="L252">        Prop prop = getProp();</span>
+<span class="fc" id="L253">        String keyPrefix = &quot;components.dmail.campaings.email.status.&quot;;</span>
 
-<span class="pc bpc" id="L218" title="2 of 6 branches missed.">        if (entity.getRetry()!=null &amp;&amp; entity.getSentDate()!=null &amp;&amp; entity.getRetry().intValue()&lt;0) entity.setStatus(prop.getText(keyPrefix+&quot;error&quot;));</span>
-<span class="pc bpc" id="L219" title="2 of 4 branches missed.">        else if(entity.getCreatedByUserId()!=null &amp;&amp; entity.getCreatedByUserId() &lt; 0) entity.setStatus(prop.getText(keyPrefix+&quot;temporal&quot;));</span>
-<span class="fc bfc" id="L220" title="All 2 branches covered.">        else if (Boolean.TRUE.equals(entity.getDisabled())) entity.setStatus(prop.getText(keyPrefix+&quot;disabled&quot;));</span>
-<span class="pc bpc" id="L221" title="1 of 2 branches missed.">        else if (entity.getSentDate()!=null) entity.setStatus(prop.getText(keyPrefix+&quot;sent&quot;));</span>
-<span class="nc" id="L222">        else entity.setStatus(prop.getText(keyPrefix+&quot;saved&quot;));</span>
+<span class="pc bpc" id="L255" title="2 of 6 branches missed.">        if (entity.getRetry()!=null &amp;&amp; entity.getSentDate()!=null &amp;&amp; entity.getRetry().intValue()&lt;0) entity.setStatus(prop.getText(keyPrefix+&quot;error&quot;));</span>
+<span class="pc bpc" id="L256" title="2 of 4 branches missed.">        else if(entity.getCreatedByUserId()!=null &amp;&amp; entity.getCreatedByUserId() &lt; 0) entity.setStatus(prop.getText(keyPrefix+&quot;temporal&quot;));</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        else if (Boolean.TRUE.equals(entity.getDisabled())) entity.setStatus(prop.getText(keyPrefix+&quot;disabled&quot;));</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        else if (entity.getSentDate()!=null) entity.setStatus(prop.getText(keyPrefix+&quot;sent&quot;));</span>
+<span class="nc" id="L259">        else entity.setStatus(prop.getText(keyPrefix+&quot;saved&quot;));</span>
 
-<span class="fc" id="L224">        return entity;</span>
+<span class="fc" id="L261">        return entity;</span>
     }
 
     @Override
     public boolean processAction(EmailsEntity entity, String action) {
-<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (&quot;resend&quot;.equals(action)) {</span>
+<span class="nc bnc" id="L266" title="All 2 branches missed.">        if (&quot;resend&quot;.equals(action)) {</span>
             //Resend emails
             try {
-<span class="nc" id="L232">                new SimpleQuery().execute(&quot;UPDATE emails SET sent_date = ?, retry = ?, disabled = ? WHERE email_id = ?&quot;,null, 0, false, entity.getId());</span>
-<span class="nc" id="L233">            } catch (Exception e) {</span>
-<span class="nc" id="L234">                Logger.error(EmailsRestController.class, e);</span>
-<span class="nc" id="L235">                return false;</span>
-<span class="nc" id="L236">            }</span>
+<span class="nc" id="L269">                new SimpleQuery().execute(&quot;UPDATE emails SET sent_date = ?, retry = ?, disabled = ? WHERE email_id = ?&quot;,null, 0, false, entity.getId());</span>
+<span class="nc" id="L270">            } catch (Exception e) {</span>
+<span class="nc" id="L271">                Logger.error(EmailsRestController.class, e);</span>
+<span class="nc" id="L272">                return false;</span>
+<span class="nc" id="L273">            }</span>
         }
 
-<span class="nc" id="L239">        Sender.resetSenderWait();</span>
+<span class="nc" id="L276">        Sender.resetSenderWait();</span>
 
-<span class="nc" id="L241">        return true;</span>
+<span class="nc" id="L278">        return true;</span>
     }
 
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

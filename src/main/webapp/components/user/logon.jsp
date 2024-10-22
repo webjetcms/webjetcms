@@ -133,7 +133,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				<iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
 				<%if(Constants.getInt("password"+constStr+"MinLength") > 0){%>
 				   - <iwcm:text key="logon.change_password.min_length" param1='<%=String.valueOf(Constants.getInt("password"+constStr+"MinLength"))%>'/>.<br/>
-			  <%}if(Constants.getInt("password"+constStr+"MinCountOfDigits") > 0){%>
+			  	<%}if(Constants.getInt("password"+constStr+"MinCountOfDigits") > 0){%>
 				   - <iwcm:text key="logon.change_password.count_of_digits" param1='<%=String.valueOf(Constants.getInt("password"+constStr+"MinCountOfDigits"))%>'/>.<br/>
 				<%}if(Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0){%>
 				   - <iwcm:text key="logon.change_password.count_of_upper_case" param1='<%=String.valueOf(Constants.getInt("password"+constStr+"MinUpperCaseLetters"))%>'/>.<br/>
@@ -148,15 +148,15 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				<fieldset>
 				<p>
 					<label for="oldpass"><b><iwcm:text key="logon.old_password"/>:</b></label><br/>
-					<input type="password" name="password" size="16" maxlength="16" class="input" id="oldpass" />
+					<input type="password" name="password" size="16" maxlength="64" class="input" id="oldpass" />
 				</p>
 				<p>
 					<label for="newpass"><b><iwcm:text key="logon.new_password"/>:</b></label><br/>
-					<input type="password" name="newPassword" size="16" maxlength="16" class="input" id="newpass" />
+					<input type="password" name="newPassword" size="16" maxlength="64" class="input" id="newpass" />
 				</p>
 				<p>
 					<label for="retypepass"><b><iwcm:text key="logon.retype_new_password"/>:</b></label><br/>
-					<input type="password" name="retypeNewPassword" size="16" maxlength="16" class="input" id="retypepass" />
+					<input type="password" name="retypeNewPassword" size="16" maxlength="64" class="input" id="retypepass" />
 				</p>
 				<p class="right">
 					<label>
@@ -216,7 +216,7 @@ if("true".compareTo(socialErrorRights) == 0){	//ak chyba, vypisem ju
 				  <div class="form-group">
 					<label id="loginLabelPassword" for="pass" class="col-md-2 control-label"><iwcm:text key="logon.password"/>:</label>
 					<div class="col-md-10">
-					  <input type="password" name="password" size="16" maxlength="16" class="form-control" id="pass" />
+					  <input type="password" name="password" size="16" maxlength="64" class="form-control" id="pass" />
 					</div>
 				  </div>
 					<p>

@@ -10,8 +10,10 @@ Ak sa na webe používa ```Google Tag Manager``` k vkladaniu skriptov a sledovac
 
 ```DataLayer``` musí byť vytvorený ešte pred vloženým ```GTM```.
 
+```javascript
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments)};
+```
 
 ## Predvolené nastavenie súhlasov
 
@@ -35,7 +37,7 @@ Ide o východiskové nastavenie. Pri načítaní stránky sa nastaví na ```deni
 - ```ad_personalization``` = WebJET marketingová kategória ```cookies```
 - ```analytics_storage``` = WebJET štatistická kategória ```cookies```
 
-**Upozornenie:** predvolené nastavenie súhlasov musí byť v kóde ešte pred vloženým ```GTM```.
+!>**Upozornenie:** predvolené nastavenie súhlasov musí byť v kóde ešte pred vloženým ```GTM```.
 
 *Zaujímavosťou je, že ak sú súhlasy vyššie zakázané, Google Analytics sa aj tak spustí. Nevytvára však ```cookies``` a neposiela si informácie o používateľovi, jeho prehliadači, nesleduje sa návšteva a podobne. Spúšťa sa z dôvodu, že sľubuje do-modelovanie analytiky na základe chýbajúcich dát používateľov, ktorí nedali súhlas.*
 
@@ -100,4 +102,12 @@ Aktualizáciu údajov automaticky vykonáva aplikácia ```GDPR Cookies``` aj apl
 
       </body>
     </html>
+```
+
+## Udalosť pri odoslaní formuláru
+
+Po odoslaní formuláru cez AJAX je publikovaná udalosť `WJ.formSubmit`, na ktorú je možné počúvať pri napojení na `DataLayer`, napr. ako:
+
+```javascript
+    window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
 ```

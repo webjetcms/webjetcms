@@ -87,4 +87,12 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
     public void deleteByDocIdIn(@Param("docIds")List<Long> docIds);
 
     Page<DocDetails> findAllByOrderByDateCreatedDesc(Pageable pageable);
+
+    //Used in DocPublicableService
+    @Transactional
+    @Modifying
+    @Query(value = "UPDATE DocDetails dd SET dd.available = :available, dd.disableAfterEnd = :disableAfterEnd WHERE dd.id = :docId")
+    public void updateAvailableAndDisabledAfterEnd(@Param("available")boolean available, @Param("disableAfterEnd")boolean disableAfterEnd, @Param("docId")Integer docId);   
+
+    List<DocDetails> findAllByDisableAfterEndTrue();
 }

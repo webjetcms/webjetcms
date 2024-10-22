@@ -125,13 +125,13 @@ public class WebApproveRestController extends DatatableRestControllerV2<DocHisto
     }
 
     @Override
-    public DocHistory processFromEntity(DocHistory entity, ProcessItemAction action) {
+    public DocHistory processFromEntity(DocHistory entity, ProcessItemAction action, int rowCount) {
         //otoc nastavenie docId a historyId, lebo tak to pozaduje DT
         int docId = entity.getDocId();
         entity.setDocId(entity.getHistoryId());
         entity.setHistoryId(docId);
 
-        WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, getRequest());
+        WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, getRequest(), rowCount == 1);
 
         return entity;
     }

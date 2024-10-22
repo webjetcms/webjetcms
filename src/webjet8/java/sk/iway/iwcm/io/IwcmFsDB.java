@@ -1246,6 +1246,10 @@ public class IwcmFsDB
 				fhb.setChangeDate(new Date());
 				fhb.setFileUrl(virtualPath);
 				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+				if (rb == null) {
+					rb = new RequestBean();
+					rb.setUserId(-1);
+				}
 				fhb.setUserId(rb.getUserId());
 				fhb.setDeleted(deleted);
 				fhb.setIpAddress(rb.getRemoteIP());
@@ -1255,6 +1259,8 @@ public class IwcmFsDB
 				}
 				// zapisanie zaznamu do historie - tabulka file_history
 				boolean saveOk = new FileHistoryDB().save(fhb);
+				RequestBean.addAuditValue("fileHistoryId", String.valueOf(fhb.getId()));
+				RequestBean.addAuditValue("path", fhb.getFileUrl()+"?fHistoryId="+fhb.getId());
 
 				if (saveOk)
 				{

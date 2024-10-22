@@ -44,99 +44,87 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2&lt;
     @Override
     public Page&lt;EnumerationTypeBean&gt; getAllItems(Pageable pageable) {
 <span class="fc" id="L46">        DatatablePageImpl&lt;EnumerationTypeBean&gt; page = new DatatablePageImpl&lt;&gt;(enumerationTypeRepository.findAllByHiddenFalse(pageable));</span>
-
-<span class="fc" id="L48">        processFromEntity(page, ProcessItemAction.GETALL);</span>
-
-        //Enumeration type's - select options
-<span class="fc" id="L51">        List&lt;EnumerationTypeBean&gt; enumerationTypes = enumerationTypeRepository.findAll();</span>
-
-        //Mark deleted one
-<span class="fc bfc" id="L54" title="All 2 branches covered.">        for(EnumerationTypeBean type : enumerationTypes)</span>
-<span class="fc bfc" id="L55" title="All 2 branches covered.">            if(type.isHidden())</span>
-<span class="fc" id="L56">                type.setTypeName(getProp().getText(&quot;enum_type.deleted_type_mark.js&quot;) + type.getTypeName());</span>
-
-<span class="fc" id="L58">        page.addDefaultOption(&quot;editorFields.childEnumTypeId&quot;, &quot;&quot;, &quot;-1&quot;);</span>
-<span class="fc" id="L59">        page.addOptions(&quot;editorFields.childEnumTypeId&quot;, enumerationTypes, &quot;typeName&quot;, &quot;enumerationTypeId&quot;, false);</span>
-
-<span class="fc" id="L61">        return page;</span>
+<span class="fc" id="L47">        processFromEntity(page, ProcessItemAction.GETALL);</span>
+<span class="fc" id="L48">        EnumerationService.prepareEnumTypesOptions(page, getProp());</span>
+<span class="fc" id="L49">        return page;</span>
     }
 
     @Override
     public void addSpecSearch(Map&lt;String, String&gt; params, List&lt;Predicate&gt; predicates, Root&lt;EnumerationTypeBean&gt; root, CriteriaBuilder builder) {
         //Only hidden = false records (non soft deleted)
-<span class="fc" id="L67">        predicates.add(builder.isFalse(root.get(&quot;hidden&quot;)));</span>
+<span class="fc" id="L55">        predicates.add(builder.isFalse(root.get(&quot;hidden&quot;)));</span>
 
         //vyhladaj podla searchUserFullName
-<span class="fc" id="L70">        super.addSpecSearch(params, predicates, root, builder);</span>
-<span class="fc" id="L71">    }</span>
+<span class="fc" id="L58">        super.addSpecSearch(params, predicates, root, builder);</span>
+<span class="fc" id="L59">    }</span>
 
     @Override
     public EnumerationTypeBean getOneItem(long id) {
         EnumerationTypeBean entity;
 
-<span class="fc bfc" id="L77" title="All 2 branches covered.">        if(id == -1) entity = new EnumerationTypeBean();</span>
-<span class="fc" id="L78">        else entity = enumerationTypeRepository.getNonHiddenByEnumId((int)id, false);</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if(id == -1) entity = new EnumerationTypeBean();</span>
+<span class="fc" id="L66">        else entity = enumerationTypeRepository.getNonHiddenByEnumId((int)id, false);</span>
 
-<span class="fc" id="L80">        processFromEntity(entity, ProcessItemAction.GETONE);</span>
+<span class="fc" id="L68">        processFromEntity(entity, ProcessItemAction.GETONE);</span>
 
-<span class="fc" id="L82">        return entity;</span>
+<span class="fc" id="L70">        return entity;</span>
     }
 
     @Override
     public void beforeSave(EnumerationTypeBean entity) {
-<span class="fc" id="L87">        Long entityId = entity.getId();</span>
-<span class="pc bpc" id="L88" title="1 of 4 branches missed.">        if(entityId != null &amp;&amp; entityId != -1) {</span>
+<span class="fc" id="L75">        Long entityId = entity.getId();</span>
+<span class="pc bpc" id="L76" title="1 of 4 branches missed.">        if(entityId != null &amp;&amp; entityId != -1) {</span>
             //If allowChildEnumerationType was changed to false, remove from data all set child enum type's
-<span class="fc bfc" id="L90" title="All 2 branches covered.">            if(!entity.isAllowChildEnumerationType()) {</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            if(entity.isAllowChildEnumerationType()==false) {</span>
                 //Only if in DB is value still true
-<span class="pc bpc" id="L92" title="1 of 2 branches missed.">                if(jpaToBoolean(enumerationTypeRepository.isAllowChildEnumerationType(entityId)))</span>
-<span class="nc" id="L93">                    enumerationDataRepository.denyChildEnumerationTypeByTypeId(entityId);</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">                if(jpaToBoolean(enumerationTypeRepository.isAllowChildEnumerationType(entityId)))</span>
+<span class="nc" id="L81">                    enumerationDataRepository.denyChildEnumerationTypeByTypeId(entityId);</span>
             }
 
             //If allowParentEnumerationData was changed to false, remove from data all set parent enum data's
-<span class="fc bfc" id="L97" title="All 2 branches covered.">            if(!entity.isAllowParentEnumerationData()) {</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if(entity.isAllowParentEnumerationData()==false) {</span>
                 //Only if in DB is value still true
-<span class="pc bpc" id="L99" title="1 of 2 branches missed.">                if(jpaToBoolean(enumerationTypeRepository.isAllowParentEnumerationData(entityId)))</span>
-<span class="nc" id="L100">                    enumerationDataRepository.denyParentEnumerationDataByTypeId(entityId);</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                if(jpaToBoolean(enumerationTypeRepository.isAllowParentEnumerationData(entityId)))</span>
+<span class="nc" id="L88">                    enumerationDataRepository.denyParentEnumerationDataByTypeId(entityId);</span>
             }
         }
 
-<span class="fc" id="L104">        processToEntity(entity, ProcessItemAction.EDIT);</span>
-<span class="fc" id="L105">    }</span>
+<span class="fc" id="L92">        processToEntity(entity, ProcessItemAction.EDIT);</span>
+<span class="fc" id="L93">    }</span>
 
     @Override
     public EnumerationTypeBean processFromEntity(EnumerationTypeBean entity, ProcessItemAction action) {
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (entity == null) entity = new EnumerationTypeBean();</span>
+<span class="pc bpc" id="L97" title="1 of 2 branches missed.">        if (entity == null) entity = new EnumerationTypeBean();</span>
 
-<span class="fc bfc" id="L111" title="All 2 branches covered.">        if(entity.getEditorFields() == null) {</span>
-<span class="fc" id="L112">            EnumerationTypeEditorFields etef = new EnumerationTypeEditorFields();</span>
-<span class="fc" id="L113">            etef.fromEnumerationType(entity);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        if(entity.getEditorFields() == null) {</span>
+<span class="fc" id="L100">            EnumerationTypeEditorFields etef = new EnumerationTypeEditorFields();</span>
+<span class="fc" id="L101">            etef.fromEnumerationType(entity);</span>
         }
-<span class="fc" id="L115">        return entity;</span>
+<span class="fc" id="L103">        return entity;</span>
     }
 
     @Override
     public EnumerationTypeBean processToEntity(EnumerationTypeBean entity, ProcessItemAction action) {
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if(entity != null) {</span>
-<span class="fc" id="L121">            EnumerationTypeEditorFields etef = entity.getEditorFields();</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        if(entity != null) {</span>
+<span class="fc" id="L109">            EnumerationTypeEditorFields etef = entity.getEditorFields();</span>
 
             //If for some reason editorFields is null, return entity
-<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if(etef == null) return entity;</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            if(etef == null) return entity;</span>
 
-<span class="fc" id="L126">            etef.toEnumerationType(entity, enumerationTypeRepository, getProp());</span>
+<span class="fc" id="L114">            etef.toEnumerationType(entity, enumerationTypeRepository, getProp());</span>
         }
-<span class="fc" id="L128">        return entity;</span>
+<span class="fc" id="L116">        return entity;</span>
     }
 
     @Override
     public boolean deleteItem(EnumerationTypeBean entity, long id) {
-<span class="fc" id="L133">        enumerationTypeRepository.deleteEnumTypeById(entity.getEnumerationTypeId(), true);</span>
+<span class="fc" id="L121">        enumerationTypeRepository.deleteEnumTypeById(entity.getEnumerationTypeId(), true);</span>
         //&quot;Delete&quot; all created EnumerationData's under this EnumerationType
-<span class="fc" id="L135">        enumerationDataRepository.deleteAllEnumDataByEnumTypeId(entity.getEnumerationTypeId(), true);</span>
+<span class="fc" id="L123">        enumerationDataRepository.deleteAllEnumDataByEnumTypeId(entity.getEnumerationTypeId(), true);</span>
 
-<span class="fc" id="L137">        Adminlog.add(Adminlog.TYPE_UPDATEDB, &quot;DELETE/HIDE:\nid: &quot;+id+&quot;\nname: &quot;+entity.getTypeName(), (int)id, -1);</span>
-<span class="fc" id="L138">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
-<span class="fc" id="L139">        return true;</span>
+<span class="fc" id="L125">        Adminlog.add(Adminlog.TYPE_UPDATEDB, &quot;DELETE/HIDE:\nid: &quot;+id+&quot;\nname: &quot;+entity.getTypeName(), (int)id, -1);</span>
+<span class="fc" id="L126">        Cache.getInstance().removeObjectStartsWithName(&quot;enumeration.&quot;);</span>
+<span class="fc" id="L127">        return true;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

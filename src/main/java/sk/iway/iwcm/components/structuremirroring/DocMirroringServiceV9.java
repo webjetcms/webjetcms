@@ -9,6 +9,8 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PkeyGenerator;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
@@ -117,6 +119,31 @@ public class DocMirroringServiceV9 {
                   if (autoTranslatorUserId > 0) mirror.setAuthorId(autoTranslatorUserId);
 
                   tranlateDoc(doc, mirror, translator);
+
+                  //CloneStructure - keepVirtualPath
+                  RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+                  boolean keepVirtualPath = "true".equals(rb.getParameter("keepVirtualPath"));
+                  if(keepVirtualPath) {
+                     int srcGroupId = Tools.getIntValue(rb.getParameter("srcGroupId"), -1);
+                     int destGroupId = Tools.getIntValue(rb.getParameter("destGroupId"), -1);
+                     if (srcGroupId > 0 && destGroupId > 0) {
+                        //get source group URL prefixes
+                        String srcGroupPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), srcGroupId);
+
+                        //get destination group URL prefixes
+                        String destGroupPath = DocDB.getGroupDiskPath(groupsDB.getGroupsAll(), destGroupId);
+
+                        //remove source prefix path and replace it with destination prefix path, if not found, append it
+                        String virtualPath = doc.getVirtualPath();
+                        if(virtualPath.startsWith(srcGroupPath)) {
+                           virtualPath = virtualPath.substring(srcGroupPath.length());
+                        }
+                        virtualPath = destGroupPath + virtualPath;
+                        //fix double slashes
+                        virtualPath = Tools.replace(virtualPath, "//", "/");
+                        mirror.setVirtualPath(virtualPath);
+                     }
+                  }
 
                   //Save created mirror DOC
                   DocDB.saveDoc(mirror, false);

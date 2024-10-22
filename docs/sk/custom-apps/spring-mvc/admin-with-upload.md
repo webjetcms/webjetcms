@@ -109,7 +109,7 @@ form.document.not_null=Dokument nemôže byť prázdny
 
 ## Frontend
 
-HTML kód stránky obsahuje štandardný Spring MVC formulár.
+HTML kód stránky obsahuje štandardný `Spring MVC` formulár.
 
 Ukážka obsahuje zobrazenie mena nahratého súboru, ktorý sa získa z atribútu ```importedFileName```, ktorý sa nastaví na backende po úspešnom nahratí súboru.
 

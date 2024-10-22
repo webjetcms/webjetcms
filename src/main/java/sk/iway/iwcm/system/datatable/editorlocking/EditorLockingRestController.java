@@ -33,7 +33,7 @@ public class EditorLockingRestController {
 
     //nazov cachce objektu v pamäti
     private static final String CACHE_PREFIX = "editor.locking";
-    //dlžka expiracie v minutach, pre dany cache objekt
+    //dlžka exspiracie v minutach, pre dany cache objekt
     private static final int CACHE_EXPIRE_MINUTES = 2;
 
     /**
@@ -63,7 +63,7 @@ public class EditorLockingRestController {
                 if(editAction.getEntityId() == entityId &&
                     editAction.getUserId() == userId) {
                         actionExist = true;
-                        //Aktualizuj poslednu zmenu (musi byť aktualizovana PRED odstranenim editActions, ktore expirovali)
+                        //Aktualizuj poslednu zmenu (musi byť aktualizovana PRED odstranenim editActions, ktore exspirovali)
                         editAction.setLastChange(new Date());
                         break;
                     }
@@ -75,7 +75,7 @@ public class EditorLockingRestController {
                 editorLockingBeanList.add(getNewEditRecord(entityId, userId));
             }
 
-            //Odstran editActions, ktore expirovali
+            //Odstran editActions, ktore exspirovali
             removeExpiredEditActions(editorLockingBeanList);
 
             //Vrať list ostatnych použivateľov, ktory upravuju rovnaky zaznam v rovnakej tabuľke (ako aktualny poživateľ)
@@ -131,12 +131,12 @@ public class EditorLockingRestController {
     }
 
     /**
-	 * Prejdi zadany list (List<EditorLockingBean>), a dostran z neho EditorLockingBean objekty, ktore už expirovali.
+	 * Prejdi zadany list (List<EditorLockingBean>), a dostran z neho EditorLockingBean objekty, ktore už exspirovali.
 	 *
 	 * @param entityId
 	 * @param tableUniqueId
      * @param request
-	 * @return list (List<EditorLockingBean>) s objektami, ktore ešte neexpirovali
+	 * @return list (List<EditorLockingBean>) s objektami, ktore ešte neexspirovali
 	 */
     private void removeExpiredEditActions(List<EditorLockingBean> editorLockingBeanList) {
         //Aktualny datum a čas v millisekundach
@@ -150,7 +150,7 @@ public class EditorLockingRestController {
             //Dokedy validne
             long validUntil = editAction.getLastChange().getTime() + (60000 * CACHE_EXPIRE_MINUTES);
 
-            //Ak editAction expirovala, odstraň ju
+            //Ak editAction exspirovala, odstraň ju
             if(now >= validUntil) {
                 i.remove();
             }
@@ -194,7 +194,7 @@ public class EditorLockingRestController {
             editorLockingBeanList = new ArrayList<>();
             cache.setObject(cacheKey, editorLockingBeanList, CACHE_EXPIRE_MINUTES+5);
         } else {
-            //musime ho v cache obnovit, aby neexpiroval
+            //musime ho v cache obnovit, aby neexspiroval
             cache.setObjectExpiryTime(cacheKey, Tools.getNow() + ((CACHE_EXPIRE_MINUTES+5)*60*1000));
         }
         return editorLockingBeanList;

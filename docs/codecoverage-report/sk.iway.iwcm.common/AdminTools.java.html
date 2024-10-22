@@ -129,7 +129,7 @@ public class AdminTools {
 
 <span class="fc" id="L130">                GroupDetails group = actualDoc.getGroup();</span>
                 //test na stranky v kosi / schovane adresare
-<span class="pc bpc" id="L132" title="2 of 6 branches missed.">                if(group==null || group.getFullPath().startsWith(trashDirName) || group.isHiddenInAdmin())</span>
+<span class="pc bpc" id="L132" title="1 of 6 branches missed.">                if(group==null || group.getFullPath().startsWith(trashDirName) || group.isHiddenInAdmin())</span>
 <span class="nc" id="L133">                    continue;</span>
 
 <span class="fc" id="L135">                counter++;</span>
@@ -358,7 +358,7 @@ public class AdminTools {
             {
 <span class="fc" id="L359">                int docId = rs.getInt(&quot;doc_id&quot;);</span>
 <span class="fc" id="L360">                DocDetails actualDoc = docDB.getBasicDocDetails(docId, false);</span>
-<span class="pc bpc" id="L361" title="1 of 2 branches missed.">                if (actualDoc==null) continue;</span>
+<span class="fc bfc" id="L361" title="All 2 branches covered.">                if (actualDoc==null) continue;</span>
 
 <span class="fc" id="L363">                GroupDetails docGroup = actualDoc.getGroup();</span>
 <span class="pc bpc" id="L364" title="1 of 2 branches missed.">                if (docGroup==null) continue;</span>
@@ -455,4 +455,4 @@ public class AdminTools {
 <span class="nc" id="L455">        return getRecentPages(size,null);</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

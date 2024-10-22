@@ -26,4 +26,4 @@ Nina.init({
 });
 ```
 
-!> **Pozor:**  Ak je v URL adrese nastavený parameter `NinjaDebug` na `true`, vynúti sa zapnutie aj tohto debug režimu. Viac informácií v časti [Debug režim](/ninja-starter-kit/ninja-jv/debug/?id=debug-režim-boolean).
+!> **Upozornenie:**  Ak je v URL adrese nastavený parameter `NinjaDebug` na `true`, vynúti sa zapnutie aj tohto debug režimu. Viac informácií v časti [Debug režim](/ninja-starter-kit/ninja-jv/debug/?id=debug-režim-boolean).

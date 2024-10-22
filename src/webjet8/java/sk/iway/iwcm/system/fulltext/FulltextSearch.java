@@ -340,6 +340,7 @@ public class FulltextSearch
 				}
 				count++;
 			}
+			scanner.close();
 			cdb.finish();
 		}
 		catch (IOException e1)

@@ -104,7 +104,7 @@ import java.util.*;
 <span class="nc" id="L104">			String groupNamesIn = &quot;&quot;;</span>
 <span class="nc" id="L105">			db_conn = DBPool.getConnection();</span>
 
-<span class="nc" id="L107">			StringBuffer sql = new StringBuffer(&quot;SELECT &quot;+D_DOCUMENT_FIELDS_NODATA+&quot; FROM documents d WHERE d.group_id IN (&quot;+groupIds+&quot;) AND d.available = 1 AND d.show_in_menu = 1&quot;);</span>
+<span class="nc" id="L107">			StringBuffer sql = new StringBuffer(&quot;SELECT &quot;+D_DOCUMENT_FIELDS_NODATA+&quot; FROM documents d WHERE d.group_id IN (&quot;+groupIds+&quot;) AND d.available = &quot;+DB.getBooleanSql(true)+&quot; AND d.show_in_menu = &quot;+DB.getBooleanSql(true));</span>
 <span class="nc bnc" id="L108" title="All 2 branches missed.">			if(perexGroupIdsArray != null)</span>
 			{
 <span class="nc bnc" id="L110" title="All 2 branches missed.">				if(perexGroupUseJoin)</span>
@@ -658,4 +658,4 @@ import java.util.*;
 <span class="nc" id="L658">		return result;</span>
 	}
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

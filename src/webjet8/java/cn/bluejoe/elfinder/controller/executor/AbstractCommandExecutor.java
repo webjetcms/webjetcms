@@ -22,6 +22,7 @@ import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.util.FsItemFilterUtils;
 import cn.bluejoe.elfinder.util.FsServiceUtils;
 import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 
 public abstract class AbstractCommandExecutor implements CommandExecutor
 {
@@ -52,16 +53,29 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 		}
 	}
 
-	protected void createAndCopy(FsItemEx src, FsItemEx dst) throws IOException
+	/**
+	 * Classic createAndCopy BUT set request is used to swap FOLDER PROPERTIES
+	 * 
+	 * @param src
+	 * @param dst
+	 * @param request
+	 * @throws IOException
+	 */
+	protected void createAndCopy(FsItemEx src, FsItemEx dst, HttpServletRequest request) throws IOException
 	{
 		if (src.isFolder())
 		{
-			createAndCopyFolder(src, dst);
+			createAndCopyFolder(src, dst, request);
 		}
 		else
 		{
 			createAndCopyFile(src, dst);
 		}
+	}
+
+	protected void createAndCopy(FsItemEx src, FsItemEx dst) throws IOException
+	{
+		createAndCopy(src, dst, null);
 	}
 
 	protected void createAndCopyFile(FsItemEx src, FsItemEx dst) throws IOException
@@ -76,13 +90,30 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 
 	protected void createAndCopyFolder(FsItemEx src, FsItemEx dst) throws IOException
 	{
+		createAndCopyFolder(src, dst, null);
+	}
+
+	/**
+	 * Classic createAndCopyFolder BUT request is used to swap FOLDER PROPERTIES
+	 * 
+	 * @param src
+	 * @param dst
+	 * @param request
+	 * @throws IOException
+	 */
+	protected void createAndCopyFolder(FsItemEx src, FsItemEx dst, HttpServletRequest request) throws IOException
+	{
 		dst.createFolder();
+
+		if(request != null) {
+			FolderPropertiesService.copyFolderProperties(src.getPath(), dst.getPath(), request);
+		}
 
 		for (FsItemEx c : src.listChildren())
 		{
 			if (c.isFolder())
 			{
-				createAndCopyFolder(c, new FsItemEx(dst, c.getName()));
+				createAndCopyFolder(c, new FsItemEx(dst, c.getName()), request);
 			}
 			else
 			{

@@ -14,7 +14,7 @@
 
 <!-- /code_chunk_output -->
 
-V administrácii je väčšina testov datatabuľky zhodná vo forme ```CRUD (Create, Read, Update, Delete)``` operácií. Aby sa nemuseli dookola opakovať štandardné postupy testu datatabuľky pripravili sme **automatizované testovanie**. Implementácia je v súbore [DataTables.js](../../../src/test/webapp/pages/DataTables.js) a zahŕňa nasledovné kroky:
+V administrácii je väčšina testov datatabuľky zhodná vo forme ```CRUD (Create, Read, Update, Delete)``` operácií. Aby sa nemuseli dookola opakovať štandardné postupy testu datatabuľky pripravili sme **automatizované testovanie**. Implementácia je v súbore [DataTables.js](../../../../src/test/webapp/pages/DataTables.js) a zahŕňa nasledovné kroky:
 
 - pridanie nového záznamu
   - overenie povinných polí
@@ -51,7 +51,7 @@ Scenario('zakladne testy', async ({I, DataTables}) => {
 });
 ```
 
-do ```dataTable``` nastavujete **meno** premennej v stránke. Je možné použiť aj ďalšie parametre testu (príklad v súbore [templates.js](../../../src/test/webapp/tests/components/templates.js)):
+do ```dataTable``` nastavujete **meno** premennej v stránke. Je možné použiť aj ďalšie parametre testu (príklad v súbore [templates.js](../../../../src/test/webapp/tests/components/templates.js)):
 
 ```javascript
 Scenario('zakladne testy', async ({I, DataTables}) => {
@@ -97,9 +97,9 @@ Pri uložení nového záznamu sa zároveň do objektu ```options.testingData```
     I.see(`${options.testingData[0]}-change`, "div.dataTables_scrollBody");
 ```
 
-Objekt ```options``` je vrátený z ```baseTest``` funkcie a je možné ho použiť v ďalších scenároch, príklad je v [translation_keys.js](../../../src/test/webapp/tests/components/translation_keys.js)
+Objekt ```options``` je vrátený z ```baseTest``` funkcie a je možné ho použiť v ďalších scenároch, príklad je v [translation-keys.js](../../../../src/test/webapp/tests/settings/translation-keys.js)
 
-**POZOR**: automatizovaný test základných operácii nenahrádza komplexné testovanie. Má slúžiť ako základ testu, vašou úlohou je pridať testovacie scenáre špecifických vlastností. Ideálne ako **samostatné scenáre**, alebo doplnením krokov do funkcií ```createSteps, editSteps, editSearchSteps, beforeDeleteSteps```.
+!>**Upozornenie:** automatizovaný test základných operácii nenahrádza komplexné testovanie. Má slúžiť ako základ testu, vašou úlohou je pridať testovacie scenáre špecifických vlastností. Ideálne ako **samostatné scenáre**, alebo doplnením krokov do funkcií ```createSteps, editSteps, editSearchSteps, beforeDeleteSteps```.
 
 ## Možnosti nastavenia
 
@@ -116,6 +116,7 @@ Voliteľné možnosti:
 - ```skipRefresh``` - ak je nastavené na ```true``` nevykoná sa obnovenie web stránky po pridaní záznamu.
 - ```skipSwitchDomain``` - ak je nastavené na ```true``` nevykoná sa kontrola medzi-doménového oddelenia záznamov.
 - ```switchDomainName``` - možnosť definovať inú doménu ako je predvolená ```mirroring.tau27.iway.sk``` pre kontrolu medzi-doménového oddelenia záznamov.
+- ```skipDuplication``` - ak je nastavené na ```true``` nevykoná sa test duplikovania záznamov.
 - ```createSteps``` - funkcia pridávajúca kroky testovania pri vytvorí nového záznamu.
 - ```afterCreateSteps``` - funkcia je vykonaná po uložení nového záznamu. Ak tabuľka nemá žiadne povinné polia je možné nastavením ```requiredFields.push("string1");options.testingData[0] = string1;``` pole zadefinovať a nastaviť mu hodnotu.
 - ```editSteps``` - funkcia pridávajúca kroky testovania pri editácii záznamu.
@@ -171,11 +172,11 @@ await DataTables.baseTest({
 });
 ```
 
-UPOZORNENIE: zadanie tohto parametra je povinné, aby sa vždy pri zobrazení datatabuľky otestovali aj práva. Pri vnorenej datatabuľke ale tento test môže byť problematický z dôvodu odhlásenia, môžete zadať prázdnu hodnotu, alebo znak ```-```.
+!>**Upozornenie:** zadanie tohto parametra je povinné, aby sa vždy pri zobrazení datatabuľky otestovali aj práva. Pri vnorenej datatabuľke ale tento test môže byť problematický z dôvodu odhlásenia, môžete zadať prázdnu hodnotu, alebo znak ```-```.
 
 ## Detaily implementácie
 
-Test je implementovaný v súbore [DataTables.js](../../../src/test/webapp/pages/DataTables.js). Základom je získanie columns definície:
+Test je implementovaný v súbore [DataTables.js](../../../../src/test/webapp/pages/DataTables.js). Základom je získanie columns definície:
 
 ```javascript
 const columns = await I.getDataTableColumns(dataTable);
@@ -183,7 +184,7 @@ const columns = await I.getDataTableColumns(dataTable);
 
 Z ktorej sa číta zoznam polí, ich nastavenie atď. Ak nie sú definované povinné polia, získajú sa z columns definície podľa atribútu ```required: true```.
 
-Funkcia ```I.getDataTableColumns``` je definovaná v [custom_helper.js](../../../src/test/webapp/custom_helper.js):
+Funkcia ```I.getDataTableColumns``` je definovaná v [custom_helper.js](../../../../src/test/webapp/custom_helper.js):
 
 ```javascript
   /**
@@ -207,6 +208,6 @@ Funkcia ```I.getDataTableColumns``` je definovaná v [custom_helper.js](../../..
 
 Všetky funkcie sú asynchrónne z dôvodu volania ```I.getDataTableColumns```.
 
-**POZOR**: pri implementácii sa nám stalo, že druhé volanie ```this.helpers['Playwright'];``` počas behu testu odhlási prihláseného používateľa (resetne cookies). Chceli sme použiť toto volanie pri formátovaní dátumov, žiaľ aktuálne to nie je možné. Predpokladáme, že sa jedná o chybu v CodeceptJS.
+!>**Upozornenie:** pri implementácii sa nám stalo, že druhé volanie ```this.helpers['Playwright'];``` počas behu testu odhlási prihláseného používateľa (resetne cookies). Chceli sme použiť toto volanie pri formátovaní dátumov, žiaľ aktuálne to nie je možné. Predpokladáme, že sa jedná o chybu v CodeceptJS.
 
 Následne sú vykonávané jednotlivé kroky testu ako ich bežne poznáme.

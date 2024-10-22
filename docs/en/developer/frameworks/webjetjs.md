@@ -235,7 +235,7 @@ At the same time, the caption of the item that first does not have the attribute
 
 **Display language selection**
 
-In some cases, it is necessary to display the data in the datatable according to the selected language (not according to the language of the currently logged-in administrator). An example is the GDPR-\&gt;Cookie Manager application, where individual `cookies` can set descriptions for different languages.
+In some cases, it is necessary to display the data in the datatable according to the selected language (not according to the language of the currently logged-in administrator). An example is the GDPR->Cookie Manager application, where individual `cookies` can set descriptions for different languages.
 
 ![](breadcrumb-language.png)
 

@@ -199,103 +199,104 @@ public class EditorUtils {
 <span class="fc" id="L199">        else dataAsc = (DB.internationalToEnglish(data).trim()).toLowerCase();</span>
 
 <span class="fc" id="L201">        dataAsc = EditorToolsForCore.removeHtmlTagsKeepLength(dataAsc);</span>
+<span class="fc" id="L202">		dataAsc = Tools.replace(dataAsc, &quot;&amp;nbsp;&quot;, &quot;      &quot;);</span>
 
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">        if (editedDoc != null)</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">        if (editedDoc != null)</span>
         {
             //ak tam nie je title, dopln
-<span class="fc" id="L206">            String titleAsc = (DB.internationalToEnglish(editedDoc.getTitle()).trim()).toLowerCase();</span>
+<span class="fc" id="L207">            String titleAsc = (DB.internationalToEnglish(editedDoc.getTitle()).trim()).toLowerCase();</span>
             //aby spravne hladalo aj v nazvoch suborov len s pouzitim contains
-<span class="fc" id="L208">            titleAsc = Tools.replace(titleAsc, &quot;_&quot;, &quot; &quot;);</span>
-<span class="fc" id="L209">            titleAsc = Tools.replace(titleAsc, &quot;-&quot;, &quot; &quot;);</span>
-<span class="fc" id="L210">            titleAsc = Tools.replace(titleAsc, &quot;.&quot;, &quot; &quot;);</span>
-<span class="fc" id="L211">            titleAsc = Tools.replace(titleAsc, &quot;/&quot;, &quot; &quot;);</span>
-<span class="pc bpc" id="L212" title="1 of 2 branches missed.">            if (isLucene)</span>
+<span class="fc" id="L209">            titleAsc = Tools.replace(titleAsc, &quot;_&quot;, &quot; &quot;);</span>
+<span class="fc" id="L210">            titleAsc = Tools.replace(titleAsc, &quot;-&quot;, &quot; &quot;);</span>
+<span class="fc" id="L211">            titleAsc = Tools.replace(titleAsc, &quot;.&quot;, &quot; &quot;);</span>
+<span class="fc" id="L212">            titleAsc = Tools.replace(titleAsc, &quot;/&quot;, &quot; &quot;);</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">            if (isLucene)</span>
             {
-<span class="nc bnc" id="L214" title="All 2 branches missed.">                if (dataAsc.indexOf(editedDoc.getTitle())==-1) dataAsc += &quot; &quot;+editedDoc.getTitle()+&quot;\n&quot;;</span>
+<span class="nc bnc" id="L215" title="All 2 branches missed.">                if (dataAsc.indexOf(editedDoc.getTitle())==-1) dataAsc += &quot; &quot;+editedDoc.getTitle()+&quot;\n&quot;;</span>
             }
             else
             {
-<span class="fc bfc" id="L218" title="All 2 branches covered.">                if (dataAsc.indexOf(titleAsc)==-1) dataAsc += &quot;&lt;h1&gt;&quot;+titleAsc+&quot;&lt;/h1&gt;\n&quot;;</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">                if (dataAsc.indexOf(titleAsc)==-1) dataAsc += &quot;&lt;h1&gt;&quot;+titleAsc+&quot;&lt;/h1&gt;\n&quot;;</span>
             }
 
-<span class="fc" id="L221">            DocDB docDB = DocDB.getInstance();</span>
+<span class="fc" id="L222">            DocDB docDB = DocDB.getInstance();</span>
             //ak treba dopln keywords
-<span class="pc bpc" id="L223" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludeKeywords&quot;))</span>
+<span class="pc bpc" id="L224" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludeKeywords&quot;))</span>
             {
-<span class="nc" id="L225">				String[] perexGroupIds = editedDoc.getPerexGroupNames();</span>
-<span class="nc bnc" id="L226" title="All 2 branches missed.">				if (perexGroupIds != null)</span>
+<span class="nc" id="L226">				String[] perexGroupIds = editedDoc.getPerexGroupNames();</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">				if (perexGroupIds != null)</span>
 				{
-<span class="nc" id="L228">					StringBuilder keywords = new StringBuilder();</span>
-<span class="nc bnc" id="L229" title="All 2 branches missed.">					for (String keyword : perexGroupIds)</span>
+<span class="nc" id="L229">					StringBuilder keywords = new StringBuilder();</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">					for (String keyword : perexGroupIds)</span>
 					{
-<span class="nc" id="L231">						keyword = docDB.convertPerexGroupIdToName(Tools.getIntValue(keyword, -1));</span>
-<span class="nc bnc" id="L232" title="All 2 branches missed.">						if (Tools.isEmpty(keyword)) continue;</span>
-<span class="nc bnc" id="L233" title="All 6 branches missed.">						if (keyword.startsWith(&quot;#&quot;) || keyword.startsWith(&quot;@&quot;) || keyword.startsWith(&quot;_&quot;)) keyword=keyword.substring(1);</span>
-<span class="nc bnc" id="L234" title="All 2 branches missed.">						if (keywords.length()&gt;0)keywords.append(&quot;, &quot;);</span>
-<span class="nc" id="L235">						keywords.append(keyword);</span>
+<span class="nc" id="L232">						keyword = docDB.convertPerexGroupIdToName(Tools.getIntValue(keyword, -1));</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">						if (Tools.isEmpty(keyword)) continue;</span>
+<span class="nc bnc" id="L234" title="All 6 branches missed.">						if (keyword.startsWith(&quot;#&quot;) || keyword.startsWith(&quot;@&quot;) || keyword.startsWith(&quot;_&quot;)) keyword=keyword.substring(1);</span>
+<span class="nc bnc" id="L235" title="All 2 branches missed.">						if (keywords.length()&gt;0)keywords.append(&quot;, &quot;);</span>
+<span class="nc" id="L236">						keywords.append(keyword);</span>
 					}
-<span class="nc bnc" id="L237" title="All 2 branches missed.">					if (Tools.isNotEmpty(keywords.toString()))</span>
+<span class="nc bnc" id="L238" title="All 2 branches missed.">					if (Tools.isNotEmpty(keywords.toString()))</span>
 					{
-<span class="nc bnc" id="L239" title="All 2 branches missed.">						if (isLucene) dataAsc += (DB.internationalToEnglish(keywords.toString()).trim()).toLowerCase()+&quot;\n&quot;;</span>
-<span class="nc" id="L240">						else dataAsc += &quot;&lt;div style='display:none' class='fulltextKeywords'&gt;&quot;+(DB.internationalToEnglish(keywords.toString()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">						if (isLucene) dataAsc += (DB.internationalToEnglish(keywords.toString()).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="nc" id="L241">						else dataAsc += &quot;&lt;div style='display:none' class='fulltextKeywords'&gt;&quot;+(DB.internationalToEnglish(keywords.toString()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
 					}
 				}
             }
-<span class="pc bpc" id="L244" title="1 of 4 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludePerex&quot;) &amp;&amp; Tools.isNotEmpty(editedDoc.getHtmlData()))</span>
+<span class="pc bpc" id="L245" title="1 of 4 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludePerex&quot;) &amp;&amp; Tools.isNotEmpty(editedDoc.getHtmlData()))</span>
             {
-<span class="pc bpc" id="L246" title="1 of 2 branches missed.">                if (isLucene) dataAsc += (DB.internationalToEnglish(editedDoc.getHtmlData()).trim()).toLowerCase()+&quot;\n&quot;;</span>
-<span class="fc" id="L247">                else dataAsc += &quot;&lt;div style='display:none' class='fulltextPerex'&gt;&quot;+(DB.internationalToEnglish(editedDoc.getHtmlData()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
+<span class="pc bpc" id="L247" title="1 of 2 branches missed.">                if (isLucene) dataAsc += (DB.internationalToEnglish(editedDoc.getHtmlData()).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="fc" id="L248">                else dataAsc += &quot;&lt;div style='display:none' class='fulltextPerex'&gt;&quot;+(DB.internationalToEnglish(editedDoc.getHtmlData()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
             }
             //ak treba dopln atributy
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludeAttributes&quot;))</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">            if (Constants.getBoolean(&quot;fulltextIncludeAttributes&quot;))</span>
             {
-<span class="nc" id="L252">				List&lt;AtrBean&gt; attrs = AtrDB.getAtributes(editedDoc.getDocId(), null, null);	//ziskam vsetky atributy pre danu stranku</span>
-<span class="nc bnc" id="L253" title="All 4 branches missed.">				if (attrs != null &amp;&amp; attrs.isEmpty()==false)</span>
+<span class="nc" id="L253">				List&lt;AtrBean&gt; attrs = AtrDB.getAtributes(editedDoc.getDocId(), null, null);	//ziskam vsetky atributy pre danu stranku</span>
+<span class="nc bnc" id="L254" title="All 4 branches missed.">				if (attrs != null &amp;&amp; attrs.isEmpty()==false)</span>
 				{
-<span class="nc" id="L255">					StringBuilder attributes = new StringBuilder();</span>
-<span class="nc bnc" id="L256" title="All 2 branches missed.">					for (AtrBean attr : attrs)</span>
+<span class="nc" id="L256">					StringBuilder attributes = new StringBuilder();</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">					for (AtrBean attr : attrs)</span>
 					{
-<span class="nc bnc" id="L258" title="All 2 branches missed.">						if (attr == null) continue;</span>
-<span class="nc bnc" id="L259" title="All 4 branches missed.">						if(Tools.isNotEmpty(attr.getAtrName()) &amp;&amp; Tools.isNotEmpty(attr.getValueString()))</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">						if (attr == null) continue;</span>
+<span class="nc bnc" id="L260" title="All 4 branches missed.">						if(Tools.isNotEmpty(attr.getAtrName()) &amp;&amp; Tools.isNotEmpty(attr.getValueString()))</span>
 						{
-<span class="nc bnc" id="L261" title="All 2 branches missed.">							if (attributes.length()&gt;1) attributes.append(&quot;, &quot;);</span>
-<span class="nc" id="L262">							attributes.append(attr.getAtrName()).append(&quot;=&quot;).append(attr.getValueString());</span>
+<span class="nc bnc" id="L262" title="All 2 branches missed.">							if (attributes.length()&gt;1) attributes.append(&quot;, &quot;);</span>
+<span class="nc" id="L263">							attributes.append(attr.getAtrName()).append(&quot;=&quot;).append(attr.getValueString());</span>
 						}
-<span class="nc" id="L264">					}</span>
+<span class="nc" id="L265">					}</span>
 
-<span class="nc bnc" id="L266" title="All 2 branches missed.">					if (Tools.isNotEmpty(attributes.toString()))</span>
+<span class="nc bnc" id="L267" title="All 2 branches missed.">					if (Tools.isNotEmpty(attributes.toString()))</span>
 					{
-<span class="nc bnc" id="L268" title="All 2 branches missed.">						if (isLucene) dataAsc += (DB.internationalToEnglish(attributes.toString()).trim()).toLowerCase()+&quot;\n&quot;;</span>
-<span class="nc" id="L269">						else dataAsc += &quot;&lt;div style='display:none' class='fulltextAttributes'&gt;&quot;+(DB.internationalToEnglish(attributes.toString()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
+<span class="nc bnc" id="L269" title="All 2 branches missed.">						if (isLucene) dataAsc += (DB.internationalToEnglish(attributes.toString()).trim()).toLowerCase()+&quot;\n&quot;;</span>
+<span class="nc" id="L270">						else dataAsc += &quot;&lt;div style='display:none' class='fulltextAttributes'&gt;&quot;+(DB.internationalToEnglish(attributes.toString()).trim()).toLowerCase()+&quot;&lt;/div&gt;\n&quot;;</span>
 					}
 				}
             }
 
             //#22131
-<span class="pc bpc" id="L275" title="1 of 2 branches missed.">            if(Tools.isNotEmpty(Constants.getString(&quot;fulltextDataAscMethod&quot;)))</span>
+<span class="pc bpc" id="L276" title="1 of 2 branches missed.">            if(Tools.isNotEmpty(Constants.getString(&quot;fulltextDataAscMethod&quot;)))</span>
             {
-<span class="nc" id="L277">                String className = &quot;&quot;;</span>
-<span class="nc" id="L278">                String methodName = &quot;&quot;;</span>
+<span class="nc" id="L278">                String className = &quot;&quot;;</span>
+<span class="nc" id="L279">                String methodName = &quot;&quot;;</span>
                 try {
-<span class="nc" id="L280">                    className = Constants.getString(&quot;fulltextDataAscMethod&quot;).substring(0, Constants.getString(&quot;fulltextDataAscMethod&quot;).lastIndexOf(&quot;.&quot;));</span>
-<span class="nc" id="L281">                    methodName = Constants.getString(&quot;fulltextDataAscMethod&quot;).substring(Constants.getString(&quot;fulltextDataAscMethod&quot;).lastIndexOf(&quot;.&quot;) + 1);</span>
+<span class="nc" id="L281">                    className = Constants.getString(&quot;fulltextDataAscMethod&quot;).substring(0, Constants.getString(&quot;fulltextDataAscMethod&quot;).lastIndexOf(&quot;.&quot;));</span>
+<span class="nc" id="L282">                    methodName = Constants.getString(&quot;fulltextDataAscMethod&quot;).substring(Constants.getString(&quot;fulltextDataAscMethod&quot;).lastIndexOf(&quot;.&quot;) + 1);</span>
 
-<span class="nc" id="L283">                    Class&lt;?&gt; clazz = Class.forName(className);</span>
-<span class="nc" id="L284">                    Method method = clazz.getMethod(methodName, DocDetails.class);</span>
-<span class="nc" id="L285">                    String returned = (String)method.invoke(null, editedDoc);</span>
-<span class="nc bnc" id="L286" title="All 2 branches missed.">                    if(Tools.isNotEmpty(returned))</span>
-<span class="nc" id="L287">                        dataAsc += returned;</span>
-<span class="nc" id="L288">                } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {</span>
-<span class="nc" id="L289">                    Logger.debug(EditorUtils.class, &quot;ReflectionLoader - &quot; + className + &quot;.&quot; + methodName + &quot; exception&quot;);</span>
-<span class="nc" id="L290">					Logger.error(EditorUtils.class, e);</span>
-<span class="nc" id="L291">                }</span>
+<span class="nc" id="L284">                    Class&lt;?&gt; clazz = Class.forName(className);</span>
+<span class="nc" id="L285">                    Method method = clazz.getMethod(methodName, DocDetails.class);</span>
+<span class="nc" id="L286">                    String returned = (String)method.invoke(null, editedDoc);</span>
+<span class="nc bnc" id="L287" title="All 2 branches missed.">                    if(Tools.isNotEmpty(returned))</span>
+<span class="nc" id="L288">                        dataAsc += returned;</span>
+<span class="nc" id="L289">                } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | SecurityException | IllegalArgumentException | InvocationTargetException e) {</span>
+<span class="nc" id="L290">                    Logger.debug(EditorUtils.class, &quot;ReflectionLoader - &quot; + className + &quot;.&quot; + methodName + &quot; exception&quot;);</span>
+<span class="nc" id="L291">					Logger.error(EditorUtils.class, e);</span>
+<span class="nc" id="L292">                }</span>
             }
         }
 
-<span class="fc" id="L295">		dataAsc = Tools.replace(dataAsc, &quot;&amp;nbsp;&quot;, &quot;      &quot;);</span>
-<span class="fc" id="L296">        dataAsc = Tools.replaceStrings(dataAsc, &quot;searchIndexReplaceStrings&quot;, false);</span>
+<span class="fc" id="L296">		dataAsc = Tools.replace(dataAsc, &quot;&amp;nbsp;&quot;, &quot;      &quot;);</span>
+<span class="fc" id="L297">        dataAsc = Tools.replaceStrings(dataAsc, &quot;searchIndexReplaceStrings&quot;, false);</span>
 
-<span class="fc" id="L298">        return dataAsc;</span>
+<span class="fc" id="L299">        return dataAsc;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

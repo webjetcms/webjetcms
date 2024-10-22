@@ -1,12 +1,12 @@
-"use strict";
 /**
  * @class  elFinder command "paste"
  * Paste filesfrom clipboard into directory.
  * If files pasted in its parent directory - files duplicates will created
- *
- * @author Dmitry (dio) Levashov
  **/
-elFinder.prototype.commands.fileopen = function() {
+elFinder.prototype.commands.wjfileopen = function() {
+	"use strict";
+	var fm = this.fm;
+
 	this.getstate = function(sel) {
 		var sel = this.files(sel);
 
@@ -18,7 +18,21 @@ elFinder.prototype.commands.fileopen = function() {
 	};
 
 	this.exec = function(hashes) {
-		var file = this.files(hashes)[0];
-		window.open(file.virtualPath);
+		var dfrd  = $.Deferred().fail(function(error) { error && fm.error(error); });
+
+		if(hashes === null || hashes === undefined || hashes.length < 1) { 
+			return dfrd.reject("Hashes are not valid.");
+		}
+
+		var fileVirtualPath;
+		try {
+			var file = this.files(hashes)[0];
+			fileVirtualPath = file.virtualPath;
+		} catch(e) {
+			return dfrd.reject("File not found.");
+		}
+
+		window.open(fileVirtualPath);
+		return dfrd.resolve();
 	}
 }

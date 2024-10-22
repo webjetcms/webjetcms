@@ -21,9 +21,7 @@
 	prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
-		String lng = PageLng.getUserLng(request);
-		pageContext.setAttribute("lng", lng);
-		Prop prop = Prop.getInstance(lng);
+		Prop prop = Prop.getInstance(request);
 		request.setAttribute("cmpName", "slider");
 
 		request.setAttribute("iconLink",
@@ -128,18 +126,18 @@
             classes: "editorLeft"
         },
         title: {
-            title: "Nadpis",
+            title: '<iwcm:text key="components.app-cookiebar.cookiebar_title" />',
             type: "text",
             classes: "editorRight",
         },
         description: {
-            title: "Podnadpis",
+            title: '<iwcm:text key="editor.subtitle" />',
             type: "textArea",
             classes: "editorRight"
         },
         redirectUrl: {
-            title: "<iwcm:text key="components.news.redirectAfterClick" />",
-            description: "Zadajte adresu stranky, alebo kliknite na ikonu na konci riadku pre jej vyber",
+            title: "<iwcm:text key="components.news.redirectAfterClick"/>",
+        	description: "<iwcm:text key="components.news.redirectLinkHelp"/>",
             type: "conditionalText",
             classes: "editorRight"
         }

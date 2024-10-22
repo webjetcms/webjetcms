@@ -38,8 +38,8 @@ if (root.exists())
 	}
 }
 
-request.setAttribute("dialogTitle", "Export / Import súborov");
-request.setAttribute("dialogDesc", "Umožní export, import a rollback súborov.");
+request.setAttribute("dialogTitleKey", "components.sync.export-import.title");
+request.setAttribute("dialogDescKey", "components.sync.export-import.desc");
 %>
 
 <%@ include file="/admin/layout_top_dialog.jsp" %>
@@ -73,13 +73,13 @@ label { display:block; padding:2px 0; }
 
 <div class="box_tab box_tab_thin left">
 	<ul class="tab_menu" id="Tabs">
-		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1">Export</a></li>
-		<li class="first"><a href="#" onclick="showHideTab('2');" id="tabLink2">Import</a></li>
+		<li class="first openFirst"><a href="#" onclick="showHideTab('1');" id="tabLink1"><iwcm:text key="components.sync.export-import.export"/></a></li>
+		<li class="first"><a href="#" onclick="showHideTab('2');" id="tabLink2"><iwcm:text key="components.sync.export-import.import"/></a></li>
 		<%//rollback, iba ak ma povolene vsetky adresare
 			if(Tools.isEmpty(user.getWritableFolders())){%>
-			<li class="first"><a href="#" onclick="showHideTab('3');" id="tabLink3">Rollback</a></li>
+			<li class="first"><a href="#" onclick="showHideTab('3');" id="tabLink3"><iwcm:text key="components.sync.export-import.rollback"/></a></li>
 		<%}%>
-		<li class="first"><a href="#" onclick="showHideTab('4');" id="tabLink4">Log</a></li>
+		<li class="first"><a href="#" onclick="showHideTab('4');" id="tabLink4"><iwcm:text key="components.sync.export-import.log"/></a></li>
 	</ul>
 </div>
 
@@ -93,19 +93,19 @@ label { display:block; padding:2px 0; }
 		<form class="form-horizontal" action="/components/sync/export_result.jsp?__setf=1&__sfu=1" name="exportFilesForm" method="post" enctype="multipart/form-data" id="exportForm" target="log_iframe">
 
 			<div class="col-sm-6">
-				<h2>Adresáre, ktoré chcete exportovať</h2>
+				<h2><iwcm:text key="components.sync.export-import.foldersToExport"/></h2>
 
 				<div class="form-group">
 					<div class="${contentFull}">
 
 						<label class="${contentFull} radio">
 							<input class="radio_Dirs" type="radio" name="path" id="path" value="standard" checked="checked">
-							Štandardne definované
+							<iwcm:text key="components.sync.export-import.standardDefined"/>
 						</label>
 
 						<label class="${contentFull} radio">
 							<input class="radio_Dirs zvoleneAdresare" type="radio" name="path" value="selected">
-							Zvolené adresáre
+							<iwcm:text key="components.sync.export-import.selectedFolders"/>
 						</label>
 
 
@@ -118,12 +118,12 @@ label { display:block; padding:2px 0; }
 
 						<label class="${contentFull} radio">
 							<input class="radio_Dirs" type="radio" name="path" value="all">
-							Všetky adresáre
+							<iwcm:text key="components.sync.export-import.allFolders"/>
 						</label>
 
 						<label class="${contentFull} radio">
 							<input class="radio_Dirs" type="radio" name="path" value="manual">
-							Zadané adresáre
+							<iwcm:text key="components.sync.export-import.manualFolders"/>
 						</label>
 						<input class="form-control input_manualPath" type="text" name="manualPath" placeholder="/adresar,/druhy_adresar">
 
@@ -131,19 +131,19 @@ label { display:block; padding:2px 0; }
 				</div>
 
 				<br>
-				<h2>Filter exportu</h2>
+				<h2><iwcm:text key="components.sync.export-import.exportFilter"/></h2>
 
 				<div class="form-group">
 					<div class="${contentFull}">
 
 						<label class="${contentFull} radio">
 							<input type="radio" name="filter" value="none" checked="checked">
-							Bez filtra
+							<iwcm:text key="components.sync.export-import.noFilter"/>
 						</label>
 
 						<label class="${contentFull} radio">
 							<input type="radio" name="filter" value="fromDate">
-							Od dátumu
+							<iwcm:text key="components.sync.export-import.fromDate"/>
 						</label>
 
 						<div class="fromDateBox">
@@ -159,7 +159,7 @@ label { display:block; padding:2px 0; }
 
 						<label class="${contentFull} radio">
 							<input type="radio" name="filter" value="snapshot">
-							Podľa výpisu
+							<iwcm:text key="components.sync.export-import.bySnaphost"/>
 						</label>
 
 						<input class="input_snapshot" type="file" name="snapshot">
@@ -172,7 +172,7 @@ label { display:block; padding:2px 0; }
 			</div>
 			<div class="col-sm-6">
 
-				<h2>Typ exportovaného súboru</h2>
+				<h2><iwcm:text key="components.sync.export-import.exportFileType"/></h2>
 
 				<div class="form-group">
 					<div class="${contentFull}">
@@ -189,40 +189,40 @@ label { display:block; padding:2px 0; }
 
 						<label class="${contentFull} radio">
 							<input type="radio" name="format" value="snapshot">
-							Výpis
+							<iwcm:text key="components.sync.export-import.exportTypeSnaphshot"/>
 						</label>
 					</div>
 				</div>
 
 				<br>
-				<h2>Typ nodu</h2>
+				<h2><iwcm:text key="components.sync.export-import.nodeType"/></h2>
 
 				<div class="form-group">
 					<div class="${contentFull}">
 
 						<label class="${contentFull} radio">
 							<input type="radio" name="nodeType" value="admin" checked="checked">
-							Admin
+							<iwcm:text key="components.sync.export-import.nodeType.admin"/>
 						</label>
 
 						<label class="${contentFull} radio">
 							<input type="radio" name="nodeType" value="public">
-							Public
+							<iwcm:text key="components.sync.export-import.nodeType.public"/>
 						</label>
 					</div>
 				</div>
 
 				<br>
-				<h2>Kópia na e-mail</h2>
+				<h2><iwcm:text key="components.sync.export-import.sendToEmail"/></h2>
 
 			 	<div class="form-group">
 			 		<div class="${contentFull}">
 				 		<label class="${contentFull} radio">
 							<input class="checkbox_sendEmail" type="checkbox" name="sendEmail" value="yes">
-							Poslať kópiu na e-mail
+							<iwcm:text key="components.sync.export-import.sendCopyToEmail"/>
 						</label>
 						<div class="${contentFull}">
-							<input class="input_emailAddress form-control"  type="text" name="emailAddress" placeholder="email@domena.sk"><br>
+							<input class="input_emailAddress form-control"  type="text" name="emailAddress" placeholder="email@domain.com"><br>
 						</div>
 					</div>
 				</div>
@@ -237,7 +237,7 @@ label { display:block; padding:2px 0; }
 	<div class="tab-page" id="tabMenu2">
 		<form action="/components/sync/import_result.jsp?__setf=1&__sfu=1" name="importFilesForm" method="post" enctype="multipart/form-data" target="log_iframe">
 			<input type="file" name="archive"><br>
-			<input type="checkbox" name="backup" value="y">Vytvoriť zálohu (umožní vykonať rollback)<br>
+			<input type="checkbox" name="backup" value="y"><iwcm:text key="components.sync.export-import.createBackup"/><br>
 			<input name="importSubmit" style="display: none;" type="submit" class="button50 import" value="Import" />
 			<%sk.iway.iwcm.system.stripes.CSRF.writeCsrfTokenInputFiled(session, out);%>
 		</form>
@@ -289,8 +289,9 @@ label { display:block; padding:2px 0; }
 				<input name="rollbackSubmit" style="display: none;" type="submit" class="button50" value="Rollback" />
 			</form>
 		<%}
-		else
-			out.print("Nenašli sa žadne zálohy v adresári "+ Constants.getString("rollbackArchivePath"));
+		else {
+			%><iwcm:text key="components.sync.export-import.backupNotFound" param1='<%=Constants.getString("rollbackArchivePath")%>' /><%
+		}
 		%>
 	</div>
 

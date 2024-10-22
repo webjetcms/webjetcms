@@ -37,10 +37,18 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.click(container+" button.buttons-colvis");
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
-    if("sk" === confLng) {
-        I.click("Nadradený priečinok");
-    } else if("en" === confLng) {
-        I.click("Parent folder");
+    switch (confLng) {
+        case 'sk':
+            I.click("Nadradený priečinok");
+            break;
+        case 'en':
+            I.click("Parent folder");
+            break;
+        case 'cs':
+            I.click("Nadřazený adresář");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
     I.click("button.btn.btn-primary.dt-close-modal");
@@ -57,11 +65,18 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
 
     Document.screenshot("/redactor/datatables/dt-colvis.png");
-
-    if("sk" === confLng) {
-        I.click("Obnoviť");
-    } else if("en" === confLng) {
-        I.click("Restore");
+    switch (confLng) {
+        case 'sk':
+            I.click("Obnoviť");
+            break;
+        case 'en':
+            I.click("Restore");
+            break;
+        case 'cs':
+            I.click("Obnovit");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
 
     I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
@@ -318,31 +333,46 @@ Scenario('datatable-duplicate', ({ I, Document }) => {
 
 Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
 
-    if("sk" === I.getConfLng()) {
-        I.amOnPage("/apps/otazky-odpovede/");
-        Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
-
-        I.amOnPage("/apps/qa/admin/");
-        Document.screenshot("/redactor/apps/qa/admin.png");
-
-        DT.filter("question", "Koľko nôh ma pavúk ?");
-        I.click("Koľko nôh ma pavúk ?");
-        DTE.waitForEditor("qaDataTable");
-        I.click("#pills-dt-qaDataTable-answer-tab");
-        Document.screenshot("/redactor/apps/qa/admin-edit.png");
-    } else if("en" === I.getConfLng()) {
-        I.amOnPage("/apps/otazky-odpovede/questions-answers.html?language=en");
-        Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
-
-        I.amOnPage("/apps/qa/admin/");
-        Document.screenshot("/redactor/apps/qa/admin.png");
-
-        DT.filter("question", "How many legs does a spider have ?");
-        I.click("How many legs does a spider have ?");
-        DTE.waitForEditor("qaDataTable");
-        I.click("#pills-dt-qaDataTable-answer-tab");
-        Document.screenshot("/redactor/apps/qa/admin-edit.png");
-    }
+    switch (I.getConfLng()) {
+        case "sk":
+            I.amOnPage("/apps/otazky-odpovede/");
+            Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
+            I.amOnPage("/apps/qa/admin/");
+            Document.screenshot("/redactor/apps/qa/admin.png");
+            DT.filter("question", "Koľko nôh ma pavúk ?");
+            I.click("Koľko nôh ma pavúk ?");
+            DTE.waitForEditor("qaDataTable");
+            I.click("#pills-dt-qaDataTable-answer-tab");
+            Document.screenshot("/redactor/apps/qa/admin-edit.png");
+            break;
+        
+        case "en":
+            I.amOnPage("/apps/otazky-odpovede/questions-answers.html?language=en");
+            Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
+            I.amOnPage("/apps/qa/admin/");
+            Document.screenshot("/redactor/apps/qa/admin.png");
+            DT.filter("question", "How many legs does a spider have ?");
+            I.click("How many legs does a spider have ?");
+            DTE.waitForEditor("qaDataTable");
+            I.click("#pills-dt-qaDataTable-answer-tab");
+            Document.screenshot("/redactor/apps/qa/admin-edit.png");
+            break;
+    
+        case "cs":
+            I.amOnPage("/apps/otazky-odpovedi/otazky-odpovedi-2.html");
+            Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
+            I.amOnPage("/apps/qa/admin/");
+            Document.screenshot("/redactor/apps/qa/admin.png");
+            DT.filter("question", "Kolik nohou má pavouk");
+            I.click("Kolik nohou má pavouk ?");
+            DTE.waitForEditor("qaDataTable");
+            I.click("#pills-dt-qaDataTable-answer-tab");
+            Document.screenshot("/redactor/apps/qa/admin-edit.png");
+            break;
+    
+        default:
+            throw new Error("Unknown language: " + I.getConfLng());
+    }    
 });
 
 Scenario('logon', ({ I, Document }) => {
@@ -350,10 +380,16 @@ Scenario('logon', ({ I, Document }) => {
 
     let confLng = I.getConfLng();
     //Select language if not default
-    if ("sk" != confLng) {
-        //Different language detected, selecting language
-        if("en" == confLng) {
-          I.selectOption("language", "English");
+    if ("sk" !== confLng) {
+        switch (confLng) {
+            case 'en':
+                I.selectOption("language", "English");
+                break;
+            case 'cs':
+                I.selectOption("language", "Česky");
+                break;
+            default:
+                throw new Error(`Unsupported language code: ${confLng}`);
         }
     }
 
@@ -456,9 +492,8 @@ Scenario('welcome', ({ I, Document }) => {
     I.amOnPage("/admin/v9/");
 
     Document.screenshotElement("div.overview-logged.feedback", "/redactor/admin/feedback.png", 1360, 900);
-    I.click("div.overview-logged.feedback div.overview-logged__head__icon");
+    I.clickCss(".ti.ti-writing");
     I.waitForElement("#feedback_modal");
-    I.wait(2);
     Document.screenshot("/redactor/admin/feedback-modal.png");
 
     I.amOnPage("/admin/v9/");
@@ -469,7 +504,7 @@ Scenario('welcome', ({ I, Document }) => {
     Document.screenshotElement("div.overview-logged.bookmark", "/redactor/admin/bookmarks.png");
 
     I.amOnPage("/admin/v9/");
-    I.click("div.overview-logged.bookmark .overview-logged__head__icon");
+    I.click(".ti.ti-plus");
     I.waitForElement("#bookmark_modal");
     I.wait(2);
     Document.screenshot("/redactor/admin/bookmarks-modal.png", 1280, 580);
@@ -545,43 +580,87 @@ Scenario('formsimple', ({ I, DTE, Document }) => {
     //aby na screenshote nebolo meno usera
 
     I.amOnPage("/logoff.do?forward=/admin/");
-    if("sk" === confLng) {
-        I.amOnPage("/apps/formular-lahko/");
-    } else if("en" === confLng) {
-        I.amOnPage("/apps/formular-lahko/?language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/formular-lahko/");
+            break;
+        case 'en':
+            I.amOnPage("/apps/formular-lahko/?language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/formular-lahko/?language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
     I.wait(5);
     Document.screenshot("/redactor/apps/formsimple/formsimple.png");
 
     I.say("skupiny poli");
-    if("sk" === confLng) {
-        I.amOnPage("/apps/formular-lahko/zaskrtavacie-vyberove-polia.html");
-    } else if("en" === confLng) {
-        I.amOnPage("/apps/formular-lahko/check-radio-fields.html?language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/formular-lahko/zaskrtavacie-vyberove-polia.html");
+            break;
+        case 'en':
+            I.amOnPage("/apps/formular-lahko/check-radio-fields.html?language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/formular-lahko/check-radio-fields.html?language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
     I.wait(5);
     Document.screenshotElement("article.ly-content div.container", "/redactor/apps/formsimple/formsimple-radiogroup.png");
 
     I.say("riadkove zobrazenie");
-    if("sk" === confLng) {
-        I.amOnPage("/apps/formular-lahko/riadkove-zobrazenie.html");
-    } else if("en" === confLng) {
-        I.amOnPage("/apps/formular-lahko/line-view.html");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/formular-lahko/riadkove-zobrazenie.html");
+            break;
+        case 'en':
+            I.amOnPage("/apps/formular-lahko/line-view.html");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/formular-lahko/line-view.html?language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
     I.wait(5);
     Document.screenshotElement("article.ly-content div.container", "/redactor/apps/formsimple/formsimple-rowview.png");
 
     I.say("wysiwyg version");
-    if("sk" === confLng) {
-        I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true");
-    } else if("en" === confLng) {
-        I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true&language=en");
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true");
+            break;
+        case 'en':
+            I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true&language=en");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/formular-lahko/formular-lahko-wysiwyg.html?NO_WJTOOLBAR=true&language=cs");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
     I.wait(5);
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
 
-    I.fillField("#meno-a-priezvisko", "Form Tester");
+    switch (confLng) {
+        case 'sk':
+            I.fillField("#meno-a-priezvisko", "Form Tester");
+            break;
+        case 'en':
+            I.fillField("#name-and-surname", "Form Tester");
+            break;
+        case 'cs':
+            I.fillField("#jmeno-a-prijmeni", "Form Tester");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
+    }
 
     DTE.fillCleditor("form.formsimple > div.form-group", "Lorem ipsum dolor sit amet!");
     I.pressKey(['CommandOrControl', 'A']);
@@ -599,4 +678,12 @@ Scenario('formsimple', ({ I, DTE, Document }) => {
     I.click("div.cleditorButton[title=Numbering]");
 
     Document.screenshot("/redactor/apps/formsimple/formsimple-wysiwyg.png");
+});
+
+Scenario('template list', ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/templates/temps-list/?tempId=1");
+    DTE.waitForLoader("tempsTable");
+    I.clickCss("#pills-dt-datatableInit-templatesTab-tab");
+    I.click( locate("div.DTE_Field_Name_footerDocId").find("button.dropdown-toggle") );
+    Document.screenshotElement(locate("#datatableInit_modal").find("div.DTE_Action_Edit") ,"/frontend/setup/header-footer.png");
 });

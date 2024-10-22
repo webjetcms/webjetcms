@@ -21,6 +21,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.datatable.*;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.spring.DateConverter;
@@ -31,10 +32,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Rest controller pre datatabulku zobrazenia parametrov aplikacie (v appstore)
@@ -50,7 +54,7 @@ public class ComponentsRestController {
      * @return ResponseEntity<Map<String, Object>>
      */
     @PostMapping(value = "/component", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> component(@RequestBody ComponentRequest componentRequest) {
+    public ResponseEntity<Map<String, Object>> component(@RequestBody ComponentRequest componentRequest, HttpServletRequest request) {
         Map<String, Object> result = new HashMap<>();
 
         String className = componentRequest.getClassName();
@@ -72,12 +76,23 @@ public class ComponentsRestController {
         }
 
         try {
+            bean.initAppEditor(componentRequest, request);
             setParametersToBean(componentRequest, bean);
             DataTableColumnsFactory dataTableColumnsFactory = new DataTableColumnsFactory(className);
             result.put("data", bean);
             result.put("columns", dataTableColumnsFactory.getColumns(null));
             result.put("tabs", dataTableColumnsFactory.getTabs());
             result.put("title", dataTableColumnsFactory.getTitle());
+
+            //add options for selects
+            result.put("options", bean.getAppOptions(componentRequest, request));
+
+            String componentPath = null;
+            if (bean.getClass().isAnnotationPresent(WebjetAppStore.class)) {
+                WebjetAppStore appStore = bean.getClass().getAnnotation(WebjetAppStore.class);
+                componentPath = appStore.componentPath();
+            }
+            result.put("componentPath", componentPath);
         }
         catch (Exception e) {
             result.put("error", e.getMessage());
@@ -146,7 +161,7 @@ public class ComponentsRestController {
      * @throws InvocationTargetException
      * @throws NoSuchFieldException - if error is catch and there is still superClass do nothing, else return new NoSuchFieldException
      */
-    private static java.lang.reflect.Field getDeclaredFiledRecursive(Class<?> initialClass, String fieldName) throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+    private static java.lang.reflect.Field getDeclaredFiledRecursive(Class<?> initialClass, String fieldName) throws NoSuchFieldException {
         java.lang.reflect.Field field = null;
 
         int failsafe=0;
@@ -203,6 +218,13 @@ public class ComponentsRestController {
                     value = value.substring(0, value.indexOf("."));
                 }
                 return Integer.valueOf(value);
+            }
+
+            if (parameterType.getTypeName().equalsIgnoreCase("java.lang.Integer[]")) {
+                //get tokens, it's probably + separated list
+                int[] tokens = Tools.getTokensInt(value, "+");
+                Integer[] result = Arrays.stream( tokens ).boxed().toArray( Integer[]::new );
+                return result;
             }
 
             if (parameterType.getTypeName().equalsIgnoreCase("java.util.Date")) {

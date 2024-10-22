@@ -6,10 +6,12 @@ import org.springframework.web.bind.annotation.*;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
@@ -33,218 +35,236 @@ public class GalleryTreeRestController extends JsTreeRestController&lt;GalleryDi
     private final GalleryDimensionRepository repository;
     private final GalleryTreeService galleryTreeService;
 
-<span class="fc" id="L36">    public GalleryTreeRestController(GalleryDimensionRepository repository, GalleryTreeService galleryTreeService) {</span>
-<span class="fc" id="L37">        this.repository = repository;</span>
-<span class="fc" id="L38">        this.galleryTreeService = galleryTreeService;</span>
-<span class="fc" id="L39">    }</span>
+<span class="fc" id="L38">    public GalleryTreeRestController(GalleryDimensionRepository repository, GalleryTreeService galleryTreeService) {</span>
+<span class="fc" id="L39">        this.repository = repository;</span>
+<span class="fc" id="L40">        this.galleryTreeService = galleryTreeService;</span>
+<span class="fc" id="L41">    }</span>
 
     @Override
     protected void tree(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
-<span class="fc" id="L43">        String url = item.getUrl();</span>
-<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (Tools.isEmpty(url)) url = Constants.getString(&quot;imagesRootDir&quot;);</span>
+<span class="fc" id="L45">        String url = item.getUrl();</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">        if (Tools.isEmpty(url)) url = Constants.getString(&quot;imagesRootDir&quot;);</span>
 
-<span class="pc bpc" id="L46" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(Constants.getString(&quot;imagesRootDir&quot;)) &amp;&amp; url.startsWith(Constants.getString(&quot;imagesRootDir&quot;))==false) {</span>
-<span class="nc" id="L47">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L48">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_id_not_in_images&quot;, url));</span>
-<span class="nc" id="L49">            return;</span>
+<span class="pc bpc" id="L48" title="2 of 4 branches missed.">        if (Tools.isNotEmpty(Constants.getString(&quot;imagesRootDir&quot;)) &amp;&amp; url.startsWith(Constants.getString(&quot;imagesRootDir&quot;))==false) {</span>
+<span class="nc" id="L49">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L50">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_id_not_in_images&quot;, url));</span>
+<span class="nc" id="L51">            return;</span>
         }
 
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (!FileTools.isDirectory(url)) {</span>
-<span class="nc" id="L53">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L54">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.path_doesnt_exist&quot;, url));</span>
-<span class="nc" id="L55">            return;</span>
+<span class="pc bpc" id="L54" title="1 of 2 branches missed.">        if (!FileTools.isDirectory(url)) {</span>
+<span class="nc" id="L55">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L56">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.path_doesnt_exist&quot;, url));</span>
+<span class="nc" id="L57">            return;</span>
         }
 
-<span class="fc" id="L58">        List&lt;GalleryJsTreeItem&gt; items = galleryTreeService.getItems(url);</span>
+<span class="fc" id="L60">        List&lt;GalleryJsTreeItem&gt; items = galleryTreeService.getItems(url);</span>
 
-<span class="fc" id="L60">        result.put(&quot;result&quot;, true);</span>
-<span class="fc" id="L61">        result.put(&quot;items&quot;, items);</span>
-<span class="fc" id="L62">    }</span>
+<span class="fc" id="L62">        result.put(&quot;result&quot;, true);</span>
+<span class="fc" id="L63">        result.put(&quot;items&quot;, items);</span>
+<span class="fc" id="L64">    }</span>
 
     @Override
     protected void move(Map&lt;String, Object&gt; result, JsTreeMoveItem item) {
-<span class="fc" id="L66">        JsTreeItem original = item.getNode().getOriginal();</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (original == null) {</span>
-<span class="nc" id="L68">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L69">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.json_original_missing&quot;));</span>
-<span class="nc" id="L70">            return;</span>
+<span class="fc" id="L68">        JsTreeItem original = item.getNode().getOriginal();</span>
+<span class="pc bpc" id="L69" title="1 of 2 branches missed.">        if (original == null) {</span>
+<span class="nc" id="L70">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L71">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.json_original_missing&quot;));</span>
+<span class="nc" id="L72">            return;</span>
         }
 
-<span class="fc" id="L73">        String virtualPath = original.getVirtualPath();</span>
+<span class="fc" id="L75">        String virtualPath = original.getVirtualPath();</span>
 
-<span class="fc" id="L75">        Optional&lt;GalleryDimension&gt; firstByPath = repository.findFirstByPathAndDomainId(virtualPath, CloudToolsForCore.getDomainId());</span>
-<span class="pc bpc" id="L76" title="1 of 2 branches missed.">        if (firstByPath.isPresent()) {</span>
+        //check perms
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">        if (checkPathAccess(result, virtualPath)==false) {</span>
+<span class="nc" id="L79">            return;</span>
+        }
+
+<span class="fc" id="L82">        Optional&lt;GalleryDimension&gt; firstByPath = repository.findFirstByPathAndDomainId(virtualPath, CloudToolsForCore.getDomainId());</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (firstByPath.isPresent()) {</span>
             try {
-<span class="fc" id="L78">                GalleryDimension galleryDimension = firstByPath.get();</span>
-<span class="fc" id="L79">                String originalPath = galleryDimension.getPath();</span>
-<span class="fc" id="L80">                String newPath = item.getParent() + &quot;/&quot; + galleryDimension.getNameFromPath();</span>
-<span class="fc" id="L81">                galleryDimension.setPath(newPath);</span>
-<span class="fc" id="L82">                repository.save(galleryDimension);</span>
+<span class="fc" id="L85">                GalleryDimension galleryDimension = firstByPath.get();</span>
+<span class="fc" id="L86">                String originalPath = galleryDimension.getPath();</span>
+<span class="fc" id="L87">                String newPath = item.getParent() + &quot;/&quot; + galleryDimension.getNameFromPath(); //NOSONAR</span>
 
-<span class="fc" id="L84">                IwcmFile file = new IwcmFile(Tools.getRealPath(virtualPath));</span>
-<span class="fc" id="L85">                boolean renamed = file.renameTo(new IwcmFile(Tools.getRealPath(newPath)));</span>
-<span class="fc" id="L86">                result.put(&quot;result&quot;, renamed);</span>
-
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">                if (!renamed) {</span>
-<span class="nc" id="L89">                    result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.renamed_failed&quot;));</span>
-                    // Vraciam do povodneho adresaru aj DB entitu
-<span class="nc" id="L91">                    galleryDimension.setPath(originalPath);</span>
-<span class="nc" id="L92">                    repository.save(galleryDimension);</span>
+<span class="fc bfc" id="L89" title="All 2 branches covered.">                if (checkPathAccess(result, newPath)==false) {</span>
+<span class="fc" id="L90">                    return;</span>
                 }
 
-<span class="fc" id="L95">                return;</span>
-<span class="nc" id="L96">            } catch (Exception e) {</span>
-<span class="nc" id="L97">                Logger.error(GalleryTreeRestController.class, e);</span>
-<span class="nc" id="L98">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L99">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.save_failed&quot;));</span>
-<span class="nc" id="L100">                return;</span>
+<span class="fc" id="L93">                galleryDimension.setPath(newPath);</span>
+<span class="fc" id="L94">                repository.save(galleryDimension);</span>
+
+<span class="fc" id="L96">                IwcmFile file = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="fc" id="L97">                boolean renamed = file.renameTo(new IwcmFile(Tools.getRealPath(newPath)));</span>
+<span class="fc" id="L98">                result.put(&quot;result&quot;, renamed);</span>
+
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">                if (!renamed) {</span>
+<span class="nc" id="L101">                    result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.renamed_failed&quot;));</span>
+                    // Vraciam do povodneho adresaru aj DB entitu
+<span class="nc" id="L103">                    galleryDimension.setPath(originalPath);</span>
+<span class="nc" id="L104">                    repository.save(galleryDimension);</span>
+                }
+
+                //update all gallery items
+<span class="fc" id="L108">                new SimpleQuery().execute(&quot;UPDATE gallery SET image_path=? WHERE image_path=?&quot;, newPath, virtualPath);</span>
+
+<span class="fc" id="L110">                return;</span>
+<span class="nc" id="L111">            } catch (Exception e) {</span>
+<span class="nc" id="L112">                Logger.error(GalleryTreeRestController.class, e);</span>
+<span class="nc" id="L113">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L114">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GroupsTreeRestController.move.save_failed&quot;));</span>
+<span class="nc" id="L115">                return;</span>
             }
         }
 
-<span class="nc" id="L104">        result.put(&quot;result&quot;, true);</span>
-<span class="nc" id="L105">    }</span>
+<span class="nc" id="L119">        result.put(&quot;result&quot;, true);</span>
+<span class="nc" id="L120">    }</span>
 
     @Override
     protected void save(Map&lt;String, Object&gt; result, GalleryDimension item) {
-<span class="nc" id="L109">        String path = item.getPath();</span>
-<span class="nc" id="L110">        checkPathAccess(result, path);</span>
-<span class="nc bnc" id="L111" title="All 4 branches missed.">        if (result.containsKey(&quot;result&quot;) &amp;&amp; result.get(&quot;result&quot;).equals(false)) {</span>
-<span class="nc" id="L112">            return;</span>
+<span class="nc" id="L124">        String path = item.getPath();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        if (checkPathAccess(result, path)==false) {</span>
+<span class="nc" id="L126">            return;</span>
         }
 
-<span class="nc" id="L115">        galleryDimensionCreateUpdate(result, item);</span>
-<span class="nc" id="L116">    }</span>
+<span class="nc" id="L129">        galleryDimensionCreateUpdate(result, item);</span>
+<span class="nc" id="L130">    }</span>
 
     @Override
     protected void delete(Map&lt;String, Object&gt; result, GalleryDimension item) {
-<span class="nc" id="L120">        String virtualPath = item.getPath();</span>
-<span class="nc" id="L121">        checkPathAccess(result, virtualPath);</span>
-<span class="nc bnc" id="L122" title="All 4 branches missed.">        if (result.containsKey(&quot;result&quot;) &amp;&amp; result.get(&quot;result&quot;).equals(false)) {</span>
-<span class="nc" id="L123">            return;</span>
+<span class="nc" id="L134">        String virtualPath = item.getPath();</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        if (checkPathAccess(result, virtualPath)==false) {</span>
+<span class="nc" id="L136">            return;</span>
         }
 
-<span class="nc" id="L126">        Optional&lt;GalleryDimension&gt; firstByPath = repository.findFirstByPathAndDomainId(virtualPath, CloudToolsForCore.getDomainId());</span>
-<span class="nc" id="L127">        firstByPath.ifPresent(repository::delete);</span>
+<span class="nc" id="L139">        Optional&lt;GalleryDimension&gt; firstByPath = repository.findFirstByPathAndDomainId(virtualPath, CloudToolsForCore.getDomainId());</span>
+<span class="nc" id="L140">        firstByPath.ifPresent(repository::delete);</span>
 
-<span class="nc" id="L129">        IwcmFile iwcmFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">        if (iwcmFile.exists()) {</span>
-<span class="nc" id="L131">            boolean deleted = FileTools.deleteDirTree(iwcmFile);</span>
-<span class="nc bnc" id="L132" title="All 2 branches missed.">            if (deleted == false) {</span>
-<span class="nc" id="L133">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L134">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryRestController.directory_cannot_be_deleted&quot;, virtualPath));</span>
+<span class="nc" id="L142">        IwcmFile iwcmFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (iwcmFile.exists()) {</span>
+<span class="nc" id="L144">            boolean deleted = FileTools.deleteDirTree(iwcmFile);</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (deleted == false) {</span>
+<span class="nc" id="L146">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L147">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryRestController.directory_cannot_be_deleted&quot;, virtualPath));</span>
             }
-<span class="nc" id="L136">        }</span>
+<span class="nc" id="L149">        }</span>
         else {
-<span class="nc" id="L138">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L139">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryRestController.directory_not_found&quot;, virtualPath));</span>
+<span class="nc" id="L151">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L152">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryRestController.directory_not_found&quot;, virtualPath));</span>
         }
 
-<span class="nc bnc" id="L142" title="All 4 branches missed.">        if (result.containsKey(&quot;result&quot;) &amp;&amp; result.get(&quot;result&quot;).equals(false)) {</span>
-<span class="nc" id="L143">            return;</span>
+<span class="nc bnc" id="L155" title="All 4 branches missed.">        if (result.containsKey(&quot;result&quot;) &amp;&amp; result.get(&quot;result&quot;).equals(false)) {</span>
+<span class="nc" id="L156">            return;</span>
         }
 
-<span class="nc" id="L146">        result.put(&quot;result&quot;, true);</span>
-<span class="nc" id="L147">    }</span>
+<span class="nc" id="L159">        result.put(&quot;result&quot;, true);</span>
+<span class="nc" id="L160">    }</span>
 
-    private void checkPathAccess(Map&lt;String, Object&gt; map, String virtualPath) {
-<span class="nc bnc" id="L150" title="All 2 branches missed.">        if (!virtualPath.startsWith(&quot;/images&quot;)) {</span>
-<span class="nc" id="L151">            map.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L152">            map.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_id_not_in_images&quot;, virtualPath));</span>
+    private boolean checkPathAccess(Map&lt;String, Object&gt; map, String virtualPath) {
+<span class="pc bpc" id="L163" title="1 of 2 branches missed.">        if (!virtualPath.startsWith(&quot;/images&quot;)) {</span>
+<span class="nc" id="L164">            map.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L165">            map.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_id_not_in_images&quot;, virtualPath));</span>
+<span class="nc" id="L166">            return false;</span>
         }
-<span class="nc" id="L154">    }</span>
+<span class="fc" id="L168">        Identity user = getUser();</span>
+<span class="pc bpc" id="L169" title="1 of 4 branches missed.">        if (user == null || user.isFolderWritable(virtualPath) == false) {</span>
+<span class="fc" id="L170">            map.put(&quot;result&quot;, false);</span>
+<span class="fc" id="L171">            map.put(&quot;error&quot;, getProp().getText(&quot;components.gallery.folderIsNotEditable&quot;, virtualPath));</span>
+<span class="fc" id="L172">            return false;</span>
+        }
+<span class="fc" id="L174">        return true;</span>
+    }
 
     private void galleryDimensionCreateUpdate(Map&lt;String, Object&gt; result, GalleryDimension item) {
-<span class="nc" id="L157">        GalleryDimension galleryDimension = getGalleryDimension(item);</span>
+<span class="nc" id="L178">        GalleryDimension galleryDimension = getGalleryDimension(item);</span>
 
-<span class="nc" id="L159">        String directoryName = DB.internationalToEnglish(DocTools.removeChars(item.getName()));</span>
-<span class="nc bnc" id="L160" title="All 4 branches missed.">        if (item.getId() == null || item.getId() == 0) {</span>
-<span class="nc" id="L161">            String virtualPath = item.getPath() + &quot;/&quot; + directoryName;</span>
-<span class="nc" id="L162">            IwcmFile file = new IwcmFile(Tools.getRealPath(virtualPath));</span>
-<span class="nc bnc" id="L163" title="All 2 branches missed.">            if (file.exists()) {</span>
-<span class="nc" id="L164">                result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L165">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_already_exists&quot;, virtualPath));</span>
-<span class="nc" id="L166">                return;</span>
+<span class="nc" id="L180">        String directoryName = DB.internationalToEnglish(DocTools.removeChars(item.getName()));</span>
+<span class="nc bnc" id="L181" title="All 4 branches missed.">        if (item.getId() == null || item.getId() == 0) {</span>
+<span class="nc" id="L182">            String virtualPath = item.getPath() + &quot;/&quot; + directoryName; //NOSONAR</span>
+<span class="nc" id="L183">            IwcmFile file = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L184" title="All 2 branches missed.">            if (file.exists()) {</span>
+<span class="nc" id="L185">                result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L186">                result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_already_exists&quot;, virtualPath));</span>
+<span class="nc" id="L187">                return;</span>
             }
 
-<span class="nc" id="L169">            file.mkdirs();</span>
-<span class="nc" id="L170">            galleryDimension.setPath(file.getVirtualPath());</span>
-<span class="nc" id="L171">        }</span>
+<span class="nc" id="L190">            file.mkdirs();</span>
+<span class="nc" id="L191">            galleryDimension.setPath(file.getVirtualPath());</span>
+<span class="nc" id="L192">        }</span>
         else {
-<span class="nc" id="L173">            renameDirectory(result, item);</span>
+<span class="nc" id="L194">            renameDirectory(result, item);</span>
         }
 
-<span class="nc bnc" id="L176" title="All 4 branches missed.">        if (result.containsKey(&quot;result&quot;) &amp;&amp; result.get(&quot;result&quot;).equals(false)) {</span>
-<span class="nc" id="L177">            return;</span>
+<span class="nc bnc" id="L197" title="All 4 branches missed.">        if (result.containsKey(&quot;result&quot;) &amp;&amp; result.get(&quot;result&quot;).equals(false)) {</span>
+<span class="nc" id="L198">            return;</span>
         }
 
-<span class="nc" id="L180">        galleryDimensionSave(result, galleryDimension);</span>
-<span class="nc" id="L181">    }</span>
+<span class="nc" id="L201">        galleryDimensionSave(result, galleryDimension);</span>
+<span class="nc" id="L202">    }</span>
 
     private void renameDirectory(Map&lt;String, Object&gt; result, GalleryDimension item) {
-<span class="nc" id="L184">        String directoryName = DB.internationalToEnglish(DocTools.removeChars(item.getName()));</span>
-<span class="nc" id="L185">        IwcmFile file = new IwcmFile(Tools.getRealPath(item.getPath()));</span>
-<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (file.getName().equals(directoryName)) {</span>
-<span class="nc" id="L187">            return;</span>
+<span class="nc" id="L205">        String directoryName = DB.internationalToEnglish(DocTools.removeChars(item.getName()));</span>
+<span class="nc" id="L206">        IwcmFile file = new IwcmFile(Tools.getRealPath(item.getPath()));</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        if (file.getName().equals(directoryName)) {</span>
+<span class="nc" id="L208">            return;</span>
         }
 
-<span class="nc" id="L190">        String virtualPath = file.getParentFile().getVirtualPath() + &quot;/&quot; + directoryName;</span>
-<span class="nc" id="L191">        IwcmFile newFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
-<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (newFile.exists()) {</span>
-<span class="nc" id="L193">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L194">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_already_exists&quot;, virtualPath));</span>
-<span class="nc" id="L195">            return;</span>
+<span class="nc" id="L211">        String virtualPath = file.getParentFile().getVirtualPath() + &quot;/&quot; + directoryName; //NOSONAR</span>
+<span class="nc" id="L212">        IwcmFile newFile = new IwcmFile(Tools.getRealPath(virtualPath));</span>
+<span class="nc bnc" id="L213" title="All 2 branches missed.">        if (newFile.exists()) {</span>
+<span class="nc" id="L214">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L215">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.directory_already_exists&quot;, virtualPath));</span>
+<span class="nc" id="L216">            return;</span>
         }
 
-<span class="nc" id="L198">        boolean ok = file.renameTo(newFile);</span>
-<span class="nc bnc" id="L199" title="All 2 branches missed.">        if (!ok) {</span>
-<span class="nc" id="L200">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L201">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.cannot_rename_to&quot;, virtualPath));</span>
+<span class="nc" id="L219">        boolean ok = file.renameTo(newFile);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        if (!ok) {</span>
+<span class="nc" id="L221">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L222">            result.put(&quot;error&quot;, getProp().getText(&quot;java.GalleryTreeRestController.cannot_rename_to&quot;, virtualPath));</span>
         }
-<span class="nc" id="L203">    }</span>
+<span class="nc" id="L224">    }</span>
 
     private void galleryDimensionSave(Map&lt;String, Object&gt; result, GalleryDimension galleryDimension) {
         try {
-<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (galleryDimension.getId() == 0) {</span>
-<span class="nc" id="L208">                galleryDimension.setId(null);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">            if (galleryDimension.getId() == 0) {</span>
+<span class="nc" id="L229">                galleryDimension.setId(null);</span>
             }
-<span class="nc bnc" id="L210" title="All 2 branches missed.">            if (galleryDimension.getDate() == null) {</span>
-<span class="nc" id="L211">                galleryDimension.setDate(new Date());</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">            if (galleryDimension.getDate() == null) {</span>
+<span class="nc" id="L232">                galleryDimension.setDate(new Date());</span>
             }
-<span class="nc" id="L213">            repository.save(galleryDimension);</span>
-<span class="nc" id="L214">            result.put(&quot;result&quot;, true);</span>
+<span class="nc" id="L234">            repository.save(galleryDimension);</span>
+<span class="nc" id="L235">            result.put(&quot;result&quot;, true);</span>
         }
-<span class="nc" id="L216">        catch (Exception e) {</span>
-<span class="nc" id="L217">            Logger.error(GalleryTreeRestController.class, e);</span>
-<span class="nc" id="L218">            result.put(&quot;result&quot;, false);</span>
-<span class="nc" id="L219">            result.put(&quot;error&quot;, e.getMessage());</span>
-<span class="nc" id="L220">        }</span>
-<span class="nc" id="L221">    }</span>
+<span class="nc" id="L237">        catch (Exception e) {</span>
+<span class="nc" id="L238">            Logger.error(GalleryTreeRestController.class, e);</span>
+<span class="nc" id="L239">            result.put(&quot;result&quot;, false);</span>
+<span class="nc" id="L240">            result.put(&quot;error&quot;, e.getMessage());</span>
+<span class="nc" id="L241">        }</span>
+<span class="nc" id="L242">    }</span>
 
     private GalleryDimension getGalleryDimension(GalleryDimension item) {
-<span class="nc" id="L224">        Optional&lt;GalleryDimension&gt; galleryDimensionFromDB = getGalleryDimensionFromDB(item);</span>
-<span class="nc" id="L225">        GalleryDimension galleryDimension = galleryDimensionFromDB.orElseGet(GalleryDimension::new);</span>
+<span class="nc" id="L245">        Optional&lt;GalleryDimension&gt; galleryDimensionFromDB = getGalleryDimensionFromDB(item);</span>
+<span class="nc" id="L246">        GalleryDimension galleryDimension = galleryDimensionFromDB.orElseGet(GalleryDimension::new);</span>
 
-<span class="nc" id="L227">        NullAwareBeanUtils.copyProperties(item, galleryDimension);</span>
+<span class="nc" id="L248">        NullAwareBeanUtils.copyProperties(item, galleryDimension);</span>
 
-<span class="nc" id="L229">        return galleryDimension;</span>
+<span class="nc" id="L250">        return galleryDimension;</span>
     }
 
     private Optional&lt;GalleryDimension&gt; getGalleryDimensionFromDB(GalleryDimension item) {
-<span class="nc bnc" id="L233" title="All 4 branches missed.">        if (item.getId() != null &amp;&amp; item.getId() &gt; 0) {</span>
-<span class="nc" id="L234">            return repository.findById(item.getId());</span>
+<span class="nc bnc" id="L254" title="All 4 branches missed.">        if (item.getId() != null &amp;&amp; item.getId() &gt; 0) {</span>
+<span class="nc" id="L255">            return repository.findFirstByIdAndDomainId(item.getId(), CloudToolsForCore.getDomainId());</span>
         }
 
-<span class="nc bnc" id="L237" title="All 2 branches missed.">        if (Tools.isNotEmpty(item.getPath())) {</span>
-<span class="nc" id="L238">            return repository.findFirstByPathAndDomainId(item.getPath(), CloudToolsForCore.getDomainId());</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">        if (Tools.isNotEmpty(item.getPath())) {</span>
+<span class="nc" id="L259">            return repository.findFirstByPathAndDomainId(item.getPath(), CloudToolsForCore.getDomainId());</span>
         }
 
-<span class="nc" id="L241">        return Optional.empty();</span>
+<span class="nc" id="L262">        return Optional.empty();</span>
     }
 
     @Override
     public boolean checkAccessAllowed(HttpServletRequest request) {
-        //TODO: kontrola prav
-<span class="fc" id="L247">        return true;</span>
+<span class="fc" id="L267">        return true;</span>
     }
 }
-</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

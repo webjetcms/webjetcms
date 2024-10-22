@@ -51,6 +51,7 @@ The application parameters tab is where you set the basic behaviour of the appli
 - The annotation (perex) does not have to be filled in - by default, only news items that have the annotation (perex) filled in will be displayed, if you tick this box, the news items that do not have the annotation (perex) filled in will be loaded as well.
 - Load with page text (less optimal) - by default the page text is not loaded from the database, if you need it for display, check this box. However, loading will be slower and more demanding on database and server performance.
 - Duplication check - if a page contains multiple news applications in one page, the list of already displayed news is recorded. The already existing ones are excluded from the list. However, the number of displayed records may not be matched afterwards, but at the same time it does not happen that the same news item is displayed multiple times on one page.
+- Exclude main folder pages - if selected, the main folder pages are excluded (for Include subdirectories). Subfolders are assumed to contain the main page with the list of news items in that folder. Such pages are excluded and are not used in the news list.
 - Insert classes into `Velocity` templates - a special field for the programmer to define a Java class (program) that can then be used in a template. If you don't have exact instructions what to put in this field leave it empty.
 - Buffer time (minutes) - the number of minutes the news list is remembered. Loading the news list can be demanding on the database performance, we recommend to set the buffer time to at least 10 minutes. This will speed up the page display (especially if the news list is on the home page, for example).
 
@@ -71,7 +72,6 @@ Save the preview image for the template to `/components/news/images/MENO-SABLONY
 Some examples of working with advanced objects:
 
 ```velocity
-
 //nastavenie premennej podla pageParams objektu:
 #set ($anonymousQuestions = $pageParams.getBooleanValue("anonymousQuestions", false))
 
@@ -94,7 +94,7 @@ Some examples of working with advanced objects:
 //nacitanie medii a vypis
 #foreach($media in $MediaDB.getMedia($doc, "files"))
     #set ($fileType = $media.mediaLink.split("[.]"))
-    #if($fileType[1].equals('jpg') || $fileType[1].equals('png') || $fileType[1].equals('gif')) <a rel='wjimageviewer' href="$media.mediaLink" > <img  src="$media.mediaLink " alt="" class="media-img myModalImg" style="height: 100%;" /></a> #end
+    #if($fileType[1].equals('jpg') || $fileType[1].equals('png') || $fileType[1].equals('gif')) <a rel='wjimageviewer' href="$media.mediaLink"  > <img  src="$media.mediaLink " alt="" class="media-img myModalImg" style="height: 100%;" /></a> #end
 #end
 
 //nacitanie medii a vypis
@@ -110,7 +110,7 @@ Some examples of working with advanced objects:
 #set($showComment = 3)
 #set($e = $commentCount - $showComment)
 #foreach($forum in $forumDb)
-    <div class="comment" #if($foreach.count> $e)style="display:block;"#end>
+    <div class="comment" #if($foreach.count > $e)style="display:block;"#end>
     <div class="comment-header"> <img src="/thumb$forum.getAuthorPhoto('/templates/intranet/assets/images/css/avatar.png')?w=35&h=35&ip=5" class="mr-3" alt="Fotka používateľa $forum.autorFullName"/>$forum.autorFullName <span>$forum.questionDateDisplayDate $forum.questionDateDisplayTime</span> </div>
     <p>$forum.question</p>
 </div>
@@ -125,6 +125,19 @@ Some examples of working with advanced objects:
 $pagesAll
 //celkovy pocet stran strankovania, napr 23, da sa ziskat aj z $lastPage.pageNumber
 $totalPages
+
+//podmienene zobrazenie ak je zadany perex obrazok
+#if ($doc.perexImage!="")<a href="$context.link($doc)"><img src="/thumb$doc.perexImage?w=400&h=300&ip=6" class="img-responsive img-fluid" alt="$doc.title"></a>#end
+```
+
+If you need to display the date when the web page was first saved, set the conf. variable `editorAutoFillPublishStart` to the value of `true`. Once set, the editor will automatically fill the Start Date field in the Perex tab of the editor with the current date. This date can also be changed manually if necessary. You can then use the following objects in the template:
+
+```velocity
+//datum a cas posledneho ulozenia
+$doc.lastUpdateDate $doc.lastUpdateTime
+
+//datum a cas vytvorenia
+$doc.publishStartString
 ```
 
 ## Perex Group
@@ -148,6 +161,36 @@ In the filter tab, you can define advanced options for displaying news according
 The News tab displays a list of news items that are loaded according to the selected directories from the Application Parameters tab. You can see the list of news items and you can easily edit existing news items (edit the title, photo, or text of the news item). You can also create a new news item.
 
 ![](editor-dialog-newslist.png)
+
+# Search
+
+The application also supports dynamic search/filtering of news directly on the web page using URL parameters. You can add filtering of the displayed news in the web page according to the visitor's wishes (e.g. by category, dates, etc.). The search/filtering is entered in the URL parameters in the format:
+
+```
+search[fieldName_searchType]=value
+search[title_co]=test
+```
+
+where the searchType value can have the following options:
+- `eq` - exact match
+- `gt` - more than
+- `ge` - more than including
+- `le` - less than including
+- `lt` - less than
+- `sw` - starting at
+- `ew` - ends at
+- `co` - contains
+- `swciai` - starts at whatever case and diacritics
+- `ewciai` - ending in case-insensitive and diacritical
+- `cociai` - contains case-insensitive letters and diacritics
+
+When specifying URL parameters, there may be a problem with rejecting the value `[]` and displaying the error `400 - Bad Request`, in which case use the replacement `[=%5B, ]=%5D`, an example of a call:
+
+```
+/zo-sveta-financii/?search%5Btitle_co%5D=konsolidacia
+```
+
+URL parameter search can occur multiple times, for multiple parameters the connection is used `AND`.
 
 # Possible configuration variables
 

@@ -9,11 +9,22 @@ Scenario('calendar-admin editor', ({ I, DTE, Document }) => {
     I.amOnPage("/apps/calendar/admin/");
     Document.screenshot("/redactor/apps/calendar/calendar-datatable.png");
 
-    if("sk" === I.getConfLng()) {
-        I.amOnPage("/apps/calendar/admin/?id=1");
-    } else if("en" === I.getConfLng()) {
-        I.amOnPage("/apps/calendar/admin/?id=986");
+    const confLng = I.getConfLng();
+
+    switch (confLng) {
+        case 'sk':
+            I.amOnPage("/apps/calendar/admin/?id=1");
+            break;
+        case 'en':
+            I.amOnPage("/apps/calendar/admin/?id=986");
+            break;
+        case 'cs':
+            I.amOnPage("/apps/calendar/admin/?id=1588");
+            break;
+        default:
+            throw new Error(`Unsupported language code: ${confLng}`);
     }
+    
     DTE.waitForEditor("calendarEventsDataTable");
 
     //basic tab
