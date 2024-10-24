@@ -24,10 +24,10 @@ import sk.iway.iwcm.stat.StatNewDB;
  *@created      Date: 6.8.2012 14:18:45
  *@modified     $Date: 2004/08/16 06:26:11 $
  */
-public class StatNewDBTest
+class StatNewDBTest
 {
 	@Test
-	public void testTableExists()
+	void testTableExists()
 	{
 		boolean mycheck =false;
 		Calendar now = Calendar.getInstance();
@@ -40,10 +40,9 @@ public class StatNewDBTest
 			{
 				db_conn = DBPool.getConnection();
 
-				String sql = "SELECT * from ?";
+				String sql = "SELECT * FROM " + tablename;
 
 				ps = db_conn.prepareStatement(sql);
-				ps.setString(1, tablename);
 
 				rs = ps.executeQuery();
 				mycheck = true;
@@ -58,6 +57,7 @@ public class StatNewDBTest
 			{
 
 				String errorMessage = ex.getMessage();
+				System.out.println("errorMessage: "+errorMessage);
 				if (errorMessage.contains("Invalid object name") || errorMessage.contains("doesn't exist") || errorMessage.contains("not exist") || errorMessage.contains("ORA-00942"))
 				{
 					mycheck = false;

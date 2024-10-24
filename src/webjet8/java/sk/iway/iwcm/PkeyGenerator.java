@@ -295,6 +295,8 @@ public class PkeyGenerator
 		}
 		catch (Exception ex)
 		{
+			String message = ex.getMessage();
+			if (message.contains("doesn't exist")) throw new RuntimeException("Table pkey_generator doesn't exist, please create it.");
 			sk.iway.iwcm.Logger.error(ex);
 		}
 		finally

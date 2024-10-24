@@ -20,6 +20,22 @@ jobs:
     permissions:
       contents: read
 
+    services:
+      mariadb:
+        image: mariadb:latest
+        ports:
+          - 33006:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: webjetcms_web
+        options: >-
+          --health-cmd="healthcheck.sh --connect"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+        volumes:
+          - .github/workflows/blank_web_autotest.sql:/docker-entrypoint-initdb.d/blank_web_autotest.sql
+
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -34,7 +50,8 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
     - name: Build with Gradle Wrapper
-      run: ./gradlew build
+      run: |
+        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew build --info
 
   dependency-submission:
 
