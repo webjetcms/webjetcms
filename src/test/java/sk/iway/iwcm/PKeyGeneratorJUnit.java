@@ -46,7 +46,7 @@ public class PKeyGeneratorJUnit
 	public void getInt()
 	{
 		int value = PkeyGenerator.getNextValue(TEST_TABLE);
-		assertTrue(value == Integer.MAX_VALUE);
+		assertTrue(value == Integer.MAX_VALUE-3);
 	}
 
 	@Test

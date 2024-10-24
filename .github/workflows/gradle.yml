@@ -56,7 +56,7 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: |
-        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew build --info
+        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
   dependency-submission:
 
