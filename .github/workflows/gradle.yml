@@ -34,7 +34,7 @@ jobs:
           --health-timeout=5s
           --health-retries=10
         volumes:
-          - .github/workflows/blank_web_autotest.sql:/docker-entrypoint-initdb.d/blank_web_autotest.sql
+          - ${GITHUB_WORKSPACE}.github/workflows/blank_web_autotest.sql:/docker-entrypoint-initdb.d/blank_web_autotest.sql
 
     steps:
     - uses: actions/checkout@v4
