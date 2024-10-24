@@ -33,8 +33,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=10
-        volumes:
-          - ${GITHUB_WORKSPACE}.github/workflows/blank_web_autotest.sql:/docker-entrypoint-initdb.d/blank_web_autotest.sql
 
     steps:
     - uses: actions/checkout@v4
@@ -43,6 +41,13 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+
+    - name: Install MariaDB Client
+      run: sudo apt-get update && sudo apt-get install -y mariadb-client
+
+    - name: Import SQL file
+      run: |
+        mariadb -h 127.0.0.1 -P 33006 -u root -proot_password webjetcms_web < .github/workflows/blank_web_autotest.sql
 
     # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
     # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
