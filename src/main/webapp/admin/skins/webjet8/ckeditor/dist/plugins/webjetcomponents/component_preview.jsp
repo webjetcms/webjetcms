@@ -34,6 +34,8 @@ else {
 		lng = groupDetails.getLng();
 	}
 }
+//set language also to Spring Locale object
+PageLng.setUserLng(request, response, lng);
 
 pageContext.setAttribute("lng", lng);
 request.setAttribute("PageLng", lng);

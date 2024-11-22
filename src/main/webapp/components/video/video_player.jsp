@@ -96,7 +96,7 @@ if (file.indexOf("youtube.com") != -1 || file.indexOf("youtu.be") != -1)
 		iframeVersion += "<div class=\"embed-responsive embed-responsive-16by9 ratio ratio-16x9 video_align-"+align+" clearfix videoPlaceholder"+ videoCounter +" \" >";
 	}
 	if(fullscreen > 0)  allowFullscreen = "allowfullscreen";
-	iframeVersion += "<iframe class=\"embed-responsive-item\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" width=\""+ width +"\" height=\""+ height +"\" src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+"></iframe>";
+	iframeVersion += "<iframe class=\"embed-responsive-item\" id=\"videoPlaceholder"+ videoCounter +"\" type=\"text/html\" width=\""+ width +"\" height=\""+ height +"\" src=\"//www.youtube.com/embed/"+ file +"?enablejsapi=1&showinfo="+showinfo+"&autoplay="+autoplay+"&modestbranding="+branding+"&controls="+controls+"&rel="+rel+"&origin=" + Tools.getBaseHref(request) + "\" frameborder=\"0\" "+allowFullscreen+" referrerpolicy=\"strict-origin-when-cross-origin\"></iframe>";
 
 	if(percentageWidth >0) {
 		iframeVersion += "</div>";

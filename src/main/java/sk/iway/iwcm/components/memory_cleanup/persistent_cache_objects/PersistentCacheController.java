@@ -7,6 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.system.cache.PersistentCacheBean;
+import sk.iway.iwcm.system.cache.PersistentCacheDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
@@ -35,5 +36,10 @@ public class PersistentCacheController extends DatatableRestControllerV2<Persist
             return persistentCacheService.refreshPersistentCaches(entity);
         }
         return false;
+    }
+
+    @Override
+    public void beforeSave(PersistentCacheBean entity) {
+        entity.setDataType(PersistentCacheDB.TYPE_URLDOWNLOAD);
     }
 }

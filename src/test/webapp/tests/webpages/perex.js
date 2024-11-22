@@ -21,6 +21,22 @@ Scenario('perex-zakladne testy', async ({I, DataTables }) => {
     });
 });
 
+Scenario('verify all domains selection for available groups', ({I, DT, DTE}) => {
+    I.amOnPage("/admin/v9/webpages/perex/");
+    I.see("demotest.webjetcms.sk:/Newsletter", "#perexDataTable td.dt-style-json");
+    DT.filter("perexGroupName", "PerexWithGroup_");
+    I.see("demotest.webjetcms.sk:/Newsletter", "#perexDataTable td.dt-style-json");
+    I.dontSee("/Test stavov/Zaheslovaný", "#perexDataTable td.dt-style-json");
+    I.click("PerexWithGroup_B");
+    DTE.waitForEditor("perexDataTable");
+    I.click("button.btn-vue-jstree-add");
+    I.waitForElement("#jsTree");
+    I.waitForText("demotest.webjetcms.sk", 5, "#jsTree a.jstree-anchor");
+    I.waitForText("mirroring.tau27.iway.sk", 5, "#jsTree a.jstree-anchor");
+    I.click("a.close-custom-modal");
+    DTE.cancel();
+});
+
 Scenario('overenie filtrovania perex skupin podla adresara', ({I, DTE}) => {
     var editorContainer = "#datatableInit_modal .DTE_Field_Name_perexGroups";
 
@@ -79,7 +95,7 @@ Scenario('overenie nastavenia perex skupiny web stranky', ({I, DTE}) => {
     I.dontSeeElement("#DTE_Field_perexGroups_3:checked");
 });
 
-Scenario('overenie filtrovania perexov podla prava', ({I, DT}) => { 
+Scenario('overenie filtrovania perexov podla prava', ({I, DT}) => {
     I.relogin("tester_perex");
     I.amOnPage("/admin/v9/webpages/perex/");
 

@@ -2185,19 +2185,26 @@ export const dataTableInit = options => {
                     columnText: function ( dt, idx, title ) {
                         //console.log("columnText, dt=", dt, "idx=", idx, "title=", title, "columns=", DATA.columns);
                         let columnText = title;
+
+                        //find original index in DATA.columns
+                        let dataIdx = idx;
+                        for (let i = 0; i < DATA.columns.length; i++) {
+                            if (DATA.columns[i].data == dt.column(idx).dataSrc()) {
+                                dataIdx = i;
+                                break;
+                            }
+                        }
+
                         try {
-                            //zober aktualny title
-                            columnText = DATA.columns[idx].title;
+                            //zober aktualny title namiesto fieldA...
+                            //columnText = title+"-"+DATA.columns[dataIdx].title+"-"+dataIdx+"-"+idx;
+                            columnText = DATA.columns[dataIdx].title;
                             //console.log("columnText=", columnText, "data=", DATA.columns[idx]);
                         } catch (e) {}
 
-                        let tab = DATA.columns[idx]?.editor?.tab;
+                        let tab = DATA.columns[dataIdx]?.editor?.tab;
                         //console.log("tab=", tab);
 
-                        if (idx == 0) {
-                            window.colvisLastTab = "";
-                            window.colvisLastHeadline = "";
-                        }
                         let tabTitle = "";
                         if (typeof tab != "undefined") {
                             //ziskaj meno tabu
@@ -2209,33 +2216,30 @@ export const dataTableInit = options => {
                                 }
                             }
                         }
-                        if (window.colvisLastTab != tabTitle) {
-                            //ked sa zmeni tab resetni lastHeadline
-                            window.colvisLastTab = tabTitle;
-                            window.colvisLastHeadline = "";
-                        }
 
-                        //nadpis
                         let headline = "";
-                        if (DATA.columns[idx]?.editor?.attr) headline =  DATA.columns[idx].editor.attr["data-dt-field-headline"];
+
+                        //search backward, find headline on current tab
+                        for (let i = dataIdx; i >= 0; i--) {
+                            if (tab == DATA.columns[i]?.editor?.tab && DATA.columns[i]?.editor?.attr) headline =  DATA.columns[i].editor.attr["data-dt-field-headline"];
+                            if (typeof headline != "undefined" && headline != null && headline!="") break;
+                        }
                         //console.log("headline=", headline);
                         if (typeof headline == "undefined") headline = "";
                         if (tabTitle == headline) headline = "";
                         if (columnText == headline) headline = "";
-                        if (headline != "") window.colvisLastHeadline = headline;
 
                         //tooltip
                         let tooltipHtml = "";
                         let tooltipText = "";
-                        if (DATA.columns[idx]?.editor?.message) tooltipText =  DATA.columns[idx].editor.message;
+                        if (DATA.columns[dataIdx]?.editor?.message) tooltipText =  DATA.columns[dataIdx].editor.message;
                         if (typeof tooltipText != "undefined" && tooltipText != "") {
                             tooltipHtml = `<span class="btn btn-link btn-tooltip" data-toggle="tooltip" title="${tooltipText}"><i class="far fa-info-circle"></i></span>`;
                         }
 
-                        let colvisLastHeadline = window.colvisLastHeadline;
-                        if (colvisLastHeadline != "") colvisLastHeadline = colvisLastHeadline + "&nbsp;";
+                        if (headline != "") headline = headline + "&nbsp;";
 
-                        columnText = `<span class="tab-title">${tabTitle}</span><span class="tab-columntext"><span class="tab-headline">${colvisLastHeadline}</span><span class="column-title">${columnText}</span></span><span class="btn-tooltip">${tooltipHtml}</span>`;
+                        columnText = `<span class="tab-title">${tabTitle}</span><span class="tab-columntext"><span class="tab-headline">${headline}</span><span class="column-title">${columnText}</span></span><span class="btn-tooltip">${tooltipHtml}</span>`;
 
                         return columnText;
                     },

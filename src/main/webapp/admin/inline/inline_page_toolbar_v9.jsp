@@ -289,6 +289,16 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
         initializePageBuilder();
 
+        document.addEventListener("keydown", function(e) {
+            //zachytenie CTRL+S/CMD+S pre ulozenie stranky
+            if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.key === 's') {
+                e.preventDefault();
+                //console.log("Dispatching WJ.DTE.save");
+                try {
+                    window.parent.WJ.dispatchEvent("WJ.DTE.save", {});
+                } catch (ex) {}
+            }
+        }, false);
     });
 
     window.editorStyles = <%=JsonTools.objectToJSON(sk.iway.iwcm.editor.service.EditorService.getCssListJson(doc))%>;

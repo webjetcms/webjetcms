@@ -372,3 +372,42 @@ Scenario("BUG - filter by URL and imageName", async ({ I }) => {
     const numVisible = await I.grabNumberOfVisibleElements(locate("#galleryTable td.dt-row-edit").withText("chrysanthemum.jpg"));
     I.assertEqual(numVisible, 1);
 });
+
+Scenario('BUG - buttons-create disabled #56393-17', async ({ I, DTE }) => {
+    I.relogin("jtester");
+    I.amOnPage("/admin/v9/apps/gallery/");
+    I.waitForElement(".tree-col .dt-buttons button.buttons-create.disabled");
+
+    I.jstreeClick("test");
+    I.waitForElement(".tree-col .dt-buttons button.buttons-create:not(.disabled)");
+
+    I.click(".tree-col button.buttons-create");
+    DTE.waitForEditor("galleryDimensionDatatable");
+    I.seeInField("#DTE_Field_path", "/images/gallery/test");
+    DTE.cancel();
+});
+
+Scenario('logout', ({ I }) => {
+    I.logout();
+});
+
+Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, DT, DTE }) => {
+    var nameOfImage = 'koala.jpg';
+    I.amOnPage("/admin/v9/apps/gallery");
+    DT.waitForLoader();
+    I.jstreeClick("test");
+
+    // otvor ten isty obrazok a bez uprav zatvor editor
+    I.say('Otvor ten isty obrazok a bez uprav zatvor editor');
+    I.seeAndClick(nameOfImage);
+    I.waitForVisible('.DTE_Header.modal-header', 15);
+    I.waitForVisible('#pills-dt-galleryTable-photoeditor-tab', 5);
+    I.click('#pills-dt-galleryTable-photoeditor-tab');
+    I.waitForVisible('#photoEditorContainer', 10);
+    DTE.save();
+
+    // po ulozeni over ci sa modalne okno s uploadom suboru nezobrazilo
+    I.say('Po ulozeni over ci sa modalne okno s uploadom suboru nezobrazilo');
+    I.dontSeeElement('#upload-wrapper');
+    I.dontSeeElement(locate('#toast-container-upload').withText(nameOfImage));
+});

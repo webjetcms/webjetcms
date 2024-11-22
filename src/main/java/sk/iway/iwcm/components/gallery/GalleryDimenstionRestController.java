@@ -124,8 +124,20 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
         if (entity.getEditorFields().isForceResizeModeToSubgroups()) {
             GalleryDB.updateDirectoryDimToSubfolders(entity.getPath());
         }
-        if (entity.getEditorFields().isRegenerateImages()) {
-            GalleryDB.resizePicturesInDirectory(entity.getPath(), entity.getEditorFields().isForceResizeModeToSubgroups(), getProp(), null);
+
+        if (entity.getEditorFields().isForceWatermarkToSubgroups()) {
+            List<GalleryDimension> subfolders = repository.findByPathLikeAndDomainId(entity.getPath()+"/%", CloudToolsForCore.getDomainId());
+            for (GalleryDimension subfolder : subfolders) {
+                subfolder.setWatermark(entity.getWatermark());
+                subfolder.setWatermarkPlacement(entity.getWatermarkPlacement());
+                subfolder.setWatermarkSaturation(entity.getWatermarkSaturation());
+                repository.save(subfolder);
+            }
+        }
+
+        if (entity.getEditorFields().isRegenerateImages() || entity.getEditorFields().isRegenerateWatermark()) {
+            boolean recursive = entity.getEditorFields().isForceResizeModeToSubgroups() || entity.getEditorFields().isForceWatermarkToSubgroups();
+            GalleryDB.resizePicturesInDirectory(entity.getPath(), recursive, getProp(), null);
         }
 
         return saved;
@@ -143,14 +155,15 @@ public class GalleryDimenstionRestController extends DatatableRestControllerV2<G
 
             //If dimension id is not present, set default path from path parameter
             String parentPath = getRequest().getParameter("path");
-            if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = "/images"; //NOSONAR
+            if (Tools.isEmpty(parentPath) || FileBrowserTools.hasForbiddenSymbol(parentPath)) parentPath = "/images/gallery"; //NOSONAR
 
             String forcePath = null;
 
             //If dimension id is present it's parent ID, copy properties
             GalleryDimension parentGallery = null;
             if(dimensionId != -1) {
-                parentGallery = repository.getById(Long.valueOf(dimensionId));
+                parentGallery = super.getOneItem(dimensionId);
+                if (parentGallery == null) parentPath = "/images/gallery"; //NOSONAR
             } else {
                 //find settings by parentPath recursivelly from repository, so search for /images/gallery/path/subfolder, then /images/gallery/path etc until root
                 String[] pathParts = parentPath.split("/");

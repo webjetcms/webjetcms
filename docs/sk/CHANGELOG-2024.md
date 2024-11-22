@@ -25,6 +25,34 @@ WebJET CMS verzie 2024 prešiel na Java verzie 17. Obsahuje nasledovné zmeny:
 
 ### Oprava chýb
 
+2024.0.X
+
+- Datatabuľky - opravené zobrazené meno stĺpca pri nastavení zobrazenia stĺpcov ak je upravené ich poradie (#56393-14).
+- Export do HTML - opravená kontrola práv, opravené zobrazenie generovaných súborov v priečinku `/html` (#57141).
+- Persistent cache objekty - opravené uloženie záznamu - nastavenie správneho typu (#56393-15).
+- Úlohy na pozadí - opravený reštart úloh na pozadí po zmazaní úlohy (#56393-14).
+- Web stránky - opravené uloženie web stránok, ktorých názov je jedno písmenový `N,B,S,P` (#56393-15).
+- Web stránky - Page Builder - zlepšená klávesová skratka `CTRL/CMD+S` pre uloženie stránky bez zatvorenia editora, je aktívna aj mimo zelených častí s editorom.
+- Zálohovanie systému - opravená kontrola práv (#57141).
+- Značky - upravené zobrazenie priečinkov a ich výber tak, aby bolo možné voliť značku zo všetkých domén (#56393-15).
+- `DatatableRestControllerV2` presunuté volanie `afterDelete` mimo metódy `deleteItem` aby pri preťažení tejto metódy bolo `afterDelete` korektne zavolané.
+- Formuláre - opravené nastavenie jazyka pri presmerovaní formuláru na stránku, ktorá obsahuje `Spring` aplikáciu (#56393-15).
+- Web stránky - Editor - opravené nastavenie jazyka v náhľade vloženej `Spring` aplikácie (#56393-15).
+- Audit - Notifikácie - opravené uloženie novej notifikácie pri použití MicroSoft SQL databázy, doplnené zmazanie cache zoznamu notifikácií pri úprave záznamu (#57225).
+- Galéria - opravené zobrazenie možnosti pridania priečinku ak má používateľ obmedzené práva na priečinky (#56393-17).
+- Galéria - pridaná možnosť nastavenia vodoznaku rekurzívne aj na pod adresáre a pre generovanie obrázkov po zmene vodoznaku (#MR181).
+- Galéria - vytvorená dokumentácia pre [nastavenie vodoznaku](redactor/apps/gallery/watermark.md) v galérii (#MR181).
+- Galéria - opravená kontrola práv na presun priečinka pomocou Drag&Drop (#MR11).
+- Galéria - opravená chyba zobrazenia obrázkov pri presune priečinka pomocou Drag&Drop (#MR11).
+- Monitorovanie - doplnené monitorovanie `Spring` aplikácií (#67357).
+- Automatizované úlohy - opravené stránkovanie a zobrazenie viac ako 25 úloh (#56393-18).
+- Aplikácie - pre Spring aplikácie používajúce výber priečinka `dt-tree-dir-simple` pridaná možnosť priamo zadať hodnotu z klávesnice (#56393-18).
+- Web stránky - opravené vloženie odkazu na stránku, ktorá v URL adrese/parametri obsahuje znak `:` (#56393-18).
+- Web stránky - opravené vkladanie `FontAwesome` ikon. Ak vaša šablóna používa `FontAwesome` nastavte konfiguračnú premennú `editorEnableFontAwesome` na `true` pre zobrazenie možnosti vkladať ikony v editore (#56393-18).
+- Formuláre - opravený regulárny výraz pre kontrolu email adresy typu `email@domena,com` (#56393-18).
+- Video - upravené nastavenie `referrerpolicy` pre YouTube videá, ktoré spôsobovalo, že niektoré videá sa nedajú prehrávať (#56393-18).
+- Aktualizované Java knižnice, doplnené výnimky pre `DependencyCheck` (#56393-18).
+
 2024.0.34
 
 - Audit - opravené zobrazenie opisu auditu v prehliadači Firefox.
@@ -43,7 +71,7 @@ WebJET CMS verzie 2024 prešiel na Java verzie 17. Obsahuje nasledovné zmeny:
 - Galéria - opravené nastavenie parametrov priečinka galérie ak rodičovský priečinok nemá uložené nastavenia (je biely). Hľadá sa uložené nastavenie priečinka smerom ku koreňu (#56393-10).
 - Galéria/Editor obrázkov - doplnená chýbajúca funkcia na zmenu veľkosti obrázka.
 - Hromadný email - opravená chyba vloženia príjemcu zo skupiny používateľov, ktorý nemá povolené prihlásenie (je deaktivovaný, alebo nemá platné dátumy prihlásenia od-do) (#56701).
-- Klonovanie štruktúry - opravené nastavenie prepojenia priečinkov pri klonovaní (mohlo dochádzať k neúplnému naklonovaniu priečinkov) (#56277-7).
+- Klonovanie štruktúry - opravené nastavenie prepojenia priečinkov pri klonovaní (mohlo dochádzať k neúplnému klonovaniu priečinkov) (#56277-7).
 - Mapa stránok - opravené generovanie súboru `/sitemap.xml` podľa nastavených atribútov zobrazenia web stránky v Mape stránok (karta Navigácia web stránky) (#56993).
 - Prekladové kľúče - upravené zobrazenie aby sa zobrazil v tabuľke prípadný HTML kód hodnoty kľúča (#56993).
 - Skripty, Bannerový systém, Skupiny práv - opravená funkcia duplikovať záznam (#56849).
@@ -73,7 +101,7 @@ UPOZORNENIE: upravené čítanie a ukladanie hesiel používateľov, po nasaden�
 - Klonovanie štruktúry - pri klonovaní priečinka doplnené kopírovanie všetkých atribútov pôvodného priečinka (html kód do hlavičky, meno inštalácie, prístupové práva, zobrazenie v mape stránok a navigačnej lište) (#56633).
 - Plno textové vyhľadávanie - doplnená kontrola nastavenia zaškrtávacieho poľa Indexovať súbory pre vyhľadávanie v nastavení priečinka. Ak pole nie je zaškrtnuté, súbory v priečinku sa nebudú indexovať. Pôvodná verzia kontrolovala len existenciu priečinka `/files` v karte System vo web stránkach (#56277-6).
 - Používatelia - opravené uloženie hesla bez šifrovania pri použití API `UsersDB.getUser/UsersDB.saveUser` pri prechode cez GUI. Predpokladalo sa, že heslá budú pri API volaní vopred zašifrované, čo sa neudialo. Kód doplnený o detekciu `hash`, pri čítaní z databázy sa heslá, salt a API kľúč nečíta a nastaví sa hodnota "Heslo nezmenené". Pri zmene hesla dôjde k odhláseniu ostatných relácií toho istého používateľa. (#56277-6).
-- Vyhľadávanie - vylúčené indexovanie súborov z priečinka začínajúce na `/files/protected/`, pre `Lucene` vyhľadávanie doplnená kontrola na túto cestu, odkaz nebude do vyhľadania zaradený (štadardné databázové vyhľadávanie podmienku už obsahovalo) (#56277-6).
+- Vyhľadávanie - vylúčené indexovanie súborov z priečinka začínajúce na `/files/protected/`, pre `Lucene` vyhľadávanie doplnená kontrola na túto cestu, odkaz nebude do vyhľadania zaradený (štandardné databázové vyhľadávanie podmienku už obsahovalo) (#56277-6).
 - Zrkadlenie štruktúry/Klonovanie - doplnené kopírovanie voľných polí priečinka (#56637).
 - Web stránky - upravené načítanie stránok z podadresárov - filtrovaný je zoznam stránok plno textového vyhľadávania, ak sa nachádza v hlavnom priečinku domény (#56277-6).
 

@@ -12,7 +12,6 @@ plugins {
     id 'war'
     id 'org.gretty' version "3.1.1"
     id "com.jfrog.artifactory" version "4.26.1"
-    id 'idea'
     //https://docs.freefair.io/gradle-plugins/current/reference/ + https://projectlombok.org
     id "io.freefair.lombok" version "8.0.1"
     id "org.owasp.dependencycheck" version "8.2.1"
@@ -98,11 +97,11 @@ dependencies {
     implementation("commons-beanutils:commons-beanutils:1.9.4")
     implementation("commons-chain:commons-chain:1.2")
     implementation("org.apache.commons:commons-collections4:4.4")
-    implementation("org.apache.commons:commons-compress:1.21")
+    implementation("org.apache.commons:commons-compress:1.26.1")
     implementation("commons-dbcp:commons-dbcp:1.4")
     implementation("commons-digester:commons-digester:2.0")
     implementation("commons-fileupload:commons-fileupload:1.+")
-    implementation("commons-io:commons-io:2.11.0")
+    implementation("commons-io:commons-io:2.18.0")
     implementation("commons-lang:commons-lang:2.6")
     implementation("org.apache.commons:commons-lang3:3.12.0")
     implementation("org.apache.directory.studio:org.apache.commons.pool:1.6")
@@ -205,7 +204,7 @@ dependencies {
     annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
 
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
-    implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20220608.1'
+    implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20240325.1'
 
     //Java 11/17 - JAXB-API - do not update to v3, packages changed from javax.xml.bind to jakarta.xml.bind
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.3'
@@ -218,6 +217,19 @@ dependencies {
     testImplementation 'org.hamcrest:hamcrest:2.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
+
+    //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
+    // used in io.springfox:springfox-swagger2
+    // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
+    implementation 'io.github.classgraph:classgraph:4.8.177'
+
+    // used in com.google.crypto.tink:tink
+    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+    implementation 'com.google.protobuf:protobuf-java:3.25.5'
+
+    // used in velocity-tools-generic
+    // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
+    implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 }
 
 configurations {

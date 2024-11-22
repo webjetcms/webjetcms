@@ -7,6 +7,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.system.adminlog.AdminlogNotifyManager;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -33,6 +35,33 @@ public class AuditNotifyRestController extends DatatableRestControllerV2<AuditNo
 		pages.addOptions("adminlogType", auditService.getTypes(getRequest()), "label", "value", false);
 
 		return pages;
+	}
+
+	@Override
+	public boolean beforeDelete(AuditNotifyEntity entity) {
+		beforeSave(entity);
+		return true;
+	}
+
+	@Override
+	public void beforeSave(AuditNotifyEntity entity) {
+		//we better refresh the cache because of deadlock in MS SQL
+		AdminlogNotifyManager.getNotifyEmails(Adminlog.TYPE_ADMINLOG_NOTIFY);
+	}
+
+	@Override
+	public void afterDelete(AuditNotifyEntity entity, long id) {
+		afterSave(entity, null);
+	}
+
+	@Override
+	public void afterDuplicate(AuditNotifyEntity entity, Long originalId) {
+		afterSave(entity, null);
+	}
+
+	@Override
+	public void afterSave(AuditNotifyEntity entity, AuditNotifyEntity saved) {
+		AdminlogNotifyManager.clearCache();
 	}
 
 }

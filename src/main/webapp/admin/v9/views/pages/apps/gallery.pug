@@ -429,12 +429,14 @@ block content
                         window.lastGalleryDimension = galleryDimension;
 
                         if (isEditable===true) {
+                            $('.tree-col .dt-header-row .buttons-create').removeClass("disabled");
                             $('.tree-col .dt-header-row .buttons-edit').removeClass("disabled");
                             $('.tree-col .dt-header-row .buttons-remove').removeClass("disabled");
                             $('#galleryTable_wrapper .dt-header-row .btn-success').removeClass("disabled");
                             adminUpload.element.style.display="";
                             adminUpload.element.style.visibility="hidden";
                         } else {
+                            $('.tree-col .dt-header-row .buttons-create').addClass("disabled");
                             $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
                             $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
                             $('#galleryTable_wrapper .dt-header-row .btn-success').addClass("disabled");

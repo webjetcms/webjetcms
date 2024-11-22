@@ -542,7 +542,7 @@ export class DatatablesCkEditor {
 
 							//console.log("url=", url);
 
-							if (url.indexOf(":")!=-1 && url.indexOf("http")==-1) {
+							if (url.indexOf("://")!=-1 && url.indexOf("http")==-1) {
 								//console.log("Setting protocol to none");
 								this.getContentElement("info", "protocol").setValue("");
 							}

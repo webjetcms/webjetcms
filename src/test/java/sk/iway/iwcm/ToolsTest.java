@@ -33,5 +33,6 @@ class ToolsTest extends BaseWebjetTest {
         assertFalse(Tools.isEmail("Marek&@gmail.com"));
         assertFalse(Tools.isEmail("peta.miusová@gmail.com"));
         assertFalse(Tools.isEmail("_slavo_niekto@centrum.sk"));
+        assertFalse(Tools.isEmail("hasek@domena,cz"));
     }
 }

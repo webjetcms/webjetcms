@@ -72,6 +72,13 @@
             if (this.$props.attr != null) {
                 if (typeof(this.$props.attr["data-dt-json-addbutton"])!=undefined) this.addButtonText=this.$props.attr["data-dt-json-addbutton"];
             }
+            if (this.click.indexOf("dt-tree-dir-simple")!=-1) {
+                //remove diabled element on input
+                var that = this;
+                setTimeout(function() {
+                    window.$("#"+that.idKey).parent().find("div.dt-tree-container .input-group input").removeAttr("disabled");
+                }, 100);
+            }
         },
         methods: {
             onRemoveItem(id) {

@@ -17,7 +17,7 @@ public class PerexGroupsEditorFields implements Serializable{
 
     public PerexGroupsEditorFields(){}
 
-    @DataTableColumn(inputType = DataTableColumnType.JSON, title="admin.temp.edit.showForDir", className = "dt-tree-group-array")
+    @DataTableColumn(inputType = DataTableColumnType.JSON, title="admin.temp.edit.showForDir", className = "dt-tree-group-array-alldomains")
     private List<GroupDetails> availableGroups;
 
     public void fromPerexGroupsEntity(PerexGroupsEntity perexGroupOriginal) {

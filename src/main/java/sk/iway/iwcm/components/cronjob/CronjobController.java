@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.cronjob;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +37,8 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
 
     @Override
     public Page<CronTask> getAllItems(Pageable pageable) {
-        return cronjobService.getCronTasks(pageable);
+        List<CronTask> tasks = cronjobService.getCronTasks();
+        return new DatatablePageImpl<>(tasks);
     }
 
     @Override
@@ -84,6 +87,11 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
         //restart cron
         ClusterDB.addRefresh(CronFacade.class);
 		CronFacade.getInstance(true);
+    }
+
+    @Override
+    public void afterDelete(CronTask entity, long id) {
+        afterSave(entity, null);
     }
 
 }

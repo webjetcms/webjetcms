@@ -418,6 +418,9 @@ function initClosure() {
                 $("div.dataTables_processing").hide();
                 if (!response.result) {
                     WJ.notifyError(response.error);
+                    setTimeout(function() {
+                        $('#SomStromcek').jstree(true).refresh();
+                    }, 500);
                     return;
                 }
 

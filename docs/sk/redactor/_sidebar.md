@@ -38,7 +38,9 @@
   - Fórum/Diskusia
     - [Nastavenie aplikácie](/redactor/apps/forum/README.md)
     - [Zoznam diskusií](/redactor/apps/forum/forum-list.md)
-  - [Galéria](/redactor/apps/gallery/README.md)
+  - Galéria
+    - [Galéria](/redactor/apps/gallery/README.md)
+    - [Nastavenie vodoznaku](/redactor/apps/gallery/watermark.md)
   - GDPR
     - [Cookies manažér](/redactor/apps/gdpr/cookiesmanger.md)
     - [Správa regulárnych výrazov](/redactor/apps/gdpr/regexps.md)

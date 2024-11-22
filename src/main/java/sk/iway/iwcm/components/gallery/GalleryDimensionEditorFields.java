@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
@@ -13,14 +14,13 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 public class GalleryDimensionEditorFields implements Serializable{
 
     @DataTableColumn(
-        renderFormat = "dt-format-checkbox",
-        title = "[[#{}]]",
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "&nbsp;",
         visible = false,
         sortAfter = "resizeMode",
+        tab = "sizes",
         editor = {
             @DataTableColumnEditor(
-                type = "checkbox",
-                tab = "sizes",
                 options = {
                     @DataTableColumnEditorAttr(key = "components.gallery.regenerate.all", value = "true")
                 },
@@ -31,14 +31,13 @@ public class GalleryDimensionEditorFields implements Serializable{
     private boolean regenerateImages = false;
 
     @DataTableColumn(
-        renderFormat = "dt-format-checkbox",
-        title = "[[#{}]]",
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "&nbsp;",
         visible = false,
         sortAfter = "editorFields.regenerateImages",
+        tab = "sizes",
         editor = {
             @DataTableColumnEditor(
-                type = "checkbox",
-                tab = "sizes",
                 options = {
                     @DataTableColumnEditorAttr(key = "editor.apply_for_all_sub_folders", value = "true")
                 }
@@ -46,5 +45,39 @@ public class GalleryDimensionEditorFields implements Serializable{
         }
     )
     private boolean forceResizeModeToSubgroups = false;
+
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "&nbsp;",
+        visible = false,
+        sortAfter = "watermarkSaturation",
+        tab = "watermark",
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "components.gallery.regenerate.all", value = "true")
+                },
+                message = "components.gallery.regenerate.all.title"
+            )
+        }
+    )
+    private boolean regenerateWatermark = false;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "&nbsp;",
+        visible = false,
+        sortAfter = "editorFields.regenerateWatermark",
+        tab = "watermark",
+        editor = {
+            @DataTableColumnEditor(
+                options = {
+                    @DataTableColumnEditorAttr(key = "editor.apply_for_all_sub_folders", value = "true")
+                }
+            )
+        }
+    )
+    private boolean forceWatermarkToSubgroups = false;
 
 }

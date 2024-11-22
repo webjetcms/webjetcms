@@ -2285,7 +2285,10 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setDataAsc(String dataAsc) {
-		if (isEmpty(dataAsc)) return;
+		if (isEmpty(dataAsc)) {
+			if (this.dataAsc == null) this.dataAsc = "";
+			return;
+		}
 		this.dataAsc = dataAsc;
 	}
 

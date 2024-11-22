@@ -1163,5 +1163,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>21.11.2024</string></void>
+                <void property="desc"><string>forms regexp - fix email address validation type name@domain,com</string></void>
+                <void property="mysql"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\\._-]*[a-zA-Z0-9]+\\\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' ]]></string></void>
+                <void property="mssql"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' ]]></string></void>
+                <void property="oracle"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\.[a-zA-Z]{2,16}$' ]]></string></void>
+            </object>
+        </void>
+
+
     </object>
 </java>

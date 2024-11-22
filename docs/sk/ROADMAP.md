@@ -33,6 +33,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Kalendár udalostí - neschválené a odporúčanie udalosti - prerobiť do DT, využiť kód pre zoznam udalostí (#56181).
 - [ ] Zaviesť do projektu povinnosť použitia `SonarLint` a formátovania kódu cez `.editorconfig` alebo `Spotless` - príklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Editor - pri vytvorení odkazu na email to v okne automaticky pridáva http, aj keď odkaz nakoniec vloží správne s `mailto:` prefixom (#56189).
+- [ ] +Galéria - pridať pole URL adresa zdroja obrázku s možnosťou zadať adresu, z ktorej sme obrázok získali, automaticky nastaviť pri použití foto banky.
 
 ## 2023.52 / 2024.0
 

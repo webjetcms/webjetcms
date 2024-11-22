@@ -225,6 +225,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				//failsafe
 			}
 			T processed = insertItem(entity);
+			afterSave(entity, processed);
 			return Arrays.asList(processed);
 		}
 
@@ -288,7 +289,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						repo.delete(fromRepo);
 					}
 				}
-				afterDelete(entity, id);
 				return true;
 			} catch (Exception e) {
 				Logger.error(DatatableRestControllerV2.class, e);
@@ -1177,6 +1177,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				if (deleted == false) {
 					throwError("editor.delete_error");
 				}
+				afterDelete(entity, id);
 			}
 		}
 
@@ -1281,6 +1282,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			throw new ConstraintViolationException("Invalid data", violations);
 		} else {
 			T newT = this.insertItem(entity);
+			afterSave(entity, newT);
 			return new ResponseEntity<>(newT, null, HttpStatus.CREATED);
 		}
 	}
@@ -1294,6 +1296,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			throw new ConstraintViolationException("Invalid data", violations);
 		} else {
 			T one = this.editItem(entity, id);
+			afterSave(entity, one);
 			return ResponseEntity.ok(one);
 		}
 	}
@@ -1307,6 +1310,9 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		boolean deleted = this.deleteItem(entity, id);
 		result.put("result", deleted);
+		if (deleted) {
+			afterDelete(entity, id);
+		}
 
 		return new ResponseEntity<>(result, HttpStatus.OK);
 	}
