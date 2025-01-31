@@ -3,14 +3,15 @@
 #priklady spustenia:
 #npx-allure.sh firefox http://iwcm.interway.sk
 #npx-allure.sh chromium http://iwcm.interway.sk
-#npx-allure.sh chromium http://demo.webjetcms.sk
+#npx-allure.sh chromium http://demotest.webjetcms.sk
 
 echo "Creating test/history directory"
 pwd
 rm -rf ../../../build/test
 mkdir ../../../build/test
+mkdir ../../../build/test/allure-results
 #ls -la ../../../build/test
-mkdir ../../../build/test/history
+mkdir ../../../build/test/allure-results/history
 #ls -la ../../../build/test/history
 
 # --------------------------------------------------------------------
@@ -28,7 +29,7 @@ else
 fi
 
 if [[ -z "$3" ]]; then
-        HOST_USER="tomcat_au20"
+        HOST_USER="tomcat"
 else
         HOST_USER="$3"
 fi
@@ -40,7 +41,7 @@ else
 fi
 
 if [[ -z "$5" ]]; then
-        HOST_DIR="/www/tomcat_au20/webapps/docs.webjetcms.sk/allure/"
+        HOST_DIR="/www/tomcat/webapps/docs.webjetcms.sk/allure/"
 else
         HOST_DIR="$5"
 fi
@@ -54,33 +55,33 @@ fi
 echo "Browser version=$BROWSER_VERSION"
 
 #skopiruj z docs servera posledne history udaje, aby sa zobrazila historia testov na grafe
-#TODO: tomcat_au20@
-#rsync -rtlpPI tomcat_au20@webjet2b.srv.iway.local:/www/tomcat_au20/webapps/docs.webjetcms.sk/allure/chromium/history ../../../build/test
+#TODO: tomcat@
+#rsync -rtlpPI tomcat@webjet2b.srv.iway.local:/www/tomcat/webapps/docs.webjetcms.sk/allure/chromium/history ../../../build/test
 #echo "Executing: rsync -r $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history ../../../build/test"
-echo "Excecuting scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/history"
-scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/history
+echo "Excecuting scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/allure-results/history"
+scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/allure-results/history
 
 ls -la ../../../build/test
-ls -la ../../../build/test/history
+ls -la ../../../build/test/allure-results/history
 
 #generovanie screenshotu
 #CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npx codeceptjs run tests/admin/datatables.js --grep 'Nastavenie tabulky'
 
-NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure --steps
+NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure
 RET_CODE=$?
 
 #skopiruj konfiguracne subory pre allure z gitu do test adresara
-cp -r allure/ ../../../build/test
+cp -r allure/ ../../../build/test/allure-results
 
 #vygeneruj enviroment.properties subor
 #rm ../../../build/test/environment.properties
-printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODECEPT_URL" >> ../../../build/test/environment.properties
+printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODECEPT_URL" >> ../../../build/test/allure-results/environment.properties
 
 #vygeneruj report do test-results adresara
-npx allure generate --clean ../../../build/test -o ../../../build/test-results
+npx allure generate --clean ../../../build/test/allure-results -o ../../../build/test-results
 
 #uloz na docs server vysledok
-#TODO: tomcat_au20@
+#TODO: tomcat@
 rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-results/ $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER
 
 #npx allure open ../../../build/test-results
@@ -88,6 +89,7 @@ rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-resu
 
 #zaarchivuj vystup, aby sa to dalo nasledne ulozit ako artifakt v pipeline (pre istotu, keby sa rsync pokazil a zmazal subory)
 tar cvfz ../../../build/test-results-$CODECEPT_BROWSER.tgz ../../../build/test-results/
+tar cvfz ../../../build/test-screenshots-$CODECEPT_BROWSER.tgz ../../../build/test/screenshots/
 
 echo "Done, return code=$RET_CODE"
 exit $RET_CODE

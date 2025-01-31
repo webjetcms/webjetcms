@@ -26,9 +26,11 @@ block content
             let docId = $('#docId', window.parent.document).val();
             let groupId = $('#groupId', window.parent.document).val();
             let title = $('#title', window.parent.document).val();
+            let originalComponentName = $('#originalComponentName', window.parent.document).val();
+            let originalJspFileName = $('#originalJspFileName', window.parent.document).val();
             componentPath = componentClass;
 
-            //console.log("PUG docId=", docId, "groupId=", groupId, "title=", title);
+            //console.log("PUG docId=", docId, "groupId=", groupId, "title=", title, "componentPath=", componentPath, "originalComponentName=", originalComponentName, "originalJspFileName=", originalJspFileName);
 
             if (componentClass === '') {
                 return;
@@ -125,7 +127,14 @@ block content
                     });
 
                     if (response.componentPath != null && response.componentPath != '') {
-                        componentPath = response.componentPath;
+                        //it there is multiple path separated by comma use originalJspFileName is not empty otherwise use first one
+                        let paths = response.componentPath.split(",");
+                        //console.log("paths=", paths, "originalJspFileName=", originalJspFileName);
+                        if (paths.length > 1 && originalJspFileName != null && originalJspFileName != '') {
+                            componentPath = originalJspFileName;
+                        } else {
+                            componentPath = paths[0];
+                        }
                     }
                 }
             });
@@ -211,6 +220,10 @@ block content
 
                 //skip id or static text
                 if ("id"===key || "dt-format-static-text"===column.renderFormat) continue;
+                if ("dt-format-datatable" === column.renderFormat) {
+                    //skip datatable
+                    continue;
+                }
 
                 if (typeof column.className != "undefined" && column.className != null && column.className.indexOf("dt-style-base64")!=-1) {
                     value = WJ.base64encode(value);

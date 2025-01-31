@@ -1443,9 +1443,9 @@ public class GalleryDB
 <span class="pc bpc" id="L1443" title="1 of 2 branches missed.">				if (dir.startsWith(&quot;/&quot;)==false) dir = &quot;/&quot;+dir;</span>
 
 <span class="fc" id="L1445">				gBean = new GalleryBean();</span>
-<span class="pc bpc" id="L1446" title="1 of 2 branches missed.">				if (name.startsWith(&quot;s_&quot;))</span>
+<span class="fc bfc" id="L1446" title="All 2 branches covered.">				if (name.startsWith(&quot;s_&quot;))</span>
 				{
-<span class="nc" id="L1448">					name = name.substring(2, name.length());</span>
+<span class="fc" id="L1448">					name = name.substring(2, name.length());</span>
 				}
 
 <span class="fc" id="L1451">				request.setAttribute(&quot;imageURL&quot;, dir + &quot;/&quot; + name);</span>

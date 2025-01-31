@@ -37,7 +37,6 @@ import sk.iway.iwcm.common.EditTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.doc.DebugTimer;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.filebrowser.UnusedFile;
 import sk.iway.iwcm.io.IwcmFile;
@@ -46,6 +45,7 @@ import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.io.IwcmOutputStream;
 import sk.iway.iwcm.io.JarPackaging;
+import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.StatNewDB;
 
@@ -489,26 +489,27 @@ public class FileTools
 	 * @param url - url adresa suboru, napr. /images/wjlogo.gif
 	 * @return
 	 */
-	public static List<Column> getFileUsage(String url)
+	public static List<Column> getFileUsage(String url, Identity user)
 	{
 		Logger.debug(FileTools.class, "getFileUsage: url="+url);
 
-		DocDB docDB = DocDB.getInstance();
-		List<DocDetails> pages = docDB.searchTextAll(url, -1, null, false);
+		List<DocDetails> pages =  SearchService.searchTextAll(url, "docs", -1, user);
 		List<Column> dokumenty = new ArrayList<>();
-	   Column col;
+	   	Column col;
 
 		for(int i=0;i<pages.size();i++)
 		{
 			DocDetails doc = pages.get(i);
-			if(Tools.isNotEmpty(doc.getVirtualPath()) && doc.getVirtualPath().startsWith("/files"))
+			if(Tools.isNotEmpty(doc.getVirtualPath()) && doc.getVirtualPath().startsWith("/files")) {
 				continue;
-   	   col = new Column();
-   	   col.setIntColumn1(doc.getDocId());
-		   col.setColumn1(doc.getTitle());
-		   col.setColumn2(doc.getDocLink());
-		   dokumenty.add(col);
-      }
+			}
+
+			col = new Column();
+			col.setIntColumn1(doc.getDocId());
+			col.setColumn1(doc.getTitle());
+			col.setColumn2(doc.getDocLink());
+			dokumenty.add(col);
+      	}
 
 		List<Column> cesty = new ArrayList<>();
 		cesty.addAll(dirRekurzia("/components/"+Constants.getInstallName()+"/", url));

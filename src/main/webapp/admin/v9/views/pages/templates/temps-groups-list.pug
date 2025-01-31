@@ -33,7 +33,7 @@ block content
                 let lng = $(this).val();
                 //console.log("Select changed, language=", lng);
                 url = "/admin/rest/templates/temps-groups-list?breadcrumbLanguage="+lng;
-                tempsGroupsListTable.ajax.url(url);
+                tempsGroupsListTable.setAjaxUrl(url);
                 tempsGroupsListTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
                 tempsGroupsListTable.ajax.reload();
             });

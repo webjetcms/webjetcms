@@ -20,7 +20,7 @@ if ("true".equals(Tools.getRequestParameter(request, sk.iway.iwcm.SetCharacterEn
 <script type="text/javascript">
 
 //prepni bootstrap button na jquery-ui button
-$.fn.bootstrapBtn = $.fn.button.noConflict();
+//$.fn.bootstrapBtn = $.fn.button.noConflict();
 
 var $modal = $('#ajax-modal');
 

@@ -1,4 +1,4 @@
-# Formuláře
+# Seznam formulářů
 
 Aplikace formuláře slouží k pokročilé správě vyplněných formulářů. Každá webová stránka může obsahovat formulář, který návštěvník vyplní. Může se jednat o žádosti o zaměstnání, žádosti o podrobnější informace apod.
 
@@ -58,15 +58,25 @@ Formuláři je možné nastavit některé skryté hodnoty, které ovlivní jeho 
 
 Formulář lze nastavit **potvrzení e-mailové adresy** ( `double opt-in` ). Odeslání formuláře můžete potvrdit kliknutím na odkaz v e-mailu, a tím. **Ověřit** že návštěvník, který vyplnil formulář, zadal **platnou e-mailovou adresu**.
 
-Je třeba ji nastavit:
+Chcete-li povolit potvrzení e-mailové adresy, musíte nastavit:
 
-1. Ve vlastnostech formuláře je třeba vybrat možnost **Vyžadovat potvrzení souhlasu e-mailem**.
+1. Ve vlastnostech formuláře, konkrétně v pokročilém nastavení. ![](advanced-settings.png) je třeba vybrat možnost **Vyžadovat potvrzení souhlasu e-mailem**. ![](checkbox-confirmation.png)
 
-2. Vytvoření stránky pro potvrzení souhlasu, aplikace musí být vložena do ní. `!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!`, který potvrdí souhlas na základě parametrů v databázi. Stránka může být použita pro několik různých formulářů, může mít adresu URl např. `/potvrdenie-double-optin/`.
+2. Vytvoření stránky pro potvrzení souhlasu, aplikace musí být vložena do ní. `!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!`, který potvrdí souhlas na základě parametrů v databázi. Stránka může být použita pro několik různých formulářů, může mít adresu URL např. `/potvrdenie-double-optin/`.
 
 3. Vytvořte stránku s textem e-mailu, např. "Pro potvrzení e-mailové adresy klikněte na následující odkaz", a vložte odkaz na stránku, kde bude souhlas potvrzen. Odkaz musí obsahovat parametry `!FORM_ID!,!OPTIN_HASH!`, např. `/potvrdenie-double-optin/?formId=!FORM_ID!&hash=!OPTIN_HASH!`. Nastavte ID této stránky v poli `Doc ID` oznámení pro uživatele.
 
-Po kliknutí na odkaz v e-mailu se ve formuláři nastaví pole Datum potvrzení souhlasu, takže můžete identifikovat formuláře, u kterých byl souhlas potvrzen.
+Po kliknutí na odkaz v e-mailu se ve formuláři nastaví pole Datum potvrzení souhlasu, takže můžete identifikovat formuláře, u kterých byl souhlas potvrzen. Zároveň se červeně zobrazí formuláře, které nemají potvrzený souhlas.
+
+![](forms-list.png)
+
+## Událost odeslání formuláře
+
+Po odeslání formuláře pomocí AJAXu je zveřejněna událost. `WJ.formSubmit` které je možné poslouchat, např. jako:
+
+```javascript
+    window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
+```
 
 ## Možné konfigurační proměnné
 
@@ -86,4 +96,4 @@ Po kliknutí na odkaz v e-mailu se ve formuláři nastaví pole Datum potvrzení
 - `formmailScrollTopAfterSend` - Pokud je nastavena na `true` po odeslání přetočí stránku na začátek formuláře (aby se zobrazila zpráva o odeslání).
 - `formmailResetFormAfterSend` - Pokud je nastavena na `true` po úspěšném odeslání se formulář vymaže.
 - `formmailSendUserInfoSenderName` - Bude odesláno jako jméno odesílatele v e-mailu při odesílání stránky podle zadané hodnoty. `formmail_sendUserInfoDocId`. Pokud je prázdný, je odesláno jméno autora stránky, jejíž obsah je odesílán do e-mailu.
-- `formmailSendUserInfoSenderEmail` - Bude odeslán jako e-mail odesílatele v e-mailu při odesílání stránky podle zadané hodnoty. `formmail_sendUserInfoDocId`. Pokud je prázdný, bude odeslán e-mail autora stránky, jejíž obsah je odeslán na e-mail.
+- `formmailSendUserInfoSenderEmail` - Bude odeslán jako e-mail odesílatele v e-mailu při odesílání stránky podle zadané hodnoty. `formmail_sendUserInfoDocId`. Pokud je prázdná, je e-mail odeslán autorovi stránky, jejíž obsah je odeslán do e-mailu.

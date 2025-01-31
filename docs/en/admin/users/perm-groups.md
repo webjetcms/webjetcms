@@ -1,4 +1,4 @@
-# Group of rights
+# Groups of rights
 
 You can define group permissions in rights groups. You can create/edit/duplicate/delete rights groups, export rights groups to excel or import them from excel using the buttons on the top left of the page.
 

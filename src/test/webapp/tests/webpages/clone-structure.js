@@ -1,11 +1,6 @@
 Feature('webpages.clone-structure');
 
 var randomNumber;
-var add_button = (locate('.tree-col').find('button.buttons-create'));
-var edit_button = (locate('.tree-col').find('button.buttons-edit'));
-var delete_button = (locate('.tree-col').find('button.buttons-remove.noperms-deleteDir'));
-var doc_edit_button = (locate('#datatableInit_wrapper').find('button.buttons-edit'));
-var doc_add_button = (locate('#datatableInit_wrapper').find('button.buttons-create'));
 
 //CLASSIC cloning test variables
 var srcGroupName = "clone-src-autotest-";
@@ -34,9 +29,9 @@ Before(({ I, login }) => {
     }
 });
 
-function createGroup(I, DTE, groupName, language, isRootGroup) {
-    I.waitForElement(add_button, 10);
-    I.click(add_button);
+function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
+    I.waitForElement(DT.btn.tree_add_button, 10);
+    I.click(DT.btn.tree_add_button);
     DTE.waitForEditor("groups-datatable");
     I.fillField("#DTE_Field_groupName", groupName);
 
@@ -59,9 +54,9 @@ function createGroup(I, DTE, groupName, language, isRootGroup) {
     DTE.save();
 }
 
-async function fillDocBody(I, DTE, body) {
-    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
-    I.click(doc_edit_button);
+async function fillDocBody(I, DTE, DT, body) {
+    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    I.click(DT.btn.edit_button);
 
     I.waitForElement("iframe.cke_wysiwyg_frame");
     await DTE.fillCkeditor(body);
@@ -69,10 +64,10 @@ async function fillDocBody(I, DTE, body) {
 }
 
 async function editDoc(I, DT, DTE, title) {
-    DT.filter("title", title);
+    DT.filterContains("title", title);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
-    I.click(doc_edit_button);
+    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    I.click(DT.btn.edit_button);
     DTE.waitForEditor();
 }
 
@@ -121,7 +116,7 @@ async function hardDeleteFolder(I, DT, DTE, groupName) {
     const groupId = await I.grabValueFrom('#tree-folder-id');
 
     I.say("Perform soft delete");
-    I.click(delete_button);
+    I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.see(groupName, "div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -141,7 +136,7 @@ async function hardDeleteFolder(I, DT, DTE, groupName) {
     I.wait(1);
 
     I.say("Perform hard delete");
-    I.click(delete_button);
+    I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
@@ -156,14 +151,14 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
     I.say("Preparing source folder");
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
         DT.waitForLoader();
-        createGroup(I, DTE, srcGroupName, "Slovenský", true);
+        createGroup(I, DTE, DT, srcGroupName, "Slovenský", true);
         I.jstreeClick(srcGroupName);
         //Save groupID
         const srcGroupId = await I.grabValueFrom('#tree-folder-id');
 
         //
         I.say("Create new doc in root group");
-            I.click(doc_add_button);
+            I.click(DT.btn.add_button);
             DTE.waitForEditor();
             I.waitForVisible("#DTE_Field_title");
             I.fillField("#DTE_Field_title", newDocName);
@@ -174,13 +169,13 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
 
         //
         I.say("Create sub group");
-        createGroup(I, DTE, srcGroupChildName, "Slovenský", false);
+        createGroup(I, DTE, DT, srcGroupChildName, "Slovenský", false);
 
         I.jstreeClick(srcGroupChildName);
-        await fillDocBody(I, DTE, doc_b_sk);
+        await fillDocBody(I, DTE, DT, doc_b_sk);
 
     I.say("Preparing dest folder");
-        createGroup(I, DTE, destGroupName, "Anglický", true);
+        createGroup(I, DTE, DT, destGroupName, "Anglický", true);
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
         const destGroupId = await I.grabValueFrom('#tree-folder-id');
 
@@ -199,7 +194,7 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT })  
 
         I.say("Check folder optional fields");
         I.jstreeNavigate([destGroupName, srcGroupChildName]);
-        I.click(edit_button);
+        I.click(DT.btn.tree_edit_button);
         DTE.waitForEditor("groups-datatable");
 
         I.click("#pills-dt-groups-datatable-fields-tab");
@@ -213,16 +208,16 @@ Scenario("Structure cloning with translate - NO URL TRANSLATE", async ({ I, DTE,
     I.say("Preparing source folder");
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=9811');
         DT.waitForLoader();
-        createGroup(I, DTE, srcGroupName_noUrlTranslate, "Slovenský", true);
+        createGroup(I, DTE, DT, srcGroupName_noUrlTranslate, "Slovenský", true);
         I.jstreeClick(srcGroupName_noUrlTranslate);
         //Save groupID
         const srcGroupId = await I.grabValueFrom('#tree-folder-id');
 
         I.say("Create sub group");
-            createGroup(I, DTE, srcGroupChildName_noUrlTranslate, "Slovenský", false);
+            createGroup(I, DTE, DT, srcGroupChildName_noUrlTranslate, "Slovenský", false);
 
         I.say("Preparing dest folder");
-            createGroup(I, DTE, destGroupName_noUrlTranslate, "Anglický", true);
+            createGroup(I, DTE, DT, destGroupName_noUrlTranslate, "Anglický", true);
             I.click( locate("a.jstree-anchor").withText(destGroupName_noUrlTranslate) );
             const destGroupId = await I.grabValueFrom('#tree-folder-id');
 
@@ -233,7 +228,7 @@ Scenario("Structure cloning with translate - NO URL TRANSLATE", async ({ I, DTE,
             I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=" + destGroupId);
             DT.waitForLoader();
             I.click( locate("a.jstree-anchor").withText(destGroupChildName_noUrlTranslate) );
-            I.click(edit_button);
+            I.click(DT.btn.tree_edit_button);
             DTE.waitForEditor("groups-datatable");
 
             //Its not translated good

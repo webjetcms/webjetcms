@@ -11,6 +11,7 @@ import javax.servlet.jsp.tagext.BodyTagSupport;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.i18n.Prop;
 
 
@@ -30,7 +31,7 @@ public final class CombineTag extends BodyTagSupport
 
 	private static final long serialVersionUID = -7352999434842740830L;
 
-	public static String FILES_ADMIN_JQUERY_JS = "/admin/skins/webjet8/assets/global/plugins/jquery-3.5.1.min.js,"+
+	public static String FILES_ADMIN_JQUERY_JS = "/admin/skins/webjet8/assets/global/plugins/jquery.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery-migrate-3.3.0.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery.browser.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery-ui/jquery-ui.min.js,"+
@@ -39,19 +40,13 @@ public final class CombineTag extends BodyTagSupport
 	public static String FILES_ADMIN_STANDARD_JS =
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap/js/popper.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap/js/bootstrap.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-hover-dropdown/bootstrap-hover-dropdown.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery-slimscroll/jquery.slimscroll.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery.blockui.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery.cokie.min.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/uniform/jquery.uniform.min.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/js/bootstrap-switch.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jstree/dist/jstree.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-modal/js/bootstrap-modalmanager.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-modal/js/bootstrap-modal.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/datatables/datatables.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/select2/select2.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/jquery-multi-select/js/jquery.multi-select.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-select/bootstrap-select.min.js,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap-select/bootstrap-select.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/js/bootstrap-datepicker.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/js/locales/bootstrap-datepicker.USERLANG.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-timepicker/js/bootstrap-timepicker.min.js,"+
@@ -60,21 +55,16 @@ public final class CombineTag extends BodyTagSupport
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-daterangepicker/daterangepicker.js,"+
 				"/components/_common/minicolors/jquery.minicolors.min.js,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-toastr/toastr.min.js,"+
 				"/admin/skins/webjet8/assets/global/scripts/metronic.js,"+
 				"/admin/skins/webjet8/assets/admin/layout/scripts/layout.js,"+
 				"/admin/skins/webjet8/assets/admin/pages/scripts/components-dropdowns.js";
 
 	public static String FILES_ADMIN_STANDARD_CSS = "/admin/skins/webjet8/assets/global/plugins/tabler/css/tabler-icons.min.css,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap/css/bootstrap.min.css,"+
-				"/admin/skins/webjet8/assets/global/plugins/uniform/css/uniform.default.css,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-switch/css/bootstrap-switch.min.css,"+
+				"/admin/skins/webjet8/assets/global/plugins/bootstrap/css/bootstrap.css,"+
 				"/admin/skins/webjet8/assets/global/plugins/jstree/dist/themes/default/style.min.css,"+
-				"/admin/skins/webjet8/assets/global/plugins/simple-line-icons/simple-line-icons.min.css,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-datepicker/css/datepicker3.css,"+
 				"/components/_common/minicolors/jquery.minicolors.css,"+
 				"/admin/skins/webjet8/assets/global/plugins/bootstrap-timepicker/css/bootstrap-timepicker.min.css,"+
-				"/admin/skins/webjet8/assets/global/plugins/bootstrap-toastr/toastr.min.css,"+
 				"/admin/skins/webjet8/assets/global/css/plugins.css,"+
 				"/admin/skins/webjet8/assets/global/css/components.css,"+
 				"/admin/skins/webjet8/assets/admin/pages/css/tasks.css,"+
@@ -117,6 +107,11 @@ public final class CombineTag extends BodyTagSupport
 	public int doEndTag() throws JspException
 	{
 		HttpServletRequest request = (HttpServletRequest)pageContext.getRequest();
+
+		TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
+		if (temp != null) {
+			request.getSession().setAttribute("templateInstallName", temp.getTemplateInstallName());
+		}
 
 		String lng = getLng(pageContext, request);
 

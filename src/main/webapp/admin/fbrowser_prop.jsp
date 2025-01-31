@@ -142,7 +142,7 @@ fieldset {margin-bottom: 10px;}
          		</tr>
 				<%
 				List list = new ArrayList();
-				if ("true".equals(Tools.getRequestParameter(request, "usage"))) list = FileTools.getFileUsage(filePath);
+				if ("true".equals(Tools.getRequestParameter(request, "usage"))) list = FileTools.getFileUsage(filePath, user);
 				Column col;
 				DocDB docDB = DocDB.getInstance();
 			  	for(int j=0;j<list.size();j++)

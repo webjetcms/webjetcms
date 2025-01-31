@@ -71,10 +71,13 @@ Scenario('demo component page params', ({I, DTE}) => {
     I.seeInField("#editorAppDTE_Field_groupDetails input.form-control", "/Test stavov");
     I.seeInField("#editorAppDTE_Field_docDetails input.form-control", "/Jet portal 4/Zo sveta financií/Trhy sú naďalej vydesené");
     I.seeInField("#editorAppDTE_Field_dirSimple input.form-control", "/images/bannery");
+
+    I.switchTo();
 });
 
 Scenario('mvc aplikacia', async ({I, DataTables}) => {
     I.amOnPage("/apps/spring-app/kontakty/");
+    I.switchTo();
 
     I.dontSee("Ospravedlňujeme sa, ale nastala chyba pri vykonávaní komponenty");
 
@@ -82,11 +85,13 @@ Scenario('mvc aplikacia', async ({I, DataTables}) => {
     I.see("SK2020268294");
 
     I.click("Nový kontakt");
-    I.click("Potvrdiť");
+    I.waitForElement(locate('button').withAttr({"name" : "saveForm"}));
+    I.click(locate('button').withAttr({"name" : "saveForm"}));
     I.see("PSČ - veľkosť musí byť medzi 5 a 8");
     I.see("Názov - nemôže byť prázdne");
 
     I.amOnPage("/apps/spring-app/kontakty/");
+    I.waitForElement("div.container table.table tr:nth-child(2)", 10);
     I.click("Upraviť", "div.container table.table tr:nth-child(2)");
     I.seeInField("name", "InterWay, a. s.");
 });

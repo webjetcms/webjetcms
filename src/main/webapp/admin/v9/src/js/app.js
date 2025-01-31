@@ -77,7 +77,6 @@ import 'jquery-ui/ui/widgets/autocomplete';
 import 'jquery-ui/themes/base/theme.css';
 import 'jquery-ui/themes/base/draggable.css';
 
-import '@babel/polyfill';
 import 'bootstrap';
 import '../scss/ninja.scss';
 
@@ -88,10 +87,13 @@ const bootstrap = (window.bootstrap = require('bootstrap'));
 
 //na zaklade https://github.com/snapappointments/bootstrap-select/issues/2505 importovane priamo js a nie dist/js mozno po prechode do stable to bude OK
 //tiez musi ist cez require, inak to padalo ze nepozna bootstrap objekt
-require('bootstrap-select/js/bootstrap-select');
+//require('bootstrap-select/js/bootstrap-select');
+//https://gist.github.com/mattymatty76/c996d3b77f298b2ec133be59992df9d4/revisions
+require('./plugins/bootstrap-select-v1.14.0-gamma1')
 import 'bootstrap-select/dist/css/bootstrap-select.css';
 
-require('ajax-bootstrap-select');
+//not used anymore
+//require('ajax-bootstrap-select');
 
 import { WebjetJsTree } from './webjet-jstree';
 import { JsTreeDocumentOpener, JsTreeFolderOpener } from './libs/js-tree-extends';

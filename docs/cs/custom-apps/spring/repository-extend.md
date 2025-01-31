@@ -79,7 +79,7 @@ V `SpringConfig` a `JpaDBConfig` nezapomeňte přidat balíček `sk.iway.web.new
 
 Nejjednodušším řešením bez dodatečné konfigurace je vytvoření nové položky `Spring DATA` úložiště ve stejném balíčku jako standardní úložiště WebJET (např. `sk.iway.iwcm.doc`). Tím zajistíte, že se automaticky inicializuje při spuštění WebJETu.
 
-**Varování:** nesmíte tento balíček přidávat do `JpaDBConfig` protože jedna entita (třída) nemůže být současně ve více konfiguracích JPA.
+!>**Varování:** nesmíte tento balíček přidávat do `JpaDBConfig` protože jedna entita (třída) nemůže být současně ve více konfiguracích JPA.
 
 V příkladu je vytvořena metoda `findByTitleLike` vyhledat seznam webových stránek podle názvu. Původní `DocDetails` entita.
 
@@ -139,7 +139,7 @@ V případě jednoduché podmínky můžete také použít přímý zápis `Spec
 
 ## Vytvoření vlastního úložiště a entity
 
-Pro některé případy je vhodné vytvořit vlastní úložiště a vlastní entitu (není možné použít původní entitu ze systému WebJET CMS kvůli odlišným podmínkám). `TransactionManager`). To je vhodné i pro případ, kdy nepotřebujete přenášet všechna data a toto řešení tak částečně nahrazuje objekty DTO.
+Pro některé případy je vhodné vytvořit vlastní úložiště a vlastní entitu (není možné použít původní entitu ze systému WebJET CMS kvůli odlišným podmínkám `TransactionManager`). To je vhodné i pro případ, kdy nepotřebujete přenášet všechna data a toto řešení tak částečně nahrazuje objekty DTO.
 
 Jak nejprve vytvořit entitu, můžete použít podobný kód jako v původní entitě, v našem příkladu pouze přeneseme sloupec `title`. Z technického hlediska to pro tabulku není žádný problém. `documents` již existuje jiná entita:
 

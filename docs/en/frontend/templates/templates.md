@@ -25,6 +25,7 @@ The number of uses column shows the number of pages that use the template. If it
 - Main CSS style - a list of references to the CSS file that the template uses. The above CSS will also be used to get a list of CSS styles for selection in the page editor.
 - Secondary CSS style - an additional CSS style, not used for the Styles selection menu in the page editor.
 - HTML code allows you to define additional HTML code to be inserted at the end of the page (or at a location defined in the HTML template).
+
 CSS files can be entered each on a new line or separated by a comma.
 
 The page editor in the admin area automatically searches for the file `/templates/template-name/dist/css/editor.css` which loads along with the CSS style of the template. In the file `editor.css` you can redefine certain properties to be used only in the editor.
@@ -50,6 +51,14 @@ For an existing template, displays a list of folders that have the displayed tem
 ### Websites tab
 
 For an existing template, displays a list of websites that use the template.
+
+## Language mutations
+
+If you are running a website in multiple languages, there is no need to create separate templates for each language. We recommend to use the option [language settings for the web page folder](../../redactor/webpages/group.md#card-template).
+
+After setting the folder language, WebJET will also automatically search for the language versions of the associated headers, footers and menus in the template. If the template has a header named "default header" or "EN-default header", WebJET will automatically search for the "EN-default header" page when displaying a page with the EN language set.
+
+So in the template you have a default language and a default header/footer/menu page. You set the English folder in the web pages to English and WebJET will search for the appropriate EN versions of the header/footer/menu pages when the page is displayed.
 
 ## Device-specific display
 

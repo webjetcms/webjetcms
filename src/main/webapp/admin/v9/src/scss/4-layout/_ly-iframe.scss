@@ -1,7 +1,17 @@
 @charset "UTF-8";
 
 html.pg-iframe {
-    .ly-container.container { padding: 0px !important; }
+    .ly-content {
+        .ly-container.container {
+            padding: 0px !important;
+            //because of toastr in image editor
+            min-height: 90vh;
+        }
+    }
+    .ly-page-wrapper {
+        .ly-sidebar { display: none; }
+        .ly-content-wrapper { padding: 0px; }
+    }
     .innerPadding {
         padding: 4px 9px 2px 9px !important;
         label.cke_dialog_ui_labeled_label, input.cke_dialog_ui_input_text {

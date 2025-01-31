@@ -1,4 +1,4 @@
-# Form Simple
+# Form easily
 
 The form app is easy to use for simple form creation. The advantage is the simplicity of creating the form by simply inserting prepared input fields with the possibility of entering a different field name, indicating the obligation to fill in and setting the text of the explanatory note (`tooltip`). The author of the form does not have to deal with the output HTML format, it is prepared according to the web design for each type of input fields.
 
@@ -20,7 +20,7 @@ By default, the form fields are displayed one below the other:
 
 ![](formsimple.png)
 
-By selecting Row View, fields can be displayed side-by-side in a row. To create a new row, insert a field in the form `Nový riadok`:
+By selecting Row View, fields can be displayed side-by-side in a row. To create a new row, insert a field in the form **New line**:
 
 ![](formsimple-rowview.png)
 
@@ -35,18 +35,18 @@ The advanced tab contains advanced settings for settings that are not required.
 - Redirect after filling - url address to be redirected to after saving the form. If it is not specified it redirects to the original page.
 - Redirect after error - url address to redirect to if the form fails to submit. If not specified, the same value is used as it should **Redirection after completion**.
 - Redirect method - the type of redirect after the form is processed.
-	- If the value is not specified, the form is processed and then redirection to the specified page with the set send status parameter (e.g. formSend=true) is performed.
-	- Value `forward` means that an internal redirect is performed to the destination page. The target page can then access the identical parameters as the form and perform an additional action. Since this is an internal redirect, the value will remain in the browser's address bar `/formmail.do`.
-	- Value `addParams` performs a redirect to the destination page with the addition of individual parameters to the URL. In this case, the browser performs the redirection and the address of the destination page remains in the address bar. However, since the parameters are added to the URL, the number of parameters is limited by the length of the URL, which is 2048 characters by default.
+  - If the value is not specified, the form is processed and then redirection to the specified page with the set send status parameter (e.g. formSend=true) is performed.
+  - Value `forward` means that an internal redirect is performed to the destination page. The target page can then access the identical parameters as the form and perform an additional action. Since this is an internal redirect, the value will remain in the browser's address bar `/formmail.do`.
+  - Value `addParams` performs a redirect to the destination page with the addition of individual parameters to the URL. In this case, the browser performs the redirection and the address of the destination page remains in the address bar. However, since the parameters are added to the URL, the number of parameters is limited by the length of the URL, which is 2048 characters by default.
 - Doc id of page with email version - doc id of page with email version. The system needs the page to be able to generate the email version. If the value none is specified, the determination of the web page for email is not used. If the value is not specified at all, the value specified by the parameter `useFormDocId`. The value is useful if you have one contact form embedded in all pages, e.g. in the footer. When generating an email, the code of the page itself is used as the code, but the form is not located in it. This way you can tell it to use a different page for the email.
-- Doc id of notification for user - if set to docId value of some web page, then after successful saving of the form, an email with the text of the web page is sent to the visitor's email (from the email / email field). This can be, for example, a thank you for filling out the form, or further instructions on how to proceed.
+- Doc id of notification for user - if set to docId value of some web page, then after successful saving of the form, the visitor's email (from the field with the name `email / e-mail`) sent an email with the text of the web page. This could be a thank you for filling out the form, or further instructions on how to proceed. You insert the value from the form into the page as an expression `!field-name!`, which is the value in `name` attribute of the form field.
 - Interceptor before sending the email - the value is the name of the class that **must implement the interface `AfterSendInterceptor`**. After the email is sent, the code from this class is executed.
 
 ![](editor-dialog-advanced.png)
 
 ## Items
 
-In the Items tab, you can add a new form field, move the order of the fields (using drag \&amp; drop), and delete a form field by clicking the delete icon.
+In the Items tab, you can add a new form field, move the order of the fields (using drag & drop), and delete a form field by clicking the delete icon.
 
 ![](editor-dialog-items.png)
 
@@ -56,7 +56,9 @@ To add a form field (item), click the New Item button, which is displayed below 
 - Placeholder text - for standard text fields, represents the value of the placeholder text (`placeholder`), which is displayed when the field is empty.
 - Required field - checking the box will mark the field as required to submit the form.
 - Tooltip - if you enter a value, an information bubble (explanatory note) will appear next to the field name with the text entered in this field. The display method depends on the design of the web page (typically requires support [FontAwesome](https://fontawesome.com) to view the icon).
-**Remark:** if it is in the field `Hodnota` blank text and the text is entered in `Zástupný text`, so when the form is displayed on the web page, the field name is not displayed separately but only as a placeholder text. This allows you to create a smaller form in terms of its space on the web page.
+
+**Remark:** if it is in the field **Value** blank text and text is entered in the field **Representative text**, so when the form is displayed on the web page, the field name is not displayed separately but only as a placeholder text. This allows you to create a smaller form in terms of its space on the web page.
+
 For **groups of fields (e.g. a group of selection or checkbox fields)** a list of options is defined in the Value field. The character is searched for as an option separator `|`, if not found the character is searched for `,`, if not found a space is used. So you can enter e.g. `Slobodný,Ženatý,Rozvedený`, or if you need to enter a comma in an option, use the separator `|` Like `Predjedlo|Polievku|Hlavné jedlo|Koláč, kávu` (option `Koláč, káva` will be one item).
 
 For **Selection list - select** it is also possible to enter different text for the displayed information and the selected value. The displayed text and value are separated by a character `:`. Example: `Pomaranč:orange,Jablko:apple` prints a selection field (select) with text values Orange or Apple but when selecting the value is stored in the form `orange` or `apple`.
@@ -84,7 +86,7 @@ You define individual items via keys:
 
 Example:
 
-```html
+```
 //najjednoduchsi typ pola
 components.formsimple.label.meno=Meno
 components.formsimple.input.meno=<div class="form-group"><label for="${id}">${label}${tooltip}</label> <input class="${classes}form-control" data-name="${labelSanitized}" id="${id}" name="${id}" placeholder="${placeholder}" type="text" maxlength="20" />${cs-error}</div>
@@ -133,4 +135,5 @@ The following tags can be used in the code and will be replaced when the form is
 - `${counter}` - sequence number for the repeating record, is needed to set a unique `id` a `for` attribute
 - `${value-label}` - the text value (label) for the repeating record, if it contains a different value for `value` and for `label` (e.g. in `option` tag). The user specifies possible values as `label:value`, i.e. as e.g. `Pomaranč:orange,Jablko:apple` to view the options.
 - `{enumeration-options|ID_CISELNIKA|MENO_VALUE|MENO_LABEL}` - link to get the list `option` values from the dialer application. The dial ID, the column name for the value, and the column name for the text are entered.
+
 In the display to email, the value of the tooltip field is replaced with a blank character (so that the tooltip is not unnecessarily broken in the email).

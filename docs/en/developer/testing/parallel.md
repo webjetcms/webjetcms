@@ -12,7 +12,7 @@ For the sake of test continuity in a single scenario, tests are split between br
 
 However, some tests cannot be executed in parallel, because they check the status by IP address and so on. An example is a check for a wrong password, which, if executed, will prevent logging in for the specified time. If this were to happen in a test running in parallel, it would not be possible to log in in other browser windows either, which would break the tests.
 
-For this reason, a script is prepared `singlethread`which will only run tests marked with the `@singlethread`
+For this reason, a script is prepared `singlethread` which will only run tests marked with the `@singlethread` in the title of the script. At the same time, tests marked as such are excluded from parallel execution.
 
 ```javascript
 Feature('admin.login');
@@ -24,7 +24,7 @@ Scenario('zle zadane heslo @singlethread', ({ I }) => {
 });
 ```
 
-
+So for a complete test, you need to run the scripts in sequence:
 
 ```bash
 npm run singlethread
@@ -33,16 +33,16 @@ npm run parallel8
 
 ## Implementation details
 
-`package.json`:
+Individual scripts are defined in `package.json`:
 
 ```json
 {
-	"scripts": {
-		"parallel4": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 4 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
-		"parallel6": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 6 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
-		"parallel8": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 8 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
-		"parallel12": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 12 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
-		"singlethread": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure --grep '@singlethread'"
-	}
+    "scripts": {
+        "parallel4": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 4 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+        "parallel6": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 6 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+        "parallel8": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 8 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+        "parallel12": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run-workers --suites 12 -p allure --grep '(?=.*)^(?!.*@singlethread)'",
+        "singlethread": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure --grep '@singlethread'",
+    }
 }
 ```

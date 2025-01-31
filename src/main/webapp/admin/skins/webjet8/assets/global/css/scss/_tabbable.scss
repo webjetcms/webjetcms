@@ -11,10 +11,9 @@ Taby pod nadpisom
         .default.imageButton {
             margin-right: 10px;
             margin-bottom: 0;
-            transition: color 0.3s ease-in-out;
             padding: 0;
 
-            &:hover { color: #29c01a; }
+            &:hover { color: #0063FB; text-decoration: none; }
             &:last-of-type { margin-right: 100px; }
 
             &::before {
@@ -22,7 +21,7 @@ Taby pod nadpisom
                 right: 100%;
                 bottom: 8px;
                 height: 2px;
-                background-color: #29c01a;
+                background-color: #0063FB;
             }
 
             &:hover::before,

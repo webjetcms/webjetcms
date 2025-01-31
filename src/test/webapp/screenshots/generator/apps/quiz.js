@@ -11,7 +11,7 @@ Scenario("Test quiz stat sekcie", async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/quiz/admin/");
     Document.screenshot("/redactor/apps/quiz/quiz-datatable.png");
 
-    DT.filter("name", "Answer_quiz");
+    DT.filterContains("name", "Answer_quiz");
     I.clickCss("button.buttons-select-all.dt-filter-id");
     Document.screenshotElement("button.buttons-statistics", "/redactor/apps/quiz/quizStat-button.png");
 

@@ -151,7 +151,7 @@ $(function(){
 
 					<div class="form-group">
 						<label for="sort" class="col-sm-2 control-label">Zoradenie</label>
-						<div class="btn-group" data-toggle="buttons">
+						<div class="btn-group" data-bs-toggle="buttons">
 							<label class="btn btn-primary active">
 								<input type="radio" name="sort" id="sort-priority-default" autocomplete="off" checked> Default
 							</label>
@@ -195,7 +195,7 @@ $(function(){
 
 					<div class="form-group">
 						<label for="sort" class="col-sm-2 control-label">Zoradenie</label>
-						<div class="btn-group" data-toggle="buttons">
+						<div class="btn-group" data-bs-toggle="buttons">
 							<label class="btn btn-primary active">
 								<input type="radio" name="sort" id="sort-priority-default" autocomplete="off" checked> Default
 							</label>

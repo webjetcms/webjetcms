@@ -5,13 +5,15 @@ Aplikace galerie umožňuje snadné vytvoření galerie fotografií. Stačí do 
 - Obrázek v normálním rozlišení - fotografie v rozlišení pro běžný monitor, tj. cca 600x400 pixelů - tato fotografie se zobrazí po kliknutí na náhled obrázku.
 - Původní fotografie - slouží především jako kopie nahrané fotografie pro možnost změny velikosti menších obrázků. V závislosti na nastavení galerie je však možné stáhnout originální fotografii a získat tak její nejkvalitnější verzi.
 
-Rozměry miniatury a obrázku v normálním rozlišení lze nastavit ve vlastnostech složky a případně je kdykoli změnit (obrázky se automaticky předgenerují z původní fotografie).
+Rozměry miniatury a obrázku v normálním rozlišení lze nastavit ve vlastnostech složky a případně je kdykoli změnit (obrázky se automaticky generují z původní fotografie).
 
 ## Práce s aplikací galerie
 
 Administrace galerie je rozdělena do dvou sloupců, stejně jako webové stránky. V prvním je struktura složek a ve druhém se zobrazují samotné fotografie. Ikony pro přidávání, úpravy, mazání atd. odkazují na příslušný sloupec.
 
 ![](admin-dt.png)
+
+Ve stromové struktuře je možné [Vyhledávání](../../webpages/README.md#vyhledávání-ve-stromové-struktuře) podobně jako na webových stránkách. Prohledávají se pouze složky uložené v databázi, tj. ty, které mají plnou ikonu. <i class="ti ti-folder-filled" role="presentation" ></i>.
 
 ### Správa struktury
 
@@ -52,13 +54,41 @@ Panel nástrojů obsahuje ikony `SML` upravit velikost zobrazených fotografií 
 
 Kliknutím na fotografii ji vyberete a poté můžete vybrat funkci kliknutím na panel nástrojů (upravit, odstranit, zobrazit, otočit...). Pro rychlé zobrazení editoru můžete kliknout přímo na název souboru.
 
-![](admin-edit-photo.png)
-
 Editor obsahuje následující karty:
-- Popis - krátký a dlouhý popis fotografie v různých jazycích (v závislosti na jazyku stránky se zobrazí odpovídající popis).
-- Metadata - další údaje, pole priority lze použít k uspořádání fotografií v galerii.
-- Editor - upravte fotografii v editoru obrázků, můžete ji oříznout, otočit, přidat objekty, text atd.
-- Oblast zájmu - sady [oblast zájmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu) na fotografii pro zobrazení např. v seznamu novinek apod.
+
+**Popis**
+
+Krátký a dlouhý popis fotografie v různých jazycích.
+
+Tyto popisy jsou důležité pro mezinárodní uživatele. Krátký popis poskytuje rychlý náhled na obsah fotografie, zatímco dlouhý popis poskytuje podrobnější informace. Popisy se automaticky zobrazují podle zvoleného jazyka stránky.
+
+![](description-preview.png)
+
+**Metadata**
+
+Obsahuje další údaje:
+- **Název souboru**: Jedinečný název souboru fotografie, který umožňuje její identifikaci v systému.
+- **Složka**: Cesta nebo umístění v úložišti, kde je fotografie uložena. Pomáhá při organizaci a vyhledávání fotografií.
+- **Autor**: Jméno nebo pseudonym osoby, která fotografii pořídila.
+- **Datum nahrání**: Datum a čas nahrání fotografie do systému. Pomáhá sledovat chronologii a umožňuje vyhledávat fotografie podle času jejich nahrání.
+- **Priorita**: Stupeň důležitosti nebo preference, který lze použít k uspořádání fotografií v galerii. Nižší priorita znamená, že fotografie bude zobrazena na výraznějším místě.
+- **Adresa URL zdroje obrázku**: URL, odkud jsme obrázek získali.
+
+![](metadata-preview.png)
+
+**Editor obrázků**
+
+Obsahuje editor obrázků, ve kterém můžete snadno otáčet, ořezávat, měnit velikost, přidávat text a používat různé efekty, více informací [v editoru obrázků](../../image-editor/README.md)
+
+![](../../image-editor/editor-preview.png)
+
+**Oblast zájmu**
+
+Sady [oblast zájmu](../../../frontend/thumb-servlet/interest-point.md) na fotografii pro zobrazení např. v seznamu novinek apod.
+
+Používá se v případech, kdy potřebujeme mít k dispozici původní fotografii, ale zobrazit z ní pouze určitý výřez - fotografii neořezáváme, pouze nastavíme oblast zájmu.
+
+![](area_of_interest-preview.png)
 
 ## Vložení aplikace do webové stránky
 

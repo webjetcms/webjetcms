@@ -1,9 +1,6 @@
 Feature('webpages.webpage-access-perex');
 
 var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber,
-     add_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider')),
-     edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning')),
-     delete_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider')),
      anotation = 'autotest',
      place = 'Bratislava';
 
@@ -129,8 +126,8 @@ Scenario('Pristup a perex webstranky', async ({ I, DTE }) => {
      I.waitForElement(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'), 15);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('Foto galéria'));
      I.wait(1);
-     I.waitForVisible(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'), 20);
-     I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('test'));
+     I.waitForVisible(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withChild('.elfinder-cwd-filename[title="test"]'), 20);
+     I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withChild('.elfinder-cwd-filename[title="test"]'));
      I.wait(1);
      I.waitForVisible(locate('.elfinder-cwd-file.ui-corner-all.ui-selectee'), 10);
      I.wait(1);

@@ -117,16 +117,16 @@ $(document).ready(function()
         url: "/admin/users/2factorauth",
     }).done(function(msg) {
         if (msg == ""){
-            $("#uniform-gauthCheckbox span").removeClass("checked");
+            $("#gauthCheckbox").prop( "checked", false );
         }else{
             $("#secret").text(msg);
-            $("#uniform-gauthCheckbox span").addClass("checked");
+            $("#gauthCheckbox").prop( "checked", true );
         }
     });
 
    $("#gauthCheckbox").change(function() {
 
-       if($("#secret").text() == ""){//!$("#uniform-gauthCheckbox span").hasClass("checked")){
+       if($("#secret").text() == ""){
 
            $.ajax({
                url: "/admin/users/2factorauthNew",
@@ -147,14 +147,14 @@ $(document).ready(function()
 			   //not used anymore $("#scratchCodeCell").show();
 			   $("#scratchCode").text(data.scratch);
 			   $("#secret").text(data.secret);
-               $("#uniform-gauthCheckbox span").addClass("checked");
+               $("#gauthCheckbox").prop( "checked", true );
 
                $("#instructions").html("<iwcm:text key='user.gauth.instructions2'/> "+data.secret);
 
                $("#okToConfirm").show();
            });
 	   }else{
-           $("#uniform-gauthCheckbox span").removeClass("checked");
+           $("#gauthCheckbox").prop( "checked", false );
            $("#qrImage").hide();
            $("#scratchCodeCell").hide();
            $("#scratchCode").text("");

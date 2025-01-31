@@ -113,7 +113,7 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     <div class="password-strength-info"></div>
                 </div>
                 <div class="form-group">
-                <form:select path="language" cssClass="lang select2 form-control" onchange="selectLanguage(this)">
+                <form:select path="language" cssClass="lang select2 form-select" onchange="selectLanguage(this)">
                     <form:option value="sk"><iwcm:text key="logon.language.slovak"/></form:option>
                     <form:option value="en"><iwcm:text key="logon.language.english"/></form:option>
                     <form:option value="cz"><iwcm:text key="logon.language.czech"/></form:option>
@@ -121,8 +121,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                 </form:select>
                 </div>
                 <div class="form-actions">
-                    <button type="submit" name="login-submit" id="login-submit" class="btn blue pull-right"><iwcm:text key="button.login"/></button>
-                    <button type="button" class="btn lost-password" onclick="$('#sendPassword').show('slow');"><i class="ti ti-lock-open"></i> <iwcm:text key="logon.mail.lost_password"/></button>
+                    <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary pull-right"><iwcm:text key="button.login"/></button>
+                    <button type="button" class="btn btn-outline-secondary lost-password" onclick="$('#sendPassword').show('slow');"><i class="ti ti-lock-open"></i> <iwcm:text key="logon.mail.lost_password"/></button>
                 </div>
             </form:form>
 
@@ -141,9 +141,9 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
                     <div class="form-group">
                         <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
                     </div>
-                    <div class="form-actions text-right">
-                        <button type="submit" id="register-submit-btn" class="btn blue">
-                            <iwcm:text key="button.send"/> <i class="m-icon-swapright m-icon-white"></i>
+                    <div class="form-actions text-end">
+                        <button type="submit" id="register-submit-btn" class="btn btn-primary">
+                            <iwcm:text key="button.send"/>
                         </button>
                     </div>
                 </form>

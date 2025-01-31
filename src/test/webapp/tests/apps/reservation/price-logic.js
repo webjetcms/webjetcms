@@ -15,9 +15,9 @@ Scenario('Reservation prices calculating logic', ({I, DTE}) => {
     DTE.waitForEditor("reservationDataTable");
 
     SL.verifyReservationPrice(I, reservation_object_name, "01.01.2045", "01.01.2045", "08:00", "09:00", "190");
-    SL.verifyReservationPrice(I, reservation_object_name, "01.01.2045", "02.01.2045", "08:00", "15:00", "2660");
-    SL.verifyReservationPrice(I, reservation_object_name, "03.01.2045", "03.01.2045", "08:00", "16:00", "1120");
-    SL.verifyReservationPrice(I, reservation_object_name, "01.01.2045", "03.01.2045", "08:00", "16:00", "4160");
+    SL.verifyReservationPrice(I, null, "01.01.2045", "02.01.2045", "08:00", "15:00", "2660");
+    SL.verifyReservationPrice(I, null, "03.01.2045", "03.01.2045", "08:00", "16:00", "1120");
+    SL.verifyReservationPrice(I, null, "01.01.2045", "03.01.2045", "08:00", "16:00", "4160");
 });
 
 Scenario('Reservation price DISCOUNT by userGroup', ({I, DT, DTE}) => {
@@ -51,7 +51,10 @@ Scenario('Remove discount', ({I, DT, DTE}) => {
 
 function checkUserReservationPrice(I, reservationDate, slots, expectedPrice) {
     I.amOnPage("/apps/spring-app/rezervacie/");
+    I.waitForVisible("#reservationDate");
+    I.wait(1);
     I.fillField("#reservationDate", reservationDate);
+    I.pressKey("Tab");
     for (const slot of slots) {
         I.click(locate(`td[id='${slot}'].free`));
     }

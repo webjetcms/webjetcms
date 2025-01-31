@@ -1,5 +1,7 @@
 # Rezervační objekty
 
+## Seznam objektů rezervace
+
 Aplikace Seznam objektů rezervací umožňuje vytvářet/upravovat/mazat objekty rezervací a také je importovat ze souboru Excel a exportovat do souboru Excel/CSV (nebo je dokonce při exportu ihned vytisknout).
 
 ![](reservation_object-datatable.png)
@@ -17,7 +19,7 @@ Dalším důležitým parametrem je možnost rezervace pokoje na celý den.
 - Pokud je tato možnost vypnutá, můžete zadat minimální délku rezervace v minutách a cenu za zvolenou časovou jednotku. Cena může být samozřejmě nulová, v takovém případě bude rezervace tohoto objektu bezplatná. Minimální délka rezervace musí být kladné nenulové číslo, tedy alespoň 1 minuta. Tento objekt bude možné rezervovat minimálně na zadanou časovou hodnotu a maximálně na dobu, která je v rámci zvoleného rezervačního intervalu.
 - Pokud je tato možnost povolena, nebude možné nastavit minimální délku rezervace ani cenu za jednotku času. Budete moci zadat pouze cenu za den. V praxi to znamená, že nemůžete rezervovat pouze část celého intervalu, ale rezervujete celý interval (celý den).
 
-**Varování:** kromě toho, že se některé parametry skrývají v závislosti na stavu přepínače rezervací pro celý den, je skryta/odkryta i celá karta. [Časy podle dnů](#Časy-podle-dnů).
+!>**Varování:** kromě toho, že se některé parametry skrývají v závislosti na stavu přepínače rezervací pro celý den, je skryta/odkryta i celá karta. [Časy podle dnů](#časy-podle-dnů).
 
 ![](reservation_object-editor_basic_tab.png)
 

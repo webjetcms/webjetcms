@@ -2,6 +2,7 @@ package sk.iway.iwcm.doc;
 
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -12,6 +13,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.rest.WebPagesListener;
 import sk.iway.iwcm.editor.service.GroupsService;
+import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +38,7 @@ public class GroupsTreeService {
         DocDB docDB = DocDB.getInstance();
         int idOriginal = id;
 
+        String treeSearchValue = Tools.getStringValue(request.getParameter("treeSearchValue"), null);
         if (isSystemRequested(click) && id<1) {
             if (Constants.getBoolean("templatesUseRecursiveSystemFolder")==false) {
                 GroupDetails systemGroupDetails = GroupsService.getSystemGroupDetails();
@@ -53,17 +56,17 @@ public class GroupsTreeService {
 
         boolean parentEditable = GroupsDB.isGroupEditable(user, id);
 
-        List<GroupDetails> groups = groupsDB.getGroups(id);
+        List<GroupDetails> groups = getGroups(id, treeSearchValue, request);
 
-        //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RESTURN ALL ITEMS
+        //Special case -> if we want tree items for STAT section AND user have cmp_stat_seeallgroups right, we do not filter by perms but RETURN ALL ITEMS
         String referer = request.getHeader("referer");
         String uri = request.getRequestURI();
         final boolean checkGroupsPerms;
         //Referer -> that we call from stat section
         //Uri -> that it's called from GroupTreeRestController NOT from WebPagesListener
-        if(referer!=null && referer.contains("/apps/stat/admin/") && uri != null && uri.contains("/admin/rest/groups/tree/tree") && user.isEnabledItem("cmp_stat_seeallgroups"))
+        if(referer!=null && referer.contains("/apps/stat/admin/") && uri != null && uri.contains("/admin/rest/groups/tree/tree") && user.isEnabledItem("cmp_stat_seeallgroups")) {
             checkGroupsPerms = false;
-        else {
+        } else {
             checkGroupsPerms = true;
             groups = filterByPerms(groups, user); //Filter groups by perms
         }
@@ -90,6 +93,8 @@ public class GroupsTreeService {
                 groups = filterFullPath(groups, domainFilesPrefix + "/files");
             }
         }
+
+        List<JsTreeItem> filteredFilesGroupsTree = new ArrayList<>();
         if (isSystemRequested(click)) {
             if (group!=null && (group.getFullPath().startsWith("/files") || group.getFullPath().startsWith(domainFilesPrefix+"/files"))) {
                 //if it's /files/something OR /Jet Portal 4/files/something then do not filter and show all groups by requested parent folder
@@ -104,43 +109,58 @@ public class GroupsTreeService {
                 //add /files folder to root (it's shown in /System folder)
                 if (idOriginal==0) {
                     List<GroupDetails> filesGroups = filterFullPath(groupsDB.getGroups(0), "!/files");
-                    groups.addAll(filesGroups);
                     if (domainRootGroup != null && Tools.isNotEmpty(domainFilesPrefix)) {
-                        filesGroups = filterFullPath(groupsDB.getGroups(domainRootGroup.getGroupId()), "!"+domainFilesPrefix+"/files");
+                        filesGroups.addAll( filterFullPath(groupsDB.getGroups(domainRootGroup.getGroupId()), "!"+domainFilesPrefix+"/files") );
+                    }
+
+                    if(Tools.isNotEmpty(treeSearchValue) == true) {
+                        filteredFilesGroupsTree = getFilteredGroupsTree(filesGroups, treeSearchValue, user, showPages, request);
+                        // This file groups is fully prepared tree with parents -> add at end
+                    } else {
                         groups.addAll(filesGroups);
                     }
                 }
             }
         }
 
-        items.addAll(groups.stream().sorted(Comparator.comparing(GroupDetails::getSortPriority)).map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms)).collect(Collectors.toList()));
+        items.addAll( sortTreeBasedOnUserSettings(user, groups, showPages, checkGroupsPerms) );
 
-        //standardne zobrazenie v stromovej strukture, rovno zobraz aj pod adresare
-        int groupId = WebPagesListener.getLastGroupId(request, 0);
-        if ((click.equals("dt-tree-group-filter-system-trash") || click.equals("dt-tree-filter-system-trash")) && id==0 && groupId<1 && request.getParameter("docid")==null) {
-            List<JsTreeItem> rootItems = new ArrayList<>();
-            rootItems.addAll(items);
-            //oznac prvy adresar ako selectnuty
-            if (rootItems.isEmpty()==false) {
-                rootItems.get(0).getState().setSelected(true);
-            }
-            //pridaj child elementy
-            if (rootItems.size() <= Constants.getInt("webpagesTreeAutoOpenLimit", 2)) {
-                //ak je tam menej ako 3 grupy, tak nacitaj rovno aj subgrupy
-                for (JsTreeItem item : rootItems) {
-                    if (item.getState()==null) item.setState(new JsTreeItemState());
-                    item.getState().setOpened(true);
-                    //toto je totalna haluz, pri rozbalenie a refreshi toto nemoze byt nastavene, inak to padne
-                    if (request.getParameter("click")!=null) item.setChildren(null);
+        if(Tools.isEmpty(treeSearchValue)) {
+            //standardne zobrazenie v stromovej strukture, rovno zobraz aj pod adresare
+            int groupId = WebPagesListener.getLastGroupId(request, 0);
+            if ((click.equals("dt-tree-group-filter-system-trash") || click.equals("dt-tree-filter-system-trash")) && id==0 && groupId<1 && request.getParameter("docid")==null) {
+                List<JsTreeItem> rootItems = new ArrayList<>();
+                rootItems.addAll(items);
+                //oznac prvy adresar ako selectnuty
+                if (rootItems.isEmpty()==false) {
+                    rootItems.get(0).getState().setSelected(true);
+                }
+                //pridaj child elementy
+                if (rootItems.size() <= Constants.getInt("webpagesTreeAutoOpenLimit", 2)) {
+                    //ak je tam menej ako 3 grupy, tak nacitaj rovno aj subgrupy
+                    for (JsTreeItem item : rootItems) {
+                        if (item.getState()==null) item.setState(new JsTreeItemState());
+                        item.getState().setOpened(true);
+                        //toto je totalna haluz, pri rozbalenie a refreshi toto nemoze byt nastavene, inak to padne
+                        if (request.getParameter("click")!=null) item.setChildren(null);
 
-                    item.setParent("#");
-                    List<JsTreeItem> subGroups = this.getItems(user, Tools.getIntValue(item.getId(), -1), showPages, click, requestedDomain, request);
-                    for (JsTreeItem sub : subGroups) {
-                        sub.setParent(item.getId());
+                        item.setParent("#");
+                        List<JsTreeItem> subGroups = this.getItems(user, Tools.getIntValue(item.getId(), -1), showPages, click, requestedDomain, request);
+                        for (JsTreeItem sub : subGroups) {
+                            sub.setParent(item.getId());
+                        }
+                        items.addAll(subGroups);
                     }
-                    items.addAll(subGroups);
                 }
             }
+        } else {
+            //
+            List<JsTreeItem> filteredListWithParents = addParents( items, user, showPages, checkGroupsPerms, id );
+            // Add prepared file groups
+            filteredListWithParents.addAll(filteredFilesGroupsTree);
+
+            items.clear();
+            items.addAll(filteredListWithParents);
         }
 
         if (parentEditable && showPages && id>0)
@@ -179,6 +199,31 @@ public class GroupsTreeService {
         }
 
         return items;
+    }
+
+    private List<JsTreeItem> sortTreeBasedOnUserSettings(Identity user, List<GroupDetails> groups, boolean showPages, boolean checkGroupsPerms) {
+        String sortType = WebpagesService.getTreeSortType(user);
+        boolean orderAsc = WebpagesService.isTreeSortOrderAsc(user);
+
+        Comparator<GroupDetails> comparator;
+        if("title".equals(sortType)) {
+            // ignore case, sort that way is better
+            comparator = Comparator.comparing(GroupDetails::getGroupName, String.CASE_INSENSITIVE_ORDER);
+        } else if("createDate".equals(sortType)) {
+            comparator = Comparator.comparing(GroupDetails::getGroupId);
+        } else {
+            //DEFAULT OPTION -> sort by "priority"
+            comparator = Comparator.comparing(GroupDetails::getSortPriority);
+        }
+
+        if(!orderAsc) {
+            comparator = comparator.reversed();
+        }
+
+        return groups.stream()
+            .sorted(comparator)
+            .map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))
+            .collect(Collectors.toList());
     }
 
     public void fixSortPriority(HttpServletRequest request, int docId, GroupDetails parent, int position) {
@@ -352,5 +397,222 @@ public class GroupsTreeService {
         path.append("/");
         path.append(tmp.getTitle());
         return path.toString();
+    }
+
+    /**
+     * Returns GrooupDetails object for groupId, BUT verify permissions for user.
+     * It it's not accessible, return first accessible group for user.
+     * @param groupId
+     * @param user
+     * @return
+     */
+    public static GroupDetails gerDefaultGroupTreeOptionForUser(int groupId, Identity user) {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+
+        //User can edit all groups -> so return group (no check needed)
+        //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        String referer = null;
+        if (rb != null) {
+            referer = rb.getReferrer();
+        }
+        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
+            if(groupId > 0) return groupsDB.findGroup(groupId);
+
+            GroupDetails rootGroup = new GroupDetails();
+            rootGroup.setGroupId(-1);
+            return rootGroup;
+        }
+
+        //Can handle default group ?
+        boolean parentEditable = GroupsDB.isGroupEditable(user, groupId);
+        boolean parentViewable = GroupsDB.isGroupViewable(user, groupId);
+
+        //Check if user have right for this group
+        //It cant be -1 (root group), because there is group restriction for you part of tree
+        if( (parentEditable || parentViewable) && groupId != -1) {
+            //User have right for this group)
+           return groupsDB.findGroup(groupId);
+        } else {
+            //Problem, user missing rights for this group ... return first permitted group
+            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(true), ",");
+
+            //Use first groupId
+            return groupsDB.findGroup( permittedGroups[0] );
+        }
+    }
+
+    /**
+     * Filter list of groups by searchText value
+     * @param groups
+     * @param searchText
+     * @param request
+     * @return
+     */
+    private List<GroupDetails> filterGroups(List<GroupDetails> groups, String searchText, HttpServletRequest request) {
+        String treeSearchType = Tools.getStringValue(request.getParameter("treeSearchType"), "");
+        final String wantedValueLC = DB.internationalToEnglish(searchText).toLowerCase();
+
+        //Filter by serach value and search type
+        if("contains".equals(treeSearchType)) {
+            return groups.stream()
+                .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().contains(wantedValueLC))
+                .collect(Collectors.toList());
+        } else if("startwith".equals(treeSearchType)) {
+            return groups.stream()
+                .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().startsWith(wantedValueLC))
+                .collect(Collectors.toList());
+        } else if("endwith".equals(treeSearchType)) {
+            return groups.stream()
+                .filter(group -> DB.internationalToEnglish(group.getGroupName()).toLowerCase().endsWith(wantedValueLC))
+                .collect(Collectors.toList());
+        } else if("equals".equals(treeSearchType)) {
+            return groups.stream()
+                .filter(group -> DB.internationalToEnglish(group.getGroupName()).equalsIgnoreCase(wantedValueLC))
+                .collect(Collectors.toList());
+        } else return new ArrayList<>();
+    }
+
+    /**
+     * Get groups list by root ID and filter by searchText
+     * @param rootGroupId
+     * @param searchText
+     * @param request
+     * @return
+     */
+    private List<GroupDetails> getGroups(int rootGroupId, String searchText, HttpServletRequest request) {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+
+        if (Tools.isEmpty(searchText)) return groupsDB.getGroups(rootGroupId);
+
+        //Get all suitable
+        List<GroupDetails> result;
+        if(rootGroupId < 1) {
+            result = groupsDB.getGroupsAll();
+        } else {
+            result = new ArrayList<>();
+            groupsDB.getGroupsTree(rootGroupId, result);
+        }
+
+        return filterGroups(result, searchText, request);
+    }
+
+    /**
+     * Filter file groups by searchValue
+     * @param fileGroups
+     * @param searchValue
+     * @param user
+     * @param showPages
+     * @param request
+     * @return
+     */
+    private List<JsTreeItem> getFilteredGroupsTree(List<GroupDetails> fileGroups, String searchValue, Identity user, boolean showPages, HttpServletRequest request) {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+
+        // From fileGroups get all groups expanded -> direction down (children)
+        Map<Integer, GroupDetails> allGroupsExpanded = new HashMap<>();
+        fileGroups.forEach(g -> allGroupsExpanded.put(g.getGroupId(), g));
+        for(GroupDetails fileGroup : fileGroups) {
+            List<GroupDetails> childs = new ArrayList<>();
+            groupsDB.getGroupsTree(fileGroup.getGroupId(), childs);
+            for(GroupDetails child : childs) {
+                allGroupsExpanded.putIfAbsent(child.getGroupId(), child);
+            }
+        }
+
+        // Filter all groups by wanted value
+        List<GroupDetails> filtered = filterGroups(new ArrayList<>(allGroupsExpanded.values()), searchValue, request);
+
+        //Transform to JsTreeItem
+        List<JsTreeItem> items = new ArrayList<>();
+        items.addAll(
+            filtered.stream()
+            .map(g -> new GroupsJsTreeItem(g, user, showPages))
+            .collect(Collectors.toList())
+        );
+
+        // Add to filtered groups their parents -> but only to height of original groups
+        Map<Integer, JsTreeItem> filteredWithParents = new HashMap<>();
+        for(JsTreeItem item : items) {
+            int idToAdd = Integer.parseInt(item.getId());
+            while(true) {
+                GroupDetails g = allGroupsExpanded.get(idToAdd);
+                if(g != null && filteredWithParents.containsKey(g.getGroupId()) == false) {
+                    filteredWithParents.putIfAbsent(g.getGroupId(), new GroupsJsTreeItem(g, user, showPages));
+                    idToAdd = g.getParentGroupId();
+                } else {
+                    break;
+                }
+            }
+        }
+
+        // Set statuses
+        for (Map.Entry<Integer, JsTreeItem> entry : filteredWithParents.entrySet()) {
+            entry.getValue().setState(getLoadedState());
+            Integer parentId = allGroupsExpanded.get( entry.getKey() ).getParentGroupId();
+            entry.getValue().setParent( filteredWithParents.containsKey(parentId) ? parentId.toString() : "#" );
+        }
+
+        // Return filtered groups with their parents
+        return new ArrayList<>(filteredWithParents.values());
+    }
+
+    /**
+     * Add parent groups for foundGroups to correctly build tree structure
+     * @param filteredGroups
+     * @param user
+     * @param showPages
+     * @param checkGroupsPerms
+     * @param id
+     * @return
+     */
+    private List<JsTreeItem> addParents(List<JsTreeItem> filteredGroups, Identity user, boolean showPages, boolean checkGroupsPerms, int id) {
+        GroupsDB groupsDB = GroupsDB.getInstance();
+        Map<Integer, GroupDetails> kk = new HashMap<>();
+
+        //Get whole trees
+        for(JsTreeItem group : filteredGroups) {
+            List<GroupDetails> parents = groupsDB.getParentGroups(Integer.parseInt(group.getId()), false);
+            for(GroupDetails parent : parents) {
+                kk.putIfAbsent(parent.getGroupId(), parent);
+            }
+        }
+
+        // Remove groups that are higher level that we want (including parent group because its System or trash and we dont want to show them)
+        if(id > 0) {
+            List<GroupDetails> groupsToRemove = groupsDB.getParentGroups(id);
+            for(GroupDetails group : groupsToRemove) {
+                kk.remove(group.getGroupId());
+            }
+        }
+
+        //Transform to JsTreeItem
+        List<JsTreeItem> items = new ArrayList<>();
+        items.addAll(
+            kk.values().stream()
+            .map(g -> new GroupsJsTreeItem(g, user, showPages, checkGroupsPerms))
+            .collect(Collectors.toList())
+        );
+
+        //Set them states
+        for(JsTreeItem item : items) {
+            item.setState(getLoadedState());
+
+            int parentId = kk.get( Integer.parseInt(item.getId()) ).getParentGroupId();
+            item.setParent( (parentId == 0 || parentId == id)  ? "#" : String.valueOf(parentId) );
+        }
+
+        return items;
+    }
+
+    /**
+     * Returns JsTreeItemState with loaded state
+     * @return
+     */
+    private JsTreeItemState getLoadedState() {
+        JsTreeItemState state =  new JsTreeItemState();
+        state.setOpened(false);
+        state.setLoaded(true);
+        return state;
     }
 }

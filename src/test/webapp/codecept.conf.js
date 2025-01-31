@@ -55,7 +55,7 @@ exports.config = {
       timeout: 30000, //toto je max cas ako dlho moze trvat akcia, kedze mame pressKeyDelay 50ms tak musi byt dostatocne dlhe, aby cez fillField vedelo napisat text, inak timeoutne funkcia
       restart: restart,
       keepCookies: true,
-      keepBrowserState: true
+      keepBrowserState: true,
       /* este nefunguje, vid https://github.com/microsoft/playwright/pull/3526
       ,
       chromium: {
@@ -63,6 +63,9 @@ exports.config = {
       }
       */
       //,emulate: devices['iPhone 6']
+      chromium: {
+        args: ['--lang=sk']
+      }
     },
     CustomWebjetHelper: {
       require: './custom_helper.js'
@@ -102,7 +105,7 @@ exports.config = {
     DTE: './pages/DTE.js',
     TempMail: './pages/TempMail.js',
     Apps: './pages/Apps.js',
-    i18n: './pages/i18n.js'
+    i18n: './pages/i18n.js',
   },
   bootstrap: null,
   mocha: {
@@ -117,9 +120,14 @@ exports.config = {
       enabled: true
     },
     screenshotOnFail: {
-      enabled: true
+      enabled: true,
+      fullPageScreenshots: true
     },
-    allure: {},
+    allure: {
+      enabled: true,
+      require: "allure-codeceptjs",
+      resultsDir: "../../../build/test/allure-results",
+    },
     pauseOnFail: {},
     autoLogin: {
       enabled: true,
@@ -135,6 +143,7 @@ exports.config = {
             I.amOnPage('/logoff.do?forward=/admin/logon/');
             //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
             I.wjSetDefaultWindowSize();
+            I.switchTo();
 
             //Select language if not default
             if ("sk" != language) {

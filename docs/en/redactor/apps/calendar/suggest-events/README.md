@@ -6,7 +6,8 @@ It shows events that are approved (automatically or by the administrator) and wh
 
 ![](page.png)
 
-**Warning:** after the recommendation/non-recommendation, the event continues to **will display** in the table so that their recommendation status can be changed. However, when the start of the event gets into the past, **stop displaying**. However, events will still be visible in the [List of events](../README.md)
+!>**Warning:** after the recommendation/non-recommendation, the event continues to **will display** in the table so that their recommendation status can be changed. However, when the start of the event gets into the past, **stop displaying**. However, events will still be visible in the [List of events](../README.md)
+
 ## Event recommendation
 
 The event recommendation is triggered by the button ![](suggest_button.png ":no-zoom"). After a successful recommendation, an informative message will be displayed.

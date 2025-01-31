@@ -1,4 +1,4 @@
-# Seznam blogerů
+# Správa blogů
 
 Sekce Seznam bloggerů slouží k vytváření a správě uživatelů typu **blogger**.
 
@@ -6,7 +6,7 @@ Přístup do této sekce mají pouze **správci blogů**. Administrátor bloger�
 
 Kromě toho musí být [skupina uživatelů](../../../admin/users/user-groups.md) s názvem `Blog`. Pokud neexistuje, vytvořte ji před přidáním prvního bloggera.
 
-**Varování:** admin bloggerů se nepřidává do skupiny uživatelů Blog.
+!>**Varování:** admin bloggerů se nepřidává do skupiny uživatelů Blog.
 
 Pokud chcete, aby měl administrátor blogerů také možnost zasahovat do struktury a článků jednotlivých blogerů ([Seznam článků](./README.md)) musí mít také správně nastaven Seznam blogů/článků.
 

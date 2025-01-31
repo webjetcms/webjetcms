@@ -163,7 +163,7 @@ public class StatService {
      * @return ChartType enum value
      */
     public static ChartType stringToChartTypeEnum(String chartType) {
-<span class="fc bfc" id="L166" title="All 4 branches covered.">        if(chartType == null || chartType.equalsIgnoreCase(&quot;notChart&quot;))</span>
+<span class="pc bpc" id="L166" title="1 of 4 branches missed.">        if(chartType == null || chartType.equalsIgnoreCase(&quot;notChart&quot;))</span>
 <span class="fc" id="L167">            return ChartType.NOT_CHART;</span>
 <span class="fc bfc" id="L168" title="All 2 branches covered.">        else if(&quot;pie&quot;.equalsIgnoreCase(chartType))</span>
 <span class="fc" id="L169">            return ChartType.PIE;</span>
@@ -257,8 +257,8 @@ public class StatService {
 <span class="nc" id="L257">            searchDate = specialDateName;</span>
         else {
 <span class="pc bpc" id="L259" title="1 of 2 branches missed.">            if (Tools.getStringValue(request.getParameter(&quot;searchdayDate&quot;), null) != null) searchDate = &quot;searchdayDate&quot;;</span>
-<span class="fc bfc" id="L260" title="All 2 branches covered.">            else if (Tools.getStringValue(request.getParameter(&quot;searchDayDate&quot;), null) != null) searchDate = &quot;searchDayDate&quot;;</span>
-<span class="fc" id="L261">            else searchDate = &quot;dayDate&quot;;</span>
+<span class="pc bpc" id="L260" title="1 of 2 branches missed.">            else if (Tools.getStringValue(request.getParameter(&quot;searchDayDate&quot;), null) != null) searchDate = &quot;searchDayDate&quot;;</span>
+<span class="nc" id="L261">            else searchDate = &quot;dayDate&quot;;</span>
         }
 
         //Process dateString

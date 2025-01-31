@@ -1,4 +1,4 @@
-# Prekladové kľúče
+# Zoznam kľúčov
 
 Sekcia Prekladové kľúče umožňuje vytvárať/upravovať/duplikovať prekladové kľúče alebo ich importovať či exportovať.
 

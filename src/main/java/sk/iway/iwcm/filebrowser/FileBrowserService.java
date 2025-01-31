@@ -232,7 +232,7 @@ public class FileBrowserService {
 					// zmenim udaje v suboroch
 					Column col;
 					String stranka="";
-					List<Column> zoznamUsage = FileTools.getFileUsage(oldFile);
+					List<Column> zoznamUsage = FileTools.getFileUsage(oldFile, user);
 					for(int i=0;i<zoznamUsage.size();i++)
 					{
 						col = zoznamUsage.get(i);

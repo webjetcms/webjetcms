@@ -63,10 +63,11 @@ Scenario('password-strength-login', ({ I, Document }) => {
     Document.screenshotElement("div.content", "/_media/changelog/2021q2/2021-26-password-strength.png");
 });
 
-Scenario('users-docs-screens', ({ I, Document }) => {
+Scenario('users-docs-screens', ({ I, DT, Document }) => {
     I.amOnPage("/admin/v9/users/user-list");
 
     //Users data table
+    DT.waitForLoader();
     Document.screenshot("/admin/users/users-dataTable.png");
 
     //Tab personal info
@@ -79,6 +80,7 @@ Scenario('users-docs-screens', ({ I, Document }) => {
 
     //Tab groups
     I.click("#pills-dt-datatableInit-groupsTab-tab");
+    I.wait(1);
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-groups.png");
 
     //Tab rights - create new user (without admin section)
@@ -118,7 +120,7 @@ Scenario('users-docs-screens', ({ I, Document }) => {
 
 Scenario('users-docs-screens-adminuser', ({ I , DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/users/user-list");
-    DT.filter("login", "admin");
+    DT.filterContains("login", "admin");
     I.click("admin");
     DTE.waitForEditor();
 

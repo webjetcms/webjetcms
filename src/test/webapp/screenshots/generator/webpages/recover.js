@@ -1,13 +1,5 @@
 Feature('webpages.recover-action');
 
-let recoveryWebPage = (locate('#datatableInit_wrapper').find("button.btn.btn-sm.btn-outline-secondary.button-recover-page"));
-let recoveryFolder = (locate('.col-md-4.tree-col').find("button.btn.btn-sm.buttons-selected.btn-outline-secondary.button-recover-group"));
-
-let delete_webpage_button = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger'));
-let delete_folder_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger'));
-
-let edit_folder_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.noperms-editDir.btn-warning'));
-
 Before(({ I }) => {
     I.relogin("admin");
 });
@@ -17,9 +9,9 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     let confLng = I.getConfLng();
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
-    DT.filter("title", "page_to_delete");
+    DT.filterContains("title", "page_to_delete");
     I.clickCss("td.sorting_1");
-    I.click(delete_webpage_button);
+    I.click(DT.btn.delete_button);
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
 
     switch (confLng) {
@@ -41,19 +33,20 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
         default:
             throw new Error("Unknown language: " + confLng);
     }
-    
+
 
     I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
-    DT.filter("title", "page_to_delete");
+    DT.filterContains("title", "page_to_delete");
     Document.screenshot("/redactor/webpages/recover.png", 1410, 760);
     I.see("page_to_delete");
-    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
-    Document.screenshotElement(recoveryWebPage, "/redactor/webpages/recover-button.png");
+
+    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    Document.screenshotElement(DT.btn.recovery_button, "/redactor/webpages/recover-button.png");
     I.fillField("#folderIdInputWrapper", "");
     Document.screenshotElement("#folderIdInputWrapper", "/redactor/webpages/recover-folder-id-1.png");
-    I.click(recoveryWebPage);
-  
+    I.click(DT.btn.recovery_button);
+
     switch (confLng) {
         case "sk":
             I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -67,16 +60,16 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
         default:
             I.see("No matching records found");
     }
-    
+
 
     I.moveCursorTo("div.toast-success");
     Document.screenshotElement("div.toast-success", "/redactor/webpages/recover-page-success.png");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
     I.click( locate("a.jstree-anchor").withText("recoverSubFolderOne") );
-    I.click(delete_folder_button);
+    I.click(DT.btn.tree_delete_button);
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
-    
+
     switch (confLng) {
         case "sk":
             I.click('Zmazať');
@@ -90,7 +83,7 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
         default:
             I.click('Unknown action');
     }
-    
+
 
     DTE.waitForLoader();
     I.clickCss("#pills-trash-tab");
@@ -99,9 +92,9 @@ Scenario('recover screens', ({ I, DT, DTE, Document }) => {
     I.pressKey('Enter');
     DT.waitForLoader();
     Document.screenshotElement("#folderIdInputWrapper", "/redactor/webpages/recover-folder-id-2.png");
-    I.click(recoveryFolder);
+    I.click(DT.btn.recovery_button);
     I.waitForElement("div.toast-info");
-    
+
     switch (confLng) {
         case "sk":
             I.see("Ste si istý, že chcete obnoviť priečinok", "div.toast-title");

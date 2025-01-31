@@ -1,6 +1,6 @@
 # External filter
 
-An external filter is a special kind of filter used by sections `Štatistika` a `SEO`. The data can be filtered at the top of the page under the page title according to the options below. This filter works differently from the other datatables. At the top near the title is the main filter that filters the data retrieved from the server. Subsequently in the datatables, you can filter on the displayed data by other columns, but the filtering only happens over the data loaded according to the main filter anymore.
+An external filter is a special kind of filter used by sections **Statistics** a **SEO**. The data can be filtered at the top of the page under the page title according to the options below. This filter works differently from the other datatables. At the top near the title is the main filter that filters the data retrieved from the server. Subsequently in the datatables, you can filter on the displayed data by other columns, but the filtering only happens over the data loaded according to the main filter anymore.
 
 ![](ext-filter-1.png)
 
@@ -10,7 +10,7 @@ Such a case can be seen in the following figure, where the external filter inclu
 
 ![](ext-filter-2.png)
 
-> Set data si main filter at the top **remembers in the browser until you close it**. So if you set a period from-to you can scroll through the sections `Štatistika` a `SEO`, while all external filters containing period filtering are automatically set according to the value you specify. In this case, the data is automatically filtered when it is retrieved from the server. The same applies to filtering by folder etc.
+> Set data si main filter at the top **remembers in the browser until you close it**. So if you set a period from-to you can scroll through the sections **Statistics** a **SEO**, while all external filters containing period filtering are automatically set according to the value you specify. In this case, the data is automatically filtered when it is retrieved from the server. The same applies to filtering by folder etc.
 
 ## Date filter
 
@@ -41,7 +41,7 @@ If only the "from" part is entered, the traffic from the entered date to the cur
 
 ## View from folder
 
-You can filter data only for a specific folder, e.g. for language mutations or product microsites. We can think of this as traffic for statistics. Option `Všetky (zo všetkých domén)` is the default value and will display the data regardless of folder and domain, which in the case of Statistics represents **complete attendance**.
+You can filter data only for a specific folder, e.g. for language mutations or product microsites. We can think of this as traffic for statistics. Option **All (from all domains)** is the default value and will display the data regardless of folder and domain, which in the case of Statistics represents **complete attendance**.
 
 ![](stats-domainSelect.png)
 
@@ -57,9 +57,9 @@ In situations where you want to allow the user to view **complete attendance** s
 
 ## Filter web pages
 
-Filtering web pages (e.g. in the Search engines section) allows you to select a specific web page from the selected folder. If no folder is selected (folder filtering has the selected value `Všetky (zo všetkých domén)`), no web page is displayed for selection.
+Filtering web pages (e.g. in the Search engines section) allows you to select a specific web page from the selected folder. If no folder is selected (folder filtering has the selected value **All (from all domains)**), no web page is displayed for selection.
 
-The default option is `Všetky web stránky` and displays the data of all websites that match the other parameters.
+The default option is **All websites** and displays the data of all websites that match the other parameters.
 
 ![](ext-filter-webPageSelect.png)
 
@@ -77,7 +77,7 @@ In this section, filtering is used e.g. to specify a search engine to verify the
 
 The search engines offered for filtering depend on the selected time range, the selected folder and the filtered web page.
 
-The default option is `Všetky vyhľadávače` and displays data from all search engines.
+The default option is **All search engines** and displays data from all search engines.
 
 ![](ext-filter-searchEngineSelect.png)
 

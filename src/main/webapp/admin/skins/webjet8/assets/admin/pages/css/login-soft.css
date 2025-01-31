@@ -133,6 +133,7 @@ div.password-strength-info {
   background-color: transparent;
   color: white;
   padding-left: 2px;
+  border-width: 0px;
 }
 .login .content .form-actions .btn.lost-password:hover {
   text-decoration: underline;

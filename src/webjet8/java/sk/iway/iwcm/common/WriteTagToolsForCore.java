@@ -817,20 +817,24 @@ public class WriteTagToolsForCore {
 
         if (request != null)
         {
+            String templateInstallName = null;
             TemplateDetails temp = (TemplateDetails)request.getAttribute("templateDetails");
             if (temp != null)
             {
-                String templateInstallName = temp.getTemplateInstallName();
-                if (Tools.isNotEmpty(templateInstallName) && ("/templates/".equals(prefix) || origUrl.startsWith(prefix+templateInstallName+"/")==false))
-                {
-                    //skus prehladavat /components/ing/news/news.jsp (orig. /components/ing/menu/news.jsp)
-                    String fileName;
-                    if (origUrl.startsWith(prefix+templateInstallName+"/")==false) fileName = Tools.replace(origUrl, prefix, prefix+templateInstallName+"/");
-                    else fileName = origUrl;
+                templateInstallName = temp.getTemplateInstallName();
+            } else {
+                //set by CombineTag
+                templateInstallName = (String)request.getSession().getAttribute("templateInstallName");
+            }
+            if (Tools.isNotEmpty(templateInstallName) && ("/templates/".equals(prefix) || origUrl.startsWith(prefix+templateInstallName+"/")==false))
+            {
+                //skus prehladavat /components/ing/news/news.jsp (orig. /components/ing/menu/news.jsp)
+                String fileName;
+                if (origUrl.startsWith(prefix+templateInstallName+"/")==false) fileName = Tools.replace(origUrl, prefix, prefix+templateInstallName+"/");
+                else fileName = origUrl;
 
-                    newUrl = checkSetFile(newUrl, fileName);
-                    newUrl = checkSetFile(newUrl, Tools.replace(fileName, ext, "-"+lng+ext));
-                }
+                newUrl = checkSetFile(newUrl, fileName);
+                newUrl = checkSetFile(newUrl, Tools.replace(fileName, ext, "-"+lng+ext));
             }
         }
 

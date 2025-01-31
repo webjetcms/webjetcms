@@ -1,4 +1,4 @@
-Feature('apps.usrlogon');
+Feature('apps.user.usrlogon');
 
 var randomText = null;
 let userName = "autotestApproveUser_";
@@ -275,4 +275,30 @@ Scenario('user with weak password @singlethread', ({ I, DTE }) => {
     I.fillField("#retypepass", password);
     I.click(".buttonLogon");
     I.waitForText("tento text sa zobrazí len prihlásenému používateľovi", 10);
+});
+
+function checkLogoffPage(I) {
+    I.waitForText("Investičný vklad", 10);
+    I.dontSeeElement("a.logout");
+    I.dontSee("Dobrý deň Tester Playwright");
+}
+
+Scenario('logoff forward parameters', ({ I, DT, DTE }) => {
+    I.amOnPage("/logoff.do?forward=/apps/prihlaseny-pouzivatel/zakaznicka-zona/");
+    I.see("Zadajte vaše prihlasovacie údaje");
+
+    I.amOnPage("/logoff.do?forward=https://www.google.com/");
+    I.waitForText("Investičný vklad", 10);
+    I.dontSeeElement("a.logout");
+    I.dontSee("Dobrý deň Tester Playwright");
+
+    var forward = "/www.google.com";
+    for (var i=1; i<10; i++) {
+        I.amOnPage("/logoff.do?forward="+forward);
+
+        if (i<=2) I.waitForText("Chyba 404", 10);
+        else checkLogoffPage(I);
+
+        forward = "/"+forward;
+    }
 });

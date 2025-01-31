@@ -63,22 +63,21 @@ window.dtWJ = dtWJ;
 require('datatables.net');
 require('datatables.net-bs5');
 require('datatables.net-editor-bs5');
-require('datatables.net-autofill-bs5');
+//require('datatables.net-autofill-bs5');
 require('datatables.net-buttons-bs5');
 require('datatables.net-buttons/js/buttons.colVis.js');
 //WebJET fixnuta verzia - problem s prefixButtons a postfixButtons
 require('./buttons.colVis');
-require('datatables.net-buttons/js/buttons.flash.js');
 require('datatables.net-buttons/js/buttons.html5.js');
 require('datatables.net-buttons/js/buttons.print.js');
 require('datatables.net-colreorder-bs5');
 //require('datatables.net-fixedcolumns-bs5');
-require('datatables.net-fixedheader-bs5');
-require('datatables.net-keytable-bs5');
-require('datatables.net-responsive-bs5');
-require('datatables.net-rowgroup-bs5');
+//require('datatables.net-fixedheader-bs5');
+//require('datatables.net-keytable-bs5');
+//require('datatables.net-responsive-bs5');
+//require('datatables.net-rowgroup-bs5');
 //require('datatables.net-rowreorder-bs5');
-require('datatables.net-scroller-bs5');
+//require('datatables.net-scroller-bs5');
 require('datatables.net-select-bs5');
 require('datatables.net-datetime');
 
@@ -142,6 +141,8 @@ export const dataTableInit = options => {
     DATA.autoHeight = (typeof options.autoHeight !== "undefined") ? options.autoHeight : true;
     DATA.customFieldsUpdateColumns = (typeof options.customFieldsUpdateColumns !== "undefined") ? options.customFieldsUpdateColumns : false;
     DATA.customFieldsUpdateColumnsPreserveVisibility = (typeof options.customFieldsUpdateColumnsPreserveVisibility !== "undefined") ? options.customFieldsUpdateColumnsPreserveVisibility : false;
+    //If we have editor that we dont close after save, but we want to update editor data after save
+    DATA.updateEditorAfterSave = (typeof options.updateEditorAfterSave !== "undefined") ? options.updateEditorAfterSave : false;
 
     //false - we don't want to hash filter for this datatable
     DATA.initHashFilter = (typeof options.initHashFilter !== "undefined") ? options.initHashFilter : true;
@@ -296,7 +297,7 @@ export const dataTableInit = options => {
     };
 
     function refreshRow(id, callback) {
-        var url = TABLE.ajax.url();
+        var url = TABLE.getAjaxUrl();
         var q = url.indexOf("?");
         if (q === -1) url = url + "/" + id;
         else url = url.substring(0, q) + "/" + id + url.substring(q);
@@ -377,16 +378,16 @@ export const dataTableInit = options => {
                     dtWJ.updateFilterSelect(DATA, fieldName);
                 }
             }
-
-            //console.log("Fixing options width")
-            //fixni sirky stlpcov ked sa zmenia sirky optionov
-            setTimeout(function () {
-                TABLE.columns.adjust();
-            }, 100);
         }
 
-        if (DATA.customFieldsUpdateColumns===true && json.length>0) {
-            let fieldsDefinition = json[0]?.editorFields?.fieldsDefinition;
+        //console.log("Fixing options width")
+        //fixni sirky stlpcov ked sa zmenia sirky optionov
+        setTimeout(function () {
+            dtWJ.adjustColumns(TABLE);
+        }, 100);
+
+        if (DATA.customFieldsUpdateColumns===true && json.data.length>0) {
+            let fieldsDefinition = json.data[0]?.editorFields?.fieldsDefinition;
             if (typeof fieldsDefinition != "undefined" && fieldsDefinition != null) {
                 //je to zoznam nazvov volnych poli
                 let fieldName, column, dataColumn;
@@ -406,7 +407,7 @@ export const dataTableInit = options => {
                     isChange = true;
 
                     //console.log("column.header()=", $(column.header()).text(), "new=", customField.label);
-                    $(column.header()).text(""+customField.label);
+                    $(column.header()).find(".dt-column-title").text(""+customField.label);
                     if (customField.label===null || customField.label=="null") {
                         if (column.header().className.indexOf("dt-format-date")!=-1) {
                             //date field muset be hidden in setTimeout to initialize datepicker
@@ -480,11 +481,34 @@ export const dataTableInit = options => {
             var height = $(window).height();
 
             var headerHeight = $("div.ly-header").outerHeight();
-            var breadcrumbHeight = $("div.md-breadcrumb").outerHeight();
+            var breadcrumbHeight = 0;
+            var breadcrumbElemets = $("div.md-breadcrumb");
+            if (breadcrumbElemets.length>0) {
+                //iterate all breadcrumbs and get total sum of outerHeight
+                breadcrumbElemets.each(function() {
+                    var $this = $(this);
+
+                    //do not count if $this has .tree-col parent
+                    if ($this.parents(".tree-col").length>0) {
+                        //console.log("breadcrumb has tree-col parent");
+                        return;
+                    }
+
+                    //console.log("breadcrumb=", $this);
+                    breadcrumbHeight += $this.outerHeight();
+                });
+            }
+
             if ($("html").hasClass("in-iframe-show-table")) breadcrumbHeight = -18; //finta aby sa nam tam standardne vosiel o riadok viac, 18 kvoli galerii
+
+            //fixed values, because datatable is not constructed yet
             var dtToolbarRowHeight = 48;
             var dtScrollHeadHeight = 66;
             var dtFooterHeight = 48;
+
+            if (DATA.autoHeight === true && typeof DATA.defaultSearch === "object" && DATA.defaultSearch != null) {
+                dtScrollHeadHeight = dtScrollHeadHeight + 31;
+            }
 
             if ($(window).width()<1200) {
                 headerHeight = 0;
@@ -531,7 +555,7 @@ export const dataTableInit = options => {
                     var colWidth = 15 + $("#"+DATA.id).width() + 15;
                     var columns = Math.floor(colWidth / imgWidth);
                     var rows = Math.floor((height + dtScrollHeadHeight) / imgHeight);
-                    //console.log("colWidth=", colWidth, "imgWidth=", imgWidth);
+                    //console.log("colWidth=", colWidth, "imgWidth=", imgWidth, "dtScrollHeadHeight=", dtScrollHeadHeight, "height=", height, "imgHeight=", imgHeight, "columns=", columns, "rows=", rows, "breadcrumbHeight=", breadcrumbHeight);
 
                     pageLength = columns * rows;
                 }
@@ -652,7 +676,7 @@ export const dataTableInit = options => {
             if (typeof col.renderFormatLinkTemplate !== "undefined") {
                 linkTemplate = col.renderFormatLinkTemplate;
             }
-            var fieldName = col.name.replace(/\./gi, "-");
+            var fieldName = col.data.replace(/\./gi, "-");
             ths += `<th class="${col.renderFormat} dt-th-${fieldName}" data-dt-field-name="${fieldName}" data-format-link-template="${linkTemplate}">${col.title}</th>`;
         });
 
@@ -845,6 +869,13 @@ export const dataTableInit = options => {
                 })
                 .appendTo($('div.modal-header', append));
 
+            //If showOnlyEditor, set it as full screen and hide close/minimalize button's
+            if(window.location.href.indexOf("showOnlyEditor=true") != -1) {
+                $(dom.content).find("div.modal-dialog").addClass("modal-fullscreen");
+                $(append).find("button.btn-close-editor").hide();
+                $(append).find("div.maximize").hide();
+            }
+
             // This is a bit horrible, but if you mousedown and then drag out of the modal container, we don't
             // want to trigger a background action.
             let allowBackgroundClick = false;
@@ -944,7 +975,7 @@ export const dataTableInit = options => {
             const fields = this.order();
             for (let i = 0; i < fields.length; i++) {
                 const value = resolvePath(json, fields[i], "");
-                //console.log("Setting val for=", fields[i], " val=", val);
+                //console.log("Setting val for=", fields[i], " val=", value);
                 this.val(fields[i], value);
             }
         }
@@ -1219,7 +1250,6 @@ export const dataTableInit = options => {
         });
         EDITOR.on('submit', function () {
             TABLE.columns.adjust();
-            TABLE.fixedHeader.adjust();
             const eventSubmit = new CustomEvent('WJ.DTE.submitclick', {
                 detail: {
                     element: this,
@@ -1228,17 +1258,17 @@ export const dataTableInit = options => {
             });
             window.dispatchEvent(eventSubmit);
         });
-        EDITOR.on('close', function () {
-            //console.log("Editor.on close, editor=", EDITOR, "url=", EDITOR.TABLE.DATA.url, "close=", EDITOR.close);
+        EDITOR.on('close', function (e) {
+            //console.log("Editor.on close, editor=", EDITOR, "url=", EDITOR.TABLE.DATA.url, "close=", EDITOR.close, "e=", e);
 
             //pre istotu zatvor, niekedy pri nested dialogu zostava otvoreny kvoli nejakemu bugu
             if (typeof EDITOR._bootstrapDisplay != "undefined" && $("#" + EDITOR._bootstrapDisplay.id).hasClass("show")) {
                 //console.log("IS NOT CLOSED, CLOSING MANUALLY");
                 $.fn.dataTable.Editor.display.bootstrap.close(EDITOR, null);
             }
-
-            TABLE.columns.adjust();
-            TABLE.fixedHeader.adjust();
+            setTimeout(()=> {
+                dtWJ.adjustColumns(e.currentTarget.TABLE);
+            }, 1000);
             const eventClose = new CustomEvent('WJ.DTE.closeclick', {
                 detail: {
                     element: this,
@@ -1268,6 +1298,10 @@ export const dataTableInit = options => {
                     window.dispatchEvent(eventReload);
                 }
 
+                if(DATA.updateEditorAfterSave == true) {
+                    EDITOR.setJson(data);
+                }
+
                 if(typeof json.notify != "undefined" && json.notify != null) {
                     showNotify(json.notify);
                 }
@@ -1278,7 +1312,7 @@ export const dataTableInit = options => {
             //ak je zapnute volanie servera pre novy zaznam zavolame ajax a pockame na data pre novy zaznam (napr. pre web stranku)
             EDITOR.on('initCreate', function (e) {
                 return new Promise(function (resolve, reject) {
-                    let url = TABLE.ajax.url();
+                    let url = TABLE.getAjaxUrl();
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
@@ -1649,6 +1683,7 @@ export const dataTableInit = options => {
                         $(this).closest("div.DTE_Field").addClass("dt-autocomplete");
                     });
                 } else {
+                    //console.log("Refreshing selectpicker");
                     $('#' + DATA.id + '_modal div.DTE_Field_InputControl select').selectpicker('refresh');
                 }
 
@@ -1671,7 +1706,7 @@ export const dataTableInit = options => {
 
                     var min = parseInt($(group).find('.min').val()),
                         max = parseInt($(group).find('.max').val()),
-                        index = $(group).parents("th").attr("data-column-index"),
+                        index = $(group).parents("th").attr("data-dt-column"),
                         val = parseInt(data[index]) || 0;
 
                     if (!dtConfig.isRangeOk(min, max, val)) isOk = false;
@@ -1682,7 +1717,7 @@ export const dataTableInit = options => {
 
                     var min = parseFloat($(group).find('.min').val(), 10),
                         max = parseFloat($(group).find('.max').val(), 10),
-                        index = $(group).parents("th").attr("data-column-index"),
+                        index = $(group).parents("th").attr("data-dt-column"),
                         val = parseFloat(data[index], 10).toFixed(2) || 0;
 
                     if (!dtConfig.isRangeOk(min, max, val)) isOk = false;
@@ -1693,7 +1728,7 @@ export const dataTableInit = options => {
                 $.each($('#' + TABLE.DATA.id + '_wrapper .input-group[data-filter-type="boolean"]'), function (key, group) {
 
                     var option = $(group).find('option:selected').val(),
-                        index = $(group).parents("th").attr("data-column-index"),
+                        index = $(group).parents("th").attr("data-dt-column"),
                         val = data[index];
 
                     //if (index===8) console.log("Searching boolean, option=",option," index=", index, " val=",val);
@@ -1723,12 +1758,12 @@ export const dataTableInit = options => {
                     }
                 });
 
-                $.each($('#' + TABLE.DATA.id + '_wrapper .dataTables_scrollHeadInner .input-group[data-filter-type="date"], #' + TABLE.DATA.id + '_wrapper .dataTables_scrollHeadInner .input-group[data-filter-type="datetime"], #' +
-                + TABLE.DATA.id + '_wrapper .dataTables_scrollHeadInner .input-group[data-filter-type="timehm"], #' + + TABLE.DATA.id + '_wrapper .dataTables_scrollHeadInner .input-group[data-filter-type="timehms"]'), function (key, group) {
+                $.each($('#' + TABLE.DATA.id + '_wrapper .dt-scroll-headInner .input-group[data-filter-type="date"], #' + TABLE.DATA.id + '_wrapper .dt-scroll-headInner .input-group[data-filter-type="datetime"], #' +
+                + TABLE.DATA.id + '_wrapper .dt-scroll-headInner .input-group[data-filter-type="timehm"], #' + + TABLE.DATA.id + '_wrapper .dt-scroll-headInner .input-group[data-filter-type="timehms"]'), function (key, group) {
 
                     var min = $(group).find('.min').val(),
                         max = $(group).find('.max').val(),
-                        index = $(group).parents("th").attr("data-column-index"),
+                        index = $(group).parents("th").attr("data-dt-column"),
                         val = parseInt(data[index]) || 0;
 
                     if (min === null) {
@@ -1996,7 +2031,7 @@ export const dataTableInit = options => {
                             action: function(e, dt, node, config) {
                                 window.dataTableCellVisibilityService.buildConfigDataFromObject(dt.editor().TABLE);
                                 //console.log("Zmena stlpcov, fixujem selecty, dt=", dt.editor(), "config=", config);
-                                dtWJ.fixDatatableHeaderInputs(dt.editor().TABLE);
+                                dtWJ.initializeHeaderFilters('#' + dt.editor().TABLE.DATA.id + '_wrapper', false, dt.editor().TABLE.DATA, dt.editor().TABLE);
                             }
                         },
                         {
@@ -2076,8 +2111,12 @@ export const dataTableInit = options => {
                             //tu nastavujeme iny stlpec pre parovanie v importe, pretoze to moze byt v editorFields.login, ale hladat a parovat budeme podla login atributu
                             data = col.attr["data-dt-import-updateByColumn"];
                         }
-                        if (typeof col.attr != "undefined" && typeof col.attr["data-dt-import-hidden"] == "true") {
+                        if (typeof col.attr != "undefined" && col.attr["data-dt-import-hidden"] === "true") {
                             //toto nechceme zobrazovat v moznosti parovania importu
+                            if (col.name === "id" && select.options.length === 1) {
+                                //remove also ID option
+                                select.options.length = 0;
+                            }
                             return;
                         }
 
@@ -2126,16 +2165,6 @@ export const dataTableInit = options => {
                 $("#datatableExportModal input.dt-settings-filename").val(title);
                 //prepni na prvy tab
                 $("#pills-export-basic-tab")[0].click();
-                //inicializuj pdfmake kniznicu
-                if (createPdfMake) {
-                    createPdfMake().then(module => {
-                        window.pdfMake = module;
-                        createPdfFonts().then(module => {
-                            const pdfFonts = module;
-                            window.pdfMake.vfs = pdfFonts.pdfMake.vfs;
-                        });
-                    });
-                }
                 //console.log("serverSide=", DATA.serverSide);
                 if (DATA.serverSide===false) {
                     //schovaj nepodporovane moznosti
@@ -2165,12 +2194,23 @@ export const dataTableInit = options => {
 
         calculateAutoPageLength(false);
 
+        $.fn.dataTable.ext.errMode = function(settings, tn, msg) {
+            console.error("DataTables error: ", msg, "tn=", tn, "settings=", settings);
+            WJ.notifyWarning(WJ.translate("text.warning"), msg, 10000);
+            dtWJ.stateResetLocalStorage(settings);
+            dtWJ.stateReset(TABLE);
+            if (msg.indexOf("ColReorder - column count mismatch") != -1) {
+                //console.log("Invalid JSON response, reloading table");
+                TABLE.ajax.reload();
+            }
+        }
+
         $.extend(true, $.fn.dataTable.defaults, {
 
             //Dom tree
             dom: "<'dt-header-row clearfix'<'row'<'col-auto'B><'col ps-0 pe-0'<'dt-filter-labels'>>>>" +
                 "<'row'<'col'<'rounded-bg'tr>>>" +
-                "<'row dt-footer-row'<'col'i><'col-auto g-0'p>>",
+                "<'row dt-footer-row'<'col'i><'col-auto col-sum'><'col-auto g-0'p>>",
 
             // fixedColumns
             //jeeff: toto ratame v _table.scss kedze to ma viac podmienok pre cardView scrollY: "calc(100vh - 332px)",
@@ -2290,9 +2330,9 @@ export const dataTableInit = options => {
 
                 /*
                 console.log("select picker 3");
-                $('.dataTables_wrapper select').selectpicker(DT_SELECTPICKER_OPTS);*/
+                $('.dt-container select').selectpicker(DT_SELECTPICKER_OPTS);*/
 
-                $('#' + DATA.id + '_wrapper .buttons-select-all').on('click', function (e) {
+                $('#' + DATA.id + '_wrapper').on('click', '.buttons-select-all', function (e) {
                     if (TABLE.rows({selected:true}).count()>0) {
                         TABLE.rows().deselect();
                     } else {
@@ -2509,176 +2549,26 @@ export const dataTableInit = options => {
         });
 
         //console.log("serverSide=", DATA.serverSide);
+
         var extfilterExists = $("#" + DATA.id + "_extfilter").length > 0;
+        if (extfilterExists) {
+            //we must construct filters before DT initialization to move it to extfilters, because the column could be hidden after initialization
+            dtWJ.initializeHeaderFilters(dataTableSelector, true, DATA, null);
+        }
+        runDataTables();
+        dtWJ.initializeHeaderFilters(dataTableSelector+"_wrapper div.dt-scroll-head table ", false, DATA, TABLE);
 
-        $(dataTableSelector + ' thead tr:eq(1) th').each(function (i) {
+        function datatable2SpringData(data, fnCallback, oSettings) {
 
-            $(this).attr("data-column-index", i);
-            //console.log("Iterating, i=", i, " col=", DATA.columns[i]);
-            var fieldName = DATA.columns[i].name;
+            var sSource = DATA.url;
 
-            var inputGroupBefore = `
-                <form>
-                    <div class="input-group" data-filter-type="text">`;
-            var inputGroupAfter = `
-
-                            <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-${fieldName}" type="submit">
-                                <i class="ti ti-search"></i>
-                            </button>
-
-                    </div>
-                </form>`;
-            var html = `
-                    <select class="filter-input-prepend">
-                        <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
-                        <option value="startwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
-                        <option value="endwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
-                        <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>"><i class="ti ti-arrow-bar-left"></i> ${WJ.translate('datatables.select.equals.js')}</option>`;
-            //regex nie je dobre podporovany v Spring data, takze sa nemoze pouzit pri server side
-            //regex disabled, most tables are server side
-            /*if (DATA.serverSide === false) {
-                html += `
-                        <option value="regex" data-content="<i class=\'ti ti-brackets\'></i><small>${WJ.translate('datatables.select.regex.js')}</small>"><i class="ti ti-brackets"></i> ${WJ.translate('datatables.select.regex.js')}</option>`;
-            }*/
-            html += `
-                    </select>
-                    <input class="form-control form-control-sm filter-input dt-filter-${fieldName}" type="text" />`;
-
-            if ($(this).hasClass("dt-format-selector")) {
-                html = `
-                <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
-                    <i class="ti ti-square-check"></i>
-                </button>`;
-                if (DATA.serverSide === false) {
-                    html += `<div style="display: none">
-                        <select class="filter-input-prepend">
-                            <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>"><i class="ti ti-arrow-bar-left"></i> ${WJ.translate('datatables.select.equals.js')}</option>
-                        </select>
-                    </div>`;
-                }
-                html += `<input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
-                `;
-            }
-
-            if ($(this).hasClass("dt-format-boolean-true") || $(this).hasClass("dt-format-boolean-yes") || $(this).hasClass("dt-format-boolean-one")) {
-                inputGroupBefore = '<form><div class="input-group" data-filter-type="boolean">';
-                html = `
-                <select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">
-                    <option value="">${WJ.translate('datatables.select.all.js')}</option>
-                    <option value="true">${WJ.translate('button.yes')}</option>
-                    <option value="false">${WJ.translate('button.no')}</option>
-                </select>`;
-            }
-
-            //Fix - number inputs (others formats stay as string due custom components/styling)
-            if ($(this).hasClass("dt-format-number") || $(this).hasClass("dt-format-percentage")) {
-                inputGroupBefore = '<form><div class="input-group" data-filter-type="number">';
-                html = `
-                <input class="min form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-                <input class="max form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
-            }
-
-            if ($(this).hasClass("dt-format-number--decimal") || $(this).hasClass("dt-format-percentage--decimal") || $(this).hasClass("dt-format-number--text")) {
-                inputGroupBefore = '<form><div class="input-group" data-filter-type="number-decimal">';
-                html = `
-                <input class="min form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-                <input class="max form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
-            }
-
-            if ($(this).hasClass("dt-format-date") || $(this).hasClass("dt-format-date-time") || $(this).hasClass("dt-format-date--text")
-            || $(this).hasClass("dt-format-date-time--text") || $(this).hasClass("dt-format-time-hm") || $(this).hasClass("dt-format-time-hms")) {
-                let dateFormat = "datepicker";
-                let filterType = "date";
-                if ($(this).hasClass("dt-format-date-time")) {
-                    dateFormat = "datetimepicker";
-                    filterType = "datetime";
-                }
-
-                if ($(this).hasClass("dt-format-time-hm")) {
-                    dateFormat = "timehmpicker";
-                    filterType = "datetime";
-                }
-
-                if ($(this).hasClass("dt-format-time-hms")) {
-                    dateFormat = "timehmspicker";
-                    filterType = "datetime";
-                }
-                inputGroupBefore = `<form><div class="input-group" data-filter-type="${filterType}">`;
-
-
-                html = `
-                <input class="${dateFormat} min form-control form-control-sm dt-filter-from-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.from.js')}"/>
-                <input class="${dateFormat} max form-control form-control-sm dt-filter-to-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
-            }
-
-            if ($(this).hasClass("dt-format-none")) {
-                inputGroupBefore = '';
-                inputGroupAfter = '';
-                html = ``;
-            }
-
-            if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio")) {
-                inputGroupBefore = '<form><div class="input-group" data-filter-type="select">';
-                html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">`;
-                //hodnoty sa setnu volanim updateFilterSelect po dobehnuti ajax requestu
-                let options = DATA.columns[i].editor.options;
-                //console.log("Options=", options);
-                if (typeof options != "undefined" && options != null && options.length>0) {
-                    //ak mame definovane data priamo v JSON definicii musime ich inicializovat
-                    setTimeout(function() {
-                        dtWJ.updateFilterSelect(DATA, fieldName);
-                    }, 300);
-                }
-                html += '</select>';
-            }
-
-            // var popOver = '<a class="btn btn-sm btn-outline-secondary row-menu" data-placement="bottom" data-content="" role="button"><i class="ti ti-dots-vertical"></i></a>';
-
-            var filterHtml = inputGroupBefore + html + inputGroupAfter;
-            //console.log("filter["+i+"] typeof=", typeof DATA.columns[i].filter);
-            if (typeof DATA.columns[i].filter === "undefined" || DATA.columns[i].filter === true) {
-                $(this).html(filterHtml);
-            } else {
-                if ($(this).hasClass("dt-format-selector")) {
-                    html = `
-                    <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
-                        <i class="ti ti-square-check"></i>
-                    </button>
-                    `;
-                    $(this).html(inputGroupBefore + html + "</div></form>");
-                } else {
-                    $(this).html("");
-                }
-            }
-
-            if (extfilterExists) {
-                //console.log("Setting ext filter for ", fieldName, " html: ", filterHtml);
-                $("#" + DATA.id + "_extfilter .dt-extfilter-title-" + fieldName).text(DATA.columns[i].title);
-                $("#" + DATA.id + "_extfilter .dt-extfilter-" + fieldName).attr("data-column-index", i);
-                $("#" + DATA.id + "_extfilter .dt-extfilter-" + fieldName).html(filterHtml);
-            }
-
-            $(this).find("input.filter-input").on("keypress", function(e) {
-                if (e.key === "Enter") {
-                    //console.log("Mam keypress, e=", e);
-                    e.preventDefault();
-                    $(e.target).parent().find("button.filtrujem").trigger("click");
-                }
-            })
-
-        }).promise().done(function () {
-            runDataTables();
-        });
-
-        function datatable2SpringData(sSource, aoData, fnCallback) {
-
-            //console.log("datatable2SpringData, sSource: ",sSource, " aoData: ", aoData, " TABLE: ", TABLE);
+            //console.log("datatable2SpringData, data:", data, "\nfnCallback:", fnCallback, "\noSettings:", oSettings, "\nTABLE:", TABLE, "\nsSource:", sSource);
 
             if (typeof DATA.defaultSearch === "object" && DATA.defaultSearch != null) {
                 //nastav hodnoty default search fieldov
                 for (const property in DATA.defaultSearch) {
                     const value = DATA.defaultSearch[property];
-                    //console.log("Setting default search, property=", property, "value=", value);
+                    //console.log("Setting default search, property=", property, "value=", value, "input=", $(property).length);
                     $(property).val(value);
 
                     //over hodnotu v selecte, ak je null, nenachadza sa tam, skus setnut -1, je to typicky rootGroupId
@@ -2692,7 +2582,7 @@ export const dataTableInit = options => {
                     propertyName = propertyName[propertyName.length - 1];
                     if(propertyName !== undefined && propertyName !== null) {
                         //Find table filter and reset values
-                        var $th = $('#' + DATA.id + '_wrapper .dataTables_scrollHeadInner tr:last-child th[data-dt-field-name="' + propertyName + '"]');
+                        var $th = $('#' + DATA.id + '_wrapper .dt-scroll-headInner tr:last-child th[data-dt-field-name="' + propertyName + '"]');
                         $th.find(".form-control-sm").val("");
                         $th.find("select").selectpicker("val", "");
                         $th.find("select").selectpicker("val", "contains");
@@ -2719,55 +2609,45 @@ export const dataTableInit = options => {
 
             if (typeof TABLE != "undefined") {
                 //zober aktualnu URL tabulky, ktora sa mohla medzi tym zmenit
-                sSource = TABLE.ajax.url();
+                //sSource = TABLE.ajax.url();
             }
 
             var serverSide = "true" === this.attr("data-server-side");
             var url = WJ.urlAddPath(sSource, urlSuffix);
             if (typeof TABLE !== 'undefined') {
-                var ajaxUrl = TABLE.ajax.url();
-                url = WJ.urlAddPath(ajaxUrl, urlSuffix);
+                var ajaxUrl = TABLE.getAjaxUrl();
+                //url = WJ.urlAddPath(ajaxUrl, urlSuffix);
             }
-            var columnName;
+
             var isAnyColumnSearch = false;
             var hasFixedParams = false;
             var restParams = [];
             var searchColumnParams = [];
-            var paramMap = {};
 
-            //console.log("aoData=", aoData);
+            if (typeof data.columns !== "undefined") {
+                // prechod vsetkymi vstupnymi parametrami od datatables
+                for (var col of data.columns) {
 
-            // prechod vsetkymi vstupnymi parametrami od datatables
-            for (var i = 0; i < aoData.length; i++) {
+                    // ak je to vyhladavacie policko naplnime prislusny parameter (id ignorujeme)
+                    //console.log("search test name=", col.name," col=",col);
+                    if (col.search.value != "") {
 
-                // extract name/value pairs into a simpler map for use later
-                paramMap[aoData[i].name] = aoData[i].value;
-
-                // zistenie nazvu stlpca (vsetky nasledujuce parametre sa viazu k nemu)
-                if (aoData[i].name.includes('mDataProp_')) {
-                    columnName = aoData[i].value;
-                }
-
-                // ak je to vyhladavacie policko naplnime prislusny parameter (id ignorujeme)
-                //console.log("search test, i=",i," name=",aoData[i].name," aoData=",aoData[i], " columnName=", columnName);
-                if (aoData[i].name.includes('sSearch_') && columnName !== null) {
-
-                    if (!isAnyColumnSearch && aoData[i].value) {
                         isAnyColumnSearch = true;
-                    }
-                    columnName = columnName.charAt(0).toUpperCase() + columnName.slice(1);
-                    if (columnName !== "" && aoData[i].value !== "") {
-                        searchColumnParams.push({"name": "search" + columnName, "value": aoData[i].value});
-                        //console.log("Search["+i+"]: '" + columnName + "' value: '" + aoData[i].value + "'");
+                        var colName = col.name;
+                        //we need to have colName with upper case first letter
+                        colName = colName.charAt(0).toUpperCase() + colName.slice(1);
+                        searchColumnParams.push({"name": "search" + colName, "value": col.search.value});
+                        //console.log("Search " + col.name + " value: '" + col.search.value + "'");
                     }
                 }
+            }
 
-                if (aoData[i].name.indexOf('fixed_')==0) {
-                    //fixne parametre nastavene cez DATA.onPreXhr funkciu
-                    searchColumnParams.push({"name": aoData[i].name.substring(6), "value": aoData[i].value});
+            //i need to iterate over data json object and find fixed_ columns
+            for (var key in data) {
+                if (key.startsWith("fixed_")) {
                     hasFixedParams = true;
-                    //its search param, switch to search URL
-                    if (aoData[i].name.indexOf("fixed_search")==0) isAnyColumnSearch = true;
+                    isAnyColumnSearch = true;
+                    searchColumnParams.push({"name": key.substring(6), "value": data[key]});
                 }
             }
 
@@ -2809,28 +2689,33 @@ export const dataTableInit = options => {
                 restParams = searchColumnParams;
             }
 
-            //console.log("Datatable url: '" + url + "' sSource: "+sSource);
+            //console.log("Datatable url: '" + url + "' sSource: "+sSource, "restParams:", restParams);
 
             //page calculations
-            var pageSize = paramMap.iDisplayLength;
-            var start = paramMap.iDisplayStart;
+            var pageSize = data.length;
+            var start = data.start;
             var pageNum = (start === 0) ? 0 : (start / pageSize);
 
             //chceme vsetky zaznamy
             if (pageSize === -1) pageSize = 999999;
 
             // extract sort information
-            var sortCol = paramMap.iSortCol_0;
-            var pageSort = paramMap['mDataProp_' + sortCol] + "," + paramMap.sSortDir_0;
+            var pageSort = null;
+            if (typeof data.order !== "undefined" && data.order != null) {
+                for (var sort of data.order) {
+                    if (pageSort == null) pageSort = sort.name + "," + sort.dir;
+                    else pageSort += "," + sort.name + "," + sort.dir;
+                }
+            }
 
-            //console.log("Datatable sortCol="+sortCol+" pageSort: '" + pageSort + "'");
+            //console.log("Datatable pageSort: '" + pageSort + "'");
             //console.log(paramMap);
 
             //create new json structure for parameters for REST request
             if (serverSide) {
                 restParams.push({"name": "size", "value": pageSize});
                 restParams.push({"name": "page", "value": pageNum});
-                restParams.push({"name": "sort", "value": pageSort});
+                if (pageSort != null) restParams.push({"name": "sort", "value": pageSort});
             }
 
             if (typeof breadcrumbLanguage !== 'undefined') {
@@ -2864,16 +2749,18 @@ export const dataTableInit = options => {
 
                 var sourceData = DATA.initialData;
                 var totalElements = sourceData.totalElements;
-                var data = sourceData.content;
+                var data = {};
+                data.data = sourceData.content;
 
-                data.iTotalRecords = totalElements;
-                data.iTotalDisplayRecords = totalElements;
+                data.recordsTotal = totalElements;
+                data.recordsFiltered = totalElements;
                 data.options = sourceData.options || {};
 
                 //zresetuj, aby sa nabuduce uz pouzilo ajax volanie
                 DATA.initialData = null;
 
                 setTimeout(()=> {
+                    //console.log("initialData: ", data);
                     fnCallback(data);
                 }, 10);
 
@@ -2909,10 +2796,11 @@ export const dataTableInit = options => {
                         }
 
                         var totalElements = sourceData.totalElements;
-                        var data = sourceData.content;
+                        var data = {};
+                        data.data = sourceData.content;
 
-                        data.iTotalRecords = totalElements;
-                        data.iTotalDisplayRecords = totalElements;
+                        data.recordsTotal = totalElements;
+                        data.recordsFiltered = totalElements;
                         data.options = sourceData.options || {};
                         data.notify = sourceData.notify || null;
 
@@ -2964,29 +2852,27 @@ export const dataTableInit = options => {
                         }
                     })
                     .DataTable({
-                        sAjaxSource: DATA.url,
-                        sAjaxDataProp: "",
-                        fnDrawCallback: function (oSettings) {
-                            //datatables_globalConfig.fn_drawCallback(this.api());
-                        },
+                        ajax: datatable2SpringData,
                         columns: DATA.columns,
                         serverSide: DATA.serverSide,
                         processing: true, //Feature control the processing indicator.
-                        fnServerData: datatable2SpringData,
                         rowId: DATA.editorId,
                         order: DATA.order,
                         paging: DATA.paging,
-                        rowCallback: function (row, data) {
+                        rowCallback: function (row, data, displayNum) {
                             //pozor, tato funkcia je tu 2x pre ajax aj normal load
-                            //console.log("createdRow, data=", data.title);
+                            //console.log("createdRow, displayNum=", displayNum, " data=", data, "row=", row);
+
+                            //console.log("Setting class: ", data.editorFields.rowClass);
+                            let selected = $(row).hasClass("selected");
+                            let highlight = $(row).hasClass("highlight");
+                            if (displayNum % 2 == 0) $(row).attr("class", "odd");
+                            else $(row).attr("class", "even");
+                            if (selected) $(row).addClass("selected");
+                            if (highlight) $(row).addClass("highlight");
+
                             if (data.hasOwnProperty("editorFields") && data.editorFields !== null && data.editorFields.hasOwnProperty("rowClass")) {
-                                //console.log("Setting class: ", data.editorFields.rowClass);
-                                let selected = $(row).hasClass("selected");
-                                let highlight = $(row).hasClass("highlight");
-                                if ($(row).hasClass("odd")) $(row).attr("class", "odd");
-                                else $(row).attr("class", "even");
-                                if (selected) $(row).addClass("selected");
-                                if (highlight) $(row).addClass("highlight");
+
 
                                 if (data.editorFields.rowClass !== null) $(row).addClass(data.editorFields.rowClass);
                             }
@@ -3003,7 +2889,11 @@ export const dataTableInit = options => {
                     data: DATA.src.data,
                     columns: DATA.columns,
                     order: DATA.order,
-                    rowCallback: function (row, data) {
+                    rowCallback: function (row, data, displayNum) {
+
+                        if (displayNum % 2 == 0) $(row).attr("class", "odd");
+                        else $(row).attr("class", "even");
+
                         if (data.hasOwnProperty("editorFields") && data.editorFields !== null && data.editorFields.hasOwnProperty("rowClass")) {
                             //console.log("Setting class: ", data.editorFields.rowClass);
                             if ($(row).hasClass("odd")) $(row).attr("class", "odd");
@@ -3062,9 +2952,14 @@ export const dataTableInit = options => {
                 // });
             });
 
+            let colvisTimeout = null;
             $(dataTableInit).on('column-visibility.dt', function (e, settings, column, state) {
-                //console.log("on data visibility select picker");
-                $('select.filter-input').selectpicker(DT_SELECTPICKER_OPTS);
+                //console.log("colvis changed, e=", e);
+                //rerender header filters
+                if (colvisTimeout != null) clearTimeout(colvisTimeout);
+                colvisTimeout = setTimeout(() => {
+                    dtWJ.initializeHeaderFilters(dataTableSelector+"_wrapper div.dt-scroll-head table ", false, DATA, TABLE);
+                }, 50);
             });
 
             // aktivuj rezim uprava bunky / bubble
@@ -3158,7 +3053,7 @@ export const dataTableInit = options => {
                         });
                     } else {
                         //console.log(TABLE.row(this).id());
-                        var json = TABLE.DATA.json[TABLE.row(this).id()];
+                        var json = TABLE.DATA.json.data[TABLE.row(this).id()];
                         //console.log("json=", json);
                         editCell(json);
                     }
@@ -3201,8 +3096,8 @@ export const dataTableInit = options => {
 
             //Reset field after removed
             $('#' + DATA.id + '_wrapper .dt-filter-labels').on('click', '.dt-filter-labels__link', function () {
-                var index = $(this).attr("data-column-index");
-                var th = $('#' + DATA.id + '_wrapper .dataTables_scrollHeadInner tr:last-child th[data-column-index="' + index + '"]');
+                var index = $(this).attr("data-dt-column");
+                var th = $('#' + DATA.id + '_wrapper .dt-scroll-headInner tr:last-child th[data-dt-column="' + index + '"]');
 
                 $(th).find(".form-control-sm").val("");
                 //console.log("Selectpickers=", $(th).find("select"), " index=", index);
@@ -3230,7 +3125,7 @@ export const dataTableInit = options => {
      * @param {*} ids
      */
     function _executeAction(action, ids, customData = null) {
-        $("#"+DATA.id+"_wrapper .dataTables_processing").show();
+        $("#"+DATA.id+"_wrapper .dt-processing").show();
 
         $.post({
             url: WJ.urlAddPath(DATA.url, "/action/" + action),
@@ -3523,7 +3418,7 @@ export const dataTableInit = options => {
     TABLE.on('select.dt.DT deselect.dt.DT draw.dt.DT', function () {
         var anySelected = TABLE.rows({selected: true}).any();
         //change select-all icon depending on selected rows
-        var icon = $("#"+DATA.id+"_wrapper div.dataTables_scrollHead table thead th.dt-format-selector button.buttons-select-all i.ti");
+        var icon = $("#"+DATA.id+"_wrapper div.dt-scroll-head table thead th.dt-format-selector button.buttons-select-all i.ti");
         if (anySelected) {
             icon.removeClass("ti-square-check");
             icon.addClass("ti-square");
@@ -3539,6 +3434,20 @@ export const dataTableInit = options => {
     dtWJ.bindOnResize(TABLE, DATA);
     dtWJ.bindDialogDragDrop(TABLE);
     dtWJ.bindColumnReorder(TABLE);
+
+    TABLE.setAjaxUrl = function(newUrl) {
+        try {
+            TABLE.rows().deselect();
+            TABLE.rows().invalidate();
+
+            //remove all items in TABLE.context[0]._select_set array
+            TABLE.context[0]._select_set.length = 0;
+        } catch (e) {console.log(e);}
+        TABLE.DATA.url = newUrl;
+    }
+    TABLE.getAjaxUrl = function() {
+        return TABLE.DATA.url;
+    }
 
     return TABLE;
 }

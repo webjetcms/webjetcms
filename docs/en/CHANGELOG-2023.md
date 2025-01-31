@@ -4,10 +4,14 @@
 
 > Version 2023.52/2024.0 includes a new version **updates describing the changes**, **cloning structure** integrated with the mirroring function (including the possibility of interlacing), adds the possibility of **Retrieved from** web page, or **the entire folder from the bin**, adds **HTML editor** and the ability to set the editor type directly for the template, **applications** it is possible **enable display only for selected device types** mobile, tablet, PC and of course improves the safety and comfort of work.
 
+<div class="video-container">
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/YGvWne70czo" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Groundbreaking changes
 
 This version introduces several changes that may not be backwards compatible:
-- Discussion/Forum - add new post and approval modified from Struts to Spring, use call `/admin/update/update-2023-18.jsp` For [basic treatment](install/README.md#zmeny-pri-aktualizácii-na-202318). User profile editing cancelled, we recommend using the standard editing component [registered user](redactor/zaheslovana-zona/README.md) (#55649).
+- Discussion/Forum - add new post and approval modified from Struts to Spring, use call `/admin/update/update-2023-18.jsp` For [basic treatment](install/README.md#changes-for-update-to-202318). User profile editing cancelled, we recommend using the standard editing component [registered user](redactor/zaheslovana-zona/README.md) (#55649).
 - Import from Excel - if you have a special version of import from Excel in your project that calls the URL `/admin/importxls.do` edit the form and URL according to `/admin/spec/import_xls.jsp`. The update script should solve the basics for you `/admin/update/update-2023-18.jsp` (#55905).
 - Restoration menu - rebuilt from Struts to Spring, use the update script and verify the menu is displayed on the web page (#55945).
 
@@ -18,11 +22,11 @@ This version introduces several changes that may not be backwards compatible:
 - Applications - once again improved window size for applications - both height and width including windows when using PageBuilder. Optimized size of nested datatables. Adjustments in `top.jsp,datatables-wjfunctions.js` (#56013).
 - Apps - updated photos of apps and their descriptions in the list of apps in the page editor. Fixed various minor visual bugs in app settings (#55293).
 - Datatables - during a long-lasting operation, the connection to the server may be interrupted, in which case the message "An error occurred while communicating with the server. It is possible that the operation is taking too long and will be executed later. Wait and check after a while to see if the operation is executed." to distinguish it from a standard record save error.
-- Datatables - added option [import only new records](redactor/datatables/export-import.md#import-dát)if the record by the selected column already exists is left unchanged (#56061).
+- Datatables - added option [import only new records](redactor/datatables/export-import.md#data-import) if the record by the selected column already exists is left unchanged (#56061).
 
 ![](admin/settings/translation-keys/dataTable-import.png)
 
-### Website
+### Web pages
 
 - Import/Export - added setting of local folder IDs when creating a template. Addresses an issue when editing a page after importing, where the template is created but does not have the correct folder access set. Non-existing folders are filtered out. We recommend checking the template settings after import (#55993).
 - When you create a new web page and upload an image/file/media, the Media folder for that page is already created before saving. It will be created according to the value entered in the Item Name field in the menu (#54953-29).
@@ -54,12 +58,12 @@ This version introduces several changes that may not be backwards compatible:
 - Loading in the editor should be faster, the new version doesn't contain old parts of the code, some objects will be reused.
 - In the future, only the Page Builder version will be available in the Web page section, the separate inline editing when displaying a web page will be removed (for script consistency reasons).
 - Visibility settings adjusted to Mobile, Tablet, Desktop options in concert with editor width toggle (#56017).
-- Added option [generate menu](frontend/page-builder/blocks.md#podpora-menu) For `single page` types of pages. The menu is generated automatically according to the sections in the web page (#56017).
+- Added option [generate menu](frontend/page-builder/blocks.md#menu-support) For `single page` types of pages. The menu is generated automatically according to the sections in the web page (#56017).
 
 ### Spring applications
 
 - Added application name to the settings window instead of the generic name Edit (#55997).
-- Spring applications have the added [View tab](custom-apps/appstore/README.md#karta-zobrazenie) for setting the application to display on different devices and the ability to set the HTML output to be cached for faster web page display. If no device is selected the application will always be displayed.
+- Spring applications have the added [View tab](custom-apps/appstore/README.md#tab-view) for setting the application to display on different devices and the ability to set the HTML output to be cached for faster web page display. If no device is selected the application will always be displayed.
 
 ![](custom-apps/appstore/common-settings-tab.png)
 
@@ -77,7 +81,7 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 
 ### Banner system
 
-- Added support for [Display banner for specific device type](redactor/apps/banner/README.md#zobrazenie-banneru-pre-špecificky-typ-zariadenia), i.e. displaying only on a mobile phone, or only on a tablet, for example. So you can display different banners for different devices (#55921).
+- Added support for [Display banner for specific device type](redactor/apps/banner/README.md#banner-display-for-specific-device-type), i.e. displaying only on a mobile phone, or only on a tablet, for example. So you can display different banners for different devices (#55921).
 
 ![](redactor/apps/banner/banner-device-setting-tab.png)
 
@@ -92,7 +96,7 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 
 ### HTTP headers
 
-- Added header setting option `Content-Language`, [automatic adjustment](admin/settings/response-header/README.md#nastavenie-pre-súbory) headers for files.
+- Added header setting option `Content-Language`, [automatic adjustment](admin/settings/response-header/README.md#settings-for-files) headers for files.
 - Added support [header settings](admin/settings/response-header/README.md) for an exact URL match using `^/path/subpath/$` and the option to set it for certain suffixes `/path/subpath/*.pdf,*.jpg` (#56109).
 
 ![](admin/settings/response-header/editor-wildcard.png)
@@ -111,9 +115,9 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 
 ### News
 
-- To [news templates](redactor/apps/news/README.md#šablóna) added objects `$pagesAll` with the whole pagination list (`$pages` contains an abbreviated list) and `$totalPages` with the total number of pages.
+- To [news templates](redactor/apps/news/README.md#Template) added objects `$pagesAll` with the whole pagination list (`$pages` contains an abbreviated list) and `$totalPages` with the total number of pages.
 
-### Users of
+### Users
 
 - User deletion - fixed situation when currently logged in user tries to delete himself (#55917).
 - [List of users](admin/users/README.md) - added columns Directory and Site Permissions and Approvals to the table. Due to the nested data in the columns, it is not possible to search and sort by value (#55897).
@@ -140,7 +144,7 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 
 ### Optional fields
 
-- Added field type `UUID` for generating [a unique identifier](frontend/webpages/customfields/README.md#unikátny-identifikátor).
+- Added field type `UUID` for generating [a unique identifier](frontend/webpages/customfields/README.md#unique-identifier).
 
 ![](frontend/webpages/customfields/webpages-uuid.png)
 
@@ -152,7 +156,7 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 
 - Added the ability to add another folder ID for mirroring later, using [Cloning structure](redactor/apps/clone-structure/README.md) it is possible to add the content of the new language (#55733).
 - Added synchronization settings check - if you remove the folder ID from the conf. variable `structureMirroringConfig` pages and folders in the removed structure will no longer be synchronized (#55733).
-- Added ability to create in mirrored folders [pages and folders with display turned on](redactor/apps/docmirroring/README.md#priebeh-zrkadlenia) (e.g. during the page development phase), just set the conf. variable `structureMirroringDisabledOnCreate` to the value of `false` (#55733).
+- Added ability to create in mirrored folders [pages and folders with display turned on](redactor/apps/docmirroring/README.md#course-of-mirroring) (e.g. during the page development phase), just set the conf. variable `structureMirroringDisabledOnCreate` to the value of `false` (#55733).
 - Translator - [For DeepL](admin/setup/translation.md) is possible in the conf. variable `deepl_api_url` set the service API URL. The default value is for the free version, when using `Pro` versions set to `https://api.deepl.com/v2/translate`. Modified the way of authorization against the API to the new version using the HTTP header `Authorize` (#55733).
 
 ### Security
@@ -174,8 +178,8 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 - Import XLS - URL for importing XLS files changed from `/admin/importxls.do` at `/admin/import/excel/`, use the example in `/admin/spec/import_xls.jsp` to update your files (#55905).
 - Restaurant menu - redesigned at Spring, classes `MenuDB,MealDB,MenuBean,MealBean` substituted for `RestaurantMenuService,RestaurantMenuEntity,RestaurantMenuMealsEntity` (#55945).
 - Web pages - redesigned cloning option from struts to Spring [Cloning structure](redactor/apps/clone-structure/README.md) (#55733).
-- Web pages - redesigned importing pages from ZIP archive [Importing web pages from a ZIP archive](redactor/webpages/import-export.md#importovanie-web-stránok-zo-zip-archívu) (#55905).
-- Web pages - redesigned import of pages from Excel file [Importing web pages from an Excel file](redactor/webpages/import-export.md#import-štruktúry-z-excel-súboru) (#55905).
+- Web pages - redesigned importing pages from ZIP archive [Importing web pages from a ZIP archive](redactor/webpages/import-export.md#importing-web-pages-from-zip-archive) (#55905).
+- Web pages - redesigned import of pages from Excel file [Importing web pages from an Excel file](redactor/webpages/import-export.md#import-structure-from-excel-file) (#55905).
 
 ### Error correction
 
@@ -207,15 +211,15 @@ Improved process [WebJET CMS updates](sysadmin/update/README.md), transferred to
 
 ### For the programmer
 
-- Applications - added option to show application in page [by type of device](custom-apps/appstore/README.md#podmienené-zobrazenie-aplikácie) (mobile, tablet, pc) by adding a parameter `!INCLUDE(/components..., device=mobil)!`. For [Banner system](redactor/apps/banner/README.md) setting is also added to the application settings interface.
+- Applications - added option to show application in page [by type of device](custom-apps/appstore/README.md#conditional-application-view) (mobile, tablet, pc) by adding a parameter `!INCLUDE(/components..., device=mobil)!`. For [Banner system](redactor/apps/banner/README.md) setting is also added to the application settings interface.
 - Datatables - added support `LocalDate/LocalDateTime` for data fields, added attribute `alwaysCopyProperties` to `DatatableColumn` for the copy option when editing from [of an existing record](developer/datatables-editor/datatable-columns.md).
 - Users - supplemented usage documentation `afterSaveInterceptor` At [user registration](custom-apps/apps/user/README.md) and the option to not send a standard welcome email by overriding the method `shouldSendUserWelcomeEmail` (#54953-28).
 
-![meme](_media/meme/2023-52.jpg)
+![meme](_media/meme/2023-52.jpg ":no-zoom")
 
 ## 2023.40
 
-> Version 2023.40 adds the option **explorer searches**/files, the ability to use **video banner**, improves user interface, speeds up data loading in web pages. **Banner** adds restriction settings for **display only in specified web pages and folders**. New application **HTTP headers** allows you to set HTTP headers for specified URLs. **To the media** we have added **optional fields**. Mirroring of the structure supports **translation of the body of the website** and improves change detection. Redesigned applications **Server monitoring, SEO, News, Discussion**. The version is also aimed at removing old parts of the code, hence the need to re [compile your classes and edit JSP files](install/README.md#zmeny-pri-aktualizácii-na-202318).
+> Version 2023.40 adds the option **explorer searches** /files, the ability to use **video banner**, improves user interface, speeds up data loading in web pages. **Banner** adds restriction settings for **display only in specified web pages and folders**. New application **HTTP headers** allows you to set HTTP headers for specified URLs. **To the media** we have added **optional fields**. Mirroring of the structure supports **translation of the body of the website** and improves change detection. Redesigned applications **Server monitoring, SEO, News, Discussion**. The version is also aimed at removing old parts of the code, hence the need to re [compile your classes and edit JSP files](install/README.md#changes-for-update-to-202318).
 
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/5hlbQYoOF6U" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
@@ -243,7 +247,7 @@ After deploying this version, check the minimum:
 - Applications - adjusted the number of columns in the list of all applications to 4 to display a higher number of applications at once (#54953-15).
 - Datatables - corrected window position in cell edit mode for type `quill` (e.g. perex/annotation in the gallery). The window was too tall and could not be scrolled, in the new version the bubble is wider for more comfortable work (#54953-15).
 - Datatables - **accelerated record search by ID** in URL, accelerated page switching if there is no entry on the first page (#54273).
-- Datatables - **added option to filter list by ID**so you can easily find a record even with a high page count. Unlike the ID field in the toolbar, it only filters the records, it doesn't automatically open the editor as well. Entering an ID in the toolbar paginates up to 5 pages and then uses ID filtering to open the editor. Modified ability to tag/untag all records to one icon. If no records are tagged all records are tagged, if any are tagged they are untagged (#55581).
+- Datatables - **added option to filter list by ID** so you can easily find a record even with a high page count. Unlike the ID field in the toolbar, it only filters the records, it doesn't automatically open the editor as well. Entering an ID in the toolbar paginates up to 5 pages and then uses ID filtering to open the editor. Modified ability to tag/untag all records to one icon. If no records are tagged all records are tagged, if any are tagged they are untagged (#55581).
 - Datatables - modified file name with export to format `názov-YYYYMMDD-HHmmss.xlsx` for better alphabetization of exported files in the standard computer explorer (#55581).
 - Datatables - if the editor contains a value that is not in the selection field as an option, it will be added with at least the ID value and a warning will be displayed. The situation occurs if, for example, you move the page to another folder and the assigned template should not be used in the new folder due to restrictions (#54953-16).
 
@@ -268,7 +272,7 @@ After deploying this version, check the minimum:
 - Some paid applications can be purchased with the version.
 - For a list of available applications, see [www.webjetcms.sk](https://www.webjetcms.sk/) (#55773).
 
-### Website
+### Web pages
 
 - Republished from **approval process** from the original version to Spring DATA repositories and REST services. Optimized code, deleted duplicate parts (#55493,#54953-21).
 - Republished from **process for deleting web pages and approving deletions** on Spring DATA and REST services (#55493).
@@ -287,7 +291,7 @@ After deploying this version, check the minimum:
 
 ![](redactor/apps/banner/editor-restrictions.png)
 
-- Added support for [Video banners](redactor/apps/banner/README.md#banner-typu-video) in format `mp4` a `YouTube` and support for **adding a video** in the background of the Content banner (#55817).
+- Added support for [Video banners](redactor/apps/banner/README.md#video-banner) in format `mp4` a `YouTube` and support for **adding a video** in the background of the Content banner (#55817).
 
 ![](redactor/apps/banner/banner-video.png)
 
@@ -297,7 +301,7 @@ After deploying this version, check the minimum:
 
 ### Export of data
 
-- Added option **create a custom data export type** s [custom JSP file](redactor/apps/export/README.md#vlastný-formát-exportu) (#54953-19).
+- Added option **create a custom data export type** s [custom JSP file](redactor/apps/export/README.md#custom-export-format) (#54953-19).
 - Added data export format for `Úradní desku` v [OpenData Czech Republic](https://ofn.gov.cz/úřední-desky/2021-07-20/) JSON (#54953-19).
 
 ### Forms
@@ -351,7 +355,7 @@ New application [HTTP headers](admin/settings/response-header/README.md) in the 
 
 - When setting up the application in a page, the list of tags/perfect groups is filtered by the selected folders. This allows you to select tags even when you are inserting a news list into a folder outside of the specified folders for tags. The list does not update dynamically, first set the folders, click OK to insert the app, then re-open the app settings to update the tag list (#54953-17).
 
-### Users of
+### Users
 
 - Modified **search by group** - when set to Equal, users who have only this one group (no other groups entered) are found (#54953-20).
 - User approval - added **user approval for registration** into the password-protected zone. Added [documentation describing the whole process](redactor/zaheslovana-zona/README.md) (#55545).
@@ -359,7 +363,7 @@ New application [HTTP headers](admin/settings/response-header/README.md) in the 
 ![](redactor/zaheslovana-zona/user-list-page.png)
 
 - Added the ability to edit the profile to the menu displayed after clicking on the user name in the header. **Profile is only available in the new version** (e.g. on the Home page), you cannot edit the profile in old JSP files. (#54953-22).
-- Import - improved **error message during import**if the cell contains an incorrect JSON value (#54953-22).
+- Import - improved **error message during import** if the cell contains an incorrect JSON value (#54953-22).
 - Import - improved import test - added check for cells that are retained after import - not found as a column in the Excel file - by setting the value `preserveColumns` (#54953-22).
 
 ### Translation keys
@@ -373,7 +377,7 @@ Section **Missing keys** redesigned. Added information about **the last time and
 ### Proxy
 
 - Added option to create **proxy for the REST service on the internal network**. To prevent the response from the REST service from being inserted into the page, enter an empty value (#54953-21,#55689) in the Extensions inserted into page field.
-- Added option to enter [multiple URLs](redactor/apps/proxy/README.md#nastavenie-aplikácie) in the Local URL field and the option to use exact match and end at the URL (#55689).
+- Added option to enter [multiple URLs](redactor/apps/proxy/README.md#application-settings) in the Local URL field and the option to use exact match and end at the URL (#55689).
 
 ### Templates
 
@@ -384,8 +388,8 @@ Section **Missing keys** redesigned. Added information about **the last time and
 
 - Added folder/page existence check after mirroring is set to **folders/pages are not unnecessarily duplicated if they already exist in the language** (and the translation matches) (#55193).
 - Added translation cache to speed up translation retrieval and reduce API load (#55193).
-- Supplemented by [translating website text](redactor/apps/docmirroring/README.md#automatický-preklad) (#55709).
-- Supplemented by a better [identification of automatic translation](redactor/apps/docmirroring/README.md#úprava-existujúcej-web-stránky) with the possibility **continuous updating of translated pages** pending their revision. Automatically translated pages have a set author `autotranslate` for unique identification (#55709)
+- Supplemented by [translating website text](redactor/apps/docmirroring/README.md#automatic-translation) (#55709).
+- Supplemented by a better [identification of automatic translation](redactor/apps/docmirroring/README.md#modification-of-the-existing-website) with the possibility **continuous updating of translated pages** pending their revision. Automatically translated pages have a set author `autotranslate` for unique identification (#55709)
 
 ### Security
 
@@ -402,14 +406,14 @@ Section **Missing keys** redesigned. Added information about **the last time and
 - Removed old `Flash/SWF` files for banner system, YouTube and video player (#55285).
 - Library removed `org.bouncycastle:bcprov-jdk15on:1.70`, it was used only for the service `Pay24` and contained a possible vulnerability (#55193-4).
 - When calling URLs containing `/rest` All HTTP methods are enabled (#54273-44).
-- Login - on [extension of the period of inability to log in](sysadmin/pentests/README.md#blokovanie-prihlásenia) for 60 seconds after 5 unsuccessful attempts to enter the password (#55489-4).
+- Login - on [extension of the period of inability to log in](sysadmin/pentests/README.md#blocking-login) for 60 seconds after 5 unsuccessful attempts to enter the password (#55489-4).
 - Two-factor authentication - if you use authentication against `ActiveDirectory/SSO` server, you can disable the menu item for setting two-factor authentication by setting the conf. variable `2factorAuthEnabled` to the value of `false`.
 
 ### WebJET update
 
 - Enhanced **WebJET update process** directly via WebJET. During the upgrade, files that were deleted during the upgrade to version 2023.18 (#55293) are deleted.
 - Modified file combination on login screen to reload JS/CSS files after update (#55293).
-- Added control `web.xml` of the file after the update, checking for the occurrence of `web-app_2_4.xsd`, if found is updated according to the file `web-v2023.xml`which is `web-app_3_0.xsd` (#55293).
+- Added control `web.xml` of the file after the update, checking for the occurrence of `web-app_2_4.xsd`, if found is updated according to the file `web-v2023.xml` which is `web-app_3_0.xsd` (#55293).
 
 ### System changes
 
@@ -505,11 +509,11 @@ Section **Missing keys** redesigned. Added information about **the last time and
 - External filter - when presetting the values from the external filter, the value was also written into the datatable (if the columns were named the same), and this value in the datatable prevented filtering through the external filter. Fix, these values are no longer set into the datatable + its filter over such column becomes `disabled` to avoid such an error (#55537).
 - Table width - fixed bug where table width was not being adjusted with table parameter `autoHeight` if we filtered in the given table (#55537).
 - Web pages - Fixed loading a list of regular expressions when editing a page for users who do not have rights to the forms section (#55501).
-- Web pages - added logic for deleting pages in [multiple folders](redactor/webpages/editor.md#zaradenie-v-stromovej-štruktúre). When you delete the main web page from the trash, all pages in the other folders (#55813) are also deleted.
+- Web pages - added logic for deleting pages in [multiple folders](redactor/webpages/editor.md#classification-in-the-tree-structure). When you delete the main web page from the trash, all pages in the other folders (#55813) are also deleted.
 
 ### For the programmer
 
-- Datatable - added `renderFormat = "dt-format-image"` to view [small preview image](developer/datatables/README.md#nastavenie-stĺpcov) with a link to the full version and the text of the link to the image (#55285).
+- Datatable - added `renderFormat = "dt-format-image"` to view [small preview image](developer/datatables/README.md#setting-columns) with a link to the full version and the text of the link to the image (#55285).
 - Datatable - added option to add [notification](developer/datatables-editor/notify.md) also when calling `/all` (#55497).
 - Modified constructors `Tools/DB/utility` classes from `private` at `protected` for extensibility in client projects (#54953-14).
 - Library removed `com.googlecode.lambdaj:lambdaj`, expressions replaced by standard Lambda functions in Java 8 (#54425).
@@ -520,29 +524,30 @@ Section **Missing keys** redesigned. Added information about **the last time and
 - Documentation created for [transition from Struts to Spring](developer/frameworks/struts/README.md)
 - Modified upload processing/`upload` file. For URLs `path.contains("spring") || path.contains("rest") || path.startsWith("/admin/v9/") || queryString.contains("__sfu=0")` the old `MultipartWrapper.getFileParameterValue(key)` but the standard Spring `MultipartFile`.
 
-![meme](_media/meme/2023-40.jpg)
+![meme](_media/meme/2023-40.jpg ":no-zoom")
 
 ## 2023.18
 
 > Version 2023.18 is aimed at integrating the code of the original version 8. **Cancelled** is the possibility **switching to the old version 8**, parts of the code that have been redesigned or are no longer supported are removed. **Main API changes** are in use **generic objects** type `List/Map` instead of specific implementations `ArrayList/Hashtable`. Therefore **you need to recompile your classes and modify JSP files**.
 
 Significant changes in this version:
-- Website
-	- Updated library `ckeditor` (page editor) to the latest version 4.21.
-	- Added option to set the ratio [column widths of the tree structure and datatable](redactor/webpages/README.md#nastavenie-zobrazenia-stromovej-štruktúry).
-	- Added integration [page attributes to the editor](redactor/webpages/doc-attributes/README.md).
+- Web pages
+  - Updated library `ckeditor` (page editor) to the latest version 4.21.
+  - Added option to set the ratio [column widths of the tree structure and datatable](redactor/webpages/README.md#setting-the-tree-structure-view).
+  - Added integration [page attributes to the editor](redactor/webpages/doc-attributes/README.md).
 - Applications
-	- Banner system - redesigned **statistics of views and clicks** on the banner to the new form.
-	- Forms - added option **archive form**.
-	- [Dialers](redactor/apps/enumeration/README.md) - redesigned.
-	- Users - In a multi-domain installation, the user and rights group editing allows you to select web page folders and individual web pages regardless of the currently selected domain.
-	- Translation keys - view **translation keys** modified to **spreadsheet format**where the columns represent languages.
-	- Templates - added option **merge two templates** to one.
+  - Banner system - redesigned **statistics of views and clicks** on the banner to the new form.
+  - Forms - added option **archive form**.
+  - [Dialers](redactor/apps/enumeration/README.md) - redesigned.
+  - Users - In a multi-domain installation, the user and rights group editing allows you to select web page folders and individual web pages regardless of the currently selected domain.
+  - Translation keys - view **translation keys** modified to **spreadsheet format** where the columns represent languages.
+  - Templates - added option **merge two templates** to one.
 - Security
-	- Retrieved from **safety tests** at client deployment and tests by automated tool `Acunetix OVS`.
-	- Updated multiple libraries.
+  - Retrieved from **safety tests** at client deployment and tests by automated tool `Acunetix OVS`.
+  - Updated multiple libraries.
 - System
-	- Enhanced **Support** database server **Oracle and Microsoft SQL**.
+  - Enhanced **Support** database server **Oracle and Microsoft SQL**.
+
 Of course, a number of bugs that have been identified while using WebJET on several projects have also been fixed.
 
 <div class="video-container">
@@ -572,11 +577,11 @@ Cleaned/deleted multiple Java classes and packages and the corresponding JSP fil
 - Doc to PDF conversion (service was no longer available).
 - Conf. variables removed: `editorEnableScripting,enableToPdfConversion,doc2pdfConvertUrl,packagerMode,packager*,`.
 
-### Website
+### Web pages
 
 - When duplicating a web page, when the window opens, it switches to the Basic tab for easier name changes, deleting the value of the URL and Menu Item Name fields to automatically set them to the new page name. Similarly, blank values are set when duplicating a folder (#54953-6).
 - Added duplication of media when duplicating a web page (#54953-6).
-- Added option to set the ratio [column widths of the tree structure and datatable](redactor/webpages/README.md#nastavenie-zobrazenia-stromovej-štruktúry). Suitable if you have a wide or narrow monitor and need to see more/less in a tree structure (#54953-7).
+- Added option to set the ratio [column widths of the tree structure and datatable](redactor/webpages/README.md#setting-the-tree-structure-view). Suitable if you have a wide or narrow monitor and need to see more/less in a tree structure (#54953-7).
 
 ![](redactor/webpages/jstree-settings.png)
 
@@ -607,8 +612,8 @@ Added features:
 
 ### Datatables
 
-- Optional fields - added option to set field type [text area and non-editable text](frontend/webpages/customfields/README.md#textová-oblasť) (#55001).
-- Added option [set table](developer/datatables/README.md#možnosti-konfigurácie) the height according to its content (number of rows) so that it does not fill the whole height of the window (e.g. if there are several tables in a row or a chart is added) by setting the option `autoHeight: false` (#54989).
+- Optional fields - added option to set field type [text area and non-editable text](frontend/webpages/customfields/README.md#text-area) (#55001).
+- Added option [set table](developer/datatables/README.md#configuration-options) the height according to its content (number of rows) so that it does not fill the whole height of the window (e.g. if there are several tables in a row or a chart is added) by setting the option `autoHeight: false` (#54989).
 
 ### Banner system
 
@@ -631,7 +636,7 @@ Added features:
 - When a new folder is created, the dimension (including resizing method) and watermark values are preset according to the parent folder (#54953-11).
 - Added support for displaying folders when using domain aliases. By default a folder is displayed/opened `/images/ALIAS/gallery`, but for backwards compatibility other gallery folders will also be displayed (unless they contain the domain alias of another domain in the name) (#54953-12).
 
-### Users of
+### Users
 
 - In a multi-domain installation, the user and rights group editing allows you to select Web page folders and individual Web pages regardless of the currently selected domain. The domains are displayed as root folders. The display of the selected item includes a prefix with the domain name to distinguish between folders (often they are called the same in different domains, e.g. Slovak) (#54953-11).
 
@@ -726,8 +731,8 @@ Added features:
 
 ### Testing
 
-- To [Testing Datatables](developer/testing/datatable.md#možnosti-nastavenia), `DataTables.baseTest` option added `afterCreateSteps(I, options, requiredFields, DT, DTE)` for setting e.g. mandatory fields after saving the record (if the table does not contain any mandatory fields it is possible to set the field for record search in the next steps).
-- Completed test `webpages.webpage-virtual-path `setting URLs - duplicity check, checking URLs with asterisk (#55161).
+- To [Testing Datatables](developer/testing/datatable.md#setting-options), `DataTables.baseTest` option added `afterCreateSteps(I, options, requiredFields, DT, DTE)` for setting e.g. mandatory fields after saving the record (if the table does not contain any mandatory fields it is possible to set the field for record search in the next steps).
+- Completed test `webpages.webpage-virtual-path ` setting URLs - duplicity check, checking URLs with asterisk (#55161).
 
 ### Documentation
 
@@ -737,16 +742,16 @@ Added features:
 
 - API method added [DatatableRestControllerV2.afterDuplicate(T entity, Long originalId)](developer/datatables/restcontroller.md) called after duplicating a record. For example, you can also duplicate attached data such as web page media (#54953-6).
 - Added JavaScript function `WJ.selectMenuItem(href)` For [highlighting the specified menu item](custom-apps/admin-menu-item/README.md#frontend) v `master-detail` Pages (#54953-9).
-- Added support for fields of type `DataTableColumnType.JSON` v [application parameters](custom-apps/appstore/README.md#parametre-aplikácie) and directly in Spring class. Field settings for the editor (application settings in the editor) and when displaying the application on the page are aligned. (#55169).
+- Added support for fields of type `DataTableColumnType.JSON` v [application parameters](custom-apps/appstore/README.md#application-parameters) and directly in Spring class. Field settings for the editor (application settings in the editor) and when displaying the application on the page are aligned. (#55169).
 - Documentation created for [extending existing Spring DATA repositories](custom-apps/spring/repository-extend.md) in your project (#UCMWS-14).
-- Added option [](developer/datatables/export-import.md#špeciálny-typ-exportu)
+- Added option [dialogue extensions](developer/datatables/export-import.md#special-export-type) for special import and export of datatable data (#54513-11,MR360).
 
-![meme](_media/meme/2023-18.jpg)
+![meme](_media/meme/2023-18.jpg ":no-zoom")
 
-##
+## 2023.0
 
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/_Rt-GJk-E1Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-[](CHANGELOG-2022.md).
+Version 2023.0 is identical to [version 2022.52](CHANGELOG-2022.md).

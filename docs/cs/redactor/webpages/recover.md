@@ -1,4 +1,4 @@
-# Obnovení webových stránek a složek z koše
+# Obnovení z koše
 
 Obnovení webových stránek a složek je proces, který lze provést pouze pro ty stránky/složky, které se nacházejí ve složce. **Košík**. Pro tuto akci existuje speciální ikona ![](recover-button.png ":no-zoom").
 

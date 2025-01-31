@@ -10,10 +10,6 @@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><iwcm:checkLogon admin="
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 
-<%
-if ("has765h".equals(Tools.getRequestParameter(request, "hasty"))==false) return;
-%>
-
 <%@page import="sk.iway.iwcm.doc.DebugTimer"%>
 <%@page import="sk.iway.iwcm.io.*"%>
 <%@page import="java.io.*"%>
@@ -21,7 +17,9 @@ if ("has765h".equals(Tools.getRequestParameter(request, "hasty"))==false) return
 <%@page import="java.util.ArrayList"%>
 <%@page import="java.sql.*"%>
 <%@page import="java.util.Collections"%>
-<h1>Database speed test</h1>
+<%@ include file="/admin/layout_top.jsp" %>
+<h1>Database speed test, call with URL parameter ?act=fix</h1>
+<p><a href="?act=fix">RUN IT</a></p>
 
 <%!
 
@@ -132,173 +130,174 @@ public String getDocData(int docId)
 }
 
 %><%
-List<String> allUrls = new ArrayList<String>();
-prepareFileList("/images/", allUrls);
-%>
+
+if ("fix".equals(request.getParameter("act"))) {
+
+	List<String> allUrls = new ArrayList<String>();
+	prepareFileList("/images/", allUrls);
+	%>
 
 
-<h2>Image read, count=<%=allUrls.size() %></h2>
-<%
-//test rychlosti databazy
-DebugTimer dt = new DebugTimer("dbspeedtest");
-long start = System.currentTimeMillis();
+	<h2>Image read, count=<%=allUrls.size() %></h2>
+	<%
+	//test rychlosti databazy
+	DebugTimer dt = new DebugTimer("dbspeedtest");
+	long start = System.currentTimeMillis();
 
-double totalBytesRead = 0;
-int i = 0;
-if (false)
-{
-	for (String fileUrl : allUrls)
+	double totalBytesRead = 0;
+	int i = 0;
+	if (true)
 	{
-		IwcmFile f = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(fileUrl));
-		if (f.exists() && f.canRead())
+		for (String fileUrl : allUrls)
 		{
-			try
+			IwcmFile f = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(fileUrl));
+			if (f.exists() && f.canRead())
 			{
-				InputStream isr = new IwcmInputStream(f);
-				byte buff[] = new byte[64000];
-				int len;
-				int total = 0;
-				while ((len = isr.read(buff))!=-1)
+				try
 				{
-					total += len;
-					totalBytesRead += len;
-					out.println("i="+i+" reading: "+len+"b total: "+total+"b<br/>");
-				}
-				isr.close();
-			} catch (Exception ex) {}
+					InputStream isr = new IwcmInputStream(f);
+					byte buff[] = new byte[64000];
+					int len;
+					int total = 0;
+					while ((len = isr.read(buff))!=-1)
+					{
+						total += len;
+						totalBytesRead += len;
+						out.println("i1="+i+" reading: "+len+"b total: "+total+"b<br/>");
+					}
+					isr.close();
+				} catch (Exception ex) {}
+			}
+
+			out.println("i1="+i+" url="+fileUrl+" diff="+dt.getLastDiff()+"<br/>");
+			i++;
 		}
-
-		out.println("i="+i+" url="+fileUrl+" diff="+dt.getLastDiff()+"<br/>");
-		i++;
 	}
-}
 
-long end = System.currentTimeMillis();
+	long end = System.currentTimeMillis();
 
-long totalTime = end - start;
-double perItemTime = (double)totalTime / (double)allUrls.size();
-double bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
-out.println("<strong>Total time: "+(end-start)+" ms, per item: "+perItemTime+"</strong><br/>");
-out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +"</strong>");
-
-
-List<Integer> allDocIds = prepareDocIds();
-Collections.shuffle(allDocIds);
-Collections.shuffle(allDocIds);
-Collections.shuffle(allDocIds);
-%>
-
-<h2>Random web page read, count=<%=allDocIds.size() %></h2>
-<%
-totalBytesRead = 0;
-DocDB docDB = DocDB.getInstance();
-start = System.currentTimeMillis();
-i = 0;
-if (false)
-{
-	for (Integer docId : allDocIds)
-	{
-		DocDetails doc = docDB.getDoc(docId.intValue());
-		out.println("i="+i+" data:"+doc.getData().length()+"b diff="+dt.getLastDiff()+"<br/>");
-		totalBytesRead += doc.getData().length() + doc.getData().length();
-		i++;
-	}
-}
-end = System.currentTimeMillis();
-
-totalTime = end - start;
-perItemTime = (double)totalTime / (double)allDocIds.size();
-bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
-out.println("<strong>Total time: "+totalTime+" ms, per item: "+perItemTime+"</strong><br/>");
-out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +"</strong>");
-%>
-<h2>Only documents.data web page read count=<%=allDocIds.size() %></h2>
-<%
-
-if (false)
-{
+	long totalTime = end - start;
+	double perItemTime = (double)totalTime / (double)allUrls.size();
+	double bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
+	out.println("<strong>Total time: "+(end-start)+" ms, per item: "+perItemTime+" ms</strong><br/>");
+	out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +" B/s</strong>");
 
 
+	List<Integer> allDocIds = prepareDocIds();
+	Collections.shuffle(allDocIds);
+	Collections.shuffle(allDocIds);
+	Collections.shuffle(allDocIds);
+	%>
 
+	<h2>Random web page read, count=<%=allDocIds.size() %></h2>
+	<%
 	totalBytesRead = 0;
+	DocDB docDB = DocDB.getInstance();
 	start = System.currentTimeMillis();
 	i = 0;
-	for (Integer docId : allDocIds)
+	if (true)
 	{
-		String data = getDocData(docId);
-		out.println("i3="+i+" data:"+data.length()+"b diff="+dt.getLastDiff()+"<br/>");
-		totalBytesRead += data.length();
-		i++;
+		for (Integer docId : allDocIds)
+		{
+			DocDetails doc = docDB.getDoc(docId.intValue());
+			out.println("i2="+i+" docId: "+docId+" data: "+doc.getData().length()+"b diff="+dt.getLastDiff()+"<br/>");
+			totalBytesRead += doc.getData().length() + doc.getData().length();
+			i++;
+		}
 	}
 	end = System.currentTimeMillis();
 
 	totalTime = end - start;
 	perItemTime = (double)totalTime / (double)allDocIds.size();
 	bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
-	out.println("<strong>Total time: "+totalTime+" ms, per item: "+perItemTime+"</strong><br/>");
-	out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +"</strong>");
-}
+	out.println("<strong>Total time: "+totalTime+" ms, per item: "+perItemTime+" ms</strong><br/>");
+	out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +" B/s</strong>");
+	%>
+	<h2>Only documents.data web page read, count=<%=allDocIds.size() %></h2>
+	<%
 
-if (true)
-{
-	Connection db_conn = null;
-	PreparedStatement ps = null;
-	ResultSet rs = null;
-	try
+	if (true)
 	{
-	   db_conn = DBPool.getConnection();
-	   ps = db_conn.prepareStatement("SELECT "+DocDB.D_DOCUMENT_FIELDS+" FROM documents d WHERE doc_id=?");
-	   totalBytesRead = 0;
+		totalBytesRead = 0;
 		start = System.currentTimeMillis();
 		i = 0;
 		for (Integer docId : allDocIds)
 		{
-		   ps.setInt(1, docId);
-		   rs = ps.executeQuery();
-		   if (rs.next())
-		   {
-				//String data = rs.getString("data");
-
-				DocDetails doc = DocDB.getDocDetails(rs, false, true);
-
-				out.println("i4="+i+" docid="+docId+" data:"+doc.getData().length()+"b diff="+dt.getLastDiff()+"<br/>");
-				totalBytesRead += doc.getData().length();
-				i++;
-		   }
-		   rs.close();
+			String data = getDocData(docId);
+			out.println("i3="+i+" docId: "+docId+" data:"+data.length()+"b diff="+dt.getLastDiff()+"<br/>");
+			totalBytesRead += data.length();
+			i++;
 		}
-	   ps.close();
-		db_conn.close();
-	   rs = null;
-	   ps = null;
-		db_conn = null;
-	}
-	catch (Exception ex)
-	{
-	   sk.iway.iwcm.Logger.error(ex);
-	}
-	finally
-	{
-	   try
-	   {
-	      if (rs!=null) rs.close();
-	      if (ps!=null) ps.close();
-	      if (db_conn!=null) db_conn.close();
-	   }
-	   catch (Exception ex2)
-	   {
+		end = System.currentTimeMillis();
 
-	   }
+		totalTime = end - start;
+		perItemTime = (double)totalTime / (double)allDocIds.size();
+		bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
+		out.println("<strong>Total time: "+totalTime+" ms, per item: "+perItemTime+" ms</strong><br/>");
+		out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +" B/s</strong>");
 	}
-	end = System.currentTimeMillis();
+	%>
+	<h2>Documents read using web page API, count=<%=allDocIds.size() %></h2>
+	<%
+	if (true)
+	{
+		Connection db_conn = null;
+		PreparedStatement ps = null;
+		ResultSet rs = null;
+		try
+		{
+			db_conn = DBPool.getConnection();
+			ps = db_conn.prepareStatement("SELECT "+DocDB.getDocumentFields()+" FROM documents d WHERE doc_id=?");
+			totalBytesRead = 0;
+			start = System.currentTimeMillis();
+			i = 0;
+			for (Integer docId : allDocIds)
+			{
+				ps.setInt(1, docId);
+				rs = ps.executeQuery();
+				if (rs.next())
+				{
+						//String data = rs.getString("data");
 
-	totalTime = end - start;
-	perItemTime = (double)totalTime / (double)allDocIds.size();
-	bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
-	out.println("<strong>Total time: "+totalTime+" ms, per item: "+perItemTime+"</strong><br/>");
-	out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +"</strong>");
+						DocDetails doc = DocDB.getDocDetails(rs, false, true);
+
+						out.println("i4="+i+" docid:"+docId+" data:"+doc.getData().length()+"b diff="+dt.getLastDiff()+"<br/>");
+						totalBytesRead += doc.getData().length();
+						i++;
+				}
+				rs.close();
+			}
+			ps.close();
+			db_conn.close();
+			rs = null;
+			ps = null;
+			db_conn = null;
+		}
+		catch (Exception ex)
+		{
+			sk.iway.iwcm.Logger.error(ex);
+		}
+		finally
+		{
+			try
+			{
+				if (rs!=null) rs.close();
+				if (ps!=null) ps.close();
+				if (db_conn!=null) db_conn.close();
+			}
+			catch (Exception ex2)
+			{
+
+			}
+		}
+		end = System.currentTimeMillis();
+
+		totalTime = end - start;
+		perItemTime = (double)totalTime / (double)allDocIds.size();
+		bytesPerSecond = totalBytesRead / (double)totalTime * 1000;
+		out.println("<strong>Total time: "+totalTime+" ms, per item: "+perItemTime+" ms</strong><br/>");
+		out.println("<strong>Total bytes: "+totalBytesRead+", per second: "+ bytesPerSecond +" B/s</strong>");
+	}
 }
-
-
-
 %>
+<%@ include file="/admin/layout_bottom.jsp" %>

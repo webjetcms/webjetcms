@@ -62,7 +62,7 @@ public class DocNewRestController extends DatatableRestControllerV2<DocNewDTO, L
     @Override
     public Page<DocNewDTO> searchItem(Map<String, String> params, Pageable pageable, DocNewDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
 
         List<Column> aVariantColumns = getAvariantColumns(docId, filter);

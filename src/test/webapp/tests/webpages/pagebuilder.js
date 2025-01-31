@@ -162,7 +162,7 @@ Scenario('bug - nova stranka sablona podla priecinka', ({I, DT, DTE}) => {
     DTE.cancel();
 
     //skusim novu stranku, ta musi mat PB
-    I.click("button.buttons-create", "#datatableInit_wrapper");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
     I.click("#pills-dt-datatableInit-content-tab");
@@ -189,7 +189,7 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     I.waitForElement("div.exit-inline-editor", 10);
     I.seeElement("div.exit-inline-editor");
     I.seeElement("#trEditor div.wysiwyg");
-    I.dontSeeElement("#trEditor div.wysiwyg_textarea");
+    I.waitForInvisible("#trEditor > div.wysiwyg_textarea", 10);
 
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
 
@@ -208,7 +208,7 @@ Scenario('check toolbar elements', ({I, DTE, Document}) => {
     //
     I.say("Open style modal");
     I.forceClick({css: "aside.pb-is-toolbar-active span.pb-toolbar-button__style"});
-    I.seeElement("#wjInline-docdata.pb-is-modal-open div.pb-modal");
+    I.waitForElement("#wjInline-docdata.pb-is-modal-open div.pb-modal", 10);
 
     I.forceClick({css: "#wjInline-docdata.pb-is-modal-open div.pb-modal .pb-modal__footer .pb-modal__footer__button-close"});
     I.dontSeeElement("#wjInline-docdata div.pb-modal");

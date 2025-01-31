@@ -423,8 +423,10 @@ function getOrderFormParametersString()
 				<tr>
 					<td><label for="groupIds1"><iwcm:text key="components.news.groupids"/>:</label></td>
 					<td>
-					<input type="text" name="groupIds" size=30 maxlength="255" id="groupIds1" />
-							<input type="button" class="button50" name="groupSelect" value="<iwcm:text key="components.news.addgroup"/>" onclick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);' />
+						<div class="input-group">
+							<input type="text" name="groupIds" size=30 maxlength="255" id="groupIds1" class="form-control"/>
+							<input type="button" class="btn btn-primary" name="groupSelect" value="<iwcm:text key="components.news.addgroup"/>" onclick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);' />
+						</div>
 					</td>
 				</tr>
 				<tr>

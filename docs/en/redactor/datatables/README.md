@@ -1,5 +1,7 @@
 # Datatables
 
+## Basics of working with data tables
+
 Data tables are the basis of the interface in CMS WebJET, watch the instructional video how to work with tables.
 
 <div class="video-container">
@@ -12,7 +14,7 @@ Compared to the video above, the standard datatable has new features.
 
 ### Display name in window header
 
-When editing an existing item (if a single record is being edited), the header of the editor dialog displays the name of the item being edited (in the example, the text `Produktová stránka`) instead of the general text `Upraviť`.
+When editing an existing item (if a single record is being edited), the header of the editor dialog displays the name of the item being edited (in the example, the text **Product page**) instead of the general text **Edit by**.
 
 ![](dt-header-title.png)
 
@@ -22,23 +24,23 @@ Similarly, when you confirm the deletion, a list of marked items will be display
 
 ### Option to move the window
 
-The editor window can be moved (for example, if you need to see information on the page overlaid on the window). Just start dragging the window in the header area (like a standard windows window).
+The editor window can be moved (for example, if you need to see information on the page overlaid on the window). Just start dragging the window in the header area (like a standard window in `Windows`).
 
 ### Remembering the arrangement
 
 If you change the way the table is arranged (by clicking on the column name), the table will remember this arrangement in your browser. When you go back to that section again, the table will be arranged according to your preference.
 
-Click on the icon <i class="ti ti-adjustments-horizontal" role="presentation"></i>, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the layout.
+Click on the icon <i class="ti ti-adjustments-horizontal" role="presentation" ></i>, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the layout.
 
 ### Changing the order of columns
 
 You can move columns in the table to change their order according to your needs. Just grab the column header (name) and start dragging it left or right. The order of the columns will be remembered in the browser and when you go back to that section again, the order of the columns will be preserved.
 
-Click on the icon <i class="ti ti-adjustments-horizontal" role="presentation"></i>, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the column order.
+Click on the icon <i class="ti ti-adjustments-horizontal" role="presentation" ></i>, then the Column View setting, and then the Refresh button to reset the table to its basic form, including the column order.
 
 ## Setting the display of columns
 
-Click on the button <i class="ti ti-adjustments-horizontal" role="presentation"></i> settings, you will be given the option to set the display of columns and the number of records displayed per page.
+Click on the button <i class="ti ti-adjustments-horizontal" role="presentation" ></i> settings, you will be given the option to set the display of columns and the number of records displayed per page.
 
 In most tables all columns are displayed by default, but some like the table in the list of web pages contain very many columns, so only the basic ones are displayed by default. Click on the option **Columns display** opens a dialog box in which you can **select which columns you want to display**. Select them at will and click on the **Save**, the selected columns in **your browser will remember**. The selected columns will also be displayed after the page is refreshed.
 
@@ -48,12 +50,14 @@ The following columns are displayed in the window:
 - Tab Name - displays the name of the tab in which the field is located in the editor. If the field is not displayed in the editor, the value is empty.
 - Section heading - displays the heading above the fields in the editor (if specified), allows to distinguish a group of fields, e.g. to set the display for a logged in or logged out user.
 - Column name - the name of the field in the editor, the value represents the column you want to display.
-There is also a button in the column display settings **Refresh**which will restore **default column list setting**. In addition, there are also buttons **View all** a **Hide all**, which turns on or off the display of all columns with one click.
 
-**Warning:** the more columns you have displayed, the longer it will take your computer to display the table.
+There is also a button in the column display settings **Refresh** which will restore **default column list setting**. In addition, there are also buttons **View all** a **Hide all**, which turns on or off the display of all columns with one click.
+
+!>**Warning:** the more columns you have displayed, the longer it will take your computer to display the table.
+
 ## Number of records per page
 
-Click on the button <i class="ti ti-adjustments-horizontal" role="presentation"></i> settings, the option to set the number of records per page will appear.
+Click on the button <i class="ti ti-adjustments-horizontal" role="presentation" ></i> settings, the option to set the number of records per page will appear.
 
 In order for the window to contain the ideal number of table rows, its size is calculated and preset according to this calculation. In the number of records setting, the first option displayed is Automatic (X) where X is the calculated number of rows according to the height of the window.
 

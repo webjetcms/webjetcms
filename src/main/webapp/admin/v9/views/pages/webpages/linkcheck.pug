@@ -58,13 +58,13 @@ block content
             let selectedTab = e.target.id;
 
             if(selectedTab === "pills-brokenLinks-tab") {
-                linkCheckDataTable.ajax.url(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
+                linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "brokenLinks"));
                 linkCheckDataTable.ajax.reload();
             } else if(selectedTab === "pills-hiddenPages-tab") {
-                linkCheckDataTable.ajax.url(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
+                linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "hiddenPages"));
                 linkCheckDataTable.ajax.reload();
             } else if(selectedTab === "pills-emptyPages-tab") {
-                linkCheckDataTable.ajax.url(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
+                linkCheckDataTable.setAjaxUrl(WJ.urlUpdateParam(linkCheckUrl, "tableType", "emptyPages"));
                 linkCheckDataTable.ajax.reload();
             }
         });

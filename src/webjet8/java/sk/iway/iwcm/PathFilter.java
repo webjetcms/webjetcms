@@ -576,7 +576,14 @@ public class PathFilter implements Filter
 			SessionHolder holder = SessionHolder.getInstance();
 			if (
 					"get".equalsIgnoreCase(req.getMethod())==false ||
-				 	((path.endsWith(".do") || path.endsWith(".jsp") || path.endsWith(".html") || path.endsWith("/") || path.endsWith(".action")) && path.contains("/admin/") && !path.contains("/scripts/"))
+				 	(
+						//for admin apply to all methods
+						path.contains("/admin/") && !path.contains("/scripts/") &&
+						(path.contains("/rest/") || path.endsWith(".do") || path.endsWith(".jsp") || path.endsWith(".html") || path.endsWith("/") || path.endsWith(".action"))
+					) ||
+					(
+						path.contains("/rest/")
+					)
 				)
 			{
 				//	setni data pre SessionListener - admin cast (ostatne stranky su az dole)
@@ -638,7 +645,7 @@ public class PathFilter implements Filter
 				}
 			}
 
-			if (!checkCSRFTokenAjax(path, req)) {
+			if (!checkCSRFToken(path, req)) {
 				Logger.debug(PathFilter.class, "CSRF token missing - header param X-CSRF-Token");
 				res.setStatus(HttpServletResponse.SC_FORBIDDEN);
 				forwardSafely("/403.jsp", req, res);
@@ -888,7 +895,7 @@ public class PathFilter implements Filter
 					setStaticContentHeaders(path, user, req, res);
 					setXRobotsTagValue(path, res);
 
-					Logger.debug(PathFilter.class, "Sending DIST file: " + f.getAbsolutePath());
+					//Logger.debug(PathFilter.class, "Sending DIST file: " + f.getAbsolutePath());
 					FilePathTools.writeFileOut(f, req, res);
 
 					return;
@@ -930,7 +937,7 @@ public class PathFilter implements Filter
 			String domain = DocDB.getDomain(req);
 			int accessDocId = -1;
 			//files adresar musime nechat povoleny kvoli linkam z fulltext indexu (/files/subor.xls.html) a presmerovaniu na subor.xls
-			if (path.startsWith("/images")==false && path.startsWith("/css")==false && path.startsWith("/jscripts")==false)
+			if (path.startsWith("/images")==false && path.startsWith("/css")==false && path.startsWith("/jscripts")==false && path.startsWith("/templates")==false)
 			{
 				if (Constants.getBoolean("ABTesting")==true)
 				{
@@ -942,14 +949,6 @@ public class PathFilter implements Filter
 					accessDocId = docDB.getVirtualPathDocId(path, domain);
 				}
 			}
-
-			//TatraBanka - ich proxy dava na koniec za .do kontext /, cize zo /showdoc.do?docid=4 vznikne /showdoc.do/
-				/*
-				if (accessDocId < 1 && "/showdoc.do/".equals(path))
-				{
-					req.getRequestDispatcher("/showdoc.do").forward(req, res);
-				}
-				*/
 
 			if (accessDocId > 0)
 			{
@@ -2569,7 +2568,22 @@ public class PathFilter implements Filter
 	}
 
 	//pre WebJET 9 kontrolujeme pri REST volaniach CSRF token
-	private boolean checkCSRFTokenAjax(String path, HttpServletRequest request) {
+	private boolean checkCSRFToken(String path, HttpServletRequest request) {
+
+		//check URL against custom CSRF required URLs #57521
+		boolean isCsrfRequired = DocTools.isUrlAllowed(path, "csrfRequiredUrls", false);
+		if (isCsrfRequired) {
+			String token = request.getParameter(CSRF.getParameterName());
+            if (Tools.isEmpty(token)) token = request.getHeader("x-csrf-token");
+
+            if (Tools.isNotEmpty(token) && CSRF.verifyTokenAjax(request.getSession(), token))
+            {
+                return true;
+            }
+
+			return false;
+		}
+
 		if (path.startsWith("/admin/rest/")==false || path.startsWith("/admin/rest/document/") || path.startsWith("/admin/rest/datatables/") ) {
 			//taketo URL nekontrolujeme
 			return true;
@@ -2577,8 +2591,6 @@ public class PathFilter implements Filter
 
 		//ak path obsahuje vyraz html tak token nie je potrebny
 		if (path.contains("/html") || path.contains("html/")) return true;
-
-		if ("webjet9".equals(Constants.getString("defaultSkin"))==false) return true;
 
 		//pouziva sa pri prihlaseni tokenom, vtedy CSRF nie je posielane
 		if (request.getAttribute("csrfDisabled")!=null) return true;

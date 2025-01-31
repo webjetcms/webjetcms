@@ -34,41 +34,10 @@ include ../pug/mixins
     </div>
 </div>
 
-<div id="SomStromcek" data-rest-url="/admin/rest/components/gallery/tree" data-rest-param-name="url">
+<div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/components/gallery/tree" data-rest-param-name="url">
     <ul>
 
     </ul>
 </div>
 
-#jstreeSettingsModal.modal.DTED.fade(tabindex='-1' role='dialog' aria-labelledby='jstreeSettingsModalLabel' aria-hidden='true')
-  .modal-dialog.modal-dialog-scrollable.modal-lg(role='document')
-    .DTE_Action_Edit.modal-content
-      .modal-header
-        .row
-          .col-sm-4
-            h5.modal-title.ui-draggable-handle [[\#{datatables.button.settings.js}]]
-      .DTE_Body.modal-body.modal-body-notabs
-        .modal-body-bg
-          #pills-jstreesettingsData.DTE_Action_Edit.tab-content
-            #pills-jstreesetting-basic.tab-pane.fade.show.active(role='tabpanel' aria-labelledby='pills-jstreesetting-basic-tab')
-              .form-group.row.DTE_Field_Type_select.DTE_Field_treeWidth
-                label.col-sm-4.col-form-label [[\#{webpages.jstree.treeWidth}]]
-                .col-sm-7
-                  .DTE_Field_InputControl
-                      select#jstree-settings-treeWidth.form-control.form-select.col-12
-                        each val in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-                          option(value=val) #{val}:#{12-val}
-                .col-sm-1.form-group-tooltip
-                  button.btn.btn-link(type='button' data-toggle='tooltip' data-th-title='\#{webpages.jstree.treeWidth.tooltip}')
-                    i.ti.ti-info-circle
-      .modal-footer.DTE_Footer
-        .DTE_Form_Error
-        button.btn.btn-link(type='button' onclick='WJ.showHelpWindow()')
-          i.ti.ti-info-circle
-          |  [[\#{button.help}]]
-        button.btn.btn-outline-secondary.btn-close-editor(type='button' data-bs-dismiss='modal')
-          i.ti.ti-x
-          |  [[\#{button.cancel}]]
-        button#jstree-settings-submit.btn.btn-primary(type='button')
-          i.ti.ti-check
-          |  [[\#{button.submit}]]
++jstreesettings("gallery")

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
-import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -198,7 +197,7 @@ public class WebjetSecurityService {
             if (first.isPresent()) {
                 Method method = first.get();
                 boolean ret = (boolean) method.invoke(controller, request);
-                Logger.debug(WebjetSecurityService.class, "calling checkAccessAllowed, ret="+ret);
+                //Logger.debug(WebjetSecurityService.class, "calling checkAccessAllowed, ret="+ret);
                 return ret;
             }
         } catch (IllegalAccessException | InvocationTargetException e) {

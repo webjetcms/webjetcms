@@ -1,3 +1,9 @@
 # Manuál pre prevádzku
 
-Manuál pre prevádzku sa aktuálne neodlišuje od manuálu pre WebJET 8, použite ten.
+Manuál pre prevádzku WebJET CMS.
+
+## Dokumentácia na stiahnutie
+
+Túto dokumentáciu si môžete stiahnuť aj v PDF formáte pre možnosť vytlačenia.
+
+[Manuál pre prevádzku - PDF](../_media/manuals/webjetcms-sysadmin.pdf)

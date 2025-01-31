@@ -48,7 +48,7 @@ npm install
 
 ## Události
 
-**Varování:** není možné použít událost v kódu JavaScript `$(document).ready`, protože je třeba nejprve inicializovat úložiště překladových klíčů. Implementovali jsme vlastní funkci `window.domReady.add` v knihovně [připraveno](../libraries/ready-extender.md), která se provede až po inicializaci úložiště překladových klíčů.
+!>**Varování:** není možné použít událost v kódu JavaScript `$(document).ready`, protože je třeba nejprve inicializovat úložiště překladových klíčů. Implementovali jsme vlastní funkci `window.domReady.add` v knihovně [připraveno](../libraries/ready-extender.md), která se provede až po inicializaci úložiště překladových klíčů.
 
 ```javascript
 window.domReady.add(function () {

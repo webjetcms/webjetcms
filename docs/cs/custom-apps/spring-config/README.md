@@ -79,10 +79,13 @@ public class JpaDBConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         Logger.println(this, "loading basecms JpaDBConfig");
 
+        String dataSourceName = "iwcm";
+
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
-        emf.setDataSource(DBPool.getInstance().getDataSource("iwcm"));
+        emf.setDataSource(DBPool.getInstance().getDataSource(dataSourceName));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+        emf.setPersistenceUnitName(dataSourceName);
 
         // Zoznam packages ktore sa maju skenovat pre databazove entity/DAO !!
         emf.setPackagesToScan(

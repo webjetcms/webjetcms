@@ -8,6 +8,7 @@ Class `CellVisibilityService` extends functionality `DataTables`
 
 - [Tools](tools.md)
 - [StorageHandler](storage-handler.md)
+
 ***
 
 ### Description of operation:
@@ -21,8 +22,9 @@ Each time the table is reordered, the method [updateColumnConfig()](#updatecolum
 ## Creating an instance:
 
 **WebJET** creates an instance in the file [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
+
 ```javascript
-import { CellVisibilityService } from "./libs/data-tables-extends/";
+import {CellVisibilityService} from "./libs/data-tables-extends/";
 
 window.dataTableCellVisibilityService = new CellVisibilityService();
 ```
@@ -30,13 +32,14 @@ window.dataTableCellVisibilityService = new CellVisibilityService();
 **Application:**
 
 **WebJET** uses a class in the file [.../webjetdatatables/index.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+
 The data is collected and saved when the save button is pressed in the column configuration.
 
 ```javascript
 {
-	action: function action(e, dataTable) {
-		window.dataTableCellVisibilityService.buildConfigDataFromObject(dataTable);
-	}
+    action: function action(e, dataTable) {
+        window.dataTableCellVisibilityService.buildConfigDataFromObject(dataTable);
+    }
 }
 ```
 
@@ -44,14 +47,18 @@ The column data of the table is updated when the table is created.
 
 ```javascript
 DataTable({
-	columns: window.dataTableCellVisibilityService.updateColumnConfig(DATA.id, DATA.columns),
+    columns: window.dataTableCellVisibilityService.updateColumnConfig(DATA.id, DATA.columns),
 });
 ```
 
 ## List of APIs
 
 **(Click to see the detail for the function)**
-| Methods | | --------------------------------------------------------- | | | [buildConfigDataFromObject()](#buildconfigdatafromobject) | | [updateColumnConfig()](#updatecolumnconfig)               |
+
+| Methods |
+| --------------------------------------------------------- |
+| [buildConfigDataFromObject()](#buildconfigdatafromobject) |
+| [updateColumnConfig()](#updatecolumnconfig)               |
 
 ### Detailed description of functions
 
@@ -76,6 +83,7 @@ window.dataTableCellVisibilityService.buildConfigDataFromObject(dataTable);
 ```
 
 ***
+
 #### updateColumnConfig()
 
 Updates an existing column object with the stored data. If the data does not exist, the method returns its input.

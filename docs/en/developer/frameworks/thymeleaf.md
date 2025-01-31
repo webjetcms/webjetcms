@@ -5,20 +5,20 @@
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-
 - [Thymeleaf](#thymeleaf)
-	- [URL mapping](#mapovanie-url)
-	- [Inserting custom objects into the model](#vloženie-vlastných-objektov-do-modelu)
-	- [LayoutService](#layoutservice)
-	- [Basic text/attribute listing](#základný-výpis-textu--atribútu)
-	- [Translation text](#prekladový-text)
-	- [Select box](#select-box)
-	- [Linking strings](#spájanie-reťazcov)
-	- [Conditional tag display](#podmienené-zobrazenie-tagu)
-	- [Getting an object from Constants](#získanie-objektu-z-constants)
-	- [Control of rights](#kontrola-práv)
-	- [Verification of law](#overenie-práva)
-	- [Chyba TemplateProcessingException: Only variable expressions returning numbers or booleans are allowed in this context](#chyba-templateprocessingexception-only-variable-expressions-returning-numbers-or-booleans-are-allowed-in-this-context)
+  - [URL mapping](#url-mapping)
+  - [Inserting custom objects into the model](#inserting-custom-objects-into-the-model)
+  - [LayoutService](#layoutservice)
+  - [Basic text/attribute listing](#basic-text-attribute-listing)
+  - [Translation text](#translation-text)
+  - [Select box](#select-box)
+  - [Linking strings](#linking-strings)
+  - [Conditional tag display](#conditional-tag-display)
+  - [Obtaining an object from `Constants`](#obtaining-an-object-from-constants)
+  - [Control of rights](#control-of-rights)
+  - [Verification of law](#verification-of-the-right)
+  - [Chyba TemplateProcessingException: Only variable expressions returning numbers or booleans are allowed in this context](#error-templateprocessingexception-only-variable-expressions-returning-numbers-or-booleans-are-allowed-in-this-context)
+
 <!-- /code_chunk_output -->
 
 ## URL mapping
@@ -46,11 +46,11 @@ All default objects are inserted into the model via [LayoutBean.java](../../../s
 
 ## Inserting custom objects into the model
 
-If you need to insert a custom object into the model for certain administration pages, you can use events. [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) publishes the event [ThymeleafEvent](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafEvent.java)to which it is possible to listen. In the event is published `ModelMap` object and `HttpServletRequest`.
+If you need to insert a custom object into the model for certain administration pages, you can use events. [ThymeleafAdminController.java](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java) publishes the event [ThymeleafEvent](../../../src/main/java/sk/iway/iwcm/admin/ThymeleafEvent.java) to which it is possible to listen. In the event is published `ModelMap` object and `HttpServletRequest`.
 
 An example of use is [WebPagesListener](../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java).
 
-It is important to use annotation `@Component` (which also requires adding a package in the class [SpringConfig](../../../src/main/java/sk/iway/webjet/v9/SpringConfig.java) in the annotation `@ComponentScan`) and of course `@EventListener`. In the conditions it is necessary to set the value of the parameter `page` a `subpage`so that event listening is done only for the specified administration page.
+It is important to use annotation `@Component` (which also requires adding a package in the class [SpringConfig](../../../src/main/java/sk/iway/webjet/v9/SpringConfig.java) in the annotation `@ComponentScan`) and of course `@EventListener`. In the conditions it is necessary to set the value of the parameter `page` a `subpage` so that event listening is done only for the specified administration page.
 
 ```java
 @Component
@@ -88,7 +88,8 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
-**ATTENTION**: note the rights check by calling `user.isEnabledItem("menuWebpages")`, the data is inserted directly into the page and bypasses the REST services rights check. So you must provide rights checks implicitly. By default, the object `webpagesInitialJson` inserts a string `null`, as it is not possible to set the model directly `null` object. But the string is correctly inserted into the pug file as `null` value, HTML code processing fails and the REST call is used (since the value `initialData` of the object will be `null`).
+!>**Warning:** note the checking of calling rights `user.isEnabledItem("menuWebpages")`, the data is inserted directly into the page and bypasses the REST services rights check. So you must provide rights checks implicitly. By default, the object `webpagesInitialJson` inserts a string `null`, as it is not possible to set the model directly `null` object. But the string is correctly inserted into the pug file as `null` value, HTML code processing fails and the REST call is used (since the value `initialData` of the object will be `null`).
+
 ## LayoutService
 
 Class [LayoutService](../../../src/main/java/sk/iway/iwcm/admin/layout/LayoutService.java) ensures that basic objects are populated to display the admin part. Important Java methods:
@@ -104,24 +105,24 @@ Important JavaScript objects:
 
 ```javascript
 //jazyk nastavený pri prihlásení do admin časti
-window.userLng;
+window.userLng
 
 //aktualny CSRF token, automaticky je nastaveny cez jQuery.ajaxSetup do HTTP hlavicky X-CSRF-Token
-window.csrfToken;
+window.csrfToken
 
 //aktualne prihlaseny pouzivatel
-window.currentUser;
+window.currentUser
 
 //verzia bootstrapu z konf. premennej bootstrapVersion
-window.bootstrapVersion;
+window.bootstrapVersion
 
 //datum poslednej zmeny prekladovych textov
-window.propertiesLastModified;
+window.propertiesLastModified
 ```
 
 ## Basic text/attribute listing
 
-The text cannot be typed out directly, it must be put into e.g. `span` wrappers with attribute `data-th-text`which will replace the content `span` element (to be prototyped). Similarly, attributes are set, e.g. `data-th-href=...`
+The text cannot be typed out directly, it must be put into e.g. `span` wrappers with attribute `data-th-text` which will replace the content `span` element (to be prototyped). Similarly, attributes are set, e.g. `data-th-href=...`
 
 ```html
 <span data-th-text="${layout.user.fullName}">WebJET User</span>
@@ -143,7 +144,9 @@ in JavaScript code, the value can be assigned as follows:
 The translation text shall be written in the form `#{prekladovy.kluc}`. But in the pug file it needs to be **escape through \\** because # is done directly in pug files:
 
 ```html
-<span data-th-text="\#{menu.top.help}">Pomocník</span> alebo priamo ako text: [[\#{menu.top.help}]]
+<span data-th-text="\#{menu.top.help}">Pomocník</span>
+alebo priamo ako text:
+[[\#{menu.top.help}]]
 ```
 
 The translation can also be easily inserted into the JS code in the PUG file via write:
@@ -171,7 +174,7 @@ String lng = Prop.getLng(request, false); //ziska jazyk aktualne zobrazenej web 
 Prop.getInstance(lng); //ziska prop objekt zadaneho jazyka
 ```
 
-Note: inserting texts from WebJET CMS into Spring is handled by class `WebjetMessageSource.java`.
+Note: inserting texts from WebJET CMS into `Spring` provided by the class `WebjetMessageSource.java`.
 
 ## Select box
 
@@ -192,10 +195,10 @@ img(
 in addition, it is also possible to use `Literal substitutions` https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#literal-substitutions
 
 ```html
-<span data-th-text="|Welcome to our application, ${layout.user.fullName}!|"></span>
+<span data-th-text="|Welcome to our application, ${layout.user.fullName}!|">
 ```
 
-WARNING: if it throws an error like: `Could not parse as expression: "aitem--open md-large-menu"`, it's because of `__`. This is a special brand for the pre-processor:
+!>**Warning:** if it throws an error like: `Could not parse as expression: "aitem--open md-large-menu"`, it's because of `__`. This is a special brand for the pre-processor:
 
 https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#preprocessing
 
@@ -210,10 +213,10 @@ div(data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ?
 `data-th-if` ensure the display of `tagu` only when the specified condition is met
 
 ```javascript
-i(data-th-if="${!subMenuItem.childrens.empty}" class="fas fa-chevron-down")
+i(data-th-if="${!subMenuItem.childrens.empty}" class="ti ti-chevron-down")
 ```
 
-## Getting an object from Constants
+## Obtaining an object from `Constants`
 
 ```javascript
 a(data-th-href="${layout.getConstant('adminLogoffLink')}")
@@ -227,7 +230,7 @@ the following functions are supported:
 - `String getConstant(String name, String defaultValue)` - returns the value of the constant according to the specified `name`, if none returns the value specified in `defaultValue`.
 - `int getConstantInt(String name)` - returns the integer value of the constant according to the specified `name`, if none returns 0.
 - `int getConstantInt(String name, int defaultValue)` - returns the integer value of the constant according to the specified `name`, if none returns the value specified in `defaultValue`.
-- `boolean getConstantBoolean(String name)` - returns the binary value of the constant according to the specified `name`if there is no return `false`.
+- `boolean getConstantBoolean(String name)` - returns the binary value of the constant according to the specified `name` if there is no return `false`.
 - `boolean isPerexGroupsRenderAsSelect()` - returns a binary value for displaying tags (perex groups) as a multi-select field instead of a list of checkboxes (if there are more than 30 tags).
 
 ## Control of rights
@@ -243,7 +246,7 @@ To verify the right, you can use the call `${layout.hasPermission('cmp_form')}`,
 ```javascript
 li(data-th-if="${layout.hasPermission('cmp_form')}")
     a.dropdown-item(data-th-data-userid="${layout.user.userId}" onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
-        i.far.fa-key
+        i.ti.ti-key
         <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
 ```
 

@@ -15,17 +15,25 @@ Pri vkladaní aplikácie pre prihlásenie môžete použiť jednoduchší formul
 
 Registruje do všetkých emailových skupín, ktoré majú zapnutú možnosť **Povoliť pridávanie/odoberanie zo skupiny samotným používateľom** a **Vyžadovať potvrdenie e-mailovej adresy**. Neobsahuje ```captcha``` element, preto je vyžadované zapnuté potvrdenie e-mailovej adresy. Formulár využíva ```Bootstrap v5``` pre zobrazenie formuláru a dialógového okna.
 
+Ak vo web stránke použijete aplikáciu **Registračný formulár - jednoduchý** je potrebné aby skupina používateľov pre registráciu do hromadného emailu mala nastavené nasledovné možnosti:
+
+- Povoliť pridávanie/odoberanie zo skupiny samotným používateľom
+- Vyžadovať potvrdenie e-mailovej adresy
+
+Do skupín, ktoré majú tieto možnosti nastavené sa bude registrovať návštevník. Ak neexistuje žiadna skupina s takýmto nastavením formulár sa nezobrazí.
+
 ## Odhlásenie
 
 Vytvorte stránku ```/odhlasenie-z-mailingu.html``` s nasledovným HTML kódom. Vložte aplikáciu pre odhlásenie e-mailu:
 
 ```html
-<p>Zadajte váš email pre odhlásenie odberu informačných emailov:</p>
-!INCLUDE(/components/dmail/unsubscribe.jsp, senderEmail=meno@domena.sk, senderName="Ľuboš Balát")!
+!INCLUDE(/components/dmail/unsubscribe.jsp, senderEmail=name@your-domain.com, senderName="Your Name", confirmUnsubscribe=true)!
 ```
 Pre odhlásenie môžete do emailu priamo vytvoriť odkaz na stránku s odhlásením:
 
-```<a href="/odhlasenie-z-mailingu.html?email=!RECIPIENT_EMAIL!&save=true">Kliknite pre odhlásenie</a>```
+```html
+<a href="/odhlasenie-z-mailingu.html?email=!RECIPIENT_EMAIL!&save=true">Kliknite pre odhlásenie</a>
+```
 
 Pri odosielaní emailu sa automaticky nastaví hlavička emailu pre odhlásenie [List-Unsubscribe=One-Click](https://support.google.com/a/answer/81126#subscriptions) v podporovaných email klientoch. Odkaz na odhlásenie je nastavený podľa domény adresy stránky odosielaného emailu, v prípade potreby je možné doménu zmeniť nastavením konf. premennej `dmailListUnsubscribeBaseHref`. Pre zobrazenie priameho tlačidla na odhlásenie v email klientovi musí email/vaša doména spĺňať viacero kritérií (tieto kritéria odporúčame nastaviť aj pre lepšiu doručiteľnosť emailov):
 
@@ -34,7 +42,23 @@ Pri odosielaní emailu sa automaticky nastaví hlavička emailu pre odhlásenie 
 
 Naviac v schránke `gmail` sa tlačidlo na odhlásenie zobrazí len v prípade, že vás ako odosielateľa zaradí do kategórie hromadných emailov.
 
-## Email s textom na prihlásenie / odhlásenie
+![](../unsubscribed/unsubscribed-form.png)
+
+### Nastavenia aplikácie
+
+Okrem e-mailu a mena odosielateľa je možné v editore aplikácie nastaviť možnosti:
+
+- **Vždy zobraziť potvrdenie odhlásenia**:
+Ak je táto možnosť zvolená, používateľ musí potvrdiť odhlásenie na zobrazenom formulári.
+Ak táto možnosť nie je zvolená, používateľ bude odhlásený priamo po kliknutí na odkaz v emaile (bez ďalších krokov).
+
+![](editor.png)
+
+- **Text zobrazený pred odhlásením**
+Môže byť použitý vlastný text na stránke, kde je aplikácia vložená.
+Ak text necháte prázdny, nezobrazí sa žiadny text ani tlačidlo s nápisom `Nie, chcem zostať`. Ľubovoľný text môžete vložiť aj do web stránky pred aplikáciu odhlásenia.
+
+## Email s textom na prihlásenie
 
 Ak potrebujete modifikovať text emailu, ktorý je zaslaný pre potvrdenie prihlásenia / odhlásenia môžete modifikovať štandardný HTML kód v konfigurácii systému v časti Editácia textov. Kľúče s textami sú ```dmail.subscribe.bodyNew``` pre prihlásenie a ```dmail.unsubscribe.bodyNew``` pre odhlásenie.
 

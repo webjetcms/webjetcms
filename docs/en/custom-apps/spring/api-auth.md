@@ -1,6 +1,8 @@
 # API authorization
 
-If you need to access REST services/API WebJET CMS from an external system you can use the API key authorization option. This is sent in the HTTP header `x-auth-token` when calling the REST service. There is no need to send a CSRF token for such authorization.
+If you need to access REST services/`API WebJET CMS` from an external system, you can use the API key authorization option. This is sent in the HTTP header `x-auth-token` when calling the REST service. There is no need to send a CSRF token for such authorization.
+
+API [authorisation can be disabled](../../sysadmin/pentests/README.md#Configuration) in the configuration variable `springSecurityAllowedAuths` from which you remove the value `api-token`.
 
 ## Setting the key
 

@@ -11,7 +11,7 @@ export function bindExportButton(TABLE, DATA) {
         //const {name} = window.VueTools.getRouter().history.current.params;
         //const all = name ? '' : '/all';
         //const allData = exportAllData ? '?size=999999&page=0&export=true' : '';
-        //const url = `${TABLE.ajax.url()}${all}${allData}`;
+        //const url = `${TABLE.getAjax.url()}${all}${allData}`;
 
         let url = DATA.urlLatest;
         let restParams = [];
@@ -226,7 +226,7 @@ export function bindExportButton(TABLE, DATA) {
                     order: orderVal
                 },
                 customizeData: function (d) {
-                    //console.log("customizeData, pageVal=", pageVal, "serverSide=", DATA.serverSide, "d=", d, "formatedData=", formatedData);
+                    //console.log("customizeData, pageVal=", pageVal, "serverSide=", DATA.serverSide, "d=", d, "formatedData=", formatedData, "count=", d.headerStructure[0].length);
                     if (formatedData != null) {
                         while (d.body.length > 0) {
                             d.body.pop();
@@ -236,6 +236,10 @@ export function bindExportButton(TABLE, DATA) {
                     //uprav header na polia podla editora
                     while (d.header.length > 0) {
                         d.header.pop();
+                        d.headerStructure[0].pop();
+                    }
+                    while (d.headerStructure[0].length > 0) {
+                        d.headerStructure[0].pop();
                     }
                     DATA.fields.forEach((dc, index) => {
                         //console.log(index, "header dc=", dc);
@@ -244,7 +248,13 @@ export function bindExportButton(TABLE, DATA) {
                         let headerTitle = dc.label;
                         if (extendVal === "excelHtml5" || extendVal === "csvHtml5") headerTitle += "|" + dc.name;
                         d.header.push(headerTitle);
+                        d.headerStructure[0].push({
+                            title: headerTitle,
+                            colspan: 1,
+                            rowspan: 1
+                        });
                     });
+                    d.headerStructure.splice(1, 1);
                     //console.log("d fixed=", d);
                 }
             },
@@ -541,7 +551,7 @@ export function bindImportButton(TABLE, DATA) {
         let finishCounter = 0;
         let dzchunkindex = 0;
         let action = 'edit';
-        let url = WJ.urlAddPath(TABLE.ajax.url(), "/editor");
+        let url = WJ.urlAddPath(TABLE.getAjaxUrl(), "/editor");
         const chunks = window.chunksQuantity || 25;
 
         //console.log("mainData=", mainData, "importMode=", importMode, "updateByColumn=", updateByColumn);

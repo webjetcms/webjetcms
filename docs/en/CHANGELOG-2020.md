@@ -15,7 +15,8 @@ ext {
 we have experimentally verified the basic functionality on projects with MariaDB, Microsoft SQL and Oracle DB.
 
 **Build Artifactory/Maven versions**
-#52318 [Build file](../ant/build.xml) contains several `task` elements, the final one is `deploy`that has the correct dependencies set, so just run that one. List `taskov`:
+
+#52318 [Build file](../ant/build.xml) contains several `task` elements, the final one is `deploy` that has the correct dependencies set, so just run that one. List `taskov`:
 - `setup` - recovers dependencies and generates `WAR` archive
 - `updatezip` - prepare the temporary structure in `build/updatezip` directory. The structure contains an unpacked `WAR` archive, unpacked `webjet-XXXX.jar` files (i.e. the complete structure of the /admin, /components and /WEB-INF/classes directories)
 - `preparesrc` - withdraws `SRC` jar file and prepares the structure for the jar archive with source files (linked from the jar archive and WebJET 2021 source code)
@@ -40,6 +41,7 @@ JPA and Spring initialization is moved to package `sk.iway.webjet.v9`. For backw
 For JPA, we have added the correct database type setting (the previous version only had the MariaDB option set).
 
 **Home screen**
+
 #47428 Sliced splash screen design, filled with data. So far, data is entered directly in [ThymeleafAdminController](../src/main/java/sk/iway/iwcm/admin/ThymeleafAdminController.java), it will be read by ajax later after finalizing the properties.
 
 The screen is cut using VUE components. New DTO objects are used for `DocDetails, Audit a User beany`.
@@ -55,10 +57,10 @@ JavaScript object is available `window.currentUser`. Added VUE filters for date 
 **Documentation**
 
 - is deployed on http://docs.webjetcms.sk/v2021/, no side menu is generated yet, solved by gradle task `rsyncDocs`
-- documentation for insertion completed [HTML code without escaping](developer/frameworks/thymeleaf.md#základny-výpis-textu--atribútu) in Thymeleaf
-- supplemented documentation for [date and time formatting](developer/frameworks/vue.md#formátovanie-dátumu-a-času) in Vue
+- documentation for insertion completed [HTML code without escaping](developer/frameworks/thymeleaf.md#basic-text--attribute-listing) in Thymeleaf
+- supplemented documentation for [date and time formatting](developer/frameworks/vue.md#date-and-time-formatting) in Vue
 
-![meme](_media/meme/2020-53.jpg)
+![meme](_media/meme/2020-53.jpg ":no-zoom")
 
 ## 2020.51
 
@@ -71,12 +73,13 @@ New version of the server monitoring logged values display. Displays both table 
 - 14-30 = aggregation per hour
 - 30-60 = aggregation for 4 hours
 - 60+ = aggregation for 12 hours
+
 If aggregation was not performed, the browser would likely fall on the amount of data in the graph. The implementation is in the class [MonitoringAggregator](../src/main/java/sk/iway/iwcm/components/monitoring/MonitoringAggregator.java), the highest value in a given time interval is recorded.
 
 - #50053 [Charts] - added basic documentation for the library [amcharts](developer/frameworks/amcharts.md).
 - #50053 [Charts] - v `app.js` added asynchronous initialization of the amcharts library by calling `window.initAmcharts()`.
 
-![meme](_media/meme/2020-51.jpg)
+![meme](_media/meme/2020-51.jpg ":no-zoom")
 
 ## 2020.50
 
@@ -84,7 +87,7 @@ If aggregation was not performed, the browser would likely fall on the amount of
 >
 > The page editor has also been improved, it automatically adjusts its height according to the size of the window. Icons for directory and web page statuses in a tree structure have also been added.
 
-**Website**
+**Web pages**
 
 - Deleted the original sample page and directory editing code, only datatable views are used anymore.
 - Added status icons in the tree structure according to the original design for the directory (internal, not displayed in the menu, passworded) and the web page (display disabled, redirected, unsearchable, passworded).
@@ -102,6 +105,7 @@ Supplemented documentation for use [jsTree](developer/jstree/README.md).
 ## 2020.49
 
 **Import/Export:**
+
 Implemented a system for importing and exporting data between datatables.
 
 Export:
@@ -116,54 +120,67 @@ Export:
 Import:
 - Enables **import data as new** (to be added to the database) or **match existing data according to the selected column** (e.g. name, URL, etc.). When matching, it will automatically look up the record in the database first and then update it. If it does not exist, it creates a new record.
 - **Imported from xlsx format**.
-- Import is carried out **successively in batches of 25 records**so as not to overload the server.
-**Datatables:**
-- Modified filtering by dates - added option to set the time to the UI, no need to set the end of day time on the backend anymore
+- Import is carried out **successively in batches of 25 records** so as not to overload the server.
 
+**Datatables:**
+
+- Modified filtering by dates - added option to set the time to the UI, no need to set the end of day time on the backend anymore
 - Added attributes (we need them for calling the REST service to export data):
-	- `DATA.jsonOptions` - settings from the REST service response for rendering (we need for export of codebook data)
-	- `DATA.urlLatest` - complete URL of the last REST call
-	- `DATA.urlLatestParams` - all parameters of the last REST call (current page, page size, filters)
+  - `DATA.jsonOptions` - settings from the REST service response for rendering (we need for export of codebook data)
+  - `DATA.urlLatest` - complete URL of the last REST call
+  - `DATA.urlLatestParams` - all parameters of the last REST call (current page, page size, filters)
+
 ## 2020.45
 
-- #47293 [Deleting records in database] Remastered version of deleting data from WJ8 to datatable. Uses a few hacks, like setting [external filter](developer/datatables/README.md#externý-filter), disable paging (paging option)
+- #47293 [Deleting records in database] Remastered version of deleting data from WJ8 to datatable. Uses a few hacks, like setting [external filter](developer/datatables/README.md#external-filter), disable paging (paging option)
+
 **Datatables:**
+
 - Added option **do not show filter** in the table header for the column by setting the attribute `filter=false` in the annotation
-- Added option **disable paging** via `options paging: false`, [Documentation](developer/datatables/README.md#možnosti-konfigurácie)
+- Added option **disable paging** via `options paging: false`, [Documentation](developer/datatables/README.md#configuration-options)
 
 ## 2020.44
 
-> Version 2020.44 brings **new documentation** k [WebJET JavaScript functions](developer/frameworks/webjetjs.md), [Automated testing of the datatable](developer/testing/datatable.md), we add an example for [Dynamic change of values in the selection field in Datatables Editor](developer/datatables-editor/README.md#dynamická-zmena-hodnôt-vo-výberovom-poli) and other minor changes.
+> Version 2020.44 brings **new documentation** k [WebJET JavaScript functions](developer/frameworks/webjetjs.md), [Automated testing of the datatable](developer/testing/datatable.md), we add an example for [Dynamic change of values in the selection field in Datatables Editor](developer/datatables-editor/README.md#dynamic-change-of-values-in-the-selection-field) and other minor changes.
 >
 > We have ported the application to WebJET 2021 **Deleting cache objects** and we have completed the application **Templates**. It adds JSP template file selection on the server with dynamic loading based on the selected template group and directory settings for template display. We also added [automated tests](../src/test/webapp/tests/components/templates.js).
 >
 > Application **Server monitoring/actual values** we have visually fine-tuned (indentations, mobile version display) and edited the live data in the charts. They now scroll correctly in real time.
 >
-> We have added an option to the datatable [confirmation of the action taken](developer/datatables/README.md#tlačidlo-pre-vykonanie-serverovej-akcie) for special buttons in the datatable (such as delete all).
-
+> We have added an option to the datatable [confirmation of the action taken](developer/datatables/README.md#button-to-perform-a-server-action) for special buttons in the datatable (such as delete all).
 - [VS Code] modified [tasks.json](../.vscode/tasks.json) a [launch.json](../.vscode/launch.json) adding debug configuration `Debug`. It starts the application server and then connects in debug mode. Unfortunately due to [error in gretty](https://github.com/gretty-gradle-plugin/gretty/issues/166) the shutdown is solved `killnutím` process (not yet tested on windows). So in VS Code you can run the "Debug" configuration directly in the Run tab.
 - [Layout] Visually corrected display of domain selection in the upper right part
-- #47293 [toastr] Refactored code using toastr directly for API calls [WJ.notify](developer/frameworks/webjetjs.md#notifikácie)
+- #47293 [toastr] Refactored code using toastr directly for API calls [WJ.notify](developer/frameworks/webjetjs.md#notifications)
+
 **Datatables:**
+
 - #47293 [Datatable] Modified function `TABLE.executeAction` for the possibility to confirm the action before execution
 - #45718 [Datatable Editor] Disabled sending editor after pressing Enter by configuration setting `onReturn: false`. It was causing a problem in the selection field filter, where pressing Enter set the value and also submitted the form.
 - #47293 [Datatables] Modified code [DatatableRestControllerV2.action](../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) for the possibility of triggering the action even for an unentered entity (null value). Used for actions of type "Delete All"
+
 **Deleting Cache Objects:**
+
 - #47293 Converted version from WebJET 8 to datatable. Cache objects but not Spring DATA repository. Implemented is a custom [service](../src/main/java/sk/iway/iwcm/components/memory_cleanup/cache_objects/CacheObjectsService.java), which provides an API for accessing the Cache class and object list.
 - #47293 In class [CacheObjectsService](../src/main/java/sk/iway/iwcm/components/memory_cleanup/cache_objects/CacheObjectsService.java) methods are implemented `deleteAllCacheBeans()` to delete the entire cache including DocDB, GroupsDB and other objects. Method `deletePictureCache()` implements cache clearing `/thumb` Images.
+
 **Templates:**
+
 - #45718 [Templates] added [REST service /forward](../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java) to select a JSP template from the list of files in `/templates` directory
 - #45718 [Templates] added option to set directories where templates should be displayed
+
 **Testing:**
+
 - [Testing] Refactored auto test code [DataTables.js](../src/test/webapp/pages/DataTables.js) from parametric constructor to `options` object. Added ability to add test steps for new record, edit, search and delete records. Modified wait from fixed `I.wait(1)` at `DTE.waitForLoader()`, supplemented `I.say` for better orientation in the test logo. Search test supplemented with verification of found records.
 - [Testing] Added template `default` for the ability to test a selection of JSP template files
+
 **Documentation:**
-- [Datatable] Supplemented documentation for [button to perform a server action](developer/datatables/README.md#tlačidlo-pre-vykonanie-serverovej-akcie) (e.g. rotate image, delete all records)
-- Supplemented documentation for use [Gitlabu in VS Code](developer/guildelines/gitlab.md#práca-vo-vs-code)
+
+- [Datatable] Supplemented documentation for [button to perform a server action](developer/datatables/README.md#button-to-perform-a-server-action) (e.g. rotate image, delete all records)
+- Supplemented documentation for use [Gitlabu in VS Code](developer/guildelines/gitlab.md#work-in-vs-code)
 - Added documentation [WebJET JavaScript functions](developer/frameworks/webjetjs.md) to view notifications, action confirmations and more. Refactored their code for better use.
 - Supplemented list [special features](developer/testing/README.md) for testing datatables
 - Added description of use and implementation [Automated datatable testing](developer/testing/datatable.md)
-- #45718 added instructions for [dynamic change of values in select box](developer/datatables-editor/README.md#dynamická-zmena-hodnôt-vo-výberovom-poli) in Datatable Editor by other fields
+- #45718 added instructions for [dynamic change of values in select box](developer/datatables-editor/README.md#dynamic-change-of-values-in-the-selection-field) in Datatable Editor by other fields
 
 ## 2020.43
 
@@ -177,7 +194,7 @@ Import:
 >
 > We have extended and documented the JSON array capabilities for [adding directories and web pages](developer/datatables-editor/field-json.md) in datatables.
 >
-> We have added the ability to set the data tables [the default arrangement method](developer/datatables/README.md#usporiadanie) and date-time fields, we also added the display of seconds.
+> We have added the ability to set the data tables [the default arrangement method](developer/datatables/README.md#Arrangement) and date-time fields, we also added the display of seconds.
 >
 > We have added a library to WebJET `oshi-core` to get the CPU load and amcharts to display graphs in Server Monitoring.
 >
@@ -189,11 +206,11 @@ Import:
 - #46891 [Translation keys] - corrected search by change date
 - #46891 [Auditing] - JPA entity auditing enabled `FormsEntity, GalleryDimension, GallleryEntity, InsertScriptBean, InsertScriptDocBean, InsertScriptGroupBean, TranslationkeyEntity, AuditNotifyEntity`
 - #46891 [Auditing] - renamed table `webjet_audit` at `webjet_adminlog` by its original name in Oracle
-- #46891 [Testing] - added [extension codeceptjs-chai](developer/testing/README.md#assert-knižnica) for easy writing `assert` conditions
-- #46891 [Documentation] - added documentation for [auditing](developer/backend/auditing.md), [problem solving](developer/troubles/README.md) and supplemented by information on [testing](developer/testing/README.md#webjet-doplnkové-funkcie)
+- #46891 [Testing] - added [extension codeceptjs-chai](developer/testing/README.md#assert-library) for easy writing `assert` conditions
+- #46891 [Documentation] - added documentation for [auditing](developer/backend/auditing.md), [problem solving](developer/troubles/README.md) and supplemented by information on [testing](developer/testing/README.md#webjet-additional-features)
 - adjusted settings in `build.gradle`, `options.encoding=utf-8`, corrected diacritics in `PathFilter`
 - #46891 [Testing] - added audit trail testing to standard call `DataTables.baseTest('domainRedirectTable');`
-- #46891 [Datatable] - added setting option [method of arrangement](developer/datatables/README.md#usporiadanie) when displaying the page, set the order for configuration (by the date of change),
+- #46891 [Datatable] - added setting option [method of arrangement](developer/datatables/README.md#Arrangement) when displaying the page, set the order for configuration (by the date of change),
 - #46891 [Datatable] - added seconds to date and time formatting
 - #46891 [Audit] - added auditing of datatable export
 
@@ -225,13 +242,13 @@ Import:
 - [Web pages] Functional setting of directory and page copy in directories. Solved by VUE component [vue-folder-tree.vue](../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue). JSTree is used and opened into a full-screen dialog. In the annotation `@DatatableColumn` shall be entered as `DataTableColumnType.JSON` where using the attribute `className = "dt-tree-group"` is set to select a single directory or by `className = "dt-tree-group-array"` selecting multiple directories. Objects are of type `GroupDetails`.
 - [Web pages] - resolved moving the page to another directory with restoring the datatable and page tree structure
 - [Web pages] - deletion of web pages added
-- [Datatables] Added option [datatable updates](developer/datatables/restcontroller.md#reload-datatabuľky) after the data has been saved (e.g. when a web page is moved to another directory). Added method `setForceReload(boolean)` to REST controller and JavaScript events `WJ.DTE.forceReload`.
-- [Datatables] Added option not to display column in datatable or in editor by parameter `hidden` (for not displaying in the datatable) or `hiddenEditor` (not displayed in the editor) annotations [@DatatableColumn](developer/datatables-editor/datatable-columns.md#vlasnosti-datatablecolumn). In contrast to the parameter `visible` it is not possible to display such columns even via datatable settings on the frontend.
+- [Datatables] Added option [datatable updates](developer/datatables/restcontroller.md#reload-datatables) after the data has been saved (e.g. when a web page is moved to another directory). Added method `setForceReload(boolean)` to REST controller and JavaScript events `WJ.DTE.forceReload`.
+- [Datatables] Added option not to display column in datatable or in editor by parameter `hidden` (for not displaying in the datatable) or `hiddenEditor` (not displayed in the editor) annotations [@DatatableColumn](developer/datatables-editor/datatable-columns.md#properties-datatablecolumn). In contrast to the parameter `visible` it is not possible to display such columns even via datatable settings on the frontend.
 - [Datatables] Added initialization parameter `fetchOnEdit` - when set to true, a REST call will be made before editing the record to retrieve the current data of the record being edited. When using a datatable, for example for a web page, the record is updated from the server before the editor is opened, so the latest version is always opened in the editor. Implemented via JS function `refreshRow` and customer button `$.fn.dataTable.ext.buttons.editRefresh` to replace the standard button `edit`.
 - [Datatables] Added initialization parameter `fetchOnCreate` - after setting to `true` a REST call with value -1 will be made to get the data of the new object before the new record is created. This is convenient for setting the default data for the new record. For example, for a web page, the directory, layout order, template, and so on will be set before the record.
 - [Datatables] Added automatic display of the record ID in the first column, where previously there were only selection fields to mark the row
 - [Datatables] Modified the display of the error message from the server so that it is not between the Cancel and Save buttons but to the left of them.
-- [Testing] function added `DT.waitForLoader`which is waiting for the "Processing" information to be displayed and then hidden in the datatable. It is used as `DT.waitForLoader("#forms-list_processing");`
+- [Testing] function added `DT.waitForLoader` which is waiting for the "Processing" information to be displayed and then hidden in the datatable. It is used as `DT.waitForLoader("#forms-list_processing");`
 
 ## 2020.36
 
@@ -241,18 +258,18 @@ Import:
 ## 2020.34
 
 - #47008 [Datatables] Automatic generation added `required` of the attribute in `columns` definition if the field has an annotation `@NotEmpty` or `@NotBlank`. Implemented in [DatatableColumnEditor.java](../src/main/java/sk/iway/iwcm/system/datatable/json/DataTableColumnEditor.java).
-
 - #47008 [Automated Testing] Added [automated test](../src/test/webapp/pages/DataTables.js) datatables with reading the definition directly from the `columns` object. It performs a standard CRUD test. Sample use in [redirects.js](../src/test/webapp/tests/components/redirects.js):
+
 ```javascript
-const requiredFields = ["oldUrl", "newUrl"];
-DataTables.baseTest("redirectTable", requiredFields);
+const requiredFields = ['oldUrl', 'newUrl'];
+DataTables.baseTest('redirectTable', requiredFields);
 ```
 
 ## 2020.33
 
 - #47341 [Datatables] - Added new JSON field type, so far it is displayed as `textarea` but when reading and writing, the data is sent correctly as JSON objects. Implemented as a new field type json in index.js in the code `$.fn.dataTable.Editor.fieldTypes.json`
 - #47425 [Datatables] - Fixed bulk row marking and delete call on server
-- #44890 [Tests] - [added instructions](developer/testing/README.md#čakanie-na-dokončenie) for use `I.waitFor*` instead of fixed `I.wait`. Modified test [webpages.js](../src/test/webapp/tests/components/webpages.js) for use `waitFor` a `within`, as the page contains two datatables.
+- #44890 [Tests] - [added instructions](developer/testing/README.md#waiting-for-completion) for use `I.waitFor*` instead of fixed `I.wait`. Modified test [webpages.js](../src/test/webapp/tests/components/webpages.js) for use `waitFor` a `within`, as the page contains two datatables.
 - #44890 [Datatables Editor] - Added CSS class transfer from attribute `className` annotations on the whole line in the div.DTE\_Field editor. See comment `//prenesieme hodnotu className aj do DT editora do prislusneho riadku` v [index.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js).
 - #44890 [Datatables] - Modified comparison `true/false` values for the selection field. Similarly to the checkbox, the non-string value must be compared `true` (see comment `ak mame true/false select box, aj tomu musime zmenit value na true/false namiesto String hodnot` v [index.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)).
 
@@ -267,7 +284,7 @@ DataTables.baseTest("redirectTable", requiredFields);
 
 - #44890 [Datatables] - Added option in annotation to set the arrangement of fields in the output JSON object using the attribute `sortAfter` in the annotation `@DatatableColumn`. Sorting is done in the class [DatatableColumnsFactory.java](../src/main/java/sk/iway/iwcm/system/datatable/DataTableColumnsFactory.java) in the method `sortColumns`.
 - #44890 [Datatables] - Added annotation options `DataTableColumnType.BOOLEAN` for true/false values and `DataTableColumnType.CHECKBOX` for standard checkboxes.
-- #44890 [Datatables] - Added annotation option [nested objects](developer/datatables-editor/datatable-columns.md#vnorené-atribúty) via `@DatatableColumnNested`. The prefix attribute (the default value is auto, which generates the prefix according to the name of the annotated field) can be used to specify the prefix of an attribute in the generated JSON object (e.g. by setting it to `editorFields` an array is generated in JSON `allowChangeUrl` Like `editorFields.allowChangeUrl`). The prefix can also be empty, then only the variable name is generated (if it has e.g. `gettery/settery` in the original object such as. [FieldsFromAtoE](../src/main/java/sk/iway/iwcm/doc/FieldsFromAtoE.java) v [DocDetails](../src/main/java/sk/iway/iwcm/doc/DocDetails.java) facility.)
+- #44890 [Datatables] - Added annotation option [nested objects](developer/datatables-editor/datatable-columns.md#nested-attributes) via `@DatatableColumnNested`. The prefix attribute (the default value is auto, which generates the prefix according to the name of the annotated field) can be used to specify the prefix of an attribute in the generated JSON object (e.g. by setting it to `editorFields` an array is generated in JSON `allowChangeUrl` Like `editorFields.allowChangeUrl`). The prefix can also be empty, then only the variable name is generated (if it has e.g. `gettery/settery` in the original object such as. [FieldsFromAtoE](../src/main/java/sk/iway/iwcm/doc/FieldsFromAtoE.java) v [DocDetails](../src/main/java/sk/iway/iwcm/doc/DocDetails.java) facility.)
 
 ## 2020.30
 
@@ -297,7 +314,7 @@ DataTables.baseTest("redirectTable", requiredFields);
 - #43588 [Datatables] Fixed repeated setting of select box in filter and in editor (after second setting values could not be selected)
 - #45532 [Forms] Added basic search option in form data, limited to maximum 6 columns (due to Spring DATA API)
 - #45718 [Templates] Template list version via datatable, uses `TemplatesDB` API
-- #45490 [Audit] View audit logs and notifications. Both via Spring DATA, for audit added select boxes for filtering in datatable (linked to options editor), added option [custom filtering](./datatables/restcontroller.md#špeciálne-vyhľadávanie) in the REST controller.
+- #45490 [Audit] View audit logs and notifications. Both via Spring DATA, for audit added select boxes for filtering in datatable (linked to options editor), added option [custom filtering](./datatables/restcontroller.md#special-search) in the REST controller.
 - #44968 [Translation keys] Display and edit translation keys, implemented reading of original values, mapping `.properties` and DB changes.
 
 ## 2020.25
@@ -308,7 +325,7 @@ DataTables.baseTest("redirectTable", requiredFields);
 
 ## 2020.23
 
-- #45685 \[CI-CD] Configured CI-CD pipeline on Gitlab server, nightly build from master branch available at http://demotest.webjetcms.sk/admin/
+- #45685 [CI-CD] Configured CI-CD pipeline on Gitlab server, nightly build from master branch available at http://demotest.webjetcms.sk/admin/
 - #45382 [Datatables] Initial version of data import by sending data from import excel to datatables editor, possibility to set import mode (no support on backend yet)
 - #45379 [Datatables] Refactored datatable customization code from `app.js` into a separate file [index.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) with the possibility of use as a [NPM module](../src/main/webapp/admin/v9/npm_packages/README.md) (e.g. on the frontend in the template). Refactored code for the possibility of using multiple datatables on one page.
 - #45679 [Datatables] Added option [generate columns configuration](developer/datatables-editor/datatable-columns.md) datatables using Java bean annotation
@@ -317,23 +334,23 @@ DataTables.baseTest("redirectTable", requiredFields);
 
 - #44836 [Website] Migrated ckeditor editing code from WJ8. Modified image embedding, forms, and other CK editor dialogs. Added hidden form containing `docid, groupid, virtualpath` for compatibility of application preview and dialogs from WJ8.
 - #44836 [Website] For the editor, the `options` sends `original` template object that is needed to get paths to CSS styles. When the DT editor is opened, the CSS starting with /admin is preserved (for the CK extension editor), the rest is changed based on the assigned template.
-- #44836 [Website] The DT editor is available directly [JSON object](./datatables-editor/README.md#ukážky-kódu) of the edited record (not all data). For `options` dials added sending option [original object](./datatables/restcontroller.md). The JSON object retrieved from the server (containing the complete data of all rows and the options property) is available in the DT as DATA.json.
+- #44836 [Website] The DT editor is available directly [JSON object](./datatables-editor/README.md#code-samples) of the edited record (not all data). For `options` dials added sending option [original object](./datatables/restcontroller.md). The JSON object retrieved from the server (containing the complete data of all rows and the options property) is available in the DT as DATA.json.
 - #44737 [Configuration] Updated [self-test](../src/test/webapp/tests/components/configuration.js).
 - #44293 [Domain redirects] Updated [self-test](../src/test/webapp/tests/components/domain-redirects.js).
 
 ## 2020.21
 
 - [Testing] Added CSS classes `dt-filter-MENO` on the filter fields in the datatable for the ability to set filtering in the automated test `I.fillField("input.dt-filter-newUrl", randomNumber);`. Example in the test [redirects.js](../src/test/webapp/tests/components/redirects.js)
-- [Redirections] Added [annotation of mandatory fields](./datatables/restcontroller.md#valid%c3%a1cia--povinn%c3%a9-polia) to UrlRedirectBean.java (in WJ8)
+- [Redirections] Added [annotation of mandatory fields](./datatables/restcontroller.md#valid%c3%a1cia--mandatory%c3%a9-fields) to UrlRedirectBean.java (in WJ8)
 - [Gallery] Added text translations for image editor and area of interest, added option to set area of interest in input fields, added [auto test](../src/test/webapp/tests/components/gallery.js)
 - [Documentation] Added [sample code](developer/frameworks/example.md) use of frameworks
-- [Testing] Added [report generation](./testing/README.md#generovanie-html-reportu) via mochawesome and CodeceptUI for [test control](./testing/README.md#codecept-ui) via browser
-- [Datatable] Added option to display data (columns and fields in the editor) [on the basis of the rights](./datatables/README.md#zobrazenie-dát-na-základe-práv) logged in user
+- [Testing] Added [report generation](./testing/README.md#html-report-generation) via mochawesome and CodeceptUI for [test control](./testing/README.md#codecept-ui) via browser
+- [Datatable] Added option to display data (columns and fields in the editor) [on the basis of the rights](./datatables/README.md#rights-based-data-display) logged in user
 
 ## 2020.20
 
-- [Datatable] Added [search by date range](./datatables/restcontroller.md#vyh%c4%bead%c3%a1vanie-pod%c4%bea-rozsahu-d%c3%a1tumov) specific processing of URL parameter with prefix `daterange:od-do`.
-- [Documentation] Supplemented User Manual [assert](./testing/README.md#assert-kni%c5%benica) libraries, the use and writing of new [translation keys](./frameworks/thymeleaf.md#prekladov%c3%bd-text)
+- [Datatable] Added [search by date range](./datatables/restcontroller.md#avoid%c4%bead%c3%a1vanie-pod%c4%bea-range-d%c3%a1tumov) specific processing of URL parameter with prefix `daterange:od-do`.
+- [Documentation] Supplemented User Manual [assert](./testing/README.md#assert-book%c5%girl) libraries, the use and writing of new [translation keys](./frameworks/thymeleaf.md#translation%c3%bd-text)
 - [Gallery] Modified display of image language mutation columns to use API datatables (to allow inline editing to work correctly)
 - [Translation keys] New version of display and editing [translation keys](../src/main/webapp/admin/v9/views/pages/settings/translation-keys.pug)
 - [Datatable] Refactored code [DatatableRestControllerV2.java](../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) with an annotated division into entity and rest methods
@@ -361,15 +378,14 @@ DataTables.baseTest("redirectTable", requiredFields);
 
 ## 2020.13
 
-\[#43588 - wj9 - basic layout functionalization] - task #5 =\&gt;
-
+[#43588 - wj9 - basic layout functionalization] - task #5 =>
 - modified lombook configuration (in build.gradle - `config['lombok.accessors.chain'] = 'true'`) in order to `settre` Returned `this` for chaining
 - webpack set to not remove quotes in attributes (because TH can return a multi-word expression - `removeAttributeQuotes: false`)
 - MENU - added MenuBean and MenuService objects that generate menus, translation of the original ModuleInfo from `Modules` object (groups, icons) + modified texts via `text-webjet9.properties`
 
 ## 2020.12
 
-\[#43588 - wj9 - basic layout functionality] - task #1 =\&gt; I committed the first version, made it functional:
+[#43588 - wj9 - basic layout functionality] - task #1 => I committed the first version, made it functional:
 - click on the logo + `tooltip` with version (TODO: it would be better to write it out somehow, TODO: add logos for NET and LMS)
 - switching domains (they are there for `iwcm.interway.sk` also illustration data), TODO: it's broken, `@MHO` need to be upset
 - Help
@@ -381,5 +397,6 @@ PLUS:
 - lombook enabled on the project - https://projectlombok.org
 - basic classes made `LayoutBean` a `HeaderBean` with their insertion into the model
 - Supplemented by `webjet.js` with JS functions WJ.xxx
-- basic skeleton for translation of texts, added `WJ.translate`, but it must be called as `async`which slows down the display.
+- basic skeleton for translation of texts, added `WJ.translate`, but it must be called as `async` which slows down the display.
+
 I suggest in the future to pass translation keys from HTML code as a JS function parameter (in the pug file the translation is simply inserted as `#{prekladovy.kluc}` and the server is translated.

@@ -77,7 +77,7 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
                 }
             }
 
-            docDetailsList.sort(Comparator.comparing(DocHistoryDto::getPublishStartDate));
+            docDetailsList.sort(Comparator.comparing(DocHistoryDto::getPublishStartDate, Comparator.nullsFirst(Comparator.naturalOrder())));
             page = new DatatablePageImpl<>(docDetailsList);
         } else {
             if(!getUser().isEnabledItem("menuWebpages")) throw new IllegalArgumentException("Access is denied");

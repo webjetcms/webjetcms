@@ -12,6 +12,7 @@ WebJET v súbore webjet.js zapúzdruje API použitých knižníc. Cieľom je, ab
   - [Potvrdenie akcie](#potvrdenie-akcie)
   - [Získanie hodnoty](#získanie-hodnoty)
   - [Formátovanie dátumu a času](#formátovanie-dátumu-a-času)
+  - [Formátovanie čísel](#formátovanie-čísel)
   - [Iframe dialóg](#iframe-dialóg)
   - [Dialóg pre výber súboru/odkazu](#dialóg-pre-výber-súboruodkazu)
   - [Udržiavanie spojenia so serverom (refresher)](#udržiavanie-spojenia-so-serverom-refresher)
@@ -127,6 +128,12 @@ Pre unifikované formátovanie dátumu a času sú dostupné nasledovné funkcie
 - ```WJ.formatTime(timestamp)``` - naformátuje zadaný ```timestamp``` ako čas (hodiny:minúty)
 - ```WJ.formatTimeSeconds(timestamp)``` - naformátuje zadaný ```timestamp``` ako čas vrátane sekúnd
 
+## Formátovanie čísel
+
+Pre unifikované formátovanie čísel sú dostupné nasledovné funkcie:
+
+- `WJ.formatPrice(price)` - naformátuje zadané číslo ako menu zaokrúhlenú na 2 desatinné miesta, príklad: `WJ.formatPrice(1089) - 1 089,00`.
+
 ## Iframe dialóg
 
 Pomocou volania ```WJ.openIframeModal(options)``` je možné otvoriť dialógové okno s iframe zadanej URL adresy. Neotvára sa tak ```popup``` okno, ale dialógové okno priamo v stránke. V ```options``` objekte môžu byť nasledovné parametre:
@@ -206,9 +213,9 @@ Dostupné sú nasledovné funkcie:
 
 Chybové hlásenia sú zobrazené cez knižnicu toastr v samostatnom kontajneri ```toast-container-logoff``` v hornej časti obrazovky. Používajú ```window``` objekty pre ochranu pred viac násobným zobrazením hlásenia.
 
-Inicializácia časovača je spustená z [app-init.js](../../../src/main/webapp/admin/v9/src/js/app-init.js) volaním funkcie ```WJ.keepSession();```.
+Inicializácia časovača je spustená z [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) volaním funkcie ```WJ.keepSession();```.
 
-Ochrana pre CSRF tokeny a spojenie so serverom je okrem časovača nastavená aj v [head.pug](../../../src/main/webapp/admin/v9/views/partials/head.pug) v nastavení ajax volaní pomocou funkcie ```$.ajaxSetup```. Pre HTTP chybu so stavom 401 je volaná funkcia ```WJ.keepSessionShowLogoffMessage()```, pre chybu 403 funkcia ```WJ.keepSessionShowTokenMessage(errorMessage)```.
+Ochrana pre CSRF tokeny a spojenie so serverom je okrem časovača nastavená aj v [head.pug](../../../../src/main/webapp/admin/v9/views/partials/head.pug) v nastavení ajax volaní pomocou funkcie ```$.ajaxSetup```. Pre HTTP chybu so stavom 401 je volaná funkcia ```WJ.keepSessionShowLogoffMessage()```, pre chybu 403 funkcia ```WJ.keepSessionShowTokenMessage(errorMessage)```.
 
 ## Navigačná lišta
 
@@ -287,7 +294,7 @@ $("#breadcrumbLanguageSelect").change(function() {
     let lng = $(this).val();
     //console.log("Select changed, language=", lng);
     url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
-    cookiesDataTable.ajax.url(url);
+    cookiesDataTable.setAjaxUrl(url);
     cookiesDataTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
     cookiesDataTable.ajax.reload();
 });
@@ -488,11 +495,12 @@ public class AdminSettingsRestController {
 Ak zobrazenie stránky trvá dlhšie (napr. načítanie grafov v štatistike) je možné zobraziť animáciu načítania. V JavaScript kóde je možné využiť funkcie na zobrazenie a schovanie animácie:
 
 ```javascript
-//zobrazenie animacie
+//show loader
 WJ.showLoader();
 WJ.showLoader("text");
+WJ.showLoader(null, "#pills-dt-datatableInit-index > div.panel-body");
 
-//schovanie animacie
+//hide loader
 WJ.hideLoader();
 ```
 

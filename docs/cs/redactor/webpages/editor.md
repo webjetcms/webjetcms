@@ -134,9 +134,23 @@ Na kartě Perex můžete nastavit platnost zobrazení stránky nebo nastavit jej
 
 ![](editor/tab-perex.png)
 
-Pole Začátek, Konec a Datum se obvykle používají pouze pro zprávy, tiskové zprávy, události a konference. Pole Začátek a Konec však mají také speciální funkci, pokud chcete načasovat zveřejnění nebo zrušení stránky od určitého okamžiku v budoucnosti. Tato funkce se aktivuje, když zaškrtnete políčka "Zveřejnit stránku po tomto datu", respektive "Zrušit zveřejnění stránky po tomto datu". Hodnoty polí Začátek a Konec musí být vyplněny pro všechny události a konference v kalendáři událostí. U zpravodajských událostí stačí zadat datum zahájení.
+Pole **Datum zahájení**, **Datum ukončení** a **Datum konání akce** se obvykle používají pouze pro zprávy, tiskové zprávy, události a konference. Pole **Datum zahájení** a **Datum ukončení** Mají však také speciální funkci, pokud chcete načasovat zveřejnění nebo zrušení stránky od určitého okamžiku v budoucnosti. Tato funkce se aktivuje zaškrtnutím políčka **Zveřejnit stránku po tomto datu**, resp. **Zveřejnit stránku po tomto datu**. Hodnota polí **Datum zahájení** a **Datum ukončení** musí být vyplněny u všech akcí a konferencí v kalendáři akcí. U novinek stačí zadat datum zahájení.
 
-Perex (Anotace) obsahuje stručný popis toho, čeho se stránka týká. Neměl by být delší než 160 znaků. Perex se používá hlavně při psaní zpráv, tiskových zpráv, událostí a konferencí, kde se jedná o stručný popis článku, který se zobrazuje v seznamu zpráv. Obrázek můžete definovat pomocí ikony, která se zobrazí za polem Obrázek
+Perex (Anotace) obsahuje stručný popis toho, čeho se stránka týká. Neměl by být delší než 160 znaků. Perex se používá hlavně při psaní zpráv, tiskových zpráv, událostí a konferencí, kde se jedná o stručný popis článku, který se zobrazuje v seznamu zpráv.
+
+Obrázek můžete definovat pomocí ikony za polem. **Obrázek**.
+
+### Zveřejnění webové stránky
+
+Pokud jste si načasovali zveřejnění webové stránky a chcete být co nejrychleji. **autor stránky** informován, stačí nastavit konfigurační proměnnou `webpagesNotifyAutorOnPublish`. Přednastavená hodnota je **Pravda** to znamená, že kdykoli je zveřejněna nová verze webové stránky, je jejímu autorovi zaslán následující informační e-mail.
+
+![](editor/publish-email-notification.png)
+
+Na konci e-mailu je odkaz na stránku, kde si můžete zkontrolovat novou verzi stránky. Pokud tyto informační e-maily nechcete, musíte nastavit hodnotu konfigurační proměnné `webpagesNotifyAutorOnPublish` na adrese **false**.
+
+Tato událost bude [Auditováno](../../sysadmin/audit/README.md) kde typ auditu je `SAVEDOC` a popis kontrolované akce musí obsahovat informace o `publishStatus: Webpage was published` abyste mohli snadno najít publikační akce.
+
+![](editor/publish-audit-logs.png)
 
 ## Mediální karta
 
@@ -154,7 +168,7 @@ V poli Náhledový obrázek lze nastavit odkaz na vhodný náhledový obrázek, 
 
 Uspořádání určuje pořadí odkazů. Média přiřazená do různých skupin se navzájem neovlivňují. Pořadová čísla mohou být také stejná, v takovém případě systém seřadí odkazy podle abecedy.
 
-**Varování:** nově přidaná média se na webové stránce začnou zobrazovat až po uložení webové stránky. Tímto způsobem můžete v případě potřeby načasovat přidání médií spolu s webovou stránkou, pokud nastavíte odložení publikování stránky.
+!>**Varování:** nově přidaná média se na webové stránce začnou zobrazovat až po uložení webové stránky. Tímto způsobem můžete v případě potřeby načasovat přidání médií spolu s webovou stránkou, pokud nastavíte odložení publikování stránky.
 
 ## Karta Volitelná pole
 

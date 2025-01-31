@@ -37,7 +37,7 @@ Toto je výchozí nastavení. Po načtení stránky je nastaveno na hodnotu `den
 - `ad_personalization` = marketingová kategorie WebJET `cookies`
 - `analytics_storage` = statistická kategorie WebJET `cookies`
 
-**Varování:** výchozí nastavení souhlasů musí být v kódu před vložením `GTM`.
+!>**Varování:** výchozí nastavení souhlasů musí být v kódu před vložením `GTM`.
 
 *Zajímavé je, že pokud jsou výše uvedené souhlasy zakázány, služba Google Analytics bude stále fungovat. Nevytváří však `cookies` a neodesílá informace o uživateli, jeho prohlížeči, nesleduje návštěvu atd. Spouští se proto, že slibuje do-modelovat analytiku na základě chybějících údajů od uživatelů, kteří k tomu nedali souhlas.*
 
@@ -102,4 +102,12 @@ Data jsou automaticky aktualizována aplikací `GDPR Cookies` a aplikace `Cookie
 
       </body>
     </html>
+```
+
+## Událost odeslání formuláře
+
+Po odeslání formuláře pomocí AJAXu je zveřejněna událost. `WJ.formSubmit`, které lze poslouchat po připojení k síti `DataLayer`, např. jako:
+
+```javascript
+    window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
 ```

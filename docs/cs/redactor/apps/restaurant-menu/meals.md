@@ -14,6 +14,6 @@ Při vytváření nového pokrmu jsou v editoru k dispozici následující param
 
 ![](meals-editor.png)
 
-Alergeny se vybírají z výběrové nabídky, ve které lze zvolit několik možností. K dispozici je 14 alergenů (jejich počet lze nastavit v konfigurační proměnné). `restaurantMenu.alergensCount`) a jsou definovány v překladových klíčích s předponou `components.restaurant_menu.alergen`:
+Alergeny se vybírají z výběrové nabídky, ve které lze zvolit několik možností. K dispozici je 14 alergenů (jejich počet lze nastavit v konfigurační proměnné `restaurantMenu.alergensCount`) a jsou definovány v překladových klíčích s předponou `components.restaurant_menu.alergen`:
 
 ![](meals-allergens-list.png)

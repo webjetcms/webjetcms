@@ -345,7 +345,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 	public void beforeSave(ReservationEntity entity) {
         //Email is NULL, because this is ADMIN section, so admin must be logged in
         int userId = ReservationService.getUserToPay(null, entity.getId(), reservationRepository, getRequest());
-        
+
         //INSERT action
         if(entity.getId() == null || entity.getId() == -1) {
             //Set domain id, not null
@@ -353,7 +353,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
             //Set creator id
             entity.setUserId(userId);
-            
+
             entity.setId(-1L);
         }
 
@@ -461,8 +461,9 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, ReservationEntity> target, Identity user, Errors errors, Long id, ReservationEntity entity) {
         if(target.getAction().equals("create") || target.getAction().equals("edit") && entity.getEditorFields() != null) {
             //Is object set as ALL DAY reservation ? - if yes, we do not need to check time
-            boolean allDay = ror.isReservationForAllDay(entity.getReservationObjectId());
-            if(allDay == false) {
+            Boolean allDay = false;
+            if (entity.getReservationObjectId()!=null) allDay = ror.isReservationForAllDay(entity.getReservationObjectId());
+            if(Tools.isFalse(allDay)) {
                 if(entity.getEditorFields().getReservationTimeFrom() == null)
                     errors.rejectValue("errorField.editorFields.reservationTimeFrom", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
                 if(entity.getEditorFields().getReservationTimeTo() == null)

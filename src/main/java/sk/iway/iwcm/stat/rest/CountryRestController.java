@@ -55,7 +55,7 @@ public class CountryRestController extends DatatableRestControllerV2<CountryDTO,
     @Override
     public Page<CountryDTO> searchItem(Map<String, String> params, Pageable pageable, CountryDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
 
         DatatablePageImpl<CountryDTO> page = new DatatablePageImpl<>(getDataAndConvertIntoPageItems(filter));
         return page;

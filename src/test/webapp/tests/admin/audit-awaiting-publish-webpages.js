@@ -26,13 +26,13 @@ Scenario("logout 2", ({ I }) => {
 
 Scenario("Check values", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/");
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
     DT.checkTableRow("awaitingPublishWebpagesDataTable", 1, [null, "22955", pageTitle, "01.12.2030 06:00:00", "", "/Test stavov/"+pageTitle]);
 });
 
 Scenario("Check buttons preview", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/");
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-history-preview");
     I.wait(2);
@@ -44,7 +44,7 @@ Scenario("Check buttons preview", ({ I, DT }) => {
 
 Scenario("Check buttons stat", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/");
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-stat");
     I.wait(2);

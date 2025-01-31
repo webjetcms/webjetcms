@@ -20,7 +20,8 @@
         var tabs = [
             { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
             { id: 'advanced', title: '[[#{components.banner.tab.advanced}]]'},
-            { id: 'answers', title: '[[#{inquiry.answer2}]]'}
+            { id: 'answers', title: '[[#{inquiry.answer2}]]'},
+            { id: 'votes', title: '[[#{menu.stat}]]', hideOnCreate: true, content: '<div class="statContainer"><iframe id="statIframe" src="about:blank" width="100%" height="500"></iframe><div>'}
         ];
 
         let url = "/admin/rest/inquiry";
@@ -37,12 +38,42 @@
 
         //Hide question id
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
-            if(event.detail.conf.id == "DTE_Field_editorFields.answers")
+            if(event.detail.conf.id == "DTE_Field_editorFields.answers") {
                 var innerTable = event.detail.conf.datatable;
 
                 innerTable.EDITOR.on('open', function (e, mode, action) {
                     innerTable.EDITOR.field('questionId').hide();
                 });
+            }
+        });
+
+        inquiryDataTable.button().add(4, {
+            text: '<i class="ti ti-chart-line"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                for(var i = 0; i < selectedRows.length; i++) {
+                    window.location.href= "/apps/inquiry/admin/stat/?questionId=" + selectedRows[i].id;
+                }
+            },
+            init: function ( dt, node, config ) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'buttons-statistics btn btn-outline-secondary',
+            attr: {
+                'title': '[[#{components.quiz.statistics.title}]]',
+                'data-toggle': 'tooltip'
+            }
+        });
+
+        window.addEventListener('WJ.DTE.tabclick', function (e) {
+            //console.log("tabclick, id=", e.detail.id, " e=", e);
+            let id = e.detail.id;
+            //console.log("tab clicked, e=", e, "id=", id);
+            if ("inquiryDataTable-votes"===id) {
+                let url = '/apps/inquiry/admin/stat/?questionId=' + inquiryDataTable.EDITOR.currentJson.id + '&isInTab=true&hideHeaderFooter=true';
+                //console.log("url=", url);
+                $("#statIframe").attr("src", url);
+            }
         });
     });
     </script>

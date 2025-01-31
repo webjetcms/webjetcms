@@ -17,7 +17,7 @@ ineGroupId1,ineGroupId2:poznamka inej domeny
 
 whereby as `groupId-sk,groupId-en,groupId-cz` you enter the directory ID in the Web page section. For a multi-domain WebJET, you can enter multiple lines of configuration - each domain on a new line. The directory IDs you enter may or may not be the root directories in the WebJET.
 
-For the sign `:` it is possible to enter a note, e.g. domain name, etc.
+For the sign `:` it is possible to enter a note, e.g. a domain name, etc.
 
 ## Course of mirroring
 
@@ -27,6 +27,7 @@ Creating a directory/page in the SK or EN directory will automatically create a 
 
 - Page - Show to NO
 - Directory - Display method in menu - DO NOT SHOW
+
 If you don't like the setting of disabling the display of a web page/folder (e.g. during the creation of a web site when you don't mind that the section starts to be displayed immediately), set the conf. variable `structureMirroringDisabledOnCreate` to the value of `false`.
 
 The following operations are mirrored in further work:
@@ -34,6 +35,7 @@ The following operations are mirrored in further work:
 - Delete a directory/page
 - Change the order of a directory/page in the structure (except for root folders)
 - Move a directory/page to another directory
+
 The remaining directory/page properties are preserved and do not affect their equivalent in the second language.
 
 ## Creating a link to language mutations in the page header
@@ -53,6 +55,7 @@ The names SK, CZ, EN are generated from the specified directory IDs in the mirro
 WebJET can automatically translate the name of a directory or page when it is created. The following setting is required:
 - [configure the translator](../../../admin/setup/translation.md)
 - the root directory of each language mutation, it is necessary to set the Language field in the directory properties in the Template tab to the language of the directory
+
 The translator searches the folders recursively towards the root of the Language setting field when the page is created, and uses it as the source or target language when it is not empty. If no language is found, the language set in the source and destination folder template is used.
 
 ![](./language.png)
@@ -61,7 +64,7 @@ It is translated **Name of the website**, menu item name, URL address and **Tabl
 
 ### New page
 
-When you create a page, automatic translation is always triggered. If you create a new page with the name "good morning" in the folder `preklad_sk`where the Slovak language is set, in the directory `preklad_en` a page will be created `good morning`, the content of the site will also be translated into English.
+When you create a page, automatic translation is always triggered. If you create a new page with the name "good morning" in the folder `preklad_sk` where the Slovak language is set, in the directory `preklad_en` a page will be created `good morning`, the content of the site will also be translated into English.
 
 Web page in folder `preklad_sk`:
 
@@ -77,15 +80,12 @@ If a page already exists in the target language, it is necessary to distinguish 
 
 WebJET needs to know if the translated page has already been modified by the actual user. There is a configuration variable `structureMirroringAutoTranslatorLogin` where you can enter the login name of a (virtual) user, which is used to record the automatic translation - the page in another language is saved as if by this user. When the original language version is saved again, the text of the web page is translated again as long as the author of this page is still this virtual user - i.e. another (real) user has not yet changed the translated web page.
 
-In users, create a new (virtual) user with rights to edit the necessary web pages and enter his login name in the conf. variable `structureMirroringAutoTranslatorLogin`. You should never log in with such a user and use them for editorial work, they are just a technical/virtual user. The default login is `autotranslator`if you use this login you do not need to set the conf. variable.
+In users, create a new (virtual) user with rights to edit the necessary web pages and enter his login name in the conf. variable `structureMirroringAutoTranslatorLogin`. You should never log in with such a user and use them for editorial work, they are just a technical/virtual user. The default login is `autotranslator` if you use this login you do not need to set the conf. variable.
 
 Automatic translation of an existing page is performed under the following conditions:
-
-1.  If the configuration variable `structureMirroringAutoTranslatorLogin` is set and the user exists in the database.
-
-    1.  And the author of the landing page is identical to `structureMirroringAutoTranslatorLogin` - so the page has not yet been corrected by a real user.
-
-2.  If the configuration variable `structureMirroringAutoTranslatorLogin` is not set, or there is no user in the database with such a login name, the decision is based on whether the page is displayed. The automatic translation is only triggered in language versions that **not yet displayed**, i.e. they are worth `available` set to `false`.
+- If the configuration variable `structureMirroringAutoTranslatorLogin` is set and the user exists in the database.
+  - And the author of the landing page is identical to `structureMirroringAutoTranslatorLogin` - so the page has not yet been corrected by a real user.
+- If the configuration variable `structureMirroringAutoTranslatorLogin` is not set, or there is no user in the database with such a login name, the decision is based on whether the page is displayed. The automatic translation is only triggered in language versions that **not yet displayed**, i.e. they are worth `available` set to `false`.
 
 At the set value `structureMirroringAutoTranslatorLogin` the detection is more reliable because even an unpublished version of the web page may have already been corrected by another user, but not yet published. Your change would result in an overwriting of the text, which is an undesirable state. We recommend that you create a (virtual) user and set his login name to `structureMirroringAutoTranslatorLogin` for more reliable change detection.
 

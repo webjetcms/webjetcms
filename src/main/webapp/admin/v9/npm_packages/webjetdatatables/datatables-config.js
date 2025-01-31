@@ -1,5 +1,9 @@
 import WJ from "../../src/js/webjet";
 
+function prepareForSearch(td) {
+    return $.fn.DataTable.util.diacritics(td)
+}
+
 export function renderPrefix(row) {
     //console.log("Render prefix, row=", row);
     return (typeof row.settings.aoColumns[row.col].renderFormatPrefix != "undefined") ? row.settings.aoColumns[row.col].renderFormatPrefix : "";
@@ -226,7 +230,7 @@ export function renderBoolean(td, type, rowData, row, isTrue, isFalse) {
     }
 
     if ( type == "filter" ) {
-        return td;
+        return prepareForSearch(td);
     } else {
         //return renderTd(row,td);
         //pre boolean nerendrujeme hodnotu ale len true/false hodnoty
@@ -252,7 +256,7 @@ export function renderDate(td, type, rowData, row, dateFormat) {
     }
 
     if (type == "sort" || type == "filter" ) {
-        return td;
+        return prepareForSearch(td);
     } else {
         td = parseInt(td);
         if(!isNaN(td)) {
@@ -283,7 +287,7 @@ export function renderText(td, type, rowData, row) {
     if (td === "") { return "" }
 
     if (type == "sort" || type == "filter" ) {
-        return td;
+        return prepareForSearch(td);
     } else {
         return renderTd(row, td, rowData);
     }
@@ -303,7 +307,7 @@ export function renderTextHtmlInput(td, type, rowData, row) {
                 td = td.replaceAll(">", "&gt;");
                 td = td.replaceAll("\"", "&quot;");
             }
-            return td;
+            return prepareForSearch(td);
         } catch (e) {}
         return td;
     }
@@ -383,7 +387,7 @@ export function renderLink(td, type, rowData, row) {
     if (td === "") { return "" }
 
     if (type == "sort" || type == "filter" ) {
-        return td;
+        return prepareForSearch(td);
     } else {
 
         var template = "";
@@ -414,7 +418,7 @@ export function renderImage(td, type, rowData, row) {
     if (td === "") { return "" }
 
     if (type == "sort" || type == "filter" ) {
-        return td;
+        return prepareForSearch(td);
     } else {
 
         if (td!=null && (td.endsWith(".png") || td.endsWith(".gif") || td.endsWith(".jpg") || td.endsWith(".svg"))) {
@@ -429,7 +433,7 @@ export function renderMail(td, type, rowData, row) {
     if (td === "") return "";
 
     if (type == "sort" || type == "filter" ) {
-        return td;
+        return prepareForSearch(td);
     } else {
         return  "<a href=\"mailto:" + td + "\" target=\"_blank\">" + renderTd(row, td, rowData) + "</a>";
     }
@@ -464,7 +468,7 @@ export function renderJson(td, type, rowData, row) {
     });
 
     if (type == "sort" || type == "filter" ) {
-        return fullPath;
+        return prepareForSearch(fullPath);
     } else {
 
         //return renderLink(fullPath, type, rowData, row);

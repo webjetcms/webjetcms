@@ -22,7 +22,7 @@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/><%
 
 String lng = PageLng.getUserLng(request);
-//In case if user is logged in EN lng (for example) and in banner preview he want this language (not group language) 
+//In case if user is logged in EN lng (for example) and in banner preview he want this language (not group language)
 String origLng = lng;
 int docId = Tools.getIntValue(Tools.getRequestParameter(request, "docid"), 0);
 if (docId > 0) {

@@ -1,4 +1,4 @@
-# Aplikace AB testování
+# AB testování
 
 Aplikace AB testování poskytuje přehled stránek AB a správu příslušných konfiguračních proměnných:
 - Seznam AB stránek

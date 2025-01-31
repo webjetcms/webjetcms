@@ -10,11 +10,12 @@ Instructions for creating a new installation/clean database for a new project in
 ## Basic server requirements
 
 - Server with at least 8GB of memory (for applications with heavier workloads, at least 12GB), processor with at least `Dual Core 2 GHz` (for servers with a heavier Quad core load), disk space of at least 40GB.
-- Database `MySQL/MariaDB verzie 5.0+` (UTF-8 encoded), or the database `Microsoft SQL 2012+` or database `Oracle 11g+`.
+- Database `MySQL/MariaDB verzie 5.0+` (UTF-8 encoded), or the database `Microsoft SQL 2012+` or database `Oracle 11g+` or `PostgreSQL 16+`.
 - [Open JDK](https://adoptium.net/temurin/releases/) version 17 and application server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
 - Connection to SMTP server for sending emails.
 - Functional DNS server.
 - To speed up the generation of preview images, we recommend the installed library [ImageMagick](https://imagemagick.org/script/download.php).
+
 For installations of products such as `NET, LMS, DSK` the minimum requirements suitable for installations of up to 50 users (25 working simultaneously). For a higher number of users, it is necessary to increase the RAM and the CPU appropriately - for each additional 50 users working simultaneously +4GB of memory and 1CPU. For more than 200 users we recommend a cluster solution.
 
 For installations of products such as `NET, LMS, DSK` it is necessary to enable on the server `websocket` connect and install the server [RabbitMQ](https://www.rabbitmq.com/).
@@ -22,8 +23,8 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 ## Creating a DB schema
 
 - connect to the DB server and create a new database/schema (if not already established)
-
 - in the file `src/main/resources/poolman.xml` in the gradle project, or `/WEB-INF/classes/poolman.xml` when using a ready-made WAR file, set up a database connection:
+
 [MariaDB](https://mariadb.com/kb/en/library/about-mariadb-connector-j/):
 
 ```xml
@@ -32,7 +33,6 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 <poolman><management-mode>local</management-mode>
     <datasource>
       <dbname>iwcm</dbname>
-      <jndiName>jndi-iwcm</jndiName>
       <driver>com.mysql.jdbc.Driver</driver>
       <url>jdbc:mysql://MENO-SQL-SERVERA/MENO-SCHEMY</url>
       <username>DB-LOGIN</username>
@@ -73,17 +73,47 @@ For installations of products such as `NET, LMS, DSK` it is necessary to enable 
 </poolman>
 ```
 
+[PostgreSQL](https://jdbc.postgresql.org/documentation/use/):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<poolman><management-mode>local</management-mode>
+    <datasource>
+        <dbname>iwcm</dbname>
+        <driver>org.postgresql.Driver</driver>
+        <url>jdbc:postgresql://localhost/DB-NAME?currentSchema=webjet_cms</url>
+        <username></username>
+        <password></password>
+    </datasource>
+</poolman>
+```
+
+The following XML elements are supported:
+- `dbname` - the name of the database connection, for WebJET CMS tables it must have the value `iwcm`, but you can set more in XML `datasource` elements and create a connection to other databases, set a unique name here
+- `driver` - java database driver class
+- `url` - URL in the format for `JDBC` Connection
+- `username` - login name
+- `password` - login password
+
+Optionally, it is possible to set:
+- `initialConnections` - default number of open database connections (default 0)
+- `minimumSize` - minimum number of constantly open database connections (default 0)
+- `maximumSize` - maximum number of open database connections (default 50)
+- `connectionTimeout` - number of seconds when the connection is considered not closed (default 300)
+- `autoCommit` - if set to true is set `connection.setAutoCommit(true);` (default `false`)
+- `testQuery` - test SQL expression to verify the functionality of the connection. For `JDBC` v4 drivers are used to call `isValid()`, for older drivers need to be set. Value `true` sets the default expression `SELECT 1` (used automatically for `jtds` controller). But it is possible to set your own SQL expression.
+
 ## Fulfillment of the DB scheme
 
 WebJET includes a built-in configuration that can populate an empty DB schema.
-
 - run WebJET/Tomcat
 - WebJET reports an error (multiple errors) at startup
+
 ```log
 [27.11 8:32:49 {webjet} {InitServlet}] -----------------------------------------------
 [27.11 8:32:49 {webjet} {InitServlet}] WebJET initializing, root: ...
 [27.11 8:32:49 {webjet} {InitServlet}]
-
 [27.11 8:32:49 {webjet} {InitServlet}] Checking database connection:
 [27.11 8:32:49 {webjet} {InitServlet}]    Database connection: [OK]
 java.sql.SQLSyntaxErrorException: Table 'MENO-SCHEMY._conf_' doesn't exist
@@ -99,17 +129,16 @@ When you try to log in or access the WebJET website, you will receive an error m
 ![](./error.png)
 
 - Open the URL in your browser [installations](http://localhost/wjerrorpages/setup/setup).
+
 > WebJET everything that starts with `/wjerrorpages/` will process even if it is not started. Automatically provides a static file [/wjerrorpages/dberror.html](http://localhost/wjerrorpages/dberror.html) for any GET request. In the directory `/wjerrorpages/` it is also possible to have images, but we recommend to insert them via `data:` entry directly into `dberror.html`.
 
 - The above URL has an exception and is allowed to be used even if WebJET is not started correctly (but only on the domain `localhost` or `iwcm.interway.sk`).
-
 - You will be presented with the WebJET installation dialog:
 
 ![](./setup.png)
 
 - Check/enter the data for setting the database connection (defaults to the values from the poolman.xml file). The installation makes the connection directly to those values (ignoring the values in poolman.xml), so it needs them. But if the file `poolman.xml` already exists, it will not overwrite it, so for the next start the values in `poolman.xml`. If the file does not exist, it will be created according to the specified values.
 - Enter a unique installation name (without spaces and accents, e.g. `interway2023`) and license number (if you are not using the Open Sorce version) and check the other values.
-
 - Click OK to start the installation. If the validation of the entered values is successful, you will see the following message:
 
 ![](./setup-saved.png)
@@ -121,10 +150,6 @@ In the logo you should see something like:
 ```log
 fillEmptyDatabaseMySQL
 fillEmptyDatabaseMySQL 1
-AbandonedObjectPool is used (org.apache.commons.dbcp.WebJETAbandonedObjectPool@727687f7)
-   LogAbandoned: true
-   RemoveAbandoned: true
-   RemoveAbandonedTimeout: 600
 fillEmptyDatabaseMySQL 2
 hasDatabase=false
 
@@ -146,10 +171,8 @@ CREATE TABLE _conf_ (
 #
 
 INSERT INTO users VALUES("1", "", "", "Administrátor", "admin", "d7ed8dc6fc9b4a8c3b442c3dcc35bfe4", "1", NULL, "Interway s.r.o.", "Hattalova 12/a", "", "lubos.balat@interway.sk", "83103", "Slovakia", "0903-450445", "1", "", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-
 Executing:
 INSERT INTO users VALUES("2", "", "Obchodny", "Partner", "partner", "34f414bd2609b73403ea09787fb0aac4", "0", "2", "Interway s.r.o.", "Hattalova 12/a", "", "lubos.balat@interway.sk", "83103", "Slovensko", "0903-945990", "1", "", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
-
 Executing:
 INSERT INTO users VALUES("3", "", "VIP", "Klient", "vipklient", "d1a9b4b9977e4829011396ec9dd2cf6a", "0", "1", "Interway s.r.o.", "Hattalova 12/a", NULL, "lubos.balat@interway.sk", "83103", "Slovensko", "0903-945990", "1", NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)
 [27.11 9:24:31 {webjet} {InitServlet}] RESTART request ret=true
@@ -168,7 +191,6 @@ Constants - clearValues
 [27.11 9:25:05 {webjet} {InitServlet}] -----------------------------------------------
 [27.11 9:25:05 {webjet} {InitServlet}] WebJET initializing, root: /Users/jeeff/Documents/workspace-idea/webjet8/WebContent/
 [27.11 9:25:05 {webjet} {InitServlet}]
-
 [27.11 9:25:05 {webjet} {InitServlet}] Checking database connection:
 [27.11 9:25:05 {webjet} {InitServlet}]    Database connection: [OK]
 
@@ -216,6 +238,8 @@ PathFilterInit - customPath: /Users/jeeff/Documents/DISK_E/webapps-server/ppa
 
 At this point, WebJET is initialized and booted to the default state.
 
+## Login to administration
+
 Log in to [section admin](http://localhost/admin/) named `admin` and the password `heslo`:
 
 ![](./first-login.png)
@@ -224,7 +248,7 @@ WebJET will prompt you to change your password:
 
 ![](./change-password.png)
 
-After logging in, you will see a message on the home screen that the database conversion has not been performed. Click on the link [Start the conversion](http://localhost/admin/update/update_webjet7.jsp) for database conversion.
+After logging in, you may see a message on the home screen that the database conversion has not been performed. Click on the link [Start the conversion](http://localhost/admin/update/update_webjet7.jsp) for database conversion. If you don't get the message, the installation database is already ready in the new format, continue [by setting the rights](#setting-rights).
 
 ![](./main-page.png)
 
@@ -241,7 +265,11 @@ DROP TABLE stat_doc;
 DROP TABLE stat_views;
 ```
 
-Close the tab in which you have the conversion. In the original window, go to [Users -> List of users](http://localhost/admin/v9/users/user-list/), using the left menu navigation.
+Close the tab in which you have the conversion.
+
+## Setting rights
+
+In the original window, go to [Users -> List of users](http://localhost/admin/v9/users/user-list/), using the left menu navigation.
 
 ![](./users.png)
 
@@ -257,6 +285,7 @@ In the charts **Rights** enable the necessary rights. At a minimum, add rights:
 
 After setting the rights, log out to apply the new rights and log in again. Once logged in, go to [Settings/Configuration](http://localhost/admin/v9/settings/configuration/) and set the following conf. variables:
 - If the server is in an InterWay environment, or is located behind a proxy/load balancer, set the variable `serverBeyoundProxy` to the value of `true`. In this mode, WebJET expects the IP address of the visitor in the HTTP header `x-forwarded-for` and the protocol used in `x-forwarded-proto`.
-- You can set the variable `logLevel` to the value of `debug`
-- `webEnableIPs`
-[](../../frontend/setup/README.md).
+- You can set the variable `logLevel` to the value of `debug` for more detailed logging.
+- We recommend setting the variable `webEnableIPs` to a list of IP address prefixes from which you will access the site before launching (e.g. 127.0.0.1,10.,192.168.,195.168.35.4,195.168.35.5).
+
+Next, follow the instructions for [template settings](../../frontend/setup/README.md).

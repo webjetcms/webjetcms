@@ -1,9 +1,6 @@
 Feature('webpages.webpage-content');
 
-var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber;
-var add_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
-var delete_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
+var folder_name, randomNumber;
 
 Before(({ I, login }) => {
      login('admin');
@@ -11,9 +8,6 @@ Before(({ I, login }) => {
           randomNumber = I.getRandomText();
           I.say("randomNumber="+randomNumber);
           folder_name = 'name-autotest-' + randomNumber;
-          subfolder_one = 'subone-autotest-' + randomNumber;
-          subfolder_two = 'subtwo-autotest-' + randomNumber;
-          auto_webPage = 'webPage-autotest-' + randomNumber;
      }
 });
 
@@ -30,7 +24,8 @@ Scenario('Priprav strukturu', ({ I }) => {
      I.createNewWebPage(randomNumber);
 });
 
-Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
+Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser, Document }) => {
+     Document.setConfigValue('editorFontAwesomeCssPath', '');
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.jstreeNavigate([folder_name]);
 
@@ -117,7 +112,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
      I.clickCss('.cke_button_icon.cke_button__link_icon');
      I.waitForText('Informácie o odkaze', 10);
      I.switchTo('#wjLinkIframe');
-     I.waitForVisible('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee', 20);
+     I.waitForVisible('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-navbar-collapsed.native-droppable.ui-droppable.elfinder-subtree-loaded', 20);
 
      I.waitForLoader(".WJLoaderDiv");
 
@@ -142,28 +137,31 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
      I.pressKey('Enter');
      I.wait(1);
 
+     //SIVAN - nie je tlacidlo uz odstranene Jeeff?? Prekladovz kluc k tomu "editor.specialChar" nie je nikde pouzity
+
      // VLOZIT SPECIALNY ZNAK
-     I.say('Pridavam specialny znak do obsahu');
-     I.clickCss('.cke_button.cke_button__specialchar.cke_button_off');
-     I.waitForText('Výber špeciálneho znaku', 20);
-     I.waitForText('¾', 20);
-     I.click(locate('.cke_specialchar').withText('¾'));
-     I.switchTo('.cke_wysiwyg_frame.cke_reset');
-     I.waitForElement(locate('p').withText('¾'), 10);
-     I.switchTo();
-     I.pressKey('Enter');
-     I.wait(1);
+     // I.say('Pridavam specialny znak do obsahu');
+     // I.clickCss('.cke_button.cke_button__specialchar.cke_button_off');
+     // I.waitForText('Výber špeciálneho znaku', 20);
+     // I.waitForText('¾', 20);
+     // I.click(locate('.cke_specialchar').withText('¾'));
+     // I.switchTo('.cke_wysiwyg_frame.cke_reset');
+     // I.waitForElement(locate('p').withText('¾'), 10);
+     // I.switchTo();
+     // I.pressKey('Enter');
+     // I.wait(1);
 
      // HLADAT A NAHRADIT
      I.say('Hladam a nahradzam slovo');
      I.clickCss('.cke_button.cke_button__find.cke_button_off');
      I.waitForText('Vyhľadať a nahradiť', 10);
      I.waitForText('Čo hľadať', 10);
-     I.fillField('.cke_dialog_ui_input_text', 'This');
+     I.clickCss('.cke_dialog_ui_input_text')
+     I.type('This');
      I.click('Nahradiť');
      I.waitForText('Čo hľadať', 10);
      I.click(locate('.cke_dialog_ui_input_text').last());
-     I.fillField('.cke_dialog_ui_input_text', 'Toto');
+     I.type('Toto');
      I.doubleClick(locate('.cke_dialog_ui_vbox.cke_dialog_page_contents').find('.cke_dialog_ui_button').withText('Nahradiť'));
      I.dontSee('Hľadaný text nebol nájdený');
      I.click(locate('.cke_dialog_footer').find('.cke_dialog_ui_button.cke_dialog_ui_button_cancel').withText('Zatvoriť'));
@@ -184,9 +182,14 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser }) => {
      I.waitForText('<!-- Toto is an autotest -->', 10);
      I.waitForElement('table', 5);
      I.waitForText('name-autotest-', 5);
-     I.waitForText('¾', 5);
+     //I.waitForText('¾', 5);
      I.switchTo();
      DTE.cancel();
+});
+
+Scenario('Set config value editorFontAwesomeCssPath to default ', ({ Document }) => {
+     const defaultEditorFontAwesomeCssPath = '/templates/aceintegration/jet/assets/fontawesome/css/fontawesome.css\n/templates/aceintegration/jet/assets/fontawesome/css/solid.css';
+     Document.setConfigValue('editorFontAwesomeCssPath', defaultEditorFontAwesomeCssPath);
 });
 
 Scenario('TODO - bugs', ({ I, DT, DTE }) => {
@@ -354,7 +357,7 @@ Scenario('Notify', ({ I, DT, DTE }) => {
      I.jstreeNavigate(["English", "News"]);
 
      //Vyfiltruj si zaznam
-     DT.filter("title", "Test");
+     DT.filterContains("title", "Test");
 
      //Edituj stranku
      I.click("Test", "#datatableInit_wrapper td.dt-row-edit");
@@ -391,7 +394,7 @@ Scenario('Notify edit button', ({ I, DT, DTE }) => {
      I.jstreeNavigate(["English", "News"]);
 
      //Vyfiltruj si zaznam
-     DT.filter("title", "Test");
+     DT.filterContains("title", "Test");
 
      //Edituj stranku
      I.click("Test");
@@ -508,7 +511,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
      I.see("Nastala zmena v názve stránky, linky boli aktualizované v nasledovných stránkach");
      I.see("22954-Test existujucej URL");
 
-     I.see("Zadaná virtuálna cesta je už použitá na stránke: 22916");
+     I.see("Zadaná URL adresa je už použitá na stránke: 22916");
      I.clickCss(".toast-close-button");
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22954");
@@ -516,7 +519,7 @@ Scenario('overit zobrazenie notifikacie, ak vytvorim stranku s URL, ktora uz exi
 
      I.clickCss("#pills-dt-datatableInit-basic-tab");
      //over pridanie -1 na koniec URL
-     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/test-pracovnej-verzie-stranky-1.html");
+     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/test-pracovnej-verzie-stranky-2.html");
 
 });
 
@@ -578,7 +581,7 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
 
      DTE.cancel();
 
-     I.clickCss("#datatableInit_wrapper button.buttons-create");
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
@@ -597,7 +600,7 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
 
      DTE.cancel();
 
-     I.clickCss("#datatableInit_wrapper button.buttons-create");
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
@@ -649,6 +652,23 @@ async function testLink(link, fixedLink, I, DT, DTE) {
      I.waitForElement("#txtUrl", 10);
      I.seeInField("#txtUrl", fixedLink);
      I.dontSeeInField("#txtUrl", "http://"+fixedLink);
+
+     //if URL startsWith / wait for ckeditor select by hash
+     if (fixedLink.indexOf("/")===0) {
+          I.wait(5);
+          I.seeInField("#txtUrl", fixedLink);
+          I.dontSeeInField("#txtUrl", "http://"+fixedLink);
+
+          if (fixedLink.indexOf("/?email=")===0) {
+               //click on another page and verify URL contains email parameter
+               //I.forceClick("Banner neprihlásený", "div.elfinder-cwd-filename");
+               I.click("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E");
+               I.waitForElement("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E.ui-selected", 10);
+               I.wait(1);
+               I.seeInField("#txtUrl", "/banner-neprihlaseny.html?email=!RECIPIENT_EMAIL!");
+          }
+     }
+
      I.switchTo();
      I.click(locate('.cke_dialog_ui_button').withText('Zrušiť'));
 
@@ -677,31 +697,50 @@ async function testLink(link, fixedLink, I, DT, DTE) {
      return htmlCode;
 }
 
-Scenario('Various link types', async ({ I, DT, DTE, Document }) => {
+Scenario('Various link types', async ({ I, DT, DTE }) => {
      I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
      DT.waitForLoader();
-     I.clickCss("#datatableInit_wrapper button.buttons-create");
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
      I.click("#pills-dt-datatableInit-content-tab");
 
      I.say("Testing phone links");
-     //await testLink("tel:090312366", I, DT, DTE);
+     await testLink("tel:0903123666", null, I, DT, DTE);
+     await testLink("tel:+421903123666", null, I, DT, DTE);
+     await testLink("tel:+421-903-123-666", null, I, DT, DTE);
+     await testLink("tel:09/53788888", null, I, DT, DTE);
+     await testLink("tel:09-5378-8888", null, I, DT, DTE);
 
+     //
+     I.say("test link with URL parameter");
+     await testLink("/?email=!RECIPIENT_EMAIL!", null, I, DT, DTE);
+
+     //
+     I.say("Testing links with : in URL parameter");
+     await testLink("https://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991", null, I, DT, DTE);
+     await testLink("eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991", "http://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991", I, DT, DTE);
+
+     //
      I.say("Testing web links");
      await testLink("www.interway.sk", "http://www.interway.sk", I, DT, DTE);
      await testLink("http://docs.webjetcms.sk", null, I, DT, DTE);
      await testLink("https://docs.webjetcms.sk", null, I, DT, DTE);
      await testLink("docs.webjetcms.sk", "http://docs.webjetcms.sk", I, DT, DTE);
 
-     await testLink("/sk/", null, I, DT, DTE);
-     await testLink("/sk/podstranka.html", null, I, DT, DTE);
-     await testLink("/files/file.pdf", null, I, DT, DTE);
+     //
+     I.say("Testing local links");
+     await testLink("/apps/formular/", null, I, DT, DTE);
+     await testLink("/apps/formular/potvdenie-double-optin.html", null, I, DT, DTE);
+     await testLink("/files/jurko.jpg", null, I, DT, DTE);
+     await testLink("/files/do-not-exist.pdf", null, I, DT, DTE);
 
+     //
      I.say("Testing email links");
      await testLink("info@webjetcms.sk", "mailto:info@webjetcms.sk", I, DT, DTE);
      await testLink("mailto:info@webjetcms.sk", null, I, DT, DTE);
 
+     //
      I.say("Testing tiktok links");
      await testLink("https://www.tiktok.com/@webjetcms", null, I, DT, DTE);
      await testLink("www.tiktok.com/@webjetcms", "http://www.tiktok.com/@webjetcms", I, DT, DTE);

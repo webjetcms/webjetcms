@@ -1,6 +1,6 @@
 # Search
 
-The GDPR application contains a "Search" node which is used to search for data in the "Forms", "Websites", "Questions \&amp; Answers" and "Forum/Discussion" sections/applications.
+The GDPR application contains a "Search" node which is used to search for data in the "Forms", "Websites", "Questions & Answers" and "Forum/Discussion" sections/applications.
 
 ![](search-dataTable.png)
 

@@ -42,7 +42,7 @@
 
         $("#nodesFilterSelect").on("change", function() {
             var selectedNodeValue = $('#nodesFilterSelect').val();
-            monitoringSqlDataTable.ajax.url(WJ.urlAddParam(tableUrl, "selectedNode", selectedNodeValue));
+            monitoringSqlDataTable.setAjaxUrl(WJ.urlAddParam(tableUrl, "selectedNode", selectedNodeValue));
             monitoringSqlDataTable.ajax.reload();
             //
             window.appModule.changeButtonVisibility();

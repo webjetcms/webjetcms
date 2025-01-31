@@ -12,11 +12,13 @@ Adresár:
 
 Názvy Pole A - Pole X lze změnit v konfiguraci v části pro úpravu textu. Stačí upravit klíče:
 - `editor.field_x` - pro webovou stránku
+- `temp-ID.editor.field_x` - pro webovou stránku se šablonou `ID`, např. `temp-3.editor.field_a` změní název volného pole A pouze u webových stránek, které používají šablonu s. `ID` 3.
 - `groupedit.field_x` - pro adresář
 - `user.field_x` - pro uživatele
-- `components.qa.field_x` - pro aplikaci Q\&amp;A
+- `components.qa.field_x` - pro aplikaci Q&A
 - `components.banner.field_x` - pro aplikaci Banner System
 - `components.media.field_x` - pro aplikaci Média
+- `components.perex.field_x` - pro aplikaci Brands
 
 Technické informace naleznete v [dokumentace pro programátora](../../../developer/datatables-editor/customfields.md).
 
@@ -26,7 +28,7 @@ Pole se ve výchozím nastavení zobrazují jako text, změnou definice pomocí 
 
 ![](webpages.png)
 
-**Varování:**, **nastavení typu** musí být vždy nastaven výchozí jazyk (nastavený v konfigurační proměnné `defaultLanguage`), i když je WebJET používán v jiném jazyce.
+!>**Varování:**, **nastavení typu** musí být vždy nastaven výchozí jazyk (nastavený v konfigurační proměnné `defaultLanguage`), i když je WebJET používán v jiném jazyce.
 
 ### Text
 
@@ -152,6 +154,12 @@ Výběr adresáře v souborovém systému nastavením `.type` na hodnotu `dir`. 
 Typ pole `uuid` umožňuje vygenerovat jedinečný identifikátor. Pokud má pole při zobrazení prázdnou hodnotu, vytvoří se nová hodnota. `uuid` Stejně tak když odstraníte hodnotu a přesunete kurzor do jiného pole, vytvoří se nová hodnota.
 
 ![](webpages-uuid.png)
+
+### Barva
+
+Typ pole `color` umožňuje vybrat barvu včetně nastavení průsvitnosti.
+
+![](webpages-color.png)
 
 ## Odkaz na šablonu
 

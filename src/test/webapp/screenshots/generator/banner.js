@@ -6,10 +6,11 @@ Before(({ I, login }) => {
 
 Scenario('banner admin', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/banner/admin/");
+    DT.waitForLoader();
 
     Document.screenshot("/redactor/apps/banner/datatable.png");
 
-    DT.filter("name", "WebJET");
+    DT.filterContains("name", "WebJET");
 
     I.click("WebJET CMS");
     DTE.waitForEditor("bannerDataTable");

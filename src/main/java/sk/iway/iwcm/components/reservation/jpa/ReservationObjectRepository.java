@@ -13,7 +13,7 @@ public interface ReservationObjectRepository extends DomainIdRepository<Reservat
     List<ReservationObjectEntity> findAllByIdIn(Integer[] ids);
 
     @Query("SELECT roe.reservationForAllDay FROM ReservationObjectEntity roe WHERE roe.id = :id")
-    boolean isReservationForAllDay(@Param("id")Long id);
+    Boolean isReservationForAllDay(@Param("id")Long id);
 
     List<ReservationObjectEntity> findAllByDomainIdAndReservationForAllDayFalse(Integer domainId);
 }

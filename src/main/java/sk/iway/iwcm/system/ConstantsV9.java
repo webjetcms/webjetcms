@@ -21,7 +21,7 @@ public class ConstantsV9 {
 		Constants.setString("mariaDbDefaultEngine", "InnoDB");
 		Constants.setString("chunksQuantity", "25");
 		Constants.setString("propertiesAdminKeys",
-				"button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*");
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2);
 		Constants.setString("deepl_auth_key", "", "translations", "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
 		Constants.setString("deepl_api_url", "https://api-free.deepl.com/v2/translate", "translations", "Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate");
@@ -82,7 +82,7 @@ public class ConstantsV9 {
 
 		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "ntlm", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
 
-		Constants.setString("webpagesFunctionsPerms", "menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting", Constants.MOD_SECURITY, "Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.");
+		Constants.setString("webpagesFunctionsPerms", "menuWebpages|cmp_blog|cmp_blog_admin|cmp_news|cmp_abtesting|cmp_basket", Constants.MOD_SECURITY, "Zoznam prav pre funkcie web stranok, ktore sa pouzivaju aj v inych moduloch ako blog, novinky atd.");
 		Constants.setString("bloggerAppPermissions", "menuGallery,menuInquiry,cmp_quiz,cmp_form", "blog", "Prava k apllikáciam, ktoré sa majú pridať vytvorenému používateľovi typu BLOGGER");
 
 		Constants.setString("dmailListUnsubscribeBaseHref", "", "dmail", "Zakladna URL adresa pre odhlasovanie sa z mailing listu. Ak je prazdna, tak sa pouzije URL adresa podla domeny odosielaneho emailu.");
@@ -92,11 +92,15 @@ public class ConstantsV9 {
 
 		Constants.setString("amchartLicense", "", Constants.MOD_STAT, "Licencny kluc pre amchart kniznicu");
 
+		Constants.setString("basketInvoiceBonusStatuses", "", Constants.MOD_CONFIG, "Bonusove statusy pre objednávku v sekcií Elektonický obchod. Formát: ID_STATUSU|PREKALDOVÝ_KĽÚČ\nID_STATUSU|PREKALDOVÝ_KĽÚČ. ID_STATUSU musí byť číslo väčšie rovné 10.");
+
 		Constants.setBoolean("ABTestingAllowVariantUrl", false, "abtest", "Nastavenim na true povoli priame zobrazenie variantnej URL adresy aj ne-administratorom, napr. volanie /investicie/abtestvariantb.html");
 
 		Constants.setBoolean("forumAlwaysNotifyPageAuthor", false, Constants.MOD_CONFIG, "Pri nastaveni na true sa budú odosielať notifikácie autorovi stránky s Diskusiou, vždy keď bude pridaná nová téma alebo odpoveď.");
 
 		Constants.setLong("licenseExpiryDate", 0L, Constants.MOD_STAT, "Datum exspiracie licencie v milisekundach");
+
+		Constants.setString("propertiesRestControllerAllowedKeysPrefixes", "", Constants.MOD_CONFIG, "Povolene prefixi prekladových kľúčov");
 
 		Constants.setBoolean("monitoringEnableCountUsersOnAllNodes", true, "server_monitoring;performance", "Ak verejne nody nedokazu zapisovat do tabuly _conf_ nastavte na false pre vypnutie zapisu celkove poctu sessions");
 
@@ -111,6 +115,17 @@ public class ConstantsV9 {
 		Constants.setInt("contentBlockTypeCount", 5, "contentBlock", "Pocet dostupnych typov blokov pre obsah");
 
 		Constants.setBoolean("elfinderMoveConfirm", true, "files", "Zobrazi potvrdzovaci dialog pri presune priecinkov a suborov");
+
+		Constants.setString("editorFontAwesomeCssPath", "", Constants.MOD_EDITOR, "Cesta k CSS suborom s fontawesome ikonami, ak je CSS suborov viac oddelenych znakom ciarka alebo novy riadok");
+		Constants.setString("editorFontAwesomeCustomIcons", "", Constants.MOD_EDITOR, "Doplnkove FontAwesome ikony, kazda na novom riadku vo formate cssStyl:nazov");
+
+		Constants.setString("stripes.FormatterFactory.Class", "sk.iway.iwcm.system.stripes.StripesFormatterFactory", Constants.MOD_CONFIG, "Stripes custom FormatterFactory to use WebJET Tools.formatDate/Time formatters");
+
+		Constants.setString("springSecurityAllowedAuths", "basic,api-token", Constants.MOD_SECURITY, "Allowed auth methods for REST services, after change restart server.");
+		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_SECURITY, "If true, /logoff.do requires CSRF token");
+		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
+
+		Constants.setBoolean("virtualPathLastSlash", true, Constants.MOD_CONFIG, "If true, virtual path will have last slash for main pages in folder");
 	}
 
 	/**

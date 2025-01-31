@@ -161,7 +161,7 @@ export class DatatableOpener {
 
                     values = array[i].split("=");
                     if (values.length>0 && values[0].startsWith("dt-filter-")) {
-                        let input = $("#"+this.dataTable.DATA.id+"_wrapper div.dataTables_scrollHeadInner table thead .input-group input."+values[0]);
+                        let input = $("#"+this.dataTable.DATA.id+"_wrapper div.dt-scroll-headInner table thead .input-group input."+values[0]);
                         input.val(values[1]);
                         if (firstInputName==null) firstInputName = input;
                     }
@@ -171,7 +171,7 @@ export class DatatableOpener {
                     this.dataTable.one('draw.dt', (evt, settings) => {
                         setTimeout(()=> {
                             if (autoSelect) {
-                                $("#"+this.dataTable.DATA.id+"_wrapper div.dataTables_scrollHeadInner table thead .input-group button.buttons-select-all").trigger("click");
+                                $("#"+this.dataTable.DATA.id+"_wrapper div.dt-scroll-headInner table thead .input-group button.buttons-select-all").trigger("click");
                             }
                             if (openEditor) {
                                 $("#"+this.dataTable.DATA.id+"_wrapper div.dt-buttons button.buttons-edit").trigger("click");
@@ -268,7 +268,7 @@ export class DatatableOpener {
                 } else if (this.failsafeCounter<=maxPageNumberSearch) {
                     //console.log("Setting input field");
                     setTimeout(() => {
-                        var $el = $("#" + this.dataTable.DATA.id + "_wrapper .dataTables_scrollHeadInner .filter-input-id");
+                        var $el = $("#" + this.dataTable.DATA.id + "_wrapper .dt-scroll-headInner .filter-input-id");
                         $el.val(""+id);
                         $el.parent().find("button.filtrujem").trigger("click");
                     }, 100);

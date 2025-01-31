@@ -37,41 +37,41 @@ Scenario('Filter by actual doimain', ({ I, DT, Document }) => {
     //demotest.webjetcms.sk is selected by default
 
     //No domain
-    DT.filter("oldUrl", "/slovensky/");
+    DT.filterContains("oldUrl", "/slovensky/");
     I.see("681");
     I.see("/slovensky/");
     I.see("/sk12345/");
     I.see("302");
 
     //Actual domain
-    DT.filter("domainName", "demotest.webjetcms.sk");
-    DT.filter("oldUrl", "/images/drag-drop-test/lighthouse.jpg");
+    DT.filterContains("domainName", "demotest.webjetcms.sk");
+    DT.filterContains("oldUrl", "/images/drag-drop-test/lighthouse.jpg");
     I.see("8387");
     I.see("/images/drag-drop-test/lighthouse.jpg");
     I.see("/images/drag-drop/lighthouse.jpg");
     I.see("301");
 
     //Other domain
-    DT.filter("domainName", "mirroring.tau27.iway.sk");
-    DT.filter("oldUrl", "");
+    DT.filterContains("domainName", "mirroring.tau27.iway.sk");
+    DT.filterContains("oldUrl", "");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     //Change domain
     Document.switchDomain("mirroring.tau27.iway.sk");
 
     //No domain -> same record ... should be visible everzwhere, because domain is not set
-    DT.filter("oldUrl", "/slovensky/");
+    DT.filterContains("oldUrl", "/slovensky/");
     I.see("681");
     I.see("/slovensky/");
     I.see("/sk12345/");
     I.see("302");
 
     //This should not be seen in this domain
-    DT.filter("oldUrl", "/images/drag-drop-test/lighthouse.jpg");
+    DT.filterContains("oldUrl", "/images/drag-drop-test/lighthouse.jpg");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     //This domain specific record
-    DT.filter("oldUrl", "/files/sk_test/test_sub_sk/podadresar_test_sk/test_priecinok/logo1.jpg");
+    DT.filterContains("oldUrl", "/files/sk_test/test_sub_sk/podadresar_test_sk/test_priecinok/logo1.jpg");
     I.see("4688");
     I.see("/files/sk_test/test_sub_sk/podadresar_test_sk/test_priecinok/logo1.jpg");
     I.see("/files/sk_test/test_sub_sk/podadresar_test_sk/test/test_priecinok/logo1.jpg");
@@ -95,7 +95,7 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
 
     //
     I.say("delete all old/failed records");
-    DT.filter("oldUrl", "/oldurl-onlynew-");
+    DT.filterContains("oldUrl", "/oldurl-onlynew-");
 
     //
     I.say("Delete old data");
@@ -104,7 +104,7 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
         DT.deleteAll();
     }
 
-    I.dontSee(oldUrl, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.dontSee(oldUrl, "#datatableInit_wrapper .dt-scroll-body");
 
     //
     I.say("Import excel as APPEND")
@@ -118,28 +118,28 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     DT.waitForLoader();
 
     //Check inserted names, records and statuses
-    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dt-scroll-body");
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
+    I.see(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
 
 
     //
     I.say("Edit newUrl");
-    DT.filter("oldUrl", oldUrl);
-    I.click(oldUrl, "#datatableInit_wrapper .dataTables_scrollBody");
+    DT.filterContains("oldUrl", oldUrl);
+    I.click(oldUrl, "#datatableInit_wrapper .dt-scroll-body");
     DTE.waitForEditor();
     I.fillField("#DTE_Field_newUrl", newUrl+"-edited");
     DTE.save();
 
     DT.waitForLoader();
-    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
 
     //
     I.say("Delete second row to verify it will be imported again");
-    DT.filter("oldUrl", oldUrlSecond);
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
+    DT.filterContains("oldUrl", oldUrlSecond);
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
     DT.deleteAll();
-    I.dontSee(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.dontSee(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
 
     //
     I.say("Reimport in onlyNew mode");
@@ -157,26 +157,26 @@ Scenario('XLS import onlynew', async ({I, DT, DTE}) => {
     I.clickCss("#submit-import");
 
     DT.waitForLoader();
-    DT.filter("oldUrl", "/oldurl-onlynew-");
+    DT.filterContains("oldUrl", "/oldurl-onlynew-");
 
     //Check inserted names, records and statuses
-    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see(newUrl+"-edited", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dt-scroll-body");
+    I.see(newUrl+"-edited", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
 
 
     //refresh data
     I.clickCss("div.dt-buttons button.buttons-refresh");
     DT.waitForLoader();
-    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see(newUrl+"-edited", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see(oldUrlSecond, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.waitForText(oldUrl, 15, "#datatableInit_wrapper .dt-scroll-body");
+    I.see(newUrl+"-edited", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee(newUrl+"-xls", "#datatableInit_wrapper .dt-scroll-body");
+    I.see(oldUrlSecond, "#datatableInit_wrapper .dt-scroll-body");
 
     //
     I.say("Delete old data");
-    DT.filter("oldUrl", "/oldurl-onlynew-");
+    DT.filterContains("oldUrl", "/oldurl-onlynew-");
     DT.deleteAll();
  });
 

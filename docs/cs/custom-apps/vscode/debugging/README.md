@@ -7,7 +7,7 @@ Při správném nastavení projektu gradle je možné ladit nejen kód v jazyce 
 Pro spuštění aplikačního serveru Tomcat v rámci projektu gradle se používá rozšíření [gretty](https://gretty-gradle-plugin.github.io/gretty-doc/). Podporuje hot-swap, ale musí být správně nastaven. Důležité jsou následující parametry:
 - `reloadOnClassChange = false` - zakáže automatický restart Tomcatu při kompilaci třídy, čímž zabrání restartu aplikačního serveru.
 - `-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005` - aktivuje možnost připojení ladicího programu na portu 5005.
-- `-Dwebjet.showDocActionAllowedDocids=4,383,390` - seznam ID stránek, které lze otevřít přímo zadáním parametru docid v adrese URL bez přihlášení do administrace (slouží k otevření stránky přímo v prohlížeči). `Launch Chrome`).
+- `-Dwebjet.showDocActionAllowedDocids=4,383,390` - seznam ID stránek, které lze otevřít přímo zadáním parametru docid v adrese URL bez přihlášení do administrace (slouží k otevření stránky přímo v prohlížeči `Launch Chrome`).
 
 ```gradle
 gretty {
@@ -45,7 +45,7 @@ gretty {
 
 V minulosti bylo také možné použít parametr `managedClassReload = true`, ale používá knihovnu, která není podporována v Javě 11 a vyšší, pokud ji máte v projektu nastavenou, odstraňte ji z konfigurace gretty.
 
-**Varování:** pokud máte otevřený soubor, který obsahuje chybu (např. html nebo dokonce JavaScript), režim ladění se nespustí správně nebo se po spuštění serveru odpojí. VS Code zřejmě nerozlišuje, v jakém typu souboru se chyba nachází, nesmíte mít při spuštění otevřený soubor, jehož karta se zobrazuje červeně.
+!>**Varování:** pokud máte otevřený soubor, který obsahuje chybu (např. html nebo dokonce JavaScript), režim ladění se nespustí správně nebo se po spuštění serveru odpojí. VS Code zřejmě nerozlišuje, v jakém typu souboru se chyba nachází, nesmíte mít při spuštění otevřený soubor, jehož karta se zobrazuje červeně.
 
 ## Nastavení pro ladění JavaScriptu
 

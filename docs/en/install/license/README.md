@@ -4,14 +4,13 @@ The license number for WebJET is entered in the Settings/Configuration section i
 
 ## Incorrect licence number
 
-If WebJET contains a license number with an expired expiration date, an incorrect domain name, or the license number is entered incorrectly, the option to update the license number will be displayed in the server logs after logging in to administration, and will be displayed in the server logs at startup:
+If WebJET contains a license number with an expired expiration date, an incorrect domain name, or the license number is entered incorrectly, the option to update the license number will be displayed in the server logs after logging in to the administration at startup:
 
 ```log
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - -----------------------------------------------
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - WebJET initializing, root: /www/tomcat/webapps/webjet
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 -
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - VERSION: 9
-
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - Checking database connection:
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 -    Database connection: [OK]
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - INIT (db): license=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
@@ -44,3 +43,9 @@ for Oracle use the notation:
 ```sql
 UPDATE webjet_conf SET value='xxx' WHERE name='license';
 ```
+
+## Expiry of the licence
+
+WebJET can automatically detect the upcoming expiration of your license. If it detects that your license will expire in 2 (or less) months, it will display a warning in the home page.
+
+![](license-expiration-notification.png)

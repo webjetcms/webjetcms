@@ -1,6 +1,7 @@
 package sk.iway.iwcm.sync.inport;
 
 import java.awt.Dimension;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.gallery.GalleryBean;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.gallery.GalleryDimension;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.SyncDirWriterService;
 import sk.iway.iwcm.sync.export.Content;
 
 /**
@@ -28,6 +31,10 @@ import sk.iway.iwcm.sync.export.Content;
  */
 public class GalleryImporter
 {
+
+	private static final String GALLERY_INFO_PREFIX = "galleryInfo_";
+	private static final String GALLERY_IMAGE_PREFIX = "galleryImage_";
+	private static final String PRODUCTS_PATH = "/images/gallery/products";
 
 	public static List<ContentGalleryBean.Info> getGalleryInfos(Content content)
 	{
@@ -56,26 +63,96 @@ public class GalleryImporter
 		return imageBeans;
 	}
 
-	public static void importGalleries(HttpServletRequest request, Content content)
+	public static void importGalleries(HttpServletRequest request, Content content, PrintWriter writer)
 	{
-		if (null == content) return;
-		boolean hasCloudShop = "cloud".equals(Constants.getInstallName()) && CloudToolsForCore.hasShop(request);
+		//
+		importGalleriesInfos(request, content, writer);
 
-		for (Numbered<Content.GalleryInfo> remoteInfo : Numbered.list(content.getGalleryInfos()))
+		//
+		importGalleriesImages(request, content, writer);
+	}
+
+	public static void importGalleriesInfos(HttpServletRequest request, Content content, PrintWriter writer) {
+		Prop prop = Prop.getInstance(request);
+		//Prepare HTML with progress
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingGalleryInfos"), "galleriesInfosImportCount", prop.getText("components.syncDirAction.progress.syncingGalleryInfo") + ": - / -", writer);
+
+		if (null == content) return;
+
+		Map<String, String> selectedGalleryInfosMap = SyncDirWriterService.getOptionsMap(GALLERY_INFO_PREFIX, request);
+		if(selectedGalleryInfosMap.size() < 1) return;
+
+		int importedGalleriesInfosCount = 1;
+		int galleriesInfosToImportCount = 0;
+		String installName  = Constants.getInstallName();
+		boolean hasCloudShop = "cloud".equals(installName) && CloudToolsForCore.hasShop(request);
+		Iterable<Numbered<Content.GalleryInfo>> galleriesInfosToImport = Numbered.list(content.getGalleryInfos());
+
+		//Get number of all galleries infos to import
+		for (Numbered<Content.GalleryInfo> remoteInfo : galleriesInfosToImport)
 		{
-			if (null != request.getParameter("galleryInfo_" + remoteInfo.number) || request.getAttribute("syncAll")!=null)
+			if (selectedGalleryInfosMap.get(GALLERY_INFO_PREFIX + remoteInfo.number) != null)
 			{
-				if("cloud".equals(Constants.getInstallName()) && hasCloudShop==false && remoteInfo.item.getInfo().getGalleryPath().equals("/images/gallery/products")) continue;
-				createLocalGalleryInfo(remoteInfo.item, request);
+				if("cloud".equals(installName) && hasCloudShop==false && remoteInfo.item.getInfo().getGalleryPath().equals(PRODUCTS_PATH)) continue;
+				galleriesInfosToImportCount++;
 			}
 		}
 
-		for (Numbered<Map<String, GalleryBean>> remoteImageTranslations : Numbered.list(content.getGalleryImages()))
+		//Start importing + update progress
+		for (Numbered<Content.GalleryInfo> remoteInfo : galleriesInfosToImport)
 		{
-			if (null != request.getParameter("galleryImage_" + remoteImageTranslations.number) || request.getAttribute("syncAll")!=null)
+			if (selectedGalleryInfosMap.get(GALLERY_INFO_PREFIX + remoteInfo.number) != null)
+			{
+				if("cloud".equals(Constants.getInstallName()) && hasCloudShop==false && remoteInfo.item.getInfo().getGalleryPath().equals(PRODUCTS_PATH)) continue;
+
+				SyncDirWriterService.updateProgress("galleriesInfosImportCount", prop.getText("components.syncDirAction.progress.syncingGalleryInfo") + ": " + importedGalleriesInfosCount + " / " + galleriesInfosToImportCount, writer);
+				importedGalleriesInfosCount++;
+
+				createLocalGalleryInfo(remoteInfo.item, request);
+			}
+		}
+	}
+
+	public static void importGalleriesImages(HttpServletRequest request, Content content, PrintWriter writer) {
+		Prop prop = Prop.getInstance(request);
+		//Prepare HTML with progress
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingGalleryImages"), "galleriesImagesImportCount", prop.getText("components.syncDirAction.progress.syncingGalleryImage") + ": - / -", "border-bottom", writer);
+
+		if (null == content) return;
+
+		//
+		Map<String, String> selectedGalleryImagesMap = SyncDirWriterService.getOptionsMap(GALLERY_IMAGE_PREFIX, request);
+		if(selectedGalleryImagesMap.size() < 1) return;
+
+		String installName  = Constants.getInstallName();
+		boolean hasCloudShop = "cloud".equals(installName) && CloudToolsForCore.hasShop(request);
+		Iterable<Numbered<Map<String,GalleryBean>>> galleriesImagesToImport = Numbered.list(content.getGalleryImages());
+
+		int importedGalleriesImagesCount = 1;
+		int galleriesImagesToImportCount = 0;
+
+		//Get number of all galleries images to import
+		for (Numbered<Map<String, GalleryBean>> remoteImageTranslations : galleriesImagesToImport)
+		{
+			if (selectedGalleryImagesMap.get(GALLERY_IMAGE_PREFIX + remoteImageTranslations.number) != null)
 			{
 				GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();
-				if("cloud".equals(Constants.getInstallName()) && hasCloudShop==false && remoteImage.getImagePath().startsWith("/images/gallery/products")) continue;
+				if("cloud".equals(installName) && hasCloudShop==false && remoteImage.getImagePath().startsWith(PRODUCTS_PATH)) continue;
+				galleriesImagesToImportCount++;
+			}
+		}
+
+		//Start importing + update progress
+		for (Numbered<Map<String, GalleryBean>> remoteImageTranslations : galleriesImagesToImport)
+		{
+			if (selectedGalleryImagesMap.get(GALLERY_IMAGE_PREFIX + remoteImageTranslations.number) != null)
+			{
+				GalleryBean remoteImage = remoteImageTranslations.item.values().iterator().next();
+				if("cloud".equals(installName) && hasCloudShop==false && remoteImage.getImagePath().startsWith(PRODUCTS_PATH)) continue;
+
+				SyncDirWriterService.updateProgress("galleriesImagesImportCount", prop.getText("components.syncDirAction.progress.syncingGalleryImage") + ": " + importedGalleriesImagesCount + " / " + galleriesImagesToImportCount, writer);
+				importedGalleriesImagesCount++;
+
 				createLocalGalleryImage(remoteImage);
 			}
 		}

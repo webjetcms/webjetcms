@@ -57,7 +57,7 @@
 <div class="tabbable tabbable-custom tabbable-full-width">
 	<ul class="nav nav-tabs">
 		<li class="active">
-			<a href="#tabMenu1" data-toggle="tab">
+			<a href="#tabMenu1" data-bs-toggle="tab">
 				<iwcm:text key="components.basket.pricelist.dialog_title"/>
 			</a>
 		</li>

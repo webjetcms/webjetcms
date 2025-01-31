@@ -2,7 +2,7 @@
 
 Pri požiadavke na mapovanie objektov je možné využiť knižnicu [mapstruct](https://mapstruct.org).
 
-Príkladom je mapovanie objektu [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na [DocHistoryDto](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
+Príkladom je mapovanie objektu [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
 
 Je potrebné pripraviť DTO objekt a ```interface``` triedu pre ```mapper```. Vytvorený interface je implementovaný automaticky počas kompilácie, v ```build.gradle``` je zapnutý nastavením:
 
@@ -20,7 +20,7 @@ dependencies {
 ```
 ## DTO objekt
 
-Pri implementácii najskôr pripravte DTO objekt, napr. [DocHistoryDto](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
+Pri implementácii najskôr pripravte DTO objekt, napr. [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;
@@ -57,7 +57,7 @@ public class DocHistoryDto {
 
 ## Mapovanie
 
-!>**Upozornenie:** mapovacia trieda musí obsahovať v názve výraz ```Mapper``` z dôvodu kompilácie na ```Jenkins``` serveri, napr. [DocHistoryDtoMapper](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+!>**Upozornenie:** mapovacia trieda musí obsahovať v názve výraz ```Mapper``` z dôvodu kompilácie na ```Jenkins``` serveri, napr. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;

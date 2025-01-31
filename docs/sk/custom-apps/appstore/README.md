@@ -32,6 +32,7 @@ Anotácia má nasledovné parametre:
 - ```descKey``` - prekladový kľúč **opisu aplikácie**, ak nie je zadaný hľadá sa prekladový kľúč zadaný ako ```nameKey.desc``` (ak ```nameKey``` končí na ```.title``` nahradí sa ```.title``` za ```.desc```).
 - ```imagePath``` - cesta k obrázku **ikony** aplikácie. Môže sa jednať o súbor, alebo môže byť zadaná CSS trieda pre ikonu [TablerIcons](https://tabler.io/icons) ako ```ti ti-meno-ikony```.
 - ```galleryImages``` - čiarkou oddelený zoznam obrázkov, ktoré sa zobrazia v opise aplikácie, napr. ```/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png```.
+- ```componentPath``` - čiarkou oddelený zoznam JSP súborov pre ktoré sa má aplikácia zobraziť (ak sa nejedná o Spring aplikáciu), napríklad ```/components/search/search.jsp,/components/search/lucene_search.jsp```. Pri vložení novej aplikácie sa použije prvý JSP súbor.
 - ```domainName``` - ak máte multi doménovú inštaláciu môžete obmedziť zobrazenie aplikácie len na zadanú doménu. Môžete zadať viac domén oddelených čiarkou.
 - ```commonSettings``` - parameter určujúci, či sa v editore aplikácie zobrazí karta Zobrazenie pre spoločné nastavenia. Prednastavená hodnota je `true`, čiže karta sa bude zobrazovať.
 - ```custom``` - nastavte na `true` pre vaše zákaznícke aplikácie. Automaticky sa nastaví podľa toho, či sa nachádza v package `sk.iway.iwcm`. Zákaznícke aplikácie sú v zozname aplikácií na začiatku zoznamu.

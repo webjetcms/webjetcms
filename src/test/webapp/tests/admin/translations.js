@@ -96,9 +96,9 @@ Scenario("reset jazyka", ({ I, Document }) => {
 Scenario("filter by date and keyword", ({ I, DT }) => {
     I.relogin('admin');
     I.amOnPage("/admin/v9/settings/translation-keys/");
-    DT.filter("from-updateDate", "06.07.2021");
-    DT.filter("to-updateDate", "07.07.2021");
-    I.click({"css":"div.dataTables_scrollHeadInner button.dt-filtrujem-updateDate"});
+    DT.filterContains("from-updateDate", "06.07.2021");
+    DT.filterContains("to-updateDate", "07.07.2021");
+    I.click({"css":"div.dt-scroll-headInner button.dt-filtrujem-updateDate"});
 
     I.see("components.gdpr.cookies.Test.provider", "#datatableInit");
     I.see("components.gdpr.cookies.Test.purpouse", "#datatableInit");
@@ -109,7 +109,7 @@ Scenario("filter by date and keyword", ({ I, DT }) => {
 
     //
     I.say("Set secondary filter");
-    DT.filter("fieldA", "AAX");
+    DT.filterContains("fieldA", "AAX");
     I.see("components.gdpr.cookies.Test.provider", "#datatableInit");
     I.dontSee("components.gdpr.cookies.Test.purpouse", "#datatableInit");
     I.dontSee("components.gdpr.cookies.Test.validity", "#datatableInit");
@@ -132,27 +132,28 @@ Scenario("filter by date and keyword", ({ I, DT }) => {
 
 Scenario("edit from searchall", ({ I, DT, DTE }) => {
     I.relogin('admin');
+    //test old v8 url
     I.amOnPage("/admin/searchall.jsp");
-    I.fillField("#text1", "cookies.bar.");
-    I.clickCss("#tabMenu1 .btn");
-
-    I.click("cookies.bar.preferencne");
-
-    I.switchToNextTab();
+    I.fillField("#searchText", "cookies.bar.pref");
+    I.clickCss("#pills-translationKeys-tab");
 
     DT.waitForLoader();
-    DTE.waitForEditor();
 
-    I.see("cookies.bar.preferencne", "#datatableInit_modal .modal-title");
+    I.waitForText("cookies.bar.preferencne", 10, "#translationKeysDataTable_wrapper");
+    I.click("cookies.bar.preferencne", "#translationKeysDataTable_wrapper")
 
-    I.closeCurrentTab();
+    DTE.waitForEditor("translationKeysDataTable");
+
+    I.see("cookies.bar.preferencne", "#translationKeysDataTable_modal .modal-title");
+
+    DTE.cancel();
 });
 
 Scenario("show HTML value for show-html columns", ({ I, DT }) => {
     I.relogin('admin');
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.waitForLoader();
-    DT.filter("key", "admin.update.databaseNotUpdatedToWebJET7");
+    DT.filterContains("key", "admin.update.databaseNotUpdatedToWebJET7");
     I.waitForText("admin.update.databaseNotUpdatedToWebJET7", 10, "#datatableInit tbody");
     I.see("<a href=\"/admin/update/update_webjet7.jsp", "#datatableInit tbody");
 });

@@ -20,7 +20,7 @@ Calling `MirroringService.isEnabled(int groupId)` verifies that structure mirror
 
 Directory linking is done by listening for a directory change event `SaveListener.handleGroupSave`, which subsequently calls `GroupMirroringServiceV9.handleGroupSave`.
 
-Note: the exception is for the directory named **New subdirectory** (translation key `editor.dir.new_dir`), which will be created in the tree structure by clicking Add new directory in the context menu. This would create directories in other languages `Nový podadresár`which would be of no practical use (since changing the directory name no longer changes the mirrored copies created).
+Note: the exception is for the directory named **New subdirectory** (translation key `editor.dir.new_dir`), which will be created in the tree structure by clicking Add new directory in the context menu. This would create directories in other languages `Nový podadresár` which would be of no practical use (since changing the directory name no longer changes the mirrored copies created).
 
 In an event `WebjetEventType.ON_START` is checked to see if the directory has already set `syncId`. If not, we know that it is a new directory that is not yet mirrored and we set a new value for it `syncId`.
 

@@ -1,5 +1,7 @@
 # Bannerový systém
 
+## Zoznam bannerov
+
 Aplikácia Bannerový systém, umožňuje do stránky vložiť banner. Systém podporuje nasledovné typy bannerov:
 
 - Obrázok - zobrazí statický obrázok, alebo animovaný ```gif```. Eviduje kliknutie na banner.

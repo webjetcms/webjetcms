@@ -14,7 +14,7 @@ Ukázka entity JPA s anotacemi `@DataTableColumn`, [pro datovou tabulku a editor
 
 Povinná pole a další validace [nastavíte anotace](../../developer/datatables/restcontroller.md#validace---povinná-pole), `@NotBlank,@Size,@Email` atd.
 
-**Varování:** nepoužívat primitivní typy v entitě `int, long` ale pouze objekt `Integer, Long` jinak nebude filtrování/vyhledávání fungovat správně.
+!>**Varování:** nepoužívat primitivní typy v entitě `int, long` ale pouze objekt `Integer, Long` jinak nebude filtrování/vyhledávání fungovat správně.
 
 ```java
 package sk.iway.basecms.contact;
@@ -89,7 +89,7 @@ public class ContactEntity {
 }
 ```
 
-Vzorové úložiště JPA, při jeho použití vždy použijte také `Pageable` objekt pro stránkování a rozvržení. Podpora dynamického generování vyhledávacích kritérií (v metodě řadiče REST) `addSpecSearch`) úložiště také rozšiřuje `JpaSpecificationExecutor`.
+Vzorové úložiště JPA, při jeho použití vždy použijte také `Pageable` objekt pro stránkování a rozvržení. Podpora dynamického generování vyhledávacích kritérií (v metodě řadiče REST `addSpecSearch`) úložiště také rozšiřuje `JpaSpecificationExecutor`.
 
 ```java
 package sk.iway.basecms.contact;
@@ -111,7 +111,7 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long>, J
 }
 ```
 
-**Varování:** si všimněte použití `JpaSpecificationExecutor`. Umožňuje dynamické vytváření příkazu SQL pro vyhledávání/filtraci/uspořádání záznamů v datové tabulce. Pokud byste jej nepoužili, vyhledává ve tvaru [Dotazování podle příkladu](https://www.baeldung.com/spring-data-query-by-example) když **Nesmíte** používat primitivní typy a inicializační hodnoty v entitě (např. `String text="test"`). Při vyhledávání by pak hodnota byla `test` automaticky vyhledávány, i když nejsou zadány. To řeší `JpaSpecificationExecutor`, který hledá pouze parametry zadané ve filtru (testováním parametrů požadavku začínajících na znaky `search`).
+!>**Varování:** si všimněte použití `JpaSpecificationExecutor`. Umožňuje dynamické vytváření příkazu SQL pro vyhledávání/filtraci/uspořádání záznamů v datové tabulce. Pokud byste jej nepoužili, vyhledává ve tvaru [Dotazování podle příkladu](https://www.baeldung.com/spring-data-query-by-example) když **Nesmíte** používat primitivní typy a inicializační hodnoty v entitě (např. `String text="test"`). Při vyhledávání by pak hodnota byla `test` automaticky vyhledávány, i když nejsou zadány. To řeší `JpaSpecificationExecutor`, který hledá pouze parametry zadané ve filtru (testováním parametrů požadavku začínajících na znaky `search`).
 
 Ukázka kontroléru REST, vždy věnujte pozornost kontrole práv pomocí anotace `@PreAuthorize` a nezapomeňte na anotaci `@Datatable` pro správné generování chybových odpovědí.
 

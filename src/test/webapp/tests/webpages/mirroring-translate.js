@@ -1,8 +1,6 @@
 Feature('webpages.mirroring-translate');
 
 var randomText;
-var add_webButton = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var remove_webButton = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-remove.btn-danger.buttons-divider'));
 
 // SK original
 var docDataSK = '<p class="text-center"><strong>Názov stránky</strong></p><p>Test prekladu stránky s&nbsp;rôznymi slovami.</p><ol>	<li>dnes</li>	<li>zajtra</li>	<li>pozajtra</li></ol>';
@@ -14,10 +12,12 @@ var docDataEN = ["Page", "different words", "oday", "omorrow", "he day after tom
 var docDataENupdate = ["new", "old", "oldest"];
 var docDataENupdate2 = ["dog", "cat", "coconut"];
 
-Before(({ I }) => {
+Before(({ I, DT }) => {
     if (typeof randomText=="undefined") {
         randomText = I.getRandomTextShort();
     }
+
+    DT.addContext('configuration', '#configurationDatatable_wrapper');
 });
 
 /**
@@ -69,7 +69,7 @@ async function testTranslation(I, DT, DTE, useAutotranslator) {
     // CREATE NEW DOC IN SK VERSION
     I.say("Creating initial SK version");
     I.jstreeClick("preklad_sk");
-    I.click(add_webButton);
+    I.click(DT.btn.add_button);
     I.waitForVisible("#DTE_Field_title");
     I.fillField("#DTE_Field_title", docTitleSK);
 
@@ -145,21 +145,21 @@ async function deleteDocWithCheck(I, DT, DTE, docNameA, docNameB) {
     DT.waitForLoader();
     I.wait(0.5);
     I.jstreeClick("preklad_sk");
-    DT.filter("title", docNameA);
-    I.waitForText("Záznamy 1 až 1 z 1", 10, "#datatableInit_wrapper .dataTables_info");
+    DT.filterContains("title", docNameA);
+    I.waitForText("Záznamy 1 až 1 z 1", 10, "#datatableInit_wrapper .dt-info");
     I.see(docNameA);
     I.wait(1);
 
     // Delete SK version
     I.clickCss("td.dt-select-td");
-    I.click(remove_webButton);
+    I.click(DT.btn.delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy");
 
     // Check that EN version i gone too
     I.jstreeClick("preklad_en");
-    DT.filter("title", docNameB);
+    DT.filterContains("title", docNameB);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 }
 
@@ -178,23 +178,23 @@ async function setConfValues(I, DT, DTE, autotranslator) {
     I.amOnPage("/admin/v9/settings/configuration/");
 
     //Set structureMirroringConfig
-    I.clickCss("button.buttons-create");
+    I.click(DT.btn.configuration_add_button);
     DTE.waitForEditor("configurationDatatable");
     I.fillField("#DTE_Field_name", "structureMirroringConfig");
     I.fillField("#DTE_Field_value", "56845,56846:mirroring.tau27.iway.sk");
     DTE.save();
     //Check it
-    DT.filter("name", "structureMirroringConfig");
+    DT.filterContains("name", "structureMirroringConfig");
     I.see("56845,56846:mirroring.tau27.iway.sk");
 
     //Set structureMirroringAutoTranslatorLogin
-    I.clickCss("button.buttons-create");
+    I.click(DT.btn.configuration_add_button);
     DTE.waitForEditor("configurationDatatable");
     I.fillField("#DTE_Field_name", "structureMirroringAutoTranslatorLogin");
     I.fillField("#DTE_Field_value", autotranslator);
     DTE.save();
     //Check it
-    DT.filter("name", "structureMirroringAutoTranslatorLogin");
+    DT.filterContains("name", "structureMirroringAutoTranslatorLogin");
     I.see(autotranslator);
 
     I.say("autoTranslator set as : ", autotranslator);
@@ -242,7 +242,7 @@ function openDoc(I, DT, DTE, docName, version) {
         I.jstreeClick("preklad_en");
     } else return; //uknown
 
-    DT.filter("title", docName);
+    DT.filterContains("title", docName);
     I.see(docName);
     I.click(docName);
     DTE.waitForEditor();

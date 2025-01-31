@@ -30,7 +30,7 @@ public class SaveListener {
           Logger.error(SaveListener.class, ex);
       }
    }
-   
+
     /**
     * Ulozenie web stranky vo forme EditorForm (stara verzia)
     * @param event
@@ -74,9 +74,8 @@ public class SaveListener {
          ConfDetails conf = event.getSource();
          if (conf == null) return;
 
-         Logger.debug(SaveListener.class, "conf name="+conf.getName()+" value="+conf.getValue());
-
          if ("structureMirroringConfig".equals(conf.getName())) {
+            Logger.debug(SaveListener.class, "conf name="+conf.getName()+" value="+conf.getValue());
             MirroringService.checkRootGroupsConfig();
          }
       } catch (Exception ex) {

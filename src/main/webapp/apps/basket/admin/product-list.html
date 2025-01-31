@@ -1,0 +1,159 @@
+<script data-th-inline="javascript">
+    let columns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
+    let url = "/admin/rest/eshop/product-list";
+</script>
+<script type="text/javascript">
+    var productListDataTable;
+
+    WJ.breadcrumb({
+        id: "product-list",
+        tabs: [
+            {
+                url: '/apps/eshop/admin/product-list',
+                title: '[[#{apps.product-list.title}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        //Add filter to tab
+        $("#pills-dateRange-tab").html("");
+        $("div#productListDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldK", visible: true });
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldK", title: WJ.translate("apps.product-list.price_without_DPH.js") });
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldL", visible: true });
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldL", title: WJ.translate("apps.product-list.VAT.js") });
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldM", visible: true });
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldM", title: WJ.translate("apps.product-list.count_of_pieces.js") });
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldH", visible: true });
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldH", title: WJ.translate("apps.product-list.price_with_DPH.js") });
+
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldI", visible: true });
+        window.WJ.DataTable.mergeColumns(columns, { name: "fieldI", title: WJ.translate("apps.product-list.currency.js") });
+
+        let columnsToExport = ["id", "title", "fieldK", "fieldL", "fieldM", "fieldH", "fieldI"];
+        for(let i = 0; i < columns.length; i++) {
+            if(columnsToExport.includes( columns[i]['name'] ) === false) {
+                let className = columns[i]['className'];
+                if(className === undefined) {
+                    columns[i]['className'] = "not-export";
+                } else {
+                    columns[i]['className'] = className + " not-export";
+                }
+            }
+        }
+
+        window.importWebPagesDatatable().then(module => {
+            let wpdInstance = new module.WebPagesDatatable({
+                url: url,
+                columns: columns,
+                id: "productListDataTable",
+                newPageTitleKey: "apps.product-list.articles.new_article.js",
+            });
+            productListDataTable = wpdInstance.createDatatable();
+
+            productListDataTable.showButton("import");
+            productListDataTable.showButton("export");
+
+            //Add new button with logic -> add folder
+            productListDataTable.button().add(1, {
+                text: '<i class="ti ti-folder-plus"></i>',
+                action: function (e, dt, node) {
+                    addFolderFn();
+                },
+                className: 'btn btn-outline-secondary buttons-divider buttons-add-folder',
+                attr: {
+                    title : "[[#{apps.product-list.add_group.title}]]",
+                    'data-toggle': 'tooltip'
+                }
+            });
+
+            productListDataTable.EDITOR.on('open', function (e, mode, action) {
+                bloggerDataTable.EDITOR.field("fieldH").disable();
+                bloggerDataTable.EDITOR.field("fieldI").disable();
+            });
+        });
+
+        //Init select
+        ChartTools.setSelect("/admin/rest/eshop/product-list/product-groups", $('#groupSelect').val(), "groupSelect", false);
+        ChartTools.setSelect("/admin/rest/eshop/product-list/supported-currencies", $('#currencySelect').val(), "currencySelect", false);
+
+        $("#groupSelect").on("change", function() {
+            updateTable();
+        });
+
+        $("#currencySelect").on("change", function() {
+            updateTable();
+        });
+
+        function updateTable() {
+            //set table filter params
+            productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "groupId", $('#groupSelect').val()));
+            productListDataTable.setAjaxUrl(WJ.urlUpdateParam( productListDataTable.getAjaxUrl() , "currency", $('#currencySelect').val()));
+            //reload tables values
+            productListDataTable.ajax.reload();
+        }
+
+        //After addFolder action is executed, reload select with folders
+        window.addEventListener('WJ.DT.executeAction', function (e) {
+            //Sub group added successfully - reload select
+            ChartTools.setSelect("/admin/rest/eshop/product-list/product-groups", $('#groupSelect').val(), "groupSelect", true);
+        });
+
+        /**
+         * Add folder action
+         */
+        async function addFolderFn() {
+            WJ.prompt({
+                title: "[[#{apps.product-list.add_group.title}]]",
+                message: "[[#{apps.product-list.add_folder.msg}]] " + $('#groupSelect').find(":selected").text(),
+                success: function(value) {
+                    let customData = {
+                        groupId: $('#groupSelect').val(),
+                        newGroupName: value
+                    }
+                    productListDataTable.executeAction("addProductGroup", true, null, null, JSON.stringify(customData));
+                },
+                cancel: function() {}
+            });
+        }
+    });
+</script>
+
+<style>
+    /*During crate/edit action user cant see groupTree, it's set via extFilter*/
+    .DTE_Action_Create {
+        #panel-body-dt-productListDataTable-basic > div.DTE_Field.form-group.row.DTE_Field_Type_json.DTE_Field_Name_editorFields\.groupCopyDetails.dt-style-json.dt-tree-group-array { display: none; }
+    }
+    .DTE_Action_Edit {
+        #panel-body-dt-productListDataTable-basic > div.DTE_Field.form-group.row.DTE_Field_Type_json.DTE_Field_Name_editorFields\.groupCopyDetails.dt-style-json.dt-tree-group-array { display: none; }
+    }
+    #pills-dt-productListDataTable-template-tab {
+        display: none;
+    }
+</style>
+
+<div id="productListDataTable_extfilter">
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <select id="groupSelect">
+            </select>
+        </div>
+        <div class="col-auto">
+            <select id="currencySelect">
+            </select>
+        </div>
+    </div>
+</div>
+
+<table id="productListDataTable" class="datatableInit table"></table>

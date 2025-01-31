@@ -65,7 +65,7 @@ Scenario('atributy v stranke', async ({I, DT, DTE}) => {
     I.say("Opening multiedit and saving");
     I.forceClick(locate("table.datatableInit tr").withText("Dell P2772").find("td.dt-select-td"));
     I.forceClick(locate("table.datatableInit tr").withText("Apple 5k").find("td.dt-select-td"));
-    I.click("#datatableInit_wrapper div.dt-buttons button.buttons-edit");
+    I.click(DT.btn.edit_button)
     DTE.waitForEditor();
     I.dontSeeElement("#pills-dt-datatableInit-attributes-tab");
 

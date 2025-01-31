@@ -50,83 +50,90 @@ import sk.iway.iwcm.users.UsersDB;
 <span class="fc" id="L50">            int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
 <span class="pc bpc" id="L51" title="1 of 2 branches missed.">            String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
 <span class="fc" id="L52">            StringBuilder includeIds = new StringBuilder();</span>
-<span class="fc bfc" id="L53" title="All 2 branches covered.">            for (int groupId : groupIds) {</span>
-<span class="fc bfc" id="L54" title="All 2 branches covered.">                if (includeIds.isEmpty()==false) includeIds.append(&quot;,&quot;);</span>
-<span class="fc" id="L55">                includeIds.append(&quot;&quot;+groupId).append(append);</span>
-            }
-<span class="fc" id="L57">            ids = includeIds.toString();</span>
-<span class="fc" id="L58">            list.add(new LabelValue(ids, ids));</span>
-<span class="fc" id="L59">        } else {</span>
-<span class="fc" id="L60">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L61">            String currentDomain = DocDB.getDomain(request);</span>
+<span class="fc" id="L53">            StringBuilder includeIdsNames = new StringBuilder();</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            for (int groupId : groupIds) {</span>
+<span class="fc bfc" id="L55" title="All 2 branches covered.">                if (includeIds.isEmpty()==false) includeIds.append(&quot;,&quot;);</span>
+<span class="fc" id="L56">                includeIds.append(&quot;&quot;+groupId).append(append);</span>
 
-<span class="pc bpc" id="L63" title="1 of 2 branches missed.">            if (Tools.isEmpty(ids)) {</span>
-<span class="fc" id="L64">                Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
-<span class="fc" id="L65">                String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
+<span class="fc" id="L58">                GroupDetails group = GroupsDB.getInstance().getGroup(groupId);</span>
+<span class="pc bpc" id="L59" title="1 of 2 branches missed.">                if (group != null) {</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">                    if (includeIdsNames.isEmpty()==false) includeIdsNames.append(&quot;, &quot;);</span>
+<span class="fc" id="L61">                    includeIdsNames.append(group.getFullPath()).append(append);</span>
+                }
+            }
+<span class="fc" id="L64">            ids = includeIds.toString();</span>
+<span class="fc" id="L65">            list.add(new LabelValue(includeIdsNames.toString(), ids));</span>
+<span class="fc" id="L66">        } else {</span>
+<span class="fc" id="L67">            GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L68">            String currentDomain = DocDB.getDomain(request);</span>
+
+<span class="pc bpc" id="L70" title="1 of 2 branches missed.">            if (Tools.isEmpty(ids)) {</span>
+<span class="fc" id="L71">                Prop propSystem = Prop.getInstance(Constants.getString(&quot;defaultLanguage&quot;));</span>
+<span class="fc" id="L72">                String trashDirName = propSystem.getText(&quot;config.trash_dir&quot;);</span>
 
                 //we dont have any ids, try to search for NEWS include in all groups
-<span class="fc" id="L68">                List&lt;String&gt; dataList = new SimpleQuery().forListString(&quot;SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '&quot;+trashDirName+&quot;%'&quot;);</span>
-<span class="fc" id="L69">                Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
+<span class="fc" id="L75">                List&lt;String&gt; dataList = new SimpleQuery().forListString(&quot;SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '&quot;+trashDirName+&quot;%'&quot;);</span>
+<span class="fc" id="L76">                Set&lt;String&gt; duplicityCheck = new HashSet&lt;&gt;();</span>
 
-<span class="fc bfc" id="L71" title="All 2 branches covered.">                for (String data : dataList) {</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                for (String data : dataList) {</span>
 
-<span class="fc" id="L73">                    Pattern pattern = Pattern.compile(&quot;!INCLUDE\\(/components/news/(.*?)\\)!&quot;);</span>
-<span class="fc" id="L74">                    Matcher matcher = pattern.matcher(data);</span>
+<span class="fc" id="L80">                    Pattern pattern = Pattern.compile(&quot;!INCLUDE\\(/components/news/(.*?)\\)!&quot;);</span>
+<span class="fc" id="L81">                    Matcher matcher = pattern.matcher(data);</span>
 
-<span class="fc bfc" id="L76" title="All 2 branches covered.">                    while (matcher.find()) {</span>
-<span class="fc" id="L77">                        String group = matcher.group();</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">                    while (matcher.find()) {</span>
+<span class="fc" id="L84">                        String group = matcher.group();</span>
 
-<span class="fc" id="L79">                        PageParams pp = new PageParams(group);</span>
-<span class="fc" id="L80">                        int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
-<span class="fc bfc" id="L81" title="All 2 branches covered.">                        for (int groupId : groupIds) {</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">                            if (groupId &gt; 0) {</span>
-<span class="fc" id="L83">                                GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
-<span class="fc bfc" id="L84" title="All 2 branches covered.">                                if (groupDetails != null) {</span>
-<span class="pc bpc" id="L85" title="1 of 4 branches missed.">                                    if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(groupDetails.getDomainName())==false) continue;</span>
+<span class="fc" id="L86">                        PageParams pp = new PageParams(group);</span>
+<span class="fc" id="L87">                        int[] groupIds = Tools.getTokensInt(pp.getValue(&quot;groupIds&quot;, null), &quot;,+&quot;);</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">                        for (int groupId : groupIds) {</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">                            if (groupId &gt; 0) {</span>
+<span class="fc" id="L90">                                GroupDetails groupDetails = groupsDB.getGroup(groupId);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">                                if (groupDetails != null) {</span>
+<span class="pc bpc" id="L92" title="1 of 4 branches missed.">                                    if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(groupDetails.getDomainName())==false) continue;</span>
 
-<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                                    String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
-<span class="fc" id="L88">                                    String value = String.valueOf(groupId)+append;</span>
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                                    String append = pp.getBooleanValue(&quot;expandGroupIds&quot;, false) ? &quot;*&quot; : &quot;&quot;;</span>
+<span class="fc" id="L95">                                    String value = String.valueOf(groupId)+append;</span>
 
-<span class="fc bfc" id="L90" title="All 2 branches covered.">                                    if (duplicityCheck.contains(value)==false) {</span>
-<span class="fc" id="L91">                                        list.add(new LabelValue(groupDetails.getFullPath()+append, value));</span>
-<span class="fc" id="L92">                                        duplicityCheck.add(value);</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                                    if (duplicityCheck.contains(value)==false) {</span>
+<span class="fc" id="L98">                                        list.add(new LabelValue(groupDetails.getFullPath()+append, value));</span>
+<span class="fc" id="L99">                                        duplicityCheck.add(value);</span>
                                     }
                                 }
                             }
                         }
-<span class="fc" id="L97">                    }</span>
-<span class="fc" id="L98">                }</span>
+<span class="fc" id="L104">                    }</span>
+<span class="fc" id="L105">                }</span>
 
                 //sort list using stream api by label property
-<span class="fc" id="L101">                list.sort((o1, o2) -&gt; o1.getLabel().compareTo(o2.getLabel()));</span>
-<span class="fc" id="L102">            } else {</span>
+<span class="fc" id="L108">                list.sort((o1, o2) -&gt; o1.getLabel().compareTo(o2.getLabel()));</span>
+<span class="fc" id="L109">            } else {</span>
                 //add all groups from ids
-<span class="nc" id="L104">                int[] groupIds = Tools.getTokensInt(ids, &quot;,+&quot;);</span>
+<span class="nc" id="L111">                int[] groupIds = Tools.getTokensInt(ids, &quot;,+&quot;);</span>
 
-<span class="nc bnc" id="L106" title="All 2 branches missed.">                for (int groupId : groupIds) {</span>
-<span class="nc" id="L107">                    GroupDetails group = groupsDB.getGroup(groupId);</span>
-<span class="nc bnc" id="L108" title="All 2 branches missed.">                    if (group != null) {</span>
-<span class="nc bnc" id="L109" title="All 4 branches missed.">                        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(group.getDomainName())==false) continue;</span>
-<span class="nc" id="L110">                        list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">                for (int groupId : groupIds) {</span>
+<span class="nc" id="L114">                    GroupDetails group = groupsDB.getGroup(groupId);</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">                    if (group != null) {</span>
+<span class="nc bnc" id="L116" title="All 4 branches missed.">                        if (Constants.getBoolean(&quot;multiDomainEnabled&quot;) &amp;&amp; currentDomain.equals(group.getDomainName())==false) continue;</span>
+<span class="nc" id="L117">                        list.add(new LabelValue(group.getFullPath(), String.valueOf(groupId)));</span>
                     }
                 }
             }
         }
 
         //Filter folder's by PERM'S
-<span class="fc" id="L117">        Identity currentUser = UsersDB.getCurrentUser(request);</span>
-<span class="fc" id="L118">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L119">        int[] editableGroups = Tools.getTokensInt(currentUser.getEditableGroups(true), &quot;,&quot;);</span>
-<span class="fc" id="L120">        int[] editablePages = Tools.getTokensInt(currentUser.getEditablePages(), &quot;,&quot;);</span>
+<span class="fc" id="L124">        Identity currentUser = UsersDB.getCurrentUser(request);</span>
+<span class="fc" id="L125">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="fc" id="L126">        int[] editableGroups = Tools.getTokensInt(currentUser.getEditableGroups(true), &quot;,&quot;);</span>
+<span class="fc" id="L127">        int[] editablePages = Tools.getTokensInt(currentUser.getEditablePages(), &quot;,&quot;);</span>
 
-<span class="fc bfc" id="L122" title="All 2 branches covered.">        if(editableGroups.length &lt; 1) {</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">            if(editablePages.length &lt; 1) return list;</span>
-<span class="nc" id="L124">            else return new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">        if(editableGroups.length &lt; 1) {</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">            if(editablePages.length &lt; 1) return list;</span>
+<span class="nc" id="L131">            else return new ArrayList&lt;&gt;();</span>
         } else {
-<span class="fc" id="L126">            int[] expandedEditableGroups = groupsDB.expandGroupIdsToChilds(editableGroups, true);</span>
-<span class="fc" id="L127">            return list.stream()</span>
-<span class="fc" id="L128">                    .filter(group -&gt; Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))</span>
-<span class="fc" id="L129">                    .collect(Collectors.toList());</span>
+<span class="fc" id="L133">            int[] expandedEditableGroups = groupsDB.expandGroupIdsToChilds(editableGroups, true);</span>
+<span class="fc" id="L134">            return list.stream()</span>
+<span class="fc" id="L135">                    .filter(group -&gt; Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))</span>
+<span class="fc" id="L136">                    .collect(Collectors.toList());</span>
         }
     }
 }

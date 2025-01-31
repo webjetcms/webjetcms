@@ -1,12 +1,12 @@
-# Configuration
+# Basic configuration
 
-The most commonly used configuration variables.
+The most commonly used [configuration variables](../../admin/setup/configuration/README.md).
 
 ## Logging in
 
 - `logLevel` - basic logging level, can have a value of `debug` for detailed logging, or `normal` for production deployment.
-
 - `logLevels` - list of java packages with logging level (each on a new line), e.g:
+
 ```
 sk.iway=DEBUG
 sk.iway.iwcm=WARN
@@ -31,11 +31,26 @@ For bulk email you can still set up:
 - `dmailWaitTimeout` - speed of sending emails from bulk email in milliseconds. By default it is set to 5000, which means that an email is sent once every 5 seconds. If you lower the value then the web server and SMTP server will be more loaded when sending emails. The value will only take effect after a server restart.
 - `dmailBadEmailSmtpReplyStatuses` - A comma-separated list of expressions returned from the SMTP server for which the email will not attempt to be sent again.
 
+### Setting up Amazon SES
+
+For bulk email, we recommend using [Amazon Simple Email Services/SES](https://aws.amazon.com/ses/) for better email delivery. Originally WebJET CMS used API access, which was activated by setting the conf. variable `useAmazonSES` to the value of `true`, but currently it is already in use [standard SMTP protocol](https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html) in Amazon SES:
+- Select [the address of the SMTP server](https://docs.aws.amazon.com/general/latest/gr/ses.html) for your region and set it in the conf. variable `smtpServer`, e.g. `email-smtp.eu-west-1.amazonaws.com`. The tables are scrollable on the page, only the US region is visible at first, don't be afraid to scroll the table.
+- Create [login details](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html) to the SMTP server and set them to conf. variables `smtpUser` a `smtpPassword`, select Encrypt for the password.
+- On the page [Amazon SES](https://console.aws.amazon.com/ses/) in the SMTP settings section for the selected region you can also see the individual ports through which it communicates, typically it is necessary to enable communication to port 587 on the firewall.
+- For a new project, after testing, ask for an increase in email sending limits, they are set low by default.
+- Set conf. variable `smtpUseTLS` at `true`.
+- V [Amazon SES](https://console.aws.amazon.com/ses/) in the Identities section you need to verify the domain identity and set `DKIM` Keys.
+- Delete conf. variable `useAmazonSES` if you have it set (for older projects where API access was originally used).
+- Restart the application server.
+- Try sending an email, verify in the email headers that it was actually sent via Amazon SES.
+
+Sending via Amazon SES sets `DKIM` headers and ensure higher deliverability of emails.
+
 ## Cluster
 
 In the case of a cluster installation, WebJET needs to know that it is running in a cluster and has to synchronize the internal memory cache.
 
-Can run in fashion `auto`when it doesn't need a list of nodes, or in a mode where it has them listed exactly.
+Can run in fashion `auto` when it doesn't need a list of nodes, or in a mode where it has them listed exactly.
 
 ### Auto mode
 
@@ -44,12 +59,14 @@ The easiest is to run in auto mode, conf. variable `clusterNames` set to `auto` 
 - call value `InetAddress.getLocalHost().getHostName()` - the domain name of the computer
 - call value `InetAddress.getLocalHost().getHostAddress()` - IP address of the computer
 - Value `"auto-"+Tools.getNow()`
+
 The value is truncated to the first 16 characters. If the variable is `clusterHostnameTrimFromEnd` set to `true`, the trailing 16 characters are used (e.g. kubernetes creates `hostname` with a random value at the end).
 
 ### Exact list of nodes
 
 If you have a stable configuration of running nodes/`nodes` set the conf. variable:
 - `clusterNames=node1,node2,node3` - comma separated list of nodes from 1 to N
+
 You need to externally define individual nodes `ID` node, you can't do it via Settings->Configuration, because all nodes would have the same name.
 
 It is recommended to set the value via the parameter `-DwebjetNodeId=1`, or otherwise via [external configuration](../external-configuration.md).
@@ -66,4 +83,10 @@ For some parts the primary key generator has historically been used, the followi
 - `pkeyGenIncrement` - the value by which it increases.
 - `pkeyGenOffset` - shift value for the cluster.
 - `pkeyGenBlockSize` - the size of the block selection for the primary key generator. By default set to 10, for server with high load we recommend to set it to a higher value (100 - 1000).
+
 To avoid conflicts in the cluster configuration, the value `pkeyGenOffset` for nodeshift. E.g. value `pkeyGenIncrement` is set to 5 and `offset` to 0-5 for individual nodes. In mode `auto` clustra is the automatically set value `pkeyGenBlockSize=1` to always read the last value from the database. This has a slight impact on server performance.
+
+## Licences
+
+Some libraries may need to purchase additional licenses for their use:
+- `amchartLicense` - license number for the library [amCharts](https://www.amcharts.com) to display charts, after setting the license key, the amCharts logo will not be displayed in the chart.

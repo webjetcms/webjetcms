@@ -30,7 +30,7 @@ Scenario('zoznam formularov', async ({ I, DT }) => {
     within(".active", () => {
         I.see("Zoznam formulárov");
     });
-    DT.filter("formName", "Brexit");
+    DT.filterContains("formName", "Brexit");
     I.click("Brexit");
     DT.waitForLoader("#form-detail_processing");
     const formName = await within("#pills-forms", () => {
@@ -51,7 +51,7 @@ Scenario('zoznam formularov', async ({ I, DT }) => {
 
 Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
-    DT.filter(`formName`, formName);
+    DT.filterContains(`formName`, formName);
 
     I.click(formName);
     DT.waitForLoader("#form-detail_processing");
@@ -60,7 +60,7 @@ Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
         I.see(numberOfTotalResults);
     });
 
-    I.click("input.dt-filter-from-dateTime");
+    I.click("input.dt-filter-from-createDate");
     I.waitForElement("div.dt-datetime", 1);
     I.selectOption({css:".dt-datetime-year"}, yearFrom);
     I.selectOption({css:".dt-datetime-month"}, monthFrom);
@@ -68,7 +68,7 @@ Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
        I.click(dayFrom);
     });
 
-    I.click("input.dt-filter-to-dateTime");
+    I.click("input.dt-filter-to-createDate");
     I.waitForElement("div.dt-datetime", 1);
     I.selectOption({css:".dt-datetime-year"}, yearTo);
     I.selectOption({css:".dt-datetime-month"}, monthTo);
@@ -76,7 +76,7 @@ Scenario("vyhladavanie podla oboch datumov", ({ I, DT }) => {
         I.click(dayTo);
     });
 
-    I.pressKey("Enter", "input.dt-filter-to-dateTime");
+    I.pressKey("Enter", "input.dt-filter-to-createDate");
     DT.waitForLoader("#form-detail_processing");
     within(".dt-footer-row", () => {
         I.see(numberOfDateBothResults);
@@ -91,7 +91,7 @@ Scenario("vyhladavanie podla datumu od", ({ I, DT }) => {
     I.click(formName);
     DT.waitForLoader("#form-detail_processing");
 
-    I.click("input.dt-filter-from-dateTime");
+    I.click("input.dt-filter-from-createDate");
     I.waitForElement("div.dt-datetime", 1);
     I.selectOption({css:".dt-datetime-year"}, yearFrom);
     I.selectOption({css:".dt-datetime-month"}, monthFrom);
@@ -99,7 +99,7 @@ Scenario("vyhladavanie podla datumu od", ({ I, DT }) => {
        I.click(dayFrom);
     });
 
-    I.pressKey("Enter", "input.dt-filter-to-dateTime");
+    I.pressKey("Enter", "input.dt-filter-to-createDate");
     DT.waitForLoader("#form-detail_processing");
     within(".dt-footer-row", () => {
         I.see(numberOfDateFromResults);
@@ -114,7 +114,7 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
     I.click(formName);
     DT.waitForLoader("#form-detail_processing");
 
-    I.click("input.dt-filter-to-dateTime");
+    I.click("input.dt-filter-to-createDate");
     I.waitForElement("div.dt-datetime", 1);
     I.selectOption({css:".dt-datetime-year"}, yearTo);
     I.selectOption({css:".dt-datetime-month"}, monthTo);
@@ -122,7 +122,7 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
         I.click(dayTo);
     });
 
-    I.pressKey("Enter", "input.dt-filter-to-dateTime");
+    I.pressKey("Enter", "input.dt-filter-to-createDate");
     DT.waitForLoader("#form-detail_processing");
     within(".dt-footer-row", () => {
         I.see(numberOfDateToResults);
@@ -195,14 +195,14 @@ function checkFormSimpleRowHtml(I, random, rowNumber, isWysiwyg=false) {
 
 function checkFormSimpleData(I, DT, random, random2) {
     //over zobrazenie
-    DT.filter("col_meno-a-priezvisko", "Form-autotest-"+random);
+    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+random);
     I.see(random);
     I.see("Záznamy 1 až 1 z 1");
 
     //over kliknutie na oko
     checkFormSimpleRowHtml(I, random, 1);
 
-    DT.filter("col_meno-a-priezvisko", "Form-autotest-2-"+random);
+    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-2-"+random);
     checkFormSimpleRowHtml(I, random2, 1);
 }
 
@@ -213,21 +213,21 @@ Scenario("overenie vyplneneho formsimple", ({ I, DT }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     checkFormSimpleData(I, DT, randomNumber, randomNumber2);
 
     //BUG: ked sa preplo zobrazenie stlpcov, tak sa nevykonala render funkcia
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click(locate('span.column-title').withText('Meno'));
     I.click("Mesto");
     I.click("Priezvisko");
     I.click("button.btn.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.amOnPage("/admin/v9/");
     I.amOnPage("/apps/form/admin/#/detail/formular-lahko");
@@ -284,7 +284,7 @@ Scenario("odhlasenie", ({ I }) => {
 Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.amOnPage("/apps/form/admin/#/detail/formular-lahko");
 
-    DT.filter("col_meno-a-priezvisko", "Form-autotest-2-"+randomNumber);
+    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-2-"+randomNumber);
     I.see(randomNumber);
     I.see("Záznamy 1 až 1 z 1");
 
@@ -294,14 +294,14 @@ Scenario("vymazanie formsimple", ({ I, DT, DTE }) => {
     I.waitForElement("#form-detail_modal");
     DTE.save();
 
-    DT.filter("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
+    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
     I.see(randomNumber);
 
     I.see("Záznamy 1 až 1 z 1");
 
     //zmaz cely formular
     I.amOnPage("/apps/form/admin/");
-    DT.filter("formName", "formular-lahko", "Rovná sa");
+    DT.filterEquals("formName", "formular-lahko");
 
     I.click("#forms-list tbody tr:nth-child(1) td.dt-select-td");
     I.click("button.buttons-remove");
@@ -319,7 +319,7 @@ Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT }) => {
 
     I.see("Dotaznik-spokojnosti-externy");
     I.dontSee("OPLZ");
-    DT.filter("formName", "OPLZ");
+    DT.filterContains("formName", "OPLZ");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.see("Záznamy 0 až 0 z 0");
 
@@ -334,7 +334,7 @@ Scenario("domainId overenie zobrazenia zoznamu", ({ I, DT }) => {
 
     I.dontSee("Dotaznik-spokojnosti-externy");
     I.see("OPLZ");
-    DT.filter("formName", "OPLZ");
+    DT.filterContains("formName", "OPLZ");
     I.see("Korupcia-OPLZ");
     I.see("Formular-korupcia-OPLZ");
     I.see("Záznamy 1 až 2 z 2");
@@ -396,12 +396,12 @@ Scenario("form with note field", ({ I, DT }) => {
     I.see("Druhy zaznam formularu");
     I.see("Toto je poznamka vo formulari z frontendu");
 
-    DT.filter("col_note", "Druhy");
+    DT.filterStartsWith("col_note", "Druhy");
     I.see("Admin poznamka");
     I.see("Druhy zaznam formularu");
     I.dontSee("Toto je poznamka vo formulari z frontendu");
 
-    DT.filter("col_note", "Toto je");
+    DT.filterStartsWith("col_note", "Toto je");
     I.dontSee("Admin poznamka");
     I.dontSee("Druhy zaznam formularu");
     I.see("Toto je poznamka vo formulari z frontendu");
@@ -411,7 +411,7 @@ Scenario("form with note field", ({ I, DT }) => {
     DT.waitForLoader();
 
     I.waitForText("Admin poznamka", 20, "#form-detail_wrapper");
-    DT.filter("note", "Poznamka");
+    DT.filterContains("note", "Poznamka");
     I.see("Admin poznamka");
     I.see("Druhy zaznam formularu");
     I.dontSee("Toto je poznamka vo formulari z frontendu");
@@ -512,7 +512,7 @@ Scenario("odhlasenie2", async ({ I }) => {
     I.logout();
 });
 
-Scenario("BUG switch tabs by arrow key", ({ I, DTE, Document }) => {
+Scenario("BUG switch tabs by arrow key", ({ I, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=87145");
     DTE.waitForEditor();
     I.waitForElement("a.cke_button__wjforms", 10);
@@ -525,6 +525,7 @@ Scenario("BUG switch tabs by arrow key", ({ I, DTE, Document }) => {
 
     I.click(locate("div.cke_dialog_tabs a.cke_dialog_tab").withText("Rozšírené nastavenia"));
 
+    I.waitForElement(locate("input[name=attribute_subject]"));
     I.fillField(locate("input[name=attribute_subject]"), "test");
     I.pressKey("ArrowLeft");
     //
@@ -561,7 +562,7 @@ Scenario("formsimple-wysiwyg", ({ I, DT, DTE }) => {
 
     //
     I.say("Verify HTML/email version");
-    DT.filter("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
+    DT.filterStartsWith("col_meno-a-priezvisko", "Form-autotest-"+randomNumber);
     checkFormSimpleRowHtml(I, randomNumber, 1, true);
 
     //
@@ -580,7 +581,7 @@ Scenario("BUG double opt in column in admin not shown", ({ I, DT }) => {
 
     //
     I.say("Filter by date");
-    DT.filter("from-doubleOptinConfirmationDate", "06.06.2024 11:15");
+    DT.filterContains("from-doubleOptinConfirmationDate", "06.06.2024 11:15");
     I.see("06.06.2024 11:20:20", "td.cell-not-editable div");
     I.dontSee("06.06.2024 11:11:11", "td.cell-not-editable div");
 

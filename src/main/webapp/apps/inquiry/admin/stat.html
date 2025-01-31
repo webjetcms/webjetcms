@@ -1,0 +1,234 @@
+<script data-th-inline="javascript">
+    let url = "/admin/rest/inquiry-stat";
+    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.inquiry.jpa.InquiryUsersVoteEntity")})]*/ '';
+</script>
+<script type="text/javascript">
+    var inquiryStatDataTable;
+
+    WJ.breadcrumb({
+        id: "inquiryStat",
+        tabs: [
+            {
+                url: '/apps/inquiry/admin/',
+                title: '[[#{components.inquiry.title}]]',
+                active: false
+            },
+            {
+                url: '/apps/inquiry/admin/stat/',
+                title: '[[#{menu.stat}]]',
+                active: true
+            },
+            {
+                url: '#dateRange',
+                title: '{filter}',
+                active: false
+            }
+        ]
+    });
+
+    window.domReady.add(function () {
+        WJ.showLoader();
+        WJ.selectMenuItem("/apps/inquiry/admin/");
+
+        //presun filter do hlavicky
+        $("#pills-dateRange-tab").html("");
+        $("div#inquiryStatDataTable_extfilter").appendTo("#pills-dateRange-tab");
+
+        let questionId;
+        let isInTab;
+        let dateRange;
+        let userId = $('#userSelect').val();
+        let answerId = $('#answerSelect').val();
+
+        let pieChart;
+        let lineChart;
+
+        // Load question id from URL
+        parseUrlParam();
+
+        // Obtain text of the question
+        $.get({
+            url: "/admin/rest/inquiry-stat/supportValues?questionId=" + questionId,
+            success: function(response) {
+                //Response is JSON object
+                //console.log("responseObject=", response);
+                setSupportValues(response);
+            }
+        });
+
+        inquiryStatDataTable = WJ.DataTable({
+            url: WJ.urlAddParam(url, "questionId", questionId),
+            serverSide: false,
+            columns: columns,
+            id: "inquiryStatDataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true,
+            autoHeight: false,
+            idAutoOpener: false,
+            onPreXhr: function(TABLE, e, settings, data) {
+                //console.log('onPreXhr, docId=', docId);
+                data.fixed_dayDate = dateRange;
+                data.fixed_userId = userId;
+                data.fixed_answerId = answerId;
+            }
+        });
+
+        inquiryStatDataTable.hideButton("import");
+        inquiryStatDataTable.hideButton("create");
+        inquiryStatDataTable.hideButton("edit");
+        inquiryStatDataTable.hideButton("duplicate");
+        inquiryStatDataTable.hideButton("celledit");
+        inquiryStatDataTable.hideButton("remove");
+
+        //Create and set amcharts
+        window.initAmcharts().then(module => {
+            $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+                pieChart = new ChartTools.PieChartForm("value", "label", '[[#{stat.graph.inquiryPie}]]', "inquiryStat-pieVotes", result);
+                ChartTools.createAmchart(pieChart);
+            }});
+
+            $.ajax({url: getGraphUrl(ChartTools.ChartType.Line), success: function(result) {
+                lineChart = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["value"], [undefined]), "dayDate", '[[#{stat.graph.answer}]]', "inquiryStat-lineVotes", ChartTools.convertDataForLineChart(result), ChartTools.DateType.Auto);
+                ChartTools.createAmchart(lineChart);
+            }});
+
+            //After last load data
+            WJ.hideLoader();
+        });
+
+        //Onchange events
+        $("#inquiryStatDataTable_extfilter").on("click", "button.filtrujem", function() {
+            updateTableAndCharts();
+        });
+
+        $("#answerSelect").on("change", function() {
+            updateTableAndCharts();
+        });
+
+        $("#userSelect").on("change", function() {
+            updateTableAndCharts();
+        });
+
+        function getGraphUrl(graphType) {
+            let graphUrl = url;
+
+            if(graphType === ChartTools.ChartType.Pie) {
+                graphUrl += "/pieChartData";
+            } else if(graphType === ChartTools.ChartType.Line) {
+                graphUrl += "/lineChartData";
+            }
+
+            graphUrl = WJ.urlAddParam(graphUrl, "questionId", questionId);
+            graphUrl = WJ.urlAddParam(graphUrl, "dayDate", ChartTools.getDateRange(null));
+            graphUrl = WJ.urlAddParam(graphUrl, "answerId", $('#answerSelect').val());
+            graphUrl = WJ.urlAddParam(graphUrl, "userId", $('#userSelect').val());
+            return graphUrl;
+        }
+
+        async function updateTableAndCharts() {
+            WJ.showLoader();
+
+            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
+                pieChart.chartData = result;
+                ChartTools.updateChart(pieChart);
+            }});
+
+            await $.ajax({url: getGraphUrl(ChartTools.ChartType.Line), success: function(result) {
+                lineChart.chartData = ChartTools.convertDataForLineChart(result);
+                ChartTools.updateChart(lineChart);
+            }});
+
+            inquiryStatDataTable.setAjaxUrl(WJ.urlUpdateParam(inquiryStatDataTable.getAjaxUrl(), "questionId", questionId));
+            inquiryStatDataTable.setAjaxUrl(WJ.urlUpdateParam(WJ.urlUpdateParam(inquiryStatDataTable.getAjaxUrl(), "dayDate", ChartTools.getDateRange(null))));
+            inquiryStatDataTable.setAjaxUrl(WJ.urlUpdateParam(inquiryStatDataTable.getAjaxUrl(), "answerId", $('#answerSelect').val()));
+            inquiryStatDataTable.setAjaxUrl(WJ.urlUpdateParam(inquiryStatDataTable.getAjaxUrl(), "userId", $('#userSelect').val()));
+
+            //reload table values
+            inquiryStatDataTable.ajax.reload();
+
+            WJ.hideLoader();
+        }
+
+        function parseUrlParam() {
+            const queryString = window.location.search;
+            const urlParams = new URLSearchParams(queryString);
+            questionId = urlParams.get('questionId');
+            isInTab = urlParams.get('hideHeaderFooter') == null ? false : urlParams.get('hideHeaderFooter');
+        }
+
+        function setSupportValues(jsonObject) {
+
+            if(isInTab === false) {
+                // If isInTab is FALSE, we are on stat page
+                let titleText = $("#titleText");
+
+                // Insert element with ql-editor for question text
+                titleText.html('<div class="questionTextTitle"><div id="questionText" class="ql-editor" data-gramm="false" contenteditable="false"></div></div>');
+
+                // Set question text into prepared ql-editor
+                $("#questionText").html(jsonObject.questionText);
+            } else {
+                // We are in inquiry tab with stat, hide all nav-links
+                $("a.nav-link").hide();
+            }
+
+            //Set answers to the select
+            if(jsonObject.answers !== undefined && jsonObject.answers !== null) {
+                let answersSelect = document.getElementById("answerSelect");
+                for (const [key, value] of Object.entries(jsonObject.answers)) {
+                    answersSelect.add(new Option(value, key));
+                }
+                $("#answerSelect").selectpicker('refresh');
+            }
+
+            //Set users to the select
+            if(jsonObject.users !== undefined && jsonObject.users !== null) {
+                let userSelect = document.getElementById("userSelect");
+                for (const [key, value] of Object.entries(jsonObject.users)) {
+                    userSelect.add(new Option(value, key));
+                }
+                $("#userSelect").selectpicker('refresh');
+            }
+        }
+    });
+    </script>
+
+<style>
+    .questionTextTitle {
+        background-color: #F3F3F6;
+        border-bottom: 1px solid #DDDFE6 !important;
+        margin-left: -15px;
+        margin-right: -15px;
+    }
+</style>
+
+<div id="inquiryStatDataTable_extfilter">
+    <div class="row">
+        <div class="col-auto dt-extfilter dt-extfilter-dayDate"></div>
+
+        <div class="col-auto">
+            <select id="userSelect">
+                <option value="-3">[[#{users.authType.all}]]</option>
+                <option value="-2">[[#{users.authType.logged}]]</option>
+                <option value="-1">[[#{users.authType.unlogged}]]</option>
+            </select>
+        </div>
+
+        <div class="col-auto">
+            <select id="answerSelect">
+                <option value="-1">[[#{groupslist.answers.all}]]</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div id="titleText"></div>
+
+<div id="graphsDiv" class="hide-while-loading">
+    <div id="inquiryStat-pieVotes" class="amcharts"></div>
+    <div id="inquiryStat-lineVotes" class="amcharts"></div>
+</div>
+
+<div id="tableDiv">
+    <table id="inquiryStatDataTable" class="datatableInit table"></table>
+</div>

@@ -74,15 +74,19 @@ String brandSuffix = InitServlet.getBrandSuffix();
                 <div class="form-group">
                     <form:form method="post" name="logonForm" modelAttribute="userForm">
                         <logic:present name="QRURL" scope="session">
-                            <label class="control-label"><iwcm:text key="user.gauth.instructions"/></label>
-                            <div id="qrImage"></div>
-                            <p>
-                                <iwcm:text key='user.gauth.instructions2'/> <%=session.getAttribute("token")%>
-                            </p>
-                            <label class="control-label"><iwcm:text key="user.gauth.enterCodeAfterSetup"/></label>
+                            <div class="form-group">
+                                <label class="control-label"><iwcm:text key="user.gauth.instructions"/></label>
+                                <div id="qrImage"></div>
+                                <p>
+                                    <iwcm:text key='user.gauth.instructions2'/> <%=session.getAttribute("token")%>
+                                </p>
+                                <label class="control-label"><iwcm:text key="user.gauth.enterCodeAfterSetup"/></label>
+                            </div>
                         </logic:present>
                         <logic:notPresent name="QRURL" scope="session">
-                            <label class="control-label"><iwcm:text key="user.gauth.label"/></label>
+                            <div class="form-group">
+                                <label class="control-label"><iwcm:text key="user.gauth.label"/></label>
+                            </div>
                         </logic:notPresent>
                         <div class="form-group">
                             <label class="control-label visible-ie8 visible-ie9"><iwcm:text key="logon.password"/>:</label>
@@ -92,8 +96,8 @@ String brandSuffix = InitServlet.getBrandSuffix();
                             </div>
                         </div>
                         <div class="form-actions">
-                            <button type="button" class="btn blue-hoki" onclick="window.location.href='/logoff.do?forward=/admin/index.jsp';"><iwcm:text key="inlineToolbar.option.settings.logout"/></button>
-                            <button type="submit" name="login-submit" id="login-submit" class="btn blue pull-right"><iwcm:text key="button.submit"/> <i class="m-icon-swapright m-icon-white"></i></button>
+                            <button type="button" class="btn btn-secondary" onclick="window.location.href='/logoff.do?forward=/admin/index.jsp';"><iwcm:text key="inlineToolbar.option.settings.logout"/></button>
+                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary pull-right"><iwcm:text key="button.submit"/></button>
                         </div>
                     </form:form>
                 </div>
@@ -115,14 +119,16 @@ String brandSuffix = InitServlet.getBrandSuffix();
     jQuery(document).ready(function() {
         document.logonForm.token.focus();
 
-        var qrcode = new QRCode(document.getElementById("qrImage"), {
-            text: "<%=session.getAttribute("QRURL")%>",
-            width: 300,
-            height: 300,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-        });
+        <logic:present name="QRURL" scope="session">
+            var qrcode = new QRCode(document.getElementById("qrImage"), {
+                text: "<%=session.getAttribute("QRURL")%>",
+                width: 300,
+                height: 300,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        </logic:present>
     });
 
 </script>

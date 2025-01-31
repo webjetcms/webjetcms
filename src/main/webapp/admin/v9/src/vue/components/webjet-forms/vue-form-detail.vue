@@ -78,7 +78,7 @@
                     },
                     {
                         data: "createDate",
-                        name: "dateTime",
+                        name: "createDate",
                         title: this.$createDate,
                         renderFormat: "dt-format-date-time",
                         orderable: true,
@@ -517,26 +517,28 @@
                     if (serverSide) {
                         //console.log("on init");
 
-                        //zmaz ine ako startswith moznosti selectpickerov
-                        $("#form-detail_wrapper th form select.selectpickerbinded").each(function(index, element) {
-                            let $this = $(this);
-                            //console.log("SELECT: ", this);
-                            let inputClass = $this.parents("div.input-group").find("input.form-control").attr("class");
-                            if (inputClass.indexOf("dt-filter-note")!=-1 || inputClass.indexOf("dt-filter-files")!=-1) {
-                                //tieto su povolene a mozu mat plny filter
-                            }
-                            else {
-                                //nastav moznost startswith do filtrov
-                                $this.selectpicker("val", "startwith");
-                                if (this.options.length==4 && this.options[0].value=="contains") {
-                                    //console.log(this.options[0]);
-                                    this.options[3] = null;
-                                    this.options[2] = null;
-                                    this.options[0] = null;
+                        setTimeout(() => {
+                            //zmaz ine ako startswith moznosti selectpickerov
+                            $("#form-detail_wrapper th form select.selectpickerbinded").each(function(index, element) {
+                                let $this = $(this);
+                                //console.log("SELECT: ", this);
+                                let inputClass = $this.parents("div.input-group").find("input.form-control").attr("class");
+                                if (inputClass.indexOf("dt-filter-note")!=-1 || inputClass.indexOf("dt-filter-files")!=-1) {
+                                    //tieto su povolene a mozu mat plny filter
                                 }
-                                $this.selectpicker("refresh");
-                            }
-                        });
+                                else {
+                                    //nastav moznost startswith do filtrov
+                                    $this.selectpicker("val", "startwith");
+                                    if (this.options.length==4 && this.options[0].value=="contains") {
+                                        //console.log(this.options[0]);
+                                        this.options[3] = null;
+                                        this.options[2] = null;
+                                        this.options[0] = null;
+                                    }
+                                    $this.selectpicker("refresh");
+                                }
+                            });
+                        }, 1000);
                     }
                 } );
 
@@ -551,10 +553,9 @@
                     serverSide: serverSide,
                     order: [[2, 'desc']],
                     idAutoOpener: true,
-                    onXhr: function(...args) {
-                        const json = args[3];
+                    onXhr: function( TABLE, e, settings, json, xhr ) {
                         //console.log("onXhr json=", json);
-                        json.forEach(j => {
+                        json.data.forEach(j => {
                             for (let [key, value] of Object.entries(j.columnNamesAndValues)) {
                                 j["col_"+key] = value;
                             }

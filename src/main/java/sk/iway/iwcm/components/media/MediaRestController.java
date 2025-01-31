@@ -311,7 +311,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     }
 
     @Override
-    public Media processFromEntity(Media entity, ProcessItemAction action) {
+    public Media processFromEntity(Media entity, ProcessItemAction action, int rowCount) {
         //GetOneItem call super, and super call this with null entity !
         if(entity == null) return entity;
 
@@ -319,7 +319,8 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         MediaEditorFields mef = new MediaEditorFields();
 
         //Set "volitelne polia"
-        mef.setFieldsDefinition( mef.getFields(entity, "components.media", 'F') );
+        if(rowCount == 1)
+            mef.setFieldsDefinition( mef.getFields(entity, "components.media", 'F') );
 
         //Perform from action
         mef.fromMedia(entity);

@@ -4,91 +4,97 @@ The HTML code is split into multiple files to allow for common code to be insert
 
 <!-- tabs:start -->
 
-#### \*\* home-page.jsp \*\*
+#### ** home-page.jsp **
 
 ```html
-<!DOCTYPE html>
-<html class="no-js pg-homepage" <%@ include file="includes/html-attributes.jsp" %>
-	>
-	<head>
-		<%@ include file="includes/head.jsp" %>
-	</head>
-	<body>
-		<div class="ly-page-wrapper">
-			<%@ include file="includes/blind-friendly-panel.jsp" %>
+<!doctype html>
+<html class="no-js pg-homepage" <%@ include file="includes/html-attributes.jsp" %>>
+    <head>
+        <%@ include file="includes/head.jsp" %>
+    </head>
+    <body>
+        <div class="ly-page-wrapper">
 
-			<div class="container">
-				<header class="ly-header"><%@ include file="includes/header.jsp" %></header>
-				<!--/.ly-header-->
+            <%@ include file="includes/blind-friendly-panel.jsp" %>
 
-				<main class="ly-content-wrapper">
-					<%@ include file="includes/breadcrumb.jsp" %>
+            <div class="container">
 
-					<div class="ly-content">
-						<%@ include file="includes/browser-support.jsp" %>
+                <header class="ly-header">
+                    <%@ include file="includes/header.jsp" %>
+                </header><!--/.ly-header-->
 
-						<div class="row">
-							<div class="col-md-8">
-								<article class="ly-article" id="blindBlock-article">
-									<h1><iwcm:write name="doc_title" /></h1>
-									<iwcm:write name="doc_data" />
-								</article>
-								<!--/.ly-article-->
-							</div>
-							<!--/.col-md-8-->
-							<div class="col-md-4">
-								<aside class="ly-sidebar" id="blindBlock-sidebar"><%@ include file="includes/sidebar.jsp" %></aside>
-								<!--/.ly-sidebar-->
-							</div>
-							<!--/.col-md-4-->
-						</div>
-						<!--/.row-->
-					</div>
-					<!--/.ly-content-->
-				</main>
-				<!--/.ly-content-wrapper-->
+                <main class="ly-content-wrapper">
 
-				<footer class="ly-footer" id="blindBlock-footer"><%@ include file="includes/footer.jsp" %></footer>
-				<!--/.ly-footer-->
-			</div>
-			<!--/.container-->
-		</div>
-		<!--/.ly-page-wrapper-->
-	</body>
+                    <%@ include file="includes/breadcrumb.jsp" %>
+
+                    <div class="ly-content">
+
+                        <%@ include file="includes/browser-support.jsp" %>
+
+                        <div class="row">
+                            <div class="col-md-8">
+
+                                <article class="ly-article" id="blindBlock-article">
+                                    <h1><iwcm:write name="doc_title"/></h1>
+                                    <iwcm:write name="doc_data"/>
+                                </article><!--/.ly-article-->
+
+                                </div><!--/.col-md-8-->
+                                <div class="col-md-4">
+
+                                    <aside class="ly-sidebar" id="blindBlock-sidebar">
+                                        <%@ include file="includes/sidebar.jsp" %>
+                                    </aside><!--/.ly-sidebar-->
+
+                                </div><!--/.col-md-4-->
+                            </div><!--/.row-->
+
+                    </div><!--/.ly-content-->
+
+                </main><!--/.ly-content-wrapper-->
+
+                <footer class="ly-footer" id="blindBlock-footer">
+                    <%@ include file="includes/footer.jsp" %>
+                </footer><!--/.ly-footer-->
+
+            </div><!--/.container-->
+
+        </div> <!--/.ly-page-wrapper-->
+
+    </body>
 </html>
 ```
 
-#### \*\* sidebar.jsp \*\*
+#### ** sidebar.jsp **
 
 ```html
-<iwcm:write name="doc_right_menu" />
+<iwcm:write name="doc_right_menu"/>
 ```
 
-#### \*\* html-attributes.jsp \*\*
+#### ** html-attributes.jsp **
 
 ```html
-lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" data-browser-version="${ninja.userAgent.browserVersion}" data-device-type="${ninja.userAgent.deviceType}" data-device-os="${ninja.userAgent.deviceOS}"
+lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" data-browser-version="${ninja.userAgent.browserVersion}" data-device-type="${ninja.userAgent.deviceType}" data-device-os="${ninja.userAgent.deviceOS}" data-ab-variant="${ninja.abVariant}"
 ```
 
-#### \*\* header.jsp \*\*
+#### ** header.jsp **
 
 ```html
 <c:if test="${ninja.userAgent.blind}">
-	<a href="${ninja.page.urlPath}?forceBrowserDetector=blind">Textová verzia stránky</a>
+    <a href="${ninja.page.urlPath}?forceBrowserDetector=blind">Textová verzia stránky</a>
 </c:if>
-<iwcm:write name="doc_header" />
+<iwcm:write name="doc_header"/>
 <nav class="md-navigation" id="blindBlock-navigation">
-	<iwcm:write name="doc_menu" />
-</nav>
-<!--/.md-navigation-->
+    <iwcm:write name="doc_menu"/>
+</nav><!--/.md-navigation-->
 ```
 
-#### \*\* head.jsp \*\*
+#### ** head.jsp **
 
 ```html
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<meta charset="${ninja.temp.charset}" />
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta charset="${ninja.temp.charset}">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta http-equiv="Content-type" content="text/html;charset=${ninja.temp.charset}" />
 
 <title>${ninja.page.doc.title} | ${ninja.temp.group.author}</title>
@@ -113,32 +119,45 @@ lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" d
 
 <%-- <% if (ninja.amp.enabled) { %> --%>
 <c:if test="${requestScope.doc_temp_name == 'Blog template'}">
-	<link rel="amphtml" href="${ninja.page.url}?forceBrowserDetector=amp" />
+    <link rel="amphtml" href="${ninja.page.url}?forceBrowserDetector=amp" />
 </c:if>
-<%-- <% } %> --%> ${ninja.temp.insertTouchIconsHtml}
+<%-- <% } %> --%>
+
+${ninja.temp.insertTouchIconsHtml}
 <link rel="icon" href="${ninja.temp.basePathImg}favicon.ico" type="image/x-icon" />
 
 <c:choose>
-	<c:when test="${ninja.userAgent.blind}">
-		<iwcm:combine type="css" set=""> ${ninja.temp.basePathCss}blind-friendly.min.css </iwcm:combine>
-	</c:when>
-	<c:otherwise>
-		<iwcm:combine type="css" set="">
-			${ninja.temp.basePathCss}ninja.min.css ${ninja.temp.basePathCss}shame.css
-			<iwcm:write name="base_css_link" />
-			<iwcm:write name="css_link" />
-		</iwcm:combine>
-	</c:otherwise>
+    <c:when test="${ninja.userAgent.blind}">
+        <iwcm:combine type="css" set="">
+            ${ninja.temp.basePathCss}blind-friendly.min.css
+        </iwcm:combine>
+    </c:when>
+    <c:otherwise>
+        <iwcm:combine type="css" set="">
+            ${ninja.temp.basePathCss}ninja.min.css
+            ${ninja.temp.basePathCss}shame.css
+            <iwcm:write name="base_css_link"/>
+            <iwcm:write name="css_link"/>
+        </iwcm:combine>
+    </c:otherwise>
 </c:choose>
 
-<iwcm:combine type="js" set=""> ${ninja.temp.basePathJs}plugins/jquery.min.js ${ninja.temp.basePathJs}plugins/jquery.cookie.js ${ninja.temp.basePathJs}plugins/modernizr-custom.js ${ninja.temp.basePathJs}plugins/bootstrap.bundle.min.js ${ninja.temp.basePathJs}global-functions.min.js ${ninja.temp.basePathJs}ninja.min.js ${ninja.webjet.pageFunctionsPath} </iwcm:combine>
+<iwcm:combine type="js" set="">
+    ${ninja.temp.basePathJs}plugins/jquery.min.js
+    ${ninja.temp.basePathJs}plugins/jquery.cookie.js
+    ${ninja.temp.basePathJs}plugins/modernizr-custom.js
+    ${ninja.temp.basePathJs}plugins/bootstrap.bundle.min.js
+    ${ninja.temp.basePathJs}global-functions.min.js
+    ${ninja.temp.basePathJs}ninja.min.js
+    ${ninja.webjet.pageFunctionsPath}
+</iwcm:combine>
 
 ${ninja.webjet.insertJqueryFake}
-<iwcm:write name="group_htmlhead_recursive" />
-<iwcm:write name="html_head" />
+<iwcm:write name="group_htmlhead_recursive"/>
+<iwcm:write name="html_head"/>
 ```
 
-#### \*\* debug-info.jsp \*\*
+#### ** debug-info.jsp **
 
 ```html
 <c:if test="${ninja.debug}">
@@ -183,56 +202,55 @@ ${ninja.webjet.insertJqueryFake}
 </c:if>
 ```
 
-#### \*\* browser-support.jsp \*\*
+#### ** browser-support.jsp **
 
 ```html
 <c:if test="${ninja.userAgent.browserOutdated}">
-	<div class="alert alert-warning md-browser-support md-browser-support--outdated" role="alert">Verzia vášho prehliadača nie je aktuálna, stránka sa nebude zobrazovať správne.</div>
+<div class="alert alert-warning md-browser-support md-browser-support--outdated" role="alert">
+   Verzia vášho prehliadača nie je aktuálna, stránka sa nebude zobrazovať správne.
+</div>
 </c:if>
 
 <div class="alert alert-warning md-browser-support md-browser-support--cookie" role="alert" style="display: none">
-	Nemáte povolené použitie Cookie, webová stránka nebude fungovať správne.<br />
-	Niektoré časti webu a aplikácie nebudú dostupné.
+    Nemáte povolené použitie Cookie, webová stránka nebude fungovať správne.<br> Niektoré časti webu a aplikácie nebudú dostupné.
 </div>
 
 <div class="alert alert-warning md-browser-support md-browser-support--js" role="alert" style="display: none">
-	Nemáte zapnutý Javascript, webová stránka nebude fungovať správne.<br />
-	Niektoré časti webu a aplikácie nebudú dostupné.
+    Nemáte zapnutý Javascript, webová stránka nebude fungovať správne.<br> Niektoré časti webu a aplikácie nebudú dostupné.
 </div>
 ```
 
-#### \*\* breadcrumb.jsp \*\*
+#### ** breadcrumb.jsp **
 
 ```html
 <div class="md-breadcrumb" id="blindBlock-breadcrumb">
-	<iwcm:write name="navbar" />
-</div>
-<!--/.md-breadcrump-->
+    <iwcm:write name="navbar"/>
+</div><!--/.md-breadcrump-->
 ```
 
-#### \*\* blind-friendly-panel.jsp \*\*
+#### ** blind-friendly-panel.jsp **
 
 ```html
 <c:if test="${ninja.userAgent.blind}">
-	<div id="blindBlock-top">
-		<address>Aktuálna stránka: <a href="${ninja.page.url}">${ninja.page.doc.title} | ${ninja.temp.group.author}</a></address>
-		<p><strong>Zobrazuje sa optimalizovaná verzia stránky pre slabo vidiacich alebo špecializované či staršie prehliadače.</strong></p>
-		<p><a href="${ninja.page.urlPath}?forceBrowserDetector=pc">Prejsť na grafickú verziu</a></p>
-		<hr />
-		<p><em>Začiatok stránky, titulka:</em></p>
-		<p><a href="#blindBlock-next">Pokračuj v čítaní</a> alebo preskoč na <a href="#blindBlock-navigation">Hlavnú navigáciu</a>.</p>
-		<div id="blindBlock-next">
-			<p><em>Ďalšie možnosti:</em></p>
-			<ul>
-				<li><a href="#blindBlock-top">Začiatok stránky</a></li>
-				<li><a href="#blindBlock-navigation">Hlavná navigácia</a></li>
-				<li><a href="#blindBlock-breadcrumb">Cesta k stránke</a></li>
-				<li><a href="#blindBlock-article">Obsah stránky</a></li>
-				<li><a href="#blindBlock-sidebar">Bočný panel</a></li>
-				<li><a href="#blindBlock-footer">Pätičkové informácie</a></li>
-			</ul>
-		</div>
-	</div>
+    <div id="blindBlock-top">
+        <address>Aktuálna stránka: <a href="${ninja.page.url}">${ninja.page.doc.title} | ${ninja.temp.group.author}</a></address>
+        <p><strong>Zobrazuje sa optimalizovaná verzia stránky pre slabo vidiacich alebo špecializované či staršie prehliadače.</strong></p>
+        <p><a href="${ninja.page.urlPath}?forceBrowserDetector=pc">Prejsť na grafickú verziu</a></p>
+        <hr />
+        <p><em>Začiatok stránky, titulka:</em></p>
+        <p><a href="#blindBlock-next">Pokračuj v čítaní</a> alebo preskoč na <a href="#blindBlock-navigation">Hlavnú navigáciu</a>.</p>
+        <div id="blindBlock-next">
+            <p><em>Ďalšie možnosti:</em></p>
+            <ul>
+                <li><a href="#blindBlock-top">Začiatok stránky</a></li>
+                <li><a href="#blindBlock-navigation">Hlavná navigácia</a></li>
+                <li><a href="#blindBlock-breadcrumb">Cesta k stránke</a></li>
+                <li><a href="#blindBlock-article">Obsah stránky</a></li>
+                <li><a href="#blindBlock-sidebar">Bočný panel</a></li>
+                <li><a href="#blindBlock-footer">Pätičkové informácie</a></li>
+            </ul>
+        </div>
+    </div>
 </c:if>
 ```
 

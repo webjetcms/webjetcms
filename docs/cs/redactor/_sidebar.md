@@ -1,16 +1,20 @@
- <div class="sidebar-section">Příručka pro editor</div>
+ <div class="sidebar-section">Příručka pro redaktora</div>
 
 - [:point\_left: Zpět na úvod](/?back)
-- Použití správy
+- Použití administrace
   - [Přihlašování a odhlašování](/redactor/admin/logon.md)
+  - [Zapomenuté heslo](/redactor/admin/password-recovery/README.md)
   - [Hlavní ovládací prvky](/redactor/admin/README.md)
   - [Domovská obrazovka](/redactor/admin/welcome.md)
+  - [Odeslat zprávu](/redactor/admin/send-message.md)
+  - [Vyhledávání](/redactor/admin/search/README.md)
 - Datové tabulky
   - [Základy práce s datovými tabulkami](/redactor/datatables/README.md)
   - [Export a import](/redactor/datatables/export-import.md)
 - Webové stránky
   - [Základní práce](/redactor/webpages/README.md)
   - [Úprava webové stránky](/redactor/webpages/editor.md)
+  - [Práce v editoru](/redactor/webpages/working-in-editor/README.md)
   - [Složka webové stránky](/redactor/webpages/group.md)
   - [Historie](/redactor/webpages/history.md)
   - [Obnovení z koše](/redactor/webpages/recover.md)
@@ -19,15 +23,20 @@
   - [Import a export webových stránek](/redactor/webpages/import-export.md)
   - [Schválení změn](/redactor/webpages/approve/README.md)
   - [Stránky chráněné heslem](/redactor/zaheslovana-zona/README.md)
+  - [Editor obrázků](/redactor/image-editor/README.md)
   - [Klonovací struktura](/redactor/apps/clone-structure/README.md)
   - [Atributy stránky](/redactor/webpages/doc-attributes/README.md)
+  - [Přesměrování](/redactor/webpages/redirects/README.md)
   - [Média](/redactor/webpages/media.md)
   - [Štítky](/redactor/webpages/perexgroups.md)
+  - [Export do HTML](/redactor/webpages/export-to-html/README.md)
 - Aplikace
   - AB testování
     - [Úvod](/redactor/apps/abtesting/README.md)
     - [AB testování](/redactor/apps/abtesting/abtesting.md)
-  - [Průzkum](/redactor/apps/inquiry/README.md)
+  - Průzkum
+    - [Průzkum](/redactor/apps/inquiry/README.md)
+    - [Statistiky průzkumu](/redactor/apps/inquiry/inquiry-stat.md)
   - [Archivní soubory](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Seznam bannerů](/redactor/apps/banner/README.md)
@@ -36,11 +45,22 @@
     - [Seznam článků](/redactor/apps/blog/README.md)
     - [Správa blogů](/redactor/apps/blog/bloggers.md)
   - [Carousel Slider](/redactor/apps/carousel_slider/README.md)
+  - [Cookie bar](/redactor/apps/app-cookiebar/README.md)
   - [Obsahový blok](/redactor/apps/content-block/README.md)
   - [Číselníky](/redactor/apps/enumeration/README.md)
   - [Datum](/redactor/apps/app-date/README.md)
+  - [Komentáře Disqus](/redactor/apps/app-disqus/README.md)
   - [Dotazníky](/redactor/apps/quiz/README.md)
+  - Elektronické obchodování
+    - [Seznam objednávek](/redactor/apps/eshop/invoice/README.md)
+    - [Platby](/redactor/apps/eshop/invoice/payments.md)
+    - [Položky](/redactor/apps/eshop/invoice/items.md)
+    - [Seznam produktů](/redactor/apps/eshop/product-list/README.md)
+    - [Nastavení aplikace](/redactor/apps/basket/README.md)
+  - [Emotikony](/redactor/apps/emoticon/README.md)
   - [Export dat](/redactor/apps/export/README.md)
+  - [Rámeček To se mi líbí na Facebooku](/redactor/apps/app-facebook_like_box/README.md)
+  - [Tlačítko To se mi líbí na Facebooku](/redactor/apps/app-facebook_like/README.md)
   - [Formulář snadno](/redactor/apps/formsimple/README.md)
   - Formuláře
     - [Seznam formulářů](/redactor/apps/form/README.md)
@@ -48,8 +68,11 @@
   - Fórum/Diskuze
     - [Nastavení aplikace](/redactor/apps/forum/README.md)
     - [Seznam diskusí](/redactor/apps/forum/forum-list.md)
-  - [Galerie](/redactor/apps/gallery/README.md)
+  - Galerie
+    - [Galerie](/redactor/apps/gallery/README.md)
+    - [Nastavení vodoznaku](/redactor/apps/gallery/watermark.md)
   - GDPR
+    - [Souhlas se soubory cookie](/redactor/apps/gdpr/README.md)
     - [Správce souborů cookie](/redactor/apps/gdpr/cookiesmanger.md)
     - [Správa regulárních výrazů](/redactor/apps/gdpr/regexps.md)
     - [Vyhledávání](/redactor/apps/gdpr/search.md)
@@ -58,16 +81,18 @@
   - [Vyhledávání na Googlu](/redactor/apps/app-vyhladavanie/README.md)
   - Hromadný e-mail
     - [Kampaně](/redactor/apps/dmail/campaings/README.md)
-    - [Přihlašovací/odhlašovací formulář](/redactor/apps/dmail/form/README.md)
+    - [Přihlašovací a odhlašovací formulář](/redactor/apps/dmail/form/README.md)
     - [Omezení domény](/redactor/apps/dmail/domain-limits/README.md)
     - [Odhlášené e-maily](/redactor/apps/dmail/unsubscribed/README.md)
     - [Jak funguje odesílání e-mailů](/redactor/apps/dmail/campaings/how-sender-works.md)
   - [Hodnocení/hodnocení](/redactor/apps/rating/README.md)
+  - [Živý chat (SmartsUpp)](/redactor/apps/app-smartsupp/README.md)
   - Kalendář akcí
     - [Seznam událostí](/redactor/apps/calendar/README.md)
     - [Konfigurace typů událostí](/redactor/apps/calendar/calendar-types/README.md)
     - [Nepovolené události](/redactor/apps/calendar/non-approved-events/README.md)
     - [Doporučení k události](/redactor/apps/calendar/suggest-events/README.md)
+  - [Kontakt](/redactor/apps/contact/README.md)
   - [Mapa](/redactor/apps/map/README.md)
   - [Mapa stránek](/redactor/apps/sitemap/README.md)
   - [Menu (navigace)](/redactor/apps/menu/README.md)
@@ -83,11 +108,13 @@
   - [Počasí](/redactor/apps/app-weather/README.md)
   - [Odeslání stránky e-mailem](/redactor/apps/send_link/README.md)
   - [Působivá prezentace](/redactor/apps/app-impress_slideshow/README.md)
+  - [Uživatelé](/redactor/apps/user/README.md)
   - [Předpřipravené bloky](/redactor/apps/htmlbox/README.md)
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Související stránky](/redactor/apps/related-pages/README.md)
   - Rezervace
-    - [Seznam výhrad](/redactor/apps/reservation/reservations/README.md)
+    - [Seznam rezervací](/redactor/apps/reservation/reservations/README.md)
+    - [Statistiky rezervací](/redactor/apps/reservation/reservations-stat/README.md)
     - [Seznam objektů rezervace](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikace Rezervace času](/redactor/apps/reservation/time-book-app/README.md)
   - [SEO](/redactor/apps/seo/README.md)
@@ -108,3 +135,4 @@
     - [Úprava souborů](/redactor/files/fbrowser/file-edit/README.md)
     - [Nastavení souborů](/redactor/files/fbrowser/file-settings/README.md)
     - [Nastavení složky](/redactor/files/fbrowser/folder-settings/README.md)
+  - [Zálohování systému](/sysadmin/files/backup/README.md)

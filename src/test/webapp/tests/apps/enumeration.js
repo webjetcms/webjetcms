@@ -75,20 +75,20 @@ Scenario('test datatables paging', ({I, DT}) => {
     //types
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
     DT.waitForLoader();
-    I.see("2", ".dt-footer-row ul.pagination li a");
+    I.see("2", ".dt-footer-row ul.pagination li button");
     I.see("Okresne Mestá", "#enumerationTypeDataTable tbody tr td");
 
-    I.click({css: "ul.pagination li:nth-child(3) a"});
+    I.click({css: "ul.pagination li:nth-child(3) button"});
     DT.waitForLoader();
     I.dontSee("Okresne Mestá", "#enumerationTypeDataTable tbody tr td");
 
     //data
     I.amOnPage("/apps/enumeration/admin/#2");
-    I.see("5", ".dt-footer-row ul.pagination li a");
+    I.see("5", ".dt-footer-row ul.pagination li button");
     I.see("Bánovce nad Bebravou", "#enumerationDataDataTable tbody tr td");
     I.dontSee("Poprad", "#enumerationDataDataTable tbody tr td");
 
-    I.click({css: "ul.pagination li:nth-child(6) a"});
+    I.click({css: "ul.pagination li:nth-child(6) button"});
     DT.waitForLoader();
     I.dontSee("Bánovce nad Bebravou", "#enumerationDataDataTable tbody tr td");
     I.see("Senec", "#enumerationDataDataTable tbody tr td");
@@ -191,6 +191,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
         I.say("Delete parent enumeration data");
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");
+        DTE.waitForEditor('enumerationDataDataTable');
         I.click("Zmazať", "div.DTE_Action_Remove");
         DT.waitForLoader('enumerationDataDataTable');
         I.see(stringTestValue+"2");
@@ -208,7 +209,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
 
     //Filter enumTypeNameB
-    DT.filter("typeName", enumTypeNameB);
+    DT.filterContains("typeName", enumTypeNameB);
 
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
@@ -216,7 +217,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     //Filter enumTypeNameA
-    DT.filter("typeName", enumTypeNameA);
+    DT.filterContains("typeName", enumTypeNameA);
 
     //Delete enumTypeNameA
     I.clickCss("td.dt-select-td.sorting_1");
@@ -353,13 +354,13 @@ function createEnumType(I, DTE, typeName, stringName, numberName, booleanName) {
 }
 
 function checkEnumType(I, DT, typeName, shouldSee) {
-    DT.filter("typeName", typeName);
+    DT.filterContains("typeName", typeName);
     if(shouldSee === true) I.see(typeName);
     else I.dontSee(typeName);
 }
 
 function openEnumType(I, DT, DTE, typeName) {
-    DT.filter("typeName", typeName);
+    DT.filterContains("typeName", typeName);
     I.click(typeName);
     DTE.waitForEditor('enumerationTypeDataTable');
 }

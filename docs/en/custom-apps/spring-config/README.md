@@ -1,10 +1,10 @@
 # Spring configuration
 
-Before programming, you need to configure the loading of Spring classes and repositories. It is necessary to create a file `SpringConfig.java` for Spring configuration and `JpaDBConfig.java` for configuring repositories. You create them in package `sk.iway.INSTALL_NAME`to be loaded and initialized by WebJET at startup. The value `INSTALL_NAME` replace with the value of the conf. variable `installName`.
+Before programming it is necessary to configure the loading `Spring` classes and repositories. It is necessary to create a file `SpringConfig.java` for configuration `Spring` a `JpaDBConfig.java` for configuring repositories. You create them in package `sk.iway.INSTALL_NAME` to be loaded and initialized by WebJET at startup. The value `INSTALL_NAME` replace with the value of the conf. variable `installName`.
 
 ## Spring settings
 
-In class `SpringConfig` should be set in the annotation `@ComponentScan` packages that contain Spring classes.
+In class `SpringConfig` should be set in the annotation `@ComponentScan` packages containing `Spring` Classes.
 
 ```java
 package sk.iway.basecms;
@@ -24,7 +24,7 @@ public class SpringConfig {
 
 ## JPA settings
 
-In class `JpaDBConfig` (technically it doesn't matter what it's called, but it must be in the package that is set in `SpringConfig` in section `@ComponentScan`) is similarly needed in the annotation `@EnableJpaRepositories.basePackages` set up packages containing Spring DATA repositories. Do `emf.setPackagesToScan` you need to add packages containing JPA entities (usually they are the same packages).
+In class `JpaDBConfig` (technically it doesn't matter what it's called, but it must be in the package that is set in `SpringConfig` in section `@ComponentScan`) is similarly needed in the annotation `@EnableJpaRepositories.basePackages` set packages containing `Spring DATA` repositories. Do `emf.setPackagesToScan` it is necessary to add `packages` Containing `JPA` entities (usually these are the same `packages`).
 
 ```java
 package sk.iway.basecms;
@@ -49,7 +49,6 @@ import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
 /**
-
  *     Dolezite:
  *     1.) nastavit anotaciu @EnableJpaRepositories na package ktore obsahuju @Repository
  *     2.) nastavit setPackagesToScan() na entity ktore pouzivame v repozitaroch
@@ -80,10 +79,13 @@ public class JpaDBConfig {
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         Logger.println(this, "loading basecms JpaDBConfig");
 
+        String dataSourceName = "iwcm";
+
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
-        emf.setDataSource(DBPool.getInstance().getDataSource("iwcm"));
+        emf.setDataSource(DBPool.getInstance().getDataSource(dataSourceName));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+        emf.setPersistenceUnitName(dataSourceName);
 
         // Zoznam packages ktore sa maju skenovat pre databazove entity/DAO !!
         emf.setPackagesToScan(
@@ -94,12 +96,10 @@ public class JpaDBConfig {
         // https://stackoverflow.com/questions/10769051/eclipselinkjpavendoradapter-instead-of-hibernatejpavendoradapter-issue
         properties.setProperty("eclipselink.weaving", "false");
 
-        if (Constants.DB_TYPE == Constants.DB_ORACLE)
-            properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.Oracle);
-        else if (Constants.DB_TYPE == Constants.DB_MSSQL)
-            properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.SQLServer);
-        else
-            properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
+        if (Constants.DB_TYPE == Constants.DB_ORACLE) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.Oracle);
+        else if (Constants.DB_TYPE == Constants.DB_MSSQL) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.SQLServer);
+        else if (Constants.DB_TYPE == Constants.DB_PGSQL) properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
+        else properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
 
         WebJETJavaSECMPInitializer.setDefaultProperties(properties);
         emf.setJpaProperties(properties);

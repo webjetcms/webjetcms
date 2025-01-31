@@ -6,16 +6,13 @@ Before(({ I, login }) =>{
 });
 
 Scenario('update from server', async ({ I }) => {
-    /* DISABLED kym nebudeme mat aktualizacie aj z JAR suborov
     I.waitForElement("#version-selector");
     I.wait(1);
 
-    I.click("2023.40");
-    I.wait(1);
+    I.click("2024.18");
 
-    I.see("Pre zjednodušenie aktualizácie môžete použiť skript /admin/update/update-2023-18.jsp pre kontrolu a opravu JSP súborov.");
+    I.waitForText("v Štatistika-Prehliadače dôjde k drobným rozdielom, ale údaje o prehliadači anonymizovane zaznamenávame aj bez Cookies súhlasu.", 10);
     I.seeElement("#submitButton");
-    */
 });
 
 Scenario('update from file', async ({ I }) => {
@@ -28,8 +25,7 @@ Scenario('update from file', async ({ I }) => {
 
     I.click("#uploadSubmitButton");
     I.waitForText("Dokument nemôže byť prázdny");
-    let count = await I.grabNumberOfVisibleElements(locate("div.alert-danger li").withText("Dokument nemôže byť prázdny"));
-    I.assertEqual(count, 1);
+    I.waitForElement(locate("div.alert-danger li").withText("Dokument nemôže byť prázdny"), 10);
     I.dontSeeElement("#submitButton");
     I.seeElement("#UPLOAD > form");
 

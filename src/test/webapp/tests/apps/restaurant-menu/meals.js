@@ -25,7 +25,7 @@ Scenario('testy domainId', ({I, DT, Document}) => {
     I.amOnPage("/apps/restaurant-menu/admin/meals/");
     DT.waitForLoader();
     I.see("Gulášová", "#mealsDataTable");
-    DT.filter("name", "Test23");
+    DT.filterContains("name", "Test23");
     I.dontSee("Test23 polievka", "#mealsDataTable");
     I.dontSee("Test23 jedlo", "#mealsDataTable");
 

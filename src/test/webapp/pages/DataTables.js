@@ -118,7 +118,15 @@ module.exports = {
         let index = 0;
         for (const field of requiredFields) {
             let fieldFixed = field.replace(".", "\\.");
-            let value = await I.grabValueFrom(`#DTE_Field_${field}`);
+            let value;
+            const tagName = await Document.grabTagNameFrom(`#DTE_Field_${field}`);
+            if (tagName && ["input", "textarea", "select"].includes(tagName)){
+                value = await I.grabValueFrom(`#DTE_Field_${field}`);
+            }
+            else {
+                value = await I.grabTextFrom(`#DTE_Field_${field}`);
+                value = value.trim();
+            }
             if (typeof value == "undefined" || value == "") {
                 I.see("Povinné pole", `div.DTE_Field_Name_${fieldFixed}`);
             } else {
@@ -130,7 +138,15 @@ module.exports = {
 
         index = 0;
         for (const field of requiredFields) {
-            let value = await I.grabValueFrom(`#DTE_Field_${field}`);
+            let value;
+            const tagName = await Document.grabTagNameFrom(`#DTE_Field_${field}`);
+            if (tagName && ["input", "textarea", "select"].includes(tagName)){
+                value = await I.grabValueFrom(`#DTE_Field_${field}`);
+            }
+            else {
+                value = await I.grabTextFrom(`#DTE_Field_${field}`);
+                value = value.trim();
+            }
             if (typeof value == "undefined" || value == "") {
 
                 let characterAppend = "ľščô-";
@@ -182,14 +198,14 @@ module.exports = {
             if ("select" === fieldType) {
                 //DT.filterSelect(field, testingData[index]);
                 //we must select by option value not text
-                I.selectOption({ css: "div.dataTables_scrollHeadInner select.dt-filter-" + field }, testingData[index]);
+                I.selectOption({ css: "div.dt-scroll-headInner select.dt-filter-" + field }, testingData[index]);
                 I.executeScript(({field}) => {
-                    $("div.dataTables_scrollHeadInner select.dt-filter-" + field).selectpicker('refresh');
+                    $("div.dt-scroll-headInner select.dt-filter-" + field).selectpicker('refresh');
                 }, {field});
-                I.clickCss("div.dataTables_scrollHeadInner button.dt-filtrujem-" + field);
+                I.clickCss("div.dt-scroll-headInner button.dt-filtrujem-" + field);
                 DT.waitForLoader();
             } else {
-                DT.filter(field, testingData[index]);
+                DT.filterContains(field, testingData[index]);
             }
             I.see(testingData[index]);
             DT.clearFilter(field);
@@ -197,7 +213,7 @@ module.exports = {
 
         /* Testovanie - uprava  */
         I.say("Testovanie - uprava");
-        DT.filter(requiredFields[0], testingData[0]);
+        DT.filterContains(requiredFields[0], testingData[0]);
 
         I.clickCss(container+"td.dt-select-td");
         I.clickCss(container+"button.buttons-edit");
@@ -235,8 +251,8 @@ module.exports = {
             I.refreshPage();
             DT.waitForLoader();
         }
-        DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
-        I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
+        DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+        I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dt-scroll-body");
 
         /* Testovanie - custom editSearchSteps funkcia */
         I.say("Testing editSearchSteps: "+(typeof options.editSearchSteps));
@@ -262,20 +278,20 @@ module.exports = {
             I.clickCss(".btn-close-editor")
 
             Document.switchDomain(switchDomainName);
-            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
 
             const itsThereIfFoundByName = await I.grabNumberOfVisibleElements(locate('a').withText( `${testingData[0]}${CHANGE_TEXT}`));
 
-            DT.filter(requiredFields[0], '');
-            DT.filter(options.columns[0].name, firstRowId);
+            DT.filterContains(requiredFields[0], '');
+            DT.filterId(options.columns[0].name, firstRowId);
 
             const itsThereIfFoundById = await I.grabNumberOfVisibleElements(locate('a').withText( `${testingData[0]}${CHANGE_TEXT}`));
 
             await I.executeScript((newUrl) =>
-                $.get(newUrl).done((json)=>{$(".dataTables_scrollBody").text(JSON.stringify(json))}), newUrl
+                $.get(newUrl).done((json)=>{$(".dt-scroll-body").text(JSON.stringify(json))}), newUrl
             );
 
-            const response = await I.grabTextFrom(".dataTables_scrollBody");
+            const response = await I.grabTextFrom(".dt-scroll-body");
             I.say("Response: "+response);
 
             I.say("Go back to previous domain");
@@ -294,8 +310,9 @@ module.exports = {
             }
 
             I.say("We must again filter out our record - state before we switched domains");
-            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
-            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
+            DT.waitForLoader();
+            DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dt-scroll-body");
         }
 
         await this.testDuplicateRow(options, testingData, requiredFields, container, containerModal, skipRefresh);
@@ -310,24 +327,24 @@ module.exports = {
         I.say("Testovanie - zmazanie");
         if (skipRefresh==false) I.clickCss(container+"td.dt-select-td");
 
-        I.see(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+        I.see(`${testingData[0]}${CHANGE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
 
         I.clickCss(container+'.dt-buttons .buttons-remove');
         DTE.waitForEditor(options.id);
         I.waitForElement("div.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
         DTE.waitForLoader();
-        DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
-        I.dontSee(`${testingData[0]}chan.ge`, ".dataTables_scrollBody table.dataTable tbody");
-        I.dontSee(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+        DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+        I.dontSee(`${testingData[0]}chan.ge`, ".dt-scroll-body table.dataTable tbody");
+        I.dontSee(`${testingData[0]}${CHANGE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
 
         //reloadni DT a over, ci to je skutocne zmazane
         I.say("Obnovenie DT a overenie zmazania");
         //I.click("#dt-filter-labels-link-availableGrooupsList");
         I.clickCss(container+'.dt-buttons .buttons-refresh');
         DT.waitForLoader();
-        I.dontSee(`${testingData[0]}chan.ge`, ".dataTables_scrollBody table.dataTable tbody");
-        I.dontSee(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+        I.dontSee(`${testingData[0]}chan.ge`, ".dt-scroll-body table.dataTable tbody");
+        I.dontSee(`${testingData[0]}${CHANGE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
         I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
 
         await this.testAuditRecords(startDate.getTime(), testingData[0]);
@@ -379,7 +396,7 @@ module.exports = {
             I.say("Duplikujem zaznam");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
             I.click(container+"td.dt-select-td");
-            I.see(`${testingData[0]}${CHANGE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
             I.clickCss(container+'.dt-buttons .btn-duplicate');
             DTE.waitForEditor(options.id);
 
@@ -406,8 +423,8 @@ module.exports = {
                 I.refreshPage();
                 DT.waitForLoader();
             }
-            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
-            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
+            DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dt-scroll-body");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
             I.clickCss(container+"td.dt-select-td");
 
@@ -429,8 +446,8 @@ module.exports = {
                 I.refreshPage();
                 DT.waitForLoader();
             }
-            DT.filter(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
-            I.see(`${testingData[0]}${DUPLICATE_TEXT}`, "div.dataTables_scrollBody");
+            DT.filterContains(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
+            I.see(`${testingData[0]}${DUPLICATE_TEXT}`, "div.dt-scroll-body");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
             I.clickCss(container+"td.dt-select-td");
 
@@ -450,7 +467,7 @@ module.exports = {
             // vymazanie duplikovaneho zaznamu
             I.say("Testovanie - zmazanie duplikovaneho zaznamu");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
-            I.see(`${testingData[0]}${DUPLICATE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.see(`${testingData[0]}${DUPLICATE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
             I.clickCss(container+'.dt-buttons .buttons-remove');
             DTE.waitForEditor(options.id);
             I.waitForElement("div.DTE_Action_Remove");
@@ -458,23 +475,23 @@ module.exports = {
             DTE.waitForLoader();
             DTE.waitForModalClose(options.id+"_modal");
 
-            DT.filter(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
+            DT.filterContains(requiredFields[0], `${testingData[0]}${DUPLICATE_TEXT}`);
             I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
-            I.dontSee(`${testingData[0]}dupli.cate`, ".dataTables_scrollBody table.dataTable tbody");
-            I.dontSee(`${testingData[0]}${DUPLICATE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.dontSee(`${testingData[0]}dupli.cate`, ".dt-scroll-body table.dataTable tbody");
+            I.dontSee(`${testingData[0]}${DUPLICATE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
 
             //reloadni DT a over, ci to je skutocne zmazane
             I.say("Obnovenie DT a overenie zmazania duplikovaneho zaznamu");
             I.clickCss(container+'.dt-buttons .buttons-refresh');
             DT.waitForLoader();
             I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
-            I.dontSee(`${testingData[0]}dupli.cate`, ".dataTables_scrollBody table.dataTable tbody");
-            I.dontSee(`${testingData[0]}${DUPLICATE_TEXT}`, ".dataTables_scrollBody table.dataTable tbody");
+            I.dontSee(`${testingData[0]}dupli.cate`, ".dt-scroll-body table.dataTable tbody");
+            I.dontSee(`${testingData[0]}${DUPLICATE_TEXT}`, ".dt-scroll-body table.dataTable tbody");
             I.waitForText("Záznamy 0 až 0 z 0", 10, "#"+options.id+"_info");
 
             // over ci povodny stale existuje
-            DT.filter(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
-            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dataTables_scrollBody");
+            DT.filterContains(requiredFields[0], `${testingData[0]}${CHANGE_TEXT}`);
+            I.see(`${testingData[0]}${CHANGE_TEXT}`, "div.dt-scroll-body");
         }
     },
 
@@ -584,7 +601,7 @@ module.exports = {
             for (var key in row) {
                 let value = this.getJsonProperty(row, key);
                 I.say("Iterating row, key="+key+" value="+value);
-                DT.filter(key, value);
+                DT.filterContains(key, value);
             }
             I.see("Nenašli sa žiadne vyhovujúce záznamy");
         });
@@ -607,8 +624,8 @@ module.exports = {
             for (var key in row) {
                 let value = this.getJsonProperty(row, key);
                 I.say("Iterating row, key="+key+" value="+value);
-                DT.filter(key, value);
-                I.see(value, "div.dataTables_scrollBody");
+                DT.filterContains(key, value);
+                I.see(value, "div.dt-scroll-body");
             }
             I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
@@ -623,8 +640,8 @@ module.exports = {
             for (var key in row) {
                 let value = this.getJsonProperty(row, key);
                 I.say("Iterating row, key="+key+" value="+value);
-                DT.filter(key, value);
-                I.see(value, "div.dataTables_scrollBody");
+                DT.filterContains(key, value);
+                I.see(value, "div.dt-scroll-body");
             }
             I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
@@ -643,7 +660,7 @@ module.exports = {
             I.click("Uložiť", containerModal+"div.DTE_Form_Buttons");
             DTE.waitForLoader();
 
-            I.see(CHANGE_TEXT, "div.dataTables_scrollBody");
+            I.see(CHANGE_TEXT, "div.dt-scroll-body");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
         });
 
@@ -693,9 +710,9 @@ module.exports = {
             for (var key in row) {
                 let value = this.getJsonProperty(row, key);
                 I.say("Iterating row, key="+key+" value="+value);
-                DT.filter(key, value);
-                I.see(value, "div.dataTables_scrollBody");
-                I.dontSee(value+CHANGE_TEXT, "div.dataTables_scrollBody");
+                DT.filterContains(key, value);
+                I.see(value, "div.dt-scroll-body");
+                I.dontSee(value+CHANGE_TEXT, "div.dt-scroll-body");
             }
             I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
@@ -724,8 +741,8 @@ module.exports = {
             for (var key in row) {
                 let value = this.getJsonProperty(row, key);
                 I.say("Iterating row, key="+key+" value="+value);
-                DT.filter(key, value);
-                I.see(value, "div.dataTables_scrollBody");
+                DT.filterContains(key, value);
+                I.see(value, "div.dt-scroll-body");
             }
             //over, ze sa nasiel jeden zaznam
             I.waitForText("Záznamy 1 až 1 z 1", 10, "#"+options.id+"_info");
@@ -737,7 +754,7 @@ module.exports = {
             I.click("Zmazať", "div.DTE_Action_Remove");
 
             //over, ze sa nic nenaslo
-            I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5, "td.dataTables_empty");
+            I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5, "td.dt-empty");
         });
 
     }

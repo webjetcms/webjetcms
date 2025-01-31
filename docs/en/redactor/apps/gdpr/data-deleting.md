@@ -10,7 +10,7 @@ Allows you to lubricate:
 
 ![](data-deleting-dataTable.png)
 
-It is not possible to create new records in the data table, their number is fixed by the WebJET CMS functionality. When editing, only the numeric value can be changed **Period**which indicates over what period the values will be given when the action is executed **Delete data** Deleted.
+It is not possible to create new records in the data table, their number is fixed by the WebJET CMS functionality. When editing, only the numeric value can be changed **Period** which indicates over what period the values will be given when the action is executed **Delete data** Deleted.
 
 ![](data-deleting-editor.png)
 

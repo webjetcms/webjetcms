@@ -1,18 +1,16 @@
 # Google search
 
-Through this application, you can place a Google search box on your page for searching your website using the Google index/Google Custom Search.
+With this app, you can place a Google search box on your page to search your site using Google Index/Google Custom Search.
 
-Before inserting it into the page, you need to create a search engine (for free) at: [cse.google.com](https://cse.google.com/cse/create/new). After creation, you will find the item "Search engine ID" in the search engine settings.
+You must (for free) create a search engine at the following address before embedding it in the site: [cse.google.com](https://cse.google.com/cse/create/new). Once created, you will find the "Search Engine ID" entry in the search engine settings.
 
 ## Application settings
 
 In this section it is possible to set:
-
-- Search engine ID - value obtained from [cse.google.com](https://cse.google.com/cse/create/new)
+- Search engine ID - value retrieved on the page [cse.google.com](https://cse.google.com/cse/create/new)
 
 ![](editor.png)
 
-
-## Application view
+## View application
 
 ![](app-vyhladavanie.png)

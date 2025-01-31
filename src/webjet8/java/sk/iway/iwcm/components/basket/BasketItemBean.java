@@ -149,14 +149,14 @@ public class BasketItemBean implements Serializable
 	{
 		if (itemAlreadyPurchased())
 			return getItemPrice();
-		return getDoc().getLocalPrice(request,currency);
+		return getDoc().getLocalPriceDouble(request,currency);
 	}
 
 	public double getLocalPrice(HttpServletRequest request)
 	{
 		if (itemAlreadyPurchased())
 			return getItemPrice();
-		return getDoc().getLocalPrice(request);
+		return getDoc().getLocalPriceDouble(request);
 	}
 
 	public double getItemLocalPriceQty(HttpServletRequest request, String currency)

@@ -84,6 +84,6 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
     @Query(value = "SELECT dh.id FROM DocHistory dh WHERE dh.docId = :docIds")
     public Optional<List<Integer>> getHisotryIdsByDocIdIn(@Param("docIds") Integer docIds);
 
-    @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.publicable = true AND ( dh.awaitingApprove IS NULL OR dh.awaitingApprove = '' )")
+    @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.publicable = true AND ( dh.awaitingApprove IS NULL OR dh.awaitingApprove = '' ) AND dh.publishStartDate IS NOT NULL")
     public Optional<List<DocHistory>> getPublicableThatAreNotAwaitingToApprove();
 }

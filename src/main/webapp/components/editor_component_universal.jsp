@@ -124,6 +124,9 @@ if (url.startsWith("/components/")) {
 						.after($('<input type="hidden" id="docId" />').val("<%=ResponseUtils.filter(request.getParameter("docId")) %>"))
 						.after($('<input type="hidden" id="groupId" />').val("<%=ResponseUtils.filter(request.getParameter("groupId")) %>"))
 						.after($('<input type="hidden" id="title" />').val("<%=ResponseUtils.filter(request.getParameter("title")) %>"))
+						.after($('<input type="hidden" id="originalComponentName" />').val(""))
+                    	.after($('<input type="hidden" id="originalJspFileName" />').val(""));
+
 					iframe.attr('src', src);
 				</script>
 			<%

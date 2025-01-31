@@ -95,6 +95,8 @@ const WJ = (() => {
         if (window.focus && !!popUpWindow) {
             popUpWindow.focus();
         }
+        //Return instance of window, so we can manipulate with it
+        return popUpWindow;
     }
 
     let modalIframe = null;
@@ -669,6 +671,10 @@ const WJ = (() => {
         return _formatTime(timestamp, 'HH:mm:ss');
     }
 
+    function formatPrice(price) {
+        return numeral(price).format('0,0.00');
+    }
+
     /**
      * Udrzuje session zo serverom, ked server neodpovie, zobrazi hlasenie
      */
@@ -1047,17 +1053,21 @@ const WJ = (() => {
      * Show #loader div
      * @param {*} loaderText - optional text to show inside #loaderText element
      */
-    function showLoader(loaderText=null) {
+    function showLoader(loaderText=null, insertAfter=null) {
         $(".hide-while-loading").hide();
-        let loaderEl = $("#webjetAnimatedLoader");
+        let insertAfterSelector = ".ly-content >.scroll-content > .ly-container > .md-breadcrumb";
+        if(insertAfter != null) insertAfterSelector = insertAfter;
+
+        let loaderEl = $(insertAfterSelector + " .webjetAnimatedLoader");
         if (loaderEl.length<1) {
             let loaderText = WJ.translate("webjetjs.webjetAnimatedLoader.text.js");
             loaderEl = $(`
-            <div id="webjetAnimatedLoader">
+            <div class="webjetAnimatedLoader">
                 <div class="lds-dual-ring"></div>
                 <p class="loaderText">${loaderText}</p>
             </div>`);
-            loaderEl.insertAfter(".ly-content >.scroll-content > .ly-container > .md-breadcrumb");
+            //console.log("showLoader, insertAfterSelector=", insertAfterSelector, "insertAfter=", insertAfter);
+            loaderEl.insertAfter(insertAfterSelector);
         }
         if (loaderText != null) loaderEl.find(".loaderText").text(loaderText);
         loaderEl.show();
@@ -1068,7 +1078,7 @@ const WJ = (() => {
      */
     function hideLoader() {
         $(".hide-while-loading").show();
-        $("#webjetAnimatedLoader").hide();
+        $(".webjetAnimatedLoader").hide();
     }
 
     /**
@@ -1245,6 +1255,9 @@ const WJ = (() => {
         formatTimeSeconds: timestamp => {
             return formatTimeSeconds(timestamp);
         },
+        formatPrice: price => {
+            return formatPrice(price);
+        },
         keepSession: () => {
             return keepSession();
         },
@@ -1281,8 +1294,8 @@ const WJ = (() => {
         setAdminSetting: (key, value) => {
             return setAdminSetting(key, value);
         },
-        showLoader: (loaderText=null) => {
-            return showLoader(loaderText);
+        showLoader: (loaderText=null, insertAfter=null) => {
+            return showLoader(loaderText, insertAfter);
         },
         hideLoader: () => {
             return hideLoader();

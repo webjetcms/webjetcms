@@ -164,6 +164,8 @@ Minimální konfigurace:
 - `customFieldsUpdateColumns {boolean}` - nastavením na hodnotu `true` je v získávání [volitelná pole](../datatables-editor/customfields.md) také aktualizovat názvy sloupců v tabulce a v nastavení zobrazených sloupců (ve výchozím nastavení na hodnotu `false` volitelné názvy polí se aktualizují pouze v editoru).
 - `customFieldsUpdateColumnsPreserveVisibility {boolean}` - nastavením na hodnotu `true` nastavení zobrazení sloupce pro režim je pro uživatele zachováno. `customFieldsUpdateColumns`. Lze ji použít pouze v případě, že se sloupce datové tabulky během zobrazení nemění. Například v sekci Překladové klíče se data nemění, lze ji nastavit na hodnotu `true`, ale v sekci Číselníky se při změně číselníku mění i sloupce, tato volba zde není použitelná.
 - `autoHeight {boolean}` - ve výchozím nastavení tabulka vypočítá svou výšku tak, aby maximálně využila prostor v okně. Nastavením na hodnotu `false` výška tabulky bude odpovídat obsahu (počtu řádků).
+- `editorLocking {boolean}` - ve výchozím nastavení tabulka volá notifikační službu, když více uživatelů upravuje stejný záznam, pokud je tato možnost nastavena na hodnotu `false`.
+- `updateEditorAfterSave {boolean}` - nastavením na hodnotu `true` obsah editoru se po uložení dat aktualizuje (pokud editor zůstane otevřený).
 
 ```javascript
 let columns = [
@@ -486,7 +488,7 @@ if (webpagesDatatable.hasPermission("create")) {
 }
 ```
 
-**Varování:** nespoléhejte se pouze na kontrolu práv na frontendu, práva je třeba kontrolovat také ve službě REST nebo ve třídě služby. Můžete použít metody [beforeSave nebo beforeDelete](restcontroller.md#zabránění-vymazání---editace-záznamu.).
+!>**Varování:** nespoléhejte se pouze na kontrolu práv na frontendu, práva je třeba kontrolovat také ve službě REST nebo ve třídě služby. Můžete použít metody [beforeSave nebo beforeDelete](restcontroller.md#zabránění-vymazání---editace-záznamu.).
 
 ## Stylování řádků
 
@@ -664,7 +666,7 @@ div#dateDependentEntriesTable_extfilter
         div.col-auto.dt-extfilter.dt-extfilter-from
 ```
 
-**Varování:** v prvku pro vyhledávací pole je třída CSS `.dt-extfilter` Také `.dt-extfilter-FIELD`, je třeba použít obě. Podle třídy CSS `.dt-extfilter` prvek se nachází po kliknutí na lupu v atributu data. `data-column-index` je uloženo pořadové číslo sloupce.
+!>**Varování:** v prvku pro vyhledávací pole je třída CSS `.dt-extfilter` Také `.dt-extfilter-FIELD`, je třeba použít obě. Podle třídy CSS `.dt-extfilter` prvek se nachází po kliknutí na lupu v atributu data. `data-column-index` je uloženo pořadové číslo sloupce.
 
 Pokud chcete filtr přesunout do záhlaví stránky, můžete jej jednoduše přesunout pomocí jQuery, jako v případě [database-delete.pug](../../../src/main/webapp/admin/v9/views/pages/settings/database-delete.pug).
 
@@ -702,7 +704,7 @@ Další informace naleznete v dokumentaci k [Vývojář](export-import.md) nebo 
 //zoznam selectnutych riadkov
 galleryTable.rows( { selected: true }).data();
 //zmena URL adresy
-galleryTable.ajax.url("/admin/rest/nova-url");
+galleryTable.setAjaxUrl("/admin/rest/nova-url");
 //refresh dat
 galleryTable.ajax.reload();
 //nastavenie filtra a reload dat

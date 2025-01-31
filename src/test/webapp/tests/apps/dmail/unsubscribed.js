@@ -31,16 +31,16 @@ function unsubscribeEmail(I, url, email) {
 
 function verifyUnsubscribed(I, DT, emailCorrect, emailNotFound) {
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
-    DT.filter("email", emailCorrect);
+    DT.filterContains("email", emailCorrect);
     DT.checkTableRow("unsubscribedDataTable", 1, [null, emailCorrect]);
 
-    DT.filter("email", emailNotFound);
+    DT.filterContains("email", emailNotFound);
     I.see("Nenašli sa žiadne vyhovujúce záznamy", "#unsubscribedDataTable_wrapper");
 }
 
 function deleteUnsubscribed(I, DT, DTE, email) {
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
-    DT.filter("email", email);
+    DT.filterContains("email", email);
     I.click("button.dt-filter-id");
     I.click("button.btn.btn-sm.buttons-selected.buttons-remove");
     DTE.waitForEditor("unsubscribedDataTable");
@@ -61,7 +61,7 @@ Scenario("Unsubscibed emails", ({I, DT, DTE, Document}) => {
 
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
 
-    DT.filter("email", "test_domain_filter");
+    DT.filterContains("email", "test_domain_filter");
     DT.checkTableRow("unsubscribedDataTable", 1, ["81", "test_domain_filter_webjet9@test.sk"]);
     I.dontSee("test_domain_filter_test23@test.sk");
 
@@ -70,7 +70,7 @@ Scenario("Unsubscibed emails", ({I, DT, DTE, Document}) => {
     //
     I.say("Change domain");
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("email", "test_domain_filter");
+    DT.filterContains("email", "test_domain_filter");
     DT.checkTableRow("unsubscribedDataTable", 1, ["82", "test_domain_filter_test23@test.sk"]);
     I.dontSee("test_domain_filter_webjet9@test.sk");
 
@@ -87,7 +87,7 @@ Scenario('logout', async ({I}) => {
     I.logout();
 });
 
-Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE, Document}) => {
+Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE}) => {
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
     I.click("button.buttons-create");
     DTE.waitForEditor("unsubscribedDataTable");
@@ -102,8 +102,8 @@ Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE, Document}) =
 
     //
     I.say("Check emails");
-    DT.filter("email", randomText+"@balat.sk");
-    I.waitForText("Záznamy 1 až 2 z 2", 10, "div.dataTables_info");
+    DT.filterContains("email", randomText+"@balat.sk");
+    I.waitForText("Záznamy 1 až 2 z 2", 10, "div.dt-info");
     for (var e of email.split(", ")) {
         I.see(e, "#unsubscribedDataTable_wrapper");
     };
@@ -111,9 +111,8 @@ Scenario("BUG - unsubscribe multiple - set domainId", ({I, DT, DTE, Document}) =
     //
     I.say("Deleting emails");
     I.click("button.buttons-select-all");
-    I.waitForText("2 riadky označené", 10, "div.dataTables_info");
+    I.waitForText("2 riadky označené", 10, "div.dt-info");
     I.click("button.buttons-remove");
     DTE.waitForEditor("unsubscribedDataTable");
     DTE.save();
 });
-

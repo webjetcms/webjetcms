@@ -13,24 +13,55 @@ Vysvětlení použitých piktogramů:
 
 ## 2025
 
-- [ ] Přepnout na `Jakarta EE` - Spring 6, změňte balíčky Java z `javax.servlet` na adrese `jakarta.servlet`, přechod na aplikační server Tomcat 11+.
+- [ ] Přepnout na `Jakarta EE` - změnit balíčky Java z `javax.servlet` na adrese `jakarta.servlet`, připravte migrační skript.
+- [ ] Přepněte na aplikační server Tomcat 11+.
+- [ ] Přepnout na `Spring` Verze 7.
+- [ ] Zavést do projektu povinnost používat `SonarLint` a formátování kódu pomocí `.editorconfig` nebo `Spotless` - Příklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
+- [ ] Primární využití úložiště GitHub pro vývoj.
+- [ ] Zrušit generování artefaktů na starých `iwmsp.sk` artefakty budou k dispozici pouze prostřednictvím [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [ ] Aktualizace knihovny `pd4ml` na novou verzi si budou muset jednotlivé weby zakoupit licenci samostatně, nebude již poskytována systémem WebJET CMS.
+- [ ] Migrace nejpoužívanějších aplikací na verzi Spring pomocí šablon Thymeleaf.
+- [ ] Zrušení `Apache Struts` rámec, náhrada `logic:present,logic:iterate,bean:write` buď pro `JSTL` nebo implementace podobné funkce do `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [ ] Přesunutí souborů JSP, tříd Java a knihoven JavaScript staré verze 8 na `obsolete` jarní archiv, který nebude standardní součástí systému WebJET CMS. Lze jej použít na starých projektech, kde ještě nebyly aktualizovány všechny zákaznické aplikace. `Spring` verze, ale bez podpory a aktualizací ze strany WebJET CMS.
+- [ ] Statistiky - kliknutí na mapu - obnovení funkčnosti, vyřešení problému s odezvou (oddělit registraci podle šířky okna).
+- [ ] Statistiky - možnost filtrovat roboty pro statistiky neúspěšných stránek.
+- [ ] Soubory protokolu - filtrování podle názvu instalace.
+- [ ] `quill` - přidat možnost nastavení položek menu včetně barev.
+- [ ] Aplikace - možnost zakoupit aplikaci pro verzi OpenSource (#55825).
+- [ ] Možnost spustit kód Thymeleaf v záhlaví/zápatí a možná i v těle webové stránky.
+- [ ] Zabezpečení - přidat podporu generování `nonce` Pro `Content-Security-Policy` hlavičky, viz např. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [ ] Formuláře - přidání možnosti volat třídu jazyka Java pro validaci formuláře.
+- [ ] Štítky - filtrujte podle aktuální domény, aby byly stejné jako v ostatních sekcích.
+- [ ] Import uživatelů - pokud není zadáno heslo, vygeneruje se (pro nové uživatele), pokud není odeslán žádný stav `available` nastavit na `true`.
+- [ ] V testech nějakým způsobem automatizovaně kontrolujte výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` což jsou nesprávná čekání bez definovaného času, způsobí, že se automatické testy zaseknou.
+- [ ] Přidání aplikace, která přesměruje hlavní stránku na `/sk/` nebo `/en/` podle jazyka prohlížeče.
+- [ ] Upravte smazání konfigurace tak, aby se při smazání nastavila na původní hodnotu definovanou v položce `Constants`.
+- [ ] Galerie - při duplikování obrázku povolte změnu "Složka", která nám umožní duplikovat obrázky do jiné složky, než je aktuální složka.
+- [ ] Hromadný e-mail - audit změn v uživatelských skupinách.
+- [ ] Archivní soubory - přebudování na datové tabulky (#57317).
+- [ ] Nepovinná pole - přidejte možnost vybrat více položek, které chcete propojit s číselníkem.
+- [ ] eCommerce - integrace s platební bránou `GoPay` (#56609).
+- [ ] Přidat možnost autorizace prostřednictvím `OAuth2`, možnost používat `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [ ] Autorizace prostřednictvím `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost ověření proti `ADFS/SAML` serveru.
+- [ ] Rezervace - nová aplikace pro celodenní rezervace (#57389).
+- [ ] Aplikace - převedení dialogu nastavení aplikace v editoru webové stránky ze starého JSP na datovou tabulku (#57409).
+- [ ] Hromadný e-mail - optimalizace vytváření seznamu příjemců (#57537).
 
 ## 2024
 
 - [x] Přechod na Javu 17 - WebJET od verze 2024.0 bude vyžadovat Javu verze 17 (#54425)
 - [x] Nahrazení sady ikon ze souboru `FontAwesome` pro sad `Tabler Icons` (#56397).
 - [x] Publikování souborů JAR do `Maven Central` (#43144).
-- [ ] Nová verze aplikace Nákupní košík/`eshop`, ukázková verze webových stránek, integrace API do online fakturačních systémů, aktualizované integrace do platebních bran (#56329,56385,56325).
+- [x] Nová verze aplikace Nákupní košík/`eshop`, ukázková verze webových stránek, integrace API do online fakturačních systémů, aktualizované integrace do platebních bran (#56329,56385,56325).
 - [x] Překladové klíče - možnost importovat pouze neexistující klíče (#56061).
-- [ ] `quill` - přidat možnost nastavení položek menu včetně barev.
-- [ ] Aplikace - možnost zakoupit aplikaci pro verzi OpenSource (#55825).
+- [ ] ~~`quill` - přidat možnost nastavení položek menu včetně barev.~~~
+- [ ] ~~Aplikace - možnost zakoupit aplikaci pro verzi OpenSource (#55825).~~
 - [x] Webové stránky - pokud je povolena konfigurační proměnná `syncGroupAndWebpageTitle` a jedna stránka je nastavena jako hlavní stránka pro více složek, zakažte přejmenování názvu složky podle hlavní stránky. Navíc pokud je hlavní stránka v jiné složce, také nepřejmenovávejte (#56477).
 - [x] Audit - opakování změněných stránek a čekání na publikování do datových tabulek (#56165).
 - [x] Blog - správa `bloggerov` Přestavba na datové tabulky (#56169).
 - [x] Blog - komentáře - zařadit do sekce Diskuze, přidat `bloggerom` práva také v sekci Diskuze (#56173).
 - [x] AB testování - přepracování na DT, použití možností z `news` aplikace, proveďte nastavení konfiguračních proměnných podle předpony (#56177).
 - [x] Kalendář akcí - neschválené a doporučené akce - předělat na DT, použít kód pro seznam akcí (#56181).
-- [ ] Zavést do projektu povinnost používat `SonarLint` a formátování kódu pomocí `.editorconfig` nebo `Spotless` - Příklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Editor - při vytváření odkazu na e-mail se do okna automaticky přidá http, ačkoli se odkaz nakonec vloží správně s pomocí `mailto:` předpona (#56189).
 - [x] Dotazníky - přebudování aplikace na datové tabulky (#55949).
 - [x] +PostgreSQL - přidání podpory databáze (#56305).
@@ -39,18 +70,38 @@ Vysvětlení použitých piktogramů:
 - [x] +Odstranění nepoužívaných a nahrazení málo používaných knihoven (#56265).
 - [x] +MultiWeb - ověření funkčnosti, přidání potřebných práv (#56421, #56405, #56425).
 - [x] +Hromadný e-mail - přidání podpory odhlášení jedním kliknutím (#56409).
-- [ ] +Možnost spustit kód Thymeleaf v záhlaví/zápatí a možná i v těle webové stránky.
+- [ ] ~~+Možnost spustit kód Thymeleaf v záhlaví/zápatí a možná také v těle webové stránky.~~
 - [x] +Nahraďte databázový fond pomocí `HikariCP` (#56821).
 - [x] +Úrovně záznamů - převod na datovou tabulku (#56833).
 - [x] +DBPool - přechod z `Apache DBCP` na adrese `HikariCP` (#56821).
 - [x] Dokumentace - český překlad (#56237,#56249,#56773).
-- [ ] +Dokumentace - český překlad.
+- [x] +Dokumentace - český překlad (#57033).
 - [x] +A/B testování - zakázat pro prohlížeče/boty, uvádět verzi pro objekt Ninja (#56677).
 - [x] +Datové tabulky - možnost přeskočit řádek při importu, pokud je nesprávný (#56465).
 - [x] +Přesměrování - optimalizace získávání přesměrování bez nutnosti získávat kód přesměrování z databáze podruhé (#53469).
-- [ ] +Zabezpečení - přidat podporu generování `nonce` Pro `Content-Security-Policy` hlavičky, viz např. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
-- [ ] +Galerie - přidání možnosti změny velikosti obrázku.
-- [ ] +Formuláře - přidání možnosti volat třídu jazyka Java pro validaci formulářů.
+- [ ] ~~+Zabezpečení - přidat podporu generování `nonce` Pro `Content-Security-Policy` záhlaví, viz např. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.~~.
+- [x] +Galerie - přidání možnosti změny velikosti obrázku.
+- [ ] ~~+Forms - přidání možnosti volat třídu Java pro validaci formulářů.~~
+- [x] +Indexování souborů - přidání data poslední změny souboru (#57177) do Perex-Start of publishing.
+- [x] +Překladové klíče - do služby REST `/rest/properties/` přidat možnost filtrování klíčů podle konfigurační proměnné, aby nebylo možné veřejně načíst všechny klíče z WebJET CMS (#57202).
+- [x] +Webové stránky - audit úspěšného publikování webové stránky, možnost zaslání oznámení autorovi webové stránky (#57173).
+- [x] +Zobrazení informací o vypršení platnosti licence 2 měsíce před jejím vypršením na úvodní obrazovce (#57169).
+- [ ] ~~+Tags - filtr podle aktuální domény, aby byl stejný jako v ostatních sekcích.~~
+- [x] +Audit - přidat hlavičku HTTP `Referrer` k identifikaci původní stránky, ze které bylo volání provedeno (#57565).
+- [ ] ~~+Import uživatelů - pokud není zadáno heslo, vygeneruje se (pro nové uživatele), pokud není odeslán žádný stav `available` nastavit na `true`.~~
+- [ ] ~~+V testech nějak automaticky kontrolujte výskyt parametru `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` což jsou nesprávná čekání bez definovaného času, způsobí pád automatických testů.~~~
+- [ ] ~~+Přidat aplikaci, která přesměruje hlavní stránku na `/sk/` nebo `/en/` podle jazyka prohlížeče.~~~
+- [ ] ~~+Změnit odstranění konfigurace tak, aby se po jejím odstranění nastavila na původní hodnotu definovanou v položce `Constants`.~~
+- [x] +Galerie - přidání pole URL pro zdroj obrázku s možností zadání adresy, ze které jsme obrázek získali, automaticky nastavené při použití fotobanky.
+- [ ] ~~+Galerie - při duplikování obrázku povolte změnu "Složka", abyste mohli duplikovat obrázky do jiné složky, než je aktuální složka.~~
+- [ ] ~~+Hromadný e-mail - audit změn v uživatelských skupinách.~~
+- [ ] ~~+Archivní soubory - přebudování na datové tabulky (#57317).~~
+- [ ] ~~+Volitelná pole - přidejte možnost výběru více položek pro propojení s číselníkem.~~
+- [x] +Vyhledávání v administraci - přepracování do datové tabulky (#57333).
+- [x] +Anotace - doplnění původní funkce zobrazení statistik (#57337).
+- [x] +Tags - přidání možnosti definovat název ve více jazycích, přidání volitelných polí (#57273,#57449)
+- [x] +Aplikace - převod dialogu nastavení aplikace v editoru webové stránky ze starého JSP na datovou tabulku (#57157,#57161,#57409).
+- [x] +Webové stránky, galerie - přidání možnosti vyhledávání ve stromové struktuře (#57265,#57437)
 
 ## 2023.52 / 2024.0
 
@@ -62,12 +113,12 @@ Vysvětlení použitých piktogramů:
 - [x] Fórum - předělání na jaro (#55649).
 - [x] Uživatelé - přidání skupiny práv sloupce do datové tabulky (#55601).
 - [ ] Galerie - nový typ pro zobrazení malého počtu fotografií s rozbalením, možnost přepínat mezi všemi fotografiemi v článku (#55349).
-- [ ] Přidat možnost autorizace prostřednictvím `OAuth2`, možnost používat `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
-- [ ] Autorizace prostřednictvím `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost ověření proti `ADFS/SAML` serveru.
+- [ ] ~~~Přidání možnosti autorizace prostřednictvím `OAuth2`, možnost používat `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).~~~
+- [ ] ~~Autorizace prostřednictvím `SAML` - integrovat knihovnu [Spring SAML](https://spring.io/projects/spring-security-saml) pro možnost ověření proti `ADFS/SAML` server.~~
 - [x] Webové stránky - přidání možnosti obnovit smazanou složku tak, aby byl atribut správně nastaven pro webové stránky `available` (#55937).
 - [ ] Průzkumník - úprava do nového designu, aktualizace JS kódu elfinderu (#55849).
 - [x] Webové stránky - pamatujte si poslední adresář při vytváření odkazů v dialogu a použijte jej přímo při přidávání dalšího odkazu (#54953-29).
-- [ ] Kalendář událostí - pokud je událost zadána v říjnu na listopad, kdy je čas posunut, zobrazí se s časem posunutým o jednu hodinu (#56857).
+- [x] Kalendář událostí - pokud je událost zadána v říjnu na listopad, kdy je čas posunut, zobrazí se s časem posunutým o jednu hodinu (#56857).
 - [ ] upravit zasílání zpráv mezi správci z vyskakovacího okna na lepší uživatelské rozhraní.
 - [x] Aplikace - vylepšete popis jednotlivých aplikací, aktualizujte obrázky aplikací (#55293).
 - [x] Fotogalerie - optimalizace množství načítaných dat (#56093).
@@ -346,7 +397,7 @@ Vysvětlení použitých piktogramů:
 
 ## 2021.40
 
-> Cílem verze 2021.40 je migrace uživatelských úprav a modulu GDPR do Editoru datových tabulek. Budeme také nadále pracovat na zlepšení použitelnosti práce s webovými stránkami - možnosti Drag \&amp; Drop a kontextové nabídky ve stromové struktuře.
+> Cílem verze 2021.40 je migrace uživatelských úprav a modulu GDPR do Editoru datových tabulek. Budeme také nadále pracovat na zlepšení použitelnosti práce s webovými stránkami - možnosti Drag & Drop a kontextové nabídky ve stromové struktuře.
 
 ### Nové funkce
 

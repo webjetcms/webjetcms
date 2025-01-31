@@ -34,8 +34,6 @@ npm install
 
 ten nainstaluje potřebné knihovny, licencuje `Datatables Editor` a zkompiluje produkční verzi.
 
-`FontAwesome` licence je zakoupena a zajištěna skrytým souborem. [.npmrc](../../../src/main/webapp/admin/v9/.npmrc) obsahující ověřovací token.
-
 Poté můžete začít **režim dev** čímž se automaticky **webpack sleduje změny** v `js/scss/pug` soubory a sestavy `dist` Adresář:
 
 ```shell
@@ -75,7 +73,7 @@ gradlew compileJava --refresh-dependencies --info
 
 Spusťte/zastavte Tomcat, vytvořte archiv WAR:
 
-**Varování:** před spuštěním gradle appRun jednou sestavte adresář dist se soubory HTML/CSS pomocí gradle npmbuild nebo spusťte npm run watch ze src/main/webapp/admin/v9 v samostatném terminálu.
+!>**Varování:** před spuštěním gradle appRun jednou sestavte adresář dist se soubory HTML/CSS pomocí gradle npmbuild nebo spusťte npm run watch ze src/main/webapp/admin/v9 v samostatném terminálu.
 
 ```shell
 gradlew appRun
@@ -107,7 +105,7 @@ WebJET je licencován podle domény. Chcete-li pracovat lokálně, musíte přid
 127.0.0.1   iwcm.interway.sk
 ```
 
-**Varování:** na adrese `Windows` musíte soubor upravit s právy správce.
+!>**Varování:** na adrese `Windows` musíte soubor upravit s právy správce.
 
 WebJET bude po spuštění k dispozici lokálně jako http://iwcm.interway.sk/admin/.
 

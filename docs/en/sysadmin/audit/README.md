@@ -1,15 +1,12 @@
 # Audit
 
-An audit is a tool for tracking changes in a system. It allows you to view and filter individual recorded values.
+The Audit application is a tool for tracking changes in the system. The Audit -> Search section allows you to view and filter individual recorded values. Filtering is possible by type of audit records, time, user, etc.
 
-In the menu item Notification list you can set notifications for certain system events/errors. We recommend to set a notification for XSS type events.
-
-The WEB Pages menu item allows you to view an overview of changes to all web pages from all authors.
+![](audit-search.png)
 
 # Types of audit records
 
 Each audit record automatically records the date and time, the ID of the logged-on user, the IP address, and, if the reverse DNS server is enabled, the computer name. The cluster node name, URI address, domain, and the value of the User-Agent http header are automatically inserted into the text of the audit record.
-
 - `ADMINLOG_NOTIFY` - change in the list of notifications in the Audit application.
 - `BANNER` - operations in the Banner System application
 - `BASKET` - operations in the E-Commerce application
@@ -30,7 +27,7 @@ Each audit record automatically records the date and time, the ID of the logged-
 - `FILE_DELETE` - deleting a file or directory, records the path
 - `FILE_EDIT` - renaming, or editing a file, records the path
 - `FILE_SAVE` - saving a file, e.g. when copying/moving it, etc. Record the path to the file
-- `FILE_UPLOAD` - Uploading a file to WebJET, either via classic upload or Drag \&amp; Drop. It typically records the path to the uploaded file.
+- `FILE_UPLOAD` - Uploading a file to WebJET, either via classic upload or Drag & Drop. It typically records the path to the uploaded file.
 - `FORMMAIL` - submitting the form. It records the successful submission with a report `FormMail formName:` the name of the form, the list of beneficiaries and `referer`. On failure, it records the reason for not sending with a report `ERROR: formName:` name of the form, `fail:` reason for not sending. It also records spam detection by reporting `detectSpam TRUE:` reason for detection as spam.
 - `FORM_ARCHIVE` - archiving the form, records the name of the form
 - `FORM_DELETE` - form deletion, records the name of the form and possibly the ID if it is a deletion of a single record
@@ -70,7 +67,7 @@ Each audit record automatically records the date and time, the ID of the logged-
 - `PROP_DELETE` - deleting the translation text, records the language and key
 - `PROP_UPDATE` - editing the translation text (in the Settings section), records the language, key and value
 - `PROXY` - proxy application operations
-- `QA` - operations in the Questions \&amp; Answers app
+- `QA` - operations in the Questions & Answers app
 - `REDIRECT_CREATE` - create a new redirect (url or domain)
 - `REDIRECT_DELETE` - deleting a redirect (url or domain), records the source and, for the domain, the destination of the redirect
 - `REDIRECT_UPDATE` - change redirection (url or domain), record source and destination address

@@ -174,7 +174,7 @@ block content
                         init: function ( dt, node, config ) {
                             $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
                         },
-                        className: 'btn btn-outline-secondary button-recover-page buttons-divider hidden',
+                        className: 'btn btn-outline-secondary buttons-recover buttons-divider hidden',
                         attr: {
                             'title': '[[\#{editor.recover.page_button}]]',
                             'data-toggle': 'tooltip'
@@ -246,7 +246,7 @@ block content
                     groupsDatatable.hideButton("import");
                     groupsDatatable.hideButton("export");
 
-                    $('.tree-col .dt-header-row .button-recover-group').click(function () {
+                    $('.tree-col .dt-header-row .buttons-recover').click(function () {
                         var type = getTreeNodeType(selectedNode);
                         //console.log("Edit click, type=", type, "selectedNode=", selectedNode);
                         if (type === 'group') {
@@ -266,10 +266,10 @@ block content
                     });
                     window.addEventListener("WJ.DT.executeAction", function(e) {
                         $('#SomStromcek').jstree(true).refresh();
-                        $('.tree-col .dt-header-row .button-recover-group').removeClass("processing");
+                        $('.tree-col .dt-header-row .buttons-recover').removeClass("processing");
                     });
                     window.addEventListener("WJ.DT.executeActionCancel", function(e) {
-                        $('.tree-col .dt-header-row .button-recover-group').removeClass("processing");
+                        $('.tree-col .dt-header-row .buttons-recover').removeClass("processing");
                     });
 
                     window.jsTreeDocumentOpener.dataTable = webpagesDatatable;
@@ -366,7 +366,7 @@ block content
                             });
                             //console.log("button=", button);
                             if (button != null) {
-                                groupsDatatable.wjUpdateOptions(WJ.urlAddPath(groupsDatatable.ajax.url(), "/all") , function() {
+                                groupsDatatable.wjUpdateOptions(WJ.urlAddPath(groupsDatatable.getAjaxUrl(), "/all") , function() {
                                     $(button).click();
                                 });
                             }
@@ -462,7 +462,7 @@ block content
                     });
                     groupsDatatable.EDITOR.on('remove', function (e, json, ids) {
                         //console.log("AFTER REMOVE");
-                        webpagesDatatable.ajax.url(webpagesUrl);
+                        webpagesDatatable.setAjaxUrl(webpagesUrl);
                         webpagesDatatable.ajax.reload();
                     });
 
@@ -529,7 +529,7 @@ block content
 
                 //Check if actual PATH include recusive param and if yes, remove this param from PATH and return new edited PATH
                 function returnActualPathWithoutRecursionParam() {
-                    let actualUrl = webpagesDatatable.ajax.url();
+                    let actualUrl = webpagesDatatable.getAjaxUrl();
                     let splitUrl = undefined;
 
                     if(actualUrl.includes("&recursive=true")) {
@@ -644,16 +644,16 @@ block content
                     if ($("#pills-folders-dt-tab").hasClass("active")==false) $('#pills-pages li:first-child a').tab('show');
 
                     //Set groupId param
-                    webpagesDatatable.ajax.url(WJ.urlAddParam(webpagesUrl, "groupId", id));
+                    webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", id));
 
                     //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
-                    webpagesDatatable.ajax.url(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                    webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
 
                     webpagesDatatable.ajax.reload();
 
                     webpagesDatatableGroupId = id;
 
-                    groupsDatatable.ajax.url(groupsUrl+"?groupId="+id);
+                    groupsDatatable.setAjaxUrl(groupsUrl+"?groupId="+id);
                     let selectedNodes = getTreeNodeSelectedGroups();
 
                     //console.log("Web-page-list URLL : ", groupsUrl+"?groupId="+id);
@@ -705,18 +705,18 @@ block content
                         }
 
                         if (showRecoverGroup) {
-                            $('.tree-col .dt-header-row button.button-recover-group').show();
+                            $('.tree-col .dt-header-row button.buttons-recover').show();
                             $('.tree-col .dt-header-row button.buttons-remove').removeClass("buttons-divider");
                         } else {
-                            $('.tree-col .dt-header-row button.button-recover-group').hide();
+                            $('.tree-col .dt-header-row button.buttons-recover').hide();
                             $('.tree-col .dt-header-row button.buttons-remove').addClass("buttons-divider");
                         }
 
                         if (showRecoverPages) {
-                            $("#datatableInit_wrapper .dt-header-row button.button-recover-page").show();
+                            $("#datatableInit_wrapper .dt-header-row button.buttons-recover").show();
                             $('#datatableInit_wrapper .dt-header-row button.buttons-remove').removeClass("buttons-divider");
                         } else {
-                            $("#datatableInit_wrapper .dt-header-row button.button-recover-page").hide();
+                            $("#datatableInit_wrapper .dt-header-row button.buttons-recover").hide();
                             $('#datatableInit_wrapper .dt-header-row button.buttons-remove').addClass("buttons-divider");
                         }
                     }, 300);
@@ -752,6 +752,9 @@ block content
                     window.history.pushState({path: url}, '', url);
                     //$("#SomStromcek").jstree(true).deselect_all(true);
 
+                    //clear search text
+                    $("#tree-folder-search-input").val("");
+
                     //nacitaj strom
                     window.jstree.data("rest-url", "/admin/rest/groups/tree?click="+click);
                     //zabudni stav, inak sa zle reloadne DT (nekoresponduje so stromom)
@@ -785,9 +788,9 @@ block content
                         $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
                         $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
                         //reloadni tabulku na prazdnu
-                        webpagesDatatable.ajax.url(webpagesInitialUrl);
+                        webpagesDatatable.setAjaxUrl(webpagesInitialUrl);
                         webpagesDatatable.ajax.reload();
-                        groupsDatatable.ajax.url(groupsInitialUrl);
+                        groupsDatatable.setAjaxUrl(groupsInitialUrl);
                         groupsDatatable.ajax.reload();
                     }
                 });
@@ -822,21 +825,21 @@ block content
                     if("pills-pages-tab" == id) {
                         //console.log("pills-pages, webpagesDatatableGroupId=", webpagesDatatableGroupId);
 
-                        webpagesDatatable.ajax.url(WJ.urlAddParam(webpagesUrl, "groupId", webpagesDatatableGroupId));
+                        webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", webpagesDatatableGroupId));
                         //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
-                        webpagesDatatable.ajax.url(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                        webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
 
                         webpagesDatatable.columns("id:name").order("asc").draw();
                         //webpagesDatatable.ajax.reload();
                     } else if("pills-changes-tab" == id) {
-                        webpagesDatatable.ajax.url(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
+                        webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
 
                         //console.log(changesId);
                         webpagesDatatable.columns("dateCreated:name").order("desc").draw();
                         //webpagesDatatable.ajax.reload();
                     } else if("pills-waiting-tab" == id) {
                         //console.log(waitingId);
-                        webpagesDatatable.ajax.url("/admin/rest/webpages/toapprove");
+                        webpagesDatatable.setAjaxUrl("/admin/rest/webpages/toapprove");
                         webpagesDatatable.columns("dateCreated:name").order("desc").draw();
                         //webpagesDatatable.ajax.reload();
                     }

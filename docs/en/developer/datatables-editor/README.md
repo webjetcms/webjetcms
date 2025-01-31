@@ -5,19 +5,19 @@
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-
 - [Datatables EDITOR](#datatables-editor)
-	- [Tabs in the editor](#karty-v-editore)
-	- [Configuration options for the columns object](#možnosti-konfigurácie-columns-objektu)
-	- [Events](#udalosti)
-	- [Styling](#štýlovanie)
-	- [Special buttons](#špeciálne-tlačidlá)
-	- [Code samples](#ukážky-kódu)
-		- [Dynamic change of values in the selection field](#dynamická-zmena-hodnôt-vo-výberovom-poli)
-		- [Getting the JSON object before editing](#získanie-json-objektu-pred-editáciou)
-		- [Program editor opening](#programové-otvorenie-editora)
-		- [Conditional display of the input field](#podmienené-zobrazenie-vstupného-poľa)
-		- [API functions](#api-funkcie)
+  - [Tabs in the editor](#tabs-in-the-editor)
+  - [Configuration options for the columns object](#columns-object-configuration-options)
+  - [Events](#events)
+  - [Styling](#styling)
+  - [Special buttons](#special-buttons)
+  - [Code samples](#code-samples)
+    - [Dynamic change of values in the selection field](#dynamic-change-of-values-in-the-selection-field)
+    - [Getting the JSON object before editing](#getting-json-object-before-editing)
+    - [Program editor opening](#program-editor-opening)
+    - [Conditional display of the input field](#conditional-display-of-the-input-field)
+    - [API functions](#api-functions)
+
 <!-- /code_chunk_output -->
 
 ## Tabs in the editor
@@ -32,6 +32,7 @@ Possible attributes:
 - `perms` allows to not display the tab if the user does not have the specified right (note, the character `.` in the law is taken as a sign of `_`). The rights in the JavaScript object are checked `nopermsJavascript`.
 - `hideOnCreate` by setting it to `true` hides the tab when creating a new record.
 - `hideOnEdit` by setting it to `true` hides the tab when editing an existing record.
+
 ```javascript
 let tabs = [
     //id: unikatne ID tabu, title: zobrazeny nazov tabu, selected: urcenie predvoleneho tabu
@@ -73,34 +74,30 @@ galleryTable = WJ.DataTable( {
 To switch tabs, you can activate `listener`:
 
 ```javascript
-window.addEventListener(
-	"WJ.DTE.tabclick",
-	function (e) {
-		console.log("tabclick, e=", e);
-		if ("photoeditor" == e.detail.id) initializeImageEditor(e);
-	},
-	false
-);
+window.addEventListener('WJ.DTE.tabclick', function (e) {
+    console.log("tabclick, e=", e);
+    if ("photoeditor" == e.detail.id) initializeImageEditor(e);
+}, false);
 ```
 
 If you need to have **tab to the full height of the window** it is possible to set the CSS style `.dte-tab-autoheight`. If necessary, it is possible via the data attribute `data-dt-autoheight-offset` set the size offset (if the window already contains another element). If you need the window to be scrollable (it may contain a large object) don't forget to set `style="overflow:scroll;"`.
 
 ```javascript
 var tabs = [
-	{ id: "description", title: "[[#{components.catalog.desc}]]", selected: true },
-	{ id: "metadata", title: "[[#{gallery.admin.metadata.title}]]", selected: false },
-	{
-		id: "photoeditor",
-		title: "[[#{admin.editor.title}]]",
-		selected: false,
-		content: '<div id="photoEditorContainer" class="dte-tab-autoheight"></div>',
-	},
-	{
-		id: "areaOfInterest",
-		title: "[[#{components.gallery.areaOfInterest}]]",
-		selected: false,
-		content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><div id="cropper-app"><webjet-cropper-component ref="vueCropper"></webjet-cropper-component></div></div>',
-	},
+    { id: 'description', title: '[[\#{components.catalog.desc}]]', selected: true },
+    { id: 'metadata', title: '[[\#{gallery.admin.metadata.title}]]', selected: false },
+    {
+        id: 'photoeditor',
+        title: '[[\#{admin.editor.title}]]',
+        selected: false,
+        content: '<div id="photoEditorContainer" class="dte-tab-autoheight"></div>'
+    },
+    {
+        id: 'areaOfInterest',
+        title: '[[\#{components.gallery.areaOfInterest}]]',
+        selected: false,
+        content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><div id="cropper-app"><webjet-cropper-component ref="vueCropper"></webjet-cropper-component></div></div>'
+    }
 ];
 ```
 
@@ -221,14 +218,48 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
+Similarly, to add a new record, custom buttons can be set using `createButtons` with the option not to close the editor after saving the record:
+
+```javascript
+filePropertiesTable = WJ.DataTable({
+    url: ...,
+    ...
+    createButtons: [
+        {
+            text: '<i class="fal fa-check"></i> ' + WJ.translate('button.add'),
+            action: function() {
+                //console.log("SAVING NO CLOSE");
+                //action musime zachovat, lebo to editor pri ulozeni zmaze
+                let editorAction = this.s.action;
+                //console.log("editorAction=", editorAction);
+                let editor = this;
+                this.submit(
+                    //success callback
+                    function() {
+                        editor.s.action = editorAction;
+                    },
+                    //error callback
+                    null,
+                    //formatData function
+                    null,
+                    //hide editor after save
+                    false
+                );
+            }
+        }
+    ]
+});
+```
+
 ## Code samples
 
 ### Dynamic change of values in the selection field
 
-Sometimes it is necessary to dynamically change the values in the select box based on changes in previous fields. An example is in the file [temps-list.pug](../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) where is the solution to:
+Sometimes it is necessary to dynamically change the values in the select box based on changes in previous fields. An example is in the file [temps-list.pug](../../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) where is the solution to:
 - change select box values when loading the editor
 - change of values when changing the previous field
-In the sample case, this is a change of field values `forward` based on the value selected in the select box `templatesGroupId`. In addition, the currently set value in the field is also preserved. `forward`so that the returned possible values do not contain the currently set value.
+
+In the sample case, this is a change of field values `forward` based on the value selected in the select box `templatesGroupId`. In addition, the currently set value in the field is also preserved. `forward` so that the returned possible values do not contain the currently set value.
 
 ```javascript
 let tabs = [
@@ -290,7 +321,7 @@ window.domReady.add(function () {
 });
 ```
 
-REST service is added to an existing class [TemplatesController](../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
+REST service is added to an existing class [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
 
 ```java
 @RequestMapping("/forwards/")
@@ -305,10 +336,10 @@ public List<LabelValue> getForwards(@RequestParam(required = false) Integer temp
 Getting the JSON object before editing (it is possible to modify the data for the editor)
 
 ```javascript
-webpagesDatatable.EDITOR.on("initEdit", function (e, node, data, items, type) {
-	console.log("editor initEdit, data=", data, " items=", items);
-	editorCurrentJson = data;
-	return;
+webpagesDatatable.EDITOR.on( 'initEdit', function( e, node, data, items, type ){
+    console.log("editor initEdit, data=", data, " items=", items);
+    editorCurrentJson = data;
+    return ;
 });
 ```
 
@@ -332,16 +363,16 @@ webpagesDatatable.wjEditFetch($('.datatableInit tr[id=' + docId + ']'));
 If you need to conditionally display an input field based on a different value, you can use the API call `field("meno").hide()`. The preview hides/shows the field when the editor is opened based on a different value in the JSON data:
 
 ```javascript
-groupsDatatable.EDITOR.on("open", function (e, type) {
-	//zobrazovat-pole-pre-zadanie-domeny-len-pre-korenove-priecinky
-	let parentGroupId = e.target.currentJson.parentGroupId;
-	if (parentGroupId > 0) {
-		groupsDatatable.EDITOR.field("domainName").hide();
-		groupsDatatable.EDITOR.field("editorFields.forceDomainNameChange").hide();
-	} else {
-		groupsDatatable.EDITOR.field("domainName").show();
-		groupsDatatable.EDITOR.field("editorFields.forceDomainNameChange").show();
-	}
+groupsDatatable.EDITOR.on('open', function (e, type) {
+    //zobrazovat-pole-pre-zadanie-domeny-len-pre-korenove-priecinky
+    let parentGroupId = e.target.currentJson.parentGroupId;
+    if (parentGroupId > 0) {
+        groupsDatatable.EDITOR.field("domainName").hide();
+        groupsDatatable.EDITOR.field("editorFields.forceDomainNameChange").hide();
+    } else {
+        groupsDatatable.EDITOR.field("domainName").show();
+        groupsDatatable.EDITOR.field("editorFields.forceDomainNameChange").show();
+    }
 });
 ```
 

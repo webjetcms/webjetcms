@@ -1,0 +1,177 @@
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:19:23 - Last modified /webjet8v9/src/main/webapp/WEB-INF/classes/text-webjet9.properties=19.06.2024 11:16:48
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:19:23 - getLastUpdate=19.06.2024 11:16:48
+[webjetcms][s.i.i.d.ComplexQuery][DEBUG][18] 13:19:23 - list: Executed query: SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:23 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/css/main.style.css
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:23 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:23 - GET /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:23 - /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:23 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:23 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:23 - GET /admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:23 - /admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:23 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:23 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/js/main.e818d239e799f870ff1c.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:24 - /admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:24 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/css/vendor-inline.style.css
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:24 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:24 - Return full file
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:24 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/fonts/tabler-icons.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/v9/dist/js/inline.c86b459368b2462bbf81.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/rest/audit/log-files/log-dir
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:24 - GET /admin/rest/audit/log-files/all
+[webjetcms][s.i.i.s.s.s.WebjetSecurityService][DEBUG][18] 13:19:24 - calling checkAccessAllowed, ret=true
+[webjetcms][s.i.i.s.d.DatatableRestControllerV2][DEBUG][18] 13:19:24 - ThreadData.creating, id=34
+[webjetcms][s.i.i.s.d.ThreadBean][DEBUG][18] 13:19:24 - clearing data, thread=34
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:27 - GET /admin/tail.jsp?file=%2FUsers%2Fjeeff%2FDocuments.nosync%2Fworkspace-visualstudio%2Fwebjet8v9%2Flogs%2Ftest-log-file.txt&iframed=true
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:27 - /admin/tail.jsp
+[webjetcms][s.i.i.d.ComplexQuery][DEBUG][18] 13:19:27 - list: Executed query: SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC
+/webjet8v9
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:27 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:27 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:27 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:27 - /admin/scripts/common.jsp
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:27 - GET /admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-regular-webfont.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:27 - GET /admin/skins/webjet8/assets/admin/layout/img/ajax-loading.svg
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:27 - GET /admin/skins/webjet8/assets/global/plugins/tabler/fonts/tabler-icons.woff2?v3.0.1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:19:30 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:19:30 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:19:30 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:19:30 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:34 - POST /admin/rest/refresher
+[EL Fine]: sql: 13:19:34.342--ServerSession(1574575239)--Connection(1434168570)--Thread(Thread[https-jsse-nio-443-exec-4,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[EL Fine]: sql: 13:19:42.607--ServerSession(1574575239)--Connection(853732496)--Thread(Thread[https-jsse-nio-443-exec-8,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/apps/audit-log-files/
+[webjetcms][s.i.i.a.ThymeleafAdminController][DEBUG][18] 13:19:47 - Thymeleaf forward=admin/v9/dist/views/apps/audit-log-files
+[webjetcms][s.i.i.s.s.e.WebjetEventPublisher][DEBUG][18] 13:19:47 - publishEvent, event.clazz=sk.iway.iwcm.admin.ThymeleafEvent event.type=ON_START
+[webjetcms][s.i.i.d.SimpleQuery][DEBUG][18] 13:19:47 - SELECT max(update_date) FROM _properties_ WHERE lng=? sk
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:19:47 - Last modified /webjet8v9/src/main/webapp/WEB-INF/classes/text.properties=18.06.2024 13:15:35
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:19:47 - Last modified /webjet8v9/src/main/webapp/WEB-INF/classes/text-webjet9.properties=19.06.2024 11:16:48
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:19:47 - getLastUpdate=19.06.2024 11:16:48
+[webjetcms][s.i.i.d.ComplexQuery][DEBUG][18] 13:19:47 - list: Executed query: SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - /admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/css/main.style.css
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:47 - Return full file
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:47 - Return full file
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:47 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - /admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:47 - Return full file
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:47 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/css/vendor-inline.style.css
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:19:47 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/js/main.e818d239e799f870ff1c.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/fonts/tabler-icons.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/v9/dist/js/inline.c86b459368b2462bbf81.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:47 - GET /admin/rest/audit/log-files/log-dir
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:48 - GET /admin/rest/audit/log-files/all
+[webjetcms][s.i.i.s.s.s.WebjetSecurityService][DEBUG][18] 13:19:48 - calling checkAccessAllowed, ret=true
+[webjetcms][s.i.i.s.d.ThreadBean][DEBUG][18] 13:19:48 - clearing data, thread=33
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:50 - GET /admin/tail.jsp?file=%2FUsers%2Fjeeff%2FDocuments.nosync%2Fworkspace-visualstudio%2Fwebjet8v9%2Flogs%2Ftest-log-file.txt&iframed=true
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:50 - /admin/tail.jsp
+[webjetcms][s.i.i.d.ComplexQuery][DEBUG][18] 13:19:50 - list: Executed query: SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC
+/webjet8v9
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:50 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:50 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:50 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:19:50 - /admin/scripts/common.jsp
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:50 - GET /admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-regular-webfont.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:50 - GET /admin/skins/webjet8/assets/admin/layout/img/ajax-loading.svg
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:50 - GET /admin/skins/webjet8/assets/global/plugins/tabler/fonts/tabler-icons.woff2?v3.0.1
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:19:57 - POST /admin/rest/refresher
+[EL Fine]: sql: 13:19:57.808--ServerSession(1574575239)--Connection(1468362953)--Thread(Thread[https-jsse-nio-443-exec-6,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[webjetcms][s.i.i.s.StatWriteBuffer][INFO][0] 13:20:00 - sleep for: 1534 ms
+[webjetcms][s.i.i.Adminlog][DEBUG][0] 13:20:00 - Cron task executed: sk.iway.iwcm.calendar.CalendarDB [] subId1=-1 subId2=-1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:00 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:00 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:00 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:00 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.d.SimpleQuery][DEBUG][0] 13:20:00 - SELECT schedule_id FROM groups_scheduler WHERE when_to_publish IS NOT NULL AND date_published IS NULL AND when_to_publish <= ? 13:20:00.006
+[EL Fine]: sql: 13:20:05.785--ServerSession(1574575239)--Connection(629607742)--Thread(Thread[https-jsse-nio-443-exec-10,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:30 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:30 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:30 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:20:30 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:20:47 - POST /admin/rest/refresher
+[EL Fine]: sql: 13:20:47.825--ServerSession(1574575239)--Connection(1848112699)--Thread(Thread[https-jsse-nio-443-exec-2,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[EL Fine]: sql: 13:20:50.773--ServerSession(1574575239)--Connection(1270516434)--Thread(Thread[https-jsse-nio-443-exec-5,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[webjetcms][s.i.i.s.StatWriteBuffer][INFO][0] 13:21:00 - sleep for: 2339 ms
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:00 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:00 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:00 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:00 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.d.SimpleQuery][DEBUG][0] 13:21:00 - SELECT schedule_id FROM groups_scheduler WHERE when_to_publish IS NOT NULL AND date_published IS NULL AND when_to_publish <= ? 13:21:00.004
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:13 - GET /admin/v9/apps/audit-log-files/
+[webjetcms][s.i.i.a.ThymeleafAdminController][DEBUG][18] 13:21:13 - Thymeleaf forward=admin/v9/dist/views/apps/audit-log-files
+[webjetcms][s.i.i.s.s.e.WebjetEventPublisher][DEBUG][18] 13:21:13 - publishEvent, event.clazz=sk.iway.iwcm.admin.ThymeleafEvent event.type=ON_START
+[webjetcms][s.i.i.d.SimpleQuery][DEBUG][18] 13:21:13 - SELECT max(update_date) FROM _properties_ WHERE lng=? sk
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:21:13 - Last modified /webjet8v9/src/main/webapp/WEB-INF/classes/text.properties=18.06.2024 13:15:35
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:21:13 - Last modified /webjet8v9/src/main/webapp/WEB-INF/classes/text-webjet9.properties=19.06.2024 11:16:48
+[webjetcms][s.i.i.a.AdminPropRestController][DEBUG][18] 13:21:13 - getLastUpdate=19.06.2024 11:16:48
+[webjetcms][s.i.i.d.ComplexQuery][DEBUG][18] 13:21:13 - list: Executed query: SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:13 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/css/main.style.css
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:21:13 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:13 - GET /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:13 - /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:13 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:21:13 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:13 - GET /admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:13 - /admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:13 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/main.e818d239e799f870ff1c.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:21:13 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/js/main.e818d239e799f870ff1c.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:14 - /admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:14 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/css/vendor-inline.style.css
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:14 - Sending DIST file: /webjet8v9/src/main/webapp/admin/v9/dist/js/inline.c86b459368b2462bbf81.js
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:21:14 - Return full file
+[webjetcms][s.i.i.c.MultipartFileSender][DEBUG][18] 13:21:14 - Return full file
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/js/appInit.b09a8d5860ccadcbb7cd.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/js/inline.c86b459368b2462bbf81.js.map
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/fonts/tabler-icons.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/rest/audit/log-files/log-dir
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:14 - GET /admin/rest/audit/log-files/all
+[webjetcms][s.i.i.s.s.s.WebjetSecurityService][DEBUG][18] 13:21:14 - calling checkAccessAllowed, ret=true
+[webjetcms][s.i.i.s.d.ThreadBean][DEBUG][18] 13:21:14 - clearing data, thread=40
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:16 - GET /admin/tail.jsp?file=%2FUsers%2Fjeeff%2FDocuments.nosync%2Fworkspace-visualstudio%2Fwebjet8v9%2Flogs%2Ftest-log-file.txt&iframed=true
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:16 - /admin/tail.jsp
+[webjetcms][s.i.i.d.ComplexQuery][DEBUG][18] 13:21:16 - list: Executed query: SELECT * FROM groups WHERE parent_group_id <= 0 ORDER BY sort_priority ASC, group_name ASC
+/webjet8v9
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:16 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:16 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:16 - /admin/scripts/combine.jsp
+[webjetcms][s.i.i.PathFilter][DEBUG][18] 13:21:16 - /admin/scripts/common.jsp
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:17 - GET /admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-regular-webfont.woff2
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:17 - GET /admin/skins/webjet8/assets/admin/layout/img/ajax-loading.svg
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:17 - GET /admin/skins/webjet8/assets/global/plugins/tabler/fonts/tabler-icons.woff2?v3.0.1
+[webjetcms][s.i.i.SetCharacterEncodingFilter][DEBUG][18] 13:21:24 - POST /admin/rest/refresher
+[EL Fine]: sql: 13:21:24.344--ServerSession(1574575239)--Connection(84823847)--Thread(Thread[https-jsse-nio-443-exec-9,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]
+[webjetcms][s.i.i.Cache][DEBUG][0] 13:21:27 - removeCheck
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:30 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:30 - conf name=statSessions-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:30 - conf name=statDistinctUsers-MacBookProLubos value=1
+[webjetcms][s.i.i.c.s.SaveListener][DEBUG][0] 13:21:30 - conf name=statDistinctUsers-MacBookProLubos value=1
+[EL Fine]: sql: 13:21:32.441--ServerSession(1574575239)--Connection(1026105120)--Thread(Thread[https-jsse-nio-443-exec-5,5,main])--SELECT admin_message_id, create_by_user_id, create_date, is_readed, message_text, only_for_logged, recipient_user_id FROM admin_message WHERE ((recipient_user_id = ?) AND (is_readed IS NULL)) ORDER BY create_date ASC
+        bind => [18]

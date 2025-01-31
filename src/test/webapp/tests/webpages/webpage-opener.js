@@ -223,7 +223,7 @@ Scenario('Opener pre ine ako id, otocene sortovanie', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     DT.resetTable();
     //prepni sorting
-    I.clickCss("th.dt-th-tempId.sorting_asc");
+    I.clickCss("th.dt-th-tempId.dt-ordering-asc");
     DT.waitForLoader();
 
     I.amOnPage("/admin/v9/templates/temps-list/?tempId=1");
@@ -240,7 +240,7 @@ Scenario('Filter by ID', ({ I, DT, DTE }) => {
     //
     I.say("Filter webpages");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
-    DT.filter("id", "8486");
+    DT.filterId("id", "8486");
     I.see("Voliteľné polia", "#datatableInit tbody");
     I.dontSee("Test pracovnej verzie stránky", "#datatableInit tbody");
     I.dontSee("Hlavná stránka adresára", "#datatableInit tbody");
@@ -249,7 +249,7 @@ Scenario('Filter by ID', ({ I, DT, DTE }) => {
     //
     I.say("Filter audit");
     I.amOnPage("/admin/v9/apps/audit-search/");
-    DT.filter("id", "58993");
+    DT.filterId("id", "58993");
     I.see("CRON", "#datatableInit tbody");
     I.see("Cron task executed: sk.iway.iwcm.", "#datatableInit tbody");
     I.see("Záznamy 1 až 1 z 1", "#datatableInit_info");
@@ -262,7 +262,7 @@ Scenario('Filter by ID', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/tooltip/admin/");
     I.see("Tooltip test", "#tooltipDataTable tbody");
     I.see("Druhy tooltip", "#tooltipDataTable tbody");
-    DT.filter("dictionaryId", "4602");
+    DT.filterId("dictionaryId", "4602");
     I.see("Tooltip test", "#tooltipDataTable tbody");
     I.dontSee("Druhy tooltip", "#tooltipDataTable tbody");
     I.see("Záznamy 1 až 1 z 1", "#tooltipDataTable_info");
@@ -273,7 +273,7 @@ Scenario('Filter by ID', ({ I, DT, DTE }) => {
     //
     I.say("Filter serverSide=false table");
     I.amOnPage("/admin/v9/templates/temps-list/");
-    DT.filter("tempId", "33");
+    DT.filterId("tempId", "33");
     I.see("Subpage EN", "#datatableInit tbody");
     I.dontSee("Subpage DE", "#datatableInit tbody");
     I.see("Záznamy 1 až 1 z 1", "#datatableInit_info");
@@ -301,7 +301,7 @@ Scenario("BUG filter clientSide table by ID equals value", ({ I, DT }) => {
     I.waitForText("Generic", 5, "#datatableInit tbody");
     I.see("Homepage", "#datatableInit tbody");
 
-    DT.filter("tempId", "1");
+    DT.filterId("tempId", "1");
 
     I.waitForText("Generic", 5, "#datatableInit tbody");
     I.dontSee("Homepage", "#datatableInit tbody");

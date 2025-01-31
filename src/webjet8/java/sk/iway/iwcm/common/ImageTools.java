@@ -47,6 +47,17 @@ public class ImageTools
 
 	}
 
+	/**
+	 * Returns true if fileName is image file (ends with .jpg, png...)
+	 * @param fileName
+	 * @return
+	 */
+	public static boolean isImage(String fileName)
+	{
+		String ext = FileTools.getFileExtension(fileName);
+		return ext.equalsIgnoreCase("jpg") || ext.equalsIgnoreCase("jpeg") || ext.equalsIgnoreCase("gif") || ext.equalsIgnoreCase("png") || ext.equalsIgnoreCase("svg");
+	}
+
 	public static int resizeImage(IwcmFile imageFile, int width, int height)
 	{
 		try

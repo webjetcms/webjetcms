@@ -150,7 +150,7 @@ if (Tools.isNotEmpty(Tools.getRequestParameterUnsafe(request, "query")) && Tools
 		}
 		if (doc == null) doc = new DocDetails();
 
-		out.println("<li>" + document.getFieldable("doc_id").stringValue() + " title=" + doc.getTitle() + " ["+document.getFieldable("title").stringValue()+"]" + " groupid=" + doc.getGroupId() + " groups="+document.getFieldable("password_protected").stringValue() +" " +DB.prepareString(document.getFieldable(indexed.defaultField()).stringValue(), 100)+"</li>");
+		out.println("<li>" + document.getFieldable("doc_id").stringValue() + " author_id=" + document.getFieldable("author_id").stringValue() + " title=" + doc.getTitle() + " ["+document.getFieldable("title").stringValue()+"]" + " groupid=" + doc.getGroupId() + " groups="+document.getFieldable("password_protected").stringValue() +" " +DB.prepareString(document.getFieldable(indexed.defaultField()).stringValue(), 100)+"</li>");
 	}
 	out.println("</ul>");
 

@@ -71,7 +71,7 @@ V kartách **Příjemci** můžeme zobrazit přehled všech příjemců, kterým
 
 ![](receivers.png)
 
-**Varování,** seznam příjemců je ošetřen proti určitým nevyhovujícím hodnotám:
+!>**Varování,** seznam příjemců je ošetřen proti určitým nevyhovujícím hodnotám:
 - Ochrana proti duplicitám, kontrola duplicit v zadaných e-mailech i v již existujících e-mailech v kampani.
 - ochranu před nevhodnými e-maily, musí e-mail splňovat standardní formát. **meno@domena.sk** (zvláštní výjimka pro [Import z xlsx](#import-z-xlsx))
 - ochrana proti odhlášení e-mailů, není možné přidat příjemce, jehož e-mailová adresa je v seznamu. [Odhlášené e-maily](../unsubscribed/README.md)
@@ -123,7 +123,7 @@ V souboru v prvním řádku je třeba mít definovány následující názvy:
 
 Správný importní soubor získáte jednoduše exportem příjemců. Poté můžete odstranit sloupec ID a vyplnit jména a e-mailové adresy pro import příjemců.
 
-**Varování:**
+!>**Varování:**
 
 - Import ze souboru xlxs nepodporuje přidání více e-mailů do jedné buňky jako v případě ručního přidání. V buňce musí být vždy pouze jedna e-mailová adresa.
 - Import ze souboru xlxs podporuje výjimku formátu e-mailu. Při ručním přidávání musí mít každý e-mail formát **meno@domena.sk**. Pokud však kopírujete e-maily např. z aplikace Outlook, může mít kopírovaná hodnota formát `"Ján Tester <jan_tester@test.com>"`. Pokud hodnota obsahuje znaky `<>`, **(přesně v tomto pořadí)**, použije se hodnota mezi nimi. V tomto případě by to byla právě hodnota `jan_tester@test.com`. Tato hodnota musí mít formát **meno@domena.sk**.

@@ -19,13 +19,13 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/forum/admin/");
     let confLng = I.getConfLng();
 
-    DT.filter("subject", "diskusia testovací príspevok");
+    DT.filterContains("subject", "diskusia testovací príspevok");
     Document.screenshot("/redactor/apps/forum/forum-list.png", 1500, 800);
 
-    I.click("#forumDataTable_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-select.dt-th-editorFields-statusIcons > form > div > div > button");
+    I.click("#forumDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-select.dt-th-editorFields-statusIcons > form > div > div > button");
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/forum/forum-list-statusSelect.png")
 
-    DT.filter("question", "Toto je jednoduchá diskusia pod článkom");
+    DT.filterContains("question", "Toto je jednoduchá diskusia pod článkom");
     I.click("button.buttons-select-all");
 
     Document.screenshotElement("button.buttons-edit", "/redactor/apps/forum/editButton.png");
@@ -112,7 +112,7 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/forum/forum-list-subBoard.png", 1200, 900);
 
     I.amOnPage("/apps/forum/admin/");
-    DT.filter("subject", "diskusia testovací príspevok");
+    DT.filterContains("subject", "diskusia testovací príspevok");
     I.click("Re: Viactémová diskusia testovací príspevok");
     DTE.waitForEditor("forumDataTable");
     I.click("#pills-dt-forumDataTable-advanced-tab");

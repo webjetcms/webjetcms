@@ -141,7 +141,7 @@ public class StatWriteBuffer
 		try
 		{
 			long rndSleep = random.nextInt(10000);
-			Logger.println(StatWriteBuffer.class, "sleep for: "+rndSleep+" ms");
+			Logger.debug(StatWriteBuffer.class, "sleep for: "+rndSleep+" ms");
 			Thread.sleep(rndSleep);
 		}
 		catch (InterruptedException e){sk.iway.iwcm.Logger.error(e);}

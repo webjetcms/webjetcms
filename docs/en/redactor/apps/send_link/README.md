@@ -1,6 +1,6 @@
 # Send page by email
 
-Inserts a component into the page that allows you to send a link to the current page along with the completed text to an email address. If a visitor finds interesting information on your site, they can forward it to their email, or to the email of a friend they want to share the page with.
+Inserts an application into the page that allows you to send a link to the current page along with the completed text to an email address. If a visitor finds interesting information on your site, they can forward it to their email or to the email of a friend they want to share the page with.
 
 ## Application settings
 
@@ -18,6 +18,8 @@ For the user, the fields are:
 - E-mail of the recipient
 - Subject
 - Enter the text from the image
-- Message All fields except message are required
+- Report
+
+All fields except the message are required
 
 ![](send_link.png)

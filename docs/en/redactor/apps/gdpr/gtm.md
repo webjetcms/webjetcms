@@ -10,43 +10,50 @@ If the site uses `Google Tag Manager` to insert scripts and tracking tools, we n
 
 `DataLayer` must be created before the inserted `GTM`.
 
-window.dataLayer = window.dataLayer || \[]; function gtag(){dataLayer.push(arguments)};
+```javascript
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments)};
+```
 
 ## Default consent settings
 
 `ad_storage` a `analytics_storage` are the default consents that Google tools can read without the need for additional conditions in `GTM`. They can acquire values `denied` a `granted`.
 
 ```javascript
-gtag("consent", "default", {
-	ad_storage: "denied",
-	ad_user_data: "denied",
-	ad_personalization: "denied",
-	analytics_storage: "denied",
-});
+    gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied'
+    });
 ```
 
 This is the default setting. When the page is loaded, it is set to `denied/granted` according to our cookie `enableCookieCategory`. If the visitor comes to the site for the first time, the values are `denied`.
 
 **In principle, the**
+
 - `ad_storage` = WebJET marketing category `cookies`
 - `ad_user_data` = WebJET marketing category `cookies`
 - `ad_personalization` = WebJET marketing category `cookies`
 - `analytics_storage` = WebJET statistical category `cookies`
-**Warning:** the default setting of consents must be in the code before the inserted `GTM`.
+
+!>**Warning:** the default setting of consents must be in the code before the inserted `GTM`.
+
 *Interestingly, if the consents above are disabled, Google Analytics will still run. However, it does not create `cookies` and does not send information about the user, his browser, does not track the visit, etc. It is being launched because it promises to do-model analytics based on missing data from users who have not given consent.*
+
 ### Other categories of consent
 
-The code above should of course also be supplemented with WebJET categories `cookies`that are used within the site, e.g. preferences.
+The code above should of course also be supplemented with WebJET categories `cookies` that are used within the site, e.g. preferences.
 
 ```javascript
-gtag("consent", "default", {
-	ad_storage: "denied",
-	ad_user_data: "denied",
-	ad_personalization: "denied",
-	analytics_storage: "denied",
-	preferencne: "denied",
-	nutne: "granted",
-});
+    gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'ad_user_data': 'denied',
+        'ad_personalization': 'denied',
+        'analytics_storage': 'denied',
+        'preferencne': 'denied',
+        'nutne': 'granted'
+    });
 ```
 
 ## Updating consents when changing preferences
@@ -64,7 +71,7 @@ As soon as changes are made to the consents (the visitor interacts with the cook
 
 In the framework of `gtag update` you only need to insert the categories that have changed.
 
-`DataLayer` push is an event due to `GTM`to be able to launch the tools directly when consent is granted and not wait for the page to refresh.
+`DataLayer` push is an event due to `GTM` to be able to launch the tools directly when consent is granted and not wait for the page to refresh.
 
 The data is automatically updated by the application `GDPR Cookies` and the app `Cookiebar`.
 
@@ -75,20 +82,32 @@ The data is automatically updated by the application `GDPR Cookies` and the app 
 ## Model example
 
 ```html
-<html>
-	<head>
-		<!-- Inicializácia DataLayer a východiskový stav súhlasov -->
-		<iwcm:write>!INCLUDE(/components/gdpr/gtm_init.jsp)!</iwcm:write>
+    <html>
+      <head>
 
-		<!-- Include scripty aplikácie, prostredníctvom ktorej sa vloží 1. časť GTM -->
-		<iwcm:insertScript position="head" />
-	</head>
-	<body>
-		<!-- Include scripty aplikácie, prostredníctvom ktorej sa vloží 2. časť GTM -->
-		<iwcm:insertScript position="body" />
+        <!-- Inicializácia DataLayer a východiskový stav súhlasov -->
+        <iwcm:write>!INCLUDE(/components/gdpr/gtm_init.jsp)!</iwcm:write>
 
-		<!-- GDPR modul, v ktorom sa spúšťajú eventy pri aktualizácii súhlasov -->
-		<iwcm:write>!INCLUDE(/components/gdpr/cookie_bar.jsp)!</iwcm:write>
-	</body>
-</html>
+        <!-- Include scripty aplikácie, prostredníctvom ktorej sa vloží 1. časť GTM -->
+        <iwcm:insertScript position="head"/>
+
+      </head>
+      <body>
+
+         <!-- Include scripty aplikácie, prostredníctvom ktorej sa vloží 2. časť GTM -->
+        <iwcm:insertScript position="body"/>
+
+        <!-- GDPR modul, v ktorom sa spúšťajú eventy pri aktualizácii súhlasov -->
+        <iwcm:write>!INCLUDE(/components/gdpr/cookie_bar.jsp)!</iwcm:write>
+
+      </body>
+    </html>
+```
+
+## Form submission event
+
+After submitting the form via AJAX, an event is published `WJ.formSubmit`, which can be listened to when connected to `DataLayer`, e.g. as:
+
+```javascript
+    window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
 ```

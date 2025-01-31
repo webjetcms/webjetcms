@@ -2,7 +2,7 @@
 
 It is often necessary in a multi-domain installation to separate application data for a domain (each domain has externally separate data in the application). WebJET supports such separation by adding a database column `domain_id`, which represents the domain ID (technically the same as the first directory ID in the domain) in the database table (e.g. `questions_answers`). Then, when selecting data from the table, the data is filtered based on the currently selected domain according to the column `domain_id` in the database.
 
-Setting up multi-domain mode is described in [template settings](../../frontend/setup/README.md#správa-viacerých-domén), setting the configuration variable is important `enableStaticFilesExternalDir=true`which enables the separation of domain data (by default, common data is used in multidomain mode, the conf. variable is set to `false`).
+Setting up multi-domain mode is described in [template settings](../../frontend/setup/README.md#management-of-multiple-domains), setting the configuration variable is important `enableStaticFilesExternalDir=true` which enables the separation of domain data (by default, common data is used in multidomain mode, the conf. variable is set to `false`).
 
 The value for the column `domain_id` can be obtained in Java code by calling `CloudToolsForCore.getDomainId()`.
 

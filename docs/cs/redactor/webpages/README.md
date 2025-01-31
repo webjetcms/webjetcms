@@ -1,6 +1,6 @@
 # Webové stránky
 
-## Základní ovládací prvky
+## Základní práce
 
 ### Výběr domény
 
@@ -37,9 +37,9 @@ V pravé části lze zobrazit následující karty:
 - **Webové stránky** - zobrazí standardní seznam webových stránek ve vybrané složce ve stromové struktuře.
 - **Naposledy upraveno** - zobrazí seznam naposledy upravených stránek.
 - **Čeká se na schválení** - pokud schválíte změny webových stránek, zobrazí se na této kartě stránky, které čekají na vaše schválení.
-- **Složky** - přepne zobrazení ze seznamu webových stránek na seznam složek. Kliknutím na složku ve stromové struktuře se zobrazí vybraná složka a její podsložky. Pokud ve stromové struktuře vyberete více složek (např. stisknutím tlačítka `CTRL`), zobrazí se označené složky. Tabulkové zobrazení složek umožňuje například provádět hromadné operace se složkami (např. změnu šablony), používat funkci Upravit buňku nebo funkci Duplikovat.
+- **Složky** - přepne zobrazení ze seznamu webových stránek na seznam složek. Kliknutím na složku ve stromové struktuře se zobrazí vybraná složka a její podsložky. Pokud ve stromové struktuře vyberete více složek (např. stisknutím tlačítka `CTRL`), zobrazí se označené složky. Tabulkové zobrazení složek umožňuje například provádět hromadné operace se složkami (např. změnu šablony), používat funkci Upravit v zobrazení mřížky nebo funkci Duplikovat.
 
-**Oznámení**: nejprve musíte povolit zobrazení složek v [nastavení zobrazení stromové struktury](#nastavení-zobrazení-stromové-struktury).
+!>**Oznámení**: nejprve musíte povolit zobrazení složek v [nastavení zobrazení stromové struktury](#nastavení-zobrazení-stromové-struktury).
 
 ![](../../_media/changelog/2021q1/2021-13-awaiting-approve.png)
 
@@ -85,7 +85,26 @@ V případě potřeby můžete kliknout na ikonu ve stromové struktuře. <i cla
 - **ID** - Před názvem se také zobrazí ID adresáře ve tvaru #ID. Toto zobrazení je užitečné, pokud potřebujete ručně zadat ID adresáře do aplikace nebo pokud migrujete stránky mezi prostředími a potřebujete rychle zkontrolovat nastavení vložených aplikací.
 - **Pořadí uspořádání** - Za názvem zobrazte pořadí uspořádání ve formuláři (order).
 - **Webové stránky** - Zobrazuje také webové stránky ve stromové struktuře. **Varování:** snižuje výkon a rychlost načítání dat. Tuto možnost doporučujeme povolit pouze v případě, že potřebujete přesouvat webové stránky pomocí funkce `Drag&Drop`.
-- **Stromová struktura složek jako tabulka** - Zobrazí kartu Složky v datové tabulce. Umožňuje používat funkce datové tabulky, jako jsou hromadné operace, duplikování, úpravy buněk atd. se složkami se stromovou strukturou.
+- **Stromová struktura složek jako tabulka** - Zobrazí kartu Složky v datové tabulce. Umožňuje používat funkce datové tabulky, jako jsou hromadné operace, duplikování, úpravy v mřížkovém zobrazení atd. se složkami se stromovou strukturou.
 - **Poměr šířky sloupců strom:tabulka** - Nastaví poměr šířek sloupců zobrazené stromové struktury a datové tabulky pro lepší využití šířky monitoru. Výchozí poměr je 4:8. Upozornění: Některé poměry a nevhodná velikost monitoru mohou způsobit nesprávné zobrazení panelu nástrojů/tlačítek.
+- **Seřadit strom podle** - Vyberte parametr adresáře, podle kterého chcete uspořádat strom složek. Výběrové pole podporuje následující parametry
+  - **Priorita**
+  - **Název**
+  - **Datum vytvoření**
+- **Vyrovnejte strom ve směru** - Přepínání mezi směry rozvržení stromu složek. Výběrem možnosti se použije směr **Vzestupně (ASC)** a pokud tuto možnost nezvolíte, bude použit směr **Sestupný (DESC)**.
 
 ![](jstree-settings.png)
+
+## Hledání ve stromové struktuře
+
+Filtr nad stromovou strukturou umožňuje rychle vyhledávat složky podle jejich názvu. Vyhledávání funguje v **celou stromovou strukturu**, takže není nutné otevírat složky a skenovat je. Vyhledávání mezi kartami **Složka** / **Systém** / **Košík** je oddělen, tj. na kartě **Systém** vyhledávání nenajde složky patřící do karty **Košík** atd.
+
+![](jstree-search-form.png)
+
+Po zadání hodnoty do pole se filtrování spustí stisknutím tlačítka `Enter` nebo ikony ![](jstree-search-button.png ":no-zoom"). Pro lepší přehled, kde se nalezená složka nachází, uvádíme celou cestu ke kořenové složce. Každá složka odpovídající hledanému výrazu je zvýrazněna.
+
+![](jstree-search-result.png)
+
+Chcete-li vyhledávání zrušit, stiskněte tlačítko ![](jstree-search-cancel-button.png ":no-zoom") nebo pokud se pokusíte vyhledat prázdný řetězec.
+
+!>**Varování:** Pokud máte aktivní vyhledávání (právě jste vyhledali řetězec) na jedné kartě, přepnutím na druhou kartu se vyhledávání zruší. To znamená, že vyhledávací řetězec např. "blog" bude po přepnutí na jinou kartu z pole odstraněn.

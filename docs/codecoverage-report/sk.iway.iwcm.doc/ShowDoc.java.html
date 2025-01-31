@@ -396,14 +396,14 @@ private static String combineCss(String cssStyle)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-<span class="fc" id="L399">        Logger.println(ShowDoc.class,&quot;ShowDoc SERVLET CALLED - GET&quot;);</span>
+<span class="fc" id="L399">        Logger.debug(ShowDoc.class,&quot;ShowDoc SERVLET CALLED - GET&quot;);</span>
 <span class="fc" id="L400">        execute(request,response);</span>
 <span class="fc" id="L401">    }</span>
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-<span class="fc" id="L406">        Logger.println(ShowDoc.class,&quot;ShowDoc SERVLET CALLED - POST&quot;);</span>
+<span class="fc" id="L406">        Logger.debug(ShowDoc.class,&quot;ShowDoc SERVLET CALLED - POST&quot;);</span>
 <span class="fc" id="L407">        execute(request,response);</span>
 <span class="fc" id="L408">    }</span>
 

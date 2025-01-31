@@ -23,7 +23,7 @@ Scenario('zaheslovana-zona-screen-y', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/zaheslovana-zona/user-groups-page-editor.png");
     //Document.screenshotElement('//*[@id="userGroupsDataTable_modal"]/div/div/div[4]/div[3]/button[2]', "/redactor/zaheslovana-zona/user-groups-create-button2.png");
     DTE.cancel();
-    DT.filter("userGroupName", "noApprove_allowUserEdit");
+    DT.filterContains("userGroupName", "noApprove_allowUserEdit");
     I.click("noApprove_allowUserEdit_1");
     DTE.waitForEditor("userGroupsDataTable");
     I.click("#pills-dt-userGroupsDataTable-folders-tab");

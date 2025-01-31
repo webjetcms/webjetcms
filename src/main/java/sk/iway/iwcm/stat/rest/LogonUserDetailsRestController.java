@@ -56,7 +56,7 @@ public class LogonUserDetailsRestController extends DatatableRestControllerV2<Lo
     @Override
     public Page<LogonUserDetailsDTO> searchItem(Map<String, String> params, Pageable pageable, LogonUserDetailsDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         int userId = Tools.getIntValue(getRequest().getParameter("userId"), -1);
 
         Logger.debug(getClass(), "filter="+filter);

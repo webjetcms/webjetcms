@@ -19,8 +19,8 @@ String orderType = pageParams.getValue("orderType", "sort_priority");
 String order = pageParams.getValue("order", "asc");
 String searchType = pageParams.getValue("sForm", "complete");
 String buttonText = pageParams.getValue("buttonText", Prop.getInstance(request).getText("components.search.search") );
-String inputText = pageParams.getValue("inputText", Prop.getInstance(request).getText("components.search.title") );
-String normalInputText = inputText;
+String inputText = "";
+String placeholder = pageParams.getValue("inputText", Prop.getInstance(request).getText("components.search.title") );
 String engine = pageParams.getValue("engine", "db"); // can be "db" or "lucene"
 
 //vycistenie requestu, inak ak by stranka pre vyhladavanie mala nastavene hodnoty, pouzili by sa (naprp. perex)
@@ -93,7 +93,7 @@ if (searchType != null)
 <form class="smallSearchForm" action="<%=url%>" method="get">
 		<p>
 			<% if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) { %><input type="hidden" name="docid" value="<%=resultsDocId%>" /><% } %>
-			<input class="smallSearchInput" type="text" name="words" size="25" value="<%=inputText %>" id="searchWords" maxlength="512" />
+			<input class="smallSearchInput" type="text" name="words" size="25" value="<%=inputText %>" placeholder="<%=ResponseUtils.filter(placeholder) %>" id="searchWords" maxlength="512" />
 			<input class="smallSearchSubmit" type="submit" value="<%=buttonText %>" />
 			<%=CSRF.getCsrfTokenInputFiled(request.getSession(), false)%>
 		</p>
@@ -103,28 +103,12 @@ if (searchType != null)
 
 	<iwcm:script type="text/javascript">
 	$(document).ready(function(){
-		var searchText = '<%=inputText%>'
-		var defaultText = '<%=normalInputText%>'
-
     	$("#searchWords").focus(function () {
-        	var text = $(this).val();
-        	if(text == defaultText){
-            	$(this).val("");
-        	}else{
-            	$(this).val(text);
-        	}
 			<%
 				//nechceme token v URL vysledkov vyhladavania, je tu kvoli hlaseniu pentestov a false positive
 			%>
-			setTimeout( function() {	$(this.form.elements["__token"]).remove(); }, 1000 );
-    	});
-    	$("#searchWords").blur(function () {
-        	var text = $(this).val();
-        	if(text == ""){
-            	$(this).val('<%=normalInputText%>');
-        	}else{
-            	$(this).val(text);
-        	}
+			var form = this.form;
+			setTimeout( function() {	$(form.elements["__token"]).remove(); }, 1000 );
     	});
 	});
 	</iwcm:script>

@@ -405,16 +405,14 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 			if (current.endsWith("/") === false && current.indexOf(".") === -1) {
 				current += "/";
 			}
+			var currentWithHash = currentWithQs+window.location.hash;
+			currentWithHash = currentWithHash.replace("?#", "#");
+			//console.log("current=", current, "currentWithQs=", currentWithQs, "currentWithHash=", currentWithHash);
 			$('.md-main-menu__item__link, .md-main-menu__item__sub-menu__item__link').each(function () {
 				var $this = $(this);
 
 				//console.log("Comparing: this=", $this.attr('href'), "current=", current, " eq=", ($this.attr('href')==current));
-				if ($this.attr('href').indexOf("/v9") === -1 && $this.attr('href').indexOf("/apps") != 0) {
-					//to co nie je v9 daj CSS triedu v8version
-					$this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--v8version");
-				}
-
-				if ($this.attr('href') === current || $this.attr('href') === currentWithQs) {
+				if ($this.attr('href') === current || $this.attr('href') === currentWithQs || $this.attr('href') === currentWithHash) {
 					$this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
 					$this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
@@ -434,10 +432,6 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 						hasSomeV9 = true;
 					}
 				});
-
-				if (hasSomeV9 === false) {
-					$this.addClass("md-main-menu__item--v8version");
-				}
 			});
 
 			//ak ma ul.nav-tabs schovaj title
@@ -445,6 +439,14 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 				$(".row.title").addClass("title-hidden");
 				$("ul.nav-tabs").addClass("title-hidden");
 			}
+
+			$(".page-sidebar .menu-wrapper a").on("click", function () {
+				var $this = $(this);
+            	if ($this.parent().find(".md-main-menu__item__sub-menu").length>0) return;
+				var href = $(this).attr("href");
+				if (href.indexOf("javascript:") === 0) return;
+				WJ.selectMenuItem(href);
+			});
 
 			WJ.openPopupDialog = function(url) {
 				openPopupDialogFromLeftMenu(url);

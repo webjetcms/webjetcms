@@ -71,8 +71,6 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
 
   <script type="text/javascript">
   //<![CDATA[
-    //document.write('<style type="text/css" media="all">@import url("/components/basket/basket.css");</style>');
-
     (function($) {
 
       $.basket = function(options) {

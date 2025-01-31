@@ -198,7 +198,7 @@ public class WebpagesRestController extends DatatableRestControllerV2&lt;DocDeta
 <span class="fc" id="L198">                    List&lt;GroupDetails&gt; subgroups = groupsDB.getGroups(userRootGroupId);</span>
 
 <span class="fc bfc" id="L200" title="All 2 branches covered.">                    for (GroupDetails group : subgroups) {</span>
-<span class="pc bpc" id="L201" title="2 of 4 branches missed.">                        if (group != null &amp;&amp; group.getGroupName().equals(unclassifiedGroupName)) unclassifiedGroupId = group.getGroupId();</span>
+<span class="pc bpc" id="L201" title="1 of 4 branches missed.">                        if (group != null &amp;&amp; group.getGroupName().equals(unclassifiedGroupName)) unclassifiedGroupId = group.getGroupId();</span>
 <span class="fc" id="L202">                    }</span>
 <span class="pc bpc" id="L203" title="1 of 2 branches missed.">                    if (unclassifiedGroupId &gt; 0) {</span>
 <span class="fc" id="L204">                        groupId = unclassifiedGroupId;</span>

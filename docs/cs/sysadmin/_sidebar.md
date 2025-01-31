@@ -13,6 +13,11 @@
   - [Úrovně logovaní](/sysadmin/audit/audit-log-levels.md)
   - [Soubory protokolu](/sysadmin/audit/audit-log-files.md)
   - [Nejnovější protokoly](/sysadmin/audit/memory-logging.md)
-- Monitorování serveru
+- Operace
+  - [Výkonnost serveru](/sysadmin/performance/README.md)
   - [Monitorování serveru](/sysadmin/monitoring/README.md)
+  - [Restartování](/sysadmin/restart.md)
   - [Výměna dat uzlu clusteru](/sysadmin/monitoring/nodes-logic.md)
+  - [Vymazání dat](/sysadmin/data-deleting/README.md)
+- Soubory
+  - [Zálohování systému](/sysadmin/files/backup/README.md)

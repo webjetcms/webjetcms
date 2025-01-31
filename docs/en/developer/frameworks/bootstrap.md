@@ -8,10 +8,11 @@ The administration view is responsive, using the following break widths (defined
 - `$bp-laptop:1200px` - for widths smaller than this, the header and left menu are hidden and available by clicking on the hamburger menu.
 - `$bp-tablet:992px` - for less than this width, the datatable editor is displayed in the full window area (both horizontally and vertically).
 - `$bp-dinosaur:576px` - for less than this width the layout in the editor is changed - the field names are moved from the left above the field.
-More is described in the section [Main controls](../../redactor/admin/README.md)
 
-##
+More is described in the section [Main controls](../../redactor/admin/README.md) in manual for the editor.
 
-###
+## Extensions used
 
-[](https://github.com/snapappointments/bootstrap-select/).
+### Bootstrap select
+
+The selection fields are replaced by the complement [Bootstrap Select](https://github.com/snapappointments/bootstrap-select/).

@@ -1,24 +1,26 @@
-<div class="sidebar-section">Programming of customer applications</div>
+ <div class="sidebar-section">Programming of customer applications</div>
 
 - [:point\_left: Back to Home](/?back)
 - Spring
-	- [Spring configuration](/custom-apps/spring-config/)
-	- [Token authorisation](/custom-apps/spring/api-auth.md)
-	- [REST service provisioning](/custom-apps/spring/rest-url.md)
-	- [Extension of Spring DATA repositories of WebJET CMS](/custom-apps/spring/repository-extend.md)
+  - [Spring configuration](/custom-apps/spring-config/)
+  - [Token authorisation](/custom-apps/spring/api-auth.md)
+  - [REST service provisioning](/custom-apps/spring/rest-url.md)
+  - [Extension of Spring DATA repositories of WebJET CMS](/custom-apps/spring/repository-extend.md)
+  - [Public services](/custom-apps/spring/public-services.md)
 - Applications
-	- [Menu item in the admin section](/custom-apps/admin-menu-item/)
-	- [List of websites/news](/custom-apps/news/)
-	- [Users of](/custom-apps/apps/user/README.md)
+  - [Menu item in the admin section](/custom-apps/admin-menu-item/)
+  - [List of websites/news](/custom-apps/news/)
+  - [Users](/custom-apps/apps/user/README.md)
+  - [Configuration](/custom-apps/config/README.md)
 - Spring MVC
-	- [Application in the web page](/custom-apps/spring-mvc/)
-	- [Admin with file upload](/custom-apps/spring-mvc/admin-with-upload.md)
-	- [Admin import from Excel](/custom-apps/spring-mvc/admin-excel-import.md)
+  - [Application in the web page](/custom-apps/spring-mvc/)
+  - [Admin with file upload](/custom-apps/spring-mvc/admin-with-upload.md)
+  - [Admin import from Excel](/custom-apps/spring-mvc/admin-excel-import.md)
 - Appstore
-	- [To view in the App list](/custom-apps/appstore/)
+  - [To view in the App list](/custom-apps/appstore/)
 - VS Code
-	- [Home](/custom-apps/vscode/README.md)
-	- [Setting debug mode](/custom-apps/vscode/debugging/README.md)
+  - [Home](/custom-apps/vscode/README.md)
+  - [Setting debug mode](/custom-apps/vscode/debugging/README.md)
 - Testing
-	- [Testing options](/custom-apps/testing/README.md)
-	- [Code coverage](/custom-apps/testing/codecoverage.md)
+  - [Testing options](/custom-apps/testing/README.md)
+  - [Code coverage](/custom-apps/testing/codecoverage.md)

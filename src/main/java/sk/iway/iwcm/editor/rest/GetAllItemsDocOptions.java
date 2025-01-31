@@ -65,4 +65,8 @@ public class GetAllItemsDocOptions {
         if(request.getParameter("tempId") != null) this.tempIdRequested = true;
         else this.tempIdRequested = false;
     }
+
+    public String getRequestPrameter(String paramName) {
+        return request.getParameter(paramName);
+    }
 }

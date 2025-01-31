@@ -28,8 +28,9 @@ The following attributes are supported, only mandatory `data-ac-url`:
 - `data-ac-params` - a list of field selectors whose values are added to the URL of the REST service call, e.g. `#DTE_Field_templateInstallName,#DTE_Field_templatesGroupId`.
 - `data-ac-select` - when set to `true` in autocomplete behaves similarly to a selection field - when you click the mouse in the input field, all options are loaded and displayed.
 - `data-ac-collision` - the location of the loaded options relative to the input field. Default `flipfit` for automatic placement, for the possibility `select` is preset to `none` for strict placement under the input field.
+- `data-ac-render-item-fn` - the name of the function that specifically generates the data list element
 
-An example of a REST service returning data is in [ConfigurationController.getAutocomplete](../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), the implementation is simple - based on the specified `term` parameter returns a list of `List<String>` matching records:
+An example of a REST service returning data is in [ConfigurationController.getAutocomplete](../../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), the implementation is simple - based on the specified `term` parameter returns a list of `List<String>` matching records:
 
 ```java
 @GetMapping("/autocomplete")
@@ -45,29 +46,64 @@ Since LIKE searches are typically used on the backend, it is possible to enter a
 
 ## Use outside the datatable
 
-`Autocompleter` can also be used outside the datatable simply by setting `data-ac` attributes and CSS classes `autocomplete`. Initialization is automatically activated in [app-init.js](../../../src/main/webapp/admin/v9/src/js/app-init.js) to all `input` elements with CSS class `autocomplete`. Example:
+`Autocompleter` can also be used outside the datatable simply by setting `data-ac` attributes and CSS classes `autocomplete`. Initialization is automatically activated in [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) to all `input` elements with CSS class `autocomplete`. Example:
 
 ```html
 <div id="docIdInputWrapper" class="col-auto col-pk-input">
-	<label for="tree-doc-id">Doc ID: </label>
-	<input type="text" autocomplete="off" class="js-tree-doc-id__input autocomplete" id="tree-doc-id" data-ac-name="docid" data-ac-url="/admin/skins/webjet6/_doc_autocomplete.jsp" data-ac-click="fireEnter" />
+    <label for="tree-doc-id">Doc ID: </label>
+    <input type="text" autocomplete="off" class="js-tree-doc-id__input autocomplete" id="tree-doc-id" data-ac-name="docid" data-ac-url="/admin/skins/webjet6/_doc_autocomplete.jsp" data-ac-click="fireEnter"/>
 </div>
 ```
 
 ## Notes on implementation
 
-Autocomplete uses [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) functions. Internally it is encapsulated in a JavaScript class [AutoCompleter](../../../src/main/webapp/admin/v9/src/js/autocompleter.js). This is modified from the original version in WebJET 8, it should be backwards compatible (it is also possible to use the URLs of the original autocomplete services in WebJET 8).
+Autocomplete uses [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) functions. Internally it is encapsulated in a JavaScript class [AutoCompleter](../../../../src/main/webapp/admin/v9/src/js/autocompleter.js). This is modified from the original version in WebJET 8, it should be backwards compatible (it is also possible to use the URLs of the original autocomplete services in WebJET 8).
 
 The function is added `autobind()`, which takes the settings from the data attributes of the specified input element. The autocomplete initialization is implemented in index.js in the code:
 
 ```javascript
 //nastav autocomplete
-$("#" + DATA.id + "_modal input.form-control[data-ac-url]").each(function () {
-	var autocompleter = new AutoCompleter("#" + $(this).attr("id")).autobind();
-	$(this).closest("div.DTE_Field").addClass("dt-autocomplete");
+$('#'+DATA.id+'_modal input.form-control[data-ac-url]').each(function() {
+    var autocompleter = new AutoCompleter('#'+$(this).attr("id")).autobind();
+    $(this).closest("div.DTE_Field").addClass("dt-autocomplete");
 });
 ```
 
 whereby as can be seen `div.DTE_Field` element is also set CSS class `dt-autocomplete` for future styling of the element.
 
 Function set via `click` parameter is called with a delay of 100ms to first set a value in the array that can then be retrieved and used.
+
+## Special generation of list elements
+
+Using the parameter `data-ac-render-item-fn` the name of the function that specifically generates the element in the data list can be set. For this to work it must be satisfied :
+- the generated element must be `li` element (what's in it is up to you)
+- this generated element must be inserted into the sheet `ul`
+- the specified function in `data-ac-render-item-fn` must be defined using `window` and must have input parameters `ul` a `item`
+
+Example of a custom function
+
+```java
+    @DataTableColumnEditorAttr(key = "data-ac-render-item-fn", value = "disableDeletedEnum")
+```
+
+an example implementation of such a function
+
+```js
+//Don't forget to add fn into windows AND use correct input params
+window.disableDeletedEnum = function(ul, item) {
+    var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
+    if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "" && item.label.startsWith(deletedPrefix)) {
+        //Special element generation - with added "disabled" class
+        return $("<li>")
+            .append($("<div>").append(item.label))
+            .appendTo(ul).addClass("disabled");
+    }
+
+    //Classic element generation
+    return $("<li>")
+        .append($("<div>").append(item.label))
+        .appendTo(ul);
+}
+```
+
+In this example, we have added an element class when the condition is met `disabled`. Autocomplete we have set up so that data (elements) marked with the class `disabled` are highlighted in colour and cannot be selected.

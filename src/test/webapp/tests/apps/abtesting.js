@@ -17,7 +17,7 @@ Scenario('vytvorenie stranok @singlethread', async ({I, DT, DTE}) => {
     DT.waitForLoader();
 
     I.createNewWebPage(randomNumber);
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
 
     I.clickCss('.dt-filter-id');
     I.waitForText('Záznamy 1 až 1 z 1', 10);
@@ -57,7 +57,7 @@ Scenario('zobrazenie stranok @singlethread', async ({I, DT}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=30452");
     DT.waitForLoader();
 
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
 
     I.clickCss("tr.odd a.preview-page-link");
     I.wait(2);
@@ -123,7 +123,7 @@ Scenario('zobrazenie stranok @singlethread', async ({I, DT}) => {
 Scenario('zmazanie stranok @singlethread ', ({I, DT}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=30452");
     DT.waitForLoader();
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
 
     I.clickCss('.dt-filter-id');
 
@@ -139,16 +139,16 @@ Scenario('zmazanie stranok @singlethread ', ({I, DT}) => {
 
 Scenario('Test ABtesting page with webpages and with right values', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/abtesting/admin/");
-    DT.filter("title", "AB testovanie");
+    DT.filterContains("title", "AB testovanie");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
-    DT.filter("title", "Produktová stránka");
+    DT.filterContains("title", "Produktová stránka");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
-    DT.filter("title", "Úvodná stránka");
+    DT.filterContains("title", "Úvodná stránka");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
-    DT.filter("title", "AB testovanie");
+    DT.filterContains("title", "AB testovanie");
     I.clickCss("td.sorting_1");
 
     I.clickCss("button.buttons-history-preview");
@@ -167,7 +167,7 @@ Scenario('Test abtesting config page', ({ I, DT, DTE }) => {
     I.see("ABTestingCookieDays");
 
     I.say('Check editor');
-    DT.filter("name", "ABTesting");
+    DT.filterContains("name", "ABTesting");
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor("abtestingConfDataTable");

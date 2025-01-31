@@ -19,6 +19,7 @@ Názvy Pole A - Pole X je možné zmeniť v konfigurácii v časti editácia tex
 - ```components.qa.field_x``` - pre aplikáciu Otázky a odpovede
 - ```components.banner.field_x``` - pre aplikáciu Bannerový systém
 - ```components.media.field_x``` - pre aplikáciu Média
+- ```components.perex.field_x``` - pre aplikáciu Značky
 
 Technické informácie sa nachádzajú v [dokumentácii pre programátora](../../../developer/datatables-editor/customfields.md).
 
@@ -158,6 +159,12 @@ Pre výber adresára v súborovom systéme nastavením ```.type``` na hodnotu ``
 Typ poľa `uuid` umožňuje generovať unikátny identifikátor. Ak má pole pri zobrazení prázdnu hodnotu, vygeneruje sa nový `uuid`, podobne, keď zmažete hodnotu a prejdete kurzorom do iného poľa vygeneruje sa nová hodnota.
 
 ![](webpages-uuid.png)
+
+### Farba
+
+Typ poľa `color` umožňuje vybrať farbu vrátane nastavenia priesvitnosti.
+
+![](webpages-color.png)
 
 ## Prepojenie na šablónu
 

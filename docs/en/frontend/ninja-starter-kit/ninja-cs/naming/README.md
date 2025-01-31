@@ -21,10 +21,10 @@ The selection box will display all CSS classes starting with the newline charact
 
 ```css
 .styleYellow {
-	background-color: yellow !important;
+   background-color: yellow !important;
 }
 .styleBlueViolet {
-	background-color: blueviolet !important;
+   background-color: blueviolet !important;
 }
 ```
 
@@ -34,16 +34,16 @@ Binding and setting CSS classes according to a specific tag is also supported. J
 
 ```css
 section.aqua {
-	background-color: aqua !important;
+   background-color: aqua !important;
 }
 section.azure {
-	background-color: azure !important;
+   background-color: azure !important;
 }
 div.burlywood {
-	background-color: burlywood !important;
+   background-color: burlywood !important;
 }
 div.chocolate {
-	background-color: chocolate !important;
+   background-color: chocolate !important;
 }
 ```
 
@@ -54,26 +54,26 @@ Often a DIV element with a certain class is used, e.g. `div.container`. To apply
 ```css
 //aplikuje sa iba na div.container
 div.container.red {
-	background-color: red !important;
+   background-color: red !important;
 }
 div.container.orange {
-	background-color: orange !important;
+   background-color: orange !important;
 }
 
 //aplikuje sa iba na div.row
 div.row.darkorange {
-	background-color: darkorange;
+   background-color: darkorange;
 }
 div.row.orange {
-	background-color: orange;
+   background-color: orange;
 }
 
 //aplikuje sa iba na div.col-12
 div.col-12.chartreuse {
-	background-color: chartreuse;
+   background-color: chartreuse;
 }
 div.col-12.darkgreen {
-	background-color: darkgreen;
+   background-color: darkgreen;
 }
 ```
 

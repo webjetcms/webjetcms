@@ -78,7 +78,7 @@ export class DatatablesCkEditor {
 		{
 			//console.log("resizeDialogCK, width=", width, " height=", height);
 			if (typeof that.ckEditorObject != 'undefined' && that.ckEditorObject.dialog.getCurrent() != null) {
-				ckEditorObject.dialog.getCurrent().resize(width, height);
+				that.ckEditorObject.dialog.getCurrent().resize(width, height);
 			}
 			else {
 				console.warn("Var CKEDITOR is undefined or ckEditorObject.dialog.getCurrent() is null");
@@ -569,7 +569,7 @@ export class DatatablesCkEditor {
 
 							//console.log("url=", url);
 
-							if (url.indexOf(":")!=-1 && url.indexOf("http")==-1) {
+							if (url.indexOf("tel:")==0 || (url.indexOf("://")!=-1 && url.indexOf("http")==-1)) {
 								//console.log("Setting protocol to none");
 								this.getContentElement("info", "protocol").setValue("");
 							}
@@ -1620,8 +1620,9 @@ export class DatatablesCkEditor {
 
 		var instance = this.ckEditorInstance;
 		that.myWindow.getCkEditorInstance = function() {
-			//this.console.log("getCkEditorInstance, instance=", instance);
-			return instance;
+			//console.log("getCkEditorInstance, instance=", instance, "win instance=", that.myWindow.ckEditorInstance, "this.ckEditorInstance=", that.ckEditorInstance);
+			//return last instance for pagebuilder mode
+			return that.myWindow.ckEditorInstance;
 		}
 		that.myWindow.ckEditorInstance = instance;
 	}

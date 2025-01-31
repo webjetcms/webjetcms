@@ -1,9 +1,5 @@
 package sk.iway.iwcm.components.cronjob;
 
-import org.springframework.beans.support.PagedListHolder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.cron.CronDB;
@@ -14,7 +10,7 @@ import java.util.List;
 @Service
 public class CronjobService {
 
-    Page<CronTask> getCronTasks(Pageable pageable) {
+    List<CronTask> getCronTasks() {
         List<CronTask> cronTaskList = CronDB.getAll();
 
         for (CronTask cronTask : cronTaskList) {
@@ -23,11 +19,7 @@ public class CronjobService {
             }
         }
 
-        PagedListHolder<CronTask> holder = new PagedListHolder<>(cronTaskList);
-        holder.setPageSize(pageable.getPageSize());
-        holder.setPage(pageable.getPageNumber());
-
-        return new PageImpl<>(holder.getPageList(), pageable, cronTaskList.size());
+        return cronTaskList;
     }
 
     boolean deleteCronTask(Long id) {

@@ -26,7 +26,7 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
     I.click(locate('span').withText('WebJET Admin'));
     DTE.save();
 
-    DT.filter("name", entityName);
+    DT.filterContains("name", entityName);
     I.click(entityName);
     DTE.waitForEditor('calendarTypesDataTable');
 
@@ -38,7 +38,7 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
     I.click(locate('span').withText('WebJET Administrátor'));
     DTE.save();
 
-    DT.filter("name", entityName + ".changed");
+    DT.filterContains("name", entityName + ".changed");
     I.see(entityName + ".changed");
     //I.see('WebJET Administrátor');
 
@@ -54,17 +54,17 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
 
 Scenario('Domain test', ({I, DT, Document}) => {
     I.amOnPage("/apps/calendar/admin/calendar-types");
-    DT.filter("name", "Výstava");
+    DT.filterContains("name", "Výstava");
     I.see("Výstava");
 
-    DT.filter("name", "DomainTest_Test23_type");
+    DT.filterContains("name", "DomainTest_Test23_type");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("name", "Výstava");
+    DT.filterContains("name", "Výstava");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
-    DT.filter("name", "DomainTest_Test23_type");
+    DT.filterContains("name", "DomainTest_Test23_type");
     I.see("DomainTest_Test23_type");
 });
 

@@ -1,14 +1,16 @@
 # Debug mode
 
-| Method | Type | Description | | | -------------- | --------- | ----------- | | ${ninja.debug} | *Boolean* | Debug mode |
+| Method | Type | Description |
+| -------------- | --------- | ----------- |
+| ${ninja.debug} | *Boolean* | Debug mode |
 
 ## Debug mode *Boolean*
 
 <!-- tabs:start -->
 
-#### \*\* Description \*\*
+#### ** Description **
 
-Returns `true`if the parameter is in the url `ninjaDebug` set to `true`, or if it is in `config.properties` attribute set `ninjaDebug` at `true`.
+Returns `true` if the parameter is in the url `ninjaDebug` set to `true`, or if it is in `config.properties` attribute set `ninjaDebug` at `true`.
 
 ```java
 ${ninja.debug}
@@ -26,12 +28,12 @@ Example of setting in `config.properties`
 ninjaDebug=true
 ```
 
-#### \*\* Preview \*\*
+#### ** Preview **
 
 Used in :ghost:<code>html-attributes.jsp</code>
 
 ```html
-<html data-is-ninja-debug="${ninja.debug}"></html>
+<html data-is-ninja-debug="${ninja.debug}" >
 ```
 
 Used in :ghost:<code>debug-info.jsp</code>

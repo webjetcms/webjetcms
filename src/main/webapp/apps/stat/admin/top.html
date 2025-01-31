@@ -104,9 +104,9 @@
             WJ.hideLoader();
 
             //add table filter params
-            topDataTable.ajax.url(WJ.urlAddParam(url, "chartType", ChartTools.ChartType.Not_Chart));
-            topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
-            topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
+            topDataTable.setAjaxUrl(WJ.urlAddParam(url, "chartType", ChartTools.ChartType.Not_Chart));
+            topDataTable.setAjaxUrl(WJ.urlAddParam(topDataTable.getAjaxUrl(), "searchRootDir", $('#rootDir').val()));
+            topDataTable.setAjaxUrl(WJ.urlAddParam(topDataTable.getAjaxUrl(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
 
             //reload table values
             topDataTable.ajax.reload();

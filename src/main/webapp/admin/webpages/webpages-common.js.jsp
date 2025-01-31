@@ -156,7 +156,7 @@ function jstreeAddNewDoc(obj)
               var self = this;
               showErrorOrCallback(data, function(data){
                   var inst = $.jstree.reference(self.id);
-                  inst.create_node(self, { id: data.newDocId, text: data.text, icon: "fa fa-file icon-state-success", children: false }, "last", function (new_node) {
+                  inst.create_node(self, { id: data.newDocId, text: data.text, icon: "ti ti-file icon-state-success", children: false }, "last", function (new_node) {
                       setTimeout(function () { inst.edit(new_node); },0);
                   });
               });
@@ -1648,11 +1648,11 @@ function fillFields(jsonEditorForm) {
 
 			    if (v.typeValues[0].value == null || v.typeValues[0].value == "") {
 			    	//kdyz nemame displayScript prepneme na textTemplate
-					button = "<span type=\"button\" id=\"fieldButton" + keyUpper + "\" class=\"btn green input-group-addon\"><i class=\"fa fa-pencil-square-o\"></i></span>";
+					button = "<span type=\"button\" id=\"fieldButton" + keyUpper + "\" class=\"btn green input-group-addon\"><i class=\"ti ti-pencil\"></i></span>";
 			    	hiddenTemplate = textTemplate;
 					hiddenTemplate = hiddenTemplate + button;
 				} else {
-					button = "<span type=\"button\" id=\"fieldButton" + keyUpper + "\" class=\"pull-right btn green\"><i class=\"fa fa-pencil-square-o\"></i></span>";
+					button = "<span type=\"button\" id=\"fieldButton" + keyUpper + "\" class=\"pull-right btn green\"><i class=\"ti ti-pencil\"></i></span>";
 					hiddenTemplate = button + hiddenTemplate;
 				}
 			}
@@ -2168,7 +2168,7 @@ function initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, configL
 			}
 			else if ( dialogName == 'link')
 			{
-				//console.log("link dialog open");
+				//console.log("link dialog open OLD version");
 
 				dialogDefinition.minWidth = 800;
 				dialogDefinition.minHeight = 445;

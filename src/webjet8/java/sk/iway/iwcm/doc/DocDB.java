@@ -10,13 +10,15 @@ import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.components.forum.rest.ForumGroupService;
+import sk.iway.iwcm.components.perex_groups.PerexGroupBeanToPerexGroupsEntityMapper;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsEntity;
+import sk.iway.iwcm.components.perex_groups.PerexGroupsService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.editor.*;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
-import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.fulltext.indexed.Documents;
 import sk.iway.iwcm.system.spring.events.DocumentPublishEvent;
@@ -27,13 +29,13 @@ import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.http.HttpServletRequest;
+
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
-import java.net.URI;
 import java.net.URL;
 import java.sql.*;
 import java.text.Collator;
 import java.util.*;
-import java.util.Date;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -79,6 +81,8 @@ public class DocDB extends DB
 	public static final int ORDER_SAVE_DATE = 7;
 
 	public static final int ORDER_RATING = 8;
+
+	public static final int ORDER_PRICE = 9;
 
 
 	/**
@@ -446,6 +450,13 @@ public class DocDB extends DB
 		}
 		if (virtualPath.contains("//")) virtualPath = Tools.replace(virtualPath, "//", "/");
 		//Logger.println(this,"vp="+virtualPath);
+
+		//remove lash slash if it is not wanted
+		if (virtualPath.endsWith("/") && Constants.getBoolean("virtualPathLastSlash")==false && virtualPath.length()>1)
+		{
+			virtualPath = virtualPath.substring(0, virtualPath.length()-1);
+		}
+
 		return(virtualPath);
 	}
 
@@ -1234,6 +1245,10 @@ public class DocDB extends DB
 			{
 				orderType = DocDB.ORDER_SAVE_DATE;
 			}
+			else if (p_order.compareTo("price") == 0)
+			{
+				orderType = DocDB.ORDER_PRICE;
+			}
 		}
 		if (request.getParameter("desc") != null && request.getParameter("desc").compareToIgnoreCase("yes")==0)
 		{
@@ -1817,6 +1832,18 @@ public class DocDB extends DB
 			else if (orderType == ORDER_RATING)
 			{
 				order = new StringBuilder("forum_count");
+			}
+			else if (orderType == ORDER_PRICE)
+			{
+				String priceField = Constants.getString("basketPriceField");
+				//need to convert price field from Java format fieldK to SQL format field_k
+				priceField = priceField.replaceAll("([a-z])([A-Z])", "$1_$2").toLowerCase();
+
+				if (Constants.DB_TYPE == Constants.DB_ORACLE) {
+					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS NUMBER(10, 2))");
+				} else {
+					order = new StringBuilder("CAST("+ DB.removeSlashes(priceField) +" AS DECIMAL(10, 2))");
+				}
 			}
 
 			if (asc)
@@ -3098,266 +3125,6 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Vyhladavanie vo vsetkych strankach (/admin/searchall.jsp)
-	 * @param text
-	 * @return
-	 */
-	public List<DocDetails> searchTextAll(String text)
-	{
-		return searchTextAll(text, -1);
-	}
-
-	/**
-	 * Vyhladavanie vo vsetkych strankach (/admin/searchall.jsp) v danom adresari
-	 *
-	 * @param 	text		text, ktory sa vyhladava v nazvoch a telach stranok
-	 * @param	groupId	identifikacne cislo adresara, v ktorom sa vyhladava
-	 *
-	 * @return	zoznam stranok, ktore obsahuju vo svojom nazve alebo tele dany text a su umiestnene v danom adresari
-	 *
-	 */
-	public List<DocDetails> searchTextAll(String text, int groupId)
-	{
-		return searchTextAll(text, groupId, null);
-	}
-
-	/**
-	 * Search for text in documents
-	 * @param text - text to search
-	 * @param groupId - root groupId
-	 * @param whereSql - additional SQL query
-	 * @return
-	 */
-	public List<DocDetails> searchTextAll(String text, int groupId, String whereSql) {
-		return searchTextAll(text, groupId, whereSql, true);
-	}
-
-	/**
-	 * Search for text in documents
-	 * @param text - text to search
-	 * @param groupId - root groupId
-	 * @param whereSql - additional SQL query
-	 * @param allowFulltext - allow to use fulltext for faster results
-	 * @return
-	 */
-	public List<DocDetails> searchTextAll(String text, int groupId, String whereSql, boolean allowFulltext)
-	{
-		if ("tatrabanka".equals(Constants.getInstallName()))
-		{
-			//fix na TB, ale inak rozumne som to nevedel spravit
-			//vo fulltexte to mame ako TatraPay TB cize s medzerou kvoli sup
-			text = Tools.replace(text, "TB", " TB");
-		}
-		//odstran dvojite medzery
-		text = Tools.replace(text, "  ", " ");
-
-		List<DocDetails> docs = new ArrayList<>();
-		String groupIdsQuery = null;
-		if (groupId > 0) groupIdsQuery = StatDB.getRootGroupWhere("group_id", groupId);
-
-		//obmedzujeme na max 2000 zaznamov, viac realne nema zmysel (zbytocne iba zere pamat)
-		int limit = Constants.getInt("searchTextAllLimit");
-		String limit1 = "";
-		String limit2 = "";
-		if (Constants.DB_TYPE==Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) limit2 = " LIMIT "+limit;
-		if (Constants.DB_TYPE==Constants.DB_MSSQL) limit1 = " TOP "+limit;
-
-		StringBuilder sql = new StringBuilder("SELECT").append(limit1).append(' ').append(getDocumentFields()).append(", d.data_asc FROM documents d WHERE ");
-
-		boolean useFullText = false;
-
-		int searchTextDocsLimit = Constants.getInt("searchTextDocsLimit");
-		if(searchTextDocsLimit < 0) searchTextDocsLimit = 10000;
-
-		if (basicAllDocsTable.size()> searchTextDocsLimit && allowFulltext)
-		{
-			if (Constants.DB_TYPE == Constants.DB_MSSQL)
-			{
-				sql.append("CONTAINS(data_asc, ?)");
-			}
-			else if (Constants.DB_TYPE == Constants.DB_ORACLE && Constants.getBoolean("searchUseOracleText"))
-			{
-				sql.append("CONTAINS(data_asc, ?)>1");
-			}
-			else if (Constants.DB_TYPE == Constants.DB_PGSQL)
-			{
-				sql.append("to_tsvector(data_asc) @@ to_tsquery(?)");
-			}
-			else
-			{
-				sql.append("MATCH(title, data_asc) AGAINST (? IN BOOLEAN MODE) ");
-			}
-			useFullText =true;
-		}
-		else
-		{
-			sql.append("(data LIKE ? OR data_asc LIKE ? OR d.title LIKE ?) ");
-			useFullText =false;
-		}
-
-		if (Tools.isNotEmpty(groupIdsQuery)) sql.append(' ').append(groupIdsQuery);
-
-		if (Tools.isNotEmpty(whereSql)) sql.append(' ').append(whereSql).append(' ');
-
-		sql.append(limit2);
-
-		Logger.debug(DocDB.class, "SearcTextAll, text="+text+", groupid="+groupId+", sql="+sql);
-
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-
-		try
-		{
-			//ziskaj udaje z db
-			db_conn = DBPool.getConnection();
-			ps = StatNewDB.prepareStatement(db_conn, sql.toString());
-
-			if (useFullText)
-			{
-				if ((Constants.DB_TYPE == Constants.DB_MSSQL || (Constants.DB_TYPE == Constants.DB_ORACLE && Constants
-						.getBoolean("searchUseOracleText"))) && text.split(" ").length > 1)
-				{
-					String[] words = text.split(" ");
-					//String containsPhraze = Lambda.join(words, " AND ");
-					String containsPhraze = String.join(" AND ", words);
-
-					Logger.debug(getClass(), "contains phraze: " + containsPhraze);
-					ps.setString(1, DB.internationalToEnglish(containsPhraze.toLowerCase()));
-				}
-				else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
-					String containsPhraze = text;
-					String[] words = text.split(" ");
-					if (words.length>1) containsPhraze = String.join(" & ", words);
-
-					Logger.debug(getClass(), "contains phraze pgsql: " + containsPhraze);
-					ps.setString(1, DB.internationalToEnglish(containsPhraze.toLowerCase()));
-				}
-				else
-				{
-					ps.setString(1, "%" + DB.internationalToEnglish(text.toLowerCase()) + "%");
-				}
-			}
-			else
-			{
-				String searchText = Tools.replace(text, " ", "%");
-				//data
-				ps.setString(1, "%"+searchText+"%");
-				//data_asc
-				ps.setString(2, "%"+DB.internationalToEnglish(searchText.toLowerCase())+"%");
-				//title
-				ps.setString(3, "%"+searchText+"%");
-			}
-
-			rs = ps.executeQuery();
-			DocDetails doc;
-			int counter = 0;
-			while (rs.next() && counter++ < limit)
-			{
-				doc = getDocDetails(rs, false, true);
-				String dataAsc = DB.getDbString(rs, "data_asc");
-				if (dataAsc != null && "null".equals(dataAsc)==false)
-				{
-					doc.setData(dataAsc);
-				}
-				docs.add(doc);
-			}
-			rs.close();
-			ps.close();
-
-			db_conn.close();
-			db_conn = null;
-			ps = null;
-			rs = null;
-		}
-		catch (Exception ex){Logger.error(DocDB.class, ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-
-		return(docs);
-	}
-
-	/**
-	 * Vyhlada stranky obsahujuce zadane URL
-	 * @param url
-	 * @return
-	 */
-	public List<DocDetails> searchTextUrl(String url)
-	{
-		return searchTextUrl(url, -1);
-	}
-
-	/**
-	 * Vyhlada stranky obsahujuce zadane URL v zadanom adresari
-	 * @param url
-	 * @param groupId
-	 * @return
-	 */
-	public List<DocDetails> searchTextUrl(String url, int groupId)
-	{
-		List<DocDetails> docs = new ArrayList<>();
-
-		String groupIdsQuery = null;
-		if (groupId > 0) groupIdsQuery = StatDB.getRootGroupWhere("group_id", groupId);
-
-		//obmedzujeme na max 2000 zaznamov, viac realne nema zmysel (zbytocne iba zere pamat)
-		int limit = Constants.getInt("searchTextAllLimit");
-		String limit1 = "";
-		String limit2 = "";
-		if (Constants.DB_TYPE==Constants.DB_MYSQL || Constants.DB_TYPE==Constants.DB_PGSQL) limit2 = " LIMIT "+limit;
-		if (Constants.DB_TYPE==Constants.DB_MSSQL) limit1 = " TOP "+limit;
-
-		StringBuilder sql = new StringBuilder("SELECT").append(limit1).append(' ').append(getDocumentFieldsNodata()).append(" FROM documents d WHERE virtual_path LIKE ?");
-
-		if (Tools.isNotEmpty(groupIdsQuery)) sql.append(' ').append(groupIdsQuery);
-
-		sql.append(limit2);
-
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			URI uri = new URI(url);
-			String path = uri.getPath();
-			//ziskaj udaje z db
-			db_conn = DBPool.getConnection();
-			ps = StatNewDB.prepareStatement(db_conn, sql.toString());
-			ps.setString(1, "%"+path.toLowerCase()+"%");
-			rs = ps.executeQuery();
-			DocDetails doc;
-			int counter = 0;
-			while (rs.next() && counter++<limit)
-			{
-				doc = getDocDetails(rs, true, true);
-				docs.add(doc);
-			}
-			rs.close();
-			ps.close();
-
-			db_conn.close();
-			db_conn = null;
-			ps = null;
-			rs = null;
-		}
-		catch (Exception ex){Logger.error(DocDB.class, ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
-
-		return(docs);
-	}
-
-	/**
 	 * vrati zoznam dokumentov na schvalenie pre daneho pouzivatela
 	 * @param userId
 	 * @return
@@ -3756,180 +3523,9 @@ public class DocDB extends DB
 	 */
 	public boolean savePerexGroup(String groupName, int groupId, String availableGroups, HttpServletRequest request)
 	{
-		if (InitServlet.isTypeCloud() && Tools.isEmpty(availableGroups))
-		{
-			availableGroups = String.valueOf(CloudToolsForCore.getDomainId());
-		}
-
-		String lng = "";
-		if(request != null)
-			PageLng.getUserLng(request);
-		Prop prop = Prop.getInstance(lng);
-		boolean result = false;
-		boolean found = false;
-		int resultsDb = 0;
-		StringBuilder ulozeneAdresare = new StringBuilder();
-		try
-		{
-			if (Tools.isNotEmpty(groupName))
-			{
-				if( InitServlet.isTypeCloud() ) {
-					if(Tools.isEmpty(availableGroups))
-					{
-						availableGroups = CloudToolsForCore.getDomainId() + "";
-					}
-					else
-					{
-						Logger.debug(this," Removing availableGroups [ "+availableGroups+" ] from other domains");
-						GroupDetails gd = null;
-						int[] newAvailableGroupsCd = Tools.getTokensInt(availableGroups, ",");
-						availableGroups = ","+availableGroups+",";
-						boolean removeGroup = false;
-						for(int avgGrup : newAvailableGroupsCd)
-						{
-							removeGroup = false;
-							if((gd = GroupDetails.getById(avgGrup)) != null )
-							{
-								if (!gd.getDomainName().equalsIgnoreCase(CloudToolsForCore.getDomainName()))
-									removeGroup = true;  //vymazeme cislo zo zoznamu, pretoze je z inej domeny
-							}
-							else
-								removeGroup = true;	//je null (nepatri do ziadnej domeny) nema tu co hladat
-
-							if(removeGroup)
-								availableGroups = Tools.replace(availableGroups, ","+avgGrup+",", ",");
-						}
-						//odstranim pridane ciarky
-						availableGroups = availableGroups.substring(1,availableGroups.length());
-						//ak bolo v availableGroups iba jedno cislo a bolo zmazane, neostala tam uz ziadna ciarka
-						if(availableGroups.length() > 0) availableGroups = availableGroups.substring(0,availableGroups.length()-1);
-					}
-				}
-				PerexGroupBean pg = getPerexGroup(groupId, null);
-
-				for(PerexGroupBean pgBean : getPerexGroups())
-				{
-					//duplicitu kontrolujem pri novej perex skupine, alebo editacii perex skupiny s ostatnymi skupinami
-					if((pg == null || pg.getPerexGroupId() != pgBean.getPerexGroupId()) && pgBean.getPerexGroupName().equalsIgnoreCase(groupName.trim()))
-					{
-						//ak naslo rovnaky nazov perex skupiny, skontrolujem este aj zhodnost skupin
-						int[] pgBeanAvailableGroupsInt = pgBean.getAvailableGroupsInt();
-						int[] newAvailableGroups = Tools.getTokensInt(availableGroups, ",");
-						GroupsDB groupsDB = GroupsDB.getInstance();
-
-						//ak je zadane pre vsetky adresare, tak je zhoda
-						if(pgBeanAvailableGroupsInt.length == 0 || newAvailableGroups.length == 0)
-						{
-							found = true;
-							if(pgBeanAvailableGroupsInt.length == 0)
-							{
-								ulozeneAdresare.delete(0, ulozeneAdresare.length());
-								ulozeneAdresare.append(prop.getText("editor.perex_group.vsetky"));
-							}
-							else
-							{
-								for(int groupIdTmp : pgBeanAvailableGroupsInt)
-									ulozeneAdresare.append(groupsDB.getPath(groupIdTmp)).append(", ");
-								if(Tools.isNotEmpty(ulozeneAdresare)){
-									ulozeneAdresare = new StringBuilder(ulozeneAdresare.substring(0, ulozeneAdresare.length()-2));
-								}
-							}
-							break;
-						}
-						else
-						{
-							for(int groupIdTmp : pgBeanAvailableGroupsInt)
-							{
-								if(isGroupAvailable(newAvailableGroups, groupsDB.getParentGroups(groupIdTmp)))
-								{
-									found = true;
-									break;
-								}
-							}
-							if(found)
-							{
-								for(int groupIdTmp : pgBeanAvailableGroupsInt)
-									ulozeneAdresare.append(groupsDB.getPath(groupIdTmp)).append(", ");
-								if(Tools.isNotEmpty(ulozeneAdresare))
-									ulozeneAdresare = new StringBuilder(ulozeneAdresare.substring(0, ulozeneAdresare.length()-2));
-								break;
-							}
-						}
-
-					}
-				}
-
-				//Logger.println(this,"UPDATE: " +groupName+ "  " +groupId);
-
-				if (!found)
-				{
-					java.sql.Connection db_conn = null;
-					java.sql.PreparedStatement ps = null;
-					try{
-						db_conn = DBPool.getConnection();
-						String sql;
-
-						if (groupId > 0)
-						{
-							sql = "UPDATE perex_groups SET perex_group_name=?, available_groups=? WHERE perex_group_id=?";
-							if (pg!=null) Adminlog.add(Adminlog.TYPE_PEREX_GROUP_UPDATE, String.format("Zmena nazvu perex skupiny: %s => %s ", pg.getPerexGroupName(), groupName), groupId, -1);
-							else Adminlog.add(Adminlog.TYPE_PEREX_GROUP_UPDATE, String.format("Zmena nazvu perex skupiny: %s => %s ", groupId, groupName), groupId, -1);
-						}
-						else
-						{
-							sql = "INSERT INTO perex_groups (perex_group_name, available_groups) VALUES (?,?)";
-							Adminlog.add(Adminlog.TYPE_PEREX_GROUP_CREATE, "Vytvorena perex skupina: "+groupName, groupId, -1);
-						}
-
-						ps = db_conn.prepareStatement(sql);
-						int ind = 1;
-						ps.setString(ind++, groupName);
-						ps.setString(ind++, availableGroups);
-						if (groupId > 0)
-							ps.setInt(ind++, groupId);
-
-						resultsDb = ps.executeUpdate();
-						ps.close();
-						db_conn.close();
-
-						if(resultsDb > 0)
-							result = true;
-						else
-							result = false;
-
-						db_conn = null;
-						ps = null;
-					}
-					catch (Exception ex){Logger.error(DocDB.class, ex);}
-					finally{
-						try{
-							if (ps != null) ps.close();
-							if (db_conn != null) db_conn.close();
-						}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-					}
-				}
-				else
-				{
-					if(request != null)
-						request.setAttribute("groupExist", prop.getText("editor.perex_group.skupina_je_uz_definovana", ulozeneAdresare.toString()));
-					result = false;
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			result = false;
-			Logger.error(DocDB.class, ex);
-		}
-
-		if(resultsDb > 0)
-			getPerexGroups(true);
-
-		if (result) {
-			ClusterDB.addRefresh(DocDB.class);
-		}
-
-		return(result);
+		PerexGroupsEntity saved = PerexGroupsService.savePerexGroup(groupId, groupName, availableGroups);
+		if (saved == null) return false;
+		return true;
 	}
 
 	/**
@@ -3949,53 +3545,18 @@ public class DocDB extends DB
 	 */
 	public List<PerexGroupBean> getPerexGroups(boolean forceRefresh)
 	{
-		if (perexGroups!=null && forceRefresh==false)
-		{
-			return(perexGroups);
+		if (perexGroups != null && forceRefresh == false) {
+			return perexGroups;
 		}
 
-		List<PerexGroupBean> perexGroupsHolder = new ArrayList<>();
-		java.sql.Connection db_conn = null;
-		java.sql.PreparedStatement ps = null;
-		ResultSet rs = null;
-		try
-		{
-			db_conn = DBPool.getConnection();
-			PerexGroupBean pgBean;
-			String sql;
-
-			sql = "SELECT * FROM perex_groups ORDER BY perex_group_name ASC";
-			ps = db_conn.prepareStatement(sql);
-			rs = ps.executeQuery();
-			while(rs.next())
-			{
-				pgBean = new PerexGroupBean();
-				pgBean.setPerexGroupId(rs.getInt("perex_group_id"));
-				pgBean.setPerexGroupName(DB.getDbString(rs, "perex_group_name"));
-				pgBean.setRelatedPages(DB.getDbString(rs, "related_pages"));
-				pgBean.setAvailableGroups(DB.getDbString(rs, "available_groups"));
-				perexGroupsHolder.add(pgBean);
-			}
-
-			rs.close();
-			ps.close();
-			db_conn.close();
-			db_conn = null;
-			ps = null;
-			rs = null;
-		}
-		catch (Exception ex){Logger.error(DocDB.class, ex);}
-		finally{
-			try{
-				if (rs != null) rs.close();
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
+		try {
+			perexGroups = PerexGroupBeanToPerexGroupsEntityMapper.INSTANCE.perexGroupsEntityListToPerexGroupBeanList( PerexGroupsService.getPerexGroups() );
+		} catch (Exception e) {
+			Logger.error(DocDB.class, "Error loading PerexGroups", e);
+			if (perexGroups == null) perexGroups = new ArrayList<>();
 		}
 
-		perexGroups = perexGroupsHolder;
-
-		return (perexGroups);
+		return perexGroups;
 	}
 
 	public PerexGroupBean getPerexGroupByName(String name) {
@@ -4011,60 +3572,34 @@ public class DocDB extends DB
 
 	/**
 	 * Zmaze zadanu perex skupinu
-	 * @param groups
+	 * @param groups - zoznam perex skupin oddelenych znakom ,
 	 * @return
 	 */
 	public boolean deletePerexGroup(String groups)
 	{
 		String[] groupsArray;
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		try
-		{
-			if (Tools.isNotEmpty(groups))
+
+		if (Tools.isNotEmpty(groups)) {
+			groupsArray = Tools.getTokens(groups, ",");
+			for (int i=0; i<groupsArray.length; i++)
 			{
-				db_conn = DBPool.getConnection();
+				int groupId = Tools.getIntValue(groupsArray[i], -1);
+				PerexGroupBean perexGroup = getPerexGroup(groupId, groupsArray[i]);
 
-				groupsArray = Tools.getTokens(groups, ",");
-				for (int i=0; i<groupsArray.length; i++)
-				{
-					int groupId = Tools.getIntValue(groupsArray[i], -1);
-					PerexGroupBean perexGroup = getPerexGroup(groupId, groupsArray[i]);
+				if (perexGroup.getPerexGroupId() < 0) continue;
+				PerexGroupsService.deletePerexGroup(groupId);
 
-					if (perexGroup.getPerexGroupId() < 0) continue;
-					ps = db_conn.prepareStatement("DELETE FROM perex_groups WHERE perex_group_id=?");
-					ps.setInt(1, perexGroup.getPerexGroupId()) ;
-					ps.execute();
-					ps.close();
-
-					//zmazem aj pripadne zaznamy z perex_group_doc
-					ps = db_conn.prepareStatement("DELETE FROM perex_group_doc WHERE perex_group_id=?");
-					ps.setInt(1, perexGroup.getPerexGroupId());
-					ps.execute();
-					ps.close();
-
-					Adminlog.add(Adminlog.TYPE_PEREX_GROUP_DELETE, "Zmazana perex skupina: "+perexGroup.getPerexGroupName()+" id="+perexGroup.getPerexGroupId(), perexGroup.getPerexGroupId(), -1);
-					//Logger.println(this,"Deleting "+groupsArray[i]+", result: "+result);
-				}
-
-				db_conn.close();
-
-				getPerexGroups(true);
-
-				return(true);
+				//zmazem aj pripadne zaznamy z perex_group_doc
+				PerexGroupsService.deletePerexGroupDocsByPerexGroupId(groupId);
 			}
-			db_conn = null;
-			ps = null;
+
+			getPerexGroups(true);
+
+			return true;
 		}
-		catch (Exception ex){Logger.error(DocDB.class, ex);}
-		finally{
-			try{
-				if (ps != null) ps.close();
-				if (db_conn != null) db_conn.close();
-			}catch (Exception e) {sk.iway.iwcm.Logger.error(e);}
-		}
+
 		getPerexGroups(true);
-		return (false);
+		return false;
 	}
 
 
@@ -5338,7 +4873,7 @@ public class DocDB extends DB
 	 *
 	 * @return
 	 */
-	public static List<DocDetails> getBlogs(int authorId, int filterTopicId, String filterBlogName, Date filterDateFrom, Date filterDateTo)
+	public static List<DocDetails> getBlogs(int authorId, int filterTopicId, String filterBlogName, java.util.Date filterDateFrom, java.util.Date filterDateTo)
 	{
 		List<DocDetails> docs = new ArrayList<>();
 
@@ -6057,57 +5592,11 @@ public class DocDB extends DB
 			if(masterId < 1 || docIdList.size() < 1)
 				docIdList.add(Integer.valueOf(docId));
 
-			Connection db_conn = null;
-			PreparedStatement ps = null;
-			try
+			int[] pgArray = Tools.getTokensInt(perexGroups, ",");
+			for(Integer id : docIdList)
 			{
-				db_conn = DBPool.getConnection();
-				String[] pgArray = Tools.getTokens(perexGroups, ",");
-
-				for(Integer id : docIdList)
-				{
-					Logger.println(DocDB.class, "udpdatePerexGroupDoc - doc_id = "+id+"; perexGroups = "+perexGroups);
-
-					ps = db_conn.prepareStatement("DELETE FROM perex_group_doc WHERE doc_id = ?");
-					ps.setInt(1, id);
-					ps.execute();
-					ps.close();
-					ps = null;
-
-					for(String pg : pgArray)
-					{
-						if(Tools.getIntValue(pg, -1) > 0)
-						{
-							ps = db_conn.prepareStatement("INSERT INTO perex_group_doc (doc_id, perex_group_id) VALUES (?,?)");
-							ps.setInt(1, id);
-							ps.setInt(2, Tools.getIntValue(pg, 0));
-							ps.execute();
-							ps.close();
-							ps = null;
-						}
-					}
-				}
-
-				db_conn.close();
-				db_conn = null;
-			}
-			catch (Exception ex)
-			{
-				Logger.error(DocDB.class, ex);
-			}
-			finally
-			{
-				try
-				{
-					if (ps != null)
-						ps.close();
-					if (db_conn != null)
-						db_conn.close();
-				}
-				catch (Exception ex2)
-				{
-					//
-				}
+				Logger.println(DocDB.class, "udpdatePerexGroupDoc - doc_id = "+id+"; perexGroups = "+perexGroups);
+				PerexGroupsService.savePerexGroupsDoc(id, pgArray);
 			}
 		}
 	}
@@ -6390,9 +5879,9 @@ public class DocDB extends DB
 				DocDetails document = getDoc(rs.getInt(1));
 				if (document == null)
 					continue;
-				double price = document.getPrice();
+				BigDecimal price = document.getPrice();
 				//ak nema cenu, tak nas nezaujima, nejde o produkt
-				if (Math.abs(price) < 1e-7 || (showOnlyAvailable && !document.isAvailable() ) )
+				if (price.abs().compareTo(BigDecimal.valueOf(1e-7)) < 0 || (showOnlyAvailable && !document.isAvailable() ) )
 					continue;
 				products.add(document);
 			}

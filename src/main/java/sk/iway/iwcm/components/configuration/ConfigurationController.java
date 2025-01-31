@@ -23,6 +23,7 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -80,6 +81,15 @@ public class ConfigurationController extends DatatableRestControllerV2<ConfDetai
     public boolean deleteItem(ConfDetailsDto confDetailsDto, long id) {
         configurationService.deleteConfDetails(confDetailsDto.getName());
         return true;
+    }
+
+    @Override
+    public List<ConfDetailsDto> findItemBy(String propertyName, ConfDetailsDto original)
+            throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, InstantiationException {
+
+        //used for XLS import
+        List<ConfDetailsDto> list = configurationService.findConfDetailsBy(propertyName, original, getUser());
+        return list;
     }
 
     @Override

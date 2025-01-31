@@ -26,7 +26,7 @@
    List docList = null;
    if(grpDet != null)
    {
-   	docList = docDB.getDocByGroup(grpDet.getGroupId());
+   	docList = docDB.getBasicDocDetailsByGroup(grpDet.getGroupId(), DocDB.ORDER_PRIORITY);
    	if(docList.size() > 0)
    		request.setAttribute("docList", docList);
    }
@@ -84,8 +84,7 @@
                     htmlCode = previewWindow.document.getElementById("_iframeHtmlData").value;
                 }
 					 //console.log("Inserting HTML code=", htmlCode);
-                oEditor.FCK.InsertHtml(htmlCode);
-              	 oEditor.FCK.WJToogleBordersCommand_thisRef.RefreshBorders();
+                insertHtml(htmlCode);
                 return true ;
 			}else {
 
@@ -98,13 +97,11 @@
                     htmlCode = "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=" + selectedObjectDocId + ")!";
 
                     if (htmlCode.indexOf("<span") == 0) {
-                        oEditor.ckeditor.insertHtml(htmlCode);
+                        insertHtml(htmlCode);
                         return true;
                     }
 
-                    oEditor.FCK.InsertHtml(htmlCode);
-                    oEditor.FCK.WJToogleBordersCommand_thisRef.RefreshBorders();
-
+                    insertHtml(htmlCode);
                     return true;
                 } else if ($('input[name=DSsel]:checked').val() === "static") {
                     var htmlCode = $("#previewWindow").contents().find("#WJTempPreview").contents().find('#_iframeHtmlData').val();
@@ -115,12 +112,10 @@
                     //window.alert(htmlCode);
 
                     if (htmlCode.indexOf("<span") == 0) {
-                        oEditor.ckeditor.insertHtml(htmlCode);
+                        insertHtml(htmlCode);
                         return true;
                     }
-                    oEditor.FCK.InsertHtml(htmlCode);
-                    oEditor.FCK.WJToogleBordersCommand_thisRef.RefreshBorders();
-
+                    insertHtml(htmlCode);
                     return true;
 
                 } else {
@@ -134,9 +129,7 @@
                 //console.log("static chosen")
                 var htmlCode = $('#dirPreview').contents().find('#previewWindow').contents().find('body').html();
 				//console.log("htmlCode="+htmlCode);
-                oEditor.FCK.InsertHtml(htmlCode);
-                oEditor.FCK.WJToogleBordersCommand_thisRef.RefreshBorders();
-
+                insertHtml(htmlCode);
                 return true ;
 			}else if($('input[name=DSsel2]:checked').val()==="dynamic") {
 
@@ -144,6 +137,26 @@
 
 		}
 	} // End OK function
+
+	function insertHtml(data) {
+		//console.log("Inserting HTML code=", data, "oEditor=", oEditor);
+
+		if (data.indexOf("<span") == 0) {
+			//console.log("Inserting SPAN");
+			//insert inline element
+			oEditor.ckeditor.insertHtml(data);
+        } else if (typeof oEditor.ckeditor != "undefined" && typeof oEditor.ckeditor.wjInsertHtml != "undefined") {
+			//console.log("Inserting WJ HTML");
+			if (data.indexOf("!INCLUDE") == 0) oEditor.ckeditor.wjInsertUpdateComponent(data);
+			else oEditor.ckeditor.wjInsertHtml(data);
+		}
+		else {
+			//consoleo.log("Inserting FCK HTML");
+			oEditor.FCK.InsertHtml(data);
+		}
+
+		oEditor.FCK.WJToogleBordersCommand_thisRef.RefreshBorders();
+	}
 
 
 	function preview(select)
@@ -285,7 +298,7 @@
 	</script>
 <%  } %>
 
-<% if ((docList == null || docList.size()<2 ) && listPriecinkov.size()<1) { %>
+<% if ((docList == null || docList.size()<3 ) && listPriecinkov.size()<1) { %>
 	<script type="text/javascript">
 		$("#tabLink2").click();
 	</script>

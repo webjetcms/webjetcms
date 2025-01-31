@@ -100,6 +100,16 @@ public class DatatablePageImpl<T> extends PageImpl<T> {
             addOption(field, option, option, null);
     }
 
+    /**
+     * Add options from map type id:label, id will be converted to string and used as value for option
+     * @param field
+     * @param options
+     */
+    public void addOptions(String field, Map<? extends Number, String> options) {
+        for(Map.Entry<? extends Number,String> entry : options.entrySet())
+            addOption(field, entry.getValue(), String.valueOf(entry.getKey()), null);
+    }
+
     public Map<String, List<OptionDto>> getOptions() {
         return options;
     }

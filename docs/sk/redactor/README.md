@@ -6,7 +6,11 @@ Pokračujte výberom sekcie v ľavom menu.
 
 ## Dokumentácia na stiahnutie
 
-Pripravená je aj základná dokumentácia vo formáte `docx` na stiahnutie. Obsahuje informácie k základnej práci s WebJET CMS, nemusí obsahovať všetky najnovšie zmeny a neobsahuje opis všetkých aplikácií a možností. Vždy považujte za právoplatnú online dokumentáciu na tejto stránke, verzia v `docx` formáte je len doplnková možnosť.
+Túto dokumentáciu si môžete stiahnuť aj v PDF formáte pre možnosť vytlačenia.
+
+[Manuál pre redaktora - PDF](../_media/manuals/webjetcms-redactor.pdf)
+
+Staršia základná dokumentácia vo formáte `docx` na stiahnutie. Obsahuje informácie k základnej práci s WebJET CMS, nemusí obsahovať všetky najnovšie zmeny a neobsahuje opis všetkých aplikácií a možností. Vždy považujte za právoplatnú online dokumentáciu na tejto stránke, verzia v `docx` formáte je len doplnková možnosť.
 
 [WebJET_pre_redaktorov.docx](../_media/manuals/WebJET_pre_redaktorov.docx)
 

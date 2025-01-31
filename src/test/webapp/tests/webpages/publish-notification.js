@@ -77,8 +77,8 @@ Scenario('Publicable notification test + audit logs', async ({ I, DT, DTE, TempM
     I.say('Check that admin log was created correctly for this action');
     I.amOnPage('/admin/v9/apps/audit-search/');
     DT.filterSelect("logType", "SAVEDOC");
-    DT.filter("from-createDate", date.format(format) + ":00");
-    DT.filter("description", adminlogPublishMsg);
+    DT.filterContains("from-createDate", date.format(format) + ":00");
+    DT.filterContains("description", adminlogPublishMsg);
     I.see("UPDATE: id: 104831");
 });
 

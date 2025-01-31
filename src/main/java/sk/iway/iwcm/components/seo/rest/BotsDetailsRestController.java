@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_seo')")
 @Datatable
 public class BotsDetailsRestController extends DatatableRestControllerV2<BotsDetailsDTO, Long> {
-    
+
     @Autowired
     public BotsDetailsRestController() {
         super(null);
@@ -39,7 +39,7 @@ public class BotsDetailsRestController extends DatatableRestControllerV2<BotsDet
     }
 
     @Override
-    public Page<BotsDetailsDTO> getAllItems(Pageable pageable) {  
+    public Page<BotsDetailsDTO> getAllItems(Pageable pageable) {
         FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
         int botId = Tools.getIntValue(getRequest().getParameter("botId"), -1);
         return new DatatablePageImpl<>( SeoService.getUserStatViews(filter, botId) );
@@ -47,7 +47,7 @@ public class BotsDetailsRestController extends DatatableRestControllerV2<BotsDet
 
     @Override
     public Page<BotsDetailsDTO> searchItem(Map<String, String> params, Pageable pageable, BotsDetailsDTO search) {
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         int botId = Tools.getIntValue(getRequest().getParameter("botId"), -1);
         return new DatatablePageImpl<>( SeoService.getUserStatViews(filter, botId) );
     }
@@ -69,7 +69,7 @@ public class BotsDetailsRestController extends DatatableRestControllerV2<BotsDet
                 @RequestParam("rootDir") int rootGroupId) {
 
         Date[] dateRangeArr = StatService.processDateRangeString(stringRange);
-        
+
         return SeoService.getBotsDetailsLineChartData(dateRangeArr[0], dateRangeArr[1], botId, rootGroupId);
     }
 }

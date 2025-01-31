@@ -21,9 +21,10 @@ JAVA_OPTS="$JAVA_OPTS -DwebjetNodeId=2"
 
 The above entry sets the configuration variable `disableDMailSender` to the value of `false`.
 
-**COMMENT:** Note the setting of the cluster node ID directly by setting the variable `webjetNodeId`that does not use a prefix `webjet.`. webjetNodeId is not a configuration variable, but an instruction to set configuration variables:
+**COMMENT:** Note the setting of the cluster node ID directly by setting the variable `webjetNodeId` that does not use a prefix `webjet.`. webjetNodeId is not a configuration variable, but an instruction to set configuration variables:
 - `clusterMyNodeName` - to the value of `nodeX`
 - `pkeyGenOffset` - to the value of X
+
 Where `X` is the value set via `webjetNodeId`.
 
 In Windows, system variables are set in the program `Configure Tomcat` in the tab `Java`. You can set the above variables by adding them to the end of the text area `Java Options`:
@@ -46,6 +47,7 @@ export webjetNodeId=2
 ```
 
 **We recommend using environment variables when containerizing**, because they can be set by the standard way by a triggered container.
+
 ## Context parameter
 
 A suitable place to set the variable is also `<Parameter` v `<Context` element in server.xml for Tomcat. The advantage is that you can set the variable for each host separately. They are set with the prefix `webjet_`
@@ -61,6 +63,10 @@ A suitable place to set the variable is also `<Parameter` v `<Context` element i
                 remoteIpHeader="x-forwarded-for" protocolHeader="x-forwarded-proto" />
       </Host>
 ```
+
+## Empty value
+
+When entering a value via `-Dwebjet.` or `ENV` value is used only if it is not empty. To specify an empty value, enter the character `-`, this will be replaced with an empty value.
 
 ## External database connection
 
@@ -91,10 +97,12 @@ You can then set individual values via system or environment variables. The foll
 - `webjetDbUrl`
 - `webjetDbMinimumSize`
 - `webjetDbMaximumSize`
+
 only the values that are set are downloaded. So you can combine the settings `minumumSize` v `poolman.xml` and then the variable `webjetDbMinimumSize` you don't have to set it via an environment variable.
 
 **TIP:** for setting the variable v `JAVA_OPTS` don't forget to add a parameter to the variable menu `-D`.
-If you need to define multiple database connections for a connection other than `iwcm` it is possible to use a suffix in the variable name with the value `_dbname`that is, for example `webjetDbUserName_ip_data_jpa`.
+
+If you need to define multiple database connections for a connection other than `iwcm` it is possible to use a suffix in the variable name with the value `_dbname` that is, for example `webjetDbUserName_ip_data_jpa`.
 
 ### Using another file
 

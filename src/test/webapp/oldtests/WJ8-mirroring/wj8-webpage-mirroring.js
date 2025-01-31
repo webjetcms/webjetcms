@@ -173,14 +173,14 @@ function wj8MoveSubpage(I, randomNumber) {
      I.waitForInvisible(locate('.jstree-node.jstree-leaf.jstree-last').withDescendant('.jstree-anchor>i.jstree-icon.jstree-themeicon.fa.fa-file.icon-state-success.jstree-themeicon-custom').withText(auto_webpage1_sk), 10);
      I.dontSeeElement(locate('.jstree-node.jstree-leaf.jstree-last').withDescendant('.jstree-anchor>i.jstree-icon.jstree-themeicon.fa.fa-file.icon-state-success.jstree-themeicon-custom').withText(auto_webpage1_sk));
      I.click(locate('.jstree-anchor').withText(auto_subfolder1_sk));
-     I.waitForVisible('.dataTables_scrollBody', 15);
+     I.waitForVisible('.dt-scroll-body', 15);
      I.waitForElement(locate('tr.odd').withText(auto_webpage1_sk), 15);
      // overim ci sa stranka webpage1 premiestnila i do en struktury
      I.say('Overim ci sa stranka webpage1 premiestnila i do en podpriecinka subfolder1');
      I.click(locate('.jstree-anchor').withText(auto_folder_en));
      I.dontSeeElement(locate('.jstree-node.jstree-leaf.jstree-last').withDescendant('.jstree-anchor>i.jstree-icon.jstree-themeicon.fa.fa-file.icon-state-danger.jstree-themeicon-custom').withText(auto_webpage1_sk));
      I.click(locate('.jstree-anchor').withChild('.jstree-icon.jstree-themeicon.wj-folder-hidden.jstree-themeicon-custom').withText(auto_subfolder1_sk));
-     I.waitForVisible('.dataTables_scrollBody', 15);
+     I.waitForVisible('.dt-scroll-body', 15);
      I.waitForElement(locate('tr.odd').withText(auto_webpage1_sk), 5); // TODO - webstranka sa automaticky nepremiestni do en subadresara subfolder1
      I.wait(1);
 }
@@ -205,13 +205,13 @@ function wj8ChangeMainPage(I, randomNumber) {
      // over ci sa v hlavnom sk adresari zmenila hlavna stranka na webpage1
      I.say('Over ci sa v hlavnom sk adresari zmenila hlavna stranka na webpage1');
      I.click(locate('.jstree-anchor').withText(auto_folder_sk));
-     I.waitForVisible('.dataTables_scrollBody', 15);
+     I.waitForVisible('.dt-scroll-body', 15);
      I.seeElement(locate('tr.even.is-default-doc').withText(auto_webpage1_sk));
      I.wait(1);
      // over ci sa v en adresari zmenila hlavna stranka na sk-webpage1
      I.say('Over ci sa v hlavnom en adresari zmenila hlavna stranka na webpage1');
      I.click(locate('.jstree-anchor').withText(auto_folder_en));
-     I.waitForVisible('.dataTables_scrollBody', 15);
+     I.waitForVisible('.dt-scroll-body', 15);
      I.seeElement(locate('tr.even.is-default-doc').withText(auto_webpage1_sk)); // TODO hlavna stranka v en adresari sa nezmenila
 }
 

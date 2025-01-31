@@ -240,6 +240,4 @@ VÁŠ KÓD TU
 
 ### Nevedomosť `markdown` formátu
 
-Najčastejšia chyba bude asi nesprávny formát z dôvodu nevedomosti formátu súborov `markdown`.  O základnom syntaxe sa môžete dočítať na stránke [Basic Syntax](https://www.markdownguide.org/basic-syntax/).
-
-**Príklad chybného použitia**
+Najčastejšia chyba bude asi nesprávny formát z dôvodu nevedomosti formátu súborov `markdown`.  O základnej syntaxi sa môžete dočítať na stránke [Basic Syntax](https://www.markdownguide.org/basic-syntax/).

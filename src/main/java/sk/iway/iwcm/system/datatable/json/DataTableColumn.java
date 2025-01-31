@@ -639,6 +639,10 @@ public class DataTableColumn {
 
     private void addClassName(String addClassName) {
         if (Tools.isEmpty(addClassName)) return;
+
+        //add multiweb class name only in multiweb
+        if ("multiweb-noteditable".equals(addClassName) && InitServlet.isTypeCloud()==false) return;
+
         if (Tools.isEmpty(className)) className = addClassName.trim();
         else className += " "+addClassName.trim();
     }

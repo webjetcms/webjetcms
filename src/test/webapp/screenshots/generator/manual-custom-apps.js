@@ -25,15 +25,18 @@ Scenario('frontend', ({ I, Document }) => {
     I.amOnPage("/apps/spring-app/kontakty/?NO_WJTOOLBAR=true");
 
     //cela stranka
+    I.waitForVisible( locate("h3").withText("Zoznam kontaktov") );
     Document.screenshot("/custom-apps/spring-mvc/list.png");
 
     //editacia
     I.click("Upraviť", "div.container table.table tbody tr:nth-child(2)");
+    I.waitForVisible("#wjInline-docdata");
     Document.screenshot("/custom-apps/spring-mvc/edit.png");
 
     I.amOnPage("/apps/spring-app/kontakty/?NO_WJTOOLBAR=true");
     I.click("Nový kontakt");
     I.click("Potvrdiť");
+    I.waitForVisible("div.alert.alert-danger")
     Document.screenshot("/custom-apps/spring-mvc/validation.png");
 });
 

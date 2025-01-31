@@ -54,7 +54,9 @@ Způsob zobrazení se dělí na přihlášeného a nepřihlášeného návštěv
 
 ## Přístup ke kartě
 
-Na kartě přístupu nastavíte oprávnění pro přístup ke stránkám v této složce. Pokud vyberete skupinu uživatelů, obsah složky nebude veřejně přístupný. Bude přístupný pouze přihlášenému návštěvníkovi, který patří do jedné z vybraných skupin uživatelů. **Varování:** nejedná se o nastavení oprávnění pro správce, ale o vytvoření sekce chráněné heslem na webové stránce (pro návštěvníky stránky).
+Na kartě přístupu nastavíte oprávnění pro přístup ke stránkám v této složce. Pokud vyberete skupinu uživatelů, obsah složky nebude veřejně přístupný. Bude přístupný pouze přihlášenému návštěvníkovi, který patří do jedné z vybraných skupin uživatelů.
+
+!>**Varování:** nejedná se o nastavení oprávnění pro správce, ale o vytvoření sekce chráněné heslem na webové stránce (pro návštěvníky stránky).
 
 - Povolit přístup pouze skupině uživatelů - pokud vyberete skupinu uživatelů, uživatel z této skupiny bude muset být pro zobrazení stránky přihlášen. Přiřadit stránku k hromadnému e-mailu - stránka bude dostupná pro hromadný e-mail uživatelů z vybrané skupiny. Odesílané hromadné e-maily je možné tímto způsobem kategorizovat podle preferencí návštěvníků.
 - Stránka přihlašovacího formuláře - pokud jste vytvořili speciální stránku přihlašovacího formuláře, nastavte ji zde. Stránka je rekurzivně prohledávána až do kořenového adresáře, takže nemusí být nastavena pro všechny složky, ale pouze pro kořenový adresář.

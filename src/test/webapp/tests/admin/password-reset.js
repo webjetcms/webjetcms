@@ -27,7 +27,7 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 1 
 });
 
 
-Scenario('forgotten password - customer zone - VIA login @singlethread', async ({ I, TempMail }) => {
+Scenario('forgotten password - customer zone - VIA login @singlethread', async ({ I, Document, TempMail }) => {
   I.logout();
   const randomPassword = 'password_P' + I.getRandomText();
 
@@ -35,7 +35,7 @@ Scenario('forgotten password - customer zone - VIA login @singlethread', async (
   I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona');
   setValueToRecoverPassword(I, user, false);
 
-  await changePasswordEmail(I, TempMail, 'webjetcmstest');
+  await changePasswordEmail(I, Document, TempMail, 'webjetcmstest');
 
   await checkUsersSelectOptions(I, ['user_slabeheslo'], false); //only one login, because we recover using login
 
@@ -48,7 +48,7 @@ Scenario('forgotten password - customer zone - VIA login @singlethread', async (
   I.clickCss('input[type="submit"].btn.btn-success.login-submit');
 });
 
-Scenario('forgotten password - administration - VIA login @singlethread', async ({ I, TempMail }) => {
+Scenario('forgotten password - administration - VIA login @singlethread', async ({ I, Document, TempMail }) => {
   I.logout();
   const randomPassword = 'password_P' + I.getRandomText();
 
@@ -59,7 +59,7 @@ Scenario('forgotten password - administration - VIA login @singlethread', async 
   I.amOnPage('/admin');
   setValueToRecoverPassword(I, user, true);
 
-  await changePasswordEmail(I, TempMail, 'webjetcmstest');
+  await changePasswordEmail(I, Document, TempMail, 'webjetcmstest');
   changePasswordPlusTests(I, randomPassword, true);
 
   I.amOnPage('/admin');
@@ -73,7 +73,7 @@ const emailName = 'samemail';
 const email = `${emailName}@fexpost.com`;
 const users = ['sameA','sameB', 'sameC', 'sameD'];
 
-Scenario('forgotten password - administration - VIA email @singlethread', async ({ I, TempMail, DT}) => {
+Scenario('forgotten password - administration - VIA email @singlethread', async ({ I, Document, TempMail, DT}) => {
   I.logout();
   const randomPassword = 'password_P' + I.getRandomText();
 
@@ -83,7 +83,7 @@ Scenario('forgotten password - administration - VIA email @singlethread', async 
   setValueToRecoverPassword(I, email);
 
   const lastId  = await checkAudit(I, DT);
-  await changePasswordEmail(I, TempMail, emailName);
+  await changePasswordEmail(I, Document, TempMail, emailName);
   const changePasswordUrl = await I.grabCurrentUrl();
 
   I.closeOtherTabs();
@@ -142,7 +142,7 @@ Scenario('IF un-used email address by users is used, the email will not be sent 
 Scenario('Make users not-valid for password reset @singlethread', async ({I, DT, DTE }) => {
   I.relogin('admin');
   I.amOnPage('/admin/v9/users/user-list/');
-  DT.filter("email", "samemail@fexpost.com");
+  DT.filterContains("email", "samemail@fexpost.com");
 
   I.say("user sameA - will be un-approved");
   I.click("sameA");
@@ -166,7 +166,10 @@ Scenario('Make users not-valid for password reset @singlethread', async ({I, DT,
   I.logout();
 });
 
-Scenario('forgotten password - user zone - invalid users option test - VIA email @singlethread', async ({I, TempMail }) => {
+Scenario('forgotten password - user zone - invalid users option test - VIA email @singlethread', async ({I, Document, TempMail }) => {
+  I.closeOtherTabs();
+  Document.deleteAllCacheObjects();
+
   I.logout();
   I.say('Vyžiadanie zmeny hesla v zakaznickej zóne');
   I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona');
@@ -176,14 +179,14 @@ Scenario('forgotten password - user zone - invalid users option test - VIA email
   setValueToRecoverPassword(I, email, false);
 
   // Do not close email tab - we will return there
-  await changePasswordEmail(I, TempMail, emailName, false);
+  await changePasswordEmail(I, Document, TempMail, emailName, false);
   const changePasswordUrl = await I.grabCurrentUrl();
 
   await checkUsersSelectOptions(I, ['sameB', 'sameD'], false); //two one logins are VALID - must see even if not a admin
 
   I.say("Cancel change password action");
   I.closeCurrentTab();
-  cancelChangePassword(I);
+  await cancelChangePassword(I, Document);
 
   checkUrlDoesNotWork(I, changePasswordUrl, false);
 });
@@ -194,7 +197,9 @@ Scenario('delete cache objects to prevent logon form wrong password counting, 3 
 });
 
 
-Scenario('forgotten password - administration - invalid users option test - VIA email @singlethread', async ({I, TempMail }) => {
+Scenario('forgotten password - administration - invalid users option test - VIA email @singlethread', async ({I, Document, TempMail }) => {
+  TempMail.login(emailName);
+  await TempMail.destroyInbox();
   I.logout();
   I.amOnPage("/admin/logon/");
 
@@ -203,14 +208,15 @@ Scenario('forgotten password - administration - invalid users option test - VIA 
   setValueToRecoverPassword(I, email);
 
   // Do not close email tab - we will return there
-  await changePasswordEmail(I, TempMail, emailName, false);
+  await changePasswordEmail(I, Document, TempMail, emailName, false);
   const changePasswordUrl = await I.grabCurrentUrl();
+  I.say(`Url for password change: ${changePasswordUrl}`);
 
   await checkUsersSelectOptions(I, ['sameD'], true); //only one login is VALID
 
   I.say("Cancel change password action");
   I.closeCurrentTab();
-  cancelChangePassword(I);
+  await cancelChangePassword(I, Document);
 
   checkUrlDoesNotWork(I, changePasswordUrl, true);
 });
@@ -218,7 +224,7 @@ Scenario('forgotten password - administration - invalid users option test - VIA 
 Scenario('Restoration of changes, approval of users @singlethread', async ({ I , DT, DTE}) => {
   I.relogin('admin');
   I.amOnPage('/admin/v9/users/user-list/');
-  DT.filter("email", "samemail@fexpost.com");
+  DT.filterContains("email", "samemail@fexpost.com");
 
   I.say("user sameA");
   I.click("sameA");
@@ -243,7 +249,7 @@ Scenario('Restoration of changes, approval of users @singlethread', async ({ I ,
   I.logout();
 });
 
-Scenario('Verification of password reset completion and audit log removal @singlethread', async ({ I, TempMail, DT }) => {
+Scenario('Verification of password reset completion and audit log removal @singlethread', async ({ I, Document, TempMail, DT }) => {
   I.logout();
 
   I.say('Wait 10 seconds for next login');
@@ -256,7 +262,7 @@ Scenario('Verification of password reset completion and audit log removal @singl
   TempMail.login(emailName);
   TempMail.openLatestEmail();
 
-  cancelChangePassword(I);
+  await cancelChangePassword(I, Document);
 
   const changePasswordUrl = await I.grabCurrentUrl();
 
@@ -284,7 +290,7 @@ async function checkAudit(I, DT, lastId = null){
   I.amOnPage('/admin/v9/apps/audit-search/');
   if (lastId){
     I.say('Check if audit log was deleted');
-    DT.filter('id', lastId );
+    DT.filterId('id', lastId );
     const mails = ['Same A Mail', 'Same B Mail', 'Same C Mail', 'Same D Mail'];
     mails.forEach(mail => I.dontSee(mail));
   }
@@ -292,17 +298,18 @@ async function checkAudit(I, DT, lastId = null){
     I.say('Check last audit log');
     DT.filterSelect('logType', 'USER_CHANGE_PASSWORD');
     const lastId = await I.grabAttributeFrom('tbody tr:first-child', 'id');
-    DT.filter('id', lastId );
+    DT.filterId('id', lastId );
     I.see('Same D Mail');
     I.logout();
     return lastId;
   }
 }
 
-async function changePasswordEmail(I, TempMail, emailName, closeAndDestroy = true) {
+async function changePasswordEmail(I, Document, TempMail, emailName, closeAndDestroy = true) {
   I.say('Opening the email for password reset');
   TempMail.login(emailName);
   TempMail.openLatestEmail();
+  let openTabs = await I.grabNumberOfOpenTabs();
   I.click(locate('a').withText('Ak si chcete zmeniť heslo, kliknite sem do 30 minút.'));
 
   if(closeAndDestroy === true) {
@@ -310,6 +317,7 @@ async function changePasswordEmail(I, TempMail, emailName, closeAndDestroy = tru
     await TempMail.destroyInbox();
   }
 
+  await Document.waitForTab(openTabs+1);
   I.switchToNextTab();
   if(closeAndDestroy === true) {
     I.closeOtherTabs();
@@ -390,9 +398,13 @@ async function checkUsersSelectOptions(I, users, isAdminSection) {
   assert.deepStrictEqual(uniqueOptions, users, 'The options in the select do not match the expected values of users');
 }
 
-function cancelChangePassword(I) {
+async function cancelChangePassword(I, Document) {
   I.waitForText('Ak ste nepožiadali o zmenu hesla môžete túto akciu zrušiť kliknutím sem.');
+  let openTabs = await I.grabNumberOfOpenTabs();
   I.click(locate('a').withText('Ak ste nepožiadali o zmenu hesla môžete túto akciu zrušiť kliknutím sem.'));
+  //wait for tab open
+  await Document.waitForTab(openTabs+1);
+
   I.switchToNextTab();
   I.waitForText('Požiadavka na zmenu hesla bola zrušená.');
 }

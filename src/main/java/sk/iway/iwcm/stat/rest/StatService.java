@@ -8,12 +8,15 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.stat.Column;
 import sk.iway.iwcm.stat.FilterHeaderDto;
 import sk.iway.iwcm.stat.StatTableDB;
 import sk.iway.iwcm.stat.jpa.SearchEnginesDTO;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Main goal of this Service is help with extended filters that all Stat section pages contains and to reduce dudplicity codes.
@@ -185,7 +188,7 @@ public class StatService {
      * @param specialDateName name of param that is in map and represent date range param dayDate
      * @return FilterHeaderDto variable that contain handled params
      */
-    public static FilterHeaderDto processMapToStatFilter(Map<String, String> params, String specialDateName) {
+    public static FilterHeaderDto processMapToStatFilter(Map<String, String> params, String specialDateName, Identity user) {
         FilterHeaderDto filter = new FilterHeaderDto();
         String stringRange = "";
 
@@ -234,6 +237,9 @@ public class StatService {
         //Set date range into filter
         filter.setDateFrom(dateRange[0]);
         filter.setDateTo(dateRange[1]);
+
+        // Safety FIRST
+        filter.setRootGroupId( GroupsTreeService.gerDefaultGroupTreeOptionForUser(filter.getRootGroupId(), user).getGroupId());
 
         return filter;
     }
@@ -288,6 +294,8 @@ public class StatService {
         filter.setUrl(Tools.getStringValue(request.getParameter("searchUrl"), ""));
         if("".equals( filter.getUrl() ))
             filter.setUrl(Tools.getStringValue(request.getParameter("url"), ""));
+        if("".equals( filter.getUrl() ))
+            filter.setUrl(Tools.getStringValue(request.getParameter("searchurl"), ""));
 
         //Set search engine name
         filter.setSearchEngineName(Tools.getStringValue(request.getParameter("searchEngine"), ""));
@@ -303,6 +311,10 @@ public class StatService {
         filter.setStatType( Tools.getStringValue(request.getParameter("searchStatType"), "days") );
         if("days".equals( filter.getStatType() ))
             filter.setStatType( Tools.getStringValue(request.getParameter("statType"), "days") );
+
+
+        // Safety FIRST
+        filter.setRootGroupId( GroupsTreeService.gerDefaultGroupTreeOptionForUser(filter.getRootGroupId(), UsersDB.getCurrentUser(request)).getGroupId() );
 
         return filter;
     }

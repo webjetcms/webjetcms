@@ -9,6 +9,7 @@ Storing and editing web pages is a complex process. Classes are in the package `
 - [service.MultigroupService](../../../../javadoc/sk/iway/iwcm/editor/service/MultigroupService.html) - service for web pages stored in multiple directories.
 - [service.WebpagesService](../../../../javadoc/sk/iway/iwcm/editor/service/WebpagesService.html) - service for the list of pages in the datatable.
 - [util.EditorUtils](../../../../javadoc/sk/iway/iwcm/editor/util/EditorUtils.html) - additional methods for the editor.
+
 If you need to edit a page in your code, use the class exclusively `EditorFacade` for the acquisition of an existing/new `DocDetails` of the object by calling `getDocForEditor(int docId, int historyId, int groupId)`, or to save changes by calling `save(DocDetails entity)`.
 
 To quickly create a new page, you can use the method `EditorFacade.createEmptyWebPage(GroupDetails group, String title, boolean available)`. If the value is `title` empty the directory name is used as the page name. Attribute `available` determines whether or not the page should be immediately available for viewing after it is created.

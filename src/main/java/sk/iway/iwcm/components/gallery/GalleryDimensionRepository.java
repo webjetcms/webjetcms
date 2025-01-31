@@ -11,5 +11,6 @@ import java.util.Optional;
 public interface GalleryDimensionRepository extends DomainIdRepository<GalleryDimension, Long> {
     Optional<GalleryDimension> findFirstByPathAndDomainId(String path, int domainId);
     List<GalleryDimension> findByPathLikeAndDomainId(String path, int domainId);
+    List<GalleryDimension> findByPathLikeAndPathLikeAndDomainId(String baseFolder, String searchContains, int domainId);
     Optional<GalleryDimension> findFirstByPathLikeAndDomainId(String path, int domainId);
 }

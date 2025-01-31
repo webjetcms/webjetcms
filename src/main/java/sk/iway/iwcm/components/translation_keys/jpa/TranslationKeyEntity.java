@@ -298,4 +298,30 @@ public class TranslationKeyEntity {
         if (key.contains("<") || key.contains(">")) return ResponseUtils.filter(key).trim();
         return key.trim();
     }
+
+    public String getOriginalValue(char a) {
+        switch (a) {
+            case 'A':
+                return originalValueA;
+            case 'B':
+                return originalValueB;
+            case 'C':
+                return originalValueC;
+            case 'D':
+                return originalValueD;
+            case 'E':
+                return originalValueE;
+            case 'F':
+                return originalValueF;
+            case 'G':
+                return originalValueG;
+            case 'H':
+                return originalValueH;
+            case 'I':
+                return originalValueI;
+            case 'J':
+                return originalValueJ;
+            default: return null;
+        }
+    }
 }

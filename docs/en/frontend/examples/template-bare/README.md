@@ -12,7 +12,7 @@ You can get the source code of the template in [WebJET CMS github repository](ht
 
 Download the template and place it in the folder `templates/bare/bootstrap-bare/` (if you are using gradle project so of course still to `src/main/webapp`). If you place it in a different folder you need to edit the paths in the source codes, just search for that string in the files and edit the path.
 
-All the paths that you write in `.pug/.scss/.js` files you use including the prefix `/templates/bare/....`that is, as if for use in WebJET. If you run the local version via `npm run start`, but the paths have a prefix `/` (since the root folder is actually `dist`). In the file `node_scripts/bs-config.js` redirection is set, if you change the path to the template don't forget to edit it in this file as well.
+All the paths that you write in `.pug/.scss/.js` files you use including the prefix `/templates/bare/....` that is, as if for use in WebJET. If you run the local version via `npm run start`, but the paths have a prefix `/` (since the root folder is actually `dist`). In the file `node_scripts/bs-config.js` redirection is set, if you change the path to the template don't forget to edit it in this file as well.
 
 In the terminal, navigate to the folder `src/main/webapp/templates/bare/bootstrap-bare` and generate `dist` version of the command:
 
@@ -77,13 +77,14 @@ Go to Web Pages - List of Web Pages, click the System tab, and navigate to the H
 You will see 3 columns:
 - WebJET logo - you can change it for a suitable logo for your site
 - Application menu - probably does not have the root folder set correctly, click on the pencil icon in the application and in the application settings window change `Koreňový adresár` to your domain directory. However, you have not yet created a site structure so the application will not display anything yet.
-- Language switching - displays the language switcher `SK - EN`If you do not use the language mutations, you can delete the application.
+- Language switching - displays the language switcher `SK - EN` If you do not use the language mutations, you can delete the application.
 
 ![](header-editor.png)
 
 Follow a similar procedure for setting the footer (page `Základná pätička`), delete everything and insert the block `footer-footer`. In addition to the standard text columns where you can easily edit the text to suit your needs, the footer of the app includes:
 - Login to `newslettra` (bulk email) - a simplified version with only a field for entering the email is used. The simplified registration form registers to all email groups that have the option enabled `Povoliť pridávanie/odoberanie zo skupiny samotným používateľom` a `Vyžadovať potvrdenie e-mailovej adresy`.
 - GDPR cookies - application for setting cookies, their list is taken from the GDPR-Cookie Manager application in which you set the list of cookies that the website uses. You can import [basic list of cookies](cookies.xlsx).
+
 Go to Template-List and set the header/footer to the template `Bare - Hlavná šablóna` (in the Template tab, set the Header and Footer fields).
 
 Note: the template contains a menu in the header, so leave the Main and Side Navigation items blank in the template settings.
@@ -110,9 +111,10 @@ All template files are located in the src folder, which contains the following s
 - `assets` - images, icons and fonts, we recommend to follow the suggested structure of subfolders. In the folder `images` there are sample images for PageBuilder blocks.
 - `js` - JavaScript files, the main file is `ninja.js`.
 - `pug` - HTML code of templates in the format [PugJS](https://pugjs.org/).
-	- `includes` - Shared blocks between templates (e.g. a header shared between the main page template and a subpage).
-	- `pagebuilder` - blocks for [PageBuilder](http://docs.webjetcms.sk/v2022/#/frontend/page-builder/blocks). In blocks we recommend to use as much as possible the possibility of `include`. Do `container` insert existing blocks `column` blocks and into `section` Existing `container` Blocks. When changing `column` block, the change will also be reflected in `container` a `section` blocks.
+  - `includes` - Shared blocks between templates (e.g. a header shared between the main page template and a subpage).
+  - `pagebuilder` - blocks for [PageBuilder](http://docs.webjetcms.sk/v2022/#/frontend/page-builder/blocks). In blocks we recommend to use as much as possible the possibility of `include`. Do `container` insert existing blocks `column` blocks and into `section` Existing `container` Blocks. When changing `column` block, the change will also be reflected in `container` a `section` blocks.
 - `scss` - CSS styles in format for [Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/)
+
 Design templates are compiled from pug format to HTML format for use via [Thymeleaf](http://docs.webjetcms.sk/v2022/#/frontend/thymeleaf/README). For prototyping using `npm run start` we recommend to follow the option `include` blocks for PageBuilder into templates. This way, you can verify the page view and the content at the same time as you verify the block view. Ideally, you will use all the blocks on one page in the prototype. This makes it easy to visually verify their functionality and display when changing CSS styles or HTML code.
 
 ### Generating dist version
@@ -139,6 +141,7 @@ individual `npm` scripts are defined in [package.json](package.json) in the elem
 - `npm run clean` - erases `dist` Directory.
 - `npm run start` - starts prototyping mode - generates `dist` directory, tracks changes to the files and opens the browser with the prototype version.
 - `npm run start:debug` - starts the prototyping mode with `debug` Browser mode.
+
 Configuration for prototyping mode `browser-sync` is located in the file [node-scripts/bs-config.js](node_scripts/bs-config.js). There is possibly a need to modify the path for replacing the addresses of fonts/images that are linked with the full URL in the CSS files (since during prototyping the URL of the pages differs from the address in the final version via WebJET CMS).
 
 ### JavaScript file processing
@@ -161,33 +164,33 @@ Basic application of styles to any element is supported, as well as styling of s
 
 ```css
 .blue {
-	color: blue;
+    color: blue;
 }
 .zvyrazneny-text {
-	background-color: yellow;
+    background-color: yellow;
 }
 
 a {
-	&.btn.btn-primary {
-		/*bootstrap default*/
-	}
-	&.btn.btn-secondary {
-		/*bootstrap default*/
-	}
+    &.btn.btn-primary {
+        /*bootstrap default*/
+    }
+    &.btn.btn-secondary {
+        /*bootstrap default*/
+    }
 }
 
 table {
-	&.table {
-		&.table.table-dark {
-			/*bootstrap default*/
-		}
-		&.table.table-striped {
-			/*bootstrap default*/
-		}
-		&.table-bordered {
-			/*bootstrap default*/
-		}
-	}
+    &.table {
+        &.table.table-dark {
+            /*bootstrap default*/
+        }
+        &.table.table-striped {
+            /*bootstrap default*/
+        }
+        &.table-bordered {
+            /*bootstrap default*/
+        }
+    }
 }
 ```
 
@@ -203,12 +206,12 @@ If you want, you can also define the style displayed in the selection box in the
 
 ```css
 a {
-	&.btn.more-info {
-		/* editor */
-		font-size: 150%;
-		background-color: var(--bs-orange);
-		color: var(--bs-white);
-	}
+    &.btn.more-info {
+        /* editor */
+        font-size: 150%;
+        background-color: var(--bs-orange);
+        color: var(--bs-white);
+    }
 }
 ```
 
@@ -218,10 +221,10 @@ When applying a CSS style that has no HTML tag set, the style is applied to the 
 
 ```css
 span.more-info {
-	/* editor */
-	font-size: 150%;
-	background-color: orange;
-	color: white;
+    /* editor */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
 }
 ```
 

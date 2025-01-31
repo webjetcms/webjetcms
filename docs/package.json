@@ -6,15 +6,22 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "sitemap": "node sitemapGenerator.js",
-    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid"
+    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid",
+    "pdf": "node convert-to-pdf.js",
+    "postinstall": "npx replace-in-file \"browser.newPage();\" \"browser.newPage();\n\t\tpage.setDefaultTimeout(0);\" node_modules/docsify-to-pdf/src/render.js"
   },
   "author": "InterWay, a. s.",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@webjetcms/deepmark": "^0.1.8",
-    "fast-glob": "^3.3.2",
+    "@webjetcms/deepmark": "^0.2.1",
+    "fast-glob": "^3.3.3",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
+    "properties": "^1.2.1",
+    "replace-in-file": "^8.3.0",
     "xmlbuilder": "^15.1.1"
+  },
+  "devDependencies": {
+    "docsify-to-pdf": "^0.0.5"
   }
 }

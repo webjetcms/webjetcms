@@ -25,7 +25,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_seo')")
 @Datatable
 public class StatKeywordsRestController extends DatatableRestControllerV2<StatKeywordsDTO, Long> {
-    
+
     private final DocDetailsRepository docDetailsRepository;
 
     @Autowired
@@ -40,19 +40,19 @@ public class StatKeywordsRestController extends DatatableRestControllerV2<StatKe
     }
 
     @Override
-    public Page<StatKeywordsDTO> getAllItems(Pageable pageable) { 
+    public Page<StatKeywordsDTO> getAllItems(Pageable pageable) {
         FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
         return new DatatablePageImpl<>( SeoService.getStatKeywordsTableData(filter) );
     }
 
     @Override
     public Page<StatKeywordsDTO> searchItem(Map<String, String> params, Pageable pageable, StatKeywordsDTO search) {
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         return new DatatablePageImpl<>( SeoService.getStatKeywordsTableData(filter) );
     }
 
     @RequestMapping(
-        value="/searchEnginesSelect", 
+        value="/searchEnginesSelect",
         params={"dayDate", "rootDir", "webPage"})
     @ResponseBody
     public List<String> getSearchEnginesSelectValues(

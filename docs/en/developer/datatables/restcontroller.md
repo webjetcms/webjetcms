@@ -1,6 +1,6 @@
 # DatatableRestControllerV2.java
 
-Java class [DatatableRestControllerV2](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) encapsulates communication with [datatable](README.md) a [To the editor](../datatables-editor/README.md).
+Java class [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) encapsulates communication with [datatable](README.md) a [To the editor](../datatables-editor/README.md).
 
 ## Basic implementation
 
@@ -30,14 +30,15 @@ public class RedirectRestController extends DatatableRestControllerV2<RedirectBe
 }
 ```
 
-important is the constructor that passes the Spring DATA repository `RedirectsRepository`, annotation `@Datatable`to ensure correct processing of error messages and annotation `PreAuthorize` for the control of rights:
+important is the constructor that passes the Spring DATA repository `RedirectsRepository`, annotation `@Datatable` to ensure correct processing of error messages and annotation `PreAuthorize` for the control of rights:
 
 ```java
 @Datatable
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
-**ATTENTION**: Spring DATA entity must have as PK `Long id` (not e.g. `adminlogId` and so on), if the column in the database is called differently, it is necessary to set the column name:
+!>**Warning:** Spring DATA entity must have as PK `Long id` (not e.g. `adminlogId` and so on), if the column in the database is called differently, it is necessary to set the column name:
+
 ```java
 @Id
 @GeneratedValue(strategy=GenerationType.IDENTITY, generator="S_adminlog_notify")
@@ -46,7 +47,7 @@ important is the constructor that passes the Spring DATA repository `RedirectsRe
 private Long id;
 ```
 
-**ATTENTION**: in the data entity **You MUST NOT use primitive types** Like `int`, `long` but the objects `Integer`, `Long`, otherwise the search will not work. This is used by ExampleMatcher, which does not insert NULL objects into the DB query. But for primitive types it cannot use NULL, it sets them to 0 and then adds them to the `WHERE` conditions.
+!>**Warning:** in the data entity **You MUST NOT use primitive types** Like `int`, `long` but the objects `Integer`, `Long`, otherwise the search will not work. This is used by ExampleMatcher, which does not insert NULL objects into the DB query. But for primitive types it cannot use NULL, it sets them to 0 and then adds them to the `WHERE` conditions.
 
 Comprehensive demonstration including rights checking, deleting files and performing a special action:
 
@@ -114,7 +115,6 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         if (!user.isFolderWritable(entity.getImagePath())) {
             //objekt errorField je nase T, v tomto pripade GalleryEntity, setuje sa presna property kde sa ma error vypisat
             errors.rejectValue("errorField.imagePath", null, Prop.getInstance(request).getText("user.rights.no_folder_rights"));
-
             //pre globalnu chybu (netykajucu sa konkretneho fieldu) je mozne pouzit kod:
             //((BindingResult)errors).addError(new ObjectError("global", Prop.getInstance(request).getText("datatable.error.fieldErrorMessage")));
         }
@@ -341,10 +341,11 @@ If you need to edit the data before saving, or perform an action after saving to
 
 Method `public void afterSave(T entity, T saved)` is called after saving the entity - object `entity` is the original sent object, `saved` is the saved version. When a new record is `ID` found only in `saved` entity. If you use methods to update the cache, don't forget to implement the public method `void afterDelete(T entity, long id)` called after deleting an entry.
 
-**NOTICE**: not recommended to overwrite via annotation `@Override` REST methods, always override in your class `xxxItem` Methods.
+!>**Warning:** we do not recommend overwriting via annotation `@Override` REST methods, always override in your class `xxxItem` Methods.
+
 When duplicating a record, it is necessary to "delete" the attribute ID value from the received data. Typically, this is an attribute with the name `id`, but this may not always be the case. So the attribute name is searched according to the set annotation `DataTableColumnType.ID`.
 
-When using [nested/additional attributes](../datatables-editor/datatable-columns.md#vnorené-atribúty) in the form of `editorFields` it is possible to implement methods `processFromEntity` for setting `editorFields` attributes or `processToEntity` for setting attributes in entity z `editorFields`. Methods are automatically called when reading all records, retrieving a single record, searching, or saving data.
+When using [nested/additional attributes](../datatables-editor/datatable-columns.md#nested-attributes) in the form of `editorFields` it is possible to implement methods `processFromEntity` for setting `editorFields` attributes or `processToEntity` for setting attributes in entity z `editorFields`. Methods are automatically called when reading all records, retrieving a single record, searching, or saving data.
 
 ```java
 	/**
@@ -374,7 +375,7 @@ When overriding methods `getAllItems` or `searchItem` it is necessary to invoke 
 
 Sometimes it is necessary to filter the data even when displaying all records (e.g. in a nested datatable by some group or by user rights).
 
-There is a method `Page<T> DatatableRestControllerV2.getAllItemsIncludeSpecSearch(T empty, Pageable pageable)`that you can use in your implementation. Calling it will ensure that the methods are executed `addSpecSearch` even when all the records have been retrieved. You can implement additional conditions there.
+There is a method `Page<T> DatatableRestControllerV2.getAllItemsIncludeSpecSearch(T empty, Pageable pageable)` that you can use in your implementation. Calling it will ensure that the methods are executed `addSpecSearch` even when all the records have been retrieved. You can implement additional conditions there.
 
 ```java
 @Override
@@ -432,15 +433,15 @@ By default, not all attributes of an entity need to come from the editor, so the
 
 By calling the method `setForceReload(true);` it is possible to force the datatable data to be restored after saving.
 
-This is necessary if the saved object is moved to another directory and so on. The sample is in [WebpagesRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+This is necessary if the saved object is moved to another directory and so on. The sample is in [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
 
 ## Dials for select boxes
 
-For select boxes in the editor and automatic conversion of ID to value (e.g. `templateId` on the template name) is added in WebJET extension `PageImpl` object [DatatablePageImpl.java](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), which allows you to send dial data.
+For select boxes in the editor and automatic conversion of ID to value (e.g. `templateId` on the template name) is added in WebJET extension `PageImpl` object [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), which allows you to send dial data.
 
 These are automatically set to `options` of the object in the columns definition of the object editor and are automatically used for the ID-value conversion.
 
-An example is in [TranslationKeyController.java](../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
+An example is in [TranslationKeyController.java](../../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
 
 ```java
     //najlepsie riesenie je prepisat metodu getOptions a doplnit page.addOptions metody
@@ -496,7 +497,7 @@ There are 2 search modes:
 - `ByExample` - uses the method `Example<T> exampleQuery = Example.of(search, matcher);` which sets the search conditions to `search` entity and then use it for the search. All attributes in the entity must be objects, those that have `NULL` value will not be used in the search. Such a search does not support all options.
 - `Specification` - uses dynamic creation of SQL conditions, the repository must extend `JpaSpecificationExecutor<T>`. This is **recommended solution** and allows you to search by date ranges and also use special searches.
 
-Warning. **Oracle** database, you need to set up a search regardless of font size and diacritics by setting SQL. By default, this is provided by `trigger tgg_after_logon_ci_ai`that WebJET automatically creates. If the search does not work correctly, verify that it is correctly defined:
+Warning. **Oracle** database, you need to set up a search regardless of font size and diacritics by setting SQL. By default, this is provided by `trigger tgg_after_logon_ci_ai` that WebJET automatically creates. If the search does not work correctly, verify that it is correctly defined:
 
 ```sql
 CREATE or REPLACE TRIGGER tgg_after_logon_ci_ai
@@ -517,7 +518,7 @@ To search by date range, you need to combine a search by Example and a specific 
 private Specification<T> getSpecFromRangeAndExample(Map<String, String> ranges, Example<T> example) {
 ```
 
-It is a condition that the Spring DATA repository also extends the `JpaSpecificationExecutor`, an example is in [RedirectsRepository](../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
+It is a condition that the Spring DATA repository also extends the `JpaSpecificationExecutor`, an example is in [RedirectsRepository](../../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
 
 ```java
 package sk.iway.iwcm.components.redirects;
@@ -531,10 +532,11 @@ public interface RedirectsRepository extends JpaRepository<RedirectBean, Long>, 
 }
 ```
 
-**ATTENTION:** all JPA repositories must be defined as public, otherwise they will not be available in client projects.
+!>**Warning:** all JPA repositories must be defined as public, otherwise they will not be available in client projects.
+
 ### Special search
 
-If a special search needs to be performed, it is possible to override the method `addSpecSearch` in which a specific condition can be implemented. An example is in [GroupSchedulerRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) where you search by both user name and parameter:
+If a special search needs to be performed, it is possible to override the method `addSpecSearch` in which a specific condition can be implemented. An example is in [GroupSchedulerRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) where you search by both user name and parameter:
 
 ```java
 @Override
@@ -553,7 +555,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-WARNING: JPA Repository must also inherit from `JpaSpecificationExecutor`, Example:
+!>**Warning:** The JPA Repository must also inherit from `JpaSpecificationExecutor`, Example:
 
 ```java
 @Repository
@@ -623,6 +625,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 The list is stored in the database as `id1,id2,id3`, therefore the search consists of all possibilities of occurrence: `id OR id,% OR %,id,% OR %,id`.
 
 **Search by brand name (perex groups)**
+
 To search by comma-separated list of tag IDs, you can use the method `addSpecSearchPerexGroup(String perexGroupName, String jpaProperty, List<Predicate> predicates, Root<T> root, CriteriaBuilder builder)`.
 
 This search is automatically used if the search contains the parameter `searchPerexGroups`, is called directly in `DatatableRestControllerV2.addSpecSearch`.
@@ -769,7 +772,7 @@ Since we often store only the user ID in the database, typically in the `user_id
 	}
 ```
 
-Spring repository must extend `JpaSpecificationExecutor`as above. Standard implementation in `DatatableRestControllerV2.addSpecSearch` already includes search by parameter `searchUserFullName`which is typical of such cases. So if you don't need any other special search, the display and search by user name will work automatically.
+Spring repository must extend `JpaSpecificationExecutor` as above. Standard implementation in `DatatableRestControllerV2.addSpecSearch` already includes search by parameter `searchUserFullName` which is typical of such cases. So if you don't need any other special search, the display and search by user name will work automatically.
 
 ## Validation / mandatory fields
 
@@ -801,7 +804,7 @@ Most common annotations:
 @Past //zadamy datum musi byt v minulosti, aplikovatelne na Date objekty
 ```
 
-The error message trapping is implemented in the class [DatatableExceptionHandlerV2](../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) where the object is converted `ConstraintViolation` on the text. To be able to edit the error message via WebJET, the translation key is searched for in the method `getErrorMessage`. If found, it is used, otherwise the standard reporting from `javax.validation`.
+The error message trapping is implemented in the class [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) where the object is converted `ConstraintViolation` on the text. To be able to edit the error message via WebJET, the translation key is searched for in the method `getErrorMessage`. If found, it is used, otherwise the standard reporting from `javax.validation`.
 
 The translation key can use annotation attributes, e.g. `{min}` or the specified value as `${validatedValue}`.
 
@@ -811,7 +814,7 @@ You can annotate via the attribute `message` set the text of the error message. 
 @Pattern(message="components.module.property", regexp = "^.+@.+\\.")
 ```
 
-When using `@Convert` annotations using an object instead of a primitive value (e.g. `GroupDetailsConverter`) annotation is to be used on the entity `@Valid`. This then invokes the validation of the nested object. The technical problem is that the error is raised in `group.navbarName`, but no such field exists in the datatable. Class `DatatableExceptionHandlerV2` treats this so that for an array containing a character `.` in the name to the output JSON object generates as the field name the value only before the character `.`, e.g. `group`. The exception is the field named `editorFields`which shall be left in its original/full form.
+When using `@Convert` annotations using an object instead of a primitive value (e.g. `GroupDetailsConverter`) annotation is to be used on the entity `@Valid`. This then invokes the validation of the nested object. The technical problem is that the error is raised in `group.navbarName`, but no such field exists in the datatable. Class `DatatableExceptionHandlerV2` treats this so that for an array containing a character `.` in the name to the output JSON object generates as the field name the value only before the character `.`, e.g. `group`. The exception is the field named `editorFields` which shall be left in its original/full form.
 
 If simple validation is not enough you can implement the method `validateEditor`:
 
@@ -832,22 +835,37 @@ If simple validation is not enough you can implement the method `validateEditor`
         if (!user.isFolderWritable(entity.getImagePath())) {
             //objekt errorField je nase T, v tomto pripade GalleryEntity, setuje sa presna property kde sa ma error vypisat
             errors.rejectValue("errorField.imagePath", null, Prop.getInstance(request).getText("user.rights.no_folder_rights"));
-
             //pre globalnu chybu (netykajucu sa konkretneho fieldu) je mozne pouzit kod:
             //((BindingResult)errors).addError(new ObjectError("global", Prop.getInstance(request).getText("datatable.error.fieldErrorMessage")));
         }
     }
 ```
 
+If you need to specifically control permissions (e.g., for web pages, folder permissions) you can implement the method `public boolean checkItemPerms(T entity, Long id)`. The method is called by default for edit/create/delete/action/record retrieval operations:
+
+```java
+    @Override
+    public boolean checkItemPerms(MediaGroupBean entity, Long id) {
+        if (InitServlet.isTypeCloud() && entity.getId() != null && entity.getId().longValue()>0) {
+            if (GroupsDB.isGroupsEditable(getUser(), entity.getAvailableGroups())==false) return false;
+            MediaGroupBean old = getOneItem(entity.getId());
+            if (old != null && GroupsDB.isGroupsEditable(getUser(), old.getAvailableGroups())==false) return false;
+        }
+        return true;
+    }
+```
+
 ## Invocation of an error
 
-Program-controlled errors need to be treated by overloading the method `validateEditor` (see example above), where you can perform validations before saving the record. From the parameter `target.getAction()` (DatatableRequest) can identify the type of action. ATTENTION: validateEditor is also called for deletion, you can test it as `if ("remove".equals(target.getAction()) ...`.
+Program-controlled errors need to be treated by overloading the method `validateEditor` (see example above), where you can perform validations before saving the record. From the parameter `target.getAction()` (DatatableRequest) can identify the type of action.
 
-`editItem``throwError(String error)` or `throwError(List<String> errors)`. An example is in [](../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
+!>**Warning:** Method `validateEditor` is also called for deletion, you can test it as `if ("remove".equals(target.getAction()) ...`.
 
-##
+In the case of an error detected only at the time of saving (e.g. in the method `editItem`) you can raise a general error message by calling the method `throwError(String error)` or `throwError(List<String> errors)`. An example is in [GroupsRestController](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
 
-`beforeSave` or `beforeDelete`, Example:
+## Preventing deletion / editing of a record
+
+For some cases it is necessary to prevent editing or deleting the record. It is possible to overload methods `beforeSave` or `beforeDelete`, Example:
 
 ```java
 @Override
@@ -862,5 +880,66 @@ public boolean beforeDelete(ConfPreparedEntity entity) {
 
     throwError("admin.cong_editor.youCanOnlyDeleteFutureRecords");
     return false;
+}
+```
+
+## Export and import of data
+
+For the data export test, the method can be called `isExporting()` which returns the value `true` if data export is currently being performed.
+
+For importing it is possible to modify/validate the data by implementing the method `preImportDataEdit`. This method is called before the import and it is possible to modify the data. An example is in the class [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
+
+## Extension versions
+
+There are extension classes for special cases.
+
+### DatatableRestControllerAvailableGroups.java
+
+The class implements rights checking for applications whose rights are based on the structure of web pages (only records that match the rights set for the tree structure should be displayed to the user), or are used in a MultiWeb installation. An example is the media groups setting, where media groups need to be filtered according to the user's rights on the web page structure. For example, if a user has rights only to the folder "/Slovak/News" only groups that are set to display in this folder (and possibly all without restrictions) should be displayed.
+
+Basic use is similar to standard `DatatableRestControllerV2`, but the constructor also needs to specify the name of the column with the ID value and the name of the column with the list of rights to the web page structure:
+
+```java
+@RestController
+@Datatable
+@RequestMapping("/admin/rest/media-group")
+@PreAuthorize("@WebjetSecurityService.hasPermission('editor_edit_media_group')")
+public class MediaGroupRestController extends DatatableRestControllerAvailableGroups<MediaGroupBean, Long> {
+
+    @Autowired
+    public MediaGroupRestController(MediaGroupRepository mediaGroupRepository) {
+        super(mediaGroupRepository, "id", "availableGroups");
+    }
+
+}
+```
+
+Class `DatatableRestControllerAvailableGroups` in the method `public boolean checkItemPerms(T entity, Long id)` Controls the rights to both the current and original entity so that existing entities that the user does not have rights to cannot be modified.
+
+```java
+public abstract class DatatableRestControllerAvailableGroups<T, ID extends Serializable> extends DatatableRestControllerV2<T, ID> {
+    ...
+    @Override
+    public boolean checkItemPerms(T entity, Long id) {
+
+        BeanWrapperImpl bw = new BeanWrapperImpl(entity);
+        Number entityId = (Number) bw.getPropertyValue(idColumnName);
+        String availableGroups = (String) bw.getPropertyValue(availableGroupsColumnName);
+
+        if ((InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) && entityId != null && entityId.longValue()>0) {
+            //if it's empty AND it's NOT multiweb then it is available for all domains
+            if (InitServlet.isTypeCloud()==false && Tools.isEmpty(availableGroups)) return true;
+
+            if (GroupsDB.isGroupsEditable(getUser(), availableGroups)==false) return false;
+            T old = getOneItem(entityId.longValue());
+            if (old != null) {
+                //check also if original entity is editable, you can't just remove perms and edit entity which not belongs to you
+                BeanWrapperImpl bwOld = new BeanWrapperImpl(old);
+                availableGroups = (String) bwOld.getPropertyValue(availableGroupsColumnName);
+                if (GroupsDB.isGroupsEditable(getUser(), availableGroups)==false) return false;
+            }
+        }
+        return true;
+    }
 }
 ```

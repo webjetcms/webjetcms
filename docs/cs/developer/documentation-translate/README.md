@@ -34,7 +34,7 @@ Vzhledem k tomu, že `deepmark` používá překladatele k překladu `DeepL`, je
 
 V konfiguračním souboru nastavíme místo, odkud budeme `markdown` přeložit, a také umístění, kde budou tyto přeložené soubory uloženy. Rovněž určíme, z jakého jazyka a do jakého jazyka má být překlad proveden.
 
-**Varování:** tento konfigurační soubor **musí být** nazvaný jako `deepmark.config.mjs` a musí být na stejném místě, kde jsme nainstalovali `deepmark`. V našem případě je to složka `docs`.
+!>**Varování:** tento konfigurační soubor **musí být** nazvaný jako `deepmark.config.mjs` a musí být na stejném místě, kde jsme nainstalovali `deepmark`. V našem případě je to složka `docs`.
 
 ```javascript
 /** @type {import("deepmark").UserConfig} */
@@ -47,13 +47,13 @@ export default {
 };
 ```
 
-**Varování:** pokud není cílové místo překladu vytvořeno, vytvoří se automaticky. Pokud cílové umístění již obsahuje soubory se stejným názvem, budou přepsány. V opačném případě budou vytvořeny nové soubory.
+!>**Varování:** pokud není cílové místo překladu vytvořeno, vytvoří se automaticky. Pokud cílové umístění již obsahuje soubory se stejným názvem, budou přepsány. V opačném případě budou vytvořeny nové soubory.
 
 ## Zahájení překladu
 
 Než začneme, musíme říci, že samotný překlad může pracovat ve třech režimech. `hybrid, offline, online`. Důrazně doporučujeme používat režim `hybrid` kde jsou již přeložené fráze uloženy v místní databázi, což šetří jak čaj, tak počet použitých znaků.
 
-**Varování:** Všimněte si, že počet překladů je omezen, a proto se doporučuje používat tento režim pro úsporu počtu překladů.
+!>**Varování:** Všimněte si, že počet překladů je omezen, a proto se doporučuje používat tento režim pro úsporu počtu překladů.
 
 Překlad provedete prostřednictvím konzoly, kde v umístění `docs` pro spuštění procesu použijte příkaz `npm run translate`. V konzole by se měly zobrazit informace o tom, jak jsou jednotlivé soubory překládány. Zobrazí se také seznam **Start** a **Konec** celý proces překladu.
 
@@ -69,7 +69,7 @@ Téměř veškerá naše vlastní logika je v souboru, který jsme vytvořili na
 
 Jednou z funkcí překladu je zkopírování všech nepřeložitelných souborů ze zdrojové složky do cílové složky. Mezi tyto soubory patří `.png, .jpg, .jpge, .ico, .css` a další. Ve skutečnosti všechny soubory, které nejsou typu `markdown`. Toto chování může být výhodné, protože nemusíte ručně kopírovat všechny závislé soubory.
 
-**Varování:** nevýhodou je, že pokud do EN dokumentace přidáte konkrétní upravené obrázky pro anglickou verzi, budou při každém překladu přepsány původními obrázky ze slovenské verze. Z tohoto důvodu byla tato logika upravena tak, že při překladu **nikdy nekopírovali obrázky**.
+!>**Varování:** nevýhodou je, že pokud do EN dokumentace přidáte konkrétní upravené obrázky pro anglickou verzi, budou při každém překladu přepsány původními obrázky ze slovenské verze. Z tohoto důvodu byla tato logika upravena tak, že při překladu **nikdy nekopírovali obrázky**.
 
 Úprava byla použita v souboru `docs/node_modules/deepmark/dist/config.js`, kolem řádku 240. Byla přidána nová podmínka pro vynechání souboru s příponou pro obrázky, např. `.png, .jpg, .jpge`. Tímto způsobem se soubory s danými příponami při překladu nezkopírují.
 
@@ -96,7 +96,7 @@ if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg")) {
 
 Pokud se páříte v `markdown` některé části souboru, které nemají být přeloženy, jako jsou kódy,... `markdown` nabízí možnost přeskočit překlad části souboru, pokud je text zabalen do **\`text\`** nebo kód zabalený jako **\`\`Kód\`\`**. Problém nastává, když kód v souboru neslouží k ilustračním účelům, ale k provedení nějaké logiky.
 
-**Varování:**, v případě, že ji nezabalíte jako **\`\`Kód\`\`**, může být kód částečně přeložen, čímž se stane nefunkčním. Pokud kód zabalíte jako **\`\`Kód\`\`**, ale nepřekládá se **ani se nesmí provádět**.
+!>**Varování:**, v případě, že ji nezabalíte jako **\`\`Kód\`\`**, může být kód částečně přeložen, čímž se stane nefunkčním. Pokud kód zabalíte jako **\`\`Kód\`\`**, ale nepřekládá se **ani se nesmí provádět**.
 
 **Řešení** byla tvorba vlastních značek `<!-- deepmark-ignore-start -->` a `<!-- deepmark-ignore-end -->` které zajišťují, že kódy (nebo dokonce text) obsažené v těchto značkách nejsou překládány. **Ale** se provede samotný kód. Logika těchto značek vybírá označené části kódu ze souboru ještě před vlastním překladem a teprve po překladu je do souboru vrací, a sice **beze změny**.
 
@@ -170,7 +170,7 @@ Seznam **Aktualizováno** závislosti:
 
 Při překladu se můžete setkat s tím, že výsledný překlad porušil strukturu souboru. Tento problém může nastat, pokud váš `markdown` soubory obsahují syntaxi, která `deepmark` nedokáže zpracovat. V další části si ukážeme některé problémové syntaxe.
 
-**Varování:**, mnoho problémů bylo vyřešeno ve verzi `@webjetcms/deepmark`, ale stále existují situace, kdy určitý formát souboru způsobí problémy při překladu a následném formátování.
+!>**Varování:**, mnoho problémů bylo vyřešeno ve verzi `@webjetcms/deepmark`, ale stále existují situace, kdy určitý formát souboru způsobí problémy při překladu a následném formátování.
 
 ### Kombinace typů seznamů
 
@@ -241,5 +241,3 @@ VÁŠ KÓD ZDE
 ### Nevědomost `markdown` formát
 
 Nejčastější chybou bude pravděpodobně nesprávný formát v důsledku neznalosti formátu souboru. `markdown`. Základní syntaxi si můžete přečíst na adrese [Základní syntaxe](https://www.markdownguide.org/basic-syntax/).
-
-**Příklad zneužití**

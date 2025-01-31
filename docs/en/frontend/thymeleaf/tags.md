@@ -9,22 +9,21 @@ For a list of available attributes when displaying a web page, see [a separate c
 ```html
 <span data-th-text="${docDetails.title}">Titulok stránky</span>
 <body data-th-class="${docDetails.fieldA}">
-	<meta name="author" data-th-if="${!#strings.isEmpty(ninja.temp.group.author)}" data-th-content="${ninja.temp.group.author}" />
-	<link data-th-href="${ninja.page.url}" rel="canonical" />
-	<link data-th-href="${base_css_link}" rel="stylesheet" type="text/css" />
+<meta name="author" data-th-if="${!#strings.isEmpty(ninja.temp.group.author)}" data-th-content="${ninja.temp.group.author}" />
+<link data-th-href="${ninja.page.url}" rel="canonical" />
+<link data-th-href="${base_css_link}" rel="stylesheet" type="text/css"/>
 
-	<article data-iwcm-write="doc_data" />
-	<div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
-</body>
+<article data-iwcm-write="doc_data"/>
+<div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
 ```
 
 Attributes beginning with `data-th-XXX` shall be implemented and replaced `XXX` attribute by the value of the specified code. When prototyping without WebJET CMS running, you can set the attribute to the default value and replace it when running through WebJET using `data-th-` Attribute:
 
 ```html
 <!-- content atribut sa pri zobrazeni cez WebJET nahradi za data-th-content hodnotu -->
-<meta property="og:title" content="WebJET CMS" data-th-content="${ninja.page.seoTitle}" />
+<meta property="og:title" content="WebJET CMS" data-th-content='${ninja.page.seoTitle}'/>
 <!-- class atribut sa pri zobrazeni cez WebJET nahradi za data-th-class hodnotu -->
-<body class="subpage" data-th-class="${docDetails.fieldA}"></body>
+<body class="subpage" data-th-class="${docDetails.fieldA}">
 ```
 
 ## Execution of the INCLUDE tag
@@ -35,28 +34,30 @@ Retrieved from **can** remove wrapping `div` element. The behaviour is as follow
 - if the attribute name starts with `doc_` (e.g. `doc_data`) wrapping `div` element **will be preserved** (for better compatibility in prototyping and the possibility of setting attributes as `class` and the like)
 - if the value of the attribute `data-iwcm-remove` Is `false` or NOT `tag` wrapping element **will be preserved**
 - in other cases the wrapping `div` element **removed** and the code from WebJET is inserted into the page
+
 ```html
 <!-- zacina na doc_ standardne by header element zostal, ale nastavenim data-iwcm-remove="tag" header element odstranime -->
 <header data-iwcm-write="doc_head" data-iwcm-remove="tag" />
 <!-- zacina na doc_ standardne sa article element zachova -->
-<article data-iwcm-write="doc_data" class="page-body" />
+<article data-iwcm-write="doc_data" class="page-body"/>
 <!-- NEzacina na doc_ standardne sa div element odstrani -->
 <div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
 ```
 
 Use `data-iwcm-remove` simplified from the HTML code point of view is performed when setting `true` Call `element[0].outerHTML=data` (that is, the tag on which it is set is also replaced), otherwise it will execute `element.html(data)`, i.e. it replaces the inside of the tag.
 
-**We also recommend** take advantage of the brand property `data-iwcm-write`which **removes the body**, `div` Signs. You can thus **prototype efficiently at html level without running the template in WebJET**:
+**We also recommend** take advantage of the brand property `data-iwcm-write` which **removes the body**, `div` Signs. You can thus **prototype efficiently at html level without running the template in WebJET**:
+
 ```html
 <article data-iwcm-write="doc_data">
-	<!-- content - toto je len ukazka pre html sablonu, vo WebJETe sa toto cele nahradi za obsah stranky -->
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12">
-				<p>Lorem ipsum</p>
-			</div>
-		</div>
-	</div>
+    <!-- content - toto je len ukazka pre html sablonu, vo WebJETe sa toto cele nahradi za obsah stranky -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <p>Lorem ipsum</p>
+            </div>
+        </div>
+    </div>
 </article>
 ```
 
@@ -68,29 +69,33 @@ To combine JavaScript and CSS files, you can use the attribute `data-iwcm-combin
 
 ```html
 <combine
-	basePath="|${ninja.temp.basePath}assets/|"
-	,
-	data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}
-${ninja.webjet.pageFunctionsPath}">
-	<link href="css/ninja.min.css" rel="stylesheet" type="text/css" />
-	<script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
-	<script src="js/jquery.cookie.js" type="text/javascript"></script>
-	<script src="js/bootstrap.bundle.min.js" type="text/javascript"></script>
-	<script src="js/global-functions.js" type="text/javascript"></script>
-	<script src="js/ninja.min.js" type="text/javascript"></script>
+basePath='|${ninja.temp.basePath}assets/|',
+data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}
+${ninja.webjet.pageFunctionsPath}"
+>
+    <link href="css/ninja.min.css" rel="stylesheet" type="text/css"/>
+    <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="js/jquery.cookie.js" type="text/javascript"></script>
+    <script src="js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="js/global-functions.js" type="text/javascript"></script>
+    <script src="js/ninja.min.js" type="text/javascript"></script>
 </combine>
 ```
 
 possibly as `PUG` Minutes:
 
 ```html
-combine( basePath='|${ninja.temp.basePath}dist/|', data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}\n"+ "${ninja.webjet.pageFunctionsPath}" )
-<link href="css/ninja.min.css" rel="stylesheet" type="text/css" />
-<script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
-<script src="js/jquery.cookie.js" type="text/javascript"></script>
-<script src="js/bootstrap.bundle.min.js" type="text/javascript"></script>
-<script src="js/global-functions.js" type="text/javascript"></script>
-<script src="js/ninja.min.js" type="text/javascript"></script>
+combine(
+basePath='|${ninja.temp.basePath}dist/|',
+data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}\n"+
+"${ninja.webjet.pageFunctionsPath}"
+)
+    <link href="css/ninja.min.css" rel="stylesheet" type="text/css"/>
+    <script src="js/jquery-3.6.0.min.js" type="text/javascript"></script>
+    <script src="js/jquery.cookie.js" type="text/javascript"></script>
+    <script src="js/bootstrap.bundle.min.js" type="text/javascript"></script>
+    <script src="js/global-functions.js" type="text/javascript"></script>
+    <script src="js/ninja.min.js" type="text/javascript"></script>
 ```
 
 Note that in the body `combine` are inserted standard `link` a `script` Signs. These are processed and used in the combined entry. The advantage is that you can have it displayed directly `.html` file in the browser and the above scripts and CSS files are inserted into the page by default. Even without executing the page in WebJET, it is functional in the browser.
@@ -102,7 +107,7 @@ The combination first inserts the scripts and CSS from the body and then adds th
 There is a special tag for inserting scripts from the scripts application `data-iwcm-script`. It receives the script position as a name (e.g. `header`) as defined in the application. The tag uses the tag `div`, but it is removed when displayed.
 
 ```html
-<div data-iwcm-script="header" />
+<div data-iwcm-script="header"/>
 ```
 
 ## Embedding jQuery
@@ -111,20 +116,21 @@ WebJET typically needs the embedded jQuery library from `/components/_common/jav
 
 But when using npm, you can embed jQuery into `ninja.js` and thus you don't want the library to be duplicated by WebJET when displaying the object `doc_data`. This can be influenced by the following options:
 - If `data-iwcm-combine` Contains `${ninja.webjet.pageFunctionsPath}` it is assumed that jQuery is embedded via e.g. `ninja.js` and is no longer automatically inserted.
-
 - When using `data-iwcm-write="doc_data"` attribute can be added `data-iwcm-jquery` with the following values:
-	- `false` - jQuery is already embedded, we don't want to automatically embed it with WebJET
-	- `true` - jQuery is inserted automatically, but it is checked for duplication and inserted only if it has not been inserted by WebJET yet (it is also inserted `page_functions.js.jsp` a `check_form.css`)
-	- `force` - even if WebJET thinks jQuery is embedded (e.g. from `data-iwcm-combine`) it is forced to be inserted again (it is also inserted `page_functions.js.jsp` a `check_form.css`)
-We recommend inserting jQuery via the NPM module into ninja.js and then using `combine` s `${ninja.webjet.pageFunctionsPath}`
+  - `false` - jQuery is already embedded, we don't want to automatically embed it with WebJET
+  - `true` - jQuery is inserted automatically, but it is checked for duplication and inserted only if it has not been inserted by WebJET yet (it is also inserted `page_functions.js.jsp` a `check_form.css`)
+  - `force` - even if WebJET thinks jQuery is embedded (e.g. from `data-iwcm-combine`) it is forced to be inserted again (it is also inserted `page_functions.js.jsp` a `check_form.css`)
+
+We recommend inserting jQuery via the NPM module into ninja.js and then using `combine` s `${ninja.webjet.pageFunctionsPath}` to notify WebJET that jQuery is embedded:
 
 ```html
 <combine
-	basePath="|${ninja.temp.basePath}|"
-	data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}
-    ${ninja.webjet.pageFunctionsPath}">
-	<script src="js/ninja.js" type="text/javascript"></script>
+    basePath="|${ninja.temp.basePath}|"
+    data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}
+    ${ninja.webjet.pageFunctionsPath}"
+>
+    <script src="js/ninja.js" type="text/javascript"></script>
 </combine>
 ```
 
-`/components/form/check_form.css``5-modules/md-checkform.scss`.
+CSS for `/components/form/check_form.css` you need to paste into your scss (download the content in your browser from the URL above). We recommend to paste it into `5-modules/md-checkform.scss`.

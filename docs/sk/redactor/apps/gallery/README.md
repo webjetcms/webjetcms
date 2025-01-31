@@ -14,6 +14,8 @@ Administrácia galérie je podobne ako web stránky rozdelená na dva stĺpce. V
 
 ![](admin-dt.png)
 
+V stromovej štruktúre je možné [vyhľadávať](../../webpages/README.md#vyhľadávanie-v-stromovej-štruktúre) podobne ako vo web stránkach. Vyhľadávajú sa len priečinky uložené v databáze, čiže tie s plnou ikonou <i class="ti ti-folder-filled" role="presentation"></i>.
+
 ### Správa štruktúry
 
 V stĺpci priečinky je možné prechádzať a pridať/editovať/zmazať priečinok stromovej štruktúry galérie.
@@ -75,6 +77,7 @@ Obsahuje doplnkové údaje:
   - **Autor**: Meno alebo pseudonym osoby, ktorá fotografiu vytvorila.
   - **Dátum nahratia**: Dátum a čas, kedy bola fotografia nahraná do systému. Pomáha sledovať chronológiu a umožňuje vyhľadávať fotografie podľa času ich nahrania.
   - **Priorita**: Úroveň dôležitosti alebo preferencie, ktorá sa môže použiť na usporiadanie fotografií v galérii. Nižšia priorita znamená, že fotografia bude zobrazená na poprednejších miestach.
+  - **URL adresa zdroja obrázku**: URL adresa odkiaľ sme získali daný obrázok.
 
 ![](metadata-preview.png)
 

@@ -24,7 +24,7 @@ Ručně je třeba provést testy exportu a importu datových souborů:
 
 Při každé změně se zamyslete nad tím, zda je vám důvod změny jasný a zda vám bude jasný i za rok, a zejména zda bude jasný i jinému programátorovi. Nesrozumitelné změny by měly být okomentovány přímo ve zdrojovém kódu - dokumentace a komentáře zdrojového kódu jdou ruku v ruce a mohou být na první pohled duplicitní. Ale to nevadí, dokumentaci pište spíše slovně, komentáře spíše technicky.
 
-**Varování:** ne všichni vývojáři potřebují mít přístup ke zdrojovému kódu, dokumentace je k dispozici také klientům, kteří mají zájem o programování funkcí pro WebJET. Dokumentace musí být dostatečně obsáhlá, aby bylo možné komponentu používat i bez zdrojového kódu.
+!>**Varování:** ne všichni vývojáři potřebují mít přístup ke zdrojovému kódu, dokumentace je k dispozici také klientům, kteří mají zájem o programování funkcí pro WebJET. Dokumentace musí být dostatečně obsáhlá, aby bylo možné komponentu používat i bez zdrojového kódu.
 
 Doporučuji, abyste si **otevřít vyhledávací okno** v `docs` a když se ve složce `Changes` změnu v proměnné/konfiguraci/objektu, najdete ji v dokumentaci (složka ./docs). Pokud ji najdete, přidáte změnu do textu, pokud ji nenajdete, přidáte úplný popis změny.
 

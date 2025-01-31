@@ -275,8 +275,14 @@ public class AppManager
 		Map<String, String> replaces = new Hashtable<>();
 		List<AppBean> apps = getAppsList(request);
 		for (AppBean app : apps) {
-			if (Tools.isEmpty(app.getComponentPath())) continue;
-			replaces.put(app.getComponentPath(), app.getComponentClickAction());
+			String path = app.getComponentPath();
+			if (Tools.isEmpty(path)) continue;
+
+			//path could be coma separated, we need all of them
+			String[] paths = Tools.getTokens(path, ",", true);
+			for (String p : paths) {
+				replaces.put(p, app.getComponentClickAction());
+			}
 		}
 		return replaces;
 	}

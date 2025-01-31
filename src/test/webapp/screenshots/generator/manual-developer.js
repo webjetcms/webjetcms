@@ -70,7 +70,7 @@ Scenario('datatable-notify', async({ I, DT, DTE, Document }) => {
     I.jstreeNavigate(["English", "News"]);
 
     //Vyfiltruj si zaznam
-    DT.filter("title", "Test");
+    DT.filterContains("title", "Test");
 
     //Edituj stranku
     I.click("Test");

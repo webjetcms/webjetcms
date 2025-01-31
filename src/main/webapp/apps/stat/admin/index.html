@@ -107,6 +107,14 @@
                     statsDataTable.column(4).visible(false);
                     statsDataTable.column(5).visible(true);
                 }
+
+                if(statType == "hours") {
+                    //order by hour column asc
+                    statsDataTable.order([5, 'asc']);
+                } else {
+                    //order by dayDate column desc
+                    statsDataTable.order([1, 'desc']);
+                }
             }
 
             async function getDataAndUpdateAmcharts() {
@@ -126,9 +134,9 @@
                 WJ.hideLoader();
 
                 //add table filter params
-                statsDataTable.ajax.url(WJ.urlAddParam(url, "searchRootDir", $('#rootDir').val()));
-                statsDataTable.ajax.url(WJ.urlAddParam(statsDataTable.ajax.url(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
-                statsDataTable.ajax.url(WJ.urlAddParam(statsDataTable.ajax.url(), "statType", getStatType()));
+                statsDataTable.setAjaxUrl(WJ.urlAddParam(url, "searchRootDir", $('#rootDir').val()));
+                statsDataTable.setAjaxUrl(WJ.urlAddParam(statsDataTable.getAjaxUrl(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
+                statsDataTable.setAjaxUrl(WJ.urlAddParam(statsDataTable.getAjaxUrl(), "statType", getStatType()));
 
                 //reload table values
                 statsDataTable.ajax.reload();

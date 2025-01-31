@@ -6,7 +6,7 @@ Třída `Store` upravuje funkčnost nativního [Úložiště](https://developer.
 
 Jedná se o wrapper, který umožňuje přímé ukládání do adresáře `Storage` údaje různých typů `[number, string, object, array, boolean, null, undefined, ...]` s ošetřením proti nechtěnému vypadnutí aplikace při nesprávném zadání. Vstupy jsou automaticky převedeny na `JSON`.
 
-**Varování:** Není možné ukládat `HTMLElementy`, `NodeListy` a `funkcie`.
+!>**Varování:** Není možné ukládat `HTMLElementy`, `NodeListy` a `funkcie`.
 
 V systému **WebJET** se globálně nepoužívá. Instanci této třídy byste měli vždy vytvořit v rámci nové třídy nebo knihovny.
 

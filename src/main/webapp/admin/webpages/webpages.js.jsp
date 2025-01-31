@@ -232,11 +232,11 @@ var groupslistTable = function () {
 							   var title = full.title;
 								//tools
 								var tools = '<a href="/showdoc.do?docid='+data+'" target="_blank"><span class="glyphicon glyphicon-eye-open" aria-hidden="true" title="<iwcm:text key="components.qa.show_page"/>"></span></a>';
-								tools += '<div class="task-config webSiteSettings"><div class="task-config-btn btn-group"><a class="btn btn-xs default" href="#" data-toggle="dropdown" data-hover="dropdown" data-close-others="true"><i class="ti ti-settings"></i><i class="ti ti-chevron-down"></i></a><ul class="dropdown-menu pull-left" style="min-width: 160px;">';
+								tools += '<div class="task-config webSiteSettings"><div class="task-config-btn btn-group"><a class="btn btn-xs default" href="#" data-bs-toggle="dropdown" data-hover="dropdown" data-close-others="true"><i class="ti ti-settings"></i><i class="ti ti-chevron-down"></i></a><ul class="dropdown-menu pull-left" style="min-width: 160px;">';
 								tools += '   <li><a href="/apps/stat/admin/top-details/?docId='+data+'&title='+title+'" title="<iwcm:text key="menu.stat"/>"><i class="fa fa-bar-chart-o"></i></a></li>';
-								tools += '   <li><a href="javascript:editWebPage('+data+', -1, -1)" title="<iwcm:text key="components.wiki.editPage"/>"><i class="fa fa-file-text"></i></a></li>';
+								tools += '   <li><a href="javascript:editWebPage('+data+', -1, -1)" title="<iwcm:text key="components.wiki.editPage"/>"><i class="ti ti-file-text"></i></a></li>';
 								tools += '   <li><a href="javascript:void(0)" onclick="window.open(\'/admin/dochistory.jsp?docid='+data+'\',\''+title+'\',\'width=600,height=400\')"  title="<iwcm:text key="components.data.deleting.documentHistory"/>"><i class="ti ti-clock-o"></i></a></li>';
-								tools += '   <li><a href="javascript:void(0)" onclick="jstreeDeleteDocByDocId('+full.groupId+', '+data+')" title="<iwcm:text key="components.user.perms.deletePage"/>"><i class="fa fa-trash-o"></i></a></li>';
+								tools += '   <li><a href="javascript:void(0)" onclick="jstreeDeleteDocByDocId('+full.groupId+', '+data+')" title="<iwcm:text key="components.user.perms.deletePage"/>"><i class="ti ti-trash"></i></a></li>';
 								tools += '</ul></div></div>';
 								  return tools;
 							}

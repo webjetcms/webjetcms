@@ -69,6 +69,22 @@ block content
         function selectLink(link)
         {
             var urlPath = link;
+            //click on root folder like Zoznam web stranok
+            if ("javascript:void(0)"===urlPath) return;
+
+            //if current link contains URL parameters copy them to the new link
+            var current = GetE('txtUrl').value;
+            var i = current.indexOf("?");
+            if (i != -1)
+            {
+                if (urlPath.indexOf("?") == -1)
+                {
+                    urlPath += "?" + current.substring(i+1);
+                }
+            }
+
+            //console.log("selectLink: "+urlPath);
+
             //window.parent.CKEDITOR.dialog.getCurrent().getContentElement("info", "url").setValue(link);
             GetE('txtUrl').value=urlPath;
             updateValuesToCk();
@@ -230,6 +246,7 @@ block content
                             }
                         }, 500);
                     }
+                    setInitialElfinderHeight();
                 }
             });
 
@@ -250,6 +267,7 @@ block content
         }
 
         function updateElfinderCustomData() {
+            //console.log("updateElfinderCustomData");
             var docId = window.parent.getCkEditorInstance().element.$.form.docId.value;
             var groupId = window.parent.getCkEditorInstance().element.$.form.groupId.value;
             var virtualPath = window.parent.getCkEditorInstance().element.$.form.virtualPath.value;
@@ -267,7 +285,7 @@ block content
                 customData.startPath = file.substring(0, file.lastIndexOf('/'));
             }
 
-            elfinderInstance.options.customData = customData;
+            elFinderInstance.options.customData = customData;
             elFinderInstance.optsCustomData = customData;
             elFinderInstance.customData = customData;
 
@@ -287,7 +305,7 @@ block content
             lastVirtualPath = virtualPath;
             lastTitle = getPageNavbar();
 
-            if (file != "") {
+            if (file != "" && file.indexOf("/")==0) {
                 setTimeout(function() {
                     openElfinderInFolder(file);
                 }, openTimeout);
@@ -304,6 +322,7 @@ block content
         script(type='text/javascript').
             function txtUrlOnChange(field)
             {
+                //console.log("txtUrlOnChange: value=", field.value);
                 if (field.value.indexOf("http")==0 || field.value.indexOf("www.")==0 || field.value.indexOf("/files/")==0)
                 {
                     window.parent.CKEDITOR.dialog.getCurrent().getContentElement("target", "linkTargetType").setValue("_blank");
@@ -325,12 +344,12 @@ block content
         .modal-dialog(role='document')
             .modal-content
                 .modal-header
-                    button.close(type='button' data-dismiss='modal' aria-label='Close')
+                    button.close(type='button' data-bs-dismiss='modal' aria-label='Close')
                         span(aria-hidden='true') &times;
                     h4#modalLabel.modal-title [[\#{fbrowser.dirprop.dir}]]
             .modal-body
             .modal-footer
-                button.btn.btn-default.closeModal(type='button' data-dismiss='modal') [[\#{webpages.modal.close}]]
+                button.btn.btn-default.closeModal(type='button' data-bs-dismiss='modal') [[\#{webpages.modal.close}]]
                 select.btn.form-control.action(name='action' style='display: inline-block; width: 150px;')
                     option.bSubmit(value='bSubmit') [[\#{fbrowse.save_button}]]
                     option.bConvert2Pdf(value='bConvert2Pdf') [[\#{editor_dir.convert2pdf}]]

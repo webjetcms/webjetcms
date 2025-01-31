@@ -527,6 +527,7 @@ public class EditorDB
 		HttpSession session = request.getSession();
 
 		DebugTimer dt = new DebugTimer("EditorDB.save");
+		dt.setEnabled(false);
 
 		UserDetails user;
 

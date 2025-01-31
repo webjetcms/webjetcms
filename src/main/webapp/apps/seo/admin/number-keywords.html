@@ -6,7 +6,7 @@
     var numberKeywordsDataTable;
     let barChartKeywordsNumber;
 
-    WJ.breadcrumb({ 
+    WJ.breadcrumb({
         id: "numberKeywords",
         tabs: [
             {
@@ -23,7 +23,7 @@
     });
 
     window.getSearchAll = function (order) {
-        let keywordName = numberKeywordsDataTable.DATA.json[order - 1]['name'];
+        let keywordName = numberKeywordsDataTable.DATA.json.data[order - 1]['name'];
         let groupId = $('#rootDir').val();
         window.location.href="/admin/skins/webjet6/searchall.jsp?text=" + keywordName + "&groupId=" + groupId;
     }
@@ -61,7 +61,7 @@
             updateTablesAndCharts("dayDate");
         });
 
-        $("#rootDir").on("change", function() { 
+        $("#rootDir").on("change", function() {
             updateTablesAndCharts("rootDir");
         });
 
@@ -80,7 +80,7 @@
             });
         }
 
-        async function updateTablesAndCharts(refreshType) { 
+        async function updateTablesAndCharts(refreshType) {
             if(refreshType == "rootDir")
                 await ChartTools.setWebPagesSelect(getUrl("webPageSelect"), null);
 
@@ -93,8 +93,8 @@
             WJ.hideLoader();
 
             //Update values and reload table
-            numberKeywordsDataTable.ajax.url(WJ.urlUpdateParam(numberKeywordsDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
-            numberKeywordsDataTable.ajax.url(WJ.urlUpdateParam(numberKeywordsDataTable.ajax.url(), "searchWebPage", $('#webPageSelect').val()));
+            numberKeywordsDataTable.setAjaxUrl(WJ.urlUpdateParam(numberKeywordsDataTable.getAjaxUrl(), "searchRootDir", $('#rootDir').val()));
+            numberKeywordsDataTable.setAjaxUrl(WJ.urlUpdateParam(numberKeywordsDataTable.getAjaxUrl(), "searchWebPage", $('#webPageSelect').val()));
             numberKeywordsDataTable.ajax.reload();
 
             ChartTools.saveSearchCriteria(numberKeywordsDataTable.DATA);
@@ -110,7 +110,7 @@
                 let tmpDefURL = url + "/barChartData?rootDir=" + $('#rootDir').val();;
                 tmpDefURL += "&webPage=" + selectedPage;
                 return tmpDefURL;
-            } 
+            }
 
             return "/admin/rest/seo/stat-keywords/webPageSelect?rootDir=" + rootDir;
         }

@@ -343,7 +343,7 @@ export function resizeTabContent(EDITOR) {
  * Calculate height of the table based on window height and all toolbars
  */
 function calculateAutoHeight(DATA) {
-    const scrollBody = $('#' + DATA.id + '_wrapper').find('.dataTables_scrollBody');
+    const scrollBody = $('#' + DATA.id + '_wrapper').find('.dt-scroll-body');
     const inIframe = $("html").hasClass("in-iframe-show-table");
 
     var vh = document.documentElement.clientHeight;
@@ -352,8 +352,16 @@ function calculateAutoHeight(DATA) {
 
     if (inIframe==false) {
         if ("fixed"==$(".ly-header").css("position")) lyHeader = $(".ly-header").outerHeight();
-        var breadcrumb = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb").outerHeight();
-        if (breadcrumb == undefined) breadcrumb = $(".md-breadcrumb").outerHeight();
+        var breadcrumbElemets = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
+        if (breadcrumbElemets.length>0) {
+            //iterate all breadcrumbs and get total sum of outerHeight
+            breadcrumbElemets.each(function() {
+                breadcrumb += $(this).outerHeight();
+            });
+        } else {
+            var breadcrumb = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb").outerHeight();
+            breadcrumb = $(".md-breadcrumb").outerHeight();
+        }
     } else {
         //restaurant-menu has show-in-iframe class on breadcrumb because of the date selector
         var breadcumbEl = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
@@ -361,7 +369,7 @@ function calculateAutoHeight(DATA) {
     }
 
     var dtHeaderRow = $('#' + DATA.id + '_wrapper .dt-header-row').outerHeight();
-    var dtFilterRow = $('#' + DATA.id + '_wrapper div.dataTables_scrollHeadInner').outerHeight();
+    var dtFilterRow = $('#' + DATA.id + '_wrapper div.dt-scroll-headInner').outerHeight();
     var dtFooterRow = $('#' + DATA.id + '_wrapper .dt-footer-row').outerHeight();
     if (dtFooterRow < 30) dtFooterRow = dtFooterRow + 31; //footer not initialized/empty, add text height
 
@@ -374,7 +382,8 @@ function calculateAutoHeight(DATA) {
     //set also jstree height
     if (inIframe==false) breadcrumb = $(".tree-col .md-breadcrumb").outerHeight();
     dtHeaderRow = $('.tree-col .dt-header-row').outerHeight();
-    height = vh - lyHeader - breadcrumb - dtHeaderRow;
+    let filterHeight = $("div.tree-col .datatableInit").outerHeight();
+    height = vh - lyHeader - breadcrumb - dtHeaderRow - filterHeight;
 
     //console.log("vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "height=", height);
     $("#SomStromcek").css("height", height + "px");
@@ -418,7 +427,10 @@ export function bindOnResize(TABLE, DATA) {
  * @param {*} TABLE
  */
 export function bindDialogDragDrop(TABLE) {
+
     if ($("html").hasClass("in-iframe")) return; //in iframe disable drag & drop, window is full screen
+    
+    if(window.location.href.indexOf("showOnlyEditor=true") != -1) return; //showOnlyEditor sets the window to full screen, disable drag & drop
 
     $("body").on("mousedown", "#"+TABLE.DATA.id+"_modal .DTE_Header", function (mousedownEvt) {
         var $draggable = $(this);
@@ -459,22 +471,16 @@ export function bindColumnReorder(TABLE) {
 
         setTimeout( function () {
             //fixni atribut data-column-index v druhom riadku hlavicky
-            $("#"+TABLE.DATA.id+"_wrapper .dataTables_scrollHead table.dataTable thead tr:first th").each(function(i){
+            $("#"+TABLE.DATA.id+"_wrapper .dt-scroll-head table.dataTable thead tr:first th").each(function(i){
                 let $this = $(this);
-                let columnIndex = $this.data("column-index");
+                let columnIndex = $this.attr("data-dt-column");
                 //console.log(i+":", this, "index=", columnIndex);
-                //najdi rovnaky v druhom riadku
-                let filter = $("#"+TABLE.DATA.id+"_wrapper .dataTables_scrollHead table.dataTable thead tr:nth-child(2) th:nth-child("+(i+1)+")");
-                //console.log("filter=", filter.data("column-index"));
-                filter.data("column-index", columnIndex);
-                filter.attr("data-column-index", columnIndex);
 
                 //najdi extfilter, ak existuje
-                filter = $("div.dt-extfilter-"+$this.data("dt-field-name"));
+                let filter = $("div.dt-extfilter-"+$this.data("dt-field-name"));
                 //console.log("EXT filter=", filter.data("column-index"));
                 if (filter.length>0) {
-                    filter.data("column-index", columnIndex);
-                    filter.attr("data-column-index", columnIndex);
+                    filter.attr("data-dt-column", columnIndex);
                 }
             })
         }, 200 );
@@ -538,7 +544,8 @@ export function stateSaveCallback(settings,data) {
     //console.log("stateSaveCallback, settings=",settings," key=", key,", data=", data);
 
     let newData = {};
-    newData.ColReorder = data.ColReorder;
+    //DT v1 compatibility
+    newData.ColReorder = data.colReorder;
     newData.order = data.order;
     newData.time = data.time;
 
@@ -558,11 +565,24 @@ export function stateSaveCallback(settings,data) {
  * @returns
  */
 export function stateLoadCallback(settings) {
+    if ("form-detail"==settings.sInstance || "component-datatable"==settings.sInstance) return null;
+
     let key = getStateSaveKey(settings);
     let data = JSON.parse( localStorage.getItem( key ) );
+    //DT v1 compatibility
+    if (data != null) data.colReorder = data.ColReorder;
     //console.log("stateLoadCallback, key=", key," data=", data, "settings=", settings);
     enableStateSave();
     return data;
+}
+
+/**
+ * Reset table state in local storage (eg. after table error)
+ * @param {*} settings - DT settings
+ */
+export function stateResetLocalStorage(settings) {
+    let key = getStateSaveKey(settings);
+    localStorage.removeItem(key);
 }
 
 /**
@@ -579,7 +599,7 @@ export function stateReset(TABLE) {
 export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
 
     var input = $(button).parents(".input-group").find("input.filter-input,select.filter-input");
-    var index = parseInt($(button).parents("th,div.dt-extfilter").attr("data-column-index"));
+    var index = parseInt($(button).parents("th,div.dt-extfilter").attr("data-dt-column"));
     var regExval = $(button).parents(".input-group").find("option:selected").val();
 
     if (isNaN(index)) return;
@@ -684,10 +704,13 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
             val = regExSearch;
         }
 
-        var inputIndex = parseInt($(group).parents("th,div.dt-extfilter").attr("data-column-index"));
+        var inputIndex = parseInt($(group).parents("th,div.dt-extfilter").attr("data-dt-column"));
         if (isNaN(inputIndex)) return;
+        var columnName = $(group).parents("th,div.dt-extfilter").attr("data-dt-field-name");
+        //console.log("columnName=", columnName, "inputIndex=", inputIndex);
+        var dataIndex = getDataIndex(columnName, DATA);
 
-        //console.log("inputIndex=", inputIndex);
+        //console.log("inputIndex=", inputIndex, "dataIndex=", dataIndex);
         var prefix = "range:";
         if (isDateRange) prefix = "daterange:";
         if (valServerSideRange !== null && DATA.serverSide && !isDefaultSearch) {
@@ -704,34 +727,36 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
         //console.log("val=",val, "valServerSideRange=", prefix+valServerSideRange, "inputIndex=",inputIndex);
 
         //ulozime aktualny search aj do columns objektu, pouziva sa to specificky pre kombinaciu server side a client side filtrovania/sortovania
-        DATA.columns[inputIndex].searchVal = "";
-        if (valServerSideRange !== null && valServerSideRange !== "") DATA.columns[inputIndex].searchVal = prefix + valServerSideRange;
-        else if (val !== "") DATA.columns[inputIndex].searchVal = val;
+        DATA.columns[dataIndex].searchVal = "";
+        if (valServerSideRange !== null && valServerSideRange !== "") DATA.columns[dataIndex].searchVal = prefix + valServerSideRange;
+        else if (val !== "") DATA.columns[dataIndex].searchVal = val;
 
         //set all search values even on other columns than clicked search button
-        //console.log("Searching[", inputIndex, "]=", DATA.columns[inputIndex].searchVal, "current=", TABLE.column(inputIndex).search());
-        let searchVal = DATA.columns[inputIndex].searchVal;
+        //console.log("Searching[", inputIndex, "]=", DATA.columns[dataIndex].searchVal, "current=", TABLE.column(inputIndex).search());
+        let searchVal = DATA.columns[dataIndex].searchVal;
         //daterange: and range: is not possible to set this way
         if (searchVal=="" || searchVal.indexOf("range:")==-1) {
-            //console.log("Searching[", inputIndex, "]=", DATA.columns[inputIndex].searchVal, "current=", TABLE.column(inputIndex).search());
-            if (!isDefaultSearch) TABLE.column(inputIndex).search(searchVal, allowRegex, false);
+            //console.log("Searching[", inputIndex, "]=", DATA.columns[dataIndex].searchVal, "current=", TABLE.column(inputIndex).search());
+            if (!isDefaultSearch) {
+                TABLE.column(inputIndex).search(searchVal, allowRegex, false);
+            }
         }
 
         if (val !== "") {
             //console.log("Setting filter label, val=", val);
 
-            var headline = DATA.columns[inputIndex].title;
+            var headline = DATA.columns[dataIndex].title;
 
-            if ($('#' + DATA.id + '_wrapper .dt-filter-labels__link[data-column-index="' + inputIndex + '"]').length < 1) {
-                $('#' + DATA.id + '_wrapper .dt-filter-labels').append('<a href="javascript:;" class="btn btn-sm btn-outline-secondary dt-filter-labels__link" id="dt-filter-labels-link-' + DATA.columns[inputIndex].data + '" data-column-index="' + inputIndex + '"><span  class="dt-filter-labels__link__headline">' + headline + '</span><i class="ti ti-x" style="font-size: 0.9rem"></i></a>');
+            if ($('#' + DATA.id + '_wrapper .dt-filter-labels__link[data-dt-column="' + inputIndex + '"]').length < 1) {
+                $('#' + DATA.id + '_wrapper .dt-filter-labels').append('<a href="javascript:;" class="btn btn-sm btn-outline-secondary dt-filter-labels__link" id="dt-filter-labels-link-' + DATA.columns[dataIndex].data + '" data-dt-column="' + inputIndex + '"><span  class="dt-filter-labels__link__headline">' + headline + '</span><i class="ti ti-x" style="font-size: 0.9rem"></i></a>');
             }
 
-            $('#' + DATA.id + '_wrapper th[data-column-index="' + inputIndex + '"]').addClass("has-filter-active");
+            $('#' + DATA.id + '_wrapper th[data-dt-column="' + inputIndex + '"]').addClass("has-filter-active");
 
         } else {
 
-            $('#' + DATA.id + '_wrapper .dt-filter-labels__link[data-column-index="' + inputIndex + '"]').remove();
-            $('#' + DATA.id + '_wrapper th[data-column-index="' + inputIndex + '"]').removeClass("has-filter-active");
+            $('#' + DATA.id + '_wrapper .dt-filter-labels__link[data-dt-column="' + inputIndex + '"]').remove();
+            $('#' + DATA.id + '_wrapper th[data-dt-column="' + inputIndex + '"]').removeClass("has-filter-active");
         }
     });
 
@@ -749,6 +774,25 @@ export function filtrujemClick(button, TABLE, DATA, isDefaultSearch) {
         //console.log("Reataching selectpicker, input=", input);
         input.selectpicker('refresh');
     }
+}
+
+/**
+ * Returns index of column in DATA.columns object based on column name
+ * @param {*} columnName
+ * @param {*} DATA
+ * @returns
+ */
+function getDataIndex(columnName, DATA) {
+    var index = 0;
+    columnName = columnName.replace("editorFields-", "editorFields.");
+    //console.log("getDataIndex, columnName=", columnName, "DATA=", DATA);
+    $.each(DATA.columns, function (key, column) {
+        if (column.data === columnName) {
+            index = key;
+            return false;
+        }
+    });
+    return index;
 }
 
 /**
@@ -827,7 +871,6 @@ export function fixDatatableHeaderInputs(tableInstance) {
             else $this.removeClass("has-value");
 
             tableInstance.columns.adjust();
-            tableInstance.fixedHeader.adjust();
         });
 
         //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
@@ -855,7 +898,6 @@ export function fixDatatableHeaderInputs(tableInstance) {
                 else $this.removeClass("has-value");
 
                 tableInstance.columns.adjust();
-                tableInstance.fixedHeader.adjust();
             }, 100);
         });
 
@@ -882,7 +924,6 @@ export function fixDatatableHeaderInputs(tableInstance) {
             else $this.removeClass("has-value");
 
             tableInstance.columns.adjust();
-            tableInstance.fixedHeader.adjust();
         });
 
         //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
@@ -908,7 +949,6 @@ export function fixDatatableHeaderInputs(tableInstance) {
             else $this.removeClass("has-value");
 
             tableInstance.columns.adjust();
-            tableInstance.fixedHeader.adjust();
         });
 
         //console.log("Setting datepicker to sk: ", dateInput, " i18n: ", EDITOR.i18n);
@@ -925,7 +965,6 @@ export function fixDatatableHeaderInputs(tableInstance) {
     });
 
     tableInstance.columns.adjust();
-    tableInstance.fixedHeader.adjust();
 }
 
 /**
@@ -980,4 +1019,196 @@ export function updateFilterSelect(DATA, fieldName) {
            dteSelect.selectpicker('refresh');
        }, 100);
    }
+}
+
+/**
+ * Initialize header filter for datatable
+ * @param {*} dataTableSelector - header selector prefix
+ * @param {*} extfilterExists - true if there is external filter
+ * @param {*} DATA
+ * @param {*} TABLE - optional, if set we will also call fixDatatableHeaderInputs to adhist datatables header selects
+ */
+export function initializeHeaderFilters(dataTableSelector, extfilterExists, DATA, TABLE=null) {
+    //console.log("initializeHeaderFilters, dataTableSelector=", dataTableSelector, "extfilterExists=", extfilterExists, "DATA=", DATA, "TABLE=", TABLE);
+    $(dataTableSelector + ' thead tr:eq(1) th').each(function (index) {
+
+        //remove colreorder listener - disable drag drop on filter
+        $(this).off("selectstart.colReorder");
+        $(this).off("mousedown.colReorder touchstart.colReorder");
+
+        var i = $(this).attr("data-dt-column");
+        if (typeof i === "undefined" || i === null) i = index;
+        var fieldName = DATA.columns[i].data;
+
+        //console.log("Iterating, i=", i, "fieldName=", fieldName, " col=", DATA.columns[i], "this=", this);
+
+        var inputGroupBefore = `
+            <form>
+                <div class="input-group" data-filter-type="text">`;
+        var inputGroupAfter = `
+
+                        <button class="filtrujem btn btn-sm btn-outline-secondary dt-filtrujem-${fieldName}" type="submit">
+                            <i class="ti ti-search"></i>
+                        </button>
+
+                </div>
+            </form>`;
+        var html = `
+                <select class="filter-input-prepend">
+                    <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
+                    <option value="startwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
+                    <option value="endwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
+                    <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>">${WJ.translate('datatables.select.equals.js')}</option>`;
+        //regex nie je dobre podporovany v Spring data, takze sa nemoze pouzit pri server side
+        //regex disabled, most tables are server side
+        /*if (DATA.serverSide === false) {
+            html += `
+                    <option value="regex" data-content="<i class=\'ti ti-brackets\'></i><small>${WJ.translate('datatables.select.regex.js')}</small>"><i class="ti ti-brackets"></i> ${WJ.translate('datatables.select.regex.js')}</option>`;
+        }*/
+        html += `
+                </select>
+                <input class="form-control form-control-sm filter-input dt-filter-${fieldName}" type="text" />`;
+
+        if ($(this).hasClass("dt-format-selector")) {
+            html = `
+            <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
+                <i class="ti ti-square-check"></i>
+            </button>`;
+            if (DATA.serverSide === false) {
+                html += `<div style="display: none">
+                    <select class="filter-input-prepend">
+                        <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>">${WJ.translate('datatables.select.equals.js')}</option>
+                    </select>
+                </div>`;
+            }
+            html += `<input class="form-control form-control-sm filter-input min max filter-input-id dt-filter-${fieldName}" type="text" />
+            `;
+        }
+
+        if ($(this).hasClass("dt-format-boolean-true") || $(this).hasClass("dt-format-boolean-yes") || $(this).hasClass("dt-format-boolean-one")) {
+            inputGroupBefore = '<form><div class="input-group" data-filter-type="boolean">';
+            html = `
+            <select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">
+                <option value="">${WJ.translate('datatables.select.all.js')}</option>
+                <option value="true">${WJ.translate('button.yes')}</option>
+                <option value="false">${WJ.translate('button.no')}</option>
+            </select>`;
+        }
+
+        //Fix - number inputs (others formats stay as string due custom components/styling)
+        if ($(this).hasClass("dt-format-number") || $(this).hasClass("dt-format-percentage")) {
+            inputGroupBefore = '<form><div class="input-group" data-filter-type="number">';
+            html = `
+            <input class="min form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
+            <input class="max form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+        }
+
+        if ($(this).hasClass("dt-format-number--decimal") || $(this).hasClass("dt-format-percentage--decimal") || $(this).hasClass("dt-format-number--text")) {
+            inputGroupBefore = '<form><div class="input-group" data-filter-type="number-decimal">';
+            html = `
+            <input class="min form-control form-control-sm dt-filter-from-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.from.js')}"/>
+            <input class="max form-control form-control-sm dt-filter-to-${fieldName}" type="number" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+        }
+
+        if ($(this).hasClass("dt-format-date") || $(this).hasClass("dt-format-date-time") || $(this).hasClass("dt-format-date--text")
+            || $(this).hasClass("dt-format-date-time--text") || $(this).hasClass("dt-format-time-hm") || $(this).hasClass("dt-format-time-hms")) {
+            let dateFormat = "datepicker";
+            let filterType = "date";
+            if ($(this).hasClass("dt-format-date-time")) {
+                dateFormat = "datetimepicker";
+                filterType = "datetime";
+            }
+
+            if ($(this).hasClass("dt-format-time-hm")) {
+                dateFormat = "timehmpicker";
+                filterType = "datetime";
+            }
+
+            if ($(this).hasClass("dt-format-time-hms")) {
+                dateFormat = "timehmspicker";
+                filterType = "datetime";
+            }
+            inputGroupBefore = `<form><div class="input-group" data-filter-type="${filterType}">`;
+
+
+            html = `
+            <input class="${dateFormat} min form-control form-control-sm dt-filter-from-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.from.js')}"/>
+            <input class="${dateFormat} max form-control form-control-sm dt-filter-to-${fieldName}" type="text" placeholder="${WJ.translate('datatables.input.to.js')}"/>`;
+        }
+
+        if ($(this).hasClass("dt-format-none")) {
+            inputGroupBefore = '';
+            inputGroupAfter = '';
+            html = ``;
+        }
+
+        if ($(this).hasClass("dt-format-select") || $(this).hasClass("dt-format-radio")) {
+            inputGroupBefore = '<form><div class="input-group" data-filter-type="select">';
+            html = `<select class="filter-input dt-filter-${fieldName}" data-dt-name="${fieldName}">`;
+            //hodnoty sa setnu volanim updateFilterSelect po dobehnuti ajax requestu
+            let options = DATA.columns[i].editor.options;
+            //console.log("Options=", options);
+            if (typeof options != "undefined" && options != null && options.length>0) {
+                //ak mame definovane data priamo v JSON definicii musime ich inicializovat
+                setTimeout(function() {
+                    dtWJ.updateFilterSelect(DATA, fieldName);
+                }, 300);
+            }
+            html += '</select>';
+        }
+
+        // var popOver = '<a class="btn btn-sm btn-outline-secondary row-menu" data-placement="bottom" data-content="" role="button"><i class="ti ti-dots-vertical"></i></a>';
+
+        var filterHtml = inputGroupBefore + html + inputGroupAfter;
+        //console.log("filter["+i+"] typeof=", typeof DATA.columns[i].filter, " isTrue=", DATA.columns[i].filter === true);
+        if (typeof DATA.columns[i].filter === "undefined" || DATA.columns[i].filter === true) {
+            //console.log("Setting filter for ", fieldName, " html:", filterHtml, "this:", this);
+            $(this).html(filterHtml);
+        } else {
+            if ($(this).hasClass("dt-format-selector")) {
+                html = `
+                <button class="buttons-select-all btn btn-sm btn-outline-secondary dt-filter-${fieldName}">
+                    <i class="ti ti-square-check"></i>
+                </button>
+                `;
+                $(this).html(inputGroupBefore + html + "</div></form>");
+            } else {
+                $(this).html("");
+            }
+        }
+
+        if (extfilterExists) {
+            //console.log("Setting ext filter for ", fieldName, " html: ", filterHtml);
+            $("#" + DATA.id + "_extfilter .dt-extfilter-title-" + fieldName).text(DATA.columns[i].title);
+            $("#" + DATA.id + "_extfilter .dt-extfilter-" + fieldName).attr("data-dt-column", i);
+            $("#" + DATA.id + "_extfilter .dt-extfilter-" + fieldName).attr("data-dt-field-name", fieldName);
+            $("#" + DATA.id + "_extfilter .dt-extfilter-" + fieldName).html(filterHtml);
+        }
+
+        $(this).find("input.filter-input").on("keypress", function(e) {
+            if (e.key === "Enter") {
+                //console.log("Mam keypress, e=", e);
+                e.preventDefault();
+                $(e.target).parent().find("button.filtrujem").trigger("click");
+            }
+        })
+
+    });
+    if (typeof TABLE != "undefined" && TABLE!=null && typeof TABLE.DATA != "undefined") fixDatatableHeaderInputs(TABLE);
+}
+
+/**
+ * Adjust width of columns/filter inputs in header (sync table columns width with filter inputs)
+ * @param {*} TABLE
+ */
+export function adjustColumns(TABLE) {
+    try {
+        //reset maxLenString - tooks me 10 hours to find this bug
+        for (var column of TABLE.context[0].aoColumns) {
+            column.maxLenString = null;
+        }
+        TABLE.columns.adjust();
+    } catch (e) {
+        console.error("Error adjusting columns: ", e);
+    }
 }

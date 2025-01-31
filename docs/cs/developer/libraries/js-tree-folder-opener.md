@@ -92,7 +92,7 @@ Příklad takové adresy URL: `/admin/v9/webpages/web-pages-list/?groupid=SYSTEM
 
 ***
 
-**Varování:** V případě, že chceme externě nastavit [id](#id) je dobré použít metodu před [loaded()](#Převzato-z) ve kterém můžeme volat [next()](#další) a testovat [notFound](#notfound).
+!>**Varování:** V případě, že chceme externě nastavit [id](#id) je dobré použít metodu před [loaded()](#Převzato-z) ve kterém můžeme volat [next()](#další) a testovat [notFound](#notfound).
 
 ```javascript
 /** @type {JsTreeFolderOpener} jstfo */

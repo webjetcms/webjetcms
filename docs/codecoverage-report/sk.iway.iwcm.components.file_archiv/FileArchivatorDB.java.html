@@ -130,8 +130,8 @@ public class FileArchivatorDB extends JpaDB&lt;FileArchivatorBean&gt;
 <span class="fc bfc" id="L130" title="All 2 branches covered.">		if(!cleanCache)</span>
         {
 <span class="fc" id="L132">            Object o = Cache.getInstance().getObject(cacheKey);</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">            if (o != null)</span>
-<span class="nc" id="L134">                return (List&lt;FileArchivatorBean&gt;) o;</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">            if (o != null)</span>
+<span class="fc" id="L134">                return (List&lt;FileArchivatorBean&gt;) o;</span>
         }
 		//Logger.debug(FileArchivatorDB.class, &quot;Nacitam z databazy: &quot;+cacheKey);
 		// Pair.of(&quot;uploaded&quot;, -1) - nezobrazujeme subory, ktore sa maju nahrat neskor

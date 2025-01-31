@@ -22,7 +22,7 @@ div.ly-container.container
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-search-toggler(href="/admin/searchall.jsp")
+            a.btn.btn-sm.btn-outline-secondary.js-search-toggler(data-th-if="${layout.hasPermission('menuWebpages|edit_text')}" href="/admin/v9/search/index/" data-th-title="\#{components.search.title}" data-bs-toggle="tooltip")
                 i.ti.ti-search
 
             .btn.btn-sm.btn-outline-secondary.js-tasks-toggler(style="display:none")
@@ -55,12 +55,15 @@ div.ly-container.container
                             i.ti.ti-key
                             <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
                     li
-                        a.dropdown-item(data-th-href="${layout.getConstant('adminLogoffLink')}")
+                        a.dropdown-item(href="javascript:document.adminLogoffForm.submit()")
                             i.ti.ti-logout
                             <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
                 |
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(data-th-href="${layout.getConstant('adminLogoffLink')}" data-th-title="\#{menu.logout}" data-toggle="tooltip")
+            a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(href="javascript:document.adminLogoffForm.submit()" data-th-title="\#{menu.logout}" data-bs-toggle="tooltip")
                 i.ti.ti-logout.fs-5
+
+    form(data-th-action="${layout.getConstant('adminLogoffLink')}" method="post" name="adminLogoffForm" style="display:none;")
+        input(type="hidden" data-th-name="${layout.csrfParameterName}" data-th-value="${layout.csrfToken}")

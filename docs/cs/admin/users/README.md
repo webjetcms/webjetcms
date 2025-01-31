@@ -53,7 +53,9 @@ Karta **Skupiny** je rozdělena na dvě části, a to :
 - Skupiny uživatelů - výběrem názvu skupiny uživatelů získá uživatel přístupová práva do neveřejných částí webu.
 - Hromadný e-mail - výběrem názvu skupiny se uživatel přihlásí do skupiny hromadných e-mailů.
 
-Na kartě je také možnost Odesílat e-maily o přidání do skupin uživatelů. **Varování:** e-maily budou odeslány pouze v případě, že má skupina uživatelů nastaveno. `ID stránky s textom e-mailu`.
+Na kartě je také možnost Odesílat e-maily o přidání do skupin uživatelů.
+
+!>**Varování:** e-maily budou odeslány pouze v případě, že má skupina uživatelů nastaveno. `ID stránky s textom e-mailu`.
 
 ![](users-tab-groups.png)
 
@@ -83,7 +85,7 @@ Kliknutím na ikonu tužky vedle již přidaného adresáře/stránky můžete a
 
 Ve výchozím nastavení správce, který **nemá vybraná práva na adresáře/webové stránky, automaticky získá práva na všechny adresáře a webové stránky**.
 
-Při instalaci s více doménami umožňuje úprava uživatelů a skupin práv vybrat složky webových stránek a jednotlivé webové stránky bez ohledu na aktuálně vybranou doménu. Domény se zobrazují jako kořenové složky. Zobrazení vybrané položky obsahuje předponu s názvem domény pro rozlišení jednotlivých složek (v různých doménách se často jmenují stejně, např. slovensky).
+Při instalaci s více doménami umožňuje úprava uživatelů a skupin práv vybrat složky webových stránek a jednotlivé webové stránky bez ohledu na aktuálně vybranou doménu. Domény se zobrazují jako kořenové složky, zatímco složku s názvem domény nelze vybrat. Je třeba vybrat jednotlivé složky v rámci domény, protože samotná doména není skutečnou složkou. Zobrazení vybrané položky obsahuje předponu s názvem domény, která slouží k rozlišení jednotlivých složek (v různých doménách se často jmenují stejně, např. slovensky).
 
 ![](users-tab-right-existing.png)
 
@@ -94,6 +96,8 @@ V této části můžete vybrat práva pro nahrávání souborů do adresářů 
 Ve výchozím nastavení může správce, který nemá vybraný žádný adresář souborového systému, nahrávat soubory do libovolného adresáře. Toto chování lze změnit nastavením konfigurační proměnné `defaultDisableUpload` na hodnotu `true`, což umožní nahrávat soubory pouze do vybraných adresářů (a pokud uživatel nemá vybrané žádné adresáře, nebude moci nahrávat soubory vůbec).
 
 ![](users-tab-right-existing.png)
+
+Pokud nastavíte konfigurační proměnnou `userPermsActualPageAutomatic` na hodnotu `true` takže práva ke složkám `/images` a `/files` nastaví automaticky podle práv ve stromové struktuře webových stránek, takže pro povolené složky webových stránek má editor práva zapisovat obrázky a soubory do příslušných složek Média této stránky.
 
 ### Skupiny práv a přístupová práva
 

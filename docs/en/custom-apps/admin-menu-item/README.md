@@ -2,19 +2,19 @@
 
 The administration is based on [data tables](../../developer/datatables/README.md) a [REST interface](../../developer/datatables/restcontroller.md). As a basis, it is necessary to understand their operation according to the documentation for [WebJET CMS Programmer](../../developer/README.md).
 
-In this demonstration we will program the contact management, the table is used `contact`which exists in the standard WebJET CMS installation (but is typically not used).
+In this demonstration we will program the contact management, the table is used `contact` which exists in the standard WebJET CMS installation (but is typically not used).
 
 ![](contact.png)
 
 ## Backend
 
-The ideal solution uses a Spring DATA repository, a REST controller and a datatable generated from `@DataTableColumn`, [Annotations](../../developer/datatables-editor/datatable-columns.md).
+The ideal solution uses `Spring DATA` repository, REST controller and datatable generated from `@DataTableColumn`, [Annotations](../../developer/datatables-editor/datatable-columns.md).
 
 Sample JPA entity with annotations `@DataTableColumn`, [for datatable and editor](../../developer/datatables-editor/datatable-columns.md). Also note the annotation `@EntityListeners` for automatic [audit logging](../../developer/backend/auditing.md) when changing the entity.
 
-Mandatory fields and other validations [you set annotations](../../developer/datatables/restcontroller.md#validácia--povinné-polia), `@NotBlank,@Size,@Email` etc.
+Mandatory fields and other validations [you set annotations](../../developer/datatables/restcontroller.md#validation---required-fields), `@NotBlank,@Size,@Email` etc.
 
-WARNING: do not use primitive types in the entity `int, long` but only object `Integer, Long`otherwise filtering/searching will not work correctly.
+!>**Warning:** do not use primitive types in the entity `int, long` but only object `Integer, Long` otherwise filtering/searching will not work correctly.
 
 ```java
 package sk.iway.basecms.contact;
@@ -40,6 +40,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
  * Ukazkova JPA entita pre pouzitie v datatabulke
  * http://docs.webjetcms.sk/v2022/#/custom-apps/admin-menu-item
  */
+
 //nastavenie JPA entity
 @Entity
 @Table(name = "contact")
@@ -110,7 +111,8 @@ public interface ContactRepository extends JpaRepository<ContactEntity, Long>, J
 }
 ```
 
-**Warning:** note the use of `JpaSpecificationExecutor`. It allows dynamic creation of SQL statement for searching/filtering/arranging records in the datatable. If you wouldn't use it, it searches in the form of [Query By Example](https://www.baeldung.com/spring-data-query-by-example) when `nesmiete` use primitive types and initialization values in Entity (e.g. `String text="test"`). When searching, the value would then be `test` automatically searched even when not entered. This solves `JpaSpecificationExecutor`, which searches only for the parameters specified in the filter (by testing request parameters starting with `search`).
+!>**Warning:** note the use of `JpaSpecificationExecutor`. It allows dynamic creation of SQL statement for searching/filtering/arranging records in the datatable. If you wouldn't use it, it searches in the form of [Query By Example](https://www.baeldung.com/spring-data-query-by-example) when **You must not** use primitive types and initialization values in Entity (e.g. `String text="test"`). When searching, the value would then be `test` automatically searched even when not entered. This solves `JpaSpecificationExecutor`, which searches only for the parameters specified in the filter (by testing request parameters starting with `search`).
+
 Sample REST controller, always pay attention to checking rights via annotation `@PreAuthorize` and don't forget the annotation `@Datatable` for correct generation of error responses.
 
 In the method `getOptions` sets the options for the country selection field.
@@ -137,6 +139,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
  * Ukazkovy Spring REST pre pouzitie v datatabulke
  * http://docs.webjetcms.sk/v2022/#/custom-apps/admin-menu-item
  */
+
 @RestController
 //nastavenie URL adresy REST controllera
 @RequestMapping("/admin/rest/apps/contact/")
@@ -195,46 +198,47 @@ An example is the application `src/main/webapp/apps/contact/admin/index.html` ca
 
 ```html
 <script>
-	var dataTable;
+    var dataTable;
 
-	window.domReady.add(function () {
+    window.domReady.add(function () {
 
-	    WJ.breadcrumb({
-	        id: "contact",
-	        tabs: [
-	            {
-	                url: '/apps/contact/admin/',
-	                title: '[[#{components.contact.title}]]',
-	                active: true
-	            }
-	        ]
-	    })
+        WJ.breadcrumb({
+            id: "contact",
+            tabs: [
+                {
+                    url: '/apps/contact/admin/',
+                    title: '[[#{components.contact.title}]]',
+                    active: true
+                }
+            ]
+        })
 
-	    //URL adresa REST rozhrania
-	    let url = "/admin/rest/apps/contact";
-	    //package a meno triedy s JPA entitou
-	    let columns = [(${layout.getDataTableColumns("sk.iway.basecms.contact.ContactEntity")})];
+        //URL adresa REST rozhrania
+        let url = "/admin/rest/apps/contact";
+        //package a meno triedy s JPA entitou
+        let columns = [(${layout.getDataTableColumns("sk.iway.basecms.contact.ContactEntity")})];
 
-	    dataTable = WJ.DataTable({
-	        url: url,
-	        serverSide: true,
-	        columns: columns,
-	        //id musi byt zhodne s tagom table nizsie
-	        id: "dataTable",
-	        fetchOnEdit: true,
-	        fetchOnCreate: true
-	    });
-	});
+        dataTable = WJ.DataTable({
+            url: url,
+            serverSide: true,
+            columns: columns,
+            //id musi byt zhodne s tagom table nizsie
+            id: "dataTable",
+            fetchOnEdit: true,
+            fetchOnCreate: true
+        });
+    });
+
 </script>
 
 <table id="dataTable" class="datatableInit table"></table>
 ```
 
-Using the function [WJ.breadcrumb](../../developer/frameworks/webjetjs.md#navigačná-lišta) a navigation bar is generated.
+Using the function [WJ.breadcrumb](../../developer/frameworks/webjetjs.md#navigation-bar) a navigation bar is generated.
 
 ![](breadcrumb.png)
 
-Feature [WJ.DataTable](../../developer/datatables/README.md#možnosti-konfigurácie) initializes the datatable in the page to an HTML table with `id=dataTable`. Please note the call `window.domReady.add`to be used instead of `$(document).ready` - call waiting for initialization [translation keys](../../developer/libraries/translator.md) and only after they are obtained, the specified function is called.
+Feature [WJ.DataTable](../../developer/datatables/README.md#configuration-options) initializes the datatable in the page to an HTML table with `id=dataTable`. Please note the call `window.domReady.add` to be used instead of `$(document).ready` - call waiting for initialization [translation keys](../../developer/libraries/translator.md) and only after they are obtained, the specified function is called.
 
 ![](datatable.png)
 
@@ -251,7 +255,6 @@ userItem=true
 leftMenuLink=/apps/contact/admin/
 #ikona v menu (https://fontawesome.com/v5/search?s=solid%2Cbrands)
 icon=address-book
-
 #ak je true bude po pridani aplikacie zakazana pre vsetkych pouzivatelov a musi sa implicitne povolit
 defaultDisabled=true
 #ak je true, bude v zozname aplikacii na zaciatku (je to zakaznicka aplikacia)
@@ -262,7 +265,7 @@ custom=true
 #leftSubmenu1Link=/apps/contact/admin/subpage/
 ```
 
-If you have a site like `master-detail`which is not defined in `modinfo.properties` it may not display the left menu correctly because it doesn't know what item to highlight. The simplest solution is to name such a page `meno-details.html` (such as a URL `/apps/stat/admin/top-details/?docId=35267&dateRange=` in the file `/apps/stat/admin/top-details.html`). The term `-details` or `-detail` is removed when searching for a menu item to highlight, so that the main (`master`) Page.
+If you have a site like `master-detail` which is not defined in `modinfo.properties` it may not display the left menu correctly because it doesn't know what item to highlight. The simplest solution is to name such a page `meno-details.html` (such as a URL `/apps/stat/admin/top-details/?docId=35267&dateRange=` in the file `/apps/stat/admin/top-details.html`). The term `-details` or `-detail` is removed when searching for a menu item to highlight, so that the main (`master`) Page.
 
 If such use is not appropriate you can use the JavaScript function in your page `WJ.selectMenuItem(href)` to highlight the specified menu item. In the parameter `href` enter directly the URL of the page in the menu you want to highlight:
 
@@ -280,8 +283,8 @@ If you need to attach JavaScript to your application, the WebJET module automati
 
 ```html
 <script type="module">
-	import * as appModule from "[[${appIncludePathJs}]]";
-	window.appModule = appModule;
+        import * as appModule from "[[${appIncludePathJs}]]";
+        window.appModule = appModule;
 </script>
 ```
 
@@ -312,22 +315,22 @@ which is then called in JavaScript/HTML code as `appModule.ChartType.Bar` etc.
 For the date table is ready [basic automated test](../../developer/testing/datatable.md), which you just need to configure. Create a new test scenario in `src/test/webapp/tests/apps/contact.js` with at least a basic test:
 
 ```javascript
-Feature("contact");
+Feature('contact');
 
 Before(({ I, login }) => {
-	login("admin");
-	I.amOnPage("/apps/contact/admin/");
+    login('admin');
+    I.amOnPage("/apps/contact/admin/");
 });
 
-Scenario("contact-zakladne testy", async ({ I, DataTables, DTE }) => {
-	await DataTables.baseTest({
-		dataTable: "dataTable",
-		//meno prava na kontrolu podla modinfo.properties
-		perms: "cmp_contact",
-		createSteps: function (I, options) {
-			//toto pole musime vyplnit rucne, kedze ma specialnu validaciu
-			DTE.fillField("zip", "85106");
-		},
-	});
+Scenario('contact-zakladne testy', async ({ I, DataTables, DTE }) => {
+    await DataTables.baseTest({
+         dataTable: 'dataTable',
+         //meno prava na kontrolu podla modinfo.properties
+         perms: 'cmp_contact',
+         createSteps: function(I, options) {
+            //toto pole musime vyplnit rucne, kedze ma specialnu validaciu
+            DTE.fillField("zip", "85106");
+         }
+    });
 });
 ```

@@ -18,20 +18,38 @@ The output should look similar to the following figure. At the very end of the o
 
 First, make sure you are in the directory you want to apply the import to. Press the button ![](import-export-button.png ":no-zoom") and wait for the window to appear. In the window, select the option **Import web pages from ZIP archive (xml)** and press the button with the text **OK**. You will be prompted to upload the ZIP file, which should be in the same state as when it was exported via the **Export web pages to ZIP archive (xml)**. Any experimentation with its content may result in incorrect functioning of the import with the consequence of damaging the resulting content of the web site.
 
+You also have the option to select a value **Sync pages by** to decide which parameter will be used to check whether the page already exists or not. You have the following options:
+- **Page name or URL**, it is considered to exist if it is identical in name or URL to another existing page
+- **URL addresses**, it is considered existing if it matches in URL with another existing page
+- **None**, it doesn't matter the page, she will **always be considered as new**, so you can add duplicates of existing pages
+- **Optional field A** / **Optional field B** / **Optional field C**, you have the option to compare pages according to specific values you specify, such as [specially generated ID](../../frontend/webpages/customfields/README.md#unique-identifier). If you set the Unique identifier option at the beginning of the web page creation. each page gets a unique comparison string.
+
 ![](import-zip-window.png)
 
-After uploading the zip file and confirming the insertion, click the button with the text **OK** Wait for the system to process the file until you see the comparison table for import.
+After uploading the zip file and confirming the insertion, click the button with the text **OK** wait for the system to process the file until you see **comparison table for import**.
 
-There are two check boxes above the table:
-- Create missing templates
-- Create missing user groups
-I leave their ticking up to consideration, but the recommendation is to leave them ticked.
+### Comparison table for import
 
 In the table, the Web pages are listed first, then the Files, followed by other module data, if any were present in the export. The table contains 4 columns:
-- Remote address - the name of the page/file in the ZIP file
-- Status - information about whether the same object already exists in the target repository
-- Synchronize - checkbox that defines synchronization only to specific items from the list
-- Local address - the name and location of the page/file on the target repository (in the WebJET I'm importing to)
+- **Remote address** - the name of the page/file in the ZIP file
+- **Status** - information about whether the same object already exists in the target repository
+- **Sync** - a checkbox that defines synchronization only to specific items in the list
+- **Local address** - the name and location of the page/file on the target repository (in the WebJET I'm importing to)
+
+There are two check boxes above the table:
+- **Create missing templates**
+- **Create missing user groups**
+
+!> I leave their ticking up to consideration, but it is recommended to keep them ticked.
+
+**Statistical header**
+
+The header of the page contains an overview of import statistics. It shows an overview of how many folders/pages/files ... have been selected for synchronization. These stats are updated in every change. The header also offers some useful buttons like:
+- ![](selectAllBtn.png ":no-zoom"), marks all available options in the table
+- ![](deselectAllBtn.png ":no-zoom"), un-checks all available options in the table
+- ![](closeAllFoldersBtn.png ":no-zoom"), hides all web pages belonging to the folder in the table
+- ![](openAllFoldersBtn.png ":no-zoom"), reveals (shows) all web pages belonging to the folder in the table
+
 Once you have scrolled through the entire list and selected the checkboxes on the items you want to sync, you can click the **Sync** at the bottom of the window. This will synchronize the data, publish the new content to the web pages, and overwrite the original files with the new ones.
 
 ![](imported-zip-window.png)

@@ -1,0 +1,359 @@
+:root {
+  --base-background-color: #13151B;
+  --sidebar-width: 22rem;
+  --docsify-example-panels-document-width: 100%;
+  --code-font-size: 12px;
+  --heading-h3-margin: 14px 0 0 0;
+  --heading-h3-font-size: 20px;
+  --heading-h6-font-size: 14px;
+  --search-margin: 0 0 0 0;
+  --sidebar-nav-margin: 0.5rem 0 0 0;
+  --sidebar-nav-link-padding: 0 0 0 0;
+  --sidebar-nav-pagelink-padding: 0 0 0 20px;
+  --sidebar-background: #353943;
+  --code-theme-background: #353943;
+  --sidebar-nav-link-text-decoration--hover: none;
+  --sidebar-nav-link-color--hover: white;
+  --link-text-decoration: none;
+  --link-text-decoration--hover: underline;
+  --link-color: #0090fc;
+  --heading-h2-margin: 0.5rem 0 0 0;
+  --heading-h2-padding: 0px;
+}
+
+.sidebar-section {
+  font-weight: bold;
+  font-size: 21px;
+  color: white;
+  text-align: center;
+}
+
+.sidebar-nav p {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  color: #0090fc;
+}
+
+.sidebar-nav > ul > li {
+  padding: 0.5rem 0;
+}
+
+h1.app-name {
+  background-color: #272b35;
+  margin: 0 -25px;
+  padding: 10px 25px 0px 25px;
+}
+
+.markdown-section iframe {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}
+
+.video-container {
+    overflow: hidden;
+    position: relative;
+    width:100%;
+}
+
+.video-container::after {
+    padding-top: 56.25%;
+    display: block;
+    content: '';
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+div.mermaid {
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.markdown-section img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.markdown-section img.emoji {
+    display: inline-block;
+    width: auto;
+}
+
+.markdown-section li img {
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+.markdown-section img[data-no-zoom] {
+    display: inline-block;
+    text-align: left;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    vertical-align: middle;
+}
+.markdown-section img[alt=meme] {
+  display: block;
+  text-align: center;
+}
+.markdown-section img.medium-zoom-image {
+  background: var(--code-theme-background);
+  padding: 6px;
+  border-radius: var(--code-block-border-radius);
+}
+.search input {
+    outline: none;
+    width: 100%;
+    padding: 0.6em 7px;
+    font-size: inherit;
+    border: 1px solid transparent;
+}
+
+div.gsc-results-wrapper-visible {
+  background-color: white;
+}
+div.input-wrap {
+  background-color: var(--search-input-background-color) !important;
+}
+
+table.gssb_c {
+  left: auto !important;
+}
+input[type="checkbox"] {
+  pointer-events: none;
+}
+
+/*WebJET CMS design for buttons and TI*/
+.btn {
+  border-width: 0;
+  font-size: 14px;
+  outline: none !important;
+  background-image: none !important;
+  filter: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  text-shadow: none;
+  color: #13151B !important;
+  border-radius: 6px;
+  margin-bottom: 2px;
+}
+
+.ti {
+  font-size: 1.1rem;
+}
+
+.btn-sm {
+  padding: 5px 9px 5px 9px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.btn-danger {
+  color: white;
+  background-color: #f3565d;
+  border-color: #f13e46;
+}
+.btn-danger:hover, .btn-danger:focus, .btn-danger:active, .btn-danger.active {
+  color: white;
+  background-color: #f03038;
+  border-color: #ec111b;
+}
+
+.btn-success {
+  color: white;
+  background-color: #45b6af;
+  border-color: #3ea49d;
+}
+.btn-success:hover, .btn-success:focus, .btn-success:active, .btn-success.active {
+  color: white;
+  background-color: #3a9893;
+  border-color: #307f7a;
+}
+
+.btn-warning {
+  color: white;
+  background-color: #dfba49;
+  border-color: #dbb233;
+}
+.btn-warning:hover, .btn-warning:focus, .btn-warning:active, .btn-warning.active {
+  color: white;
+  background-color: #d9ad26;
+  border-color: #bb9521;
+}
+
+.btn-duplicate {
+  background-color: rgb(191, 90, 242) !important;
+  border-color: rgb(191, 90, 242) !important;
+}
+
+.btn-outline-secondary {
+  color: #6c757d;
+  background-color: #fff;
+  border-color: #b3b8c7;
+  border-width: 1px
+}
+
+.btn-outline-secondary:hover {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.youtube-thumbnail {
+  display: none;
+}
+
+@media print {
+  :root {
+    --base-background-color: white;
+
+    --heading-h1-border-width: 0 0 2px 0;
+    --heading-h2-border-width: 0;
+    --code-theme-background: #eee;
+    --code-inline-background: #eee;
+
+    --base-url: "https://docs.webjetcms.sk/latest/sk/";
+    --base-font-family: 'Open Sans', sans-serif, serif;
+
+    --base-font-size: 11px;
+    --code-font-size: 10px;
+
+    --modular-scale: 1.3;
+    --content-max-width: 100%;
+
+    --heading-h3-font-size: var(--font-size-l);
+    --heading-h6-font-size: var(--font-size-xs);
+  }
+  body {
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  .no-print {
+    display: none;
+  }
+  .print-only {
+    display: block;
+  }
+  div.logo {
+    text-align: center;
+    margin-top: 366px;
+  }
+  div.logo img {
+    height: 130px;
+  }
+  body h1:first-child {
+    display: none;
+  }
+  .version {
+    display: block;
+    clear: both;
+    font-size: 14px;
+  }
+
+  div.sidebar-section {
+    text-align: center;
+    font-size: 3rem;
+    page-break-after: always;
+    color: black;
+  }
+
+  .markdown-section pre[data-lang] code {
+    white-space: pre-wrap;
+  }
+  code {
+    padding: 2px;
+  }
+
+  .markdown-section img {
+    max-width: 60%;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    /* https://stackoverflow.com/questions/9238868/how-do-i-avoid-a-page-break-immediately-after-a-heading */
+    page-break-inside: avoid;
+  }
+  h1::after, h2::after, h3::after, h4::after, h5::after, h6::after {
+    content: "";
+    display: block;
+    height: 200px;
+    margin-bottom: -200px;
+  }
+  h1::after {
+    height: 400px;
+    margin-bottom: -400px;
+  }
+
+  a[href*="://"]::after,
+  a:not([href^="/"])::after
+  {
+    content: " (" attr(href) ")";
+  }
+  /* hide links starts with # */
+  a[href^="#"]::after {
+    content: "";
+  }
+  /*a[href^="#/../"]:not([href*="://"])::after {
+    content: " (" var(--base-url) attr(href) ")";
+  }*/
+
+  p.tip {
+    page-break-inside: avoid;
+  }
+
+  /* YouTube video */
+  .video-container {
+    overflow: show;
+    position: unset;
+    width: auto;
+  }
+  .video-container iframe {
+    display: none;
+  }
+  .video-container::after {
+    display: none;
+  }
+  .youtube-thumbnail {
+    display: block !important;
+    width: 60%;
+  }
+  .youtube-link {
+    text-align: center;
+  }
+  .youtube-link a::after {
+    content: '';
+    display: none;
+  }
+
+  /* CSS counters */
+  body {
+    counter-reset: headings1;
+  }
+  h1 {
+    counter-reset: headings2;
+  }
+  h2 {
+    counter-reset: headings3;
+  }
+  h1:before {
+    content: counter(headings1) ". ";
+    counter-increment: headings1;
+  }
+  h2:before {
+    content: counter(headings1) "." counter(headings2) ". ";
+    counter-increment: headings2;
+  }
+  h3:before {
+    content: counter(headings1) "." counter(headings2) "." counter(headings3) ". ";
+    counter-increment: headings3;
+  }
+  .non-numbered:before {
+    content: none;
+    counter-increment: none;
+  }
+}

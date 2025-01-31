@@ -13,7 +13,8 @@
             "preLaunchTask": "appStart",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -24,7 +25,8 @@
             "preLaunchTask": "appStartLocalDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -35,7 +37,8 @@
             "preLaunchTask": "appStartDemoDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -46,7 +49,8 @@
             "preLaunchTask": "appStartTemplatesDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -69,7 +73,8 @@
             "preLaunchTask": "appStartNNDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -80,7 +85,8 @@
             "preLaunchTask": "appStartOracleDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -103,7 +109,8 @@
             "preLaunchTask": "appStartPssDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "type": "java",
@@ -112,7 +119,8 @@
             "hostName": "localhost",
             "port": 5005,
             "timeout": 240000,
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
         },
         {
             "trace": true,

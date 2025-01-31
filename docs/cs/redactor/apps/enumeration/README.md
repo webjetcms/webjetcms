@@ -58,7 +58,7 @@ Pro data nelze mít současně povolen "odkaz na vytáčení" a "nadřazený odk
 
 2. Propojení číselníku se sebou samým je zakázáno. Při výběru nadřazeného odkazu na sebe sama nebudou údaje číselníku mezi možnostmi viditelné.
 
-**Varování:** pokud je zrušeno oprávnění "odkaz na číselník" nebo "nadřazený odkaz", budou odstraněny všechny odkazy, které byly vytvořeny na data tohoto číselníku, a to i v případě, že je toto oprávnění znovu uděleno.
+!>**Varování:** pokud je zrušeno oprávnění "odkaz na číselník" nebo "nadřazený odkaz", budou odstraněny všechny odkazy, které byly vytvořeny na data tohoto číselníku, a to i v případě, že je toto oprávnění znovu uděleno.
 
 Jako příklad uveďme situaci, kdy vytvoříme typ číselníku s X a tento typ číselníku umožňuje "odkaz na číselník". Pod tímto typem číselníku vytvoříme záznam, který má povoleno propojení s číselníkem a bude odkazovat na číselník Z. Pokud poté zrušíme povolení "propojení na číselník" pro typ číselníku X, záznam tohoto číselníku, který se propojil s číselníkem Z, toto propojení trvale ztratí. Pokud bychom "propojení na číselník" opět povolili, volba by se u záznamu objevila, ale předchozí volba na číselník Z by se vynulovala.
 
@@ -66,7 +66,7 @@ Jako příklad uveďme situaci, kdy vytvoříme typ číselníku s X a tento typ
 
 Položka Data číselníku umožňuje upravovat data vytvořených typů číselníků. Je třeba vybrat číselník, který chcete spravovat, z nabídky v záhlaví stránky. Po výběru konkrétního číselníku se zobrazí jeho odpovídající údaje. Pokud má typ číselníku některé sloupce nepojmenované, tyto sloupce a jejich údaje se nezobrazí.
 
-**Varování:** v nabídce jsou pouze číselníky, které nebyly odstraněny.
+!>**Varování:** v nabídce jsou pouze číselníky, které nebyly odstraněny.
 
 ![](dataTable_enumData.png)
 

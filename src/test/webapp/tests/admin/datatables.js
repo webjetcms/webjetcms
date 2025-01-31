@@ -50,14 +50,14 @@ Scenario('Bug oznacenia vsetkych riadkov', ({ I }) => {
     I.amOnPage("/admin/v9/settings/configuration/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("12 riadkov označených", "div.dataTables_info");
+    I.see("12 riadkov označených", "div.dt-info");
 
     //
     I.say("serverSide=true")
     I.amOnPage("/admin/v9/settings/redirect/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("12 riadkov označených", "div.dataTables_info");
+    I.see("12 riadkov označených", "div.dt-info");
 });
 
 
@@ -94,7 +94,7 @@ Scenario('Maximalizovat - zrusene pre zmazanie zaznamu', ({ I, DT, DTE }) => {
 
     I.clickCss("div.DTE_Header button.btn-close-editor");
 
-    DT.filter("tempName", "Generic");
+    DT.filterContains("tempName", "Generic");
     I.forceClick(locate('.dt-select-td.sorting_1').at(1));
 
     I.clickCss("#datatableInit_wrapper button.buttons-remove");
@@ -120,12 +120,12 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
 
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.resetTable();
-    DT.filter("newUrl", "/test-stavov/virtualpath/podla-title.html");
+    DT.filterContains("newUrl", "/test-stavov/virtualpath/podla-title.html");
 
     if (Browser.isFirefox()) {
-        I.dragAndDrop("div.dataTables_scrollHeadInner th.dt-th-redirectCode", "div.dataTables_scrollHeadInner th.dt-th-oldUrl");
+        I.dragAndDrop("div.dt-scroll-headInner th.dt-th-redirectCode", "div.dt-scroll-headInner th.dt-th-oldUrl", { force: true });
     } else {
-        I.dragAndDrop("div.dataTables_scrollHeadInner th.dt-th-redirectCode", "div.dataTables_scrollHeadInner th.dt-th-newUrl");
+        I.dragAndDrop("div.dt-scroll-headInner th.dt-th-redirectCode", "div.dt-scroll-headInner th.dt-th-newUrl", { force: true });
     }
 
     I.click({css: "div.buttons-select-cel"});
@@ -141,7 +141,7 @@ Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
     I.say("over, ze poradie si to po reloade stranky pamata");
     I.amOnPage("/admin/v9/settings/redirect/");
 
-    I.see("Presmerovací kód", "div.dataTables_scrollHeadInner table thead tr:first-child th:nth-child(3)")
+    I.see("Presmerovací kód", "div.dt-scroll-headInner table thead tr:first-child th:nth-child(3)")
 
     //
     I.say("Over korektne filtrovanie po presune stlpca");
@@ -230,7 +230,7 @@ Scenario('drag drop okna editora', async ({ I, DTE, Browser }) => {
 
 Scenario('pamatanie usporiadania', ({ I }) => {
     I.amOnPage("/admin/v9/settings/redirect/");
-    I.click(locate("div.dataTables_scrollHeadInner table thead tr:first-child th").withText("Dátum vytvorenia"));
+    I.click(locate("div.dt-scroll-headInner table thead tr:first-child th").withText("Dátum vytvorenia"));
     I.see("/sk12345/", "#datatableInit tbody tr:first-child td");
     I.see("26.06.2020 10:52:32", "#datatableInit tbody tr:first-child td");
 });
@@ -319,7 +319,7 @@ Scenario('select - missing ID', ({ I, DT, DTE }) => {
 
     //
     I.say("Go to another page to reload options");
-    I.click("1", "#datatableInit_paginate");
+    I.click("1", "#datatableInit_wrapper div.dt-paging");
     I.dontSeeElement("div.toast-message");
 
     //

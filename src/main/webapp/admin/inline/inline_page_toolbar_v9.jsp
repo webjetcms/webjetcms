@@ -251,7 +251,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
             var htmlCode = node.html();
 
-            htmlCode = htmlCode.replace(/data-<%=pbPrefix%>-toggle="/gi, 'data-toggle="');
+            htmlCode = htmlCode.replace(/data-<%=pbPrefix%>-toggle="/gi, 'data-bs-toggle="');
 
             //console.log("Final HTML: ", htmlCode);
 

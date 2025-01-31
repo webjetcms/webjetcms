@@ -47,6 +47,9 @@ public class ApiTokenAuthFilter extends GenericFilterBean {
 	 */
 	private static boolean logUserViaApiKey(HttpServletRequest request, HttpServletResponse response) {
 		try {
+			String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
+			if (springSecurityAllowedAuths == null || springSecurityAllowedAuths.contains("api-token")==false) return false;
+
 			String loginToken = request.getHeader(Constants.getString("logonTokenHeaderName"));
 			if (Tools.isNotEmpty(loginToken)) {
 				try{

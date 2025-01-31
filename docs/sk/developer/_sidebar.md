@@ -49,7 +49,7 @@
     - [Pole jstree - stromová štruktúra](/developer/datatables-editor/field-jstree.md)
     - [Výberové pole s možnosťou editácie](/developer/datatables-editor/field-select-editable.md)
     - [Autocomplete](/developer/datatables-editor/autocomplete.md)
-    - [Úprava bunky](/developer/datatables-editor/bubble.md)
+    - [Upraviť v zobrazení mriežky](/developer/datatables-editor/bubble.md)
     - [Voliteľné polia](/developer/datatables-editor/customfields.md)
     - [Notifikácie](/developer/datatables-editor/notify.md)
     - [Upozornenie o konflikte](/developer/datatables-editor/editor-locking.md)
@@ -63,6 +63,7 @@
     - [Pokrytie kódom](/developer/testing/codecoverage.md)
     - [Paralelné spustenie testov](/developer/testing/parallel.md)
 - [Preklad dokumentácie](/developer/documentation-translate/README.md)
+- [Export dokumentácie do PDF](/developer/documentation-export/README.md)
 - Ukážkový kód
   - [PugJS aplikácia](/developer/frameworks/example.md)
 - Backend

@@ -21,6 +21,7 @@ import cn.bluejoe.elfinder.service.FsItemFilter;
 import cn.bluejoe.elfinder.service.FsService;
 import cn.bluejoe.elfinder.util.FsItemFilterUtils;
 import cn.bluejoe.elfinder.util.FsServiceUtils;
+import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 
@@ -86,6 +87,8 @@ public abstract class AbstractCommandExecutor implements CommandExecutor
 		IOUtils.copy(is, os);
 		is.close();
 		os.close();
+
+		GalleryService.createOrUpdateGalleryEntity(src, dst);
 	}
 
 	protected void createAndCopyFolder(FsItemEx src, FsItemEx dst) throws IOException

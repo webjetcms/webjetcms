@@ -1,23 +1,29 @@
 Feature('apps.app-docsembed');
 
-Before(({ I, login }) => {
+const normalUrl = 'https://docs.webjetcms.sk/v2023/_media/manuals/WebJET_pre_redaktorov.docx';
+var base64Url;
+
+Before(async ({ I, login }) => {
     login('admin');
-    if (typeof randomNumber == "undefined") {
-        randomNumber = I.getRandomText();
+    if (typeof base64Url == "undefined"){
+        base64Url = await I.executeScript((normalUrl) => {
+            return WJ.base64encode((normalUrl));
+        }, normalUrl);
     }
 });
 
 Scenario("Vlozenie dokumentu - test zobrazovania", ({ I }) => {
     I.amOnPage("/apps/vlozenie-dokumentu/");
     I.waitForElement('iframe');
+    I.waitForInvisible('.loader', 120);
+    I.wait(1);
     within({ frame: 'iframe[src*="docs.webjetcms.sk"]' }, () => {
-        I.waitForText("Používateľská príručka", 120);
+        I.see("Používateľská príručka");
     });
 });
 
-Scenario('testovanie app - Vlozenie dokumentu', async ({ I, DTE, Apps }) => {
+Scenario('testovanie app - Vlozenie dokumentu', async ({ I, DTE, Apps, Document }) => {
     Apps.insertApp('Vloženie dokumentu', '#components-app-docsembed-title');
-
     const defaultParams = {
         url: '',
         height: '900',
@@ -58,11 +64,6 @@ Scenario('testovanie app - Vlozenie dokumentu', async ({ I, DTE, Apps }) => {
 
     Apps.openAppEditor();
 
-    const normalUrl = 'https://docs.webjetcms.sk/v2023/_media/manuals/WebJET_pre_redaktorov.docx';
-    const base64Url = await I.executeScript(({normalUrl}) => {
-        return WJ.base64encode(normalUrl);
-    }, {normalUrl});
-
     I.say("Base64 URL: " + base64Url);
 
     const changedParams = {
@@ -86,10 +87,13 @@ Scenario('testovanie app - Vlozenie dokumentu', async ({ I, DTE, Apps }) => {
 
     I.say('Changed parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
+    I.waitForInvisible('.loader', 120);
+    I.wait(1);
     within({ frame: 'iframe[src*="docs.webjetcms.sk"]' }, () => {
-        I.waitForText("Používateľská príručka", 120);
+        I.see("Používateľská príručka");
     });
 });
 

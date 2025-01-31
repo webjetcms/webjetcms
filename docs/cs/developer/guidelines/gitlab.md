@@ -59,7 +59,9 @@ V určitém okamžiku přijde **žádost o aktualizaci intranetu** zákazníka. 
 
 Před prvním použitím Gitlabu je třeba nainstalovat klienta GIT a vygenerovat šifrovací klíče, protože se ke gitovi připojujete pomocí klíčů SSH.
 
-Podrobnou příručku naleznete v [Dokumenty PDF na intranetech](https://intra.iway.sk/files/dokumenty/webove-oddelenie/development/instalacia-git-vo-win.pdf). **Varování:** při generování klíčů SSH **nedoporučujeme zadávat heslo** (na obrázku je uvedeno jako NejakeYourSecretPassword007), protože VS Code / git může mít problémy se zadáváním hesla. Výhodou klíčů SSH je právě to, že přináší pohodlí, že nemusíte zadávat heslo.
+Podrobnou příručku naleznete v [Dokumenty PDF na intranetech](https://intra.iway.sk/files/dokumenty/webove-oddelenie/development/instalacia-git-vo-win.pdf).
+
+!>**Varování:** při generování klíčů SSH **nedoporučujeme zadávat heslo** (na obrázku je uvedeno jako NejakeYourSecretPassword007), protože VS Code / git může mít problémy se zadáváním hesla. Výhodou klíčů SSH je právě to, že přináší pohodlí, že nemusíte zadávat heslo.
 
 Stručně řečeno, nainstalujte [Klient GIT pro Windows](https://git-scm.com/download/win) a pak v programu **GitBash** (pro macOS v terminálu) vygenerujte klíče SSH zadáním příkazu:
 
@@ -136,12 +138,12 @@ Ukážeme si několik příkladů, jak postupovat při vývoji. **Před** Podle 
 
 Popis [model pracovních postupů/odvětví](https://intra.iway.sk/files/dokumenty/webove-oddelenie/development/gitflow-workflow.pdf) je také v dokumentu na intranetu.
 
-> **Oznámení**: při přepínání mezi větvemi se kód mění. Některé soubory se odstraní (protože v dané větvi neexistují) a některé se přidají. Po změně větve doporučuji spustit příkaz **gradlew clean** odstranit zkompilované soubory a pokud používáte NPM, proveďte také **npm install** nainstalovat potřebné knihovny. Pro npm doporučujeme připravit také úlohu gradle **[gradlew npminstall](../../build.gradle) ** abyste nemuseli přecházet do podadresářů s moduly npm.
+> **Oznámení**: při přepínání mezi větvemi se kód mění. Některé soubory se odstraní (protože v dané větvi neexistují) a některé se přidají. Po změně větve doporučuji spustit příkaz **gradlew clean** odstranit zkompilované soubory a pokud používáte NPM, proveďte také **npm install** nainstalovat potřebné knihovny. Pro npm doporučujeme připravit také úlohu gradle **[gradlew npminstall](../../build.gradle) ** &#x61;byste nemuseli přecházet do podadresářů s moduly npm.
 
 ### Zavedení nového požadavku
 
 - odevzdejte své aktuální rozpracované soubory (pokud již pracujete na jiném požadavku).
-- **přepínač** na **master** pobočka
+- ** přepínač** na **master** pobočka
 - aktualizovat hlavní větev ze serveru prostřednictvím `git pull`
 - vytvořit **nová pobočka** s názvem **feature/IDTIKETU-short-menu-label** to je například `feature/47419-monitorovanie-servera`
 
@@ -167,7 +169,7 @@ Pokud dojde k chybě ve výrobě a je třeba provést opravu:
 
 Nyní máte na svém počítači stejný kód jako na serveru a můžete podle potřeby implementovat opravy. Poté odešlete opravu na server prostřednictvím `git push`.
 
-**Varování:** následně jsou vyžadovány změny ve větvi hotfix. **sloučit** k danému **release branche a také do master branche.** (aby se oprava neztratila).
+!>**Varování:** následně jsou vyžadovány změny ve větvi hotfix. **sloučit** k danému **release branche a také do master branche.** (aby se oprava neztratila).
 
 Poté stačí na server nasadit pouze změněné soubory. Po sloučení do větve vydání můžete nasadit i celou větev vydání.
 

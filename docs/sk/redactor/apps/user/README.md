@@ -4,49 +4,6 @@ Aplikácia umožňuje jednoducho vložiť informácie o prihlásenom používate
 
 ## Nastavenia aplikácie
 
-<table>
-  <tr>
-    <th>Dostupné možnosti:</th>
-  </tr>
-  <tr>
-    <td>Registračný formulár</td>
-    <td>Prihlasovací formulár</td>
-    <td>Linka na autorizáciu e-mailu</td>
-    <td>Zabudnuté heslo</td>
-  </tr>
-  <tr>
-    <td>Meno</td>
-    <td>Priezvisko</td>
-    <td>Celé meno</td>
-    <td>Prihlasovacie meno</td>
-  </tr>
-  <tr>
-    <td>Heslo</td>
-    <td>Zopakovať heslo</td>
-    <td>E-mail</td>
-    <td>Telefón</td>
-  </tr>
-  <tr>
-    <td>Firma</td>
-    <td>Adresa</td>
-    <td>Mesto</td>
-    <td>Krajina</td>
-  </tr>
-  <tr>
-    <td>PSČ</td>
-    <td>ID</td>
-    <td>Použi pole A</td>
-    <td>Použi pole B</td>
-  </tr>
-  <tr>
-    <td>Použi pole C</td>
-    <td>Použi pole D</td>
-    <td>Použi pole E</td>
-    <td>Skupiny používateľov</td>
-  </tr>
-</table>
-
-
 ### Nastavenia pre Registračný formulár:
 
 Zadajte údaje pre registráciu používateľa. Pre štandardné nastavenia môžete ponechať hodnoty, ktoré sú prednastavené.

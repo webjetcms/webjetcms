@@ -1,10 +1,5 @@
 Feature('admin.cronjob');
 
-var add_button = locate("button.btn.btn-sm.buttons-create.btn-success");
-var delete_button = locate("button.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider");
-var edit_button = locate("button.btn.btn-sm.buttons-selected.buttons-edit.btn-warning");
-var refresh_button = locate('button.btn.btn-sm.btn-outline-secondary.buttons-refresh.buttons-right');
-
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage("/admin/v9/settings/cronjob/");
@@ -28,7 +23,7 @@ Scenario('cronjob base test', async ({ I, DataTables }) => {
  */
 Scenario('Verification of manifestation of changes in the cronjob', ({ I, DT, DTE }) => {
     I.say('Creating a new cronjob without auditing');
-    addNewCronjob(I, DTE,'sk.iway.iwcm.system.cron.Echo', jobName, '*/5', false, true, false);
+    addNewCronjob(I, DTE, DT,'sk.iway.iwcm.system.cron.Echo', jobName, '*/5', false, true, false);
 
     I.say('Verification of a new cronjob');
     I.amOnPage('/admin/v9/apps/audit-search/');
@@ -37,9 +32,9 @@ Scenario('Verification of manifestation of changes in the cronjob', ({ I, DT, DT
 
     I.say('Edit cronjob to enable auditing');
     I.amOnPage("/admin/v9/settings/cronjob");
-    DT.filter('taskName', `autotest-${randomNumber}`);
+    DT.filterContains('taskName', `autotest-${randomNumber}`);
     I.click('button.buttons-select-all');
-    I.click(edit_button);
+    I.click(DT.btn.edit_button);
     DTE.waitForEditor();
     I.checkOption('#DTE_Field_audit_0');
     DTE.save();
@@ -47,29 +42,34 @@ Scenario('Verification of manifestation of changes in the cronjob', ({ I, DT, DT
     I.say('Verification of a modified cronjob');
     I.amOnPage('/admin/v9/apps/audit-search/');
     I.wait(6);
-    I.click(refresh_button);
+    I.click(DT.btn.refresh_button);
     I.see(`Cron task executed: sk.iway.iwcm.system.cron.Echo [${jobName}]`);
 });
 
 Scenario('Delete new cronjob', ({ I, DT, DTE }) => {
-    DT.filter('taskName', 'autotest');
+    DT.filterContains('taskName', 'autotest');
     I.click('button.buttons-select-all');
-    I.click(delete_button);
+    I.click(DT.btn.delete_button);
     DTE.waitForEditor();
     DTE.save();
+    I.click(DT.btn.refresh_button);
+    I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
 Scenario('Verification that the deleted task does not manifest', async ({ I, DT }) => {
     I.say('Verification of a deleted cronjob');
+    I.relogin('admin');
     I.amOnPage('/admin/v9/apps/audit-search/');
-    DT.filter('description', `Cron task executed: sk.iway.iwcm.system.cron.Echo [${jobName}]`);
+    DT.filterContains('description', `Cron task executed: sk.iway.iwcm.system.cron.Echo [${jobName}]`);
     I.wait(6);
-    I.click(refresh_button);
+    DT.waitForLoader();
+    I.click(DT.btn.refresh_button);
+    DT.waitForLoader();
     let datatableInfo = await I.grabTextFrom('#datatableInit_info');
     const amoutOfRecordsOld = datatableInfo.match(/z (\d+)/)[1];
 
     I.wait(6);
-    I.click(refresh_button);
+    I.click(DT.btn.refresh_button);
     datatableInfo = await I.grabTextFrom('#datatableInit_info');
     const amoutOfRecordsNew = datatableInfo.match(/z (\d+)/)[1];
 
@@ -77,7 +77,7 @@ Scenario('Verification that the deleted task does not manifest', async ({ I, DT 
 });
 
 Scenario('Delete all echo cronjobs', async ({ I, DT, DTE }) => {
-    DT.filter('taskName', 'sk.iway.iwcm.system.cron.Echo');
+    DT.filterContains('taskName', 'sk.iway.iwcm.system.cron.Echo');
     var totalRows = await I.getTotalRows();
     if (totalRows > 0) {
         DT.deleteAll();
@@ -85,9 +85,9 @@ Scenario('Delete all echo cronjobs', async ({ I, DT, DTE }) => {
 });
 
 
-function addNewCronjob(I, DTE, task, params, seconds, runAtStartup, enableTask, audit) {
+function addNewCronjob(I, DTE, DT, task, params, seconds, runAtStartup, enableTask, audit) {
     let [years, daysOfMonth, daysOfWeek, months, hours, minutes] = Array(6).fill('*');
-    I.click(add_button);
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
     DTE.fillField('taskName', `autotest-${randomNumber}`);

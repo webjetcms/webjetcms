@@ -13,7 +13,7 @@ Scenario("Slit slider - test zobrazovania", async ({ I }) => {
 
     I.say("overenie automatickej výmeny obrázkov")
     let backgroundImageStyle = await I.grabAttributeFrom('.sl-slide-inner .bg-img', 'style');
-    I.assertContain(backgroundImageStyle["backgroundImage"], "/thumb/images/gallery/test-vela-foto/dsc04188.jpeg?w=1200&ip=1", 'The background image is not visible');
+    I.assertContain(backgroundImageStyle, "background-image: url(/thumb/images/gallery/test-vela-foto/dsc04188.jpeg?w=1200&ip=1)", 'The background image is not visible');
     I.seeElement( picture_A_headline );
     I.seeElement( picture_A_text );
 

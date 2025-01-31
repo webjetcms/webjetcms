@@ -392,6 +392,7 @@ block content
                                 openDefaultImageFolder(false);
                             }, 500);
                         }
+                        setInitialElfinderHeight();
                     }
                 });
 
@@ -491,12 +492,12 @@ block content
         .modal-dialog(role='document')
             .modal-content
             .modal-header
-                button.close(type='button' data-dismiss='modal' aria-label='Close')
+                button.close(type='button' data-bs-dismiss='modal' aria-label='Close')
                     span(aria-hidden='true') &times;
                 h4#modalLabel.modal-title [[\#{fbrowser.dirprop.dir}]]
             .modal-body
             .modal-footer
-                button.btn.btn-default.closeModal(type='button' data-dismiss='modal') [[\#{webpages.modal.close}]]
+                button.btn.btn-default.closeModal(type='button' data-bs-dismiss='modal') [[\#{webpages.modal.close}]]
                 select.btn.form-control.action(name='action' style='display: inline-block; width: 150px;')
                     option.bSubmit(value='bSubmit') [[\#{fbrowse.save_button}]]
                     option.bUsage(value='bUsage') [[\#{fbrowse.usage_button}]]

@@ -33,6 +33,8 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.inquiry.jpa.InquiryUsersVoteEntity;
+import sk.iway.iwcm.components.inquiry.rest.InquiryStatService;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.helpers.BeanDiff;
@@ -1380,179 +1382,6 @@ public class InquiryDB
 	}
 
 	/**
-	 * Do statistiky prida hlasovanie pre daneho usera
-	 * @param uvb	UserVoteBean object
-	 */
-	public static void addUserVote(UserVoteBean uvb){
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		try
-		{
-			//String sql_3_1 = "INSERT INTO inquiry_users(question_id,answer_text,answer_clicks) VALUES(?,?,0)";
-			if (uvb != null)
-			{
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("INSERT INTO inquiry_users(user_id, question_id, answer_id, create_date, ip_address, domain_id) VALUES(?, ?, ?, ?, ?, ?)");
-				ps.setInt(1, uvb.getUserId());
-				ps.setInt(2, uvb.getQuestionId());
-				ps.setInt(3, uvb.getAnswerId());
-				ps.setTimestamp(4, new Timestamp(uvb.getCreateDate().getTime()));
-				ps.setString(5, uvb.getIp());
-				ps.setInt(6, CloudToolsForCore.getDomainId());
-				ps.execute();
-				ps.close();
-				db_conn.close();
-			}
-
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-			}
-		}
-	}
-	/**
-	 * Vrati statisitku k danej ankete(otazke)
-	 * @param qID	Idcko danej otazky
-	 * @return statistics Zoznam statistik pre zadanu otazku
-	 */
-	public static List<UserVoteBean> getUsersVote(int qID)
-	{
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		UserVoteBean uvb = null;
-		List<UserVoteBean> statistics = new ArrayList<>();
-		try
-		{
-			db_conn = DBPool.getConnection();
-			ps = db_conn.prepareStatement("SELECT * FROM inquiry_users WHERE question_id=? "+CloudToolsForCore.getDomainIdSqlWhere(true));
-			ps.setInt(1, qID);
-			rs = ps.executeQuery();
-			while (rs.next())
-			{
-				uvb = new UserVoteBean();
-				uvb.setUserId(rs.getInt("user_id"));
-				uvb.setAnswerId(rs.getInt("answer_id"));
-				uvb.setCreateDate(rs.getTimestamp("create_date"));
-				statistics.add(uvb);
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-			}
-		}
-		return statistics;
-	}
-
-	/**
-	 * Vrati statisitku k danej ankete(otazke) medzi zadanymi datumami pre zadaneho usera a/alebo pre zadanu odpoved
-	 * userId:
-	 * 	-1 -> len neprihlaseni pouzivatelia
-	 *		-2 -> len prihlaseni pouzivatelia
-	 *		-3 -> vsetci pouzivatelia
-	 * @param qID	Idcko danej otazky
-	 * @return statistics Zoznam statistik pre zadanu otazku
-	 */
-	public static List<UserVoteBean> getUsersVoteFromTo(String dateFrom, String dateTo, Integer userId, int qID, Integer answerId)
-	{
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		ResultSet rs = null;
-		UserVoteBean uvb = null;
-		List<UserVoteBean> statistics = new ArrayList<>();
-		try
-		{
-			int count = 1;
-			db_conn = DBPool.getConnection();
-			StringBuilder sql = new StringBuilder("SELECT * FROM inquiry_users WHERE question_id=? AND create_date >= ? AND create_date <= ? ");
-			if(answerId != null && answerId.intValue() != -1) sql.append("AND answer_id = ? ");
-			if(userId != null && userId.intValue() >= 0) sql.append("AND user_id = ? ");
-			if(userId != null && userId.intValue() == -1) sql.append("AND user_id = -1 ");	//neprihlaseni pouzivatelia
-			if(userId != null && userId.intValue() == -2) sql.append("AND user_id >= 0 ");	//prihlaseni pouzivatelia
-			sql.append(CloudToolsForCore.getDomainIdSqlWhere(true)).append(" ORDER BY create_date DESC");
-			Logger.debug(null, "Dopyt: " + sql);
-			ps = db_conn.prepareStatement(sql.toString());
-			ps.setInt(count++, qID);
-			ps.setTimestamp(count++,new Timestamp(DB.getTimestamp(dateFrom,"0:00:00")));
-			ps.setTimestamp(count++,new Timestamp(DB.getTimestamp(dateTo,"23:59:59")));
-			if(answerId != null && answerId.intValue() != -1) ps.setInt(count++, answerId);
-			if(userId != null && userId.intValue() >= 0) ps.setInt(count++, userId);
-			rs = ps.executeQuery();
-			while (rs.next())
-			{
-				uvb = new UserVoteBean();
-				uvb.setUserId(rs.getInt("user_id"));
-				uvb.setAnswerId(rs.getInt("answer_id"));
-				uvb.setCreateDate(rs.getTimestamp("create_date"));
-				uvb.setIp(rs.getString("ip_address"));
-				statistics.add(uvb);
-			}
-			rs.close();
-			ps.close();
-			db_conn.close();
-			rs = null;
-			ps = null;
-			db_conn = null;
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-		finally
-		{
-			try
-			{
-				if (rs != null)
-					rs.close();
-				if (ps != null)
-					ps.close();
-				if (db_conn != null)
-					db_conn.close();
-			}
-			catch (Exception ex2)
-			{
-			}
-		}
-		return statistics;
-	}
-
-	/**
 	 * Vrati najnovsi datum zahlasovania daneho pouzivatela pre danu anketu
 	 * @param userId	ID pouzivatela
 	 * @param questionId	ID ankety
@@ -1721,21 +1550,24 @@ public class InquiryDB
 			} else
 				Tools.addCookie(cookie, response,request);
 
-			UserVoteBean uvb = null;
 			java.util.Date date = new java.util.Date();
 			Logger.debug(null, "Pred pridanim");
 			for (int k = 0; k < aID.length; k++) { //Hlasuje
 				InquiryDB.updateAnswer(questionID, aID[k], request);
-				uvb = new UserVoteBean();
-				Logger.debug(null, "Pridavam");
-				if(user == null)  uvb.setUserId(-1);
-				else uvb.setUserId(user.getUserId());	//prihlaseny aj neprihlaseny
 
-				uvb.setQuestionId(questionID);
-				uvb.setAnswerId(aID[k]);
-				uvb.setCreateDate(date);
-				uvb.setIp(request.getRemoteAddr());
-				InquiryDB.addUserVote(uvb);	//aktualizujem statistiky pre usera
+				Logger.debug(null, "Pridavam InquiryUsersVoteEntity");
+				InquiryUsersVoteEntity iuve = new InquiryUsersVoteEntity();
+
+				if(user == null)  iuve.setUserId(-1);
+				else iuve.setUserId(user.getUserId());
+				
+				iuve.setQuestionId(questionID);
+				iuve.setAnswerId(aID[k]);
+				iuve.setDayDate(date);
+				iuve.setIpAddress(request.getRemoteAddr());
+				iuve.setDomainId(CloudToolsForCore.getDomainId());
+
+				InquiryStatService.saveInquiryUserVote(iuve);
 			}
 			InquiryDB.updateTotalClicks(questionID, request);	//aktualizujem pocet kliknuti
 

@@ -344,11 +344,20 @@ Scenario('Duplikovanie suboru v galerii - drag&drop', async ({ I }) => {
      I.say('Priecinok ' + testFolder + ' sa da premiestnit do priecinka ' + subfolder2);
      I.click(mainFolder);
      I.waitForElement(locate('a').withAttr({ id: '/images/gallery/' + mainFolder + '/' + subfolder2 + '_anchor' }));
-     I.dragAndDrop(
-          locate('a').withAttr({ id: '/images/gallery/' + testFolder + '_anchor' }),
-          locate('a').withAttr({ id: '/images/gallery/' + mainFolder + '/' + subfolder2 + '_anchor' }));
+     const selector = locate('//li[contains(@class, "jstree-leaf")]')
+          .withChild(locate('a').withAttr({
+               id: '/images/gallery/' + mainFolder + '/' + subfolder2 + '_anchor'
+          }));
 
-     I.wait(4);
+     let maxIterations = 3;
+     let failsafe = 0;
+     while (await I.grabNumberOfVisibleElements(selector) > 0 && failsafe++ < maxIterations) {
+         I.dragAndDrop(
+             locate('a').withAttr({ id: '/images/gallery/' + testFolder + '_anchor' }),
+             locate('a').withAttr({ id: '/images/gallery/' + mainFolder + '/' + subfolder2 + '_anchor' })
+         );
+         I.wait(4);
+     }
      I.dontSee("Tento priečinok nie je možné upravovať.");
      I.dontSeeElement(locate('li').withAttr({ id: '/images/gallery/' + testFolder}));
      I.click(subfolder2);
@@ -364,11 +373,13 @@ Scenario('Duplikovanie suboru v galerii - drag&drop', async ({ I }) => {
      I.say('Subor by sa nemal dat premiestnit z priecinka ' + mainFolder + '/' + subfolder2 + '/' + testFolder + ' do priecinka ' + mainFolder);
      I.dragAndDrop(
           locate('a').withAttr({ id: '/images/gallery/' + mainFolder + '/' + subfolder2 + '/' + testFolder + '_anchor' }),
-          locate('a').withAttr({ id: '/images/gallery/' + mainFolder + '_anchor' }));
+          locate('a').withAttr({ id: '/images/gallery/' + mainFolder + '_anchor' }),
+          { force: true });
 
      I.wait(4);
 
-     I.see("Tento priečinok nie je možné upravovať.");
+     I.waitForElement("#toast-container-webjet", 10);
+     I.see("Tento priečinok nie je možné upravovať.", "#toast-container-webjet");
      I.seeElement(locate('li').withAttr({ id: '/images/gallery/' + mainFolder + '/' + subfolder2 + '/' + testFolder }));
      I.dontSeeElement(locate('li').withAttr({ id: '/images/gallery/' + mainFolder + '/' + testFolder }));
 });

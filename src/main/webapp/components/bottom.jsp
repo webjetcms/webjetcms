@@ -16,7 +16,7 @@ if (typeof parent.SetAutoSize !== 'undefined' && $.isFunction(parent.SetAutoSize
 <script type="text/javascript">
 
 //prepni bootstrap button na jquery-ui button
-$.fn.bootstrapBtn = $.fn.button.noConflict();
+//$.fn.bootstrapBtn = $.fn.button.noConflict();
 
 var $modal = $('#ajax-modal');
 

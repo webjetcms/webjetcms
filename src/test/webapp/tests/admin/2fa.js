@@ -95,9 +95,9 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     I.amOnPage('/admin/v9/users/user-list/');
 
     I.say('Vytvorenie noveho testovacieho pouzivatela');
-    DT.filter('login', 'testerga', 'Rovná sa');
+    DT.filterEquals('login', 'testerga');
     I.waitForText("Záznamy 1 až 1 z 1", 10, "#datatableInit_info");
-    I.see("Google Authenticate", "div.dataTables_scrollBody td.required");
+    I.see("Google Authenticate", "div.dt-scroll-body td.required");
     I.clickCss("td.dt-select-td:first-child");
     I.clickCss('button.btn-duplicate');
     DTE.waitForEditor();
@@ -115,7 +115,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     I.clickCss("#dropdownMenuUser");
     I.click(locate("li").withText("Dvojstupňové overovanie"));
     I.switchToNextTab();
-    I.clickCss('#uniform-gauthCheckbox');
+    I.clickCss('#gauthCheckbox');
 
     I.say('Overenie QR kódu');
     I.seeElement('img[alt="Scan me!"]');
@@ -140,7 +140,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     //
     I.say('Overenie dvojstupňového overovania');
     I.relogin(randomLogin, true, false);
-    I.see('Pre váš účet je zapnuté dvojstupňové overovanie. Zadajte kód z aplikácie Google Authenticator:');
+    I.see('Pre váš účet je zapnuté dvojstupňové overovanie. Zadajte kód z aplikácie Authenticator:');
 
     //
     I.say('Prihlasujem sa s nesprávnym kódom');
@@ -175,7 +175,7 @@ Scenario("Delete 2fa test user", ({ I, DT, DTE }) => {
 
     //
     I.say('Zmazanie testovacieho pouzivatela');
-    DT.filter('login', randomLogin);
+    DT.filterContains('login', randomLogin);
     I.clickCss("td.dt-select-td");
     I.click("button.buttons-remove");
     DTE.waitForEditor();

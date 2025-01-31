@@ -4,7 +4,7 @@ Struts is an old MVC technology (framework) that with the help of a configuratio
 
 ## Original mapping using Struts
 
-URL mapping `*.do` is configured in the file `struts-config.xml`, in the sample mapping `/inquiry.answer` (the actual URL has the suffix `.do`that is to say `/inquiry.answer.do`) per class `InquiryAnswerAction`.
+URL mapping `*.do` is configured in the file `struts-config.xml`, in the sample mapping `/inquiry.answer` (the actual URL has the suffix `.do` that is to say `/inquiry.answer.do`) per class `InquiryAnswerAction`.
 
 ```xml
 <action path="/inquiry.answer" type="sk.iway.iwcm.inquiry.InquiryAnswerAction">
@@ -32,7 +32,7 @@ Action class, in this case `InquiryAnswerAction`, processes the request using th
 
 ## Switching from Struts to Spring mapping
 
-To switch to Spring, delete the mapping from `struts-config.xml` and create a new one in Spring controllers. The problem is if you need to keep the original URLs (since they can be used in different JSP files). It is not possible to create a Spring mapping to `/cokolvek.do`as `*.do` handled by Struts `servlet`. The solution is a class `UnknownAction`which maps the unknown Struts `*.do` calls to `*.struts`that you can already map in Spring:
+To switch to Spring, delete the mapping from `struts-config.xml` and create a new one in Spring controllers. The problem is if you need to keep the original URLs (since they can be used in different JSP files). It is not possible to create a Spring mapping to `/cokolvek.do` as `*.do` handled by Struts `servlet`. The solution is a class `UnknownAction` which maps the unknown Struts `*.do` calls to `*.struts` that you can already map in Spring:
 
 ```xml
     <action path="/unknown" type="sk.iway.iwcm.sync.UnknownAction" unknown="true" />
@@ -128,7 +128,7 @@ In case of moving a request to a JSP file, you can use the method `request.getRe
         ...
         PrintWriter out = response.getWriter();
         out.println("<html><head><LINK rel='stylesheet' href='/admin/css/style.css'></head><body>");
-		out.println("<strong>" + prop.getText("findexer.indexing") + "</strong><br/>");
+		out.println("<strong>" + prop.getText("findexer.indexing") + "</strong><br>");
 		out.flush();
         ...
         request.setAttribute("indexedFiles", indexedFiles);

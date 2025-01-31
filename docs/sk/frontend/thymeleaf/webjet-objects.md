@@ -6,260 +6,72 @@ Zoznam dostupných atribútov pri zobrazení stránky
 
 Údaje zobrazenej web stránky
 
-<table width="100%" class="ramikTable">
-<thead>
-	<tr>
-		<td width="50%" class="head">Názov a značka</td>
-		<td width="50%" class="head">Popis</td>
-	</tr>
-</thead>
-<tbody>
-   <tr>
-		<td class="t_body"><b>ID web stránky</b> <br>&lt;div data-iwcm-write="doc_id"/&gt;</td>
-		<td class="t_body">Vloží docid web stránky, napríklad:<br> 148</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Názov web stránky</b> <br>&lt;div data-iwcm-write="doc_title"/&gt;</td>
-		<td class="t_body">Vloží názov web stránky, napríklad:<br> Web JET CMS</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Text navigačnej lišty</b><br> &lt;div data-iwcm-write="doc_navbar"/&gt;</td>
-		<td class="t_body">Text web stránky pre navigačnú lištu (zvyčajne rovnaký ako názov web stránky - doc_title)</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Text web stránky</b> <br>&lt;div data-iwcm-write="doc_data"/&gt;</td>
-		<td class="t_body">Samotný text web stránky, ako bol zadaný v editore</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Hlavička web stránky</b> <br>&lt;div data-iwcm-write="doc_header"/&gt;</td>
-		<td class="t_body">HTML text s hlavičkou web stránky ako je definované vo virtuálnej šablóne, ktorú web stránka používa</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Pätička web stránky</b> <br>&lt;div data-iwcm-write="doc_footer"/&gt;</td>
-		<td class="t_body">HTML text s pätičkou web stránky ako je definované vo virtuálnej šablóne, ktorú web stránka používa</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Menu web stránky</b> <br>&lt;div data-iwcm-write="doc_menu"/&gt;</td>
-		<td class="t_body">HTML kód menu, ktorý sa zadáva v admin časti jednotlivým virtuálnym šablónam</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Pravé menu web stránky</b> <br>&lt;div data-iwcm-write="doc_right_menu"/&gt;</td>
-		<td class="t_body">HTML kód pravého menu, ktorý sa zadáva v admin časti jednotlivým virtuálnym šablónam</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>HTML kód zo šablóny</b> <br>&lt;div data-iwcm-write="after_body"/&gt;</td>
-		<td class="t_body">HTML text z virtuálnej šablóny, ktorú web stránka používa</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>HTML hlavička stránky</b> <br>&lt;div data-iwcm-write="html_head"/&gt;</td>
-		<td class="t_body">HTML kód, ktorý sa zadáva pre stránku v záložke HTML Vlastnosti ako HTML kód hlavičky. Môže obsahovať kód, ktorý sa vkladá do šablóny do sekcie &lt;head&gt;</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>HTML kód stránky</b> <br>&lt;div data-iwcm-write="html_data"/&gt;</td>
-		<td class="t_body">HTML kód, ktorý sa zadáva pre stránku v záložke HTML Vlastnosti ako Dodatočný HTML kód.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Linka na hlavný kaskádový štýl</b> <br>&lt;div data-iwcm-write="base_css_link"/&gt;</td>
-		<td class="t_body">Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako Hlavný CSS štýl (napr. /css/page.css).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Linka na hlavný kaskádový štýl</b> <br>&lt;div data-iwcm-write="base_css_link_noext"/&gt;</td>
-		<td class="t_body">Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako Hlavný CSS štýl bez prípony (napr. /css/page). Je možné použiť pre vytváranie podmienených css štýlov (napr. /css/page-ie6.css).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Linka na kaskádový štýl</b> <br>&lt;div data-iwcm-write="css_link"/&gt;</td>
-		<td class="t_body">Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako CSS štýl (napr. /css/custom.css).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Linka na kaskádový štýl</b> <br>&lt;div data-iwcm-write="css_link_noext"/&gt;</td>
-		<td class="t_body">Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako CSS štýl bez prípony (napr. /css/custom). Je možné použiť pre vytváranie podmienených css štýlov (napr. /css/custom-ie6.css).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Navigačná lišta</b> <br>&lt;div data-iwcm-write="navbar"/&gt;</td>
-		<td class="t_body">Kompletná navigačná lišta, napr. Interway &gt; Produkty &gt; Web JET<br> Názvy sú klikateľné, linky sú vytvárané s použitím kaskádového štýlu navbar.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Dátum poslednej zmeny web stránky</b> <br>&lt;div data-iwcm-write="doc_date_created"/&gt;</td>
-		<td class="t_body">Dátum, kedy bola web stránka naposledy zmenená.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Čas poslednej zmeny web stránky</b> <br>&lt;div data-iwcm-write="doc_time_created"/&gt;</td>
-		<td class="t_body">Čas, kedy bola web stránka naposledy zmenená.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Vlastné polia</b> <br>&lt;div data-iwcm-write="field_a"/&gt; až &lt;div data-iwcm-write="field_l"/&gt;</td>
-		<td class="t_body">Vlastné polia stránky definované v Rozšírených vlastnostiach, záložka Vlastné polia.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Voľné objekty šablóny</b> <br>&lt;div data-iwcm-write="template_object_a"/&gt; až &lt;div data-iwcm-write="template_object_d"/&gt;</td>
-		<td class="t_body">Voľne použiteľné objekty šablóny. Obsahujú HTML kód priradenej stránky. Používajú sa ak nestačí použitie hlavičky, menu a pätičky.</td>
-	</tr>
-</tbody>
-</table>
+- **ID web stránky** - `<div data-iwcm-write="doc_id"/>` - Vloží docid web stránky, napríklad: `148`
+- **Názov web stránky** - `<div data-iwcm-write="doc_title"/>` - Vloží názov web stránky, napríklad: Web JET CMS
+- **Text navigačnej lišty** - `<div data-iwcm-write="doc_navbar"/>` - Text web stránky pre navigačnú lištu (zvyčajne rovnaký ako názov web stránky - `doc_title`)
+- **Text web stránky** - `<div data-iwcm-write="doc_data"/>` - Samotný text web stránky, ako bol zadaný v editore
+- **Hlavička web stránky** - `<div data-iwcm-write="doc_header"/>` - HTML text s hlavičkou web stránky ako je definované vo virtuálnej šablóne, ktorú web stránka používa
+- **Pätička web stránky** - `<div data-iwcm-write="doc_footer"/>` - HTML text s pätičkou web stránky ako je definované vo virtuálnej šablóne, ktorú web stránka používa
+- **Menu web stránky** - `<div data-iwcm-write="doc_menu"/>` - HTML kód menu, ktorý sa zadáva v admin časti jednotlivým virtuálnym šablónam
+- **Pravé menu web stránky** - `<div data-iwcm-write="doc_right_menu"/>` - HTML kód pravého menu, ktorý sa zadáva v admin časti jednotlivým virtuálnym šablónam
+- **HTML kód zo šablóny** - `<div data-iwcm-write="after_body"/>` - HTML text z virtuálnej šablóny, ktorú web stránka používa
+- **HTML hlavička stránky** - `<div data-iwcm-write="html_head"/>` - HTML kód, ktorý sa zadáva pre stránku v záložke HTML Vlastnosti ako HTML kód hlavičky. Môže obsahovať kód, ktorý sa vkladá do šablóny do sekcie `<head>`
+- **HTML kód stránky** - `<div data-iwcm-write="html_data"/>` - HTML kód, ktorý sa zadáva pre stránku v záložke HTML Vlastnosti ako Dodatočný HTML kód.
+- **Linka na hlavný kaskádový štýl** - `<div data-iwcm-write="base_css_link"/>` - Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako Hlavný CSS štýl (napr. `/css/page.css`).
+- **Linka na hlavný kaskádový štýl** - `<div data-iwcm-write="base_css_link_noext"/>` - Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako Hlavný CSS štýl bez prípony (napr. `/css/page`). Je možné použiť pre vytváranie podmienených css štýlov (napr. `/css/page-dark.css`).
+- **Linka na kaskádový štýl** - `<div data-iwcm-write="css_link"/>` - Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako CSS štýl (napr. `/css/custom.css`).
+- **Linka na kaskádový štýl** - `<div data-iwcm-write="css_link_noext"/>` - Linka na kaskádový štýl, ktorý sa zadáva v admin časti virtuálnym šablónam ako CSS štýl bez prípony (napr. /css/custom). Je možné použiť pre vytváranie podmienených css štýlov (napr. `/css/page-dark.css`).
+- **Navigačná lišta** - `<div data-iwcm-write="navbar"/>` - Kompletná navigačná lišta, napr. Interway > Produkty > Web JET. Názvy sú klikateľné, linky sú vytvárané s použitím kaskádového štýlu `navbar`.
+- **Dátum poslednej zmeny web stránky** - `<div data-iwcm-write="doc_date_created"/>` - Dátum, kedy bola web stránka naposledy zmenená.
+- **Čas poslednej zmeny web stránky** - `<div data-iwcm-write="doc_time_created"/>` - Čas, kedy bola web stránka naposledy zmenená.
+- **Vlastné polia** - `<div data-iwcm-write="field_a"/>` až `<div data-iwcm-write="field_l"/>` - Vlastné polia stránky definované v Rozšírených vlastnostiach, záložka Vlastné polia.
+- **Voľné objekty šablóny** - `<div data-iwcm-write="template_object_a"/>` až `<div data-iwcm-write="template_object_d"/>` - Voľne použiteľné objekty šablóny. Obsahujú HTML kód priradenej stránky. Používajú sa ak nestačí použitie hlavičky, menu a pätičky.
 
 ## Publikovanie stránky
 
 Údaje zadané pri editovaní web stránky v záložke Rozšírené
 
-<table width="100%" class="ramikTable">
-<thead>
-	<tr>
-		<td width="50%" class="head">Názov a značka</td>
-		<td width="50%" class="head">Popis</td>
-	</tr>
-</thead>
-<tbody>
-   <tr>
-		<td class="t_body"><b>Dátum začiatku publikovania</b> <br>&lt;div data-iwcm-write="doc_publish_start"/&gt;</td>
-		<td class="t_body">Dátum zadaný pri editovaní web stránky v záložke Rozšírené ako Začiatok.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Čas začiatku publikovania</b> <br>&lt;div data-iwcm-write="doc_publish_start_time"/&gt;</td>
-		<td class="t_body">Čas zadaný pri editovaní web stránky v záložke Rozšírené ako Začiatok.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Dátum konca publikovania</b> <br>&lt;div data-iwcm-write="doc_publish_end"/&gt;</td>
-		<td class="t_body">Dátum zadaný pri editovaní web stránky v záložke Rozšírené ako Koniec.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Čas konca publikovania</b> <br>&lt;div data-iwcm-write="doc_publish_end_time"/&gt;</td>
-		<td class="t_body">Čas zadaný pri editovaní web stránky v záložke Rozšírené ako Koniec.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Dátum konania udalosti</b> <br>&lt;div data-iwcm-write="doc_event_date"/&gt;</td>
-		<td class="t_body">Dátum konania udalosti zadaný pri editovaní web stránky v záložke Rozšírené. Používa sa napríklad pri akciách, kedy dátum akcie je neskôr ako požadovaný dátum začiatku publikovania (ak chceme, aby sa informácia na stránke zobrazovala od 1 dňa mesiaca, ale akcia o ktorej stránka informuje je až 10 dňa v mesiaci).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Čas konania udalosti</b> <br>&lt;div data-iwcm-write="doc_event_time"/&gt;</td>
-		<td class="t_body">Čas konania udalosti zadaný pri editovaní web stránky v záložke Rozšírené.</td>
-	</tr>
-   <tr>
-		<td class="t_body"><b>Perex (anotácia) web stránky</b> <br>&lt;div data-iwcm-write="perex_data"/&gt;</td>
-		<td class="t_body">Vloží do HTML šablóny anotáciu stránky.</td>
-	</tr>
-   <tr>
-		<td class="t_body"><b>Formátovaný perex (anotácia) web stránky</b> <br>&lt;div data-iwcm-write="perex_pre"/&gt;</td>
-		<td class="t_body">Vloží do HTML šablóny formátovanú anotáciu stránky. Ak je anotácia zadaná bez HTML znakov, sú znaky nového riadku skonvertované na značky &lt;br&gt;</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Miesto</b> <br>&lt;div data-iwcm-write="perex_place"/&gt;</td>
-		<td class="t_body">Miesto, ktorého sa text stránky týka.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Obrázok</b> <br>&lt;div data-iwcm-write="perex_image"/&gt;</td>
-		<td class="t_body">Obrázok, ktorý sa týka anotácie stránky.</td>
-	</tr>
-</tbody>
-</table>
+- **Dátum začiatku publikovania** - `<div data-iwcm-write="doc_publish_start"/>` - Dátum zadaný pri editovaní web stránky v záložke Rozšírené ako Začiatok.
+- **Čas začiatku publikovania** - `<div data-iwcm-write="doc_publish_start_time"/>` - Čas zadaný pri editovaní web stránky v záložke Rozšírené ako Začiatok.
+- **Dátum konca publikovania** - `<div data-iwcm-write="doc_publish_end"/>` - Dátum zadaný pri editovaní web stránky v záložke Rozšírené ako Koniec.
+- **Čas konca publikovania** - `<div data-iwcm-write="doc_publish_end_time"/>` - Čas zadaný pri editovaní web stránky v záložke Rozšírené ako Koniec.
+- **Dátum konania udalosti** - `<div data-iwcm-write="doc_event_date"/>` - Dátum konania udalosti zadaný pri editovaní web stránky v záložke Rozšírené. Používa sa napríklad pri akciách, kedy dátum akcie je neskôr ako požadovaný dátum začiatku publikovania (ak chceme, aby sa informácia na stránke zobrazovala od 1 dňa mesiaca, ale akcia o ktorej stránka informuje je až 10 dňa v mesiaci).
+- **Čas konania udalosti** - `<div data-iwcm-write="doc_event_time"/>` - Čas konania udalosti zadaný pri editovaní web stránky v záložke Rozšírené.
+- **Perex (anotácia) web stránky** - `<div data-iwcm-write="perex_data"/>` - Vloží do HTML šablóny anotáciu stránky.
+- **Formátovaný perex (anotácia) web stránky** - `<div data-iwcm-write="perex_pre"/>` - Vloží do HTML šablóny formátovanú anotáciu stránky. Ak je anotácia zadaná bez HTML znakov, sú znaky nového riadku skonvertované na značky `<br>`
+- **Miesto** - `<div data-iwcm-write="perex_place"/>` - Miesto, ktorého sa text stránky týka.
+- **Obrázok** - `<div data-iwcm-write="perex_image"/>` - Obrázok, ktorý sa týka anotácie stránky.
 
 ## Autor stránky
 
 Údaje o autorovi stránky (za autora stránky sa považuje používateľ, ktorý ju naposledy zmenil):
 
-<table width="100%" class="ramikTable">
-<thead>
-	<tr>
-		<td width="50%" class="head">Názov a značka</td>
-		<td width="50%" class="head">Popis</td>
-	</tr>
-</thead>
-<tbody>
-   <tr>
-		<td class="t_body"><b>ID autora web stránky</b> <br>&lt;div data-iwcm-write="author_id"/&gt;</td>
-		<td class="t_body">ID autora web stránky (používateľa, ktorý ju naposledy zmenil).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Meno autora web stránky</b> <br>&lt;div data-iwcm-write="author_name"/&gt;</td>
-		<td class="t_body">Meno autora web stránky (používateľa, ktorý ju naposledy zmenil).</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Email autora web stránky</b> <br>&lt;div data-iwcm-write="author_email"/&gt;</td>
-		<td class="t_body">Email autora web stránky (používateľa, ktorý ju naposledy zmenil).</td>
-	</tr>
-</tbody>
-</table>
+- **ID autora web stránky** - `<div data-iwcm-write="author_id"/>` - ID autora web stránky (používateľa, ktorý ju naposledy zmenil).
+- **Meno autora web stránky** - `<div data-iwcm-write="author_name"/>` - Meno autora web stránky (používateľa, ktorý ju naposledy zmenil).
+- **Email autora web stránky** - `<div data-iwcm-write="author_email"/>` - Email autora web stránky (používateľa, ktorý ju naposledy zmenil).
 
 ## Priečinok
 
 Údaje o priečinku, v ktorom sa stránka nachádza:
 
-<table width="100%" class="ramikTable">
-<thead>
-	<tr>
-		<td width="50%" class="head">Názov a značka</td>
-		<td width="50%" class="head">Popis</td>
-	</tr>
-</thead>
-<tbody>
-	<tr>
-		<td class="t_body"><b>ID adresára</b> <br>&lt;div data-iwcm-write="group_id"/&gt;</td>
-		<td class="t_body">ID adresára, v ktorom sa nachádza stránka</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Názov adresára</b> <br>&lt;div data-iwcm-write="group_name"/&gt;</td>
-		<td class="t_body">Názov adresára, v ktorom sa nachádza stránka</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Text navigačnej lišty</b> <br>&lt;div data-iwcm-write="group_navbar"/&gt;</td>
-		<td class="t_body">Text adresára pre navigačnú lištu (zvyčajne rovnaký ako názov adresára)</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>HTML kód do hlavičky</b> <br>&lt;div data-iwcm-write="group_htmlhead"/&gt;</td>
-		<td class="t_body">HTML kód do hlavičky adresára</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>HTML kód do hlavičky - rekurzívne získaný</b> <br>&lt;div data-iwcm-write="group_htmlhead_recursive"/&gt;</td>
-		<td class="t_body">HTML kód do hlavičky adresára rekurzívne získaný - ak je obsah tohto pola pri aktuálnom adresári prázdny, získava sa hodnota z jeho nadradeného adresára, ak nie je zadaná ani tam, postupuje sa ďalej cez podadresáre k hlavnému adresáru</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>groupParentIds</b> <br>&lt;div data-iwcm-write="groupParentIds"/&gt;</td>
-		<td class="t_body">Čiarkou oddelené ID nadradených adresárov - podla toho je možné v HTML šablóne určovať akú jazykovú mutáciu alebo sekciu práve zobrazujeme</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Vlastné polia</b> <br>&lt;div data-iwcm-write="group_field_a"/&gt; až &lt;div data-iwcm-write="group_field_d"/&gt;</td>
-		<td class="t_body">Vlastné polia adresára.</td>
-	</tr>
-</tbody>
-</table>
+- **ID adresára** - `<div data-iwcm-write="group_id"/>` - ID adresára, v ktorom sa nachádza stránka
+- **Názov adresára** - `<div data-iwcm-write="group_name"/>` - Názov adresára, v ktorom sa nachádza stránka
+- **Text navigačnej lišty** - `<div data-iwcm-write="group_navbar"/>` - Text adresára pre navigačnú lištu (zvyčajne rovnaký ako názov adresára)
+- **HTML kód do hlavičky** - `<div data-iwcm-write="group_htmlhead"/>` - HTML kód do hlavičky adresára
+- **HTML kód do hlavičky - rekurzívne získaný** - `<div data-iwcm-write="group_htmlhead_recursive"/>` - HTML kód do hlavičky adresára rekurzívne získaný - ak je obsah tohto pola pri aktuálnom adresári prázdny, získava sa hodnota z jeho nadradeného adresára, ak nie je zadaná ani tam, postupuje sa ďalej cez podadresáre k hlavnému adresáru
+- **ID rodičov** - `<div data-iwcm-write="groupParentIds"/>` - Čiarkou oddelené ID nadradených adresárov - podla toho je možné v HTML šablóne určovať akú jazykovú mutáciu alebo sekciu práve zobrazujeme
+- **Vlastné polia** - `<div data-iwcm-write="group_field_a"/>` až `<div data-iwcm-write="group_field_d"/>` - Vlastné polia adresára.
 
 ## Šablóna stránky
 
 Údaje o šablóne stránky:
 
-<table width="100%" class="ramikTable">
-<thead>
-	<tr>
-		<td width="50%" class="head">Názov a značka</td>
-		<td width="50%" class="head">Popis</td>
-	</tr>
-</thead>
-<tbody>
-   <tr>
-		<td class="t_body"><b>ID šablóny</b> <br>&lt;div data-iwcm-write="doc_temp_id"/&gt;</td>
-		<td class="t_body">ID šablóny, ktorú web stránka používa.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Názov šablóny</b> <br>&lt;div data-iwcm-write="doc_temp_name"/&gt;</td>
-		<td class="t_body">Názov šablóny, ktorú web stránka používa.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Hlavný CSS štýl</b> <br>${ninja.temp.baseCssLink}</td>
-		<td class="t_body">Názov šablóny, ktorú web stránka používa.</td>
-	</tr>
-	<tr>
-		<td class="t_body"><b>Druhoradý CSS štýl</b> <br>${ninja.temp.cssLink}</td>
-		<td class="t_body">Názov šablóny, ktorú web stránka používa.</td>
-	</tr>
-   <tr>
-       <td class="t_body"><b>Objekt šablóny</b> <br>${tempDetails}</td>
-       <td class="t_body">Objekt šablóny, ktorú web stránka používa.</td>
-   </tr>
-   <tr>
-       <td class="t_body"><b>Objekt skupiny šablóny</b> <br>${templatesGroupDetails}</td>
-       <td class="t_body">Objekt skupiny šablóny, ktorú web stránka používa.</td>
-   </tr>
-</tbody>
-</table>
+- **ID šablóny** - `<div data-iwcm-write="doc_temp_id"/>` - ID šablóny, ktorú web stránka používa.
+- **Názov šablóny** - `<div data-iwcm-write="doc_temp_name"/>` - Názov šablóny, ktorú web stránka používa.
+- **Hlavný CSS štýl** - `${ninja.temp.baseCssLink}` - Názov šablóny, ktorú web stránka používa.
+- **Druhoradý CSS štýl** - `${ninja.temp.cssLink}` - Názov šablóny, ktorú web stránka používa.
+- **Objekt šablóny** - `${tempDetails}` - Objekt šablóny, ktorú web stránka používa.
+- **Objekt skupiny šablóny** - `${templatesGroupDetails}` - Objekt skupiny šablóny, ktorú web stránka používa.
 
 ## Ninja šablóna
 

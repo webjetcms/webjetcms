@@ -20,9 +20,9 @@ Po nastavení konfigurační proměnné `serverMonitoringEnablePerformance` na a
 Po nastavení konfigurační proměnné `serverMonitoringEnableJPA` na adrese `true` je také k dispozici:
 - **Dotazy SQL** - Statistiky rychlosti provádění dotazů SQL. Zobrazuje počet provedení, průměrnou dobu provedení, nejpomalejší a nejrychlejší provedení a samotný dotaz SQL.
 
-**Varování:** Aktivace monitorování ovlivňuje výkon serveru a zatížení paměti. Kromě možnosti zaznamenávat hodnoty má zapnutí monitorování vliv na výkon serveru. Všechna data s výjimkou sekce zaznamenaných hodnot jsou uchovávána pouze v paměti serveru, takže se po restartování serveru opět začnou zaznamenávat.
+!>**Varování:** Aktivace monitorování ovlivňuje výkon serveru a zatížení paměti. Kromě možnosti zaznamenávat hodnoty má zapnutí monitorování vliv na výkon serveru. Všechna data s výjimkou sekce zaznamenaných hodnot jsou uchovávána pouze v paměti serveru, takže se po restartování serveru opět začnou zaznamenávat.
 
-**Varování:** modulární možnosti **Aplikace**, **WEBové stránky** a **Dotazy SQL** používají jedinečnou společnou logiku, která je podrobněji popsána v části [Sledování serveru podle vybraného uzlu](nodes-logic.md)
+!>**Varování:** modulární možnosti **Aplikace**, **WEBové stránky** a **Dotazy SQL** používají jedinečnou společnou logiku, která je podrobněji popsána v části [Sledování serveru podle vybraného uzlu](nodes-logic.md)
 
 ## Vzdálené monitorování běhu serveru
 
@@ -52,3 +52,4 @@ Pokud je vše v pořádku, odpoví textem `OK`. Pro sledování **stačí sledov
 - `serverMonitoringEnableJPA` - pokud je nastavena na `true`, spustí sledování rychlosti provádění dotazů SQL pro JPA, ale vede ke zvýšení zatížení paměti serveru (výchozí: false).
 - `serverMonitoringEnableIPs` - Seznam IP adres, ze kterých je součást dostupná `monitor.jsp` pro sledování serveru (výchozí: 127.0.0.1,192.168.,10.,62.65.161.,85.248.107.,195.168.35.)
 - `monitoringPreheatTime` - Počet sekund potřebných k zahřátí webu (načtení mezipaměti) po restartu, během kterých se web zahřeje. `monitor.jsp` komponenta vracející nedostupnost uzlu clusteru (výchozí: 0)
+- `monitoringEnableCountUsersOnAllNodes` - Pokud veřejné uzly clusteru nemají možnost zapisovat do tabulky. `_conf_/webjet_conf` nastavit na `false`. Celkový počet `sessions` pak bude k dispozici pouze po sečtení jednotlivých záznamů v monitorování serveru.

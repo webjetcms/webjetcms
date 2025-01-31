@@ -91,7 +91,7 @@ Kliknutím na ikonu ceruzky pri už pridanom adresári/stránke je možné adres
 
 Štandardne administrátor, ktorý **nemá zvolené žiadne právo na adresár/stránku automaticky získava práva na všetky adresáre a web stránky**.
 
-V multi doménovej inštalácii je v editácii používateľa a skupín práv možné vyberať priečinky web stránok a jednotlivé web stránky bez ohľadu na aktuálne zvolenú doménu. Domény sa zobrazia ako koreňové priečinky. Zobrazenie vybranej položky obsahuje prefix s doménovým menom, aby bolo možné rozlíšiť jednotlivé priečinky (často sa volajú v rôznych doménach rovnako, napr. Slovensky).
+V multi doménovej inštalácii je v editácii používateľa a skupín práv možné vyberať priečinky web stránok a jednotlivé web stránky bez ohľadu na aktuálne zvolenú doménu. Domény sa zobrazia ako koreňové priečinky, pričom priečinok s názvom domény nie je možné vybrať. Je potrebné vybrať jednotlivé priečinky v doméne, keďže doména samotná nie je reálny priečinok. Zobrazenie vybranej položky obsahuje prefix s doménovým menom, aby bolo možné rozlíšiť jednotlivé priečinky (často sa volajú v rôznych doménach rovnako, napr. Slovensky).
 
 ![](users-tab-right-existing.png)
 
@@ -102,6 +102,8 @@ V tejto časti je možné zvoliť práva na nahrávanie súborov do adresárov s
 Štandardne administrátor, ktorý nemá zvolený žiaden adresár súborového systému môže nahrávať súbory do ľubovoľného adresára. Správanie sa dá zmeniť nastavením konfiguračnej premennej ```defaultDisableUpload``` na hodnotu ```true```, čo spôsobí, že nahrávať súbory bude možné len do zvolených adresárov (a ak používateľ nemá zvolený žiaden adresár nebude môcť nahrávať súbory vôbec).
 
 ![](users-tab-right-existing.png)
+
+Ak nastavíte konfiguračnú premennú `userPermsActualPageAutomatic` na hodnotu `true` tak sa práva do priečinkov `/images` a `/files` nastavia automaticky podľa práv na stromovú štruktúru web stránok tak, aby pre povolené priečinky web stránok mal redaktor práva na zápis obrázkov a súborov do príslušných priečinkov Média tejto stránky.
 
 ### Skupiny práv a Prístupové práva
 

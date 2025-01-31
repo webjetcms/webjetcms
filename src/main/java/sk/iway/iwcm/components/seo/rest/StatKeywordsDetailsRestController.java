@@ -21,7 +21,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_seo')")
 @Datatable
 public class StatKeywordsDetailsRestController extends DatatableRestControllerV2<SearchEnginesDTO, Long> {
-    
+
     @Autowired
     public StatKeywordsDetailsRestController() {
         super(null);
@@ -33,7 +33,7 @@ public class StatKeywordsDetailsRestController extends DatatableRestControllerV2
     }
 
     @Override
-    public Page<SearchEnginesDTO> getAllItems(Pageable pageable) { 
+    public Page<SearchEnginesDTO> getAllItems(Pageable pageable) {
         FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);
         return new DatatablePageImpl<>( SeoService.getStatKeywordsDetailsTableData(filter) );
     }
@@ -41,7 +41,7 @@ public class StatKeywordsDetailsRestController extends DatatableRestControllerV2
     @Override
     public Page<SearchEnginesDTO> searchItem(Map<String, String> params, Pageable pageable, SearchEnginesDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         return new DatatablePageImpl<>( SeoService.getStatKeywordsDetailsTableData(filter) );
     }
 }

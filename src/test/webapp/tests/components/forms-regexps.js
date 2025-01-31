@@ -19,7 +19,7 @@ Scenario('from-regexps zakladne testy @baseTest', async ({I, DataTables}) => {
 Scenario('bug vyhladavanie', async ({I, DT}) => {
     //bol bug, ze pre jednoduche JpaRepository a searchByExample sa nepouzilo contains ale equals
     I.amOnPage("/apps/form/admin/regexps/");
-    DT.filter("title", "phone");
+    DT.filterContains("title", "phone");
     I.see("checkform.title.mobilePhone");
     I.see("checkform.title.fixedPhone");
     I.see("checkform.title.allPhone");

@@ -4,18 +4,128 @@ block content
 
     include ../../partials/datatables-upload
 
+    table.datatableInit.table(id="galleryTable")
+
     script.
+        var galleryTable = null;
+        var url = "/admin/rest/components/gallery";
+        var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.gallery.GalleryEntity')})];
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+
+        var imagePath = urlParams.get('dir');
+        var imageName = urlParams.get('name');
+
+        var adminUpload = null;
+
+        url = url + "?dir=" + imagePath + "&name=" + imageName + "&isImageEditor=true";
+
         let imageEditorInstance = null;
-        let adminUpload = null;
-        let dir = "[(${dir})]";
-        let name = "[(${name})]";
-        let cropperVm = null;
-        let labels = {
-            "selectedX": "[[\#{components.gallery.areaOfInterest.selectedX}]]",
-            "selectedY": "[[\#{components.gallery.areaOfInterest.selectedY}]]",
-            "selectedWidth": "[[\#{components.gallery.areaOfInterest.selectedWidth}]]",
-            "selectedHeight": "[[\#{components.gallery.areaOfInterest.selectedHeight}]]",
-        }
+
+        var tabs = [
+            { id: 'description', title: '[[\#{components.catalog.desc}]]', selected: true },
+            { id: 'metadata', title: '[[\#{gallery.admin.metadata.title}]]', selected: false },
+            {
+                id: 'photoeditor',
+                title: '[[\#{admin.editor.title}]]',
+                selected: false,
+                content: '<div id="photoEditorContainer" class="dte-tab-autoheight"></div>'
+            },
+            {
+                id: 'areaOfInterest',
+                title: '[[\#{components.gallery.areaOfInterest}]]',
+                selected: false,
+                content: '<div class="dte-tab-autoheight" style="overflow:scroll;"><div id="cropper-app"><webjet-cropper-component ref="vueCropper"></webjet-cropper-component></div></div>'
+            }
+        ];
+
+        window.domReady.add(function () {
+            galleryTable = WJ.DataTable( {
+                url: url,
+                serverSide: true,
+                columns: columns,
+                id: "galleryTable",
+                tabs: tabs,
+                fetchOnCreate: true,
+                fetchOnEdit: true,
+                idAutoOpener: true,
+                initialData: dtWJ.getEmptyData(true),
+                onPreXhr: function(TABLE, e, settings, data) {
+                    data.fixed_searchImagePath = imagePath;
+                    data.fixed_searchImageName = imageName;
+                },
+                createButtons: [
+                    {
+                        text: '<i class="ti ti-check"></i> ' + WJ.translate('button.save'),
+                        action: function() {
+                            //action musime zachovat, lebo to editor pri ulozeni zmaze
+                            let editorAction = this.s.action;
+                            //console.log("editorAction=", editorAction);
+                            let editor = this;
+                            this.submit(
+                                function() {
+                                    editor.s.action = editorAction;
+                                },
+                                null,
+                                null,
+                                false
+                            );
+                        }
+                    }
+                ],
+                updateEditorAfterSave: true,
+                hideTable: true,
+            });
+
+            //They are not visible but to be sure
+            galleryTable.hideButton("create");
+            galleryTable.hideButton("edit");
+            galleryTable.hideButton("remove");
+            galleryTable.hideButton("import");
+            galleryTable.hideButton("export");
+
+            //Hide fields in interest tab
+            galleryTable.EDITOR.field('selectedHeight').hide();
+            galleryTable.EDITOR.field('selectedY').hide();
+            galleryTable.EDITOR.field('selectedX').hide();
+            galleryTable.EDITOR.field('selectedWidth').hide();
+
+            galleryTable.EDITOR.on('open', function (e, type, action) {
+                $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
+                //console.log("Reseting imageEditorInstance");
+                //zresetuj image editor instance
+                if (imageEditorInstance != null) imageEditorInstance.resetData();
+            });
+
+            adminUpload = window.AdminUpload({
+                element: "#dt-upload",
+                uploadType: "image",
+                acceptedFiles: ".jpg,.jpeg,.mp4,.gif,.png",
+                destinationFolder: imagePath,
+                writeDirectlyToDestination: true
+            });
+
+            galleryTable.EDITOR.on('submitSuccess', function (e, json, data, action) {
+                if (imageEditorInstance != null) {
+                    $("#galleryTable_modal").removeClass("show");
+                    $(".modal-backdrop.show").removeClass("show");
+                    //$(".DTE_Footer").hide();
+
+                    imageEditorInstance.onPostEditedImage('/admin/upload/chunk');
+                }
+                //try to reload elfinder on opener window
+                try {
+                    //console.log("Reloading elfinder");
+                    setTimeout(() => {
+                        window.opener.elFinderInstance.exec('reload');
+                    }, 1000);
+                    window.opener.elFinderInstance.exec('reload');
+                } catch (e) {console.log("Error reloading elfinder", e);}
+            });
+
+            $("#upload-wrapper .upload-wrapper-header").text(WJ.translate("components.image_editor.saving.js"));
+        });
 
         function getCropValues() {
             let imageEditorRatio = "[(${layout.getConstant('imageEditorRatio')})]";
@@ -39,126 +149,13 @@ block content
             return imageEditorSizeTemplates.split(";");
         }
 
-        //fake galleryTable object for areaOfInterests
-        let galleryTable = {
-            EDITOR: {
-                currentJson: {
-                    selectedX: [(${entity.selectedX})],
-                    selectedY: [(${entity.selectedY})],
-                    selectedWidth: [(${entity.selectedWidth})],
-                    selectedHeight: [(${entity.selectedHeight})],
-                    imagePath: dir,
-                    imageName: name
-                }
-            }
-        }
-        galleryTable.EDITOR.field = function(name) {
-            var ret = {};
-            ret.label = function() {
-                return labels[name];
-            }
-            ret.val = function() {
-                let val = ""+galleryTable.EDITOR.currentJson[name];
-                return val;
-            }
-            return ret;
-        }
-        galleryTable.EDITOR.set = function(field, value) {
-            galleryTable.EDITOR.currentJson[field] = value;
-            return galleryTable.EDITOR;
-        }
-
         function resizeImageEditor() {
             //console.log("resizeImageEditor");
             var height = $(window).height()-$("#galleryTable_modal div.modal-header").outerHeight()-$("#galleryTable_modal div.modal-footer").outerHeight()+"px";
             if (imageEditorInstance != null) {
-                //this is problematic with resize function, image will not be smaller than original
-                /*imageEditorInstance.resizeCanvasDimension({
-                    width: "100%",
-                    height: height
-                });*/
                 $("#photoEditorContainer").css("height", height);
-                /*not working imageEditorInstance.ui.resizeEditor({
-                    uiSize: {
-                        width: $(window).width()-16,
-                        height: height
-                    }
-                });
-                */
             }
         }
-
-        window.domReady.add(function () {
-            if (dir != '' && name!='') {
-                $("#modalIframeLoader").hide();
-                $("#DTE_Field_imageName").val(name);
-                $("#DTE_Field_imagePath").val(dir);
-                $("h5.modal-title").text(name);
-                adminUpload = window.AdminUpload({
-                    element: "#dt-upload",
-                    uploadType: "image",
-                    acceptedFiles: ".jpg,.jpeg,.mp4,.gif,.png",
-                    destinationFolder: dir,
-                    writeDirectlyToDestination: true
-                });
-                var imageEditorModal = new bootstrap.Modal(document.getElementById('galleryTable_modal'), {
-                    backdrop: 'static',
-                    keyboard: false,
-                    focus: false //otherwise Text tool will not work
-                });
-                imageEditorModal.show();
-                initializeImageEditor(null);
-                $("#imageEditorButtons button.btn-primary").on("click", function() {
-                    if ($("#pills-dt-galleryTable-areaOfInterest-tab").hasClass("active") && cropperVm != null) {
-                        $.post({
-                            url: "/admin/rest/image-editor/save-area-of-interest",
-                            data: galleryTable.EDITOR.currentJson,
-                            success: function(data) {
-                                window.close();
-                            },
-                            error: function(err) {
-                                WJ.notifyError("[[\#{components.tips.saving_error}]]", err.responseText);
-                            }
-                        })
-                        return;
-                    }
-                    if (imageEditorInstance != null) {
-                        imageEditorInstance.onPostEditedImage('/admin/upload/chunk');
-                        $("#imageEditorButtons button.btn-primary i").attr("class", "ti ti-loader-2 ti-spin"); //TODO: Overit ze sa animacia zobrazuje spravne
-                    }
-                });
-                $("#imageEditorButtons button.btn-close-editor").on("click", function() {
-                    window.close();
-                });
-
-                window.addEventListener("WJ.imageEditor.upload.success", function(e) {
-                    try {
-                        var els = window.opener.ckEditorInstance.document.$.getElementsByClassName("cke_floatingtools_selected");
-                        Array.from(els).forEach((el) => {
-                            if (el.tagName.toLowerCase()=="img") {
-                                var src = el.getAttribute("src");
-                                if (src.indexOf("?v=")!=-1 || src.indexOf("&v=")!=-1) src = WJ.urlUpdateParam(src, "v", (new Date()).getTime());
-                                else src = WJ.urlAddParam(src, "v", (new Date()).getTime());
-
-                                el.setAttribute("src", src);
-                                el.setAttribute("data-cke-saved-src", src);
-                            }
-                        });
-                    } catch (e) {
-                        console.log(e);
-                    }
-                    window.close();
-                });
-
-                window.addEventListener('resize', function (e) {
-                    resizeImageEditor();
-                }, true);
-
-                $('#pills-dt-editor-galleryTable a').on('click', function (e) {
-                    if (e.currentTarget.id === 'pills-dt-galleryTable-areaOfInterest-tab') initializeAreaOfInterest(e);
-                });
-            }
-        });
 
         const initializeImageEditor = event => {
             //dynamicky vytvaram image editor
@@ -171,8 +168,8 @@ block content
                         resizePresetDimensions: getResizeValues(),
                         menuBarPosition: 'left',
                         loadImage: {
-                            path: `${dir}/${name}?v=${now}`,
-                            name: name,
+                            path: `${imagePath}/${imageName}?v=${now}`,
+                            name: imageName,
                         },
                         menu: ['resize', 'crop', 'flip', 'rotate', 'draw', 'shape', 'icon', 'text', 'mask', 'filter'],
                         locale: {
@@ -252,19 +249,18 @@ block content
                             'common.backgroundColor': '#fff',
                         },
                         uiSize: {
-                            width: $(window).width()+"px",
-                            height: $(window).height()-$(".DTE_Footer.modal-footer").outerHeight()-$(".DTE_Header.modal-header").outerHeight()+"px"
+                            width: '100%',
+                            height: galleryTable.EDITOR.editorHeightLatest+'px'
                         }
                     },
                     cssMaxWidth: $(window).width() - 360,
                     //64 je vyska spodnej nastrojovej listy
-                    cssMaxHeight: $(window).height()-$(".DTE_Footer.modal-footer").outerHeight()-$(".DTE_Header.modal-header").outerHeight()-64-16,
+                    cssMaxHeight: galleryTable.EDITOR.editorHeightLatest,
                     usageStatistics: false
 
                 }
-                //console.log("options", options);
                 imageEditorInstance = new module.ImageEditor(document.querySelector("#photoEditorContainer"), options);
-                //console.log("ImageEditor initialized");
+                // console.log("ImageEditor initialized");
                 setTimeout(() => {
                     resizeImageEditor();
                 }, 1000);
@@ -273,6 +269,7 @@ block content
 
         /* counter - kontrolujem ci bola vytvorena vue instance */
         let counter = 0;
+        let cropperVm = null;
         const createVueInstance = () => {
             return window.VueTools.createApp({
                 components: {
@@ -303,39 +300,61 @@ block content
             }, false);
         }
 
-    div.modal.DTED(id="galleryTable_modal" tabindex="-1")
-        div.modal-dialog.modal-dialog-scrollable.modal-xl.modal-fullscreen
-            div.DTE.DTE_Action_Edit.modal-content
-                div.DTE_Header.modal-header
-                    div.DTE_Header_Content
-                        .row
-                            .col-sm-4
-                                h5.modal-title
-                            .col-sm-8.md-breadcrumb
-                                ul.nav(id="pills-dt-editor-galleryTable")
-                                    li.nav-item
-                                        a.nav-link.active(href="#pills-dt-galleryTable-photoeditor" id="pills-dt-galleryTable-photoeditor-tab" data-bs-toggle="tab") [[\#{admin.editor.title}]]
-                                    li.nav-item
-                                        a.nav-link(href="#pills-dt-galleryTable-areaOfInterest" id="pills-dt-galleryTable-areaOfInterest-tab" data-bs-toggle="tab") [[\#{components.gallery.areaOfInterest}]]
-                div.DTE_Body.modal-body.has-content
-                    .tab-content
-                        div.dte-tab-pane.tab-pane.active.show(id="pills-dt-galleryTable-photoeditor")
-                            div#imageEditorContainer
-                                div#photoEditorContainer.dte-tab-autoheight
-                        div.dte-tab-pane.tab-pane(id="pills-dt-galleryTable-areaOfInterest")
-                            div.dte-tab-autoheight(style="overflow:scroll;")
-                                div#cropper-app
-                                    webjet-cropper-component(ref="vueCropper")
-                            input(id="DTE_Field_imageName" style="display: none")
-                            input(id="DTE_Field_imagePath" style="display: none")
-                div.DTE_Footer.modal-footer
-                    div.DTE_Footer_Content
-                    div#imageEditorButtons.DTE_Form_Buttons
-                        span.buttons-footer-left
-                        button.btn.btn-outline-secondary.btn-close-editor(type="button")
-                            i.ti.ti-x
-                            span [[\#{button.cancel}]]
-                        button.btn.btn-primary
-                            i.ti.ti-check
-                            span [[\#{button.save}]]
+        window.addEventListener('WJ.DTE.tabclick', function (e) {
+            //console.log("tabclick, id=", e.detail.id, " e=", e);
+            if (e.detail.id === 'galleryTable-areaOfInterest') initializeAreaOfInterest(e);
+            if (e.detail.id === 'galleryTable-photoeditor') {
+                if(imageEditorInstance === null || imageEditorInstance === undefined) {
+                    initializeImageEditor(e);
+                } else {
+                     let now = (new Date()).getTime();
+                     imageEditorInstance.loadImageFromURL(
+                            `${imagePath}/${imageName}?v=${now}`,
+                            $("#DTE_Field_imageName").val(),
+                     ).then(()=> {
+                            imageEditorInstance.clearUndoStack();
+                    });
+                };
+            }
+        }, false);
 
+        window.addEventListener('WJ.DTE.resize', function (e) {
+            if (cropperVm != null) {
+                cropperVm.resize();
+            }
+            if (imageEditorInstance != null) {
+                imageEditorInstance.resizeCanvasDimension({
+                    width: $("#galleryTable_modal div.DTE").width(),
+                    height: galleryTable.EDITOR.editorHeightLatest-64-6
+                });
+            }
+        });
+
+        window.addEventListener('resize', function (e) {
+            resizeImageEditor();
+        }, true);
+
+        window.addEventListener('WJ.DTE.closeclick', () => {
+            window.close();
+        });
+
+        window.addEventListener("WJ.imageEditor.upload.success", function (e) {
+
+            //update image in ckeditor
+            try {
+                let selectedImages = window.opener.$(".cke_wysiwyg_frame").contents()[0].getElementsByClassName("cke_floatingtools_selected");
+                //src is in form /images/apps/apps-monitor.jpg?v=1733922954 we need to update v to current time and reload image
+                for (let i = 0; i < selectedImages.length; i++) {
+                    let img = selectedImages[i];
+                    let src = img.getAttribute("src");
+                    let v = (new Date()).getTime();
+                    let newUrl = WJ.urlUpdateParam(src, "v", v);
+                    img.setAttribute("src", newUrl);
+                    img.setAttribute("data-cke-saved-src", newUrl);
+                }
+            } catch (e) {}
+
+            setTimeout(() => {
+                window.close();
+            }, 1000);
+        });

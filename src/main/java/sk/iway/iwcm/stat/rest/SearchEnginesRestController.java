@@ -49,7 +49,7 @@ public class SearchEnginesRestController extends DatatableRestControllerV2<Searc
     @Override
     public Page<SearchEnginesDTO> searchItem(Map<String, String> params, Pageable pageable, SearchEnginesDTO search) {
         //Process received params into FilterHeaderDto
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         DatatablePageImpl<SearchEnginesDTO> page = new DatatablePageImpl<>( StatService.getSearchEnginesTableData(filter) );
         return page;
     }

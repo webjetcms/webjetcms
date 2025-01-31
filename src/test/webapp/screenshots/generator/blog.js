@@ -1,19 +1,17 @@
 Feature('apps.blog');
 
-var delete_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-remove.noperms-deleteDir.btn-danger'));
-
-Scenario('Blog articles', ({ I, DTE, Document }) => {
+Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.relogin("bloggerPerm");
     I.amOnPage("/apps/blog/admin/");
 
     Document.screenshot("/redactor/apps/blog/blogger-blog.png");
     Document.screenshotElement("#bloggerArticlesDataTable_extfilter", "/redactor/apps/blog/groupFilter_defaultValue.png");
 
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
-    Document.screenshotElement("body > div.bs-container.dropdown.bootstrap-select > div", "/redactor/apps/blog/groupFilter_allValues.png");
-
     Document.screenshotElement("button.buttons-create", "/redactor/apps/blog/add_article.png");
     Document.screenshotElement("button.buttons-add-folder", "/redactor/apps/blog/add_folder.png");
+
+    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    Document.screenshotElement("body > div.bs-container.dropdown.bootstrap-select > div", "/redactor/apps/blog/groupFilter_allValues.png");
 
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-warning");
@@ -32,6 +30,7 @@ Scenario('Blog articles', ({ I, DTE, Document }) => {
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-info");
     I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", "NewSubFolder");
+    I.moveCursorTo("#toast-container-webjet > .toast-info");
     Document.screenshotElement("#toast-container-webjet > .toast-info", "/redactor/apps/blog/adding_folder_info.png");
     Document.screenshotElement("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary", "/redactor/apps/blog/adding_folder_info_button.png");
     I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
@@ -50,7 +49,7 @@ Scenario('Blog articles', ({ I, DTE, Document }) => {
     I.relogin("tester");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=63847");
     I.jstreeClick("NewSubFolder");
-    I.click(delete_button);
+    I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
     DTE.waitForLoader();

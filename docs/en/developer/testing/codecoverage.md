@@ -6,7 +6,7 @@
   <iframe width="560" height="315" src="https://www.youtube.com/embed/vJkto5AcQeA" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
 
-WebJET includes an integrated library [jacoco](https://github.com/jacoco/jacoco)which keeps track of which part of the code is executed during runtime and then generates a detailed report in HTML format. In it, you can drill down through each package down to the level of java classes and methods, highlighting in detail which parts of the code were executed during the tests and which were not.
+WebJET includes an integrated library [jacoco](https://github.com/jacoco/jacoco) which keeps track of which part of the code is executed during runtime and then generates a detailed report in HTML format. In it, you can drill down through each package down to the level of java classes and methods, highlighting in detail which parts of the code were executed during the tests and which were not.
 
 Specificity is tracking code coverage by both tests and **during the standard application server runtime**, coverage is therefore measured during normal working hours and therefore **during the execution of automated e2e tests**.
 
@@ -22,7 +22,7 @@ In standard use in VS Code, it is automatically executed after the tasks `appSta
 
 In the terminal, you will see a link to open the report in a browser. This way you can easily see how well you are doing in covering the code of the respective services with tests while you are writing the tests.
 
-A script is also prepared `./ant/codecoverage.sh` for complete report generation. The script runs standard JUnit tests but also automated e2e tests. The task is used `appBeforeIntegrationTest`which starts the application server in the background so that automated tests can continue. The application server is stopped using the task `appAfterIntegrationTest`, which will also trigger the generation of HTML reports.
+A script is also prepared `./ant/codecoverage.sh` for complete report generation. The script runs standard JUnit tests but also automated e2e tests. The task is used `appBeforeIntegrationTest` which starts the application server in the background so that automated tests can continue. The application server is stopped using the task `appAfterIntegrationTest`, which will also trigger the generation of HTML reports.
 
 ```shell
 #!/bin/sh
@@ -112,7 +112,7 @@ task('generateJacocoReport', type: JacocoReport) {
 }
 ```
 
-The key is the setting `afterEvaluate` for gretty. This activates `jacoco` also for tasks `appStart` and possibly also for `appStartDebug`because [the standard is jacoco](https://gretty-gradle-plugin.github.io/gretty-doc/Code-coverage-support.html) active only for the task `appBeforeIntegrationTest`.
+The key is the setting `afterEvaluate` for gretty. This activates `jacoco` also for tasks `appStart` and possibly also for `appStartDebug` because [the standard is jacoco](https://gretty-gradle-plugin.github.io/gretty-doc/Code-coverage-support.html) active only for the task `appBeforeIntegrationTest`.
 
 Task `generateJacocoReport` generates HTML report to the folder `./build/jacoco/report`. The terminal displays a link to open the file in the browser:
 

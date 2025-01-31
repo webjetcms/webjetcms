@@ -12,7 +12,7 @@ The following data is displayed:
 - `Suites` - list of individual tests, showing the steps performed
 - `Graphs` - charts of current and historical developments
 - `Timeline` - time display of the execution of each test
-- `Behaviors` - allows the tests to be divided into `Epic, Feature, Story`what WebJET CMS is not currently used
+- `Behaviors` - allows the tests to be divided into `Epic, Feature, Story` what WebJET CMS is not currently used
 - `Packages` - tree representation of individual tests
 
 ## Running the report
@@ -26,25 +26,23 @@ The script is used with parameters:
 - `CODECEPT_URL` - URL of the domain to be tested (default `demotest.webjetcms.sk`)
 - `HOST_USER` - SSH user name to download history and save result
 - `HOST_NAME` - server domain name for SSH connection history and result storage
-- `HOST_DIR`
+- `HOST_DIR` - folder with the report on the server, the name of the browser used is added to the folder name
+
 ```sh
 #spustenie s chrome a predvolenou domenou
 npx-allure.sh
-
 #spustenie s firefox a predvolenou domenou
 npx-allure.sh firefox
-
 #spustenie s firefoxom a domenou iwcm.interway.sk
 npx-allure.sh firefox http://iwcm.interway.sk
-
 #spustenie s chrome a domenou demo.webjetcms.sk
 npx-allure.sh chromium http://demo.webjetcms.sk
 ```
 
 ## Technical information
 
-`history``rsync`
+As written above, to preserve the history it is necessary to get the folder before generating the report `history` from the previous version. This is ensured in the script by using `rsync` from the documentation side.
 
-`build/test/environment.properties``Overview``environment`.
+In addition, a file is generated at startup `build/test/environment.properties` with the name of the browser used and the domain used. This will be displayed on the tab `Overview` in part `environment`.
 
-`gitlab-ci.yml``rune2etest` a `rune2etestfirefox`.
+Test execution and report generation is provided by CI-CD in the file `gitlab-ci.yml` by running a gradle task `rune2etest` a `rune2etestfirefox`.

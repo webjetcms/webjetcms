@@ -14,24 +14,55 @@ Vysvetlenie použitých piktogramov:
 
 ## 2025
 
-- [ ] Prechod na `Jakarta EE` - Spring 6, zmena Java packages z `javax.servlet` na `jakarta.servlet`, prechod na aplikačný server Tomcat 11+.
+- [ ] Prechod na `Jakarta EE` - zmena Java packages z `javax.servlet` na `jakarta.servlet`, pripraviť migračný skript.
+- [ ] Prechod na aplikačný server Tomcat 11+.
+- [ ] Prechod na `Spring` verzia 7.
+- [ ] Zaviesť do projektu povinnosť použitia `SonarLint` a formátovania kódu cez `.editorconfig` alebo `Spotless` - príklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
+- [ ] Primárne používanie GitHub repozitára na vývoj.
+- [ ] Zrušenie generovania artifaktov na starý `iwmsp.sk` repozitár, artefakty budú dostupné už len cez [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [ ] Aktualizácia knižnice `pd4ml` na novú verziu, jednotlivé weby si budú musieť zaobstarať licenciu samostatne, nebude už poskytovaná WebJET CMS.
+- [ ] Prechod najpoužívanejších aplikácii do Spring verzie s využitím Thymeleaf šablón.
+- [ ] Zrušenie `Apache Struts` framework, nahradenie `logic:present,logic:iterate,bean:write` buď za `JSTL` variantu, alebo implementácia podobnej funkcionality do `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [ ] Presun JSP súborov, Java tried a JavaScript knižníc starej verzie 8 do `obsolete` jar archívu, ktorý nebude štandardnou súčasťou WebJET CMS. Môže byť použitý na starých projektoch, kde zatiaľ nie je vykonaná aktualizácia všetkých zákazníckych aplikácií na `Spring` verzie, ale bez podpory a aktualizácií zo strany WebJET CMS.
+- [ ] Štatistika - mapa kliknutí - obnovenie funkcionality, vyriešenie problému responzívnosti (samostatná evidencia podľa šírky okna).
+- [ ] Štatistika - možnosť filtrovať botov pre štatistiku chybných stránok.
+- [ ] Log súbory - filtrovať podľa mena inštalácie.
+- [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
+- [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
+- [ ] Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
+- [ ] Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [ ] Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru.
+- [ ] Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach.
+- [ ] Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na `true`.
+- [ ] V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
+- [ ] Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
+- [ ] Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.
+- [ ] Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.
+- [ ] Hromadný email - auditovať zmeny v skupinách používateľov.
+- [ ] Archív súborov - prerobiť do dátových tabuliek (#57317).
+- [ ] Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.
+- [ ] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
+- [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
+- [ ] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
+- [ ] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
+- [ ] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
 
 ## 2024
 
 - [x] Prechod na Java 17 - WebJET od verzie 2024.0 bude vyžadovať Java verzie 17. (#54425)
 - [x] Výmena sady ikon z `FontAwesome` za sadu `Tabler Icons` (#56397).
 - [x] Publikovanie JAR súborov do `Maven Central` (#43144).
-- [ ] Nová verzia aplikácie Nákupný košík/`eshop`, ukážková verzia web stránky, integrácia cez API na online fakturačné systémy, aktualizované integrácie na platobné brány (#56329,56385,56325).
+- [x] Nová verzia aplikácie Nákupný košík/`eshop`, ukážková verzia web stránky, integrácia cez API na online fakturačné systémy, aktualizované integrácie na platobné brány (#56329,56385,56325).
 - [x] Prekladové kľúče - možnosť importovať len neexistujúce kľúče (#56061).
-- [ ] `quill` - pridať možnosť nastaviť položky menu vrátane farieb.
-- [ ] Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).
+- [ ] ~~`quill` - pridať možnosť nastaviť položky menu vrátane farieb.~~
+- [ ] ~~Aplikácie - možnosť nákupu aplikácie pre OpenSource verziu (#55825).~~
 - [x] Web stránky - ak je zapnutá konf. premenná `syncGroupAndWebpageTitle` a jedna stránka je nastavená ako hlavná viacerým priečinkom vypnúť premenovávanie názvu priečinku podľa hlavnej stránky. Plus keď je hlavná stránka v inom priečinku, tiež nepremenovávať (#56477).
 - [x] Audit - prerobiť Zmenené stránky a Čaká na publikovanie do datatabuliek (#56165).
 - [x] Blog - administrácia `bloggerov` prerobiť do datatabuliek (#56169).
 - [x] Blog - komentáre - integrovať na sekciu Diskusia, pridať `bloggerom` práva aj na sekciu Diskusia (#56173).
 - [x] AB testovanie - prerobenie do DT, využiť možnosti z `news` aplikácie, spraviť nastavenie konf. premenných podľa zadaného prefixu (#56177).
 - [x] Kalendár udalostí - neschválené a odporúčanie udalosti - prerobiť do DT, využiť kód pre zoznam udalostí (#56181).
-- [ ] Zaviesť do projektu povinnosť použitia `SonarLint` a formátovania kódu cez `.editorconfig` alebo `Spotless` - príklad https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Editor - pri vytvorení odkazu na email to v okne automaticky pridáva http, aj keď odkaz nakoniec vloží správne s `mailto:` prefixom (#56189).
 - [x] Dotazníky - prerobiť aplikáciu do datatabuliek (#55949).
 - [x] +PostgreSQL - pridať podporu databázy (#56305).
@@ -40,7 +71,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Zmazať nepoužívané a vymeniť málo používané knižnice (#56265).
 - [x] +MultiWeb - overiť funkčnosť, doplniť potrebné práva (#56421, #56405, #56425).
 - [x] +Hromadný email - pridať podporu odhlásenia jedným klikom (#56409).
-- [ ] +Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.
+- [ ] ~~+Možnosť vykonať Thymeleaf kód v hlavičke/pätičke a možno aj v tele web stránky.~~
 - [x] +Vymeniť databázový pool za `HikariCP` (#56821).
 - [x] +Úrovne logovania - prerobiť na datatabuľku (#56833).
 - [x] +DBPool - prechod z `Apache DBCP` na `HikariCP` (#56821).
@@ -49,22 +80,29 @@ Vysvetlenie použitých piktogramov:
 - [x] +A/B Testovanie - vypnúť pre vyhľadávače/boty, indikovať verziu pre Ninja objekt (#56677).
 - [x] +Datatabuľky - možnosť preskočiť riadok pri importe keď je chybný (#56465).
 - [x] +Presmerovania - optimalizovať získanie presmerovania bez druhotného získavania presmerovacieho kódu z databázy (#53469).
-- [ ] +Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [ ] ~~+Bezpečnosť - pridať podporu generovania `nonce` pre `Content-Security-Policy` hlavičku, viď napr. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.~~
 - [x] +Galéria - pridať možnosť zmeniť veľkosť obrázka.
-- [ ] +Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru.
+- [ ] ~~+Formuláre - pridať možnosť volať Java triedu pre validáciu formuláru.~~
 - [x] +Indexovanie súborov - doplniť do Perex-Začiatok publikovania dátum poslednej zmeny súboru (#57177).
-- [ ] +Prekladové kľúče - do REST služby `/rest/properties/` pridať možnosť filtrovať kľúče podľa konf. premennej, aby nebolo možné verejne získať všetky kľúče z WebJET CMS.
+- [x] +Prekladové kľúče - do REST služby `/rest/properties/` pridať možnosť filtrovať kľúče podľa konf. premennej, aby nebolo možné verejne získať všetky kľúče z WebJET CMS (#57202).
 - [x] +Web stránky - auditovať úspešné časové publikovanie web stránky, možnosť poslať notifikáciu autorovi web stránky (#57173).
 - [x] +Zobrazovať informáciu o platnosti licencie 2 mesiace pred jej exspiráciou na úvodnej obrazovke (#57169).
-- [ ] +Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach.
-- [ ] +Audit - doplniť HTTP hlavičku `Referrer` aby bolo možné identifikovať pôvodnú stránku z ktorej bolo volanie vykonané.
-- [ ] +Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na true.
-- [ ] +V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.
-- [ ] +Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.
-- [ ] +Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.
-- [ ] +Galéria - pridať pole URL adresa zdroja obrázku s možnosťou zadať adresu, z ktorej sme obrázok získali, automaticky nastaviť pri použití foto banky.
-- [ ] +Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.
-- [ ] +Hromadný email - auditovať zmeny v skupinách používateľov.
+- [ ] ~~+Značky - filtrovať podľa aktuálnej domény aby to bolo rovnaké ako v iných častiach.~~
+- [x] +Audit - doplniť HTTP hlavičku `Referrer` aby bolo možné identifikovať pôvodnú stránku z ktorej bolo volanie vykonané (#57565).
+- [ ] ~~+Import používateľov - ak nie je zadané heslo, tak vygenerovať (pre nových používateľov), ak nie je je posielaný stav `available` nastaviť na `true`.~~
+- [ ] ~~+V testoch nejako automatizovane kontrolovať výskyt `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` čo sú nesprávne čakania bez definovaného času, spôsobia zaseknutie automatizovaných testov.~~
+- [ ] ~~+Doplniť aplikáciu pre presmerovanie hlavnej stránky na `/sk/` alebo `/en/` podľa jazyka prehliadača.~~
+- [ ] ~~+Upraviť vymazanie konfigurácie tak, že pri vymazaní sa jej nastaví pôvodná hodnota definovaná v `Constants`.~~
+- [x] +Galéria - pridať pole URL adresa zdroja obrázku s možnosťou zadať adresu, z ktorej sme obrázok získali, automaticky nastaviť pri použití foto banky.
+- [ ] ~~+Galéria - pri duplikovaní obrázka umožniť zmenu "Priečinok", aby sme vedeli duplikovať obrázky do iného ako aktuálneho priečinka.~~
+- [ ] ~~+Hromadný email - auditovať zmeny v skupinách používateľov.~~
+- [ ] ~~+Archív súborov - prerobiť do dátových tabuliek (#57317).~~
+- [ ] ~~+Voliteľné polia - pridať možnosť výberu viac položiek pre napojenie na číselník.~~
+- [x] +Vyhľadávanie v administrácii - prerobenie do dátovej tabuľky (#57333).
+- [x] +Anketa - doplnenie pôvodnej funkcionality zobrazenia štatistiky (#57337).
+- [x] +Značky - doplniť možnosť definovať názov vo viacerých jazykoch, doplniť voliteľné polia (#57273,#57449)
+- [x] +Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57157,#57161,#57409).
+- [x] +Web stránky, galéria - doplniť možnosť vyhľadávať v stromovej štruktúre (#57265,#57437)
 
 ## 2023.52 / 2024.0
 
@@ -76,12 +114,12 @@ Vysvetlenie použitých piktogramov:
 - [x] Fórum - prerobiť do Spring (#55649).
 - [x] Používatelia - pridať stĺpec skupina práv do datatabuľky (#55601).
 - [ ] Galéria - nový typ pre zobrazenie malého počtu fotiek s expanziou, možnosť prechodu medzi všetkými fotkami v článku (#55349).
-- [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
-- [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
+- [ ] ~~Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).~~
+- [ ] ~~Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.~~
 - [x] Web stránky - pridať možnosť obnovenia zmazaného priečinka tak, aby sa korektne nastavil web stránkam atribút `available` (#55937).
 - [ ] Prieskumník - upraviť do nového dizajnu, aktualizovať JS kód elfinder (#55849).
 - [x] Web stránky - pri vytváraní odkazov v dialógovom okne zapamätať posledný adresár a pri pridaní ďalšieho odkazu ho rovno použiť (#54953-29).
-- [ ] Kalendár udalostí - ak sa zadá udalosť v októbri na november kedy dochádza k posunu času zobrazuje sa s o hodinu posunutým časom (#56857).
+- [x] Kalendár udalostí - ak sa zadá udalosť v októbri na november kedy dochádza k posunu času zobrazuje sa s o hodinu posunutým časom (#56857).
 - [ ] upraviť posielanie správ medzi administrátormi z vyskakovacieho okna na lepšie používateľské rozhranie.
 - [x] Aplikácie - zlepšiť opis každej aplikácie, aktualizovať obrázky aplikácie (#55293).
 - [x] Foto galéria - optimalizovať množstvo načítaných dát (#56093).

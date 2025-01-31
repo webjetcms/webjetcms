@@ -25,12 +25,14 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyComparator;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity;
 import sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyRepository;
+import sk.iway.iwcm.doc.SearchAction;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.i18n.PropDB;
@@ -92,7 +94,7 @@ public class TranslationKeyService {
      *
      * @return lis of entities ready to by used as page data for Datable TranslationKeys
      */
-    private List<TranslationKeyEntity> getAllData(Identity user) {
+    private List<TranslationKeyEntity> getAllData(Identity user, String searchText) {
         //List<TranslationKeyEntity> defaultLngKeys = getDefaultLngKeys(request);
         Map<String, String> languageFieldCombination = getLanguageFieldCombination();
         Map<String, TranslationKeyEntity> allDataMap = new HashMap<>();
@@ -146,6 +148,10 @@ public class TranslationKeyService {
             entity.setId(Long.valueOf((i+1)));
         }
 
+        if(Tools.isNotEmpty(searchText)) {
+            allData = searchAllFiltering(searchText, allData);
+        }
+
         return allData;
     }
 
@@ -168,7 +174,11 @@ public class TranslationKeyService {
      * @return List<TranslationKeyEntity>
      */
     private List<TranslationKeyEntity> getSortedTranslationKeys(HttpServletRequest request) {
-        List<TranslationKeyEntity> translationKeys = getAllData(UsersDB.getCurrentUser(request));
+        String searchText = null;
+        if(Tools.getBooleanValue(request.getParameter("isSearchVersion"), false)) {
+            searchText = Tools.getStringValue(request.getParameter("searchText"), null);
+        }
+        List<TranslationKeyEntity> translationKeys = getAllData(UsersDB.getCurrentUser(request), searchText);
         String sort = request.getParameter("sort");
         String[] sortArray = sort.split(",");
         Pair<String, String> sortPair = new Pair<>(sortArray[0], sortArray[1]);
@@ -368,7 +378,14 @@ public class TranslationKeyService {
      * @return Page<TranslationKeyEntity>
      */
     Page<TranslationKeyEntity> getFilteredTranslationKeys(Map<String, String> searchMap, Pair<String, String> sortPair, Pageable pageable, HttpServletRequest request) {
-        List<TranslationKeyEntity> translationKeys = getAllData(UsersDB.getCurrentUser(request));
+
+        String searchText = null;
+        if(Tools.getBooleanValue(request.getParameter("isSearchVersion"), false)) {
+            searchText = Tools.getStringValue(request.getParameter("searchText"), null);
+            searchMap.remove("text");
+        }
+
+        List<TranslationKeyEntity> translationKeys = getAllData(UsersDB.getCurrentUser(request), searchText);
         List<TranslationKeyEntity> filteredTranslationKeys = new ArrayList<>();
 
         int searchMapSize = searchMap.size();
@@ -584,5 +601,38 @@ public class TranslationKeyService {
         Prop.deleteMissingText(key, lng);
 
         return entity;
+    }
+
+    private List<TranslationKeyEntity> searchAllFiltering(String text, List<TranslationKeyEntity> allData) {
+        List<TranslationKeyEntity> filtered = new ArrayList<>();
+        if(Tools.isEmpty(text)) return filtered;
+
+        // Prepare search text
+        String cmpText = DB.internationalToEnglish(text.toLowerCase());
+
+        for(TranslationKeyEntity entity : allData) {
+            // Prepare and check key
+			String cmpPropKey = DB.internationalToEnglish(entity.getKey().toLowerCase());
+
+            if(cmpPropKey.contains(cmpText)) {
+                filtered.add(entity);
+                continue;
+            }
+
+            // Prepare and check every language field
+            char lastAlphabet = 'J';
+            for (char alphabet = 'A'; alphabet <= lastAlphabet; alphabet++) {
+                String propValue = entity.getOriginalValue(alphabet);
+                if(Tools.isEmpty(propValue)) continue;
+
+                String cmpPropValue = DB.internationalToEnglish(propValue.toLowerCase());
+                if(SearchAction.containsIgnoreHtml(cmpPropValue, cmpText)) {
+                    filtered.add(entity);
+                    break;
+                }
+            }
+
+        }
+        return filtered;
     }
 }

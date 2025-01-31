@@ -8,10 +8,10 @@ When editing text files as `.text .json .properties` a dialog box will be called
 
 Image editing varies by file location.
 
-If the image path contains `/gallery`, so that means it's a picture from the gallery. In this case, it will open in a new browser window in the application [Gallery](../../../../redactor/apps/gallery/README.md), where the editor will automatically open for the image.
+If the image path **Contains** Part of `/gallery`, so that means it's a picture from the gallery. In this case, it will open in a new browser window in the application [Gallery](../../../../redactor/apps/gallery/README.md), where the editor will automatically open for the image.
 
 ![](edit_image_gallery.png)
 
-If the image path does not contain `/gallery`, the image editor dialog opens.
+If the image path **does not contain** Part of `/gallery`, opens the image editor dialog box, which is the same as the application editor [Gallery](../../../../redactor/apps/gallery/README.md).
 
 ![](edit_image_tui.png)

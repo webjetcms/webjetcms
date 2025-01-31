@@ -44,3 +44,43 @@ $.ajaxSetup({
 ```
 
 Výjimkou jsou volání obsahující výraz v adrese URL. `/html` nebo `html/` kde se očekává vrácení kódu HTML namísto objektu JSON.
+
+Nastavením konfigurační proměnné `logoffRequireCsrfToken` na hodnotu `true` je možné aktivovat požadavek na CSRF token pro odhlášení uživatele (z administrační i zákaznické oblasti).
+
+### Vložení tokenu na webovou stránku
+
+Token CSRF lze vložit do textu webové stránky pomocí makra. `!CSRF_INPUT!` který vloží celé pole HTML, nebo pomocí příkazu `!CSRF_TOKEN!` který vloží hodnotu tokenu CSRF.
+
+```html
+<form action="/logoff.do?forward=/apps/prihlaseny-pouzivatel/zakaznicka-zona/csrf-logoff.html" method="post">
+    <button class="btn btn-primary" id="logoffButtonInput" type="submit">Logoff</button>
+    !CSRF_INPUT!
+</form>
+
+<form action="/logoff.do?forward=/apps/prihlaseny-pouzivatel/zakaznicka-zona/" method="post" name="userLogoffForm">
+    <button class="btn btn-primary" id="logoffButtonToken" type="submit">Logoff</button>
+    <input name="__token" type="hidden" value="!CSRF_TOKEN!" />
+</form>
+```
+
+Případně můžete použít přímo rozhraní API třídy [CSRF](../../../../src/webjet8/java/sk/iway/iwcm/system/stripes/CSRF.java) pro generování hodnoty `public static String getCsrfToken(HttpSession session, boolean saveToSession)` nebo celé pole HTML `public static String getCsrfTokenInputFiled(HttpSession session, boolean saveToSession)`. Přidání hlaviček HTTP pro všechna volání AJAX prostřednictvím `jQuery` můžete použít následující kód:
+
+```html
+<script>
+$.ajaxSetup({
+    headers: {
+        'X-CSRF-Token': '<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfToken(session, true)%>',
+    }
+});
+</script>
+```
+
+### Ochrana URL
+
+Ochranu CSRF lze aktivovat na libovolné adrese URL, např. `/private/rest` nastavením konfigurační proměnné `csrfRequiredUrls` do kterého na novém řádku zadáte začátky adres URL, pro které by měla být vyžadována ochrana CSRF. Podporován je také formát se znaky `%` obsahuje a `!` pro konce na. Příklad:
+
+```
+/private/rest
+%/rest/
+%/export.pdf!
+```

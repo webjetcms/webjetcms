@@ -63,15 +63,15 @@ import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 	 */
 	protected void createAndCopy(FsItemEx src, FsItemEx dst, HttpServletRequest request) throws IOException
 	{
-<span class="nc bnc" id="L66" title="All 2 branches missed.">		if (src.isFolder())</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">		if (src.isFolder())</span>
 		{
-<span class="nc" id="L68">			createAndCopyFolder(src, dst, request);</span>
+<span class="fc" id="L68">			createAndCopyFolder(src, dst, request);</span>
 		}
 		else
 		{
 <span class="nc" id="L72">			createAndCopyFile(src, dst);</span>
 		}
-<span class="nc" id="L74">	}</span>
+<span class="fc" id="L74">	}</span>
 
 	protected void createAndCopy(FsItemEx src, FsItemEx dst) throws IOException
 	{
@@ -103,13 +103,13 @@ import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 	 */
 	protected void createAndCopyFolder(FsItemEx src, FsItemEx dst, HttpServletRequest request) throws IOException
 	{
-<span class="nc" id="L106">		dst.createFolder();</span>
+<span class="fc" id="L106">		dst.createFolder();</span>
 
-<span class="nc bnc" id="L108" title="All 2 branches missed.">		if(request != null) {</span>
-<span class="nc" id="L109">			FolderPropertiesService.copyFolderProperties(src.getPath(), dst.getPath(), request);</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">		if(request != null) {</span>
+<span class="fc" id="L109">			FolderPropertiesService.copyFolderProperties(src.getPath(), dst.getPath(), request);</span>
 		}
 
-<span class="nc bnc" id="L112" title="All 2 branches missed.">		for (FsItemEx c : src.listChildren())</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">		for (FsItemEx c : src.listChildren())</span>
 		{
 <span class="nc bnc" id="L114" title="All 2 branches missed.">			if (c.isFolder())</span>
 			{
@@ -120,7 +120,7 @@ import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 <span class="nc" id="L120">				createAndCopyFile(c, new FsItemEx(dst, c.getName()));</span>
 			}
 <span class="nc" id="L122">		}</span>
-<span class="nc" id="L123">	}</span>
+<span class="fc" id="L123">	}</span>
 
 	@Override
 	public void execute(CommandExecutionContext ctx) throws Exception

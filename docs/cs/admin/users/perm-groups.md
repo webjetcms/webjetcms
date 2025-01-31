@@ -1,4 +1,4 @@
-# Skupina práv
+# Skupiny práv
 
 Skupinová oprávnění můžete definovat ve skupinách práv. Pomocí tlačítek v levém horním rohu stránky můžete vytvářet/upravovat/duplikovat/mazat skupiny práv, exportovat skupiny práv do excelu nebo je importovat z excelu.
 

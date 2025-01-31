@@ -12,7 +12,8 @@ The list of news in the administration is similar to the list of web pages, but 
 
 The values in the folder selection field in the header are generated:
 - automatically - if the conf. variable is `newsAdminGroupIds` set to empty, a list of news folder IDs is obtained by searching for the term `!INCLUDE(/components/news/` in the page bodies and by tracing the set folder ID `groupIds`.
-- by conf. variable `newsAdminGroupIds`where you can specify a comma-separated list of folder IDs, e.g. `17,23*,72`, where if the folder ID ends in a character `*` news (web pages) from subfolders are also loaded when selected.
+- by conf. variable `newsAdminGroupIds` where you can specify a comma-separated list of folder IDs, e.g. `17,23*,72`, where if the folder ID ends in a character `*` news (web pages) from subfolders are also loaded when selected.
+
 Clicking on a news title opens an editor identical to [page editor](../../webpages/editor.md).
 
 ![](admin-edit.png)
@@ -30,20 +31,20 @@ The application parameters tab is where you set the basic behaviour of the appli
 - Directory - ID of the directories (folders of web pages) from which the news (pages) will be selected. With the Add button, you can select multiple directory IDs.
 - Include subdirectories - selecting this option also loads news from the subdirectories of the selected directories from the Directory field.
 - Page types - selection of pages by date validity
-	- Current - is a valid start and end date - only news items whose validity date (start and end of the pulication) is within the range of the current date will be displayed.
-	- Old - news items that have an end date in the past (archive) will be displayed.
-	- All - news items will be displayed regardless of the start and end date of their publication.
-	- Next - only news items that have a future publication start date will be displayed.
-	- Currently valid - only news with a filled in start date (the end date does not have to be filled in) and end date whose range is valid on the current date and time will be displayed.
+  - Current - is a valid start and end date - only news items whose validity date (start and end of the pulication) is within the range of the current date will be displayed.
+  - Old - news items that have an end date in the past (archive) will be displayed.
+  - All - news items will be displayed regardless of the start and end date of their publication.
+  - Next - only news items that have a future publication start date will be displayed.
+  - Currently valid - only news with a filled in start date (the end date does not have to be filled in) and end date whose range is valid on the current date and time will be displayed.
 - Organize by - specifies how the list of news items is arranged
-	- Priority
-	- Date of start of publication
-	- Date of the event
-	- Date of last change
-	- Page title
-	- Places
-	- Page ID
-	- Rating - the rating of the page (e.g. when using an e-shop) - the rating is set using the page rating application.
+  - Priority
+  - Date of start of publication
+  - Date of the event
+  - Date of last change
+  - Page title
+  - Places
+  - Page ID
+  - Rating - the rating of the page (e.g. when using an e-shop) - the rating is set using the page rating application.
 - Ascending - by default the list is ordered descending (e.g. from the newest news to the oldest), by checking this box the order will be reversed - from the oldest to the newest
 - Pagination - if checked, the pagination of the list of news items will also be displayed (if the number of news items is greater than the value in the Number of items on the page field)
 - Number of items on the page - number of displayed news on one page, if pagination is unchecked according to this value the number of news is retrieved from the database, suitable for example for the home page where you want to have displayed for example 3 news and a link to the list of all news, but you do not want to display pagination.

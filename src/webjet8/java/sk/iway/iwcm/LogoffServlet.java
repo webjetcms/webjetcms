@@ -1,6 +1,7 @@
 package sk.iway.iwcm;
 
 import sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor;
+import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UserDetails;
 
 import javax.servlet.ServletException;
@@ -22,14 +23,14 @@ public class LogoffServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Logger.println(LogoffServlet.class,"LogoffServlet  CALLED - GET");
+        Logger.debug(LogoffServlet.class,"LogoffServlet  CALLED - GET");
         execute(request,response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Logger.println(LogoffServlet.class,"LogoffServlet  CALLED - POST");
+        Logger.debug(LogoffServlet.class,"LogoffServlet  CALLED - POST");
         execute(request,response);
     }
 
@@ -43,6 +44,19 @@ public class LogoffServlet extends HttpServlet {
         if (user != null && user.isAdmin())
         {
             sk.iway.iwcm.stat.StatDB.addAdmin(request);
+        }
+
+        boolean csrfTokenIsValid = true;
+        if (Constants.getBoolean("logoffRequireCsrfToken"))
+        {
+            String token = request.getParameter(CSRF.getParameterName());
+            if (Tools.isEmpty(token)) token = request.getHeader("x-csrf-token");
+
+            if (Tools.isEmpty(token) || CSRF.verifyTokenAndDeleteIt(session, token)==false || request.getMethod().equalsIgnoreCase("POST")==false)
+            {
+                Logger.error(getClass(), "CSRF token mismatch, logoff failed");
+                csrfTokenIsValid = false;
+            }
         }
 
         this.callLogonLogoffInterceptor(user, request);
@@ -75,20 +89,22 @@ public class LogoffServlet extends HttpServlet {
             }
         }
 
-        session.removeAttribute(Constants.USER_KEY);
-        session.removeAttribute("loggeduser");
-        session.invalidate();
-        String admin = "";
-        if (user != null && user.isAdmin()) admin = " (ADMIN)";
-        if (user != null) Adminlog.add(Adminlog.TYPE_USER_LOGOFF, "LogoffAction - user"+admin+" successfully logged off: name = " + user.getLogin(), -1, -1);
+        if (csrfTokenIsValid) {
+            session.removeAttribute(Constants.USER_KEY);
+            session.removeAttribute("loggeduser");
+            session.invalidate();
+            String admin = "";
+            if (user != null && user.isAdmin()) admin = " (ADMIN)";
+            if (user != null) Adminlog.add(Adminlog.TYPE_USER_LOGOFF, "LogoffAction - user"+admin+" successfully logged off: name = " + user.getLogin(), -1, -1);
 
-        removePermanentLogon(request, response);
+            removePermanentLogon(request, response);
 
-        //zmaz z cache user objekty
-        if (user != null)
-        {
-            Cache cache = Cache.getInstance();
-            cache.removeUserAllUserObjects(user);
+            //zmaz z cache user objekty
+            if (user != null)
+            {
+                Cache cache = Cache.getInstance();
+                cache.removeUserAllUserObjects(user);
+            }
         }
 
         // Forward control to the specified success URI
@@ -101,10 +117,10 @@ public class LogoffServlet extends HttpServlet {
         {
             String forward = Tools.replace(Tools.sanitizeHttpHeaderParam(request.getParameter("forward")), "//", "/");
             //security: allow only forwards to local addresses, if requested to external address use forwardDocId with redirect set in webpage
-            if (forward.startsWith("/")) {
+            if (forward.startsWith("/") && forward.contains("//")==false) {
                 response.sendRedirect(forward);
+                return;
             }
-            return;
         }
         //request.getRequestDispatcher("success").forward(request,response);
         //response.sendRedirect("/");

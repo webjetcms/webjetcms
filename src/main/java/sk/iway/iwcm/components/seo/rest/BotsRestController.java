@@ -44,7 +44,7 @@ public class BotsRestController extends DatatableRestControllerV2<BotsDTO, Long>
     @Override
     public Page<BotsDTO> searchItem(Map<String, String> params, Pageable pageable, BotsDTO search) {
         //Process received params into FilterHeaderDto
-        filter = StatService.processMapToStatFilter(params, null);
+        filter = StatService.processMapToStatFilter(params, null, getUser());
         DatatablePageImpl<BotsDTO> page = new DatatablePageImpl<>(SeoService.getBotsTableData(filter.getDateFrom(), filter.getDateTo(), filter.getRootGroupId()));
         return page;
     }

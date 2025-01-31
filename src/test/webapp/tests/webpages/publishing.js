@@ -1,9 +1,6 @@
 Feature('webpages.publishing');
 
 var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber;
-var add_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
-var delete_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
 
 const publishableWebpageUrl = "/test-stavov/test-casoveho-publikovania.html";
 const uncheckedPublishableWebpageUrl = "/test-stavov/test-casoveho-publikovania-nezaskrnute.html";
@@ -113,15 +110,19 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
 
      I.say("over zobrazenie info spravy");
      I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky", "div.toast-message");
-     I.clickCss("button.toast-close-button");
+     I.toastrClose();
 
      I.wait(2);
 
      I.say("Overujem zobrazenie v historii");
-     I.click(webpageTitle);
+     I.click(webpageTitle, "#datatableInit_wrapper");
      DTE.waitForEditor();
-     I.click("Editovať poslednú verziu");
+     I.wait(5);
+     I.click("Editovať poslednú verziu", "#toast-container-webjet");
+     I.waitForInvisible("#toast-container-webjet", 200);
+     I.wait(2);
      DTE.waitForEditor();
+     I.wait(5);
      I.clickCss("#pills-dt-datatableInit-history-tab");
      I.waitForInvisible("#datatableFieldDTE_Field_editorFields-history_processing", 200);
 
@@ -193,7 +194,7 @@ Scenario('overenie spravania stranky pri nezaskrtnutych casovych moznostiach pub
      I.wait(2);
 
      I.say("Overujem zobrazenie v historii");
-     DT.filter('id', docId);
+     DT.filterId('id', docId);
      I.clickCss('td.dt-row-edit.required');
      DTE.waitForEditor();
      I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -283,11 +284,11 @@ Scenario('casove odpublikovanie existujucej stranky @singlethread', async ({ I, 
 async function checkAudit(I, DT, Document, text, isDisabled = false) {
      I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/");
      let currentUrl = await I.grabCurrentUrl();
-     DT.filter("title", "Test casoveho publikovania");
+     DT.filterContains("title", "Test casoveho publikovania");
      I.clickCss("td.dt-select-td.sorting_1");
      I.clickCss("button.buttons-history-preview");
      if (isDisabled) {
-          const classes = await I.grabAttributeFrom('.dataTables_scrollBody > table > tbody > tr', 'class');
+          const classes = await I.grabAttributeFrom('.dt-scroll-body > table > tbody > tr', 'class');
           I.assertContain(classes, 'is-disabled');
      }
      I.wait(2);

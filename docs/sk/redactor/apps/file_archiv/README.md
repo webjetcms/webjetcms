@@ -29,14 +29,14 @@ Filtrovať môžete pomocou viacerých podmienok naraz. Napr. produkt „ovocie�
 Cez zoznam súborov môžeme nad vloženými súbormi vykonávať rôzne funkcie ako editáciu, premenovať, vymazať, či vkladanie aktuálnejšej verzie súboru, alebo vrátenie poslednej zmeny.
 Funkcie nájdeme v stĺpci nástroje pri zázname súboru v archíve súborov:
 
-- ![](upload.png ":no-zoom") **Nahrať novú verziu**, v prípade, že chcete nahrať novú (aktuálnu) verziu už nahraného súboru, tento nástroj vám to umožňuje. Po kliknutí sa Vám otvorí štandardné okno s nastaveniami vlastností súboru, ktoré však už budú pred-vyplnené podľa starého súboru, ktorý chcete aktualizovať. Tieto pred-vyplnené polia neodporúčame meniť, nakoľko by mali byť zhodné s vlastnosťami starého súboru. (kvôli filtrovanému výpisu na stránke, keďže výpis súborov umožňuje zobraziť na stránke aj staršie verzie súboru, nie len aktuálne)
-- ![](edit.png ":no-zoom") **Editovať súbor** , v prípade, že chcete zmeniť nejaké nastavenia súboru, prípadne zistiť aké má súbor vlastnosti, tento nástroj vám k tomu poslúži.
-- ![](rename.png ":no-zoom") **Premenovať súbor** : Nástroj umožňuje premenovať názov súboru
-- ![](file_history.png ":no-zoom") **Zobraziť zoznam verzií**, tento nástroj sa zobrazí až keď je vložená aspoň jedna verzia, Zobrazí všetky archívne verzie súboru
-- ![](rollback.png ":no-zoom") **Vrátenie poslednej zmeny späť**, tento nástroj sa zobrazí až keď je vložená aspoň jedna verzia
-- ![](delete.png ":no-zoom") **Odstrániť súbor**, Natrvalo odstráni súbor z archívu
+- ![](upload.png ":no-zoom"), **Nahrať novú verziu**, v prípade, že chcete nahrať novú (aktuálnu) verziu už nahraného súboru, tento nástroj vám to umožňuje. Po kliknutí sa Vám otvorí štandardné okno s nastaveniami vlastností súboru, ktoré však už budú pred-vyplnené podľa starého súboru, ktorý chcete aktualizovať. Tieto pred-vyplnené polia neodporúčame meniť, nakoľko by mali byť zhodné s vlastnosťami starého súboru. (kvôli filtrovanému výpisu na stránke, keďže výpis súborov umožňuje zobraziť na stránke aj staršie verzie súboru, nie len aktuálne)
+- ![](edit.png ":no-zoom"), **Editovať súbor** , v prípade, že chcete zmeniť nejaké nastavenia súboru, prípadne zistiť aké má súbor vlastnosti, tento nástroj vám k tomu poslúži.
+- ![](rename.png ":no-zoom"), **Premenovať súbor** : Nástroj umožňuje premenovať názov súboru
+- ![](file_history.png ":no-zoom"), **Zobraziť zoznam verzií**, tento nástroj sa zobrazí až keď je vložená aspoň jedna verzia, Zobrazí všetky archívne verzie súboru
+- ![](rollback.png ":no-zoom"), **Vrátenie poslednej zmeny späť**, tento nástroj sa zobrazí až keď je vložená aspoň jedna verzia
+- ![](delete.png ":no-zoom"), **Odstrániť súbor**, Natrvalo odstráni súbor z archívu
 
-### Karta "Čakajúce súbory"
+### Karta Čakajúce súbory
 
 V karte **Čakajúce súbory** sa zobrazujú súbory, ktorým bolo pri vkladaní nastavené neskoršie nahratie.
 

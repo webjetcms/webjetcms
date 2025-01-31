@@ -71,7 +71,7 @@
                 $("#pills-dt-reservationDataTable-specialPrice-tab").on("click", function(e) {
                     if(innerTable != null) {
                         let objectId = reservationDataTable.EDITOR.field("reservationObjectId").val();
-                        innerTable.ajax.url(WJ.urlUpdateParam(innerTable.ajax.url(), "objectId", objectId));
+                        innerTable.setAjaxUrl(WJ.urlUpdateParam(innerTable.getAjaxUrl(), "objectId", objectId));
                         innerTable.ajax.reload();
                     }
                 });
@@ -305,7 +305,7 @@
             for(let i = 0; i < selectedRowsIds.length; i++)
                 selectedRowsIdsArr[selectedRowsIdsArr.length] = Number(selectedRowsIds[i]);
 
-            let reservations = reservationDataTable.DATA.json;
+            let reservations = reservationDataTable.DATA.json.data;
             for(let i = 0; i < reservations.length; i++) {
                 let reservationId = reservations[i]['id'];
                 if(selectedRowsIdsArr.includes(reservationId)) {

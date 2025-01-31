@@ -105,6 +105,8 @@ public class SyncArchiveActionBean implements ActionBean
 			}
 			zis.close();
 			context.getRequest().setAttribute("syncDir",virtualDir);
+
+			context.getRequest().setAttribute("compareBy", Tools.getParameter(context.getRequest(), "compareBy"));
 		}
 		catch (Exception ex)
 		{

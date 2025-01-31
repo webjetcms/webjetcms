@@ -12,7 +12,7 @@ Before(({ I }) => {
 });
 
 
-Scenario('uvodne overenie prav', ({ I }) => {
+Scenario('uvodne overenie prav', ({ I, DT }) => {
     I.relogin("admin");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=1");
 
@@ -49,7 +49,7 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?removePerm=addPage,pageSave,deletePage,pageSaveAs,forceShowButton&groupid=67");
     DT.waitForLoader();
     //skus pridat
-    I.click("#datatableInit_wrapper button.buttons-create");
+    I.click(DT.btn.add_button);
     I.click("#pills-dt-datatableInit-basic-tab");
     I.fillField("Názov web stránky", auto_webPage);
     DTE.save();
@@ -67,9 +67,9 @@ Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
     DTE.cancel();
 
     //skus zmazat
-    DT.filter("title", "Nedá sa zmazať");
+    DT.filterContains("title", "Nedá sa zmazať");
     I.click("table.datatableInit button.buttons-select-all");
-    I.click("#datatableInit_wrapper button.buttons-remove");
+    I.click(DT.btn.delete_button);
     DTE.waitForEditor();
     I.see("Naozaj chcete zmazať položku?");
     DTE.save();
@@ -108,7 +108,7 @@ Scenario('adresare-overenie prav na tlacidla', ({ I, DT, DTE }) => {
         catch (e) {}
     });
     //skus pridat
-    I.click("div.tree-col button.buttons-create");
+    I.click(DT.btn.tree_add_button)
     DTE.waitForEditor("groups-datatable");
     I.fillField("Názov priečinku", folder_name);
     DTE.save();
@@ -117,7 +117,7 @@ Scenario('adresare-overenie prav na tlacidla', ({ I, DT, DTE }) => {
 
     //skus editovat
     I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
-    I.click("div.tree-col button.buttons-edit");
+    I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
     I.seeInField("Názov priečinku", "Nedá sa zmazať");
     DTE.save();
@@ -126,7 +126,7 @@ Scenario('adresare-overenie prav na tlacidla', ({ I, DT, DTE }) => {
 
     //skus zmazat
     I.jstreeNavigate(["Test stavov", "Nedá sa zmazať"]);
-    I.click("div.tree-col button.buttons-remove");
+    I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.see("Naozaj chcete zmazať položku?")
     DTE.save();
@@ -135,6 +135,8 @@ Scenario('adresare-overenie prav na tlacidla', ({ I, DT, DTE }) => {
 
 Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
     I.relogin("tester2");
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    I.jstreeReset();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
     //over zobrazenie vsetkych tlacidiel pre adresar, inicialne musia byt disabled
@@ -222,13 +224,15 @@ Scenario('overenie prav na strukturu', ({ I, DT, DTE }) => {
 
     //over vytvorenie noveho adresara
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť"]);
-    I.click('.tree-col .dt-header-row .buttons-create');
+    I.click(DT.btn.tree_add_button);
     DTE.waitForEditor("groups-datatable");
     I.seeElement("#groups-datatable_modal");
     I.fillField("Názov priečinku", folder_name);
     DTE.save();
     I.dontSee("K tomuto adresáru nemáte prístupové práva");
     I.dontSeeElement("#groups-datatable_modal");
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
 
     //skus zmazanie
     I.jstreeNavigate(["Jet portal 4", "Úvodná stránka", "Test podadresar", "Nesmie sa dať presunúť", folder_name]);

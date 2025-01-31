@@ -1,4 +1,4 @@
-<%@page import="java.util.Map"%><%@page import="java.util.List"%><%@page import="com.mchange.v2.sql.filter.FilterCallableStatement"%>
+<%@page import="java.util.Map"%><%@page import="java.util.List"%>
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*"%><%@

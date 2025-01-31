@@ -71,7 +71,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     //screenshot skupiny sablon
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
     DT.waitForLoader();
-    DT.filter("name", "Bare");
+    DT.filterContains("name", "Bare");
     I.click("Bare");
     DTE.waitForEditor();
 
@@ -81,7 +81,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
 
     //screenshot sablona
     I.amOnPage("/admin/v9/templates/temps-list/");
-    DT.filter("tempName", "Bare");
+    DT.filterContains("tempName", "Bare");
     I.click("Bare - Hlavná šablóna");
     DTE.waitForEditor();
 
@@ -176,7 +176,7 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
 
     //screenshot skupiny sablon
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
-    DT.filter("name", "Creative");
+    DT.filterContains("name", "Creative");
     I.click("Creative");
     DTE.waitForEditor();
 
@@ -184,7 +184,7 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
 
     //screenshot sablona
     I.amOnPage("/admin/v9/templates/temps-list/");
-    DT.filter("tempName", "Creative");
+    DT.filterContains("tempName", "Creative");
     I.click("Creative - Hlavná šablóna");
     DTE.waitForEditor();
 

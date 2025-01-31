@@ -1,6 +1,6 @@
 # DatatableRestControllerV2.java
 
-Třída Java [DatatableRestControllerV2](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) zapouzdřuje komunikaci s [datová tabulka](README.md) a [Redakci](../datatables-editor/README.md).
+Třída Java [DatatableRestControllerV2](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatableRestControllerV2.java) zapouzdřuje komunikaci s [datová tabulka](README.md) a [Redakci](../datatables-editor/README.md).
 
 ## Základní implementace
 
@@ -37,7 +37,7 @@ důležitý je konstruktor, který předává úložiště Spring DATA. `Redirec
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_redirects')")
 ```
 
-**Varování:** Entita Spring DATA musí mít jako PK `Long id` (ne např. `adminlogId` a podobně), pokud se sloupec v databázi jmenuje jinak, je nutné nastavit název sloupce:
+!>**Varování:** Entita Spring DATA musí mít jako PK `Long id` (ne např. `adminlogId` a podobně), pokud se sloupec v databázi jmenuje jinak, je nutné nastavit název sloupce:
 
 ```java
 @Id
@@ -47,7 +47,7 @@ důležitý je konstruktor, který předává úložiště Spring DATA. `Redirec
 private Long id;
 ```
 
-**Varování:** v datové entitě **NESMÍTE používat primitivní typy** Stejně jako `int`, `long` ale objekty `Integer`, `Long`, jinak vyhledávání nebude fungovat. Toho využívá ExampleMatcher, který do dotazu do DB nevkládá objekty NULL. U primitivních typů však NULL použít nemůže, nastaví jim hodnotu 0 a pak je přidá do databáze. `WHERE` podmínky.
+!>**Varování:** v datové entitě **NESMÍTE používat primitivní typy** Stejně jako `int`, `long` ale objekty `Integer`, `Long`, jinak vyhledávání nebude fungovat. Toho využívá ExampleMatcher, který do dotazu do DB nevkládá objekty NULL. U primitivních typů však NULL použít nemůže, nastaví jim hodnotu 0 a pak je přidá do databáze. `WHERE` podmínky.
 
 Komplexní ukázka včetně kontroly práv, odstranění souborů a provedení speciální akce:
 
@@ -341,7 +341,7 @@ Pokud potřebujete data před uložením upravit nebo provést nějakou akci po 
 
 Metoda `public void afterSave(T entity, T saved)` je volán po uložení entity - objektu `entity` je původní odeslaný objekt, `saved` je uložená verze. Když je nový záznam `ID` se nachází pouze v `saved` entitu. Pokud používáte metody pro aktualizaci mezipaměti, nezapomeňte implementovat veřejnou metodu `void afterDelete(T entity, long id)` volán po odstranění položky.
 
-**Varování:** nedoporučujeme přepisovat pomocí anotace. `@Override` Metody REST vždy překryjte ve své třídě. `xxxItem` Metody.
+!>**Varování:** nedoporučujeme přepisovat pomocí anotace. `@Override` Metody REST vždy překryjte ve své třídě. `xxxItem` Metody.
 
 Při duplikaci záznamu je nutné z přijatých dat "vymazat" hodnotu ID atributu. Obvykle se jedná o atribut s názvem `id`, ale nemusí tomu tak být vždy. Název atributu se tedy hledá podle anotace množiny `DataTableColumnType.ID`.
 
@@ -433,15 +433,15 @@ Ve výchozím nastavení nemusí všechny atributy entity pocházet z editoru, t
 
 Voláním metody `setForceReload(true);` je možné vynutit obnovení datové tabulky po uložení.
 
-To je nutné, pokud je uložený objekt přesunut do jiného adresáře apod. Ukázka je v [WebpagesRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
+To je nutné, pokud je uložený objekt přesunut do jiného adresáře apod. Ukázka je v [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java).
 
 ## Číselníky pro výběrová pole
 
-Pro výběrová pole v editoru a automatický převod ID na hodnotu (např. `templateId` na název šablony) je přidán do rozšíření WebJETu. `PageImpl` objekt [DatatablePageImpl.java](../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), který umožňuje odesílat data vytáčení.
+Pro výběrová pole v editoru a automatický převod ID na hodnotu (např. `templateId` na název šablony) je přidán do rozšíření WebJETu. `PageImpl` objekt [DatatablePageImpl.java](../../../../src/main/java/sk/iway/iwcm/system/datatable/DatatablePageImpl.java), který umožňuje odesílat data vytáčení.
 
 Ty jsou automaticky nastaveny na `options` objektu v definici sloupců v editoru objektů a jsou automaticky použity pro převod ID na hodnotu.
 
-Příkladem je [TranslationKeyController.java](../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
+Příkladem je [TranslationKeyController.java](../../../../src/main/java/sk/iway/iwcm/components/translation_keys/rest/TranslationKeyController.java) a [WebpagesRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesRestController.java):
 
 ```java
     //najlepsie riesenie je prepisat metodu getOptions a doplnit page.addOptions metody
@@ -518,7 +518,7 @@ Chcete-li vyhledávat podle rozsahu dat, musíte kombinovat vyhledávání podle
 private Specification<T> getSpecFromRangeAndExample(Map<String, String> ranges, Example<T> example) {
 ```
 
-Podmínkou je, aby úložiště Spring DATA také rozšiřovalo repozitář `JpaSpecificationExecutor`, příkladem je [PřesměrováníÚložiště](../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
+Podmínkou je, aby úložiště Spring DATA také rozšiřovalo repozitář `JpaSpecificationExecutor`, příkladem je [PřesměrováníÚložiště](../../../../src/main/java/sk/iway/iwcm/system/RedirectsRepository.java):
 
 ```java
 package sk.iway.iwcm.components.redirects;
@@ -532,11 +532,11 @@ public interface RedirectsRepository extends JpaRepository<RedirectBean, Long>, 
 }
 ```
 
-**Varování:** všechna úložiště JPA musí být definována jako veřejná, jinak nebudou v klientských projektech dostupná.
+!>**Varování:** všechna úložiště JPA musí být definována jako veřejná, jinak nebudou v klientských projektech dostupná.
 
 ### Speciální vyhledávání
 
-Pokud je třeba provést speciální vyhledávání, je možné metodu přepsat `addSpecSearch` ve kterém lze implementovat konkrétní podmínku. Příkladem může být [GroupSchedulerRestController.java](../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) kde můžete vyhledávat podle uživatelského jména i parametru:
+Pokud je třeba provést speciální vyhledávání, je možné metodu přepsat `addSpecSearch` ve kterém lze implementovat konkrétní podmínku. Příkladem může být [GroupSchedulerRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerRestController.java) kde můžete vyhledávat podle uživatelského jména i parametru:
 
 ```java
 @Override
@@ -555,7 +555,7 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 }
 ```
 
-**Varování:** Úložiště JPA musí také dědit z funkce `JpaSpecificationExecutor`, Příklad:
+!>**Varování:** Úložiště JPA musí také dědit z funkce `JpaSpecificationExecutor`, Příklad:
 
 ```java
 @Repository
@@ -804,7 +804,7 @@ Nejčastější anotace:
 @Past //zadamy datum musi byt v minulosti, aplikovatelne na Date objekty
 ```
 
-Zachytávání chybových zpráv je implementováno ve třídě [DatatableExceptionHandlerV2](../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde je objekt převeden `ConstraintViolation` na textu. Aby bylo možné upravit chybové hlášení prostřednictvím WebJET, hledá se překladový klíč v metodě `getErrorMessage`. Pokud je nalezen, použije se, jinak se použije standardní hlášení z `javax.validation`.
+Zachytávání chybových zpráv je implementováno ve třídě [DatatableExceptionHandlerV2](../../../../src/main/java/sk/iway/iwcm/system/spring/DatatableExceptionHandlerV2.java) kde je objekt převeden `ConstraintViolation` na textu. Aby bylo možné upravit chybové hlášení prostřednictvím WebJET, hledá se překladový klíč v metodě `getErrorMessage`. Pokud je nalezen, použije se, jinak se použije standardní hlášení z `javax.validation`.
 
 Klíč překladu může používat atributy anotace, např. `{min}` nebo zadanou hodnotu jako `${validatedValue}`.
 
@@ -857,9 +857,11 @@ Pokud potřebujete specificky kontrolovat oprávnění (např. pro webové strá
 
 ## Vyvolání chyby
 
-Chyby řízené programem je třeba ošetřit přetížením metody `validateEditor` (viz příklad výše), kde můžete před uložením záznamu provést ověření. Z parametru `target.getAction()` (DatatableRequest) lze identifikovat typ akce. **Varování:** validateEditor je volán také pro smazání, můžete jej otestovat jako `if ("remove".equals(target.getAction()) ...`.
+Chyby řízené programem je třeba ošetřit přetížením metody `validateEditor` (viz příklad výše), kde můžete před uložením záznamu provést ověření. Z parametru `target.getAction()` (DatatableRequest) lze identifikovat typ akce.
 
-V případě chyby zjištěné až při ukládání (např. v metodě `editItem`) můžete vyvolat obecnou chybovou zprávu zavoláním metody `throwError(String error)` nebo `throwError(List<String> errors)`. Příkladem je [GroupsRestController](../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
+!>**Varování:** Metoda `validateEditor` je také volán ke smazání, můžete jej otestovat jako `if ("remove".equals(target.getAction()) ...`.
+
+V případě chyby zjištěné až při ukládání (např. v metodě `editItem`) můžete vyvolat obecnou chybovou zprávu zavoláním metody `throwError(String error)` nebo `throwError(List<String> errors)`. Příkladem je [GroupsRestController](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
 
 ## Zabránění odstranění / úpravě záznamu
 
@@ -880,6 +882,12 @@ public boolean beforeDelete(ConfPreparedEntity entity) {
     return false;
 }
 ```
+
+## Export a import dat
+
+Pro test exportu dat je možné zavolat metodu `isExporting()` který vrací hodnotu `true` pokud se právě provádí export dat.
+
+Při importu je možné data upravit/ověřit implementací metody `preImportDataEdit`. Tato metoda se volá před importem a je možné data upravit. Příkladem je třída [EnumerationDataRestController](../../../../src/main/java/sk/iway/iwcm/components/enumerations/rest/EnumerationDataRestController.java).
 
 ## Verze rozšíření
 

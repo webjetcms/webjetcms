@@ -2,10 +2,6 @@ const assert = require('assert');
 
 Feature('apps.gallery');
 
-var edit_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
-var delete_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger'));
-var doc_duplicate_button = (locate("#galleryTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-selected.btn-duplicate"));
-var doc_delete_button = (locate('#galleryTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
 var randomNumber;
 var autoName;
 
@@ -55,7 +51,7 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.click("test", "#SomStromcek");
     DT.waitForLoader();
     I.seeAndClick("koala.jpg");
-    I.seeAndClick("Oblasť záujmu");
+    I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
 
     I.waitForElement("div.vue-preview__wrapper");
 
@@ -72,12 +68,12 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.seeAndClick("koala.jpg");
     DTE.waitForEditor("galleryTable");
 
-    I.seeAndClick("Oblasť záujmu");
+    I.clickCss('#pills-dt-galleryTable-areaOfInterest-tab');
     I.wait(2);
-    let inputValueW = await I.grabAttributeFrom('#w', 'value');
-    let inputValueH = await I.grabAttributeFrom('#h', 'value');
-    let inputValueX = await I.grabAttributeFrom('#x', 'value');
-    let inputValueY = await I.grabAttributeFrom('#y', 'value');
+    let inputValueW = await I.grabValueFrom('#w');
+    let inputValueH = await I.grabValueFrom('#h');
+    let inputValueX = await I.grabValueFrom('#x');
+    let inputValueY = await I.grabValueFrom('#y');
     assert.equal(+inputValueH, +area.h);
     assert.equal(+inputValueW, +area.w);
     assert.equal(+inputValueX, +area.x);
@@ -87,19 +83,19 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     DTE.cancel();
     I.seeAndClick("lighthouse.jpg");
     DTE.waitForEditor("galleryTable");
-    I.seeAndClick("Oblasť záujmu");
+    I.clickCss('#pills-dt-galleryTable-areaOfInterest-tab');
     I.wait(2);
     DTE.cancel();
 
     I.seeAndClick("koala.jpg");
     DTE.waitForEditor("galleryTable");
 
-    I.seeAndClick("Oblasť záujmu");
+    I.clickCss('#pills-dt-galleryTable-areaOfInterest-tab');
     I.wait(2);
-    inputValueW = await I.grabAttributeFrom('#w', 'value');
-    inputValueH = await I.grabAttributeFrom('#h', 'value');
-    inputValueX = await I.grabAttributeFrom('#x', 'value');
-    inputValueY = await I.grabAttributeFrom('#y', 'value');
+    inputValueW = await I.grabValueFrom('#w');
+    inputValueH = await I.grabValueFrom('#h');
+    inputValueX = await I.grabValueFrom('#x');
+    inputValueY = await I.grabValueFrom('#y');
     assert.equal(+inputValueH, +area.h);
     assert.equal(+inputValueW, +area.w);
     assert.equal(+inputValueX, +area.x);
@@ -113,12 +109,12 @@ Scenario('oblast zaujmu', async ({ I, DT, DTE }) => {
     I.click("test", "#SomStromcek");
     DT.waitForLoader();
     I.seeAndClick("koala.jpg");
-    I.seeAndClick("Oblasť záujmu");
+    I.clickCss('#pills-dt-galleryTable-areaOfInterest-tab');
     I.wait(1);
-    inputValueW = await I.grabAttributeFrom('#w', 'value');
-    inputValueH = await I.grabAttributeFrom('#h', 'value');
-    inputValueX = await I.grabAttributeFrom('#x', 'value');
-    inputValueY = await I.grabAttributeFrom('#y', 'value');
+    inputValueW = await I.grabValueFrom('#w');
+    inputValueH = await I.grabValueFrom('#h');
+    inputValueX = await I.grabValueFrom('#x');
+    inputValueY = await I.grabValueFrom('#y');
     assert.equal(+inputValueH, +area.h);
     assert.equal(+inputValueW, +area.w);
     assert.equal(+inputValueX, +area.x);
@@ -173,7 +169,7 @@ Scenario('otvorenie galerie s URL parametrom', async({ I }) => {
 Scenario('multidomain zobrazenie', async({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
-    I.jstreeClick("test");
+    I.jstreeClick("test", true);
     I.see("koala.jpg");
     I.dontSee("dsc04082.jpeg");
 
@@ -188,7 +184,7 @@ Scenario('multidomain zobrazenie', async({ I, DT }) => {
     I.wait(2);
     DT.waitForLoader();
 
-    I.jstreeClick("test");
+    I.jstreeClick("test", true);
     I.dontSee("koala.jpg");
     I.see("dsc04082.jpeg");
 });
@@ -226,17 +222,31 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
 
     var position = 4;
     if (Browser.isFirefox()) {
-        I.dragAndDrop("#galleryTable_wrapper div.dataTables_scrollHeadInner th.dt-th-descriptionShortCz", "#galleryTable_wrapper div.dataTables_scrollHeadInner th.dt-th-imageName", {sourcePosition: {x: 10, y: 10}, targetPosition: { x: 10, y: 10 }});
+        I.dragAndDrop(
+            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz[aria-label*=\"Názov <span class='lang-shortcut'>cz</span>: Activate to sort\"]",
+            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imageName",
+            {
+                force: true,
+                sourcePosition: {x: 10, y: 10},
+                targetPosition: { x: 10, y: 10 }
+            }
+        );
         position = 5;
     } else {
-        I.dragAndDrop("#galleryTable_wrapper div.dataTables_scrollHeadInner th.dt-th-descriptionShortCz", "#galleryTable_wrapper div.dataTables_scrollHeadInner th.dt-th-imagePath");
+        I.dragAndDrop(
+            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz[aria-label*=\"Názov <span class='lang-shortcut'>cz</span>: Activate to sort\"]",
+            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imagePath",
+            {
+                force: true
+            }
+        );
     }
-    I.see("Názov cz", "#galleryTable_wrapper div.dataTables_scrollHeadInner table thead tr th:nth-child("+position+")");
+    I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
 
     //
     I.say("Reload and check if the column order is preserved");
     I.amOnPage("/admin/v9/apps/gallery/");
-    I.see("Názov cz", "#galleryTable_wrapper div.dataTables_scrollHeadInner table thead tr th:nth-child("+position+")");
+    I.see("Názov cz", "#galleryTable_wrapper div.dt-scroll-headInner table thead tr th:nth-child("+position+")");
 
     //
     I.say("check column settings-there was bug with duplicate buttons on header and footer");
@@ -244,7 +254,7 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
     var container = "#galleryTable_wrapper";
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.see("Priečinok", "div.colvisbtn_wrapper button.buttons-columnVisibility span.column-title");
 
 });
@@ -325,7 +335,7 @@ function waitForUploadMessage(I, name) {
     I.waitForVisible(locate("#toast-container-upload div.toast-message").withText(name).find("i.ti-circle-check"), 10);
 }
 
-Scenario('Gallery - image editor test', async ({I, DT, DTE, Document}) => {
+Scenario('Gallery - image editor test', async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
 
     //There can be different view of the gallery
@@ -334,19 +344,32 @@ Scenario('Gallery - image editor test', async ({I, DT, DTE, Document}) => {
 
     I.say(`Duplicating image turtle.png`)
     I.click(locate("tr").withDescendant(locate("td.dt-row-edit a").withText("turtle.png")));
-    I.click(doc_duplicate_button);
+    I.click(DT.btn.gallery_duplicate_button);
     DTE.waitForLoader();
-    I.fillField('#DTE_Field_descriptionShortSk', autoName);
-    DTE.save()
+    //verify correct name with multiple extensions, turtle is png
+    I.fillField('#DTE_Field_descriptionShortSk', autoName+".jpg");
 
-    I.say(`Edit image ${autoName}`);
-    I.waitForText("turtle.png", 10, "#galleryTable");
-    I.click(locate("td.dt-row-edit a").withText(autoName + '.png'));
+    I.say("Check that field imageName is disabled during duplication");
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+    I.waitForVisible("#DTE_Field_imageName[disabled]", 10);
+
+    DTE.save();
+
+    //fix filename according to backend changes
+    let realFileName = (autoName+".jpg.png").replace(".jpg.png", "-jpg.png");
+
+    I.say(`Edit image ${realFileName}`);
+    I.waitForText(realFileName, 10, "#galleryTable");
+
+    I.say("Bug test, check that s_ version of image is not here");
+    I.dontSee("s_" + realFileName, "#galleryTable");
+
+    I.click(locate("td.dt-row-edit a").withText(realFileName));
     DTE.waitForEditor("galleryTable");
     I.clickCss("#pills-dt-galleryTable-photoeditor-tab");
     I.waitForElement("li.tie-btn-crop.tui-image-editor-item", 10);
 
-    I.say(`Rotating image ${autoName}` )
+    I.say(`Rotating image ${realFileName}` )
     I.forceClickCss("li.tie-btn-rotate.tui-image-editor-item.normal");
     I.clickCss(".tui-image-editor-button.clockwise");
     I.clickCss(".tui-image-editor-button.clockwise");
@@ -356,28 +379,28 @@ Scenario('Gallery - image editor test', async ({I, DT, DTE, Document}) => {
 
     DTE.save("galleryTable");
     I.say('waiting for changes to be applied to the file system');
-    waitForUploadMessage(I, autoName + ".png");
+    waitForUploadMessage(I, realFileName);
 
     I.waitForElement("#toast-container-upload", 10);
 
-    I.amOnPage(`/images/gallery/test/editor/${autoName}.png`);
+    I.amOnPage(`/images/gallery/test/editor/${realFileName}`);
     await Document.compareScreenshotElement('body > img', "autotest-image_rotated.png", null, null, 20);
 });
-
 
 Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=17321');
     DTE.waitForEditor();
 
-    I.say('Creating new folder')
-    I.clickCss('#cke_40');
+    I.say('Creating new folder');
+    I.waitForElement('.cke_button__image', 10);
+    I.clickCss('.cke_button__image');
     I.switchTo("#wjImageIframeElement");
     I.waitForElement('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', 10);
     I.forceClick('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms');
     I.wait(2)
     I.forceClick('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
-    I.waitForEnabled('.elfinder-button-icon.elfinder-button-icon-mkdir', 10);
-    I.wait(2)
+    I.waitForVisible('.elfinder-button-icon.elfinder-button-icon-mkdir', 10);
+    I.wait(5)
     I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
     I.type(autoName);
     I.click('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
@@ -391,11 +414,10 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.clickCss('.cke_dialog_ui_button_cancel');
 
     I.amOnPage(`/admin/v9/apps/gallery/?dir=/images/gallery/apps/${autoName}`);
-
     I.say('Checking if folder icon is empty');
     I.dontSeeElement(`//a[contains(., "${autoName}")]/i[contains(@class, "ti-folder-filled")]`);
     I.seeElement(`//a[contains(., "${autoName}")]/i[contains(@class, "ti-folder")]`);
-    I.click(edit_button);
+    I.click(DT.btn.tree_edit_button);
     DT.waitForLoader();
     I.say('Checking size of the uploaded image')
     I.clickCss('#pills-dt-galleryDimensionDatatable-sizes-tab');
@@ -423,7 +445,7 @@ Scenario('Gallery - uploaded image size test', async ({ I }) => {
     }
 });
 
-Scenario('Gallery - uploaded image delete', async ({I, DTE}) => {
+Scenario('Gallery - uploaded image delete', async ({I, DTE, DT}) => {
     I.say('Deleting copy');
     const copyNameSelector = locate("tr").withDescendant(locate("td.dt-row-edit a").withText('gallery.png'));
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
@@ -432,7 +454,8 @@ Scenario('Gallery - uploaded image delete', async ({I, DTE}) => {
     I.jstreeClick(autoName);
     const numVisible = await I.grabNumberOfVisibleElements(copyNameSelector);
     if (numVisible) {
-        I.click(delete_button);
+        I.click(DT.btn.tree_delete_button);
+        DTE.waitForModal('galleryDimensionDatatable_modal');
         DTE.save();
     }
 });
@@ -497,19 +520,19 @@ Scenario("BUG - filter by URL and imageName", async ({ I, DT }) => {
 const editorTestImage = 'editorTestImage';
 const editorTestImageType = '.jpeg';
 Scenario('Editor test crop', async ({ I, DT, DTE, Document }) => {
-    const autoNameCrop = autoName + 'crop';
+    const testFileNameCrop = autoName + 'crop';
 
-    duplicateImage(I, DT, DTE, autoNameCrop);
+    duplicateImage(I, DT, DTE, testFileNameCrop);
 
     const ratios = ['9:16', '2:1', '3:4', '5:3']; //1:1 failed tests because screenshoted image has 428x428px instead of 427x427px
     Document.setConfigValue('imageEditorRatio', ratios.join(', '));
 
-    I.say(`Editing image ${autoNameCrop}`);
+    I.say(`Editing image ${testFileNameCrop}`);
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
-    I.waitForVisible(locate("td.dt-row-edit a").withText(autoNameCrop + editorTestImageType), 10);
+    I.waitForVisible(locate("td.dt-row-edit a").withText(testFileNameCrop + editorTestImageType), 10);
 
-    I.say(`Opening editor for ${autoNameCrop}`);
-    openEditor(I, DTE, autoNameCrop, editorTestImageType);
+    I.say(`Opening editor for ${testFileNameCrop}`);
+    openEditor(I, DTE, testFileNameCrop, editorTestImageType);
     I.clickCss('.tie-btn-crop.tui-image-editor-item.normal');
     I.waitForElement('.tui-image-editor-button.preset label', 10);
 
@@ -543,35 +566,35 @@ Scenario('Editor test crop', async ({ I, DT, DTE, Document }) => {
 
     I.say('Verifying the file system for the cropped image');
     I.wait(3);
-    I.amOnPage(`/images/gallery/test/editor/${autoNameCrop}${editorTestImageType}?v=${Date.now()}`);
+    I.amOnPage(`/images/gallery/test/editor/${testFileNameCrop}${editorTestImageType}?v=${Date.now()}`);
     const fileBaseName = `${editorTestImage}-${randomRatio.replace(':', ';')}.png`;
     await Document.compareScreenshotElement('body > img', fileBaseName, null, null, 20);
 });
 
 Scenario('Editor test resize lockAspectRation FALSE', async ({ I, DT, DTE, Document }) => {
-    const autoNameResize = autoName + 'resize-false';
+    const testFileNameResize = autoName + 'resize-false';
 
-    duplicateImage(I, DT, DTE, autoNameResize);
+    duplicateImage(I, DT, DTE, testFileNameResize);
 
-    openEditor(I, DTE, autoNameResize, editorTestImageType);
+    openEditor(I, DTE, testFileNameResize, editorTestImageType);
 
     I.clickCss('.tie-btn-resize.tui-image-editor-item.normal');
     I.seeCheckboxIsChecked('.tie-lock-aspect-ratio');
 
-    await testDimension(I, DTE, Document, autoNameResize, false);
+    await testDimension(I, DTE, Document, testFileNameResize, false);
 });
 
 Scenario('Editor test resize lockAspectRation TRUE', async ({ I, DT, DTE, Document }) => {
-    const autoNameResize = autoName + 'resize-true';
+    const testFileNameResize = autoName + 'resize-true';
 
-    duplicateImage(I, DT, DTE, autoNameResize);
+    duplicateImage(I, DT, DTE, testFileNameResize);
 
-    openEditor(I, DTE, autoNameResize, editorTestImageType);
+    openEditor(I, DTE, testFileNameResize, editorTestImageType);
 
     I.clickCss('.tie-btn-resize.tui-image-editor-item.normal');
     I.seeCheckboxIsChecked('.tie-lock-aspect-ratio');
 
-    await testDimension(I, DTE, Document, autoNameResize, true);
+    await testDimension(I, DTE, Document, testFileNameResize, true);
 
     I.say('Changing image editor size templates');
     const changedSizes = ['160x160', '320x240', '1024x768'];
@@ -579,7 +602,7 @@ Scenario('Editor test resize lockAspectRation TRUE', async ({ I, DT, DTE, Docume
 
     I.say('Opening editor again after changing size templates');
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
-    openEditor(I, DTE, autoNameResize, editorTestImageType);
+    openEditor(I, DTE, testFileNameResize, editorTestImageType);
     I.clickCss('.tie-btn-resize.tui-image-editor-item.normal');
     I.uncheckOption('.tie-lock-aspect-ratio');
     I.fillField('.tie-width-range-value', '11');
@@ -594,6 +617,70 @@ Scenario('Editor test resize lockAspectRation TRUE', async ({ I, DT, DTE, Docume
     arraysAreEqual(I, changedSizes, changedOptions);
 });
 
+Scenario('Default Gallery Style Setting Test - prettyPhoto', async ({Apps, Document, DTE, I }) => {
+    Document.setConfigValue('galleryDefaultStyle', 'prettyPhoto');
+    Apps.insertApp('Fotogaléria', '#components-gallery-title');
+    await Apps.assertParams({style: 'prettyPhoto'});
+
+    Apps.insertApp('Fotogaléria', '#components-gallery-title', null, false);
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+    DTE.waitForModal('component-datatable_modal');
+    DTE.selectOption('style', 'Photo Swipe - galéria pre mobilné zariadenia');
+    clickOkButton(I);
+    await Apps.assertParams({style: 'photoSwipe'});
+});
+
+Scenario('Revert and test default option - photoSwipe', async ({Apps, Document, I }) => {
+    Document.setConfigValue('galleryDefaultStyle', 'photoSwipe');
+    Apps.insertApp('Fotogaléria', '#components-gallery-title');
+    await Apps.assertParams({style: 'photoSwipe'});
+});
+
+Scenario('Clear testing page for next Scenario', ({ DTE, Apps }) => {
+    Apps.clearPageContent(112886);
+    DTE.save();
+});
+
+Scenario('Input updates gallery path parameter', async ({ I, Apps, DTE }) => {
+    const paths = ['/images/gallery/test-vela-foto', '/images/gallery/test/editor'];
+    Apps.insertApp('Fotogaléria', '#components-gallery-title', 112886, false);
+    I.waitForElement(".cke_dialog_ui_iframe");
+    I.switchTo('.cke_dialog_ui_iframe');
+    I.switchTo('#editorComponent');
+    DTE.waitForModal('component-datatable_modal');
+
+    await updateAndVerifyGalleryPath(I, DTE, paths[0]);
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=112886');
+    Apps.openAppEditor();
+    await updateAndVerifyGalleryPath(I, DTE, paths[1]);
+});
+
+async function updateAndVerifyGalleryPath(I, DTE, path) {
+    I.say("updateAndVerifyGalleryPath");
+    I.waitForVisible("#editorAppDTE_Field_dir input");
+
+    //Dont know why, but without waiting, input is not filled somethimes even if it is visible
+    I.wait(1);
+
+    I.fillField('#editorAppDTE_Field_dir input', path);
+    clickOkButton(I);
+    DTE.save();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=112886');
+    DTE.waitForEditor();
+    I.switchTo(".cke_wysiwyg_frame.cke_reset");
+    I.openNewTab();
+    I.amOnPage('/test-stavov/test-input-updates-gallery-path-parameter.html');
+    I.waitForElement(`img[src*="${path}/s"]`, 30);
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+}
+
+async function clickOkButton(I) {
+    I.switchTo();
+    I.click('.cke_dialog_ui_button_ok');
+}
+
 function duplicateImage(I, DT, DTE, newImageName) {
     I.openNewTab();
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
@@ -602,7 +689,7 @@ function duplicateImage(I, DT, DTE, newImageName) {
     I.say('Navigating to the gallery editor page');
     I.clickCss("button.btn-gallery-size-table");
     DT.waitForLoader();
-    DT.filter("imageName", editorTestImage+editorTestImageType, "Rovná sa");
+    DT.filterEquals("imageName", editorTestImage+editorTestImageType);
     I.clickCss("button.btn-gallery-size-s");
     DT.waitForLoader();
 
@@ -611,7 +698,7 @@ function duplicateImage(I, DT, DTE, newImageName) {
 
     DT.clearFilter("imageName");
 
-    I.click(doc_duplicate_button);
+    I.click(DT.btn.gallery_duplicate_button);
     DTE.waitForLoader();
     I.fillField('#DTE_Field_descriptionShortSk', newImageName);
     DTE.save();
@@ -631,7 +718,9 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
 
     I.say('Grabbing available resize options');
     const options = (await I.grabTextFromAll('#presetDimensionSelect option')).filter(option => option !== 'Vyberte');
-    const randomIndex = Math.floor(Math.random() * options.length);
+    let randomIndex = Math.floor(Math.random() * options.length);
+    //skip small resolutions
+    if (randomIndex<2) randomIndex = 2;
     const randomOption = options[randomIndex];
 
     I.say(`Selecting random dimension: ${randomOption}`);
@@ -654,7 +743,7 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
     I.clickCss('.tui-image-editor-button.apply');
     const width = parseInt(await I.grabAttributeFrom('.upper-canvas', 'width'), 10);
     const height = parseInt(await I.grabAttributeFrom('.upper-canvas', 'height'), 10);
-    const tolerance = 5;
+    let tolerance = 5;
 
     I.say('Verifying resized image dimensions');
     I.assertTrue(Math.abs(width - expectedWidth) <= tolerance, `Width is not within the tolerance. Expected: ${expectedWidth}, but got: ${width}`);
@@ -666,6 +755,8 @@ async function testDimension(I, DTE, Document, fileName, isAspectRationLocked = 
     I.waitForVisible('.ti.ti-circle-check.float-end', 25);
     I.amOnPage(`/images/gallery/test/editor/${fileName}${editorTestImageType}`);
     const fileBaseName = `${editorTestImage}-${randomOption}-${isAspectRationLocked}.png`;
+    tolerance = 20;
+    if (expectedHeight < 100) tolerance = 30;
     await Document.compareScreenshotElement('body > img', fileBaseName, null, null, 20);
 }
 
@@ -675,7 +766,7 @@ Scenario('Revert configuration variables', ({ I, Document }) => {
     Document.setConfigValue('imageEditorSizeTemplates', '80x80;640x480;800x600;');
 });
 
-Scenario('Gallery - image editor delete', async ({I, DT, DTE}) => {
+Scenario('Gallery - image editor delete', async ({I, DT, DTE }) => {
     I.say(`Deleting copies`)
     I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
     DTE.waitForLoader();
@@ -684,13 +775,13 @@ Scenario('Gallery - image editor delete', async ({I, DT, DTE}) => {
     I.clickCss("button.btn-gallery-size-table");
     DT.waitForLoader();
 
-    DT.filter("imagePath", "/images/gallery/test/editor");
-    DT.filter("imageName", "autotest-");
+    DT.filterContains("imagePath", "/images/gallery/test/editor");
+    DT.filterContains("imageName", "autotest-");
 
     let rows = await I.getTotalRows();
     if(rows > 0) {
         I.clickCss("button.dt-filter-id");
-        I.click(doc_delete_button);
+        I.click(DT.btn.gallery_delete_button);
         I.waitForElement("div.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
         I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
@@ -751,7 +842,11 @@ Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, D
     var nameOfImage = 'koala.jpg';
     I.amOnPage("/admin/v9/apps/gallery");
     DT.waitForLoader();
-    I.jstreeClick("test");
+
+    I.jstreeWaitForLoader();
+    const selector = ".//*[@id='SomStromcek']//a[contains(@class, 'jstree-anchor') and text() = 'test']";
+    I.click(selector);
+    DT.waitForLoader();
 
     // otvor ten isty obrazok a bez uprav zatvor editor
     I.say('Otvor ten isty obrazok a bez uprav zatvor editor');
@@ -766,4 +861,74 @@ Scenario('Editovanie obrazka - nezobrazovat upload bez zmeny v obrazku', ({ I, D
     I.say('Po ulozeni over ci sa modalne okno s uploadom suboru nezobrazilo');
     I.dontSeeElement('#upload-wrapper');
     I.dontSeeElement(locate('#toast-container-upload').withText(nameOfImage));
+});
+
+Scenario('Feature - test that field imageNAme is now required', ({I,DT, DTE}) => {
+    I.amOnPage("/admin/v9/apps/gallery/?dir=/images/gallery/test/editor");
+
+    //There can be different view of the gallery
+    I.clickCss("button.btn-gallery-size-s");
+    DT.waitForLoader();
+
+    I.waitForText("turtle.png", 10, "#galleryTable");
+    I.click(locate("td.dt-row-edit a").withText('turtle.png'));
+    DTE.waitForEditor("galleryTable");
+
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+    I.waitForVisible("#DTE_Field_imageName", 10);
+    I.fillField("#DTE_Field_imageName", "");
+    DTE.save();
+
+    I.see("Povinné pole. Zadajte aspoň jeden znak.");
+});
+
+Scenario('Gallery - filtering', ({ I }) => {
+    I.amOnPage('/admin/v9/apps/gallery/');
+    I.waitForElement(locate("a.jstree-anchor").withText("test-vela-foto"), 10);
+
+    I.say('1. I can filter the folder by name.');
+    I.jstreeFilter('locnost');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('o-spolocnosti'));
+    I.seeElement(locate('.jstree-anchor').withText('gallery'));
+
+    I.jstreeFilter('spolocnosti', 'Začína na');
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('o-spolocnosti'));
+    I.dontSeeElement(locate('.jstree-anchor').withText('gallery'));
+
+    I.jstreeFilter('edi', 'Začína na');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('editor'));
+    I.seeElement(locate('.jstree-anchor').withText('gallery'));
+    I.seeElement(locate('.jstree-anchor').withText('test'));
+
+    I.jstreeFilter('level', 'Končí na');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('second-level'));
+    I.seeElement(locate('.jstree-anchor').withText('gallery'));
+    I.seeElement(locate('.jstree-anchor').withText('test'));
+
+    I.jstreeFilter('second-level', 'Rovná sa');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('second-level'));
+    I.seeElement(locate('.jstree-anchor').withText('gallery'));
+    I.seeElement(locate('.jstree-anchor').withText('test'));
+
+    I.say('2. All filtering is cleared');
+    I.jstreeFilter('');
+    I.dontSeeInField('#tree-folder-search-input', 'second-level');
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('second-level'));
+    I.seeElement(locate('.jstree-anchor').withText('gallery'));
+    I.seeElement(locate('.jstree-anchor').withText('apps'));
+    I.seeElement(locate('.jstree-anchor').withText('test'));
+    I.seeElement(locate('.jstree-anchor').withText('test-vela-foto'));
+    I.seeElement(locate('.jstree-anchor').withText('user'));
+
+    I.jstreeFilter('test-vela-foto');
+    I.seeElement(locate('.jstree-anchor').withText('test-vela-foto'));
+    I.clickCss('#tree-folder-search-clear-button');
+    I.waitForInvisible("div.dt-processing", 40);
+    I.dontSeeInField('#tree-folder-search-input', 'test-vela-foto');
+    I.seeElement(locate('.jstree-node.jstree-open').withText("test-vela-foto"));
+    I.seeElement(locate('.jstree-anchor').withText('gallery'));
+    I.seeElement(locate('.jstree-anchor').withText('apps'));
+    I.seeElement(locate('.jstree-anchor').withText('test'));
+    I.seeElement(locate('.jstree-anchor').withText('test-vela-foto'));
+    I.seeElement(locate('.jstree-anchor').withText('user'));
 });

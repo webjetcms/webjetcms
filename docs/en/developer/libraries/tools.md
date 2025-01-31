@@ -1,4 +1,4 @@
-# 'Tools'
+# `Tools`
 
 Static auxiliary functions package.
 
@@ -11,10 +11,10 @@ The package serves as a small library that contains static functions treating di
 ## Application:
 
 ```javascript
-import { Tools } from "tools/tools";
+import {Tools} from 'tools/tools';
 ```
 
-**Resistance:** The package is not implemented globally in the system, so it needs to be added wherever it is used.
+!>**Warning:** The package is not implemented globally in the system, so it needs to be added wherever it is used.
 
 Function calls are made anywhere in the **WebJET** Javascript files or `<script>` html tags using call:
 
@@ -25,12 +25,27 @@ Tools.funkcia(parametre);
 ## List of APIs
 
 **(Click to see the detail for the function)**
-| [System](#system)                   | [String](#string)                       | [DOM](#dom)                                     | [Test](#test)                     | [Other](#other)     | | ----------------------------------- | --------------------------------------- | ----------------------------------------------- | --------------------------------- | ------------------- | | [isDevMode()](#isdevmode)           | [removeDiacritics()](#removediacritics) | [getCssValue()](#getcssvalue)                   | [isNumeric()](#isnumeric)         | [uuidv4()](#uuidv4) | | [log()](#log)                       | [declension()](#declension)             | [getNextHighestZIndex()](#getnexthighestzindex) | [empty()](#empty)                 | [copy()](#copy)     | | [getUrlQuery()](#geturlquery)       | [multiReplace()](#multireplace)         | | [isArray()](#isarray)             | | [updateUrlQuery()](#updateurlquery) | | | [isObject()](#isobject)           | | [exec()](#exec)                     | | | [isNull()](#isnull)               | | | | | [isJQuery()](#isjquery)           | | | | | [isString()](#isstring)           | | | | | [isNumber()](#isnumber)           | | | | | [isBoolean()](#isboolean)         | | | | | [isFunction()](#isfunction)       | | | | | [isHTMLElement()](#ishtmlelement) | | | | | [elementExist()](#elementexist)   |
+
+| [System](#system)                   | [String](#string)                       | [DOM](#home)                                     | [Test](#test)                     | [Other](#other)     |
+| ----------------------------------- | --------------------------------------- | ----------------------------------------------- | --------------------------------- | ------------------- |
+| [isDevMode()](#isdevmode)           | [removeDiacritics()](#removediacritics) | [getCssValue()](#getcssvalue)                   | [isNumeric()](#isnumeric)         | [uuidv4()](#uuidv4) |
+| [log()](#log)                       | [declension()](#declension)             | [getNextHighestZIndex()](#getnexthighestzindex) | [empty()](#empty)                 | [copy()](#copy)     |
+| [getUrlQuery()](#geturlquery)       | [multiReplace()](#multireplace)         | | [isArray()](#isarray)             |
+| [updateUrlQuery()](#updateurlquery) | | | [isObject()](#isobject)           |
+| [exec()](#exec)                     | | | [isNull()](#isnull)               |
+| | | | [isJQuery()](#isjquery)           |
+| | | | [isString()](#isstring)           |
+| | | | [isNumber()](#isnumber)           |
+| | | | [isBoolean()](#isboolean)         |
+| | | | [isFunction()](#isfunction)       |
+| | | | [isHTMLElement()](#ishtmlelement) |
+| | | | [elementExist()](#elements)   |
 
 ***
+
 ### System
 
-#### isDevMode()
+#### `isDevMode()`
 
 It will verify that we are in a development environment. If so, the function returns **TRUE** if not it will return **FALSE**. The value is also available in `window` under the key `isDev` (`window.isDev`).
 
@@ -45,7 +60,8 @@ Tools.isDevMode();
 ```
 
 ***
-#### log()
+
+#### `log()`
 
 Logging in DEV environment. Alternative to `console.log` but it does not appear on the production.
 
@@ -61,10 +77,11 @@ Logging in DEV environment. Alternative to `console.log` but it does not appear 
 Tools.log(type, ...data);
 
 /** @example */
-Tools.log("error", "Nejaká error hláška", "Alebo ďalší text");
+
+Tools.log('error', 'Nejaká error hláška', 'Alebo ďalší text');
 ```
 
-#### getUrlQuery()
+#### `getUrlQuery()`
 
 Parses the GET query from the address after the question mark and returns an object with the values `{kľúč : hodnota}`. It also handles the query placed after the #hash attribute.
 
@@ -77,11 +94,12 @@ Parses the GET query from the address after the question mark and returns an obj
  * @public
  * @static
  */
-Tools.getUrlQuery((fullDecode = false));
+Tools.getUrlQuery(fullDecode = false);
 ```
 
 ***
-#### updateUrlQuery()
+
+#### `updateUrlQuery()`
 
 Updates the url search query with input values. If the field `excludeKeys` key names are found, these will not be added in the update. Setting an empty value using `queryValue` causes the parameter to be removed from the URL.
 
@@ -96,11 +114,12 @@ Updates the url search query with input values. If the field `excludeKeys` key n
  * @public
  * @static
  */
-Tools.updateUrlQuery(queryKey, queryValue, (excludeKeys = []));
+Tools.updateUrlQuery(queryKey, queryValue, excludeKeys = []);
 ```
 
 ***
-#### exec()
+
+#### `exec()`
 
 Handles callback execution to prevent a fatal errore if the callback was not defined correctly.
 
@@ -117,9 +136,10 @@ Tools.exec(callback, ...args);
 ```
 
 ***
+
 ### String
 
-#### removeDiacritics()
+#### `removeDiacritics()`
 
 Replaces all accented characters from the input text with characters from the English alphabet. We also have an optional character or string insertion argument that will replace all spaces in the input text.
 
@@ -132,11 +152,12 @@ Replaces all accented characters from the input text with characters from the En
  * @public
  * @static
  */
-Tools.removeDiacritics(text, (replaceSpaceWithChar = ""));
+Tools.removeDiacritics(text, replaceSpaceWithChar = '');
 ```
 
 ***
-#### declension()
+
+#### `declension()`
 
 Spelling words based on the whole number. Works even when entering a negative number.
 
@@ -171,7 +192,8 @@ Tools.declension(numberValue, declensionArray);
 ```
 
 ***
-#### multiReplace()
+
+#### `multiReplace()`
 
 Allows you to substitute multiple different parts of the input string for defined values.
 
@@ -192,13 +214,14 @@ Allows you to substitute multiple different parts of the input string for define
  * @public
  * @static
  */
-Tools.multiReplace(str, mapObj, (ignoreCaseSensitive = false));
+Tools.multiReplace(str, mapObj, ignoreCaseSensitive = false);
 ```
 
 ***
+
 ### DOM
 
-#### getCssValue()
+#### `getCssValue()`
 
 ```javascript
 /**
@@ -215,7 +238,8 @@ Tools.getCssValue(element, propertyName);
 ```
 
 ***
-#### getNextHighestZIndex()
+
+#### `getNextHighestZIndex()`
 
 If we need to use Javascript to set the highest available value for an element `z-index`, we can find out the new highest by calling the function.
 
@@ -228,13 +252,14 @@ If we need to use Javascript to set the highest available value for an element `
  * @public
  * @static
  */
-Tools.getNextHighestZIndex((context = document));
+Tools.getNextHighestZIndex(context = document);
 ```
 
 ***
+
 ### Test
 
-#### empty()
+#### `empty()`
 
 Tests the specified input value to see if it is empty. It is possible to enter multiple input values at the same time separated by a comma and if at least one is empty, the method will return TRUE.
 
@@ -244,7 +269,6 @@ Tests the specified input value to see if it is empty. It is possible to enter m
  *              Je možné vložiť aj viac vstupných hodnôt súčasne oddelených čiarkou a ak je aspoň jedna prázdna, tak metóda vráti TRUE.
  *
  * @example
-
  *          Testovacie scenáre:
  *          ---------------
  *          []               true, empty array
@@ -277,7 +301,6 @@ Tests the specified input value to see if it is empty. It is possible to enter m
  *          Tools.empty(premenna, premenna?.replace(' ', '')); // OK
  *          ---------------
  *
-
  *          Použitie:
  *          ---------------
  *          // Vráti TRUE, pretože je empty array
@@ -299,7 +322,8 @@ Tools.empty(value);
 ```
 
 ***
-#### isNumeric()
+
+#### `isNumeric()`
 
 Verifies that the input value is numeric. Whether it is a number, whether it is of type number or string.
 
@@ -318,7 +342,8 @@ Tools.isNumeric(value);
 ```
 
 ***
-#### isArray()
+
+#### `isArray()`
 
 Tests if the input value is of type Array.
 
@@ -337,7 +362,8 @@ Tools.isArray(value);
 ```
 
 ***
-#### isObject()
+
+#### `isObject()`
 
 Tests if the input value is of type Object.
 
@@ -356,7 +382,8 @@ Tools.isObject(value);
 ```
 
 ***
-#### isNull()
+
+#### `isNull()`
 
 Tests if the input value is null.
 
@@ -375,7 +402,8 @@ Tools.isNull(value);
 ```
 
 ***
-#### isJQuery()
+
+#### `isJQuery()`
 
 Tests if the input value is a jQuery object.
 
@@ -394,7 +422,8 @@ Tools.isJQuery(value);
 ```
 
 ***
-#### isString()
+
+#### `isString()`
 
 Tests if the input value is a string.
 
@@ -413,7 +442,8 @@ Tools.isString(value);
 ```
 
 ***
-#### isNumber()
+
+#### `isNumber()`
 
 Tests if the input value is a number.
 
@@ -432,7 +462,8 @@ Tools.isNumber(value);
 ```
 
 ***
-#### isBoolean()
+
+#### `isBoolean()`
 
 Tests if the input value is a boolean.
 
@@ -451,7 +482,8 @@ Tools.isBoolean(value);
 ```
 
 ***
-#### isFunction()
+
+#### `isFunction()`
 
 Tests whether the input value is a function.
 
@@ -470,7 +502,8 @@ Tools.isFunction(value);
 ```
 
 ***
-#### isHTMLElement()
+
+#### `isHTMLElement()`
 
 Tests whether the input value is an HTMLElement.
 
@@ -488,7 +521,8 @@ Tools.isHTMLElement(value);
 ```
 
 ***
-#### elementExist()
+
+#### `elementExist()`
 
 Checks if an element exists based on its css selector. If it doesn't exist, the method listens and if it does, it calls `existCallback`. The maximum waiting time for an element is 25 seconds. Then the listening is interrupted and a call is made `notExistCallback`
 
@@ -507,10 +541,11 @@ Checks if an element exists based on its css selector. If it doesn't exist, the 
  * @public
  * @static
  */
-Tools.elementExist(selector, existCallback, (notExistCallback = null), options);
+Tools.elementExist(selector, existCallback, notExistCallback = null, options);
 ```
 
 ***
+
 ### Other
 
 #### uuidv4()
@@ -529,6 +564,7 @@ Tools.uuidv4();
 ```
 
 ***
+
 #### copy()
 
 Creates a copy of the input. This prevents object references.
@@ -545,20 +581,27 @@ Tools.copy(value);
 ```
 
 ***
+
 ***
+
 ***
+
 ## Changelog
 
 Version 1.1.0
 
 - [x] Modified functionality of is\* methods
 - [x] New methods added
+
 Version 1.0.0
 
 - [x] Add versioning
 - [x] Correct grammar
+
 ***
-**\[Todo list]**
+
+**[Todo list]**
+
 Version 2.0.0
 
 - [ ] Separate categories into separate classes

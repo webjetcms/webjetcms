@@ -3,6 +3,8 @@ package sk.iway.iwcm.doc;
 import java.util.StringTokenizer;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 ;
 
@@ -28,14 +30,48 @@ public class PerexGroupBean
     */
    private String availableGroups;
 
+   /**
+     * Get perex group name by language of current webpage
+     * @return
+     */
+    public String getPerexGroupName() {
+        String lng = null;
 
-	/**
-	 * @return Returns the perexGroupName.
-	 */
-	public String getPerexGroupName()
-	{
-		return perexGroupName;
-	}
+        //Get value by actual language
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        if(rb != null) lng = rb.getLng();
+
+        return getPerexGroupName(lng);
+    }
+
+    /**
+     * Get perex group name by language
+     * @param lng
+     * @return
+     */
+    public String getPerexGroupName(String lng) {
+        String name = getPerexGroupNameInternal(lng);
+        //Get value by REQUIRED perexGroupName
+        if(Tools.isEmpty(name)) name = perexGroupName;
+
+        return name;
+    }
+
+    private String getPerexGroupNameInternal(String lng) {
+        if (Tools.isEmpty(lng)) return "";
+        switch(lng) {
+            case "sk": return perexGroupNameSk;
+            case "cz": return perexGroupNameCz;
+            case "en": return perexGroupNameEn;
+            case "de": return perexGroupNameDe;
+            case "pl": return perexGroupNamePl;
+            case "ru": return perexGroupNameRu;
+            case "hu": return perexGroupNameHu;
+            case "cho": return perexGroupNameCho;
+            case "esp": return perexGroupNameEsp;
+            default: return "";
+        }
+    }
 
 	public String getPerexGroupNameId()
 	{
@@ -131,4 +167,147 @@ public class PerexGroupBean
 	{
 		this.availableGroups = availableGroups;
 	}
+
+	private String perexGroupNameSk;
+	private String perexGroupNameCz;
+	private String perexGroupNameEn;
+	private String perexGroupNameDe;
+	private String perexGroupNamePl;
+	private String perexGroupNameRu;
+	private String perexGroupNameHu;
+	private String perexGroupNameCho;
+	private String perexGroupNameEsp;
+
+	public String getPerexGroupNameSk() {
+		return perexGroupNameSk;
+	}
+
+	public void setPerexGroupNameSk(String perexGroupNameSk) {
+		this.perexGroupNameSk = perexGroupNameSk;
+	}
+
+	public String getPerexGroupNameCz() {
+		return perexGroupNameCz;
+	}
+
+	public void setPerexGroupNameCz(String perexGroupNameCz) {
+		this.perexGroupNameCz = perexGroupNameCz;
+	}
+
+	public String getPerexGroupNameEn() {
+		return perexGroupNameEn;
+	}
+
+	public void setPerexGroupNameEn(String perexGroupNameEn) {
+		this.perexGroupNameEn = perexGroupNameEn;
+	}
+
+	public String getPerexGroupNameDe() {
+		return perexGroupNameDe;
+	}
+
+	public void setPerexGroupNameDe(String perexGroupNameDe) {
+		this.perexGroupNameDe = perexGroupNameDe;
+	}
+
+	public String getPerexGroupNamePl() {
+		return perexGroupNamePl;
+	}
+
+	public void setPerexGroupNamePl(String perexGroupNamePl) {
+		this.perexGroupNamePl = perexGroupNamePl;
+	}
+
+	public String getPerexGroupNameRu() {
+		return perexGroupNameRu;
+	}
+
+	public void setPerexGroupNameRu(String perexGroupNameRu) {
+		this.perexGroupNameRu = perexGroupNameRu;
+	}
+
+	public String getPerexGroupNameHu() {
+		return perexGroupNameHu;
+	}
+
+	public void setPerexGroupNameHu(String perexGroupNameHu) {
+		this.perexGroupNameHu = perexGroupNameHu;
+	}
+
+	public String getPerexGroupNameCho() {
+		return perexGroupNameCho;
+	}
+
+	public void setPerexGroupNameCho(String perexGroupNameCho) {
+		this.perexGroupNameCho = perexGroupNameCho;
+	}
+
+	public String getPerexGroupNameEsp() {
+		return perexGroupNameEsp;
+	}
+
+	public void setPerexGroupNameEsp(String perexGroupNameEsp) {
+		this.perexGroupNameEsp = perexGroupNameEsp;
+	}
+
+	private String fieldA;
+	private String fieldB;
+	private String fieldC;
+	private String fieldD;
+	private String fieldE;
+	private String fieldF;
+
+	private String notNull(String field) {
+		if (field == null) return "";
+		return field;
+	}
+
+	public String getFieldA() {
+		return notNull(fieldA);
+	}
+
+	public void setFieldA(String fieldA) {
+		this.fieldA = fieldA;
+	}
+
+	public String getFieldB() {
+		return notNull(fieldB);
+	}
+
+	public void setFieldB(String fieldB) {
+		this.fieldB = fieldB;
+	}
+
+	public String getFieldC() {
+		return notNull(fieldC);
+	}
+
+	public void setFieldC(String fieldC) {
+		this.fieldC = fieldC;
+	}
+
+	public String getFieldD() {
+		return notNull(fieldD);
+	}
+
+	public void setFieldD(String fieldD) {
+		this.fieldD = fieldD;
+	}
+
+	public String getFieldE() {
+		return notNull(fieldE);
+	}
+
+	public void setFieldE(String fieldE) {
+		this.fieldE = fieldE;
+	}
+
+	public String getFieldF() {
+		return notNull(fieldF);
+	}
+
+	public void setFieldF(String fieldF) {
+		this.fieldF = fieldF;
+	}
+
 }

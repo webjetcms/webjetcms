@@ -28,7 +28,7 @@ Before(({ I, login }) => {
 
 Scenario('Excel import', ({I, DT, DTE}) => {
     I.amOnPage("/apps/contact/admin/");
-    DT.filter("name", "test5");
+    DT.filterContains("name", "test5");
     I.dontSee("test5", "#dataTable");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.see("Záznamy 0 až 0 z 0");
@@ -43,7 +43,7 @@ Scenario('Excel import', ({I, DT, DTE}) => {
     I.see("Úspešný import, ďakujeme");
 
     I.amOnPage("/apps/contact/admin/");
-    DT.filter("name", "test5");
+    DT.filterContains("name", "test5");
     I.see("test5", "#dataTable");
     I.see("Záznamy 1 až 1 z 1");
 
@@ -58,7 +58,7 @@ Scenario('Excel import', ({I, DT, DTE}) => {
 
 Scenario('Excel import-zmazanie', ({I, DT}) => {
     I.amOnPage("/apps/contact/admin/");
-    DT.filter("name", "test5");
+    DT.filterContains("name", "test5");
     I.see("test5", "#dataTable");
     I.see("Záznamy 1 až 1 z 1");
 
@@ -74,7 +74,7 @@ Scenario('Excel import-zmazanie', ({I, DT}) => {
     I.see("Záznamy 0 až 0 z 0");
 });
 
-Scenario('testovanie app - Kontakty', async ({ I, DTE, Apps }) => {
+Scenario('testovanie app - Kontakty', async ({ I, DTE, Apps, Document }) => {
     Apps.insertApp('Kontakty', '#apps-contact-title');
 
     const defaultParams = {
@@ -85,6 +85,7 @@ Scenario('testovanie app - Kontakty', async ({ I, DTE, Apps }) => {
 
     I.say('Default parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
     I.see('ZOZNAM KONTAKTOV', 'h3')
@@ -108,6 +109,7 @@ Scenario('testovanie app - Kontakty', async ({ I, DTE, Apps }) => {
 
     I.say('Changed parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
     I.see('ZOZNAM KONTAKTOV', 'h3');

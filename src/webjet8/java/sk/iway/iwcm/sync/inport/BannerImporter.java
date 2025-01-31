@@ -1,13 +1,17 @@
 package sk.iway.iwcm.sync.inport;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.banner.BannerDB;
 import sk.iway.iwcm.components.banner.model.BannerBean;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stripes.SyncDirWriterService;
 import sk.iway.iwcm.sync.export.Content;
 
 /**
@@ -24,6 +28,8 @@ import sk.iway.iwcm.sync.export.Content;
 public class BannerImporter
 {
 
+	private static final String BANNER_PREFIX = "banner_";
+
 	public static List<ContentBannerBean> getBanners(Content content)
 	{
 		List<ContentBannerBean> bannerBeans = new ArrayList<ContentBannerBean>();
@@ -37,13 +43,27 @@ public class BannerImporter
 		return bannerBeans;
 	}
 
-	public static void importBanners(HttpServletRequest request, Content content)
-	{
+	public static void importBanners(HttpServletRequest request, Content content, PrintWriter writer) {
+		Prop prop = Prop.getInstance(request);
+		//
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingBanners"), "bammersImportCount", prop.getText("components.syncDirAction.progress.syncingBanner") + ": - / -", writer);
+
 		if (null == content) return;
-		for (Numbered<BannerBean> banner : Numbered.list(content.getBanners()))
+
+		Map<String, String> selectedBannersMap = SyncDirWriterService.getOptionsMap(BANNER_PREFIX, request);
+		if(selectedBannersMap.size() < 1) return;
+
+		int importedBannersCount = 1;
+		Iterable<Numbered<BannerBean>> bannersToImport = Numbered.list(content.getBanners());
+		int bannersToImportCount = SyncDirWriterService.getCountToHandle(selectedBannersMap, bannersToImport, BANNER_PREFIX);
+
+		for (Numbered<BannerBean> banner : bannersToImport)
 		{
-			if (null != request.getParameter("banner_" + banner.number) || request.getAttribute("syncAll")!=null)
+			if (selectedBannersMap.get(BANNER_PREFIX + banner.number) != null)
 			{
+				SyncDirWriterService.updateProgress("bammersImportCount", prop.getText("components.syncDirAction.progress.syncingBanner") + ": " + importedBannersCount + " / " + bannersToImportCount, writer);
+				importedBannersCount++;
+
 				createLocalContentBanner(banner.item);
 			}
 		}
@@ -51,7 +71,7 @@ public class BannerImporter
 
 	/**
 	 * Vrati banner zodpovedajuci importovanemu (rovnaka skupina a meno), alebo null.
-	 * 
+	 *
 	 * @param remoteBanner
 	 * @return
 	 */

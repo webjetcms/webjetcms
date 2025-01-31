@@ -14,6 +14,7 @@ obsahuje nasledovné možnosti:
 
 - Výber domény s ktorou pracujete (pri viac doménovej inštalácii).
 - Odkaz na otvorenie pomocníka.
+- ![](icon-search.png ":no-zoom") Ikonu na otvorenie stránky [Vyhľadávanie](search/README.md)
 - Meno aktuálne prihláseného používateľa, kliknutím na meno zobrazíte nasledovné možnosti:
   - Profil - upraviť vlastný profil (meno, email... - po zmene profilu je potrebné sa odhlásiť a znova prihlásiť).
   - Dvojstupňové overovanie - možnosť aktivovať dvoj stupňové overovanie pomocou aplikácie ```Google Authenticate``` pri prihlasovaní do administrácie. Zvyšuje sa tak bezpečnosť vášho konta, pretože okrem hesla je pre prihlásenie potrebné zadať aj kód z vášho mobilného zariadenia. Odporúčame nastaviť na všetky kontá, cez ktoré je možné spravovať používateľské účty a práva. Ak používate overovanie voči `ActiveDirectory/SSO` serveru môžete menu položku vypnúť nastavením konf. premennej `2factorAuthEnabled` na hodnotu `false`.
@@ -30,10 +31,6 @@ V ľavej časti pod logom WebJETu sú ikony reprezentujúce hlavné sekcie menu.
 Kliknutím na ikonu hlavnej sekcie sa zobrazia menu položky zvolenej sekcie:
 
 ![](menu-items.png)
-
-Menu položky sa zobrazujú v tmavšej a svetlejšej farbe. Tmavšie ešte nie sú prerobené do nového dizajnu, vidno to na odkaze na aplikáciu štatistiky. Kliknutím na túto položku sa zobrazí aplikácia v starom dizajne. Kliknutím na už prerobenú časť, napr. Úvod sa zo starej verzie prepnem nazad do novej.
-
-Prepínanie medzi starou a novou verziou je automatické podľa toho, či je už aplikácia prerobená, alebo nie. V prípade potreby je možné sa úplne prepnúť do starej verzie kliknutím na ikonu ![](icon-switch8.png ":no-zoom") Prepnúť na verziu 8 v hlavičke.
 
 ## Zobrazenie na mobilných zariadeniach
 

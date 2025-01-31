@@ -1,13 +1,35 @@
 const { I } = inject();
+const buttons = require('./buttons.js')
 
 /**
  * Funkcie pre pracu s datatabulkou
  */
 
 module.exports = {
+    btn : buttons.btn,
+
+    /**
+     * Add new context to the datatable for button selectors
+     * @param {string} newContextKey - key of the new context
+     * @param {string} newContextSelector - selector of the new context
+     * @example
+     * DT.addContext('inquiryStat', '#inquiryStatDataTable_wrapper');
+     * DT.addContext('config','#configurationDatatable_wrapper');
+     * then you can use selectors:
+     * I.click(DT.btn.inquiryStat_add_button);
+     * I.click(DT.btn.config_add_button);
+     **/
+    addContext(newContextKey, newContextSelector) {
+        buttons.addContext(newContextKey, newContextSelector);
+    },
 
     waitForLoader(name) {
-        if (typeof name == "undefined") { name = "div.dataTables_processing"; }
+        if (typeof name == "undefined") { name = "div.dt-processing"; }
+
+        if (name.indexOf(".") == -1 && name.indexOf("#") == -1) {
+            name = "#" + name + "_processing";
+        }
+
         I.waitForInvisible(name, 40);
         //ak by sa este nestihol zobrazit kym sa vykona prva podmienka, pre istotu pockame a potom skusime znova
         I.wait(0.3);
@@ -49,21 +71,36 @@ module.exports = {
         I.waitUrlEquals('/admin/logon/', 10);
     },
 
-    filter(name, value, type=null) {
+    _filter(name, value, type=null, containerSelector = null) {
         var nameType = name;
         if (name.indexOf(".") != -1) {
             nameType = name.replace(/\./gi, "-");
             name = name.replace(/\./gi, "\\.");
         }
+
+        if (containerSelector == null || containerSelector == "") containerSelector = "";
+        else containerSelector = containerSelector + " ";
+
         var value1 = value;
         if (value1.length>2) value1 = "**"; //just placeholder
-        I.fillField({ css: "div.dataTables_scrollHeadInner input.dt-filter-" + name }, value1);
+        I.fillField({ css: containerSelector+"div.dt-scroll-headInner input.dt-filter-" + name }, value1);
         //este raz, niekedy to nechyti prve pismena
-        I.fillField({ css: "div.dataTables_scrollHeadInner input.dt-filter-" + name }, value);
+        I.fillField({ css: containerSelector+"div.dt-scroll-headInner input.dt-filter-" + name }, value);
 
-        if (type != null) {
-            I.click({ css: "div.dataTables_scrollHeadInner th.dt-th-" + nameType + " div.filter-input-prepend button.btn-outline-secondary" });
-            I.click(locate('div.dropdown-menu.show .dropdown-item').withText(type));
+        //If its from/to its number/date NOT a string
+        if (type != null && name.startsWith("from-") == false && name.startsWith("to-") == false) {
+            I.click({ css: containerSelector+"div.dt-scroll-headInner th.dt-th-" + nameType + " div.filter-input-prepend button.btn-outline-secondary" });
+
+            //this dialog is not withon container, it is in body element
+            if(type == 'contains') {
+                I.click(locate('div.dropdown-menu.show .dropdown-item').withChild("span > i.ti-arrows-horizontal"));
+            } else if(type == 'startwith') {
+                I.click(locate('div.dropdown-menu.show .dropdown-item').withChild("span > i.ti-arrow-right-bar"));
+            } else if(type == 'endwith') {
+                I.click(locate('div.dropdown-menu.show .dropdown-item').withChild("span > i.ti-arrow-left-bar"));
+            } else if(type == 'equals') {
+                I.click(locate('div.dropdown-menu.show .dropdown-item').withChild("span > i.ti-equal"));
+            }
         }
 
         //for date fields remove from- or to- prefix, there is only one search button
@@ -74,11 +111,52 @@ module.exports = {
         }
 
         //because of firefox we use forceClick
-        I.forceClick({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + name });
+        I.forceClick({ css: containerSelector+"div.dt-scroll-headInner button.dt-filtrujem-" + name });
         //this.waitForLoader();
         //this is faster
         I.wait(0.3);
-        I.waitForInvisible("div.dataTables_processing", 40);
+        I.waitForInvisible("div.dt-processing", 40);
+    },
+
+    //this will expect that the filter is preselected to contains, otherwise use filterContainsForce,
+    // it's like that because default is contains so the tests are faster
+    filterContains(name, value, containerSelector = null) {
+        this._filter(name, value, null, containerSelector);
+    },
+    filterContainsForce(name, value, containerSelector = null) {
+        this._filter(name, value, 'contains', containerSelector);
+    },
+    filterStartsWith(name, value, containerSelector = null) {
+        this._filter(name, value, 'startwith', containerSelector);
+    },
+    filterEndsWith(name, value, containerSelector = null) {
+        this._filter(name, value, 'endwith', containerSelector);
+    },
+    filterEquals(name, value, containerSelector = null) {
+        this._filter(name, value, 'equals', containerSelector);
+    },
+    filterId(name, value, containerSelector = null) {
+        this._filter(name, value, null, containerSelector);
+    },
+
+    setDates(dateFrom, dateTo, containerSelector = null) {
+        const fillDates = () => {
+            I.fillField({css: "input.dt-filter-from-dayDate"}, dateFrom);
+            I.fillField({css: "input.dt-filter-to-dayDate"}, dateTo);
+            I.click({css: "button.dt-filtrujem-dayDate"});
+        };
+
+        if (containerSelector) {
+            within(containerSelector, fillDates);
+        } else {
+            fillDates();
+        }
+    },
+
+    setExtfilterDate(value) {
+        I.fillField("div.dt-extfilter-dayDate > form > div.input-group > input.datepicker.min", value);
+        I.click("div.dt-extfilter-dayDate > form > div.input-group > button.filtrujem");
+        this.waitForLoader();
     },
 
     clearFilter(name) {
@@ -95,9 +173,9 @@ module.exports = {
 
     filterSelect(name, text) {
         if (name.indexOf(".") != -1) name = name.replace(/\./gi, "\\.");
-        I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-" + name + " button.btn-outline-secondary" });
+        I.click({ css: "div.dt-scroll-headInner div.dt-filter-" + name + " button.btn-outline-secondary" });
         I.click(locate('div.dropdown-menu.show .dropdown-item').withText(text));
-        I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + name });
+        I.click({ css: "div.dt-scroll-headInner button.dt-filtrujem-" + name });
         this.waitForLoader();
     },
 
@@ -108,9 +186,9 @@ module.exports = {
       this.waitForLoader();
       I.clickCss(container+" button.buttons-settings");
       I.clickCss(container+" button.buttons-colvis");
-      I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+      I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
       I.clickCss(container+" div.colvispostfix_wrapper button.buttons-colvisRestore");
-      I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+      I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
       this.waitForLoader();
     },
 
@@ -123,10 +201,10 @@ module.exports = {
         var container = "#"+tableId+"_wrapper";
         I.clickCss(container+" button.buttons-settings");
         I.clickCss(container+" button.buttons-colvis");
-        I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+        I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
         I.click(locate("div.colvisbtn_wrapper button.buttons-columnVisibility").withText(columnText));
         I.clickCss("button.btn.btn-primary.dt-close-modal");
-        I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+        I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     },
 
 
@@ -165,6 +243,11 @@ module.exports = {
         }
     },
 
+    checkExtfilterDates(dateFrom, dateTo) {
+        I.seeInField("div.md-breadcrumb input.dt-filter-from-dayDate", dateFrom);
+        I.seeInField("div.md-breadcrumb input.dt-filter-to-dayDate", dateTo);
+    },
+
     /**
      * Delete all rows in datatable selecting all and clicking remove button
      * WARNING: use DT.filter before this function to select only rows you want to delete
@@ -173,7 +256,7 @@ module.exports = {
     deleteAll(name = "datatableInit") {
         var container = "#"+name+"_wrapper";
 
-        I.clickCss(container + " div.dataTables_scrollHeadInner button.buttons-select-all");
+        I.clickCss(container + " div.dt-scroll-headInner button.buttons-select-all");
         I.clickCss(container + " div.dt-buttons button.buttons-remove");
         I.waitForVisible("#" + name + "_modal", 200);
         I.click("Zmazať", "div.DTE_Action_Remove");

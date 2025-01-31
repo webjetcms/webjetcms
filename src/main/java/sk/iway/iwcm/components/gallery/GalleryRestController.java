@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -12,10 +13,12 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadService;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
@@ -37,15 +40,45 @@ import sk.iway.iwcm.users.UsersDB;
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('menuGallery')")
 public class GalleryRestController extends DatatableRestControllerV2<GalleryEntity, Long> {
 
+    private final GalleryRepository repository;
+
     @Autowired
     public GalleryRestController(GalleryRepository repository, HttpServletRequest request) {
         super(repository);
+        this.repository = repository;
     }
 
     @Override
     public Page<GalleryEntity> getAllItems(Pageable pageable) {
         //getAll nie je povolene, vrati prazdne data, pouziva sa findBy podla adresara po kliknuti na stromovu strukturu
         return new DatatablePageImpl<>(new ArrayList<>());
+    }
+
+    @Override
+    public GalleryEntity getOneItem(long id) {
+
+        if(isImageEditor()) {
+            //in ImageEditor we don't get ID, but we get imagePath and imageName, so load entity by these values
+            String imagePath = getRequest().getParameter("dir");
+            String imageName = getRequest().getParameter("name");
+
+            GalleryEntity entity = new GalleryEntity();
+            if(Tools.isNotEmpty(imagePath) && Tools.isNotEmpty(imageName)) {
+                entity = repository.findByImagePathAndImageNameAndDomainId(imagePath, imageName, CloudToolsForCore.getDomainId());
+                if(entity == null) {
+                    entity = new GalleryEntity();
+                    entity.setImagePath(imagePath);
+                    entity.setImageName(imageName);
+                    entity.setUploadDatetime(new Date());
+                    entity.setDomainId(CloudToolsForCore.getDomainId());
+                }
+            }
+
+            if(entity.getId() == null) entity.setId(Long.valueOf(-1));
+            return entity;
+        }
+
+        return super.getOneItem(id);
     }
 
     /**
@@ -59,7 +92,6 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         Identity currentUser = UsersDB.getCurrentUser(request);
         return currentUser.isEnabledItem("menuGallery");
     }
-
 
     /**
      * Prikladova metoda na validaciu dat odoslanych z datatables editora.
@@ -121,8 +153,15 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
     @Override
     public GalleryEntity insertItem(GalleryEntity entity) {
+
+        boolean isImageEditor = isImageEditor();
+        if(isImageEditor && entity.getId() > 0) {
+            // ITS update
+            return editItem(entity, entity.getId());
+        }
+
         //ak sa vola insert a ma nastavenu cestu k obrazku, tak sa jedna o funkciu duplikovania, obrazok musime najskor skopirovat
-        if (Tools.isNotEmpty(entity.getImageName())) {
+        if (!isImageEditor && Tools.isNotEmpty(entity.getImageName())) {
             String originalUrl = GalleryDB.getImagePathOriginal(entity.getImagePath()+"/"+entity.getImageName());
 
             String name = entity.getDescriptionShortSk();
@@ -134,7 +173,10 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
                 name = entity.getImageName();
             } else {
                 //remove special chars and add extension
-                name = DocTools.removeChars(name, true).toLowerCase()+"."+FileTools.getFileExtension(entity.getImageName());
+                name = DB.internationalToEnglish(name);
+                String ext = FileTools.getFileExtension(entity.getImageName());
+                if (Tools.isNotEmpty(ext) && name.endsWith("."+ext)==false) name = name+"."+ext;
+                name = DocTools.removeCharsDir(name, true).toLowerCase();
             }
 
             if (FileTools.isFile(entity.getImagePath()+"/"+name)) {
@@ -161,7 +203,27 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         GalleryEntity saved = super.insertItem(entity);
 
         //resize robime az po save, inak by nam to spravilo druhy DB zaznam
-        GalleryDB.resizePicture(Tools.getRealPath(entity.getImagePath()+"/"+entity.getImageName()), entity.getImagePath());
+        if(!isImageEditor) {
+            GalleryDB.resizePicture(Tools.getRealPath(entity.getImagePath()+"/"+entity.getImageName()), entity.getImagePath());
+        }
+
+        if (isImageEditor) {
+            String name = getRequest().getParameter("name");
+            String dir = getRequest().getParameter("dir");
+            if (Tools.isNotEmpty(dir) && Tools.isNotEmpty(name)) {
+                //obrazok bol premenovany, je potrebne presunut na file systeme
+                GalleryEntity original = new GalleryEntity();
+                original.setImagePath(dir);
+                original.setImageName(name);
+                if (original != null && original.getImageName()!=null && original.getImageName().equals(saved.getImageName())==false) {
+                    //obrazok bol premenovany, je potrebne presunut na file systeme
+                    FileTools.moveFile(original.getImagePath()+"/"+original.getImageName(), saved.getImagePath()+"/"+saved.getImageName());
+
+                    if (FileTools.isFile(original.getImagePath()+"/o_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/o_"+original.getImageName(), saved.getImagePath()+"/o_"+saved.getImageName());
+                    if (FileTools.isFile(original.getImagePath()+"/s_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/s_"+original.getImageName(), saved.getImagePath()+"/s_"+saved.getImageName());
+                }
+            }
+        }
 
         return saved;
     }
@@ -173,9 +235,10 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
 
         if (original != null && original.getImageName()!=null && original.getImageName().equals(saved.getImageName())==false) {
             //obrazok bol premenovany, je potrebne presunut na file systeme
-            FileTools.moveFile(original.getImagePath()+"/o_"+original.getImageName(), saved.getImagePath()+"/o_"+saved.getImageName());
             FileTools.moveFile(original.getImagePath()+"/"+original.getImageName(), saved.getImagePath()+"/"+saved.getImageName());
-            FileTools.moveFile(original.getImagePath()+"/s_"+original.getImageName(), saved.getImagePath()+"/s_"+saved.getImageName());
+
+            if (FileTools.isFile(original.getImagePath()+"/o_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/o_"+original.getImageName(), saved.getImagePath()+"/o_"+saved.getImageName());
+            if (FileTools.isFile(original.getImagePath()+"/s_"+original.getImageName())) FileTools.moveFile(original.getImagePath()+"/s_"+original.getImageName(), saved.getImagePath()+"/s_"+saved.getImageName());
         }
 
         return saved;
@@ -190,9 +253,12 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
     public void afterSave(GalleryEntity entity, GalleryEntity saved) {
         //change image lastmodified to regenerate thumb image if necessary
         long now = Tools.getNow();
-        setLastModified(entity.getImagePath()+"/o_"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/"+entity.getImageName(), now);
+        setLastModified(entity.getImagePath()+"/o_"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/s_"+entity.getImageName(), now);
     }
 
+    private boolean isImageEditor() {
+        return Tools.getBooleanValue(getRequest().getParameter("isImageEditor"), false);
+    }
 }

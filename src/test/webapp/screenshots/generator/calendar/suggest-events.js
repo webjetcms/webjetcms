@@ -23,7 +23,7 @@ Scenario('calendar suggest events screens', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/calendar/admin/suggest-events/");
     Document.screenshot("/redactor/apps/calendar/suggest-events/page.png");
 
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.clickCss("td.sorting_1");
     Document.screenshotElement("button.buttons-suggest", "/redactor/apps/calendar/suggest-events/suggest_button.png");
     Document.screenshotElement("button.buttons-not-suggest", "/redactor/apps/calendar/suggest-events/not_suggest_button.png");
@@ -40,7 +40,7 @@ Scenario('calendar suggest events screens', async ({I, DT, DTE, Document}) => {
     Document.screenshotElement("div.toast-container div.toast", "/redactor/apps/calendar/suggest-events/not_suggested_toast.png");
 
     I.amOnPage("/apps/calendar/admin/");
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");

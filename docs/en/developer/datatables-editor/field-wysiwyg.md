@@ -26,7 +26,7 @@ var tabs = [
 
 The implementation is in the file [field-type-wysiwyg.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-wysiwyg) and in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) set as `$.fn.dataTable.Editor.fieldTypes.wysiwyg = fieldTypeWysiwyg.typeWysiwyg();`.
 
-When displayed in the editor, the `create` function generates a separate form called `editorForm`which contains additional fields `docId`, `groupId`, `virtualPath`, `title` with values populated according to the current JSON object. These fields are used for historical reasons in various ckeditor components to get the ID of the currently edited page (e.g. to display the Media of that page when selecting an image/file).
+When displayed in the editor, the `create` function generates a separate form called `editorForm` which contains additional fields `docId`, `groupId`, `virtualPath`, `title` with values populated according to the current JSON object. These fields are used for historical reasons in various ckeditor components to get the ID of the currently edited page (e.g. to display the Media of that page when selecting an image/file).
 
 For the sake of speed of displaying the list of web pages, the ckeditor is initialized only when the dialog box is first opened. This is ensured by the code `EDITOR.on( 'open', function ( e, type ) {` in which it is tested `conf.wjeditor` and is initialized the first time it is opened.
 
@@ -36,7 +36,7 @@ The functionality of the ckeditor itself is modified in the file [datatables-cke
 
 ```javascript
 const createDatatablesCkEditor = () => {
-	return import(/* webpackChunkName: "ckeditor" */ "./datatables-ckeditor");
+    return import(/* webpackChunkName: "ckeditor" */ './datatables-ckeditor');
 };
 window.createDatatablesCkEditor = createDatatablesCkEditor;
 ```

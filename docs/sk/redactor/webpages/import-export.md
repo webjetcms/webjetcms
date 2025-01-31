@@ -18,23 +18,44 @@ Výstup by mal vyzerať podobne ako na nasledujúcom obrázku. Úplne na konci v
 
 Najprv sa uistite, či sa nachádzate v adresári, do ktorého chcete import aplikovať. Stlačte tlačidlo ![](import-export-button.png ":no-zoom") a počkajte na zobrazenie okna. V okne zvoľte možnosť **Importovať web stránky zo ZIP archívu (xml)** a stlačte tlačidlo s textom **OK**. Budete vyzvaný k nahratiu ZIP súboru, ktorý by mal byť v rovnakom stave ako keď bol vyexportovaný cez možnosť **Exportovať web stránky do ZIP archívu (xml)**. Akékoľvek experimentovanie s jeho obsahom môže mať za následok nesprávne fungovanie importu s dôsledkom poškodenia výsledného obsahu web sídla.
 
+Máte taktiež možnosť zvoliť hodnotu **Synchronizovať stránky podľa**, ktorou rozhodnete, podľa akého parametra sa bude kontrolovať, či stránka už existuje alebo nie.
+Na výber máte možnosti:
+- **Názvu stránky alebo URL adresy**, považuje sa za existujúcu, ak sa zhoduje v názve alebo URL adrese s inou existujúcou stránkou
+- **URL adresy**, považuje sa existujúcu, ak sa zhoduje v URL adrese s inou existujúcou stránkou
+- **Žiadno**, nezáleží na stránke, tá sa bude **vždy považovať za novú**, čiže môžete pridať duplikáty existujúcich stránok
+- **Voliteľné pole A** / **Voliteľné pole B** / **Voliteľné pole C**, máte možnosť porovnávať stránky podľa vami zadaných špecifických hodnôt ako napríklad [špeciálne vygenerovaného ID](../../frontend/webpages/customfields/README.md#unikátny-identifikátor). Ak nastavíte na začiatku vytvárania web stránok možnosť Unikátny identifikátor každá stránka získa unikátny porovnávací reťazec.
+
 ![](import-zip-window.png)
 
-Po nahratí zip súboru a potvrdení vloženia tlačidlo s textom **OK** počkajte, nech systém súbor spracuje, až kým vám nezobrazí porovnávaciu tabuľku pre import.
+Po nahratí zip súboru a potvrdení vloženia tlačidlo s textom **OK** počkajte, nech systém súbor spracuje, až kým vám nezobrazí **porovnávaciu tabuľku pre import**.
 
-Nad tabuľkou sa nachádzajú dve zaškrtávacie polia:
-
-- Vytvoriť chýbajúce šablóny
-- Vytvoriť chýbajúce skupiny používateľov
-
-Ich zaškrtnutie nechávam na zváženie, odporúčané je však ponechať ich zaškrtnutie.
+### Porovnávacia tabuľka pre import
 
 V tabuľke sa nachádzajú pod sebou postupne najprv Web stránky, potom Súbory, ktoré sú nasledované ďalšími dátami modulov, pokiaľ boli v exporte nejaké prítomné. Tabuľka obsahuje 4 stĺpce:
+- **Vzdialená adresa** – názov stránky/súboru v ZIP súbore
+- **Stav** – informácia o tom, či už rovnaký objekt v cieľovom úložisku existuje
+- **Synchronizovať** – zaškrtávacie políčko, ktoré vymedzuje synchronizáciu len na konkrétne položky zo zoznamu
+- **Lokálna adresa** – názov a umiestnenie stránky/súboru na cieľovom úložisku (vo WebJETe, do ktorého importujem)
 
-- Vzdialená adresa – názov stránky/súboru v ZIP súbore
-- Stav – informácia o tom, či už rovnaký objekt v cieľovom úložisku existuje
-- Synchronizovať – zaškrtávacie políčko, ktoré vymedzuje synchronizáciu len na konkrétne položky zo zoznamu
-- Lokálna adresa – názov a umiestnenie stránky/súboru na cieľovom úložisku (vo WebJETe, do ktorého importujem)
+
+Nad tabuľkou sa nachádzajú dve zaškrtávacie polia:
+- **Vytvoriť chýbajúce šablóny**
+- **Vytvoriť chýbajúce skupiny používateľov**
+
+!> Ich zaškrtnutie nechávam na zváženie, odporúčané je však ponechať ich zaškrtnutie.
+
+**Štatistická hlavička**
+
+HLavička stránky obsahuje prehľad štatistik importovania. Zobrazuje prehľad, koľko priečinkov / stránok / súborov ... bolo zvolených k synchronizácií. Tieto štatistiky sa aktualizujú v pri každej zmene.
+Hlavička ponúka aj niekoľko užitočných tlačidiel ako:
+- ![](selectAllBtn.png ":no-zoom"), označí všetky dostupné možnosti v tabuľke
+
+- ![](deselectAllBtn.png ":no-zoom"), od-značí všetky dostupne možnosti v tabuľke
+
+- ![](closeAllFoldersBtn.png ":no-zoom"), skryje všetky web stránky patriace priečinku v tabuľke
+
+- ![](openAllFoldersBtn.png ":no-zoom"), odkryje (ukáže) všetky web stránky patriace priečinku v tabuľke
+
 
 Po prejdení celého zoznamu a po zvolení zaškrtávacích políčok na položkách, ktoré chcete synchronizovať môžete kliknúť tlačidlo **Synchronizovať** v spodnej časti okna. Tým pádom sa vykoná synchronizácia dát, web stránkam sa vy-publikuje nový obsah, pôvodné súbory budú prepísané novými.
 

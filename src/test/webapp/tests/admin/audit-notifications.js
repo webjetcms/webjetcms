@@ -1,7 +1,5 @@
 Feature('admin.audit-notifications');
 
-var add_button = locate('button.btn.btn-sm.buttons-create.btn-success.buttons-divider');
-var delete_button = locate('button.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
 const docId = 164;
 const auditEvent = `UPDATE:
 id: ${docId}
@@ -12,7 +10,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario('Test for Event Notification and Cache Handling in Audit Notifications', async ({ I, DT, DTE, TempMail }) => {
+Scenario('Test for Event Notification and Cache Handling in Audit Notifications', async ({ I, DT, DTE, TempMail}) => {
     TempMail.login('auditnotification');
     await TempMail.destroyInbox();
     savePage(I, DTE);
@@ -21,7 +19,7 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
     I.amOnPage('/admin/v9/apps/audit-notifications');
     DT.waitForLoader();
     I.see('Zoznam notifikácií');
-    I.click(add_button);
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     DTE.selectOption('adminlogType', 'SAVEDOC');
     DTE.fillField('text', auditEvent );
@@ -35,22 +33,26 @@ Scenario('Test for Event Notification and Cache Handling in Audit Notifications'
 Scenario('Revert changes', ({ I, DT, DTE }) => {
     I.amOnPage('/admin/v9/apps/audit-notifications');
     DT.filterSelect('adminlogType', "SAVEDOC");
-    DT.filter('email', email);
+    DT.filterContains('email', email);
     I.clickCss('.buttons-select-all');
-    I.click(delete_button);
+    I.click(DT.btn.delete_button);
     DTE.waitForEditor();
     DTE.save();
     I.see('Nenašli sa žiadne vyhovujúce záznamy');
 });
 
-async function savePage(I, DTE) {
+function savePage(I, DTE) {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=164');
     DTE.waitForEditor();
+    I.wait(3);
     DTE.save();
+    DTE.waitForModalClose();
 }
 
 async function verifyEmailNotification(I, TempMail, expectNotification){
     TempMail.login('auditnotification');
+    if (expectNotification) I.waitForText('Notifikácia akcie:SAVEDOC', 20);
+
     if (!await TempMail.isInboxEmpty())
         TempMail.openLatestEmail();
     if (expectNotification)

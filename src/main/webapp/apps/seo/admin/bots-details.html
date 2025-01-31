@@ -109,8 +109,8 @@
             WJ.hideLoader();
 
             //add table filter params
-            botsDetailsDataTable.ajax.url(WJ.urlUpdateParam(botsDetailsDataTable.ajax.url(), "searchDayDate", ChartTools.getDateRange(null)));
-            botsDetailsDataTable.ajax.url(WJ.urlUpdateParam(botsDetailsDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
+            botsDetailsDataTable.setAjaxUrl(WJ.urlUpdateParam(botsDetailsDataTable.getAjaxUrl(), "searchDayDate", ChartTools.getDateRange(null)));
+            botsDetailsDataTable.setAjaxUrl(WJ.urlUpdateParam(botsDetailsDataTable.getAjaxUrl(), "searchRootDir", $('#rootDir').val()));
 
             //reload table values
             botsDetailsDataTable.ajax.reload();

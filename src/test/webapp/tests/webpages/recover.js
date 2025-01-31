@@ -1,52 +1,67 @@
 Feature('webpages.recover');
 
-let recoverBtnWebPage = (locate('#datatableInit_wrapper').find("button.btn.btn-sm.btn-outline-secondary.button-recover-page"));
-let recoverBtnFolder = (locate('.col-md-4.tree-col').find("button.btn.btn-sm.buttons-selected.btn-outline-secondary.button-recover-group"));
-
-let delete_webpage_button = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger'));
-let delete_folder_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger'));
-
-let edit_folder_button = (locate('.col-md-4.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.noperms-editDir.btn-warning'));
-
 Before(({ I }) => {
     I.relogin("admin");
 });
 
 
-Scenario('Recovery buttons visibility logic', ({ I, DT }) => {
-    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
+Scenario('Recovery doc button visibility logic', ({ I, DT }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list");
     DT.waitForLoader();
 
-    I.say("We are not in trash tab, dont see recovery buttons");
-    I.dontSeeElement(recoverBtnWebPage);
-    I.dontSeeElement(recoverBtnFolder);
+    I.say("We are not in trash tab, dont see recovery button");
+    I.dontSeeElement(DT.btn.recovery_button);
 
-    I.say("IN trash tab see recovery buttons");
+    I.say("IN trash tab see recovery buttons - with confition");
     I.clickCss("#pills-trash-tab");
     DT.waitForLoader();
-    I.waitForElement(recoverBtnFolder, 10);
-    I.seeElement(recoverBtnWebPage);
-    I.wait(1);
+
+    I.say("Doc recovery button visible if NO deleted groups are selected");
+    I.fillField("#tree-folder-id", "");
+    I.pressKey("Enter");
+    DT.waitForLoader();
+    I.waitForElement(DT.btn.recovery_button, 10);
 
     I.say("Recovery web page is allowed only in pages tab");
     I.clickCss("#pills-changes-tab");
     DT.waitForLoader();
-    I.waitForInvisible(recoverBtnWebPage);
+    I.waitForInvisible(DT.btn.recovery_button);
 
     I.clickCss("#pills-folders-tab");
     DT.waitForLoader();
-    I.dontSeeElement(recoverBtnWebPage);
-    I.dontSeeElement(recoverBtnFolder);
+    I.dontSeeElement(DT.btn.recovery_button);
+});
+
+Scenario('Recovery tree buttons visibility logic', ({ I, DT }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list");
+    DT.waitForLoader();
+
+    I.say("We are not in trash tab, dont see recovery buttons");
+    I.dontSeeElement(DT.btn.tree_recovery_button);
+
+    I.say("IN trash tab see recovery buttons - with confition");
+    I.clickCss("#pills-trash-tab");
+    DT.waitForLoader();
+
+    I.say("Tree recovery button visible ONLY IF deleted group is selected");
+    I.fillField("#tree-folder-id", 81986);
+    I.pressKey("Enter");
+    DT.waitForLoader();
+    I.waitForElement(DT.btn.tree_recovery_button, 10);
+
+    I.clickCss("#pills-folders-tab");
+    DT.waitForLoader();
+    I.dontSeeElement(DT.btn.tree_recovery_button);
 });
 
 Scenario('Recovery web page logic', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
 
     I.say("Deleting web page");
-    DT.filter("title", "page_to_delete");
+    DT.filterContains("title", "page_to_delete");
     I.wait(1);
     I.clickCss("#datatableInit_wrapper button.buttons-select-all");
-    I.click(delete_webpage_button);
+    I.click(DT.btn.delete_button);
 
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
     I.see("page_to_delete", ".DTE.modal-content.DTE_Action_Remove");
@@ -60,42 +75,57 @@ Scenario('Recovery web page logic', ({ I, DT, DTE }) => {
 
     //
     I.say("Test recover of unrecoverable page");
-    DT.filter("title", "Test zmazania stránky");
-    I.see("Test zmazania stránky", "#datatableInit_wrapper .dataTables_scrollBody");
+    DT.filterContains("title", "Test zmazania stránky");
+    I.see("Test zmazania stránky", "#datatableInit_wrapper .dt-scroll-body");
     I.clickCss("#datatableInit_wrapper button.buttons-select-all");
-    I.click(recoverBtnWebPage);
+    I.click(DT.btn.recovery_button);
     I.waitForText("Stránku sa nepodarilo obnoviť", 10, "div.toast-title");
     I.toastrClose();
 
     //
     I.say("Test recover of recoverable page");
-    DT.filter("title", "page_to_delete");
+    DT.filterContains("title", "page_to_delete");
     I.see("page_to_delete");
     I.clickCss("#datatableInit_wrapper button.buttons-select-all");
-    I.click(recoverBtnWebPage);
+    I.click(DT.btn.recovery_button);
     I.waitForText("Stránka bola úspešne obnovená", 10, "div.toast-title");
     I.see("bola úspešne obnovená do priečinka:", "div.toast-message");
     I.see("/Test stavov/page_folder_recovery/page_to_delete", "div.toast-message");
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 15, "#datatableInit_wrapper .dataTables_scrollBody");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 15, "#datatableInit_wrapper .dt-scroll-body");
 
     //
     I.say("Check recovered page");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59609");
-    DT.filter("title", "page_to_delete");
-    I.waitForText("page_to_delete", 10, "#datatableInit_wrapper .dataTables_scrollBody");
+    DT.filterContains("title", "page_to_delete");
+    I.waitForText("page_to_delete", 10, "#datatableInit_wrapper .dt-scroll-body");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+Scenario('Before - Recovery folder logic', async ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59672");
+
+    I.say("Check if folder is deleted - if YES, recover it");
+    const count = await I.grabNumberOfVisibleElements("#pills-trash-tab.active");
+    if(count > 0) {
+        I.click(DT.btn.tree_recovery_button);
+        I.waitForElement("div.toast-info");
+        I.see("Ste si istý, že chete obnoviť priečinok", "div.toast-title");
+        I.see("recoverSubFolderOne", "div.toast-message");
+        I.clickCss(".toastr-buttons button.btn-primary");
+        DTE.waitForLoader();
+    }
 });
 
 Scenario('Recovery folder logic', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59672");
 
     DT.waitForLoader();
-    //verigy we are not in trash tab
+    I.say("verify we are not in trash tab");
     I.seeElement("#pills-folders-tab.active");
     I.dontSeeElement("#pills-trash-tab.active");
 
     I.say("Deleting folder");
-    I.click(delete_folder_button);
+    I.click(DT.btn.tree_delete_button);
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
     I.see("recoverSubFolderOne", ".DTE.modal-content.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -108,7 +138,7 @@ Scenario('Recovery folder logic', ({ I, DT, DTE }) => {
     I.pressKey('Enter');
     DT.waitForLoader();
     I.wait(1);
-    I.click(recoverBtnFolder);
+    I.click(DT.btn.tree_recovery_button);
     I.waitForElement("div.toast-info");
     I.see("Ste si istý, že chete obnoviť priečinok", "div.toast-title");
     I.see("recoverSubFolderOne", "div.toast-message");
@@ -126,7 +156,7 @@ Scenario('Recovery folder logic', ({ I, DT, DTE }) => {
     I.say("Check folder position");
     I.click("#pills-folders-tab");
     I.jstreeNavigate(["Test stavov", "page_folder_recovery", "recoverSubFolderOne"]);
-    I.click(edit_folder_button);
+    I.click(DT.btn.tree_edit_button);
     DTE.waitForLoader();
     I.seeInField('#editorAppDTE_Field_editorFields-parentGroupDetails input.form-control', '/Test stavov/page_folder_recovery', 10);
     DTE.cancel();

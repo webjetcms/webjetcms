@@ -1,7 +1,6 @@
 Feature('webpages.import-export');
-var delete_folder_button = (locate('.col-auto').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
 
-let zipFileInput = "#form > input[type=file]:nth-child(3)";
+let zipFileInput = "#form input[type=file]";
 let excelFileInput = "#xlsImportForm > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type=file]";
 
 let zipFileLocation = "tests/webpages/demotest.webjetcms.sk-export.zip";
@@ -26,6 +25,8 @@ Scenario('Screens', ({ I, DT, Document }) => {
         I.waitForElement( locate("h2").withText("Hotovo"), 60 );
     } else if("en" === confLng) {
         I.waitForElement( locate("h2").withText("Done"), 60 );
+    } else if("cs" === confLng) {
+        I.waitForElement( locate("h2").withText("Hotovo"), 60 );
     }
 
     Document.screenshot("/redactor/webpages/exported-window.png");
@@ -39,6 +40,11 @@ Scenario('Screens', ({ I, DT, Document }) => {
     I.click("#btnOk");
     I.waitForElement("#syncForm");
     Document.screenshot("/redactor/webpages/imported-zip-window.png");
+
+    Document.screenshotElement("#selectAllBtn", "/redactor/webpages/selectAllBtn.png");
+    Document.screenshotElement("#deselectAllBtn", "/redactor/webpages/deselectAllBtn.png");
+    Document.screenshotElement("#closeAllFoldersBtn", "/redactor/webpages/closeAllFoldersBtn.png");
+    Document.screenshotElement("#openAllFoldersBtn", "/redactor/webpages/openAllFoldersBtn.png");
 
     I.amOnPage("/components/import_web_pages/import_pages.jsp?groupId=59160");
     I.waitForElement("#dialogCentralRow");
@@ -55,6 +61,8 @@ Scenario('Screens', ({ I, DT, Document }) => {
         I.waitForText("Import dokončený", 120);
     } else if("en" === confLng) {
         I.waitForText("Import done", 120);
+    } else if("cs" === confLng) {
+        I.waitForText("Import dokončen", 120)
     }
 
     Document.screenshot("/redactor/webpages/imported-excel-window.png");
@@ -63,7 +71,7 @@ Scenario('Screens', ({ I, DT, Document }) => {
     //Delete
     I.click( locate("a.jstree-anchor").withText("Aktuality") );
     I.say("Delete folder");
-    I.click(delete_folder_button);
+    I.click(DT.btn.tree_delete_button);
     DT.waitForLoader();
     I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
 
@@ -71,5 +79,7 @@ Scenario('Screens', ({ I, DT, Document }) => {
         I.click('Zmazať');
     } else if("en" === confLng) {
         I.click('Delete');
+    } else if("cs" === confLng) {
+        I.click('Smazat');
     }
 });

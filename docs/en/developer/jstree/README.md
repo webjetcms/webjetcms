@@ -5,16 +5,16 @@ Library [jsTree](https://www.jstree.com/) is jquery `plugin`, which displays tre
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-
 - [jsTree](#jstree)
   - [Basic initialization in cooperation with Spring REST](#basic-initialization-in-cooperation-with-spring-rest)
-  - [Configuration](#configuration)
+  - [Configuration](#Configuration)
     - [Creating a new REST controller](#creating-a-new-rest-controller)
     - [Custom object types](#custom-object-types)
-    - [Adjusting the display](#adjusting-the-display)
-    - [Change the URL of a REST service](#change-the-url-of-a-rest-service)
+    - [Adjusting the display](#display-adjustment)
+    - [Change the URL of a REST service](#change-the-url-of-the-rest-service)
   - [Icons and CSS classes](#icons-and-css-classes)
     - [How to use icons](#how-to-use-icons)
+
 <!-- /code_chunk_output -->
 
 ## Basic initialization in cooperation with Spring REST
@@ -137,14 +137,17 @@ script.
 ```
 
 ```html
-<div id="SomStromcek" data-rest-url="/admin/rest/components/gallery/tree" data-rest-param-name="url"></div>
+<div id="SomStromcek"
+    data-rest-url="/admin/rest/components/gallery/tree"
+    data-rest-param-name="url">
+</div>
 ```
 
 ## Configuration
 
 The address of the called REST service is configured using HTML attributes `data-rest-url` a `data-rest-param-name` (the name of the parameter sent to the REST service).
 
-In the object `window.treeInitialJson` it is possible to set the initialization JSON data for the initial display of the tree structure. Thus, the first view will be faster as there is no need to call the REST service. Passing data to the backend is described in the section [thymeleaf](../frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu).
+In the object `window.treeInitialJson` it is possible to set the initialization JSON data for the initial display of the tree structure. Thus, the first view will be faster as there is no need to call the REST service. Passing data to the backend is described in the section [thymeleaf](../frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
 
 ### Creating a new REST controller
 
@@ -152,7 +155,7 @@ New controller should expand the class [JsTreeRestController](../../../src/main/
 
 ### Custom object types
 
-To the object `JsTreeItem` has been added `String customType`, for defining a custom type in customer implementations. The usage is the same as in the case of `Type`where we can compare `Enumy`, only in this case we compare `Stringy`, by the method of `equals`.
+To the object `JsTreeItem` has been added `String customType`, for defining a custom type in customer implementations. The usage is the same as in the case of `Type` where we can compare `Enumy`, only in this case we compare `Stringy`, by the method of `equals`.
 
 Use type
 
@@ -221,7 +224,7 @@ window.getJstreeUrl = function() {
 
 ## Icons and CSS classes
 
-The icon is set using [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS classes by calling [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). The value is, for example `fas fa-folder` or `fas fa-globe`.
+The icon is set using [FontAwesome](https://fontawesome.com/icons?d=gallery) CSS classes by calling [JsTreeItem.setIcon](../../../src/main/java/sk/iway/iwcm/admin/jstree/JsTreeItemState.java). The value is, for example `ti ti-folder-filled` or `ti ti-map-pin`.
 
 The API provides methods for setting HTML attributes on both the LI and A element using attributes [li\_attr and a\_attr](https://www.jstree.com/docs/json/). To easily add CSS classes, the API provides methods `JsTreeItem.addLiClass` a `JsTreeItem.addAClass`. So you can set CSS states `is-not-public` or `fa-is-internal`.
 
@@ -232,11 +235,10 @@ Examples are in the classes [GroupsJsTreeItem](../../../src/main/java/sk/iway/iw
 ### How to use icons
 
 The use of icons has the following rules:
-
-- <i class="ti ti-folder-filled" role="presentation"></i> / <i class="ti ti-map-pin" role="presentation"></i> full page icon and folder = displayed in the menu
-- <i class="ti ti-folder" role="presentation"></i> / <i class="ti ti-map-pin-off" role="presentation"></i> empty page icon and folder = not displayed in the menu
-- <i class="ti ti-lock" role="presentation"></i> lock = available only to logged in visitor
-- <span style="color: #FF4B58">red color</span> = not available for public (internal directory) or page with display disabled (in DT it is possible to use CSS class is-not-public per line)
-- **bold font** = the main page of the directory (it is possible to use the CSS class ```is-default-page''' in DT)
-- <i class="ti ti-external-link"></i> arrow out = page is redirected
-- <i class="ti ti-eye-off"></i> crossed out eye = page cannot be searched
+- <i class="ti ti-folder-filled" role="presentation" ></i> / <i class="ti ti-map-pin" role="presentation" ></i> full page and folder icon = displayed in menu
+- <i class="ti ti-folder" role="presentation" ></i> / <i class="ti ti-map-pin-off" role="presentation" ></i> empty page and folder icon = not shown in menu
+- <i class="ti ti-lock" role="presentation" ></i> lock = only available for logged in visitor
+- <span style="color: #FF4B58">red colour</span> = unavailable for public (internal directory) or page with display disabled (in DT it is possible to use CSS class is-not-public per line)
+- **bold font** = main page of the directory (in DT it is possible to use CSS class `is-default-page`)
+- <i class="ti ti-external-link" ></i> out arrow = page is redirected
+- <i class="ti ti-eye-off" ></i> crossed out eye = page not searchable

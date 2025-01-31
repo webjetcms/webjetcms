@@ -114,10 +114,10 @@ Integration into the datatable editor is implemented in the file [custom-fields.
 The key is to connect the form field to an existing editor, this is provided by the call:
 
 ```javascript
-EDITOR.field("field" + keyUpper).s.opts._input = inputBox.find("input, select");
+EDITOR.field("field"+keyUpper).s.opts._input = inputBox.find('input, select');
 ```
 
-which from the new `inputBox` object gets the form field and sets it to the editor. An internal API call is used `.s.opts._input`which is dangerous in terms of API changes in the datatables editor, but we have not found any other solution.
+which from the new `inputBox` object gets the form field and sets it to the editor. An internal API call is used `.s.opts._input` which is dangerous in terms of API changes in the datatables editor, but we have not found any other solution.
 
 The function call is made in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) when you open the window.
 
@@ -130,7 +130,7 @@ EDITOR.on('open', function (e, mode, action) {
 });
 ```
 
-In case of use `multiple select` this stores the value of the field as `Array`. Conversion to String separated `|` before sending the form is secured using the method `prepareCustomFieldsDataBeforeSend`which is called in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+In case of use `multiple select` this stores the value of the field as `Array`. Conversion to String separated `|` before sending the form is secured using the method `prepareCustomFieldsDataBeforeSend` which is called in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
 ```
 EDITOR.on('preSubmit', function (e, data, action) {
@@ -148,10 +148,10 @@ Columns with `null` v `label` are hidden in the table and are also hidden in the
 
 ```javascript
 translationKeysTable = WJ.DataTable({
-	url: "/admin/v9/settings/translation-keys",
-	columns: columns,
-	serverSide: true,
-	customFieldsUpdateColumns: true,
+    url: "/admin/v9/settings/translation-keys",
+    columns: columns,
+    serverSide: true,
+    customFieldsUpdateColumns: true
 });
 ```
 

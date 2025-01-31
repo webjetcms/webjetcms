@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,8 +24,17 @@ import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
+import sk.iway.iwcm.editor.facade.EditorFacade;
+import sk.iway.iwcm.editor.rest.WebpagesDatatable;
+import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
+import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.users.UsersDB;
@@ -31,10 +43,49 @@ import sk.iway.iwcm.users.UsersDB;
  * Rest controller for app news, there are only support methods,
  * because for data it will use WebpagesRestController calls
  */
+@Datatable
 @RestController
 @RequestMapping(value = "/admin/rest/news/news-list")
 @PreAuthorize(value = "@WebjetSecurityService.hasPermission('cmp_news')")
-public class NewsRestController {
+public class NewsRestController extends WebpagesDatatable {
+
+    @Autowired
+    public NewsRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+        super(docDetailsRepository, editorFacade, docAtrDefRepository);
+    }
+
+    @Override
+    public Page<DocDetails> getAllItems(Pageable pageable) {
+
+        GetAllItemsDocOptions options = getDefaultOptions(pageable, false);
+
+        int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        groupId = getNewsGroupId(groupId);
+        getRequest().getSession().setAttribute(Constants.SESSION_GROUP_ID, String.valueOf(groupId));
+
+        options.setGroupId(groupId);
+
+        //verify perms after groupId change
+        if (options.getGroupId()!=Constants.getInt("systemPagesRecentPages") && GroupsDB.isGroupEditable(getUser(), options.getGroupId())==false && GroupsDB.isGroupViewable(getUser(), options.getGroupId())==false) {
+            throwError("components.jstree.access_denied__group");
+        }
+
+        return WebpagesService.getAllItems(options);
+    }
+
+    @Override
+    public DocDetails getOneItem(long id) {
+        int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
+
+        groupId = getNewsGroupId(groupId);
+
+        List<NotifyBean> notifyList = new ArrayList<>();
+        DocDetails docToReturn = WebpagesService.getOneItem(id, groupId, historyId, editorFacade, docAtrDefRepository, notifyList, getRequest());
+        addNotify(notifyList);
+
+        return docToReturn;
+    }
 
     @RequestMapping(value = "/convertIdsToNamePair")
     public List<LabelValue> convertIdsToNamePair(@RequestParam String ids, @RequestParam(required = false) String include, HttpServletRequest request) {
@@ -50,12 +101,19 @@ public class NewsRestController {
             int[] groupIds = Tools.getTokensInt(pp.getValue("groupIds", null), ",+");
             String append = pp.getBooleanValue("expandGroupIds", false) ? "*" : "";
             StringBuilder includeIds = new StringBuilder();
+            StringBuilder includeIdsNames = new StringBuilder();
             for (int groupId : groupIds) {
                 if (includeIds.isEmpty()==false) includeIds.append(",");
                 includeIds.append(""+groupId).append(append);
+
+                GroupDetails group = GroupsDB.getInstance().getGroup(groupId);
+                if (group != null) {
+                    if (includeIdsNames.isEmpty()==false) includeIdsNames.append(", ");
+                    includeIdsNames.append(group.getFullPath()).append(append);
+                }
             }
             ids = includeIds.toString();
-            list.add(new LabelValue(ids, ids));
+            list.add(new LabelValue(includeIdsNames.toString(), ids));
         } else {
             GroupsDB groupsDB = GroupsDB.getInstance();
             String currentDomain = DocDB.getDomain(request);
@@ -128,5 +186,30 @@ public class NewsRestController {
                     .filter(group -> Tools.containsOneItem(expandedEditableGroups, Tools.getIntValue(group.getValue(), -1)))
                     .collect(Collectors.toList());
         }
+    }
+
+    /**
+     * Expand groupID from list of groupID's
+     * @param currentGroupId
+     * @return
+     */
+    private int getNewsGroupId(int currentGroupId) {
+        int groupId = currentGroupId;
+        //news version get group ID in groupIdList parameter
+        String groupIdList = getRequest().getParameter("groupIdList");
+        if (Tools.isNotEmpty(groupIdList)) {
+            if (groupId < 1 || groupId == Constants.getInt("rootGroupId")) {
+                try {
+                    groupIdList = Tools.replace(groupIdList, "*", "");
+                    if (groupIdList.indexOf(",")!=-1) groupIdList=groupIdList.substring(0, groupIdList.indexOf(","));
+
+                    int groupIdParser = Tools.getIntValue(groupIdList, -1);
+                    if (groupIdParser > 0) groupId = groupIdParser;
+                } catch (Exception e) {
+                    //do nothing - failsafe
+                }
+            }
+        }
+        return groupId;
     }
 }

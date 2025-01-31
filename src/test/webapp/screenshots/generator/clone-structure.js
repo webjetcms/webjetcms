@@ -1,12 +1,6 @@
 Feature('apps.clone-structure');
 
 var randomNumber;
-var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var edit_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
-var delete_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-remove.noperms-deleteDir.btn-danger'));
-var doc_edit_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-selected.buttons-edit.btn-warning"));
-var doc_add_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success"));
-
 var srcGroupName = "clone-src-autotest";
 var srcGroupChildName = "Subfolder-autotest";
 var destGroupName = "clone-dest-autotest";
@@ -35,9 +29,9 @@ Scenario("Structure clone screenshots", async ({ I, Document })  => {
 
 //COPYED from test, only added screen shot
 
-function createGroup(I, DTE, groupName, language, isRootGroup) {
-    I.waitForElement(add_button, 10);
-    I.click(add_button);
+function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
+    I.waitForElement(DT.btn.tree_add_button, 10);
+    I.click(DT.btn.tree_add_button);
     DTE.waitForEditor("groups-datatable");
     I.fillField("#DTE_Field_groupName", groupName);
 
@@ -50,9 +44,9 @@ function createGroup(I, DTE, groupName, language, isRootGroup) {
     DTE.save();
 }
 
-async function fillDocBody(I, DTE, body) {
-    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
-    I.click(doc_edit_button);
+async function fillDocBody(I, DTE, DT, body) {
+    I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
+    I.click(DT.btn.edit_button);
 
     I.waitForElement("iframe.cke_wysiwyg_frame");
     await DTE.fillCkeditor(body);
@@ -69,18 +63,18 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
 
         switch (confLng) {
             case 'sk':
-                createGroup(I, DTE, srcGroupName, "Slovenský", true);
+                createGroup(I, DTE, DT, srcGroupName, "Slovenský", true);
                 break;
             case 'en':
-                createGroup(I, DTE, srcGroupName, "Slovak", true);
+                createGroup(I, DTE, DT, srcGroupName, "Slovak", true);
                 break;
             case 'cs':
-                createGroup(I, DTE, srcGroupName, "Slovensky", true);
+                createGroup(I, DTE, DT, srcGroupName, "Slovensky", true);
                 break;
             default:
                 throw new Error(`Unsupported language code: ${confLng}`);
         }
-        
+
 
         I.jstreeClick(srcGroupName);
         //Save groupID
@@ -88,7 +82,7 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
 
         //
         I.say("Create new doc in root group");
-            I.click(doc_add_button);
+            I.click(DT.btn.add_button);
             DTE.waitForEditor();
             I.waitForVisible("#DTE_Field_title");
             I.fillField("#DTE_Field_title", newDocName);
@@ -102,33 +96,33 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
 
         switch (confLng) {
             case 'sk':
-                createGroup(I, DTE, srcGroupChildName, "Slovenský", false);
+                createGroup(I, DTE, DT, srcGroupChildName, "Slovenský", false);
                 break;
             case 'en':
-                createGroup(I, DTE, srcGroupChildName, "Slovak", false);
+                createGroup(I, DTE, DT, srcGroupChildName, "Slovak", false);
                 break;
             case 'cs':
-                createGroup(I, DTE, srcGroupChildName, "Slovensky", true);
+                createGroup(I, DTE, DT, srcGroupChildName, "Slovensky", false);
                 break;
             default:
                 throw new Error(`Unsupported language code: ${confLng}`);
         }
-        
+
         I.jstreeClick(srcGroupChildName);
-        await fillDocBody(I, DTE, doc_b_sk);
+        await fillDocBody(I, DTE, DT, doc_b_sk);
 
     //
     I.say("Preparing dest folder");
 
     switch (confLng) {
         case 'sk':
-            createGroup(I, DTE, destGroupName, "Anglický", true);
+            createGroup(I, DTE, DT, destGroupName, "Anglický", true);
             break;
         case 'en':
-            createGroup(I, DTE, destGroupName, "English", true);
+            createGroup(I, DTE, DT, destGroupName, "English", true);
             break;
         case 'cs':
-            createGroup(I, DTE, destGroupName, "Česky", true);
+            createGroup(I, DTE, DT, destGroupName, "Česky", true);
             break;
         default:
             throw new Error(`Unsupported language code: ${confLng}`);
@@ -157,12 +151,16 @@ Scenario("Structure clonning with translate", async ({ I, DTE, DT, Document })  
             I.waitForText("Cloning directory:", 100);
             I.waitForText("/clone-src-autotest" + randomNumber + "/Subfolder-autotest")
             I.waitForText("Clone structure done", 100);
+        } else if("cs" === confLng) {
+            I.waitForText("Klonuji adresář:", 100);
+            I.waitForText("/clone-src-autotest" + randomNumber + "/Subfolder-autotest")
+            I.waitForText("Klonování struktury dokončeno", 100);
         }
 
     Document.screenshot("/redactor/apps/clone-structure/clone_structure_result.png", 500, 500);
 });
 
-Scenario('delete data', ({ I, DTE }) => {
+Scenario('delete data', ({ I, DTE, DT }) => {
     let confLng = I.getConfLng();
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
     //
@@ -170,7 +168,7 @@ Scenario('delete data', ({ I, DTE }) => {
         I.waitForElement(locate("a.jstree-anchor").withText(srcGroupName), 10);
         I.jstreeClick(srcGroupName);
         //delete
-        I.click(delete_button);
+        I.click(DT.btn.tree_delete_button);
         DTE.waitForEditor("groups-datatable");
 
         switch (confLng) {
@@ -193,7 +191,7 @@ Scenario('delete data', ({ I, DTE }) => {
 
         I.jstreeClick(destGroupName);
         //delete
-        I.click(delete_button);
+        I.click(DT.btn.tree_delete_button);
         DTE.waitForEditor("groups-datatable");
 
 

@@ -42,8 +42,8 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
 
     I.amOnPage("/apps/forum/admin/");
 
-    DT.filter("subject", subject + "_1");
-    DT.filter("question", question + " 1");
+    DT.filterContains("subject", subject + "_1");
+    DT.filterContains("question", question + " 1");
 
     //See the forum but dont see button, to recover deleted forum (recover from soft delete)
     I.see(subject + "_1");
@@ -78,13 +78,14 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     I.waitForInvisible(locate('td .ti.ti-trash'), 10);
 
     /* Additional test of recover button (not in datatable but above table) */
-        DT.filter("subject", subject + "_2");
-        DT.filter("question", question + " 2");
+        DT.filterContains("subject", subject + "_2");
+        DT.filterContains("question", question + " 2");
 
         I.see(subject + "_2");
         I.dontSee(subject + "_1");
 
-        //Delete forum (soft delete)
+        //
+        I.say("Delete forum (soft delete)");
         I.clickCss(".buttons-select-all");
         I.clickCss("button.buttons-remove");
         I.waitForElement("div.DTE_Action_Remove");
@@ -94,8 +95,9 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
         I.see(subject + "_2");
         I.waitForVisible(locate('td .ti.ti-trash'), 10);
 
-        //Use other recover button
-        I.clickCss(".buttons-select-all");
+        //
+        I.say("Use other recover button");
+        //I.clickCss(".buttons-select-all");
         I.clickCss("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)");
         I.wait(1);
 
@@ -110,8 +112,8 @@ Scenario('Test of forum editor', ({I, DT, DTE}) => {
 
     I.amOnPage("/apps/forum/admin/");
 
-    DT.filter("subject", subject + "_1");
-    DT.filter("question", question + " 1");
+    DT.filterContains("subject", subject + "_1");
+    DT.filterContains("question", question + " 1");
 
     I.click(subject + "_1");
     DTE.waitForEditor("forumDataTable");
@@ -127,14 +129,14 @@ Scenario('Test of forum editor', ({I, DT, DTE}) => {
 
     DTE.save();
 
-    DT.filter("subject", subject + "_1" + "_change");
+    DT.filterContains("subject", subject + "_1" + "_change");
     I.see(subject + "_1" + "_change");
 
     I.click(subject + "_1");
     DTE.waitForEditor("forumDataTable");
     I.fillField("#DTE_Field_subject", subject + "_1");
     DTE.save();
-    DT.filter("subject", subject + "_1");
+    DT.filterContains("subject", subject + "_1");
     I.see(subject + "_1");
     I.dontSee(subject + "_1" + "_change");
  });
@@ -142,7 +144,7 @@ Scenario('Test of forum editor', ({I, DT, DTE}) => {
 async function removeUserEditablePages(I, DT, DTE) {
     I.relogin('admin');
     I.amOnPage("/admin/v9/users/user-list/");
-    DT.filter("login", userLogin);
+    DT.filterContains("login", userLogin);
     I.click(userLogin);
     DTE.waitForEditor();
 
@@ -167,8 +169,8 @@ async function removeUserEditablePages(I, DT, DTE) {
 function testForumsVisibility(iSeeFirst, iSeeSecond, I, DT) {
     I.amOnPage("/apps/forum/admin/");
 
-    DT.filter("subject", subject);
-    DT.filter("question", question);
+    DT.filterContains("subject", subject);
+    DT.filterContains("question", question);
 
     if(iSeeFirst) I.see(subject + "_1");
     else I.dontSee(subject + "_1");
@@ -185,7 +187,7 @@ function clearAllCaches(I) {
 
 function addPagePermision(I, DT, DTE, elelentId) {
     I.amOnPage("/admin/v9/users/user-list/");
-    DT.filter("login", userLogin);
+    DT.filterContains("login", userLogin);
     I.click(userLogin);
     DTE.waitForEditor();
 
@@ -212,11 +214,9 @@ Scenario('Message board', async ({I, DT, DTE}) => {
     I.click("#forumContentDiv a.btn-primary");
 
     I.waitForElement("#forumForm");
-    I.switchTo("#forumForm");
 
-    I.fillField("#subject", subject);
+    I.fillField("#forumForm #subject", subject);
     DTE.fillCleditor("#forum", body);
-    I.switchTo();
     I.click("button.btn-primary");
 
     //Check that theme was created
@@ -230,14 +230,11 @@ Scenario('Message board', async ({I, DT, DTE}) => {
     //Answer
     I.click( locate("div.btn-group > span > a.btn-info") );
     I.waitForElement("#forumForm");
-    I.switchTo("#forumForm");
     DTE.fillCleditor("#forum", body + "_ANSWER");
-
     //SPAM LIMIT WAIT 30 seconds
     I.wait(30);
 
-    I.click("button.btn-primary");
-    I.switchTo();
+    I.click(".ui-dialog button.btn-primary");
 
     I.waitForElement("#forumContentDiv div.row2.even");
     I.see(body);
@@ -247,14 +244,14 @@ Scenario('Message board', async ({I, DT, DTE}) => {
     I.click( locate("div.btn-group > span.deleteMessage > a.btn-danger") );
 
     I.amOnPage("/apps/forum/admin/");
-    DT.filter("subject", subject);
+    DT.filterContains("subject", subject);
     I.see(body);
     I.see(body + "_ANSWER");
 
     I.click("div.filter-input > button");
     I.click("a.dropdown-item > span > i.ti-trash");
 
-    I.click({ css: "div.dataTables_scrollHeadInner button.dt-filtrujem-" + "editorFields\\.statusIcons" });
+    I.click({ css: "div.dt-scroll-headInner button.dt-filtrujem-" + "editorFields\\.statusIcons" });
 
     I.see(body);
     I.see(body + "_ANSWER");
@@ -267,7 +264,7 @@ Scenario("basic table tests", async ({I, DT, DTE}) => {
     I.see("/Aplikácie/Diskusia/Diskusia", "#forumDataTable td.dt-tree-page a");
     I.see("/Aplikácie/Message Board/Skupina2/podskupina3", "#forumDataTable td.dt-tree-page a");
 
-    DT.filter("docDetails", "podskupina3");
+    DT.filterContains("docDetails", "podskupina3");
     I.dontSee("/Aplikácie/Diskusia/Diskusia", "#forumDataTable td.dt-tree-page a");
     I.see("/Aplikácie/Message Board/Skupina2/podskupina3", "#forumDataTable td.dt-tree-page a");
 });
@@ -377,7 +374,7 @@ Scenario("image attachment verification", async ({I, DTE, Document}) => {
     I.wait(5);
     I.clickCss('li img[src="/components/_common/mime/jpg.gif"] + a');
     const imageUrl = await I.grabCurrentUrl();
-    Document.compareScreenshotElement("img", "autotest-penguin.png", null,null, 5);
+    await Document.compareScreenshotElement("img", "autotest-penguin.png", null,null, 5);
 
     I.say('Waiting for files update');
     I.wait(4);
@@ -414,8 +411,8 @@ Scenario("Verification of special actions", async ({I, DT, DTE, Document}) => {
     I.see(subject + "_1", 'h4.media-heading');
 
     I.amOnPage("/apps/forum/admin/");
-    DT.filter("subject", subject + "_1");
-    DT.filter("question", question + " 1");
+    DT.filterContains("subject", subject + "_1");
+    DT.filterContains("question", question + " 1");
 
     I.clickCss(".buttons-select-all");
     I.clickCss('.reject-forum');
@@ -424,8 +421,8 @@ Scenario("Verification of special actions", async ({I, DT, DTE, Document}) => {
     I.dontSee(subject + "_1", 'h4.media-heading');
 
     I.amOnPage("/apps/forum/admin/");
-    DT.filter("subject", subject + "_1");
-    DT.filter("question", question + " 1");
+    DT.filterContains("subject", subject + "_1");
+    DT.filterContains("question", question + " 1");
 
     I.clickCss(".buttons-select-all");
     I.clickCss('.approve-forum');

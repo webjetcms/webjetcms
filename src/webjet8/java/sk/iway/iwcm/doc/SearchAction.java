@@ -594,6 +594,38 @@ public class SearchAction
 
 			sql.append(" AND searchable="+DB.getBooleanSql(true)+" AND available="+DB.getBooleanSql(true)+" AND (external_link IS NULL OR external_link NOT LIKE '/files/protected%') ");
 
+			if (Constants.getBoolean("multiDomainEnabled")) {
+				//we must filter by domain using root_group_l1
+				String domainName = DocDB.getDomain(request);
+				if (Tools.isNotEmpty(domainName)) {
+					List<Integer> rootGroupIds = new ArrayList<>();
+
+					List<GroupDetails> rootGroups = GroupsDB.getRootGroups();
+					for (GroupDetails rootGroup : rootGroups) {
+						if (domainName.equals(rootGroup.getDomainName())) {
+							//add ID to list
+							rootGroupIds.add(rootGroup.getGroupId());
+						}
+					}
+
+					//add ids into SQL query as root_group_l1 IN (...)
+					if (rootGroupIds.size() > 0) {
+						sql.append(" AND root_group_l1 IN (");
+						sqlTotalResults += " AND root_group_l1 IN (";
+						for (i = 0; i < rootGroupIds.size(); i++) {
+							if (i > 0) {
+								sql.append(",");
+								sqlTotalResults += ",";
+							}
+							sql.append(rootGroupIds.get(i));
+							sqlTotalResults += rootGroupIds.get(i);
+						}
+						sql.append(") ");
+						sqlTotalResults += ") ";
+					}
+				}
+			}
+
 			String searchWhereSql = (String)request.getAttribute("searchWhereSql");
 			if (Tools.isNotEmpty(searchWhereSql))
 			{
@@ -1640,12 +1672,10 @@ public class SearchAction
 		code = EditorDB.removeHtmlTagsKeepLength(code);
 		searchTerm = EditorDB.removeHtmlTagsKeepLength(searchTerm);
 
-		code = Tools.replace(code, " ", "");
-		searchTerm = Tools.replace(searchTerm, " ", "");
+		code = code.replaceAll("\\s+", " ");
+		searchTerm = searchTerm.replaceAll("\\s+", " ");
 
-		if (code.contains(searchTerm)) return true;
-
-		return false;
+		return code.contains(searchTerm);
 	}
 
 	/**

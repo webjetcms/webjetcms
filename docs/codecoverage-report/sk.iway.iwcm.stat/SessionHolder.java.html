@@ -272,8 +272,8 @@ public class SessionHolder
 <span class="pc bpc" id="L272" title="1 of 2 branches missed.">   	if(ClusterDB.isServerRunningInClusterMode())</span>
    	{
 <span class="fc" id="L274">   		int totalSessions=Constants.getInt(&quot;statSessionsAllNodes&quot;);</span>
-<span class="pc bpc" id="L275" title="1 of 2 branches missed.">   		if(totalSessions&lt;=0)</span>
-<span class="nc" id="L276">   			totalSessions = getTotalSessionsPerNode();</span>
+<span class="fc bfc" id="L275" title="All 2 branches covered.">   		if(totalSessions&lt;=0)</span>
+<span class="fc" id="L276">   			totalSessions = getTotalSessionsPerNode();</span>
 <span class="fc" id="L277">   		return totalSessions;</span>
 
    	}

@@ -4,12 +4,7 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-function checkDates(I, dateFrom, dateTo) {
-    I.seeInField("div.md-breadcrumb input.dt-filter-from-dayDate", dateFrom);
-    I.seeInField("div.md-breadcrumb input.dt-filter-to-dayDate", dateTo);
-}
-
-function setDates(I, dateFrom, dateTo) {
+function navigateAndSetDates(I, DT, dateFrom, dateTo) {
     I.amOnPage("/apps/stat/admin/");
 
     I.seeElement("#graphsDiv");
@@ -18,22 +13,17 @@ function setDates(I, dateFrom, dateTo) {
     //pockaj na loader pre grafy
     I.waitForInvisible("#loader", 20);
 
-    within("#statsDataTable_extfilter", () => {
-        I.fillField({css: "input.dt-filter-from-dayDate"}, dateFrom);
-        I.fillField({css: "input.dt-filter-to-dayDate"}, dateTo);
-        I.click({css: "button.dt-filtrujem-dayDate"});
-    });
-    I.dtWaitForLoader();
+    DT.setDates(dateFrom, dateTo, "#statsDataTable_extfilter");
+    DT.waitForLoader();
 }
 
-Scenario("visits", ({ I, DT }) => {
-
-    setDates(I, "01.05.2022", "31.05.2022");
+Scenario("visits", async ({ I, DT, Document }) => {
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
-
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
+    await Document.compareScreenshotElement("#stat-lineVisits", "stat/autotest-stat-lineVisits1.png", null, null, 5);
     DT.checkTableRow("statsDataTable", 1, ["31", "31.05.2022", "77", "25", "1"]);
     DT.checkTableRow("statsDataTable", 2, ["30", "30.05.2022", "2", "2", "1"]);
 
@@ -43,13 +33,8 @@ Scenario("visits", ({ I, DT }) => {
     DT.checkTableRow("statsDataTable", 1, ["6", "2 022", "22", "79", "27", "1"]);
     DT.checkTableRow("statsDataTable", 2, ["5", "2 022", "21", "410", "124", "1"]);
 
-    within("#statsDataTable_extfilter", () => {
-        I.fillField({css: "input.dt-filter-from-dayDate"}, "01.05.2022");
-        I.fillField({css: "input.dt-filter-to-dayDate"}, "31.07.2022");
-        I.click({css: "button.dt-filtrujem-dayDate"});
-    });
-    I.dtWaitForLoader()
-
+    DT.setDates("01.05.2022", "31.07.2022", "#statsDataTable_extfilter");
+    DT.waitForLoader()
     DT.checkTableRow("statsDataTable", 2, ["13", "2 022", "29", "583", "217", "1"]);
     DT.checkTableRow("statsDataTable", 3, ["12", "2 022", "28", "637", "294", "1"]);
 
@@ -60,132 +45,150 @@ Scenario("visits", ({ I, DT }) => {
 
     //change from stat months to hours months
     I.click("#statsDataTable_extfilter button[data-stat-type=hours]");
-
     DT.checkTableRow("statsDataTable", 1, ["1", "0", "159", "12", "3"]);
 });
 
-Scenario("top", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+Scenario("top", async ({ I, DT, Document }) => {
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/top/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
+    await Document.compareScreenshotElement("#top-pieVisits", "stat/autotest-top-pieVisits1.png", null, null, 10);
 
     DT.checkTableRow("topDataTable", 2, ["2", "/Jet portal 4/Úvodná stránka/Úvodná stránka", "260", "92", "1"]);
 });
 
 Scenario("country", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/country/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
     DT.checkTableRow("countryDataTable", 2, ["2", "Slovensko", "7", "0,34"]);
 });
 
 Scenario("browser", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
-
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
     I.amOnPage("/apps/stat/admin/browser/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
     DT.checkTableRow("browserDataTable", 2, ["2", "Chrome 101.0", "macOS", "7", "0,33"]);
 });
 
-Scenario("search-engines", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+Scenario("search-engines", async ({ I, DT, Document }) => {
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/search-engines/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
     DT.checkTableRow("searchEnginesQueryDataTable", 1, ["1", "kontakt", "8", "32,00"]);
     DT.checkTableRow("searchEnginesQueryDataTable", 2, ["2", "interway", "3", "12,00"]);
 
     DT.checkTableRow("searchEnginesDataTable", 1, ["1", "WebJET", "25"]);
-
+    await Document.compareScreenshotElement("#searchEngines-barQueries", "stat/autotest-barQueries.png", null, null, 5);
     I.forceClick("interway", "#searchEnginesQueryDataTable tbody");
-    I.dtWaitForLoader();
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.waitForLoader();
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
     I.seeInField("#searchQuery", "interway");
     DT.checkTableRow("searchEnginesDetailsDataTable", 2, ["2", "25.05.2022 08:33:12", "WebJET", "/Jet portal 4/Jet portal 4 - testovacia stranka", "109-230-50-58.dynamic.orange.sk"]);
 });
 
-Scenario("referer", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+Scenario("referer", async ({ I, DT, Document }) => {
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/referer/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
-
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
+    await Document.compareScreenshotElement("#referer-pieReferer", "stat/autotest-pieReferer.png", null, null, 5);
     DT.checkTableRow("refererDataTable", 1, ["1", "iwcm.interway.sk", "7", "87,50"]);
     DT.checkTableRow("refererDataTable", 2, ["2", "www.netcraft.com", "1", "12,50"]);
 
 });
 
 Scenario("error", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/error/");
+    DT.resetTable("errorDataTable");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
     DT.checkTableRow("errorDataTable", 2, ["2", "2 022", "22", "/templates/aceintegration/jet/assets/fonts/geomanist/geomanist", "referer: http://demotest.webjetcms.sk/components/_common/combine", "14"]);
+
+    DT.filterContains("url", "/wp-login.php");
+    DT.checkTableRow("errorDataTable", 1, ["1", "2 022", "22", "/wp-login.php", "", "3"]);
+
+    DT.filterContains("from-count", "2");
+    DT.filterContains("to-count", "10");
+
+    I.waitForText("Záznamy 1 až 5 z 5", 10, ".dt-footer-row");
+
+    //
+    I.say("BUG: Verify that we will load more than 1000 rows");
+    DT.setDates("01.10.2023", "31.10.2023", "#errorDataTable_extfilter");
+    I.amOnPage("/apps/stat/admin/error/");
+    I.waitForText("Záznamy 1 až 11 z 1,217", 10, ".dt-footer-row");
+
+    DT.checkTableRow("errorDataTable", 1, ["1", "2 023", "44", "/", "", "9"]);
+
+    //
+    I.say("goto page 2");
+    I.click(locate("li.page-item .page-link").withText("2"));
+    DT.waitForLoader();
+    DT.checkTableRow("errorDataTable", 2, ["13", "2 023", "44", "/css/page.css", "referer: http://demotest.webjetcms.sk/ntlm/logon.do", "2"]);
 });
 
 Scenario("logon-user", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/logon-user/");
 
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
     DT.checkTableRow("logonUserDataTable", 2, ["2", "Áno", "WebJET Administrátor", "InterWay, a. s.", "", "3", "4"]);
     I.click("WebJET Administrátor");
-    I.dtWaitForLoader();
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.waitForLoader();
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
     I.see("WebJET Administrátor", "span.statUserName");
     DT.checkTableRow("logonUserDetailsDataTable", 2, ["2", "02.05.2022 09:56:06", "0", "localhost"]);
 });
 
 Scenario("logon-current", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/logon-current/");
 
     //tu nevieme overist aktualne prihlaseneho pouzivatela
     I.see("Tester Playwright", "#actualLogonUserDataTable tbody");
     I.click("Tester Playwright", "#actualLogonUserDataTable tbody");
-    I.dtWaitForLoader();
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.waitForLoader();
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
     I.see("Tester Playwright", "span.statUserName");
     DT.checkTableRow("logonUserDetailsDataTable", 2, ["2", "26.05.2022 10:32:40", "0", "localhost"]);
 });
 
 Scenario("ext-filter behavior", ({ I, DT }) => {
-    setDates(I, "01.05.2022", "31.05.2022");
+    navigateAndSetDates(I, DT, "01.05.2022", "31.05.2022");
 
     I.click(locate('.ext-filter-out > .custom-control.form-switch'));
-    I.dtWaitForLoader();
+    DT.waitForLoader();
 
     DT.checkTableRow("statsDataTable", 1, ["31", "31.05.2022", "0", "0", "0"]);
     DT.checkTableRow("statsDataTable", 2, ["30", "30.05.2022", "0", "0", "0"]);
 
     I.amOnPage("/apps/stat/admin/search-engines/");
-    checkDates(I, "01.05.2022", "31.05.2022");
+    DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
-    within("#searchEnginesQueryDataTable_extfilter", () => {
-        I.fillField({css: "input.dt-filter-from-dayDate"}, "");
-        I.fillField({css: "input.dt-filter-to-dayDate"}, "18.05.2022");
-        I.click({css: "button.dt-filtrujem-dayDate"});
-    });
-    I.dtWaitForLoader();
+    DT.setDates("", "18.05.2022");
+    DT.waitForLoader();
 
     I.amOnPage("/apps/stat/admin/");
 
-    checkDates(I, "", "18.05.2022");
+    DT.checkExtfilterDates("", "18.05.2022");
     DT.checkTableRow("statsDataTable", 1, ["31", "18.05.2022", "3", "2", "2"]);
     DT.checkTableRow("statsDataTable", 2, ["30", "17.05.2022", "4", "1", "1"]);
 
@@ -213,8 +216,9 @@ Scenario("stat-groupTree-perms", async ({ I }) => {
     I.assertEqual("Test podadresar", caseB);
     I.clickCss("#editorApprootDir > section > div > div > div > div > button.btn-vue-jstree-item-edit");
     I.say("Over NEzobrazenie ROOT priečinka pri výbere.");
+    I.waitForElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("Jet portal 4"), 10 );
     I.dontSeeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node > a.jstree-anchor").withText("Koreňový priečinok") );
-    I.seeElement( locate("div#jsTree > ul.jstree-container-ul > li.jstree-node.jstree-closed > a.jstree-anchor").withText("Jet portal 4") );
+
     I.say("Check the icons");
     I.seeElement( locate('//*[@id="1"]/a').withChild("i.jstree-icon.ti-folder-x") );
     I.seeElement( locate('//*[@id="67"]/a').withChild("i.jstree-icon.ti-folder-filled") );

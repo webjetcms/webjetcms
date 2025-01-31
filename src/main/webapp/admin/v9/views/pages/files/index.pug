@@ -4,6 +4,11 @@ block content
 
     include jsinclude
 
+    style(type="text/css").
+        .ly-content {
+            height: 100vh !important;
+        }
+
     script.
         let editor = null;
         var elFinderInstance;
@@ -177,6 +182,7 @@ block content
                 if (!toolbarFixApplied) {
                     toolbarFixApplied = true;
                     elfinderTabClick("file");
+                    setInitialElfinderHeight();
                 }
             });
 
@@ -229,12 +235,12 @@ block content
             .modal-dialog(role='document')
                 .modal-content
                     .modal-header
-                        button.close(type='button' data-dismiss='modal' aria-label='Close')
+                        button.close(type='button' data-bs-dismiss='modal' aria-label='Close')
                             span(aria-hidden='true') &times;
                         h4#modalLabel.modal-title [[\#{fbrowser.dirprop.dir}]]
                 .modal-body
                 .modal-footer
-                    button.btn.btn-default.btn-closeModal(type='button' data-dismiss='modal') [[\#{webpages.modal.close}]]
+                    button.btn.btn-default.btn-closeModal(type='button' data-bs-dismiss='modal') [[\#{webpages.modal.close}]]
                     select.btn.form-control.form-select.action(name='action')
                         option.bSubmit(value='bSubmit') [[\#{fbrowse.save_button}]]
                         option.bUsage(value='bUsage') [[\#{fbrowse.usage_button}]]

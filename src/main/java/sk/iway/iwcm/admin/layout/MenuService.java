@@ -313,12 +313,20 @@ public class MenuService {
 
             { "/components/abtesting/admin_abtesting.jsp", "/apps/abtesting/admin/"},
 
+            //ESHOP
+            { "/components/basket/admin_invoices_list.jsp", "/apps/basket/admin/"},
+            { "/components/basket/admin_pricelist.jsp", "/apps/basket/admin/product-list"},
+
             { "/admin/elFinder/", "/admin/v9/files/index/"},
             { "/admin/elFinder/dialog.jsp", "/admin/v9/files/dialog"},
             { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_link.jsp", "/admin/v9/files/wj_link"},
             { "/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_image.jsp", "/admin/v9/files/wj_image"},
 
-            {"/admin/adminlog/logging/", "/admin/v9/apps/audit-log-levels/"}
+            {"/admin/adminlog/logging/", "/admin/v9/apps/audit-log-levels/"},
+
+            //Search
+            {"/admin/searchall.jsp", "/admin/v9/search/index/"},
+            {"/admin/skins/webjet6/searchall.jsp", "/admin/v9/search/index/"}
         };
         for (String[] pair : linkReplaces) {
             menuLinkReplaces.put(pair[0], pair[1]);

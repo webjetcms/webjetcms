@@ -34,9 +34,9 @@ Scenario('zoznam fotografii', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/gallery/admin-edit-photo.png");
 
     //editor
-    Document.screenshotAppEditor(45926, "/redactor/apps/gallery/editor-dialog.png", function(Document, I, DT, DTE) {
+    Document.screenshotAppEditor(45926, "/redactor/apps/gallery/editor-dialog.png", function(Document, I, DT, DTE, Apps) {
         //prepni sa na prvu kartu
-        I.click("#tabLink1");
+        Apps.switchToTabByIndex(0);
     }, 1280, 800);
 
     //zobrazenie galerie

@@ -22,11 +22,10 @@ elFinder.prototype.commands.resize = function() {
 			files = this.files(hashes),
 			dfrd  = $.Deferred(),
 
-			open = function(file, id) {
+			open = function(file) {
 				var index = file.virtualPath.lastIndexOf("/");
-				var iID = -1;
 				var dir = file.virtualPath.substring(0, index);
-				var name = file.virtualPath.substring(index+1);
+				var name = file.virtualPath.substring(index + 1);
 
 				var width = 990;
 				var height = 720;
@@ -41,28 +40,40 @@ elFinder.prototype.commands.resize = function() {
 					height = screen.height - 150;
 				}
 
-				var myWindow = window.open("/admin/v9/apps/image-editor/?iID=" + iID + "&dir=" + dir + "&name=" + name, "tinyWindow", "toolbar=no,scrollbars=yes,resizable=yes,width=" + width + ",height=" + height + ";");
-			},
+				let openedWindow = WJ.openPopupDialog('/admin/v9/apps/image-editor?id=-1&dir=' + dir + '&name=' + name + '&showOnlyEditor=true', width, height);
+				let closeBtn;
+				let saveBtn;
 
-			id, dialog
-			;
+				openedWindow.addEventListener("WJ.DTE.opened", function(e) {
+					//Remove close button action from table
+					openedWindow.$("#galleryTable_modal").off();
 
+					//Get buttons instances
+					closeBtn = openedWindow.$("div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn-close-editor");
+					saveBtn = openedWindow.$("div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn-primary");
+
+					//Prepare new close button action
+					closeBtn.on("click", function() {
+						openedWindow.close();
+					});
+
+					//
+					saveBtn.on("click", function() {
+						$('#finder').elfinder('instance').exec('reload');
+					});
+				});
+
+				openedWindow.addEventListener("WJ.imageEditor.upload.success", function(e) {
+					//Call relaod after picture is uploaded successfully
+					$('#finder').elfinder('instance').exec('reload');
+				});
+			};
 
 		if (!files.length || files[0].mime.indexOf('image/') === -1) {
 			return dfrd.reject();
 		}
 
-		id = 'resize-'+fm.namespace+'-'+files[0].hash;
-		/*
-		dialog = fm.getUI().find('#'+id);
-
-		if (dialog.length) {
-			dialog.elfinderdialog('toTop');
-			return dfrd.resolve();
-		}
-		*/
-
-		open(files[0], id);
+		open(files[0]);
 
 		return dfrd;
 	};

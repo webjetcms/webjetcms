@@ -1,6 +1,15 @@
 # Template information
 
-| Method | Type | Description | | | ---------------------------------- | -------- | ----------------------------- | | ${ninja.temp.basePath}             | *String* | | ${ninja.temp.basePathCss}          | *String* | | ${ninja.temp.basePathJs}           | *String* | Path to JS scripts | | ${ninja.temp.basePathImg}          | *String* | | | ${ninja.temp.lngIso}               | *String* | HTML ISO Language Cod | | ${ninja.temp.charset}              | *String* | File encoding | | ${ninja.temp.insertTouchIconsHtml} | *String* | Setting touch icons | | ${ninja.temp.templateFolderName}   | *String* | Template folder name |
+| Method | Type | Description |
+| ---------------------------------- | -------- | ----------------------------- |
+| ${ninja.temp.basePath}             | *String* | Path to the root directory of the template |
+| ${ninja.temp.basePathCss}          | *String* | The way to CSS stylesheets |
+| ${ninja.temp.basePathJs}           | *String* | The way to JS scripts |
+| ${ninja.temp.basePathImg}          | *String* | The way to images |
+| ${ninja.temp.lngIso}               | *String* | HTML ISO Language Cod |
+| ${ninja.temp.charset}              | *String* | File encoding |
+| ${ninja.temp.insertTouchIconsHtml} | *String* | Setting touch icons |
+| ${ninja.temp.templateFolderName}   | *String* | Template folder name |
 
 ## Path to the root directory of the template *String*
 
@@ -51,7 +60,7 @@ Used in :ghost:<code>head.jsp</code>
 Used in :ghost:<code>html-attributes.jsp</code>
 
 ```html
-<html lang="${ninja.temp.lngIso}"></html>
+<html lang="${ninja.temp.lngIso}" >
 ```
 
 ## File encoding *String*
@@ -65,7 +74,8 @@ ${ninja.temp.charset}
 Used in :ghost:<code>head.jsp</code>
 
 ```html
-<meta charset="${ninja.temp.charset}" /> <meta http-equiv="Content-type" content="text/html;charset=${ninja.temp.charset}" />
+<meta charset="${ninja.temp.charset}">
+<meta http-equiv="Content-type" content="text/html;charset=${ninja.temp.charset}" />
 ```
 
 ## Setting touch icons *String*

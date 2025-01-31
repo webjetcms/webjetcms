@@ -33,7 +33,7 @@ webpagesDatatable = WJ.DataTable({
 
 The ID value is set in the URL parameter only while the editor is open, after the editor is closed the parameter is removed from the URL `id` erases. Such behaviour seems to us more natural and representative of the current state of affairs.
 
-After initialization in the datatable header, the class creates a function call `bindInput` input field for entering the ID in which the key is waiting to be pressed `Enter`. It then sets the specified value to the attribute `this.id` and will trigger `this.dataTable.draw();`to start the process of displaying the editor, similar to initializing from a URL parameter.
+After initialization in the datatable header, the class creates a function call `bindInput` input field for entering the ID in which the key is waiting to be pressed `Enter`. It then sets the specified value to the attribute `this.id` and will trigger `this.dataTable.draw();` to start the process of displaying the editor, similar to initializing from a URL parameter.
 
 ## Setting the ID in the URL
 
@@ -61,6 +61,6 @@ The library also provides the ability to filter the table according to the param
 
 If there is also a value in the hash expression `dt-select=true`, so after the records are loaded, the rows are marked. Thus, it is easy to perform an action like user approval by clicking a button and so on.
 
-If there is also a value in the hash expression `dt-open-editor=true``dt-select=true`).
+If there is also a value in the hash expression `dt-open-editor=true` the editor is opened after marking the rows (the rows are automatically marked as well, no parameter is needed `dt-select=true`).
 
-`filterTableByHashParameters``this.dataTable.one('draw.dt', (evt, settings) => {`.
+The implementation is in function `filterTableByHashParameters` that is triggered by an event `this.dataTable.one('draw.dt', (evt, settings) => {`.

@@ -36,7 +36,6 @@ import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
-import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
@@ -690,7 +689,7 @@ public class CloudToolsForCore {
 		if (hasShop != null) return hasShop.booleanValue();
 
 		//vyhladajme stranky pre nas web v ktorom sa nachadza include products.jsp
-		String sqlQuery = "SELECT count(doc_id) FROM documents WHERE doc_id>0 "+StatDB.getRootGroupWhere("group_id", rootGroupId)+" AND data LIKE '%/components/basket/%'";
+		String sqlQuery = "SELECT count(doc_id) FROM documents WHERE doc_id>0 AND root_group_l1 IN ("+GroupsDB.getInstance().expandRootGroupL1(rootGroupId)+") AND (data LIKE '%/components/basket/%' OR data LIKE '%/components/eshop/%')";
 		//System.out.println("---------------> " + CloudToolsForCore.getRootGroupId(request));
 		//System.out.println(sqlQuery);
 		int records = (new SimpleQuery()).forInt(sqlQuery);

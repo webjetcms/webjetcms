@@ -431,7 +431,7 @@ function getSaveData()
 
         var htmlCode = node.html();
 
-		  htmlCode = htmlCode.replace(/data-<%=pbPrefix%>-toggle="/gi, 'data-toggle="');
+		  htmlCode = htmlCode.replace(/data-<%=pbPrefix%>-toggle="/gi, 'data-bs-toggle="');
 
         //console.log("Final HTML: ", htmlCode);
 
@@ -495,7 +495,8 @@ function initializePageData(editingMode, html, pageDiv) {
 				html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
 			}
 
-			html = html.replace(/data-toggle="/gi, 'data-<%=pbPrefix%>-toggle="');
+			html = html.replace(/data-bs-toggle="/gi, 'data-<%=pbPrefix%>-toggle="');
+			html = html.replace(/data-bs-toggle="/gi, 'data-<%=pbPrefix%>-toggle="');
 
 		//console.log("Settng HTML into div=", pageDiv, " html=", html);
 

@@ -10,7 +10,7 @@ Pokud nepoužíváte proxy server k volání služeb REST, ale vkládáte výstu
 
 Po vytvoření stránky je třeba nastavit parametry mapování adres. Přejděte do nabídky Aplikace/Proxy. Klepnutím na ikonu přidejte novou položku. Zadejte následující údaje:
 - Jméno - vaše identifikační jméno zástupce (volný text)
-- Místní adresa URL - mapovací adresa na vašich webových stránkách, například `/cobrand/poistenie/` (bez konce) `*`). Na webových stránkách vytvořte webovou stránku s takovou adresou URL, můžete použít znak `*` v adrese URL, např. `/cobrand/poistenie/*` vytvořit webovou stránku, která bude přijímat všechny adresy URL začínající zadanou hodnotou.
+- Místní adresa URL - mapovací adresa na vašich webových stránkách, například `/cobrand/poistenie/` (bez konce `*`). Na webových stránkách vytvořte webovou stránku s takovou adresou URL, můžete použít znak `*` v adrese URL, např. `/cobrand/poistenie/*` vytvořit webovou stránku, která bude přijímat všechny adresy URL začínající zadanou hodnotou.
 - Vzdálený server - adresa vzdáleného serveru (bez předpony http), např. `reservations.bookhostels.com`
 - Vzdálená adresa URL - adresa URL vzdáleného serveru, např. `/custom/index.php`
 - Vzdálený port - port, na kterém je ve výchozím nastavení spuštěn vzdálený server. `80`

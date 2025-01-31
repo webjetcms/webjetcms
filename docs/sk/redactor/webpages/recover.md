@@ -1,4 +1,4 @@
-# Obnovenie web stránok a priečinkov z koša
+# Obnovenie z koša
 
 Obnovenie web stránok a priečinkov je proces, ktorý sa dá vykonať iba na tých stránkach/priečinkoch, ktoré sú umiestnené v priečinku **Kôš**. K tejto akcií slúži špeciálna ikona ![](recover-button.png ":no-zoom").
 

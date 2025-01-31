@@ -11,13 +11,13 @@ Scenario('reservation object screens', async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-datatable.png");
 
-    DT.filter("name", reservationObjectNameB);
+    DT.filterContains("name", reservationObjectNameB);
     I.click(reservationObjectNameB);
     DTE.waitForEditor("reservationObjectDataTable");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_basic_tab_2.png");
     DTE.cancel();
 
-    DT.filter("name", reservationObjectNameA);
+    DT.filterContains("name", reservationObjectNameA);
     I.click(reservationObjectNameA);
     DTE.waitForEditor("reservationObjectDataTable");
     Document.screenshot("/redactor/apps/reservation/reservation-objects/reservation_object-editor_basic_tab.png");

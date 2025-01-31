@@ -41,11 +41,11 @@
             paging: false,
             columns: columns,
             id: "menuDataTable",
-            onXhr: function(xhr) {
+            onXhr: function( TABLE, e, settings, json, xhr ) {
                 //DT is not sortable, it's sorted by days, cathegory and sort priority server side
-                $(".dt-format-selector").removeClass("sorting_asc");
+                $(".dt-format-selector").removeClass("dt-ordering-asc");
                 setTimeout(()=> {
-                    $(".dt-format-selector").removeClass("sorting_asc");
+                    $(".dt-format-selector").removeClass("dt-ordering-asc");
                 }, 200);
             }
         });
@@ -60,7 +60,7 @@
             $(this).addClass("active");
 
             let menuType = $("#menuType button.active").data("menu-type");
-            menuDataTable.ajax.url(WJ.urlUpdateParam(menuDataTable.ajax.url(), "menuType", menuType));
+            menuDataTable.setAjaxUrl(WJ.urlUpdateParam(menuDataTable.getAjaxUrl(), "menuType", menuType));
 
             //reload table values
             menuDataTable.ajax.reload();

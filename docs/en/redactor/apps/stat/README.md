@@ -11,6 +11,7 @@ Please note: the storage of statistics is subject to GDPR consent to the storage
 - visit time is rounded to 15 minutes
 - browser is set to unknown
 - the landscape is set for the unknown
+
 The Statistics section uses an external filter, which is described in more detail here [External filter](./external-filter.md)
 
 ## Traffic
@@ -60,11 +61,12 @@ Value **Unknown** or **???** is displayed for unknown browsers and for browsers 
 ![](browser-page.png)
 
 **Remark:** type, version, operating system is detected by HTTP header `User-Agent`. The library is used [UAP-java](https://github.com/ua-parser/uap-java). Used [YAML](https://github.com/ua-parser/uap-core/blob/master/regexes.yaml) the file can be updated and the path to it can be set in the conf. variable `uaParserYamlPath`. It is applied after restarting the application server.
+
 ## Search engines
 
 > What do visitors search for on our website? What search terms did they come to our site from search engines?
 
-List of search terms on your website, but also on external search engines `google`, `seznam` etc. Click on a search term to see a detailed list of times and the search engine used to search for that term. The computer address column displays the IP address/domain name of the computer from which the search was performed. The value `0.0.0.0` will be displayed if the visitor has not consented to the collection of statistical cookies.
+List of search terms on your website, but also on external search engines `Google`, `Seznam` etc. Click on a search term to see a detailed list of times and the search engine used to search for that term. The computer address column displays the IP address/domain name of the computer from which the search was performed. The value `0.0.0.0` will be displayed if the visitor has not consented to the collection of statistical cookies.
 
 The chart and table can be further filtered in the main top filter by search engine and possibly by the page where the search results are located (or the page was navigated to from an external search engine).
 

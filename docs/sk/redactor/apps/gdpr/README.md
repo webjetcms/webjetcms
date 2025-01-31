@@ -1,4 +1,4 @@
-# GDPR Cookies súhlas
+# Cookies súhlas
 
 Vloží do stránky nastavenie cookies pre návštevníka s možnosťou výberu kategórií, ktoré návštevník môže povoliť alebo zamietnuť. Pre korektné vkladanie marketingových skriptov je potrebné využiť aplikáciu Skripty, ktorá je napojená na povolené cookies.
 

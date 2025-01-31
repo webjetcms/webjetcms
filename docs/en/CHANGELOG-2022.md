@@ -6,27 +6,28 @@
 
 Significant changes in this version:
 - Datatables
-	- Remembering the set number of records per page - if you set a value other than the automatic value, the table will remember the set number of records per page.
-	- Import - improved display of line number on import error, added removal of spaces at the beginning and end of text, displayed information when importing many records.
-- Website
-	- When you create a new page, the editor window switches to the Basic tab so that you can immediately enter a page name.
-	- Added function to [checking links and empty pages](redactor/webpages/linkcheck.md).
+  - Remembering the set number of records per page - if you set a value other than the automatic value, the table will remember the set number of records per page.
+  - Import - improved display of line number on import error, added removal of spaces at the beginning and end of text, displayed information when importing many records.
+- Web pages
+  - When you create a new page, the editor window switches to the Basic tab so that you can immediately enter a page name.
+  - Added function to [checking links and empty pages](redactor/webpages/linkcheck.md).
 - Applications
-	- Redesigned: Page Attributes, Poll, Statistics, Reservations and Reservation Objects List
-	- Banner system - added option [set optional fields A-F](frontend/webpages/customfields/README.md)to record/display additional information if necessary (e.g. additional title/reference/button text in the banner).
-	- Gallery - automatic calculation of the number of images per page and remembering the set image size `SML`.
-	- Gallery - added the option to rotate the photo left/right (originally there was only the right option).
+  - Redesigned: Page Attributes, Poll, Statistics, Reservations and Reservation Objects List
+  - Banner system - added option [set optional fields A-F](frontend/webpages/customfields/README.md) to record/display additional information if necessary (e.g. additional title/reference/button text in the banner).
+  - Gallery - automatic calculation of the number of images per page and remembering the set image size `SML`.
+  - Gallery - added the option to rotate the photo left/right (originally there was only the right option).
 - Security and API
-	- Updated libraries `Spring Security` and others.
-	- Added option to use Google reCaptcha v3.
-	- [API key login](custom-apps/spring/api-auth.md) sent in the HTTP header of the request.
+  - Updated libraries `Spring Security` and others.
+  - Added option to use Google reCaptcha v3.
+  - [API key login](custom-apps/spring/api-auth.md) sent in the HTTP header of the request.
+
 ### Groundbreaking changes
 
 - During parallel testing, we identified a flaw in the acquisition `domainId` in multi-domain installations. Therefore, the retrieval of this value has been changed according to the lowest `groupId` of the folder in the domain (originally, it was according to the ordering priority). This change can lead to broken relationships in the database, so it is possible to define a conf. variable `domainId-www.domena.sk` and an ID value that refers to the originally set value.
 - `FtpDownloader` - class cancelled.
 - Banner - if you are using custom Java code to read banners the primary key name has been changed from `bannerId` to standard `id`.
 
-### Website
+### Web pages
 
 - When creating root folders named `Slovensky, Česky, English, Deutsch` automatically sets the two-letter language code and the order of arrangement to `10, 20, 30, 40` (#market-245).
 - Fixed the ordering of the list of web pages when first loaded, if it is set to something other than the default ordering by page ID.
@@ -54,7 +55,7 @@ Significant changes in this version:
 
 - Added option to set to client banner, fixed statistics display (ability to change dates and error if banner contains no statistics) (#39751-52).
 - Added "Show all banners" permission check - if the user does not have this permission, only banners where he is set as a client will be displayed (#39751-52).
-- Added option [set optional fields A-F](frontend/webpages/customfields/README.md)to allow additional information to be recorded/displayed if necessary (e.g., additional heading/reference/button text in banner) (#39751-52).
+- Added option [set optional fields A-F](frontend/webpages/customfields/README.md) to allow additional information to be recorded/displayed if necessary (e.g., additional heading/reference/button text in banner) (#39751-52).
 
 ### Gallery
 
@@ -97,9 +98,9 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 - Pagination - **increased number of pagination numbers** in the footer of the table. For main tables and screen widths greater than 800 pixels, the number of pagination items (originally 7 items) is calculated according to the table width (#39751-50,54857-4).
 - `Quill` - simple HTML editor - extended capabilities of simple HTML editor (used e.g. in gallery, questions and answers...) - added settings for superscript/subscript, colors, alignment, ability to edit HTML code (#54857-4).
 - Added configuration option [onPreXhr](developer/datatables/README.md) for the possibility to add URL parameters for calling the REST service. This is used if there is a special filter on the page, such as in statistics (#54585).
-- Added configuration option [defaultSearch](developer/datatables/README.md#možnosti-konfigurácie) for initializing the lookup before the first REST service call (used in the Statistics application to remember the from-to dates entered between each statistics page) (#54585).
+- Added configuration option [defaultSearch](developer/datatables/README.md#configuration-options) for initializing the lookup before the first REST service call (used in the Statistics application to remember the from-to dates entered between each statistics page) (#54585).
 - Added option to set the value `null` (entered as a string) in the selection field (for the possibility of setting/filtering `null/true/false`) (#54701).
-- Added field type `TIME_HM/TIME_HMS` For [selection of hours and minutes](developer/datatables-editor/standard-fields.md#time_hm-a-time_hms) (and possibly seconds) (#54701).
+- Added field type `TIME_HM/TIME_HMS` For [selection of hours and minutes](developer/datatables-editor/standard-fields.md#time_hm-and-time_hms) (and possibly seconds) (#54701).
 - Import - supplemented **display of line number on error** even if the imported entity does not inherit from `ActiveRecordBase` (#39751-53).
 - Import - added removal of spaces at the beginning and end of the value in the cell (so that e.g. no import error occurs due to incorrect email address) (#39751-53).
 - Import - added display of import progress in %, added indicator icon to import button (#39751-53).
@@ -121,8 +122,8 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 ### Other minor changes
 
 - Administration - left menu - when you click on an item that is low in the menu, the menu will move higher when the page loads to make the item visible and display any second level menu items (#54701).
-- Loading animation - added option to show [loading animation](developer/frameworks/webjetjs.md#animácia-načítania), e.g. during graph generation (#54585).
-- Banner - added setting option [campaign URL parameter](redactor/apps/banner/README.md#banner-typu-obsahový-banner) and displaying the banner only during the campaign.
+- Loading animation - added option to show [loading animation](developer/frameworks/webjetjs.md#loading-animation), e.g. during graph generation (#54585).
+- Banner - added setting option [campaign URL parameter](redactor/apps/banner/README.md#content-banner) and displaying the banner only during the campaign.
 - Dialogs - Modified the visuals of legacy dialogs (e.g. application settings, page editor dialogs) to the new header and tab style (#39751-52).
 - Domain redirection - fixed getting domain alias on detection `xsrf` (it is no longer necessary to add the domain to the conf. variable when creating a domain alias `xsrfReferers`).
 - Form easily - added insertion detection `check_form` for checking the filled fields. If there is already an object in the page (exists `checkFormLoaded`) it will not be unnecessary to insert the script to insert it (#54393).
@@ -136,17 +137,17 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 - Files - added option to use [external directory for files](frontend/setup/README.md) as part of a web application. It is set as a conf. variable `cloudStaticFilesDir={FILE_ROOT}static-files` which sets up file storage for each domain separately in a folder `static_files` in the root folder of the web application (#39751-47).
 - Templates - added Folders and Web pages tab in the editor with **a list of folders and pages using the displayed template** (#54693).
 - Structure mirroring - root folders will no longer be synchronized in order to set their order in the administration (e.g. first Slovak and second English).
-- Added API function [WJ.prompt](developer/frameworks/webjetjs.md#získanie-hodnoty) to get a value from the user (e.g. password to confirm deletion, etc.) (#54701).
+- Added API function [WJ.prompt](developer/frameworks/webjetjs.md#obtaining-value) to get a value from the user (e.g. password to confirm deletion, etc.) (#54701).
 
 ### Documentation
 
 - Documentation created and project optimised `basecms` for setting [debug mode](custom-apps/vscode/debugging/README.md) in VS Code for both Java and JavaScript files (#54393).
-- Added documentation for setup [campaign URL parameter](redactor/apps/banner/README.md#banner-typu-obsahový-banner) and displaying the banner only during the campaign.
+- Added documentation for setup [campaign URL parameter](redactor/apps/banner/README.md#content-banner) and displaying the banner only during the campaign.
 - Completed documentation for [Thymeleaf](frontend/thymeleaf/webjet-objects.md) template objects (`${ninja.temp.baseCssLink},${ninja.temp.cssLink})`.
 - Created documentation for the application [Statistics](redactor/apps/stat/README.md) (#54497).
-- Documentation in the section Programming of customer applications has been supplemented with the possibility to attach a JavaScript module to the application as [entry in the admin area](custom-apps/admin-menu-item/README.md#priloženie-javascript-súboru) (#54585).
+- Documentation in the section Programming of customer applications has been supplemented with the possibility to attach a JavaScript module to the application as [entry in the admin area](custom-apps/admin-menu-item/README.md#attaching-a-javascript-file) (#54585).
 - Created documentation for the editor for the application [booking](redactor/apps/reservation/reservations/README.md) a [reservation objects](redactor/apps/reservation/reservation-objects/README.md) (#54701).
-- Created documentation for Customer Application Programming - [Token authorisation](custom-apps/spring/api-auth.md), [provision of REST services](custom-apps/spring/rest-url.md), supplemented by documentation on the setup [SpringSecurity](custom-apps/spring-config/README.md#nastavenie-springsecurity) (#54941).
+- Created documentation for Customer Application Programming - [Token authorisation](custom-apps/spring/api-auth.md), [provision of REST services](custom-apps/spring/rest-url.md), supplemented by documentation on the setup [SpringSecurity](custom-apps/spring-config/README.md#springsecurity-settings) (#54941).
 - Statistics - added information about storing statistics [without GDPR consent](redactor/apps/stat/README.md) (#54709).
 - Page attributes - documentation created for [defining attributes](redactor/webpages/doc-attributes/README.md) (#54709).
 - Created documentation for the editor for the application [Gallery](redactor/apps/gallery/README.md) (#54953-4).
@@ -158,11 +159,11 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 - Automated tests - redesigned call `I.wjDocsScreenshot` into a separate `Page` object `Document`.
 - Gallery - added test for remembering set image size and displaying HTML text in the description and author of the photo (#54857-4).
 - Translation keys - supplemented search test by starts/ends with and equals to (#54857-4).
-- Added features `DT.checkTableCell, DT.checkTableRow` to test the value in [cell of the table and in the whole row](developer/testing/README.md#webjet-doplnkové-funkcie).
+- Added features `DT.checkTableCell, DT.checkTableRow` to test the value in [cell of the table and in the whole row](developer/testing/README.md#webjet-additional-features).
 - Added report generation [code coverage](developer/testing/codecoverage.md) during testing (#54909).
-- Changed the way images are visually compared from [Resemble](https://codecept.io/visual/#visual-testing) at [pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper)which can also be used when running tests in parallel (#54909).
+- Changed the way images are visually compared from [Resemble](https://codecept.io/visual/#visual-testing) at [pixelMatchHelper](https://github.com/stracker-phil/codeceptjs-pixelmatchhelper) which can also be used when running tests in parallel (#54909).
 - Added the ability to trigger [tests in parallel](developer/testing/parallel.md) for their faster execution (#54909).
-- Added option [test REST services](developer/testing/README.md#testovanie-rest-služieb) (#54941).
+- Added option [test REST services](developer/testing/README.md#testing-rest-services) (#54941).
 - Added function `Document.screenshotAppEditor(docId, path, callback, width, height)` to create a snapshot of the application setup (#54953-4).
 
 ### Error correction
@@ -186,9 +187,9 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 
 ### For the programmer
 
-- Added function `WJ.confirm` For [obtaining value](developer/frameworks/webjetjs.md#získanie-hodnoty) (#54701).
+- Added function `WJ.confirm` For [obtaining value](developer/frameworks/webjetjs.md#obtaining-value) (#54701).
 
-![meme](_media/meme/2022-52.jpg)
+![meme](_media/meme/2022-52.jpg ":no-zoom")
 
 ## 2022.40
 
@@ -196,23 +197,24 @@ Reservation app and list of reservation objects redesigned in a new visual. Adde
 
 Significant changes in this version:
 - Security
-	- Updated Java and JavaScript libraries, updated VueJS from version 2 to version 3.
-	- Changed algorithm `hashovania` passwords to standard [bcrypt](sysadmin/pentests/README.md#algoritmus-hashovania-hesiel).
-	- All error statements `Stack Trace` are routed through `Logger`, so they will also appear in the list [Last logs](sysadmin/audit/memory-logging.md) in the Audit section.
-	- Added option to generate HTTP header `Access-Control-Allow-Origin` to provide access to REST services.
+  - Updated Java and JavaScript libraries, updated VueJS from version 2 to version 3.
+  - Changed algorithm `hashovania` passwords to standard [bcrypt](sysadmin/pentests/README.md#password-hashing-algorithm).
+  - All error statements `Stack Trace` are routed through `Logger`, so they will also appear in the list [Last logs](sysadmin/audit/memory-logging.md) in the Audit section.
+  - Added option to generate HTTP header `Access-Control-Allow-Origin` to provide access to REST services.
 - Datatables
-	- Added dynamic counting of the number of lines per page according to the size of the browser window.
-	- Added the ability to move the editor window.
-	- Added memorization [the order of the columns and the method of arrangement](redactor/datatables/README.md#pamätanie-usporiadania) tables.
-	- Added [keyboard shortcut](redactor/datatables/README.md#klávesové-skratky), `CTRL+S/CMD+S` to save the record to the database without closing the editor window to continue working.
-- Website
-	- Page Builder - supplemented [screen size switching](redactor/webpages/pagebuilder.md#nastavenie-šírky-stĺpcov) to set the column width for desktop, tablet and mobile.
-	- Added option to view [preview of the complete website](redactor/webpages/editor.md#náhľad-stránky) without saving it.
-	- The list of web pages within one login remembers the last viewed folder (tree structure), when returning the folder is expanded again.
+  - Added dynamic counting of the number of lines per page according to the size of the browser window.
+  - Added the ability to move the editor window.
+  - Added memorization [the order of the columns and the method of arrangement](redactor/datatables/README.md#remembering-the-arrangement) tables.
+  - Added [keyboard shortcut](redactor/datatables/README.md#keyboard-shortcuts), `CTRL+S/CMD+S` to save the record to the database without closing the editor window to continue working.
+- Web pages
+  - Page Builder - supplemented [screen size switching](redactor/webpages/pagebuilder.md#setting-the-width-of-the-columns) to set the column width for desktop, tablet and mobile.
+  - Added option to view [preview of the complete website](redactor/webpages/editor.md#page-preview) without saving it.
+  - The list of web pages within one login remembers the last viewed folder (tree structure), when returning the folder is expanded again.
 - Applications
-	- Redesigned: Bulk Email, Event Calendar/List and Types.
-	- Form easily - added the ability to generate forms with multiple fields in one row and the field type Select List - select.
-	- Search - added weights for page title (weight 20) and headings (weight 10) for the ability to prioritize results to pages where the search term is in the title or heading.
+  - Redesigned: Bulk Email, Event Calendar/List and Types.
+  - Form easily - added the ability to generate forms with multiple fields in one row and the field type Select List - select.
+  - Search - added weights for page title (weight 20) and headings (weight 10) for the ability to prioritize results to pages where the search term is in the title or heading.
+
 Below you will find the complete list of changes in this version.
 
 <div class="video-container">
@@ -225,28 +227,28 @@ Below you will find the complete list of changes in this version.
 - When the window is closed, the preview of the page is deleted so that the previous version/web page is not flashed when the window is reopened.
 - When you delete all tabs or `accordion` the + button will appear to add a new entry. It is thus possible to correctly delete all elements and then add them again.
 - When you delete all sections (blocks) from the page, a blue + button will appear to add a new item.
-- Added CSS style `pb-col` a `pb-col-auto` for the possibility of setting the columns that [width cannot be adjusted](frontend/page-builder/settings.md#column-zelená-farba).
-- Supplemented by [screen size switching](redactor/webpages/pagebuilder.md#nastavenie-šírky-stĺpcov) for desktop, tablet and mobile. Allows you to adjust column widths according to the device selected (#39751).
+- Added CSS style `pb-col` a `pb-col-auto` for the possibility of setting the columns that [width cannot be adjusted](frontend/page-builder/settings.md#column-green-colour).
+- Supplemented by [screen size switching](redactor/webpages/pagebuilder.md#setting-the-width-of-the-columns) for desktop, tablet and mobile. Allows you to adjust column widths according to the device selected (#39751).
 - Editor window size increased to 1210 pixels wide to allow setting CSS classes `col-xl-` for 1200 points width `desktop` (#39751).
 - Added execution support `data-th-src` a `data-th-href` attributes including `${ninja.temp.basePathXXX}` when inserting a block into the page (#39751-38).
 
-### Website
+### Web pages
 
 - When you create a new domain, the Basic header/footer/menu pages are automatically created in the System folder for the header/footer and menu settings.
 - When you create a folder, the empty URL field is automatically set to a two-letter language code (e.g. `sk`) for names `Slovensky, English, Deutsch a Česky`.
 - If there is both a local (for the domain) and a global (with an unconfigured domain) folder The system displays only the local folder in the list of web pages (to avoid displaying two folders with the same name that cannot be distinguished at a glance).
 - In the folder properties, groups are split to restrict access and bulk email just like in the website (#54493).
-- Added option to view [preview of the complete website](redactor/webpages/editor.md#náhľad-stránky) without saving it (#54513).
+- Added option to view [preview of the complete website](redactor/webpages/editor.md#page-preview) without saving it (#54513).
 
 ![](redactor/webpages/save-work-version.png)
 
-- Added option in tree structure [show directory ID, order of arrangement and also list of web pages](redactor/webpages/README.md#nastavenie-zobrazenia-stromovej-štruktúry) (for drag \&amp; drop purposes) (#54513).
+- Added option in tree structure [show directory ID, order of arrangement and also list of web pages](redactor/webpages/README.md#setting-the-tree-structure-view) (for drag & drop purposes) (#54513).
 - Header/footer/menu language search added (looking for a page `LNG-meno`) when setting the directory language even when local is not used `System` Folder (#39751).
 - Adjusted size and position of the application properties window - the window is centered and the maximum size is calculated according to the available area (#39751).
 
 ![](redactor/webpages/jstree-settings.png)
 
-- Modified acquisition [list of CSS styles for the selection box in the editor](frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor) - if a minified CSS file is set in the template, its non-minified version is searched for. At the same time, when reading the CSS file, the search will stop after finding `@media` expression, which typically when inserted `bootstrap` to start with means that no styles will be found. The new code scans the CSS file one more time and looks for the comment `/* editor */`. If found the definition from the previous line (#39751-35) is used.
+- Modified acquisition [list of CSS styles for the selection box in the editor](frontend/examples/template-bare/README.md#list-of-styles-for-editor) - if a minified CSS file is set in the template, its non-minified version is searched for. At the same time, when reading the CSS file, the search will stop after finding `@media` expression, which typically when inserted `bootstrap` to start with means that no styles will be found. The new code scans the CSS file one more time and looks for the comment `/* editor */`. If found the definition from the previous line (#39751-35) is used.
 
 ![](frontend/examples/template-bare/editor-stylecombo.png)
 
@@ -256,7 +258,7 @@ Below you will find the complete list of changes in this version.
 - Added display of folders in a tree structure according to rights to specific pages. Only pages that the user has rights to (#39751-39) will be displayed in the folder list afterwards.
 - In the charts [History](redactor/webpages/history.md) shows the date of the scheduled publication of the page, rearranged the records so that the scheduled events are at the top of the list (#54513-15).
 - History - added the ability to delete a scheduled change in a web page (#54513-15).
-- Added [Folders tab](redactor/webpages/README.md#karty-web-stránok) to the date table. Allows you to use datatable features such as bulk operations, cell editing, duplicate and on tree structure folders (#54797).
+- Added [Folders tab](redactor/webpages/README.md#web-site-cards) to the date table. Allows you to use datatable features such as bulk operations, cell editing, duplicate and on tree structure folders (#54797).
 
 ![](_media/changelog/2022q3/2022-40-folders-dt.png)
 
@@ -271,7 +273,7 @@ Below you will find the complete list of changes in this version.
 
 ### Templates
 
-- [Thymeleaf templates](frontend/thymeleaf/tags.md#vykonanie-include-značky) added option to preserve wrapper element by setting attribute `data-iwcm-remove` to keep the structure identical to prototyping and the possibility of using elements as `header, article, footer`.
+- [Thymeleaf templates](frontend/thymeleaf/tags.md#execution-of-include-tags) added option to preserve wrapper element by setting attribute `data-iwcm-remove` to keep the structure identical to prototyping and the possibility of using elements as `header, article, footer`.
 - Modified template and template group editor - better division of fields into tabs.
 - Template groups - added Metadata language switcher, corrected Czech translation settings, corrected field settings `Generator` (#39751).
 
@@ -282,7 +284,7 @@ Below you will find the complete list of changes in this version.
 
 ![](redactor/apps/formsimple/formsimple-rowview.png)
 
-- Added option [create groups of fields](redactor/apps/formsimple/README.md#Položky), e.g. selection fields and checkboxes. The character is used as a delimiter `|`, or the character `,` or gap. Character `|` must be used if one of the options is to contain a comma.
+- Added option [create groups of fields](redactor/apps/formsimple/README.md#Items), e.g. selection fields and checkboxes. The character is used as a delimiter `|`, or the character `,` or gap. Character `|` must be used if one of the options is to contain a comma.
 
 ![](redactor/apps/formsimple/formsimple-radiogroup.png)
 
@@ -320,7 +322,7 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 
 ![](redactor/apps/calendar/calendar-datatable.png)
 
-### Users of
+### Users
 
 - In the list of user groups in the editor, added a Users tab with a list of users in the group being edited (#54493).
 - In the user group list, modified the loading of the list of web pages for server paging (#54493).
@@ -335,7 +337,7 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 
 - Editable selection box - increased the size of the edit window to the same size as the web page edit for better responsive display (e.g. when editing the header from a template edit) (#54345).
 - Added the ability to import and export from nested tables as well (correctly displayed over an open editor window with proper dimming) (#54377).
-- Added method for applying specific search parameters also for [the first (complete) loading of the table](developer/datatables/restcontroller.md#filtrovanie-pri-zobrazení-všetkých-záznamov) (calling `addSpecSearch` when calling `getAll`). Just in your implementation `getAll` calling method `getAllItemsIncludeSpecSearch` (#54493).
+- Added method for applying specific search parameters also for [the first (complete) loading of the table](developer/datatables/restcontroller.md#filtering-when-displaying-all-records) (calling `addSpecSearch` when calling `getAll`). Just in your implementation `getAll` calling method `getAllItemsIncludeSpecSearch` (#54493).
 - Added option to export data in format `CSV` (#54513).
 - Added field type [MULTISELECT](developer/datatables-editor/standard-fields.md) (#54273).
 - Adjusted the size of the Status column so that it does not unnecessarily take up the width of the table (#54273-26).
@@ -344,31 +346,31 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 
 ![](redactor/datatables/dt-pagelength.png)
 
-- Added [keyboard shortcut](redactor/datatables/README.md#klávesové-skratky), `CTRL+S/CMD+S`, which saves the record to the database but leaves the editor window open (#54273-26).
+- Added [keyboard shortcut](redactor/datatables/README.md#keyboard-shortcuts), `CTRL+S/CMD+S`, which saves the record to the database but leaves the editor window open (#54273-26).
 - Import - when an import error occurs, the error message will display the line number and also a detailed list of errors (#39751-39).
-- Added option `tab.hideOnCreate` a `tab.hideOnEdit` for hiding [tabs in the editor](developer/datatables-editor/README.md#karty-v-editore) for a new record and editing an existing record (#54749).
-- Supplemented by [the name of the edited item](redactor/datatables/README.md#zobrazenie-názvu-v-hlavičke-okna) in the editor header and the list of items in the delete confirmation dialog (#54753).
+- Added option `tab.hideOnCreate` a `tab.hideOnEdit` for hiding [tabs in the editor](developer/datatables-editor/README.md#tabs-in-the-editor) for a new record and editing an existing record (#54749).
+- Supplemented by [the name of the edited item](redactor/datatables/README.md#displaying-the-name-in-the-window-header) in the editor header and the list of items in the delete confirmation dialog (#54753).
 
 ![](redactor/datatables/dt-delete-confirm.png)
 
 - Improved visual consistency of old tables generated via `displaytag` and through an older version `DataTables`. Pagination is shifted to the right, line spacing and mouseover is (#39751-42).
-- Added option to set the tab to [the full height of the editor window](developer/datatables-editor/README.md#karty-v-editore) (#39751-42).
-- Added option [move window](redactor/datatables/README.md#možnosť-presúvať-okno) editor (#54513-21).
-- Added memorization [the order of the columns and the method of arrangement](redactor/datatables/README.md#pamätanie-usporiadania) Tables (#54513-22).
+- Added option to set the tab to [the full height of the editor window](developer/datatables-editor/README.md#tabs-in-the-editor) (#39751-42).
+- Added option [move window](redactor/datatables/README.md#possibility-to-move-the-window) editor (#54513-21).
+- Added memorization [the order of the columns and the method of arrangement](redactor/datatables/README.md#remembering-the-arrangement) Tables (#54513-22).
 
 ### Language mutations
 
 - Fixed loading of administration in languages other than Slovak.
 - Pages scanned for static texts without translations, texts replaced by translation keys.
 - Added translations for Czech and English.
-- Added option to use parameters for using translation [keys in JavaScript files](developer/frameworks/jstranslate.md#frontend-knižnica).
+- Added option to use parameters for using translation [keys in JavaScript files](developer/frameworks/jstranslate.md#frontend-library).
 
 ### Security
 
 - Updated spring libraries to 5.6.5 and thymeleaf to 3.0.15.
-- Changed algorithm `hashovania`, [passwords to bcrypt](sysadmin/pentests/README.md#algoritmus-hashovania-hesiel).
-- Supplemented by [checking page view rights](developer/frameworks/thymeleaf.md#kontrola-práv) in the administration (originally only the REST service call was checked). It is based on finding a URL in the menu and then getting the right for that URL. This is then verified with the rights of the logged in user (#54649).
-- At [datatable tests](developer/testing/datatable.md#testovanie-práv) it is mandatory to specify the option `perms` for rights testing.
+- Changed algorithm `hashovania`, [passwords to bcrypt](sysadmin/pentests/README.md#password-hashing-algorithm).
+- Supplemented by [checking page view rights](developer/frameworks/thymeleaf.md#control-of-rights) in the administration (originally only the REST service call was checked). It is based on finding a URL in the menu and then getting the right for that URL. This is then verified with the rights of the logged in user (#54649).
+- At [datatable tests](developer/testing/datatable.md#rights-testing) it is mandatory to specify the option `perms` for rights testing.
 - Calling a script `/admin/mem.jsp` is enabled only for IP addresses set in the conf. variable `serverMonitoringEnableIPs`. Originally, the script was always available (used for basic monitoring), but it displays potentially sensitive data.
 - Supplemented documentation [Safety tests for operation](sysadmin/pentests/README.md) additional solutions for security findings and settings for not displaying detailed error and version `Apache Tomcat` (#43144).
 - Removed the option to directly view the JSP component `/components/user/logon.jsp`. When accessing a password-protected file, the redirection to the `logon.jsp`, but the internal `forward`, so the URL will remain the original one. If necessary, we recommend using the conf. variable `fileAccessDeniedDocId` to set the page ID to display the login when accessing the file and set the correct page ID for the login of the web site folder (#43144).
@@ -403,21 +405,21 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 - Created documentation for the editor - [Bulk email campaigns](redactor/apps/dmail/campaings/README.MD) a [Login form](redactor/apps/dmail/form/README.md).
 - Created documentation with description of operation [sending mass emails](redactor/apps/dmail/campaings/how-sender-works.md).
 - Created documentation for the editor for the application [list of forms](redactor/apps/form/README.md).
-- Documentation created for [preview of the complete web page](redactor/webpages/editor.md#náhľad-stránky) without saving it for the editor and also for [programmer](developer/apps/webpages/README.md#náhľad-stránky).
+- Documentation created for [preview of the complete web page](redactor/webpages/editor.md#page-preview) without saving it for the editor and also for [programmer](developer/apps/webpages/README.md#page-preview).
 - Documentation created for use [specific JavaScript](developer/frameworks/README.md#webpack) file for pasting into the pug file.
-- Added documentation for the ability to add a button to [datatable editor](developer/datatables-editor/README.md#Špeciálne-tlačidlá).
+- Added documentation for the ability to add a button to [datatable editor](developer/datatables-editor/README.md#Special-buttons).
 - Created documentation for the editor for the application [AB testing](redactor/apps/abtesting/README.md).
-- Created documentation for the programmer to use [persistent user settings](developer/frameworks/webjetjs.md#perzistentné-nastavenia-používateľa)
+- Created documentation for the programmer to use [persistent user settings](developer/frameworks/webjetjs.md#persistent-user-settings)
 - Created documentation for the editor of the Calendar of Events application - [List of events](redactor/apps/calendar/README.md) a [Configure event types](redactor/apps/calendar/calendar-types/README.md) (#54473).
 - Created documentation for the programmer with a list of [field types for DataTables editor](developer/datatables-editor/standard-fields.md) (#54273).
-- Added documentation for web designer describing the method [adding styles to the selection box in the editor](frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor) (#39751-35).
+- Added documentation for web designer describing the method [adding styles to the selection box in the editor](frontend/examples/template-bare/README.md#list-of-styles-for-editor) (#39751-35).
 - Created demonstration and documentation [file upload](custom-apps/spring-mvc/admin-with-upload.md) a [import from Excel](custom-apps/spring-mvc/admin-excel-import.md) for Customer Application Programmer (#54449).
 - Supplemented documentation [Safety tests for operation](sysadmin/pentests/README.md) additional solutions for security findings and settings for not displaying detailed error and version `Apache Tomcat` (#43144).
 - The Help link in the administration directed to the main documentation page, or to a specific page (if it already exists) instead of directing to the old documentation for version 8 (#39751-40).
 - Created Audit documentation with [a description of the types of audit records](sysadmin/audit/README.md) for traffic (#54269).
-- Added documentation for the programmer about [use of field validation](developer/datatables-editor/datatable-columns.md#validácie) (#54597).
-- Added documentation for the editor - [Web pages - web page tabs](redactor/webpages/README.md#karty-web-stránok) (#54797).
-- Added documentation for setup [HTTP security headers](sysadmin/pentests/README.md#http-hlavičky).
+- Added documentation for the programmer about [use of field validation](developer/datatables-editor/datatable-columns.md#validation) (#54597).
+- Added documentation for the editor - [Web pages - web page tabs](redactor/webpages/README.md#web-site-cards) (#54797).
+- Added documentation for setup [HTTP security headers](sysadmin/pentests/README.md#http-headers).
 
 ### Testing
 
@@ -428,7 +430,7 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 - Page Builder - created a test of Page Builder and Standard switching and mode (#39751).
 - Datatable - added test for maximizing the window, closing it by clicking on the icon in the header, and dynamically calculating the number of rows on the page (#54273-16).
 - Web pages - added test for saving a page with the CTRL+s/CMS+s keyboard shortcut (#54273-16).
-- At [datatable tests](developer/testing/datatable.md#testovanie-práv) it is mandatory to specify the option `perms` for rights testing.
+- At [datatable tests](developer/testing/datatable.md#rights-testing) it is mandatory to specify the option `perms` for rights testing.
 - File rights check - added test `links.js` to verify login credentials when accessing the file in the basic version, even with a nice login page.
 - Added media display tests (`media.js`) on the web page, including tests of web page change dates (#54689).
 - Updated `CodeceptJS` to version `3.3.5`, Chromium to version 105, Firefox to version 103 (#54721-4).
@@ -475,7 +477,7 @@ The app redesigned in a new visual. Added the ability to set the start of sendin
 - Bulk email - fixed initial setting of recipients, number of recipients and emails sent when saving a campaign, non-removal of emails if user is in both selected and removed group (#39751-44).
 - Datatable - corrected search after changing the order of columns (#43144).
 
-![meme](_media/meme/2022-40.jpg)
+![meme](_media/meme/2022-40.jpg ":no-zoom")
 
 ## 2022.18
 
@@ -498,7 +500,7 @@ Documentation for [of the editor](redactor/webpages/pagebuilder.md), [web design
 - Added option to generate a random ID when inserting a block into a page by entering a value `__ID__` to the block code (#54345).
 - Added option not to mark section by setting CSS class `pb-not-section`, container setting `pb-not-container` and column setting `pb-not-column` (#54345).
 
-**Website**
+**Web pages**
 
 Added option to display [action buttons](developer/datatables-editor/notify.md) in the notification. For example, if there is a working version of the page, a button to open the last working version of the page will be displayed. This way the editor does not have to navigate to the History tab and click the button to edit the working version (#54375).
 
@@ -539,17 +541,16 @@ In the form details added:
 **Templates**
 
 - Added option to use [Thymeleaf templates](frontend/thymeleaf/README.md) sites instead of the old JSP. This brings the advantage of a better possibility of prototyping the design directly in the HTML code.
+
 ```html
 <span data-th-text="${docDetails.title}">Titulok stránky</span>
 <body data-th-class="${docDetails.fieldA}">
-	<meta name="author" data-th-content="${ninja.temp.group.author}" />
-	<link rel="canonical" data-th-href="${ninja.page.url}" />
+<meta name="author" data-th-content="${ninja.temp.group.author}" />
+<link rel="canonical" data-th-href="${ninja.page.url}" />
 
-	<div data-iwcm-write="doc_data" />
-	<div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
-</body>
+<div data-iwcm-write="doc_data"/>
+<div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
 ```
-
 - Menu item templates modified to directly include the sub-items List of Templates and List of Template Groups (items are moved to the first menu level).
 - For the local System directory, added search for the language version of the header/footer/menu according to the language of the directory. If the template has a set header `SK-Default hlavička` and directory set language English looking for `EN-Default hlavička` (there must be a - in the third place). If it exists, it shall be used.
 
@@ -586,16 +587,16 @@ Added option [add an app to the app list](custom-apps/appstore/README.md) using 
 
 **Datatables**
 
-- Added simplified option [dial settings for select boxes](developer/datatables/restcontroller.md#číselníky-pre-select-boxy) by overwriting the method `getOptions(DatatablePageImpl<T> page)`
+- Added simplified option [dial settings for select boxes](developer/datatables/restcontroller.md#dials-for-select-boxes) by overwriting the method `getOptions(DatatablePageImpl<T> page)`
 - Added option [do not export the selected column](developer/datatables/README.md#exportimport) using the setting `className` attribute to the value `not-export` (#54273).
-- Added the ability to set [the values of the selection field](developer/datatables-editor/datatable-columns.md#možnosti-výberového-poľa) by calling Java API methods or values from the application dialer.
+- Added the ability to set [the values of the selection field](developer/datatables-editor/datatable-columns.md#selection-field-options) by calling Java API methods or values from the application dialer.
 - Fixed cell editing if not to perform record retrieval from server (condition `fetchOnEdit` Is `false`).
 - Added check for duplicate notification messages when calling `DatatableRestControllerV2.addNotify`. The same message is repeated only once, checking that the caption, text and notification type match.
 - Added checking the open editor window when leaving the page. If it is open a confirmation of leaving the page will be displayed when navigating to another page. Not applicable for users with a login name starting with `tester` (#54413).
 - Field type Selection field with editing option allows to edit and add web pages [also from the card system and the basket](developer/datatables-editor/field-select-editable.md). Added icon descriptions (`tooltip`) and hiding the edit icon if the selected web page has an ID less than 1.
-- Added a field type for selecting a directory on the file system using [json field type](developer/datatables-editor/field-json.md#možnosti-classname) and values `className='dt-tree-dir-simple'` (#54433).
-- Added option for optional fields of selection field type [enter a blank value](frontend/webpages/customfields/README.md#výberové-pole) (#53805).
-- Adjusted settings [columns displayed in the datatable](redactor/datatables/README.md#nastavenie-zobrazenia-stĺpcov). The view is columnar, and in addition to the column name, it also contains the name of the tab in the editor, a possible title and auxiliary text. This makes it easier to identify the necessary columns (#54381).
+- Added a field type for selecting a directory on the file system using [json field type](developer/datatables-editor/field-json.md#classname-options) and values `className='dt-tree-dir-simple'` (#54433).
+- Added option for optional fields of selection field type [enter a blank value](frontend/webpages/customfields/README.md#selection-field) (#53805).
+- Adjusted settings [columns displayed in the datatable](redactor/datatables/README.md#setting-the-display-of-columns). The view is columnar, and in addition to the column name, it also contains the name of the tab in the editor, a possible title and auxiliary text. This makes it easier to identify the necessary columns (#54381).
 
 ![](redactor/datatables/dt-colvis.png)
 
@@ -604,7 +605,7 @@ Added option [add an app to the app list](custom-apps/appstore/README.md) using 
 
 **Home**
 
-Added [Bookmarks mini app](redactor/admin/welcome.md?id=záložky)where you can add links to frequently used sections from WebJET CMS. After logging in, you don't have to search for a section in the menu, but you can go directly to your favorite section in the bookmarks.
+Added [Bookmarks mini app](redactor/admin/welcome.md?id=záložky) where you can add links to frequently used sections from WebJET CMS. After logging in, you don't have to search for a section in the menu, but you can go directly to your favorite section in the bookmarks.
 
 ![](redactor/admin/bookmarks.png)
 
@@ -617,13 +618,14 @@ Added pull-down menu in the header after clicking on the name of the logged-in u
 - Two-Step Authentication - the ability to activate two-step authentication using the app `Google Authenticate` when logging into the administration. This increases the security of your account, because in addition to the password, you also need to enter a code from your mobile device to log in. We recommend setting this on all accounts through which user accounts and rights can be managed.
 - Encryption Key Management - allows you to create a new encryption key for encrypting forms and specify an existing key for decrypting them. Requires the Forms right.
 - Logout - logout from the administration.
+
 The todo application, which has not yet been implemented, does not yet appear on the home page (#54381).
 
 **Other changes**
 
 - Added option to use [Thymeleaf templates](custom-apps/spring-mvc/README.md#frontend) for Spring MVC applications.
 - Menu - application of the menu when setting the parameter `classes="bootstrap"` also generates classes `nav-item,nav-link,dropdown,dropdown-toggle`.
-- Optional fields - added those fields for [directory selection](frontend/webpages/customfields/README.md#výber-adresára-súborového-systému) on the file system (#54433).
+- Optional fields - added those fields for [directory selection](frontend/webpages/customfields/README.md#file-system-directory-selection) on the file system (#54433).
 
 ![](frontend/webpages/customfields/webpages-dir.png)
 
@@ -642,28 +644,28 @@ The todo application, which has not yet been implemented, does not yet appear on
 - Documentation for customer application programming has been supplemented with settings [Spring](custom-apps/spring-config/README.md) and modified [example datatable](custom-apps/admin-menu-item/README.md) to the Contacts app.
 - Added example for programming [Spring MVC applications](custom-apps/spring-mvc/README.md) (#54273).
 - External repository of WebJET CMS maven artifacts available (requires access credentials) and sample [github repository](https://github.com/webjetcms/basecms).
-- Added documentation on the use of vulnerability scanning in libraries for [programmer](developer/backend/security.md#kontrola-zraniteľností-v-knižniciach) Also [traffic](sysadmin/dependency-check/README.md).
+- Added documentation on the use of vulnerability scanning in libraries for [programmer](developer/backend/security.md#vulnerability-scanning-in-libraries) Also [traffic](sysadmin/dependency-check/README.md).
 - Documentation created for use [Thymeleaf website templates](frontend/thymeleaf/README.md).
 - Created Page Builder documentation for [of the editor](redactor/webpages/pagebuilder.md), [web designer](frontend/page-builder/README.md) Also [programmer](developer/apps/webpages/pagebuilder.md).
 - Created documentation on the possibility [do not export the selected column](developer/datatables/README.md#exportimport) datatables (#54273).
 - Documentation created for [Start screen](redactor/admin/welcome.md) to use bookmarks and send feedback.
 - Documentation created for [by unsubscribed email](redactor/apps/dmail/unsubscribed/README.md) from the bulk email app.
 - Fixed display of graphs in documentation.
-- Documentation created for the setup option [values of the selection field](developer/datatables-editor/datatable-columns.md#možnosti-výberového-poľa) datatable editor by calling the API function or by inserting data from the dialer application.
+- Documentation created for the setup option [values of the selection field](developer/datatables-editor/datatable-columns.md#selection-field-options) datatable editor by calling the API function or by inserting data from the dialer application.
 - Documentation created for [to add an app to the app list](custom-apps/appstore/README.md) for custom application programmer.
 - Created Template section in the documentation for the editor - [Editing a web page](redactor/webpages/editor.md).
-- Added documentation for setting the optional field [of the filesystem directory selection type](frontend/webpages/customfields/README.md#výber-adresára-súborového-systému).
+- Added documentation for setting the optional field [of the filesystem directory selection type](frontend/webpages/customfields/README.md#file-system-directory-selection).
 - Documentation created [Server monitoring](sysadmin/monitoring/README.md) for traffic (#54453).
 - Created documentation for the application [Form easily](redactor/apps/formsimple/README.md) (#54831).
-- Created documentation for the editor to [setting the display of columns](redactor/datatables/README.md#nastavenie-zobrazenia-stĺpcov) in datatable (#54381).
+- Created documentation for the editor to [setting the display of columns](redactor/datatables/README.md#setting-the-display-of-columns) in datatable (#54381).
 
 **Testing**
 
-- Added option to set field value for [automated datatable test](developer/testing/datatable.md#možnosti-nastavenia) via the option `testingData`. This is necessary if the field has a specific format (e.g. email address, number, limited number of characters).
-- Added autodetection [mandatory field of type email](developer/testing/datatable.md#spôsob-generovania-povinných-polí) (based on the name of the field containing the term email), the field is then filled in correctly with the domain name.
+- Added option to set field value for [automated datatable test](developer/testing/datatable.md#setting-options) via the option `testingData`. This is necessary if the field has a specific format (e.g. email address, number, limited number of characters).
+- Added autodetection [mandatory field of type email](developer/testing/datatable.md#method-of-generating-mandatory-fields) (based on the name of the field containing the term email), the field is then filled in correctly with the domain name.
 - Added test for displaying list of applications, search by name, inserting JSP and Spring application into page and editing their parameters - `tests/webpages/appstore.js` (#54333).
 - Modified tests to run in firefox (#54437).
-- Added features `Browser.isChromium() a Browser.isFirefox()` For [browser detection](developer/testing/README.md#detekcia-prehliadača) in tests (#54437).
+- Added features `Browser.isChromium() a Browser.isFirefox()` For [browser detection](developer/testing/README.md#browser-detection) in tests (#54437).
 - Added test for setting tags (perex groups) for web page (#53805).
 - Added report generation via library [Allure](developer/testing/allure.md). They are published for [chromium](http://docs.webjetcms.sk/allure/chromium/) also for [firefox](http://docs.webjetcms.sk/allure/firefox/) (#54437).
 
@@ -688,7 +690,7 @@ The todo application, which has not yet been implemented, does not yet appear on
 - Web site - fixed error saving tags (perex groups) (#53805).
 - Media - Fixed display of the Media app in the list of apps in the page editor (#54381).
 
-![meme](_media/meme/2022-18.jpg)
+![meme](_media/meme/2022-18.jpg ":no-zoom")
 
 ## 2022.0
 
@@ -698,10 +700,10 @@ The todo application, which has not yet been implemented, does not yet appear on
 
 - Updated Java libraries to newer versions, updated basic WebJET CMS to version 8.9.
 - Added tool [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html) triggered by the command `gradlew dependencyCheckAnalyze` to check for vulnerabilities in the Java and JavaScript libraries used.
-- ATTENTION: change logging from `log4j` at `logback`. After the update, verify that the files have been successfully deleted `commons-logging-1.1.jar, log4j.jar, slf4j-api-1.5.3.jar` (updated to version 1.7.33), `slf4j-jcl-1.5.3.jar` from the directory `/WEB-INF/lib`.
+- **Warning:** change logging from `log4j` at `logback`. After the update, verify that the files have been successfully deleted `commons-logging-1.1.jar, log4j.jar, slf4j-api-1.5.3.jar` (updated to version 1.7.33), `slf4j-jcl-1.5.3.jar` from the directory `/WEB-INF/lib`.
 - Email / SMTP - added option to set version `TLS` for sending emails (connection to SMTP server). It is set via conf. variable `smtpTLSVersion`, set by default to `TLSv1.2`.
 - Files - the function to convert from Word to PDF format has been removed (the online service we used to use no longer works).
-- ATTENTION: old library removed `commons-httpclient-3.1`, API `Tools.downloadUrl(String basePath, HttpServletRequest req)` modified for v4 library use, methods deleted `Tools.proxyUrl`. In the Proxy application, the option to use the `ProxyByHttpClient` (existing versions use `ProxyByHttpClient4`). We recommend using the library `Apache HttpClient Fluent API` for specific HTTP connections (examples https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
+- **Warning:** old library removed `commons-httpclient-3.1`, API `Tools.downloadUrl(String basePath, HttpServletRequest req)` modified for v4 library use, methods deleted `Tools.proxyUrl`. In the Proxy application, the option to use the `ProxyByHttpClient` (existing versions use `ProxyByHttpClient4`). We recommend using the library `Apache HttpClient Fluent API` for specific HTTP connections (examples https://hc.apache.org/httpcomponents-client-4.5.x/current/tutorial/html/fluent.html).
 - Updated set of libraries `jQuery UI` from 1.8.23 to 1.13.1.
 - Photo gallery - updated library `jquery.prettyPhoto`, fixed functionality with jQuery v3.
 - Deleted unused/old versions of jQuery library, updated `moment.js, jquery-ui.min.js, jquery-ui.css, handlebars.min.js`.
@@ -709,15 +711,15 @@ The todo application, which has not yet been implemented, does not yet appear on
 - Updated library `velocity` from 1.7 to 2.3, `velocity-tools` from 2.0 to 3.1 and `commons-lang3` from 3.3.2 to 3.12
 - Updated library `jsoup` from 1.7.2 to 1.14.3, `socialauth` from 4.12 to 4.15 + `openid4java` from 0.9.5 to 0.9.6, `snakeyaml` from 1.12 to 1.30 `http-client, http-core` from 4.5.6 to 4.5.13, `http-mime` deleted (not necessary), `commons-codec` from 1.6 to 1.11
 - Updated library `standard.jar` a `jstl.jar` from version 1.1.2 to 1.2.5 (by replacing `taglibs-standard-spec` a `taglibs-standard-impl`)
-- ATTENTION: updated `Apache POI` from 3.14-beta1 to 5.2.0, has changed API, list of typical changes at http://docs.webjetcms.sk/v8/#/back-end/apache-poi/, added `commons-math`, `log4j-api`, `log4j-to-slf4j-2.17.1`, `SparseBitSet-1.2`.
+- **Warning:** Updated `Apache POI` from 3.14-beta1 to 5.2.0, has changed API, list of typical changes at http://docs.webjetcms.sk/v8/#/back-end/apache-poi/, added `commons-math`, `log4j-api`, `log4j-to-slf4j-2.17.1`, `SparseBitSet-1.2`.
 - Updated `commons-collection4` from 4.1 to 4.4, `commons-compress` from 1.10 to 1.21, `commons-io` from 2.6 to 2.11, `pdfbox` a `fontbox` from 2.0.2 to 2.0.25, `xmlbeans` from 2.6.0 to 5.0.3
 - Updated `springfox/swagger` from 2.6.1 to 3.0.0, `commons-upload` from 1.3.3 to 1.4
 - Updated `Spring` from 5.1.1.RELEASE to 5.3.15, updated `spring-data` from 2.1.1 to 2.6.1
 - Cancelled `webdav/milton servlet` (no longer in use for a long time), libraries `milton-api, milton-servlet`.
 - Updated library `jackson-annotations, jackson-core, jackson-databind` from 2.0.7 to 2.13.1
 - `Apache Struts` - patched vulnerabilities `CVE-2014-0114, CVE-2016-1181, CVE-2016-1182, CVE-2015-0899` By https://github.com/bingcai/struts-mini/commit/df4da55bc2b0c3c1f4687a61c49458dfbde0e3c3 and https://github.com/tkhanateconsysdotcom/struts1-forever/commit/eda3a79907ed8fcb0387a0496d0cb14332f250e8
-- Deleted library `itext`which has unpatched vulnerabilities and the new version is commercial. Removed PDF export option in `DisplayTag` and export the form to PDF (`/formtopdf.do`), if you need in the project you need to get a library `itext` manually add with risk of possible vulnerability
-- ATTENTION: updated libraries `bcprov-jdk5on-154.jar` at 1.70, `common-beanutils-1.9.2.jar` at 1.9.4, `tink-1.2.2.jar` on 1.6.1, check the directory `WEB-INF/lib` after the update if the old versions were correctly deleted.
+- Deleted library `itext` which has unpatched vulnerabilities and the new version is commercial. Removed PDF export option in `DisplayTag` and export the form to PDF (`/formtopdf.do`), if you need in the project you need to get a library `itext` manually add with risk of possible vulnerability
+- **Warning:** updated libraries `bcprov-jdk5on-154.jar` at 1.70, `common-beanutils-1.9.2.jar` at 1.9.4, `tink-1.2.2.jar` on 1.6.1, check the directory `WEB-INF/lib` after the update if the old versions were correctly deleted.
 - REST - documentation for REST services `swagger` updated to version 4.2.1 and moved to URL `/admin/swagger-ui/index.html` (admin account authorization required and conf. variable enabled at the same time `swaggerEnabled` to true). You need to delete from the gradle projects `implementation("sk.iway:webjet:${webjetVersion}:swagger-ui")`.
 - Administration updated on `Bootstrap` version 4.6.1
 
@@ -731,4 +733,4 @@ The todo application, which has not yet been implemented, does not yet appear on
 - Gallery - corrected display in the Area of Interest tab.
 - Datatables - file upload - corrected the upload status setting when finished (the spinning wheel was incorrectly left displayed).
 
-![meme](_media/meme/2022-0.jpg)
+![meme](_media/meme/2022-0.jpg ":no-zoom")

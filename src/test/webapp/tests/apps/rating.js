@@ -1,8 +1,6 @@
 Feature('apps.rating');
 
 var randomNumber;
-var doc_edit_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-selected.buttons-edit.btn-warning"));
-var doc_add_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success"));
 
 var ratingForm = "!INCLUDE(/components/rating/rating_form.jsp, checkLogon=false, ratingDocId=REPLACE_THIS, range=10)!";
 // var ratingPage = "!INCLUDE(/components/rating/rating_page.jsp, ratingDocId=REPLACE_THIS, range=10)!";
@@ -29,7 +27,7 @@ Scenario("Rating action testing", async ({ I, DT, DTE }) => {
     var docName = "Rating_autotest-" + randomNumber;
 
     //Crate new page
-        I.click(doc_add_button);
+        I.click(DT.btn.add_button);
         DTE.waitForEditor();
         I.waitForElement("#DTE_Field_title");
         I.click("#DTE_Field_title");
@@ -37,7 +35,7 @@ Scenario("Rating action testing", async ({ I, DT, DTE }) => {
         DTE.save();
 
     //Get created doc ID
-        DT.filter("title", docName);
+        DT.filterContains("title", docName);
         I.see(docName);
         const docId = await I.grabTextFrom( "#datatableInit > tbody tr:nth-child(1) > td:nth-child(1) > div" );
 
@@ -70,7 +68,7 @@ Scenario("Rating action testing", async ({ I, DT, DTE }) => {
 
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=57593");
-    DT.filter("title", docName);
+    DT.filterContains("title", docName);
     I.see(docName);
     I.clickCss("#datatableInit_wrapper .buttons-select-all");
     I.clickCss("#datatableInit_wrapper button.buttons-remove");

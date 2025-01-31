@@ -1,5 +1,7 @@
 # Rezervačné objekty
 
+## Zoznam rezervačných objektov
+
 Aplikácia Zoznam rezervačných objektov umožňuje vytváranie/úpravu/mazanie rezervačných objektov, ako aj ich import z Excel súboru a export do Excel/CSV súboru (prípadne aj možnosť okamžitého tlačenia pri exporte).
 
 ![](reservation_object-datatable.png)

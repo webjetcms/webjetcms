@@ -94,7 +94,7 @@ Scenario('zakladne testy', async ({I, DataTables}) => {
 Pri uložení nového záznamu sa zároveň do objektu ```options.testingData``` uloží pole vyplnených údajov povinných polí. Tie môžete využiť napr. vo funkcii ```editSearchSteps``` ako:
 
 ```javascript
-    I.see(`${options.testingData[0]}-change`, "div.dataTables_scrollBody");
+    I.see(`${options.testingData[0]}-change`, "div.dt-scroll-body");
 ```
 
 Objekt ```options``` je vrátený z ```baseTest``` funkcie a je možné ho použiť v ďalších scenároch, príklad je v [translation-keys.js](../../../../src/test/webapp/tests/settings/translation-keys.js)

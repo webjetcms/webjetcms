@@ -44,7 +44,6 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 	<iwcm:combine type="css" set="adminStandardCssWj9" />
 	<link href="/admin/skins/webjet8/assets/global/css/webjet2021.css" rel="stylesheet" type="text/css"/>
 
-	<link rel="stylesheet" href="/admin/skins/webjet8/assets/global/css/custom.css" />
 	<link rel="stylesheet" href="/admin/skins/webjet8/css/fck_dialog.css" />
 	<link type="text/css" rel="stylesheet" media="screen" href="/admin/css/tabpane-luna.css" />
    <style type="text/css">
@@ -52,7 +51,7 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
    	 input[type="text"] {
    	     background-color: white;
 	    border: 1px solid #e5e5e5;
-	    border-radius: 0;
+	    border-radius: 6px;
 	    box-shadow: none;
 	    color: #333333;
 	    font-size: 14px;

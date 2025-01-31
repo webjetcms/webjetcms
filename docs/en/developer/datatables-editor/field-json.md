@@ -3,14 +3,14 @@
 <!-- @import "[TOC]" {cmd="toc" depthFrom=1 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
-
 - [Field Type - JSON](#field-type---json)
-	- [Options className](#možnosti-classname)
-	- [Using specific JSON objects](#použitie-špecifických-json-objektov)
-	- [Custom configuration of the displayed tree structure](#vlastná-konfigurácia-zobrazenej-stromovej-štruktúry)
-	- [Display JSON column value in Datatable](#zobrazenie-hodnoty-json-stĺpca-v-datatable)
-	- [Listening for a change in value](#počúvanie-na-zmenu-hodnoty)
-	- [Implementation details](#implementačné-detaily)
+  - [Options className](#classname-options)
+  - [Using specific JSON objects](#use-of-specific-json-objects)
+  - [Custom configuration of the displayed tree structure](#custom-configuration-of-the-displayed-tree-structure)
+  - [Display JSON column value in Datatable](#display-the-json-column-value-in-datatable)
+  - [Listening for a change in value](#listening-for-value-change)
+  - [Implementation details](#implementation-details)
+
 <!-- /code_chunk_output -->
 
 The Scripts web page or application uses a 1:N mapping to other objects. In the case of a Web page, this is the selected directory and a copy of the Web page in the directories, and in the case of a Scripts application, it is a mapping of the script to directories and Web pages.
@@ -23,6 +23,7 @@ In the JSON data from the server, this mapping is returned as:
 - [List\<InsertScriptGroupBean> groupIds](../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) for application Scripts mapping to directories
 - [List\<InsertScriptDocBean> docIds](../../../src/main/java/sk/iway/iwcm/components/insertScript/InsertScriptBean.java) for Scripts application mapping to web pages
 - [List\<DirTreeItem> writableFolders](../../../src/main/java/sk/iway/iwcm/components/users/UserDetailsEditorFields.java) to select a list of directories in the file system
+
 The above attributes use annotation `@DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-group"`, i.e. the JSON field type. The className attribute is used to specify the behavior of the returned object.
 
 ```java
@@ -74,7 +75,7 @@ private List<GroupDetails> editableGroups;
 
 note the use of the attribute `data-dt-json-addbutton` to set the button text in the directory listing. Keys are ready `editor.json.addPage` to add a web page and `editor.json.addGroup` to add a directory.
 
-> NOTE: if you are using client paging (attribute `serverSide: false`) so you need a blank `List<>` objects return as `null` instead of an empty field (otherwise the value in the datatable is not updated after deleting all directories/pages from the list).
+> **Warning:** if you use client paging (attribute `serverSide: false`) so you need a blank `List<>` objects return as `null` instead of an empty field (otherwise the value in the datatable is not updated after deleting all directories/pages from the list).
 
 ## Options className
 
@@ -94,7 +95,7 @@ note the use of the attribute `data-dt-json-addbutton` to set the button text in
 
 `dt-tree-dir` - returned JSON object of type `DirTreeItem` For **directory selection in the file system**
 
-`dt-tree-dir-simple` - returned **Chain** with value for **directory selection in the file system**
+`dt-tree-dir-simple` - returned **Chain** with value for **directory selection in the file system**, it is possible to specify the root folder as `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
@@ -136,53 +137,55 @@ List<InsertScriptDocBean> docIds;
 the important thing is the marking `inputType=DataTableColumnType.JSON` and setting the correct `className`.
 
 **TIP**: `className` may contain additional `suffix` (for example `dt-tree-group-array-insert-script`) for further resolution in your code. For example, if you had multiple JSON objects of the same type `GroupDetails` and needed to generate different resulting JSON objects.
+
 On the frontend it is possible to define an object in the Datatable constructor `jsonField` wherein the function `getItem` converts the returned node from the jstree (GroupDetails or DocDetails) to the target format. Function `getKey` is used when verifying the existence of an object in an array, it returns the unique identifier of the object.
 
 An example is in the file [insert-script.pug](../../../src/main/webapp/admin/v9/views/pages/apps/insert-script.pug), which provides conversion of standard `DocDetails` a `GroupDetails` objects to type format:
 
 ```javascript
 insertScriptTable = WJ.DataTable({
-	id: "insertScriptTable",
-	url: "/admin/rest/components/insert-script",
-	columns: columns,
-	tabs: tabs,
-	serverSide: false,
-	editorId: "id",
-	jsonField: {
-		getItem: function (props, data) {
-			let obj;
-			if (props.click.indexOf("dt-tree-page") == 0) {
-				//web stranka - DocDetails objekt
-				let doc = data.node.original.docDetails;
-				//pre ziskanie fullPath potrebujeme aj parent GroupDetails objekt
-				let group = data.parentNode.original.groupDetails;
-				obj = {
-					id: 0,
-					docId: doc.docId,
-					fullPath: group.fullPath + "/" + doc.title,
-					insertScriptDocId: 0,
-				};
-			} else {
-				//zvoleny bol adresar - GroupDetails objekt
-				let group = data.node.original.groupDetails;
-				obj = {
-					id: 0,
-					groupId: group.groupId,
-					domainId: 1,
-					insertScriptGrId: 0,
-					fullPath: group.fullPath,
-				};
-			}
+    id: 'insertScriptTable',
+    url: '/admin/rest/components/insert-script',
+    columns: columns,
+    tabs: tabs,
+    serverSide: false,
+    editorId: "id",
+    jsonField: {
+        getItem: function(props, data) {
+            let obj;
+            if (props.click.indexOf("dt-tree-page")==0) {
+                //web stranka - DocDetails objekt
+                let doc = data.node.original.docDetails;
+                //pre ziskanie fullPath potrebujeme aj parent GroupDetails objekt
+                let group = data.parentNode.original.groupDetails;
+                obj = {
+                    id: 0,
+                    docId: doc.docId,
+                    fullPath: group.fullPath + "/" + doc.title,
+                    insertScriptDocId: 0
+                }
+            }
+            else {
+                //zvoleny bol adresar - GroupDetails objekt
+                let group = data.node.original.groupDetails;
+                obj = {
+                    id: 0,
+                    groupId: group.groupId,
+                    domainId: 1,
+                    insertScriptGrId: 0,
+                    fullPath: group.fullPath
+                }
+            }
 
-			return obj;
-		},
-		getKey: function (props, data) {
-			let key;
-			if (props.click.indexOf("dt-tree-page") == 0) key = data.docId;
-			else key = data.groupId;
-			return key;
-		},
-	},
+            return obj;
+        },
+        getKey: function(props, data) {
+            let key;
+            if (props.click.indexOf("dt-tree-page")==0) key = data.docId;
+            else key = data.groupId;
+            return key;
+        }
+    }
 });
 ```
 
@@ -294,7 +297,7 @@ public class DirTreeItem extends JsTreeItem {
         setText(f.getName());
         setVirtualPath(f.getVirtualPath());
 
-        setIcon("fa fa-folder");
+        setIcon("ti ti-folder");
         setState(new JsTreeItemState());
 
         setType(JsTreeItemType.DIR);
@@ -328,7 +331,7 @@ Value `className` we recommend to leave at the value `dt-tree-universal-array` t
 
 ## Display JSON column value in Datatable
 
-The Java bean used must contain a method `getFullPath()` or `getVirtualPath()`whose value is used when listing the value of the object in the datatable and the editor:
+The Java bean used must contain a method `getFullPath()` or `getVirtualPath()` whose value is used when listing the value of the object in the datatable and the editor:
 
 ```java
 /**
@@ -346,7 +349,8 @@ public String getFullPath() {
 }
 ```
 
-**Notice**: display json columns with `renderuje` only in the browser, the search in the value (yet) cannot be used in server searches.
+!>**Notice**: display json columns with `renderuje` only in the browser, the search in the value (yet) cannot be used in server searches.
+
 If the method `getFullPath()` you cannot implement we recommend using the attribute `hidden=true` to disable the display of json columns in the table. You can implement an additional attribute to display the value in the datatable, which you set the attribute `hiddenEditor=true` to disable the attribute in the editor. This gives you a separate attribute for the editor and the datatable.
 
 ## Listening for a change in value
@@ -354,19 +358,19 @@ If the method `getFullPath()` you cannot implement we recommend using the attrib
 If you need to listen for a field value change outside of the VUE component it is possible to listen for a change event on a nested `textarea` element that contains the current JSON object:
 
 ```javascript
-$("#DTE_Field_editorFields-parentGroupDetails").on("change", function (e) {
-	//console.log("Input changed, e=", e);
-	let json = JSON.parse($(e.target).val());
-	//console.log("json=", json);
-	//tu pouzivame groupId, lebo je to objekt parent adresara
-	let groupId = json[0].groupId;
-	showHideDomainName(groupId);
+$("#DTE_Field_editorFields-parentGroupDetails").on("change", function(e) {
+    //console.log("Input changed, e=", e);
+    let json = JSON.parse($(e.target).val());
+    //console.log("json=", json);
+    //tu pouzivame groupId, lebo je to objekt parent adresara
+    let groupId = json[0].groupId;
+    showHideDomainName(groupId);
 });
 ```
 
 ## Implementation details
 
-[field-type-json.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a new data type is defined `$.fn.dataTable.Editor.fieldTypes.json`. This is implemented using the VUE component [webjet-dte-jstree](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). It also contains a hidden field of type `textarea`to which the current JSON object is copied. But this field is only used to "inspect" the current data. In the get function, the current data from the VUE component is always returned.
+[field-type-json.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a new data type is defined `$.fn.dataTable.Editor.fieldTypes.json`. This is implemented using the VUE component [webjet-dte-jstree](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/webjet-dte-jstree.vue). It also contains a hidden field of type `textarea` to which the current JSON object is copied. But this field is only used to "inspect" the current data. In the get function, the current data from the VUE component is always returned.
 
 [datatables-config.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-config.js) implements the function `renderJson(td, type, rowData, row)` to display the data in the table. The latter passes the records from which it uses the attribute `fullPath`.
 
@@ -380,4 +384,4 @@ Feature `processTreeItem(that, data)` handles clicking on an object (DocDetails 
 
 [vue-folder-tree.vue](../../../src/main/webapp/admin/v9/src/vue/components/webjet-dte-jstree/folder-tree/vue-folder-tree.vue) encapsulates the JS Tree library into a VUE component.
 
-If `Doc/GroupDetails` object `null` no field would appear. Therefore, in `field-type-json.js` is a function of `fixNullData`which artificially creates a base object for this case. If it is a web page it contains the attribute `docId=-1`, for the directory `groupId=-1` and for other objects `id=-1`. Attribute `fullPath` is set to an empty value.
+If `Doc/GroupDetails` object `null` no field would appear. Therefore, in `field-type-json.js` is a function of `fixNullData` which artificially creates a base object for this case. If it is a web page it contains the attribute `docId=-1`, for the directory `groupId=-1` and for other objects `id=-1`. Attribute `fullPath` is set to an empty value.

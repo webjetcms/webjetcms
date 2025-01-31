@@ -26,8 +26,17 @@ public interface PerexGroupBeanToPerexGroupsEntityMapper {
     }
 
     @Named("tokensToString")
-    default String intToLong(String[] relatedPages) {
+    default String tokensToString(String[] relatedPages) {
         if(relatedPages.length < 1) return "";
         return String.join(",", relatedPages);
+    }
+
+    @Mapping(source = "id", target = "perexGroupId", qualifiedByName = "longToInt")
+    PerexGroupBean perexGroupsEntityToPerexGroupBean (PerexGroupsEntity perexGroupsEntity);
+    List<PerexGroupBean> perexGroupsEntityListToPerexGroupBeanList (List<PerexGroupsEntity> perexGroupsEntityList);
+
+    @Named("longToInt")
+    default int longToInt(Long id) {
+        return id.intValue();
     }
 }

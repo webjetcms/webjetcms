@@ -47,7 +47,7 @@
                 let lng = $(this).val();
                 //console.log("Select changed, language=", lng);
                 url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
-                cookiesDataTable.ajax.url(url);
+                cookiesDataTable.setAjaxUrl(url);
                 cookiesDataTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
                 cookiesDataTable.ajax.reload();
             });

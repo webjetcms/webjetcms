@@ -6,6 +6,7 @@
   - [Autorizace tokenů](/custom-apps/spring/api-auth.md)
   - [Poskytování služeb REST](/custom-apps/spring/rest-url.md)
   - [Rozšíření úložišť Spring DATA systému WebJET CMS](/custom-apps/spring/repository-extend.md)
+  - [Veřejné služby](/custom-apps/spring/public-services.md)
 - Aplikace
   - [Položka menu v sekci správce](/custom-apps/admin-menu-item/)
   - [Seznam webových stránek/novinek](/custom-apps/news/)

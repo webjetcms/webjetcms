@@ -77,7 +77,7 @@ public class DocHistoryRestController extends DatatableRestControllerV2&lt;DocHi
                 }
 <span class="fc" id="L78">            }</span>
 
-<span class="fc" id="L80">            docDetailsList.sort(Comparator.comparing(DocHistoryDto::getPublishStartDate));</span>
+<span class="fc" id="L80">            docDetailsList.sort(Comparator.comparing(DocHistoryDto::getPublishStartDate, Comparator.nullsFirst(Comparator.naturalOrder())));</span>
 <span class="fc" id="L81">            page = new DatatablePageImpl&lt;&gt;(docDetailsList);</span>
 <span class="fc" id="L82">        } else {</span>
 <span class="pc bpc" id="L83" title="1 of 2 branches missed.">            if(!getUser().isEnabledItem(&quot;menuWebpages&quot;)) throw new IllegalArgumentException(&quot;Access is denied&quot;);</span>

@@ -1,10 +1,10 @@
-# Úprava bunky
+# Upraviť v zobrazení mriežky
 
-Datatables podporujú priamu úpravu bunky v režime editácie ```bubble```. Režim sa zapne kliknutím na tlačidlo **Úprava bunky** v nástrojovej lište. Následne kliknutím na bunku sa zobrazí dialógové okno s editorom zvolenej bunky.
+Datatables podporujú priamu úpravu bunky v režime editácie ```bubble```. Režim sa zapne kliknutím na tlačidlo **Upraviť v zobrazení mriežky** v nástrojovej lište. Následne kliknutím na bunku sa zobrazí dialógové okno s editorom zvolenej bunky.
 
 ## Inicializácia režimu
 
-Úprava bunky sa inicializuje v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) kódom:
+Upraviť v zobrazení mriežky sa inicializuje v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) kódom:
 
 ```javascript
 // aktivuj rezim uprava bunky / bubble

@@ -65,6 +65,8 @@ Scenario('campaings-zakladne testy', ({I, DTE}) => {
     /* DELETE TEST */
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
+
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     I.dontSee(entityName);
@@ -83,7 +85,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
     DTE.save();
-    DT.filter("subject", entityName);
+    DT.filterContains("subject", entityName);
 
     I.click(entityName);
     DTE.waitForEditor("campaingsDataTable");
@@ -116,6 +118,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     DTE.cancel();
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
  });
 
@@ -133,7 +136,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.click('Produktová stránka - B verzia');
     DTE.save();
 
-    DT.filter("subject", entityName);
+    DT.filterContains("subject", entityName);
     I.click(entityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
@@ -214,6 +217,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("button.btn-close-editor", "div.DTE_Footer");
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee(entityName);
  });
@@ -234,7 +238,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     DTE.save();
 
     //Try add users by group
-    DT.filter("subject", entityName);
+    DT.filterContains("subject", entityName);
     I.click(entityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
@@ -251,9 +255,9 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.wait(1);
 
     I.dontSeeElement("NEULOŽENÝ");
-    DT.filter('recipientName', 'Lukáč');
+    DT.filterContains('recipientName', 'Lukáč');
     I.see("Filip Lukáč");
-    DT.filter('recipientName', 'Pavlík');
+    DT.filterContains('recipientName', 'Pavlík');
     I.see("Matej Pavlík");
 
     DT.clearFilter('recipientName');
@@ -270,6 +274,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.wait(1);
+    DT.waitForLoader("datatableFieldDTE_Field_recipientsTab");
 
     I.dontSee("Filip Lukáč");
     I.dontSee("Matej Pavlík");
@@ -299,6 +304,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("button.btn-close-editor", "div.DTE_Footer");
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee(entityName);
 });
@@ -361,6 +367,7 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     I.dtWaitForLoader();
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     I.dontSee(entityName);
@@ -368,7 +375,7 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
 
 Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     DT.waitForLoader();
-    DT.filter("subject", "Testovaci email");
+    DT.filterContains("subject", "Testovaci email");
     I.click("Testovaci email");
     I.dtWaitForEditor("campaingsDataTable");
 
@@ -382,7 +389,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
     I.dtEditorCancel();
 
     //
-    DT.filter("subject", "Test_1");
+    DT.filterContains("subject", "Test_1");
     I.click("Test_1");
     I.dtWaitForEditor("campaingsDataTable");
 
@@ -427,7 +434,7 @@ Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
 
 Scenario('Test sort in inner tables', ({I, DT, DTE}) => {
     I.amOnPage("/apps/dmail/admin/");
-    DT.filter("subject", "Test_filtrovania_a_sortovania");
+    DT.filterContains("subject", "Test_filtrovania_a_sortovania");
 
     I.click("Test_filtrovania_a_sortovania");
     DTE.waitForEditor("campaingsDataTable");
@@ -553,7 +560,7 @@ Scenario("Duplicity check", ({I, DT, DTE}) => {
     I.click("Duplicity check campaign");
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
-    DT.filter("recipientEmail", "vipklient");
+    DT.filterContains("recipientEmail", "vipklient");
     I.see("Záznamy 1 až 1 z 1", recipientsWrapper);
 
     //deselect groups
@@ -566,13 +573,13 @@ Scenario("Duplicity check", ({I, DT, DTE}) => {
 Scenario("Domain separation check", ({I, DT, Document}) => {
     I.amOnPage("/apps/dmail/admin/");
 
-    DT.filter("subject", "test_domain_filter");
+    DT.filterContains("subject", "test_domain_filter");
     DT.checkTableRow("campaingsDataTable", 1, ["2476", "test_domain_filter_webjet9"]);
     I.dontSee("test_domain_filter_test23");
 
     //Change domain
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("subject", "test_domain_filter");
+    DT.filterContains("subject", "test_domain_filter");
     DT.checkTableRow("campaingsDataTable", 1, ["2477", "test_domain_filter_test23"]);
     I.dontSee("test_domain_filter_webjet9");
 });
@@ -584,7 +591,7 @@ Scenario('logout', async ({I}) => {
 Scenario("BUG check - disabling buttons + emails/stat delete", ({I, DT, DTE}) => {
     I.amOnPage("/apps/dmail/admin/");
 
-    DT.filter("subject", "test_domain_filter");
+    DT.filterContains("subject", "test_domain_filter");
     I.click("test_domain_filter_webjet9");
     DTE.waitForEditor("campaingsDataTable");
 
@@ -602,7 +609,7 @@ Scenario("BUG check - disabling buttons + emails/stat delete", ({I, DT, DTE}) =>
     DTE.save("datatableFieldDTE_Field_recipientsTab");
     DT.waitForLoader();
 
-    DT.filter("recipientName", "testForDelete");
+    DT.filterContains("recipientName", "testForDelete");
 
     I.see("testForDelete");
     I.seeElement( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-resend") );
@@ -662,7 +669,7 @@ Scenario('Check BUG recipients + constraint MultipleEmails', ({ I, DT, DTE}) => 
     DTE.save();
 
     I.say("Edit campaing and check that recipient is bind to campaing");
-        DT.filter("subject", entityName);
+        DT.filterContains("subject", entityName);
         I.see(entityName);
         I.click(entityName);
         DTE.waitForEditor("campaingsDataTable");
@@ -673,6 +680,7 @@ Scenario('Check BUG recipients + constraint MultipleEmails', ({ I, DT, DTE}) => 
         DTE.cancel();
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");
+        DTE.waitForEditor("campaingsDataTable");
         I.click("Zmazať", "div.DTE_Action_Remove");
         I.dontSee(entityName);
 });
@@ -743,6 +751,7 @@ Scenario('FEATURE - before save/action remove all un-subscribed emails', ({ I, D
     addEmail(I, DTE, "", email);
 
     I.say("Check email");
+    DT.filterEquals("recipientEmail", email);
     I.seeElement( locate(recipientsWrapper).find("a").withText( email.toLowerCase() ) );
 
     I.say("Unsubscribe email");
@@ -753,13 +762,14 @@ Scenario('FEATURE - before save/action remove all un-subscribed emails', ({ I, D
     DTE.save();
 
     I.say("Check that email is unsubscribed");
-    DT.filter("email", email);
+    DT.filterContains("email", email);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Check that email is STILL visible in campaign - PROBLEM");
     I.amOnPage('/apps/dmail/admin/?id=2744');
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    DT.filterEquals("recipientEmail", email);
     I.seeElement( locate(recipientsWrapper).find("a").withText( email.toLowerCase() ) );
 
     I.say("DO save and then check that email is no longer visible in campaign");
@@ -767,13 +777,15 @@ Scenario('FEATURE - before save/action remove all un-subscribed emails', ({ I, D
     I.amOnPage('/apps/dmail/admin/?id=2744');
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    DT.filterEquals("recipientEmail", email);
     I.dontSeeElement( locate(recipientsWrapper).find("a").withText( email.toLowerCase() ) );
 
     I.say("Remove email form un-subscribed");
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
-    DT.filter("email", email);
+    DT.filterContains("email", email);
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("unsubscribedDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee(email);
 });
@@ -856,7 +868,7 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.see(name);
     DTE.save();
 
-    DT.filter("subject", campaign);
+    DT.filterContains("subject", campaign);
     I.click(campaign);
     DTE.waitForEditor("campaingsDataTable");
 
@@ -867,13 +879,16 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     DT.waitForLoader('#datatableFieldDTE_Field_recipientsTab_processing');
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-select-all") );
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-remove") );
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForModalClose('datatableFieldDTE_Field_recipientsTab_modal');
     DT.waitForLoader();
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     DTE.cancel();
 
     I.click( locate("#campaingsDataTable_wrapper").find("button.buttons-select-all") );
     I.click( locate("#campaingsDataTable_wrapper").find("button.buttons-remove") );
+    DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
     I.see("Nenašli sa žiadne vyhovujúce záznamy");

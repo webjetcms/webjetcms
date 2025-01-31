@@ -96,6 +96,10 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 		{
 			orderType = DocDB.ORDER_SAVE_DATE;
 		}
+		else if (p_order.compareTo("price") == 0)
+		{
+			orderType = DocDB.ORDER_PRICE;
+		}
 	}
 
 	boolean ascending = pageParams.getBooleanValue("asc", true);
@@ -168,9 +172,6 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 %>
 <%= Tools.insertJQuery(request) %>
 <iwcm:script type="text/javascript">
- 	<!--
-
- 	/*
  	function addToBasket(docId)
  	{
  	   var qty = 1;
@@ -183,23 +184,31 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
  	    if (poznEl != null) userNote = poznEl.value;
  	   }
 
- 	$.get( "/components/basket/addbasket_popup.jsp?act=add&basketQty="+qty+"&basketItemId="+docId+"&basketUserNote="+userNote, function( data ) {
- 	  $(".basketPrice").html($(data).find('.cena').html());
- 	  $(".basketSmallPrice").html("<span>"+$(data).find('.cena').html()+"</span>");
+		$.get( "/components/basket/addbasket_popup.jsp?act=add&basketQty="+qty+"&basketItemId="+docId+"&basketUserNote="+userNote, function( data ) {
+			$(".basketPrice").html($(data).find('.cena').html());
+			$(".basketSmallPrice").html("<span>"+$(data).find('.cena').html()+"</span>");
 
- 	  $(".basketSmallItems").html($(data).find('.pocet').html());
+			$(".basketSmallItems").html($(data).find('.pocet').html());
 
- 	});
+			$(".basketSmallBox").show();
+		});
  	}
-	*/
 	$(document).ready(function()
 	{
 		<%-- presmerje po vybere poradia zobrazovania--%>
 		$(".filterKategorii").change(function(){
-			window.location.replace('<iwcm:cp/><%=PathFilter.getOrigPath(request)+"?orderType="%>'+$(".filterKategorii").val());
+			window.location.replace('<iwcm:cp/><%=PathFilter.getOrigPath(request)+"?orderType="%>'+$(this).val());
 		});
+
+	    $("a.addToBasket").click(function()
+	    {
+			//if there is small basket, it will handle click event and add item to basket
+			if ($(".basketBox").length > 0) return;
+
+	    	var itemId = $(this).attr("data-itemid");
+	    	addToBasket(itemId);
+	    });
 	});
-   //-->
 </iwcm:script>
 
 
@@ -395,7 +404,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
                 <% if(Tools.isNotEmpty(doc.getPerex())) out.print(doc.getPerex()); %>
                 </p>
                 	<%
-				if ( (Math.abs( doc.getPrice() ) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
+				if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
       			<hr class="line">
 
@@ -404,7 +413,7 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
       					<p class="price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr> </p>
       				</div>
       				<div class="col-addToBasket col-md-6 col-sm-6">
-      					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" ><iwcm:text key="components.basket.add_to_basket"/></a>
+      					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>" ><iwcm:text key="components.basket.add_to_basket"/></a>
       				</div>
 
       			</div>
@@ -453,10 +462,10 @@ session.setAttribute("overeneZakaznikmi", pageParams.getValue("overeneZakaznikmi
                 </div>
               </div>
               <h3><a href="shop-item.html"><a href="<%=docDB.getDocLink(doc.getDocId(), doc.getExternalLink(), request)%>"><bean:write name="doc" property="title"/></a></a></h3>
-             <%  if ( (Math.abs( doc.getPrice() ) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
+             <%  if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
               <div class="pi-price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span> <iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr></div>
-              <a class="btn add2cart addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>"><iwcm:text key="components.basket.add_to_basket"/></a>
+              <a class="btn add2cart addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>"><iwcm:text key="components.basket.add_to_basket"/></a>
 
               <% } %>
             </div>
@@ -509,7 +518,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
                 <% if(Tools.isNotEmpty(doc.getPerex())) out.print(doc.getPerex()); %>
                 </p>
                 	<%
-				if ( (Math.abs( doc.getPrice() ) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
+				if ( (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0) && (session.getAttribute("katalogProduktov")==null || !Boolean.valueOf(session.getAttribute("katalogProduktov").toString())))
 				{%>
       			<hr class="line">
 
@@ -518,7 +527,7 @@ request.setAttribute("sideBasket", "!INCLUDE(/components/basket/basket.jsp, styl
       					<p class="price"><span class="cenaOld"><iway:curr currency="<%= doc.getCurrency() %>"><%= doc.getFieldM() %></iway:curr></span><iway:curr currency="<%= doc.getCurrency() %>"><%=doc.getLocalPriceVat(request, doc.getCurrency()) %></iway:curr> </p>
       				</div>
       				<div class="col-md-6 col-sm-6">
-      					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" ><span class="fa fa-shopping-cart" aria-hidden="true"></span></i>
+      					<a  class="btn btn-success right addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" data-itemid="<jsp:getProperty name="doc" property="docId"/>"><span class="fa fa-shopping-cart" aria-hidden="true"></span></i>
 </a>
       				</div>
 

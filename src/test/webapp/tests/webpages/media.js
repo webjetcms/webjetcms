@@ -142,7 +142,7 @@ Scenario('media tabulka v NOVEJ stranke @singlethread', async ({I, DT, DTE}) => 
     I.jstreeClick("Zobrazený v menu");
 
     //open editor to add new webPage
-    I.clickCss("#datatableInit_wrapper button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
     //go to basic tab add fill web page title
@@ -179,12 +179,12 @@ Scenario('media tabulka v NOVEJ stranke @singlethread', async ({I, DT, DTE}) => 
     I.click("Zrušiť", {css: "div.DTE_Form_Buttons"});
 
     //filter out our new web page, select this page and detele
-    DT.filter("title", newPageName);
+    DT.filterContains("title", newPageName);
     I.clickCss("#datatableInit_wrapper .buttons-select-all");
     I.clickCss(".buttons-remove", '#datatableInit_wrapper .dt-buttons');
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
-    DT.filter("title", "");
+    DT.filterContains("title", "");
     I.wait(1);
     I.dontSee(newPageName);
 });
@@ -217,6 +217,7 @@ function testMediaGroups(I, DTE, editorContainer, shouldSee=true) {
     I.clickCss("div.DTE_Footer button.btn-close-editor", "#datatableInit_modal");
 }
 
+//SIVAN - jstreeNavigate nefunguje lebo zamknute priecinky obsahuje pred nazvom medzeru
 Scenario('overenie filtrovania media skupin podla adresara', ({I, DTE}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.say("Before navigate");
@@ -276,7 +277,7 @@ Scenario('XSS zranitelnost', ({I, DT, DTE}) => {
     I.say("Overenie v media tabulke");
 
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("editorFields.docDetails", "/Jet portal 4/Kontakt/Kontakt");
+    DT.filterContains("editorFields.docDetails", "/Jet portal 4/Kontakt/Kontakt");
 
     I.see(xss1, "#mediaTable_wrapper");
     I.see(xss2, "#mediaTable_wrapper");
@@ -285,7 +286,7 @@ Scenario('XSS zranitelnost', ({I, DT, DTE}) => {
 
     I.amOnPage("/admin/v9/apps/audit-search/");
     DT.filterSelect("logType", "MEDIA");
-    DT.filter("description", "^CREATE:");
+    DT.filterContains("description", "^CREATE:");
     DT.waitForLoader();
 
     I.see(xss1, "#datatableInit_wrapper");
@@ -312,7 +313,7 @@ Scenario('Overenie editacie - cez web stranku', ({I, DTE, DT}) => {
     I.clickCss("#pills-dt-datatableInit-media-tab");
     I.wait(3);
 
-    DT.filter("mediaLink", "/images/gallery/test/koala.jpg");
+    DT.filterContains("mediaLink", "/images/gallery/test/koala.jpg");
 
     I.see("Záznamy 1 až 1 z 1");
 
@@ -363,8 +364,8 @@ Scenario('Overenie editacie cez vsetky media a zobrazenie zmeny hned', ({I, DT, 
     DTE.save();
 
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("mediaLink", "/images/gallery/test/koala.jpg");
-    DT.filter("editorFields.docDetails", "24008");
+    DT.filterContains("mediaLink", "/images/gallery/test/koala.jpg");
+    DT.filterContains("editorFields.docDetails", "24008");
 
     I.see("Záznamy 1 až 1 z 1");
 
@@ -395,7 +396,7 @@ Scenario('BUG - strankovanie v mediach', ({I, DT, DTE}) => {
     I.see("fasdfasd-final", "#datatableFieldDTE_Field_editorFields-media_wrapper");
     I.see("www.sme.sk", "#datatableFieldDTE_Field_editorFields-media_wrapper");
 
-    I.click(locate("#datatableFieldDTE_Field_editorFields-media_wrapper li.paginate_button.page-item a").withText("2"));
+    I.click(locate("#datatableFieldDTE_Field_editorFields-media_wrapper div.dt-footer-row ul.pagination li.dt-paging-button.page-item button").withText("2"));
     DT.waitForLoader();
     I.see("Záznamy 11 až", "#datatableFieldDTE_Field_editorFields-media_wrapper");
     I.see("mediaTitleSk-autotest-2022-06-05-230357-94", "#datatableFieldDTE_Field_editorFields-media_wrapper");
@@ -414,7 +415,7 @@ Scenario('media domain filter test', async ({I, Document, DT}) => {
 
     //webjet9 domain test
     //Document.switchDomain("demotest.webjetcms.sk");
-    DT.filter("mediaTitleSk", searchText);
+    DT.filterContains("mediaTitleSk", searchText);
 
     I.see(webjet9);
     I.dontSee(test23);
@@ -422,7 +423,7 @@ Scenario('media domain filter test', async ({I, Document, DT}) => {
 
     //test23 domain test
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("mediaTitleSk", searchText);
+    DT.filterContains("mediaTitleSk", searchText);
 
     I.see(test23);
     I.dontSee(webjet9);
@@ -430,7 +431,7 @@ Scenario('media domain filter test', async ({I, Document, DT}) => {
 
     //mirroring domain test
     Document.switchDomain("mirroring.tau27.iway.sk");
-    DT.filter("mediaTitleSk", searchText);
+    DT.filterContains("mediaTitleSk", searchText);
 
     I.see(mirroring);
     I.dontSee(webjet9);
@@ -485,7 +486,7 @@ Scenario('media all - filtering', ({I, DT, DTE}) => {
     I.see("about");
     I.dontSee("mediaTitleSk-autotest");
 
-    DT.filter("editorFields.docDetails", "aplikacie");
+    DT.filterContains("editorFields.docDetails", "aplikacie");
     I.dontSee("Cenník");
     I.dontSee("jeeff media test 2");
     I.see("about");
@@ -532,7 +533,7 @@ function createNewMedia(mediaTitle, I, DTE) {
 }
 
 function deleteNewMedia(mediaTitle, I, DT, DTE) {
-    DT.filter("mediaTitleSk", mediaTitle);
+    DT.filterContains("mediaTitleSk", mediaTitle);
     I.see("Záznamy 1 až 1 z 1", "#datatableFieldDTE_Field_editorFields-media_wrapper");
     I.clickCss("button.buttons-select-all", "#datatableFieldDTE_Field_editorFields-media_wrapper");
     I.clickCss("button.buttons-remove", '#datatableFieldDTE_Field_editorFields-media_wrapper .dt-buttons');
@@ -580,7 +581,7 @@ Scenario('media tabulka v stranke-multigroup', async ({I, DataTables, DT, DTE, B
 
     //
     I.say("edit master media to verify only one copy");
-    DT.filter("mediaTitleSk", mediaTitleMaster);
+    DT.filterContains("mediaTitleSk", mediaTitleMaster);
     I.click(mediaTitleMaster, container);
     DTE.waitForEditor();
     DTE.fillField("mediaTitleSk", mediaTitleMaster+"-chan.ge");

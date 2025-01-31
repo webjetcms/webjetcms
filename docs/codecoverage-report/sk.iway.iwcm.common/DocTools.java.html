@@ -2,6 +2,17 @@
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.struts.util.ResponseUtils;
+import org.outerj.daisy.diff.HtmlCleaner;
+import org.outerj.daisy.diff.XslFilter;
+import org.outerj.daisy.diff.html.HTMLDiffer;
+import org.outerj.daisy.diff.html.HtmlSaxDiffOutput;
+import org.outerj.daisy.diff.html.TextNodeComparator;
+import org.outerj.daisy.diff.html.dom.DomTreeBuilder;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.dictionary.DictionaryDB;
 import sk.iway.iwcm.components.dictionary.model.DictionaryBean;
@@ -15,6 +26,14 @@ import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,9 +42,9 @@ import java.util.*;
 
 public class DocTools {
 
-<span class="nc" id="L26">    protected DocTools() {</span>
+<span class="nc" id="L45">    protected DocTools() {</span>
         //utility class
-<span class="nc" id="L28">    }</span>
+<span class="nc" id="L47">    }</span>
 
 
     /**
@@ -36,7 +55,7 @@ public class DocTools {
      */
     public static boolean isXssStrictUrlException(String path, String constantName)
     {
-<span class="fc" id="L39">        return isUrlAllowed(path, constantName, true);</span>
+<span class="fc" id="L58">        return isUrlAllowed(path, constantName, true);</span>
     }
 
     /**
@@ -53,33 +72,33 @@ public class DocTools {
      */
     public static boolean isUrlAllowed(String path, String constantName, boolean appendSystemValue)
     {
-<span class="pc bpc" id="L56" title="1 of 2 branches missed.">        if (path == null) path = &quot;&quot;;</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        if (path == null) path = &quot;&quot;;</span>
 
-<span class="fc" id="L58">        path = path.toLowerCase();</span>
+<span class="fc" id="L77">        path = path.toLowerCase();</span>
 
-<span class="fc" id="L60">        String xssProtectionStrictUrlException = Constants.getString(constantName+&quot;System&quot;);</span>
-<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (Tools.isNotEmpty(Constants.getString(constantName))) xssProtectionStrictUrlException += &quot;,&quot; + Constants.getString(constantName);</span>
-<span class="pc bpc" id="L62" title="1 of 4 branches missed.">        if (xssProtectionStrictUrlException != null &amp;&amp; xssProtectionStrictUrlException.length()&gt;2)</span>
+<span class="fc" id="L79">        String xssProtectionStrictUrlException = Constants.getString(constantName+&quot;System&quot;);</span>
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (Tools.isNotEmpty(Constants.getString(constantName))) xssProtectionStrictUrlException += &quot;,&quot; + Constants.getString(constantName);</span>
+<span class="pc bpc" id="L81" title="1 of 4 branches missed.">        if (xssProtectionStrictUrlException != null &amp;&amp; xssProtectionStrictUrlException.length()&gt;2)</span>
         {
-<span class="fc" id="L64">            xssProtectionStrictUrlException = xssProtectionStrictUrlException.toLowerCase();</span>
+<span class="fc" id="L83">            xssProtectionStrictUrlException = xssProtectionStrictUrlException.toLowerCase();</span>
 
-<span class="fc" id="L66">            StringTokenizer st = new StringTokenizer(xssProtectionStrictUrlException, &quot;,+;&quot;);</span>
-<span class="fc bfc" id="L67" title="All 2 branches covered.">            while (st.hasMoreTokens())</span>
+<span class="fc" id="L85">            StringTokenizer st = new StringTokenizer(xssProtectionStrictUrlException, &quot;,+;&quot;);</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">            while (st.hasMoreTokens())</span>
             {
-<span class="fc" id="L69">                String token = st.nextToken();</span>
+<span class="fc" id="L88">                String token = st.nextToken();</span>
 
                 //Logger.debug(ShowDocAction.class, &quot;isXssStrictUrlException path=&quot;+path+&quot; token=&quot;+token);
 
-<span class="pc bpc" id="L73" title="1 of 8 branches missed.">                if (token.startsWith(&quot;%&quot;) &amp;&amp; token.endsWith(&quot;!&quot;) &amp;&amp; token.length()&gt;4 &amp;&amp; path.endsWith(token.substring(1, token.length()-1))) return true;</span>
-<span class="pc bpc" id="L74" title="1 of 6 branches missed.">                else if (token.startsWith(&quot;%&quot;) &amp;&amp; token.length()&gt;2 &amp;&amp; path.indexOf(token.substring(1))!=-1) return true;</span>
-<span class="pc bpc" id="L75" title="1 of 6 branches missed.">                else if (token.endsWith(&quot;!&quot;) &amp;&amp; token.length()&gt;=2 &amp;&amp; path.equals(token.substring(0, token.length()-1))) return true;</span>
-<span class="pc bpc" id="L76" title="1 of 4 branches missed.">                else if (Tools.isNotEmpty(path) &amp;&amp; path.startsWith(token))</span>
+<span class="pc bpc" id="L92" title="1 of 8 branches missed.">                if (token.startsWith(&quot;%&quot;) &amp;&amp; token.endsWith(&quot;!&quot;) &amp;&amp; token.length()&gt;4 &amp;&amp; path.endsWith(token.substring(1, token.length()-1))) return true;</span>
+<span class="pc bpc" id="L93" title="1 of 6 branches missed.">                else if (token.startsWith(&quot;%&quot;) &amp;&amp; token.length()&gt;2 &amp;&amp; path.indexOf(token.substring(1))!=-1) return true;</span>
+<span class="pc bpc" id="L94" title="1 of 6 branches missed.">                else if (token.endsWith(&quot;!&quot;) &amp;&amp; token.length()&gt;=2 &amp;&amp; path.equals(token.substring(0, token.length()-1))) return true;</span>
+<span class="pc bpc" id="L95" title="1 of 4 branches missed.">                else if (Tools.isNotEmpty(path) &amp;&amp; path.startsWith(token))</span>
                 {
-<span class="fc" id="L78">                    return true;</span>
+<span class="fc" id="L97">                    return true;</span>
                 }
-<span class="fc" id="L80">            }</span>
+<span class="fc" id="L99">            }</span>
         }
-<span class="fc" id="L82">        return false;</span>
+<span class="fc" id="L101">        return false;</span>
     }
 
 
@@ -92,7 +111,7 @@ public class DocTools {
      */
     public static String removeChars(String ret)
     {
-<span class="fc" id="L95">        return removeChars(ret, true);</span>
+<span class="fc" id="L114">        return removeChars(ret, true);</span>
     }
 
     /**
@@ -104,20 +123,20 @@ public class DocTools {
     public static String removeChars(String ret, boolean lowerCase)
     {
         //odstran HTML kod
-<span class="pc bpc" id="L107" title="7 of 8 branches missed.">        if (ret.indexOf(&quot;&lt;&quot;)!=-1 &amp;&amp; ret.indexOf(&quot;&gt;&quot;)!=-1 &amp;&amp; (ret.indexOf(&quot;/&quot;)!=-1 || ret.indexOf(&quot;-&quot;)!=-1))</span>
+<span class="pc bpc" id="L126" title="7 of 8 branches missed.">        if (ret.indexOf(&quot;&lt;&quot;)!=-1 &amp;&amp; ret.indexOf(&quot;&gt;&quot;)!=-1 &amp;&amp; (ret.indexOf(&quot;/&quot;)!=-1 || ret.indexOf(&quot;-&quot;)!=-1))</span>
         {
-<span class="nc" id="L109">            ret = SearchTools.htmlToPlain(ret);</span>
+<span class="nc" id="L128">            ret = SearchTools.htmlToPlain(ret);</span>
         }
 
         //v nazve suboru nesmie byt znak /
-<span class="fc" id="L113">        ret = ret.trim();</span>
-<span class="fc" id="L114">        ret = ret.replace('/', '-');</span>
+<span class="fc" id="L132">        ret = ret.trim();</span>
+<span class="fc" id="L133">        ret = ret.replace('/', '-');</span>
         //premenovanie .jpeg suborov na .jpg
-<span class="fc" id="L116">        ret = Tools.replace(ret, &quot;.jpeg&quot;, &quot;.jpg&quot;);</span>
-<span class="fc" id="L117">        ret = Tools.replace(ret, &quot;.JPEG&quot;, &quot;.JPG&quot;);</span>
+<span class="fc" id="L135">        ret = Tools.replace(ret, &quot;.jpeg&quot;, &quot;.jpg&quot;);</span>
+<span class="fc" id="L136">        ret = Tools.replace(ret, &quot;.JPEG&quot;, &quot;.JPG&quot;);</span>
 
-<span class="fc bfc" id="L119" title="All 2 branches covered.">        if (lowerCase) return (removeCharsDir(ret, false)).toLowerCase();</span>
-<span class="fc" id="L120">        return (removeCharsDir(ret, false));</span>
+<span class="fc bfc" id="L138" title="All 2 branches covered.">        if (lowerCase) return (removeCharsDir(ret, false)).toLowerCase();</span>
+<span class="fc" id="L139">        return (removeCharsDir(ret, false));</span>
     }
 
 
@@ -128,60 +147,60 @@ public class DocTools {
      */
     public static boolean testXss(String value)
     {
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssProtection&quot;)==false) return false;</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssProtection&quot;)==false) return false;</span>
 
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        if (value == null) return false;</span>
+<span class="pc bpc" id="L152" title="1 of 2 branches missed.">        if (value == null) return false;</span>
 
         //null byte test (IE bug)
-<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (value.indexOf('\u0000')!=-1)</span>
+<span class="pc bpc" id="L155" title="1 of 2 branches missed.">        if (value.indexOf('\u0000')!=-1)</span>
         {
-<span class="nc" id="L138">            Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS null byte, value=&quot;+value, -1, -1);</span>
-<span class="nc" id="L139">            return true;</span>
+<span class="nc" id="L157">            Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS null byte, value=&quot;+value, -1, -1);</span>
+<span class="nc" id="L158">            return true;</span>
         }
 
         //odstran zakladne nepotrebne znaky (tab, medzera...)
-<span class="fc" id="L143">        value = Tools.replace(value, &quot;\t&quot;, &quot;&quot;);</span>
-<span class="fc" id="L144">        value = Tools.replace(value, &quot;\r&quot;, &quot;&quot;);</span>
-<span class="fc" id="L145">        value = Tools.replace(value, &quot;\n&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value = Tools.replace(value, &quot; &quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value = Tools.replace(value, Constants.NON_BREAKING_SPACE, &quot;&quot;);</span>
+<span class="fc" id="L162">        value = Tools.replace(value, &quot;\t&quot;, &quot;&quot;);</span>
+<span class="fc" id="L163">        value = Tools.replace(value, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L164">        value = Tools.replace(value, &quot;\n&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value = Tools.replace(value, &quot; &quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L166" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value = Tools.replace(value, Constants.NON_BREAKING_SPACE, &quot;&quot;);</span>
 
-<span class="fc" id="L149">        String valueLC = value.toLowerCase();</span>
+<span class="fc" id="L168">        String valueLC = value.toLowerCase();</span>
         //nahrad ascii entity typu JaVaS&amp;#99;RiPt:alert(142277,334213762);
-<span class="fc" id="L151">        String value2LC = StringEscapeUtils.unescapeHtml(value).toLowerCase();</span>
-<span class="fc" id="L152">        value2LC = Tools.replace(value2LC, &quot;\t&quot;, &quot;&quot;);</span>
-<span class="fc" id="L153">        value2LC = Tools.replace(value2LC, &quot;\r&quot;, &quot;&quot;);</span>
-<span class="fc" id="L154">        value2LC = Tools.replace(value2LC, &quot;\n&quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value2LC = Tools.replace(value2LC, &quot; &quot;, &quot;&quot;);</span>
-<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value2LC = Tools.replace(value2LC, Constants.NON_BREAKING_SPACE, &quot;&quot;);</span>
+<span class="fc" id="L170">        String value2LC = StringEscapeUtils.unescapeHtml(value).toLowerCase();</span>
+<span class="fc" id="L171">        value2LC = Tools.replace(value2LC, &quot;\t&quot;, &quot;&quot;);</span>
+<span class="fc" id="L172">        value2LC = Tools.replace(value2LC, &quot;\r&quot;, &quot;&quot;);</span>
+<span class="fc" id="L173">        value2LC = Tools.replace(value2LC, &quot;\n&quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value2LC = Tools.replace(value2LC, &quot; &quot;, &quot;&quot;);</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">        if (Constants.getBoolean(&quot;xssDeleteSpaces&quot;)) value2LC = Tools.replace(value2LC, Constants.NON_BREAKING_SPACE, &quot;&quot;);</span>
 
         //nahrad &amp;amp;#39; za povodny apostrof, aby do formularov bolo mozne zadat znak apostrofu
-<span class="fc" id="L159">        valueLC = Tools.replace(valueLC, &quot;&amp;amp;#39;&quot;, &quot;'&quot;);</span>
-<span class="fc" id="L160">        valueLC = Tools.replace(valueLC, &quot;&amp;#39;&quot;, &quot;'&quot;);</span>
-<span class="fc" id="L161">        value2LC = Tools.replace(value2LC, &quot;&amp;amp;#39;&quot;, &quot;'&quot;);</span>
-<span class="fc" id="L162">        value2LC = Tools.replace(value2LC, &quot;&amp;#39;&quot;, &quot;'&quot;);</span>
+<span class="fc" id="L178">        valueLC = Tools.replace(valueLC, &quot;&amp;amp;#39;&quot;, &quot;'&quot;);</span>
+<span class="fc" id="L179">        valueLC = Tools.replace(valueLC, &quot;&amp;#39;&quot;, &quot;'&quot;);</span>
+<span class="fc" id="L180">        value2LC = Tools.replace(value2LC, &quot;&amp;amp;#39;&quot;, &quot;'&quot;);</span>
+<span class="fc" id="L181">        value2LC = Tools.replace(value2LC, &quot;&amp;#39;&quot;, &quot;'&quot;);</span>
 
-<span class="fc" id="L164">        String xssTestValues = Constants.getString(&quot;xssTestValues&quot;);</span>
-<span class="fc" id="L165">        StringTokenizer st = new StringTokenizer(xssTestValues, &quot;|&quot;);</span>
-<span class="fc bfc" id="L166" title="All 2 branches covered.">        while (st.hasMoreTokens())</span>
+<span class="fc" id="L183">        String xssTestValues = Constants.getString(&quot;xssTestValues&quot;);</span>
+<span class="fc" id="L184">        StringTokenizer st = new StringTokenizer(xssTestValues, &quot;|&quot;);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        while (st.hasMoreTokens())</span>
         {
-<span class="fc" id="L168">            String token = st.nextToken();</span>
-<span class="pc bpc" id="L169" title="2 of 4 branches missed.">            if (valueLC.indexOf(token)!=-1 || value2LC.indexOf(token)!=-1)</span>
+<span class="fc" id="L187">            String token = st.nextToken();</span>
+<span class="pc bpc" id="L188" title="2 of 4 branches missed.">            if (valueLC.indexOf(token)!=-1 || value2LC.indexOf(token)!=-1)</span>
             {
-<span class="nc" id="L171">                Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS token=&quot;+token+&quot;, value=&quot;+value, -1, -1);</span>
-<span class="nc" id="L172">                return true;</span>
+<span class="nc" id="L190">                Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS token=&quot;+token+&quot;, value=&quot;+value, -1, -1);</span>
+<span class="nc" id="L191">                return true;</span>
             }
-<span class="fc" id="L174">        }</span>
+<span class="fc" id="L193">        }</span>
 
         // &lt;IMG STYLE=&quot;xss:expr/*XSS*/ession(alert('XSS'))&quot;&gt;
-<span class="pc bpc" id="L177" title="3 of 4 branches missed.">        if ((valueLC.indexOf(&quot;/*&quot;)!=-1 &amp;&amp; valueLC.indexOf(&quot;*/&quot;)!=-1) ||</span>
-<span class="pc bpc" id="L178" title="3 of 4 branches missed.">                (value2LC.indexOf(&quot;/*&quot;)!=-1 &amp;&amp; value2LC.indexOf(&quot;*/&quot;)!=-1))</span>
+<span class="pc bpc" id="L196" title="3 of 4 branches missed.">        if ((valueLC.indexOf(&quot;/*&quot;)!=-1 &amp;&amp; valueLC.indexOf(&quot;*/&quot;)!=-1) ||</span>
+<span class="pc bpc" id="L197" title="3 of 4 branches missed.">                (value2LC.indexOf(&quot;/*&quot;)!=-1 &amp;&amp; value2LC.indexOf(&quot;*/&quot;)!=-1))</span>
         {
-<span class="nc" id="L180">            Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS comment, value=&quot;+value, -1, -1);</span>
-<span class="nc" id="L181">            return true;</span>
+<span class="nc" id="L199">            Adminlog.add(Adminlog.TYPE_XSS, &quot;XSS comment, value=&quot;+value, -1, -1);</span>
+<span class="nc" id="L200">            return true;</span>
         }
 
-<span class="fc" id="L184">        return false;</span>
+<span class="fc" id="L203">        return false;</span>
     }
 
 
@@ -194,82 +213,82 @@ public class DocTools {
      */
     public static String removeCharsDir(String ret)
     {
-<span class="fc" id="L197">        return removeCharsDir(ret, true);</span>
+<span class="fc" id="L216">        return removeCharsDir(ret, true);</span>
     }
 
 
     public static String removeCharsDir(String ret, boolean removeSpojky)
     {
         //palarikovske_luky-pr .pdf
-<span class="fc" id="L204">        ret = Tools.replace(ret, &quot; .&quot;, &quot;.&quot;);</span>
+<span class="fc" id="L223">        ret = Tools.replace(ret, &quot; .&quot;, &quot;.&quot;);</span>
 
-<span class="fc" id="L206">        ret = Tools.replace(ret, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
+<span class="fc" id="L225">        ret = Tools.replace(ret, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
 
-<span class="fc" id="L208">        ret = DB.internationalToEnglish(ret); //.toLowerCase();</span>
+<span class="fc" id="L227">        ret = DB.internationalToEnglish(ret); //.toLowerCase();</span>
 
         //odstran HTML kod
-<span class="pc bpc" id="L211" title="4 of 8 branches missed.">        if (ret.indexOf(&quot;&lt;&quot;)!=-1 &amp;&amp; ret.indexOf(&quot;&gt;&quot;)!=-1 &amp;&amp; (ret.indexOf(&quot;/&quot;)!=-1 || ret.indexOf(&quot;-&quot;)!=-1))</span>
+<span class="pc bpc" id="L230" title="4 of 8 branches missed.">        if (ret.indexOf(&quot;&lt;&quot;)!=-1 &amp;&amp; ret.indexOf(&quot;&gt;&quot;)!=-1 &amp;&amp; (ret.indexOf(&quot;/&quot;)!=-1 || ret.indexOf(&quot;-&quot;)!=-1))</span>
         {
             //removeChars uz nahradi &lt;/strong&gt; za &lt;-strong&gt;
-<span class="fc" id="L214">            ret = SearchTools.htmlToPlain(ret);</span>
+<span class="fc" id="L233">            ret = SearchTools.htmlToPlain(ret);</span>
         }
 
-<span class="fc" id="L217">        ret = Tools.replace(ret, &quot;&amp;#47;&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L236">        ret = Tools.replace(ret, &quot;&amp;#47;&quot;, &quot;-&quot;);</span>
 
-<span class="fc" id="L219">        ret = ret.trim();</span>
-<span class="fc" id="L220">        ret=ret.replaceAll(&quot; +&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L221">        ret=ret.replaceAll(&quot;\\.+&quot;, &quot;.&quot;);</span>
-<span class="fc" id="L222">        ret=ret.replaceAll(&quot;\\-+&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L223">        ret=ret.replaceAll(Constants.getString(&quot;DocTools.removeCharsDir&quot;),&quot;&quot;);</span>
+<span class="fc" id="L238">        ret = ret.trim();</span>
+<span class="fc" id="L239">        ret=ret.replaceAll(&quot; +&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L240">        ret=ret.replaceAll(&quot;\\.+&quot;, &quot;.&quot;);</span>
+<span class="fc" id="L241">        ret=ret.replaceAll(&quot;\\-+&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L242">        ret=ret.replaceAll(Constants.getString(&quot;DocTools.removeCharsDir&quot;),&quot;&quot;);</span>
 
-<span class="pc bpc" id="L225" title="1 of 4 branches missed.">        if (removeSpojky &amp;&amp; Constants.getBoolean(&quot;urlRemoveSpojky&quot;))</span>
+<span class="pc bpc" id="L244" title="1 of 4 branches missed.">        if (removeSpojky &amp;&amp; Constants.getBoolean(&quot;urlRemoveSpojky&quot;))</span>
         {
-<span class="fc" id="L227">            String[] spojky = Tools.getTokens(Constants.getString(&quot;urlRemoveSpojkyList&quot;), &quot;,&quot;);</span>
-<span class="fc bfc" id="L228" title="All 2 branches covered.">            for (String spojka : spojky)</span>
+<span class="fc" id="L246">            String[] spojky = Tools.getTokens(Constants.getString(&quot;urlRemoveSpojkyList&quot;), &quot;,&quot;);</span>
+<span class="fc bfc" id="L247" title="All 2 branches covered.">            for (String spojka : spojky)</span>
             {
-<span class="fc" id="L230">                ret = Tools.replace(ret, &quot;-&quot;+spojka+&quot;-&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L231">                ret = Tools.replace(ret, &quot;-&quot;+spojka+&quot;/&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L249">                ret = Tools.replace(ret, &quot;-&quot;+spojka+&quot;-&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L250">                ret = Tools.replace(ret, &quot;-&quot;+spojka+&quot;/&quot;, &quot;/&quot;);</span>
             }
 
             try
             {
                 //ponechame len poslednu .
-<span class="fc" id="L237">                int lastBodka = ret.lastIndexOf('.');</span>
-<span class="fc bfc" id="L238" title="All 2 branches covered.">                if (lastBodka &gt; 0)</span>
+<span class="fc" id="L256">                int lastBodka = ret.lastIndexOf('.');</span>
+<span class="fc bfc" id="L257" title="All 2 branches covered.">                if (lastBodka &gt; 0)</span>
                 {
-<span class="fc" id="L240">                    String ret2 = Tools.replace(ret, &quot;.&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L241">                    ret = ret2.substring(0, lastBodka) + &quot;.&quot; + ret2.substring(lastBodka+1);</span>
+<span class="fc" id="L259">                    String ret2 = Tools.replace(ret, &quot;.&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L260">                    ret = ret2.substring(0, lastBodka) + &quot;.&quot; + ret2.substring(lastBodka+1);</span>
                 }
-<span class="nc" id="L243">            } catch (Exception ex)</span>
+<span class="nc" id="L262">            } catch (Exception ex)</span>
             {
 
-<span class="fc" id="L246">            }</span>
+<span class="fc" id="L265">            }</span>
         }
 
-<span class="fc" id="L249">        ret = Tools.replace(ret, &quot;---&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L250">        ret = Tools.replace(ret, &quot;--&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L251">        ret = Tools.replace(ret, &quot;____&quot;, &quot;_&quot;);</span>
-<span class="fc" id="L252">        ret = Tools.replace(ret, &quot;___&quot;, &quot;_&quot;);</span>
-<span class="fc" id="L253">        ret = Tools.replace(ret, &quot;__&quot;, &quot;_&quot;);</span>
-<span class="fc" id="L254">        ret = Tools.replace(ret, &quot;__&quot;, &quot;_&quot;);</span>
-<span class="fc" id="L255">        ret = Tools.replace(ret, &quot;_-_&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L256">        ret = Tools.replace(ret, &quot;-_&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L257">        ret = Tools.replace(ret, &quot;_-&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L258">        ret = Tools.replace(ret, &quot;-.-&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L259">        ret = Tools.replace(ret, &quot;-.html&quot;, &quot;.html&quot;);</span>
-<span class="fc" id="L260">        ret = Tools.replace(ret, &quot;-.jpg&quot;, &quot;.jpg&quot;);</span>
-<span class="fc" id="L261">        ret = Tools.replace(ret, &quot;-.doc&quot;, &quot;.doc&quot;);</span>
-<span class="fc" id="L262">        ret = Tools.replace(ret, &quot;-.xls&quot;, &quot;.xls&quot;);</span>
-<span class="fc" id="L263">        ret = Tools.replace(ret, &quot;-.pdf&quot;, &quot;.pdf&quot;);</span>
-<span class="fc" id="L264">        ret = Tools.replace(ret, &quot;-.&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L265">        ret = Tools.replace(ret, &quot;.-&quot;, &quot;-&quot;);</span>
-<span class="fc" id="L266">        ret = Tools.replace(ret, &quot;./&quot;, &quot;/&quot;);</span>
-<span class="fc" id="L267">        ret = Tools.replace(ret, &quot;-/&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L268">        ret = Tools.replace(ret, &quot;---&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L269">        ret = Tools.replace(ret, &quot;--&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L270">        ret = Tools.replace(ret, &quot;____&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L271">        ret = Tools.replace(ret, &quot;___&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L272">        ret = Tools.replace(ret, &quot;__&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L273">        ret = Tools.replace(ret, &quot;__&quot;, &quot;_&quot;);</span>
+<span class="fc" id="L274">        ret = Tools.replace(ret, &quot;_-_&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L275">        ret = Tools.replace(ret, &quot;-_&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L276">        ret = Tools.replace(ret, &quot;_-&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L277">        ret = Tools.replace(ret, &quot;-.-&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L278">        ret = Tools.replace(ret, &quot;-.html&quot;, &quot;.html&quot;);</span>
+<span class="fc" id="L279">        ret = Tools.replace(ret, &quot;-.jpg&quot;, &quot;.jpg&quot;);</span>
+<span class="fc" id="L280">        ret = Tools.replace(ret, &quot;-.doc&quot;, &quot;.doc&quot;);</span>
+<span class="fc" id="L281">        ret = Tools.replace(ret, &quot;-.xls&quot;, &quot;.xls&quot;);</span>
+<span class="fc" id="L282">        ret = Tools.replace(ret, &quot;-.pdf&quot;, &quot;.pdf&quot;);</span>
+<span class="fc" id="L283">        ret = Tools.replace(ret, &quot;-.&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L284">        ret = Tools.replace(ret, &quot;.-&quot;, &quot;-&quot;);</span>
+<span class="fc" id="L285">        ret = Tools.replace(ret, &quot;./&quot;, &quot;/&quot;);</span>
+<span class="fc" id="L286">        ret = Tools.replace(ret, &quot;-/&quot;, &quot;/&quot;);</span>
 
-<span class="pc bpc" id="L269" title="1 of 4 branches missed.">        if (ret.length()&gt;1 &amp;&amp; ret.endsWith(&quot;_&quot;)) ret = ret.substring(0, ret.length()-1);</span>
-<span class="pc bpc" id="L270" title="1 of 4 branches missed.">        if (ret.length()&gt;1 &amp;&amp; ret.endsWith(&quot;.&quot;)) ret = ret.substring(0, ret.length()-1);</span>
+<span class="pc bpc" id="L288" title="1 of 4 branches missed.">        if (ret.length()&gt;1 &amp;&amp; ret.endsWith(&quot;_&quot;)) ret = ret.substring(0, ret.length()-1);</span>
+<span class="pc bpc" id="L289" title="1 of 4 branches missed.">        if (ret.length()&gt;1 &amp;&amp; ret.endsWith(&quot;.&quot;)) ret = ret.substring(0, ret.length()-1);</span>
 
-<span class="fc" id="L272">        return (ret);</span>
+<span class="fc" id="L291">        return (ret);</span>
     }
 
     /**
@@ -282,17 +301,17 @@ public class DocTools {
     {
         try
          {
-<span class="fc" id="L285">            Integer docId = (Integer)request.getAttribute(name+&quot;-docId=&quot;);</span>
-<span class="fc bfc" id="L286" title="All 2 branches covered.">           if (docId != null) return docId.intValue();</span>
+<span class="fc" id="L304">            Integer docId = (Integer)request.getAttribute(name+&quot;-docId=&quot;);</span>
+<span class="fc bfc" id="L305" title="All 2 branches covered.">           if (docId != null) return docId.intValue();</span>
          }
-<span class="nc" id="L288">         catch (Exception e)</span>
+<span class="nc" id="L307">         catch (Exception e)</span>
          {
-<span class="nc" id="L290">             sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L291">         }</span>
+<span class="nc" id="L309">             sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L310">         }</span>
 
-<span class="pc bpc" id="L293" title="1 of 2 branches missed.">         if (&quot;doc_data&quot;.equals(name)) return Tools.getDocId(request);</span>
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">         if (&quot;doc_data&quot;.equals(name)) return Tools.getDocId(request);</span>
 
-<span class="nc" id="L295">        return -1;</span>
+<span class="nc" id="L314">        return -1;</span>
     }
 
     /**
@@ -305,112 +324,112 @@ public class DocTools {
      */
     private static String getRequestString(HttpServletRequest request, String name)
     {
-<span class="fc" id="L308">        String nameOrig = name;</span>
-<span class="fc" id="L309">        String ret = (String) request.getAttribute(name);</span>
+<span class="fc" id="L327">        String nameOrig = name;</span>
+<span class="fc" id="L328">        String ret = (String) request.getAttribute(name);</span>
 
-<span class="fc" id="L311">        boolean filter = true;</span>
+<span class="fc" id="L330">        boolean filter = true;</span>
         //default false for request objects, we expect it to be inserted as HTML code
-<span class="fc bfc" id="L313" title="All 2 branches covered.">        if (ret != null) filter = false;</span>
-<span class="pc bpc" id="L314" title="1 of 2 branches missed.">        if (name.startsWith(&quot;unfilter.&quot;)) {</span>
-<span class="nc" id="L315">            filter = false;</span>
-<span class="nc" id="L316">            name = name.substring(&quot;unfilter.&quot;.length());</span>
-<span class="fc bfc" id="L317" title="All 2 branches covered.">        } else if (name.startsWith(&quot;filter.&quot;)) {</span>
-<span class="fc" id="L318">            filter = true;</span>
-<span class="fc" id="L319">            name = name.substring(&quot;filter.&quot;.length());</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">        if (ret != null) filter = false;</span>
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if (name.startsWith(&quot;unfilter.&quot;)) {</span>
+<span class="nc" id="L334">            filter = false;</span>
+<span class="nc" id="L335">            name = name.substring(&quot;unfilter.&quot;.length());</span>
+<span class="fc bfc" id="L336" title="All 2 branches covered.">        } else if (name.startsWith(&quot;filter.&quot;)) {</span>
+<span class="fc" id="L337">            filter = true;</span>
+<span class="fc" id="L338">            name = name.substring(&quot;filter.&quot;.length());</span>
         }
 
         //try again request attribute without prefix
-<span class="fc bfc" id="L323" title="All 4 branches covered.">        if (ret == null &amp;&amp; name.equals(nameOrig)==false) ret = (String) request.getAttribute(name);</span>
+<span class="fc bfc" id="L342" title="All 4 branches covered.">        if (ret == null &amp;&amp; name.equals(nameOrig)==false) ret = (String) request.getAttribute(name);</span>
 
-<span class="pc bpc" id="L325" title="1 of 8 branches missed.">        if (ret == null &amp;&amp; name.startsWith(&quot;header.&quot;) &amp;&amp; name.length()&gt;8 &amp;&amp; request.getHeader(name.substring(7))!=null)</span>
+<span class="pc bpc" id="L344" title="1 of 8 branches missed.">        if (ret == null &amp;&amp; name.startsWith(&quot;header.&quot;) &amp;&amp; name.length()&gt;8 &amp;&amp; request.getHeader(name.substring(7))!=null)</span>
         {
-<span class="fc" id="L327">            ret = request.getHeader(name.substring(7));</span>
+<span class="fc" id="L346">            ret = request.getHeader(name.substring(7));</span>
         }
-<span class="fc bfc" id="L329" title="All 4 branches covered.">        if (ret == null &amp;&amp; &quot;remoteIP&quot;.equals(name)) ret = Tools.getRemoteIP(request);</span>
-<span class="pc bpc" id="L330" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;remoteHost&quot;.equals(name)) ret = Tools.getRemoteHost(request);</span>
+<span class="fc bfc" id="L348" title="All 4 branches covered.">        if (ret == null &amp;&amp; &quot;remoteIP&quot;.equals(name)) ret = Tools.getRemoteIP(request);</span>
+<span class="pc bpc" id="L349" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;remoteHost&quot;.equals(name)) ret = Tools.getRemoteHost(request);</span>
 
-<span class="pc bpc" id="L332" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;baseHref&quot;.equals(name)) ret = Tools.getBaseHref(request);</span>
+<span class="pc bpc" id="L351" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;baseHref&quot;.equals(name)) ret = Tools.getBaseHref(request);</span>
 
-<span class="pc bpc" id="L334" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;domainName&quot;.equals(name)) ret = DocDB.getDomain(request);</span>
+<span class="pc bpc" id="L353" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;domainName&quot;.equals(name)) ret = DocDB.getDomain(request);</span>
 
-<span class="pc bpc" id="L336" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;url&quot;.equals(name)) ret = PathFilter.getOrigPathDocId(request);</span>
+<span class="pc bpc" id="L355" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;url&quot;.equals(name)) ret = PathFilter.getOrigPathDocId(request);</span>
 
-<span class="pc bpc" id="L338" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;urlQuery&quot;.equals(name))</span>
+<span class="pc bpc" id="L357" title="1 of 4 branches missed.">        if (ret == null &amp;&amp; &quot;urlQuery&quot;.equals(name))</span>
         {
-<span class="nc" id="L340">            ret = PathFilter.getOrigPath(request);</span>
-<span class="nc" id="L341">            String qs = (String)request.getAttribute(&quot;path_filter_query_string&quot;);</span>
-<span class="nc bnc" id="L342" title="All 2 branches missed.">            if (Tools.isNotEmpty(qs))</span>
+<span class="nc" id="L359">            ret = PathFilter.getOrigPath(request);</span>
+<span class="nc" id="L360">            String qs = (String)request.getAttribute(&quot;path_filter_query_string&quot;);</span>
+<span class="nc bnc" id="L361" title="All 2 branches missed.">            if (Tools.isNotEmpty(qs))</span>
             {
-<span class="nc" id="L344">                ret = Tools.addParametersToUrl(ret, qs);</span>
+<span class="nc" id="L363">                ret = Tools.addParametersToUrl(ret, qs);</span>
             }
         }
 
-<span class="fc bfc" id="L348" title="All 4 branches covered.">        if (ret == null &amp;&amp; name.startsWith(&quot;wjtooltip:&quot;))</span>
+<span class="fc bfc" id="L367" title="All 4 branches covered.">        if (ret == null &amp;&amp; name.startsWith(&quot;wjtooltip:&quot;))</span>
         {
-<span class="fc" id="L350">            String lng = PageLng.getUserLng(request);</span>
-<span class="fc" id="L351">            String domainName = DocDB.getDomain(request);</span>
+<span class="fc" id="L369">            String lng = PageLng.getUserLng(request);</span>
+<span class="fc" id="L370">            String domainName = DocDB.getDomain(request);</span>
 
-<span class="fc" id="L353">            String tooltipName = name.substring(name.lastIndexOf(&quot;wjtooltip:&quot;)+10);</span>
-<span class="fc" id="L354">            tooltipName = Tools.replace(tooltipName, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
-<span class="fc" id="L355">            tooltipName = Tools.replace(tooltipName, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
-<span class="fc" id="L356">            List&lt;DictionaryBean&gt; tooltipsAll = DictionaryDB.getDictionariesByName(tooltipName, &quot;tooltip&quot;);</span>
+<span class="fc" id="L372">            String tooltipName = name.substring(name.lastIndexOf(&quot;wjtooltip:&quot;)+10);</span>
+<span class="fc" id="L373">            tooltipName = Tools.replace(tooltipName, &quot;&amp;nbsp;&quot;, &quot; &quot;);</span>
+<span class="fc" id="L374">            tooltipName = Tools.replace(tooltipName, Constants.NON_BREAKING_SPACE, &quot; &quot;);</span>
+<span class="fc" id="L375">            List&lt;DictionaryBean&gt; tooltipsAll = DictionaryDB.getDictionariesByName(tooltipName, &quot;tooltip&quot;);</span>
 
-<span class="fc" id="L358">            List&lt;DictionaryBean&gt; tooltipsFilterd = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L359" title="All 2 branches covered.">            for (DictionaryBean db : tooltipsAll)</span>
+<span class="fc" id="L377">            List&lt;DictionaryBean&gt; tooltipsFilterd = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L378" title="All 2 branches covered.">            for (DictionaryBean db : tooltipsAll)</span>
             {
-<span class="pc bpc" id="L361" title="1 of 2 branches missed.">                if (lng.equalsIgnoreCase(db.getLanguage()))</span>
+<span class="pc bpc" id="L380" title="1 of 2 branches missed.">                if (lng.equalsIgnoreCase(db.getLanguage()))</span>
                 {
-<span class="fc" id="L363">                    tooltipsFilterd.add(db);</span>
+<span class="fc" id="L382">                    tooltipsFilterd.add(db);</span>
                 }
-<span class="fc" id="L365">            }</span>
-<span class="fc" id="L366">            tooltipsAll = tooltipsFilterd;</span>
-<span class="fc" id="L367">            tooltipsFilterd = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L368" title="All 2 branches covered.">            for (DictionaryBean db : tooltipsAll)</span>
+<span class="fc" id="L384">            }</span>
+<span class="fc" id="L385">            tooltipsAll = tooltipsFilterd;</span>
+<span class="fc" id="L386">            tooltipsFilterd = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">            for (DictionaryBean db : tooltipsAll)</span>
             {
-<span class="pc bpc" id="L370" title="1 of 4 branches missed.">                if (Tools.isEmpty(db.getDomain()) || domainName.equalsIgnoreCase(db.getDomain()))</span>
+<span class="pc bpc" id="L389" title="1 of 4 branches missed.">                if (Tools.isEmpty(db.getDomain()) || domainName.equalsIgnoreCase(db.getDomain()))</span>
                 {
-<span class="fc" id="L372">                    tooltipsFilterd.add(db);</span>
+<span class="fc" id="L391">                    tooltipsFilterd.add(db);</span>
                 }
-<span class="fc" id="L374">            }</span>
+<span class="fc" id="L393">            }</span>
 
 
-<span class="pc bpc" id="L377" title="1 of 2 branches missed.">            if(tooltipsFilterd.size()&gt;0)</span>
+<span class="pc bpc" id="L396" title="1 of 2 branches missed.">            if(tooltipsFilterd.size()&gt;0)</span>
             {
-<span class="fc" id="L379">                String suffix = &quot;\&quot; &quot;+Constants.getString(&quot;tooltipReplacerAttributes&quot;)+&quot; data-tooltip-name=\&quot;&quot;+tooltipName;</span>
+<span class="fc" id="L398">                String suffix = &quot;\&quot; &quot;+Constants.getString(&quot;tooltipReplacerAttributes&quot;)+&quot; data-tooltip-name=\&quot;&quot;+tooltipName;</span>
 
-<span class="fc" id="L381">                DictionaryBean tooltip = tooltipsFilterd.get(0);</span>
+<span class="fc" id="L400">                DictionaryBean tooltip = tooltipsFilterd.get(0);</span>
 
-<span class="pc bpc" id="L383" title="1 of 2 branches missed.">                if (tooltipsFilterd.size()&gt;1)</span>
+<span class="pc bpc" id="L402" title="1 of 2 branches missed.">                if (tooltipsFilterd.size()&gt;1)</span>
                 {
                     //skus najst best match podla podla domeny
-<span class="nc bnc" id="L386" title="All 2 branches missed.">                    for (DictionaryBean db : tooltipsFilterd)</span>
+<span class="nc bnc" id="L405" title="All 2 branches missed.">                    for (DictionaryBean db : tooltipsFilterd)</span>
                     {
-<span class="nc bnc" id="L388" title="All 6 branches missed.">                        if (Tools.isNotEmpty(domainName) &amp;&amp; Tools.isNotEmpty(db.getDomain()) &amp;&amp; domainName.equals(db.getDomain()))</span>
+<span class="nc bnc" id="L407" title="All 6 branches missed.">                        if (Tools.isNotEmpty(domainName) &amp;&amp; Tools.isNotEmpty(db.getDomain()) &amp;&amp; domainName.equals(db.getDomain()))</span>
                         {
-<span class="nc" id="L390">                            tooltip = db;</span>
+<span class="nc" id="L409">                            tooltip = db;</span>
                         }
-<span class="nc" id="L392">                    }</span>
+<span class="nc" id="L411">                    }</span>
                 }
 
-<span class="fc" id="L395">                ret = Tools.replace(tooltip.getValue(), &quot;\&quot;&quot;, &quot;&amp;quot;&quot;)+suffix;</span>
-<span class="fc" id="L396">                return (ret);</span>
+<span class="fc" id="L414">                ret = Tools.replace(tooltip.getValue(), &quot;\&quot;&quot;, &quot;&amp;quot;&quot;)+suffix;</span>
+<span class="fc" id="L415">                return (ret);</span>
             }
             else {
-<span class="nc" id="L399">                ret = tooltipName;</span>
+<span class="nc" id="L418">                ret = tooltipName;</span>
             }
             //System.out.println(&quot;_______________________________________&quot;+ ret +&quot; &gt;&gt;&gt; &quot;+ name);
         }
 
-<span class="fc bfc" id="L404" title="All 2 branches covered.">        if (ret == null) ret = &quot;&quot;;</span>
+<span class="fc bfc" id="L423" title="All 2 branches covered.">        if (ret == null) ret = &quot;&quot;;</span>
 
-<span class="fc bfc" id="L406" title="All 2 branches covered.">        if (filter) {</span>
-<span class="fc" id="L407">            ret = ResponseUtils.filter(ret);</span>
-<span class="fc" id="L408">            ret = Tools.replace(ret, &quot;\n&quot;, &quot; &quot;);</span>
-<span class="fc" id="L409">            ret = Tools.replace(ret, &quot;\r&quot;, &quot; &quot;);</span>
-<span class="fc" id="L410">            ret = Tools.replace(ret, &quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
+<span class="fc bfc" id="L425" title="All 2 branches covered.">        if (filter) {</span>
+<span class="fc" id="L426">            ret = ResponseUtils.filter(ret);</span>
+<span class="fc" id="L427">            ret = Tools.replace(ret, &quot;\n&quot;, &quot; &quot;);</span>
+<span class="fc" id="L428">            ret = Tools.replace(ret, &quot;\r&quot;, &quot; &quot;);</span>
+<span class="fc" id="L429">            ret = Tools.replace(ret, &quot;&amp;amp;&quot;, &quot;&amp;&quot;);</span>
         }
 
-<span class="fc" id="L413">        return (ret);</span>
+<span class="fc" id="L432">        return (ret);</span>
     }
 
     /**
@@ -423,14 +442,14 @@ public class DocTools {
      */
     private static String getParameterString(HttpServletRequest request, String name)
     {
-<span class="fc" id="L426">        String ret = request.getParameter(name);</span>
-<span class="pc bpc" id="L427" title="1 of 2 branches missed.">        if (ret == null)</span>
+<span class="fc" id="L445">        String ret = request.getParameter(name);</span>
+<span class="pc bpc" id="L446" title="1 of 2 branches missed.">        if (ret == null)</span>
         {
-<span class="nc" id="L429">            ret = &quot;&quot;;</span>
+<span class="nc" id="L448">            ret = &quot;&quot;;</span>
         }
         //ochrana pred XSS
-<span class="fc" id="L432">        ret = ResponseUtils.filter(ret);</span>
-<span class="fc" id="L433">        return (ret);</span>
+<span class="fc" id="L451">        ret = ResponseUtils.filter(ret);</span>
+<span class="fc" id="L452">        return (ret);</span>
     }
 
     /**
@@ -447,234 +466,234 @@ public class DocTools {
     {
         try
         {
-<span class="fc" id="L450">            String docTitle = (String) request.getAttribute(&quot;doc_title&quot;);</span>
-<span class="fc bfc" id="L451" title="All 2 branches covered.">            if (docTitle == null)</span>
+<span class="fc" id="L469">            String docTitle = (String) request.getAttribute(&quot;doc_title&quot;);</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">            if (docTitle == null)</span>
             {
-<span class="fc" id="L453">                docTitle = &quot;&quot;;</span>
+<span class="fc" id="L472">                docTitle = &quot;&quot;;</span>
             }
 
-<span class="fc" id="L456">            java.util.Date d_now = new java.util.Date();</span>
-<span class="fc" id="L457">            java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
-<span class="fc" id="L458">            String actualDate = formatter.format(d_now);</span>
-<span class="fc" id="L459">            String actualDateCZ = actualDate;</span>
+<span class="fc" id="L475">            java.util.Date d_now = new java.util.Date();</span>
+<span class="fc" id="L476">            java.text.SimpleDateFormat formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateFormat&quot;));</span>
+<span class="fc" id="L477">            String actualDate = formatter.format(d_now);</span>
+<span class="fc" id="L478">            String actualDateCZ = actualDate;</span>
 
-<span class="fc" id="L461">            text = Tools.replace(text, &quot;!DATUM!&quot;, actualDate);</span>
+<span class="fc" id="L480">            text = Tools.replace(text, &quot;!DATUM!&quot;, actualDate);</span>
 
-<span class="fc" id="L463">            java.util.GregorianCalendar cal = new java.util.GregorianCalendar();</span>
-<span class="pc bpc" id="L464" title="1 of 2 branches missed.">            if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)</span>
+<span class="fc" id="L482">            java.util.GregorianCalendar cal = new java.util.GregorianCalendar();</span>
+<span class="pc bpc" id="L483" title="1 of 2 branches missed.">            if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)</span>
             {
-<span class="nc" id="L466">                actualDate = &quot;Pondelok &quot; + actualDate;</span>
-<span class="nc" id="L467">                actualDateCZ = &quot;Pondělí &quot; + actualDateCZ;</span>
+<span class="nc" id="L485">                actualDate = &quot;Pondelok &quot; + actualDate;</span>
+<span class="nc" id="L486">                actualDateCZ = &quot;Pondělí &quot; + actualDateCZ;</span>
             }
-<span class="pc bpc" id="L469" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)</span>
+<span class="pc bpc" id="L488" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)</span>
             {
-<span class="nc" id="L471">                actualDate = &quot;Utorok &quot; + actualDate;</span>
-<span class="nc" id="L472">                actualDateCZ = &quot;Úterý &quot; + actualDateCZ;</span>
+<span class="nc" id="L490">                actualDate = &quot;Utorok &quot; + actualDate;</span>
+<span class="nc" id="L491">                actualDateCZ = &quot;Úterý &quot; + actualDateCZ;</span>
             }
-<span class="pc bpc" id="L474" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)</span>
+<span class="pc bpc" id="L493" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)</span>
             {
-<span class="nc" id="L476">                actualDate = &quot;Streda &quot; + actualDate;</span>
-<span class="nc" id="L477">                actualDateCZ = &quot;Středa &quot; + actualDateCZ;</span>
+<span class="nc" id="L495">                actualDate = &quot;Streda &quot; + actualDate;</span>
+<span class="nc" id="L496">                actualDateCZ = &quot;Středa &quot; + actualDateCZ;</span>
             }
-<span class="pc bpc" id="L479" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)</span>
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)</span>
             {
-<span class="nc" id="L481">                actualDate = &quot;Štvrtok &quot; + actualDate;</span>
-<span class="nc" id="L482">                actualDateCZ = &quot;Čtvrtek &quot; + actualDateCZ;</span>
+<span class="fc" id="L500">                actualDate = &quot;Štvrtok &quot; + actualDate;</span>
+<span class="fc" id="L501">                actualDateCZ = &quot;Čtvrtek &quot; + actualDateCZ;</span>
             }
-<span class="pc bpc" id="L484" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)</span>
+<span class="nc bnc" id="L503" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)</span>
             {
-<span class="fc" id="L486">                actualDate = &quot;Piatok &quot; + actualDate;</span>
-<span class="fc" id="L487">                actualDateCZ = &quot;Pátek &quot; + actualDateCZ;</span>
+<span class="nc" id="L505">                actualDate = &quot;Piatok &quot; + actualDate;</span>
+<span class="nc" id="L506">                actualDateCZ = &quot;Pátek &quot; + actualDateCZ;</span>
             }
-<span class="nc bnc" id="L489" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)</span>
             {
-<span class="nc" id="L491">                actualDate = &quot;Sobota &quot; + actualDate;</span>
-<span class="nc" id="L492">                actualDateCZ = &quot;Sobota &quot; + actualDateCZ;</span>
+<span class="nc" id="L510">                actualDate = &quot;Sobota &quot; + actualDate;</span>
+<span class="nc" id="L511">                actualDateCZ = &quot;Sobota &quot; + actualDateCZ;</span>
             }
-<span class="nc bnc" id="L494" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)</span>
             {
-<span class="nc" id="L496">                actualDate = &quot;Nedeľa &quot; + actualDate;</span>
-<span class="nc" id="L497">                actualDateCZ = &quot;Neděle &quot; + actualDateCZ;</span>
+<span class="nc" id="L515">                actualDate = &quot;Nedeľa &quot; + actualDate;</span>
+<span class="nc" id="L516">                actualDateCZ = &quot;Neděle &quot; + actualDateCZ;</span>
             }
 
-<span class="fc" id="L500">            text = Tools.replace(text, &quot;!DEN_DATUM!&quot;, actualDate);</span>
-<span class="fc" id="L501">            text = Tools.replace(text, &quot;!DEN_DATUM_CZ!&quot;, actualDateCZ);</span>
+<span class="fc" id="L519">            text = Tools.replace(text, &quot;!DEN_DATUM!&quot;, actualDate);</span>
+<span class="fc" id="L520">            text = Tools.replace(text, &quot;!DEN_DATUM_CZ!&quot;, actualDateCZ);</span>
 
-<span class="fc" id="L503">            formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
-<span class="fc" id="L504">            text = Tools.replace(text, &quot;!TIME!&quot;, formatter.format(d_now));</span>
+<span class="fc" id="L522">            formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;timeFormat&quot;));</span>
+<span class="fc" id="L523">            text = Tools.replace(text, &quot;!TIME!&quot;, formatter.format(d_now));</span>
 
             //english
-<span class="fc" id="L507">            formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateFormatEn&quot;));</span>
-<span class="fc" id="L508">            String actualDateEN = formatter.format(d_now);</span>
+<span class="fc" id="L526">            formatter = new java.text.SimpleDateFormat(Constants.getString(&quot;dateFormatEn&quot;));</span>
+<span class="fc" id="L527">            String actualDateEN = formatter.format(d_now);</span>
 
-<span class="fc" id="L510">            text = Tools.replace(text, &quot;!DATE!&quot;, actualDateEN);</span>
+<span class="fc" id="L529">            text = Tools.replace(text, &quot;!DATE!&quot;, actualDateEN);</span>
 
-<span class="fc" id="L512">            cal = new java.util.GregorianCalendar();</span>
-<span class="pc bpc" id="L513" title="1 of 2 branches missed.">            if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)</span>
+<span class="fc" id="L531">            cal = new java.util.GregorianCalendar();</span>
+<span class="pc bpc" id="L532" title="1 of 2 branches missed.">            if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)</span>
             {
-<span class="nc" id="L515">                actualDateEN = &quot;Monday &quot; + actualDateEN;</span>
+<span class="nc" id="L534">                actualDateEN = &quot;Monday &quot; + actualDateEN;</span>
             }
-<span class="pc bpc" id="L517" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)</span>
+<span class="pc bpc" id="L536" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.TUESDAY)</span>
             {
-<span class="nc" id="L519">                actualDateEN = &quot;Tuesday &quot; + actualDateEN;</span>
+<span class="nc" id="L538">                actualDateEN = &quot;Tuesday &quot; + actualDateEN;</span>
             }
-<span class="pc bpc" id="L521" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)</span>
+<span class="pc bpc" id="L540" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.WEDNESDAY)</span>
             {
-<span class="nc" id="L523">                actualDateEN = &quot;Wednesday &quot; + actualDateEN;</span>
+<span class="nc" id="L542">                actualDateEN = &quot;Wednesday &quot; + actualDateEN;</span>
             }
-<span class="pc bpc" id="L525" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)</span>
+<span class="pc bpc" id="L544" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.THURSDAY)</span>
             {
-<span class="nc" id="L527">                actualDateEN = &quot;Thursday &quot; + actualDateEN;</span>
+<span class="fc" id="L546">                actualDateEN = &quot;Thursday &quot; + actualDateEN;</span>
             }
-<span class="pc bpc" id="L529" title="1 of 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY)</span>
             {
-<span class="fc" id="L531">                actualDateEN = &quot;Friday &quot; + actualDateEN;</span>
+<span class="nc" id="L550">                actualDateEN = &quot;Friday &quot; + actualDateEN;</span>
             }
-<span class="nc bnc" id="L533" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)</span>
+<span class="nc bnc" id="L552" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY)</span>
             {
-<span class="nc" id="L535">                actualDateEN = &quot;Saturday &quot; + actualDateEN;</span>
+<span class="nc" id="L554">                actualDateEN = &quot;Saturday &quot; + actualDateEN;</span>
             }
-<span class="nc bnc" id="L537" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)</span>
+<span class="nc bnc" id="L556" title="All 2 branches missed.">            else if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)</span>
             {
-<span class="nc" id="L539">                actualDateEN = &quot;Sunday &quot; + actualDateEN;</span>
+<span class="nc" id="L558">                actualDateEN = &quot;Sunday &quot; + actualDateEN;</span>
             }
 
-<span class="fc" id="L542">            String year = String.valueOf(cal.get(Calendar.YEAR));</span>
+<span class="fc" id="L561">            String year = String.valueOf(cal.get(Calendar.YEAR));</span>
 
-<span class="fc" id="L544">            text = Tools.replace(text, &quot;!YEAR!&quot;, year);</span>
-<span class="fc" id="L545">            text = Tools.replace(text, &quot;!DAY_DATE!&quot;, actualDateEN);</span>
-<span class="fc" id="L546">            text = Tools.replace(text, &quot;!DOC_TITLE!&quot;, docTitle);</span>
+<span class="fc" id="L563">            text = Tools.replace(text, &quot;!YEAR!&quot;, year);</span>
+<span class="fc" id="L564">            text = Tools.replace(text, &quot;!DAY_DATE!&quot;, actualDateEN);</span>
+<span class="fc" id="L565">            text = Tools.replace(text, &quot;!DOC_TITLE!&quot;, docTitle);</span>
             //text = Tools.replace(text, &quot;TITLE&quot;, docTitle);
 
             //poreplacuj texty s !request(
             try
             {
-<span class="fc" id="L552">                int counter = 0;</span>
-<span class="fc" id="L553">                String REPLACE_START = &quot;!REQUEST(&quot;;</span>
-<span class="fc" id="L554">                String REPLACE_END = &quot;)!&quot;;</span>
-<span class="fc" id="L555">                int start = text.indexOf(REPLACE_START);</span>
+<span class="fc" id="L571">                int counter = 0;</span>
+<span class="fc" id="L572">                String REPLACE_START = &quot;!REQUEST(&quot;;</span>
+<span class="fc" id="L573">                String REPLACE_END = &quot;)!&quot;;</span>
+<span class="fc" id="L574">                int start = text.indexOf(REPLACE_START);</span>
                 int end;
                 String name;
-<span class="fc bfc" id="L558" title="All 2 branches covered.">                while (start != -1)</span>
+<span class="fc bfc" id="L577" title="All 2 branches covered.">                while (start != -1)</span>
                 {
-<span class="fc" id="L560">                    end = text.indexOf(REPLACE_END, start);</span>
-<span class="pc bpc" id="L561" title="1 of 2 branches missed.">                    if (end &gt; start)</span>
+<span class="fc" id="L579">                    end = text.indexOf(REPLACE_END, start);</span>
+<span class="pc bpc" id="L580" title="1 of 2 branches missed.">                    if (end &gt; start)</span>
                     {
                         try
                         {
-<span class="fc" id="L565">                            name = text.substring(start + REPLACE_START.length(), end);</span>
+<span class="fc" id="L584">                            name = text.substring(start + REPLACE_START.length(), end);</span>
                             //Logger.println(this,&quot;name=&quot;+name);
-<span class="fc" id="L567">                            text = Tools.replace(text, REPLACE_START + name + REPLACE_END, getRequestString(request, name));</span>
+<span class="fc" id="L586">                            text = Tools.replace(text, REPLACE_START + name + REPLACE_END, getRequestString(request, name));</span>
                         }
-<span class="nc" id="L569">                        catch (Exception ex)</span>
+<span class="nc" id="L588">                        catch (Exception ex)</span>
                         {
-<span class="nc" id="L571">                            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L572">                        }</span>
+<span class="nc" id="L590">                            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L591">                        }</span>
                     }
 
                     //failsafe
-<span class="fc" id="L576">                    counter++;</span>
-<span class="pc bpc" id="L577" title="1 of 2 branches missed.">                    if (counter &gt; 30)</span>
+<span class="fc" id="L595">                    counter++;</span>
+<span class="pc bpc" id="L596" title="1 of 2 branches missed.">                    if (counter &gt; 30)</span>
                     {
-<span class="nc" id="L579">                        break;</span>
+<span class="nc" id="L598">                        break;</span>
                     }
-<span class="fc" id="L581">                    start = text.indexOf(REPLACE_START, start + 1);</span>
+<span class="fc" id="L600">                    start = text.indexOf(REPLACE_START, start + 1);</span>
                 }
             }
-<span class="nc" id="L584">            catch (Exception ex)</span>
+<span class="nc" id="L603">            catch (Exception ex)</span>
             {
-<span class="nc" id="L586">                sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L587">            }</span>
+<span class="nc" id="L605">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L606">            }</span>
 
             //poreplacuj texty s !parameter(
             try
             {
-<span class="fc" id="L592">                int counter = 0;</span>
-<span class="fc" id="L593">                String REPLACE_START = &quot;!PARAMETER(&quot;;</span>
-<span class="fc" id="L594">                String REPLACE_END = &quot;)!&quot;;</span>
-<span class="fc" id="L595">                int start = text.indexOf(REPLACE_START);</span>
+<span class="fc" id="L611">                int counter = 0;</span>
+<span class="fc" id="L612">                String REPLACE_START = &quot;!PARAMETER(&quot;;</span>
+<span class="fc" id="L613">                String REPLACE_END = &quot;)!&quot;;</span>
+<span class="fc" id="L614">                int start = text.indexOf(REPLACE_START);</span>
                 int end;
                 String name;
-<span class="fc bfc" id="L598" title="All 2 branches covered.">                while (start != -1)</span>
+<span class="fc bfc" id="L617" title="All 2 branches covered.">                while (start != -1)</span>
                 {
-<span class="fc" id="L600">                    end = text.indexOf(REPLACE_END, start);</span>
-<span class="pc bpc" id="L601" title="1 of 2 branches missed.">                    if (end &gt; start)</span>
+<span class="fc" id="L619">                    end = text.indexOf(REPLACE_END, start);</span>
+<span class="pc bpc" id="L620" title="1 of 2 branches missed.">                    if (end &gt; start)</span>
                     {
                         try
                         {
-<span class="fc" id="L605">                            name = text.substring(start + REPLACE_START.length(), end);</span>
+<span class="fc" id="L624">                            name = text.substring(start + REPLACE_START.length(), end);</span>
                             //Logger.println(this,&quot;name=&quot;+name);
-<span class="fc" id="L607">                            text = Tools.replace(text, REPLACE_START + name + REPLACE_END, getParameterString(request, name));</span>
+<span class="fc" id="L626">                            text = Tools.replace(text, REPLACE_START + name + REPLACE_END, getParameterString(request, name));</span>
                         }
-<span class="nc" id="L609">                        catch (Exception ex)</span>
+<span class="nc" id="L628">                        catch (Exception ex)</span>
                         {
-<span class="nc" id="L611">                            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L612">                        }</span>
+<span class="nc" id="L630">                            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L631">                        }</span>
                     }
 
                     //failsafe
-<span class="fc" id="L616">                    counter++;</span>
-<span class="pc bpc" id="L617" title="1 of 2 branches missed.">                    if (counter &gt; 30)</span>
+<span class="fc" id="L635">                    counter++;</span>
+<span class="pc bpc" id="L636" title="1 of 2 branches missed.">                    if (counter &gt; 30)</span>
                     {
-<span class="nc" id="L619">                        break;</span>
+<span class="nc" id="L638">                        break;</span>
                     }
-<span class="fc" id="L621">                    start = text.indexOf(REPLACE_START, start + 5);</span>
+<span class="fc" id="L640">                    start = text.indexOf(REPLACE_START, start + 5);</span>
                 }
             }
-<span class="nc" id="L624">            catch (Exception ex)</span>
+<span class="nc" id="L643">            catch (Exception ex)</span>
             {
-<span class="nc" id="L626">                sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L627">            }</span>
+<span class="nc" id="L645">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L646">            }</span>
 
             //poreplacuj texty s !text(
             try
             {
-<span class="fc" id="L632">                Prop prop = Prop.getInstance(request);</span>
-<span class="fc" id="L633">                int counter = 0;</span>
-<span class="fc" id="L634">                String REPLACE_START = &quot;!TEXT(&quot;;</span>
-<span class="fc" id="L635">                String REPLACE_END = &quot;)!&quot;;</span>
-<span class="fc" id="L636">                int start = text.indexOf(REPLACE_START);</span>
+<span class="fc" id="L651">                Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L652">                int counter = 0;</span>
+<span class="fc" id="L653">                String REPLACE_START = &quot;!TEXT(&quot;;</span>
+<span class="fc" id="L654">                String REPLACE_END = &quot;)!&quot;;</span>
+<span class="fc" id="L655">                int start = text.indexOf(REPLACE_START);</span>
                 int end;
                 String name;
-<span class="pc bpc" id="L639" title="1 of 2 branches missed.">                while (start != -1)</span>
+<span class="pc bpc" id="L658" title="1 of 2 branches missed.">                while (start != -1)</span>
                 {
-<span class="nc" id="L641">                    end = text.indexOf(REPLACE_END, start);</span>
-<span class="nc bnc" id="L642" title="All 2 branches missed.">                    if (end &gt; start)</span>
+<span class="nc" id="L660">                    end = text.indexOf(REPLACE_END, start);</span>
+<span class="nc bnc" id="L661" title="All 2 branches missed.">                    if (end &gt; start)</span>
                     {
                         try
                         {
-<span class="nc" id="L646">                            name = text.substring(start + REPLACE_START.length(), end);</span>
+<span class="nc" id="L665">                            name = text.substring(start + REPLACE_START.length(), end);</span>
                             //Logger.println(this,&quot;name=&quot;+name);
-<span class="nc" id="L648">                            text = Tools.replace(text, REPLACE_START + name + REPLACE_END, prop.getText(name));</span>
+<span class="nc" id="L667">                            text = Tools.replace(text, REPLACE_START + name + REPLACE_END, prop.getText(name));</span>
                         }
-<span class="nc" id="L650">                        catch (Exception ex)</span>
+<span class="nc" id="L669">                        catch (Exception ex)</span>
                         {
-<span class="nc" id="L652">                            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="nc" id="L653">                        }</span>
+<span class="nc" id="L671">                            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L672">                        }</span>
                     }
 
                     //failsafe
-<span class="nc" id="L657">                    counter++;</span>
-<span class="nc bnc" id="L658" title="All 2 branches missed.">                    if (counter &gt; 60)</span>
+<span class="nc" id="L676">                    counter++;</span>
+<span class="nc bnc" id="L677" title="All 2 branches missed.">                    if (counter &gt; 60)</span>
                     {
-<span class="nc" id="L660">                        break;</span>
+<span class="nc" id="L679">                        break;</span>
                     }
-<span class="nc" id="L662">                    start = text.indexOf(REPLACE_START, start + 5);</span>
+<span class="nc" id="L681">                    start = text.indexOf(REPLACE_START, start + 5);</span>
                 }
             }
-<span class="nc" id="L665">            catch (Exception ex)</span>
+<span class="nc" id="L684">            catch (Exception ex)</span>
             {
-<span class="nc" id="L667">                sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L668">            }</span>
+<span class="nc" id="L686">                sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L687">            }</span>
 
-<span class="fc" id="L670">            text = updateUserCodes(user, text);</span>
+<span class="fc" id="L689">            text = updateUserCodes(user, text);</span>
         }
-<span class="nc" id="L672">        catch (Exception ex)</span>
+<span class="nc" id="L691">        catch (Exception ex)</span>
         {
-<span class="nc" id="L674">            sk.iway.iwcm.Logger.error(ex);</span>
-<span class="fc" id="L675">        }</span>
+<span class="nc" id="L693">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="fc" id="L694">        }</span>
 
-<span class="fc" id="L677">        return (text);</span>
+<span class="fc" id="L696">        return (text);</span>
     }
 
     /**
@@ -686,62 +705,62 @@ public class DocTools {
      */
     public static StringBuilder updateUserCodes(Identity user, StringBuilder text)
     {
-<span class="fc bfc" id="L689" title="All 2 branches covered.">        if (user == null)</span>
+<span class="fc bfc" id="L708" title="All 2 branches covered.">        if (user == null)</span>
         {
-<span class="fc" id="L691">            text = Tools.replace(text, &quot;!LOGGED_USER_NAME!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L692">            text = Tools.replace(text, &quot;!name!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L693">            text = Tools.replace(text, &quot;!LOGGED_USER_FIRSTNAME!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L694">            text = Tools.replace(text, &quot;!LOGGED_USER_LASTNAME!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L695">            text = Tools.replace(text, &quot;!LOGGED_USER_TITLE!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L696">            text = Tools.replace(text, &quot;!LOGGED_USER_LOGIN!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L697">            text = Tools.replace(text, &quot;!LOGGED_USER_PASSWORD!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L698">            text = Tools.replace(text, &quot;!LOGGED_USER_EMAIL!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L699">            text = Tools.replace(text, &quot;!LOGGED_USER_COMPANY!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L700">            text = Tools.replace(text, &quot;!LOGGED_USER_CITY!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L701">            text = Tools.replace(text, &quot;!LOGGED_USER_ADDRESS!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L702">            text = Tools.replace(text, &quot;!LOGGED_USER_COUNTRY!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L703">            text = Tools.replace(text, &quot;!LOGGED_USER_PHONE!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L704">            text = Tools.replace(text, &quot;!LOGGED_USER_ZIP!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L705">            text = Tools.replace(text, &quot;!LOGGED_USER_ID!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L706">            text = Tools.replace(text, &quot;!LOGGED_USER_BIRTH_DATE!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L710">            text = Tools.replace(text, &quot;!LOGGED_USER_NAME!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L711">            text = Tools.replace(text, &quot;!name!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L712">            text = Tools.replace(text, &quot;!LOGGED_USER_FIRSTNAME!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L713">            text = Tools.replace(text, &quot;!LOGGED_USER_LASTNAME!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L714">            text = Tools.replace(text, &quot;!LOGGED_USER_TITLE!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L715">            text = Tools.replace(text, &quot;!LOGGED_USER_LOGIN!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L716">            text = Tools.replace(text, &quot;!LOGGED_USER_PASSWORD!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L717">            text = Tools.replace(text, &quot;!LOGGED_USER_EMAIL!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L718">            text = Tools.replace(text, &quot;!LOGGED_USER_COMPANY!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L719">            text = Tools.replace(text, &quot;!LOGGED_USER_CITY!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L720">            text = Tools.replace(text, &quot;!LOGGED_USER_ADDRESS!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L721">            text = Tools.replace(text, &quot;!LOGGED_USER_COUNTRY!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L722">            text = Tools.replace(text, &quot;!LOGGED_USER_PHONE!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L723">            text = Tools.replace(text, &quot;!LOGGED_USER_ZIP!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L724">            text = Tools.replace(text, &quot;!LOGGED_USER_ID!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L725">            text = Tools.replace(text, &quot;!LOGGED_USER_BIRTH_DATE!&quot;, &quot;&quot;);</span>
 
-<span class="fc" id="L708">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDA!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L709">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDB!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L710">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDC!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L711">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDD!&quot;, &quot;&quot;);</span>
-<span class="fc" id="L712">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDE!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L727">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDA!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L728">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDB!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L729">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDC!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L730">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDD!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L731">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDE!&quot;, &quot;&quot;);</span>
 
-<span class="fc" id="L714">            text = Tools.replace(text, &quot;!LOGGED_USER_GROUPS!&quot;, &quot;&quot;);</span>
+<span class="fc" id="L733">            text = Tools.replace(text, &quot;!LOGGED_USER_GROUPS!&quot;, &quot;&quot;);</span>
         }
         else
         {
-<span class="fc" id="L718">            text = Tools.replace(text, &quot;!LOGGED_USER_NAME!&quot;, user.getFullName());</span>
-<span class="fc" id="L719">            text = Tools.replace(text, &quot;!name!&quot;, user.getFullName());</span>
-<span class="fc" id="L720">            text = Tools.replace(text, &quot;!LOGGED_USER_FIRSTNAME!&quot;, user.getFirstName());</span>
-<span class="fc" id="L721">            text = Tools.replace(text, &quot;!LOGGED_USER_LASTNAME!&quot;, user.getLastName());</span>
-<span class="fc" id="L722">            text = Tools.replace(text, &quot;!LOGGED_USER_TITLE!&quot;, user.getTitle());</span>
-<span class="fc" id="L723">            text = Tools.replace(text, &quot;!LOGGED_USER_LOGIN!&quot;, user.getLoginName());</span>
-<span class="fc" id="L724">            text = Tools.replace(text, &quot;!LOGGED_USER_PASSWORD!&quot;, user.getPassword());</span>
-<span class="fc" id="L725">            text = Tools.replace(text, &quot;!LOGGED_USER_EMAIL!&quot;, user.getEmail());</span>
-<span class="fc" id="L726">            text = Tools.replace(text, &quot;!LOGGED_USER_COMPANY!&quot;, user.getCompany());</span>
-<span class="fc" id="L727">            text = Tools.replace(text, &quot;!LOGGED_USER_CITY!&quot;, user.getCity());</span>
-<span class="fc" id="L728">            text = Tools.replace(text, &quot;!LOGGED_USER_ADDRESS!&quot;, user.getAdress());</span>
-<span class="fc" id="L729">            text = Tools.replace(text, &quot;!LOGGED_USER_COUNTRY!&quot;, user.getCountry());</span>
-<span class="fc" id="L730">            text = Tools.replace(text, &quot;!LOGGED_USER_PHONE!&quot;, user.getPhone());</span>
-<span class="fc" id="L731">            text = Tools.replace(text, &quot;!LOGGED_USER_ZIP!&quot;, user.getPSC());</span>
-<span class="fc" id="L732">            text = Tools.replace(text, &quot;!LOGGED_USER_ID!&quot;, Integer.toString(user.getUserId()));</span>
-<span class="fc" id="L733">            text = Tools.replace(text, &quot;!LOGGED_USER_BIRTH_DATE!&quot;, user.getDateOfBirth());</span>
+<span class="fc" id="L737">            text = Tools.replace(text, &quot;!LOGGED_USER_NAME!&quot;, user.getFullName());</span>
+<span class="fc" id="L738">            text = Tools.replace(text, &quot;!name!&quot;, user.getFullName());</span>
+<span class="fc" id="L739">            text = Tools.replace(text, &quot;!LOGGED_USER_FIRSTNAME!&quot;, user.getFirstName());</span>
+<span class="fc" id="L740">            text = Tools.replace(text, &quot;!LOGGED_USER_LASTNAME!&quot;, user.getLastName());</span>
+<span class="fc" id="L741">            text = Tools.replace(text, &quot;!LOGGED_USER_TITLE!&quot;, user.getTitle());</span>
+<span class="fc" id="L742">            text = Tools.replace(text, &quot;!LOGGED_USER_LOGIN!&quot;, user.getLoginName());</span>
+<span class="fc" id="L743">            text = Tools.replace(text, &quot;!LOGGED_USER_PASSWORD!&quot;, user.getPassword());</span>
+<span class="fc" id="L744">            text = Tools.replace(text, &quot;!LOGGED_USER_EMAIL!&quot;, user.getEmail());</span>
+<span class="fc" id="L745">            text = Tools.replace(text, &quot;!LOGGED_USER_COMPANY!&quot;, user.getCompany());</span>
+<span class="fc" id="L746">            text = Tools.replace(text, &quot;!LOGGED_USER_CITY!&quot;, user.getCity());</span>
+<span class="fc" id="L747">            text = Tools.replace(text, &quot;!LOGGED_USER_ADDRESS!&quot;, user.getAdress());</span>
+<span class="fc" id="L748">            text = Tools.replace(text, &quot;!LOGGED_USER_COUNTRY!&quot;, user.getCountry());</span>
+<span class="fc" id="L749">            text = Tools.replace(text, &quot;!LOGGED_USER_PHONE!&quot;, user.getPhone());</span>
+<span class="fc" id="L750">            text = Tools.replace(text, &quot;!LOGGED_USER_ZIP!&quot;, user.getPSC());</span>
+<span class="fc" id="L751">            text = Tools.replace(text, &quot;!LOGGED_USER_ID!&quot;, Integer.toString(user.getUserId()));</span>
+<span class="fc" id="L752">            text = Tools.replace(text, &quot;!LOGGED_USER_BIRTH_DATE!&quot;, user.getDateOfBirth());</span>
 
-<span class="fc" id="L735">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDA!&quot;, user.getFieldA());</span>
-<span class="fc" id="L736">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDB!&quot;, user.getFieldB());</span>
-<span class="fc" id="L737">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDC!&quot;, user.getFieldC());</span>
-<span class="fc" id="L738">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDD!&quot;, user.getFieldD());</span>
-<span class="fc" id="L739">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDE!&quot;, user.getFieldE());</span>
+<span class="fc" id="L754">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDA!&quot;, user.getFieldA());</span>
+<span class="fc" id="L755">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDB!&quot;, user.getFieldB());</span>
+<span class="fc" id="L756">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDC!&quot;, user.getFieldC());</span>
+<span class="fc" id="L757">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDD!&quot;, user.getFieldD());</span>
+<span class="fc" id="L758">            text = Tools.replace(text, &quot;!LOGGED_USER_FIELDE!&quot;, user.getFieldE());</span>
 
-<span class="fc" id="L741">            UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
-<span class="fc" id="L742">            text = Tools.replace(text, &quot;!LOGGED_USER_GROUPS!&quot;, userGroupsDB.convertIdsToNames(user.getUserGroupsIds()));</span>
+<span class="fc" id="L760">            UserGroupsDB userGroupsDB = UserGroupsDB.getInstance();</span>
+<span class="fc" id="L761">            text = Tools.replace(text, &quot;!LOGGED_USER_GROUPS!&quot;, userGroupsDB.convertIdsToNames(user.getUserGroupsIds()));</span>
         }
-<span class="fc" id="L744">        return (text);</span>
+<span class="fc" id="L763">        return (text);</span>
     }
 
     /**
@@ -754,96 +773,96 @@ public class DocTools {
     public static String getXssStrictUrlRedirect(HttpServletRequest request, String path, String qs)
     {
         //STRICT XSS FILTER
-<span class="fc" id="L757">        boolean xssProtectionStrictGet = Constants.getBoolean(&quot;xssProtectionStrictGet&quot;);</span>
-<span class="pc bpc" id="L758" title="1 of 6 branches missed.">        if (xssProtectionStrictGet==false || qs==null || qs.length()&lt;2) return null;</span>
+<span class="fc" id="L776">        boolean xssProtectionStrictGet = Constants.getBoolean(&quot;xssProtectionStrictGet&quot;);</span>
+<span class="pc bpc" id="L777" title="1 of 6 branches missed.">        if (xssProtectionStrictGet==false || qs==null || qs.length()&lt;2) return null;</span>
 
         //ak sme vynimka, skonci
-<span class="fc bfc" id="L761" title="All 2 branches covered.">        if (isXssStrictUrlException(path, &quot;xssProtectionStrictGetUrlException&quot;)) return null;</span>
+<span class="fc bfc" id="L780" title="All 2 branches covered.">        if (isXssStrictUrlException(path, &quot;xssProtectionStrictGetUrlException&quot;)) return null;</span>
 
         //xssProtectionStrictGet pouzijeme len pre GET metody
-<span class="fc bfc" id="L764" title="All 2 branches covered.">        if (&quot;get&quot;.equalsIgnoreCase(request.getMethod())==false)</span>
+<span class="fc bfc" id="L783" title="All 2 branches covered.">        if (&quot;get&quot;.equalsIgnoreCase(request.getMethod())==false)</span>
         {
             //pre /components/ adresar a JSP/Stripes subory budem testovat aj pre POST requesty
-<span class="pc bpc" id="L767" title="2 of 8 branches missed.">            if (path.indexOf(&quot;/components/&quot;)!=-1 &amp;&amp; (path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.action&quot;) || path.endsWith(&quot;.do&quot;)))</span>
+<span class="pc bpc" id="L786" title="2 of 8 branches missed.">            if (path.indexOf(&quot;/components/&quot;)!=-1 &amp;&amp; (path.endsWith(&quot;.jsp&quot;) || path.endsWith(&quot;.action&quot;) || path.endsWith(&quot;.do&quot;)))</span>
             {
                 //vynimky, pre ktore netreba testovat
 
                 //ak je prihlaseny admin, tak POST ignorujeme
-<span class="fc" id="L772">                Identity user = UsersDB.getCurrentUser(request);</span>
-<span class="pc bpc" id="L773" title="2 of 4 branches missed.">                if (user != null &amp;&amp; user.isAdmin()) return null;</span>
+<span class="fc" id="L791">                Identity user = UsersDB.getCurrentUser(request);</span>
+<span class="pc bpc" id="L792" title="2 of 4 branches missed.">                if (user != null &amp;&amp; user.isAdmin()) return null;</span>
 
                 //ak nie je admin, prebehni POST vynimky
-<span class="nc bnc" id="L776" title="All 2 branches missed.">                if (isXssStrictUrlException(path, &quot;xssProtectionStrictPostUrlException&quot;)) return null;</span>
-<span class="nc" id="L777">            }</span>
+<span class="nc bnc" id="L795" title="All 2 branches missed.">                if (isXssStrictUrlException(path, &quot;xssProtectionStrictPostUrlException&quot;)) return null;</span>
+<span class="nc" id="L796">            }</span>
             else
             {
                 //xssProtectionStrictGet pouzijeme len pre GET metody
-<span class="fc" id="L781">                return null;</span>
+<span class="fc" id="L800">                return null;</span>
             }
         }
 
-<span class="fc" id="L785">        boolean hasAtLeastOneXss = false;</span>
-<span class="fc" id="L786">        StringBuilder redirectUrl = new StringBuilder();</span>
+<span class="fc" id="L804">        boolean hasAtLeastOneXss = false;</span>
+<span class="fc" id="L805">        StringBuilder redirectUrl = new StringBuilder();</span>
 
-<span class="fc" id="L788">        Enumeration&lt;String&gt; parameters = request.getParameterNames();</span>
-<span class="fc bfc" id="L789" title="All 2 branches covered.">        while (parameters.hasMoreElements())</span>
+<span class="fc" id="L807">        Enumeration&lt;String&gt; parameters = request.getParameterNames();</span>
+<span class="fc bfc" id="L808" title="All 2 branches covered.">        while (parameters.hasMoreElements())</span>
         {
-<span class="fc" id="L791">            String name = parameters.nextElement();</span>
+<span class="fc" id="L810">            String name = parameters.nextElement();</span>
 
             //prenos include parametra z editor_component.jsp
-<span class="pc bpc" id="L794" title="2 of 6 branches missed.">            if (&quot;include&quot;.equals(name) &amp;&amp; path.startsWith(&quot;/apps/&quot;) &amp;&amp; path.contains(&quot;/admin/&quot;)) continue;</span>
+<span class="pc bpc" id="L813" title="2 of 6 branches missed.">            if (&quot;include&quot;.equals(name) &amp;&amp; path.startsWith(&quot;/apps/&quot;) &amp;&amp; path.contains(&quot;/admin/&quot;)) continue;</span>
 
-<span class="pc bpc" id="L796" title="1 of 2 branches missed.">           if (testXssStrictGet(name))</span>
+<span class="pc bpc" id="L815" title="1 of 2 branches missed.">           if (testXssStrictGet(name))</span>
            {
-<span class="nc" id="L798">               Logger.debug(DocTools.class, &quot;XSS HAS: &quot;+name);</span>
-<span class="nc" id="L799">               hasAtLeastOneXss = true;</span>
-<span class="nc" id="L800">               continue;</span>
+<span class="nc" id="L817">               Logger.debug(DocTools.class, &quot;XSS HAS: &quot;+name);</span>
+<span class="nc" id="L818">               hasAtLeastOneXss = true;</span>
+<span class="nc" id="L819">               continue;</span>
            }
-<span class="fc" id="L802">           String[] values = request.getParameterValues(name);</span>
-<span class="fc bfc" id="L803" title="All 2 branches covered.">           for (int i=0; i&lt;values.length; i++)</span>
+<span class="fc" id="L821">           String[] values = request.getParameterValues(name);</span>
+<span class="fc bfc" id="L822" title="All 2 branches covered.">           for (int i=0; i&lt;values.length; i++)</span>
            {
-<span class="fc" id="L805">               String value = values[i];</span>
+<span class="fc" id="L824">               String value = values[i];</span>
 
                //vynimky pre Stripes formulare
-<span class="pc bpc" id="L808" title="2 of 6 branches missed.">               if (&quot;_sourcePage&quot;.equals(name) || &quot;__fp&quot;.equals(name) || &quot;__token&quot;.equals(name)) value = Tools.replace(value, &quot;=&quot;, &quot; &quot;);</span>
+<span class="pc bpc" id="L827" title="2 of 6 branches missed.">               if (&quot;_sourcePage&quot;.equals(name) || &quot;__fp&quot;.equals(name) || &quot;__token&quot;.equals(name)) value = Tools.replace(value, &quot;=&quot;, &quot; &quot;);</span>
 
                //test na strict hodnoty
-<span class="fc" id="L811">               boolean hasXss = false;</span>
-<span class="fc bfc" id="L812" title="All 2 branches covered.">               if (testXssStrictGet(value))</span>
+<span class="fc" id="L830">               boolean hasXss = false;</span>
+<span class="fc bfc" id="L831" title="All 2 branches covered.">               if (testXssStrictGet(value))</span>
                {
-<span class="fc" id="L814">                   Logger.debug(DocTools.class, &quot;XSS HAS: &quot;+value);</span>
-<span class="fc" id="L815">                   hasXss = true;</span>
-<span class="fc" id="L816">                   hasAtLeastOneXss = true;</span>
+<span class="fc" id="L833">                   Logger.debug(DocTools.class, &quot;XSS HAS: &quot;+value);</span>
+<span class="fc" id="L834">                   hasXss = true;</span>
+<span class="fc" id="L835">                   hasAtLeastOneXss = true;</span>
                }
 
                //docid nam do URL netreba
-<span class="pc bpc" id="L820" title="1 of 4 branches missed.">               if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_HTML &amp;&amp; &quot;docid&quot;.equals(name)) continue;</span>
+<span class="pc bpc" id="L839" title="1 of 4 branches missed.">               if (Constants.getInt(&quot;linkType&quot;)==Constants.LINK_TYPE_HTML &amp;&amp; &quot;docid&quot;.equals(name)) continue;</span>
 
                //pridaj parameter do URL
-<span class="fc bfc" id="L823" title="All 2 branches covered.">               if (redirectUrl.length() != 0) redirectUrl.append('&amp;');</span>
-<span class="fc bfc" id="L824" title="All 2 branches covered.">               if (hasXss)</span>
+<span class="fc bfc" id="L842" title="All 2 branches covered.">               if (redirectUrl.length() != 0) redirectUrl.append('&amp;');</span>
+<span class="fc bfc" id="L843" title="All 2 branches covered.">               if (hasXss)</span>
                {
                    //hodnotu parametra upravime
-<span class="fc" id="L827">                   redirectUrl.append(name+&quot;=&quot;+Tools.URLEncode(fixXssStrictGet(value)));</span>
+<span class="fc" id="L846">                   redirectUrl.append(name+&quot;=&quot;+Tools.URLEncode(fixXssStrictGet(value)));</span>
                }
                else
                {
                    //pridame celu hodnotu parametra
-<span class="fc" id="L832">                   redirectUrl.append(name+&quot;=&quot;+Tools.URLEncode(value));</span>
+<span class="fc" id="L851">                   redirectUrl.append(name+&quot;=&quot;+Tools.URLEncode(value));</span>
                }
            }
-<span class="fc" id="L835">        }</span>
+<span class="fc" id="L854">        }</span>
 
-<span class="fc bfc" id="L837" title="All 2 branches covered.">        if (hasAtLeastOneXss)</span>
+<span class="fc bfc" id="L856" title="All 2 branches covered.">        if (hasAtLeastOneXss)</span>
         {
-<span class="fc" id="L839">            String redirUrl = PathFilter.getOrigPath(request)+&quot;?&quot;+redirectUrl.toString();</span>
-<span class="fc" id="L840">            redirUrl = Tools.sanitizeHttpHeaderParam(redirUrl);</span>
+<span class="fc" id="L858">            String redirUrl = PathFilter.getOrigPath(request)+&quot;?&quot;+redirectUrl.toString();</span>
+<span class="fc" id="L859">            redirUrl = Tools.sanitizeHttpHeaderParam(redirUrl);</span>
 
-<span class="fc" id="L842">            Logger.println(DocTools.class, &quot;XSS STRICT GET:&quot;+redirUrl);</span>
+<span class="fc" id="L861">            Logger.println(DocTools.class, &quot;XSS STRICT GET:&quot;+redirUrl);</span>
 
-<span class="fc" id="L844">            return redirUrl;</span>
+<span class="fc" id="L863">            return redirUrl;</span>
         }
-<span class="fc" id="L846">        return null;</span>
+<span class="fc" id="L865">        return null;</span>
     }
 
 
@@ -854,61 +873,61 @@ public class DocTools {
      */
     public static boolean testXssStrictGet(String value)
     {
-<span class="pc bpc" id="L857" title="1 of 2 branches missed.">        if (value == null) return false;</span>
+<span class="pc bpc" id="L876" title="1 of 2 branches missed.">        if (value == null) return false;</span>
 
-<span class="fc bfc" id="L859" title="All 2 branches covered.">        for (int i=0; i&lt;value.length(); i++)</span>
+<span class="fc bfc" id="L878" title="All 2 branches covered.">        for (int i=0; i&lt;value.length(); i++)</span>
         {
-<span class="fc" id="L861">            char ch = value.charAt(i);</span>
+<span class="fc" id="L880">            char ch = value.charAt(i);</span>
 
             //pozor, rovnaky test je aj v nasledovnej metode
-<span class="pc bpc" id="L864" title="4 of 10 branches missed.">            if (ch=='\'' || ch=='&quot;' || ch=='&lt;' || ch=='&gt;' || ch=='=') return true;</span>
+<span class="pc bpc" id="L883" title="4 of 10 branches missed.">            if (ch=='\'' || ch=='&quot;' || ch=='&lt;' || ch=='&gt;' || ch=='=') return true;</span>
         }
 
-<span class="fc" id="L867">        String valueLC = value.toLowerCase();</span>
-<span class="pc bpc" id="L868" title="1 of 2 branches missed.">        if (valueLC.indexOf(&quot;://&quot;)!=-1) return true;</span>
-<span class="pc bpc" id="L869" title="1 of 2 branches missed.">        if (valueLC.indexOf(&quot;&lt;script&quot;)!=-1) return true;</span>
+<span class="fc" id="L886">        String valueLC = value.toLowerCase();</span>
+<span class="pc bpc" id="L887" title="1 of 2 branches missed.">        if (valueLC.indexOf(&quot;://&quot;)!=-1) return true;</span>
+<span class="pc bpc" id="L888" title="1 of 2 branches missed.">        if (valueLC.indexOf(&quot;&lt;script&quot;)!=-1) return true;</span>
 
-<span class="fc" id="L871">        return false;</span>
+<span class="fc" id="L890">        return false;</span>
     }
 
     private static String fixXssStrictGet(String value)
     {
-<span class="pc bpc" id="L876" title="1 of 2 branches missed.">        if (value == null) return &quot;&quot;;</span>
+<span class="pc bpc" id="L895" title="1 of 2 branches missed.">        if (value == null) return &quot;&quot;;</span>
 
-<span class="fc" id="L878">        StringBuilder sb = new StringBuilder(value.length());</span>
-<span class="fc bfc" id="L879" title="All 2 branches covered.">        for (int i=0; i&lt;value.length(); i++)</span>
+<span class="fc" id="L897">        StringBuilder sb = new StringBuilder(value.length());</span>
+<span class="fc bfc" id="L898" title="All 2 branches covered.">        for (int i=0; i&lt;value.length(); i++)</span>
         {
-<span class="fc" id="L881">            char ch = value.charAt(i);</span>
+<span class="fc" id="L900">            char ch = value.charAt(i);</span>
 
             //pozor, rovnaky test je aj v predchadzajucej metode
-<span class="pc bpc" id="L884" title="4 of 10 branches missed.">            if (ch=='\'' || ch=='&quot;' || ch=='&lt;' || ch=='&gt;' || ch=='=') sb.append(' ');</span>
-<span class="fc" id="L885">            else sb.append(ch);</span>
+<span class="pc bpc" id="L903" title="4 of 10 branches missed.">            if (ch=='\'' || ch=='&quot;' || ch=='&lt;' || ch=='&gt;' || ch=='=') sb.append(' ');</span>
+<span class="fc" id="L904">            else sb.append(ch);</span>
         }
 
-<span class="fc" id="L888">        value = sb.toString();</span>
+<span class="fc" id="L907">        value = sb.toString();</span>
 
         try
         {
-<span class="fc" id="L892">            int start = value.indexOf(&quot;://&quot;);</span>
-<span class="pc bpc" id="L893" title="1 of 2 branches missed.">            if (start!=-1)</span>
+<span class="fc" id="L911">            int start = value.indexOf(&quot;://&quot;);</span>
+<span class="pc bpc" id="L912" title="1 of 2 branches missed.">            if (start!=-1)</span>
             {
-<span class="nc" id="L895">                value = Tools.replace(value, &quot;://&quot;, &quot;&quot;);</span>
+<span class="nc" id="L914">                value = Tools.replace(value, &quot;://&quot;, &quot;&quot;);</span>
             }
 
-<span class="fc" id="L898">            String valueLC = value.toLowerCase();</span>
-<span class="fc" id="L899">            start = valueLC.indexOf(&quot;script&quot;);</span>
-<span class="pc bpc" id="L900" title="1 of 2 branches missed.">            if (start != -1)</span>
+<span class="fc" id="L917">            String valueLC = value.toLowerCase();</span>
+<span class="fc" id="L918">            start = valueLC.indexOf(&quot;script&quot;);</span>
+<span class="pc bpc" id="L919" title="1 of 2 branches missed.">            if (start != -1)</span>
             {
-<span class="nc" id="L902">                value = Tools.replaceIgnoreCase(value, &quot;script&quot;, &quot;&quot;);</span>
+<span class="nc" id="L921">                value = Tools.replaceIgnoreCase(value, &quot;script&quot;, &quot;&quot;);</span>
             }
         }
-<span class="nc" id="L905">        catch (Exception e)</span>
+<span class="nc" id="L924">        catch (Exception e)</span>
         {
-<span class="nc" id="L907">            sk.iway.iwcm.Logger.error(e);</span>
-<span class="nc" id="L908">            return &quot;&quot;;</span>
-<span class="fc" id="L909">        }</span>
+<span class="nc" id="L926">            sk.iway.iwcm.Logger.error(e);</span>
+<span class="nc" id="L927">            return &quot;&quot;;</span>
+<span class="fc" id="L928">        }</span>
 
-<span class="fc" id="L911">        return value;</span>
+<span class="fc" id="L930">        return value;</span>
     }
 
     /**
@@ -917,7 +936,7 @@ public class DocTools {
     @Deprecated
     public static int createWebPage(GroupDetails group, Identity user, HttpServletRequest request, String title)
     {
-<span class="nc" id="L920">        return AdminTools.createWebPage(group,user,request, title);</span>
+<span class="nc" id="L939">        return AdminTools.createWebPage(group,user,request, title);</span>
     }
 
     /**
@@ -929,91 +948,158 @@ public class DocTools {
      */
     public static List&lt;DocDetails&gt; getEditableDocs(int group_id, Identity user, int maxSize)
     {
-<span class="nc" id="L932">        List&lt;DocDetails&gt; docs = new ArrayList&lt;&gt;();</span>
-<span class="nc" id="L933">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L951">        List&lt;DocDetails&gt; docs = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L952">        GroupsDB groupsDB = GroupsDB.getInstance();</span>
 
-<span class="nc" id="L935">        Connection db_conn = null;</span>
-<span class="nc" id="L936">        PreparedStatement ps = null;</span>
-<span class="nc" id="L937">        ResultSet rs = null;</span>
+<span class="nc" id="L954">        Connection db_conn = null;</span>
+<span class="nc" id="L955">        PreparedStatement ps = null;</span>
+<span class="nc" id="L956">        ResultSet rs = null;</span>
         try
         {
-<span class="nc" id="L940">            db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="nc" id="L959">            db_conn = DBPool.getConnectionReadUncommited();</span>
 
-<span class="nc" id="L942">            boolean linkTypeHtml = false;</span>
-<span class="nc bnc" id="L943" title="All 2 branches missed.">            if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML)</span>
+<span class="nc" id="L961">            boolean linkTypeHtml = false;</span>
+<span class="nc bnc" id="L962" title="All 2 branches missed.">            if (Constants.getInt(&quot;linkType&quot;) == Constants.LINK_TYPE_HTML)</span>
             {
-<span class="nc" id="L945">                linkTypeHtml = true;</span>
+<span class="nc" id="L964">                linkTypeHtml = true;</span>
             }
-<span class="nc" id="L947">            String sql = &quot;SELECT d.*, u.title AS u_title, u.first_name, u.last_name, u.email, u.photo FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE d.group_id=? ORDER BY d.sort_priority, d.title&quot;;</span>
-<span class="nc bnc" id="L948" title="All 2 branches missed.">            if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
+<span class="nc" id="L966">            String sql = &quot;SELECT d.*, u.title AS u_title, u.first_name, u.last_name, u.email, u.photo FROM documents d LEFT JOIN  users u ON d.author_id=u.user_id WHERE d.group_id=? ORDER BY d.sort_priority, d.title&quot;;</span>
+<span class="nc bnc" id="L967" title="All 2 branches missed.">            if (Constants.DB_TYPE == Constants.DB_ORACLE)</span>
             {
-<span class="nc" id="L950">                sql = &quot;SELECT d.*, u.title AS u_title, u.first_name, u.last_name, u.email, u.photo FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND d.group_id=? ORDER BY d.sort_priority, d.title&quot;;</span>
+<span class="nc" id="L969">                sql = &quot;SELECT d.*, u.title AS u_title, u.first_name, u.last_name, u.email, u.photo FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND d.group_id=? ORDER BY d.sort_priority, d.title&quot;;</span>
             }
 
-<span class="nc" id="L953">            ps = db_conn.prepareStatement(sql);</span>
-<span class="nc" id="L954">            ps.setInt(1, group_id);</span>
+<span class="nc" id="L972">            ps = db_conn.prepareStatement(sql);</span>
+<span class="nc" id="L973">            ps.setInt(1, group_id);</span>
 
-<span class="nc" id="L956">            rs = ps.executeQuery();</span>
+<span class="nc" id="L975">            rs = ps.executeQuery();</span>
 
-<span class="nc" id="L958">            int counter = 0;</span>
-<span class="nc bnc" id="L959" title="All 2 branches missed.">            while (rs.next())</span>
+<span class="nc" id="L977">            int counter = 0;</span>
+<span class="nc bnc" id="L978" title="All 2 branches missed.">            while (rs.next())</span>
             {
-<span class="nc" id="L961">                counter++;</span>
+<span class="nc" id="L980">                counter++;</span>
 
-<span class="nc" id="L963">                DocDetails doc = DocDB.getDocDetails(rs, false);</span>
+<span class="nc" id="L982">                DocDetails doc = DocDB.getDocDetails(rs, false);</span>
 
-<span class="nc bnc" id="L965" title="All 2 branches missed.">                if (linkTypeHtml)</span>
+<span class="nc bnc" id="L984" title="All 2 branches missed.">                if (linkTypeHtml)</span>
                 {
-<span class="nc" id="L967">                    doc.setDocLink(DocDB.getURL(doc, groupsDB));</span>
+<span class="nc" id="L986">                    doc.setDocLink(DocDB.getURL(doc, groupsDB));</span>
                 }
-<span class="nc bnc" id="L969" title="All 2 branches missed.">                if (maxSize &gt; 0)</span>
+<span class="nc bnc" id="L988" title="All 2 branches missed.">                if (maxSize &gt; 0)</span>
                 {
-<span class="nc" id="L971">                    doc.setNavbar(groupsDB.getNavbarNoHref(doc.getGroupId()));</span>
+<span class="nc" id="L990">                    doc.setNavbar(groupsDB.getNavbarNoHref(doc.getGroupId()));</span>
                 }
 
-<span class="nc bnc" id="L974" title="All 4 branches missed.">                if (Constants.getBoolean(&quot;adminCheckUserGroups&quot;) &amp;&amp; DocDB.canAccess(doc, user, true)==false)</span>
+<span class="nc bnc" id="L993" title="All 4 branches missed.">                if (Constants.getBoolean(&quot;adminCheckUserGroups&quot;) &amp;&amp; DocDB.canAccess(doc, user, true)==false)</span>
                 {
                     //skontroluj, ci ma user pravo na zobrazenie stranky
-<span class="nc" id="L977">                    continue;</span>
+<span class="nc" id="L996">                    continue;</span>
                 }
 
-<span class="nc" id="L980">                docs.add(doc);</span>
+<span class="nc" id="L999">                docs.add(doc);</span>
 
-<span class="nc bnc" id="L982" title="All 4 branches missed.">                if (maxSize &gt; 0 &amp;&amp; counter &gt; maxSize)</span>
+<span class="nc bnc" id="L1001" title="All 4 branches missed.">                if (maxSize &gt; 0 &amp;&amp; counter &gt; maxSize)</span>
                 {
-<span class="nc" id="L984">                    break;</span>
+<span class="nc" id="L1003">                    break;</span>
                 }
 
-<span class="nc" id="L987">            }</span>
-<span class="nc" id="L988">            rs.close();</span>
-<span class="nc" id="L989">            ps.close();</span>
-<span class="nc" id="L990">            db_conn.close();</span>
-<span class="nc" id="L991">            rs = null;</span>
-<span class="nc" id="L992">            ps = null;</span>
-<span class="nc" id="L993">            db_conn = null;</span>
+<span class="nc" id="L1006">            }</span>
+<span class="nc" id="L1007">            rs.close();</span>
+<span class="nc" id="L1008">            ps.close();</span>
+<span class="nc" id="L1009">            db_conn.close();</span>
+<span class="nc" id="L1010">            rs = null;</span>
+<span class="nc" id="L1011">            ps = null;</span>
+<span class="nc" id="L1012">            db_conn = null;</span>
         }
-<span class="nc" id="L995">        catch (Exception ex)</span>
+<span class="nc" id="L1014">        catch (Exception ex)</span>
         {
-<span class="nc" id="L997">            sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L1016">            sk.iway.iwcm.Logger.error(ex);</span>
         }
         finally
         {
             try
             {
-<span class="nc bnc" id="L1003" title="All 2 branches missed.">                if (rs != null)</span>
-<span class="nc" id="L1004">                    rs.close();</span>
-<span class="nc bnc" id="L1005" title="All 2 branches missed.">                if (ps != null)</span>
-<span class="nc" id="L1006">                    ps.close();</span>
-<span class="nc bnc" id="L1007" title="All 2 branches missed.">                if (db_conn != null)</span>
-<span class="nc" id="L1008">                    db_conn.close();</span>
+<span class="nc bnc" id="L1022" title="All 2 branches missed.">                if (rs != null)</span>
+<span class="nc" id="L1023">                    rs.close();</span>
+<span class="nc bnc" id="L1024" title="All 2 branches missed.">                if (ps != null)</span>
+<span class="nc" id="L1025">                    ps.close();</span>
+<span class="nc bnc" id="L1026" title="All 2 branches missed.">                if (db_conn != null)</span>
+<span class="nc" id="L1027">                    db_conn.close();</span>
             }
-<span class="nc" id="L1010">            catch (Exception ex2)</span>
+<span class="nc" id="L1029">            catch (Exception ex2)</span>
             {
-<span class="nc" id="L1012">            }</span>
+<span class="nc" id="L1031">            }</span>
         }
 
-<span class="nc" id="L1015">        return docs;</span>
+<span class="nc" id="L1034">        return docs;</span>
     }
+
+    private static TextNodeComparator getTextNodeComparator(String htmlCode, Locale locale) throws IOException, SAXException
+    {
+<span class="fc" id="L1039">        HtmlCleaner cleaner = new HtmlCleaner();</span>
+<span class="fc" id="L1040">        DomTreeBuilder oldHandler = new DomTreeBuilder();</span>
+<span class="fc" id="L1041">        InputSource oldSource = new InputSource(new StringReader(htmlCode));</span>
+<span class="fc" id="L1042">        cleaner.cleanAndParse(oldSource, oldHandler);</span>
+
+<span class="fc" id="L1044">        TextNodeComparator comparator = new TextNodeComparator(oldHandler, locale);</span>
+
+<span class="fc" id="L1046">        return comparator;</span>
+    }
+
+
+    /**
+	 * Performs HTML diffing on two HTML strings. Notice that the input strings
+	 * are &quot;cleaned-up&quot; first (e.g. all html tags are converted to lowercase).
+	 *
+	 * @param htmlCodeNew - current HTML code
+	 * @param htmlCodeOld - old HTML code to compare with
+	 * @return the result
+	 * @throws Exception - something went wrong.
+	 */
+	public static String getHtmlDiff(String htmlCodeNew, String htmlCodeOld) throws Exception {
+<span class="fc" id="L1060">		StringWriter outStreamWriter = new StringWriter();</span>
+
+<span class="fc" id="L1062">        SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();</span>
+
+<span class="fc" id="L1064">        TransformerHandler result = tf.newTransformerHandler();</span>
+<span class="fc" id="L1065">        result.setResult(new StreamResult(outStreamWriter));</span>
+
+<span class="fc" id="L1067">        XslFilter filter = new XslFilter();</span>
+
+<span class="fc" id="L1069">        ContentHandler postProcess = filter.xsl(result, &quot;xslfilter/htmlheader.xsl&quot;);</span>
+
+<span class="fc" id="L1071">        String prefix = &quot;diff&quot;;</span>
+
+        //todo: nejako rozumnejsie
+<span class="fc" id="L1074">        Locale locale = Locale.getDefault();</span>
+
+<span class="fc" id="L1076">        TextNodeComparator leftComparator = getTextNodeComparator(htmlCodeNew, locale);</span>
+<span class="fc" id="L1077">        TextNodeComparator rightComparator = getTextNodeComparator(htmlCodeOld, locale);</span>
+
+<span class="fc" id="L1079">        postProcess.startDocument();</span>
+<span class="fc" id="L1080">        postProcess.startElement(&quot;&quot;, &quot;diffreport&quot;, &quot;diffreport&quot;, new AttributesImpl());</span>
+
+<span class="fc" id="L1082">        postProcess.startElement(&quot;&quot;, &quot;diff&quot;, &quot;diff&quot;, new AttributesImpl());</span>
+<span class="fc" id="L1083">        HtmlSaxDiffOutput output = new HtmlSaxDiffOutput(postProcess, prefix);</span>
+
+<span class="fc" id="L1085">        HTMLDiffer differ = new HTMLDiffer(output);</span>
+<span class="fc" id="L1086">        differ.diff(rightComparator, leftComparator);</span>
+<span class="fc" id="L1087">        postProcess.endElement(&quot;&quot;, &quot;diff&quot;, &quot;diff&quot;);</span>
+<span class="fc" id="L1088">        postProcess.endElement(&quot;&quot;, &quot;diffreport&quot;, &quot;diffreport&quot;);</span>
+<span class="fc" id="L1089">        postProcess.endDocument();</span>
+
+<span class="fc" id="L1091">        String headHtml = htmlCodeNew;</span>
+<span class="fc" id="L1092">        headHtml = headHtml.replaceAll(&quot;&lt;head[\\s\\S]*?&gt;([\\s\\S]*?)&lt;/head&gt;[\\s]*?&lt;body([\\s\\S]*?)&gt;[\\s\\S]*?&lt;/body&gt;&quot;,&quot;&lt;head&gt;$1&lt;link href=\&quot;/components/_common/css/daisy-diff.css\&quot; type=\&quot;text/css\&quot; rel=\&quot;stylesheet\&quot;/&gt;&lt;script type=\&quot;text/javascript\&quot; src=\&quot;/components/_common/javascript/jquery.tools.tooltip.js\&quot; &gt;&lt;/script&gt;&lt;/head&gt;&lt;body$2&gt;&quot;);</span>
+<span class="fc" id="L1093">        headHtml = headHtml.replace(&quot;$&quot;,&quot;\\$&quot;);</span>
+<span class="pc bpc" id="L1094" title="1 of 2 branches missed.">        if (headHtml.indexOf(&quot;&lt;head&quot;) !=-1) headHtml = headHtml.substring(headHtml.indexOf(&quot;&lt;head&quot;));</span>
+
+<span class="fc" id="L1096">        String outputHtml = outStreamWriter.toString();</span>
+<span class="fc" id="L1097">        outputHtml = outputHtml.replaceAll(&quot;&lt;head[\\s\\S]*?&gt;[\\s\\S]*?&lt;body[\\s\\S]*?&gt;&quot;, headHtml);</span>
+
+<span class="fc" id="L1099">        outputHtml = Tools.replace(outputHtml, &quot;\&quot; changes=\&quot;&quot;, &quot;\&quot; title=\&quot;&quot;);</span>
+
+<span class="fc" id="L1101">        return outputHtml;</span>
+	}
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

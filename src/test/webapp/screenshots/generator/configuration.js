@@ -9,6 +9,7 @@ Before(({ login }) => {
 Scenario('Components configuration', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/settings/configuration/");
 
+    I.moveCursorTo('#toast-container-webjet');
     Document.screenshot("/admin/setup/configuration/page.png");
 
     I.clickCss("button.buttons-create");

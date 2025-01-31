@@ -1957,7 +1957,7 @@ public class FormMailAction extends HttpServlet
 					{
 						ret = new StringBuilder(param);
 					}
-					else
+					else if (Tools.isNotEmpty(param))
 					{
 						ret.append(";;\n").append(param);
 					}

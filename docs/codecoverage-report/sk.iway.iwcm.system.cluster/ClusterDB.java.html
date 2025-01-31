@@ -187,7 +187,7 @@ public class ClusterDB
 <span class="fc" id="L187">			List&lt;String&gt; currentValues = new SimpleQuery().forListString(&quot;SELECT DISTINCT cluster_node FROM crontab&quot;);</span>
 <span class="fc bfc" id="L188" title="All 2 branches covered.">			for (String node : currentValues) {</span>
 <span class="fc bfc" id="L189" title="All 4 branches covered.">				if (&quot;all&quot;.equals(node) || Tools.isEmpty(node)) continue;</span>
-<span class="pc bpc" id="L190" title="1 of 2 branches missed.">				if (names.contains(node)==false) names.add(node);</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">				if (names.contains(node)==false) names.add(node);</span>
 <span class="fc" id="L191">			}</span>
 
 <span class="fc" id="L193">			Collections.sort(names);</span>

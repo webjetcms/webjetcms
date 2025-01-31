@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('meals screens', ({ I, DTE, Document }) => { 
+Scenario('meals screens', ({ I, DTE, Document }) => {
     I.amOnPage("/apps/restaurant-menu/admin/meals/");
     Document.screenshot("/redactor/apps/restaurant-menu/meals-data-table.png", 1600, 600);
 
@@ -16,7 +16,7 @@ Scenario('meals screens', ({ I, DTE, Document }) => {
     const confLng = I.getConfLng();
     const allergenField = 'editorFields\\.alergensArr';
     const dropdownSelector = 'div.dropdown-menu.show .dropdown-item';
-    
+
     switch (confLng) {
         case 'sk':
             DTE.selectOption(allergenField, '1 - Obilniny');
@@ -37,16 +37,9 @@ Scenario('meals screens', ({ I, DTE, Document }) => {
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/restaurant-menu/meals-allergens-list.png");
 });
 
-Scenario('menu screens', async ({ I, DT, Document }) => {  
+Scenario('menu screens', ({ I, DT, Document, i18n }) => {
     I.amOnPage("/apps/restaurant-menu/admin/");
-
-    let confLng = I.getConfLng();
-    if("sk" === confLng) {
-        await setDate(I, DT, '28.11.2023');
-    } else if("en" === confLng) { 
-        await setDate(I, DT, '11/28/2023');
-    }
-
+    DT.setExtfilterDate(i18n.getDate('11/28/2023'));
     Document.screenshot("/redactor/apps/restaurant-menu/menu-data-table.png", 1400, 400);
     Document.screenshotElement("#pills-meals", "/redactor/apps/restaurant-menu/menu-external-filter.png");
     Document.screenshotElement("div.dt-extfilter-dayDate", "/redactor/apps/restaurant-menu/menu-external-filter-date.png");
@@ -69,7 +62,7 @@ Scenario('menu app screens', async ({ I, DT, DTE, Document }) => {
     I.seeElement("div.inlineComponentButtons > a:nth-child(1)");
     I.wait(2);
     I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
-    
+
     I.switchTo();
     I.switchTo();
 
@@ -110,13 +103,7 @@ Scenario('menu app screens', async ({ I, DT, DTE, Document }) => {
             break;
         default:
             throw new Error("Unknown language: " + I.getConfLng());
-    }    
+    }
 
     Document.screenshot("/redactor/apps/restaurant-menu/menu-app-frontend.png", 1000, 1100);
 });
-
-async function setDate(I, DT, value) {
-    I.fillField("div.dt-extfilter-dayDate > form > div.input-group > input.datepicker.min", value);
-    I.click("div.dt-extfilter-dayDate > form > div.input-group > button.filtrujem");
-    DT.waitForLoader();
-}

@@ -190,7 +190,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
  	<!--
 
  	$(document).ready(function(){
- 		$('head').append('<style type="text/css" media="all">@import url("/components/basket/basket.css");</style>');
+ 		$('head').append('<style type="text/css" media="all">@import url("/components/basket/css/basket.css");</style>');
  	});
 
 	function addToBasket(docId)
@@ -216,7 +216,7 @@ public class CustomComparatorDesc implements Comparator<DocDetails> {
 	{
 		<%-- presmerje po vybere poradia zobrazovania--%>
 		$(".filterKategorii").change(function(){
-			window.location.replace('<iwcm:cp/><%=PathFilter.getOrigPath(request)+"?orderType="%>'+$(".filterKategorii").val());
+			window.location.replace('<iwcm:cp/><%=PathFilter.getOrigPath(request)+"?orderType="%>'+$(this).val());
 		});
 	});
    //-->
@@ -321,7 +321,7 @@ $(document).ready(function(){
 				</a>
 				<%-- NASLEDUJUCE ZOBRAZENIE CENY A KOSIKA MA VYZNAM IBA AK MA PRODUKT NENULOVU CENU --%>
 				<%
-				if (Math.abs( doc.getPrice() ) > 0)
+				if (doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0)
 				{%>
 					<div class="priceDiv">
 						<a class="cart addToBasket itemId_<jsp:getProperty name="doc" property="docId"/>" href="javascript:void(0)"><img alt="" src="/components/basket/img/kosik.png" class="cart" /></a>

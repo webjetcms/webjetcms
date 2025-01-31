@@ -97,10 +97,10 @@ public class AdminTools {
 
 <span class="fc" id="L98">            db_conn = DBPool.getConnection();</span>
 <span class="pc bpc" id="L99" title="3 of 4 branches missed.">            if (Constants.DB_TYPE == Constants.DB_MYSQL || Constants.DB_TYPE == Constants.DB_PGSQL) {</span>
-<span class="fc" id="L100">                ps = db_conn.prepareStatement(sql+&quot; LIMIT &quot;+(maxSize*3));</span>
+<span class="fc" id="L100">                ps = db_conn.prepareStatement(sql+&quot; LIMIT &quot;+(maxSize*10));</span>
             } else {
 <span class="nc" id="L102">                ps = db_conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);</span>
-<span class="nc" id="L103">                ps.setFetchSize(maxSize * 3);</span>
+<span class="nc" id="L103">                ps.setFetchSize(maxSize * 10);</span>
             }
 <span class="fc" id="L105">            ps.setInt(1, userId);</span>
 <span class="fc" id="L106">            rs = ps.executeQuery();</span>
@@ -129,7 +129,7 @@ public class AdminTools {
 
 <span class="fc" id="L130">                GroupDetails group = actualDoc.getGroup();</span>
                 //test na stranky v kosi / schovane adresare
-<span class="pc bpc" id="L132" title="1 of 6 branches missed.">                if(group==null || group.getFullPath().startsWith(trashDirName) || group.isHiddenInAdmin())</span>
+<span class="pc bpc" id="L132" title="2 of 6 branches missed.">                if(group==null || group.getFullPath().startsWith(trashDirName) || group.isHiddenInAdmin())</span>
 <span class="nc" id="L133">                    continue;</span>
 
 <span class="fc" id="L135">                counter++;</span>
@@ -211,7 +211,7 @@ public class AdminTools {
         try
         {
 <span class="nc" id="L213">            db_conn = DBPool.getConnection();</span>
-<span class="nc" id="L214">            ps = db_conn.prepareStatement(&quot;select * from file_fat where virtual_path=? order by last_modified desc&quot;);</span>
+<span class="nc" id="L214">            ps = db_conn.prepareStatement(&quot;SELECT * FROM file_fat WHERE virtual_path=? ORDER BY last_modified DESC&quot;); //NOSONAR</span>
 <span class="nc" id="L215">            ps.setString(1, virtualPath);</span>
 <span class="nc" id="L216">            rs = ps.executeQuery();</span>
 <span class="nc bnc" id="L217" title="All 2 branches missed.">            while (rs.next())</span>
@@ -358,7 +358,7 @@ public class AdminTools {
             {
 <span class="fc" id="L359">                int docId = rs.getInt(&quot;doc_id&quot;);</span>
 <span class="fc" id="L360">                DocDetails actualDoc = docDB.getBasicDocDetails(docId, false);</span>
-<span class="fc bfc" id="L361" title="All 2 branches covered.">                if (actualDoc==null) continue;</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">                if (actualDoc==null) continue;</span>
 
 <span class="fc" id="L363">                GroupDetails docGroup = actualDoc.getGroup();</span>
 <span class="pc bpc" id="L364" title="1 of 2 branches missed.">                if (docGroup==null) continue;</span>

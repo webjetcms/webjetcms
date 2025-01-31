@@ -433,6 +433,11 @@ public class Adminlog
                             descriptionLocal += "\nURI: "+requestBean.getUrl();
 							if (Tools.isNotEmpty(requestBean.getQueryString()) && requestBean.getUrl().equals("/admin/logon.do")==false) descriptionLocal += "?"+requestBean.getQueryString();
 						}
+						if (Tools.isNotEmpty(requestBean.getReferrer()))
+						{
+							//no need to escape & entities, it's auto escaped in JPA
+                            descriptionLocal += "\nReferer: "+requestBean.getReferrer();
+						}
 						if (Tools.isNotEmpty(requestBean.getDomain()))
 						{
                             descriptionLocal += "\nDomain: "+requestBean.getDomain();

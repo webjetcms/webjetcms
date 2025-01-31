@@ -73,7 +73,7 @@ Pro překlady přímo ve vykreslované stránce se používají datové atributy
 
 Atribut data lze umístit na libovolnou značku HTML, ale musí se nacházet bezprostředně u značky, která obsahuje překládaný text. Pokud je umístěn na značce HTML, která obsahuje další kód HTML, musí být tento kód HTML zahrnut i do samotného překladu, jinak bude stávající kód HTML nahrazen hodnotou z překladu.
 
-**Varování:**, *Při nastavování přeloženého textu funkce odstraní všechny existující události, které se nacházejí na daném prvku a jeho potomcích.*
+!>**Varování:**, *Při nastavování přeloženého textu funkce odstraní všechny existující události, které se nacházejí na daném prvku a jeho potomcích.*
 
 ```html
 <span data-translator="components.datatables.data.insertDate">Dátum vloženia</span>
@@ -215,7 +215,7 @@ window.webjetTranslationService.translate(translationFieldName);
 
 Zavoláním této metody v dolní části stránky nebo pomocí funkce `document.ready` to znamená, že po dokončení vykreslování webu zajistíme, aby všechny prvky na stránce, které mají definovaný atribut data. `data-translator` textové hodnoty budou změněny `innerHTML` na základě klíče zadaného v atributu dat. `data-translator`.
 
-**Varování:**, *Při nastavování přeloženého textu funkce odstraní všechny existující události, které se nacházejí na daném prvku a jeho potomcích.*
+!>**Varování:**, *Při nastavování přeloženého textu funkce odstraní všechny existující události, které se nacházejí na daném prvku a jeho potomcích.*
 
 [Klikněte pro více informací o použití](#pro-celou-stránku-html)
 

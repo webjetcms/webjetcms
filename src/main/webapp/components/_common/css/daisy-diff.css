@@ -1,13 +1,13 @@
 /* tooltip styling. by default the element to be styled is .tooltip  */
 div.daisyDiffTooltip {
-	bac2kground-image: url(/components/_common/images/tooltip_black_arrow.gif) bottom center no-repeat !important;
-	display:none;		
+	display:none;
 	background-color: black;
 	padding:5px;
 	color:white;
 	border: 1px solid #666;
 	-moz-border-radius: 5px;
 	border-radius: 5px;
+  max-width: 200px;
 }
 div.daisyDiffTooltip ul { margin: auto; padding: auto; background-image: none; }
 div.daisyDiffTooltip li { margin: auto; padding: auto; list-style-image: none; list-style: disc; background-image: none;}
@@ -71,12 +71,12 @@ span.diff-html-removed img{
 
 span.diff-html-changed img{
  border: 2px dotted #000099 !important;
- 
+
 }
 
 div.diff-removed-image, div.diff-added-image{
   height: 300px;
-  width: 200px;  
+  width: 200px;
   position: absolute;
   opacity : 0.55;
   filter: alpha(opacity=55);
@@ -114,8 +114,8 @@ table.diff-tooltip-link, table.diff-tooltip-link-changed {
 }
 
 table.diff-tooltip-link-changed {
-    border-top: thin dashed #000000; 
-    margin-top: 3px; 
+    border-top: thin dashed #000000;
+    margin-top: 3px;
     padding-top: 3px
 }
 td.diff-tooltip-prev {

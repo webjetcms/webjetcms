@@ -28,6 +28,7 @@ import sk.iway.iwcm.components.crypto.Rijndael;
 import sk.iway.iwcm.dmail.Sender;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.helpers.DataSanitizer;
 import sk.iway.iwcm.i18n.IwayProperties;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.FileCache;
@@ -1346,7 +1347,7 @@ public class InitServlet extends HttpServlet
 		if (value!=null)
 		{
 			source = " ("+source+")";
-			Logger.println(InitServlet.class,"INIT"+source+": " + name + "=" + value);
+			Logger.println(InitServlet.class,"INIT"+source+": " + name + "=" + DataSanitizer.sanitizeIfNameIsSensitive(name, value));
 		}
 
 		//value - is considered as empty

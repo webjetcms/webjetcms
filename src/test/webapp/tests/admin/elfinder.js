@@ -27,7 +27,6 @@ Scenario('dir usage', async ({I, DT}) => {
     I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie priečinka"));
     I.waitForVisible("#modalIframe", 10);
 
-    I.switchTo("#modalIframe");
     I.switchTo("#modalIframeIframeElement");
 
     I.see("Indexovať súbory pre vyhľadávanie");
@@ -44,14 +43,14 @@ Scenario('file usage', async ({I, DT}) => {
     I.click(locate('#finder .elfinder-contextmenu-item').withText("Nastavenie súboru"));
     I.waitForVisible("#modalIframe", 10);
 
-    I.switchTo("#modalIframe");
+    //I.switchTo("#modalIframe");
     I.switchTo("#modalIframeIframeElement");
 
     I.see("Názov súboru");
     I.see("Zmeniť názov vo všetkých súboroch");
 
     getFileUsage(I, DT, "#datatableFieldDTE_Field_docDetailsList_processing");
-});
+})
 
 Scenario('search files', ({I}) => {
 
@@ -93,7 +92,7 @@ Scenario('search files', ({I}) => {
     I.dontSee("atributy-stranky", "div.elfinder-cwd-wrapper");
     I.dontSeeElement("#iwcm_1_L2ltYWdlcy9hcHBzL2F0cmlidXR5LXN0cmFua3k_E");
 
-});
+})
 
 Scenario('search webpages', ({I}) => {
 
@@ -134,7 +133,7 @@ Scenario('search webpages', ({I}) => {
     //Atribúty stránky
     I.dontSee("Atribúty stránky", "div.elfinder-cwd-wrapper");
     I.dontSeeElement("#iwcm_doc_group_volume_L2dyb3VwOjQ5MzM0");
-});
+})
 
 Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=16");
@@ -207,7 +206,7 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
     I.clickCss(".cke_dialog_ui_button_cancel");
 
     DTE.cancel();
-});
+})
 
 Scenario('folder for new page by title', ({I, DTE, Browser}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=24");
@@ -260,7 +259,7 @@ Scenario('folder for new page by title', ({I, DTE, Browser}) => {
     I.clickCss(".cke_dialog_ui_button_cancel");
 
     DTE.cancel();
-});
+})
 
 Scenario('CVE-2022-26960', async ({I}) => {
     I.amOnPage("/admin/v9/");
@@ -284,7 +283,7 @@ Scenario('CVE-2022-26960', async ({I}) => {
         window.location.href="/admin/elfinder-connector/?cmd=file&volumes=files&target=iwcm_1_L2ZpbGVzLy4uL3Byb3RlY3RlZC9iYW5rYXJpL3Rlc3QtZm9yd2FyZC50eHQ=";
     });
     I.dontSee("This is test file for fileforward after logon");
-});
+})
 
 Scenario('Explorer - file diacritics test', async ({ I }) => {
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
@@ -299,60 +298,68 @@ Scenario('Explorer - file diacritics test', async ({ I }) => {
     checkCorrectTitle(I);
 
     I.say('Try to rename a file to name with diacritics');
-    within('.elfinder-cwd-message-board', () => {
+    searchFile(I, 'lsctu-zyaieo.png');
+    within('.elfinder-cwd-wrapper', () => {
+        I.waitForText('lsctu-zyaieo.png', 10);
         I.rightClick('lsctu-zyaieo.png');
-        I.waitForVisible('.elfinder-contextmenu', 10);
-        I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
     });
-    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo.png"]' }, 'ľščťú žýáíéô');
-    I.pressKey('Enter');
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
 
+    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo.png"] textarea' }, 'ľščťú žýáíéô');
+    I.pressKey('Enter');
+    I.clickCss('.elfinder-button-search > .ui-icon-close');
     I.say('Checking if file was automatically renamed to the name without diacritics');
     checkCorrectTitle(I);
     await deleteTestFiles(I);
 
+    I.amOnPage("/admin/v9/");
+    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
+    I.click("#nav-iwcm_2_L2ZpbGVz"); //files
     createFolder(I, 'ľščťú žýáíéô');
 
     I.say('Try to rename a folder to the name with diacritics');
-    within('.elfinder-cwd-message-board', () => {
-        I.rightClick('lsctu-zyaieo');
-        I.waitForVisible('.elfinder-contextmenu', 10);
-        I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
-    });
-    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo"]' }, 'ľščťú žýáíéô');
-    I.pressKey('Enter');
-    checkCorrectTitle(I);
-});
+    I.rightClick(locate(".elfinder-cwd-file").withText("lsctu-zyaieo"));
 
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rename');
+
+    I.fillField({ css: '.elfinder-cwd-filename[title="lsctu-zyaieo"] textarea' }, 'ľščťú žýáíéô');
+    I.pressKey('Enter');
+    I.clickCss('.elfinder-button-search > .ui-icon-close');
+    checkCorrectTitle(I);
+})
 
 Scenario('Explorer - file diacritics delete', async ({ I }) => {
     await deleteTestFiles(I);
-});
+})
 
 Scenario('Elfinder - Move Confirm with config value true', async ({ I, Document }) => {
     Document.setConfigValue('elfinderMoveConfirm', 'true');
+    await deleteTestFiles(I);
     await checkMoveConfirm(I, true);
-});
-
-Scenario('revert changes - Move Confirm with config value true', async ({ I }) => {
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
-    await deleteFile(I, 'outer');
-    await deleteFile(I, 'inner');
-});
+})
 
 Scenario('Elfinder - Move Confirm with config value false', async ({ I, Document }) => {
     Document.setConfigValue('elfinderMoveConfirm', 'false');
+    await deleteTestFiles(I);
     await checkMoveConfirm(I, false);
-});
+})
 
 Scenario('revert changes - Move Confirm with config value false', async ({ I, Document }) => {
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
-    await deleteFile(I, 'outer');
-    await deleteFile(I, 'inner');
+    await deleteTestFiles(I);
     Document.setConfigValue('elfinderMoveConfirm', 'true');
-});
+})
+
+function searchFile(I, fileName) {
+    I.clickCss('.elfinder-button-search > input[type="text"]');
+    I.type(fileName);
+    I.clickCss('label[for = elfinder-finderSearchFromCwd]');
+}
 
 async function checkMoveConfirm(I, elfinderMoveConfirm) {
+    //to be sure link is working with hash
+    I.amOnPage('/admin/v9/');
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
     I.clickCss('#nav-iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
 
@@ -360,7 +367,7 @@ async function checkMoveConfirm(I, elfinderMoveConfirm) {
     createFolder(I, 'outer');
     createFolder(I, 'inner');
 
-    I.dragAndDrop(getFileSelector('inner'), getFileSelector('outer'));
+    I.dragAndDrop(getFileSelector('inner'), getFileSelector('outer'), { force: true });
 
     handleConfirmationDialog(elfinderMoveConfirm, I);
 
@@ -408,7 +415,7 @@ function handleConfirmationDialog(elfinderMoveConfirm, I) {
 function createFolder(I, folderName) {
     I.say('Creating a folder');
     I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
-    I.fillField({ css: '.elfinder-cwd-filename[title="Nový priečinok"]' }, folderName);
+    I.fillField({ css: '.elfinder-cwd-filename[title="Nový priečinok"] textarea' }, folderName);
     I.pressKey('Enter');
     I.waitForVisible('.elfinder-toast', 10);
     I.wait(2);
@@ -430,9 +437,18 @@ function checkCorrectTitle(I) {
 
 async function deleteTestFiles(I) {
     I.say('Deleting uploaded files');
+    I.amOnPage("/admin/v9/");
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVz');
     let fileNames = ['lsctu-zyaieo.png', 'ľščťú-žýáíéô.png', 'ľščťú žýáíéô.png', 'lsctu zyaieo.png',
         'lsctu-zyaieo', 'ľščťú-žýáíéô', 'ľščťú žýáíéô', 'lsctu zyaieo'];
+    for (const fileName of fileNames) {
+        await deleteFile(I, fileName);
+    }
+
+    //otherwise hash change will not work
+    I.amOnPage("/admin/v9/");
+    I.amOnPage("/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E");
+    fileNames = ['outer', 'inner'];
     for (const fileName of fileNames) {
         await deleteFile(I, fileName);
     }
@@ -445,12 +461,10 @@ function getFileSelector(fileName) {
 async function deleteFile(I, fileName) {
     const numVisible = await I.grabNumberOfVisibleElements(`.elfinder-cwd-filename[title="${fileName}"]`);
     if (numVisible) {
-        within('.elfinder-cwd-message-board', () => {
-            I.rightClick(fileName);
-            I.waitForVisible('.elfinder-contextmenu', 10);
-            I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rm');
-            I.clickCss('.elfinder-confirm-accept');
-            I.waitForInvisible(fileName);
-        });
+        I.rightClick(fileName, ".elfinder-cwd-wrapper");
+        I.waitForVisible('.elfinder-contextmenu', 10);
+        I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rm');
+        I.clickCss('.elfinder-confirm-accept');
+        I.waitForInvisible(fileName);
     }
 }

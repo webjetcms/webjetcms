@@ -1,3 +1,9 @@
 # Manual for operation
 
-The manual for operation is not currently different from the manual for WebJET 8, use that one.
+Manual for WebJET CMS operation.
+
+## Download documentation
+
+This documentation can also be downloaded in PDF format for printing.
+
+[Manual for operation - PDF](../_media/manuals/webjetcms-sysadmin.pdf)

@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
     itemKey = "cmp_search",
     imagePath = "/components/search/editoricon.png",
     galleryImages = "/components/search/",
-    componentPath = "/components/search/search.jsp")
+    componentPath = "/components/search/search.jsp,/components/search/lucene_search.jsp")
 @Getter
 @Setter
 public class SearchApp extends WebjetComponentAbstract {
@@ -50,6 +50,21 @@ public class SearchApp extends WebjetComponentAbstract {
         tab = "basic"
     )
     private Boolean checkDuplicity;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXT,
+        title = "components.formsimple.placeholder",
+        tab = "basic",
+        editor = {
+            @DataTableColumnEditor(
+                message = "components.formsimple.placeholderComment",
+                attr = {
+                    @DataTableColumnEditorAttr(key = "placeholder", value = "components.search.title")
+                }
+            )
+        }
+    )
+    private String inputText = "";
 
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,

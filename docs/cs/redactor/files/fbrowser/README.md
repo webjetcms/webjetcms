@@ -12,7 +12,7 @@ Skládá se z několika částí:
 
 ## Panel nástrojů
 
-Panel nástrojů nabízí široký výběr nástrojů/funkcí pro práci se soubory a složkami souborů. Každé tlačítko nabízí jiný jedinečný nástroj. **Varování:** jednotlivá tlačítka se aktivují pouze za určitých podmínek, takže nejsou vždy k dispozici. Panel nástrojů obsahuje také vyhledávání.
+Panel nástrojů nabízí široký výběr nástrojů/funkcí pro práci se soubory a složkami souborů. Každé tlačítko nabízí jiný jedinečný nástroj. !>**Varování:** jednotlivá tlačítka se aktivují pouze za určitých podmínek, takže nejsou vždy k dispozici. Panel nástrojů obsahuje také vyhledávání.
 
 Uvedené nástroje jsou rozděleny do 3 záložek podle logického pole:
 - Soubor
@@ -115,9 +115,9 @@ Obsahuje seřazené složky souborů ve stromové struktuře. Pokud mají složk
 
 ## Hlavní oblast
 
-Na hlavní ploše máme všechny složky a soubory aktuálně vybrané složky. **Varování:** Vnořené složky a soubory se nezobrazují.
+Na hlavní ploše máme všechny složky a soubory aktuálně vybrané složky. !>**Varování:** Vnořené složky a soubory se nezobrazují.
 
-Kromě "navigačního panelu" podporuje "hlavní plocha" také `Drag and Drop` Akce. **Varování:** akce `Drag and Drop` funguje také mezi "Hlavní plochou" a "Navigačním panelem", takže můžete přesunout složku/soubor z plochy přímo do složky navigačního panelu.
+Kromě "navigačního panelu" podporuje "hlavní plocha" také `Drag and Drop` Akce. !>**Varování:** akce `Drag and Drop` funguje také mezi "Hlavní plochou" a "Navigačním panelem", takže můžete přesunout složku/soubor z plochy přímo do složky navigačního panelu.
 
 **Kliknutí levým tlačítkem myši**, který se používá k označování složek a souborů.
 
@@ -139,3 +139,9 @@ Jak je vidět z předchozí série obrázků, zobrazené nástroje se liší v z
 - <span><i class="ti ti-maximize" ></i></span>, **Zobrazit soubor**, otevře soubor na nové kartě.
 - <span><i class="ti ti-file-upload" ></i></span>, **Aktualizace souboru**, je to akce nad souborem, umožňuje nahrát nový soubor, který nahradí vybraný soubor (nad kterým jsme tuto akci vyvolali).
 - <span><i class="ti ti-file-settings" ></i></span>, **Nastavení souborů**, jedná se o akci nad souborem, více informací viz. [Nastavení souborů](../fbrowser/file-settings/README.md).
+
+## Konfigurace
+
+- **elfinderMoveConfirm** - ve výchozím nastavení se při přetahování nebo kopírování/vkládání přes kontextovou nabídku zobrazí potvrzení o přesunu souboru nebo složky. Chcete-li potvrzení přesunu souboru nebo složky vypnout, změňte hodnotu konfigurační proměnné `elfinderMoveConfirm` na adrese `false`.
+
+![](move-confirm.png)

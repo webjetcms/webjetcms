@@ -949,7 +949,7 @@ public class Tools
 	 * @param defaultValue
 	 * @return
 	 */
-	public static BigDecimal getBigDecimalValue(String value,String defaultValue)
+	public static BigDecimal getBigDecimalValue(String value, String defaultValue)
 	{
 		BigDecimal ret = null;
 		try
@@ -968,7 +968,29 @@ public class Tools
 			ret = BigDecimal.valueOf(0);
 		}
 		return ret;
+	}
 
+	/**
+	 * Get BigDecimal value from object. If value is null or not valid BigDecimal representation, return defaultValue.
+	 * @param value - BigDecimal object or value.toString() will be used to parse
+	 * @param defaultValue - default value to return if parsing fails
+	 */
+	public static BigDecimal getBigDecimalValue(Object value, String defaultValue)
+	{
+		try
+		{
+			if (value!=null)
+			{
+				if (value instanceof BigDecimal) {
+					return ((BigDecimal)value);
+				}
+				return getBigDecimalValue(value.toString(), defaultValue);
+			}
+		}
+		catch (Exception ex)
+		{
+		}
+		return new BigDecimal(defaultValue);
 	}
 
 	/**
@@ -1411,6 +1433,21 @@ public class Tools
 		}
 		return(retInt);
 
+	}
+
+	/**
+	 * Vrati pole typu Integer s jednotlivymi polozkami v retazci
+	 * @param groups
+	 * @param delimiter
+	 * @return
+	 */
+	public static Integer[] getTokensInteger(String groups, String delimiter)
+	{
+		int[] ints = getTokensInt(groups, delimiter);
+
+		if(ints.length < 1) return new Integer[0];
+
+		return Arrays.stream(ints).boxed().toArray(Integer[]::new);
 	}
 
 	/**
@@ -2185,6 +2222,10 @@ public class Tools
 				}
 			}
         }
+
+		//sometimes serverName is send with :port at the end by some k8s proxy, remove it
+		int index = serverName.indexOf(':');
+		if (index > 0) serverName = serverName.substring(0, index);
 
 		if (useAlias)
 		{

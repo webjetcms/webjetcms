@@ -17,7 +17,9 @@ In this section you can set the style by selecting from the available styles:
 - Gallery
 - Header
 - Lightbox
-- TextNavigation ![](editor-settings.png)
+- TextNavigation
+
+![](editor-settings.png)
 
 ### Advanced
 
@@ -38,7 +40,9 @@ In this section it is possible to set:
 - Go to the first picture
 - Pause on mouseover
 - Numbering
-- Shadow ![](editor-advanced.png)
+- Shadow
+
+![](editor-advanced.png)
 
 ### Transitions
 
@@ -67,7 +71,10 @@ In this section, transitions can be selected:
 
 ### Items
 
-This section is to add or remove an item: When adding, you can fill in the title, subtitle, redirect. For items, the order can be changed by dragging and dropping. Removing an item can be done by clicking on the red cross.
+In this section you can add or remove an item:
+- When adding, you can fill in the title, subtitle, redirect.
+- You can change the order of the items by dragging and dropping them.
+- You can remove an item by clicking on the red cross.
 
 ![](editor-items.png)
 

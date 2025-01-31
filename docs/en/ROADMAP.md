@@ -13,25 +13,95 @@ Explanation of the pictograms used:
 
 ## 2025
 
-- [ ] Switch to `Jakarta EE` - Spring 6, change Java packages from `javax.servlet` at `jakarta.servlet`, switching to Tomcat 11+ application server.
+- [ ] Switch to `Jakarta EE` - change Java packages from `javax.servlet` at `jakarta.servlet`, prepare the migration script.
+- [ ] Switch to Tomcat 11+ application server.
+- [ ] Switch to `Spring` Version 7.
+- [ ] Introduce into the project the obligation to use `SonarLint` and formatting code via `.editorconfig` or `Spotless` - Example https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
+- [ ] Primary use of the GitHub repository for development.
+- [ ] Cancel artifact generation on old `iwmsp.sk` repository, artifacts will only be available through [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms).
+- [ ] Updating the library `pd4ml` to the new version, individual sites will have to purchase the license separately, it will no longer be provided by WebJET CMS.
+- [ ] Migrating the most used applications to Spring version using Thymeleaf templates.
+- [ ] Cancellation `Apache Struts` framework, replacement `logic:present,logic:iterate,bean:write` either for `JSTL` variant, or the implementation of similar functionality into `iwcm:present,iwcm:iterate,iwcm:beanrwite`.
+- [ ] Moving JSP files, Java classes and JavaScript libraries of old version 8 to `obsolete` spring archive, which will not be a standard part of WebJET CMS. It can be used on old projects where all customer applications have not yet been updated to `Spring` versions, but without support and updates from WebJET CMS.
+- [ ] Statistics - click map - restore functionality, solve responsiveness problem (separate registration by window width).
+- [ ] Statistics - ability to filter bots for stats of failed pages.
+- [ ] Log files - filter by installation name.
+- [ ] `quill` - add the ability to set menu items including colors.
+- [ ] Applications - option to purchase the application for the OpenSource version (#55825).
+- [ ] Option to execute Thymeleaf code in the header/footer and maybe in the body of the web page.
+- [ ] Security - add generation support `nonce` For `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.
+- [ ] Forms - add the ability to call a Java class for form validation.
+- [ ] Tags - filter by current domain to be the same as in other sections.
+- [ ] Import users - if no password is entered, generate one (for new users), if no status is sent `available` set to `true`.
+- [ ] In tests, somehow automated to check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` which are incorrect waits without a defined time, will cause automated tests to get stuck.
+- [ ] Add an app to redirect the main page to `/sk/` or `/en/` by browser language.
+- [ ] Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants`.
+- [ ] Gallery - when duplicating an image, enable the "Folder" change to allow us to duplicate images to a folder other than the current folder.
+- [ ] Bulk email - audit changes in user groups.
+- [ ] Archive files - rebuild into data tables (#57317).
+- [ ] Optional fields - add the option to select multiple items to link to the dial.
+- [ ] eCommerce - integration to payment gateway `GoPay` (#56609).
+- [ ] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
+- [ ] Authorisation via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.
+- [ ] Reservations - new app for all day reservations (#57389).
+- [ ] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
+- [ ] Bulk email - optimizing recipient list creation (#57537).
 
 ## 2024
 
-- [x] Transition to Java 17 - WebJET from version 2024.0 will require Java version 17.
-- [ ] Replacing a set of icons from `FontAwesome` for the orchard `Tabler Icons` (#56397).
-- [x] Publishing JAR files to `Maven Central`.
-- [ ] New version of the Shopping Cart app/`eshop`, sample version of the website, API integration to online billing systems, updated integrations to payment gateways.
+- [x] Transition to Java 17 - WebJET from version 2024.0 will require Java version 17 (#54425)
+- [x] Replacing a set of icons from `FontAwesome` for the orchard `Tabler Icons` (#56397).
+- [x] Publishing JAR files to `Maven Central` (#43144).
+- [x] New version of the Shopping Cart app/`eshop`, sample version of website, API integration to online billing systems, updated integrations to payment gateways (#56329,56385,56325).
 - [x] Translation keys - option to import only non-existing keys (#56061).
-- [ ] `quill` - add the ability to set menu items including colors.
-- [ ] Applications - option to purchase the application for the OpenSource version (#55825).
-- [ ] Web pages - if conf. variable is enabled `syncGroupAndWebpageTitle` and one page is set as the main page for multiple folders, disable the renaming of the folder name according to the main page. Plus when the main page is in a different folder, also don't rename.
-- [x] Audit - Remake Changed Pages and Waiting to Publish to Datatables (#56165).
+- [ ] ~~`quill` - add the ability to set menu items including colors.~~~
+- [ ] ~~Applications - option to purchase the application for OpenSource version (#55825).~~
+- [x] Web pages - if conf. variable is enabled `syncGroupAndWebpageTitle` and one page is set as the main page for multiple folders, disable the renaming of the folder name according to the main page. Plus when the main page is in a different folder, also don't rename (#56477).
+- [x] Audit - redo Changed Pages and Waiting to Publish to Datatables (#56165).
 - [x] Blog - administration `bloggerov` rebuild to datatables (#56169).
 - [x] Blog - comments - integrate to Discussion section, add `bloggerom` rights also on the Discussion section (#56173).
 - [x] AB testing - rework to DT, use options from `news` application, make conf. variables settings according to the prefix (#56177).
 - [x] Event Calendar - unapproved and event recommendation - redo to DT, use code for event list (#56181).
-- [ ] Introduce into the project the obligation to use `SonarLint` and formatting code via `.editorconfig` or `Spotless` - Example https://github.com/gothinkster/spring-boot-realworld-example-app/blob/master/build.gradle.
 - [x] Editor - when you create a link to an email it automatically adds http in the window, although the link eventually inserts correctly with `mailto:` prefix (#56189).
+- [x] Questionnaires - rebuild application into datatables (#55949).
+- [x] +PostgreSQL - add database support (#56305).
+- [x] Form easy - add options like standard forms (especially setting redirect after submit), option to send form to user (for checking) (#56481).
+- [x]+Form easily - add support for wysiwyg fields (#56481).
+- [x] +Delete unused and replace little used libraries (#56265).
+- [x] +MultiWeb - verify functionality, add necessary rights (#56421, #56405, #56425).
+- [x] +Bulk Email - add one-click unsubscribe support (#56409).
+- [ ] ~~+Ability to execute Thymeleaf code in the header/footer and maybe also in the body of the web page.~~
+- [x] +Replace database pool with `HikariCP` (#56821).
+- [x] +Logging levels - convert to datatable (#56833).
+- [x] +DBPool - transition from `Apache DBCP` at `HikariCP` (#56821).
+- [x] Documentation - English translation (#56237,#56249,#56773).
+- [x] +Documentation - Czech translation (#57033).
+- [x] +A/B Testing - disable for browsers/bots, indicate version for Ninja object (#56677).
+- [x] +Datatables - option to skip a row when importing when it is incorrect (#56465).
+- [x] +Redirects - optimize getting redirects without getting the redirect code from the database a second time (#53469).
+- [ ] ~~+Security - add generation support `nonce` For `Content-Security-Policy` header, see e.g. https://medium.com/@ooutofmind/enhancing-web-security-implementing-csp-nonce-mechanism-with-spring-cloud-gateway-a5f206d69aee.~~
+- [x] +Gallery - add the option to resize the image.
+- [ ] ~~+Forms - add option to call Java class for form validation.~~
+- [x] +Indexing files - add the date of the last file change (#57177) to Perex-Start of publishing.
+- [x] +Translation keys - to REST service `/rest/properties/` add the ability to filter keys by conf. variable, so that it is not possible to publicly retrieve all keys from WebJET CMS (#57202).
+- [x] +Web pages - audit successful time publishing of web page, possibility to send notification to author of web page (#57173).
+- [x] +Display license expiration information 2 months before expiration on the splash screen (#57169).
+- [ ] ~~+Tags - filter by current domain to be the same as in other sections.~~
+- [x] +Audit - add HTTP header `Referrer` to identify the original page from which the call was made (#57565).
+- [ ] ~~+Import users - if no password is entered, generate one (for new users), if no status is sent `available` set to `true`.~~
+- [ ] ~~+In tests, somehow automatically check for the occurrence of `I\.waitForText\('.*?', '.*?'\);` a `I\.waitForText\(".*?", ".*?"\);` which are incorrect waits without a defined time, will cause automated tests to crash.~~~
+- [ ] ~~+Add an application to redirect the main page to `/sk/` or `/en/` by browser language.~~~
+- [ ] ~~+Modify the deletion of the configuration so that when it is deleted, it is set to the original value defined in `Constants`.~~
+- [x] +Gallery - add a URL field for the source of the image with the option to specify the address from which we got the image, automatically set when using the photo bank.
+- [ ] ~~+Gallery - when duplicating an image, enable the "Folder" change to be able to duplicate images to a folder other than the current folder.~~
+- [ ] ~~+Bulk email - audit changes in user groups.~~
+- [ ] ~~+Archive files - rebuild into data tables (#57317).~~
+- [ ] ~~+Optional fields - add the option to select multiple items for linking to the dial.~~
+- [x] +Search in administration - rebuild into data table (#57333).
+- [x] +Annotation - addition to the original statistics display functionality (#57337).
+- [x] +Tags - add possibility to define name in multiple languages, add optional fields (#57273,#57449)
+- [x] +Applications - convert application settings dialog in web page editor from old JSP to data table (#57157,#57161,#57409).
+- [x] +Web pages, gallery - add the ability to search in tree structure (#57265,#57437)
 
 ## 2023.52 / 2024.0
 
@@ -43,30 +113,29 @@ Explanation of the pictograms used:
 - [x] Forum - remake to Spring (#55649).
 - [x] Users - add column rights group to datatable (#55601).
 - [ ] Gallery - new type for displaying a small number of photos with expansion, possibility to switch between all photos in the article (#55349).
-- [ ] Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server
-- [ ] Authorisation via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.
+- [ ] ~~Add authorization option via `OAuth2`, the possibility to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).~~~
+- [ ] ~~Authorization via `SAML` - integrate the library [Spring SAML](https://spring.io/projects/spring-security-saml) for the possibility of authentication against `ADFS/SAML` server.~~
 - [x] Web pages - add the option to restore a deleted folder so that the attribute is set correctly for web pages `available` (#55937).
 - [ ] Explorer - edit to new design, update JS code elfinder (#55849).
 - [x] Web pages - remember the last directory when creating links in the dialog and use it directly when adding another link (#54953-29).
-- [ ] Event Calendar - if an event is entered in October for November when the time is shifted, it is displayed with the time shifted by one hour.
-- [ ] modify the messaging between administrators from a popup window to a better user interface
+- [x] Event calendar - if an event is entered in October for November when the time is shifted, it is displayed with the time shifted by one hour (#56857).
+- [ ] modify the messaging between administrators from a popup window to a better user interface.
 - [x] Applications - improve description of each application, update application images (#55293).
 - [x] Photo gallery - optimize the amount of data loaded (#56093).
-- [x] Photo gallery - image editor is initialized every time the window is opened, edit to use an existing editor (#55853)
-- [ ] Datatables - add Duplicate testing to the automated test.
+- [x] Photo gallery - image editor is initialized every time the window is opened, edit to use an existing editor (#55853).
+- [x] Datatables - add Duplicate testing (#56849) to the automated test.
 - [ ] Banner - add the possibility to use templates to display a banner, e.g. https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template\_literals.
-- [ ] Check how SEO extensions for WordPress work (e.g. https://yoast.com/beginners-guide-yoast-seo/) and propose a similar solution for WebJET CMS. Integrate something like https://github.com/thinhlam/seo-defect-checker into the editor.
+- [ ] Check how SEO extensions for WordPress work (e.g. https://yoast.com/beginners-guide-yoast-seo/) and propose a similar solution for WebJET CMS. Integrate something like https://github.com/thinhlam/seo-defect-checker into the editor (#56853).
 - [ ] Add some data attribute to the blocks in PageBuilder with the block name and then display it in the block properties, so that it can be identified which block it is.
 - [ ] On the splash screen, implement the todo mini app.
 - [ ] DT - after adding a record, repage to the page where the record is located (typically the last page)
 - [x] Editor - add option to display HTML editor for selected web pages, which will not be switchable to WYSIWYG mode. Used on special pages integrating different JavaScript applications or special components. Suitable editor is [Ace-code](https://www.npmjs.com/package/ace-code) (#56129).
 - [x] Fulltext - folder `files` in the index web pages move to the System tab (54953-30).
 - [x] +Users - prevent self-deleting (#55917).
-- [ ] +News - add folder permissions checker and show only the folders to which the user has permissions.
+- [x] +News - add folder rights check and show only the folders to which the user has rights (#56661).
 - [x] +Applications - option to conditionally display applications by device type, implemented generically, configurable via UI for Banner (#55921).
 - [x] +Statistics - limit the displayed statistics to folders that the user has the right to (#55941).
 - [x] +Restore menu - rebuild the application into datatables (#55945).
-- [ ] +Questionnaires - rebuild application into datatables (#55949).
 - [x] +Redirects - separate redirects according to the selected domain (#55957).
 - [x] +Perex groups - separate administration of perex groups according to user rights on the website (#55961).
 - [x] +Banner - conditional display by mobile/tablet/desktop device (#55997).
@@ -272,7 +341,7 @@ Explanation of the pictograms used:
 
 > Version 2021.52 is aimed at improving the work with web pages and the editor.
 
-### Website
+### Web pages
 
 - [x] editor - added info icons for each field with explanation of their meaning (#54253)
 - [x] editor - complete TODO items in the web page editing in the Access tab - set up navigation bar and sitemap display (data model extension) (#54205)
@@ -289,7 +358,7 @@ Explanation of the pictograms used:
 - [x] +edit cell - read data from the server before editing to get `editorFields` Data. In the user list, you cannot otherwise edit e.g. the name (because the password is missing). Also some headings (Enter admin section) are displayed incorrectly (#54109).
 - [x] +generic solution of the problem with `domain_id` (#53913)
 - [x] +adding an ID field to each datatable as used for managing web pages (#53913)
-- [x] +edit the Q\&amp;A application to the WebJET 2021 design (#53913)
+- [x] +edit the Q&A application to the WebJET 2021 design (#53913)
 - [x] +improved usability on mobile devices (#53573, #54133)
 - [x] +add the option to save the web page as a work in progress using the checkbox (#54161)
 - [x] +Change font to `Open Sans` (#53689).
@@ -301,7 +370,7 @@ Explanation of the pictograms used:
 
 ### Applications in a new design
 
-- [x] +Questions \&amp; Answers - edit to new design (#53913).
+- [x] +Questions & Answers - edit to new design (#53913).
 - [x] +Banner system - modify to new design (#53917).
 - [x] +Bulk Email - Domain Limits - edit to new design (#54153).
 - [x] +Export data - modify to new design (#54149).
@@ -312,7 +381,6 @@ Explanation of the pictograms used:
 - [x] +Add the ability to specify the record ID in any table, similar to what is done for web pages.
 
 ### Export-import
-
 - [x] +Export-import - fix the order of columns relative to the header (visible in the user list, but can be elsewhere) (#54097).
 - [x] +Export-import - resolve columns with the same name but different data (e.g. there are 2 addresses in the user list, which is not reflected in excel column names) (#54097).
 
@@ -329,17 +397,17 @@ Explanation of the pictograms used:
 
 ## 2021.40
 
-> The goal of version 2021.40 is to migrate the user editing and GDPR module to the Datatables Editor. We will also continue to work on improving the usability of working with web pages - the Drag \&amp; Drop option and the contextual menu in the tree structure.
+> The goal of version 2021.40 is to migrate the user editing and GDPR module to the Datatables Editor. We will also continue to work on improving the usability of working with web pages - the Drag & Drop option and the contextual menu in the tree structure.
 
 ### New features
 
 - [x] users - converted to Datatables Editor (#46873)
 - [x] GDPR application - rebuilt in Datatables Editor (#53881, #53905)
 
-### Website
+### Web pages
 
 - [x] editor - free fields - possibility to set field types `selectbox`, `autocomplete`, select image/page URL (#53757)
-- [x] tree structure - drag \&amp; drop support for web pages and directories (#52396)
+- [x] tree structure - drag & drop support for web pages and directories (#52396)
 - [x] +automatically create `System` a folder for the domain and display pages from it, including subfolders (#53685)
 - [x] +automatic deletion of title New web page when clicked in the box and transfer to the navigation bar (#53693)
 - [x] +adjust folder list loading for template groups - show all folders not only by installation name for easier use of templates (#53693)
@@ -365,7 +433,7 @@ Explanation of the pictograms used:
 
 > The goal of version 2021.13 is to improve the usability of working with web pages and the possibility of using them in customer projects. At the same time, the development of the new features of WebJET 8 will be completed and the What's New in Version 8.8 section will be written.
 
-### Website
+### Web pages
 
 - [x] editor - improve visibility of Editor's Note field (#53131)
 - [x] editor - view and manage media (Media tab) (#52351, #52462)
@@ -410,3 +478,17 @@ Explanation of the pictograms used:
 - [ ] writing the section What's new for WebJET 8.8
 - [x] +modification of documentation to format `docsify` and move to http://docs.webjetcms.sk/ (#52384)
 - [x] +updating the codeceptjs test framework to version 3.0.4 (#52444)
+
+<!-- deepmark-ignore-start -->
+<script type="text/javascript">
+setTimeout(function() {
+    for (var node of document.querySelectorAll("input[type=checkbox]")) {
+        node.removeAttribute("disabled");
+        // Prevent click events
+        node.addEventListener('click', function(event) {
+            event.preventDefault();
+        });
+    }
+}, 100);
+</script>
+<!-- deepmark-ignore-end -->

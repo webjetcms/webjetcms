@@ -18,21 +18,37 @@ Výstup by měl vypadat podobně jako na následujícím obrázku. Na samém kon
 
 Nejprve se ujistěte, že se nacházíte v adresáři, do kterého chcete import použít. Stiskněte tlačítko ![](import-export-button.png ":no-zoom") a počkejte, až se zobrazí okno. V okně vyberte možnost **Import webových stránek z archivu ZIP (xml)** a stiskněte tlačítko s textem **OK**. Budete vyzváni k nahrání souboru ZIP, který by měl být ve stejném stavu, v jakém byl exportován prostřednictvím nástroje. **Export webových stránek do archivu ZIP (xml)**. Jakékoli experimentování s jeho obsahem může vést k nesprávnému fungování importu s následkem poškození výsledného obsahu webových stránek.
 
+Máte také možnost vybrat hodnotu **Synchronizace stránek podle** rozhodnout, který parametr bude použit pro kontrolu, zda stránka již existuje, nebo ne. Máte na výběr z následujících možností:
+- **Název stránky nebo adresa URL**, je považována za existující, pokud je její název nebo adresa URL totožná s jinou existující stránkou.
+- **Adresy URL**, je považována za existující, pokud se shoduje v adrese URL s jinou existující stránkou.
+- **Žádné**, nezáleží na stránce, ona bude **se vždy považují za nové**, takže můžete přidávat duplikáty stávajících stránek.
+- **Nepovinné pole A** / **Nepovinné pole B** / **Nepovinné pole C**, máte možnost porovnávat stránky podle konkrétních zadaných hodnot, jako např. [speciálně vygenerované ID](../../frontend/webpages/customfields/README.md#jedinečný-identifikátor). Pokud na začátku vytváření webové stránky nastavíte možnost Jedinečný identifikátor, dostane každá stránka jedinečný srovnávací řetězec.
+
 ![](import-zip-window.png)
 
-Po nahrání souboru zip a potvrzení vložení klikněte na tlačítko s textem **OK** Počkejte, až systém zpracuje soubor a zobrazí srovnávací tabulku pro import.
+Po nahrání souboru zip a potvrzení vložení klikněte na tlačítko s textem **OK** počkat, až systém soubor zpracuje, dokud se nezobrazí. **srovnávací tabulka pro import**.
 
-Nad tabulkou jsou dvě zaškrtávací políčka:
-- Vytvoření chybějících šablon
-- Vytvoření chybějících skupin uživatelů
-
-Jejich zaškrtnutí nechávám na zvážení, ale doporučuji je nechat zaškrtnuté.
+### Srovnávací tabulka pro import
 
 V tabulce jsou nejprve uvedeny webové stránky, poté soubory a následně další údaje modulu, pokud byly v exportu přítomny. Tabulka obsahuje 4 sloupce:
-- Vzdálená adresa - název stránky/souboru v souboru ZIP
-- Stav - informace o tom, zda stejný objekt již existuje v cílovém úložišti.
-- Synchronizovat - zaškrtávací políčko, které definuje synchronizaci pouze s určitými položkami ze seznamu
-- Místní adresa - název a umístění stránky/souboru v cílovém úložišti (ve WebJETu, do kterého importuji).
+- **Vzdálená adresa** - název stránky/souboru v souboru ZIP.
+- **Stav** - informace o tom, zda stejný objekt již existuje v cílovém úložišti.
+- **Synchronizace** - zaškrtávací políčko, které definuje synchronizaci pouze s určitými položkami v seznamu.
+- **Místní adresa** - název a umístění stránky/souboru v cílovém úložišti (ve WebJETu, do kterého importuji).
+
+Nad tabulkou jsou dvě zaškrtávací políčka:
+- **Vytvoření chybějících šablon**
+- **Vytvoření chybějících skupin uživatelů**
+
+!> Jejich zaškrtnutí nechávám na zvážení, ale doporučuje se je mít zaškrtnuté.
+
+**Statistické záhlaví**
+
+Záhlaví stránky obsahuje přehled statistik importu. Zobrazuje přehled o tom, kolik složek/stránek/souborů ... bylo vybráno k synchronizaci. Tyto statistiky jsou aktualizovány při každé změně. Záhlaví také nabízí několik užitečných tlačítek, jako např:
+- ![](selectAllBtn.png ":no-zoom"), označí v tabulce všechny dostupné možnosti
+- ![](deselectAllBtn.png ":no-zoom"), zruší zaškrtnutí všech dostupných možností v tabulce.
+- ![](closeAllFoldersBtn.png ":no-zoom"), skryje všechny webové stránky patřící do složky v tabulce.
+- ![](openAllFoldersBtn.png ":no-zoom"), odhalí (zobrazí) všechny webové stránky patřící do složky v tabulce.
 
 Po projití celého seznamu a zaškrtnutí políček u položek, které chcete synchronizovat, můžete kliknout na tlačítko . **Synchronizace** v dolní části okna. Tím se data synchronizují, nový obsah se zveřejní na webových stránkách a původní soubory se přepíší novými.
 

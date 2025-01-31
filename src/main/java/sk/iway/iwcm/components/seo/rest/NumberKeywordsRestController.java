@@ -40,7 +40,7 @@ public class NumberKeywordsRestController extends DatatableRestControllerV2<Numb
 
     @Override
     public Page<NumberKeywordsDTO> searchItem(Map<String, String> params, Pageable pageable, NumberKeywordsDTO search) {
-        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null);
+        FilterHeaderDto filter = StatService.processMapToStatFilter(params, null, getUser());
         DatatablePageImpl<NumberKeywordsDTO> page = new DatatablePageImpl<>(SeoService.getNumberKeywordsTableData(filter));
         return page;
     }

@@ -20,12 +20,10 @@ If another language is selected, the table is loaded with the new texts for the 
 
 - If no text is defined in this language, an empty cell (without text) is displayed.
 - However, just because an empty cell is displayed does not mean that the front-end will display an empty value.
-	- **The text display on the front-end works as follows:**
-        1.  searches for text defined in **the currently displayed language** (for example in EN)
-
-        2.  if the text does not exist, searches in the language set in the constant `defaultLanguage` (for example CZ)
-
-        3.  if the text does not exist, looking hard in the **EN** language
+  - **The text display on the front-end works as follows:**
+    - searches for text defined in **the currently displayed language** (for example in EN)
+    - if the text does not exist, searches in the language set in the constant `defaultLanguage` (for example CZ)
+    - if the text does not exist, looking hard in the **EN** language
 
 ## Modifying the group
 
@@ -34,12 +32,13 @@ Each group of templates can be customized.
 When editing, a modal window will open, containing fields with default values that are set for the currently selected language.
 
 **Example of modification:**
+
 - the selected Language for text editing is English
 - when editing a group, the fields will default to the values set for the English language
-
 - When editing the template, it is not possible to change:
-	- language (this is taken from the Language selection field for text editing)
-	- fields Name and Folder are set globally for all languages, it is not possible to define fields individually for each language
+  - language (this is taken from the Language selection field for text editing)
+  - fields Name and Folder are set globally for all languages, it is not possible to define fields individually for each language
+
 ## Use of the group
 
 In the virtual template edit, the field **Template group** in which one group is set from the list of all template groups as required.
@@ -49,6 +48,7 @@ After selecting a group, the selection box **HTML Template** show all **availabl
 ## Using text key prefixes
 
 *Example of prefix usage:*
+
 ```properties
 testujemPrefix.editor.field_a=GPS súradnice
 ```
@@ -58,12 +58,8 @@ For all templates in the group with the prefix set **I testPrefix** is set **nam
 ## Group migration
 
 If you are migrating a group to a different environment, you need to do the following:
-
-1.  transfer the physical directory of the group in `/templates/` from environment A to environment B
-
-	- if the JSP files of the migrated template contain directly linked modules and other JSP files that are not on the B environment, migrate them as well
-2.  check set variables `$wj-install-name` a `$wj-template-name` in the file `_variables.scss`
-
-3.  Creating and setting up a group on environment B based on a pattern from environment A
-
-4.  Exporting text keys from environment A with the prefix set in the field **Prefix of text keys** and importing to environment B
+- transfer the physical directory of the group in `/templates/` from environment A to environment B
+  - if the JSP files of the migrated template contain directly linked modules and other JSP files that are not on the B environment, migrate them as well
+- check set variables `$wj-install-name` a `$wj-template-name` in the file `_variables.scss`
+- Creating and setting up a group on environment B based on a pattern from environment A
+- Exporting text keys from environment A with the prefix set in the field **Prefix of text keys** and importing to environment B

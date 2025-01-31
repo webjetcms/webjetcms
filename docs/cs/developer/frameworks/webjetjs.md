@@ -10,6 +10,7 @@ WebJET zapouzdřuje rozhraní API knihoven používaných v souboru webjet.js. C
   - [Potvrzení akce](#potvrzení-akce)
   - [Získání hodnoty](#získání-hodnoty)
   - [Formátování data a času](#formátování-data-a-času)
+  - [Formátování čísel](#formátování-čísel)
   - [Dialog Iframe](#dialog-iframe)
   - [Dialog pro výběr souboru/odkazu](#dialog-pro-výběr-odkazu-na-soubor)
   - [Udržování připojení k serveru (opakování)](#udržování-spojení-se-serverem-refresher)
@@ -121,6 +122,11 @@ Pro jednotné formátování data a času jsou k dispozici následující funkce
 - `WJ.formatTime(timestamp)` - zformátuje zadaný `timestamp` jako čas (hodiny:minuty)
 - `WJ.formatTimeSeconds(timestamp)` - zformátuje zadaný `timestamp` jako čas včetně sekund
 
+## Formátování čísel
+
+Pro jednotné formátování čísel jsou k dispozici následující funkce:
+- `WJ.formatPrice(price)` - zformátuje zadané číslo jako nabídku zaokrouhlenou na 2 desetinná místa, příklad: `WJ.formatPrice(1089) - 1 089,00`.
+
 ## Dialog Iframe
 
 Použití volání `WJ.openIframeModal(options)` je možné otevřít dialogové okno s iframe zadané adresy URL. Neotevře se `popup` okno, ale dialogové okno přímo na stránce. V `options` objekt může mít následující parametry:
@@ -138,7 +144,7 @@ Použití volání `WJ.openIframeModal(options)` je možné otevřít dialogové
 
 Dialogové okno má vlastní tlačítko pro zavření, v případě potřeby lze použít volání API. `WJ.closeIframeModal()` zavřít okno.
 
-Pro okna obsahující datovou tabulku existuje funkce `openIframeModalDatatable(options)` který nastavuje funkce `okclick` a `onload` pro volání uložení a správné zavření okna po uložení záznamu v tabulce dat.
+Pro okna obsahující datovou tabulku existuje funkce `openIframeModalDatatable(options)` který nastavuje funkce `okclick` a `onload` pro volání uložení a správné zavření okna po uložení záznamu v tabulce dat. Nastavená výška se automaticky zmenší podle velikosti okna.
 
 **Poznámky k implementaci**
 
@@ -158,6 +164,7 @@ Příklad použití `WJ.openElFinder`:
 WJ.openElFinder({
     link: conf._input.val(),
     title: conf.label,
+    volumes: "images", //or link
     okclick: function(link) {
         //console.log("OK click");
         setValue(conf, link);
@@ -196,9 +203,9 @@ K dispozici jsou následující funkce:
 
 Chybová hlášení se zobrazují prostřednictvím knihovny toastr v samostatném kontejneru. `toast-container-logoff` v horní části obrazovky. Používají `window` objekty na ochranu proti vícenásobnému hlášení.
 
-Inicializace časovače je spuštěna z [app-init.js](../../../src/main/webapp/admin/v9/src/js/app-init.js) voláním funkce `WJ.keepSession();`.
+Inicializace časovače je spuštěna z [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) voláním funkce `WJ.keepSession();`.
 
-Ochrana pro tokeny CSRF a připojení k serveru je nastavena navíc k časovači v položce [head.pug](../../../src/main/webapp/admin/v9/views/partials/head.pug) v nastavení ajaxového volání pomocí funkce `$.ajaxSetup`. Pro chybu HTTP se stavem 401 se volá funkce `WJ.keepSessionShowLogoffMessage()`, pro funkci error 403 `WJ.keepSessionShowTokenMessage(errorMessage)`.
+Ochrana pro tokeny CSRF a připojení k serveru je nastavena navíc k časovači v položce [head.pug](../../../../src/main/webapp/admin/v9/views/partials/head.pug) v nastavení ajaxového volání pomocí funkce `$.ajaxSetup`. Pro chybu HTTP se stavem 401 se volá funkce `WJ.keepSessionShowLogoffMessage()`, pro funkci error 403 `WJ.keepSessionShowTokenMessage(errorMessage)`.
 
 ## Navigační panel
 
@@ -276,7 +283,7 @@ $("#breadcrumbLanguageSelect").change(function() {
     let lng = $(this).val();
     //console.log("Select changed, language=", lng);
     url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
-    cookiesDataTable.ajax.url(url);
+    cookiesDataTable.setAjaxUrl(url);
     cookiesDataTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
     cookiesDataTable.ajax.reload();
 });
@@ -395,7 +402,7 @@ Pokud potřebujete uložit některá uživatelská nastavení, můžete použít
 
 K dispozici jsou rozhraní API pro zpracování v jazyce JavaScript i na straně serveru.
 
-**Oznámení**: neukládejte velké objekty do nastavení, nastavení je vloženo do kódu HTML administrace a velké objekty by neúměrně zvýšily objem přenášených dat.
+!>**Oznámení**: neukládejte velké objekty do nastavení, nastavení je vloženo do kódu HTML administrace a velké objekty by neúměrně zvýšily objem přenášených dat.
 
 ### Použití na frontend
 
@@ -473,11 +480,12 @@ public class AdminSettingsRestController {
 Pokud načítání stránky trvá déle (např. načítání grafů ve statistikách), je možné zobrazit animaci načítání. Pro zobrazení a skrytí animace je možné použít funkce v kódu JavaScriptu:
 
 ```javascript
-//zobrazenie animacie
+//show loader
 WJ.showLoader();
 WJ.showLoader("text");
+WJ.showLoader(null, "#pills-dt-datatableInit-index > div.panel-body");
 
-//schovanie animacie
+//hide loader
 WJ.hideLoader();
 ```
 
@@ -496,7 +504,7 @@ Pokud potřebujete blok během nahrávání skrýt, můžete nastavit jeho tří
 - `WJ.translate(key, ...params)` - Funkce na [překlad klíče do textu](jstranslate.md).
 - `WJ.openPopupDialog(url, width, height)` - Otevře vyskakovací okno se zadanou adresou URL a zadanou velikostí okna, ale doporučujeme použít funkci [WJ.openIframeModal](#dialog-iframe) pokud je to možné
 - `WJ.urlAddPath(url, pathAppend)` - Přidá cestu k (zbytkové) adrese URL, zkontroluje, zda v adrese URL není cesta. `?param` - Např. `WJ.urlAddPath('/admin/rest/tree?click=groups', '/list')` bude vytvořen `/admin/rest/tree/list?click=groups`.
-- `WJ.urlAddParam(url, paramName, paramValue)` - Přidá parametr do adresy URL. Zkontroluje, zda se v adrese URL již nachází parametr, a přidá ? nebo \&amp;.
+- `WJ.urlAddParam(url, paramName, paramValue)` - Přidá parametr do adresy URL. Zkontroluje, zda se v adrese URL již nachází parametr, a přidá ? nebo &, hodnotu `paramValue` kóduje pomocí `encodeURIComponent`.
 - `WJ.urlUpdateParam(url, paramName, paramValue)` - Aktualizuje zadaný parametr v adrese URL.
 - `urlGetParam(name, queryString=null)` - získá hodnotu parametru v adrese URL. Pokud není zadána žádná hodnota `queryString` se získá z `window.location.search`.
 - `WJ.setJsonProperty(obj, path, value)` - Nastaví (JSON) hodnotu v objektu podle zadaného názvu, akceptuje také vnořené objekty typu `editorFields.groupCopyDetails` (pokud `editorFields` ještě neexistuje, vytvoří se).
@@ -505,3 +513,5 @@ Pokud potřebujete blok během nahrávání skrýt, můžete nastavit jeho tří
 - `WJ.htmlToText(htmlCode)` - Převede zadaný kód HTML na prostý text. Vytvoří skrytý `DIV` prvek, kterému nastaví kód HTML a poté z něj získá prostý text.
 - `WJ.initTooltip($element)` - Inicializuje na zadaném prvku (nebo kolekci) jQuery `tooltip` s podporou MarkDown.
 - `WJ.escapeHtml(string)` - Nahradí nebezpečné znaky v kódu HTML entitami pro jejich bezpečné vypsání.
+- `WJ.base64encode(text)` - zakódované algoritmem `base64` zadaný text s podporou znaků v `utf-8`.
+- `WJ.base64decode(encodedText)` - dekódováno algoritmem `base64` zadaný text s podporou znaků v `utf-8`.

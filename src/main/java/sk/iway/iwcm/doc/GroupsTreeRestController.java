@@ -310,35 +310,6 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
      */
     @GetMapping("/defaultValue")
     public GroupDetails gerDefaultGroupTreeOptionForUser(@RequestParam("groupId") int groupId) {
-        final Identity user = UsersDB.getCurrentUser(getRequest());
-        GroupsDB groupsDB = GroupsDB.getInstance();
-
-        //User can edit all groups -> so return group (no check needed)
-        //OR user have right cmp_stat_seeallgroups (in stat section ONLY)
-        String referer = getRequest().getHeader("referer");
-        if( Tools.isEmpty(user.getEditableGroups(true)) || (referer != null && referer.contains("/apps/stat/admin/") && user.isEnabledItem("cmp_stat_seeallgroups"))) {
-            if(groupId > 0) return groupsDB.findGroup(groupId);
-
-            GroupDetails rootGroup = new GroupDetails();
-            rootGroup.setGroupId(-1);
-            return rootGroup;
-        }
-
-        //Can handle default group ?
-        boolean parentEditable = GroupsDB.isGroupEditable(user, groupId);
-        boolean parentViewable = GroupsDB.isGroupViewable(user, groupId);
-
-        //Check if user have right for this group
-        //It cant be -1 (root group), because there is group restriction for you part of tree
-        if( (parentEditable || parentViewable) && groupId != -1) {
-            //User have right for this group)
-           return groupsDB.findGroup(groupId);
-        } else {
-            //Problem, user missing rights for this group ... return first permitted group
-            int[] permittedGroups = Tools.getTokensInt(user.getEditableGroups(true), ",");
-
-            //Use first groupId
-            return groupsDB.findGroup( permittedGroups[0] );
-        }
+        return GroupsTreeService.gerDefaultGroupTreeOptionForUser(groupId, getUser());
     }
 }

@@ -1,4 +1,4 @@
-# História web stránky
+# História
 
 V karte História sa zobrazujú publikované historické verzie web stránky a **aktuálne rozpracované (ešte nepublikované) verzie**. Pri publikovaní rozpracovanej verzie sa z histórie zmažú dočasné/pracovné verzie stránky a v histórii sa ponechá publikovaná verzia.
 

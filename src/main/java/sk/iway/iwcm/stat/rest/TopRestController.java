@@ -57,7 +57,7 @@ public class TopRestController extends DatatableRestControllerV2<TopDTO, Long> {
     @Override
     public Page<TopDTO> searchItem(Map<String, String> params, Pageable pageable, TopDTO search) {
         //Process received params into FilterHeaderDto
-        filter = StatService.processMapToStatFilter(params, null);
+        filter = StatService.processMapToStatFilter(params, null, getUser());
 
         DatatablePageImpl<TopDTO> page = new DatatablePageImpl<>(getDataAndConvertIntoPageItems());
         return page;

@@ -1,5 +1,7 @@
 # Kalendář akcí
 
+## Seznam událostí
+
 Kalendář událostí umožňuje zaznamenávat a zobrazovat různé události, o kterých chcete návštěvníky webu informovat.
 
 ![](calendar-datatable.png)

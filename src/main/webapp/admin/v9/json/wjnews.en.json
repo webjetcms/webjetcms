@@ -1,14 +1,19 @@
 {
     "news": [
         {
+            "title": "Version 2024.52",
+            "perex": "In version 2024.52, Web pages add the ability to set **arrangement method** and **search in tree structure**, ZIP import allows you to set the method of comparing the existing version of the page. **E-commerce** has received a new design for the list of orders and products. **Survey statistics** added, a better image editor in the explorer and improved search in the administration. **Bulk emails** have added the option **set unsubscribe confirmation**. The gallery includes a new field for **Image source URL**, which is filled in automatically when using a photo bank, **Tags** add **language mutations** and optional fields.",
+            "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202452"
+        },
+        {
             "title": "Version 2024.40",
             "perex": "In version 2024.40 Explorer brings **confirmation when moving files drag&drop**, which reduces the risk of errors. The image editor allows **sizing and cropping according to templates**, making editing easy. The settings of several **applications** have been reworked into a **new design**. The author of the page receives **notifications at the time of publishing and adding a post** to the forum. The new booking application allows **easy booking of objects** and offers statistics for better management. We improved PageBuilder and fixed bugs in File Archive for better stability.",
-            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2024?id=_202440"
+            "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202440"
         },
         {
             "title": "Version 2024.18",
             "perex": "WebJET 2024.18 contains a **new set of icons**, Form easily supplemented with **advanced settings** (recipients, redirects...), applications AB Testing, Audit (awaiting publication, changed pages), Blog, Questionnaires, Calendar of events (approval). Adds **MultiWeb installation support** (separation of domain data) in Templates, Bulk Email and other applications. New library for **browser detection**, there will be minor differences in Statistics-Browsers, but we record browser data anonymously even without Cookies consent.",
-            "link": "http://docs.webjetcms.sk/latest/en/CHANGELOG-2024?id=_202418"
+            "link": "http://docs.webjetcms.sk/v2024/en/CHANGELOG-2024?id=_202418"
         },
         {
             "title": "Version 2024.0",

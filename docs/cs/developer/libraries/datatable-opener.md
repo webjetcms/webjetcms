@@ -61,6 +61,6 @@ Knihovna také umožňuje filtrovat tabulku podle parametrů zadaných v hashov�
 
 Pokud je v hashovém výrazu také hodnota `dt-select=true`, takže po načtení záznamů jsou řádky označeny. Je tedy snadné provést akci, jako je schválení uživatelem kliknutím na tlačítko apod.
 
-Pokud je v hashovém výrazu také hodnota `dt-open-editor=true` editor se otevře po označení řádků (řádky jsou označeny automaticky, není potřeba žádný parametr). `dt-select=true`).
+Pokud je v hashovém výrazu také hodnota `dt-open-editor=true` editor se otevře po označení řádků (řádky jsou označeny automaticky, není potřeba žádný parametr `dt-select=true`).
 
 Implementace je ve funkci `filterTableByHashParameters` která je spuštěna událostí `this.dataTable.one('draw.dt', (evt, settings) => {`.

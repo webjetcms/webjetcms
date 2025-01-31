@@ -112,7 +112,7 @@ String brandSuffix = InitServlet.getBrandSuffix();
                         <c:if test="${not empty param.auth}">
                             <div class="form-group">
                                 <label><iwcm:text key="logon.change_password.select_login"/>:</label>
-                                <form:select path="selectedLogin" cssClass="form-control">
+                                <form:select path="selectedLogin" cssClass="form-select">
                                     <c:forEach var="login" items="${userForm.login}">
                                         <form:option value="${login}">${login}</form:option>
                                     </c:forEach>
@@ -128,8 +128,8 @@ String brandSuffix = InitServlet.getBrandSuffix();
                             <label class="control-label"><iwcm:text key="logon.retype_new_password"/>:</label>
                             <form:password path="retypeNewPassword" maxlength="64" size="16" cssClass="form-control"/>
                         </div>
-                        <div class="form-actions text-right">
-                            <button type="submit" name="login-submit" id="login-submit" class="btn blue"><iwcm:text key="button.submit"/> <i class="m-icon-swapright m-icon-white"></i></button>
+                        <div class="form-actions text-end">
+                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.submit"/></button>
                             <input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(lng)%>"/>
                             <form:hidden path="login"/>
                             <form:hidden path="auth"/>

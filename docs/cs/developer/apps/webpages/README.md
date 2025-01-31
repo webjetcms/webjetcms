@@ -184,7 +184,7 @@ Vstupní pole pro zadávání `docid` ve stránce je implementován přímo v [w
 
 Vstupní pole je připojeno k `autocomplete` vyhledávání podle názvu stránky nebo adresy URL nastavením `data-ac` Atributy.
 
-**Varování:** aktuální implementace nemůže otevřít webovou stránku na druhé straně seznamu webových stránek (protože ji v seznamu nenajde). Také pokud je `docid` v adresáři Systém nebo Koš a tento list není aktuálně zobrazen, nezobrazí se ani tento adresář.
+!>**Varování:** aktuální implementace nemůže otevřít webovou stránku na druhé straně seznamu webových stránek (protože ji v seznamu nenajde). Také pokud je `docid` v adresáři Systém nebo Koš a tento list není aktuálně zobrazen, nezobrazí se ani tento adresář.
 
 ## Zobrazit kartu Naposledy upraveno
 

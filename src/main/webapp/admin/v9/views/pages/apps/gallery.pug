@@ -52,7 +52,7 @@ block content
                 window.getJstreeUrl = function() {
                     if (somStromcek==null) somStromcek = $('#SomStromcek');
                     let url = somStromcek.data("rest-url");
-                    if (dir != null) url = WJ.urlAddParam(url, "dir", dir);
+                    if (dir != null) url = WJ.urlUpdateParam(url, "dir", dir);
                     //console.log("Returning URL=", url);
                     return url;
                 }
@@ -149,7 +149,10 @@ block content
                     if (typeof size == "undefined" || size == null) {
                         size = "S";
                     }
-                    if (size != '') $("table.datatableInit").addClass('cardView cardView'+size);
+                    
+                    if (size != '') {
+                        setDatatableInitSize(size);
+                    };
 
                     let imagePath;
                     galleryTable = WJ.DataTable( {
@@ -180,6 +183,15 @@ block content
                     galleryTable.EDITOR.field('selectedX').hide();
                     galleryTable.EDITOR.field('selectedWidth').hide();
 
+                    function setDatatableInitSize(size) {
+                        let arr = $("table.datatableInit");
+                        for(let i = 0; i < arr.length; i++) {
+                            //Skip searchTable (filter)
+                            if($(arr[i]).prop('id') != "jstreeSearchTable") 
+                                $(arr[i]).addClass('cardView cardView'+size);
+                        }
+                    }
+
                     function switchGallerySize(e, dt, node, size)
                     {
                         $(dt.table().node()).removeClass('cardView cardViewS cardViewM cardViewL');
@@ -187,7 +199,7 @@ block content
                         if (size != '')
                         {
                             //table.datatableInit je povodny header
-                            $("table.datatableInit").addClass('cardView cardView'+size);
+                            setDatatableInitSize(size);
                             $(dt.table().node()).addClass('cardView cardView'+size);
                             $("body").addClass("datatableNoHeader");
                         }
@@ -451,7 +463,7 @@ block content
 
                         //console.log("loadTablesForGalleryDimesnion", dimensionId, path);
 
-                        galleryDimensionDatatable.ajax.url(urlDimension + "?dimensionId=" + dimensionId + "&path=" + encodeURIComponent(path));
+                        galleryDimensionDatatable.setAjaxUrl(urlDimension + "?dimensionId=" + dimensionId + "&path=" + encodeURIComponent(path));
 
                         if (galleryDimensionDatatable.rows().count()==0) {
                             galleryDimensionDatatable.row.add(window.lastGalleryDimension);
@@ -498,6 +510,19 @@ block content
                         //console.log("Reseting imageEditorInstance");
                         //zresetuj image editor instance
                         if (imageEditorInstance != null) imageEditorInstance.resetData();
+
+                        //Disable field imageName during DUPLICATE action
+                        if(action === "edit") {
+                            $("#DTE_Field_imageName").prop('disabled', false);
+
+                            setTimeout(() => {
+                                let dataAction = $("#galleryTable_modal").attr("data-action");
+                                if("duplicate" == dataAction) {
+                                    $("#DTE_Field_imageName").prop('disabled', true);
+                                }
+                            }, 200);
+
+                        }
                     });
 
                 });

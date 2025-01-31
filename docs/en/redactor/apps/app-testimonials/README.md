@@ -4,7 +4,7 @@ Embed an app on your site showing your customers' recommendations. The app will 
 
 ## Application settings
 
-# Style and settings
+### Style and settings
 
 In this section it is possible to set:
 - Style
@@ -12,11 +12,15 @@ In this section it is possible to set:
 - Show names
 - Colour of the name
 - Text colour
-- Background colour ![](editor-style.png)
+- Background colour
 
-# Items
+![](editor-style.png)
 
-This section is to add or remove an item: When adding, you can fill in name, text, redirection. To remove an item, click on the red cross. ![](editor-items.png)
+### Items
+
+This section is to add or remove an item: When adding, you can fill in name, text, redirection. To remove an item, click on the red cross.
+
+![](editor-items.png)
 
 ## View application
 

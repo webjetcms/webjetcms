@@ -17,3 +17,7 @@ V této části lze nastavit:
 ## Zobrazení aplikace
 
 ![](content-block.png)
+
+## Nastavení
+
+Celkový počet dostupných bloků lze nastavit v konfigurační proměnné `contentBlockTypeCount`, ve výchozím nastavení nastaveno na `5`.

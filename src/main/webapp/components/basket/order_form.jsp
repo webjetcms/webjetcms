@@ -399,30 +399,30 @@ else {%>
 				<h2><iwcm:text key="components.basket.invoice_email.delivery_address"/></h2>
 				<div class="flex">
 					<div class="form-group">
-						<label for="deliveryNameId"><iwcm:text key="components.basket.invoice_email.name"/>:</label>
-						<input type="text" name="deliveryName" id="deliveryNameId" class="required" size="25" maxlength="255" value="<%=user.getFirstName()%>"/>
+						<label class="form-label" for="deliveryNameId"><iwcm:text key="components.basket.invoice_email.name"/>:</label>
+						<input type="text" name="deliveryName" id="deliveryNameId" class="form-control required" size="25" maxlength="255" value="<%=user.getFirstName()%>"/>
 					</div>
 					<div class="form-group">
-						<label for="deliverySurNameId"><iwcm:text key="reguser.lastname"/>:</label>
-						<input type="text" name="deliverySurName" id="deliverySurNameId" class="required" size="25" maxlength="255" value="<%=user.getLastName()%>"/>
+						<label class="form-label" for="deliverySurNameId"><iwcm:text key="reguser.lastname"/>:</label>
+						<input type="text" name="deliverySurName" id="deliverySurNameId" class="form-control required" size="25" maxlength="255" value="<%=user.getLastName()%>"/>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="deliveryStreetId"><iwcm:text key="components.basket.invoice_email.street"/>:</label>
-					<input type="text" name="deliveryStreet" id="deliveryStreetId" class="required" size="25" maxlength="255" value="<%=user.getAdress()%>"/>
+					<label class="form-label" for="deliveryStreetId"><iwcm:text key="components.basket.invoice_email.street"/>:</label>
+					<input type="text" name="deliveryStreet" id="deliveryStreetId" class="form-control required" size="25" maxlength="255" value="<%=user.getAdress()%>"/>
 				</div>
 				<div class="flex">
 					<div class="form-group">
-						<label for="deliveryCityId"><iwcm:text key="components.basket.invoice_email.city"/>:</label>
-						<input type="text" name="deliveryCity" id="deliveryCityId" class="required" size="25" maxlength="255" value="<%=user.getCity()%>"/>
+						<label class="form-label" for="deliveryCityId"><iwcm:text key="components.basket.invoice_email.city"/>:</label>
+						<input type="text" name="deliveryCity" id="deliveryCityId" class="form-control required" size="25" maxlength="255" value="<%=user.getCity()%>"/>
 					</div>
 					<div class="form-group">
-						<label for="deliveryZipId"><iwcm:text key="components.basket.invoice_email.ZIP"/>:</label>
-						<input type="text" name="deliveryZip" id="deliveryZipId" class="required numbers" size="5" maxlength="5" value="<%=user.getPSC()%>"/>
+						<label class="form-label" for="deliveryZipId"><iwcm:text key="components.basket.invoice_email.ZIP"/>:</label>
+						<input type="text" name="deliveryZip" id="deliveryZipId" class="form-control required numbers" size="5" maxlength="5" value="<%=user.getPSC()%>"/>
 					</div>
 				</div>
 				<div class="form-group">
-					<label for="deliveryCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
+					<label class="form-label" for="deliveryCountryId"><iwcm:text key="components.basket.invoice_email.country"/>:</label>
 					<%/*Tento select box nemenit, je tu kvoli pay24 !!! */ %>
 					<select name="deliveryCountry" class="form-control">
 						<option value="SVK"><iwcm:text key="stat.countries.tld.sk"/></option>
@@ -434,16 +434,16 @@ else {%>
 			<div class="col-md-5">
 				<h2><iwcm:text key="components.basket.invoice_email.contact"/></h2>
 				<div class="form-group">
-					<label for="contactEmailId"><iwcm:text key="components.basket.invoice_email.email"/>:</label>
-					<input type="text" name="contactEmail" class="required email" id="contactEmailId" size="25" maxlength="255" value="<%=user.getEmail()%>"/>
+					<label class="form-label" for="contactEmailId"><iwcm:text key="components.basket.invoice_email.email"/>:</label>
+					<input type="text" name="contactEmail" class="form-control required email form-control" id="contactEmailId" size="25" maxlength="255" value="<%=user.getEmail()%>"/>
 				</div>
 				<div class="form-group">
-					<label for="contactPhoneId"><iwcm:text key="components.basket.invoice_email.phone_number"/>:</label>
-					<input type="text" name="contactPhone" size="25" id="contactPhoneId" maxlength="255" value="<%=user.getPhone()%>"/>
+					<label class="form-label" for="contactPhoneId"><iwcm:text key="components.basket.invoice_email.phone_number"/>:</label>
+					<input type="text" name="contactPhone" class="form-control" size="25" id="contactPhoneId" maxlength="255" value="<%=user.getPhone()%>"/>
 				</div>
 				<div class="form-group">
-					<label for="contactCompanyId"><iwcm:text key="components.basket.invoice_email.company"/>:</label>
-					<input type="text" name="contactCompany" id="contactCompanyId" size="25" maxlength="255" value="<%=user.getCompany()%>"/>
+					<label class="form-label" for="contactCompanyId"><iwcm:text key="components.basket.invoice_email.company"/>:</label>
+					<input type="text" name="contactCompany" class="form-control" id="contactCompanyId" size="25" maxlength="255" value="<%=user.getCompany()%>"/>
 				</div>
 			</div>
 		</div>
@@ -496,8 +496,8 @@ else {%>
 					<%} %>
 				</div>
 				<div class="form-group">
-					<label for="userNoteId"><iwcm:text key="components.basket.note"/>:</label>
-					<textarea name="userNote" id="userNoteId" rows="5" cols="30"></textarea>
+					<h2><iwcm:text key="components.basket.note"/></h2>
+					<textarea name="userNote" class="form-control" id="userNoteId" rows="5" cols="30"></textarea>
 				</div>
 
 				<div class="form-group">
@@ -519,7 +519,7 @@ else {%>
 				</div>
 				<% if (displayedPaymentMethods.size() > 0){ %>
 				<div class="form-group">
-					<label for="paymentMethodId"><iwcm:text key="components.basket.order_form.payment_method"/></label>
+					<label class="form-label" for="paymentMethodId"><iwcm:text key="components.basket.order_form.payment_method"/></label>
 
 					<select name="paymentMethod" id="paymentMethodId" onchange="checkPayMethod(this);">
 						<%for (String paymentMethod : displayedPaymentMethods)
@@ -541,7 +541,7 @@ else {%>
 				<%} %>
 
 				<div class="form-group">
-					<input type="submit" class="btn red pull-right" name="bSubmit" value="<iwcm:text key="components.basket.order_form.create"/>" />
+					<input type="submit" class="btn btn-primary" name="bSubmit" value="<iwcm:text key="components.basket.order_form.create"/>" />
 				</div>
 
 			</div>

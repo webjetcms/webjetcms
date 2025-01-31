@@ -16,7 +16,7 @@ Karta **Základné** ako už napovedá názov, obsahuje základné informácie o
 
 Karta ďalej obsahuje dátumový výber od/do a časový výber od/do. Pri tomto výbere si treba uvedomiť jednu podstatnú vec. Ak si zvolíte dni od 01.01.2022 do 03.01.2022 v čase od 08:00 do 16:00, neznamená to, že rezervácia sa začína 01.01.2022 o 08:00 a trvá do 03.01.2022 16:00 a všetko v tom rozsahu je rezervované. NIE. Pri týchto zvolených hodnotách to v praxi znamená, že si tento rezervačný objekt rezervujete v čase od 08:00 do 16:00 pre každý deň zvlášť. Dôvod je prostý, týmto spôsobom si viete rezervovať objekt v určitom čase pre viac dní bez potreby rezervovania celého intervalu. Ak je rezervačný interval pre daný objekt nastavený od 05:00 do 20:00 tak pre jednotlivé dni sa rezervuje iba zadaný časový interval a zvyšok intervalu rezervovaný nie je, aj keď rezervácia trvá napríklad 3 dni.
 
-!>**Upozornenie**, ak sa rezervačný objekt dá rezervovať [IBA na celý deň](../reservation-objects/README.md) nasledovné možnosti sa skryjú a nebudú dostupné:
+!>**Upozornenie:** ak sa rezervačný objekt dá rezervovať [IBA na celý deň](../reservation-objects/README.md) nasledovné možnosti sa skryjú a nebudú dostupné:
 
 - výberu času
 - prehľad rezervačných intervalov objektu pre jednotlivé dni
@@ -99,9 +99,9 @@ Zmena stavu rezervácie je možná buď pomocou editoru a to presnejšie v karte
 
 Rovnako ako v karte **Schvaľovanie** aj tlačidlá ponúkajú 3 rôzne stavy a to :
 
-- ![](button-approve.png ":no-zoom")  **Schválenie** rezervácie (Rezervácia bola schválená)
-- ![](button-reject.png ":no-zoom") **Zamietnutie** rezervácie (Rezervácia bola zamietnutá)
-- ![](button-reset.png ":no-zoom") **Resetovať stav** rezervácie (Rezervácia čaká na schválenie)
+- ![](button-approve.png ":no-zoom"), **Schválenie** rezervácie (Rezervácia bola schválená)
+- ![](button-reject.png ":no-zoom"), **Zamietnutie** rezervácie (Rezervácia bola zamietnutá)
+- ![](button-reset.png ":no-zoom"), **Resetovať stav** rezervácie (Rezervácia čaká na schválenie)
 
 ### Nutné schválenie
 

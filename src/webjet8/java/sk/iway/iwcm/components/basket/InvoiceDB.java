@@ -396,7 +396,7 @@ public class InvoiceDB
 			for (BasketItemBean b : items)
 			{
 				DocDetails itemDoc = b.getDoc();
-				double price = itemDoc.calculateLocalPrice(itemDoc.getPrice(request), BasketDB.getDisplayCurrency(request));
+				double price = itemDoc.calculateLocalPrice(itemDoc.getPrice(request), BasketDB.getDisplayCurrency(request)).doubleValue();
 				if (price > 0)
 				{
 					b.setItemPrice(price);

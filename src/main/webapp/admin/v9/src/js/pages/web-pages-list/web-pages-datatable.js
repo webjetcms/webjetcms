@@ -53,6 +53,7 @@ export class WebPagesDatatable {
                 }
             ],
             newPageTitleKey: defaultTitleKey,
+            showPageTitleKey: "history.showPage",
         }, options);
         //console.log("WebPagesDatatable.options=", this.options);
 
@@ -236,7 +237,7 @@ export class WebPagesDatatable {
                     },
                     className: 'btn btn-outline-secondary buttons-history-preview',
                     attr: {
-                        'title': window.WJ.translate('history.showPage'),
+                        'title': window.WJ.translate(instance.options.showPageTitleKey),
                         'data-toggle': 'tooltip'
                     }
                 });
@@ -353,7 +354,7 @@ export class WebPagesDatatable {
             },
             className: 'btn btn-outline-secondary buttons-history-preview',
             attr: {
-                'title': window.WJ.translate('history.showPage'),
+                'title': window.WJ.translate(self.options.showPageTitleKey),
                 'data-toggle': 'tooltip'
             }
         });
@@ -371,7 +372,8 @@ export class WebPagesDatatable {
                 className: 'btn btn-outline-secondary buttons-abtest',
                 attr: {
                     'title': window.WJ.translate('editor.save_as_abtest'),
-                    'data-toggle': 'tooltip'
+                    'data-toggle': 'tooltip',
+                    'data-dtbtn': 'abtest'
                 }
             });
         }
@@ -398,7 +400,8 @@ export class WebPagesDatatable {
                 className: 'btn btn-outline-secondary buttons-stat',
                 attr: {
                     'title': window.WJ.translate('stat_doc.pageStat'),
-                    'data-toggle': 'tooltip'
+                    'data-toggle': 'tooltip',
+                    'data-dtbtn': 'stat'
                 }
             });
         }
@@ -451,7 +454,7 @@ export class WebPagesDatatable {
                         $(el).addClass("enabled");
                     }
 
-                    self.webpagesDatatable.ajax.url(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+                    self.webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
                     self.webpagesDatatable.ajax.reload();
                 }
             });

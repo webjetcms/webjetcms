@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import lombok.Getter;
@@ -46,6 +47,7 @@ public class GalleryEntity {
     @DataTableColumn(inputType = DataTableColumnType.GALLERY_IMAGE, title="editor.perex.image", hiddenEditor = true)
     private String datatableImage;
 
+    @NotBlank
     @Size(max = 255)
     @Column(name = "image_name")
     @DataTableColumn(inputType = {DataTableColumnType.OPEN_EDITOR}, tab = "metadata", title="[[#{components.gallery.fileName}]]")
@@ -57,10 +59,18 @@ public class GalleryEntity {
         editor = {
             @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
+            })
+    })
+    private String imagePath;    
+    
+    @Column(name = "image_source")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title="components.gallery.image_source", tab = "metadata",
+        editor = {
+            @DataTableColumnEditor(attr = {
                     @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
             })
     })
-    private String imagePath;
+    private String imageSource;
 
     @Size(max = 1000)
     @Column(name = "s_description_sk")

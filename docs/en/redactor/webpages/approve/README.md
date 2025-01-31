@@ -20,6 +20,7 @@ Clicking the Add button opens a window where you can select a directory for appr
 - Notification - an email will be sent to the user notifying them of the page change. If approval is also set for the directory, the notification will be sent after the page is approved. This action is useful if you don't require pages to be approved, but still want to be notified of any changes that happen to the pages.
 - None - no action will be taken. This is used when multiple responsible administrators are defined in the system, with only one approving changes made by regular users. If another responsible administrator were to make a change, another administrator would have to approve it. This is sometimes unwanted, so the other responsible administrators need to be set to an approval directory with a None mode so that they can make changes to it without needing approval.
 - Approval - second level - second level approval. An email will be sent requesting approval after the first level approval (by the user who has the approval option set).
+
 The approvers are searched in the tree structure from the folder in which the change occurred to the root folder. The first folder with a defined approver is used. Thus you can define different approvers for subfolders (e.g. Products, News) and at the same time define an approver for the root folder for all other folders. If a change occurs in Products/WebJET CMS the approver for the Products folder is used, if a change occurs in Contacts the approver for the root folder is used.
 
 ## Approval process

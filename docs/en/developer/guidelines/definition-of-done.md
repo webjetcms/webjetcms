@@ -20,10 +20,12 @@ Manually you need to perform tests of export and import of datatable data:
 
 ## Documentation
 
-**Completing the documentation is well done** during code review in **merge requeste**. Therefore, always prepare `merge request` and subsequently in the letter `Changes` browse all changed files. **With every change, think about**whether it is understandable from the code and whether it modifies actual behaviour or adds features to existing code. Notice:
+**Completing the documentation is well done** during code review in **merge requeste**. Therefore, always prepare `merge request` and subsequently in the letter `Changes` browse all changed files. **With every change, think about** whether it is understandable from the code and whether it modifies actual behaviour or adds features to existing code. Notice:
+
 With each change, think about whether the reason for the change is clear to you and whether it will be clear to you in a year's time, and especially whether it will be clear to another programmer. Unintelligible changes should be commented out directly in the source code - documentation and source code comments go hand in hand and can be duplicative at first glance. But it doesn't matter, write the documentation more verbally, the comments more technically.
 
-**NOTICE:** not all developers need to have access to the source code, the documentation is also available for clients who are interested in programming features for WebJET. The documentation must be comprehensive enough to allow the component to be used without the source code.
+!>**Warning:** not all developers need to have access to the source code, the documentation is also available for clients who are interested in programming features for WebJET. The documentation must be comprehensive enough to allow the component to be used without the source code.
+
 I recommend you have **open search window** v `docs` folder, and when you see in the `Changes` a change in a variable/configuration/object, you can find it in the documentation (folder ./docs). If you find it, you add the change to the text, if you don't find it, you add the full description of the change.
 
 When writing documentation, pay attention to the used [terms/expressions](terms.md).
@@ -47,4 +49,5 @@ After the documentation has been written `pushnite` and go through the list of c
 - Module title + basic description, after the title please enter the ticket number
 - general - in the section indicate general/minor changes not directly related to the change in the module, always indicate the ticket number at the beginning
 - documentation - please list changes/new sections in the documentation with references
-After adding the changelog, check the file [ROADMAP.md](../../ROADMAP.md)if you have implemented any part of the roadmap, mark it as solved. Also add the ticket number to the end of the line in the change.
+
+After adding the changelog, check the file [ROADMAP.md](../../ROADMAP.md) if you have implemented any part of the roadmap, mark it as solved. Also add the ticket number to the end of the line in the change.

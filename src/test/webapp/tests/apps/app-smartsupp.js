@@ -10,13 +10,13 @@ Before(({ I, login }) => {
 
 Scenario('testovanie app - Live chat', async ({ I, DTE, Apps }) => {
     Apps.insertApp('Live chat', '#components-app-smartsupp-title');
-    
+
     const defaultParams = {
         kluc : ''
     };
 
     await Apps.assertParams(defaultParams);
-    
+
     I.say('Default parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
     I.switchToNextTab();
@@ -25,7 +25,7 @@ Scenario('testovanie app - Live chat', async ({ I, DTE, Apps }) => {
 
     I.switchToPreviousTab();
     I.closeOtherTabs();
-    
+
     Apps.openAppEditor();
 
     const changedParams = {
@@ -36,15 +36,16 @@ Scenario('testovanie app - Live chat', async ({ I, DTE, Apps }) => {
 
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_ok')
-    
+
     await Apps.assertParams(changedParams);
 
     I.say('Changed parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
     I.switchToNextTab();
-    
+
     I.waitForVisible({ css: '#widgetButtonFrame' });
     I.seeElement({ css: '#widgetButtonFrame' });
     I.switchTo({ css: '#widgetButtonFrame' });
     I.see('Chat', { css: '.flex-center.whitespace-nowrap.pl-4.pr-1[data-testid="widgetButtontext"]' });
+    I.switchTo();
 });

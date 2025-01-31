@@ -1,5 +1,7 @@
 # Datatabuľky
 
+## Základy práce s data tabuľkami
+
 Dátové tabuľky sú základom rozhrania v CMS WebJET, pozrite si inštruktážne video ako s tabuľkami pracovať.
 
 <div class="video-container">

@@ -20,6 +20,7 @@ The REST service returns a list of keys according to the following rules:
 If a parameter is sent when calling the REST service `since` of type timestamp is the returned list of keys:
 - if no change has occurred since the specified timestamp, an empty object is returned
 - if there is a change, all keys are returned and the key with the name `lastmodified` containing the timestamp of the last change on the server
+
 The date of the last change is also in [head.pug](../../../src/main/webapp/admin/v9/views/partials/head.pug) available as `window.propertiesLastModified`. This saves one call to the REST service if the keys do not need to be updated.
 
 ### Translation texts
@@ -33,20 +34,21 @@ If possible, it is a good idea to reuse existing translation keys from WebJET 8 
 When using an existing key, its prefix must be set in a configuration variable named `propertiesAdminKeys` to add the key to the REST service response.
 
 **Remark:** if you are translating an existing page from WebJET version 8 you can view it with the URL parameter `?showTextKeys=true` which causes the translation keys to be displayed before the text. The page will probably be broken from a design point of view (as the text will be too long), but you can look at the keys through the inspector.
-##
 
-Library [Translator](../libraries/translator.md)
+## Frontend library
 
-`WJ.translate('translation.key')`:
+Library [Translator](../libraries/translator.md) implements translation key to text conversion using system translations in WebJET.
+
+To provide translation, simply call the function `WJ.translate('translation.key')`:
 
 ```javascript
-const preklad = WJ.translate("translation.key");
+const preklad = WJ.translate('translation.key');
 ```
 
-`{1}``{X}`
+If you need to use parameters in the translation text, you can use the expression `{1}` to `{X}` to insert parameters:
 
 ```javascript
 const preklad = WJ.translate(key, ...params);
 ```
 
-`datatables.pageLength.auto.js=Automaticky ({1})``var pageLengthTitle = WJ.translate("datatables.pageLength.auto.js", pageLength);``Automaticky (14)`.
+E.g. for key `datatables.pageLength.auto.js=Automaticky ({1})` use the call `var pageLengthTitle = WJ.translate("datatables.pageLength.auto.js", pageLength);` which will display text e.g. `Automaticky (14)`.

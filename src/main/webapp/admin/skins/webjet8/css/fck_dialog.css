@@ -27,9 +27,9 @@ a:focus, li:focus, input:focus { outline: none;}
 
 .checkbox{ border: 0px;}
 
-body, td, input, select, textarea, label, div label { font-size: 12px; font-family: Arial, Helvetica, sans-serif;}
+body, td, input, select, textarea, label, div label { font-size: 14px; font-family: Asap, Arial, Helvetica, sans-serif;}
 
- input[type="text"], input[type="password"], select, textarea {
+input[type="text"], input[type="password"], select, textarea {
 	border: 1px solid #DDD;
 	margin-top: 0px;
 	background-color: #FFF !important;
@@ -350,3 +350,11 @@ a.jspActiveArrowButton, .winXP a.jspActiveArrowButton:hover { background-positio
 
 #XXXcomponentsWindowTable { border: 1px solid red; }
 #XXXcomponentsWindowTableMainDiv { border: 1px solid blue; }
+
+/* BS 5 fixes */
+label.form-label, label.form-check-label, .form-check-input {
+	font-size: 14px;
+}
+.form-select, .form-control {
+	max-width: unset;
+}

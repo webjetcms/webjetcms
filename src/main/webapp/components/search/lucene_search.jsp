@@ -1,4 +1,4 @@
-<%@page import="org.apache.struts.util.ResponseUtils"%>
+<%@page import="org.apache.struts.util.ResponseUtils"%><%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*"%>
@@ -21,8 +21,8 @@ String orderType = pageParams.getValue("orderType", "sort_priority");
 String order = pageParams.getValue("order", "asc");
 String searchType = pageParams.getValue("sForm", "complete");
 String buttonText = pageParams.getValue("buttonText", Prop.getInstance(request).getText("components.search.search") );
-String inputText = pageParams.getValue("inputText", Prop.getInstance(request).getText("components.search.title") );
-String normalInputText = inputText;
+String inputText = "";
+String placeholder = pageParams.getValue("inputText", Prop.getInstance(request).getText("components.search.title") );
 
 //vycistenie requestu, inak ak by stranka pre vyhladavanie mala nastavene hodnoty, pouzili by sa (naprp. perex)
 for (String name : SearchTools.getCheckInputParams())
@@ -85,10 +85,10 @@ if (searchType != null)
 <form class="smallSearchForm" action="<%=url%>" method="get">
 		<p>
 			<% if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) { %><input type="hidden" name="docid" value="<%=resultsDocId%>" /><% } %>
-			<iwcm:autocomplete url='<%="/components/search/ac.jsp?lang="+lng%>' class="smallSearchInput" id="" name="words"
-			value="<%=ResponseUtils.filter(inputText) %>" id="searchWords" size="25" onOptionSelect="search"></iwcm:autocomplete>
-
+			<iwcm:autocomplete url='<%="/components/search/ac.jsp?lang="+lng%>' class="smallSearchInput" name="words"
+			value="<%=ResponseUtils.filter(inputText) %>" placeholder="<%=ResponseUtils.filter(placeholder) %>" id="searchWords" size="25" onOptionSelect="search"></iwcm:autocomplete>
 			<input class="smallSearchSubmit" type="submit" value="<%=buttonText %>" />
+			<%=CSRF.getCsrfTokenInputFiled(request.getSession(), false)%>
 		</p>
 	</form>
 
@@ -100,24 +100,12 @@ if (searchType != null)
 		$(".smallSearchForm").submit();
 	}
 	$(document).ready(function(){
-		var searchText = '<%=inputText%>'
-		var defaultText = '<%=normalInputText%>'
-
     	$("#searchWords").focus(function () {
-        	var text = $(this).val();
-        	if(text == defaultText){
-            	$(this).val("");
-        	}else{
-            	$(this).val(text);
-        	}
-    	});
-    	$("#searchWords").blur(function () {
-        	var text = $(this).val();
-        	if(text == ""){
-            	$(this).val('<%=normalInputText%>');
-        	}else{
-            	$(this).val(text);
-        	}
+			<%
+				//nechceme token v URL vysledkov vyhladavania, je tu kvoli hlaseniu pentestov a false positive
+			%>
+			var form = this.form;
+			setTimeout( function() {	$(form.elements["__token"]).remove(); }, 1000 );
     	});
 	});
 	//]]>
@@ -224,7 +212,7 @@ if (searchType != null)
 	<logic:present name="crossHourlyLimit">
 		<p>
 			<strong>
-				<iwcm:text key="components.search.cross_hourly_limit" param1="<%=String.valueOf(request.getAttribute("wait")) %>"/>
+				<iwcm:text key="components.search.cross_hourly_limit" param1='<%=String.valueOf(request.getAttribute("wait")) %>'/>
 			</strong>
 		</p>
 	</logic:present>
@@ -232,7 +220,7 @@ if (searchType != null)
 	<logic:present name="crossTimeout">
 		<p>
 			<strong>
-				<iwcm:text key="components.search.cross_timeout" param1="<%=String.valueOf(Constants.getInt("spamProtectionTimeout-search")) %>"/>
+				<iwcm:text key="components.search.cross_timeout" param1='<%=String.valueOf(Constants.getInt("spamProtectionTimeout-search")) %>'/>
 			</strong>
 		</p>
 	</logic:present>

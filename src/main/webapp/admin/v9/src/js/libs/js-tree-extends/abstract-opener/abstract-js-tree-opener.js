@@ -415,8 +415,8 @@ export default class AbstractJsTreeOpener {
                 return;
             }
 
-            //console.log("intervalCount=", intervalCount, "processing=", datatableWrapperEl.find("div.dataTables_processing:visible").length);
-            if (datatableWrapperEl.find("div.dataTables_processing:visible").length>0) {
+            //console.log("intervalCount=", intervalCount, "processing=", datatableWrapperEl.find("div.dt-processing:visible").length);
+            if (datatableWrapperEl.find("div.dt-processing:visible").length>0) {
                 //je zobrazene processing, nemozeme pokracovat, cakame (interval bezi)
                 processingHiddenCount = 0;
                 return;
@@ -442,7 +442,7 @@ export default class AbstractJsTreeOpener {
      * @param {number} docId
      */
     wjEditFetchHistory(docId) {
-        var datatableUrl = this.dataTable.ajax.url();
+        var datatableUrl = this.dataTable.getAjaxUrl();
         var datatableUrlBeforeLoad = datatableUrl;
 
         //get historyId parameter from URL
@@ -453,9 +453,9 @@ export default class AbstractJsTreeOpener {
             //console.log("mam historyId=", historyId);
             datatableUrlBeforeLoad = window.WJ.urlAddParam(datatableUrl, "historyId", historyId);
 
-            this.dataTable.ajax.url(datatableUrlBeforeLoad);
+            this.dataTable.setAjaxUrl(datatableUrlBeforeLoad);
             this.dataTable.wjEditFetch($('.datatableInit tr[id=' + docId + ']'));
-            this.dataTable.ajax.url(datatableUrl);
+            this.dataTable.setAjaxUrl(datatableUrl);
 
             //remove historyId from URL parameter
             Tools.updateUrlQuery("docid", docId, ["historyid", "docid"]);
@@ -570,7 +570,7 @@ export default class AbstractJsTreeOpener {
                     //console.log("Setting input field");
                     setTimeout(() => {
                         //self.dataTable.column(0).search(""+id).draw();
-                        var $el = $("#" + self.dataTable.DATA.id + "_wrapper .dataTables_scrollHeadInner .filter-input-id");
+                        var $el = $("#" + self.dataTable.DATA.id + "_wrapper .dt-scroll-headInner .filter-input-id");
                         $el.val(""+id);
                         $el.parent().find("button.filtrujem").trigger("click");
                     }, 100);

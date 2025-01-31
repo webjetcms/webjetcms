@@ -138,8 +138,14 @@
             changeReservationDate();
         }
 
+        var reservationSubmitTimeout = null;
         function changeReservationDate() {
-            window.location.href = urlUpdateParam(window.location.href, "reservation-date", reservationDate.val());
+            if (reservationSubmitTimeout!=null) clearTimeout(reservationSubmitTimeout);
+            reservationSubmitTimeout = setTimeout(function() {
+                var newDate = reservationDate.val();
+                var newUrl = urlUpdateParam(window.location.href, "reservation-date", newDate);
+                window.location.href = newUrl;
+            }, 300);
         }
 
         let getReservationPriceTimer;

@@ -29,7 +29,7 @@
 
     window.getSearchEnginesDetails = function (order) {
         let dayDate = ChartTools.getDateRange(null);
-        let queryName = searchEnginesQueryDataTable.DATA.json[order - 1]['queryName']
+        let queryName = searchEnginesQueryDataTable.DATA.json.data[order - 1]['queryName']
         window.location.href="/apps/stat/admin/search-engines-details?queryName=" +  encodeURIComponent(queryName) + "&dayDate=" + (searchEnginesQueryDataTable.DATA.columns[1].searchVal);
     }
 
@@ -96,15 +96,15 @@
             updateTablesAndCharts("dayDate");
         });
 
-        $("#rootDir").on("change", function() { 
+        $("#rootDir").on("change", function() {
             updateTablesAndCharts("rootDir");
         });
 
-        $("#searchEngineSelect").on("change", function() { 
+        $("#searchEngineSelect").on("change", function() {
             updateTablesAndCharts("searchEngineSelect");
         });
 
-        $("#webPageSelect").on("change", function() { 
+        $("#webPageSelect").on("change", function() {
             updateTablesAndCharts("webPageSelect");
         });
 
@@ -114,7 +114,7 @@
                     barChartQueries = new ChartTools.BarChartForm("queryName", "queryCount", '[[#{stat.graph.searchQueriesBars}]]', "searchEngines-barQueries", result['content']);
                     ChartTools.createAmchart(barChartQueries);
 
-                    let pieChartData = searchEnginesDataTable.DATA.json;
+                    let pieChartData = searchEnginesDataTable.DATA.json.data;
                     pieChartEngines = new ChartTools.PieChartForm("accesCount", "serverName", '[[#{stat_searchengines.searchEnginesCount}]]', "searchEngines-pieEngines", pieChartData);
                     ChartTools.createAmchart(pieChartEngines);
 
@@ -146,7 +146,7 @@
 
             //Search engine section should not be influenced by webPageSelect and searchEngineSelect
             if(refreshType != "webPageSelect" && refreshType != "searchEngineSelect") {
-                pieChartEngines.chartData = searchEnginesDataTable.DATA.json;
+                pieChartEngines.chartData = searchEnginesDataTable.DATA.json.data;
                 ChartTools.updateChart(pieChartEngines);
             }
             WJ.hideLoader();
@@ -156,16 +156,16 @@
 
         function reloadSearchEngineTable() {
             //set table filter params
-            searchEnginesDataTable.ajax.url(WJ.urlUpdateParam(searchEnginesUrl, "searchRootDir", $('#rootDir').val()));
+            searchEnginesDataTable.setAjaxUrl(WJ.urlUpdateParam(searchEnginesUrl, "searchRootDir", $('#rootDir').val()));
             //reload tables values
             searchEnginesDataTable.ajax.reload();
         }
 
         function reloadQueryTable() {
             //set table filter params
-            searchEnginesQueryDataTable.ajax.url(WJ.urlUpdateParam(searchEnginesQueryUrl, "searchRootDir", $('#rootDir').val()));
-            searchEnginesQueryDataTable.ajax.url(WJ.urlUpdateParam(searchEnginesQueryDataTable.ajax.url(), "searchEngine", $('#searchEngineSelect').val()));
-            searchEnginesQueryDataTable.ajax.url(WJ.urlUpdateParam(searchEnginesQueryDataTable.ajax.url(), "searchWebPage", $('#webPageSelect').val()));
+            searchEnginesQueryDataTable.setAjaxUrl(WJ.urlUpdateParam(searchEnginesQueryUrl, "searchRootDir", $('#rootDir').val()));
+            searchEnginesQueryDataTable.setAjaxUrl(WJ.urlUpdateParam(searchEnginesQueryDataTable.getAjaxUrl(), "searchEngine", $('#searchEngineSelect').val()));
+            searchEnginesQueryDataTable.setAjaxUrl(WJ.urlUpdateParam(searchEnginesQueryDataTable.getAjaxUrl(), "searchWebPage", $('#webPageSelect').val()));
             //reload tables values
             searchEnginesQueryDataTable.ajax.reload();
         }

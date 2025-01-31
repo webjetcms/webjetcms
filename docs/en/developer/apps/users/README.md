@@ -10,7 +10,7 @@ The Rights tab contains a tree structure in jstree showing the individual rights
 
 The first level is represented by the same sections as in the menu, the second by the individual modules and the third by the rights within the modules (values `leftSubmenuXItemKey` v `modinfo.properties`).
 
-Specific is the generation of CSS classes `permgroup` a `permgroup-ID `by rights group, which displays coloured circles next to each right contained in the rights group.
+Specific is the generation of CSS classes `permgroup` a `permgroup-ID ` by rights group, which displays coloured circles next to each right contained in the rights group.
 
 If the 3rd level in the tree structure is to be displayed (the module contains sub rights), the item at the 2nd level is modified - a suffix is added to its ID `-leaf` to make the item unique and at the same time it is added with the same name to the 3rd level of the menu.
 
@@ -30,6 +30,6 @@ In the variable `niceColors` is a list of circle colors (to display the same col
 
 First, the list of rights groups is scrolled through by calling `$(".DTE_Field_Name_editorFields\\.permGroups input").each(function(index)`. The group ID is obtained from the input field and the assigned `label` element of her name. The first letter of the group name is displayed in circles for better clarity. At the same time, a CSS stylesheet definition is generated according to the ID of the rights group, which is then inserted into the `head` element.
 
-After getting the list of rights groups, circles are added to each LI element of jsTree according to CSS styles by calling `$("#DTE_Field_editorFields-enabledItems li.permgroup").each(function(index)`. CSS styles are added for each element of the tree structure on the backend in `MenuService.getAllPermissions()`where each LI element contains CSS classes `permgroup permgroup-ID`. Transitioning by CSS class `permgroup` HTML code is generated inside the LI element with colored circles of rights groups.
+After getting the list of rights groups, circles are added to each LI element of jsTree according to CSS styles by calling `$("#DTE_Field_editorFields-enabledItems li.permgroup").each(function(index)`. CSS styles are added for each element of the tree structure on the backend in `MenuService.getAllPermissions()` where each LI element contains CSS classes `permgroup permgroup-ID`. Transitioning by CSS class `permgroup` HTML code is generated inside the LI element with colored circles of rights groups.
 
 Clicking on the rights group selection box is handled in `$(".DTE_Field_Name_editorFields\\.permGroups").on("click", "input", function() {` and causes the CSS class to be added `permgroup-ID-checked` at `body` element. This in turn causes the circle representing the rights group to be fully coloured.

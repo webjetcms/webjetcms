@@ -37,13 +37,13 @@ block content
                 tabs: tabs,
                 order: order,
                 idAutoOpener: false,
-                onXhr: function (a1, a2, a3, a4) {
-                    if (!a4.options.currentNode) {
+                onXhr: function ( TABLE, e, settings, json, xhr ){
+                    if (!json.options.currentNode) {
                         return;
                     }
 
-                    let currentNode = a4.options.currentNode,
-                        nodes = a4.options.nodes;
+                    let currentNode = json.options.currentNode,
+                        nodes = json.options.nodes;
 
                     createNodeSelect(currentNode[0], nodes);
                 }
@@ -87,7 +87,7 @@ block content
                 }
 
                 var newUrl = $(this).val() !== '' ? WJ.urlAddParam(url, "node", $(this).val()) : url;
-                table.ajax.url(newUrl);
+                table.setAjaxUrl(newUrl);
                 table.ajax.reload();
             });
         }

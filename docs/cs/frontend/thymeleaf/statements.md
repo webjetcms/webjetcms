@@ -56,7 +56,7 @@ kromě toho je možné použít také [Doslovné záměny](https://www.thymeleaf
 <span data-th-text="|Welcome to our application, ${docDetails.title}!|">
 ```
 
-**Varování:** pokud vyhodí chybu jako: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. Jedná se o speciální značku pro [předprocesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) a je třeba jej escapovat jako \\\\\_, příklad:
+!>**Varování:** pokud vyhodí chybu jako: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. Jedná se o speciální značku pro [předprocesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) a je třeba jej escapovat jako \\\\\_, příklad:
 
 ```html
 <div data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ? 'md-large-menu\\_\\_item--open md-large-menu\\_\\_item--active' : 'md-large-menu__item'">

@@ -35,7 +35,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     switch (confLng) {
         case 'sk':
@@ -52,7 +52,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     }
 
     I.click("button.btn.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.forceClick({ css: '#dtRecursiveSwitch' });
     I.moveCursorTo('#dtRecursiveSwitch');
@@ -62,7 +62,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     Document.screenshot("/redactor/datatables/dt-colvis.png");
     switch (confLng) {
@@ -79,16 +79,16 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
             throw new Error(`Unsupported language code: ${confLng}`);
     }
 
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     Document.screenshot("/redactor/datatables/dt-pagelength.png");
 
-    I.click("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu button.dt-close-modal")
+    I.click("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu] button.dt-close-modal")
 
     I.say("specialne ikony");
     I.click("button.buttons-select-all");
@@ -119,7 +119,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.say("stavove ikony aj s vyhladavanim");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
-    I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-editorFields\\.statusIcons button.btn-outline-secondary" });
+    I.click({ css: "div.dt-scroll-headInner div.dt-filter-editorFields\\.statusIcons button.btn-outline-secondary" });
     Document.screenshot("/redactor/webpages/status-icons.png");
 });
 
@@ -203,6 +203,14 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
     I.amOnPage("/admin/v9/webpages/perex/");
 
     Document.screenshot("/redactor/webpages/perex-groups.png", 1280, 500);
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("perexDataTable");
+    Document.screenshotElement("div.DTE_Action_Create", "/redactor/webpages/perex-groups_tab-basic.png");
+    I.clickCss("#pills-dt-perexDataTable-translates-tab");
+    Document.screenshotElement("div.DTE_Action_Create", "/redactor/webpages/perex-groups_tab-translates.png");
+
+    I.clickCss("#pills-dt-perexDataTable-fields-tab");
+    Document.screenshotElement("div.DTE_Action_Create", "/redactor/webpages/perex-fields_tab.png");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.jstreeNavigate(["Jet portal 4", "Kontakt"]);
@@ -212,6 +220,9 @@ Scenario('perex-groups', ({ I, DTE, Document }) => {
     I.wait(1);
     I.scrollTo("#datatableInit_modal .DTE_Field_Name_perexGroups", 5, 5);
     Document.screenshot("/redactor/webpages/webpage-perex-groups.png");
+
+    I.amOnPage("/zo-sveta-financii/?NO_WJTOOLBAR=true");
+    Document.screenshot("/redactor/webpages/perex-groups-news.png");
 });
 
 Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
@@ -294,18 +305,21 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldM");
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldM", "/frontend/webpages/customfields/webpages-uuid.png");
 
+    I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldN");
+    Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldN", "/frontend/webpages/customfields/webpages-color.png");
+
     I.amOnPage("/admin/v9/settings/translation-keys/");
     DT.waitForLoader();
     I.click("button.buttons-settings");
     I.click("button.buttons-page-length");
-    I.click("50", "div.dropdown-menu.dt-dropdown-menu");
-    I.click("div.dropdown-menu.dt-dropdown-menu button.dt-close-modal");
-    DT.filter("key", "temp-3");
+    I.click("50", "div.dropdown-menu.dt-button-collection");
+    I.click("div.dropdown-menu.dt-button-collection button.dt-close-modal");
+    DT.filterContains("key", "temp-3");
     Document.screenshot("/frontend/webpages/customfields/translations.png");
 
 
     I.amOnPage("/admin/v9/settings/translation-keys/");
-    DT.filter("key", "button.cancel");
+    DT.filterContains("key", "button.cancel");
     I.click("button.cancel");
     DTE.waitForEditor();
 
@@ -339,62 +353,57 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
             Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
             I.amOnPage("/apps/qa/admin/");
             Document.screenshot("/redactor/apps/qa/admin.png");
-            DT.filter("question", "Koľko nôh ma pavúk ?");
+            DT.filterContains("question", "Koľko nôh ma pavúk ?");
             I.click("Koľko nôh ma pavúk ?");
             DTE.waitForEditor("qaDataTable");
             I.click("#pills-dt-qaDataTable-answer-tab");
             Document.screenshot("/redactor/apps/qa/admin-edit.png");
             break;
-        
+
         case "en":
             I.amOnPage("/apps/otazky-odpovede/questions-answers.html?language=en");
             Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
             I.amOnPage("/apps/qa/admin/");
             Document.screenshot("/redactor/apps/qa/admin.png");
-            DT.filter("question", "How many legs does a spider have ?");
+            DT.filterContains("question", "How many legs does a spider have ?");
             I.click("How many legs does a spider have ?");
             DTE.waitForEditor("qaDataTable");
             I.click("#pills-dt-qaDataTable-answer-tab");
             Document.screenshot("/redactor/apps/qa/admin-edit.png");
             break;
-    
+
         case "cs":
             I.amOnPage("/apps/otazky-odpovedi/otazky-odpovedi-2.html");
             Document.screenshotElement("article div.container", "/redactor/apps/qa/webform.png", 1000, 1000);
             I.amOnPage("/apps/qa/admin/");
             Document.screenshot("/redactor/apps/qa/admin.png");
-            DT.filter("question", "Kolik nohou má pavouk");
+            DT.filterContains("question", "Kolik nohou má pavouk");
             I.click("Kolik nohou má pavouk ?");
             DTE.waitForEditor("qaDataTable");
             I.click("#pills-dt-qaDataTable-answer-tab");
             Document.screenshot("/redactor/apps/qa/admin-edit.png");
             break;
-    
+
         default:
             throw new Error("Unknown language: " + I.getConfLng());
-    }    
+    }
 });
 
-Scenario('logon', ({ I, Document }) => {
+Scenario('logon', ({ I, Document, i18n }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
 
-    let confLng = I.getConfLng();
-    //Select language if not default
-    if ("sk" !== confLng) {
-        switch (confLng) {
-            case 'en':
-                I.selectOption("language", "English");
-                break;
-            case 'cs':
-                I.selectOption("language", "Česky");
-                break;
-            default:
-                throw new Error(`Unsupported language code: ${confLng}`);
-        }
-    }
-
+    i18n.selectOption("language", "English");
     I.fillField("#password", "12345");
     Document.screenshot("/redactor/admin/logon.png", 1080, 685);
+    Document.screenshotElement('.btn.lost-password', '/admin-recover-password-btn.png');
+
+    I.clickCss('.btn.lost-password');
+    Document.screenshot("/redactor/admin/password-recovery/admin-recovery-page.png");
+    Document.screenshotElement("#register-submit-btn", "/redactor/admin/password-recovery/admin-send-btn.png");
+
+    I.clickCss("#register-submit-btn");
+    i18n.selectOption("language", "English");
+    Document.screenshot('/redactor/admin/password-recovery/admin-recovery-page-notif.png');
 
     I.fillField("#username", "testerslabeheslo");
     I.fillField("#password", "tentousermavelmislabeheslo");
@@ -403,11 +412,22 @@ Scenario('logon', ({ I, Document }) => {
     Document.screenshot("/redactor/admin/logon-weak-password.png", 1080, 685);
 });
 
+Scenario('customer zone', ({ I, Document }) => {
+    I.logout();
+    I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+    Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-1.png');
+    I.click('Zabudli ste vaše heslo?');
+    Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-2.png');
+    I.clickCss('#register-submit-btn');
+    Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-notif.png');
+});
+
 Scenario('layout-menu', ({ I, Document }) => {
     I.amOnPage('/admin/v9/');
 
     Document.screenshot("/redactor/admin/welcome.png", 1360, 685);
     Document.screenshotElement("div.ly-header", "/redactor/admin/header.png");
+    Document.screenshotElement(".js-search-toggler", "/redactor/admin/icon-search.png");
 
     Document.screenshotElement("a.js-logout-toggler", "/redactor/admin/icon-logoff.png");
 
@@ -543,12 +563,21 @@ Scenario('jstree-settings', ({ I, DTE, Document }) => {
 
     DTE.cancel();
 
+    I.jstreeReset();
+});
 
-    I.click("button.buttons-jstree-settings");
-    I.waitForElement("#jstreeSettingsModal");
-    I.uncheckOption("#jstree-settings-showid");
-    I.uncheckOption("#jstree-settings-showorder");
-    I.uncheckOption("#jstree-settings-showpages");
+Scenario('jstree-search', ({ I, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+
+    Document.screenshotElement("div.tree-col", "/redactor/webpages/jstree-search-form.png", 1360, 400, '#jstreeSearchTable');
+    Document.screenshotElement("#tree-folder-search-button", "/redactor/webpages/jstree-search-button.png", 1360, 400);
+    Document.screenshotElement("#tree-folder-search-clear-button", "/redactor/webpages/jstree-search-cancel-button.png", 1360, 400);
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
+    I.fillField("#tree-folder-search-input", "blog");
+    I.clickCss("#tree-folder-search-button");
+
+    Document.screenshotElement("div.tree-col", "/redactor/webpages/jstree-search-result.png", 1360, 400);
 });
 
 Scenario('formsimple', ({ I, DTE, Document }) => {

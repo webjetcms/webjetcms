@@ -8,7 +8,7 @@ You can get the source code of the template in [WebJET CMS github repository](ht
 
 ## Use in WebJET CMS
 
-The use is the same as for [Bare template](../template-bare/README.md#použitie-vo-webjet-cms), the difference is of course in the names - replace everywhere `bare` For `creative`. The template folder is `src/main/webapp/templates/creative/bootstrap-creative/`, the paths used in the template and template group start at `/templates/creative/bootstrap-creative/`.
+The use is the same as for [Bare template](../template-bare/README.md#use-in-webjet-cms), the difference is of course in the names - replace everywhere `bare` For `creative`. The template folder is `src/main/webapp/templates/creative/bootstrap-creative/`, the paths used in the template and template group start at `/templates/creative/bootstrap-creative/`.
 
 ### Template group
 
@@ -43,4 +43,4 @@ You can set an ID to a block in the page editor (which you can then link to in t
 
 ## For the web designer
 
-Follow the instructions for the Bare template, in Creative is additionally used [Font Awesome](https://fontawesome.com). Copying its fonts is set in `src/main/webapp/templates/creative/bootstrap-creative/node_scripts/render-assets.js``src/main/webapp/templates/creative/bootstrap-creative/src/scss/ninja.scss`.
+Follow the instructions for the Bare template, in Creative is additionally used [Font Awesome](https://fontawesome.com). Copying its fonts is set in `src/main/webapp/templates/creative/bootstrap-creative/node_scripts/render-assets.js` and imported into CSS from the NPM module in `src/main/webapp/templates/creative/bootstrap-creative/src/scss/ninja.scss`.

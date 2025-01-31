@@ -159,7 +159,7 @@ let columns = [
 
 ## Udalosti
 
-Okrem [štandardných eventov](https://editor.datatables.net/reference/event/) z Datatabuľky sú vo WebJETe pridané nasledovné udalosti:
+Okrem [štandardných udalostí](https://editor.datatables.net/reference/event/) z Datatabuľky sú vo WebJETe pridané nasledovné udalosti:
 
 - ```WJ.DTE.open``` - vyvolaný pri otvorení okna editora, v ```details``` objekte prenesie ```dte``` objekt editora.
 - ```WJ.DTE.opened``` - vyvolaný po otvorení okna (okno je už zobrazené), v ```details``` objekte prenesie ```dte``` objekt editora, jeho ```id``` a typ akcie (```edit,create,remove```) v ```action```.
@@ -260,7 +260,7 @@ filePropertiesTable = WJ.DataTable({
 
 ### Dynamická zmena hodnôt vo výberovom poli
 
-Niekedy je potrebné dynamicky meniť hodnoty v select boxe na základe zmien v predchádzajúcich poliach. Príklad je v súbore [temps-list.pug](../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) kde je riešenie na:
+Niekedy je potrebné dynamicky meniť hodnoty v select boxe na základe zmien v predchádzajúcich poliach. Príklad je v súbore [temps-list.pug](../../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) kde je riešenie na:
 
 - zmena hodnôt select boxu pri načítaní editora
 - zmena hodnôt pri zmene predchádzajúceho poľa
@@ -327,7 +327,7 @@ window.domReady.add(function () {
 });
 ```
 
-REST služba je pridaná do existujúcej triedy [TemplatesController](../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
+REST služba je pridaná do existujúcej triedy [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
 
 ```java
 @RequestMapping("/forwards/")

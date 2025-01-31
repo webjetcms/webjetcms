@@ -7,8 +7,8 @@ Before(({ I, login }) => {
 Scenario('mobilna-verzia', ({ I , DT, Document}) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
 
-    DT.filter("title", "zob");
-    DT.filter("authorName", "admin");
+    DT.filterContains("title", "zob");
+    DT.filterContains("authorName", "admin");
 
     Document.screenshot("/_media/changelog/2021q3/mobile-datatable-filter.png", 812, 375);
 });

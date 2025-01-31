@@ -4,17 +4,15 @@ const DT = require("../../pages/DT");
 const DTE = require("../../pages/DTE");
 
 
-var edit_button_folder = (locate('.col-md-4.tree-col').find('button.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
-
 Before(({ login }) => {
      login('admin');
 });
 
 // otvorenie foldra v galerii
-function modalWindow(I, folder) {
+function modalWindow(I, DT, folder) {
      I.jstreeClick(folder);
      DT.waitForLoader();
-     I.click(edit_button_folder);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("galleryDimensionDatatable");
      I.seeInField('#DTE_Field_name', folder);
      I.click('#pills-dt-galleryDimensionDatatable-sizes-tab'); // tab rozmery
@@ -108,12 +106,12 @@ async function regenerateWatermark(I, watermark) {
      I.waitForVisible('#SomStromcek', 10);
 }
 
-Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I }) => {
+Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I, DT }) => {
      I.amOnPage("/admin/v9/apps/gallery");
      DT.waitForLoader();
 
      // pregeneruj obrazky v priecinku watermark
-     modalWindow(I, 'watermark');
+     modalWindow(I, DT, 'watermark');
 
      // premenne - velkosti maleho aj velkeho obrazka
      const widthSmallImg = await I.grabValueFrom('#DTE_Field_imageWidth');
@@ -128,7 +126,7 @@ Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I }) => {
 
      // over zmeny v hlavnom priecinku (rozery a vodotlac)
      I.say('Over zmeny v hlavnom priecinku');
-     modalWindow(I, 'watermark');
+     modalWindow(I, DT, 'watermark');
 
      I.waitForElement(locate('.filter-option-inner-inner').withText('Orezať na mieru'));
      I.seeInField('#DTE_Field_imageWidth', Number(widthSmallImg) + 1);
@@ -140,7 +138,7 @@ Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I }) => {
 
      // over nastavenie 1. podpriecinka (rozery a vodotlac)
      I.say('Over zmeny v 1. podpriecinku');
-     modalWindow(I, 'subfolder1');
+     modalWindow(I, DT, 'subfolder1');
 
      I.waitForElement(locate('.filter-option-inner-inner').withText('Orezať na mieru'));
      I.seeInField('#DTE_Field_imageWidth', Number(widthSmallImg) + 1);
@@ -152,7 +150,7 @@ Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I }) => {
 
      // over nastavenie 2. podpriecinka (rozery a vodotlac)
      I.say('Over zmeny v 2. podpriecinku');
-     modalWindow(I, 'subfolder2');
+     modalWindow(I, DT, 'subfolder2');
 
      I.waitForElement(locate('.filter-option-inner-inner').withText('Orezať na mieru'));
      I.seeInField('#DTE_Field_imageWidth', Number(widthSmallImg) + 1);
@@ -163,7 +161,7 @@ Scenario('Galeria - pregenerovanie obrazkov a vodotlac', async ({ I }) => {
      await regenerateWatermark(I, 'check');
 
      // vrat na povodne nastavenia cez hlavny priecinok a daj aplikovat na vsetky podpriecinky
-     modalWindow(I, 'watermark');
+     modalWindow(I, DT, 'watermark');
 
      await regenerateDimensions(I, 'down');
 

@@ -39,7 +39,7 @@ Scenario('test user tabu a linky na usera', ({ I, DT, DTE }) => {
 
      I.amOnPage("/admin/v9/users/user-groups/");
      DT.waitForLoader();
-     DT.filter("userGroupName", "VIP Klienti");
+     DT.filterContains("userGroupName", "VIP Klienti");
 
      I.click("VIP Klienti");
      DTE.waitForEditor('userGroupsDataTable');
@@ -68,7 +68,7 @@ Scenario('test karty adresare', ({ I, DT, DTE }) => {
      I.dontSee("test23-newsletter", ".DTE_Field_Name_groupDetailsList");
      I.dontSee("Jet portal 4", ".DTE_Field_Name_groupDetailsList");
 
-     DT.filter("groupName", "News");
+     DT.filterContains("groupName", "News");
      I.see("Newsletter", ".DTE_Field_Name_groupDetailsList");
      I.dontSee("Zaheslovaný", ".DTE_Field_Name_groupDetailsList");
 });
@@ -86,7 +86,7 @@ Scenario('test karty web stranky', ({ I, DT, DTE }) => {
      I.see("Produktová stránka - B verzia", ".DTE_Field_Name_docDetailsList");
      I.dontSee("Jet portal 4 - testovacia stranka", ".DTE_Field_Name_docDetailsList");
 
-     DT.filter("title", "Test");
+     DT.filterContains("title", "Test");
      I.see("Testovaci newsletter", ".DTE_Field_Name_docDetailsList");
      I.dontSee("Produktová stránka - B verzia", ".DTE_Field_Name_docDetailsList");
 });
@@ -104,7 +104,7 @@ Scenario('test karty web pouzivatelia', ({ I, DT, DTE }) => {
      I.see("prihlasovaciemeno", ".DTE_Field_Name_usersList");
      I.dontSee("partner", ".DTE_Field_Name_usersList");
 
-     DT.filter("login", "VIP");
+     DT.filterContains("login", "VIP");
      I.see("vipklient@balat.sk", ".DTE_Field_Name_usersList");
      I.dontSee("prihlasovaciemeno", ".DTE_Field_Name_usersList");
 });

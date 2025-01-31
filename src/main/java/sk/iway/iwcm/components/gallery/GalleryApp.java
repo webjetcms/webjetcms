@@ -128,6 +128,7 @@ public class GalleryApp extends WebjetComponentAbstract {
                 dir = uploadSubdir;
             }
         }
+        style = Constants.getString("galleryDefaultStyle");
     }
 
     @Override

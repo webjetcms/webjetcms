@@ -7,6 +7,7 @@ import org.json.JSONObject;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.common.FileBrowserTools;
+import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.elfinder.IwcmFsVolume;
 import sk.iway.iwcm.users.UsersDB;
@@ -46,6 +47,9 @@ public class RenameCommandExecutor extends AbstractJsonCommandExecutor
 
 			json.put("added", new Object[] { getFsItemInfo(request, dst) });
 			json.put("removed", new String[] { target });
+
+			//update gallery entity
+			GalleryService.createOrUpdateGalleryEntity(fsi, dst);
 		}
 		else
 		{

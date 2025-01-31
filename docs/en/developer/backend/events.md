@@ -2,10 +2,10 @@
 
 WebJET uses Spring to publish and listen to events. A basic description can be found at [baeldung](https://www.baeldung.com/spring-events). Both synchronous and asynchronous events are supported.
 
-Events are typically implemented generically using the class `WebjetEvent`which is a universal carrier of events. It contains the following attributes:
+Events are typically implemented generically using the class `WebjetEvent` which is a universal carrier of events. It contains the following attributes:
 - `source` - the source object of the event (e.g. `GroupDetails`, `DocDetails`)
-- `eventType` - [type of event](#typy-udalostí)
-- `clazz` - the name of the class also with the package for [event filtering](#počúvanie-udalosti) while listening
+- `eventType` - [type of event](#event-types)
+- `clazz` - the name of the class also with the package for [event filtering](#listening-event) while listening
 
 ## Types of events
 
@@ -20,11 +20,11 @@ For standard operations, event types are implemented in `enum` Classroom `Webjet
 ## Current published events
 
 Currently WebJET publishes the following events:
-- Web page - saving a web page - an object is published `DocDetails` before and after saving in the page editor when calling `EditorFacade.save`, condition: `#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`. You can check whether you are publishing a page or just saving a working version in the attribute `doc.getEditorFields().isRequestPublish()`which returns the value `false` if it is a working version of the page.
+- Web page - saving a web page - an object is published `DocDetails` before and after saving in the page editor when calling `EditorFacade.save`, condition: `#event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`. You can check whether you are publishing a page or just saving a working version in the attribute `doc.getEditorFields().isRequestPublish()` which returns the value `false` if it is a working version of the page.
 - Web page - delete web page - object is published `DocDetails` before and after deletion when calling `DeleteServlet.deleteDoc`, condition: `"event.clazz eq 'sk.iway.iwcm.doc.DocDetails'`.
-- Web pages - saving and deleting the directory - the object is published `GroupDetails` before and after saving when calling `GroupsDB.setGroup` a `GroupsDB.deleteGroup`which should be used for standard web page directory operations. Prerequisite: `#event.clazz eq 'sk.iway.iwcm.doc.GroupDetails'`.
+- Web pages - saving and deleting the directory - the object is published `GroupDetails` before and after saving when calling `GroupsDB.setGroup` a `GroupsDB.deleteGroup` which should be used for standard web page directory operations. Prerequisite: `#event.clazz eq 'sk.iway.iwcm.doc.GroupDetails'`.
 - Web pages - displaying the web page on the frontend - the object is published `ShowDocBean` after obtaining `DocDetails` object (event `ON_START`) and an event is published before routing to the JSP template `ON_END`. At `ON_START` attribute can be set `forceShowDoc` at `DocDetails` the object to be used to display the page, the attribute `doc` is empty for now. It is only set `docId`. In an event `ON_END` is in the attribute `doc` Retrieved from `DocDetails` object. Condition: `#event.clazz eq 'sk.iway.iwcm.doc.ShowDocBean'`.
-- Web page - when the page is published in time - the object is published `DocumentPublishEvent`which contains `DocDetails` published web page and attribute `oldVirtualPath` with information about the original URL of the page (to detect if it has changed during publishing). Prerequisite `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, event `ON_PUBLISH`.
+- Web page - when the page is published in time - the object is published `DocumentPublishEvent` which contains `DocDetails` published web page and attribute `oldVirtualPath` with information about the original URL of the page (to detect if it has changed during publishing). Prerequisite `#event.clazz eq 'sk.iway.iwcm.system.spring.events.DocumentPublishEvent'`, event `ON_PUBLISH`.
 - Configuration - create and change a configuration variable - an object is published `ConfDetails` after saving the value via the user interface by calling `ConfDB.setName`, condition: `#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'`.
 - Uploading a file - an object is published `File` Like `WebjetEvent<File> fileWebjetEvent = new WebjetEvent<>(tempfile, WebjetEventType.ON_XHR_FILE_UPLOAD);`, condition: `#event.clazz eq 'java.io.File'`.
 

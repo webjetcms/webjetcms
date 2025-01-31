@@ -32,6 +32,7 @@ You can add a rating page (or sta rating page) as an application or directly usi
 Contains parameters:
 - `ratingDocId` - Doc ID of the page to be evaluated.
 - `range` - The range of the rating scale.
+
 Displays the statistics of the current page rank.
 
 ![](rating-page.png)

@@ -5,11 +5,11 @@ Sample code for creating a new CRUD application in the administration.
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
+- [Sample code](#sample-code)
+  - [Pug file](#pug-file)
+  - [Spring DATA repository and JPA Entity/Bean](#spring-data-repository-and-jpa-entitabean)
+  - [Rest service](#rest-service)
 
-- [Sample code](#ukážkový-kód)
-	- [Pug file](#pug-súbor)
-	- [Spring DATA repository and JPA Entity/Bean](#spring-data-repozitár-a-jpa-entitabean)
-	- [Rest service](#rest-služba)
 <!-- /code_chunk_output -->
 
 ## Pug file

@@ -1,10 +1,17 @@
 # Information about the Facility
 
-| Method | Type | Description | | | ---------------------------------- | --------- | ------------------------ | | ${ninja.userAgent.browserName}     | *String*  | Browser name | | ${ninja.userAgent.browserVersion}  | *String*  | Browser version | | ${ninja.userAgent.browserOutdated} | *Boolean* | Outdated browser | | ${ninja.userAgent.blind}           | *Boolean* | Text version of the page | | ${ninja.userAgent.deviceType}      | *String*  | Device type | | ${ninja.userAgent.deviceOS}        | *String*  | Operating system name |
+| Method | Type | Description |
+| ---------------------------------- | --------- | ------------------------ |
+| ${ninja.userAgent.browserName}     | *String*  | Browser name |
+| ${ninja.userAgent.browserVersion}  | *String*  | Browser version |
+| ${ninja.userAgent.browserOutdated} | *Boolean* | Outdated browser |
+| ${ninja.userAgent.blind}           | *Boolean* | Text version of the page |
+| ${ninja.userAgent.deviceType}      | *String*  | Device Type |
+| ${ninja.userAgent.deviceOS}        | *String*  | Operating system name |
 
 ## Browser name *String*
 
-Browser name (always in lowercase) detected from userAgent: `msie / chrome / safari / firefox`.
+Browser name (always in lowercase) as detected from userAgent: `msie / chrome / safari / firefox`.
 
 ```java
 ${ninja.userAgent.browserName}
@@ -13,7 +20,7 @@ ${ninja.userAgent.browserName}
 Used in :ghost:<code>html-attributes.jsp</code>
 
 ```html
-<html data-browser-name="${ninja.userAgent.browserName}"></html>
+<html data-browser-name="${ninja.userAgent.browserName}" >
 ```
 
 ## Browser version *String*
@@ -27,7 +34,7 @@ ${ninja.userAgent.browserVersion}
 Used in :ghost:<code>html-attributes.jsp</code>
 
 ```html
-<html data-browser-version="${ninja.userAgent.browserVersion}"></html>
+<html data-browser-version="${ninja.userAgent.browserVersion}" >
 ```
 
 ## Outdated browser *Boolean*
@@ -117,7 +124,7 @@ ${ninja.userAgent.deviceType}
 Used in :ghost:<code>html-attributes.jsp</code>
 
 ```html
-<html data-device-type="${ninja.userAgent.deviceType}"></html>
+<html data-device-type="${ninja.userAgent.deviceType}" >
 ```
 
 ## Name of the operating system *String*
@@ -131,7 +138,7 @@ ${ninja.userAgent.deviceOS}
 Used in :ghost:<code>html-attributes.jsp</code>
 
 ```html
-<html data-device-os="${ninja.userAgent.deviceOS}"></html>
+<html data-device-os="${ninja.userAgent.deviceOS}" >
 ```
 
 ## Example of browser detection on the backend (in JSP file)

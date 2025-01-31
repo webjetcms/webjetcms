@@ -1,7 +1,5 @@
 Feature('apps.rating');
 
-var doc_add_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success"));
-
 Before(({ login }) => {
     login('admin');
 });
@@ -17,6 +15,11 @@ Scenario('rating screen', ({ I , DT, DTE, Document }) => {
         I.amOnPage("/apps/rating/rating-en.html?language=en");
         postfix = "-en";
         postfix_lng = "?language=en";
+    }
+    else{
+        I.amOnPage("/apps/rating/rating-cs.html?language=cs");
+        postfix="-cs";
+        postfix_lng="?language=cs";
     }
 
     DT.waitForLoader();

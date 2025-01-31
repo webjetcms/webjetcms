@@ -424,29 +424,41 @@ public class GroupsDB extends DB
 	 */
 	public GroupDetails getGroupByPath(String fullPath)
 	{
-		if (fullPath.endsWith("/") && fullPath.length()>1)
+		return getGroupByPathAndDomain(fullPath, null);
+	}
+
+	public GroupDetails getGroupByPathAndDomain(String fullPath, String domainName) {
+		if (fullPath.endsWith("/") && fullPath.length() > 1)
 		{
-			//odstran koncove lomitko
+			//Remove last character, slash "/"
 			fullPath = fullPath.substring(0, fullPath.length()-1);
 		}
 
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		GroupDetails firstGroup = null;
+		//Loop all groups to find match
 		for (GroupDetails group : getGroupsAll())
 		{
+			//We found match be full path
 			if (group.getFullPath().equals(fullPath))
 			{
-				if (firstGroup == null) firstGroup = group;
-				if (rb != null && Tools.isNotEmpty(rb.getDomain()) && Constants.getBoolean("multiDomainEnabled")==true) {
-					//mame presnu zhodu aj podla domenoveho mena
-					if (rb.getDomain().equals(group.getDomainName())) return group;
+				//Check if domainName is set - IF yes, we REQUIRE match
+				if(Constants.getBoolean("multiDomainEnabled") == true && Tools.isNotEmpty(domainName)) {
+					if(domainName.equals(group.getDomainName())) return group;
+				} else {
+					//We are good with only fullPath match
+					if (firstGroup == null) firstGroup = group;
+
+					//If we have better match full path AND domainName, we return it
+					if (rb != null && Tools.isNotEmpty(rb.getDomain()) && Constants.getBoolean("multiDomainEnabled")==true) {
+						//mame presnu zhodu aj podla domenoveho mena
+						if (rb.getDomain().equals(group.getDomainName())) return group;
+					}
 				}
 			}
 		}
 		return firstGroup;
 	}
-
-
 
 	/**
 	 *  Gets the group attribute of the GroupsDB object
@@ -637,13 +649,27 @@ public class GroupsDB extends DB
 	 */
 	public List<GroupDetails> getGroupsTree(int parent, boolean includeParent, boolean includeInternals, boolean onlyAvailableInMenu)
 	{
+		return getGroupsTree(parent, includeParent, includeInternals, onlyAvailableInMenu, null);
+	}
+
+	/**
+	 * Ziska stromovu strukturu adresarov
+	 * @param parent -  rodicovsky adresar
+	 * @param includeParent - ak true, vratane rodica
+	 * @param includeInternals - ak true, vratane internych adresarov
+	 * @param onlyAvailableInMenu - ak true, iba dostupne v menu
+	 * @param maxDepth - maximalna hlbka stromu
+	 * @return
+	 */
+	public List<GroupDetails> getGroupsTree(int parent, boolean includeParent, boolean includeInternals, boolean onlyAvailableInMenu, Integer maxDepth)
+	{
 		List<GroupDetails> p_groups = new ArrayList<>();
 		if (includeParent)
 		{
 			GroupDetails parentGroup = findGroup(parent);
 			if (parentGroup != null) p_groups.add(parentGroup);
 		}
-		getGroupsTree(parent, p_groups, includeInternals, onlyAvailableInMenu);
+		getGroupsTree(parent, p_groups, includeInternals, onlyAvailableInMenu, maxDepth);
 		return (p_groups);
 	}
 
@@ -678,8 +704,20 @@ public class GroupsDB extends DB
 	 */
 	public void getGroupsTree(int parent, List<GroupDetails> p_groups, boolean includeInternals, boolean onlyAvailableInMenu)
 	{
+		getGroupsTree(parent, p_groups, includeInternals, onlyAvailableInMenu, null);
+	}
+
+	/**
+	 *
+	 * @param parent
+	 * @param p_groups
+	 * @param includeInternals
+	 * @param onlyAvailableInMenu
+	 */
+	public void getGroupsTree(int parent, List<GroupDetails> p_groups, boolean includeInternals, boolean onlyAvailableInMenu, Integer maxDepth)
+	{
 		Map<Integer, List<GroupDetails>> childsTable = prepareChildsTable();
-		getGroupsTree(childsTable, parent, p_groups, includeInternals, onlyAvailableInMenu, 1);
+		getGroupsTree(childsTable, parent, p_groups, includeInternals, onlyAvailableInMenu, maxDepth, 1);
 	}
 
 	/**
@@ -711,9 +749,12 @@ public class GroupsDB extends DB
 	 * @param p_groups
 	 * @param includeInternals
 	 * @param onlyAvailableInMenu
+	 * @param maxDepth
 	 */
-	private void getGroupsTree(Map<Integer, List<GroupDetails>> childsTable, int parent, List<GroupDetails> p_groups, boolean includeInternals, boolean onlyAvailableInMenu, int iteration)
+	private void getGroupsTree(Map<Integer, List<GroupDetails>> childsTable, int parent, List<GroupDetails> p_groups, boolean includeInternals, boolean onlyAvailableInMenu, Integer maxDepth, int iteration)
 	{
+		if(maxDepth != null && (iteration > maxDepth)) return;
+
 		List<GroupDetails> childs = childsTable.get(parent);
 		if (childs == null) return;
 
@@ -738,7 +779,7 @@ public class GroupsDB extends DB
 			if (onlyAvailableInMenu && group.getMenuType()==GroupDetails.MENU_TYPE_NOSUB) continue;
 
 			//recursive call
-			getGroupsTree(childsTable, group.getGroupId(), p_groups, includeInternals, onlyAvailableInMenu, iteration);
+			getGroupsTree(childsTable, group.getGroupId(), p_groups, includeInternals, onlyAvailableInMenu, maxDepth, iteration+1);
 		}
 
 		if (system != null)
@@ -751,7 +792,7 @@ public class GroupsDB extends DB
 			else
 			{
 				//recursive call
-				getGroupsTree(childsTable, system.getGroupId(), p_groups, includeInternals, onlyAvailableInMenu, iteration);
+				getGroupsTree(childsTable, system.getGroupId(), p_groups, includeInternals, onlyAvailableInMenu, maxDepth, iteration+1);
 			}
 		}
 	}
@@ -3148,7 +3189,6 @@ public class GroupsDB extends DB
 		return getInstance().idToGroups;
 	}
 
-
 	/**
 	 * Vrati korenove adresare
 	 * @return
@@ -4149,4 +4189,23 @@ public class GroupsDB extends DB
 		return isInTrash;
 	}
 
+	/**
+	 * Expand domainId to root groups to use in SQL query WHERE root_group_l1 IN (...)
+	 * @param domainId
+	 * @return
+	 */
+	public String expandRootGroupL1(int domainId) {
+		GroupDetails rootGroup = getGroup(domainId);
+		if (rootGroup == null) return ""+domainId;
+		String domainName = rootGroup.getDomainName();
+		List<GroupDetails> rootGroups = getRootGroups();
+		StringBuilder sb = new StringBuilder();
+		for (GroupDetails group : rootGroups) {
+			if (Tools.isEmpty(domainName) || domainName.equals(group.getDomainName())) {
+				if (sb.isEmpty()==false) sb.append(",");
+				sb.append(group.getGroupId());
+			}
+		}
+		return sb.toString();
+	}
 }

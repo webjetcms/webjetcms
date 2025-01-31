@@ -1,9 +1,6 @@
 Feature('webpages.webpage-select-options');
 
-var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber;
-var add_webpage = (locate('datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var edit_webpage = (locate('datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
-var delete_webpage = (locate('datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider'));
+var folder_name, randomNumber;
 
 Before(({ I, login }) => {
      login('admin');
@@ -11,9 +8,6 @@ Before(({ I, login }) => {
           randomNumber = I.getRandomText();
           I.say("randomNumber=" + randomNumber);
           folder_name = 'name-autotest-' + randomNumber;
-          subfolder_one = 'subfolder_one-autotest-' + randomNumber;
-          subfolder_two = 'subfolder_two-autotest-' + randomNumber;
-          auto_webPage = 'webPage-autotest-' + randomNumber;
      }
 });
 
@@ -27,7 +21,7 @@ Scenario('Priprav strukturu', ({ I }) => {
      I.createNewWebPage(randomNumber);
 });
 
-Scenario('Webstranky - vyber z moznosti ', ({ I, DTE }) => {
+Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/');
      I.jstreeNavigate([folder_name]);
 
@@ -100,9 +94,6 @@ Scenario('Zmaz strukturu', ({ I }) => {
      //ak zostalo nieco zaseknute na editacii reloadni aby sa dalo dobre zmazat
      I.amOnPage('/admin/v9/webpages/web-pages-list/');
      I.jstreeNavigate([folder_name]);
-
-     // vymazanie webstranky
-     I.deleteCreatedWebPage(randomNumber);
 
      // vymazanie vytvoreneho priecinka name-autotest
      I.deleteFolderStructure(randomNumber);

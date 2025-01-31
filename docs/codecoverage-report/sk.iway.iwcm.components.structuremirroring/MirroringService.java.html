@@ -171,7 +171,7 @@ public class MirroringService {
 <span class="fc bfc" id="L171" title="All 2 branches covered.">         for (int id : mapping) {</span>
 <span class="pc bpc" id="L172" title="1 of 2 branches missed.">            if (id &gt; 0) {</span>
 <span class="fc" id="L173">               GroupDetails group = groupsDB.getGroup(id);</span>
-<span class="fc bfc" id="L174" title="All 2 branches covered.">               if (group == null) continue;</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">               if (group == null) continue;</span>
 
 <span class="fc bfc" id="L176" title="All 2 branches covered.">               if (group.getSyncId()&gt;0) syncId = group.getSyncId();</span>
 
@@ -188,13 +188,13 @@ public class MirroringService {
                }
             }
          }
-<span class="fc bfc" id="L191" title="All 2 branches covered.">         if (groupIdsList.length()&gt;0) {</span>
+<span class="pc bpc" id="L191" title="1 of 2 branches missed.">         if (groupIdsList.length()&gt;0) {</span>
 <span class="fc bfc" id="L192" title="All 2 branches covered.">            if (syncId==0) syncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
             //nastav syncId vsetkym v riadku
 <span class="fc" id="L194">            new SimpleQuery().execute(&quot;UPDATE groups SET sync_id=? WHERE group_id IN (&quot;+groupIdsList.toString()+&quot;)&quot;, syncId);</span>
          }
          //nastav sync aj pre hlavnu stranku adresara
-<span class="fc bfc" id="L197" title="All 2 branches covered.">         if (defaultDocIdsList.length()&gt;0) {</span>
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">         if (defaultDocIdsList.length()&gt;0) {</span>
 <span class="fc bfc" id="L198" title="All 2 branches covered.">            if (defaultDocSyncId==0) defaultDocSyncId = PkeyGenerator.getNextValue(&quot;structuremirroring&quot;);</span>
             //nastav syncId vsetkym v riadku
 <span class="fc" id="L200">            new SimpleQuery().execute(&quot;UPDATE documents SET sync_id=? WHERE doc_id IN (&quot;+defaultDocIdsList.toString()+&quot;)&quot;, defaultDocSyncId);</span>

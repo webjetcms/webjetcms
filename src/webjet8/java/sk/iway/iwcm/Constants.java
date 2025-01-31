@@ -172,7 +172,7 @@ public class Constants {
 		setInt("smsSendMaxlength", 140, MOD_SMS, "maximalna dlzka SMS spravy");
 
 		setString("imagesRootDir", "/images", MOD_CONFIG, "Hlavny adresar pre obrazky");
-		setString("galleryDirName", MOD_GALLERY, MOD_CONFIG, "adresar v adresari images, v ktorom je foto galeria");
+		setString("galleryDirName", "gallery", MOD_CONFIG, "adresar v adresari images, v ktorom je foto galeria");
 		setString("filesRootDir", "/files", MOD_CONFIG, "Hlavny adresar pre subory");
 		setString("editorPageCss", "/css/page.css", MOD_CONFIG,
 				"Hlavny CSS styl pre editor (stranku), sablona ho ale moze predefinovat");
@@ -501,7 +501,7 @@ public class Constants {
 		setInt("clusterRefreshTimeout", 5000, "cluster", "cas ako casto sa bude kontrolovat aktualnost objektov clustra");
 
 		//deprecated
-		setString("galleryDefaultStyle", "galleriffic", MOD_GALLERY,
+		setString("galleryDefaultStyle", "photoSwipe", MOD_GALLERY,
 				"ak je potrebne zmenit vsetky galerie na webe na novy styl, staci nastavit do tejto premennej");
 
 		setBoolean("editorAutomaticWordClean", false, MOD_EDITOR,
@@ -1234,7 +1234,7 @@ public class Constants {
 		setString("componentsDirectCallExceptions", "", MOD_SECURITY,
 				"Zoznam zaciatkov URL adries pre ktore je povolena vynimka priameho volania JSP komponenty");
 
-		setString("serverMonitoringEnableIPs", "127.0.0.1,192.168.,10.,62.65.161.,85.248.107.,195.168.35.4,195.168.35.5,62.168.118.66,172.17.0.1",
+		setString("serverMonitoringEnableIPs", "127.0.0.1,192.168.,10.,62.65.161.,85.248.107.,195.168.35.4,195.168.35.5,62.168.118.66,62.168.118.90,62.168.118.67,172.17.0.1",
 				mods(MOD_SECURITY, "server_monitoring"),
 				"Zoznam IP adries z ktorych je dostupna komponenta monitor.jsp pre monitorovanie servera");
 
@@ -2052,7 +2052,6 @@ public class Constants {
 		setString("accessControlAllowedOrigins", "", MOD_SECURITY,
 				"Ak nie je prazdne, vyzaduje pri requeste hlavicku origin, ktorej hodnota sa musi nachadzat v tomto zozname (ciarkou oddeleny zoznam bez medzier). Nastavuje sa len pri generovani hlavicky Access-Control-Allow-Origin");
 
-		setBoolean("editorEnableFontAwesome", false, MOD_EDITOR, "Ak je nastavene na true zobrazi v editore ikonu pre nastavenie FontAwesome namiesto ikony Specialny znak");
 		setString("bannerCampaignParamName", "utm_campaign", "banner",
 					"Nazov parametra pri kampanovom banneri na zaklade jeho hodnoty viem zobrazit prislusny banner. Pri zmene vychodzej hodnoty je potrebne pridat vynimku do xsrfParamNameException.");
 		setString("bannerDefaultImageUrl", "", "banner",
@@ -2371,7 +2370,7 @@ public class Constants {
 	 * @return
 	 */
 	public static String[] getArray(String name) {
-		String[] arr = Tools.getTokens(Constants.getString(name), ",");
+		String[] arr = Tools.getTokens(Constants.getString(name), ",\n");
 		return arr;
 	}
 

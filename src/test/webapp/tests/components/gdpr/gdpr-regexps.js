@@ -29,16 +29,16 @@ Scenario('gdpr-regexps-zakladne testy @baseTest', async ({I, DataTables }) => {
 Scenario('Domain test', ({I, DT, Document}) => {
     I.amOnPage("/apps/gdpr/admin/regexps/");
 
-    DT.filter("regexpName", "TestDomain_webjet9");
+    DT.filterContains("regexpName", "TestDomain_webjet9");
     I.see("TestDomain_webjet9");
-    DT.filter("regexpName", "TestDomain_test23");
+    DT.filterContains("regexpName", "TestDomain_test23");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     Document.switchDomain("test23.tau27.iway.sk");
 
-    DT.filter("regexpName", "TestDomain_webjet9");
+    DT.filterContains("regexpName", "TestDomain_webjet9");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    DT.filter("regexpName", "TestDomain_test23");
+    DT.filterContains("regexpName", "TestDomain_test23");
     I.see("TestDomain_test23");
 });
 

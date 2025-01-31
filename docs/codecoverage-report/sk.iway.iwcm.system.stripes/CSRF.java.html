@@ -161,10 +161,10 @@ import java.util.List;
 
 		@SuppressWarnings(&quot;unchecked&quot;)
 <span class="fc" id="L163">		List&lt;String&gt; tokenList = (List&lt;String&gt;)session.getAttribute(SESSION_KEY);</span>
-<span class="fc bfc" id="L164" title="All 2 branches covered.">		if (tokenList == null)</span>
+<span class="pc bpc" id="L164" title="1 of 2 branches missed.">		if (tokenList == null)</span>
 		{
-<span class="fc" id="L166">			RequestBean.addError(&quot;CSRF list in session is empty&quot;);</span>
-<span class="fc" id="L167">			return false;</span>
+<span class="nc" id="L166">			RequestBean.addError(&quot;CSRF list in session is empty&quot;);</span>
+<span class="nc" id="L167">			return false;</span>
 		}
 
 <span class="fc" id="L170">		boolean tokenFound = false;</span>

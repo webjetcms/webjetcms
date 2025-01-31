@@ -6,7 +6,7 @@ CREATE TABLE _conf_ (
   name varchar(255) NOT NULL default '',
   value varchar(255) NOT NULL default '',
   UNIQUE KEY name (name)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -28,7 +28,7 @@ CREATE TABLE _db_ (
   create_date date NOT NULL default '2000-01-01',
   note varchar(255) NOT NULL default '',
   KEY id (id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -90,7 +90,7 @@ CREATE TABLE _modules_ (
   path varchar(255) NOT NULL default '',
   UNIQUE KEY module_id (module_id),
   KEY module_id_2 (module_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -110,7 +110,7 @@ CREATE TABLE _properties_ (
   prop_value varchar(255) NOT NULL default '',
   UNIQUE KEY prop_key (prop_key,lng),
   KEY prop_key_2 (prop_key,lng)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -148,7 +148,7 @@ CREATE TABLE calendar (
   notify_sendsms tinyint(1) unsigned default '0',
   lng char(3) default NULL,
   KEY calendar_id (calendar_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -167,7 +167,7 @@ CREATE TABLE calendar_types (
   name varchar(128) NOT NULL default '',
   PRIMARY KEY  (type_id),
   KEY type_id (type_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -194,7 +194,7 @@ CREATE TABLE doc_atr (
   value_bool tinyint(1) unsigned default '0',
   PRIMARY KEY  (doc_id,atr_id),
   KEY doc_id (doc_id,atr_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -220,7 +220,7 @@ CREATE TABLE doc_atr_def (
   false_value varchar(255) default NULL,
   PRIMARY KEY  (atr_id),
   KEY atr_id (atr_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -246,7 +246,7 @@ CREATE TABLE document_forum (
   ip varchar(255) default NULL,
   PRIMARY KEY  (forum_id),
   KEY forum_id (forum_id)
-) ENGINE=InnoDB COMMENT='diskusne forum';
+) ENGINE=MyISAM COMMENT='diskusne forum';
 
 
 
@@ -298,7 +298,7 @@ CREATE TABLE documents (
   PRIMARY KEY  (doc_id),
   KEY i_group_id (group_id),
   FULLTEXT KEY search (title,data_asc)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -366,7 +366,7 @@ CREATE TABLE documents_history (
   sync_id int(11) default '0',
   sync_status int(11) default '0',
   PRIMARY KEY  (history_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -394,7 +394,7 @@ CREATE TABLE emails (
   created_by_user_id int(4) unsigned NOT NULL default '0',
   create_date datetime default NULL,
   PRIMARY KEY  (email_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -417,7 +417,7 @@ CREATE TABLE file_atr (
   value_bool tinyint(1) unsigned default '0',
   PRIMARY KEY  (link,atr_id),
   KEY link (link,atr_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -443,7 +443,7 @@ CREATE TABLE file_atr_def (
   false_value varchar(255) default NULL,
   PRIMARY KEY  (atr_id),
   KEY atr_id (atr_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -469,7 +469,7 @@ CREATE TABLE forms (
   doc_id int(4) NOT NULL default '-1',
   PRIMARY KEY  (id),
   KEY id (id)
-) ENGINE=InnoDB COMMENT='formulare';
+) ENGINE=MyISAM COMMENT='formulare';
 
 
 
@@ -494,7 +494,7 @@ CREATE TABLE gallery (
   s_description_de varchar(255) default NULL,
   l_description_de text,
   PRIMARY KEY  (image_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -516,7 +516,7 @@ CREATE TABLE gallery_dimension (
   normal_width int(4) unsigned NOT NULL default '0',
   normal_height int(4) unsigned NOT NULL default '0',
   PRIMARY KEY  (dimension_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -546,7 +546,7 @@ CREATE TABLE groups (
   sync_id int(11) default '0',
   sync_status int(11) default '0',
   PRIMARY KEY  (group_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -573,7 +573,7 @@ CREATE TABLE groups_approve (
   user_id int(11) unsigned default '0',
   mode int(4) unsigned default '0',
   PRIMARY KEY  (approve_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -596,7 +596,7 @@ CREATE TABLE inquiry (
   answer_text_fail tinytext,
   UNIQUE KEY question_id (question_id),
   KEY question_id_2 (question_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -617,7 +617,7 @@ CREATE TABLE inquiry_answers (
   answer_text varchar(255) default NULL,
   answer_clicks int(4) unsigned default '0',
   PRIMARY KEY  (answer_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -650,7 +650,7 @@ CREATE TABLE questions_answers (
   allow_publish_on_web tinyint(1) unsigned NOT NULL default '1',
   PRIMARY KEY  (qa_id),
   KEY qa_id (qa_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -671,7 +671,7 @@ CREATE TABLE sms_addressbook (
   sms_number varchar(32) NOT NULL default '',
   PRIMARY KEY  (book_id),
   KEY user_id (user_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -693,7 +693,7 @@ CREATE TABLE sms_log (
   sms_number varchar(32) NOT NULL default '',
   sms_text varchar(255) NOT NULL default '',
   PRIMARY KEY  (log_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -715,7 +715,7 @@ CREATE TABLE stat_browser (
   subplatform varchar(20) default NULL,
   views int(11) unsigned default '0',
   group_id int(4) unsigned NOT NULL default '1'
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -733,7 +733,7 @@ CREATE TABLE stat_country (
   country_code varchar(20) NOT NULL default '0',
   views int(11) unsigned NOT NULL default '0',
   group_id int(4) unsigned NOT NULL default '1'
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -755,7 +755,7 @@ CREATE TABLE stat_doc (
   view_time_sum int(11) unsigned default '0',
   view_time_count int(11) unsigned default '0',
   KEY i_docid (doc_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -774,7 +774,7 @@ CREATE TABLE stat_error (
   url varchar(255) default '0',
   query_string varchar(255) default '0',
   count int(11) unsigned default '0'
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -793,7 +793,7 @@ CREATE TABLE stat_searchengine (
   server varchar(16) NOT NULL default '',
   query varchar(64) NOT NULL default '',
   doc_id int(4) unsigned NOT NULL default '0'
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -827,7 +827,7 @@ CREATE TABLE stat_site_days (
   view_time_sum int(11) unsigned default '0',
   view_time_count int(11) unsigned default '0',
   group_id int(4) unsigned NOT NULL default '1'
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -891,7 +891,7 @@ CREATE TABLE stat_site_hours (
   sessions_22 int(11) unsigned default '0',
   sessions_23 int(11) unsigned default '0',
   group_id int(4) unsigned NOT NULL default '1'
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -912,7 +912,7 @@ CREATE TABLE stat_userlogon (
   view_minutes int(11) unsigned default '0',
   hostname varchar(255) default NULL,
   KEY i_userid (user_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -937,7 +937,7 @@ CREATE TABLE templates (
   css varchar(64) default NULL,
   menu_doc_id int(11) NOT NULL default '-1',
   PRIMARY KEY  (temp_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -956,7 +956,7 @@ CREATE TABLE user_disabled_items (
   user_id int(4) unsigned NOT NULL default '0',
   item_name varchar(32) NOT NULL default '',
   KEY user_id (user_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 #
 # Dumping data for table 'user_disabled_items'
@@ -978,7 +978,7 @@ CREATE TABLE user_group_verify (
   email varchar(255) NOT NULL default '',
   PRIMARY KEY  (verify_id),
   KEY verify_id (verify_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -1000,7 +1000,7 @@ CREATE TABLE user_groups (
   require_approve tinyint(1) NOT NULL default '0',
   email_doc_id int(4) NOT NULL default '-1',
   PRIMARY KEY  (user_group_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 
@@ -1047,7 +1047,7 @@ CREATE TABLE users (
   field_d varchar(255) default NULL,
   field_e varchar(255) default NULL,
   PRIMARY KEY  (user_id)
-) ENGINE=InnoDB;
+) ENGINE=MyISAM;
 
 
 

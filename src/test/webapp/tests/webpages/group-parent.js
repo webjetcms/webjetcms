@@ -1,7 +1,6 @@
 Feature('webpages.group-parent');
 
 var root1_name, subfolder_name, root2_name;
-var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -14,12 +13,12 @@ Before(({ I, login }) => {
      }
 });
 
-Scenario('1. pridanie noveho priecinka name-autotest', ({ I, DTE }) => {
+Scenario('1. pridanie noveho priecinka name-autotest', ({ I, DTE, DT }) => {
      I.waitForText('Zoznam web stránok', 5);
 
      // 1. pridanie noveho priecinka name-autotest
      I.say('1. Pridanie noveho priecinka '+root1_name);
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', root1_name);
      I.groupSetRootParent();
@@ -27,11 +26,11 @@ Scenario('1. pridanie noveho priecinka name-autotest', ({ I, DTE }) => {
      I.waitForText(root1_name, 5);
 });
 
-Scenario('2. otvorenie noveho priecinka a vytvorenie jeho podpriecinka', ({ I, DTE }) => {
+Scenario('2. otvorenie noveho priecinka a vytvorenie jeho podpriecinka', ({ I, DTE, DT }) => {
      // 2. otvorenie noveho priecinka a vytvorenie jeho podpriecinka
      I.say('2. Vytvorenie podpriecinka');
      I.click(root1_name);
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', subfolder_name);
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', root1_name, 10);
@@ -47,10 +46,10 @@ Scenario('3. overenie vytvoreneho podpriecinka', ({ I }) => {
      I.waitForText(subfolder_name, 10, '.jstree-children');
 });
 
-Scenario('4. vytvorenie noveho priecinka - ulozeneho do korenoveho adresara', ({ I, DTE }) => {
+Scenario('4. vytvorenie noveho priecinka - ulozeneho do korenoveho adresara', ({ I, DTE, DT }) => {
      // 4. vytvorenie noveho priecinka - ulozeneho do korenoveho adresara
      I.say('4. Vytvorenie noveho priecinka do korenoveho adresara');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.waitForElement('.form-control', 5);
      I.fillField('#DTE_Field_groupName', root2_name);

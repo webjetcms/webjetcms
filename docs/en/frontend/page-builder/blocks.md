@@ -35,6 +35,60 @@ In each of these subdirectories you still need to create **block groups as addit
     - right.jpg
 ```
 
+## Setting the width of the columns
+
+The editor allows you to adjust the column widths according to the selected device. In the toolbar, next to the editor type toggle, there is an option to set the size (width) of the device.
+
+![](../../redactor/webpages/pagebuilder-switcher.png)
+
+- Desktop - is for width greater/equal to 1200 pixels (sets the CSS class `col-xl`).
+- Tablet - is designed for width 768-1199 pixels (sets CSS class `col-md`)
+- Mobile - is for width less than 768 pixels (sets CSS class `col-`)
+
+The correct block setting includes all preset widths, e.g. `col-12 col-md-6 col-xl-3`:
+
+```html
+<section>
+  <div class="container">
+    <div class="row">
+      <div class="col-12">
+        <h2 class="text-center">Etiam orci</h2>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-md-6 col-xl-3 text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Etiam orci</h3>
+        <p>Suspendisse interdum dolor justo, ac venenatis massa suscipit nec. Vivamus dictum malesuada mollis.</p>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3  text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Aenean </h3>
+        <p>Aliquam elementum ut ante vitae dapibus. Interdum et malesuada fames ac ante ipsum primis in faucibus.</p>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3  text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Maecenas</h3>
+        <p>Sed sollicitudin eros quis leo imperdiet, id congue lorem ornare. Suspendisse eleifend at ante id ultrices.</p>
+      </div>
+      <div class="col-12 col-md-6 col-xl-3  text-center">
+        <p class="text-center">
+          <img src="/thumb/images/zo-sveta-financii/istock-840497622_crop.jpg?w=160&h=160&ip=5" class="fixedSize-160-160-5" />
+        </p>
+        <h3>Suspendisse</h3>
+        <p>Nullam ornare, magna in ultrices mattis, lectus neque mollis libero, vitae varius mauris metus a risus.</p>
+      </div>
+    </div>
+  </div>
+</section>
+```
+
 ## Thymeleaf code support
 
 It is important to note that the blocks are inserted into the page without executing the Thymeleaf code (technically the code is inserted directly from the html file into the editor). However, the following thymeleaf attributes are currently supported during insertion:
@@ -50,6 +104,7 @@ At the same time, the following ninja objects are executed during insertion (wri
 - `${ninja.temp.basePathJs}`
 - `${ninja.temp.basePathPlugins}`
 - `${ninja.temp.basePathImg}`
+
 If you need other Thymeleaf tags made for your work, you can send us a request via the Feedback function on the administration homepage.
 
 ## Generating preview images
@@ -66,7 +121,7 @@ We recommend to generate blocks using [PugJS](https://pugjs.org).
 
 ## CSS classes for image
 
-If the image has a CSS class set `fixedSize-w-h-ip` the specified dimension is set automatically after changing the image address `w` a `h`if the last entry is also entered `ip` is also set [point of interest](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). E.g. CSS class `fixedSize-160-160-5` automatically generates a 160 x 160 pixel image with a set point of interest of 5. We recommend setting the class to all illustration images where the size is important.
+If the image has a CSS class set `fixedSize-w-h-ip` the specified dimension is set automatically after changing the image address `w` a `h` if the last entry is also entered `ip` is also set [point of interest](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). E.g. CSS class `fixedSize-160-160-5` automatically generates a 160 x 160 pixel image with a set point of interest of 5. We recommend setting the class to all illustration images where the size is important.
 
 When you click on an image with CSS class `fixedSize/w-100/autoimg` will immediately open the image properties window for easy replacement. This way the editor does not have to click on the image and then on the change image icon in the toolbar.
 
@@ -86,47 +141,53 @@ Sample block code (in `section` directory):
 
 ```html
 <section>
-	<div class="container pb-not-container">
-		<div class="tabsBox">
-			<ul class="nav nav-tabs pb-autotabs"></ul>
-		</div>
+   <div class="container pb-not-container">
 
-		<div class="tab-content">
-			<div class="tab-pane fade active show pb-custom-container">
-				<div class="row">
-					<div class="col-12 pb-col-12 pb-tab-title">
-						<h3>Tab 1</h3>
-					</div>
-					<div class="col-12 pb-col-12">
-						<p>Text 1</p>
-					</div>
-				</div>
-			</div>
+         <div class="tabsBox">
+            <ul class="nav nav-tabs pb-autotabs"></ul>
+         </div>
 
-			<div class="tab-pane fade pb-custom-container">
-				<div class="row">
-					<div class="col-12 pb-col-12 pb-tab-title">
-						<h3>Tab 2</h3>
-					</div>
-					<div class="col-12 pb-col-12">
-						<p>Text 2</p>
-					</div>
-				</div>
-			</div>
+         <div class="tab-content">
+           <div class="tab-pane fade active show pb-custom-container">
+             <div class="row">
+                <div class="col-12 pb-col-12 pb-tab-title">
+                  <h3>Tab 1</h3>
+               </div>
+               <div class="col-12 pb-col-12">
+                  <p>Text 1</p>
+               </div>
 
-			<div class="tab-pane fade pb-custom-container">
-				<div class="row">
-					<div class="col-12 pb-col-12 pb-tab-title">
-						<h3>Tab 3</h3>
-					</div>
-					<div class="col-12 pb-col-12">
-						<p>Text 3</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-</section>
+             </div>
+
+           </div>
+
+           <div class="tab-pane fade pb-custom-container">
+             <div class="row">
+                <div class="col-12 pb-col-12 pb-tab-title">
+                  <h3>Tab 2</h3>
+               </div>
+               <div class="col-12 pb-col-12">
+                  <p>Text 2</p>
+               </div>
+
+             </div>
+           </div>
+
+           <div class="tab-pane fade pb-custom-container">
+             <div class="row">
+                <div class="col-12 pb-col-12 pb-tab-title">
+                  <h3>Tab 3</h3>
+               </div>
+               <div class="col-12 pb-col-12">
+                  <p>Text 3</p>
+               </div>
+
+             </div>
+           </div>
+         </div>
+
+   </div>
+ </section>
 ```
 
 ## Accordion support
@@ -137,47 +198,49 @@ Sample code:
 
 ```html
 <section>
-	<div class="container pb-not-container pb-autoaccordion">
-		<h2 class="text-center pb-editable">Nadpis nad accordionom</h2>
+  <div class="container pb-not-container pb-autoaccordion">
 
-		<div class="card pb-custom-container">
-			<div class="card-header">
-				<a class="accordionLink" data-toggle="collapse">
-					<div class="pb-editable">
-						<p>Nadpis accordionu 1</p>
-					</div>
-				</a>
-			</div>
-			<div class="collapse">
-				<div class="card-body">
-					<div class="row">
-						<div class="pb-col-12">
-							<p>Text accodrionu 1</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+    <h2 class="text-center pb-editable">Nadpis nad accordionom</h2>
 
-		<div class="card pb-custom-container">
-			<div class="card-header">
-				<a class="accordionLink" data-toggle="collapse">
-					<div class="pb-editable">
-						<p>Nadpis accordionu 2</p>
-					</div>
-				</a>
-			</div>
-			<div class="collapse">
-				<div class="card-body">
-					<div class="row">
-						<div class="pb-col-12">
-							<p>Text accodrionu 2</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="card pb-custom-container">
+      <div class="card-header">
+        <a class="accordionLink" data-toggle="collapse">
+          <div class="pb-editable">
+            <p>Nadpis accordionu 1</p>
+          </div>
+        </a>
+      </div>
+      <div class="collapse">
+        <div class="card-body">
+          <div class="row">
+            <div class="pb-col-12">
+              <p>Text accodrionu 1</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card pb-custom-container">
+      <div class="card-header">
+        <a class="accordionLink" data-toggle="collapse">
+          <div class="pb-editable">
+            <p>Nadpis accordionu 2</p>
+          </div>
+        </a>
+      </div>
+      <div class="collapse">
+        <div class="card-body">
+          <div class="row">
+            <div class="pb-col-12">
+              <p>Text accodrionu 2</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </section>
 ```
 
@@ -193,33 +256,35 @@ Sample card code for accordion (in the column directory):
 
 ```html
 <div class="col-12 pb-not-editable pb-always-mark">
-	<div class="tabsBox" role="tablist">
-		<ul class="nav nav-tabs pb-autotabs"></ul>
-	</div>
+   <div class="tabsBox" role="tablist">
+      <ul class="nav nav-tabs pb-autotabs"></ul>
+   </div>
 
-	<div class="tab-content">
-		<div class="tab-pane fade active show pb-custom-container">
-			<div class="row">
-				<div class="col-12 pb-tab-title">
-					<h3>Tab 1</h3>
-				</div>
-				<div class="col-12">
-					<p>Tab text 1</p>
-				</div>
-			</div>
-		</div>
+   <div class="tab-content">
+      <div class="tab-pane fade active show pb-custom-container">
+         <div class="row">
+            <div class="col-12 pb-tab-title">
+               <h3>Tab 1</h3>
+            </div>
+            <div class="col-12">
+               <p>Tab text 1</p>
+            </div>
 
-		<div class="tab-pane fade pb-custom-container">
-			<div class="row">
-				<div class="col-12 pb-tab-title">
-					<h3>Tab 2</h3>
-				</div>
-				<div class="col-12">
-					<p>Tab text 2</p>
-				</div>
-			</div>
-		</div>
-	</div>
+         </div>
+      </div>
+
+      <div class="tab-pane fade pb-custom-container">
+         <div class="row">
+            <div class="col-12 pb-tab-title">
+               <h3>Tab 2</h3>
+            </div>
+            <div class="col-12">
+               <p>Tab text 2</p>
+            </div>
+         </div>
+      </div>
+   </div>
+
 </div>
 ```
 
@@ -227,56 +292,60 @@ after inserting it, a structure of the type will be created in the web page:
 
 ```html
 <section>
-	<div class="container pb-not-container pb-autoaccordion">
-		<h2 class="text-center pb-editable">Nadpis nad accordionom</h2>
+  <div class="container pb-not-container pb-autoaccordion">
 
-		<div class="card pb-custom-container">
-			<div class="card-header">
-				<a class="accordionLink" data-toggle="collapse">
-					<div class="pb-editable">
-						<p>Nadpis accordionu 1</p>
-					</div>
-				</a>
-			</div>
-			<div class="collapse">
-				<div class="card-body">
-					<div class="row">
-						<div class="pb-col-12">
-							<p>Text accodrionu 1</p>
-						</div>
+    <h2 class="text-center pb-editable">Nadpis nad accordionom</h2>
 
-						<div class="col-12 pb-not-editable pb-always-mark">
-							<div class="tabsBox" role="tablist">
-								<ul class="nav nav-tabs pb-autotabs"></ul>
-							</div>
-							<div class="tab-content">
-								<div class="tab-pane fade active show pb-custom-container">
-									<div class="row">
-										<div class="col-12 pb-tab-title">
-											<h3>Tab 1</h3>
-										</div>
-										<div class="col-12">
-											<p>Tab text 1</p>
-										</div>
-									</div>
-								</div>
-								<div class="tab-pane fade pb-custom-container">
-									<div class="row">
-										<div class="col-12 pb-tab-title">
-											<h3>Tab 2</h3>
-										</div>
-										<div class="col-12">
-											<p>Tab text 2</p>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
+    <div class="card pb-custom-container">
+      <div class="card-header">
+        <a class="accordionLink" data-toggle="collapse">
+          <div class="pb-editable">
+            <p>Nadpis accordionu 1</p>
+          </div>
+        </a>
+      </div>
+      <div class="collapse">
+        <div class="card-body">
+          <div class="row">
+            <div class="pb-col-12">
+              <p>Text accodrionu 1</p>
+            </div>
+
+            <div class="col-12 pb-not-editable pb-always-mark">
+              <div class="tabsBox" role="tablist">
+                  <ul class="nav nav-tabs pb-autotabs"></ul>
+              </div>
+              <div class="tab-content">
+                  <div class="tab-pane fade active show pb-custom-container">
+                    <div class="row">
+                        <div class="col-12 pb-tab-title">
+                          <h3>Tab 1</h3>
+                        </div>
+                        <div class="col-12">
+                          <p>Tab text 1</p>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="tab-pane fade pb-custom-container">
+                    <div class="row">
+                        <div class="col-12 pb-tab-title">
+                          <h3>Tab 2</h3>
+                        </div>
+                        <div class="col-12">
+                          <p>Tab text 2</p>
+                        </div>
+                    </div>
+                  </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </section>
 ```
 
@@ -284,44 +353,45 @@ after inserting it, a structure of the type will be created in the web page:
 
 PageBuilder can generate menu items into bootstrap menus, this is provided by `pbAutoMenu` v `pagesupport.js`. The menu item generates to `ul.pb-automenu` of all `section` elements in the web page. It works as follows:
 - `section.pb-not-automenu` is omitted from the list.
-
 - The name of the menu item is taken from:
-	- element with CSS style `.section-title`
-	- if not found is taken from `h1` element
-	- if not found, the attribute is taken `title` at `section` element
+  - element with CSS style `.section-title`
+  - if not found is taken from `h1` element
+  - if not found, the attribute is taken `title` at `section` element
 - If the section is not set `id` attribute, is set by the section sequence number.
+
 From the found data, entries are generated `li.nav-item` to `ul.pb-automenu`.
 
 Sample block with menu:
 
 ```html
 <section class="pb-not-automenu">
-	<div class="container pb-not-container md-tabs">
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<div class="container-fluid">
-				<a class="navbar-brand" href="#">Navbar</a>
-				<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-				<div class="collapse navbar-collapse" id="navbarNav">
-					<ul class="navbar-nav pb-automenu">
-						<li class="nav-item">
-							<a class="nav-link active" aria-current="page" href="#">Home</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="#">Features</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link" href="#">Pricing</a>
-						</li>
-						<li class="nav-item">
-							<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-						</li>
-					</ul>
-				</div>
-			</div>
-		</nav>
-	</div>
+    <div class="container pb-not-container md-tabs">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">Navbar</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav pb-automenu">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Features</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Pricing</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
 </section>
 ```
 
@@ -331,51 +401,53 @@ Complete HTML code sample web page with sample sections:
 
 ```html
 <section class="pb-not-automenu">
-	<div class="container pb-not-container md-tabs">
-		<nav class="navbar navbar-expand-lg navbar-light bg-light">
-			<div class="container-fluid">
-				<a class="navbar-brand" href="#">Navbar</a><button aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler" data-bs-target="#navbarNav" data-bs-toggle="collapse" type="button"><span class="navbar-toggler-icon"></span></button>
-				<div class="collapse navbar-collapse" id="navbarNav">
-					<ul class="navbar-nav pb-automenu">
-						<li class="nav-item"><a aria-current="page" class="nav-link active" href="#">Home</a></li>
-						<li class="nav-item"><a class="nav-link" href="#">Features</a></li>
-						<li class="nav-item"><a class="nav-link" href="#">Pricing</a></li>
-						<li class="nav-item"><a aria-disabled="true" class="nav-link disabled" href="#" tabindex="-1">Disabled</a></li>
-					</ul>
-				</div>
-			</div>
-		</nav>
-	</div>
+    <div class="container pb-not-container md-tabs">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid"><a class="navbar-brand" href="#">Navbar</a><button aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation" class="navbar-toggler"
+                    data-bs-target="#navbarNav" data-bs-toggle="collapse" type="button"><span
+                        class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav pb-automenu">
+                        <li class="nav-item"><a aria-current="page" class="nav-link active" href="#">Home</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">Features</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#">Pricing</a></li>
+                        <li class="nav-item"><a aria-disabled="true" class="nav-link disabled" href="#" tabindex="-1">Disabled</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
 </section>
 
 <section>
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12">
-				<h1>Úvod</h1>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1>Úvod</h1>
+            </div>
+        </div>
+    </div>
 </section>
 
 <section>
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12">
-				<p class="section-title">Stred</p>
-				<h1>Toto nie je nadpis</h1>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <p class="section-title">Stred</p>
+                <h1>Toto nie je nadpis</h1>
+            </div>
+        </div>
+    </div>
 </section>
 
 <section title="TITLE nadpis">
-	<div class="container">
-		<div class="row">
-			<div class="col-md-12">
-				<p>Záver</p>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <p>Záver</p>
+            </div>
+        </div>
+    </div>
 </section>
 ```

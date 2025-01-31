@@ -117,9 +117,6 @@ function adminUploadInit(options) {
                     updateOverallProgress();
                     setStatus(file.toaster, 'success');
                     fromImageEditor = false;
-                    setTimeout(() => {
-                        setStatus(file.toaster, 'success');
-                    }, 2000);
                     return;
                 }
                 var response = JSON.parse(file.xhr.response);
@@ -204,24 +201,8 @@ function adminUploadInit(options) {
                 window.dispatchEvent(event);
                 // console.log('addedFile', file);
 
-                $('#upload-wrapper').show();
-                $('#dt-upload').css('visibility', 'hidden');
-                $('#dt-upload').css('opacity', 0);
+                file.toaster = createFileToaster(file);
 
-                var message = toastrMessageTemplate.replace('{FILE_NAME}', file.name);
-
-                file.toaster = toastr.info(message, '', {
-                    closeButton: true,
-                    timeOut: 0,
-                    toastClass: 'toast toast-dzpreview',
-                    tapToDismiss: false,
-                    extendedTimeOut: 0, //prevent hide after mouse over
-                    progressBar: false,
-                    containerId: 'toast-container-upload',
-                });
-
-                //scrollni kontajner
-                $('#toast-container-upload').scrollTop(0);
 
                 setStatus(file.toaster, 'progress');
             });
@@ -268,6 +249,28 @@ function adminUploadInit(options) {
             });
         },
     });
+
+    function createFileToaster(file) {
+        $('#upload-wrapper').show();
+        $('#dt-upload').css('visibility', 'hidden');
+        $('#dt-upload').css('opacity', 0);
+
+        var message = toastrMessageTemplate.replace('{FILE_NAME}', file.name);
+        let toaster = toastr.info(message, '', {
+            closeButton: true,
+            timeOut: 0,
+            toastClass: 'toast toast-dzpreview',
+            tapToDismiss: false,
+            extendedTimeOut: 0, //prevent hide after mouse over
+            progressBar: false,
+            containerId: 'toast-container-upload',
+        });
+
+        //scrollni kontajner
+        $('#toast-container-upload').scrollTop(0);
+
+        return toaster;
+    }
 
     function updateOverallProgress() {
         //vypocitaj to podla ciastkovych progressbarov

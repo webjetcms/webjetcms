@@ -255,7 +255,7 @@ filePropertiesTable = WJ.DataTable({
 
 ### Dynamická změna hodnot ve výběrovém poli
 
-Někdy je nutné dynamicky měnit hodnoty v poli výběru na základě změn v předchozích polích. Příklad je v souboru [temps-list.pug](../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) kde je řešení:
+Někdy je nutné dynamicky měnit hodnoty v poli výběru na základě změn v předchozích polích. Příklad je v souboru [temps-list.pug](../../../../src/main/webapp/admin/v9/views/pages/templates/temps-list.pug) kde je řešení:
 - změnit hodnoty políček při načítání editoru
 - změna hodnot při změně předchozího pole
 
@@ -321,7 +321,7 @@ window.domReady.add(function () {
 });
 ```
 
-Služba REST je přidána do existující třídy [TemplatesController](../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
+Služba REST je přidána do existující třídy [TemplatesController](../../../../src/main/java/sk/iway/iwcm/components/templates/TemplatesController.java):
 
 ```java
 @RequestMapping("/forwards/")

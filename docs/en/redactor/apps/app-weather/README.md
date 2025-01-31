@@ -1,6 +1,6 @@
 # Weather
 
-Displays the current weather and forecast for the following days for the specified city/GPS coordinates. The weather data is provided by met.no.
+Displays the current weather and forecast for the following days for the specified city/GPS coordinates. The weather data is provided by the service [met.no](https://www.met.no/en).
 
 ## Application settings
 

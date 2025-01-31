@@ -1,5 +1,7 @@
 # Calendar of events
 
+## List of events
+
 The event calendar allows you to record and display various events that you want to inform your website visitors about.
 
 ![](calendar-datatable.png)

@@ -92,7 +92,7 @@ export class WebjetJsTree {
             };
 
             const url = this.updateUrl(this.jsTreeUrl, '/move');
-            $("div.dataTables_processing").show();
+            $("div.dt-processing").show();
             $.ajax({
                 url: url,
                 method: 'post',
@@ -100,7 +100,7 @@ export class WebjetJsTree {
                 contentType: 'application/json',
                 data: JSON.stringify(json),
                 success: response => {
-                    $("div.dataTables_processing").hide();
+                    $("div.dt-processing").hide();
                     if (!response.result) {
                         WJ.notifyError(response.error);
                         return;
@@ -110,7 +110,7 @@ export class WebjetJsTree {
                     this.jstree.jstree(true).refresh(data.parent);
                 },
                 error: () => {
-                    $("div.dataTables_processing").hide();
+                    $("div.dt-processing").hide();
                 }
             })
         });

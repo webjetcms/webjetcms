@@ -15,6 +15,7 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%
 //synchronizacia adresara a web stranok zo vzdialeneho servera
 
+request.setAttribute("closeTable", "true");
 request.setAttribute("cmpName", "syncDir");
 request.setAttribute("dialogTitleKey", "components.import_web_pages.xml.dialogTitle");
 request.setAttribute("dialogDescKey", "components.import_web_pages.xml.dialogDesc");
@@ -53,17 +54,79 @@ showForm = false;
 function Ok()
 {
 	<%if (showForm==false) {%>
-	document.getElementById("btnSync1").click();
+
+	setSelectedOptionsRequestParams();
 	<% } else { %>
 	document.getElementById("btnLoadData1").click();
 	<% } %>
 }
+
+//sivan - #57441
+
+let prefixes = ["group", "doc", "file", "banner", "inquiry", "galleryInfo", "galleryImage"];
+
+function setSelectedOptionsRequestParams() {
+	for(let i = 0; i < prefixes.length; i++) {
+		setRequestParam(prefixes[i]);
+	}
+
+	document.getElementById("btnSync1").click();
+}
+
+function setRequestParam(prefix) {
+	//Get all selected elemnt with given class (prefix + "-checkbox")
+	let selectedDatas = $("." + prefix + "-checkbox:checked");
+
+	//Loop through all selected elements, get data-id attribute value and concate string
+	let seletedIdsString = "";
+	if(selectedDatas != undefined && selectedDatas != null && selectedDatas.length > 0) {
+		for (let i = 0; i < selectedDatas.length; i++) {
+			let dataId = selectedDatas[i].getAttribute("data-id");
+			seletedIdsString += dataId + ",";
+		}
+	}
+
+	//Find hidden input field with id = prefix + "_options" and set value to it
+	let input = $("#" + prefix + "_options");
+	if(input != undefined && input != null && input.length > 0) {
+		input.val(seletedIdsString);
+	}
+}
 </script>
+
+<style>
+	.statHeader {
+		position: sticky;
+		top: 0;
+		padding: 10px;
+		padding-bottom: 0;
+	}
+	.statHeader label {
+		min-width: 150px;
+	}
+
+	.border-bottom {
+		border-bottom: 1px solid;
+		margin-bottom: 10px;
+		border-color: lightgray;
+		padding-bottom: 10px;
+	}
+
+	.actionBtn {
+		background-color: white;
+		color: #13151b;
+		border-color: #868ea5;
+		border-width: 1px;
+		border-style: solid;
+		display: flex;
+	}
+</style>
 
 <stripes:useActionBean var="actionBean" beanclass="sk.iway.iwcm.stripes.SyncDirAction"/>
 
-<iwcm:stripForm id="syncForm" action="<%=PathFilter.getOrigPath(request)%>" beanclass="sk.iway.iwcm.stripes.SyncDirAction" method="post">
+<iwcm:stripForm id="syncForm" action="<%=PathFilter.getOrigPath(request)%>" beanclass="sk.iway.iwcm.stripes.SyncDirAction" method="post" style="display:none;">
 	<input type="hidden" name="syncDir" value="${param.syncDir}" />
+	<input type="hidden" name="compareBy" value="${param.compareBy}" />
 	<table border="0" style="<%if (showForm==false) out.print("display: none;");	%>">
 		<tr>
 			<td><iwcm:text key="components.syncDir.localGroupId"/></td>
@@ -89,10 +152,148 @@ function Ok()
 	Map<Integer, Integer> existingLocalDocIds = null;
 	String checked = "";
 	%>
-	<stripes:checkbox name="createMissingTemplates" value="true"/><iwcm:text key="components.sync.vytvorit_chybajuce_sablony"/>
-	<stripes:checkbox name="createMissingUserGroups" value="true"/><iwcm:text key="components.sync.vytvorit_skupiny_pouzivatelov"/>
+
+	<script type="text/javascript">
+		function selectAll() {
+			$("#deselectAllBtn").prop("checked", false);
+			$("#syncForm > table.sort_table > tbody > tr > td > input[type=checkbox]").prop("checked", true);
+			for(let i = 0; i < prefixes.length; i++) {
+				setSelectedInfo(prefixes[i]);
+			}
+		}
+
+		function deselectAll() {
+			$("#selectAllBtn").prop("checked", false);
+			$("#syncForm > table.sort_table > tbody > tr > td > input[type=checkbox]").prop("checked", false);
+			for(let i = 0; i < prefixes.length; i++) {
+				setSelectedInfo(prefixes[i]);
+			}
+		}
+
+		function setSelectedInfo(prefix) {
+			if(prefix == undefined || prefix == null || prefix == "") return;
+			$("#" + prefix + "_options_info").val( $("input." + prefix + "-checkbox:checked").length + " / " + $("input." + prefix + "-checkbox").length );
+		}
+
+		function setOnClickEvent(prefix) {
+			if(prefix == undefined || prefix == null || prefix == "") return;
+			$("input." + prefix + "-checkbox").click(function() {
+				setSelectedInfo(prefix);
+			});
+		}
+
+		function collpaseFolder(collapseId) {
+			let elements = $("tr[data-collapse-id='" + collapseId + "']");
+			if(elements != undefined || elements != null || elements.length > 0) {
+				let isCollapsed = elements[0].style.display == "none";
+				let btn = $("input[data-collapse-btn-id='" + collapseId + "']");
+
+				if(isCollapsed == true) {
+					btn.removeClass("btnPlus");
+					btn.addClass("btnMinus");
+
+					for(let i = 0; i < elements.length; i++) {
+						elements[i].style.display = "";
+					}
+				} else {
+					btn.removeClass("btnMinus");
+					btn.addClass("btnPlus");
+
+					for(let i = 0; i < elements.length; i++) {
+						elements[i].style.display = "none";
+					}
+				}
+			}
+		}
+
+		function closeAllFolders() {
+			//Set DOC tr elements to hide
+			$("#syncForm").find("tr[data-collapse-id]").hide();
+			//Set button's to plus
+			$("#syncForm").find("input[data-collapse-btn-id]").removeClass("btnMinus");
+			$("#syncForm").find("input[data-collapse-btn-id]").addClass("btnPlus");
+		}
+
+		function openAllFolders() {
+			//Set DOC tr elements to show
+			$("#syncForm").find("tr[data-collapse-id]").css( "display", "");
+			//Set button's to minus
+			$("#syncForm").find("input[data-collapse-btn-id]").removeClass("btnPlus");
+			$("#syncForm").find("input[data-collapse-btn-id]").addClass("btnMinus");
+		}
+
+		document.addEventListener("DOMContentLoaded", function() {
+			// HIde status messages
+			var statusMsgs = document.getElementsByClassName("statusMsg");
+			if(statusMsgs != undefined || statusMsgs != null) {
+				for (var i = 0; i < statusMsgs.length; i++) {
+					statusMsgs[i].style.display = "none";
+				}
+			}
+
+			// Load stat info
+			for(let i = 0; i < prefixes.length; i++) {
+				setSelectedInfo(prefixes[i]);
+				setOnClickEvent(prefixes[i]);
+			}
+
+			// Show stat header
+			$(".statHeader").attr("hidden",false);
+
+			//Show table
+			$("#syncForm").css( "display", "");
+		});
+	</script>
+
+	<div class="statHeader bg-light">
+		<div class="row border-bottom">
+			<div class="col-sm">
+				<label for="group_options_info" class="form-label"> <iwcm:text key="components.syncDirAction.selected_groups"/>:</label>
+				<input id="group_options_info" class="form-control-sm" disabled></br></br>
+
+				<label for="doc_options_info" class="form-label"> <iwcm:text key="components.syncDirAction.selected_docs"/>:</label>
+				<input id="doc_options_info" class="form-control-sm" disabled></br></br>
+
+				<label for="file_options_info" class="form-label"> <iwcm:text key="components.syncDirAction.selected_files"/>:</label>
+				<input id="file_options_info" class="form-control-sm" disabled>
+			</div>
+
+			<div class="col-sm">
+				<label for="banner_options_info" class="form-label"> <iwcm:text key="components.syncDirAction.selected_banners"/>:</label>
+				<input id="banner_options_info" class="form-control-sm" disabled></br></br>
+
+				<label for="inquiry_option_infos" class="form-label"> <iwcm:text key="components.syncDirAction.selected_inquiries"/>:</label>
+				<input id="inquiry_options_info" class="form-control-sm" disabled></br></br>
+
+				<button id="selectAllBtn" class="btn btn-outline-secondary" type="button" onClick="selectAll();" style="width: 130px;"><iwcm:text key="usersedit.select_all"/></button>
+				<button id="deselectAllBtn" class="btn btn-outline-secondary" type="button" onClick="deselectAll();" style="width: 130px;"><iwcm:text key="usersedit.deselect_all"/></button>
+			</div>
+
+			<div class="col-sm">
+				<label for="galleryInfo_options_info" class="form-label"> <iwcm:text key="components.syncDirAction.selected_galleryInfos"/>:</label>
+				<input id="galleryInfo_options_info" class="form-control-sm" disabled></br></br>
+
+				<label for="galleryImage_options_info" class="form-label"> <iwcm:text key="components.syncDirAction.selected_galleryImages"/>:</label>
+				<input id="galleryImage_options_info" class="form-control-sm" disabled></br></br>
+
+				<button id="closeAllFoldersBtn" class="btn btn-outline-secondary" type="button" onClick="closeAllFolders();"><iwcm:text key="components.syncDirAction.close_all_folders"/></button>
+				<button id="openAllFoldersBtn" class="btn btn-outline-secondary" type="button" onClick="openAllFolders();"><iwcm:text key="components.syncDirAction.open_all_folders"/></button>
+			</div>
+		</div>
+	</div>
+
+	<div class="col align-self-end">
+		<div class="form-check form-switch form-check-inline">
+			<stripes:checkbox id="createMissingTemplates" name="createMissingTemplates" value="true" class="form-check-input"/>
+			<label for="createMissingTemplates" class="form-check-label"><iwcm:text key="components.sync.vytvorit_chybajuce_sablony"/></label>
+		</div>
+		<div class="form-check form-switch form-check-inline">
+			<stripes:checkbox id="createMissingUserGroups" name="createMissingUserGroups" value="true" class="form-check-input"/>
+			<label for="createMissingUserGroups" class="form-check-label"><iwcm:text key="components.sync.vytvorit_skupiny_pouzivatelov"/></label>
+		</div>
+	</div>
 	<input type="submit" id="btnSync1" name="btnSync" value="Synchronizovať" style="display: none;"/>
-	<table class="sort_table" border="0">
+	<table class="sort_table" border="0" style="min-width: 99%;">
 		<thead>
 			<tr>
 				<th><iwcm:text key="components.sync.vzdialena_adresa"/></th>
@@ -103,10 +304,20 @@ function Ok()
 		</thead>
 		<tbody>
 
+		<tr style="display:none !important;">
+			<td> <input id="group_options" name="group_options"/> </td>
+			<td> <input id="doc_options" name="doc_options"/> </td>
+			<td> <input id="file_options" name="file_options"/> </td>
+			<td> <input id="banner_options" name="banner_options"/> </td>
+			<td> <input id="inquiry_options" name="inquiry_options"/> </td>
+			<td> <input id="galleryInfo_options" name="galleryInfo_options"/> </td>
+			<td> <input id="galleryImage_options" name="galleryImage_options"/> </td>
+		</tr>
+
 		<tr><td colspan="4" style="background-color: #ddd;"><iwcm:text key="menu.web_sites" /></td></tr>
 		<c:forEach items="${actionBean.remoteGroups}" var="remoteGroup">
 			<tr>
-				<td><span class="iconFolder">&nbsp;</span> <strong>${remoteGroup.fullPath}</strong></td>
+				<td> <input type="button" class="btnMinus" data-collapse-btn-id="${remoteGroup.groupId}" style="display: inline-block;" onClick="collpaseFolder(${remoteGroup.groupId})"/> <span class="iconFolder">&nbsp;</span> <strong>${remoteGroup.fullPath}</strong></td>
 				<td>
 					<%
 					checked = "";
@@ -130,13 +341,13 @@ function Ok()
 					existingLocalDocIds = new Hashtable<Integer, Integer>();
 					%>
 				</td>
-				<td style="text-align: center;"><input type="checkbox" name="group_${remoteGroup.groupId}"<%=checked %>/></td>
+				<td style="text-align: center;"><input type="checkbox" class="group-checkbox" data-id="group_${remoteGroup.groupId}"<%=checked %>/></td>
 				<td><span class="iconFolder">&nbsp;</span> <strong><bean:write name="localPath"/></strong></td>
 			</tr>
 			<c:if test="${!empty actionBean.remoteDocs}">
 				<c:forEach items="${actionBean.remoteDocs}" var="remoteDoc">
 					<c:if test="${remoteGroup.groupId==remoteDoc.groupId}">
-						<tr>
+						<tr data-collapse-id="${remoteGroup.groupId}">
 							<td style="padding-left: 30px;"><span class="iconPreview">&nbsp;</span>${remoteDoc.title}</td>
 							<td>
 							<%
@@ -175,7 +386,7 @@ function Ok()
 							}
 							%>
 							</td>
-							<td style="text-align: center;"><input type="checkbox" name="doc_${remoteDoc.docId}"<%=checked %>/></td>
+							<td style="text-align: center;"><input type="checkbox" class="doc-checkbox"  data-id="doc_${remoteDoc.docId}"<%=checked %>/></td>
 							<td style="padding-left: 30px;">
 								<c:if test="${!empty localDoc}"><span class="iconPreview">&nbsp;</span> <a href="${localDoc.virtualPath}" target="_blank">${localDoc.title}</a></c:if>
 							</td>
@@ -220,7 +431,7 @@ function Ok()
 					<c:if test="${file.currentSame}"><span style='color:green;'><iwcm:text key="components.sync.content.file.same"/></span></c:if>
 				</td>
 				<td style="text-align: center;">
-					<input type="checkbox" name="file_${file.number}" <c:if test="${file.selected}">checked="checked"</c:if> />
+					<input type="checkbox" class="file-checkbox" data-id="file_${file.number}" <c:if test="${file.selected}">checked="checked"</c:if> />
 				</td>
 				<td><c:if test="${!empty(file.localPath)}"><span class="iconPreview">&nbsp;</span> <c:out value="${file.localPath}"/></c:if></td>
 			</tr>
@@ -235,7 +446,7 @@ function Ok()
 					<c:if test="${!banner.local}"><span style='color:red;'><iwcm:text key="components.sync.lokalne_neexistuje"/></span></c:if>
 				</td>
 				<td style="text-align: center;">
-					<input type="checkbox" name="banner_${banner.number}" <c:if test="${banner.selected}"> checked="checked" </c:if> />
+					<input type="checkbox" class="banner-checkbox" data-id="banner_${banner.number}" <c:if test="${banner.selected}"> checked="checked" </c:if> />
 				</td>
 				<td><c:if test="${banner.local}"><span class="iconPreview">&nbsp;</span> <c:out value="${banner.group}"/>: <c:out value="${banner.name}"/></c:if></td>
 			</tr>
@@ -250,7 +461,7 @@ function Ok()
 					<c:if test="${!i.local}"><span style='color:red;'><iwcm:text key="components.sync.lokalne_neexistuje"/></span></c:if>
 				</td>
 				<td style="text-align: center;">
-					<input type="checkbox" name="inquiry_${i.number}" <c:if test="${i.selected}"> checked="checked" </c:if> />
+					<input type="checkbox" class="inquiry-checkbox" data-id="inquiry_${i.number}" <c:if test="${i.selected}"> checked="checked" </c:if> />
 				</td>
 				<td><c:if test="${i.local}"><span class="iconPreview">&nbsp;</span> <c:out value="${i.group}"/>: <span title='<c:out value="${i.question}"/>'><c:out value="${i.questionShort}"/></span></c:if></td>
 			</tr>
@@ -265,7 +476,7 @@ function Ok()
 					<c:if test="${!info.local}"><span style='color:red;'><iwcm:text key="components.sync.lokalne_neexistuje"/></span></c:if>
 				</td>
 				<td style="text-align: center;">
-					<input type="checkbox" name="galleryInfo_${info.number}" <c:if test="${info.selected}"> checked="checked" </c:if> />
+					<input type="checkbox" class="galleryInfo-checkbox" data-id="galleryInfo_${info.number}" <c:if test="${info.selected}"> checked="checked" </c:if> />
 				</td>
 				<td><c:if test="${info.local}"><span class="iconFolder">&nbsp;</span> <c:out value="${info.path}"/></c:if></td>
 			</tr>
@@ -277,7 +488,7 @@ function Ok()
 						<c:if test="${!image.local}"><span style='color:red;'><iwcm:text key="components.sync.lokalne_neexistuje"/></span></c:if>
 					</td>
 					<td style="text-align: center;">
-						<input type="checkbox" name="galleryImage_${image.number}" <c:if test="${image.selected}"> checked="checked" </c:if> />
+						<input type="checkbox" class="galleryImage-checkbox" data-id="galleryImage_${image.number}" <c:if test="${image.selected}"> checked="checked" </c:if> />
 					</td>
 					<td style="padding-left: 30px;"><c:if test="${image.local}"><span class="iconPreview">&nbsp;</span> <c:out value="${image.name}"/></c:if></td>
 				</tr>

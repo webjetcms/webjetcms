@@ -1,4 +1,4 @@
-# Website
+# Web pages
 
 The web page section is specific in that it contains multiple datatables:
 - `webpagesDatatable` - main datatable for the list of websites
@@ -38,40 +38,40 @@ The complicated modification is in the way the history data is loaded into the e
 
 ```javascript
 historyTable.button().add(buttonCounter++, {
-	text: '<i class="far fa-pencil"></i>',
-	action: function (e, dt, node) {
-		//console.log("btn, e=",e,"dt=",dt,"node=",node);
-		//ziskaj data selectnuteho riadku
-		let selectedRows = dt.rows({ selected: true }).data();
-		//console.log("selectedRows=", selectedRows);
-		if (selectedRows.length > 0) {
-			let row = selectedRows[0];
-			//HACK, potrebujeme ziskat dany zaznam ako JSON a podvrhnut ho do datatabulky
-			$.ajax({
-				url: "/admin/rest/web-pages/" + row.docId + "?historyId=" + row.id,
-				method: "GET",
-				success: function (json) {
-					//console.log("Edit JSON", json);
-					let oldJson = webpagesDatatable.row("#" + row.docId).data();
-					webpagesDatatable.row("#" + row.docId).data(json);
-					webpagesDatatable.EDITOR.setJson(json);
-					webpagesDatatable.wjEdit(webpagesDatatable.row("#" + row.docId));
-					setTimeout(function () {
-						//console.log("returning oldJson=", oldJson);
-						webpagesDatatable.row("#" + row.docId).data(oldJson);
-					}, 100);
-				},
-			});
-		}
-	},
-	init: function (dt, node, config) {
-		$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);
-	},
-	className: "btn btn-warning buttons-divider",
-	attr: {
-		title: "[[#{history.editPage}]]",
-		"data-toggle": "tooltip",
-	},
+    text: '<i class="ti ti-pencil"></i>',
+    action: function (e, dt, node) {
+        //console.log("btn, e=",e,"dt=",dt,"node=",node);
+        //ziskaj data selectnuteho riadku
+        let selectedRows = dt.rows({ selected: true }).data();
+        //console.log("selectedRows=", selectedRows);
+        if (selectedRows.length>0) {
+            let row = selectedRows[0];
+            //HACK, potrebujeme ziskat dany zaznam ako JSON a podvrhnut ho do datatabulky
+            $.ajax({
+                url: "/admin/rest/web-pages/"+row.docId+"?historyId="+row.id,
+                method: "GET",
+                success: function(json) {
+                    //console.log("Edit JSON", json);
+                    let oldJson = webpagesDatatable.row("#"+row.docId).data();
+                    webpagesDatatable.row("#"+row.docId).data(json);
+                    webpagesDatatable.EDITOR.setJson(json);
+                    webpagesDatatable.wjEdit(webpagesDatatable.row("#"+row.docId));
+                    setTimeout(function() {
+                        //console.log("returning oldJson=", oldJson);
+                        webpagesDatatable.row("#"+row.docId).data(oldJson);
+                    }, 100);
+                }
+            })
+        }
+    },
+    init: function ( dt, node, config ) {
+        $.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);
+    },
+    className: 'btn btn-warning buttons-divider',
+    attr: {
+        'title': '[[\#{history.editPage}]]',
+        'data-toggle': 'tooltip'
+    }
 });
 ```
 
@@ -126,10 +126,10 @@ groupsDatatable = WJ.DataTable({
 A hidden datatable is used for editing the web page directory. Data is read by default for data `jstree` tree structure. These contain `original` the object in which the factually `GroupDetails`. This object is artificially inserted into the directory datatable in the `loadTablesForGroup` Like:
 
 ```javascript
-if (groupsDatatable.rows().count() == 0) {
-	groupsDatatable.row.add(window.lastGroup);
+if (groupsDatatable.rows().count()==0) {
+    groupsDatatable.row.add(window.lastGroup);
 } else {
-	groupsDatatable.row(0).data(window.lastGroup);
+    groupsDatatable.row(0).data(window.lastGroup);
 }
 groupsDatatable.draw();
 ```
@@ -145,17 +145,17 @@ The process is thus as follows:
 
 ### Optimizing the loading of JavaScript files
 
-Website used by `ckeditor`whose JavaScript file needs to be loaded. However, it is a relatively large file and its processing increases the load on the processor and consequently slows down the display of the web page. So this file is loaded asynchronously after 2 seconds after DOM initialization in the function `window.domReady.add`:
+Website used by `ckeditor` whose JavaScript file needs to be loaded. However, it is a relatively large file and its processing increases the load on the processor and consequently slows down the display of the web page. So this file is loaded asynchronously after 2 seconds after DOM initialization in the function `window.domReady.add`:
 
 ```javascript
-setTimeout(() => {
-	//nechceme zatazit CPU hned na zaciatku, takze ckeditor.js nacitame cez timenout mierne neskor
-	var head = document.getElementsByTagName("head")[0];
-	var script = document.createElement("script");
-	script.type = "text/javascript";
-	script.src = "/admin/skins/webjet8/ckeditor/dist/ckeditor.js";
+setTimeout(()=> {
+    //nechceme zatazit CPU hned na zaciatku, takze ckeditor.js nacitame cez timenout mierne neskor
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = "/admin/skins/webjet8/ckeditor/dist/ckeditor.js";
 
-	head.appendChild(script);
+    head.appendChild(script);
 }, 2000);
 ```
 
@@ -184,21 +184,21 @@ Input field for input `docid` in the page is implemented directly in [web-pages-
 
 The input field is connected to `autocomplete` search by page name or URL by setting `data-ac` Attributes.
 
-WARNING: the current implementation cannot open the web page on the other side of the list of web pages (as it cannot find it in the list). Also, if the `docid` in the System or Recycle Bin directory and this sheet is not currently displayed, it also fails to display the directory.
+!>**Warning:** the current implementation cannot open the web page on the other side of the list of web pages (as it cannot find it in the list). Also, if a `docid` in the System or Recycle Bin directory and this sheet is not currently displayed, it also fails to display the directory.
 
 ## View tab Last modified
 
 Clicking the Last Modified tab loads a list of the most recently modified pages from all users into the datatable. Clicking on a name is handled in the `webpagesDatatable.onEdit`. Since the pages in the list can be in different directories, they are not opened directly, but their ID is entered in the field `Doc ID` and subsequently loaded including the tree structure.
 
-Clicking on a leaf loads the contents of the datatable as if for the directory set in the configuration variable `systemPagesRecentPages`which is checked in class [WebpagesService](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java) and if the directory ID matches it is called to retrieve the list of last pages.
+Clicking on a leaf loads the contents of the datatable as if for the directory set in the configuration variable `systemPagesRecentPages` which is checked in class [WebpagesService](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java) and if the directory ID matches it is called to retrieve the list of last pages.
 
 ## View Pending tab
 
 Viewing the list in the pending tab is more complicated. The backend checks to see if there are pages for the currently logged in user to approve. If so it is set in the class [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java) attribute to the model `hasPagesToApprove` to the value of `TRUE`. This is tested in [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) and if `FALSE` so the letter will be hidden.
 
-When the tab is clicked, a directory with the ID set in the configuration variable is loaded into the datatable as if `systemPagesDocsToApprove`what is controlled in the classroom [WebpagesService](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java). Loading is complicated by the fact that the value is used as a unique ID `docId`. However, there may be multiple entries for the same `docId`. As the simplest solution, we turned the value `docId` a `historyId`that are exchanged in the transmitted data.
+When the tab is clicked, a directory with the ID set in the configuration variable is loaded into the datatable as if `systemPagesDocsToApprove` what is controlled in the classroom [WebpagesService](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java). Loading is complicated by the fact that the value is used as a unique ID `docId`. However, there may be multiple entries for the same `docId`. As the simplest solution, we turned the value `docId` a `historyId` that are exchanged in the transmitted data.
 
-The problem is calling data refresh after a click that calls `WebpagesRestController.getOne`where the value is sent `historyId` Like `id`. According to the sent `id` (which is in fact `historyId`) we get the correct value by querying the database `docId` to get the content according to the combination `docId, historyId`.
+The problem is calling data refresh after a click that calls `WebpagesRestController.getOne` where the value is sent `historyId` Like `id`. According to the sent `id` (which is in fact `historyId`) we get the correct value by querying the database `docId` to get the content according to the combination `docId, historyId`.
 
 The click is served in the function `webpagesDatatable.onEdit` by opening a new window `/admin/approve.jsp` with approval dialogue.
 
@@ -208,7 +208,7 @@ For both the last modified and pending table, the add/edit/delete record buttons
 
 Page preview is implemented by class `EditorPreview` in the file `src/js/pages/web-pages-list/preview.js`. Feature `window.previewPage` sets the attribute `isPreviewClicked` and makes an API call to save the editor. It also listens for an event `preSubmit` in which it detects the state of the attribute `isPreviewClicked`.
 
-If it is set to `true` gets JSON data from the editor and stores it in the session object `session.setAttribute("ShowdocAction.showDocData", entity)` by calling `/admin/rest/web-pages/preview/`. It then opens a new tab in the browser with the address `/admin/webpages/preview/?docid=+jsonData.id`operated by the class `PreviewController.java`. It gets the DocDetails object from the session DocDetails `DocDetails doc = (DocDetails)request.getSession().getAttribute("ShowdocAction.showDocData");`, sets the necessary `request` objects and makes the call `/showdoc.do` to view the website. However, this does not get the current object from the database, but uses the object `request.getAttribute("ShowdocAction.showDocData")` to view the data.
+If it is set to `true` gets JSON data from the editor and stores it in the session object `session.setAttribute("ShowdocAction.showDocData", entity)` by calling `/admin/rest/web-pages/preview/`. It then opens a new tab in the browser with the address `/admin/webpages/preview/?docid=+jsonData.id` operated by the class `PreviewController.java`. It gets the DocDetails object from the session DocDetails `DocDetails doc = (DocDetails)request.getSession().getAttribute("ShowdocAction.showDocData");`, sets the necessary `request` objects and makes the call `/showdoc.do` to view the website. However, this does not get the current object from the database, but uses the object `request.getAttribute("ShowdocAction.showDocData")` to view the data.
 
 At the same time listening to the event `webpagesDatatable.EDITOR.on('postSubmit'`, which updates the content of the preview window when the web page is saved (the entity is saved to `session` by calling `WebpagesRestController.afterSave`). This is only done if the preview window is still open, this is tested using `self.previewWindow.name != ""`. This will remain empty if the user closes the window.
 
@@ -225,42 +225,38 @@ V `/admin/v9/src/js/datatables-ckeditor.js afterInit` event is added:
 ```javascript
 //zachytenie CTRL+S/CMD+S
 var editor = this.ckEditorInstance;
-editor.on("contentDom", function (e) {
-	var editable = editor.editable();
-	//console.log("Som contentDown");
-	editable.attachListener(editable, "keydown", function (evt) {
-		//console.log("keydown, evt=", evt);
-		var keyEvent = evt.data.$;
-		if ((window.navigator.platform.match("Mac") ? keyEvent.metaKey : keyEvent.ctrlKey) && keyEvent.key === "s") {
-			//console.log("IFRAME CTRL+S, evt=", evt);
+editor.on( 'contentDom', function(e) {
+    var editable = editor.editable();
+    //console.log("Som contentDown");
+    editable.attachListener( editable, "keydown", function(evt) {
+        //console.log("keydown, evt=", evt);
+        var keyEvent = evt.data.$;
+        if ((window.navigator.platform.match("Mac") ? keyEvent.metaKey : keyEvent.ctrlKey)  && keyEvent.key === 's') {
+            //console.log("IFRAME CTRL+S, evt=", evt);
 
-			keyEvent.preventDefault();
-			try {
-				window.top.WJ.dispatchEvent("WJ.DTE.save", {});
-			} catch (ex) {}
-		}
-	});
+            keyEvent.preventDefault();
+            try {
+                window.top.WJ.dispatchEvent("WJ.DTE.save", {});
+            } catch (ex) {}
+        }
+    });
 });
 ```
 
 similar for PageBuilder in `/admin/inline/inline.js.jsp`:
 
 ```javascript
-$(document).ready(function () {
-	document.addEventListener(
-		"keydown",
-		function (e) {
-			//zachytenie CTRL+S/CMD+S
-			if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey) && e.key === "s") {
-				e.preventDefault();
-				//console.log("Dispatching WJ.DTE.save");
-				try {
-					window.top.WJ.dispatchEvent("WJ.DTE.save", {});
-				} catch (ex) {}
-			}
-		},
-		false
-	);
+$(document).ready(function() {
+	document.addEventListener("keydown", function(e) {
+		//zachytenie CTRL+S/CMD+S
+		if ((window.navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)  && e.key === 's') {
+			e.preventDefault();
+			//console.log("Dispatching WJ.DTE.save");
+			try {
+				window.top.WJ.dispatchEvent("WJ.DTE.save", {});
+			} catch (ex) {}
+		}
+	}, false);
 });
 ```
 

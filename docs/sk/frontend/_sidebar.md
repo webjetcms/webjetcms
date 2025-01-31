@@ -2,13 +2,15 @@
 
 - [:point_left: Späť na Úvod](/?back)
 
+- Nastavenia
+  - [Šablóny](/frontend/setup/README.md)
+  - [Všeobecné nastavenia](/frontend/setup/config.md)
+  - [Voliteľné polia](/frontend/webpages/customfields/README.md)
+  - [FontAwesome](/frontend/webpages/fontawesome/README.md)
 - Šablóny
   - [Spôsob zobrazenia stránky](/frontend/templates/README.md)
   - [Šablóny](/frontend/templates/templates.md)
   - [Skupiny šablón](/frontend/templates/template-groups.md)
-  - [Nastavenie šablón](/frontend/setup/README.md)
-- Voliteľné polia
-  - [Nastavenie](/frontend/webpages/customfields/README.md)
 - Thymeleaf šablóny
   - [Úvod](/frontend/thymeleaf/README.md)
   - [Atribúty, podmienky a cykly](/frontend/thymeleaf/statements.md)

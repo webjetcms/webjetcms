@@ -9,7 +9,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('testovanie app - CookieBar', async ({ I, DTE, Apps }) => {
+Scenario('testovanie app - CookieBar', async ({ I, DTE, Apps, Document }) => {
     Apps.insertApp('Cookie lišta', '#components-app-cookiebar-title');
 
     const defaultParams = {
@@ -35,6 +35,7 @@ Scenario('testovanie app - CookieBar', async ({ I, DTE, Apps }) => {
 
     I.say('Default parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
     I.see(defaultParams.cookie_title);
@@ -95,6 +96,7 @@ Scenario('testovanie app - CookieBar', async ({ I, DTE, Apps }) => {
 
     I.say('Changed parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
     I.see(changedParams.cookie_title);

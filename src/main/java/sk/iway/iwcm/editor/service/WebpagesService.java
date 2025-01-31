@@ -3,7 +3,6 @@ package sk.iway.iwcm.editor.service;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,8 +36,6 @@ import sk.iway.iwcm.admin.layout.LayoutService;
 import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.UserTools;
-import sk.iway.iwcm.components.abtesting.ABTesting;
-import sk.iway.iwcm.components.blog.rest.BlogService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
@@ -48,15 +45,24 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupEditorField;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
+import sk.iway.iwcm.doc.HistoryDB;
+import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.doc.PerexGroupBean;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity;
+import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
+import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.context.ContextFilter;
+import sk.iway.iwcm.search.SearchService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyButton;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.SpecSearch;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -77,9 +83,9 @@ public class WebpagesService {
 	private GroupDetails localSystemGroup;
 
 	public static final String DATA_NOT_LOADED = "data not loaded";
+	private static final String ADMIN_SETTINGS_KEY = "jstreeSettings_web-pages-list";
 
-	public WebpagesService() {
-	}
+	public WebpagesService() {}
 
     public WebpagesService(int groupId, Identity user, Prop prop, HttpServletRequest request) {
         this.groupId = groupId;
@@ -842,38 +848,9 @@ public class WebpagesService {
 	 * @return
 	 */
     public static DatatablePageImpl<DocDetails> getAllItems(GetAllItemsDocOptions options) {
-
         Page<DocDetails> page = null;
 
-        Prop prop = Prop.getInstance(options.getRequest());
-        WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());
-
-		if("true".equals(options.getRequest().getParameter("isABtestingVersion")) ) {
-			//Check perms with combination with ABTesting version
-			if(options.getCurrentUser().isEnabledItem("cmp_abtesting")) {
-				Set<DocDetails> mainWebPages = new HashSet<>();
-				List<DocDetails> allBasicDoc = DocDB.getInstance().getBasicDocDetailsAll();
-				if(allBasicDoc != null) {
-					List<String> allDomains = GroupsDB.getInstance().getAllDomainsList();
-					DocDB docDB = DocDB.getInstance();
-					for(DocDetails dd : allBasicDoc)
-						if(!ABTesting.getAllVariantsDocIds(dd, allDomains, docDB).isEmpty()) mainWebPages.add(dd);
-				}
-
-				//Editor fields need to be nullified, or status icons will be stacking
-				for(DocDetails dd : mainWebPages) dd.setEditorFields(null);
-
-				page = new DatatablePageImpl<>(new ArrayList<>(mainWebPages));
-			} else {
-				//User has no right to request data in ABTesting mode
-				page = new DatatablePageImpl<>(new ArrayList<>());
-			}
-		} else if("true".equals(options.getRequest().getParameter("isBlogVersion"))) {
-			//BLOG VERSION
-			List<Integer> allGroupIds = getBloggerDataList(options.getCurrentUser(), Tools.getIntValue(options.getRequest().getParameter("groupId"), -1));
-			if(allGroupIds == null || allGroupIds.isEmpty()) page = new DatatablePageImpl<>(new ArrayList<>());
-			else page = options.getDocDetailsRepository().findAllByGroupIdIn(allGroupIds.toArray(new Integer[0]), options.getPageable());
-		} else if(options.getGroupId() == Constants.getInt("systemPagesRecentPages")) {
+		if(options.getGroupId() == Constants.getInt("systemPagesRecentPages")) {
 			Specification<DocDetails> spec = WebpagesService.getRecentPagesConditions(options.getUserId());
 			//Combine spec (recent pages) with columnsSpecification (serch throu columns)
 			if(options.getColumnsSpecification() != null) {
@@ -891,6 +868,10 @@ public class WebpagesService {
 
 			if(!options.getCurrentUser().isEnabledItem("cmp_adminlog")) throw new IllegalArgumentException("Access is denied");
 			page = options.getDocDetailsRepository().findAllByOrderByDateCreatedDesc(options.getPageable());
+
+		} else if("true".equals(options.getRequest().getParameter("isSearchVersion"))) {
+			// return empty page, we need to have search text to get data (processed in addSpecSearch)
+			page = new DatatablePageImpl<>(new ArrayList<>());
 		} else {
 			if (GroupsDB.isGroupEditable(options.getCurrentUser(), options.getGroupId())) {
 				Map<String, String> params = new HashMap<>();
@@ -902,11 +883,8 @@ public class WebpagesService {
 
 				@SuppressWarnings("java:S1602")
 				Specification<DocDetails> spec = (Specification<DocDetails>) (root, query, builder) -> {
-
 					final List<Predicate> predicates = new ArrayList<>();
-
 					addSpecSearch(params, predicates, root, builder, options.getCurrentUser());
-
 					return builder.and(predicates.toArray(new Predicate[predicates.size()]));
 				};
 
@@ -924,12 +902,30 @@ public class WebpagesService {
 			}
 		}
 
+		return preparePage(page, options);
+    }
+
+	public static DatatablePageImpl<DocDetails> preparePage(Page<DocDetails> page, GetAllItemsDocOptions options) {
         DatatablePageImpl<DocDetails> pageImpl;
 
 		if (page != null) pageImpl = new DatatablePageImpl<>(page);
 		else pageImpl = new DatatablePageImpl<>(new ArrayList<>());
 
-        pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
+        addOptions(pageImpl, options);
+
+        return pageImpl;
+    }
+
+	/**
+	 * Add options to DatatablePage object
+	 * @param pageImpl - current response Page object
+	 * @param options - options object
+	 */
+	public static void addOptions(DatatablePageImpl<DocDetails> pageImpl, GetAllItemsDocOptions options) {
+		Prop prop = Prop.getInstance(options.getRequest());
+        WebpagesService ws = new WebpagesService(options.getGroupId(), options.getCurrentUser(), prop, options.getRequest());
+
+		pageImpl.addOptions("tempId", ws.getTemplates(options.isRecursiveSubfolders()), "tempName", "tempId", true);
         pageImpl.addOptions("menuDocId,rightMenuDocId", ws.getMenuList(true), "title", "docId", false);
         pageImpl.addOptions("headerDocId,footerDocId", ws.getHeaderList(true), "title", "docId", false);
 		pageImpl.addOptions("tempFieldADocId,tempFieldBDocId,tempFieldCDocId,tempFieldDDocId", ws.getHeaderFooterMenuList(true), "title", "docId", false);
@@ -950,36 +946,6 @@ public class WebpagesService {
 			WebpagesService.processFromEntity(entity, ProcessItemAction.GETALL, options.getRequest(), addFields);
 			addFields = false;
 		}
-
-        return pageImpl;
-    }
-
-	private static List<Integer> getBloggerDataList(Identity currentUser, int selectedGroupId) {
-		if(BlogService.isUserBloggerAdmin(currentUser)) {
-			//It's admin with perms cmp_blog && cmp_blog_admin -> return all bloggers web pages
-			List<Integer> allGroupIds = BlogService.getAllBloggersGroupIds();
-
-			if(selectedGroupId == -1) //Docs from all bloggers groups
-				return allGroupIds;
-			else if(allGroupIds.contains(selectedGroupId)) //Docs from specific blogger group
-				return Arrays.asList(selectedGroupId);
-		} else if(BlogService.isUserBlogger( currentUser )) {
-			//It's blogger -> return only his web pages
-			int rootGroupId = Tools.getTokensInt(currentUser.getEditableGroups(), ",")[0];
-
-			//Get groups tree from user editable root group
-			List<GroupDetails> groupsTree = GroupsDB.getInstance().getGroupsTree(rootGroupId, true, true);
-			List<Integer> groupIds = new ArrayList<>();
-			for(GroupDetails group : groupsTree) groupIds.add(group.getGroupId());
-
-			if(selectedGroupId == -1)
-				return groupIds;
-			else if(groupIds.contains(selectedGroupId))
-				return Arrays.asList(selectedGroupId);
-		}
-
-		//User has no right or specific groupId is not from his groups tree (or not from any blogger group tree)
-		return null;
 	}
 
 	/**
@@ -1068,7 +1034,7 @@ public class WebpagesService {
 		//ak je zapnute zobrazenie zoznamu stranok pre novu stranku musim spravit reload
         //ostatne ako zmena adresara vyvolava reload uz standardne
         AdminSettingsService ass = new AdminSettingsService(user);
-        return ass.getJsonBooleanValue("jstreeSettings_web-pages-list", "showPages");
+        return ass.getJsonBooleanValue(ADMIN_SETTINGS_KEY, "showPages");
 	}
 
 	public static int getUserFirstEditableGroup(Identity user)
@@ -1142,22 +1108,20 @@ public class WebpagesService {
 
         //vyhladanie na zaklade Meno autora, hladane v DB tabulke nasledne v stlpci authorId
         String searchAuthorName = params.get("searchAuthorName");
-        if (searchAuthorName != null) {
+        if (searchAuthorName != null)
             specSearch.addSpecSearchUserFullName(searchAuthorName, "authorId", predicates, root, builder);
-        }
 
         String permissions = params.get("searchEditorFields.permisions");
-        if (permissions!=null) {
+        if (permissions != null)
             specSearch.addSpecSearchPasswordProtected(permissions, "passwordProtected", predicates, root, builder);
-        }
+
         String emails = params.get("searchEditorFields.emails");
-        if (emails!=null) {
+        if (emails != null)
             specSearch.addSpecSearchPasswordProtected(emails, "passwordProtected", predicates, root, builder);
-        }
+
         int userGroupId = Tools.getIntValue(params.get("userGroupId"), -1);
-        if (userGroupId>0) {
+        if (userGroupId > 0)
             specSearch.addSpecSearchPasswordProtected(userGroupId, "passwordProtected", predicates, root, builder);
-        }
 
 		String groupIdListParam = params.get("groupIdList");
 		if (Tools.isEmpty(groupIdListParam) && Tools.isNotEmpty(params.get("groupId"))) {
@@ -1165,10 +1129,9 @@ public class WebpagesService {
 			if ("true".equals(params.get("recursive"))) groupIdListParam+="*";
 		}
 
-		if(Boolean.TRUE.equals( Tools.getBooleanValue(params.get("isBlogVersion"), false) )) {
-			List<Integer> bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get("groupId"), -1));
-			if(bloggersGroupIds != null)
-				predicates.add(root.get("groupId").in(bloggersGroupIds));
+		if(Boolean.TRUE.equals( Tools.getBooleanValue(params.get("isSearchVersion"), false) )) {
+			// SEARCH_ALL VERSION
+			SearchService.getWebPagesData(params, user, predicates, builder, root);
 		} else {
 			String[] groupIdListArray = Tools.getTokens(groupIdListParam, ",", true);
 			int groupId;
@@ -1212,4 +1175,75 @@ public class WebpagesService {
 			}
 		}
     }
+
+	public static DocDetails getOneItem(long id, int groupId, int historyId, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository, List<NotifyBean> notifyList, HttpServletRequest request) {
+		if (groupId == Constants.getInt("systemPagesDocsToApprove")) {
+            //pre tento pripad mame otocene docid a historyid, ale principialne dostavame v id hodnotu historyid, takze to potrebujeme takto nacitat
+            historyId = (int)id;
+            //ziskaj docid podla historyid
+            id = (new SimpleQuery()).forInt("SELECT doc_id FROM documents_history WHERE history_id=?", historyId);
+        }
+
+        Prop prop = Prop.getInstance(request);
+
+		DocDetails doc = editorFacade.getDocForEditor((int) id, historyId, groupId);
+
+        if(id == -1) {
+            doc.setGenerateUrlFromTitle(true);
+        }
+
+        if (ContextFilter.isRunning(request)) {
+            // do editoru nahrame texty s pridanymi linkami
+            doc.setData(ContextFilter.addContextPath(request.getContextPath(), doc.getData()));
+		}
+
+		if (groupId == Constants.getInt("systemPagesDocsToApprove")) {
+			int docId = doc.getDocId();
+			doc.setDocId(historyId);
+			doc.setHistoryId(docId);
+        }
+
+		//over, ci existuju neschvalene/rozpracovane verzie, ak ano, zobraz notifikaciu
+        HistoryDB historyDB = new HistoryDB("iwcm");
+        List<DocDetails> history = historyDB.getHistory(doc.getDocId(), false, true);
+        if (history != null && history.isEmpty()==false) {
+            if (historyId < 1) {
+                //ak nemame zadane historyId pridaj notifikaciu o tom, ze existuje novsia verzia
+                NotifyBean notify = new NotifyBean(prop.getText("text.warning"), prop.getText("editor.notify.checkHistory"), NotifyBean.NotifyType.WARNING, 15000);
+				notify.addButton(new NotifyButton(prop.getText("editor.notify.editFromHistory"), "btn btn-primary", "ti ti-history", "editFromHistory("+history.get(0).getDocId()+", "+history.get(0).getHistoryId()+")"));
+                notifyList.add(notify);
+            }
+            request.getSession().removeAttribute("docHistory");
+        }
+
+        List<DocAtrDefEntity> atrDefs = docAtrDefRepository.findAllByDocId(MultigroupMappingDB.getMasterDocId(doc.getDocId(), true), CloudToolsForCore.getDomainId());
+        atrDefs.forEach(f -> {
+            if (f.getDocAtrEntities()!=null && f.getDocAtrEntities().isEmpty()==false) {
+                //normally in JSON we don't want to send all DocAtrEntity relationship (it's lazy loaded ant it will be populated), it's JsonIgnored,
+                //we just need first entity to be sent, so set it here for this specific case
+                f.setDocAtrEntityFirst(f.getDocAtrEntities().get(0));
+            }
+        });
+        doc.getEditorFields().setAttrs(atrDefs);
+
+        String newPageTitleKey = request.getParameter("newPageTitleKey");
+        if (Tools.isNotEmpty(newPageTitleKey) && doc.getDocId()<1) {
+            doc.setTitle(prop.getText(newPageTitleKey));
+        }
+
+        return doc;
+	}
+
+	public static String getTreeSortType(UserDetails user) {
+        AdminSettingsService ass = new AdminSettingsService(user);
+		String sortType = ass.getJsonValue(ADMIN_SETTINGS_KEY, "treeSortType");
+
+		if(sortType == null || Tools.isEmpty(sortType) == true) return "priority";
+		else return sortType;
+	}
+
+	public static boolean isTreeSortOrderAsc(UserDetails user) {
+		AdminSettingsService ass = new AdminSettingsService(user);
+		return ass.getJsonBooleanValue(ADMIN_SETTINGS_KEY, "treeSortOrderAsc");
+	}
 }

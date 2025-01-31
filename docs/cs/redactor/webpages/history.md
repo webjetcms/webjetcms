@@ -1,4 +1,4 @@
-# Historie webových stránek
+# Historie
 
 Na kartě Historie jsou zobrazeny publikované historické verze webové stránky a **aktuální verze ve vývoji (dosud nezveřejněné)**. Při publikování rozpracované verze jsou dočasné/pracovní verze stránky z historie odstraněny a v historii je ponechána publikovaná verze.
 

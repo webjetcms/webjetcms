@@ -49,27 +49,29 @@ Scenario("Check that after change, page is on top of audit-changed-webpages + it
     DTE.waitForEditor("changedWebPagesDataTable");
     I.click("#pills-dt-changedWebPagesDataTable-content-tab");
     I.waitForElement("#cke_data", 10);
-    I.switchTo("#cke_data");
     I.switchTo("iframe.cke_reset");
     I.see(newBody);
+    I.switchTo();
 });
 
 Scenario("Check buttons preview", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
     I.clickCss("button.dt-filter-id");
     I.clickCss("button.buttons-history-preview");
     I.switchToNextTab();
     I.see(pageTitle.toUpperCase(), "div.container h1");
     I.closeCurrentTab();
+    I.switchTo();
 });
 
 Scenario("Check buttons stat", ({ I, DT }) => {
     I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
-    DT.filter("title", pageTitle);
+    DT.filterContains("title", pageTitle);
     I.clickCss("button.dt-filter-id");
     I.clickCss("button.buttons-stat");
     I.switchToNextTab();
     I.waitForElement("div#topDetails-lineVariantA");
     I.closeCurrentTab();
+    I.switchTo();
 });

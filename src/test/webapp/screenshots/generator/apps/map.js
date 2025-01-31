@@ -15,9 +15,7 @@ Scenario('app map', ({ I, DT, DTE, Document }) => {
     I.wait(1);
 
     I.jstreeWaitForLoader();
-    I.click(locate("#SomStromcek a.jstree-anchor").withText('Map').last());
-    I.dtWaitForLoader();
-
+    I.jstreeClick("Map");
     I.click('//a[contains(.,"Map") and @href="javascript:;"]');
     DTE.waitForEditor();
 

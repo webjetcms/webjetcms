@@ -300,6 +300,21 @@
                 "showReuseMessage": false,
                 "close": true
             }
+        },
+        {
+            "label": "Sass Compile new-webjet-style.css",
+            "type": "shell",
+            "options": {
+                "cwd": "src/main/webapp/admin/skins/webjet8/assets/global/css/scss/"
+            },
+            "command": "sass new-webjet-style.scss ../new-webjet-style.css --no-source-map",
+            "group": "build",
+            "presentation": {
+                "reveal": "silent",
+                "clear": true,
+                "showReuseMessage": false,
+                "close": true
+            }
         }
     ]
 }

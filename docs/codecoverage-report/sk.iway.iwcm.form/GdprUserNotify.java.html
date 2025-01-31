@@ -39,8 +39,8 @@ public class GdprUserNotify {
 
     public  boolean addNotify()
     {
-<span class="fc" id="L42">        Adminlog.add(Adminlog.TYPE_FORM_VIEW, currentUserId, description, -1, -1);</span>
-<span class="fc" id="L43">        return true;</span>
+<span class="nc" id="L42">        Adminlog.add(Adminlog.TYPE_FORM_VIEW, currentUserId, description, -1, -1);</span>
+<span class="nc" id="L43">        return true;</span>
     }
 
     public boolean hasUserGdprApproved()
@@ -68,9 +68,9 @@ public class GdprUserNotify {
                 window.location.href=&quot;/admin/welcome.jsp&quot;;
             &lt;/script&gt;
                */
-<span class="fc" id="L71">            return false;//Pokym nemame suhlas, nic nezobrazime</span>
+<span class="nc" id="L71">            return false;//Pokym nemame suhlas, nic nezobrazime</span>
         }
-<span class="nc" id="L73">        return true;</span>
+<span class="fc" id="L73">        return true;</span>
     }
 
     /*private  String getCacheObjectName()

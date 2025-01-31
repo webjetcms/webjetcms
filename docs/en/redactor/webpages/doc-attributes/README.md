@@ -20,10 +20,10 @@ The attribute has the following fields:
 - Description - extended description of the attribute, it is up to the designer where this description will be displayed on the web page.
 - Default value - the default value of the attribute in the page editor (set for the new value).
 - Type - data type of the attribute
-	- `STRING` - text field
-	- `INT` - integer value
-	- `BOOL` - binary value yes/no
-	- `DOUBLE` - numeric value with decimal place
+  - `STRING` - text field
+  - `INT` - integer value
+  - `BOOL` - binary value yes/no
+  - `DOUBLE` - numeric value with decimal place
 - Group - the inclusion of the attribute in the group. E.g. for different groups of products like TV, refrigerators, computers you have different attributes.
 - `True hodnota` - text displayed for type `BOOL` for the selected option (e.g. yes or includes).
 - `False hodnota` - text displayed for type `BOOL` for an unselected option (e.g. no or does not contain).
@@ -70,6 +70,7 @@ The displayed table can be filtered (searched) using URL parameters. For example
 - `LT` (less than) - search for a value that is less than the specified value.
 - `GT` (greater than) - search for a value that is greater than the specified value.
 - `GTLT` - search for a value in the specified interval `od:do`. The value is inclusive, e.g. `?atrs_GTLT_Power+Delivery+(W)=60:120` will also display pages that have a value of 60 or 120.
+
 If the name contains a space, you can use the `+` to replace it. You do not need to use diacritics in the title, the title is compared with the diacritics removed.
 
 ### Attributes of the currently displayed page

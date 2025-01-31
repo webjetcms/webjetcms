@@ -27,7 +27,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.users.UsersDB;
 
 @RestController
-@RequestMapping("/admin/rest/blog")
+@RequestMapping("/admin/rest/blogger")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_blog_admin')")
 @Datatable
 public class BloggerRestController extends DatatableRestControllerV2<BloggerBean, Long> {
@@ -44,19 +44,19 @@ public class BloggerRestController extends DatatableRestControllerV2<BloggerBean
 
     @Override
     public Page<BloggerBean> getAllItems(Pageable pageable) {
-        List<BloggerBean> bloggers = BlogService.getAllBloggers();
+        List<BloggerBean> bloggers = BloggerService.getAllBloggers();
         return new DatatablePageImpl<>(bloggers);
     }
 
     @Override
     public BloggerBean getOneItem(long id) {
         if(id < 0) return new BloggerBean();
-        return BlogService.getBloggerBean(id);
+        return BloggerService.getBloggerBean(id);
     }
 
     @Override
     public BloggerBean insertItem(BloggerBean entity) {
-        boolean result = BlogService.saveBlogger(entity, userDetailsRepository, editorFacade, getRequest());
+        boolean result = BloggerService.saveBlogger(entity, userDetailsRepository, editorFacade, getRequest());
         if(Boolean.FALSE.equals(result)) throwError("datatable.error.unknown");
 
         //SAVE successful
@@ -66,7 +66,7 @@ public class BloggerRestController extends DatatableRestControllerV2<BloggerBean
 
     @Override
     public BloggerBean editItem(BloggerBean entity, long id) {
-        boolean result = BlogService.editBlogger(entity, userDetailsRepository, getRequest());
+        boolean result = BloggerService.editBlogger(entity, userDetailsRepository, getRequest());
         if(Boolean.FALSE.equals(result)) throwError("datatable.error.unknown");
 
         //EDIT successful

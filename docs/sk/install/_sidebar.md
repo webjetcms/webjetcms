@@ -3,7 +3,7 @@
 - [:point_left: Späť na Úvod](/?back)
 
 - Inštalácia
-  - [Predpoklady a verzie](/install/README.md)
+  - [Predpoklady a verzie](/install/versions.md)
   - [Zriadenie novej inštalácie](/install/setup/README.md)
   - [Nastavenie licenčného čísla](/install/license/README.md)
 - Konfigurácia

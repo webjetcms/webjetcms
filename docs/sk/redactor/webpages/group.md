@@ -55,6 +55,7 @@ Spôsob zobrazenia je rozdelený na prihláseného a neprihláseného návštevn
 ## Karta prístup
 
 V karte prístup nastavujete oprávnenia pre prístup k stránkam v tomto priečinku. Ak zvolíte niektorú používateľskú skupinu nebude obsah priečinka verejne dostupný. Bude dostupný len prihlásenému návštevníkovi, ktorý patrí do jednej z vybraných používateľských skupín.
+
 !>**Upozornenie:** nejedná sa o nastavenie oprávnení pre administrátorov, ale pre vytvorenie tzv. zaheslovanej sekcie na web stránke (pre návštevníkov stránky)
 
 - Povoliť prístup len pre skupinu používateľov - ak zvolíte niektorú skupinu používateľov bude pre zobrazenie stránky vyžadované prihlásenie používateľa z danej skupiny.

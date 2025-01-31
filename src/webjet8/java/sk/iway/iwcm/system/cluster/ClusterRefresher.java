@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
 import org.eclipse.persistence.jpa.JpaEntityManager;
 
 import sk.iway.iwcm.Adminlog;
@@ -94,7 +93,7 @@ public class ClusterRefresher extends TimerTask
 			}
 			catch (Exception ex)
 			{
-				Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR JPA " + ex.getMessage()+"\n\n"+ExceptionUtils.getStackFrames(ex), -1, -1);
+				Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR JPA " + ex.getMessage()+"\n\n"+Logger.getStackTrace(ex), -1, -1);
 				sk.iway.iwcm.Logger.error(ex);
 			}
 
@@ -103,7 +102,7 @@ public class ClusterRefresher extends TimerTask
 		}
 		catch (Exception ex)
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR " + ex.getMessage()+"\n\n"+ExceptionUtils.getStackFrames(ex), -1, -1);
+			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR " + ex.getMessage()+"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
 		}
 	}
@@ -130,12 +129,12 @@ public class ClusterRefresher extends TimerTask
 		}
 		catch (IllegalStateException ex)
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR 1" + ex.getMessage()+"\n\n"+ExceptionUtils.getStackFrames(ex), -1, -1);
+			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR 1 " + ex.getMessage()+"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
 		}
 		catch (Exception ex)
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR 2" + ex.getMessage()+"\n\n"+ExceptionUtils.getStackFrames(ex), -1, -1);
+			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR 2 " + ex.getMessage()+"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
 		}
 	}
@@ -150,7 +149,8 @@ public class ClusterRefresher extends TimerTask
 		{
 			//we need myNodeName to read monitoring refresher data
 			int actualMax = new SimpleQuery().forInt("SELECT MAX(cluster_refresh_id) FROM cluster_refresher WHERE (node_name=? OR node_name=?) AND cluster_refresh_id>?", "auto", clusterMyNodeName, getLastExecutedAutoId());
-			if (actualMax > 0 && getLastExecutedAutoId()>0)
+			//getLastExecutedAutoId()>0 - ak je to prvy beh, tak nechceme robit nic, su tam zapisane data z tohto nodu
+			if (actualMax > 0 && getLastExecutedAutoId()>=0)
 			{
 				List<String> updateClassNames = new SimpleQuery().forListString("SELECT class_name FROM cluster_refresher WHERE (node_name=? OR node_name=?)  AND cluster_refresh_id>? AND cluster_refresh_id<=? ORDER BY cluster_refresh_id ASC", "auto", clusterMyNodeName, getLastExecutedAutoId(), actualMax);
 
@@ -171,7 +171,7 @@ public class ClusterRefresher extends TimerTask
 		}
 		catch (Exception ex)
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR " + ex.getMessage()+"\n\n"+ExceptionUtils.getStackFrames(ex), -1, -1);
+			Adminlog.add(Adminlog.TYPE_CRON, "ClusterRefresher.run ERROR " + ex.getMessage()+"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
 		}
 	}
@@ -263,7 +263,7 @@ public class ClusterRefresher extends TimerTask
 		}
 		catch (Exception ex)
 		{
-			Adminlog.add(Adminlog.TYPE_CRON, "Error invoking "+className+" error: " + ex.getMessage()  +"\n\n"+ExceptionUtils.getStackFrames(ex), -1, -1);
+			Adminlog.add(Adminlog.TYPE_CRON, "Error invoking "+className+" error: " + ex.getMessage()  +"\n\n"+Logger.getStackTrace(ex), -1, -1);
 			Logger.error(ClusterRefresher.class, ex);
 		}
 	}

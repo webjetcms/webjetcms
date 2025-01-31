@@ -1,5 +1,4 @@
-# Konfigurácia
-
+# Základná konfigurácia
 Najčastejšie používané [konfiguračné premenné](../../admin/setup/configuration/README.md).
 
 ## Logovanie

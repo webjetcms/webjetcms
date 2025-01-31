@@ -1,18 +1,18 @@
 Feature('apps.restaurant-menu.menu');
 
-Before(({ login }) => {
+Before(({ login, DT }) => {
     login('admin');
+    DT.addContext('menu', '#menuDataTable_wrapper');
 });
 
 Scenario('basic tests', async ({I, DT, DTE}) => {
     I.amOnPage("/apps/restaurant-menu/admin/");
-    await setDate(I, DT, "25.11.2023");
+    DT.setExtfilterDate("25.11.2023");
     I.clickCss("#menuTypeDays");
     DT.waitForLoader();
 
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
-
-    I.click("button.buttons-create");
+    I.click(DT.btn.menu_add_button);
     DTE.waitForLoader("menuDataTable");
     DTE.selectOption('editorFields\\.mealCathegory', 'Hlavné jedlo');
     DTE.selectOption('editorFields\\.selectedMealId', 'Rezeň so zemiakmi');
@@ -50,7 +50,7 @@ Scenario('days-weeks dates setting tests', async ({I, DT}) => {
     I.amOnPage("/apps/restaurant-menu/admin/");
 
     I.say("Test of filter and sorting")
-    await setDate(I, DT, "29.11.2023");
+    DT.setExtfilterDate("29.11.2023");
     I.clickCss("#menuTypeDays");
     DT.waitForLoader();
 
@@ -106,8 +106,8 @@ Scenario('days-weeks dates setting tests', async ({I, DT}) => {
 Scenario('priority logic test', async ({I, DT, DTE}) => {
     I.amOnPage("/apps/restaurant-menu/admin/");
 
-    await setDate(I, DT, "27.11.2023");
-    I.click("button.buttons-create");
+    DT.setExtfilterDate("27.11.2023");
+    I.click(DT.btn.menu_add_button);
     DTE.waitForLoader("menuDataTable");
 
     const dateValue = await I.grabValueFrom("#DTE_Field_dayDate");
@@ -123,9 +123,9 @@ Scenario('priority logic test', async ({I, DT, DTE}) => {
     I.assertEqual("30", priority);
 });
 
-Scenario('test of menu link to meal table', async ({I, DT, DTE}) => {
+Scenario('test of menu link to meal table', ({I, DT, DTE}) => {
     I.amOnPage("/apps/restaurant-menu/admin/");
-    await setDate(I, DT, "27.11.2023");
+    DT.setExtfilterDate("27.11.2023");
 
     I.click("Losos s cintronom");
     DTE.waitForLoader("mealsDataTable");
@@ -188,13 +188,7 @@ async function testDateInputValue(I, value) {
     I.assertEqual(value, date_input);
 }
 
-async function setDate(I, DT, value) {
-    I.fillField("div.dt-extfilter-dayDate > form > div.input-group > input.datepicker.min", value);
-    I.click("div.dt-extfilter-dayDate > form > div.input-group > button.filtrujem");
-    DT.waitForLoader();
-}
-
-Scenario('testy domainId', async ({I, DT, DTE, Document}) => {
+Scenario('testy domainId', ({I, DT, DTE, Document}) => {
 
     //
     I.say("Testing webjet9 domain");
@@ -205,13 +199,13 @@ Scenario('testy domainId', async ({I, DT, DTE, Document}) => {
 
     I.amOnPage("/apps/restaurant-menu/admin/");
     DT.waitForLoader();
-    await setDate(I, DT, "29.11.2023");
+    DT.setExtfilterDate("29.11.2023");
 
     I.see("Gulášová", "#menuDataTable");
     I.dontSee("Test23 polievka", "#menuDataTable");
     I.dontSee("Test23 jedlo", "#menuDataTable");
 
-    I.click("button.buttons-create");
+    I.click(DT.btn.menu_add_button);
     DTE.waitForLoader("menuDataTable");
     I.click({ css: "div.modal-dialog div.DTE_Field_Name_editorFields\\.selectedMealId button.dropdown-toggle" });
     I.waitForElement(locate('div.dropdown-menu.show .dropdown-menu.show'), 5);
@@ -224,13 +218,13 @@ Scenario('testy domainId', async ({I, DT, DTE, Document}) => {
     I.say("Testing test23.tau27.iway.sk domain");
     Document.switchDomain("test23.tau27.iway.sk");
     DT.waitForLoader();
-    await setDate(I, DT, "29.11.2023");
+    DT.setExtfilterDate("29.11.2023");
 
     I.dontSee("Gulášová", "#menuDataTable");
     I.see("Test23 polievka", "#menuDataTable");
     I.see("Test23 jedlo", "#menuDataTable");
 
-    I.click("button.buttons-create");
+    I.click(DT.btn.menu_add_button);
     DTE.waitForLoader("menuDataTable");
     I.click({ css: "div.modal-dialog div.DTE_Field_Name_editorFields\\.selectedMealId button.dropdown-toggle" });
     I.waitForElement(locate('div.dropdown-menu.show .dropdown-menu.show'), 5);

@@ -52,7 +52,7 @@
         });
         statKeywordsDetailsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
 
-        enginesCountDataTable = WJ.DataTable({ 
+        enginesCountDataTable = WJ.DataTable({
             url: enginesCountUrl,
             columns: ChartTools.filterColumns(["order", "serverName", "queryCount", "percentage"], enginesCountColumns),
             serverSide: false,
@@ -97,7 +97,7 @@
 
         async function createAmcharts() {
             window.initAmcharts().then(module => {
-                pieKeywordsEngines = new ChartTools.PieChartForm("accesCount", "serverName", '[[#{stat.graph.searchEnginesPie}]]', "statKeywordsDetails-pieAccessCount", enginesCountDataTable.DATA.json);
+                pieKeywordsEngines = new ChartTools.PieChartForm("accesCount", "serverName", '[[#{stat.graph.searchEnginesPie}]]', "statKeywordsDetails-pieAccessCount", enginesCountDataTable.DATA.json.data);
                 ChartTools.createAmchart(pieKeywordsEngines);
 
                 WJ.hideLoader();
@@ -108,13 +108,13 @@
             WJ.showLoader();
             //add table filter params
             let searchDateValue = ChartTools.getDateRange(null);
-            enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchUrl", $("#searchQuery").val()));
-            enginesCountDataTable.ajax.url(WJ.urlUpdateParam(enginesCountDataTable.ajax.url(), "searchDayDate", searchDateValue));
+            enginesCountDataTable.setAjaxUrl(WJ.urlUpdateParam(enginesCountDataTable.getAjaxUrl(), "searchUrl", $("#searchQuery").val()));
+            enginesCountDataTable.setAjaxUrl(WJ.urlUpdateParam(enginesCountDataTable.getAjaxUrl(), "searchDayDate", searchDateValue));
 
             //reload table values
             await enginesCountDataTable.ajax.reload();
 
-            pieKeywordsEngines.chartData = enginesCountDataTable.DATA.json;
+            pieKeywordsEngines.chartData = enginesCountDataTable.DATA.json.data;
             ChartTools.updateChart(pieKeywordsEngines);
             WJ.hideLoader();
         }

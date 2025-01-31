@@ -10,7 +10,8 @@
   - [Skupiny uživatelů](/admin/users/user-groups.md)
   - [Skupiny práv](/admin/users/perm-groups.md)
 - Nastavení
+  - [Automatizované úkoly](/admin/settings/cronjob/README.md)
+  - [Hlavičky HTTP](/admin/settings/response-header/README.md)
   - Překladové klíče
     - [Seznam klíčů](/admin/settings/translation-keys/README.md)
     - [Chybějící klíče](/admin/settings/missing-keys/README.md)
-  - [Hlavičky HTTP](/admin/settings/response-header/README.md)

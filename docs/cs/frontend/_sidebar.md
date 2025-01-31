@@ -1,13 +1,15 @@
  <div class="sidebar-section">Webový designér</div>
 
 - [:point\_left: Zpět na úvod](/?back)
+- Nastavení
+  - [Šablony](/frontend/setup/README.md)
+  - [Obecná nastavení](/frontend/setup/config.md)
+  - [Volitelná pole](/frontend/webpages/customfields/README.md)
+  - [FontAwesome](/frontend/webpages/fontawesome/README.md)
 - Šablony
   - [Způsob zobrazení stránky](/frontend/templates/README.md)
   - [Šablony](/frontend/templates/templates.md)
   - [Skupiny šablon](/frontend/templates/template-groups.md)
-  - [Nastavení šablon](/frontend/setup/README.md)
-- Volitelná pole
-  - [Nastavení](/frontend/webpages/customfields/README.md)
 - Šablony Thymeleaf
   - [Úvod](/frontend/thymeleaf/README.md)
   - [Atributy, podmínky a cykly](/frontend/thymeleaf/statements.md)
@@ -43,3 +45,6 @@
   - [Vzorové šablony](/frontend/examples/README.md)
   - [Holá šablona](/frontend/examples/template-bare/README.md)
   - [Kreativní šablona](/frontend/examples/templates-creative/README.md)
+- Generování obrázků
+  - [Servlet Thumb](/frontend/thumb-servlet/README.md)
+  - [Zajímavosti](/frontend/thumb-servlet/interest-point.md)

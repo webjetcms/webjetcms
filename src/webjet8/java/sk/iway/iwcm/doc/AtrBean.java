@@ -14,6 +14,7 @@ import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.tags.SelectTag;
 
 /**
@@ -50,14 +51,22 @@ public class AtrBean implements Serializable
     */
    public String getHtml()
    {
-   	return getHtml(false);
+   	return getHtml(false, null, null, null);
    }
 
    /**
     * vygeneruje HTML podobu atributu
     * @return
     */
-   public String getHtml(boolean onWebPage)
+   public String getHtml(boolean onWebPage) {
+      	return getHtml(onWebPage, null, null, null);
+   }
+
+   /**
+    * vygeneruje HTML podobu atributu
+    * @return
+    */
+   public String getHtml(boolean onWebPage, String name, String id, String classes)
    {
    	if (atrDefaultValue == null) atrDefaultValue = "";
    	StringBuilder ret = null;
@@ -77,11 +86,22 @@ public class AtrBean implements Serializable
       {
          if(onWebPage)
          {
-         	ret = new StringBuilder("<option value=''>nezáleží</option>");
+            Prop prop = Prop.getInstance();
+         	ret = new StringBuilder("<option value=''>"+prop.getText("components.atr.doesntMatter")+"</option>");
          }
          else
          {
-         	ret = new StringBuilder("<select name='atr_"+atrId+"'>");
+            if(Tools.isEmpty(name))
+         	   ret = new StringBuilder("<select name='atr_"+atrId+"' ");
+            else
+         	   ret = new StringBuilder("<select name='"+name+"' ");
+
+            if(Tools.isNotEmpty(id)) ret.append("id='"+id+"' ");
+
+            if(Tools.isNotEmpty(classes)) ret.append("class='"+classes+"' ");
+
+            ret.append(">");
+
          	ret.append("<option value=''></option>");
          }
          String tmp, selected;

@@ -92,8 +92,7 @@ pageContext.include("/sk/iway/iwcm/components/news/News.action");
 .tools {position: absolute; left: 21px; top: 5px; display: none; z-index: 100;}
 .template .dropdown-menu .divider {margin: 0px;}
 .template .btn-group .dropdown-menu {margin: 0px;}
-.template .btn.dropdown-toggle {height: 34px; width: 34px;}
-.templates .template {padding-bottom: 15px;}
+.templates .template {padding-bottom: 15px; position: relative;}
 
 .templates .template.selected div.image img {border: 1px solid #ccc; border-color: #3b5998;}
 .templates .template.selected div.image:after {
@@ -127,10 +126,6 @@ pageContext.include("/sk/iway/iwcm/components/news/News.action");
 	text-align: left;
 	width: 300px;
 }
-.btn-group .btn.dropdown-toggle {
-    height: 35px;
-	padding-top: 0px;
-}
 button.template-cancel {
 	border-top-right-radius: 0px !important;
     border-bottom-right-radius: 0px !important;
@@ -143,6 +138,17 @@ div.tools i.ti.ti-chevron-down {
 	margin-left: -8px;
 	line-height: 34px;
 }
+.btn.dropdown-toggle {
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+.tab-page select.filterSelect {
+	display: inline-block;
+	width: auto;
+}
+.operationsBox select {
+	min-width: 100px;
+}
 </style>
 
 <script type="text/javascript" src="/admin/scripts/common.jsp"></script>
@@ -153,7 +159,7 @@ div.tools i.ti.ti-chevron-down {
 
 $(document).ready(function(){
 	//$('.dropdown-toggle').dropdown();
-	$('[data-toggle="tooltip"]').tooltip();
+	//$('[data-bs-toggle="tooltip"]').tooltip();
 
 	$('body').on('mouseover', '.template', function(){
 		$(this).find('.tools').stop().fadeIn();
@@ -219,7 +225,7 @@ $(document).ready(function(){
 				$('#templateValue').val(template.value);
 				$('#pagingValue').val(template.pagingValue);
 
-				console.log(template.pagingPosition);
+				//console.log(template.pagingPosition);
 				if (template.pagingPosition == '<%= PagingPosition.BEFORE_AND_AFTER %>') {
 					$('#pagingPositionPred').prop('checked', true);
 					$('#pagingPositionZa').prop('checked', true);
@@ -236,10 +242,6 @@ $(document).ready(function(){
 					$('#pagingPositionPred').prop('checked', false);
 					$('#pagingPositionZa').prop('checked', false);
 				}
-
-				if (typeof $('#pagingPositionPred, #pagingPositionZa').uniform != 'undefined') {
-                    $('#pagingPositionPred, #pagingPositionZa').uniform('refresh');
-                }
 
 				$('#keyShort').val(template.keyShort);
 
@@ -770,9 +772,7 @@ function escapeHtml(unsafe) {
 					<div class="col-sm-6">
 						<div class="input-group">
 							<input type="text" name="groupIds" id="groupIds" class="form-control" value="${actionBean.groupIdsString}" />
-							<span class="input-group-btn">
-								<input type="button" class="btn green" name="groupIdsSelect" value="<iwcm:text key="components.news.addgroup"/>" onClick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);'>
-	                  		</span>
+							<input type="button" class="btn btn-primary" name="groupIdsSelect" value="<iwcm:text key="components.news.addgroup"/>" onClick='popupFromDialog("<iwcm:cp/>/admin/grouptree.jsp", 500, 500);'>
 						</div>
 					</div>
 				</div>
@@ -927,9 +927,9 @@ function escapeHtml(unsafe) {
 									<button type="button" class="btn btn-primary template-choose"><iwcm:text key="components.news.choose_template" /></button>
 									<button type="button" class="btn btn-primary template-cancel"><iwcm:text key="components.news.cancel_template" /></button>
 									<c:if test="${actionBean.canEdit}">
-										<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 											<i class="ti ti-chevron-down"></i>
-											<span class="sr-only"><iwcm:text key="components.news.new_template" /></span>
+											<span class="visually-hidden"><iwcm:text key="components.news.new_template" /></span>
 										</button>
 										<ul class="dropdown-menu">
 											<li><a href="javascript:;" class="template-edit"><iwcm:text key="components.news.edit_template" /></a></li>
@@ -1018,11 +1018,11 @@ function escapeHtml(unsafe) {
 							</div>
 							<div class="operationsInteger operationsDate operations">
 								<select>
-									<option value="gt">></option>
+									<option value="gt">&gt;</option>
 									<option value="ge">&ge;</option>
 									<option value="eq" selected>=</option>
 									<option value="le">&le;</option>
-									<option value="lt"><</option>
+									<option value="lt">&lt;</option>
 
 								</select>
 							</div>
@@ -1105,7 +1105,9 @@ function escapeHtml(unsafe) {
 				</c:forEach>
 
 				<div class="row">
-					<a class="btn btn-primary addFilter"><iwcm:text key="components.news.add_filter" /></a>
+					<div class="col-12">
+						<a class="btn btn-primary addFilter"><iwcm:text key="components.news.add_filter" /></a>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -1121,7 +1123,7 @@ function escapeHtml(unsafe) {
 			<div class="modal-dialog vertical-align-center">
 				<div class="modal-content" style="width: 762px;">
 					<div class="modal-header">
-						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 						<h4 class="modal-title"><iwcm:text key="components.news.template" /></h4>
 					</div>
 					<div class="modal-body">
@@ -1162,7 +1164,7 @@ function escapeHtml(unsafe) {
 						</div>
 					</div>
 					<div class="modal-footer">
-						<button type="button" class="btn btn-default" data-dismiss="modal"><iwcm:text key="javascript.datepicker.closeText" /></button>
+						<button type="button" class="btn btn-default" data-bs-dismiss="modal"><iwcm:text key="javascript.datepicker.closeText" /></button>
 						<button type="button" class="btn btn-primary template-save"><iwcm:text key="admin.useredit.categories.save" /></button>
 					</div>
 				</div>
@@ -1181,16 +1183,18 @@ function escapeHtml(unsafe) {
 					<button type="button" class="btn btn-primary template-choose"><iwcm:text key="components.news.choose_template" /></button>
 					<button type="button" class="btn btn-primary template-cancel"><iwcm:text key="components.news.cancel_template" /></button>
 					<c:if test="${actionBean.canEdit}">
-						<button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-							<i class="ti ti-chevron-down"></i>
-							<span class="sr-only"><iwcm:text key="components.news.new_template" /></span>
-						</button>
-						<ul class="dropdown-menu">
-							<li><a href="javascript:;" class="template-edit"><iwcm:text key="components.news.edit_template" /></a></li>
-							<li><a href="javascript:;" class="template-duplicate"><iwcm:text key="components.news.duplicate_template" /></a></li>
-							<li role="separator" class="divider"></li>
-							<li><a href="javascript:;" class="template-delete"><iwcm:text key="components.news.delete_template" /></a></li>
-						</ul>
+						<div class="dropdown">
+							<button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								<i class="ti ti-chevron-down"></i>
+								<span class="visually-hidden"><iwcm:text key="components.news.new_template" /></span>
+							</button>
+							<ul class="dropdown-menu">
+								<li><a href="javascript:;" class="template-edit"><iwcm:text key="components.news.edit_template" /></a></li>
+								<li><a href="javascript:;" class="template-duplicate"><iwcm:text key="components.news.duplicate_template" /></a></li>
+								<li role="separator" class="divider"></li>
+								<li><a href="javascript:;" class="template-delete"><iwcm:text key="components.news.delete_template" /></a></li>
+							</ul>
+						</div>
 					</c:if>
 				</div>
 			</div>
@@ -1207,7 +1211,7 @@ function escapeHtml(unsafe) {
 			<ul class="dropdown-menu">
 			<c:forEach items="${actionBean.velocityProperties}" var="property">
 				<li>
-				    <a href="javascript:;" data-toggle="tooltip" data-container="body" title="${property.title}" data-value="${property.value}">${property.title} - ${property.description}</a>
+				    <a href="javascript:;" data-value="${property.value}">${property.title} - ${property.description}</a>
 				</li>
 			</c:forEach>
 			</ul>
@@ -1217,7 +1221,7 @@ function escapeHtml(unsafe) {
 			<ul class="dropdown-menu">
 			<c:forEach items="${actionBean.docDetailsProperties}" var="property">
 				<li>
-				    <a href="javascript:;"  data-toggle="tooltip" data-container="body" data-original-title="${property.title}" data-value="${property.value}">${property.title} - ${property.description}</a>
+				    <a href="javascript:;" data-value="${property.value}">${property.title} - ${property.description}</a>
 				</li>
 			</c:forEach>
 			</ul>
@@ -1227,7 +1231,7 @@ function escapeHtml(unsafe) {
 			<ul class="dropdown-menu">
 			<c:forEach items="${actionBean.groupDetailsProperties}" var="property">
 				<li>
-				    <a href="javascript:;"  data-toggle="tooltip" data-container="body" data-original-title="${property.title}" data-value="${property.value}">${property.title} - ${property.description}</a>
+				    <a href="javascript:;" data-value="${property.value}">${property.title} - ${property.description}</a>
 				</li>
 			</c:forEach>
 			</ul>
@@ -1238,7 +1242,7 @@ function escapeHtml(unsafe) {
 			<ul class="dropdown-menu">
 			<c:forEach items="${actionBean.pagingProperties}" var="property">
 				<li>
-				    <a href="javascript:;" data-toggle="tooltip" data-container="body" title="${property.title}" data-value="${property.value}">${property.title}<c:if test="${not empty property.description}"> - ${property.description}</c:if></a>
+				    <a href="javascript:;" data-value="${property.value}">${property.title}<c:if test="${not empty property.description}"> - ${property.description}</c:if></a>
 				</li>
 			</c:forEach>
 			</ul>

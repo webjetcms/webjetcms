@@ -1,6 +1,6 @@
 const { I } = inject();
 const DTE = require("./DTE");
-var doc_add_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success"));
+const DT = require("./DT");
 /**
  * Functions for interacting with the application
  */
@@ -72,7 +72,8 @@ module.exports = {
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + docId);
         }
         DTE.waitForEditor();
-        I.click('.cke_wysiwyg_frame.cke_reset');
+        I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
+        //I.click('.cke_wysiwyg_frame.cke_reset');
         this.switchEditor('html');
         I.click('.CodeMirror-code');
 
@@ -88,6 +89,7 @@ module.exports = {
      */
     openAppEditor(docId = null){
         I.say('Opening app editor');
+        I.switchTo();
         if(docId){
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
         }
@@ -104,6 +106,7 @@ module.exports = {
         });
         I.waitForInvisible('Čakajte prosím');
         I.switchTo('.cke_dialog_ui_iframe');
+        I.wait(1);
         I.switchTo('#editorComponent');
         DTE.waitForModal('component-datatable_modal');
     },
@@ -114,14 +117,14 @@ module.exports = {
      * @param {string} applicationSelector - The selector for the application in the app menu.
      * @param {string|null} docId - Optional document ID for the page to insert the app into.
      */
-    insertApp(applicationName, applicationSelector, docId = null){
+    insertApp(applicationName, applicationSelector, docId = null, shouldClickOkButton = true){
         I.say('Inserting an app');
         I.closeOtherTabs();
         if (docId){
             I.amOnPage("/admin/v9/webpages/web-pages-list/?docid="+docId);
         } else{
             I.amOnPage('/admin/v9/webpages/web-pages-list/');
-            I.click(doc_add_button);
+            I.click(DT.btn.add_button);
         }
         DTE.waitForEditor();
         //I.wait(5);
@@ -136,7 +139,7 @@ module.exports = {
         I.waitForElement('#search', 10);
         I.wait(1);
         I.fillField('#search', applicationName);
-        I.waitForInvisible('div.promoApp', 10);
+        I.waitForInvisible('div.promoApp', 20);
         I.waitForElement(applicationSelector, 10);
         I.wait(1);
         I.clickCss(applicationSelector); //I.clickCss('div.menu-app[data-app-action^="sk.iway"]')
@@ -146,6 +149,7 @@ module.exports = {
         DTE.waitForEditor("component-datatable");
         I.switchTo();
         I.switchTo();
-        I.clickCss('.cke_dialog_ui_button_ok')
+        if (shouldClickOkButton)
+            I.clickCss('.cke_dialog_ui_button_ok');
     }
 }

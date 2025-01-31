@@ -7,13 +7,13 @@ pro správu a používání úložiště
 **Závislosti**
 
 - [Nástroje](tools.md)
-- [Obchod](store.md)
+- [Store](store.md)
 
 ***
 
 `StorageHandler` umožňuje manipulovat s `window.localStorage` a `window.sessionStorage` na úrovni vnořených objektů, kde každý vytvořený hlavní klíč zadaný parametrem [setStoreName()](#setstorename) obsahuje objekt, ve kterém můžeme snadno definovat [setStorageItem()](#setstorageitem) a vyberte [getStorageItem()](#getstorageitem) data na základě dílčího klíče.
 
-Rozšiřuje třídu [Obchod](store.md).
+Rozšiřuje třídu [Store](store.md).
 
 ```javascript
 import Store from '../store/store';
@@ -53,8 +53,8 @@ store.setStorageItem('sub-kľúč-2', 'hodnota-2');
 | Metody | Poznámka
 | ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | [setStoreName()](#setstorename)                      |
-| [setSessionStorage()](store.md?id=setsessionstorage) | Zděděná metoda ze třídy [Obchod](store.md) [přesměruje na soubor [store.md](store.md) ] |
-| [setLocalStorage()](store.md?id=setlocalstorage)     | Zděděná metoda ze třídy [Obchod](store.md) [přesměruje na soubor [store.md](store.md) ] |
+| [setSessionStorage()](store.md?id=setsessionstorage) | Zděděná metoda ze třídy [Store](store.md) [přesměruje na soubor [store.md](store.md) ] |
+| [setLocalStorage()](store.md?id=setlocalstorage)     | Zděděná metoda ze třídy [Store](store.md) [přesměruje na soubor [store.md](store.md) ] |
 | [getStorageItem()](#getstorageitem)                  |
 | [setStorageItem()](#setstorageitem)                  |
 | [removeStorageItem()](#odstranit-skladovací-položku)            |

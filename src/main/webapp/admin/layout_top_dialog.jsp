@@ -123,7 +123,6 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		%>
 		<iwcm:combine type="js" set="adminJqueryJs" />
 
-		<link type="text/css" rel="stylesheet" href="/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css" media="all"/>
 		<link rel="stylesheet" type="text/css" href="/admin/css/datepicker.css" media="all"/>
 		<link type="text/css" rel="stylesheet" href="/components/cmp.css" media="all"/>
 		<!-- mho edit - v�mena za webjet8/css/fck_dialog.css
@@ -341,7 +340,6 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		});
 	</script>
 
-	<link type="text/css" rel="stylesheet" href="/admin/skins/webjet8/assets/global/plugins/font-awesome/css/font-awesome.min.css" media="all"/>
 	<link rel="stylesheet" type="text/css" href="/admin/css/datepicker.css" media="all"/>
 	<link type="text/css" rel="stylesheet" href="/components/cmp.css" media="all"/>
 	<link rel="stylesheet" href="/admin/skins/webjet8/css/fck_dialog.css" />

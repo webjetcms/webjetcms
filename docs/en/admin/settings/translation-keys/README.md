@@ -1,4 +1,4 @@
-# Translation keys
+# List of keys
 
 The Translation Keys section allows you to create/edit/duplicate translation keys or import or export them.
 

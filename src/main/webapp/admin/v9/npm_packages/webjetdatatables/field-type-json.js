@@ -47,7 +47,11 @@ export function typeJson() {
             var json = conf.vm.data;
             //console.log("vm=", conf.vm, "json=", json);
             //console.log("Returning json ("+conf.className+"): ", json)
-            if (conf.className.indexOf("dt-tree-dir-simple")!=-1) return json[0].virtualPath;
+            if (conf.className.indexOf("dt-tree-dir-simple")!=-1) {
+                //get value from input to allow change of value by user
+                //return json[0].virtualPath;
+                return $("#editorApp"+conf._id+" div.dt-tree-container div.input-group input.form-control").val();
+            }
             if (conf.className.indexOf("-array")==-1) return json[0];
             return json;
         },

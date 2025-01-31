@@ -8,13 +8,15 @@ for the management and use of Storage
 
 - [Tools](tools.md)
 - [Store](store.md)
+
 ***
+
 `StorageHandler` allows you to manipulate `window.localStorage` a `window.sessionStorage` at the level of nested objects, where each created master key specified by [setStoreName()](#setstorename) contains an object in which we can easily define [setStorageItem()](#setstorageitem) and choose [getStorageItem()](#getstorageitem) data based on the sub-key.
 
 Expands the class [Store](store.md).
 
 ```javascript
-import Store from "../store/store";
+import Store from '../store/store';
 
 class StorageHandler extends Store {}
 ```
@@ -30,23 +32,35 @@ Methods [getStorageItem()](#getstorageitem) a [setStorageItem()](#setstorageitem
 ## Creating an instance:
 
 ```javascript
-import { StorageHandler } from "storage-handler/storage-handler";
+import {StorageHandler} from 'storage-handler/storage-handler';
 ```
 
 **Application:**
+
 ```javascript
 // Defaultne sa pracuje s localStorage
 const store = new StorageHandler();
-store.setStoreName("názov-master-kľúča");
+store.setStoreName('názov-master-kľúča');
 
-store.setStorageItem("sub-kľúč-1", "hodnota-1");
-store.setStorageItem("sub-kľúč-2", "hodnota-2");
+store.setStorageItem('sub-kľúč-1', 'hodnota-1');
+store.setStorageItem('sub-kľúč-2', 'hodnota-2');
 ```
 
 ## List of APIs
 
 **(Click to see the detail for the function)**
-| Methods | Note | | ---------------------------------------------------- | ------------------------------------------------------------------------------------- | | | [setStoreName()](#setstorename)                      | | [setSessionStorage()](store.md?id=setsessionstorage) | Inherited method from class [Store](store.md) \[redirects to file [store.md](store.md)] | | [setLocalStorage()](store.md?id=setlocalstorage)     | Inherited method from class [Store](store.md) \[redirects to file [store.md](store.md)] | | [getStorageItem()](#getstorageitem)                  | | [setStorageItem()](#setstorageitem)                  | | [removeStorageItem()](#removestorageitem)            | | [clearData()](#cleardata)                            | | [destroy()](#destroy)                                | | [storeExist()](#storeexist)                          |
+
+| Methods | Note |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [setStoreName()](#setstorename)                      |
+| [setSessionStorage()](store.md?id=setsessionstorage) | Inherited method from class [Store](store.md) [redirects to file [store.md](store.md) ] |
+| [setLocalStorage()](store.md?id=setlocalstorage)     | Inherited method from class [Store](store.md) [redirects to file [store.md](store.md) ] |
+| [getStorageItem()](#getstorageitem)                  |
+| [setStorageItem()](#setstorageitem)                  |
+| [removeStorageItem()](#removestorageitem)            |
+| [clearData()](#cleardata)                            |
+| [destroy()](#destroy)                                |
+| [storeExist()](#storeexist)                          |
 
 A more detailed API can be found in [GIT repositories](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/storage-handler#storagehandler-kni%C5%BEnica-na-spr%C3%A1vu-a-pou%C5%BE%C3%ADvanie-storage)
 
@@ -69,6 +83,7 @@ setStoreName(name);
 ```
 
 ***
+
 #### getStorageItem()
 
 Returns a value based on the name of the specified key.
@@ -84,6 +99,7 @@ getStorageItem(key);
 ```
 
 ***
+
 #### setStorageItem()
 
 Creates the key specified in the repository and stores the specified value under it.
@@ -100,6 +116,7 @@ setStorageItem(key, value);
 ```
 
 ***
+
 #### removeStorageItem()
 
 Removes the item based on the key. The method can have caseSensitive checking disabled.
@@ -113,10 +130,11 @@ Removes the item based on the key. The method can have caseSensitive checking di
  * @returns {void}
  * @public
  */
-removeStorageItem(key, (caseSensitive = true));
+removeStorageItem(key, caseSensitive = true);
 ```
 
 ***
+
 #### clearData()
 
 Deletes the currently used repository and leaves it empty - null. However, the master key is retained.
@@ -131,6 +149,7 @@ clearData();
 ```
 
 ***
+
 #### destroy()
 
 Completely removes the currently used repository.
@@ -141,10 +160,11 @@ Completely removes the currently used repository.
  * @returns {void}
  * @public
  */
-destroy();
+destroy()
 ```
 
 ***
+
 #### storeExist()
 
 Tests whether the specified repository exists.

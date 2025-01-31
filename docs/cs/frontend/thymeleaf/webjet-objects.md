@@ -6,178 +6,73 @@ Seznam dostupných atributů při zobrazení stránky
 
 Zobrazená data webové stránky
 
-<table width="100%" class="ramikTable">
-  <thead>
-    <tr>
-      <td width="50%" class="head">Název a značka</td>Popis<td width="50%" class="head">ID webové stránky</td>
-    </tr>
-  </thead>
+- **ID webové stránky** - `<div data-iwcm-write="doc_id"/>` - Vloží například docid webové stránky: `148`
+- **Název webové stránky** - `<div data-iwcm-write="doc_title"/>` - Vloží název webové stránky, například Web JET CMS.
+- **Text navigačního panelu** - `<div data-iwcm-write="doc_navbar"/>` - Text webové stránky pro navigační panel (obvykle stejný jako název webové stránky) - `doc_title`)
+- **Text webové stránky** - `<div data-iwcm-write="doc_data"/>` - Skutečný text webové stránky zadaný v editoru
+- **Záhlaví webové stránky** - `<div data-iwcm-write="doc_header"/>` - Text HTML s hlavičkou webové stránky definovanou ve virtuální šabloně použité webovou stránkou.
+- **Zápatí webové stránky** - `<div data-iwcm-write="doc_footer"/>` - Text HTML se zápatím webové stránky definovaný ve virtuální šabloně použité webovou stránkou.
+- **Nabídka webových stránek** - `<div data-iwcm-write="doc_menu"/>` - HTML kód menu, který se zadává v sekci správce každé virtuální šablony.
+- **Pravé menu webové stránky** - `<div data-iwcm-write="doc_right_menu"/>` - HTML kód pravého menu, který se zadává v sekci správce každé virtuální šablony.
+- **Kód HTML ze šablony** - `<div data-iwcm-write="after_body"/>` - Text HTML z virtuální šablony použité webovou stránkou
+- **Záhlaví stránky HTML** - `<div data-iwcm-write="html_head"/>` - Kód HTML, který je pro stránku zadán na kartě Vlastnosti HTML jako kód záhlaví HTML. Může obsahovat kód, který je vložen do šablony v záložce `<head>`
+- **Kód HTML stránky** - `<div data-iwcm-write="html_data"/>` - Kód HTML, který je pro stránku zadán na kartě Vlastnosti HTML jako Další kód HTML.
+- **Řádek k hlavnímu kaskádovému stylu** - `<div data-iwcm-write="base_css_link"/>` - Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako Hlavní styl CSS (např. `/css/page.css`).
+- **Řádek k hlavnímu kaskádovému stylu** - `<div data-iwcm-write="base_css_link_noext"/>` - Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako Hlavní styl CSS bez přípony (např. `/css/page`). Lze jej použít k vytváření podmíněných stylů css (např. `/css/page-dark.css`).
+- **Linka ve stylu kaskády** - `<div data-iwcm-write="css_link"/>` - Odkaz na kaskádový styl, který je zadán v části pro správu virtuálních šablon jako styl CSS (např. `/css/custom.css`).
+- **Linka ve stylu kaskády** - `<div data-iwcm-write="css_link_noext"/>` - Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako styl CSS bez přípony (např. /css/custom). Lze jej použít k vytvoření podmíněných stylů css (např. `/css/page-dark.css`).
+- **Navigační panel** - `<div data-iwcm-write="navbar"/>` - Kompletní navigační panel, např. Interway > Produkty > Web JET. Nadpisy jsou klikací, odkazy jsou vytvořeny pomocí kaskádového stylu. `navbar`.
+- **Datum poslední změny webových stránek** - `<div data-iwcm-write="doc_date_created"/>` - Datum poslední změny webové stránky.
+- **Čas poslední změny webové stránky** - `<div data-iwcm-write="doc_time_created"/>` - Čas poslední změny webové stránky.
+- **Vlastní pole** - `<div data-iwcm-write="field_a"/>` na `<div data-iwcm-write="field_l"/>` - Vlastní pole stránky definovaná v části Upřesnit vlastnosti, karta Vlastní pole.
+- **Bezplatné objekty šablon** - `<div data-iwcm-write="template_object_a"/>` na `<div data-iwcm-write="template_object_d"/>` - Volně použitelné objekty šablon. Obsahují kód HTML přidružené stránky. Používají se, pokud nestačí použití záhlaví, menu a zápatí.
 
-  <tbody>
-    <tr>
-      <td class="t_body"><b>\<div data-iwcm-write="doc\_id"/></b>Vloží například docid webové stránky:<br> 148</td>Název webové stránky<td class="t_body">\<div data-iwcm-write="doc\_title"/><br>Vloží název webové stránky, například:</td>
-    </tr><tr>
-      <td class="t_body"><b> Web JET CMS</b>Text navigačního panelu<br> \<div data-iwcm-write="doc\_navbar"/></td>Text webové stránky pro navigační panel (obvykle stejný jako název webové stránky - doc\_title).<td class="t_body">Text webové stránky<br>\<div data-iwcm-write="doc\_data"/></td>
-    </tr><tr>
-      <td class="t_body"><b>Skutečný text webové stránky zadaný v editoru</b><br>Záhlaví webové stránky</td>\<div data-iwcm-write="doc\_header"/><td class="t_body">Text HTML s hlavičkou webové stránky definovanou ve virtuální šabloně použité webovou stránkou.</td>
-    </tr><tr>
-      <td class="t_body"><b>Zápatí webové stránky</b>\<div data-iwcm-write="doc\_footer"/><br>Text HTML se zápatím webové stránky definovaný ve virtuální šabloně použité webovou stránkou.</td>Nabídka webových stránek<td class="t_body">\<div data-iwcm-write="doc\_menu"/></td>
-    </tr><tr>
-      <td class="t_body"><b>HTML kód menu, který se zadává v sekci správce každé virtuální šablony.</b>Pravé menu webové stránky<br>\<div data-iwcm-write="doc\_right\_menu"/></td>HTML kód pravého menu, který se zadává v sekci správce každé virtuální šablony.<td class="t_body">Kód HTML ze šablony</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="after\_body"/></b>Text HTML z virtuální šablony použité webovou stránkou<br>Záhlaví stránky HTML</td>\<div data-iwcm-write="html\_head"/><td class="t_body">Kód HTML, který je pro stránku zadán na kartě Vlastnosti HTML jako kód záhlaví HTML. Může obsahovat kód, který je vložen do šablony v záložce \<head></td>
-    </tr><tr>
-      <td class="t_body"><b>Kód HTML stránky</b>\<div data-iwcm-write="html\_data"/><br>Kód HTML, který je pro stránku zadán na kartě Vlastnosti HTML jako Další kód HTML.</td>Řádek k hlavnímu kaskádovému stylu<td class="t_body">\<div data-iwcm-write="base\_css\_link"/></td>
-    </tr><tr>
-      <td class="t_body"><b>Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako Hlavní styl CSS (např. /css/page.css).</b>Řádek k hlavnímu kaskádovému stylu<br>\<div data-iwcm-write="base\_css\_link\_noext"/></td>Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako Hlavní styl CSS bez přípony (např. /css/page). Lze použít k vytvoření podmíněných stylů css (např. /css/page-ie6.css).<td class="t_body">Linka ve stylu kaskády</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="css\_link"/></b>Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako styl CSS (např. /css/custom.css).<br>Linka ve stylu kaskády</td>\<div data-iwcm-write="css\_link\_noext"/><td class="t_body">Odkaz na kaskádový styl, který je zadán v části správce virtuálních šablon jako styl CSS bez přípony (např. /css/custom). Lze použít k vytvoření podmíněných stylů css (např. /css/custom-ie6.css).</td>
-    </tr><tr>
-      <td class="t_body"><b>Navigační panel</b>\<div data-iwcm-write="navbar"/><br>Kompletní navigační panel, např. Interway > Produkty > Web JET</td> Nadpisy jsou klikací, odkazy jsou vytvořeny pomocí kaskádového stylu navbar.<td class="t_body">Datum poslední změny webových stránek</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="doc\_date\_created"/></b>Datum poslední změny webové stránky.<br>Čas poslední změny webové stránky</td>\<div data-iwcm-write="doc\_time\_created"/><td class="t_body">Čas poslední změny webové stránky.</td>
-    </tr><tr>
-      <td class="t_body"><b>Vlastní pole</b>\<div data-iwcm-write="field\_a"/> na \<div data-iwcm-write="field\_l"/><br>Vlastní pole stránky definovaná v části Upřesnit vlastnosti, karta Vlastní pole.</td>Bezplatné objekty šablon<td class="t_body">\<div data-iwcm-write="template\_object\_a"/> na \<div data-iwcm-write="template\_object\_d"/></td>
-    </tr><tr>
-      <td class="t_body"><b>Volně použitelné objekty šablon. Obsahují kód HTML přidružené stránky. Používají se, pokud nestačí použití záhlaví, menu a zápatí.</b>Zveřejnění stránky<br>Údaje zadané při úpravě webové stránky na kartě Upřesnit</td>Název a značka<td class="t_body">Popis</td>
-    </tr><tr>
-      <td class="t_body"><b>Datum zahájení zveřejňování</b>\<div data-iwcm-write="doc\_publish\_start"/><br>Datum zadané při úpravě webové stránky na kartě Upřesnit jako Začátek.</td>Čas zahájení zveřejnění<td class="t_body">\<div data-iwcm-write="doc\_publish\_start\_time"/></td>
-    </tr><tr>
-      <td class="t_body"><b>Čas zadaný při úpravě webové stránky na kartě Upřesnit jako Start.</b>Datum ukončení zveřejnění<br>\<div data-iwcm-write="doc\_publish\_end"/></td>Datum zadané při úpravě webové stránky na kartě Upřesnit jako Konec.<td class="t_body">Čas ukončení zveřejnění</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="doc\_publish\_end\_time"/></b>Čas zadaný při úpravě webové stránky na kartě Upřesnit jako Konec.<br>Datum konání akce</td>\<div data-iwcm-write="doc\_event\_date"/><td class="t_body">Datum události zadané při úpravě webové stránky na kartě Upřesnit. Používá se například u událostí, kde je datum události pozdější než požadované datum začátku publikování (pokud chceme, aby se informace na stránce zobrazovaly od 1. dne v měsíci, ale událost, o které stránka informuje, je až 10. dne v měsíci).<br>Čas události</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="doc\_event\_time"/></b>Čas události zadaný při úpravě webové stránky na kartě Upřesnit.<br>Webové stránky Perex (anotace)</td>\<div data-iwcm-write="perex\_data"/><td class="t_body">Vloží anotaci stránky do šablony HTML.</td>
-    </tr><tr>
-      <td class="t_body"><b>Formátovaný perex (anotace) webové stránky</b>\<div data-iwcm-write="perex\_pre"/><br>Vloží do šablony HTML formátovanou anotaci stránky. Pokud je anotace zadána bez znaků HTML, znaky nového řádku se převedou na značky. 
-</td>Místo<td class="t_body">\<div data-iwcm-write="perex\_place"/></td>
-    </tr><tr>
-      <td class="t_body"><b>Místo, na které odkazuje text stránky.</b>Obrázek<br>\<div data-iwcm-write="perex\_image"/></td>Obrázek související s anotací stránky.<td class="t_body">Autor stránky</td>
-    </tr><tr>
-      <td class="t_body"><b>Údaje o autorovi stránky (za autora stránky se považuje uživatel, který ji naposledy změnil):</b>Název a značka<br>Popis</td>ID autora webové stránky<td class="t_body">\<div data-iwcm-write="author\_id"/></td>
-    </tr>
-  </tbody>
-</table>
+## Zveřejnění stránky
 
-## ID autora webové stránky (uživatele, který ji naposledy změnil).
+Údaje zadané při úpravě webové stránky na kartě Upřesnit
 
-Jméno autora webové stránky
+- **Datum zahájení zveřejňování** - `<div data-iwcm-write="doc_publish_start"/>` - Datum zadané při úpravě webové stránky na kartě Upřesnit jako Začátek.
+- **Čas zahájení zveřejnění** - `<div data-iwcm-write="doc_publish_start_time"/>` - Čas zadaný při úpravě webové stránky na kartě Upřesnit jako Start.
+- **Datum ukončení zveřejnění** - `<div data-iwcm-write="doc_publish_end"/>` - Datum zadané při úpravě webové stránky na kartě Upřesnit jako Konec.
+- **Čas ukončení zveřejnění** - `<div data-iwcm-write="doc_publish_end_time"/>` - Čas zadaný při úpravě webové stránky na kartě Upřesnit jako Konec.
+- **Datum konání akce** - `<div data-iwcm-write="doc_event_date"/>` - Datum události zadané při úpravě webové stránky na kartě Upřesnit. Používá se například u událostí, kde je datum události pozdější než požadované datum začátku publikování (pokud chceme, aby se informace na stránce zobrazovaly od 1. dne v měsíci, ale událost, o které stránka informuje, je až 10. dne v měsíci).
+- **Čas události** - `<div data-iwcm-write="doc_event_time"/>` - Čas události zadaný při úpravě webové stránky na kartě Upřesnit.
+- **Webové stránky Perex (anotace)** - `<div data-iwcm-write="perex_data"/>` - Vloží anotaci stránky do šablony HTML.
+- **Formátovaný perex (anotace) webové stránky** - `<div data-iwcm-write="perex_pre"/>` - Vloží do šablony HTML formátovanou anotaci stránky. Pokud je anotace zadána bez znaků HTML, znaky nového řádku se převedou na značky. `<br>`
+- **Místo** - `<div data-iwcm-write="perex_place"/>` - Místo, na které odkazuje text stránky.
+- **Obrázek** - `<div data-iwcm-write="perex_image"/>` - Obrázek související s anotací stránky.
 
-<table width="100%" class="ramikTable">
-  <thead>
-    <tr>
-      <td width="50%" class="head">\<div data-iwcm-write="author\_name"/></td>Jméno autora webové stránky (uživatele, který ji naposledy změnil).<td width="50%" class="head">E-mail autora webových stránek</td>
-    </tr>
-  </thead>
+## Autor stránky
 
-  <tbody>
-    <tr>
-      <td class="t_body"><b>\<div data-iwcm-write="author\_email"/></b>E-mail autora webové stránky (uživatele, který ji naposledy změnil).<br>Složka</td>Podrobnosti o složce, ve které se stránka nachází:<td class="t_body">Název a značka</td>
-    </tr><tr>
-      <td class="t_body"><b>Popis</b>ID adresáře<br>\<div data-iwcm-write="group\_id"/></td>ID adresáře, ve kterém se stránka nachází.<td class="t_body">Název adresáře</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="group\_name"/></b>Název adresáře, ve kterém se stránka nachází.<br>Text navigačního panelu</td>\<div data-iwcm-write="group\_navbar"/><td class="t_body">Text adresáře pro navigační panel (obvykle stejný jako název adresáře).</td>
-    </tr><tr>
-      <td class="t_body"><b>Kód záhlaví HTML</b>\<div data-iwcm-write="group\_htmlhead"/><br>Kód HTML pro záhlaví adresáře</td>Kód hlavičky HTML - rekurzivně načtený<td class="t_body">\<div data-iwcm-write="group\_htmlhead\_recursive"/></td>
-    </tr><tr>
-      <td class="t_body"><b>HTML kód k rekurzivně načtené hlavičce adresáře - pokud je obsah tohoto pole pro aktuální adresář prázdný, načte se hodnota z nadřazeného adresáře, pokud není zadána ani tam, předá se přes podadresáře do hlavního adresáře.</b>groupParentIds<br>\<div data-iwcm-write="groupParentIds"/></td>ID nadřazených adresářů oddělené čárkou - podle toho lze v šabloně HTML určit, který jazyk nebo sekce se aktuálně zobrazuje.<td class="t_body">Vlastní pole</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="group\_field\_a"/> na \<div data-iwcm-write="group\_field\_d"/></b>Vlastní pole adresáře.<br>Šablona stránky</td>Podrobnosti o šabloně stránky:<td class="t_body">Název a značka</td>
-    </tr><tr>
-      <td class="t_body"><b>Popis</b>ID šablony<br>\<div data-iwcm-write="doc\_temp\_id"/></td>ID šablony, kterou webová stránka používá.<td class="t_body">Název šablony</td>
-    </tr><tr>
-      <td class="t_body"><b>\<div data-iwcm-write="doc\_temp\_name"/></b>Název šablony, kterou webová stránka používá.<br>Hlavní styl CSS</td>$<td class="t_body">Název šablony, kterou webová stránka používá.</td>
-    </tr><tr>
-      <td class="t_body"><b>Sekundární styl CSS</b>$<br>Název šablony, kterou webová stránka používá.</td>Objekt šablony<td class="t_body">$</td>
-    </tr><tr>
-      <td class="t_body"><b>Objekt šablony, který webová stránka používá.</b>Objekt skupiny šablon<br>$</td>Objekt skupiny šablon, který webová stránka používá.<td class="t_body">Šablona Ninja</td>
-    </tr>
-  </tbody>
-</table>
+Údaje o autorovi stránky (za autora stránky se považuje uživatel, který ji naposledy změnil):
+- **ID autora webové stránky** - `<div data-iwcm-write="author_id"/>` - ID autora webové stránky (uživatele, který ji naposledy změnil).
+- **Jméno autora webové stránky** - `<div data-iwcm-write="author_name"/>` - Jméno autora webové stránky (uživatele, který ji naposledy změnil).
+- **E-mail autora webových stránek** - `<div data-iwcm-write="author_email"/>` - E-mail autora webové stránky (uživatele, který ji naposledy změnil).
 
-## Příklady použití objektů z&#x20;
+## Složka
 
-Šablony Ninja
+Podrobnosti o složce, ve které se stránka nachází:
+- **ID adresáře** - `<div data-iwcm-write="group_id"/>` - ID adresáře, ve kterém se stránka nachází.
+- **Název adresáře** - `<div data-iwcm-write="group_name"/>` - Název adresáře, ve kterém se stránka nachází.
+- **Text navigačního panelu** - `<div data-iwcm-write="group_navbar"/>` - Text adresáře pro navigační panel (obvykle stejný jako název adresáře).
+- **Kód záhlaví HTML** - `<div data-iwcm-write="group_htmlhead"/>` - Kód HTML pro záhlaví adresáře
+- **Kód hlavičky HTML - rekurzivně načtený** - `<div data-iwcm-write="group_htmlhead_recursive"/>` - HTML kód k rekurzivně načtené hlavičce adresáře - pokud je obsah tohoto pole pro aktuální adresář prázdný, je hodnota načtena z nadřazeného adresáře, pokud není uvedena ani tam, je předána přes podadresáře do hlavního adresáře.
+- **ID rodiče** - `<div data-iwcm-write="groupParentIds"/>` - ID nadřazených adresářů oddělené čárkou - podle toho je možné v šabloně HTML určit, který jazyk nebo sekce se právě zobrazuje.
+- **Vlastní pole** - `<div data-iwcm-write="group_field_a"/>` na `<div data-iwcm-write="group_field_d"/>` - Vlastní pole adresáře.
 
-<table width="100%" class="ramikTable">
-  <thead>
-    <tr>
-      <td width="50%" class="head"> (příklady jsou v </td>mops<td width="50%" class="head"> formát). Obvykle se objekt Ninja používá v záhlaví šablony:</td>
-    </tr>
-  </thead>
+## Šablona stránky
 
-  <tbody>
-    <tr>
-      <td class="t_body"><b>Dostupné objekty</b>Při zobrazení stránky WebJET vloží následující objekty, které můžete použít přímo pro výpis pomocí <br>. Název odkazuje na dokumentaci, kde je k dispozici seznam vlastností objektu:</td> - objekt <td class="t_body"> - objekt </td>
-    </tr><tr>
-      <td class="t_body"><b>ninja</b> - další atributy a funkce pro <br>Šablona Ninja</td>docDetails<td class="t_body"> - objekt zobrazené webové stránky</td>
-    </tr><tr>
-      <td class="t_body"><b>docDetailsOriginal</b> - pokud zobrazená přihlašovací stránka obsahuje původní (zaheslovanou) stránku.<br>pageGroupDetails</td> - objekt adresáře aktuálně zobrazené webové stránky<td class="t_body">tempDetails</td>
-    </tr>
-  </tbody>
-</table>
+Podrobnosti o šabloně stránky:
+- **ID šablony** - `<div data-iwcm-write="doc_temp_id"/>` - ID šablony, kterou webová stránka používá.
+- **Název šablony** - `<div data-iwcm-write="doc_temp_name"/>` - Název šablony, kterou webová stránka používá.
+- **Hlavní styl CSS** - `${ninja.temp.baseCssLink}` - Název šablony, kterou webová stránka používá.
+- **Sekundární styl CSS** - `${ninja.temp.cssLink}` - Název šablony, kterou webová stránka používá.
+- **Objekt šablony** - `${tempDetails}` - Objekt šablony, který webová stránka používá.
+- **Objekt skupiny šablon** - `${templatesGroupDetails}` - Objekt skupiny šablon, který webová stránka používá.
 
-## &#x20;- objekt šablony aktuálně zobrazené webové stránky
+## Šablona Ninja
 
-templatesGroupDetails
-
-<table width="100%" class="ramikTable">
-  <thead>
-    <tr>
-      <td width="50%" class="head"> - objekt skupiny šablon zobrazené webové stránky</td>Příklady použití:<td width="50%" class="head"></td>
-    </tr>
-  </thead>
-
-  <tbody>
-    <tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr>
-  </tbody>
-</table>
-
-##
-
-
-
-<table width="100%" class="ramikTable">
-  <thead>
-    <tr>
-      <td width="50%" class="head"></td><td width="50%" class="head"></td>
-    </tr>
-  </thead>
-
-  <tbody>
-    <tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br></td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br>{ninja.temp.baseCssLink}</td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br>{ninja.temp.cssLink}</td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br>{tempDetails}</td><td class="t_body"></td>
-    </tr><tr>
-      <td class="t_body"><b></b><br>{templatesGroupDetails}</td><td class="t_body"></td>
-    </tr>
-  </tbody>
-</table>
-
-##
-
-[](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/) [](../../developer/frameworks/pugjs.md)
+Příklady použití objektů z [Šablony Ninja](http://docs.webjetcms.sk/v8/#/ninja-starter-kit/) (příklady jsou v [mops](../../developer/frameworks/pugjs.md) formát). Obvykle se objekt Ninja používá v záhlaví šablony:
 
 ```javascript
 meta(http-equiv='X-UA-Compatible' content='IE=edge')
@@ -228,20 +123,19 @@ div(data-iwcm-write="html_head")
 div(data-iwcm-script="header")
 ```
 
-##
+## Dostupné objekty
 
-`${objekt.vlastnost}`
+Při zobrazení stránky WebJET vloží následující objekty, které můžete použít přímo pro výpis pomocí `${objekt.vlastnost}`. Název odkazuje na dokumentaci, kde je k dispozici seznam vlastností objektu:
+- `request` - objekt `HttpServletRequest`
+- `session` - objekt `HttpSession`
+- [ninja](../../../javadoc/sk/iway/iwcm/doc/ninja/Ninja.html) - další atributy a funkce pro [Šablona Ninja](../ninja-starter-kit/README.md)
+- [docDetails](../../../javadoc/sk/iway/iwcm/doc/DocBasic.html) - objekt zobrazené webové stránky
+- [docDetailsOriginal](../../../javadoc/sk/iway/iwcm/doc/DocBasic.html) - pokud zobrazená přihlašovací stránka obsahuje původní (zaheslovanou) stránku.
+- [pageGroupDetails](../../../javadoc/sk/iway/iwcm/doc/GroupDetails.html) - objekt adresáře aktuálně zobrazené webové stránky
+- [tempDetails](../../../javadoc/sk/iway/iwcm/doc/TemplateDetails.html) - objekt šablony aktuálně zobrazené webové stránky
+- [templatesGroupDetails](../../../javadoc/sk/iway/iwcm/doc/TemplatesGroupBean.html) - objekt skupiny šablon zobrazené webové stránky
 
-- `request` `HttpServletRequest`
-- `session` `HttpSession`
-- [](../../../javadoc/sk/iway/iwcm/doc/ninja/Ninja.html) [](../ninja-starter-kit/README.md)
-- [](../../../javadoc/sk/iway/iwcm/doc/DocBasic.html)
-- [](../../../javadoc/sk/iway/iwcm/doc/DocBasic.html)
-- [](../../../javadoc/sk/iway/iwcm/doc/GroupDetails.html)
-- [](../../../javadoc/sk/iway/iwcm/doc/TemplateDetails.html)
-- [](../../../javadoc/sk/iway/iwcm/doc/TemplatesGroupBean.html)
-
-
+Příklady použití:
 
 ```html
     <span data-th-text="${docDetails.title}">Titulok stránky</span>

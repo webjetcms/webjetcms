@@ -20,8 +20,8 @@ let testOptions = {
         I.fillField("input.dt-filter-availableGrooupsList", "News");
         I.pressKey('Enter', "input.dt-filter-availableGrooupsList");
         DT.waitForLoader();
-        I.see("Newsletter", "div.dataTables_scrollBody");
-        I.see(`${options.testingData[0]}-chan.ge`, "div.dataTables_scrollBody");
+        I.see("Newsletter", "div.dt-scroll-body");
+        I.see(`${options.testingData[0]}-chan.ge`, "div.dt-scroll-body");
     }
 };
 
@@ -79,7 +79,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         DTE.waitForLoader();
 
         //Check that template was created
-        DT.filter("tempName", oldTemplateName);
+        DT.filterContains("tempName", oldTemplateName);
         I.see(oldTemplateName);
 
     //Create NEW template (template that will replace OLD template)
@@ -97,7 +97,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         DTE.save();
 
         //Check that template was created
-        DT.filter("tempName", newTemplateName);
+        DT.filterContains("tempName", newTemplateName);
         I.see(newTemplateName);
 
     //Create group with doc and use oldTemplate
@@ -129,7 +129,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
     //Go replace template + some checks
         I.say("Go replace oldTemplate with newTemplate");
         I.amOnPage("/admin/v9/templates/temps-list/");
-        DT.filter("tempName", oldTemplateName);
+        DT.filterContains("tempName", oldTemplateName);
         I.click(oldTemplateName);
         DTE.waitForLoader();
 
@@ -199,11 +199,11 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.amOnPage("/admin/v9/templates/temps-list/");
 
         I.say("Check taht olTemplate is gone");
-        DT.filter("tempName", oldTemplateName);
+        DT.filterContains("tempName", oldTemplateName);
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
         I.say("Delete newTemplate and check if is gone");
-        DT.filter("tempName", newTemplateName);
+        DT.filterContains("tempName", newTemplateName);
         I.see(newTemplateName);
         I.click("td.dt-select-td.sorting_1");
         I.click("button.buttons-remove");
@@ -235,28 +235,28 @@ Scenario('Forwards by installName', ({I, DTE}) => {
 });
 
 Scenario('Filter templates by domainName/groups', ({I, DT, Document}) => {
-    DT.filter("tempName", "Microsite");
+    DT.filterContains("tempName", "Microsite");
     I.see("Microsite - yellow");
     I.see("Microsite - blue");
-    DT.filter("tempName", "Newsletter");
+    DT.filterContains("tempName", "Newsletter");
     I.see("Newsletter");
     I.see("Newsletter EN");
 
     Document.switchDomain("test23.tau27.iway.sk");
 
-    DT.filter("tempName", "Microsite");
+    DT.filterContains("tempName", "Microsite");
     I.see("Microsite - yellow");
     I.dontSee("Microsite - blue");
-    DT.filter("tempName", "Newsletter");
+    DT.filterContains("tempName", "Newsletter");
     I.see("Newsletter EN");
     I.see("Záznamy 1 až 1 z 1");
 
     Document.switchDomain("mirroring.tau27.iway.sk");
 
-    DT.filter("tempName", "Microsite");
+    DT.filterContains("tempName", "Microsite");
     I.see("Microsite - yellow");
     I.dontSee("Microsite - blue");
-    DT.filter("tempName", "Newsletter");
+    DT.filterContains("tempName", "Newsletter");
     I.dontSee("Newsletter EN");
     I.see("Záznamy 0 až 0 z 0");
 });

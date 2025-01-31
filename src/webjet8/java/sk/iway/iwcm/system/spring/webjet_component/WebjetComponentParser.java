@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.time.StopWatch;
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +29,11 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.WebjetComponentInterface;
+import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
+import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
+import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.spring.WebjetComponentParserInterface;
 import sk.iway.iwcm.tags.WriteTag;
 import sk.iway.iwcm.users.UserDetails;
@@ -68,8 +72,9 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
             // parsuje komponenty a ich page params z html kodu
             parseComponentsAndPageParams(html, components);
 
+            DebugTimer dt = new DebugTimer("WriteTag");
             // renderuje html kod z tried pre dane komponenty a nahradza v html kode include za html
-            html = renderComponents(request, response, html, components);
+            html = renderComponents(request, response, html, components, dt);
         }
         catch (Exception ex) {
             html = getErrorMessage(request, ex, html);
@@ -196,10 +201,12 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
      * @return
      * @throws Exception
      */
-    private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html, Map<String, WebjetComponentInterface> components) throws Exception {
+    private String renderComponents(HttpServletRequest request, HttpServletResponse response, String html, Map<String, WebjetComponentInterface> components, DebugTimer dt) throws Exception {
         if (components.isEmpty()) {
             return html;
         }
+
+        boolean writePerfStat = "true".equals(request.getParameter("_writePerfStat"));
 
         for (Map.Entry<String, WebjetComponentInterface> entry : components.entrySet()) {
             String key = entry.getKey();
@@ -218,8 +225,14 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                 String rendered = null;
 
                 Cache cache = Cache.getInstance();
-                String cacheKey = null;
+                //prepare cache key
+                String cacheKey = getCacheKey(key, request);
                 int cacheMinutes = 0;
+                boolean servedFromCache = false;
+
+                StopWatch executionTimeStopWatch = new StopWatch();
+                executionTimeStopWatch.start();
+                MemoryMeasurement memoryConsumed = new MemoryMeasurement();
 
                 //Is cache permitted ?
                 if (isCacheEnabled(request, key)) {
@@ -227,14 +240,12 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                     cacheMinutes = pageParams.getIntValue("cacheMinutes", -1);
 
                     if(cacheMinutes > 0) {
-                        //prepare cache key
-                        cacheKey = getCacheKey(key, request);
-
                         String cachedHtml = (String) cache.getObject(cacheKey);
 
                         //If html code is in cache, use it
                         if(Tools.isNotEmpty(cachedHtml)) {
                             rendered = cachedHtml;
+                            servedFromCache = true;
                         }
                     }
                 }
@@ -257,7 +268,17 @@ public class WebjetComponentParser implements WebjetComponentParserInterface {
                     }
                 }
 
-                if (rendered != null) {
+                if (rendered != null && html.contains(key)) {
+                    if (writePerfStat && key.length()>1) {
+                        long diff = dt.getDiff();
+                        long lastDiff = dt.getLastDiff();
+                        String logText = "\nPerfStat: " + diff + " ms (+"+lastDiff+") " + key.substring(1) +"\n";
+                        rendered = rendered + logText;
+                        Logger.debug(WriteTag.class, logText);
+                    }
+                    executionTimeStopWatch.stop();
+                    if (servedFromCache) ExecutionTimeMonitor.recordComponentExecutionFromCache(cacheKey, executionTimeStopWatch.getTime());
+					else ExecutionTimeMonitor.recordComponentExecution(cacheKey, executionTimeStopWatch.getTime(), memoryConsumed.diff());
                     html = Tools.replace(html, key, rendered);
                 }
             } else {

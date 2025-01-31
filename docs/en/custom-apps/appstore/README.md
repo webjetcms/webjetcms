@@ -14,13 +14,13 @@ In order for an application to appear in the list, its class must have an annota
 
 ```java
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 public class DemoComponent extends WebjetComponentAbstract {
 	...
 }
 
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "ti ti-id", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 public class ContactApp extends WebjetComponentAbstract {
 	...
 }
@@ -29,10 +29,12 @@ public class ContactApp extends WebjetComponentAbstract {
 The annotation has the following parameters:
 - `nameKey` - translation key **application name** (in the examples it is directly text, but we recommend to use the translation key), e.g. `components.DemoComponent.title`.
 - `descKey` - translation key **description of the application**, if not specified the translation key specified as `nameKey.desc` (if `nameKey` ends at `.title` shall be replaced `.title` For `.desc`).
-- `imagePath` - the way to the picture **icons** Application. It can be a file, or it can be a CSS class for an icon [FontAwesome](https://fontawesome.com/v5/search?s=solid%2Cbrands) Like `fa fa-meno-ikony`.
+- `imagePath` - the way to the picture **icons** Application. It can be a file, or it can be a CSS class for an icon [TablerIcons](https://tabler.io/icons) Like `ti ti-meno-ikony`.
 - `galleryImages` - a comma-separated list of images that appear in the app description, e.g. `/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png`.
+- `componentPath` - comma separated list of JSP files for which the application should be displayed (if it is not a Spring application), for example `/components/search/search.jsp,/components/search/lucene_search.jsp`. The first JSP file is used when inserting a new application.
 - `domainName` - if you have a multi-domain installation, you can restrict the application to display only on the specified domain. You can specify multiple domains separated by a comma.
 - `commonSettings` - A parameter that determines whether the View tab for Common Settings appears in the application editor. The default value is `true`, so the card will be displayed.
+- `custom` - set to `true` for your customer applications. It automatically adjusts itself according to whether it is in the package `sk.iway.iwcm`. Customer apps are in the list of apps at the top of the list.
 
 ![](democomponent-desc.png)
 
@@ -41,11 +43,13 @@ The annotation is searched in the following packages (including sub packages):
 - `sk.iway.INSTALL_NAME` - applications by installation name (conf. variable `installName`), you should have standard customer applications here.
 - `sk.iway.LOG_INSTALL_NAME` - application by installation logging name (conf. variable `logInstallName`), it is used if you have a customer application but deployed in multiple variants or environments.
 - packages defined in conf. variable `springAddPackages` - additional packages for Spring applications, used if the application is programmed outside the WebJET CMS, or uses a different prefix than `sk.iway`.
+
 Applications with package starting with `sk.iway.iwcm` are placed at the end of the list of applications, others are placed at the beginning. It is assumed that you want to have customer applications displayed at the top of the application list.
 
 If you want to place the application also in the promo list (at the top), edit the conf. variable `appstorePromo`, which contains a list of app promo keys.
 
-**Warning:** the application is embedded in the page as `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)`if it is found multiple times in the page, the class is reused and its attributes and variables are preserved during the execution of the HTTP request.
+!>**Warning:** the application is embedded in the page as `@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)` if it is found multiple times in the page, the class is reused and its attributes and variables are preserved during the execution of the HTTP request.
+
 ## Application parameters
 
 Each application can have configurable parameters. These are defined directly in the class as its attributes:
@@ -53,7 +57,7 @@ Each application can have configurable parameters. These are defined directly in
 ```java
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 public class DemoComponent extends WebjetComponentAbstract {
 
 	private String stringField;
@@ -64,7 +68,7 @@ public class DemoComponent extends WebjetComponentAbstract {
 }
 ```
 
-these attributes are linked to the brand `!INCLUDE(... stringField=hodnota, booleanField=false)!` and are used for [Parameterization of the application display](../spring-mvc/README.md#používanie-parametrov-aplikácie).
+these attributes are linked to the brand `!INCLUDE(... stringField=hodnota, booleanField=false)!` and are used for [Parameterization of the application display](../spring-mvc/README.md#using-application-parameters).
 
 WebJET supports displaying parameter settings in a dialog box using `@DataTableColumn` annotations as well as for [standard datatable editor](../../developer/datatables-editor/datatable-columns.md). Also supported are cards set with the attribute `tab` Annotation. The translation key with the name `editor.tab.MENO`.
 
@@ -96,7 +100,7 @@ import java.util.Date;
 import java.util.List;
 
 @WebjetComponent("sk.iway.demo8.DemoComponent")
-@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "fa fa-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Demo komponenta", descKey = "Demo komponenta nejaky dlhy opis", imagePath = "ti ti-snowflake text-danger", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 @Getter
 @Setter
 public class DemoComponent extends WebjetComponentAbstract {
@@ -153,6 +157,16 @@ public class DemoComponent extends WebjetComponentAbstract {
     @DataTableColumn(inputType = DataTableColumnType.JSON, title = "dirSimple", tab = "json", className = "dt-tree-dir-simple")
     private String dirSimple;
 
+    //select folder with root set to /images/gallery
+    @DataTableColumn(inputType = DataTableColumnType.JSON, className = "dt-tree-dir-simple", title="components.gallery.dir", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")
+            }
+        )
+    })
+    private String dir = "/images/gallery";
+
 
 
 	@DefaultHandler
@@ -200,20 +214,19 @@ Sample HTML code `/components/aceintegration/demo-component/view.html`:
 
 ```html
 <p>
-
-	Demo component view, params:
-	<br />
-	test1: <span data-th-utext="${test}"></span>
-	<br />
-	stringField: <span data-th-utext="${demoComponent.stringField}"></span>
-	<br />
-	primitiveBooleanField: <span data-th-utext="${demoComponent.primitiveBooleanField}"></span>
-	<br />
-	primitiveIntegerField: <span data-th-utext="${demoComponent.primitiveIntegerField}"></span>
-	<br />
-	primitiveDoubleField: <span data-th-utext="${demoComponent.primitiveDoubleField}"></span>
-	<br />
-	primitiveFloatField: <span data-th-utext="${demoComponent.primitiveFloatField}"></span>
+    Demo component view, params:
+    <br>
+    test1: <span data-th-utext="${test}"></span>
+    <br>
+    stringField: <span data-th-utext="${demoComponent.stringField}"></span>
+    <br>
+    primitiveBooleanField: <span data-th-utext="${demoComponent.primitiveBooleanField}"></span>
+    <br>
+    primitiveIntegerField: <span data-th-utext="${demoComponent.primitiveIntegerField}"></span>
+    <br>
+    primitiveDoubleField: <span data-th-utext="${demoComponent.primitiveDoubleField}"></span>
+    <br>
+    primitiveFloatField: <span data-th-utext="${demoComponent.primitiveFloatField}"></span>
 </p>
 
 <p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
@@ -226,16 +239,16 @@ Sample HTML code `/components/aceintegration/demo-component/view.html`:
 
 <p>groupDetailsList:</p>
 <ul data-th-each="grp : ${demoComponent.groupDetailsList}">
-	<li data-th-text="${grp}">GroupDetails</li>
+    <li data-th-text="${grp}">GroupDetails</li>
 </ul>
 
 <p>docDetailsList:</p>
 <ul data-th-each="doc : ${demoComponent.docDetailsList}">
-	<li data-th-text="${doc}">DocDetails</li>
+    <li data-th-text="${doc}">DocDetails</li>
 </ul>
 ```
 
-Example of setting [selection field](../../developer/datatables-editor/datatable-columns.md#možnosti-výberového-poľa) in Contacts. Note also the options `@JsonIgnore` set above the repository. Otherwise, the repository itself would be serialized into the JSON object for editing application parameters, causing a JSON error.
+Example of setting [selection field](../../developer/datatables-editor/datatable-columns.md#selection-field-options) in Contacts. Note also the options `@JsonIgnore` set above the repository. Otherwise, the repository itself would be serialized into the JSON object for editing application parameters, causing a JSON error.
 
 ![](contacts-prop.png)
 
@@ -275,7 +288,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  *
  * Anotacia @WebjetAppStore zabezpeci zobrazenie aplikacie v zozname aplikacii v editore (v AppStore)
  *
-
  * V pripade, ze nejaka metoda ma byt dostupna len pre prihlaseneho pouzivatela, admina, prip. nejaku pouzivatelsku skupinu mozeme pouzit anotacie:
  * @PreAuthorize("@WebjetSecurityService.isLogged()") - prihalseny pouzivatel
  * @PreAuthorize("@WebjetSecurityService.isAdmin()") - admin
@@ -283,7 +295,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  * @see sk.iway.iwcm.system.spring.services.WebjetSecurityService
  */
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "ti ti-id", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {
@@ -395,15 +407,168 @@ public class ContactApp extends WebjetComponentAbstract {
 }
 ```
 
+## Data initialization
+
+If you need to execute code to initialize values when you open the application, you can implement the method `initAppEditor(ComponentRequest componentRequest, HttpServletRequest request)` in which you can set the initial values or execute another code. In the object `ComponentRequest` there is information about the current website.
+
+```java
+    @Override
+    public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
+        String uploadSubdir = UploadFileTools.getPageUploadSubDir(componentRequest.getDocId(), componentRequest.getGroupId(), componentRequest.getPageTitle(), "/images/gallery");
+        IwcmFile uploadDirFile = new IwcmFile(Tools.getRealPath(uploadSubdir));
+        if ("/images/gallery".equals(dir)) {
+            if (uploadDirFile.exists() == false) {
+                boolean created = uploadDirFile.mkdirs();
+                if (created) dir = uploadSubdir;
+            } else {
+                dir = uploadSubdir;
+            }
+        }
+    }
+```
+
+## Setting selection fields
+
+For dynamically created selection fields you can implement the method `getAppOptions(ComponentRequest componentRequest, HttpServletRequest request)` which sets `options` REST response object. This is transferred to the datatable and sets the options for the selection fields, or a list of checkboxes.
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
+@WebjetAppStore(nameKey = "components.gallery.title", descKey = "components.gallery.desc", itemKey="menuGallery", imagePath = "/components/gallery/editoricon.png", galleryImages = "/components/gallery/", componentPath = "/components/gallery/gallery.jsp")
+@Getter
+@Setter
+public class GalleryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.gallery.visual_style")
+    private String style;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, tab = "basic", title="components.news.perexGroup", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "editor.tab.filter"),
+                @DataTableColumnEditorAttr(key = "unselectedValue", value = "")
+            }
+        )
+    })
+	private Integer[] perexGroup;
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        //add options for style
+        List<OptionDto> styleOptions = new ArrayList<>();
+        Prop prop = Prop.getInstance(request);
+
+		styleOptions.add(new OptionDto(prop.getText("components.gallery.visual_style.prettyPhoto"), "prettyPhoto", null));
+		styleOptions.add(new OptionDto(prop.getText("components.gallery.visual_style.photoSwipe"), "photoSwipe", null));
+
+		//add all JSP files from the custom gallery folder
+		IwcmFile[] files = new IwcmFile(Tools.getRealPath("/components/" + Constants.getInstallName() + "/gallery/")).listFiles();
+		for (IwcmFile f : files)
+		{
+			if (f.getName().startsWith("gallery-")==false) continue;
+			if (f.getName().contains("-prettyPhoto.jsp") || f.getName().contains("-photoSwipe.jsp")) continue;
+
+			try
+			{
+				String name = f.getName().substring("gallery-".length(), f.getName().length()-4);
+                addPair(name, styleOptions, prop);
+			}
+			catch (Exception e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
+		}
+
+		//check if the current style is in the list
+		if (Tools.isNotEmpty(getStyle()))
+		{
+			boolean found = false;
+			for (OptionDto option : styleOptions)
+			{
+				if (option.getValue().equals(getStyle())) found = true;
+			}
+			if (found == false)
+			{
+				addPair(getStyle(), styleOptions, prop);
+			}
+		}
+
+        options.put("style", styleOptions);
+
+        //add perex groups
+        List<PerexGroupBean> perexGroups = DocDB.getInstance().getPerexGroups(componentRequest.getGroupId());
+        List<OptionDto> perexGroupOptions = new ArrayList<>();
+        for (PerexGroupBean pg : perexGroups) {
+            perexGroupOptions.add(new OptionDto(pg.getPerexGroupName(), ""+pg.getPerexGroupId(), null));
+        }
+        options.put("perexGroup", perexGroupOptions);
+
+        return options;
+    }
+
+    /**
+     * Try to translate the name of the style and add it to the list of options
+     * @param name
+     * @param styleOptions
+     * @param prop
+     */
+    private void addPair(String name, List<OptionDto> styleOptions, Prop prop)
+	{
+		String desc = prop.getText("components.gallery.visual_style."+name);
+		if (desc.startsWith("components.gallery")) desc = name;
+
+		styleOptions.add(new OptionDto(desc, name, null));
+	}
+}
+```
+
+## Cards
+
+If you need to split fields into multiple tabs, you can define them by annotating `@DataTableTabs`, you can also use the field type `IFRAME` for easy insertion of another page, e.g. a list of photos in a gallery:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
+@WebjetAppStore(nameKey = "components.gallery.title", descKey = "components.gallery.desc", itemKey="menuGallery", imagePath = "/components/gallery/editoricon.png", galleryImages = "/components/gallery/", componentPath = "/components/gallery/gallery.jsp")
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "componentIframe", title = "components.gallery.images")
+})
+@Getter
+@Setter
+public class GalleryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", title="components.gallery.visual_style")
+    private String style;
+
+    @DataTableColumn(inputType = DataTableColumnType.JSON, tab = "basic", className = "dt-tree-dir-simple", title="components.gallery.dir", editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")
+            }
+        )
+    })
+    private String dir = "/images/gallery";
+
+    ...
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframe", title="&nbsp;")
+    private String iframe  = "/admin/v9/apps/gallery/?dir={dir}";
+
+}
+```
+
 ## View tab
 
-The View tab for Common Settings, is displayed by default for each application, unless otherwise set for that application ( [more information here](#parametre-aplikácie) ).
+The View tab for Common Settings, is displayed by default for each application, unless otherwise set for that application ( [more information here](#application-parameters) ).
 
 ![](common-settings-tab.png)
 
 The card contains the parameters:
-- View on devices, used for setting up [conditional display application](#podmienené-zobrazenie-aplikácie).
+- View on devices, used for setting up [conditional display application](#conditional-application-view).
 - Buffer time (minutes), used to set the amount of time in minutes that the initialized application should be buffered.
+
+If you do not want to display the tab in the Spring application, set the attribute `commonSettings=false` in the annotation `@WebjetAppStore`.
 
 ### Conditional application view
 
@@ -413,7 +578,7 @@ When previewing an application in the editor that has a conditional view, the pr
 
 ![](../../redactor/apps/banner/multiple-devieces-banner-edit.png)
 
-To test when displaying a web page, you can use the URL parameter `?forceBrowserDetector=`that we can convince WebJET that we are accessing a specific type of device. The supported types for this parameter are `phone`, `tablet` a `pc`.
+To test when displaying a web page, you can use the URL parameter `?forceBrowserDetector=` that we can convince WebJET that we are accessing a specific type of device. The supported types for this parameter are `phone`, `tablet` a `pc`.
 
 When using old `editor_component.jsp` you can add a display settings tab for the device by calling `$(document).ready(function() { addAdvancedSettingsTab(); });` and get the set value as `oEditor.FCK.InsertHtml("!INCLUDE(/components/..." + getCommonAdvancedParameters() + ")!");`. The implementation of the function is in `/components/bottom.jsp` and is thus ready for your easy use.
 
@@ -423,16 +588,16 @@ The number of minutes during which the HTML code of an application that has alre
 
 The cache is not used if:
 - is logged in as administrator (but the cache value is updated when the page is displayed, so you can easily update the cache for non-logged in users). You can also enable caching for administrators by setting the conf. variable `cacheStaticContentForAdmin` to the value of `true`.
-- specified value of the parameter `cacheMinutes` \&lt; 1
+- specified value of the parameter `cacheMinutes` < 1
 - there is a parameter in the URL address `page` (not applicable if the value is 1, i.e. for the first page of e.g. the news list)
 - there is a parameter in the URL address `_disableCache=true`
 
 ## Implementation details
 
 - The datatable is inserted via `/admin/v9/views/pages/webpages/component.pug`
-- The logic for displaying the administration is in `/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp``editor_component.jsp`
-- `sk.iway.iwcm.system.datatable.DataTableColumnsFactory`
-- `sk.iway.iwcm.system.datatable.json.DataTableTab`
-- `sk.iway.iwcm.editor.rest.ComponentsRestController`
-- `request``sk.iway.iwcm.editor.rest.ComponentRequest`
-- `sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations`.
+- The logic for displaying the administration is in `/admin/skins/webjet8/ckeditor/dist/plugins/webjetcomponents/dialogs/webjetcomponet.jsp`, displays either the classic `editor_component.jsp`, this automatic editor via annotation, or list of applications.
+- Added method for getting a list of cards from the property annotation `sk.iway.iwcm.system.datatable.DataTableColumnsFactory`
+- Created new data object for cards `sk.iway.iwcm.system.datatable.json.DataTableTab`
+- Rest controller for application data `sk.iway.iwcm.editor.rest.ComponentsRestController`
+- New data `request` object for obtaining application data `sk.iway.iwcm.editor.rest.ComponentRequest`
+- The list of applications is searched from the annotations in `sk.iway.iwcm.editor.appstore.AppManager.scanAnnotations`.

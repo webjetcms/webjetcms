@@ -1,4 +1,4 @@
-# Nabídka
+# Menu (navigace)
 
 Aplikace menu vytváří navigační menu pro celý web (tzv. horní menu nebo levé menu). Grafická podoba nabídky je definována pomocí kaskádových stylů (CSS). Příklady horního a levého menu:
 

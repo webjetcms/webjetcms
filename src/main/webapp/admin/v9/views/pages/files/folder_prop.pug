@@ -68,18 +68,6 @@ block content
                     if(initIndexTab == false) {
                         let panelBody = $("#pills-dt-datatableInit-index > div.panel-body");
                         panelBody.append("<div id='indexMenu'> <p> [[\#{elfinder.folder_prop.start_indexing.txt}]] </p> <button id='start-index-button' class='btn btn-primary' onClick='startIndexing()'> [[\#{elfinder.folder_prop.start_indexing.btn}]] </button> </div>");
-
-                        //Add loader
-                        let loaderText = WJ.translate("elfinder.folder_prop.start_indexing.in_progress.js");
-                        loaderEl = $(`
-                            <div id="webjetAnimatedLoader">
-                                <div class="lds-dual-ring"></div>
-                                <p class="loaderText">${loaderText}</p>
-                            </div>`
-                        );
-                        loaderEl.insertAfter(panelBody);
-                        WJ.hideLoader();
-
                         initIndexTab = true;
                     }
                 }
@@ -87,7 +75,7 @@ block content
 
             function startIndexing() {
                 $("div#indexMenu").css("display", "none");
-                WJ.showLoader();
+                WJ.showLoader(null, "#pills-dt-datatableInit-index > div.panel-body");
                 if(isIndexing == false) {
                     isIndexing = true;
 

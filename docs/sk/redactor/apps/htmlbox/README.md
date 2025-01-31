@@ -1,4 +1,4 @@
-# Pred-pripravené bloky
+# Predpripravené bloky
 
 Editor stránky ponúka možnosť vkladania prednastavených blokov (```HTML``` objektov) na stránku. Napr. tabuľka, text, kontaktný formulár atď. Viete vložiť aj obsah inej stránky do aktuálnej stránky (napr. opakujúci sa formulár).
 
@@ -8,6 +8,8 @@ Zobrazenie blokov vykonáte kliknutím na ikonu ![](htmlbox_icon.png ":no-zoom")
 
 V záložke **Vaše** sa nachádzajú stránky generované z adresára **Systém** -> **Šablóny**. Každý adresár v adresári **Šablóny** reprezentuje jeden zoznam vo výberovom poli modulu. Obsah je možné vložiť dynamicky alebo staticky. Ak sa vloží dynamicky, tak sa pri neskoršej úprave daného obsahu (jednej stránky) zmena prejaví na všetkých miestach, kde bol daný obsah vložený dynamicky. Pri vložení staticky sa obsah duplikuje a vloží ako kópia, ktorá sa upravuje
 vždy už len na konkrétnom mieste v danej web stránke.
+
+Karta Vaše sa zobrazí ako zvolená pri otvorení ak obsahuje priečinok Systém->Šablóny pod priečinky alebo sú v priečinku viac ako 2 stránky.
 
 ### Nastavenie aplikácie - OSTATNÉ
 

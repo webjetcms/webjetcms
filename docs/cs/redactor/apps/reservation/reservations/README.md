@@ -2,9 +2,7 @@
 
 Aplikace **Seznam rezervací** umožňuje vytvářet/upravovat/mazat rezervace a také je importovat ze souboru Excel a exportovat do souboru Excel/CSV (nebo je dokonce při exportu ihned vytisknout).
 
-Seznam obsahuje také 3 tlačítka pro schválení/odmítnutí/obnovení rezervace, viz. sekce . [Schválení výhrad](#schválení-výhrad)
-
-a jedno tlačítko ![](button-show-stat.png ":no-zoom") přesměrovat na [Statistiky rezervací](../reservations-stat/README.md)
+Seznam obsahuje také 3 tlačítka pro schválení/odmítnutí/obnovení rezervace, viz. sekce . [Schválení výhrad](#schválení-výhrad). V levém menu můžete také přejít na [Statistiky rezervací](../reservations-stat/README.md).
 
 ![](reservation-datatable.png)
 
@@ -18,19 +16,19 @@ Karta **Základní** jak název napovídá, obsahuje základní informace o reze
 
 Karta obsahuje také výběr data od/do a výběr času od/do. U tohoto výběru je třeba upozornit na jednu důležitou věc. Pokud vyberete dny od 01.01.2022 do 03.01.2022 mezi 08:00 a 16:00, neznamená to, že rezervace začíná 01.01.2022 v 08:00 a trvá do 03.01.2022 v 16:00 a vše v tomto rozsahu je rezervováno. NE. Při takto zvolených hodnotách to v praxi znamená, že tento objekt rezervace rezervujete od 08:00 do 16:00 pro každý den zvlášť. Důvod je jednoduchý, tímto způsobem můžete rezervovat objekt v určitém čase na více dní, aniž byste museli rezervovat celý interval. Pokud je pro objekt nastaven interval rezervace od 05:00 do 20:00, rezervuje se pro každý den pouze uvedený časový interval a zbytek intervalu se nerezervuje, i když rezervace trvá například 3 dny.
 
-**Oznámení**pokud lze objekt rezervace rezervovat [POUZE na celý den](../reservation-objects/README.md) budou následující možnosti skryté a nedostupné:
+!>**Varování:** pokud lze objekt rezervace rezervovat [POUZE na celý den](../reservation-objects/README.md) budou následující možnosti skryté a nedostupné:
 - výběr času
 - přehled intervalů rezervací zařízení pro jednotlivé dny.
 
 ![](reservation-editor_basic_tab_2.png)
 
-Přepínač **Zobrazit platnost vytvářené rezervace ?** Po výběru se zobrazí textové pole s informací o platnosti rezervace. To znamená, zda lze v daném rozsahu vytvořit rezervaci pro vybraný objekt. Více informací o možných stavech v tomto poli je vysvětleno v části [Ověřování výhrad](#potvrzení-platnosti-rezervací). Pokud je rezervace platná, rámeček textového pole se zbarví zeleně, a pokud rezervace není platná, zbarví se červeně.
+Přepínač **Zobrazit platnost vytvářené rezervace ?** Po výběru se zobrazí textové pole s informací o platnosti rezervace. To znamená, zda lze v daném rozsahu vytvořit rezervaci pro vybraný objekt. Více informací o možných stavech v tomto poli je vysvětleno v části [Ověřování rezervací](#potvrzení-platnosti-rezervací). Pokud je rezervace platná, rámeček textového pole se zbarví zeleně, a pokud rezervace není platná, zbarví se červeně.
 
 **Cena rezervace** zobrazí aktuální cenu vytvářené rezervace. Cena závisí na vybraném objektu rezervace, intervalu rezervace a speciálních cenách nastavených pro daný objekt rezervace.
 
-**Varování:** sleva uživatele se pak automaticky uplatní na tuto cenu rezervace. Tato procentuální sleva je nastavena pro konkrétní [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří k více **skupiny uživatelů** které mají stanovenou procentní slevu, bude použita největší z nich. Pokud má sleva hodnotu `0%`, částka rezervace se nemění. Pokud má sleva hodnotu `100%`, rezervace je zdarma.
+!>**Varování:** sleva uživatele se pak automaticky uplatní na tuto cenu rezervace. Tato procentuální sleva je nastavena pro konkrétní [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří k více **skupiny uživatelů** které mají stanovenou procentní slevu, bude použita největší z nich. Pokud má sleva hodnotu `0%`, částka rezervace se nemění. Pokud má sleva hodnotu `100%`, rezervace je zdarma.
 
-**Varování:** platí aktuální ceny a slevy, tj. cena, která byla vypočtena v okamžiku provedení rezervace. To znamená, že pokud máte rezervaci naplánovanou např. na měsíc a cena objektu rezervace se v této době zvýší nebo se změní sleva uživatele, cena rezervace se **se nezmění**. **Nicméně** Pokud rezervaci změníte, budou použity aktuální ceny a slevy, což může vést ke změně původní ceny, kterou již nebude možné vrátit zpět.
+!>**Varování:** platí aktuální ceny a slevy, tj. cena, která byla vypočtena v okamžiku provedení rezervace. To znamená, že pokud máte rezervaci naplánovanou např. na měsíc a cena objektu rezervace se v této době zvýší nebo se změní sleva uživatele, cena rezervace se **se nezmění**. **Nicméně** Pokud rezervaci změníte, budou použity aktuální ceny a slevy, což může vést ke změně původní ceny, kterou již nebude možné vrátit zpět.
 
 Stav rezervace a cena rezervace se aktualizují vždy, když se změní datum, čas nebo objekt rezervace.
 
@@ -65,7 +63,7 @@ Po zobrazení obsahuje karta přepínač mezi třemi stavy, do kterých může r
 
 ![](reservation-editor_acceptation_tab.png)
 
-## Ověřování výhrad
+## Ověřování rezervací
 
 Logika ověřování rezervací je důležitou součástí aplikace. **Seznam rezervací**, který kontroluje, zda vytvářená nebo upravovaná rezervace splňuje všechna pravidla a podmínky. Ověřování se automaticky spustí při pokusu o uložení nové rezervace nebo o úpravu stávající rezervace. Pokud je rezervace platná (splňuje všechny potřebné požadavky), bude akce vytvoření/úpravy úspěšná, v opačném případě dojde k chybě a uživatel bude upozorněn buď konkrétní, nebo obecnou chybovou zprávou.
 
@@ -85,7 +83,7 @@ Den(y) nelze rezervovat v minulosti. Pokud se pokoušíte rezervovat na dnešek,
 
 ### Platný rozsah rezervací,
 
-Zkontroluje, zda je zadaný časový rozsah v intervalu rezervace objektu. Tato kontrola se provádí pro každý rezervovaný den zvlášť. Pokud se například pokoušíte rezervovat objekt mezi 08:00 a 09:00 na následující 3 dny a i jeden z těchto dnů má jiný rezervační interval, rezervace není platná. V úvahu se samozřejmě berou i speciální rezervační intervaly pro jednotlivé dny v týdnu, více informací naleznete na stránce [časy podle dnů](../reservation-objects/README.md#Časy-podle-dnů).
+Zkontroluje, zda je zadaný časový rozsah v intervalu rezervace objektu. Tato kontrola se provádí pro každý rezervovaný den zvlášť. Pokud se například pokoušíte rezervovat objekt mezi 08:00 a 09:00 na následující 3 dny a i jeden z těchto dnů má jiný rezervační interval, rezervace není platná. V úvahu se samozřejmě berou i speciální rezervační intervaly pro jednotlivé dny v týdnu, více informací naleznete na stránce [časy podle dnů](../reservation-objects/README.md#časy-podle-dnů).
 
 ### Maximální počet rezervací najednou
 
@@ -98,9 +96,9 @@ Kontrola bere všechny rezervace (ale pouze ty, které byly schváleny) nad obje
 Změnit stav rezervace je možné buď pomocí editoru, přesněji na kartě [Schválení](../reservations/README.md#Schválení), která se zobrazuje pouze za určitých specifických podmínek, nebo pomocí tlačítek pro změnu stavu rezervace.
 
 Stejně jako na kartě **Schválení** také tlačítka nabízejí 3 různé stavy, a to :
-- **Schválení**, ![](button-approve.png ":no-zoom") Rezervace (Rezervace schváleny)
-- **Odmítnout**, ![](button-reject.png ":no-zoom") Rezervace (Rezervace zamítnuty)
-- **Obnovení stavu**, ![](button-reset.png ":no-zoom") Rezervace (Rezervace čekají na schválení)
+- ![](button-approve.png ":no-zoom"), **Schválení** Rezervace (Rezervace schváleny)
+- ![](button-reject.png ":no-zoom"), **Odmítnout** Rezervace (Rezervace zamítnuty)
+- ![](button-reset.png ":no-zoom"), **Obnovení stavu** Rezervace (Rezervace čekají na schválení)
 
 ### Vyžaduje se schválení
 

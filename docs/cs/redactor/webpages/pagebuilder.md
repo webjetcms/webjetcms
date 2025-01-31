@@ -14,7 +14,7 @@ Pokud u šablony nastavíte možnost použít nástroj pro tvorbu stránek, rež
 
 V případě potřeby je v okně možnost přepnout editor do standardního režimu. Přepnutí z režimu PageBuilder do standardního režimu se pamatuje až do opětovného obnovení stránky. Také další stránka PageBuilder se následně zobrazí ve standardním režimu. Zpět do režimu PageBuilder se musíte přepnout přepnutím výběrového pole nebo obnovením celé stránky.
 
-**Varování:** obsah editorů není během vašich úprav synchronizován. Oba načítají stejný obsah pouze při otevření okna. Nemůžete tedy začít provádět změny v nástroji Page Builder a poté se přepnout do standardního editoru, abyste tam provedli další změny.
+!>**Varování:** obsah editorů není během vašich úprav synchronizován. Oba načítají stejný obsah pouze při otevření okna. Nemůžete tedy začít provádět změny v nástroji Page Builder a poté se přepnout do standardního editoru, abyste tam provedli další změny.
 
 ## Nastavení šířky sloupců
 
@@ -22,9 +22,9 @@ Editor umožňuje upravit šířku sloupců podle vybraného zařízení. Na pan
 
 ![](pagebuilder-switcher.png)
 
-- Desktop - je pro šířku větší nebo rovnou 1200 pixelů (nastavuje třídu CSS). `col-xl`).
+- Desktop - je pro šířku větší nebo rovnou 1200 pixelů (nastavuje třídu CSS `col-xl`).
 - Tablet - je navržen pro šířku 768-1199 pixelů (nastavuje třídu CSS `col-md`)
-- Mobilní - je pro šířku menší než 768 pixelů (nastavuje třídu CSS). `col-`)
+- Mobilní - je pro šířku menší než 768 pixelů (nastavuje třídu CSS `col-`)
 
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/aru-B1vxReo" title="Přehrávač videí YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

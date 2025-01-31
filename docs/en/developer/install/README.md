@@ -3,12 +3,12 @@
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
+- [Installation and start-up](#installation-and-start-up)
+  - [Webpack build JS, CSS and PUG files](#webpack-build-js-css-and-pug-files)
+  - [Build Java classes and start Tomcat](#build-java-classes-and-start-tomcat)
+  - [Setting up a hosts file](#hosts-file-settings)
+  - [Testing](#testing)
 
-- [Installation and start-up](#inštalácia-a-spustenie)
-	- [Webpack build JS, CSS and PUG files](#webpack-build-js-css-a-pug-súborov)
-	- [Build Java classes and start Tomcat](#build-java-tried-a-spustenie-tomcatu)
-	- [Setting up a hosts file](#nastavenie-hosts-súboru)
-	- [Testing](#testovanie)
 <!-- /code_chunk_output -->
 
 If you don't already have it, install [VS Code with recommended dependencies and extensions](https://docs.webjetcms.sk/v8/#/install-config/vscode/setup) - follow only the installation part of the extensions, the following chapters `Pull` project from SVN and the Tomcat setup no longer applies to you.
@@ -32,18 +32,16 @@ rm -rf node_modules
 npm install
 ```
 
-who will install the necessary libraries, license the Datatables Editor and build the production version.
+the latter will install the necessary libraries, license the `Datatables Editor` and compiles the production version.
 
-FontAwesome license is purchased and secured by a hidden file [.npmrc](../../../src/main/webapp/admin/v9/.npmrc) containing the authentication token.
-
-You can then start **dev mode**whereby automatically **webpack tracks changes** v `js/scss/pug` files and builds `dist` Directory:
+You can then start **dev mode** whereby automatically **webpack tracks changes** v `js/scss/pug` files and builds `dist` Directory:
 
 ```shell
 cd src/main/webapp/admin/v9
 npm run watch
 ```
 
-OR you can use the gradle task:
+OR you can use `gradle task`:
 
 ```shell
 #kontinualny watch zmien v suboroch a buildovanie dist adresara
@@ -53,6 +51,7 @@ gradlew npmbuild
 ```
 
 **Production version** you generate via:
+
 ```shell
 cd src/main/webapp/admin/v9
 npm run prod
@@ -74,7 +73,7 @@ gradlew compileJava --refresh-dependencies --info
 
 Start/stop Tomcat, create WAR archive:
 
-WARNING: before running gradle appRun, build the dist directory of HTML/CSS files once via gradle npmbuild, or run npm run watch from src/main/webapp/admin/v9 in a separate terminal.
+!>**Warning:** before running gradle appRun, build the dist directory of HTML/CSS files once via gradle npmbuild, or run npm run watch from src/main/webapp/admin/v9 in a separate terminal.
 
 ```shell
 gradlew appRun
@@ -106,7 +105,7 @@ WebJET is licensed by domain. To work locally, you need to add a line to the hos
 127.0.0.1   iwcm.interway.sk
 ```
 
-ATTENTION: on windows you need to edit the file with admin rights.
+!>**Warning:** at `Windows` you need to edit the file with admin rights.
 
 WebJET will be available locally as http://iwcm.interway.sk/admin/ when launched.
 

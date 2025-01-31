@@ -6,7 +6,7 @@ Výsledkem aplikace je zobrazení článků na webové stránce, přičemž čl�
 
 ![](blog-news-list.png)
 
-**Varování:** tato aplikace se zobrazí pouze aktuálně přihlášenému uživateli, pokud je splněna jedna z následujících podmínek:
+!>**Varování:** tato aplikace se zobrazí pouze aktuálně přihlášenému uživateli, pokud je splněna jedna z následujících podmínek:
 - Aktuálně přihlášený uživatel je tzv. **blogger**. Jinými slovy, uživatel musí mít právo Blog a zároveň musí patřit do skupiny uživatelů Blog. Takový uživatel může v rámci svého blogu vytvářet nové příspěvky a nové sekce.
 - Aktuálně přihlášený uživatel je tzv. **administrátor blogerů** který je administrátorem, musí mít práva Blog a Spravovat blogery a neměl by patřit do skupiny uživatelů Blog. Takový uživatel může vytvářet nové blogery (uživatele), mazat stávající blogery a případně provádět úpravy textu libovolného blogera.
 
@@ -32,7 +32,7 @@ Chcete-li vytvořit nový článek, použijte tlačítko ![](add_article.png ":n
 
 U nového článku je zařazení do stromové struktury přednastaveno podle hodnoty ve filtru externí sekce (např. /Applications/Blog/bloggerPerm).
 
-**Varování:** pokud se pokusíte vytvořit nový článek bez výběru sekce v externím filtru (při jeho hodnotě **Všechny sekce**) je nastavena sekce Nezařazené nebo první složka, ke které má blogger práva. Tuto sekci můžete změnit v editoru na kartě Základní nastavením hodnoty na hodnotu Nadřazená složka.
+!>**Varování:** pokud se pokusíte vytvořit nový článek bez výběru sekce v externím filtru (při jeho hodnotě **Všechny sekce**) je nastavena sekce Nezařazené nebo první složka, ke které má blogger práva. Tuto sekci můžete změnit v editoru na kartě Základní nastavením hodnoty na hodnotu Nadřazená složka.
 
 Název článku se zobrazí v seznamu článků. Pokud chcete v seznamu zobrazit krátký úvod, zadejte jej do pole Anotace v editoru článků na kartě Perex. Doporučujeme také zadat ilustrační obrázek do pole Obrázek na kartě Perex.
 

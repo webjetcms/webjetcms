@@ -57,15 +57,15 @@ Scenario("Logic tests basic log level", async ({ I, DT, DTE }) => {
         DTE.save();
 
     I.say("Check it");
-        DT.filter("packageName", newLogLevel);
-        const rowsA = await I.grabNumberOfVisibleElements("div.dataTables_scrollBody > table.datatableInit > tbody > tr");
+        DT.filterContains("packageName", newLogLevel);
+        const rowsA = await I.grabNumberOfVisibleElements("div.dt-scroll-body > table.datatableInit > tbody > tr");
         I.assertEqual(rowsA, 1, "Create with existing package name should perform EDIT. There can be only one row with same package name.");
 
     I.say('Delete');
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
-        DT.filter("packageName", newLogLevel);
+        DT.filterContains("packageName", newLogLevel);
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
@@ -99,7 +99,11 @@ Scenario("Logic tests DEFAULT log level", async ({ I, DT, DTE }) => {
         I.clickCss("td.dt-select-td.sorting_1");
         I.clickCss("button.buttons-remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
-        DT.filter("packageName", defaultLogLevel);
+
+        I.waitForText("Položku sa nepodarilo zmazať.");
+        I.clickCss("Button.btn-close-editor");
+
+        DT.filterContains("packageName", defaultLogLevel);
         I.see(defaultLogLevel);
 });
 
@@ -116,7 +120,7 @@ Scenario("Test DB save ", async ({ I, DT, DTE }) => {
 
     I.say('Say, check value in conf');
         I.amOnPage("/admin/v9/settings/configuration/");
-        DT.filter("name", "logLevels");
+        DT.filterContains("name", "logLevels");
         I.click("logLevels");
         DTE.waitForEditor("configurationDatatable");
         const value = await I.grabValueFrom("#DTE_Field_value");
@@ -129,7 +133,7 @@ Scenario("Reset log levels", async ({ I, Document }) => {
 });
 
 function checkValue(I, DT, packageName, logLevel) {
-    DT.filter("packageName", packageName);
+    DT.filterContains("packageName", packageName);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
     if(logLevel != null) {
         I.see(logLevel);

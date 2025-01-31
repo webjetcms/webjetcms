@@ -272,7 +272,13 @@ public class DomainRedirectDB
 
 			StringBuilder result = new StringBuilder();
 
-			if (redirect.getRedirectTo().startsWith("http")==false) result.append("http://");
+			if (redirect.getRedirectTo().startsWith("http")==false) {
+				if ("http".equals(redirect.getProtocol())) {
+					result.append("https://");
+				} else {
+					result.append("http://");
+				}
+			}
 			result.append(redirect.getRedirectTo());
 
 			if(!(path ==  null || path.equals("")))

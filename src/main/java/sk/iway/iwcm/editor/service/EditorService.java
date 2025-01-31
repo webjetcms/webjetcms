@@ -723,7 +723,7 @@ public class EditorService {
 	 * Nastavi stranke URL adresu (virtual_path), ak uz nejaka ina stranka takuto URL ma, tak prida cislo 1,2,3... na koniec URL adresy
 	 * @param editedDoc
 	 */
-	private void setVirtualPath(DocDetails editedDoc) {
+	protected void setVirtualPath(DocDetails editedDoc) {
 		String domain = groupsDB.getDomain(editedDoc.getGroupId());
 		int virtualPathConflictDocId = -1;
 		if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && editedDoc.getVirtualPath().startsWith("javascript:") == false) {
@@ -749,7 +749,11 @@ public class EditorService {
 				String ending = virtualPath.endsWith("/") ? "/" : ".html";
 				String editorPageExtension = Constants.getString("editorPageExtension");
 
-				for (int i = 1; i < 1000; i++) {
+				String lastVirtualPath = null;
+				for (long i = 2; i < 1000; i++) {
+
+					if (i>990) i = Tools.getNow();
+
 					if(virtualPath != null && virtualPath.length() > 255) {
 						String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());
 						vpTmp = DB.prepareString(vpTmp, 255 - ending.length()) + ending;
@@ -783,13 +787,28 @@ public class EditorService {
 							doc.setVirtualPath(editedDoc.getVirtualPath() + "-" + i + ".html");
 							ending = i + ".html";
 						} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {
-							doc.setVirtualPath(Tools.replace(editedDoc.getTitle() + ".html", "/", "-"));
-							editedDoc.setVirtualPath(doc.getVirtualPath());
 							ending = ".html";
 						}
 					}
 
 					virtualPath = DocDB.getURL(doc, groupDiskPath);
+
+					if (lastVirtualPath != null && lastVirtualPath.equals(virtualPath)) {
+						long fixedI = i - 100;
+						if (fixedI < 2) fixedI = 2;
+						//virtualPath is not changing, it is probably main page of folder, add number to the end
+						if (virtualPath.contains(".html")) {
+							//add number before .html
+							virtualPath = virtualPath.substring(0, virtualPath.lastIndexOf(".html")) + "-" + fixedI + ".html";
+						} else if (virtualPath.endsWith("/")) {
+							//add number before last slash
+							virtualPath = virtualPath.substring(0, virtualPath.length() - 1) + "-" + fixedI + "/";
+						} else {
+							virtualPath = virtualPath + "-" + fixedI;
+						}
+					} else {
+						if (i>100) lastVirtualPath = virtualPath;
+					}
 				}
 
 				editedDoc.setVirtualPath(DocDB.normalizeVirtualPath(virtualPath));
@@ -807,7 +826,7 @@ public class EditorService {
 		}
 		//pre uz existujucu stranku, ktora ma automaticky generovane URL nezobrazuj varovanie (lebo sa vzdy generuje a zobrazi sa pri kazdom ulozeni)
 		if (virtualPathConflictDocId>0 && (Boolean.FALSE.equals(editedDoc.getGenerateUrlFromTitle()) || editedDoc.getDocId()<1  ) ) {
-			NotifyBean notifyBean = new NotifyBean(prop.getText("text.warning"), prop.getText("editor.virtual_path_allready_used_in_doc")+": "+virtualPathConflictDocId, NotifyType.WARNING);
+			NotifyBean notifyBean = new NotifyBean(prop.getText("text.warning"), prop.getText("editor.virtual_path_allready_used_in_doc")+": "+virtualPathConflictDocId, NotifyType.WARNING, 20000);
 			addNotify(notifyBean);
 		}
 		String normalized = DocDB.normalizeVirtualPath(editedDoc.getVirtualPath());
@@ -1196,13 +1215,17 @@ public class EditorService {
 		return baseCssPath;
 	}
 
-	private static String getEditorCssPath(String baseCssPath) {
+	private static String getEditorCssPath(String baseCssPathMultiline) {
 		String editorCss;
-		if (baseCssPath != null && baseCssPath.startsWith("/templates/") && baseCssPath.contains("editor.css") == false) {
-			// skus automaticky dohladat aj editor.css v danom adresari
-			editorCss = baseCssPath.substring(0, baseCssPath.lastIndexOf("/")) + "/editor.css";
-			if (FileTools.isFile(editorCss)) {
-				return editorCss;
+		String[] lines = Tools.getTokens(baseCssPathMultiline, "\n");
+		for (String baseCssPath : lines) {
+			baseCssPath = baseCssPath.trim();
+			if (baseCssPath != null && baseCssPath.startsWith("/templates/") && baseCssPath.contains("editor.css") == false) {
+				// skus automaticky dohladat aj editor.css v danom adresari
+				editorCss = baseCssPath.substring(0, baseCssPath.lastIndexOf("/")) + "/editor.css";
+				if (FileTools.isFile(editorCss)) {
+					return editorCss;
+				}
 			}
 		}
 
@@ -1270,7 +1293,7 @@ public class EditorService {
 		}
 
 		//aktualizuj pripadne aj tab. perex_group_doc
-		DocDB.udpdatePerexGroupDoc(editedDoc.getDocId(), editedDoc.getPerexGroupString());
+		DocDB.udpdatePerexGroupDoc(editedDoc.getDocId(), editedDoc.getPerexGroupIdsString());
 		dt.diff("after update perex group doc");
 	}
 

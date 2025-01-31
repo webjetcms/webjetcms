@@ -92,7 +92,8 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.contentblock",
     "sk.iway.iwcm.components.sendlink",
     "sk.iway.iwcm.components.gdpr",
-    "sk.iway.iwcm.components.sitebrowser"
+    "sk.iway.iwcm.components.sitebrowser",
+    "sk.iway.iwcm.components.basket.rest"
 
 
 })

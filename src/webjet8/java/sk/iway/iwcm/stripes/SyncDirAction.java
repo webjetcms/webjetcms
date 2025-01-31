@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -14,7 +15,6 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.json.JSONArray;
@@ -99,6 +100,8 @@ public class SyncDirAction extends WebJETActionBean
 	private int remoteGroupId;
 	private String localDomain;
 
+	private GroupDetails localSrcGroup;
+
 	private List<GroupDetails> remoteGroups = null;
 	private List<DocDetails> remoteDocs = null;
 	private List<TemplateDetails> remoteTemps = null;
@@ -119,12 +122,16 @@ public class SyncDirAction extends WebJETActionBean
 
 	private List<String> errorMessages = new ArrayList<>();
 
+	private String compareBy = null;
+
 	/**
 	 * Nacita data zo vzdialeneho servera
 	 * @return
 	 */
 	public Resolution btnLoadData()
 	{
+		SyncDirWriterService.printStatusMsg("components.syncDirAction.title", true, getContext(), getRequest());
+
 		//aby sa nam vymazala cache (ak je pouzita)
 		remoteGroups = null;
 		remoteDocs = null;
@@ -132,7 +139,10 @@ public class SyncDirAction extends WebJETActionBean
 
 		try
 		{
+			SyncDirWriterService.printStatusMsg("components.syncDirAction.prepare_groups", false, getContext(), getRequest());
 			remoteGroups = getRemoteGroups();
+
+			SyncDirWriterService.printStatusMsg("components.syncDirAction.prepare_docs", false,  getContext(), getRequest());
 			remoteDocs = getRemoteDocs();
 		}
 		catch (Exception e)
@@ -140,6 +150,7 @@ public class SyncDirAction extends WebJETActionBean
 			sk.iway.iwcm.Logger.error(e);
 		}
 
+		SyncDirWriterService.printStatusMsg("components.syncDirAction.prepare_content", false,  getContext(), getRequest());
 		Logger.debug(SyncDirAction.class, "btnLoadData Remote groups="+remoteGroups);
 		if (remoteGroups == null || remoteDocs == null)
 		{
@@ -148,6 +159,97 @@ public class SyncDirAction extends WebJETActionBean
 		remoteContent = getRemoteContent();
 
 		return new ForwardResolution("/components/maybeError.jsp");
+	}
+
+	private void foldersSync(HttpServletRequest request, PrintWriter writer) {
+		//
+		Prop prop = Prop.getInstance(request);
+
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingFolders"), "folderSyncCount", prop.getText("components.syncDirAction.progress.syncingFolder") + ": - / -", writer);
+
+		Map<String, String> selectedGroupsMap = SyncDirWriterService.getOptionsMap("group_", request);
+		if(selectedGroupsMap.size() < 1) return;
+
+		int groupsToPrepareCount = 0;
+		int preparedGroupsCount = 1;
+		List<GroupDetails> remoteGroupsToSync = getRemoteGroups();
+
+		//Count groups to sync
+		groupsToPrepareCount = (int) remoteGroupsToSync.stream()
+			.filter(remoteGroup -> selectedGroupsMap.get("group_" + remoteGroup.getGroupId()) != null)
+			.count();
+
+
+		for (GroupDetails remoteGroup : remoteGroupsToSync)
+		{
+			if (selectedGroupsMap.get("group_" + remoteGroup.getGroupId()) != null)
+			{
+				SyncDirWriterService.updateProgress("folderSyncCount", prop.getText("components.syncDirAction.progress.syncingFolder") + ": " + preparedGroupsCount + " / " + groupsToPrepareCount, writer);
+				preparedGroupsCount++;
+
+				createLocalGroup(remoteGroup);
+			}
+		}
+	}
+
+	private List<Integer> pagesSync(HttpServletRequest request, PrintWriter writer) {
+		Prop prop = Prop.getInstance(request);
+		//
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingDocs"), "webPageSyncCount", prop.getText("components.syncDirAction.progress.syncingDoc") + ": - / -", writer);
+
+		List<Integer> historyIds = new ArrayList<>();
+		Map<String, String> selectedDocsMap = SyncDirWriterService.getOptionsMap("doc_", request);
+		if(selectedDocsMap.size() < 1) return historyIds;
+
+		List<DocDetails> remoteDocToSync = getRemoteDocs();
+		int pagesToPrepareCount = 0;
+		int preparedPagesCount = 1;
+
+		//Count pages to prepare
+		pagesToPrepareCount = (int) remoteDocToSync.stream()
+			.filter(remoteDoc -> selectedDocsMap.get("doc_" + remoteDoc.getDocId()) != null)
+			.count();
+
+
+		for (DocDetails remoteDoc : remoteDocToSync)
+		{
+			if (selectedDocsMap.get("doc_" + remoteDoc.getDocId()) != null)
+			{
+				SyncDirWriterService.updateProgress("webPageSyncCount", prop.getText("components.syncDirAction.progress.syncingDoc") + ": " + preparedPagesCount + " / " + pagesToPrepareCount, writer);
+				preparedPagesCount++;
+
+				int historyId = createLocalDoc(remoteDoc);
+				historyIds.add(historyId);
+			}
+		}
+
+		return historyIds;
+	}
+
+	private void importingFiles(Content content, HttpServletRequest request, PrintWriter writer) {
+		Prop prop = Prop.getInstance(request);
+		//
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingFiles"), "filesImportCount", prop.getText("components.syncDirAction.progress.syncingFile") + ": - / -", writer);
+
+		if(content == null) return;
+
+		Map<String, String> selectedFilesMap = SyncDirWriterService.getOptionsMap("file_", request);
+		if(selectedFilesMap.size() < 1) return;
+
+		int importedFilesCount = 1;
+		Iterable<Numbered<Content.File>> filesToImport = Numbered.list(content.getFiles());
+		int filesToImportCount = SyncDirWriterService.getCountToHandle(selectedFilesMap, filesToImport, "file_");
+
+		for (Numbered<Content.File> file : filesToImport)
+		{
+			if (selectedFilesMap.get("file_" + file.number) != null)
+			{
+				SyncDirWriterService.updateProgress("filesImportCount", prop.getText("components.syncDirAction.progress.syncingFile") + ": " + importedFilesCount + " / " + filesToImportCount, writer);
+				importedFilesCount++;
+
+				createLocalContentFile(file.item);
+			}
+		}
 	}
 
 	/**
@@ -160,6 +262,9 @@ public class SyncDirAction extends WebJETActionBean
 
 		try
 		{
+			HttpServletResponse response = getContext().getResponse();
+        	PrintWriter writer = response.getWriter();
+
 			HttpServletRequest request = context.getRequest();
 			//UPOZORNENIE: ziadnym sposobom nemodifikovat remote objekty!
 			// ak je to nutne je potrebne nasledne vratit povodne hodnoty
@@ -170,48 +275,24 @@ public class SyncDirAction extends WebJETActionBean
 				setLocalDomain(localGroup.getDomainName());
 			}
 
-			//sync adresarov
+			//FOLDER SYNC
 			List<Integer> historyGroupsIds = new ArrayList<>();
 			Date start = new Date();
-			for (GroupDetails remoteGroup : getRemoteGroups())
-			{
-				if (request.getParameter("group_" + remoteGroup.getGroupId()) != null || request.getAttribute("syncAll") != null)
-				{
-					createLocalGroup(remoteGroup);
-				}
-			}
+			foldersSync(request, writer);
 			historyGroupsIds = getNewGroups(start);
 
-			List<Integer> historyIds = new ArrayList<>();
-			//sync stranok
-			for (DocDetails remoteDoc : getRemoteDocs())
-			{
-				if (request.getParameter("doc_" + remoteDoc.getDocId()) != null || request.getAttribute("syncAll") != null)
-				{
-					int historyId = createLocalDoc(remoteDoc);
-					historyIds.add(historyId);
-				}
-			}
+			//WEB PAGE SYNC
+			List<Integer> historyIds = pagesSync(request, writer);
 			saveRollbackJson(historyIds, historyGroupsIds);
 
+			//FILE IMPORT
 			Content content = getRemoteContent();
-
-			// import suborov
-			if (content != null)
-			{
-				for (Numbered<Content.File> file : Numbered.list(content.getFiles()))
-				{
-					if (null != request.getParameter("file_" + file.number) || request.getAttribute("syncAll") != null)
-					{
-						createLocalContentFile(file.item);
-					}
-				}
-			}
+			importingFiles(content, request, writer);
 
 			// import komponentov
-			BannerImporter.importBanners(request, content);
-			InquiryImporter.importInquiries(request, content);
-			GalleryImporter.importGalleries(request, content);
+			BannerImporter.importBanners(request, content, writer);
+			InquiryImporter.importInquiries(request, content, writer);
+			GalleryImporter.importGalleries(request, content, writer);
 		}
 		catch (Exception ex)
 		{
@@ -863,7 +944,6 @@ public class SyncDirAction extends WebJETActionBean
 	@SuppressWarnings("unchecked")
 	public List<GroupDetails> getRemoteGroups()
 	{
-		Logger.debug(SyncDirAction.class, "getRemoteGroups, remoteGroups="+remoteGroups+" syncDir="+syncDir);
 		if (remoteGroups==null && remoteGroupId>0)
 		{
 			remoteGroups = (List<GroupDetails>) getLocalFile("groups.xml");
@@ -925,7 +1005,7 @@ public class SyncDirAction extends WebJETActionBean
 		{
 			mainPages.add(gd.getDefaultDocId());
 		}
-		Logger.debug(getClass(), "main pages docids : " + Arrays.toString(mainPages.toArray()));
+		//Logger.debug(getClass(), "main pages docids : " + Arrays.toString(mainPages.toArray()));
 		final Set<Integer> finalMainPages = mainPages;
 
 		//Logger.debug(getClass(), "docids before sort: " + Arrays.toString(Lambda.convert(remoteDocs, new PropertyExtractor("docId")).toArray()));
@@ -979,7 +1059,7 @@ public class SyncDirAction extends WebJETActionBean
 	 */
 	public String getLocalPath(GroupDetails remoteGroup)
 	{
-		Logger.debug(SyncDirAction.class, "getLocalPath, rgfp="+remoteGroup.getFullPath()+" root="+getRemoteRootPath());
+		//Logger.debug(SyncDirAction.class, "getLocalPath, rgfp="+remoteGroup.getFullPath()+" root="+getRemoteRootPath());
 
 		String basePath = remoteGroup.getFullPath().substring(getRemoteRootPath().length());
 		if("cloud".equals(Constants.getInstallName()))
@@ -1041,7 +1121,7 @@ public class SyncDirAction extends WebJETActionBean
 	 */
 	public GroupDetails getLocalGroup(String localPath)
 	{
-		return GroupsDB.getInstance().getGroupByPath(localPath);
+		return GroupsDB.getInstance().getGroupByPathAndDomain(localPath, localSrcGroup.getDomainName());
 	}
 
 	/**
@@ -1072,13 +1152,31 @@ public class SyncDirAction extends WebJETActionBean
 			List<DocDetails> localDocs = docDB.getBasicDocDetailsByGroup(localGroup.getGroupId(), DocDB.ORDER_PRIORITY);
 			for (DocDetails doc : localDocs)
 			{
-				if (doc.getTitle().equals(remoteDoc.getTitle()) || (Tools.isNotEmpty(remoteDoc.getVirtualPath()) && Tools.isNotEmpty(doc.getVirtualPath()) && doc.getVirtualPath().equals(remoteDoc.getVirtualPath()) ))
+				if (comapreDocs(doc, remoteDoc))
 				{
 					return(doc);
 				}
 			}
 		}
 		return null;
+	}
+
+	private boolean comapreDocs(DocDetails doc, DocDetails remoteDoc) {
+		if("url".equals(this.compareBy)) {
+			return (Tools.isNotEmpty(remoteDoc.getVirtualPath()) && Tools.isNotEmpty(doc.getVirtualPath()) && doc.getVirtualPath().equals(remoteDoc.getVirtualPath()));
+		} else if("none".equals(this.compareBy)) {
+			// allways return false - aka allways create new doc
+			return false;
+		} else if("fieldA".equals(this.compareBy)) {
+			return doc.getFieldA().equals(remoteDoc.getFieldA());
+		} else if("fieldB".equals(this.compareBy)) {
+			return doc.getFieldB().equals(remoteDoc.getFieldB());
+		} else if("fieldC".equals(this.compareBy)) {
+			return doc.getFieldC().equals(remoteDoc.getFieldC());
+		} else {
+			// nameOrUrl / null / or anything else - default
+			return (doc.getTitle().equals(remoteDoc.getTitle()) || (Tools.isNotEmpty(remoteDoc.getVirtualPath()) && Tools.isNotEmpty(doc.getVirtualPath()) && doc.getVirtualPath().equals(remoteDoc.getVirtualPath()) ));
+		}
 	}
 
 	/**
@@ -1379,6 +1477,10 @@ public class SyncDirAction extends WebJETActionBean
 				setSyncDir(context.getRequest().getParameter("syncDir"));
 			}
 		}
+
+		//Set comapreBy
+		this.compareBy = context.getRequest().getParameter("compareBy");
+		if(this.compareBy == null) this.compareBy = "nameOrUrl";
 	}
 
 	public void setSyncDir(String syncDir)
@@ -1394,6 +1496,13 @@ public class SyncDirAction extends WebJETActionBean
 	public void setLocalGroupId(int localGroupId)
 	{
 		this.localGroupId = localGroupId;
+
+		this.localSrcGroup = GroupsDB.getInstance().getGroup(localGroupId);
+	}
+
+	public GroupDetails getLocalSrcGroup()
+	{
+		return localSrcGroup;
 	}
 
 	public int getRemoteGroupId()

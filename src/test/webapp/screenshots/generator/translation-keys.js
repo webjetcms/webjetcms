@@ -60,5 +60,6 @@ Scenario('translation keys', async ({ I, DTE, Document }) => {
 
     I.wait(1);
 
+    I.moveCursorTo('#toast-container-webjet');
     Document.screenshotElement("#toast-container-webjet", "/admin/settings/translation-keys/delete-notification.png");
 });

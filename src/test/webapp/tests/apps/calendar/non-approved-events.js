@@ -23,12 +23,12 @@ Scenario('Test the logic of approving and suggesting existing events', async ({I
 
     I.say("Check that I NON-Approver CANT see this event");
     I.amOnPage("/apps/calendar/admin/non-approved-events/");
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("check, that non-approved event isn't visible in suggest-events.");
     I.amOnPage("/apps/calendar/admin/suggest-events/");
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Check it's not on webpage");
@@ -38,7 +38,7 @@ Scenario('Test the logic of approving and suggesting existing events', async ({I
     I.say("Relogin as approver - and check, that you see this event");
     I.relogin("tester");
     I.amOnPage("/apps/calendar/admin/non-approved-events/");
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Approve event")
@@ -55,7 +55,7 @@ Scenario('Test the logic of approving and suggesting existing events', async ({I
 
     I.say("Check, that approved EVENT is NOW visible in suggest-events.");
     I.amOnPage("/apps/calendar/admin/suggest-events/");
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
     //
@@ -71,7 +71,7 @@ Scenario('Test the logic of approving and suggesting existing events', async ({I
 
     I.say("Remove this event");
     I.amOnPage("/apps/calendar/admin/");
-    DT.filter("title", eventName);
+    DT.filterContains("title", eventName);
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");

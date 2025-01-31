@@ -462,7 +462,7 @@ REST rozhrania datatabuliek upravené na použitie ```ThreadLocal``` objektu, kt
 
 - Doplnená funkčnosť duplikovania záznamov v tabuľke. Do nástrojovej lišty pridané fialové tlačidlo Duplikovať. Je možné naraz označiť aj viacero riadkov.
 
-<img class="changelog" src="_media/changelog/2021q2/2021-24-duplicate-button.png"/>
+![changelog](_media/changelog/2021q2/2021-24-duplicate-button.png ":no-zoom")
 
 - Doplnená možnosť obnoviť zobrazené stĺpce podľa originálneho nastavenia zo servera. Nastavenie používateľa sa zmaže a obnoví sa originálna viditeľnosť stĺpcov.
 - Do editora doplnené otvorenie pomocníka kliknutím na ikonu otáznika v pätičke dialógového okna.
@@ -498,7 +498,7 @@ REST rozhrania datatabuliek upravené na použitie ```ThreadLocal``` objektu, kt
 
 Implementovali sme univerzálnu funkčnosť voliteľných polí (pôvodný názov Vlastné polia vo WebJET 8) do web stránok a adresárov web stránok (adresárom nebolo vo WebJET 8 možné naať typy polí). Vo web stránkach a adresároch je tak ľahko možné nastavovať rôzne typy polí.
 
-<img class="changelog" src="frontend/webpages/customfields/webpages.png"/>
+![changelog](frontend/webpages/customfields/webpages.png ":no-zoom")
 
 Pripravili sme dokumentáciu s informáciami o [nastavení voliteľných polí](frontend/webpages/customfields/README.md) pre frontend programátora aj dokumentáciu s [technickými informáciami](developer/datatables-editor/customfields.md) pre backend programátora.
 
@@ -546,7 +546,7 @@ Pripravili sme dokumentáciu s informáciami o [nastavení voliteľných polí](
 
 - Úprava bunky - pridaná možnosť upravovať [jednotlivé bunky](developer/datatables-editor/bubble.md) priamo v datatabuľke aj pre editor obsahujúce samostatné listy (doteraz to fungovalo len v editore bez listov). Pridaná možnosť nastaviť ne-editovateľné bunky.
 
-<img class="changelog" src="_media/changelog/2021q2/2021-17-media-bubble.png"/>
+![changelog](_media/changelog/2021q2/2021-17-media-bubble.png ":no-zoom")
 
 - Upravená možnosť prepísať metódu ```searchItem``` v ```DatatableRestControllerV2``` pre vyhľadávanie. Neodporúča sa prepísať priamo REST metódu ```findByColumns```, pretože to pri zákazníckych projektoch robí vnútorný problém v Spring-u (#53677).
 
@@ -600,7 +600,7 @@ Optimalizovali sme [rýchlosť zobrazenia zoznamu web stránok](developer/apps/w
 - Adresár - pridané zobrazenie plánovaných verzií a histórie adresára s možnosťou editácie záznamu podľa historickej/plánovanej verzie.
 - Pridané zobrazenie zoznamu Naposledy upravené (zoznam stránok, ktoré naposledy upravoval ľubovoľný používateľ v aktuálnej doméne) a Čakajúce na schválenie (zobrazí sa len ak existujú stránky, ktoré má schváliť aktuálne prihlásený používateľ) (#53493).
 
-<img class="changelog" src="_media/changelog/2021q1/2021-13-awaiting-approve.png"/>
+![changelog](_media/changelog/2021q1/2021-13-awaiting-approve.png ":no-zoom")
 
 **Administrácia**
 
@@ -622,7 +622,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Pridaná možnosť šifrovať hodnotu a plánovať zmenu hodnoty do budúcna.
 - Doplnený list Plánovanie pre zobrazenie plánovaných zmien, hodnoty v budúcnosti je možné zmazať.
 
-<img class="changelog" src="_media/changelog/2021q1/2021-13-configuration-history.png"/>
+![changelog](_media/changelog/2021q1/2021-13-configuration-history.png ":no-zoom")
 
 **Datatabuľky**
 
@@ -683,7 +683,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 
 - Sfunkčnený list História v editore stránok. Umožňuje načítať web stránku z histórie do editora, zobraziť stránku z histórie a porovnať aktuálnu verziu voči historickej verzii (#53385).
 
-<img class="changelog" src="redactor/webpages/history.png"/>
+![changelog](redactor/webpages/history.png ":no-zoom")
 
 **Datatabuľky**
 
@@ -738,7 +738,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Pridaná menu položka Média s možnosťou editácie všetkých médií a správy média skupín do menu Web stránky.
 - Pridané právo Média - správa všetkých médii pre zobrazenie zoznamu všetkých médií s možnosťou globálnych úprav médií (napr. vyhľadanie všetkých médii odkazujúcich na určitú linku alebo obrázok).
 
-<img class="changelog" src="redactor/webpages/media.png"/>
+![changelog](redactor/webpages/media.png ":no-zoom")
 
 **Datatabuľky**
 
@@ -794,13 +794,13 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Pridané doplnenie starej hodnoty a popisu aj pre novo pridávanú konfiguračnú premennú (#52999).
 - Upravené zobrazenie varovania o zobrazení len zmenených konfiguračných premenných na štandardnú toast notifikáciu, ktorá sa po 10 sekundách schová.
 
-<img class="changelog" src="_media/changelog/2021q1/2021-6-autocomplete.png"/>
+![changelog](_media/changelog/2021q1/2021-6-autocomplete.png ":no-zoom")
 
 **Web stránky**
 
 - Zlepšili sme viditeľnosť poľa Poznámka redaktora - pri načítaní stránky, ktorá nemá prázdnu poznámku redaktora sa zobrazí štandardná notifikácia s textom poznámky. Zobrazená je 15 sekúnd.
 
-<img class="changelog" src="_media/changelog/2021q1/2021-7-poznamka-redaktora.png"/>
+![changelog](_media/changelog/2021q1/2021-7-poznamka-redaktora.png ":no-zoom")
 
 - Sfunkčnili sme karty Systém a Kôš a pripravili prvý text [manuálu pre redaktora](redactor/webpages/README.md) s opisom správania týchto kariet.
 - Zoznam web stránok je filtrovaný podľa zvolenej domény (zobrazia sa len priečinky a web stránky z aktuálne zvolenej domény)
@@ -818,7 +818,7 @@ Celý systém prekladov pre JavaScript súbory je implementovaný ako knižnica 
 - Doplnili sme systém pre udržiavanie spojenia so serverom a zobrazenie chybového hlásenia pri prerušení spojenia a pri chybe bezpečnostného tokenu (#53119).
 - Notifikácie - pri prechode myšou ponad notifikáciu s progress barom sa po odchode myši progress bar spustí nanovo. (#53131)
 
-<img class="changelog" src="_media/changelog/2021q1/2021-7-refresher.png"/>
+![changelog](_media/changelog/2021q1/2021-7-refresher.png ":no-zoom")
 
 **Testy**
 

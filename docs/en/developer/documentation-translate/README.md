@@ -34,24 +34,26 @@ Since `deepmark` uses a translator to translate `DeepL`, you need to set the env
 
 In the configuration file we set the location from where we will `markdown` translate, as well as the location where these translated files will be stored. We also define from which and into which language the translation should be done.
 
-**Warning:** this configuration file **must be** called as `deepmark.config.mjs` and must be in the same location where we installed `deepmark`. In our case, this is the folder `docs`.
+!>**Warning:** this configuration file **must be** called as `deepmark.config.mjs` and must be in the same location where we installed `deepmark`. In our case, this is the folder `docs`.
 
 ```javascript
 /** @type {import("deepmark").UserConfig} */
 export default {
-	sourceLanguage: "sk",
-	outputLanguages: ["en-US"],
-	directories: [["sk", "en"]],
+    sourceLanguage: 'sk',
+    outputLanguages: ['en-US'],
+    directories: [
+        ['sk', 'en']
+    ]
 };
 ```
 
-**Warning:** if the target translation location is not created, it is created automatically. If the target location already contains files with the same name they will be overwritten. Otherwise new files will be created.
+!>**Warning:** if the target translation location is not created, it is created automatically. If the target location already contains files with the same name they will be overwritten. Otherwise new files will be created.
 
 ## Starting the translation
 
 Before we start, we have to say that the translation itself can work in three modes `hybrid, offline, online`. We strongly recommend using the mode `hybrid` where the already translated phrases are stored in a local database, saving both tea and the number of characters used.
 
-**Warning:** note that the number of translations is limited and it is therefore recommended to use this mode to save the number of translations.
+!>**Warning:** note that the number of translations is limited and it is therefore recommended to use this mode to save the number of translations.
 
 You do the translation via the console, where in the location `docs` to start the process, use the command `npm run translate`. You should see information in the console about how each file is being translated. It also lists **Start** a **End** the whole process of translation.
 
@@ -67,7 +69,7 @@ Almost all of our own logic is in a file we created at `docs\node_modules\@webje
 
 One of the features of the translation, is to copy all non-translatable files from the source folder to the destination folder. These files include `.png, .jpg, .jpge, .ico, .css` and others. Actually all files that are not of type `markdown`. This behaviour can be convenient as you do not have to manually copy all dependent files.
 
-**Warning:** the disadvantage is that if you add specific modified images for the English version to the EN documentation, they are overwritten with the original images from the Slovak version every time they are translated. For this reason, this logic has been modified so that when translating **they never copied the pictures**.
+!>**Warning:** the disadvantage is that if you add specific modified images for the English version to the EN documentation, they are overwritten with the original images from the Slovak version every time they are translated. For this reason, this logic has been modified so that when translating **they never copied the pictures**.
 
 The modification was applied in the file `docs/node_modules/deepmark/dist/config.js`, around line 240. A new condition has been added to skip a file with an extension for images e.g. `.png, .jpg, .jpge`. This way, files with the given extensions will not be copied during translation.
 
@@ -94,7 +96,7 @@ if (path.endsWith(".png") || path.endsWith(".jpg") || path.endsWith(".jpeg")) {
 
 If you mate in `markdown` some parts of the file that are not to be translated such as the codes, the `markdown` offers the option to skip translating parts of the file if the text is wrapped in **\`text\`** or code wrapped as **\`\`Code\`\`**. The problem arises when the code in the file is not for illustrative purposes, but to perform some logic.
 
-**Warning:**, in case you don't wrap it as **\`\`Code\`\`**, the code may be partially translated, rendering it inoperable. If you wrap the code as **\`\`Code\`\`**, but it does not translate **nor shall it be performed**.
+!>**Warning:**, in case you don't wrap it as **\`\`Code\`\`**, the code may be partially translated, rendering it inoperable. If you wrap the code as **\`\`Code\`\`**, but it does not translate **nor shall it be performed**.
 
 **Solution** was the creation of own brands `<!-- deepmark-ignore-start -->` a `<!-- deepmark-ignore-end -->` which ensure that the codes (or even the text) enclosed in these marks are not translated **But** the code itself is executed. The logic behind these markers extracts the marked code from the file before the actual translation and only after the translation puts them back into the file, namely **unchanged**.
 
@@ -168,7 +170,7 @@ List **Updated** addictions:
 
 When translating, you may encounter that the resulting translation has broken the file structure. This problem can occur if your `markdown` files contain syntax that `deepmark` can't process. In the next section, we will show some problem syntaxes.
 
-**Warning:**, many problems have been solved in the version `@webjetcms/deepmark`, but there are still situations where a certain file format will cause problems in translation and subsequent formatting.
+!>**Warning:**, many problems have been solved in the version `@webjetcms/deepmark`, but there are still situations where a certain file format will cause problems in translation and subsequent formatting.
 
 ### Combining list types
 
@@ -239,5 +241,3 @@ YOUR CODE HERE
 ### Ignorance `markdown` format
 
 The most common error will probably be an incorrect format due to ignorance of the file format `markdown`. You can read about the basic syntax at [Basic Syntax](https://www.markdownguide.org/basic-syntax/).
-
-**Example of misuse**

@@ -52,12 +52,12 @@ public class DocRestController extends sk.iway.iwcm.rest.RestController
 	 */
 	@RequestMapping(path={"/rest/documents/{param}/**"}, method=RequestMethod.GET)
 	public DocDetails getDoc(HttpServletRequest request, @PathVariable String param)
-	{		
+	{
 		if(!isIpAddressAllowed(request))
 			return null;
-		
+
 		int docId = getDocId(param, (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE), request);
-		
+
 		DocDetails result = DocDB.getInstance().getDoc(docId);
 		if (result != null)
 		{
@@ -75,10 +75,10 @@ public class DocRestController extends sk.iway.iwcm.rest.RestController
 		}
 		return result;
 	}
-	
+
 	/**
 	 * param je bud docId, alebo prva cast url stranky
-	 * 
+	 *
 	 * @param param - URL adresa stranky alebo docId
 	 * @param calledUrl - cele volane URL rest sluzby
 	 * @return - normovane docId
@@ -88,7 +88,7 @@ public class DocRestController extends sk.iway.iwcm.rest.RestController
 		int docId;
 		String restOfTheUrl = calledUrl.substring( ("/rest/documents/"+param).length() );
 		//String restOfTheUrl = calledUrl.replace("/rest/documents/"+param, "");
-		
+
 		if(Tools.isEmpty(restOfTheUrl) || restOfTheUrl.equals("/"))
 		{
 			docId = Tools.getIntValue(param, -1);
@@ -100,7 +100,7 @@ public class DocRestController extends sk.iway.iwcm.rest.RestController
 				docUrl += '/';
 			docId = DocDB.getDocIdFromURL(docUrl.replace("-html", ".html"), DocDB.getDomain(request));
 		}
-		
+
 		return docId;
 	}
 }

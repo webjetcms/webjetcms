@@ -38,6 +38,7 @@
             defaultSearch: ChartTools.getSearchCriteria(),
             autoHeight: false,
             onPreXhr: function(TABLE, e, settings, data) {
+                console.log("onPreXhr, data=", data);
                 data.fixed_searchChartType = ChartTools.ChartType.Not_Chart;
                 data.fixed_searchFilterBotsOut = $('#botFilterOut').is(':checked');
                 data.fixed_searchRootDir = $('#rootDir').val();

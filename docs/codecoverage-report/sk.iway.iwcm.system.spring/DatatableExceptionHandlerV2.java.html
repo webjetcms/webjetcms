@@ -123,14 +123,14 @@ import java.util.stream.Collectors;
 
 	@ExceptionHandler(TransactionSystemException.class)
 	public ResponseEntity&lt;DatatableResponse&lt;Object&gt;&gt; handleException(TransactionSystemException ex) {
-<span class="fc" id="L126">		DatatableResponse&lt;Object&gt; response = new DatatableResponse&lt;&gt;();</span>
-<span class="fc" id="L127">		List&lt;DatatableFieldError&gt; errorsList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L126">		DatatableResponse&lt;Object&gt; response = new DatatableResponse&lt;&gt;();</span>
+<span class="nc" id="L127">		List&lt;DatatableFieldError&gt; errorsList = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L129">		Throwable t = ex.getCause();</span>
-<span class="pc bpc" id="L130" title="1 of 4 branches missed.">		while ((t != null) &amp;&amp; !(t instanceof ConstraintViolationException)) {</span>
-<span class="fc" id="L131">			t = t.getCause();</span>
+<span class="nc" id="L129">		Throwable t = ex.getCause();</span>
+<span class="nc bnc" id="L130" title="All 4 branches missed.">		while ((t != null) &amp;&amp; !(t instanceof ConstraintViolationException)) {</span>
+<span class="nc" id="L131">			t = t.getCause();</span>
 		}
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">		if (t instanceof ConstraintViolationException) {</span>
+<span class="nc bnc" id="L133" title="All 2 branches missed.">		if (t instanceof ConstraintViolationException) {</span>
 			// Here you're sure you have a ConstraintViolationException, you can handle it
 <span class="nc" id="L135">			Set&lt;ConstraintViolation&lt;?&gt;&gt; violations = ((ConstraintViolationException) t).getConstraintViolations();</span>
 <span class="nc bnc" id="L136" title="All 2 branches missed.">			if (!violations.isEmpty()) {</span>
@@ -140,32 +140,32 @@ import java.util.stream.Collectors;
 			}
 
 <span class="nc" id="L142">			response.setFieldErrors(errorsList);</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">		} else if (ex instanceof TransactionSystemException) {</span>
-<span class="fc" id="L144">			String err = ex.getMessage();</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">		} else if (ex instanceof TransactionSystemException) {</span>
+<span class="nc" id="L144">			String err = ex.getMessage();</span>
 			try {
-<span class="pc bpc" id="L146" title="1 of 2 branches missed.">				if (err != null) {</span>
-<span class="fc" id="L147">					int start = err.indexOf(&quot;Duplicate entry&quot;);</span>
-<span class="pc bpc" id="L148" title="1 of 2 branches missed.">					if (start &gt; 0) {</span>
-<span class="fc" id="L149">						int end = err.indexOf(&quot;Error Code&quot;, start);</span>
-<span class="pc bpc" id="L150" title="1 of 2 branches missed.">						if (end &gt; start) err = err.substring(start, end).trim();</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">				if (err != null) {</span>
+<span class="nc" id="L147">					int start = err.indexOf(&quot;Duplicate entry&quot;);</span>
+<span class="nc bnc" id="L148" title="All 2 branches missed.">					if (start &gt; 0) {</span>
+<span class="nc" id="L149">						int end = err.indexOf(&quot;Error Code&quot;, start);</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">						if (end &gt; start) err = err.substring(start, end).trim();</span>
 					}
 				}
 <span class="nc" id="L153">			} catch (Exception e) {</span>
 				//failsafe
-<span class="fc" id="L155">			}</span>
-<span class="fc" id="L156">			response.setError(err);</span>
-<span class="fc" id="L157">			Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
-<span class="fc" id="L158">		} else {</span>
+<span class="nc" id="L155">			}</span>
+<span class="nc" id="L156">			response.setError(err);</span>
+<span class="nc" id="L157">			Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
+<span class="nc" id="L158">		} else {</span>
 <span class="nc" id="L159">			response.setError(ex.getMessage());</span>
 <span class="nc" id="L160">			Logger.error(DatatableExceptionHandlerV2.class, ex);</span>
 		}
 
-<span class="pc bpc" id="L163" title="1 of 2 branches missed.">		if (Tools.isEmpty(response.getError())) {</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">		if (Tools.isEmpty(response.getError())) {</span>
 			//vyhod este globalnu error hlasku, aby sa zobrazila aj pri tlacitkach a user si preklikal taby na konkretne chyby
 <span class="nc" id="L165">			response.setError(Prop.getInstance().getText(&quot;datatable.error.fieldErrorMessage&quot;));</span>
 		}
 
-<span class="fc" id="L168">		return new ResponseEntity&lt;&gt;(response, null, HttpStatus.OK);</span>
+<span class="nc" id="L168">		return new ResponseEntity&lt;&gt;(response, null, HttpStatus.OK);</span>
 	}
 
 	@ExceptionHandler(Exception.class)

@@ -2,7 +2,7 @@ const moment = require("moment");
 
 Feature('webpage.publish-notification');
 
-const testWebpageAdmin = "/admin/v9/webpages/web-pages-list/?docid=104050";
+const testWebpageAdmin = "/admin/v9/webpages/web-pages-list/?docid=104831";
 const testWebpageShow = "/test-stavov/test_publish_notification.html";
 const format = "DD.MM.YYYY HH:mm";
 const adminlogPublishMsg = "publishStatus: Webpage was published";
@@ -45,8 +45,8 @@ Scenario('Publish notification screens', async ({ I, DT, DTE, TempMail, Document
     I.say('Check that admin log was created correctly for this action');
     I.amOnPage('/admin/v9/apps/audit-search/');
     DT.filterSelect("logType", "SAVEDOC");
-    DT.filter("from-createDate", date.format(format) + ":00");
-    DT.filter("description", adminlogPublishMsg);
+    DT.filterContains("from-createDate", date.format(format) + ":00");
+    DT.filterContains("description", adminlogPublishMsg);
 
     Document.screenshot("/redactor/webpages/editor/publish-audit-logs.png");
 });

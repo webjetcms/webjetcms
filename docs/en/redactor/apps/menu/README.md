@@ -1,4 +1,4 @@
-# Menu
+# Menu (navigation)
 
 The menu application generates a navigation menu for the entire website (the so-called top menu or left menu). The graphical form of the menu is defined using cascading style sheets (CSS). Examples of the top and left menus:
 
@@ -29,9 +29,9 @@ In the application properties you can set:
 - Offset from Root Directory - the number of directory levels from the root directory by which the listing should be offset. This is used when you have a top menu with main items and a left menu with subitems - the subitems menu is set to shift by 2 so that the menu does not list the main items but only the subitems.
 - Maximum menu depth - -1 menu with no limitation on generation depth.
 - Generated CSS styles
-	- None (pure XHTML)
-	- Basic - generates an open class on an open item
-	- All - generates a series of classes: the displayed level, whether the item contains subitems, the directory id, whether the item is open or closed
+  - None (pure XHTML)
+  - Basic - generates an open class on an open item
+  - All - generates a series of classes: the displayed level, whether the item contains subitems, the directory id, whether the item is open or closed
 - Generate empty span - generates an empty html span tag in the link
 - Expand all items - all menu levels will be expanded
 - Set Variables - this functionality is used when we want to generate a specific level title to the mapr. menu via !WRITE(!ROOT\_GROUP\_NAME!)!
@@ -49,4 +49,5 @@ It is used to insert section descriptions or advertising banners into the menu (
 In the MenuInfo field you enter the name of the directory, which if found is not generated in the menu as a standard link, but the content of the main page of this directory is generated in the menu. The header and the contents of the page are generated.
 
 **Example:**
+
 When editing a component menu, you enter a directory name in the MenuInfo field, e.g. Information. In the web site structure that is generated in the menu, you create the directory Information. You add the necessary data to the page and publish the page. The title and content of the Information page will be displayed in the generated menu instead of the standard link.

@@ -9,11 +9,39 @@ const Apps = require("./Apps");
 
 module.exports = {
 
+  /**
+   * Highlight element on page, by adding class 'screenshotHighlight'.
+   * @param {*} selector
+   */
+  highlightElement(selector) {
+    if (typeof selector != "undefined" && selector != null && selector != "") {
+      I.say("Highlighting element");
+      I.executeScript((selector) => {
+          document.querySelector(selector).classList.add('screenshotHighlight');
+      }, selector);
+      I.wait(1);
+    }
+  },
+
+  /**
+   * Unhighlight element on page, by removing class 'screenshotHighlight'.
+   * @param {*} selector
+   */
+  unhighlightElement(selector) {
+    if (typeof selector != "undefined" && selector != null && selector != "") {
+      I.say("un-Highlighting element");
+      I.executeScript((selector) => {
+          document.querySelector(selector).classList.remove('screenshotHighlight');
+      }, selector);
+      I.wait(1);
+    }
+  },
+
   screenshot(screenshotFilePath, width, height) {
       this.screenshotElement(null, screenshotFilePath, width, height);
   },
 
-  screenshotElement(selector, screenshotFilePath, width, height) {
+  screenshotElement(selector, screenshotFilePath, width, height, selectorToHighlight) {
       var windowResized = false;
       if (typeof width != "undefined" && width != null && typeof height != "undefined" && height != null) {
         I.say("resizing window");
@@ -28,7 +56,14 @@ module.exports = {
         path = path.replace(/\//gi, '\\');
       }
       I.wait(2);
-      if (typeof selector != "undefined" && selector != null && selector != "") I.saveElementScreenshot(selector, path);
+      if (typeof selector != "undefined" && selector != null && selector != "") {
+
+        this.highlightElement(selectorToHighlight);
+
+        I.saveElementScreenshot(selector, path);
+
+        this.unhighlightElement(selectorToHighlight);
+      }
       else I.saveScreenshot(path);
 
       I.say("windows resized=" + windowResized);
@@ -72,6 +107,9 @@ module.exports = {
   async compareScreenshotElement(selector, screenshotFileName, width, height, tolerance) {
       if (typeof tolerance == "undefined" || tolerance == null) tolerance = 1;
 
+      //screenshot file name can't start with /
+      if (screenshotFileName.indexOf("/")==0) screenshotFileName = screenshotFileName.substring(1);
+
       var windowResized = false;
       if (typeof width != "undefined" && width != null && typeof height != "undefined" && height != null) {
         I.resizeWindow(width, height);
@@ -109,6 +147,7 @@ module.exports = {
       I.waitForElement(btn);
       I.click(btn);
       I.say("Domain switched to: "+domain+" DO NOT FORGET TO LOGOUT AFTER THIS SCENARIO otherwise you will be logged in with wrong domain");
+      DT.waitForLoader();
   },
 
   /**
@@ -194,13 +233,95 @@ module.exports = {
   /**
    * On iwcm.interway.sk host change domain. Before click on link grab current URL:
    * let currentUrl = await I.grabCurrentUrl();
-   * @param {*} currentUrl
+   * @param {*} baseUrl
    */
-  async fixLocalhostUrl(currentUrl) {
-    if(currentUrl.includes("iwcm.interway.sk") || currentUrl.includes("localhost")) {
-        currentUrl = await I.grabCurrentUrl();
+  async fixLocalhostUrl(baseUrl) {
+    let currentUrl = await I.grabCurrentUrl();
+    I.say("Fixing localhost URL, baseUrl URL: "+baseUrl+", current URL: "+currentUrl);
+    if(baseUrl.includes("iwcm.interway.sk") || baseUrl.includes("localhost")) {
         //get URL part after domain
         I.amOnPage(currentUrl.substring(currentUrl.indexOf("/", 10)));
+    } else if(currentUrl.includes("demotest.webjetcms.sk")) {
+      //we moved server to tau20, so we need to change domain
+      //get URL part after domain
+      I.amOnPage(currentUrl.substring(currentUrl.indexOf("/", 10)));
     }
+  },
+
+  /**
+   * Delete all cache objects to prevent spam protection and other issues
+   */
+  deleteAllCacheObjects() {
+    I.relogin("admin");
+    I.amOnPage("/admin/v9/settings/cache-objects/");
+    I.clickCss("button.btn-delete-all");
+    I.waitForElement("div.toast-message");
+    I.clickCss("div.toast-message button.btn-primary");
+    I.closeOtherTabs();
+    I.logout();
+  },
+
+  /**
+     * Adjusts the scroll position of a container based on the provided element selector.
+     *
+     * Note: Sometimes, the standard `I.scrollTo` function may not work correctly if the page uses custom
+     * scrollbars (e.g., with CSS transformations or JavaScript-based scrolling). In such cases,
+     * this function can be used as an alternative to manually scroll the custom scrollbar.
+     *
+     * @param {string} selector - The CSS selector for the element whose position is to be used for scrolling.
+     * @param {number} [offsetAdjustment=0] - An optional offset to adjust the final scroll position.
+     * @param {string} [scrollBarSelector='div.ly-content-wrapper div.scroll-content'] -
+     * The CSS selector for the custom scrollbar container. Default is set to 'div.ly-content-wrapper div.scroll-content'.
+     *
+     * @throws {Error} If the element or scroll content container is not found.
+     */
+  async adjustScrollbar(selector, offsetAdjustment = 0) {
+    const yOffset = await I.executeScript((selector) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            return element.offsetTop;
+        } else {
+            throw new Error(`Element not found for selector: ${selector}`);
+        }
+    }, selector);
+
+    const adjustedOffset = yOffset - offsetAdjustment;
+
+    await I.executeScript((adjustedOffset) => {
+        const scrollContent = document.querySelector('div.ly-content-wrapper div.scroll-content');
+        if (scrollContent) {
+            scrollContent.style.transform = `translate3d(0px, -${adjustedOffset}px, 0px)`;
+        } else {
+            throw new Error('Scroll content container not found.');
+        }
+    }, adjustedOffset);
+  },
+
+  /**
+   * Function that waits until the number of open tabs reaches the expected number.
+   * @param {number} expectedTabs - The minimum number of tabs to wait for. The default value is 2.
+   */
+  async waitForTab(expectedTabs = 2){
+    let retries = 0;
+    const limit = 10;
+    I.wait(1);
+    let current = await I.grabNumberOfOpenTabs();
+    while (current != expectedTabs) {
+      I.say(`Waiting for tab to open..., current: ${current}, expected: ${expectedTabs}`);
+      I.wait(1);
+      retries++;
+      if (retries > limit) {
+        throw new Error(`Reached timeout (${limit}s) while waiting for open tab.`);
+      }
+      current = await I.grabNumberOfOpenTabs();
+    }
+  },
+
+  async grabTagNameFrom(selector){
+    const tagName = await I.executeScript((selector) => {
+      let element = document.querySelector(selector);
+      return element ? element.tagName.toLowerCase() : null;
+    }, selector);
+  return tagName;
   },
 }

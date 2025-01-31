@@ -21,7 +21,14 @@ public class ConfDetailsDto extends ConfDetails {
         renderFormat = "dt-format-selector",
         title = "admin.conf_editor.id",
         tab = "basic",
-        filter = false
+        filter = false,
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
+                }
+            )
+        }
     )
     private Long id;
 
@@ -31,13 +38,14 @@ public class ConfDetailsDto extends ConfDetails {
         title = "admin.conf_editor.old_value",
         tab = "basic",
         sortAfter = "value",
-        className = "wrap",
+        className = "wrap not-export",
         editor = {
             @DataTableColumnEditor(
                 type = "textarea",
                 attr = {
                     @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
+                    @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
                 }
                 /*className: 'hide-on-create'*/
             )
@@ -50,7 +58,15 @@ public class ConfDetailsDto extends ConfDetails {
         inputType = DataTableColumnType.BOOLEAN,
         title="admin.conf_editor.encrypt",
         tab="basic",
-        sortAfter = "value"
+        sortAfter = "value",
+        className = "not-export",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
+                }
+            )
+        }
     )
     private boolean encrypt;
 
@@ -60,9 +76,13 @@ public class ConfDetailsDto extends ConfDetails {
         renderFormat = "dt-format-date-time",
         title = "admin.conf_editor.change_from",
         tab = "advanced",
+        className = "not-export",
         editor = {
             @DataTableColumnEditor(
-                type = "datetime"
+                type = "datetime",
+                attr = {
+                    @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
+                }
             )
         }
     )
@@ -76,7 +96,8 @@ public class ConfDetailsDto extends ConfDetails {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/settings/prepared?mode=planned&name={name}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.configuration.model.ConfPreparedEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "3,desc"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,import,celledit")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,import,celledit"),
+                @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
             }
         )
     })
@@ -90,7 +111,8 @@ public class ConfDetailsDto extends ConfDetails {
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-url", value = "/admin/rest/settings/prepared?mode=history&name={name}"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-columns", value = "sk.iway.iwcm.components.configuration.model.ConfPreparedEntity"),
                 @DataTableColumnEditorAttr(key = "data-dt-field-dt-order", value = "2,desc"),
-                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,celledit")
+                @DataTableColumnEditorAttr(key = "data-dt-field-dt-hideButtons", value = "create,edit,duplicate,remove,import,celledit"),
+                @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
             }
         )
     })

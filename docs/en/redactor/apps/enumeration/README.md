@@ -6,13 +6,19 @@ The Dials application allows you to create/edit/delete and duplicate named types
 
 ## Types of dials
 
-When creating a new dial type, you must specify a name that is unique. The other fields are optional. Note the "Strings" / "Numbers" / "Boolean" / "Dates" tabs, which contain several numbered fields. These fields are used to define what format the data of a given dial will have. If you give a name to a field, the dial data will generate a field with a name that corresponds to the specified text and type of the given card.
+When creating a new dial type, you must specify a name that is unique. The other fields are optional. Note the tabs **Chains** / **Numbers** / **Boolean** / **Dates** which contain several numbered fields. These fields are used to define the format of the dial data. If you specify a name for a field, the dial data will generate a field with a name that matches the specified text and the type of the card.
 
 ![](editor_enumType.png)
 
-Example: if you fill in 2 fields in the "Strings" tab, 2 columns/fields of the string type with the names that have been entered will be displayed in the codebook data.
+Example: if you fill in 2 fields in the tab **Chains**
 
 ![](editor_stringTab.png)
+
+and one field in the card **Boolean**,
+
+![](editor_booleanTab.png)
+
+then 2 columns/arrays of the string type and 1 column/array of the boolean type with the names that were entered will be displayed in the data of the given code list (see the figure in the section [List of dial data](#list-of-dial-data)).
 
 This means that you can define the dial data format for each dial separately. As the tab names suggest, you can combine text, numeric, Boolean or date fields. Their number is limited for each type by the number of fields in each tab.
 
@@ -23,45 +29,54 @@ In the "Basic" tab, the properties are set:
 - Link to dial - select from all dials to link the dial.
 - Enable link to dialpad - enable link to another dialpad (same as in the case of the dialpad type).
 - Enable parent link to this dial's data - determines whether the data of this dial will be allowed to select the parent link.
+
 You cannot have "dial link" and "parent link" enabled for data at the same time.
 
-**Link to the dial** has some limitations and therefore some options are either not selectable or return an error message.
-1.  Linking the dial to itself is disabled. If you select to link to another dial for dial X, dial X will also be in the list, but this option will not be selectable.
+**Link to the dial** has some limitations and therefore some options either cannot be selected (marked in grey) or their selection returns an error message.
+
+1. Linking the dial to itself is disabled. In the case of a dial **B** you select a link to another dial, it will be in the list itself but this option will not be selectable.
 
 ![](editor_select_1.png)
 
-2.  Circular linking of dials. If dial X chooses to link to dial Y, dial Y cannot link back to dial X. Although the X option will be visible to Y and he will be able to select it, but an error message will be displayed when he tries to save it.
+2. Circular linking of dials is disabled. If you dial **A** selects the link to the dialpad **B**, so the dial **B** cannot link back to the dial **A**. Option to select the dial **A** will be for the dial **B** although visible and able to select it, an error message will be returned when attempting to save.
 
 ![](editor_select_2.png)
 
-1.  Link to an already deleted dial. It may happen that dial X was linked to dial Z, which was subsequently deleted. In this case you will see the deleted dial Z in the options with the prefix "(!deleted)\_". This prefix will make it clear that the dial has already been deleted and such an option will not be selectable. However, a dial X that was linked before the deletion of dial Z will retain the link. It will be possible to change this link, but once changed, it will not be able to link back to the deleted dial again.
+3. Link to an already deleted dial. It may happen that the dial **C** is linked to the dial **D**, which was subsequently deleted. In this case you will see the deleted dial **D** in options with prefix **`(!deleted)_`**. This prefix will make it clear that the dial has already been deleted and this option will not be selectable. However, the dial **C** which was linked before the dial was deleted **D** retains this link. It will be possible to change this link, but once changed, it will not be able to link back to the deleted dial again.
 
 ![](editor_select_3.png)
 
 **Enable link to dialpad** if enabled, individual dial data will be able to link to dials. Also in this case there are some limitations.
-1.  Linking to the dials from which the data is based is disabled. If the data you are creating under dial X has dial linking enabled, the option to dial X will not be selectable.
 
-2.  Link to an already deleted dial. This case has the same conditions as **Link to the dial** for the dial type.
+1. Linking to the dials from which the data is based is disabled. If the data you are creating under dial X has the link to dial enabled, the option to dial X will not even appear.
 
-**Enable the parent link to the data of this dialer** if enabled, individual dial data will be able to choose a parent from among the other data following the same dial. Also in this case there are some limitations.
-1.  In this case, one condition must be met. To use the parent link, the dial type must have an option defined for `Reťazec 1`. The reason is that the value in the generated column `Reťazec 1` will be used as an identifier to select a link to the parent.
+2. Link to an already deleted dial. This case has the same conditions as **Link to the dial** for the dial type.
 
-2.  Linking a dial entry to itself is disabled. If dial X has a parent link enabled and you create a parent link under this dial `záznamA, záznamB a záznamC`, so you such a record can not be a parent. For `záznamA` the possibility of parental connection to each other will be made impossible (will see the possibility of `zaznamA` but you will not be able to select it).
+**Enable the parent link to the data of this dialer** if enabled, individual dial data will be able to choose a parent from among other data under the same dial. Also in this case there are some limitations.
 
-**It is important to note**that if the 'dial link permission' or 'parent link permission' is revoked, all links that have been created to the data of this dial will be removed, even if this permission is granted again.
-As an example, consider a situation where we create a dial type with X and this dial type allows "link to dial". Under this dial type, we will create a record that has dial linking enabled and will link to dial Z. If we then remove the "link to dialer" permission for dialer type X, the record of this dialer that has linked to dialer Z will lose this link permanently. If we enable "link to dialer" again, the option would appear for the record but the previous option to dialer Z would be reset.
+1. In this case, one condition must be met. To use the parent link, the dial type must have an option defined for **Chain 1**. The reason is that the value in the generated column **Chain 1** will be used as an identifier to select a link to the parent.
+
+2. Linking a dial entry to itself is disabled. Dialpad data will not be visible between the options when selecting a parent link to itself.
+
+!>**Warning:** if the 'dial link permission' or 'parent link permission' is revoked, all links that have been created to the data of this dial will be removed, even if this permission is granted again.
+
+As an example, consider a situation where we create a dial type with the X label and this dial type allows "link to dial". Under this dial type, we create a record that has dial linking enabled and will link to dial Z. If we then remove the "link to dialer" permission for dialer type X, the record of this dialer that has linked to dialer Z will lose this link permanently. If we enable "link to dialer" again, the option would appear for the record but the previous option to dialer Z would be reset.
 
 ## List of dial data
 
 Dial Data allows you to edit the data of created dial types. It is necessary to select the dial to be managed from the menu in the header of the page. After selecting a specific dial, its corresponding data will be displayed. If the dial type has some columns unnamed, these columns and their data will not be displayed.
 
+!>**Warning:** only dials that have not been deleted are in the menu.
+
 ![](dataTable_enumData.png)
 
 Example:
 
-When creating the X codebook, we filled in the fields `reťazec1, reťazec2`. If we create a new record (new data) for the X dialer, we will generate 2 fields of the string type in the editor. The names of these fields will be the same as what we entered when we created the X dialer. Also, the table will contain only these 2 defined columns. Of course, if dial X has allowed it, we will be able to select a parent or a link to the dial when creating the data (these selections are described in more detail earlier in the chapter).
+When creating a dial **A** we have filled in the fields **Chain 1**, **Chain 2** a **Boolean 1**. We can see that the table has exactly the columns we defined in the dial. If we create a new record (new data) for the dial, we will generate 2 fields of type string and 1 field of type boolean in the editor. The names of these fields will be the same as what we specified when we created the dial. Of course, if we enabled this when we created the dialer, we can have in the editor **parental connection** or **link to the dial**.
 
 ![](editor_enumData.png)
+
+When you change the selected dial type, the entire table as well as the dial data editor can be changed.
 
 ## Data deletion
 

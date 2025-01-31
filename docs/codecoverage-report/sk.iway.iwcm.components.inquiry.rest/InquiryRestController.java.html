@@ -102,7 +102,7 @@ public class InquiryRestController extends DatatableRestControllerV2&lt;InquiryE
 
         //Loop gained entities and add group name to autcomplete list &quot;ac&quot;
 <span class="fc bfc" id="L104" title="All 2 branches covered.">        for(InquiryEntity entity : groupNamesList)</span>
-<span class="pc bpc" id="L105" title="1 of 2 branches missed.">            if (ac.contains(entity.getQuestionGroup()) == false) ac.add(entity.getQuestionGroup());</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (ac.contains(entity.getQuestionGroup()) == false) ac.add(entity.getQuestionGroup());</span>
 
 <span class="fc" id="L107">        return ac;</span>
     }

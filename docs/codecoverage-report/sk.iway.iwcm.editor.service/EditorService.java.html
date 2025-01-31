@@ -762,7 +762,7 @@ public class EditorService {
 <span class="fc bfc" id="L762" title="All 4 branches covered.">					if (allreadyDocId &lt;= 0 || allreadyDocId == editedDoc.getDocId()) { break; }</span>
 
 					//lebo moze kolidovat uz z hora
-<span class="pc bpc" id="L765" title="1 of 2 branches missed.">					if (virtualPathConflictDocId &lt; 1) virtualPathConflictDocId = allreadyDocId;</span>
+<span class="fc bfc" id="L765" title="All 2 branches covered.">					if (virtualPathConflictDocId &lt; 1) virtualPathConflictDocId = allreadyDocId;</span>
 
 <span class="fc" id="L767">					doc.setTitle(editedDoc.getTitle() + &quot; &quot; + i);</span>
 <span class="fc" id="L768">					doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128) + &quot; &quot; + i);</span>
@@ -778,14 +778,14 @@ public class EditorService {
 <span class="pc bpc" id="L778" title="1 of 2 branches missed.">						} else if (editedDoc.getVirtualPath().endsWith(&quot;/&quot;)) {</span>
 <span class="nc" id="L779">							doc.setVirtualPath(editedDoc.getVirtualPath() + i + &quot;.html&quot;);</span>
 <span class="nc" id="L780">							ending = i + &quot;.html&quot;;</span>
-<span class="pc bpc" id="L781" title="3 of 6 branches missed.">						} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) &amp;&amp; editedDoc.getVirtualPath().endsWith(&quot;/&quot;)==false &amp;&amp; editedDoc.getVirtualPath().contains(&quot;.html&quot;)==false) {</span>
+<span class="pc bpc" id="L781" title="2 of 6 branches missed.">						} else if (Tools.isNotEmpty(editedDoc.getVirtualPath()) &amp;&amp; editedDoc.getVirtualPath().endsWith(&quot;/&quot;)==false &amp;&amp; editedDoc.getVirtualPath().contains(&quot;.html&quot;)==false) {</span>
 							//url without last slash and without .html like /aaa/bbb
 <span class="fc" id="L783">							doc.setVirtualPath(editedDoc.getVirtualPath() + &quot;-&quot; + i + &quot;.html&quot;);</span>
 <span class="fc" id="L784">							ending = i + &quot;.html&quot;;</span>
-<span class="nc bnc" id="L785" title="All 2 branches missed.">						} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {</span>
-<span class="nc" id="L786">							doc.setVirtualPath(Tools.replace(editedDoc.getTitle() + &quot;.html&quot;, &quot;/&quot;, &quot;-&quot;));</span>
-<span class="nc" id="L787">							editedDoc.setVirtualPath(doc.getVirtualPath());</span>
-<span class="nc" id="L788">							ending = &quot;.html&quot;;</span>
+<span class="pc bpc" id="L785" title="1 of 2 branches missed.">						} else if (Tools.isEmpty(editedDoc.getVirtualPath())) {</span>
+<span class="fc" id="L786">							doc.setVirtualPath(Tools.replace(editedDoc.getTitle() + &quot;.html&quot;, &quot;/&quot;, &quot;-&quot;));</span>
+<span class="fc" id="L787">							editedDoc.setVirtualPath(doc.getVirtualPath());</span>
+<span class="fc" id="L788">							ending = &quot;.html&quot;;</span>
 						}
 					}
 
@@ -806,7 +806,7 @@ public class EditorService {
 			}
 		}
 		//pre uz existujucu stranku, ktora ma automaticky generovane URL nezobrazuj varovanie (lebo sa vzdy generuje a zobrazi sa pri kazdom ulozeni)
-<span class="pc bpc" id="L809" title="3 of 6 branches missed.">		if (virtualPathConflictDocId&gt;0 &amp;&amp; (Boolean.FALSE.equals(editedDoc.getGenerateUrlFromTitle()) || editedDoc.getDocId()&lt;1  ) ) {</span>
+<span class="pc bpc" id="L809" title="1 of 6 branches missed.">		if (virtualPathConflictDocId&gt;0 &amp;&amp; (Boolean.FALSE.equals(editedDoc.getGenerateUrlFromTitle()) || editedDoc.getDocId()&lt;1  ) ) {</span>
 <span class="fc" id="L810">			NotifyBean notifyBean = new NotifyBean(prop.getText(&quot;text.warning&quot;), prop.getText(&quot;editor.virtual_path_allready_used_in_doc&quot;)+&quot;: &quot;+virtualPathConflictDocId, NotifyType.WARNING);</span>
 <span class="fc" id="L811">			addNotify(notifyBean);</span>
 		}

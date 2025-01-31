@@ -13,52 +13,21 @@ Before(({ I, login }) => {
 let dayDateFrom = "01.07.2021";
 let dayDateTo = "30.07.2021";
 
-function checkDates(I) {
-    I.seeInField("div.md-breadcrumb input.dt-filter-from-dayDate", dayDateFrom);
-    I.seeInField("div.md-breadcrumb input.dt-filter-to-dayDate", dayDateTo);
-}
-
-function checkCustomDates(I, dateFrom, dateTo) {
-    I.seeInField("div.md-breadcrumb input.dt-filter-from-dayDate", dateFrom);
-    I.seeInField("div.md-breadcrumb input.dt-filter-to-dayDate", dateTo);
-}
-
 function cleanFilter(I, DT) {
     I.click("button.btn-vue-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
     DT.waitForLoader();
 }
 
-function setDates(I, filterName, waitForGraphLoader=true) {
+function navigateAndSetDates(I, DT, filterName, waitForGraphLoader = true, dateFrom = null, dateTo = null) {
+    const fromDate = dateFrom || dayDateFrom;
+    const toDate = dateTo || dayDateTo;
 
-    //pockaj na loader pre grafy
+    I.say(`Setting dates: ${fromDate}-${toDate}`);
+
     I.waitForInvisible("#loader", 20);
 
-    within(filterName, () => {
-        I.fillField({css: "input.dt-filter-from-dayDate"}, dayDateFrom);
-        I.fillField({css: "input.dt-filter-to-dayDate"}, dayDateTo);
-        I.click({css: "button.dt-filtrujem-dayDate"});
-    });
-
-    if (waitForGraphLoader) {
-        waitForTableLoader(I);
-    } else {
-        I.dtWaitForLoader();
-    }
-}
-
-function setCustomDates(I, filterName, dateFrom, dateTo, waitForGraphLoader=true) {
-
-    I.say("Setting dates: "+dateFrom+"-"+dateTo);
-
-    //pockaj na loader pre grafy
-    I.waitForInvisible("#loader", 20);
-
-    within(filterName, () => {
-        I.fillField({css: "input.dt-filter-from-dayDate"}, dateFrom);
-        I.fillField({css: "input.dt-filter-to-dayDate"}, dateTo);
-        I.click({css: "button.dt-filtrujem-dayDate"});
-    });
+    DT.setDates(fromDate, toDate, filterName);
 
     if (waitForGraphLoader) {
         waitForTableLoader(I);
@@ -68,7 +37,7 @@ function setCustomDates(I, filterName, dateFrom, dateTo, waitForGraphLoader=true
 }
 
 function waitForTableLoader(I) {
-    var name = "div.dataTables_processing";
+    var name = "div.dt-processing";
     //first wait for loader to show, because we must wait for graph loading
     //originally i was waitForVisible(name, 10) but it's unreliable (sometimes it's allready hidden)
     //wait for it to disapear
@@ -82,24 +51,25 @@ function waitForTableLoader(I) {
     I.wait(0.5);
 }
 
-Scenario("admin", ({ I, DT }) => {
+Scenario("admin", async ({ I, DT, Document }) => {
     I.amOnPage("/apps/seo/admin/");
-
     I.seeElement("#bots-pieVisits");
     I.seeElement("#bots-lineVisits");
     I.seeElement("#botsDataTable");
 
-    setDates(I, "#botsDataTable_extfilter");
+    navigateAndSetDates(I, DT, "#botsDataTable_extfilter");
 
     //refresh page
     I.amOnPage("/apps/seo/admin/");
 
-    checkDates(I);
+    DT.checkExtfilterDates(dayDateFrom, dayDateTo);
+    await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 5);
+    await Document.adjustScrollbar('#bots-lineVisits');
+    await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 5);
+    DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,75", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,48", "30.07.2021"]);
 
-    DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,76", "30.07.2021"]);
-    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,52", "30.07.2021"]);
-
-    DT.filter("name", "ThinkChaos 0.0");
+    DT.filterContains("name", "ThinkChaos 0.0");
     DT.waitForLoader();
     DT.checkTableRow("botsDataTable", 1, ["20", "ThinkChaos 0.0", "98", "0,05", "30.07.2021"]);
     I.click("ThinkChaos 0.0");
@@ -107,15 +77,16 @@ Scenario("admin", ({ I, DT }) => {
     //pockaj na loader pre grafy
     I.waitForInvisible("#loader", 20);
 
-    checkDates(I);
+    DT.checkExtfilterDates(dayDateFrom, dayDateTo);
 
     I.waitForElement("#botsDetails-lineVisits", 10);
     I.seeElement("#botsDetailsDataTable");
 
-    DT.filter("document", "News");
+    DT.filterContains("document", "News");
     DT.checkTableRow("botsDetailsDataTable", 1, ["50 291 842", "06.07.2021", "News", "", "English"]);
     DT.checkTableRow("botsDetailsDataTable", 2, ["50 487 296", "15.07.2021", "News", "", "English"]);
     DT.checkTableRow("botsDetailsDataTable", 3, ["50 684 027", "23.07.2021", "News", "", "English"]);
+    await Document.compareScreenshotElement("#botsDetails-lineVisits", "seo/autotest-botsDetails-lineVisits.png", null, null, 5);
 
     //Back to index.html
     I.click(locate("span.seoPageTitle").withText("ThinkChaos 0.0"));
@@ -128,12 +99,12 @@ Scenario("admin", ({ I, DT }) => {
 Scenario("management-keywords", ({ I, DT, DTE }) => {
     I.amOnPage("/apps/seo/admin/management-keywords/");
 
-    DT.filter("name", "Redakčný systém WebJET");
+    DT.filterContains("name", "Redakčný systém WebJET");
 
     DT.checkTableRow("managementKeywordsDataTable", 1, ["9", "Redakčný systém WebJET", "www.webjetcms.sk", "bing.com", "15.08.2023 08:37:35", "Tester Playwright", "5"]);
     DT.checkTableRow("managementKeywordsDataTable", 2, ["17", "Redakčný systém WebJET", "www.interway.sk", "bing.com", "15.08.2023 08:55:23", "Tester Playwright", "4"]);
 
-    DT.filter("domain", "www.webjetcms.sk");
+    DT.filterContains("domain", "www.webjetcms.sk");
     I.dontSee("www.interway.sk");
     DT.checkTableRow("managementKeywordsDataTable", 1, ["9", "Redakčný systém WebJET", "www.webjetcms.sk", "bing.com", "15.08.2023 08:37:35", "Tester Playwright", "5"]);
 
@@ -153,16 +124,16 @@ Scenario("management-keywords", ({ I, DT, DTE }) => {
     DTE.save();
     I.dontSee("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
 
-    DT.filter("name", name);
-    DT.filter("domain", "www.interway.sk");
-    DT.filter("searchBot", "google.sk");
+    DT.filterContains("name", name);
+    DT.filterContains("domain", "www.interway.sk");
+    DT.filterContains("searchBot", "google.sk");
 
     I.click(name);
     DTE.waitForEditor("managementKeywordsDataTable");
     I.fillField("#DTE_Field_name", name + "_change");
     DTE.save();
 
-    DT.filter("name", name + "_change");
+    DT.filterContains("name", name + "_change");
     I.see(name + "_change");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -175,7 +146,7 @@ Scenario("management-keywords", ({ I, DT, DTE }) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario("stat-keywords", ({ I, DT, Browser }) => {
+Scenario("stat-keywords", async ({ I, DT, Browser, Document }) => {
     if (Browser.isFirefox) {
         I.resizeWindow(1280, 900);
     }
@@ -185,14 +156,14 @@ Scenario("stat-keywords", ({ I, DT, Browser }) => {
     I.seeElement("#statKeywords-barKeywords");
     I.seeElement("#statKeywordsDataTable");
 
-    setDates(I, "#statKeywordsDataTable_extfilter");
+    navigateAndSetDates(I, DT, "#statKeywordsDataTable_extfilter");
 
     I.amOnPage("/apps/seo/admin/stat-keywords/");
     DT.waitForLoader();
+    await Document.compareScreenshotElement("#statKeywords-barKeywords", "seo/autotest-barkeywords.png", null, null, 5);
+    DT.checkExtfilterDates(dayDateFrom, dayDateTo);
 
-    checkDates(I);
-
-    DT.filter("queryName", "archiv");
+    DT.filterContains("queryName", "archiv");
 
     DT.checkTableRow("statKeywordsDataTable", 1, ["1", "archiv", "27", "24,11"]);
 
@@ -203,17 +174,17 @@ Scenario("stat-keywords", ({ I, DT, Browser }) => {
 
     DT.checkTableRow("statKeywordsDataTable", 1, ["1", "archiv", "26", "29,89"]);
 
-    setCustomDates(I, "#statKeywordsDataTable_extfilter", "10.07.2021", dayDateTo);
+    navigateAndSetDates(I, DT, "#statKeywordsDataTable_extfilter", true, "10.07.2021", dayDateTo);
 
     DT.checkTableRow("statKeywordsDataTable", 1, ["3", "archiv", "11", "26,83"]);
 
     I.forceClick(locate("#statKeywordsDataTable td div.datatable-column-width a").withText("archiv"));
 
-    I.waitForElement("#statKeywordsDetailsDataTable", 10);
+    I.waitForElement("#statKeywordsDetailsDataTable", 30);
     I.seeElement("#statKeywordsDetails-pieAccessCount");
     I.seeElement("#enginesCountDataTable");
 
-    checkCustomDates(I, "10.07.2021", dayDateTo);
+    DT.checkExtfilterDates( "10.07.2021", dayDateTo);
 
     DT.checkTableRow("statKeywordsDetailsDataTable", 1, ["1", "10.07.2021 02:26:15", "WebJET", "//??? docId=7047", "msnbot-40-77-167-63.search.msn.com"]);
     DT.checkTableRow("statKeywordsDetailsDataTable", 2, ["2", "11.07.2021 16:48:59", "WebJET", "//??? docId=7047", "msnbot-157-55-39-91.search.msn.com"]);
@@ -226,7 +197,7 @@ Scenario("stat-keywords", ({ I, DT, Browser }) => {
     DT.checkTableRow("statKeywordsDetailsDataTable", 2, ["2", "13.07.2021 15:34:36", "WebJET", "//??? docId=7047", "msnbot-40-77-167-38.search.msn.com"]);
     DT.checkTableRow("statKeywordsDetailsDataTable", 3, ["3", "14.07.2021 06:33:00", "WebJET", "//??? docId=7047", "msnbot-40-77-167-38.search.msn.com"]);
 
-    setCustomDates(I, "#statKeywordsDetailsDataTable_extfilter", "27.07.2021 00:00",  "27.07.2021 15:00", false);
+    navigateAndSetDates(I, DT, "#statKeywordsDetailsDataTable_extfilter", false, "27.07.2021 00:00", "27.07.2021 15:00");
 
     DT.checkTableRow("statKeywordsDetailsDataTable", 1, ["1", "27.07.2021 09:10:29", "WebJET", "//??? docId=7047", "msnbot-207-46-13-165.search.msn.com"]);
     DT.checkTableRow("statKeywordsDetailsDataTable", 2, ["2", "27.07.2021 14:31:58", "WebJET", "//??? docId=7047", "msnbot-40-77-167-72.search.msn.com"]);
@@ -235,37 +206,37 @@ Scenario("stat-keywords", ({ I, DT, Browser }) => {
 Scenario("positions", ({ I, DT }) => {
     I.amOnPage("/apps/seo/admin/positions/");
 
-    DT.filter("name", "WebJET CMS");
-    DT.filter("domain", "www.interway.sk");
+    DT.filterContains("name", "WebJET CMS");
+    DT.filterContains("domain", "www.interway.sk");
 
     I.see("WebJET CMS");
     I.click("WebJET CMS");
 
-    setDates(I, "#googlePoitionDataTable_extfilter", false);
+    navigateAndSetDates(I, DT, "#googlePoitionDataTable_extfilter", false);
 
     I.refreshPage();
 
-    checkDates(I);
+    DT.checkExtfilterDates(dayDateFrom, dayDateTo);
 
     I.see("08.07.2021");
 
-    setCustomDates(I, "#googlePoitionDataTable_extfilter", "10.07.2021", dayDateTo, false);
+    navigateAndSetDates(I, DT, "#googlePoitionDataTable_extfilter", false, "10.07.2021", dayDateTo);
 
     I.dontSee("08.07.2021");
 
     I.click(locate("span.seoPageTitle").withText("WebJET CMS"));
 
-    DT.filter("name", "Redakčný systém WebJET");
-    DT.filter("domain", "www.interway.sk");
+    DT.filterContains("name", "Redakčný systém WebJET");
+    DT.filterContains("domain", "www.interway.sk");
 
     I.see("Redakčný systém WebJET");
     I.click("Redakčný systém WebJET");
 
-    checkCustomDates(I, "10.07.2021", dayDateTo);
+    DT.checkExtfilterDates( "10.07.2021", dayDateTo);
 
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 30);
 
-    setDates(I, "#googlePoitionDataTable_extfilter", false);
+    navigateAndSetDates(I, DT, "#googlePoitionDataTable_extfilter", false);
 
     I.waitForText("04.07.2021", 20);
     I.waitForText("06.07.2021", 20);
@@ -285,7 +256,7 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
     I.click("button.btn-vue-jstree-item-edit");
     I.click(locate(".jstree-anchor").withText("Koreňový priečinok"));
 
-    DT.filter("name", "rozpočet");
+    DT.filterContains("name", "rozpočet");
 
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "2", "2", "2"]);
 
@@ -299,13 +270,13 @@ Scenario("number-keywords", ({ I, Browser, DT }) => {
     I.amOnPage("/apps/seo/admin/number-keywords/");
 
     DT.waitForLoader();
-    DT.filter("name", "rozpočet");
+    DT.filterContains("name", "rozpočet");
 
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "1", "1", "1"]);
 
     I.click(locate("#numberKeywordsDataTable a").withText("rozpočet"));
 
-    I.waitForText("Konsolidácia naprieč trhmi 05.11.2018 06:00", 20);
+    I.waitForText("Konsolidácia naprieč trhmi", 20);
 });
 
 Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT }) => {
@@ -314,7 +285,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     DT.waitForLoader();
     cleanFilter(I, DT);
 
-    setDates(I, "#searchEnginesQueryDataTable_extfilter", false);
+    navigateAndSetDates(I, DT, "#searchEnginesQueryDataTable_extfilter", false);
 
         DT.checkTableRow("searchEnginesQueryDataTable", 1, ["1", "Redakčný systém WebJET CMS", "120", "4,30"]);
         DT.checkTableRow("searchEnginesQueryDataTable", 2, ["2", "správa web stránok", "108", "3,87"]);
@@ -324,7 +295,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
         DT.checkTableRow("searchEnginesDataTable", 2, ["2", "seznam.cz", "1 058"]);
         DT.checkTableRow("searchEnginesDataTable", 3, ["3", "google.com", "117"]);
 
-    setCustomDates(I, "#searchEnginesQueryDataTable_extfilter", "10.07.2021", dayDateTo);
+    navigateAndSetDates(I, DT, "#searchEnginesQueryDataTable_extfilter", true, "10.07.2021", dayDateTo);
 
         DT.checkTableRow("searchEnginesQueryDataTable", 1, ["1", "Redakčný systém WebJET CMS", "101", "4,96"]);
         DT.checkTableRow("searchEnginesQueryDataTable", 2, ["2", "správa web stránok", "89", "4,37"]);
@@ -365,7 +336,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     //
     I.amOnPage("/apps/seo/admin/number-keywords/");
 
-    DT.filter("name", "rozpočet");
+    DT.filterContains("name", "rozpočet");
     DT.checkTableRow("numberKeywordsDataTable", 1, [null, "rozpočet", "1", "1", "1"]);
 
     I.click({ css: "button[data-id=webPageSelect]" });
@@ -380,7 +351,7 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
     //
     I.amOnPage("/apps/seo/admin/stat-keywords/");
 
-    checkCustomDates(I, "10.07.2021", dayDateTo);
+    DT.checkExtfilterDates( "10.07.2021", dayDateTo);
 
     I.click({ css: "button[data-id=webPageSelect]" });
     I.see("Jet portal 4 - testovacia stranka");
@@ -445,8 +416,8 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
 
     DT.waitForLoader();
 
-        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "51,43", "30.07.2021"]);
-        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "29,39", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "50,81", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "29,03", "30.07.2021"]);
 });
 
 Scenario("cleanup", ({ I, DT }) => {

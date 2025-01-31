@@ -33,49 +33,15 @@ page import="org.xml.sax.SAXException"%><%@
 page import="java.util.regex.Pattern"%><%@
 page import="java.util.regex.Matcher"%><%@
 page import="java.util.ArrayList"%><%@
-page import="java.util.List"%><%!
-
-public static TextNodeComparator getTextNodeComparator(String htmlCode, int docId, int historyId, Locale locale) throws IOException, SAXException
-{
-	//zapis to do TMP suboru, lebo to inak hadze nejake NPE na StringReaderi
-	String fileURL = getFileName(docId, historyId);
-
-	FileTools.saveFileContent(fileURL, htmlCode, SetCharacterEncodingFilter.getEncoding());
-
-	HtmlCleaner cleaner = new HtmlCleaner();
-	DomTreeBuilder oldHandler = new DomTreeBuilder();
-	InputSource oldSource = new InputSource(new FileInputStream(new File(sk.iway.iwcm.Tools.getRealPath(fileURL))));
-	cleaner.cleanAndParse(oldSource, oldHandler);
-
-	TextNodeComparator comparator = new TextNodeComparator(oldHandler, locale);
-
-	return comparator;
-}
-
-public static String getFileName(int docId, int historyId)
-{
-	String fileURL = "/WEB-INF/tmp/daisy_old_html-"+docId+"-"+historyId+".html";
-	if (historyId < 1) fileURL = "/WEB-INF/tmp/daisy_old_html-"+docId+".html";
-
-	return fileURL;
-}
-
-public static void cleanupFile(int docId, int historyId)
-{
-	File f = new File(sk.iway.iwcm.Tools.getRealPath(getFileName(docId, historyId)));
-	if (f.exists()) f.delete();
-}
-%><%
+page import="java.util.List"%><%
 
 String lng = PageLng.getUserLng(request);
 pageContext.setAttribute("lng", lng);
 
 PageParams pageParams = new PageParams(request);
 
-Cache cache = Cache.getInstance();
 int docId = Tools.getIntValue(Tools.getRequestParameter(request, "docid"),-1);
 int historyId = Tools.getIntValue(Tools.getRequestParameter(request, "historyid"),-1);
-
 
 WJResponseWrapper respWrapper = new WJResponseWrapper(response,request);
 request.setAttribute(BuffTag.IS_BUFF_TAG, "true");
@@ -96,52 +62,10 @@ if (respWrapper.redirectURL!=null)
 }
 htmlCodeOld = Tools.replace(htmlCodeOld, "&nbsp;", " ");
 
-StringWriter outStreamWriter = new StringWriter();
-
-SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
-
-TransformerHandler result = tf.newTransformerHandler();
-result.setResult(new StreamResult(outStreamWriter));
-
-XslFilter filter = new XslFilter();
-
-ContentHandler postProcess = filter.xsl(result, "org/outerj/daisy/diff/htmlheader.xsl");
-
-String prefix = "diff";
-
-//todo: nejako rozumnejsie
-Locale locale = Locale.getDefault();
-
-TextNodeComparator leftComparator = getTextNodeComparator(htmlCodeOld, docId, historyId, locale);
-TextNodeComparator rightComparator = getTextNodeComparator(htmlCodeNew, docId, -1, locale);
-
-postProcess.startDocument();
-postProcess.startElement("", "diffreport", "diffreport", new AttributesImpl());
-
-postProcess.startElement("", "diff", "diff", new AttributesImpl());
-HtmlSaxDiffOutput output = new HtmlSaxDiffOutput(postProcess, prefix);
-
-HTMLDiffer differ = new HTMLDiffer(output);
-differ.diff(rightComparator, leftComparator);
-postProcess.endElement("", "diff", "diff");
-postProcess.endElement("", "diffreport", "diffreport");
-postProcess.endDocument();
-
-String headHtml = htmlCodeNew;
-headHtml = headHtml.replaceAll("<head[\\s\\S]*?>([\\s\\S]*?)</head>[\\s]*?<body([\\s\\S]*?)>[\\s\\S]*?</body>","<head>$1<link href=\"/components/_common/css/daisy-diff.css\" type=\"text/css\" rel=\"stylesheet\"/><script type=\"text/javascript\" src=\"/components/_common/javascript/jquery.tools.tooltip.js\" ></script></head><body$2>");
-headHtml = headHtml.replace("$","\\$");
-if (headHtml.indexOf("<head") !=-1) headHtml = headHtml.substring(headHtml.indexOf("<head"));
-
-String outputHtml = outStreamWriter.toString();
-outputHtml = outputHtml.replaceAll("<head[\\s\\S]*?>[\\s\\S]*?<body[\\s\\S]*?>", headHtml);
-
-outputHtml = Tools.replace(outputHtml, "\" changes=\"", "\" title=\"");
+String outputHtml = sk.iway.iwcm.common.DocTools.getHtmlDiff(htmlCodeNew, htmlCodeOld);
 
 Tools.insertJQuery(request);
 out.println(outputHtml);
-
-cleanupFile(docId, historyId);
-cleanupFile(docId, -1);
 %>
 <script type="text/javascript">
 // Create the tooltips only on document load

@@ -38,4 +38,4 @@ Při odstraňování konfigurační proměnné mohou nastat 2 situace:
 - vymazat hodnotu z tabulky a **je přednastavená hodnota** do této konfigurační proměnné, abyste ji mohli začít používat (proměnná stále existuje).
 - vymazat hodnotu z tabulky a **neexistuje žádná přednastavená hodnota** do této konfigurační proměnné (proměnná již nebude existovat).
 
-**Varování:** proti vytvoření/úpravě, při smazání se nastaví prázdná hodnota. Pokud má konfigurační proměnná přednastavenou hodnotu, projeví se tato skutečnost. **pouze po restartu** aplikační server.
+!>**Varování:** proti vytvoření/úpravě, při smazání se nastaví prázdná hodnota. Pokud má konfigurační proměnná přednastavenou hodnotu, projeví se tato skutečnost. **pouze po restartu** aplikační server.

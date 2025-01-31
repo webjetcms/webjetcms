@@ -63,6 +63,7 @@ V určitý moment príde **požiadavka na aktualizáciu intranetu** zákazníka.
 Pred prvým použitím Gitlabu je potrebné nainštalovať GIT klienta a vygenerovať šifrovacie kľúče, keďže do gitu sa pripájate s použitím SSH kľúčov.
 
 Podrobný manuál sa nachádza v [PDF dokumente na intranete](https://intra.iway.sk/files/dokumenty/webove-oddelenie/development/instalacia-git-vo-win.pdf).
+
 !>**Upozornenie:** pri generovaní SSH kľúčov **neodporúčame zadávať heslo** (na screenshote je uvedené ako NejakeTvojeTajneHeslo007), pretože VS Code / git môže mať problém heslo zadať. Výhoda SSH kľúčov je práve v tom, že prináša komfort nezadávania hesla.
 
 V skratke si nainštalujte [GIT klienta pre windows](https://git-scm.com/download/win) a následne v programe **GitBash** (pre MacOS v termináli) si vygenerujte SSH kľúče zadaním príkazu:

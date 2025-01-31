@@ -62,7 +62,6 @@ public class NewsQuery
 
 	private boolean returnDocdetailsWithAtributes = false;
 
-
 	/**
 	 * vygeneruje DB dotaz na zaklade kriterii
 	 * @param count vrati len pocet najdenych stranok
@@ -102,6 +101,7 @@ public class NewsQuery
 		sql.append(" FROM documents d ");
 
 		sql.append("LEFT JOIN users u ON d.author_id=u.user_id ");
+
 		if (Constants.getBoolean("perexGroupUseJoin"))
 		{
 			sql.append("LEFT JOIN perex_group_doc p ON d.doc_id = p.doc_id ");
@@ -822,7 +822,8 @@ public class NewsQuery
 		PLACE ("perex_place "),
 		EVENT_DATE ("event_date "),
 		SAVE_DATE ("date_created "),
-		RATING ("forum_count ");
+		RATING ("forum_count "),
+		PRICE ("field_k ");
 
 
 		private OrderEnum(String orderField)

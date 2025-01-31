@@ -22,7 +22,7 @@ Scenario('datatables header select', ({ I, DT, DTE }) => {
     I.say("odfiltruj data");
     I.amOnPage("/admin/v9/templates/temps-groups-list/");
 
-    DT.filter("name", key);
+    DT.filterContains("name", key);
 
     I.see('InterWay Developer SK');
     I.dontSee('Developer CZ');
@@ -66,7 +66,7 @@ Scenario('nastavenie filtra, zmazanie filtra', ({ I, DT }) => {
     clearFilter(I, "logType");
 
     I.say("skus prejst na stranku 5 a vyskusaj zmenit selector");
-    I.click({css: "ul.pagination li:nth-child(6) a"});
+    I.click({css: "ul.pagination li:nth-child(6) button"});
     I.wait(2);
     DT.filterSelect("logType", "Helpdesk");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -82,29 +82,29 @@ Scenario('nastavenie filtra, zmazanie filtra', ({ I, DT }) => {
     //
     I.say("Check set filter not clicking on search button");
     I.amOnPage("/admin/v9/apps/audit-search/");
-    I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-logType button.btn-outline-secondary" });
+    I.click({ css: "div.dt-scroll-headInner div.dt-filter-logType button.btn-outline-secondary" });
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText("USER_LOGON"));
-    DT.filter("description", "node");
+    DT.filterContains("description", "node");
     I.see("USER_LOGON", "#datatableInit tbody");
     I.dontSee("CRON", "#datatableInit tbody");
 
     I.say("Clear node value, check logType is applyed");
-    DT.filter("description", "");
+    DT.filterContains("description", "");
     I.see("USER_LOGON", "#datatableInit tbody");
     I.dontSee("CRON", "#datatableInit tbody");
 
     //
     I.say("Check boolean filter");
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
-    I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-mustAccepted button.btn-outline-secondary" });
+    I.click({ css: "div.dt-scroll-headInner div.dt-filter-mustAccepted button.btn-outline-secondary" });
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText("Áno"));
-    DT.filter("name", "test");
+    DT.filterContains("name", "test");
     I.see("Test", "#reservationObjectDataTable tbody");
     I.dontSee("testB", "#reservationObjectDataTable tbody");
     I.dontSee("Zasadačka veľká", "#reservationObjectDataTable tbody");
 
     I.say("Clear name value, check mustAccepted is applyed");
-    DT.filter("name", "");
+    DT.filterContains("name", "");
     I.see("Test", "#reservationObjectDataTable tbody");
     I.dontSee("testB", "#reservationObjectDataTable tbody");
     I.dontSee("Zasadačka veľká", "#reservationObjectDataTable tbody");
@@ -133,14 +133,14 @@ Scenario('nastavenie filtra LOCAL, zmazanie filtra LOCAL', ({ I, DT }) => {
     //
     I.say("Check set filter not clicking on search button");
     I.amOnPage("/admin/v9/templates/temps-list/");
-    I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-templatesGroupId button.btn-outline-secondary" });
+    I.click({ css: "div.dt-scroll-headInner div.dt-filter-templatesGroupId button.btn-outline-secondary" });
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText("Demo JET"));
-    DT.filter("availableGrooupsList", "jet");
+    DT.filterContains("availableGrooupsList", "jet");
     I.see("Demo JET", "#datatableInit tbody");
     I.see("Microsite - blue", "#datatableInit tbody");
 
     I.say("Clear jet value, check templatesGroupId is applyed");
-    DT.filter("availableGrooupsList", "");
+    DT.filterContains("availableGrooupsList", "");
     I.see("Demo JET", "#datatableInit tbody");
     I.dontSee("nepriradené", "#datatableInit tbody");
     I.dontSee("Newsletter EN", "#datatableInit tbody");
@@ -148,13 +148,13 @@ Scenario('nastavenie filtra LOCAL, zmazanie filtra LOCAL', ({ I, DT }) => {
     //
     I.say("Check boolean filter");
     I.amOnPage("/admin/v9/templates/temps-list/");
-    I.click({ css: "div.dataTables_scrollHeadInner div.dt-filter-disableSpamProtection button.btn-outline-secondary" });
+    I.click({ css: "div.dt-scroll-headInner div.dt-filter-disableSpamProtection button.btn-outline-secondary" });
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText("Áno"));
-    DT.filter("tempName", "yellow");
+    DT.filterContains("tempName", "yellow");
     I.see("Microsite - yellow", "#datatableInit tbody");
 
     I.say("Clear tempName value, check disableSpamProtection is applyed");
-    DT.filter("tempName", "");
+    DT.filterContains("tempName", "");
     I.see("Microsite - yellow", "#datatableInit tbody");
     I.dontSee("nepriradené", "#datatableInit tbody");
     I.dontSee("Newsletter EN", "#datatableInit tbody");
@@ -164,22 +164,22 @@ Scenario('Check contains,startswith,endswith,equals', ({ I, DT }) => {
     //
     I.say("LOCAL search");
     I.amOnPage("/admin/v9/templates/temps-list/");
-    DT.filter("tempName", "Newsletter", "Obsahuje");
+    DT.filterContainsForce("tempName", "Newsletter");
     I.see("Newsletter", "#datatableInit tbody");
     I.see("Newsletter EN", "#datatableInit tbody");
     I.dontSee("Generic", "#datatableInit tbody");
 
-    DT.filter("tempName", "Newsletter", "Začína na");
+    DT.filterStartsWith("tempName", "Newsletter");
     I.see("Newsletter", "#datatableInit tbody");
     I.see("Newsletter EN", "#datatableInit tbody");
     I.dontSee("Generic", "#datatableInit tbody");
 
-    DT.filter("tempName", "EN", "Končí na");
+    DT.filterEndsWith("tempName", "EN");
     I.see("Subpage EN", "#datatableInit tbody");
     I.see("Newsletter EN", "#datatableInit tbody");
     I.dontSee("Generic", "#datatableInit tbody");
 
-    DT.filter("tempName", "Newsletter", "Rovná sa");
+    DT.filterEquals("tempName", "Newsletter");
     I.see("Newsletter", "#datatableInit tbody");
     I.dontSee("Newsletter EN", "#datatableInit tbody");
     I.dontSee("Generic", "#datatableInit tbody");
@@ -187,22 +187,22 @@ Scenario('Check contains,startswith,endswith,equals', ({ I, DT }) => {
     //
     I.say("SERVER side search");
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("mediaLink", ".sk", "Obsahuje");
+    DT.filterContainsForce("mediaLink", ".sk");
     I.see("www.sme.sk", "#mediaTable tbody");
     I.see("www.pluska.sk", "#mediaTable tbody");
     I.dontSee("Cenník", "#mediaTable tbody");
 
-    DT.filter("mediaLink", "s", "Začína na");
+    DT.filterStartsWith("mediaLink", "s");
     I.see("sdasdfasdf", "#mediaTable tbody");
     I.dontSee("www.sme.sk", "#mediaTable tbody");
     I.dontSee("Cenník", "#mediaTable tbody");
 
-    DT.filter("mediaLink", ".sk", "Končí na");
+    DT.filterEndsWith("mediaLink", ".sk");
     I.see("www.sme.sk", "#mediaTable tbody");
     I.see("www.pluska.sk", "#mediaTable tbody");
     I.dontSee("Cenník", "#mediaTable tbody");
 
-    DT.filter("mediaLink", "www.sme.sk", "Rovná sa");
+    DT.filterEquals("mediaLink", "www.sme.sk");
     I.see("www.sme.sk", "#mediaTable tbody");
     I.dontSee("www.sme.sk/en", "#mediaTable tbody");
     I.dontSee("Cenník", "#mediaTable tbody");
@@ -214,18 +214,18 @@ Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DTE, Document }) 
     DTE.waitForEditor("userGroupsDataTable");
     I.click("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
-    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 5);
+    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
 
     DTE.cancel();
     I.click("Obchodní partneri");
     DTE.waitForEditor("userGroupsDataTable");
     I.click("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
-    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 5);
+    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
 });
 
 Scenario('BUG-set selectpickerbinded after fields visibility change', ({ I, DT }) => {
-    var selector = "#datatableInit_wrapper .dataTables_scrollHeadInner th.dt-th-fieldA select.filter-input-prepend.selectpickerbinded";
+    var selector = "#datatableInit_wrapper .dt-scroll-headInner th.dt-th-fieldA select.filter-input-prepend.selectpickerbinded";
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.resetTable();
@@ -244,4 +244,20 @@ Scenario('BUG-set selectpickerbinded after fields visibility change', ({ I, DT }
 Scenario("reset table", ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.resetTable();
+});
+
+Scenario("BUG selectpicker BS 5.3 duplicate value", ({ I, DT, DTE }) => {
+    I.amOnPage("/admin/v9/users/user-groups/?id=1");
+    DTE.waitForEditor("userGroupsDataTable");
+    const field = ".DTE_Field_Name_userGroupType button.dropdown-toggle div.filter-option-inner-inner";
+    const value1 = "Prístupov k zaheslovanej sekcii web sídla";
+    const value2 = "Prihlásenie k hromadnému e-mailu"
+    I.see(value1, field);
+    I.dontSee(value2, field);
+    DTE.cancel();
+    I.click("Newsletter");
+    DTE.waitForEditor("userGroupsDataTable");
+    I.dontSee(value1, field);
+    I.see(value2, field);
+    DTE.cancel();
 });

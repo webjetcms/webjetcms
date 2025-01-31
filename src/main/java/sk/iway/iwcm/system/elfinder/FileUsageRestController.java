@@ -22,7 +22,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 @RequestMapping("/admin/rest/elfinder/file-usage")
 @PreAuthorize("@WebjetSecurityService.hasPermission('cmp_elfinder')")
 public class FileUsageRestController extends DatatableRestControllerV2<FileUsageDTO, Long> {
-    
+
     @Autowired
     public FileUsageRestController() {
         super(null);
@@ -36,10 +36,10 @@ public class FileUsageRestController extends DatatableRestControllerV2<FileUsage
         if(Tools.isEmpty(filePath) == true) {
             return new DatatablePageImpl<>( new ArrayList<>() );
         } else {
-            for(Column column : FileTools.getFileUsage(filePath)) {
+            for(Column column : FileTools.getFileUsage(filePath, getUser())) {
                 entities.add( new FileUsageDTO(column.getColumn1(), column.getColumn2(), column.getIntColumn1()) );
             }
-        }   
+        }
 
         return new DatatablePageImpl<>( entities );
     }

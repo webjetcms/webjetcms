@@ -2,6 +2,17 @@ package sk.iway.iwcm.common;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.struts.util.ResponseUtils;
+import org.outerj.daisy.diff.HtmlCleaner;
+import org.outerj.daisy.diff.XslFilter;
+import org.outerj.daisy.diff.html.HTMLDiffer;
+import org.outerj.daisy.diff.html.HtmlSaxDiffOutput;
+import org.outerj.daisy.diff.html.TextNodeComparator;
+import org.outerj.daisy.diff.html.dom.DomTreeBuilder;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.AttributesImpl;
+
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.components.dictionary.DictionaryDB;
 import sk.iway.iwcm.components.dictionary.model.DictionaryBean;
@@ -10,11 +21,20 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.sax.SAXTransformerFactory;
+import javax.xml.transform.sax.TransformerHandler;
+import javax.xml.transform.stream.StreamResult;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -63,7 +83,7 @@ public class DocTools {
         {
             xssProtectionStrictUrlException = xssProtectionStrictUrlException.toLowerCase();
 
-            StringTokenizer st = new StringTokenizer(xssProtectionStrictUrlException, ",+;");
+            StringTokenizer st = new StringTokenizer(xssProtectionStrictUrlException, ",+;\n");
             while (st.hasMoreTokens())
             {
                 String token = st.nextToken();
@@ -667,6 +687,16 @@ public class DocTools {
                 sk.iway.iwcm.Logger.error(ex);
             }
 
+            //update CSRF token
+            if (text.indexOf("!CSRF_TOKEN!")!=-1)
+            {
+                text = Tools.replace(text, "!CSRF_TOKEN!", CSRF.getCsrfToken(request.getSession(), true));
+            }
+            if (text.indexOf("!CSRF_INPUT!")!=-1)
+            {
+                text = Tools.replace(text, "!CSRF_INPUT!", CSRF.getCsrfTokenInputFiled(request.getSession(), true));
+            }
+
             text = updateUserCodes(user, text);
         }
         catch (Exception ex)
@@ -1014,5 +1044,72 @@ public class DocTools {
 
         return docs;
     }
+
+    private static TextNodeComparator getTextNodeComparator(String htmlCode, Locale locale) throws IOException, SAXException
+    {
+        HtmlCleaner cleaner = new HtmlCleaner();
+        DomTreeBuilder oldHandler = new DomTreeBuilder();
+        InputSource oldSource = new InputSource(new StringReader(htmlCode));
+        cleaner.cleanAndParse(oldSource, oldHandler);
+
+        TextNodeComparator comparator = new TextNodeComparator(oldHandler, locale);
+
+        return comparator;
+    }
+
+
+    /**
+	 * Performs HTML diffing on two HTML strings. Notice that the input strings
+	 * are "cleaned-up" first (e.g. all html tags are converted to lowercase).
+	 *
+	 * @param htmlCodeNew - current HTML code
+	 * @param htmlCodeOld - old HTML code to compare with
+	 * @return the result
+	 * @throws Exception - something went wrong.
+	 */
+	public static String getHtmlDiff(String htmlCodeNew, String htmlCodeOld) throws Exception {
+		StringWriter outStreamWriter = new StringWriter();
+
+        SAXTransformerFactory tf = (SAXTransformerFactory) TransformerFactory.newInstance();
+
+        TransformerHandler result = tf.newTransformerHandler();
+        result.setResult(new StreamResult(outStreamWriter));
+
+        XslFilter filter = new XslFilter();
+
+        ContentHandler postProcess = filter.xsl(result, "xslfilter/htmlheader.xsl");
+
+        String prefix = "diff";
+
+        //todo: nejako rozumnejsie
+        Locale locale = Locale.getDefault();
+
+        TextNodeComparator leftComparator = getTextNodeComparator(htmlCodeNew, locale);
+        TextNodeComparator rightComparator = getTextNodeComparator(htmlCodeOld, locale);
+
+        postProcess.startDocument();
+        postProcess.startElement("", "diffreport", "diffreport", new AttributesImpl());
+
+        postProcess.startElement("", "diff", "diff", new AttributesImpl());
+        HtmlSaxDiffOutput output = new HtmlSaxDiffOutput(postProcess, prefix);
+
+        HTMLDiffer differ = new HTMLDiffer(output);
+        differ.diff(rightComparator, leftComparator);
+        postProcess.endElement("", "diff", "diff");
+        postProcess.endElement("", "diffreport", "diffreport");
+        postProcess.endDocument();
+
+        String headHtml = htmlCodeNew;
+        headHtml = headHtml.replaceAll("<head[\\s\\S]*?>([\\s\\S]*?)</head>[\\s]*?<body([\\s\\S]*?)>[\\s\\S]*?</body>","<head>$1<link href=\"/components/_common/css/daisy-diff.css\" type=\"text/css\" rel=\"stylesheet\"/><script type=\"text/javascript\" src=\"/components/_common/javascript/jquery.tools.tooltip.js\" ></script></head><body$2>");
+        headHtml = headHtml.replace("$","\\$");
+        if (headHtml.indexOf("<head") !=-1) headHtml = headHtml.substring(headHtml.indexOf("<head"));
+
+        String outputHtml = outStreamWriter.toString();
+        outputHtml = outputHtml.replaceAll("<head[\\s\\S]*?>[\\s\\S]*?<body[\\s\\S]*?>", headHtml);
+
+        outputHtml = Tools.replace(outputHtml, "\" changes=\"", "\" title=\"");
+
+        return outputHtml;
+	}
 
 }

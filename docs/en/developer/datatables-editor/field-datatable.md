@@ -44,14 +44,15 @@ Add a prefix to the menu of the set option `data-dt-field-dt-`, i.e. to set the 
 The created datatable is made available as:
 - `conf.datatable` on the original `conf` datatable column object
 - `window` object called `datatableInnerTable_fieldName` - object can be used for automated testing or other JavaScript operations.
+
 After the nested datatable is created, the event is fired `WJ.DTE.innerTableInitialized` where in the object `event.detail.conf` is the transferred configuration.
 
 ## Notes on implementation
 
 The implementation is in the file [field-type-datatable.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) and in [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) set as `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
 
-Feature `resizeDatatable`
+Feature `resizeDatatable` is used to calculate the size of the datatable (to scroll only rows), the recalculation is called when initializing the array, at intervals of every 20 seconds (to be sure), when resizing the window and when clicking on a tab in the editor. The recalculation is performed only when the field is visible.
 
-`conf.datatable.columns.adjust();`
+When you click on a tab in the editor, the tab name is tested against the tab where the datatable is inserted and if it matches, the column width is adjusted by calling `conf.datatable.columns.adjust();`. The datatable can be reused for different data and this will ensure that the column widths in the header are set correctly according to the contents of the table.
 
-Feature `getUrlWithParams``?docid={docId}&groupId={groupId}``{docId}` a `{groupId}``EDITOR.currentJson`.
+Feature `getUrlWithParams` can replace fields from a json object in the URL. If the URL of a datatable contains `?docid={docId}&groupId={groupId}` so the value of `{docId}` a `{groupId}` is replaced by values from the JSON object `EDITOR.currentJson`.

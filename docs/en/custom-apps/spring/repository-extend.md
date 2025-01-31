@@ -1,8 +1,8 @@
 # Extension of Spring DATA repositories of WebJET CMS
 
-In some cases, you will need to extend the Spring DATA repository capabilities of existing entities in your project. For example, when displaying a special news item where you need to display a list of `DocDetails` entities.
+In some cases, you may need to extend the options in your project `Spring DATA` repositories of existing entities. For example, when displaying a special news item where you need to display a list of `DocDetails` entities.
 
-You have several options for implementation. This is a sample REST controller that demonstrates the use of all the examples below:
+You have several options for implementation. This is a sample `REST controller` that shows the use of all the examples below:
 
 ```java
 package sk.iway.web.news;
@@ -77,9 +77,9 @@ V `SpringConfig` a `JpaDBConfig` don't forget to add package `sk.iway.web.news`,
 
 ## New repository in the original package
 
-The simplest solution without additional configuration is to create a new Spring DATA repository in the same package as the standard WebJET repository (e.g. `sk.iway.iwcm.doc`). This will ensure that it is automatically initialized when WebJET starts.
+The simplest solution without additional configuration is to create a new `Spring DATA` repository in the same package as the standard WebJET repository (e.g. `sk.iway.iwcm.doc`). This will ensure that it is automatically initialized when WebJET starts.
 
-WARNING: you must not add this package to your `JpaDBConfig`because one entity (class) cannot be in multiple JPA configurations at the same time.
+!>**Warning:** you must not add this package to your `JpaDBConfig` because one entity (class) cannot be in multiple JPA configurations at the same time.
 
 In the example a method is created `findByTitleLike` to find a list of web pages by name. The original `DocDetails` entity.
 

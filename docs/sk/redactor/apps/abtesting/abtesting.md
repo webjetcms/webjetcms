@@ -1,4 +1,4 @@
-# Aplikácia AB testovanie
+# AB Testovanie
 
 Aplikácia AB testovanie Vám poskytuje prehľad o AB stránkach a správu príslušných konfiguračných premenných:
 

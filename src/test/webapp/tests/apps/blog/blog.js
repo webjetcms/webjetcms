@@ -1,7 +1,6 @@
 Feature('apps.blog');
 
 var randomNumber;
-var delete_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-remove.noperms-deleteDir.btn-danger'));
 
 Before(({ I }) => {
     if (typeof randomNumber == "undefined") {
@@ -9,7 +8,7 @@ Before(({ I }) => {
     }
 });
 
-Scenario('Create blogger and test his logic', async ({I, DT, DTE}) => {
+Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     let newBlogger = "newBlogger" + randomNumber + "_autotest";
 
     I.say("CREATE NEW BLOGGER");
@@ -35,11 +34,10 @@ Scenario('Create blogger and test his logic', async ({I, DT, DTE}) => {
     I.fillField("#DTE_Field_login", newBlogger);
 
     I.clickCss("button.btn-vue-jstree-item-edit");
-    I.switchTo("div#jsTree");
-    I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
-    I.click(locate('.jstree-node.jstree-closed').withText('Blog').find('.jstree-anchor'));
-    I.switchTo();
-
+    within("div#jsTree", () => {
+        I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
+        I.click(locate('.jstree-node.jstree-closed').withText('Blog').find('.jstree-anchor'));
+    });
     I.fillField("#DTE_Field_firstName", "InsertBlogger");
     I.fillField("#DTE_Field_lastName", "Autotest");
     I.fillField("#DTE_Field_password", "*********");
@@ -92,14 +90,14 @@ Scenario('Create blogger and test his logic', async ({I, DT, DTE}) => {
     I.clickCss("#pills-dt-bloggerArticlesDataTable-basic-tab");
     I.fillField("#DTE_Field_title", "Váš prvý článok CHANGE");
     DTE.save();
-    DT.filter("title", "Váš prvý článok CHANGE");
+    DT.filterContains("title", "Váš prvý článok CHANGE");
     I.see("Váš prvý článok CHANGE");
 
     I.say("Remove blogger Structure");
     I.relogin("tester");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=63517");
     I.jstreeClick(newBlogger);
-    I.click(delete_button);
+    I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
@@ -107,9 +105,9 @@ Scenario('Create blogger and test his logic', async ({I, DT, DTE}) => {
 
     I.say("Remove user/blogger from system");
     I.amOnPage("/admin/v9/users/user-list/");
-    DT.filter("login", newBlogger);
-    DT.filter("firstName", "InsertBlogger");
-    DT.filter("lastName", 'Autotest');
+    DT.filterContains("login", newBlogger);
+    DT.filterContains("firstName", "InsertBlogger");
+    DT.filterContains("lastName", 'Autotest');
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -139,16 +137,18 @@ Scenario('Test group select logic', async ({I}) => {
     I.dontSeeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger/Nezaradené") );
 });
 
-Scenario('Test create subgroup logic', async ({I, DTE}) => {
+Scenario('Test create subgroup logic', async ({I, DTE, DT}) => {
     let subFolder = "section-" + randomNumber;
 
     I.say("Check that parent group must be selected");
     I.relogin("bloggerPerm");
     I.amOnPage("/apps/blog/admin/");
+
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-warning");
     I.waitForElement( locate("#toast-container-webjet > div > div.toast-title").withText("Pridanie sekcie") );
     I.waitForElement( locate("#toast-container-webjet > div > div.toast-message").withText("Pred pridaním novej sekcie, musí byť zvolená sekcia vo výberovom poli.") );
+    I.toastrClose();
 
     I.say("Check, that name of new subgroup must be set (or error toad)");
     I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
@@ -162,6 +162,7 @@ Scenario('Test create subgroup logic', async ({I, DTE}) => {
     I.waitForElement("#toast-container-webjet > .toast-error");
     I.waitForElement( locate("#toast-container-webjet > div > div.toast-title").withText("Pridanie sekcie") );
     I.waitForElement( locate("#toast-container-webjet > div > div.toast-message").withText("Pridanie novej sekcie bolo neúspešné.") );
+    I.toastrClose();
 
     I.say("Add subfolder and test it");
     I.clickCss("button.buttons-add-folder");
@@ -170,6 +171,7 @@ Scenario('Test create subgroup logic', async ({I, DTE}) => {
     I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
     I.waitForElement("#toast-container-webjet > .toast-success");
     I.waitForElement( locate("#toast-container-webjet > div > div.toast-message").withText("Pridanie novej sekcie bolo úspešné.") );
+    I.toastrClose();
 
     I.say("Verify that folder select was updated");
     I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
@@ -185,7 +187,7 @@ Scenario('Test create subgroup logic', async ({I, DTE}) => {
     I.jstreeClick(subFolder);
 
     I.say("Delete sub folder");
-    I.click(delete_button);
+    I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
@@ -210,6 +212,10 @@ Scenario('Test webpage logic', ({I, DT, DTE}) => {
     I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
     I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
 
+    //Too fast for DTE, wait for a while
+    I.say("Wait for a second.");
+    I.wait(1);
+
     I.say("Now create new page");
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("bloggerArticlesDataTable");
@@ -233,7 +239,7 @@ Scenario('Test webpage logic', ({I, DT, DTE}) => {
     I.see("edit_" + newPageName);
 
     I.say("Try page delete");
-    DT.filter("title", "edit_" + newPageName);
+    DT.filterContains("title", "edit_" + newPageName);
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -252,7 +258,7 @@ Scenario('Otestuj Diskusiu pre Blogera', ({I, DT, DTE}) => {
     I.amOnPage("/apps/forum/admin/");
     I.dontSee("Na túto aplikáciu/funkciu nemáte prístupové práva");
 
-    DT.filter("subject", "Blogger");
+    DT.filterContains("subject", "Blogger");
     I.click("Blogger");
     DTE.waitForEditor("forumDataTable");
     I.see("Titulok", "div.DTE_Field_Name_subject")

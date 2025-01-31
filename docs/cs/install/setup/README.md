@@ -102,7 +102,7 @@ Volitelně je možné nastavit:
 - `maximumSize` - maximální počet otevřených databázových připojení (výchozí 50)
 - `connectionTimeout` - počet sekund, po které je spojení považováno za neuzavřené (výchozí 300)
 - `autoCommit` - pokud je nastaveno na true, je nastaveno `connection.setAutoCommit(true);` (výchozí nastavení `false`)
-- `testQuery` - testovací výraz SQL pro ověření funkčnosti připojení. Pro ovladače JDBC v4 se používá volání `isValid()`, pro starší řidiče je třeba nastavit. Hodnota `true` nastaví výchozí výraz `SELECT 1` (používá se automaticky pro `jtds` ovladač). Je však možné nastavit vlastní výraz SQL.
+- `testQuery` - testovací výraz SQL pro ověření funkčnosti připojení. Pro `JDBC` ovladače v4 se používají k volání `isValid()`, pro starší řidiče je třeba nastavit. Hodnota `true` nastaví výchozí výraz `SELECT 1` (používá se automaticky pro `jtds` ovladač). Je však možné nastavit vlastní výraz SQL.
 
 ## Plnění režimu DB
 

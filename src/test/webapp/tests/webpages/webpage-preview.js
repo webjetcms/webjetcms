@@ -69,10 +69,10 @@ Scenario('Uloz cistu stranku', async ({ I, DTE }) => {
 });
 
 
-Scenario('Preview of new page', async ({ I, DTE }) => {
+Scenario('Preview of new page', async ({ I, DTE, DT }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
 
-     I.click("#datatableInit_wrapper button.buttons-create");
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForElement("#pills-dt-datatableInit-basic-tab.active");
      I.click("#pills-dt-datatableInit-content-tab");

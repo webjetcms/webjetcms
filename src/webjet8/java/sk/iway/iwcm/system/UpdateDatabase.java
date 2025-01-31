@@ -398,13 +398,23 @@ public class UpdateDatabase
 						//na public nodoch nevykonavam GRANT prikazy
 						if (sql.indexOf("GRANT")!=-1 && "public".equals(Constants.getString("clusterMyNodeType"))) continue;
 
-						if (sql.contains("{CONSTRAIN:PK}")) {
+						if (sql.contains("{CONSTRAIN:")) {
 							//MSSQL nema drop constrain podla mena ale musi sa najskor ziskat z DB presny nazov, az potom sa da spravit drop
 							try {
 								String tableName = sql.substring(sql.indexOf("ALTER TABLE")+11, sql.indexOf("DROP CONSTRAINT")).trim();
-								String constrainSql = "SELECT name  FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'"+tableName+"'";
+								int i = sql.indexOf("{CONSTRAIN:");
+								String constrainName = sql.substring(sql.indexOf(":", i)+1, sql.indexOf("}", i));
+								String constrainSql;
+								if ("PK".equals(constrainName)) {
+									constrainSql = "SELECT name FROM sys.key_constraints WHERE type = 'PK' AND OBJECT_NAME(parent_object_id) = N'"+tableName+"'";
+								} else {
+									constrainSql = "SELECT name FROM sys.default_constraints WHERE OBJECT_NAME(parent_object_id) = N'"+tableName+"' AND name LIKE '%__"+constrainName+"__%'";
+								}
+
 								String constrainKey = new SimpleQuery(dbName).forString(constrainSql);
-								sql = Tools.replace(sql, "{CONSTRAIN:PK}", constrainKey);
+
+								String replaceText = sql.substring(i, sql.indexOf("}", i)+1);
+								sql = Tools.replace(sql, replaceText, constrainKey);
 							}
 							catch (Exception ex) {
 								Logger.error(UpdateDatabase.class, ex);
@@ -461,6 +471,12 @@ public class UpdateDatabase
 						{
 							//uz existuje, je to OK
 							Logger.println(UpdateDatabase.class, "[EXISTS] ");
+							Logger.debug(UpdateDatabase.class, e.getMessage());
+						}
+						else if (sql.contains("DROP") && message.contains("does not exist"))
+						{
+							//uz neexistuje, je to OK
+							Logger.println(UpdateDatabase.class, "[NOT EXISTS] ");
 							Logger.debug(UpdateDatabase.class, e.getMessage());
 						}
 						else

@@ -46,7 +46,6 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
  *
  * Anotacia @WebjetAppStore zabezpeci zobrazenie aplikacie v zozname aplikacii v editore (v AppStore)
  *
-
  * V pripade, ze nejaka metoda ma byt dostupna len pre prihlaseneho pouzivatela, admina, prip. nejaku pouzivatelsku skupinu mozeme pouzit anotacie:
  * @PreAuthorize("@WebjetSecurityService.isLogged()") - prihalseny pouzivatel
  * @PreAuthorize("@WebjetSecurityService.isAdmin()") - admin
@@ -203,9 +202,10 @@ The following file types can be used for display:
 - `JSP` - the file has an extension `.jsp`
 - `Freemarker` - the file has an extension `.ftl`
 - `Thymeleaf` - the file has an extension `.html`
+
 For new applications, we strictly recommend using [Thymeleaf](../../developer/frameworks/thymeleaf.md). Note that in `ContactApp` methods return a path without a suffix (e.g. `return "/apps/contact/mvc/edit"`), WebJET automatically searches for the file according to the list above and uses the first one it finds. You can thus easily change the technology used on the frontend without changing the backend.
 
-For `Thymeleaf` objects are automatically inserted into the model `request a session`that can be used as e.g. `${request.getAttribute('ninja').page.urlPath}`.
+For `Thymeleaf` objects are automatically inserted into the model `request a session` that can be used as e.g. `${request.getAttribute('ninja').page.urlPath}`.
 
 ### View list of companies
 
@@ -250,51 +250,53 @@ File `src/main/webapp/apps/contact/mvc/edit.html` for editing a company is also 
 
 <!--/* https://spring.io/guides/gs/handling-form-submission/ */-->
 <form data-th-action="${request.getAttribute('ninja').page.urlPath}" data-th-object="${entity}" method="post">
-	<div data-th-if="${error!=null}" class="alert alert-danger">
-		<!--/* https://www.baeldung.com/spring-thymeleaf-error-messages */-->
-		<p data-th-text="#{chat.form_fill_error}"></p>
-		<ul style="margin: 0px;">
-			<li data-th-each="err : ${error.allErrors}"><span data-th-text="#{components.contact.property.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span></li>
-		</ul>
-	</div>
+    <div data-th-if="${error!=null}" class="alert alert-danger">
+        <!--/* https://www.baeldung.com/spring-thymeleaf-error-messages */-->
+        <p data-th-text="#{chat.form_fill_error}"></p>
+        <ul style="margin: 0px;">
+            <li data-th-each="err : ${error.allErrors}">
+                <span data-th-text="#{components.contact.property.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span>
+            </li>
+        </ul>
+    </div>
 
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.name}">Firma</label>
-		<input type="text" class="form-control" data-th-field="*{name}" />
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.vatid}">IČ DPH</label>
-		<input type="text" class="form-control" data-th-field="*{vatid}" />
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.street}"></label>
-		<input type="text" class="form-control" data-th-field="*{street}" />
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.city}"></label>
-		<input type="text" class="form-control" data-th-field="*{city}" />
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.zip}"></label>
-		<input type="text" class="form-control" data-th-field="*{zip}" />
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.country}"></label>
-		<!--/* https://www.baeldung.com/thymeleaf-select-option */-->
-		<select class="form-control" data-th-field="*{country}">
-			<option data-th-each="country : ${countries}" data-th-value="${country.value}" data-th-text="${country.label}"></option>
-		</select>
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.contact}"></label>
-		<input type="text" class="form-control" data-th-field="*{contact}" />
-	</div>
-	<div class="mb-3">
-		<label class="form-label" data-th-text="#{components.contact.property.phone}"></label>
-		<input type="text" class="form-control" data-th-field="*{phone}" />
-	</div>
-	<button type="submit" class="btn btn-primary" data-th-text="#{button.submit}" name="saveForm">Submit</button>
-	<input type="hidden" name="id" data-th-field="*{id}" />
+    <div class="mb-3">
+      <label class="form-label" data-th-text="#{components.contact.property.name}">Firma</label>
+      <input type="text" class="form-control" data-th-field="*{name}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.vatid}">IČ DPH</label>
+        <input type="text" class="form-control" data-th-field="*{vatid}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.street}"></label>
+        <input type="text" class="form-control" data-th-field="*{street}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.city}"></label>
+        <input type="text" class="form-control" data-th-field="*{city}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.zip}"></label>
+        <input type="text" class="form-control" data-th-field="*{zip}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.country}"></label>
+        <!--/* https://www.baeldung.com/thymeleaf-select-option */-->
+        <select class="form-control" data-th-field="*{country}">
+            <option data-th-each="country : ${countries}" data-th-value="${country.value}" data-th-text="${country.label}"></option>
+        </select>
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.contact}"></label>
+        <input type="text" class="form-control" data-th-field="*{contact}">
+    </div>
+    <div class="mb-3">
+        <label class="form-label" data-th-text="#{components.contact.property.phone}"></label>
+        <input type="text" class="form-control" data-th-field="*{phone}">
+    </div>
+    <button type="submit" class="btn btn-primary" data-th-text="#{button.submit}" name="saveForm">Submit</button>
+    <input type="hidden" name="id" data-th-field="*{id}"/>
 </form>
 ```
 
@@ -328,8 +330,7 @@ Example:
 ```java
 !INCLUDE(sk.iway.basecms.contact.ContactApp, viewFolder="subfolder", country="sk")!
 ```
-
 - in this case the \`\`en.iway.basecms.contact.ContactApp\`\` class is used,
-- method with annotation is called `@DefaultHandler`which will return `return "/apps/contact/mvc/list";`,
+- method with annotation is called `@DefaultHandler` which will return `return "/apps/contact/mvc/list";`,
 - WebJET searches `/components/{installName}/contact/subfolder/list.html`, or `/components/contact/subfolder/list.html`
 - embeds the resulting HTML code into the page.

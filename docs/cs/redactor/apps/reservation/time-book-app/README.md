@@ -18,9 +18,9 @@ V kódu si můžete všimnout parametru `reservationObjectIds`. Jedná se o sezn
 
 ![](app-editor.png)
 
-**Oznámení**: pouze objekty rezervace, které **NEJSOU nastaveny jako rezervace na celý den**. Tyto objekty totiž nelze rezervovat na základě času, ale pouze na základě data. Nevyhovující rezervační objekty se v poli pro více výběrů nezobrazují.
+!>**Oznámení**: pouze objekty rezervace, které **NEJSOU nastaveny jako rezervace na celý den**. Tyto objekty totiž nelze rezervovat na základě času, ale pouze na základě data. Nevyhovující rezervační objekty se v poli pro více výběrů nezobrazují.
 
-**Oznámení**: ruční přidání ID nevyhovujícího objektu rezervace do parametru `reservationObjectIds`, nebo změnit stav již použitého objektu rezervace v aplikaci na "rezervace na celý den", **způsobuje nesprávné chování aplikace**.
+!>**Oznámení**: ruční přidání ID nevyhovujícího objektu rezervace do parametru `reservationObjectIds`, nebo změnit stav již použitého objektu rezervace v aplikaci na "rezervace na celý den", **způsobuje nesprávné chování aplikace**.
 
 ## Konstrukce aplikace
 
@@ -55,7 +55,7 @@ Jednotlivé buňky v tabulce mají specifický stav.
 
 **Úplný** buňka znamená, že bylo dosaženo maximálního počtu rezervací pro tento objekt rezervace a hodinu v daném dni. Jak vidíme, buňka může obsahovat text typu "2/2", což znamená, že z celkového počtu 2 rezervací jsou již 2.
 
-**Varování:** může se stát, že tato buňka bude mít stav např. "1/2" nebo "0/2". Tato situace nastane, když je určitá hodina nebo celý den již minulostí. Takže i když nebylo dosaženo maximálního počtu rezervací, není možné přidat novou.
+!>**Varování:** může se stát, že tato buňka bude mít stav např. "1/2" nebo "0/2". Tato situace nastane, když je určitá hodina nebo celý den již minulostí. Takže i když nebylo dosaženo maximálního počtu rezervací, není možné přidat novou.
 
 ![](app-cell-full.png)
 
@@ -63,7 +63,7 @@ Jednotlivé buňky v tabulce mají specifický stav.
 
 ![](app-cell-free.png)
 
-Tato buňka znamená, že je vybrána. buňka je vybrána kliknutím na ni (pokud na ni kliknete znovu, výběr se zruší). **Varování:** lze vybrat pouze dostupné buňky, ergo ty, které jsou **Dostupné na**.
+Tato buňka znamená, že je vybrána. buňka je vybrána kliknutím na ni (pokud na ni kliknete znovu, výběr se zruší). !>**Varování:** lze vybrat pouze dostupné buňky, ergo ty, které jsou **Dostupné na**.
 
 ### Rezervační formulář
 
@@ -74,18 +74,20 @@ Tato povinná pole jsou automaticky předvyplněna, pokud jste přihlášeným u
 - Příjmení
 - E-mail
 
-Pole "Doba rezervace od-do" a "Cena rezervace" nelze měnit a mají pouze informativní charakter. Jejich hodnota se automaticky mění podle vybraných buněk v tabulce (podle zvoleného rozsahu rezervace pro daný objekt rezervace). Pokud není vybrána žádná buňka, budou pole prázdná.
+Pole **Doba rezervace od-do** a **Cena rezervace** nelze měnit a mají pouze informativní charakter. Automaticky mění hodnotu podle vybraných buněk v tabulce (podle vybraného rozsahu rezervace pro objekt rezervace). Pokud není vybrána žádná buňka, budou pole prázdná.
 
-**Varování:** tlačítko pro přidání rezervace se zobrazí pouze v případě, že je vybrána buňka v tabulce.
+**Pozor**, sleva uživatele se pak automaticky uplatní na tuto cenu rezervace. Tato procentuální sleva je nastavena pro konkrétní [skupiny uživatelů](../../../../admin/users/user-groups.md). Pokud uživatel patří k více **skupiny uživatelů** které mají stanovenou procentní slevu, bude použita největší z nich. Pokud má sleva hodnotu `0%`, částka rezervace se nemění. Pokud má sleva hodnotu `100%`, rezervace je zdarma.
+
+!>**Varování:** tlačítko pro přidání rezervace se zobrazí pouze v případě, že je vybrána buňka v tabulce.
 
 ![](app-reservation_form.png)
 
 ## Přidání rezervace
 
 Chcete-li přidat rezervaci, musíte nejprve v tabulce vybrat časový rozsah. Přidání rezervace má však následující pravidla:
-- **Najednou můžete rezervovat pouze 1 objekt rezervace**. Pokud tedy v řádku pro objektA vyberete rozsah od 13:00 do 15:00 a poté se pokusíte vybrat rozsah pro rezervaci objektuB, původně vybraný rozsah se automaticky zruší.
-- **Můžete vybrat pouze 1 souvislý rozsah**. Nelze vybrat rozsah 13:00-15:00 a 16:00-17:00 současně, i když se jedná o stejný objekt. Pokud se o to pokusíte, výběr prvního vybraného rozsahu se automaticky zruší.
-- **Zvolený rozsah nelze přerušit nedostupným časem**. Pokud se pokusíte vybrat rozsah 13:00-17:00, ale rozsah 15:00-16:00 objektu je již plně obsazen, vybraný rozsah bude automaticky zrušen.
+- **Najednou můžete rezervovat pouze 1 objekt rezervace**. Pokud tedy v řádku pro objektA vyberete rozsah od 13:00 do 15:00 a pokusíte se vybrat rozsah pro rezervaci objektuB, výběr původně vybraného rozsahu se automaticky celý zruší.
+- **Můžete vybrat pouze 1 souvislý rozsah**. Nelze vybrat rozsah 13:00-15:00 a 16:00-17:00 současně, i když se jedná o stejný objekt. Pokud se o to pokusíte, první vybraný rozsah se automaticky zruší.
+- **Zvolený rozsah nelze přerušit nedostupným časem**. Pokud se pokusíte vybrat rozsah 13:00-17:00, ale rozsah 15:00-16:00 je již plně obsazen, vybraný rozsah se automaticky zruší.
 - **Povinná pole**. Pro přidání rezervace je nutné vyplnit pole Jméno/jméno/e-mail.
 
 Pokud jste splnili výše uvedené podmínky, vybrali správný rozsah a vyplnili požadovaná pole, můžete požádat o přidání rezervace.
@@ -98,6 +100,6 @@ Pokud objekt rezervace **nepotřebuje schválení**, bude rezervace automaticky 
 
 ![](app-reservation-saved-approved.png)
 
-Pokud objekt rezervace **potřebují schválení**, bude rezervace ve stavu čekající na vyřízení. Dostupnost jednotlivých časových slotů v tabulce se nezmění, protože se započítávají POUZE schválené rezervace. Schvalovatel může vaši rezervaci schválit nebo zamítnout, o čemž budete informováni e-mailem.
+Pokud objekt rezervace **potřebuje schválení**, bude rezervace ve stavu čekající na vyřízení. Dostupnost jednotlivých časových slotů v tabulce se nezmění, protože se započítávají POUZE schválené rezervace. Schvalovatel může vaši rezervaci schválit nebo zamítnout, o čemž budete informováni e-mailem.
 
 ![](app-reservation-saved-awaiting-approve.png)

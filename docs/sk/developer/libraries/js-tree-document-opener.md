@@ -88,7 +88,7 @@ jstdo.id = 4;
 
 Problémom pri implementácii bolo čakanie na načítanie stromovej štruktúry a synchronizácia datatabuľky. Pôvodná implementácia používala udalosti ```this.dataTable.on('draw.dt', (evt, settings) => ```, čo ale nebolo vhodné na použitie pri prepínaní kariet Priečinky, Systém a Kôš, pretože tam dochádzalo ihneď k načítaniu datatabuľky po prepnutí karty.
 
-Kód používa funkciu ```setInterval``` s počítaním volania vo funkcii ```waitForDatatableRowLoaded``` a čakaním na nezobrazenie ```div.dataTables_processing:visible```. Keď nie je zobrazené, počíta ešte 3 intervaly nezobrazenia a následne pokračuje v hľadaní web stránky. Podobne je riešené aj načítavanie stromovej štruktúry, čakanie je implementované vo funkcii ```waitForJsTreeLoaded```. Funkcie sú implementované priamo v ```abstract-js-tree-opener.js```.
+Kód používa funkciu ```setInterval``` s počítaním volania vo funkcii ```waitForDatatableRowLoaded``` a čakaním na nezobrazenie ```div.dt-processing:visible```. Keď nie je zobrazené, počíta ešte 3 intervaly nezobrazenia a následne pokračuje v hľadaní web stránky. Podobne je riešené aj načítavanie stromovej štruktúry, čakanie je implementované vo funkcii ```waitForJsTreeLoaded```. Funkcie sú implementované priamo v ```abstract-js-tree-opener.js```.
 
 Hľadanie je tiež komplikované z dôvodu stránkovania a rozdielov medzi klientskym a serverovým stránkovaním. V oboch prípadoch postupne prechádza jednotlivé stránky a hľadá element so zadaným ID. Ak je nájdené otvorí editor.
 

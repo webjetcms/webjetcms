@@ -13,25 +13,25 @@
   //Maly vypis poloziek nakupneho kosika v tvare:
   //Pocet poloziek:
   //Celkova cena:
-    
+
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
-  
+
   List<BasketItemBean> items = BasketDB.getBasketItems(request);
 %>
 
 <div class="basketSmallBox" <%= items.size() == 0 ? "style=\"display: none;\"" : "" %>>
-    <span class='basketSmallItems'>            
-      <span><%=BasketDB.getTotalItems(items)%>&nbsp;<iwcm:text key="components.basket.basket_small_qty_title"/></span>
+    <span class='basketSmallItems'>
+      <span><%=BasketDB.getTotalItems(items)%></span>
     </span>
-    
-    <span class='basketSmallPrice'>              
+
+    <span class='basketSmallPrice'>
       <span>
         <iway:curr currency="<%= BasketDB.getDisplayCurrency(request) %>">
           <%= BasketDB.getTotalLocalPriceVat(items, request) %>
         </iway:curr>
       </span>
     </span>
-    
+
     <a href="javascript:void(0)" class="showBasket">Show basket</a>
 </div>

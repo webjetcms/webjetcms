@@ -25,7 +25,7 @@ Scenario('custom-fields-webpages', async ({ I, DT, DTE }) => {
     I.seeInField("#datatableInit_modal div.DTE_Field_Name_fieldM input.field-type-uuid", "7ddaab7f-3d08-b5ab-1e97-1528963fb99a")
     I.say("Checking new UUID value");
     DTE.cancel();
-    I.click("#datatableInit_wrapper button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.click("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
@@ -57,7 +57,7 @@ Scenario('custom-fields-groups', ({ I, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.jstreeNavigate(["Test stavov", "Voliteľné polia"]);
-    I.click("div.tree-col button.buttons-edit");
+    I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
     I.click("#pills-dt-groups-datatable-fields-tab");
     DT.waitForLoader();
@@ -74,7 +74,7 @@ Scenario('custom-fields-groups', ({ I, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     I.jstreeNavigate(["Test stavov", "Zobrazený v menu"]);
-    I.click("div.tree-col button.buttons-edit");
+    I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
     I.click("#pills-dt-groups-datatable-fields-tab");
     DT.waitForLoader();

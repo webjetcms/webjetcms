@@ -264,7 +264,7 @@ columns.push({
 
 Implementovaná třída `EditorFields`, např. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) obvykle obsahuje metody `fromDocDetails` pro nastavení atributů v `editorFields` třídy před úpravami a `toDocDetails` pro nastavení atributů zpět do `DocDetails` před uložením. Tyto metody je třeba v kódu v jazyce Java volat implicitně.
 
-**Varování:** pokud je entita uložena v mezipaměti (jako např. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavení atributu `editorFields` zůstane také v mezipaměti a může zbytečně zabírat paměť a vytvářet zbytečně velká data při serializaci JSON. V `GroupDetails` v editorFields odkazuje na `parentGroupDetails`.
+!>**Varování:** pokud je entita uložena v mezipaměti (jako např. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) nastavení atributu `editorFields` zůstane také v mezipaměti a může zbytečně zabírat paměť a vytvářet zbytečně velká data při serializaci JSON. V `GroupDetails` v editorFields odkazuje na `parentGroupDetails`.
 
 Při standardním postupu se každý `GroupDetails` sada objektů `editorFields` objekt. Při serializaci hluboce vnořeného adresáře se pak vnoří objekty editorFields.parentGroupDetails.editorFields.parentGroupDetails atd. Objekt GroupDetails prostě neměl potřebné první pole editorFields. Řešením je nejprve objekt `GroupDetails` naklonovat a nastavit ji `editorFields`. Příkladem je `GroupEditorField.fromGroupDetails` který objekt naklonuje a poté jej vrátí. Použití v kódu je pak následující `group = gef.fromGroupDetails(group);`.
 

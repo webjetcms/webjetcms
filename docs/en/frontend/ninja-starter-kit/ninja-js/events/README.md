@@ -1,33 +1,44 @@
 # Events
 
-| Event | Equipment | | ------------------------- | ---------------------------------------------------------------- | | | on{deviceName}() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop | | on{deviceName}Blink() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop | | on{deviceName}Up() | {deviceName} Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~ | | on{deviceName}UpBlink() | {deviceName} Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~ | | on{deviceName}Down() | {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop | | on{deviceName}DownBlink() | {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop | | | onResize() | | | onResizeWidth() | | | onResizeHeight() | |
+| Event | Device |
+| ------------------------- | ---------------------------------------------------------------- |
+| on{deviceName}() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop |
+| on{deviceName}Blink() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop |
+| on{deviceName}Up() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~ |
+| on{deviceName}UpBlink() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~ |
+| on{deviceName}Down() | {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop |
+| on{deviceName}DownBlink() | {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop |
+| onResize() | |
+| onResizeWidth() | |
+| onResizeHeight() | |
 
-## on{deviceName}()
+## `on{deviceName}()`
 
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop
 
 The event is called (with a delay according to the setting `fireTime`) if:
 - when the page is loaded, the width of the device is in the range for {deviceName}.
 - when changing the width of the device, if the new width of the device is within the range for {deviceName}.
+
 The event is for everyone {deviceName} will call only once. If the screen size was the same when the page was loaded {deviceName} and the user has resized the window (but still within the range for {deviceName}), the event will not be called a second time.
 
 ```javascript
 Nina.init({
-	onMobile: function () {
-		// do something...
-	},
+    onMobile:function() {
+        // do something...
+    }
 });
 ```
 
 Breakpoints are taken from CSS styles that are set in `_variables.scss`
 
-- **onDinosaur()** \&lt; 576px
-- 575px \&lt; **onMobile()** \&lt; 768px
-- 767px \&lt; **onTablet()** \&lt; 992px
-- 991px \&lt; **onLaptop()** \&lt; 1200px
-- 1199px \&lt; **onDesktop()**
+- **onDinosaur()** < 576px
+- 575px < **onMobile()** < 768px
+- 767px < **onTablet()** < 992px
+- 991px < **onLaptop()** < 1200px
+- 1199px < **onDesktop()**
 
-## on{deviceName}Blink()
+## `on{deviceName}Blink()`
 
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop
 
@@ -35,21 +46,21 @@ The event will be called on the same terms as he{deviceName}() except that this 
 
 ```javascript
 Nina.init({
-	onMobileBlink: function () {
-		// do something...
-	},
+    onMobileBlink:function() {
+        // do something...
+    }
 });
 ```
 
 Breakpoints are taken from CSS styles that are set in `_variables.scss`
 
-- **onDinosaurBlink()** \&lt; 576px
-- 575px \&lt; **onMobileBlink()** \&lt; 768px
-- 767px \&lt; **onTabletBlink()** \&lt; 992px
-- 991px \&lt; **onLaptopBlink()** \&lt; 1200px
-- 1199px \&lt; **onDesktopBlink()**
+- **onDinosaurBlink()** < 576px
+- 575px < **onMobileBlink()** < 768px
+- 767px < **onTabletBlink()** < 992px
+- 991px < **onLaptopBlink()** < 1200px
+- 1199px < **onDesktopBlink()**
 
-## on{deviceName}Up()
+## `on{deviceName}Up()`
 
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~
 
@@ -57,20 +68,20 @@ The event is called (with a delay according to the setting `fireTime`) if: when 
 
 ```javascript
 Nina.init({
-	onMobileUp: function () {
-		// do something...
-	},
+    onMobileUp:function() {
+        // do something...
+    }
 });
 ```
 
 Breakpoints are taken from CSS styles that are set in `_variables.scss`
 
-- 575px \&lt; **onDinosaurUp()**
-- 767px \&lt; **onMobileUp()**
-- 991px \&lt; **onTabletUp()**
-- 1199px \&lt; **onLaptopUp()**
+- 575px < **onDinosaurUp()**
+- 767px < **onMobileUp()**
+- 991px < **onTabletUp()**
+- 1199px < **onLaptopUp()**
 
-## on{deviceName}UpBlink()
+## `on{deviceName}UpBlink()`
 
 {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~
 
@@ -78,20 +89,20 @@ The event will be called on the same terms as he{deviceName}Up() except that thi
 
 ```javascript
 Nina.init({
-	onMobileUpBlink: function () {
-		// do something...
-	},
+    onMobileUpBlink:function() {
+        // do something...
+    }
 });
 ```
 
 Breakpoints are taken from CSS styles that are set in `_variables.scss`
 
-- 575px \&lt; **onDinosaurUpBlink()**
-- 767px \&lt; **onMobileUpBlink()**
-- 991px \&lt; **onTabletUpBlink()**
-- 1199px \&lt; **onLaptopUpBlink()**
+- 575px < **onDinosaurUpBlink()**
+- 767px < **onMobileUpBlink()**
+- 991px < **onTabletUpBlink()**
+- 1199px < **onLaptopUpBlink()**
 
-## on{deviceName}Down()
+## `on{deviceName}Down()`
 
 {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop
 
@@ -99,20 +110,20 @@ The event is called (with a delay according to the setting `fireTime`) if: when 
 
 ```javascript
 Nina.init({
-	onMobileDown: function () {
-		// do something...
-	},
+    onMobileDown:function() {
+        // do something...
+    }
 });
 ```
 
 Breakpoints are taken from CSS styles that are set in `_variables.scss`
 
-- **onMobileDown()** \&lt; 576px
-- **onTabletDown()** \&lt; 768px
-- **onLaptopDown()** \&lt; 992px
-- **onDesktopDown()** \&lt; 1200px
+- **onMobileDown()** < 576px
+- **onTabletDown()** < 768px
+- **onLaptopDown()** < 992px
+- **onDesktopDown()** < 1200px
 
-## on{deviceName}DownBlink()
+## `on{deviceName}DownBlink()`
 
 {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop
 
@@ -120,51 +131,51 @@ The event will be called on the same terms as he{deviceName}Down() except that t
 
 ```javascript
 Nina.init({
-	onMobileDownBlink: function () {
-		// do something...
-	},
+    onMobileDownBlink:function() {
+        // do something...
+    }
 });
 ```
 
 Breakpoints are taken from CSS styles that are set in `_variables.scss`
 
-- **onMobileDownBlink()** \&lt; 576px
-- **onTabletDownBlink()** \&lt; 768px
-- **onLaptopDownBlink()** \&lt; 992px
-- **onDesktopDownBlink()** \&lt; 1200px
+- **onMobileDownBlink()** < 576px
+- **onTabletDownBlink()** < 768px
+- **onLaptopDownBlink()** < 992px
+- **onDesktopDownBlink()** < 1200px
 
-## onResize()
+## `onResize()`
 
 The event is called (with a delay according to the setting `fireTime`) if the screen size changes.
 
 ```javascript
 Nina.init({
-	onResize: function () {
-		// do something...
-	},
+    onResize:function() {
+        // do something...
+    }
 });
 ```
 
-## onResizeWidth()
+## `onResizeWidth()`
 
 The event is called (with a delay according to the setting `fireTime`) if the screen width changes.
 
 ```javascript
 Nina.init({
-	onResizeWidth: function () {
-		// do something...
-	},
+    onResizeWidth:function() {
+        // do something...
+    }
 });
 ```
 
-## onResizeHeight()
+## `onResizeHeight()`
 
 The event is called (with a delay according to the setting `fireTime`) if the screen height changes.
 
 ```javascript
 Nina.init({
-	onResizeHeight: function () {
-		// do something...
-	},
+    onResizeHeight:function() {
+        // do something...
+    }
 });
 ```

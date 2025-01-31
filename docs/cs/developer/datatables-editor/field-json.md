@@ -95,7 +95,7 @@ všimněte si použití atributu `data-dt-json-addbutton` nastavit text tlačít
 
 `dt-tree-dir` - vrácený objekt JSON typu `DirTreeItem` Pro **výběr adresáře v souborovém systému**
 
-`dt-tree-dir-simple` - vrátil **Řetěz** s hodnotou pro **výběr adresáře v souborovém systému**
+`dt-tree-dir-simple` - vrátil **Řetěz** s hodnotou pro **výběr adresáře v souborovém systému**, je možné zadat kořenovou složku jako `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/images/gallery")`
 
 ![](../../frontend/webpages/customfields/webpages-dir.png)
 
@@ -349,7 +349,7 @@ public String getFullPath() {
 }
 ```
 
-**Oznámení**: zobrazit sloupce json pomocí `renderuje` pouze v prohlížeči, vyhledávání v hodnotě (zatím) nelze použít při vyhledávání na serveru.
+!>**Oznámení**: zobrazit sloupce json pomocí `renderuje` pouze v prohlížeči, vyhledávání v hodnotě (zatím) nelze použít při vyhledávání na serveru.
 
 Pokud metoda `getFullPath()` nemůžete implementovat, doporučujeme použít atribut `hidden=true` zakázat zobrazování sloupců json v tabulce. Můžete implementovat další atribut pro zobrazení hodnoty v datové tabulce, kterému nastavíte atribut `hiddenEditor=true` pro zakázání atributu v editoru. Tím získáte samostatný atribut pro editor a datovou tabulku.
 

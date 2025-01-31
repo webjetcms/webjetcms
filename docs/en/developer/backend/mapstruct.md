@@ -2,7 +2,7 @@
 
 If you want to map objects, you can use the library [mapstruct](https://mapstruct.org).
 
-An example is object mapping [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) at [DocHistoryDto](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
+An example is object mapping [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) at [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
 
 It is necessary to prepare a DTO object and `interface` class for `mapper`. The created interface is implemented automatically during compilation, in `build.gradle` is enabled by setting:
 
@@ -21,7 +21,7 @@ dependencies {
 
 ## DTO object
 
-When implementing, first prepare a DTO object, e.g. [DocHistoryDto](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
+When implementing, first prepare a DTO object, e.g. [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;
@@ -58,7 +58,8 @@ public class DocHistoryDto {
 
 ## Mapping
 
-**ATTENTION** the mapping class must contain the expression in the name `Mapper` because of the compilation on `Jenkins` server, e.g. [DocHistoryDtoMapper](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+!>**Warning:** the mapping class must contain the expression in the name `Mapper` because of the compilation on `Jenkins` server, e.g. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+
 ```java
 package sk.iway.iwcm.editor.rest;
 

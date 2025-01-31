@@ -97,7 +97,7 @@
                 }
             } else {
                 //add table filter params
-                enumerationDataDataTable.ajax.url(newUrl);
+                enumerationDataDataTable.setAjaxUrl(newUrl);
                 enumerationDataDataTable.EDITOR.ajax().url = WJ.urlAddPath(newUrl, '/editor');
                 //reload tables values
                 enumerationDataDataTable.ajax.reload();

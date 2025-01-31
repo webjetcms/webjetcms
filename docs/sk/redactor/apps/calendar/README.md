@@ -1,5 +1,7 @@
 # Kalendár udalostí
 
+## Zoznam udalostí
+
 Kalendár udalostí umožňuje evidovať a zobrazovať rôzne akcie, o ktorých chcete informovať návštevníkov web sídla.
 
 ![](calendar-datatable.png)

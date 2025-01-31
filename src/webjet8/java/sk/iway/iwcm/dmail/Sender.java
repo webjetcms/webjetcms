@@ -415,14 +415,30 @@ public class Sender extends TimerTask
 					{
 						try
 						{
-							Logger.debug(Sender.class,"DOWNLOADING: " + Tools.natUrl(url));
+							String natUrl = Tools.natUrl(url);
+
+							Logger.debug(Sender.class,"DOWNLOADING: " + natUrl);
 
 							//nastav HASH
 							ShowDoc.setActualUserHash(Password.generateStringHash(10));
 
+							//disable SSL verification for httpS hosts
+							if (natUrl.startsWith("https://"))
+							{
+								//extract host name from URL
+								String host = natUrl.substring(8);
+								int index = host.indexOf('/');
+								if (index != -1)
+								{
+									host = host.substring(0, index);
+								}
+								//disable SSL verification
+								Tools.doNotVerifyCertificates(host);
+							}
+
 							//body obsahuje URL adresu, ktoru je treba stiahnut
 							URLConnection conn = null;
-							URL urlCon = new URL(Tools.natUrl(url));
+							URL urlCon = new URL(natUrl);
 							conn = urlCon.openConnection();
 							conn.setAllowUserInteraction(false);
 							conn.setDoInput(true);

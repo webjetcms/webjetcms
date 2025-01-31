@@ -15,11 +15,13 @@ You can populate the list manually, by importing from an Excel file and automati
 whereby the page with the address `/odhlasenie-z-mailingu.html` includes an opt-out app:
 
 ```html
-!INCLUDE(/components/dmail/subscribe.jsp, senderEmail=noreply@interway.sk, senderName="WebJET CMS")!
+!INCLUDE(/components/dmail/unsubscribe.jsp, senderEmail=name@your-domain.com, senderName="Your Name", confirmUnsubscribe=true)!
 ```
 
-Clicking on the link will unsubscribe the recipient's email address from the email campaign.
+[Click on the link](../form/README.md#logout) ensure that the recipient's email address is unsubscribed from the mail campaign.
 
-![](unsubscribed-editor.png)
+![](unsubscribed-form.png)
 
 When creating, editing, duplicating a record, it is mandatory to enter an email to log out in the editor.
+
+![](unsubscribed-editor.png)

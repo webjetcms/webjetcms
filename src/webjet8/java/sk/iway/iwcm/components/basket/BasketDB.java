@@ -204,8 +204,8 @@ public class BasketDB
 				basketItem.setLoggedUserId(userId);
 				basketItem.setItemId(itemId);
 
-				Double price = Double.valueOf(doc.getPrice(request));
-				Double vat = Double.valueOf(doc.getVat());
+				Double price = Double.valueOf(doc.getPriceDouble(request));
+				Double vat = Double.valueOf(doc.getVatDouble());
 
 				if(request.getAttribute("docPrice")!= null)
 					price = Tools.getDoubleValue(request.getAttribute("docPrice"), 0);

@@ -18,6 +18,7 @@ function checkCommonSettingsTab(I, DTE, searchText, appId, shouldBeVisible) {
     DTE.waitForEditor();
 
     I.clickCss("#pills-dt-datatableInit-content-tab");
+    I.waitForElement("a.cke_button__components", 10);
     I.clickCss("a.cke_button__components");
 
     //1. iframe

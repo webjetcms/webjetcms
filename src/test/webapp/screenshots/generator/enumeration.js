@@ -9,11 +9,11 @@ var enumeration_A = "Číselnik_A";
 var enumeration_B = "Číselnik_B";
 var enumeration_C = "Číselnik_C";
 
-Scenario('Enum Types screenshots', ({I, DT, DTE, Document}) => {
+Scenario('Enum Types screenshots', ({I, DT, DTE, Document, i18n}) => {
     I.amOnPage("/apps/enumeration/admin/enumeration-type/");
     Document.screenshot("/redactor/apps/enumeration/dataTable_enumType.png");
 
-    DT.filter("typeName", enumeration_A);
+    DT.filterContains("typeName", enumeration_A);
     I.click(enumeration_A);
     DTE.waitForEditor('enumerationTypeDataTable');
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_enumType.png");
@@ -23,7 +23,7 @@ Scenario('Enum Types screenshots', ({I, DT, DTE, Document}) => {
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_booleanTab.png");
     DTE.cancel();
 
-    DT.filter("typeName", enumeration_B);
+    DT.filterContains("typeName", enumeration_B);
     I.click(enumeration_B);
     DTE.waitForEditor('enumerationTypeDataTable');
     I.click( locate( "div.DTE_Field_Name_editorFields\\.childEnumTypeId > div > div > div.dropdown > button.dropdown-toggle") );
@@ -32,11 +32,11 @@ Scenario('Enum Types screenshots', ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/enumeration/editor_select_1.png");
     I.click( locate("div.dropdown-menu").find( locate("a.dropdown-item").withText(enumeration_A) ) );
     DTE.save();
-    I.waitForText("Zvolené prepojenie na číselník Číselnik_A nie je možné, pretože tento číselník je už prepojený na aktuálny číselník.");
+    i18n.waitForText("Selected enumeration link Číselnik_A not possible because this enum is already linked to the current enum.");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_select_2.png");
     DTE.cancel();
 
-    DT.filter("typeName", enumeration_C);
+    DT.filterContains("typeName", enumeration_C);
     I.click(enumeration_C);
     DTE.waitForEditor('enumerationTypeDataTable');
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/enumeration/editor_select_3.png");

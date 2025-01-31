@@ -1,9 +1,6 @@
 Feature('webpages.webpage-history');
 
 var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber, now,
-     add_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider')),
-     edit_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning')),
-     delete_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider')),
      edit_history_webpage = (locate('#datatableFieldDTE_Field_editorFields-history_wrapper').find('.btn.btn-sm.btn-warning.buttons-history-edit')),
      view_history_webpage = (locate('#datatableFieldDTE_Field_editorFields-history_wrapper').find('.btn.btn-sm.btn-outline-secondary.buttons-history-preview')),
      compare_history_webpage = (locate('#datatableFieldDTE_Field_editorFields-history_wrapper').find('.btn.btn-sm.btn-outline-secondary.buttons-divider.buttons-history-compare'));
@@ -70,16 +67,11 @@ function versionSides(I, side) {
 
 // aktualne publikovana stranka a verzia z historie
 function versions(I, variant) {
-
-     if (variant === 'historical') {
-          I.switchTo(locate('frameset').at(3));
-     }
-
-     I.switchTo('frame');
-
      if (variant === 'actual') {
+          I.switchTo("frame[name='leftTop']");
           I.waitForText('Aktuálne publikovaná verzia', 10);
      } else if (variant === 'historical') {
+          I.switchTo("frame[name='rightTop']");
           I.waitForElement(locate('.first.openFirst').withText('Verzia z histórie'));
      }
 
@@ -167,6 +159,8 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // V tabulke vidim 2 zaznamy s dnesnym datumom
      I.say('V tabulke historia vidim 2 zaznamy s dnesnym datumom');
 
+     I.waitForElement(locate('#datatableFieldDTE_Field_editorFields-history>tbody>tr').withText(I.formatDate(now.getTime())), 20);
+
      I.seeNumberOfVisibleElements(locate('#datatableFieldDTE_Field_editorFields-history>tbody>tr').withText(I.formatDate(now.getTime())), 2);
 
      // 2.ZOBRAZ NAHLAD STARSEJ A NOVSEJ WEBSTRANKY
@@ -210,17 +204,17 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
 
      // Zvyraznit rozdiely
      I.say('Zvyrazni rozdiely');
-     I.switchTo('frame');
+     I.switchTo("frame[name='leftTop']");
      I.checkOption('#showChangesCb');
      I.switchTo();
      I.switchTo('#left');
      I.seeElement(locate('p').withText('<!-- This is an autotest -->'));
-     I.waitForElement(locate('#removed-diff-0').withText('<h1>Testujem historiu webstranky</h1>'));
+     I.waitForElement(locate('#added-diff-0').withText('<h1>Testujem historiu webstranky</h1>'));
      I.switchTo();
      I.switchTo('#right');
      I.seeElement(locate('p').withText('<!-- This is an autotest -->'));
      I.dontSeeElement(locate('p').withText('<h1>Testujem historiu webstranky</h1>'));
-     I.dontSeeElement(locate('#removed-diff-0').withText('<h1>Testujem historiu webstranky</h1>'));
+     I.dontSeeElement(locate('#added-diff-0').withText('<h1>Testujem historiu webstranky</h1>'));
      I.switchTo();
      I.closeCurrentTab();
 

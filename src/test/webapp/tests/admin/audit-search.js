@@ -15,7 +15,8 @@ Scenario("filter podla datumu", async ({ I, DT }) => {
   I.amOnPage("/admin/v9/apps/audit-search/");
   I.fillField({css: "input.dt-filter-from-createDate"}, "01. 01. 2020");
   I.fillField({css: "input.dt-filter-to-createDate"}, "31. 01. 2020");
-  I.click({css: "div.dataTables_scrollHeadInner button.dt-filtrujem-createDate"});
+  I.click({css: "div.dt-scroll-headInner button.dt-filtrujem-createDate"});
+  I.wait(0.5);
   DT.waitForLoader();
   const value = await I.grabTextFrom({css: '#datatableInit > tbody > tr:nth-child(1) > td.dt-style-date > div'});
   const regex = /\d\d\.01\.2020\s\d\d\:\d\d/g

@@ -8,6 +8,7 @@ To run the Tomcat application server within a gradle project, the extension is u
 - `reloadOnClassChange = false` - disables the automatic restart of Tomcat when the class is compiled, this prevents the application server from restarting.
 - `-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005` - activates the ability to connect the debugger on port 5005.
 - `-Dwebjet.showDocActionAllowedDocids=4,383,390` - list of page IDs that can be opened directly by entering the docid parameter in the URL without logging into the administration (used to open the page directly in `Launch Chrome`).
+
 ```gradle
 gretty {
     servletContainer = 'tomcat9'
@@ -44,36 +45,37 @@ gretty {
 
 In the past it was also possible to use the parameter `managedClassReload = true`, but it uses a library that is not supported in Java 11 and above, if you have it set in your project, delete it from the gretty configuration.
 
-**NOTICE:** if you have a file open that contains an error (e.g. html, or even JavaScript) the debug mode will not start correctly, or it will disconnect after the server starts. Apparently VS Code does not distinguish what type of file the error is in, you must not have a file open at startup whose tab is shown in red.
+!>**Warning:** if you have a file open that contains an error (e.g. html, or even JavaScript) the debug mode will not start correctly, or it will disconnect after the server starts. Apparently VS Code does not distinguish what type of file the error is in, you must not have a file open at startup whose tab is shown in red.
+
 ## Settings for JavaScript debug
 
 Aby bolo možné debugovať JavaScript súbory je potrebné špeciálnym spôsobom spustiť prehliadač (Chrome), ktorý otvorí možnosť pripojenia sa na vývojárske nástroje. This is set in the file `.vscode/launch.json` in which you can have a configuration:
 
 ```json
 {
-	"trace": true,
-	"name": "Launch Chrome",
-	"request": "launch",
-	"type": "chrome",
-	"url": "http://iwcm.interway.sk/admin/",
-	"webRoot": "${workspaceRoot}/src/main/webapp",
-	"sourceMaps": true,
-	"disableNetworkCache": true,
+    "trace": true,
+    "name": "Launch Chrome",
+    "request": "launch",
+    "type": "chrome",
+    "url": "http://iwcm.interway.sk/admin/",
+    "webRoot": "${workspaceRoot}/src/main/webapp",
+    "sourceMaps": true,
+    "disableNetworkCache": true,
 
-	// we have multiple js source folders, so some source maps are still generated with webpack protocol links. Don't know why?
-	"sourceMapPathOverrides": {
-		// if you override this, you MUST provide all defaults again
-		"webpack:///./~/*": "${webRoot}/node_modules/*", // a default
-		"webpack:///./*": "${webRoot}/src/js/*", // unsure how/why webpack generates ./links.js
-		"webpack:///../*": "${webRoot}/src/js/*", // unsure how/why webpack generates ../links.js
-		"webpack:///*": "*" // a default, catch everything else
-	}
+    // we have multiple js source folders, so some source maps are still generated with webpack protocol links. Don't know why?
+    "sourceMapPathOverrides": {  // if you override this, you MUST provide all defaults again
+        "webpack:///./~/*": "${webRoot}/node_modules/*",  // a default
+        "webpack:///./*":   "${webRoot}/src/js/*",        // unsure how/why webpack generates ./links.js
+        "webpack:///../*": "${webRoot}/src/js/*",         // unsure how/why webpack generates ../links.js
+        "webpack:///*":     "*"                           // a default, catch everything else
+    }
 }
 ```
 
 This will appear in the Debug launch option. The important thing is the setting:
 - `webRoot` - root folder with source codes.
 - `sourceMapPathOverrides` - setting source code search against `.map` file.
+
 Here it is important to note that if JavaScript files are compiled, it is necessary to generate `.map` File. However, it typically does not have a precise path in your development environment, so in the configuration `sourceMapPathOverrides` it is possible to set the path replacement/replenishment to absolute.
 
 To `webpack` also generated `.map` the file needs to be configured by setting the attribute `devtoolModuleFilenameTemplate`:
@@ -96,18 +98,18 @@ For example, for [Bare template](../../../frontend/examples/template-bare/README
 
 ```json
 {
-	"trace": true,
-	"name": "Launch Chrome Bare",
-	"request": "launch",
-	"type": "chrome",
-	"url": "http://iwcm.interway.sk/showdoc.do?docid=383&NO_WJTOOLBAR=true",
-	"webRoot": "${workspaceRoot}/src/main/webapp/",
-	"sourceMaps": true,
-	"disableNetworkCache": true,
-	"sourceMapPathOverrides": {
-		"src/js/ninja.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/ninja.js",
-		"src/js/global-functions.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/global-functions.js"
-	}
+    "trace": true,
+    "name": "Launch Chrome Bare",
+    "request": "launch",
+    "type": "chrome",
+    "url": "http://iwcm.interway.sk/showdoc.do?docid=383&NO_WJTOOLBAR=true",
+    "webRoot": "${workspaceRoot}/src/main/webapp/",
+    "sourceMaps": true,
+    "disableNetworkCache": true,
+    "sourceMapPathOverrides": {
+        "src/js/ninja.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/ninja.js",
+        "src/js/global-functions.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/global-functions.js",
+    }
 }
 ```
 
@@ -129,86 +131,85 @@ In addition, there are examples of running JavaScript debug for different folder
 
 ```json
 {
-	"version": "0.2.0",
-	"configurations": [
-		{
-			"type": "java",
-			"name": "Debug",
-			"request": "attach",
-			"hostName": "localhost",
-			"port": 5005,
-			"preLaunchTask": "appStart",
-			"postDebugTask": "appKill",
-			"timeout": 240000,
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"type": "java",
-			"name": "Debug Local DB",
-			"request": "attach",
-			"hostName": "localhost",
-			"port": 5005,
-			"preLaunchTask": "appStartLocalDB",
-			"postDebugTask": "appKill",
-			"timeout": 240000,
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"type": "java",
-			"name": "Debug (Attach)",
-			"request": "attach",
-			"hostName": "localhost",
-			"port": 5005,
-			"timeout": 240000,
-			"internalConsoleOptions": "neverOpen"
-		},
-		{
-			"trace": true,
-			"name": "Launch Chrome",
-			"request": "launch",
-			"type": "chrome",
-			"url": "http://iwcm.interway.sk/showdoc.do?docid=4&NO_WJTOOLBAR=true&combineEnabledRequest=false",
-			"webRoot": "${workspaceRoot}/src/main/webapp",
-			"sourceMaps": true,
-			"disableNetworkCache": true,
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStart",
+            "postDebugTask": "appKill",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug Local DB",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartLocalDB",
+            "postDebugTask": "appKill",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Attach)",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen"
+        },
+        {
+            "trace": true,
+            "name": "Launch Chrome",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://iwcm.interway.sk/showdoc.do?docid=4&NO_WJTOOLBAR=true&combineEnabledRequest=false",
+            "webRoot": "${workspaceRoot}/src/main/webapp",
+            "sourceMaps": true,
+            "disableNetworkCache": true,
 
-			// we have multiple js source folders, so some source maps are still generated with webpack protocol links. Don't know why?
-			"sourceMapPathOverrides": {
-				// if you override this, you MUST provide all defaults again
-				"webpack:///./~/*": "${webRoot}/node_modules/*", // a default
-				"webpack:///./*": "${webRoot}/src/js/*", // unsure how/why webpack generates ./links.js
-				"webpack:///../*": "${webRoot}/src/js/*", // unsure how/why webpack generates ../links.js
-				"webpack:///*": "*" // a default, catch everything else
-			}
-		},
-		{
-			"trace": true,
-			"name": "Launch Chrome Bare",
-			"request": "launch",
-			"type": "chrome",
-			"url": "http://iwcm.interway.sk/showdoc.do?docid=383&NO_WJTOOLBAR=true",
-			"webRoot": "${workspaceRoot}/src/main/webapp/",
-			"sourceMaps": true,
-			"disableNetworkCache": true,
-			"sourceMapPathOverrides": {
-				"src/js/ninja.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/ninja.js",
-				"src/js/global-functions.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/global-functions.js"
-			}
-		},
-		{
-			"trace": true,
-			"name": "Launch Chrome Creative",
-			"request": "launch",
-			"type": "chrome",
-			"url": "http://iwcm.interway.sk/showdoc.do?docid=390&NO_WJTOOLBAR=true",
-			"webRoot": "${workspaceRoot}/src/main/webapp/",
-			"sourceMaps": true,
-			"disableNetworkCache": true,
-			"sourceMapPathOverrides": {
-				"src/js/*": "${webRoot}/templates/creative/bootstrap-creative/src/js/*"
-			}
-		}
-	]
+            // we have multiple js source folders, so some source maps are still generated with webpack protocol links. Don't know why?
+            "sourceMapPathOverrides": {  // if you override this, you MUST provide all defaults again
+                "webpack:///./~/*": "${webRoot}/node_modules/*",  // a default
+                "webpack:///./*":   "${webRoot}/src/js/*",        // unsure how/why webpack generates ./links.js
+                "webpack:///../*": "${webRoot}/src/js/*",         // unsure how/why webpack generates ../links.js
+                "webpack:///*":     "*"                           // a default, catch everything else
+            }
+        },
+        {
+            "trace": true,
+            "name": "Launch Chrome Bare",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://iwcm.interway.sk/showdoc.do?docid=383&NO_WJTOOLBAR=true",
+            "webRoot": "${workspaceRoot}/src/main/webapp/",
+            "sourceMaps": true,
+            "disableNetworkCache": true,
+            "sourceMapPathOverrides": {
+                "src/js/ninja.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/ninja.js",
+                "src/js/global-functions.js": "${webRoot}/templates/bare/bootstrap-bare/src/js/global-functions.js",
+            }
+        },
+        {
+            "trace": true,
+            "name": "Launch Chrome Creative",
+            "request": "launch",
+            "type": "chrome",
+            "url": "http://iwcm.interway.sk/showdoc.do?docid=390&NO_WJTOOLBAR=true",
+            "webRoot": "${workspaceRoot}/src/main/webapp/",
+            "sourceMaps": true,
+            "disableNetworkCache": true,
+            "sourceMapPathOverrides": {
+                "src/js/*": "${webRoot}/templates/creative/bootstrap-creative/src/js/*",
+            }
+        }
+    ]
 }
 ```
 

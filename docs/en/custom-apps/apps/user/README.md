@@ -1,4 +1,4 @@
-# Users of
+# Users
 
 ## Registration form
 

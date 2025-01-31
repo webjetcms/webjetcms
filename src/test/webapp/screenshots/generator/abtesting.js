@@ -30,7 +30,7 @@ Scenario('Ab testing section screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/abtesting/admin/config/");
     Document.screenshot("/redactor/apps/abtesting/ab_test_config_page.png");
 
-    DT.filter("name", "ABTestingRatio");
+    DT.filterContains("name", "ABTestingRatio");
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-edit");
     DTE.waitForEditor("abtestingConfDataTable");

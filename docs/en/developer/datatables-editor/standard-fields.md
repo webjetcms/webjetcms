@@ -78,7 +78,7 @@ Text field `type="password"` to enter the password.
 
 ## TEXTAREA
 
-Multi-line text box.
+Multi-line text box. Long text is not wrapped, if you want to wrap long text into multiple lines set `className = "wrap"`:
 
 ```java
     @Column(name = "gallery_perex")
@@ -88,6 +88,22 @@ Multi-line text box.
         tab = "basic"
     )
     private String perex = "";
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        tab = "basic",
+        title="components.app-cookiebar.text",
+        className = "wrap",
+        editor = {
+        @DataTableColumnEditor(
+            attr = {
+                @DataTableColumnEditorAttr(
+                    key = "placeholder",
+                    value = "components.app-cookiebar.cookie_text")
+            }
+        )
+    })
+    private String cookie_text;
 ```
 
 ## DATE
@@ -127,7 +143,7 @@ Similar field as `DATE` but in addition, it also allows you to select the time.
 
 Fields similar to `DATETIME` but they ONLY allow time selection. Version `TIME_HM` is the time selection using hours and minutes. Version `TIME_HMS` allows you to select the time using hours, minutes and seconds.
 
-Note the setting `@Convert(converter = DefaultTimeValueConverter.class)`which sets the same date for each selected time, namely `01.01.2000` while the time selection remains unchanged. This same date setting is not visible, but is important in terms of how it works when filtering records using these time fields.
+Note the setting `@Convert(converter = DefaultTimeValueConverter.class)` which sets the same date for each selected time, namely `01.01.2000` while the time selection remains unchanged. This same date setting is not visible, but is important in terms of how it works when filtering records using these time fields.
 
 It should be remembered that the class `DefaultTimeValueConverter` implemented by `AttributeConverter`, which inherently means that this converter only works when it is a column in an entity that represents a database column. If the column you select does not satisfy this, you must set its value using one of the static functions contained in the class `DefaultTimeValueConverter`.
 
@@ -213,7 +229,7 @@ public class ContactEntity {
 
 ### Linking to Java class
 
-If the data is retrieved in a special way you can get a list of options by calling a Java class that returns a list of data. This is set by the value `method:PACKAGE.TRIEDA.METODA`whereby the `value` it is possible to specify attribute names to retrieve text and values in the format `LABEL-PROPERTY:VALUE-PROPERTY`.
+If the data is retrieved in a special way you can get a list of options by calling a Java class that returns a list of data. This is set by the value `method:PACKAGE.TRIEDA.METODA` whereby the `value` it is possible to specify attribute names to retrieve text and values in the format `LABEL-PROPERTY:VALUE-PROPERTY`.
 
 ```java
 public class ContactRestController extends DatatableRestControllerV2<ContactEntity, Long> {
@@ -329,7 +345,7 @@ Values separated by a comma should be used for `MULTISELECT` fields used for app
 
 ```java
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
-@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "fas fa-address-card", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
+@WebjetAppStore(nameKey = "Kontakty", descKey = "Ukazkova aplikacia so zoznamom kontaktov", imagePath = "ti ti-id", galleryImages = "/components/map/screenshot-1.jpg,/components/gdpr/screenshot-2.png,/components/gallery/screenshot-3.jpg")
 @Getter
 @Setter
 public class ContactApp extends WebjetComponentAbstract {
@@ -416,6 +432,15 @@ Represents a simplified notation of an array type `CHECKBOX` for binary yes/no o
     private Boolean requireApprove;
 ```
 
+## BOOLEAN\_TEXT
+
+It represents the type `BOOLEAN` for a binary yes/no option with a caption on the right instead of the left and a Yes option next to the checkbox.
+
+```java
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title="components.news.paging")
+    private boolean pagination = true;
+```
+
 ## HIDDEN
 
 Hidden field, will not be displayed in the editor.
@@ -444,7 +469,7 @@ Displays a text field whose value cannot be changed. In the example, note that t
 
 Displays a simple HTML editor that allows basic text formatting such as bold/italic/underline, headings, lists, and link.
 
-Note the use of the converter `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)`which will only allow you to send [secure HTML code](../backend/security.md) (without embedded JavaScript elements and so on).
+Note the use of the converter `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)` which will only allow you to send [secure HTML code](../backend/security.md) (without embedded JavaScript elements and so on).
 
 ```java
     @Column(name = "l_description_sk")
@@ -477,12 +502,12 @@ Displays the full-featured HTML editor as used for editing web pages.
 field must be used in a separate tab that has the attribute set `content: ''`:
 
 ```javascript
-var tabs = [
-	{ id: "basic", title: /*[[#{calendar_events.tab.basic}]]*/ "basic", selected: true },
-	{ id: "description", title: /*[[#{calendar_events.tab.description}]]*/ "desc", content: "" },
-	{ id: "advanced", title: /*[[#{calendar_events.tab.advanced}]]*/ "adv" },
-	{ id: "notification", title: /*[[#{calendar_events.tab.notification}]]*/ "notify" },
-];
+    var tabs = [
+        { id: 'basic', title: /*[[#{calendar_events.tab.basic}]]*/ 'basic', selected: true},
+        { id: 'description', title: /*[[#{calendar_events.tab.description}]]*/ 'desc', content: '' },
+        { id: 'advanced', title: /*[[#{calendar_events.tab.advanced}]]*/ 'adv' },
+        { id: 'notification', title: /*[[#{calendar_events.tab.notification}]]*/ 'notify' }
+    ];
 ```
 
 ## JSON
@@ -554,3 +579,69 @@ Field for selection [tree structures](field-jstree.md).
 ```
 
 ![](field-type-jstree.png)
+
+## COLOR
+
+Field for selecting the colour in `HEX` format including transparency, e.g. `#FF0000FF`:
+
+```java
+    @DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "basic", title="components.app-cookiebar.textColor")
+    private String color_text;
+```
+
+## IFRAME
+
+Field for inserting another page into `iframe` element, it is used in applications in the editor for inserting e.g. photo galleries:
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
+@WebjetAppStore(nameKey = "components.gallery.title", descKey = "components.gallery.desc", itemKey="menuGallery", imagePath = "/components/gallery/editoricon.png", galleryImages = "/components/gallery/", componentPath = "/components/gallery/gallery.jsp")
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "componentIframe", title = "components.gallery.images")
+})
+@Getter
+@Setter
+public class GalleryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(inputType = DataTableColumnType.IFRAME, tab = "componentIframe", title="&nbsp;")
+    private String iframe  = "/admin/v9/apps/gallery/?dir={dir}";
+
+}
+```
+
+### BASE64
+
+An array that encodes and decodes a value using an algorithm `base64`, shown as `textarea`. It is primarily used as a field for application in the editor to preserve special characters of the inserted value. If you need to use `base64` you can also set to another field type `className = "dt-style-base64"`.
+
+!>**Warning:** JavaScript function `btoa` only supports `ASCII` Characters.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.BASE64,
+        tab = "basic",
+        title="components.app-docsembed.editor_components.url",
+    )
+    private String url;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.ELFINDER,
+        tab = "basic",
+        title="components.app-docsembed.editor_components.url",
+        className = "dt-style-base64"
+    )
+    private String url;
+```
+
+### STATIC\_TEXT
+
+Display static text at the position of the normal input field, i.e. on the right. Markdown syntax is supported in the translation key.
+
+```java
+    @DataTableColumn(
+        inputType = DataTableColumnType.STATIC_TEXT,
+        tab = "basic",
+        title="components.app-vyhladavanie_info"
+    )
+    private String explain;
+```

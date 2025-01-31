@@ -1,4 +1,4 @@
-# Formuláre
+# Zoznam formulárov
 
 Aplikácia formuláre slúži na pokročilú správu vyplnených formulárov. Každá web stránka môže obsahovať formulár, ktorý návštevník vyplní. Môžu to byť žiadosti o pracovné miesto, žiadosti o podrobnejšie informácie a podobne.
 
@@ -62,7 +62,7 @@ Formuláru je možné nastaviť **potvrdenie e-mailovej adresy** ( ```double opt
 Pre zapnutie potvrdenia emailovej adresy je potrebné nastaviť:
 
 1. Vo vlastnostiach formuláru, konkrétne v rozšírených nastaveniach ![](advanced-settings.png) je potrebné zvoliť možnosť **Vyžadovať potvrdenie súhlasu e-mailom**. ![](checkbox-confirmation.png)
-2. Vytvoriť stránku pre potvrdenie súhlasu, v nej musí byť vložená aplikácia ```!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!```, ktorá súhlas na základe parametrov v databáze potvrdí. Stránka môže byť použitá pre viacero rôznych formulárov, môže mať URL adresu napríklad `/potvrdenie-double-optin/`.
+2. Vytvoriť stránku pre potvrdenie súhlasu, v nej musí byť vložená aplikácia `!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!`, ktorá súhlas na základe parametrov v databáze potvrdí. Stránka môže byť použitá pre viacero rôznych formulárov, môže mať URL adresu napríklad `/potvrdenie-double-optin/`.
 3. Vytvoriť stránku s textom e-mailu napr. "Pre potvrdenie platnosti email adresy kliknite na nasledovný odkaz" a vložiť odkaz na stránku, kde bude potvrdenie súhlasu. Odkaz musí obsahovať parametre `!FORM_ID!,!OPTIN_HASH!`, teda napr. `/potvrdenie-double-optin/?formId=!FORM_ID!&hash=!OPTIN_HASH!`.  ID tejto stránky nastaviť do poľa ```Doc ID``` notifikácie pre používateľa.
 
 Po kliknutí na odkaz v emaile sa vo formulári nastaví pole Dátum potvrdenia súhlasu, tak viete identifikovať formuláre, ktoré majú súhlas potvrdený. Zároveň formuláre, ktoré nemajú potvrdený súhlas sú zobrazené červenou farbou.
@@ -95,4 +95,4 @@ Po odoslaní formuláru cez AJAX je publikovaná udalosť `WJ.formSubmit`, na kt
 - ```formmailScrollTopAfterSend``` - Ak je nastavene na ```true``` posunie sa stránka po odoslaní na vrch formuláru (aby bolo vidno hlásenie o odoslaní).
 - ```formmailResetFormAfterSend``` - Ak je nastavene na ```true``` po úspešnom odoslaní sa vyčistí formulár.
 - ```formmailSendUserInfoSenderName``` - Pošle sa ako meno odosielateľa v e-maile pri odosielaní stránky podľa zadaného ```formmail_sendUserInfoDocId```. Ak je prázdne, pošle sa meno autora stránky, ktorej obsah sa posiela do e-mailu.
-- ```formmailSendUserInfoSenderEmail``` - It will be sent as the sender's email in the email when sending the page according to the specified ```formmail_sendUserInfoDocId```. If empty, the e-mail of the author of the page whose content is sent to the e-mail will be sent.
+- ```formmailSendUserInfoSenderEmail``` - Pošle sa ako e-mail odosielateľa v e-maile pri odosielaní stránky podľa zadaného ```formmail_sendUserInfoDocId```. Ak je prázdne, pošle sa e-mail autora stránky, ktorej obsah sa posiela do e-mailu.

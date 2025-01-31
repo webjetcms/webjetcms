@@ -7,6 +7,9 @@ Stejnou terminologii je třeba dodržovat i při psaní textu. Místo uvedených
 - zaškrtávací políčko = `checkbox` - Překladač Google
 - ukazatel průběhu = `progress bar` - Překladač Google
 - panel nástrojů = `toolbar` - Překladač Google
+- pole pro vícenásobný výběr `multi selection field` - Překladač Google
+- rozbalovací menu = `dropdown` - Překladač Google
+- koncový bod = `endpoint` - Překladač Google
 
 ## Terminologie pro kód
 

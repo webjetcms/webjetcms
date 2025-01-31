@@ -45,6 +45,7 @@
         forumDataTable.hideButton("duplicate");
 
         forumDataTable.EDITOR.on('open', function (e, mode, action) {
+            if (typeof e.currentTarget.currentJson === "undefined") return;
             let isMessageBoard = e.currentTarget.currentJson["forumGroupEntity"]["messageBoard"];
 
             if(!isMessageBoard) {

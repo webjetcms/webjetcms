@@ -4,17 +4,17 @@ Knihovna [amcharts](http://amcharts.com) se používá k zobrazení grafů. Pro 
 
 ## Inicializace Amcharts
 
-V souboru [app.js](../../../../../src/main/webapp/admin/v9/src/js/app.js) asynchronní inicializace amcharts verze 5 je připravena. Tím se zajistí, že knihovna bude načtena a inicializována pouze v případě potřeby.
+V souboru [app.js](../../../../../../src/main/webapp/admin/v9/src/js/app.js) asynchronní inicializace amcharts verze 5 je připravena. Tím se zajistí, že knihovna bude načtena a inicializována pouze v případě potřeby.
 
 Iniciace `Amchart5` se provádí voláním `window.initAmcharts()`. Po inicializaci je událost vyvolána `WJ.initAmcharts.success` na adrese `window` zařízení. Tuto událost je možné vyslechnout a poté již použít objekt `window.am5`, prostřednictvím kterého je knihovna přístupná. Lepším řešením je však použití `then` funkci jako `window.initAmcharts().then(module => { ... } );`.
 
 Kromě budovy se samotnou knihovnou jsou zde také objekty `window.am5xy` a `window.am5percent`, které jsou nepostradatelné pro vytváření a práci s amcharty.
 
-Kromě nastavení licence tento soubor také nastavuje témata grafů. Tato témata ovlivní vzhled grafů, animace i použitou paletu barev. Kromě použitých témat amcharts používáme také vlastní téma pro nastavení barevné palety, kterou mají grafy používat. Toto téma naleznete v souboru [amcharts.js](../../../../../src/main/webapp/admin/v9/src/js/libs/chart/amcharts.js) jako třída `WebjetTheme`.
+Kromě nastavení licence tento soubor také nastavuje témata grafů. Tato témata ovlivní vzhled grafů, animace i použitou paletu barev. Kromě použitých témat amcharts používáme také vlastní téma pro nastavení barevné palety, kterou mají grafy používat. Toto téma naleznete v souboru [amcharts.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/amcharts.js) jako třída `WebjetTheme`.
 
 # Práce s grafy
 
-Pro práci s grafy jsme vytvořili javascriptový soubor [chart-tools.js](../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), který je k dispozici jako `window.ChartTools` objekt. Tento soubor obsahuje vlastní funkce a třídy, které umožňují zjednodušenou práci s grafy vytvořenými pomocí knihovny. `Amchart5`. Cílem bylo vytvořit modulární kód, který dokáže vytvářet/nastavovat/upravovat grafy podle určitých specifikací. Tento kód podporuje vytváření grafů typu `Line`, `Pie` a `Bar` a stará se o všechna logická i grafická nastavení grafů.
+Pro práci s grafy jsme vytvořili javascriptový soubor [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js), který je k dispozici jako `window.ChartTools` objekt. Tento soubor obsahuje vlastní funkce a třídy, které umožňují zjednodušenou práci s grafy vytvořenými pomocí knihovny. `Amchart5`. Cílem bylo vytvořit modulární kód, který dokáže vytvářet/nastavovat/upravovat grafy podle určitých specifikací. Tento kód podporuje vytváření grafů typu `Line`, `Pie`, `DoublePie` a `Bar` a stará se o všechna logická i grafická nastavení grafů.
 
 ## Vytvoření nového grafu
 
@@ -39,8 +39,8 @@ window.initAmcharts().then(module => {
     }});
 });
 
-//Div s id=graphsDiv môže obsahovať aj viacero grafov a je to kontainer na grafy s určitým nastaveným štýlom
-//Div s id=top-pieVisits predstavuje elemnt ku ktorému bude priradený graf
+//Div s id=graphsDiv môže obsahovať aj viacero grafov a je to kontajner na grafy s určitým nastaveným štýlom
+//Div s id=top-pieVisits predstavuje element ku ktorému bude priradený graf
 <div id="graphsDiv">
     <div id="top-pieVisits" class="amcharts"></div>
 </div>
@@ -48,6 +48,7 @@ window.initAmcharts().then(module => {
 
 Toto byl příklad toho, jak může vypadat vytvoření/nastavení grafu. Důležitá je zde třída `PieChartForm`, který představuje graf typu `PIE`, jeho data a všechny parametry potřebné k vytvoření a správnému nastavení grafu. Podpora pro 3 typy grafů je reprezentována 3 třídami (nebo, jak jsme se zmínili, formuláři) dostupnými ze stránek `window.ChartTools` :
 - Třída `PieChartForm`, představuje grafy typu `Pie`
+- Třída `DoublePieChartForm`, představuje grafy typu `Pie` který se skládá ze dvou vnořených grafů typu `Pie`
 - Třída `BarChartForm`, představuje grafy typu `Bar`
 - Třída `LineChartForm`, představuje grafy typu `Line`
 
@@ -55,11 +56,11 @@ Další informace o tom, co jednotlivé parametry těchto tříd dělají, jaký
 
 ### Prvek grafu HTML
 
-Jak jsme si mohli všimnout v příkladu vytvoření grafu, musíme přidat element HTML div, který bude obsahovat tento graf. Při zadávání id mějte na paměti, že **každý prvek představující graf musí mít v rámci celého projektu jedinečné ID.** protože knihovna am5 potřebuje při vytváření grafu id prvku a pamatuje si tyto hodnoty id na globální úrovni. V situacích, kdy se pokusíme vytvořit více grafů pro prvek se stejným id (i když v jiné aplikaci), vyhodí am5 chybu a graf se nevytvoří. Doporučujeme sestavit `id` prvek grafu jako "název aplikace - název grafu", např. `top-pieVisits`.
+Jak jsme si mohli všimnout v příkladu vytvoření grafu, musíme přidat element HTML div, který bude obsahovat tento graf. Při zadávání id mějte na paměti, že **každý prvek představující graf musí mít v rámci celého projektu jedinečné ID.** &#x70;rotože knihovna am5 potřebuje při vytváření grafu id prvku a pamatuje si tyto hodnoty id na globální úrovni. V situacích, kdy se pokusíme vytvořit více grafů pro prvek se stejným id (i když v jiné aplikaci), vyhodí am5 chybu a graf se nevytvoří. Doporučujeme sestavit `id` prvek grafu jako "název aplikace - název grafu", např. `top-pieVisits`.
 
 ### Úprava dat grafu
 
-U některých grafů si můžeme všimnout úpravy extrahovaných dat před jejich dalším přiřazením ke grafu. Tato úprava souvisí s formou dat, filtrováním apod. Nejčastěji se s ní setkáme při vytváření/úpravě grafu typu `Line`. Pokud jsou data z části BackEnd vrácena ve správném (použitém) formátu, můžeme použít dostupnou funkci `convertDataForLineChart()` jak je uvedeno v následujícím příkladu. Další informace o fungování této funkce naleznete v souboru [chart-tools.js](../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js).
+U některých grafů si můžeme všimnout úpravy extrahovaných dat před jejich dalším přiřazením ke grafu. Tato úprava souvisí s formou dat, filtrováním apod. Nejčastěji se s ní setkáme při vytváření/úpravě grafu typu `Line`. Pokud jsou data z části BackEnd ve správném (použitém) formátu, můžeme použít dostupnou funkci `convertDataForLineChart()` jak je uvedeno v následujícím příkladu. Další informace o fungování této funkce naleznete v souboru [chart-tools.js](../../../../../../src/main/webapp/admin/v9/src/js/libs/chart/chart-tools.js).
 
 ```javascript
     //Získanie dát pre graf pomocou Ajax
@@ -67,7 +68,7 @@ U některých grafů si můžeme všimnout úpravy extrahovaných dat před jeji
         //Úprava získaných dáta pre graf s použitím convertDataForLineChart() fn
         let convertedData = ChartTools.convertDataForLineChart(result);
 
-        //Použitie upravených dát pri vytvárani grafu typu LINE
+        //Použitie upravených dát pri vytváraní grafu typu LINE
         lineChartVisits = new ChartTools.LineChartForm(ChartTools.getLineChartYAxeNameObjs(["visits"], [undefined]), "dayDate", '[[#{stat.top.lineChart}]]', "top-lineVisits", convertedData, ChartTools.DateType.Days);
         ChartTools.createAmchart(lineChartVisits);
     }});
@@ -105,9 +106,9 @@ Příklad použití:
 
 ```javascript
 //Pridanie parametrov do url
-topDataTable.ajax.url(WJ.urlAddParam(url, "chartType", ChartType.Not_Chart));
-topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
-topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
+topDataTable.setAjaxUrl(WJ.urlAddParam(url, "chartType", ChartType.Not_Chart));
+topDataTable.setAjaxUrl(WJ.urlAddParam(topDataTable.getAjaxUrl(), "searchRootDir", $('#rootDir').val()));
+topDataTable.setAjaxUrl(WJ.urlAddParam(topDataTable.getAjaxUrl(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
 
 //Refresh tabuľky
 topDataTable.ajax.reload();

@@ -64,9 +64,9 @@ if (sk.iway.iwcm.common.CloudToolsForCore.hasShop(request)==false) return;
     }
     else
     {
-  %>
+    %>
       <iwcm:text key="components.basket.canot_save_product"/>.
-  <%
+    <%
     }
   }
   else if ("deleteall".equals(act))
@@ -203,7 +203,7 @@ $(".addToBasket").on("click", function(){
                return false;
            })
 
-           $("a.showBasket").on("click", function(){
+           $("a.showBasket, .showBasketBlock").on("click", function(){
               var basketHeight = $("div.basketBox").outerHeight(),
                   windowHeight = $(window).height();
 
@@ -468,17 +468,7 @@ $(".addToBasket").on("click", function(){
           <th><iwcm:text key="components.basket.count"/></th>
           <th><iwcm:text key="components.basket.price"/> / kus</th>
           <th><iwcm:text key="components.basket.price_with_dph"/></th>
-          <% 
-            boolean containsVariant = false;
-            for (BasketItemBean basketItem : basketItems) {
-              if (Tools.isNotEmpty(basketItem.getItemNote())){
-                containsVariant = true;
-                break;
-              }
-            }
-            if (containsVariant) { %>
-              <th><iwcm:text key="components.basket.variant_variant"/></th>
-            <% } %>
+          <th><iwcm:text key="components.basket.variant_variant"/></th>
           <th><a href="javascript:;" class="closeBasket"><iwcm:text key="components.basket.close"/></a></th>
        </tr>
 
@@ -508,11 +498,9 @@ $(".addToBasket").on("click", function(){
               <td class="basketPrice fL w-2" nowrap="nowrap"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%=good.getLocalPriceVat(request) %></iway:curr></td>
 
               <td class="fL w-2"><iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>" ><%=good.getItemLocalPriceVatQty(request) %></iway:curr></td>
-              
-              <% if (containsVariant) { %>
-                <td class="fL" style="padding-right: 20px;"><%= good.getItemNote() %></td>
-              <% } %>
-              
+
+              <td class="fL" style="padding-right: 20px;"><%= good.getItemNote() %></td>
+
               <td class="delete w-1">
                 <a class="deleteItem" href="javascript:void(0);" title="<iwcm:text key="components.basket.delete"/>"><span>Delete</span></a>
               </td>
@@ -542,7 +530,7 @@ $(".addToBasket").on("click", function(){
 
           <div style="text-align:right" class="pull-xs-4  col-xs-4  col-sm-12 col-md-12 ">
              <span class="basketContinueBtn" id="orderContinurButton">
-              <a class="btn btn-info closeBasket" href="javascript:void(0)">
+              <a class="btn btn-secondary closeBasket" href="javascript:void(0)">
                 <iwcm:text key="components.basket.continue"/>
               </a>
             </span>
@@ -551,7 +539,7 @@ $(".addToBasket").on("click", function(){
 
 
             <span id="orderButton">
-              <a class="btn btn-success" href="<%= orderFormUrl %>">Dokončiť nákup</a>
+              <a class="btn btn-primary" href="<%= orderFormUrl %>">Dokončiť nákup</a>
             </span>
           </div>
         </div>

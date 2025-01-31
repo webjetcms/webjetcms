@@ -1,14 +1,18 @@
 package sk.iway.iwcm.sync.inport;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.inquiry.AnswerForm;
 import sk.iway.iwcm.inquiry.InquiryBean;
 import sk.iway.iwcm.inquiry.InquiryDB;
+import sk.iway.iwcm.stripes.SyncDirWriterService;
 import sk.iway.iwcm.sync.export.Content;
 
 /**
@@ -24,6 +28,7 @@ import sk.iway.iwcm.sync.export.Content;
  */
 public class InquiryImporter
 {
+	private static final String INQUIRY_PREFIX = "inquiry_";
 
 	public static List<ContentInquiryBean> getInquiries(Content content, HttpServletRequest request)
 	{
@@ -38,22 +43,35 @@ public class InquiryImporter
 		return inquiryBeans;
 	}
 
-	public static void importInquiries(HttpServletRequest request, Content content)
-	{
+	public static void importInquiries(HttpServletRequest request, Content content, PrintWriter writer) {
+		Prop prop = Prop.getInstance(request);
+		//
+		SyncDirWriterService.prepareProgress(prop.getText("components.syncDirAction.progress.syncingInquiries"), "inquiriesImportCount", prop.getText("components.syncDirAction.progress.syncingInquiry") + ": - / -", writer);
+
 		if (null == content) return;
-		for (Numbered<InquiryBean> inquiry : Numbered.list(content.getInquiries()))
+
+		Map<String, String> selectedInquiriesMap = SyncDirWriterService.getOptionsMap(INQUIRY_PREFIX, request);
+		if(selectedInquiriesMap.size() < 1) return;
+
+		int importedInquiriesCount = 1;
+		Iterable<Numbered<InquiryBean>> inquiriesToImport = Numbered.list(content.getInquiries());
+		int inquiriesToImportCount = SyncDirWriterService.getCountToHandle(selectedInquiriesMap, inquiriesToImport, INQUIRY_PREFIX);
+
+		for (Numbered<InquiryBean> inquiry : inquiriesToImport)
 		{
-			if (null != request.getParameter("inquiry_" + inquiry.number) || request.getAttribute("syncAll")!=null)
+			if (selectedInquiriesMap.get(INQUIRY_PREFIX + inquiry.number) != null)
 			{
+				SyncDirWriterService.updateProgress("inquiriesImportCount", prop.getText("components.syncDirAction.progress.syncingInquiry") + ": " + importedInquiriesCount + " / " + inquiriesToImportCount, writer);
+				importedInquiriesCount++;
+
 				createLocalContentInquiry(inquiry.item, request);
 			}
 		}
-
 	}
 
 	/**
 	 * Vrati anketu zodpovedajucu importovanej (rovnaka skupina a otazka), alebo null.
-	 * 
+	 *
 	 * @param remoteInquiry
 	 * @return
 	 */

@@ -1,5 +1,5 @@
 <script data-th-inline="javascript">
-    let url = "/admin/rest/web-pages";
+    let url = "/admin/rest/blog";
     var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
 </script>
 <script type="text/javascript">
@@ -33,8 +33,6 @@
 
         window.importWebPagesDatatable().then(module => {
 
-            url = WJ.urlAddParam(url, "isBlogVersion", true);
-
             let wpdInstance = new module.WebPagesDatatable({
                 url: url,
                 columns: webpageColumns,
@@ -58,7 +56,7 @@
         });
 
         //Init select
-        ChartTools.setSelect("/admin/rest/web-pages/blogger-groups", $('#groupSelect').val(), "groupSelect");
+        ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");
 
         $("#groupSelect").on("change", function() {
             updateTable();
@@ -66,7 +64,7 @@
 
         function updateTable() {
             //set table filter params
-            bloggerArticlesDataTable.ajax.url(WJ.urlUpdateParam( bloggerArticlesDataTable.ajax.url() , "groupId", $('#groupSelect').val()));
+            bloggerArticlesDataTable.setAjaxUrl(WJ.urlUpdateParam( bloggerArticlesDataTable.getAjaxUrl() , "groupId", $('#groupSelect').val()));
             //reload tables values
             bloggerArticlesDataTable.ajax.reload();
         }
@@ -74,7 +72,7 @@
         //After addFolder action is executed, reload select with folders
         window.addEventListener('WJ.DT.executeAction', function (e) {
             //Sub group added successfully - reload select
-            ChartTools.setSelect("/admin/rest/web-pages/blogger-groups", $('#groupSelect').val(), "groupSelect");
+            ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");
         });
 
         /**
@@ -88,7 +86,6 @@
                     title: "[[#{components.blog.add_folder.title}]]",
                     message: "[[#{components.blog.add_folder.msg}]] " + $('#groupSelect').find(":selected").text(),
                     success: function(value) {
-                        //let customData = "{\"groupId\":\"" + $('#groupSelect').val() + "\", \"newGroupName\":" + value + "}";
                         let customData = {
                             groupId: $('#groupSelect').val(),
                             newGroupName: value

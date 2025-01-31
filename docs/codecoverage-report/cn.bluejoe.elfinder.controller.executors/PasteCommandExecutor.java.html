@@ -21,53 +21,53 @@ import sk.iway.iwcm.system.elfinder.FolderPropertiesService;
 import sk.iway.iwcm.system.elfinder.IwcmDocGroupFsVolume;
 import sk.iway.iwcm.users.UsersDB;
 
-<span class="nc" id="L24">public class PasteCommandExecutor extends AbstractJsonCommandExecutor</span>
+<span class="fc" id="L24">public class PasteCommandExecutor extends AbstractJsonCommandExecutor</span>
 {
 	@Override
 	public void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json)
 			throws Exception
 	{
-<span class="nc" id="L30">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
+<span class="fc" id="L30">		String[] targets = request.getParameterValues(&quot;targets[]&quot;);</span>
 		//String src = request.getParameter(&quot;src&quot;);
-<span class="nc" id="L32">		String dst = request.getParameter(&quot;dst&quot;);</span>
-<span class="nc" id="L33">		boolean cut = &quot;1&quot;.equals(request.getParameter(&quot;cut&quot;));</span>
+<span class="fc" id="L32">		String dst = request.getParameter(&quot;dst&quot;);</span>
+<span class="fc" id="L33">		boolean cut = &quot;1&quot;.equals(request.getParameter(&quot;cut&quot;));</span>
 
-<span class="nc" id="L35">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
-<span class="nc" id="L36">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
+<span class="fc" id="L35">		List&lt;FsItemEx&gt; added = new ArrayList&lt;FsItemEx&gt;();</span>
+<span class="fc" id="L36">		List&lt;String&gt; removed = new ArrayList&lt;String&gt;();</span>
 
 		//FsItemEx fsrc = super.findItem(fsService, src);
-<span class="nc" id="L39">		FsItemEx fdst = super.findItem(fsService, dst);</span>
+<span class="fc" id="L39">		FsItemEx fdst = super.findItem(fsService, dst);</span>
 
 		//skontrolujem prava na zapis do cieloveho adresara
-<span class="nc" id="L42">		Prop prop = Prop.getInstance(request);</span>
-<span class="nc" id="L43">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
-<span class="nc bnc" id="L44" title="All 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))</span>
+<span class="fc" id="L42">		Prop prop = Prop.getInstance(request);</span>
+<span class="fc" id="L43">		Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();</span>
+<span class="pc bpc" id="L44" title="2 of 4 branches missed.">		if (user!=null &amp;&amp; UsersDB.isFolderWritable(user.getWritableFolders(), fdst.getPath()))</span>
 		{
-<span class="nc bnc" id="L46" title="All 2 branches missed.">			for (String target : targets)</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">			for (String target : targets)</span>
 			{
-<span class="nc" id="L48">				FsItemEx ftgt = super.findItem(fsService, target);</span>
-<span class="nc" id="L49">				String name = ftgt.getName();</span>
-<span class="nc" id="L50">				FsItemEx newFile = new FsItemEx(fdst, name);</span>
+<span class="fc" id="L48">				FsItemEx ftgt = super.findItem(fsService, target);</span>
+<span class="fc" id="L49">				String name = ftgt.getName();</span>
+<span class="fc" id="L50">				FsItemEx newFile = new FsItemEx(fdst, name);</span>
 
 				//JEEFF: upravene pre podporu nasho DocGroup
-<span class="nc bnc" id="L53" title="All 2 branches missed.">				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
+<span class="pc bpc" id="L53" title="1 of 2 branches missed.">				if (ftgt.getVolumeId().equals(IwcmDocGroupFsVolume.VOLUME_ID))</span>
 				{
 <span class="nc" id="L55">					((IwcmDocGroupFsVolume)ftgt.getVolume()).createAndCopy(ftgt, fdst, cut);</span>
 				}
 				else
 				{
-<span class="nc" id="L59">					super.createAndCopy(ftgt, newFile, request);</span>
-<span class="nc bnc" id="L60" title="All 2 branches missed.">					if (cut)</span>
+<span class="fc" id="L59">					super.createAndCopy(ftgt, newFile, request);</span>
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">					if (cut)</span>
 					{
-<span class="nc bnc" id="L62" title="All 2 branches missed.">						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
+<span class="pc bpc" id="L62" title="1 of 2 branches missed.">						if (UsersDB.isFolderWritable(user.getWritableFolders(), ftgt.getParent().getPath()))</span>
 						{
 							//#20481 - po vystrihnuti/premenovani vytvori redirect
-<span class="nc bnc" id="L65" title="All 2 branches missed.">							if(isAllowedFolder(ftgt.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
-<span class="nc" id="L66">								createRedirect(ftgt, ftgt.getPath(), newFile.getPath(), request);</span>
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">							if(isAllowedFolder(ftgt.getPath(), Constants.getString(&quot;elfinderRedirectFolders&quot;)))</span>
+<span class="fc" id="L66">								createRedirect(ftgt, ftgt.getPath(), newFile.getPath(), request);</span>
 
 							//ak chcem povodny vymazat, musim mat pravo na zapis aj do zdrojoveho
-<span class="nc" id="L69">							ftgt.delete();</span>
-<span class="nc" id="L70">							FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);</span>
+<span class="fc" id="L69">							ftgt.delete();</span>
+<span class="fc" id="L70">							FolderPropertiesService.deleteFolderProperties(ftgt.getPath(), request);</span>
 						}
 						else
 						{
@@ -75,12 +75,12 @@ import sk.iway.iwcm.users.UsersDB;
 						}
 					}
 				}
-<span class="nc" id="L78">				added.add(newFile);</span>
+<span class="fc" id="L78">				added.add(newFile);</span>
 
-<span class="nc bnc" id="L80" title="All 2 branches missed.">				if (cut)</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">				if (cut)</span>
 				{
 					//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov
-<span class="nc" id="L83">					removed.add(ftgt.getHash());</span>
+<span class="fc" id="L83">					removed.add(ftgt.getHash());</span>
 				}
 			}
 		}
@@ -90,10 +90,10 @@ import sk.iway.iwcm.users.UsersDB;
 
 		}
 
-<span class="nc" id="L93">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
+<span class="fc" id="L93">		json.put(&quot;added&quot;, files2JsonArray(request, added));</span>
 		//JEEFF: upravene, ma sa vratit zoznam hashov a nie objektov
-<span class="nc" id="L95">		json.put(&quot;removed&quot;, removed.toArray());</span>
-<span class="nc" id="L96">	}</span>
+<span class="fc" id="L95">		json.put(&quot;removed&quot;, removed.toArray());</span>
+<span class="fc" id="L96">	}</span>
 
 	/**
 	 * vrati true, ak path zacina na niektory allowed adresar(adresare oddelene ciarkou)

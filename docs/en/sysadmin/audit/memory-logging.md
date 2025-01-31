@@ -9,6 +9,7 @@ It supports clustering, so it is possible to request the last logs from another 
 ## Configuration options/settings:
 - `loggingInMemoryEnabled` - by setting it to `true/false` Enable or disable log storage.
 - `loggingInMemoryQueueSize` - maximum number of logs written to memory (default 200). Please note that all data is loaded into the table at once and due to the transfer `stack trace` can be large. We do not recommend setting this variable to an extremely high value.
+
 To function properly, it must be `logger` also set in the file `logback.xml`. By default it is set this way, but if you have changed the file, you need to add `IN_MEMORY appender` and add his call for `root` element.
 
 ```xml

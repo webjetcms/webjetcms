@@ -47,7 +47,7 @@
         //presun filter do hlavicky
         $("#pills-dateRange-tab").html("");
         $("div#reservationStatDataTable_extfilter").appendTo("#pills-dateRange-tab");
-        
+
         reservationStatDataTable = WJ.DataTable({
             url: WJ.urlUpdateParam(url, "reservation-type", $("#reservationType button.active").data("reservation-type")),
             serverSide: false,
@@ -63,7 +63,7 @@
         window.initAmcharts().then(module => {
             $.ajax({url: getGraphUrl("pie", "users"), success: function(result) {
                 doublePieChartTimeUsers = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.hours_user_chart.title}]]', "reservationStat-doublePieTimeUsers", result, "outer", "reservation.reservation_stat.hours_user_chart.label.js");
-                ChartTools.createAmchart(doublePieChartTimeUsers); 
+                ChartTools.createAmchart(doublePieChartTimeUsers);
 
                 $.ajax({url: getGraphUrl("pie", "objects"), success: function(result) {
                     doublePieChartTimeObjects = new ChartTools.DoublePieChartForm("valueB", "valueA", "category", '[[#{reservation.reservation_stat.hours_object_chart.title}]]', "reservationStat-doublePieTimeObjects", result, "inner", "reservation.reservation_stat.hours_object_chart.label.js");
@@ -165,8 +165,8 @@
             WJ.hideLoader();
 
             //add table filter params
-            reservationStatDataTable.ajax.url(WJ.urlUpdateParam(reservationStatDataTable.ajax.url(), "reservation-type", reservationType));
-            reservationStatDataTable.ajax.url(WJ.urlUpdateParam(reservationStatDataTable.ajax.url(), "search-date", $("#monthFilter").val()));
+            reservationStatDataTable.setAjaxUrl(WJ.urlUpdateParam(reservationStatDataTable.getAjaxUrl(), "reservation-type", reservationType));
+            reservationStatDataTable.setAjaxUrl(WJ.urlUpdateParam(reservationStatDataTable.getAjaxUrl(), "search-date", $("#monthFilter").val()));
 
             //reload table values
             reservationStatDataTable.ajax.reload();

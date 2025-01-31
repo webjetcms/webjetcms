@@ -1,7 +1,6 @@
 Feature('webpages.group-internal');
 
 var auto_name, auto_folder_internal, auto_folder_public, sub_folder_public;
-var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -21,7 +20,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
 
      // 1. vytvorenie priecinka name-autotest
      I.say('1. Pridanie noveho priecinka name-autotest');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', auto_name);
      I.groupSetRootParent();
@@ -45,7 +44,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      // PODADRESARE
      // 3. pridanie neverejneho/nedostupneho podadresara do priecinka name-autotest
      I.say('3. Pridanie neverejneho/nedostupneho podadresara do priecinka name-autotest');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.waitForText(auto_name, 5);
      I.fillField('#DTE_Field_groupName', auto_folder_internal);
@@ -57,7 +56,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
 
      // 4. pridanie verejneho/dostupneho podadresara do priecinka name-autotest
      I.say('4. Pridanie verejneho/dostupneho podadresara do priecinka name-autotest');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.waitForText(auto_name, 5);
      I.fillField('#DTE_Field_groupName', auto_folder_public);
@@ -103,7 +102,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      // 7. vytvorenie verejneho a interneho podadresara v podadresari public_folder-autotest + zmena na interne + kontrola zmien
      I.say('7. Vytvorenie verejneho a interneho podadresara v podadresari public_folder-autotest');
      I.click(locate('.jstree-anchor').withText(auto_folder_public));
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', sub_folder_public);
      DTE.save();

@@ -44,22 +44,24 @@
             if ("en"===window.userLng) lngkey = "en";
             else if ("cs"===window.userLng) lngkey = "cs";
             let url = window.vueOverviewApp.config.globalProperties.$overviewJsonUrl+'wjnews.'+lngkey+'.json';
-            $.get({
-                url: url,
-                success: function(data) {
-                    //console.log("data=", data);
-                    self.news = [];
-                    try {
-                        if (data.news.length>3) {
-                            self.news.push(data.news.shift());
-                            self.news.push(data.news.shift());
-                            self.news.push(data.news.shift());
+            setTimeout(() => {
+                $.get({
+                    url: url,
+                    success: function(data) {
+                        //console.log("data=", data);
+                        self.news = [];
+                        try {
+                            if (data.news.length>3) {
+                                self.news.push(data.news.shift());
+                                self.news.push(data.news.shift());
+                                self.news.push(data.news.shift());
+                            }
+                        } catch (e) {
+                            console.error("Error parsing news data", e);
                         }
-                    } catch (e) {
-                        console.error("Error parsing news data", e);
                     }
-                }
-            });
+                });
+            }, 500);
         },
         methods: {
             processMarkdown: function(perex) {

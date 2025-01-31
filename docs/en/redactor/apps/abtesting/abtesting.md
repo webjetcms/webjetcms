@@ -1,4 +1,4 @@
-# AB testing application
+# AB Testing
 
 The AB Testing application provides you with an overview of the AB pages and the management of the relevant configuration variables:
 - List of AB pages
@@ -6,7 +6,7 @@ The AB Testing application provides you with an overview of the AB pages and the
 
 ## List of AB pages
 
-The List of AB sites section offers a list of sites that have created a B variant. These pages cannot be edited, added or deleted in any way.
+The AB Site List section provides a list of sites that have a B variant created. These pages cannot be edited, added or deleted in any way.
 
 ![](ab_test_page_list.png)
 
@@ -16,7 +16,7 @@ You have the option to view the page and also view the Page Stats using the butt
 
 ## Configuration
 
-The Configuration section allows you to view and edit the relevant configuration variables for AB testing.
+The Configuration section allows you to review and edit the relevant configuration variables for AB testing.
 
 ![](ab_test_config_page.png)
 

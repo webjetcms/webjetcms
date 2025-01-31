@@ -15,11 +15,13 @@ Seznam můžete naplnit ručně, importem ze souboru aplikace Excel a automatick
 čímž se stránka s adresou `/odhlasenie-z-mailingu.html` obsahuje aplikaci pro odhlášení:
 
 ```html
-!INCLUDE(/components/dmail/subscribe.jsp, senderEmail=noreply@interway.sk, senderName="WebJET CMS")!
+!INCLUDE(/components/dmail/unsubscribe.jsp, senderEmail=name@your-domain.com, senderName="Your Name", confirmUnsubscribe=true)!
 ```
 
-Kliknutím na odkaz se e-mailová adresa příjemce odhlásí z e-mailové kampaně.
+[Klikněte na odkaz](../form/README.md#odhlášení) zajistit, aby byla e-mailová adresa příjemce odhlášena z poštovní kampaně.
 
-![](unsubscribed-editor.png)
+![](unsubscribed-form.png)
 
 Při vytváření, úpravách nebo duplikaci záznamu je nutné zadat e-mail, abyste se mohli v editoru odhlásit.
+
+![](unsubscribed-editor.png)

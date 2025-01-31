@@ -1,6 +1,12 @@
 # Information about Webjet
 
-| Method | Type | Description | | | --------------------------------- | -------- | ------------------------------------ | | ${ninja.webjet.installName}       | *String* | Installname | ${ninja.webjet.generatedTime}     | *String* | Page generation time | | ${ninja.webjet.pageFunctionsPath} | *String* | Basic JS Functions | | ${ninja.webjet.insertJqueryHtml}  | *String* | Global Jquery Library | | ${ninja.webjet.insertJqueryFake}  | *String* | Blocking the global Jquery library |
+| Method | Type | Description |
+| --------------------------------- | -------- | ------------------------------------ |
+| ${ninja.webjet.installName}       | *String* | Installname |
+| ${ninja.webjet.generatedTime}     | *String* | Page generation time |
+| ${ninja.webjet.pageFunctionsPath} | *String* | Basic JS Functions |
+| ${ninja.webjet.insertJqueryHtml}  | *String* | Global Jquery Library |
+| ${ninja.webjet.insertJqueryFake}  | *String* | Blocking the global Jquery library |
 
 ## Installname *String*
 
@@ -43,14 +49,14 @@ ${ninja.webjet.insertJqueryHtml}
 The message that is generated:
 
 ```html
-<script type="text/javascript" src="/components/_common/javascript/jquery.js"></script>
-<script type="text/javascript" src="/components/_common/javascript/page_functions.js.jsp?language=sk"></script>
+<script type="text/javascript" src="/components/_common/javascript/jquery.js" ></script>
+<script type="text/javascript" src="/components/_common/javascript/page_functions.js.jsp?language=sk" ></script>
 <link rel="stylesheet" type="text/css" media="screen" href="/components/form/check_form.css" />
 ```
 
 ## Blocking the global Jquery library *String*
 
-`${ninja.webjet.pageFunctionsPath}`.
+Simulating the insertion of the jquery version. This will block the automatic insertion of the current jquery library on the web. It is then necessary to manually add global JS function calls using `${ninja.webjet.pageFunctionsPath}`.
 
 ```java
 ${ninja.webjet.insertJqueryFake}

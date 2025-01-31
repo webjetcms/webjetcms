@@ -7,6 +7,9 @@ The same terminology should be followed when writing the text. Use only the firs
 - check box = `checkbox` - Google Translate
 - progress bar = `progress bar` - Google Translate
 - toolbar = `toolbar` - Google Translate
+- multiple selection field `multi selection field` - Google Translate
+- drop-down menu = `dropdown` - Google Translate
+- end point = `endpoint` - Google Translate
 
 ## Terminology for code
 

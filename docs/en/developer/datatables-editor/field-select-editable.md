@@ -59,6 +59,7 @@ After saving, the datatable data is restored by calling `EDITOR.TABLE.wjUpdateOp
 In the nested dialog, we do not want to display the datatable or navigation options, but only the editor itself. This is provided by CSS styles:
 - v `app-init.js` the CSS class is set for the iframe window `in-iframe` at `html` Badge. It is set by the URL parameter `showOnlyEditor=true` which is added to the URL automatically when the dialog is opened. The dialog sets the CSS class for other cases `in-iframe-show-table`, which will also leave the datatable displayed. The parameter `showEditorFooterPrimary=true` it is possible to display a footer with an active primary button (if the save is not performed in a nested manner).
 - after initialization the event is fired `WJ.iframeLoaded`, which then executes the function code `onload`, [iframe of the dialogue](../frameworks/webjetjs.md?id=iframe-dialóg).
-In the file `src/main/webapp/admin/v9/src/scss/3-base/_modal.scss` is set to display in mode `html.in-iframe`that hides the whole `.ly-page-wrapper` which contains the datatable and the whole GUI.
+
+In the file `src/main/webapp/admin/v9/src/scss/3-base/_modal.scss` is set to display in mode `html.in-iframe` that hides the whole `.ly-page-wrapper` which contains the datatable and the whole GUI.
 
 However, since it may take a while to load, the element is displayed `#modalIframeLoader` (which is hidden by default) and hides after the `onload` events. This way the user knows that something else is being loaded (the editor is initialized).

@@ -12,7 +12,7 @@ Before(({ I, login }) => {
 });
 
 function setSettings(I, checkedNames=null, treeWidth=4, galeria=false) {
-    I.click("button.buttons-jstree-settings");
+    I.clickCss("button.buttons-jstree-settings");
     I.waitForElement("#jstreeSettingsModal");
     I.wait(1);
 
@@ -25,6 +25,7 @@ function setSettings(I, checkedNames=null, treeWidth=4, galeria=false) {
         I.wait(1);
         I.uncheckOption("#jstree-settings-showfolders-dt");
         I.wait(1);
+
     }
     I.click({ css: "#jstreeSettingsModal .DTE_Field_treeWidth button.btn-outline-secondary" });
     I.click(locate('div.dropdown-menu.show .dropdown-item').withText(treeWidth+":"+(12-treeWidth)));
@@ -39,7 +40,18 @@ function setSettings(I, checkedNames=null, treeWidth=4, galeria=false) {
         }
     }
 
-    I.click("#jstree-settings-submit");
+    //set first value in select
+    let name = "treeSortType";
+    I.click({ css: "#jstreeSettingsModal div.DTE_Field_" + name + " button.dropdown-toggle" });
+    let firstOption = "div.dropdown-menu.show ul li:first-child .dropdown-item";
+    I.waitForElement(locate(firstOption), 5);
+    I.waitForEnabled(locate(firstOption), 5);
+    I.click(firstOption);
+    I.wait(0.3);
+
+    I.checkOption("#jstree-settings-treeSortOrderAsc");
+
+    I.clickCss("#jstree-settings-submit");
 }
 
 Scenario('zobrazenie ID a poradia @singlethread', ({ I }) => {
@@ -96,7 +108,7 @@ Scenario('zobrazenie web stranok @singlethread', ({ I }) => {
     I.see("Test BR<br>v nazve", "#SomStromcek");
 });
 
-Scenario('drag drop @singlethread', ({ I, DTE }) => {
+Scenario('drag drop @singlethread', ({ I, DT, DTE }) => {
     //zobrazenie stranok
     I.say("zobrazenie stranok");
     setSettings(I, ["showpages"]);
@@ -113,7 +125,9 @@ Scenario('drag drop @singlethread', ({ I, DTE }) => {
     I.say("Presun stranku do podadresara");
     I.see(webpageTitle, "#SomStromcek");
     I.checkOption("#treeAllowDragDrop");
-    I.dragAndDrop(locate('a.jstree-anchor').withText(webpageTitle), locate('a.jstree-anchor').withText(folderTitle));
+    I.dragAndDrop(locate('a.jstree-anchor').withText(webpageTitle), locate('a.jstree-anchor').withText(folderTitle), { force: true });
+    DT.waitForLoader();
+    I.jstreeWaitForLoader();
 
     I.dontSee(webpageTitle, "#SomStromcek");
     I.jstreeClick(folderTitle);
@@ -122,7 +136,7 @@ Scenario('drag drop @singlethread', ({ I, DTE }) => {
     I.say("Otvor stranku a ober zobrazenie adresara");
     I.click(webpageTitle, "#datatableInit");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#editorAppDTE_Field_editorFields-groupDetails input.form-control", "/"+folderTitle);
 
     DTE.cancel();
@@ -137,11 +151,11 @@ Scenario('zobrazenie web stranok-rozbalenie @singlethread', ({ I }) => {
     //overenie, ze aj defaultne sa nacitaju stranky (ked je rozbalena struktura)
 
     //domenovy selektor
-    I.click("div.js-domain-toggler div.bootstrap-select button");
+    I.clickCss("div.js-domain-toggler div.bootstrap-select button");
     I.wait(1);
     I.click(locate('.dropdown-item').withText("rozbalenie.tau27.iway.sk"));
     I.waitForElement("#toast-container-webjet", 10);
-    I.click(".toastr-buttons button.btn-primary");
+    I.clickCss(".toastr-buttons button.btn-primary");
 
     //cisty stav
     I.say("cisty stav");
@@ -181,7 +195,7 @@ Scenario('jstree zobrazenie v datatabulke @singlethread', ({ I, DT }) => {
     I.see("Priečinky", "div.col-md-8");
 
     I.say("Zobrazi sa root a jeho podpriecinky");
-    I.click("#pills-folders-dt-tab");
+    I.clickCss("#pills-folders-dt-tab");
     I.see("Jet portal 4", "#groups-datatable");
     I.see("Úvodná stránka", "#groups-datatable");
     I.see("Investičný vklad", "#groups-datatable");
@@ -275,7 +289,7 @@ Scenario('Slash in group name @singlethread', ({ I, DT, DTE }) => {
     I.click(title, "#SomStromcek");
 
     DT.waitForLoader();
-    I.click("div.tree-col div.dt-buttons button.buttons-edit");
+    I.clickCss("div.tree-col div.dt-buttons button.buttons-edit");
     DTE.waitForEditor("groups-datatable");
 
     I.seeInField("#DTE_Field_groupName", title);
@@ -297,7 +311,7 @@ Scenario('Slash in group name @singlethread', ({ I, DT, DTE }) => {
     DTE.waitForEditor();
 
     I.see(title, "#datatableInit_modal h5.modal-title");
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.seeInField("#DTE_Field_title", title);
     I.seeInField("#DTE_Field_navbar", title);
     I.seeInField("#DTE_Field_virtualPath", "/test-stavov/lomka-nazve/");
@@ -313,8 +327,10 @@ Scenario('Slash in group name @singlethread', ({ I, DT, DTE }) => {
 
 Scenario('reset 2 @singlethread', ({ I }) => {
     I.jstreeReset();
+    I.logout();
 });
 
 Scenario('reset 2-nosingle', ({ I }) => {
     I.jstreeReset();
+    I.logout();
 });

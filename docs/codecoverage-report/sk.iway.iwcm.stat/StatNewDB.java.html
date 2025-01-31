@@ -2414,16 +2414,16 @@ public class StatNewDB
 	 */
 	public static List&lt;Column&gt; getIncomingStats(int docId, java.util.Date from, java.util.Date to, String groupIdsQuery, HttpServletRequest request)
 	{
-<span class="pc bpc" id="L2417" title="1 of 2 branches missed.">		if (groupIdsQuery==null) groupIdsQuery = &quot;&quot;;</span>
+<span class="nc bnc" id="L2417" title="All 2 branches missed.">		if (groupIdsQuery==null) groupIdsQuery = &quot;&quot;;</span>
 
-<span class="fc" id="L2419">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L2420">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
-<span class="fc" id="L2421">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L2422">		DocDB docDB = DocDB.getInstance();</span>
-<span class="fc" id="L2423">		Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);</span>
+<span class="nc" id="L2419">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2420">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L2421">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L2422">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L2423">		Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);</span>
 
 		DocDetails bdd;
-<span class="fc" id="L2426">		int pocetPriamychPristupov = 0;</span>
+<span class="nc" id="L2426">		int pocetPriamychPristupov = 0;</span>
 
 
 		//najskor nacitaj priame pristupy
@@ -2431,26 +2431,26 @@ public class StatNewDB
 		{
 			//v ife to mame, aby neboli problemy s nazvami premennych
 
-<span class="fc" id="L2434">			Connection db_conn = null;</span>
-<span class="fc" id="L2435">			PreparedStatement ps = null;</span>
-<span class="fc" id="L2436">			ResultSet rs = null;</span>
+<span class="nc" id="L2434">			Connection db_conn = null;</span>
+<span class="nc" id="L2435">			PreparedStatement ps = null;</span>
+<span class="nc" id="L2436">			ResultSet rs = null;</span>
 			try
 			{
-<span class="fc" id="L2439">				db_conn = DBPool.getConnection();</span>
+<span class="nc" id="L2439">				db_conn = DBPool.getConnection();</span>
 
-<span class="fc" id="L2441">				String sql=&quot;SELECT count(doc_id) AS pocet, referer_server_name, referer_url FROM stat_from &quot;+</span>
+<span class="nc" id="L2441">				String sql=&quot;SELECT count(doc_id) AS pocet, referer_server_name, referer_url FROM stat_from &quot;+</span>
 				&quot;WHERE doc_id=? AND from_time &gt;= ? AND from_time &lt;= ? &quot; + groupIdsQuery +
 				&quot;GROUP BY referer_server_name, referer_url &quot;+
 				&quot;ORDER BY pocet desc&quot;;
 
-<span class="fc" id="L2446">				Logger.debug(StatNewDB.class, &quot;getIncomingStats sql: &quot;+sql);</span>
+<span class="nc" id="L2446">				Logger.debug(StatNewDB.class, &quot;getIncomingStats sql: &quot;+sql);</span>
 
-<span class="fc" id="L2448">				ps = prepareStatement(db_conn, sql);</span>
-<span class="fc" id="L2449">				ps.setInt(1,docId);</span>
-<span class="fc" id="L2450">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L2451">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
-<span class="fc" id="L2452">				rs = ps.executeQuery();</span>
-<span class="pc bpc" id="L2453" title="1 of 2 branches missed.">				while(rs.next())</span>
+<span class="nc" id="L2448">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L2449">				ps.setInt(1,docId);</span>
+<span class="nc" id="L2450">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L2451">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L2452">				rs = ps.executeQuery();</span>
+<span class="nc bnc" id="L2453" title="All 2 branches missed.">				while(rs.next())</span>
 				{
 <span class="nc" id="L2455">					Column col = new Column();</span>
 <span class="nc" id="L2456">					col.setIntColumn2(rs.getInt(&quot;pocet&quot;));</span>
@@ -2459,12 +2459,12 @@ public class StatNewDB
 <span class="nc" id="L2459">					col.setColumn2(&quot;http://&quot;+col.getColumn1());</span>
 <span class="nc" id="L2460">					ret.add(col);</span>
 <span class="nc" id="L2461">				}</span>
-<span class="fc" id="L2462">				rs.close();</span>
-<span class="fc" id="L2463">				ps.close();</span>
-<span class="fc" id="L2464">				db_conn.close();</span>
-<span class="fc" id="L2465">				rs = null;</span>
-<span class="fc" id="L2466">				ps = null;</span>
-<span class="fc" id="L2467">				db_conn = null;</span>
+<span class="nc" id="L2462">				rs.close();</span>
+<span class="nc" id="L2463">				ps.close();</span>
+<span class="nc" id="L2464">				db_conn.close();</span>
+<span class="nc" id="L2465">				rs = null;</span>
+<span class="nc" id="L2466">				ps = null;</span>
+<span class="nc" id="L2467">				db_conn = null;</span>
 			}
 <span class="nc" id="L2469">			catch (Exception ex)</span>
 			{
@@ -2474,83 +2474,83 @@ public class StatNewDB
 			{
 				try
 				{
-<span class="pc bpc" id="L2477" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc bnc" id="L2477" title="All 2 branches missed.">					if (rs != null)</span>
 <span class="nc" id="L2478">						rs.close();</span>
-<span class="pc bpc" id="L2479" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc bnc" id="L2479" title="All 2 branches missed.">					if (ps != null)</span>
 <span class="nc" id="L2480">						ps.close();</span>
-<span class="pc bpc" id="L2481" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc bnc" id="L2481" title="All 2 branches missed.">					if (db_conn != null)</span>
 <span class="nc" id="L2482">						db_conn.close();</span>
 				}
 <span class="nc" id="L2484">				catch (Exception ex2)</span>
 				{
 <span class="nc" id="L2486">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L2487">				}</span>
+<span class="nc" id="L2487">				}</span>
 			}
 		}
 
 		//nacitaj udaje statistiky
-<span class="fc" id="L2492">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
-<span class="fc bfc" id="L2493" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="nc" id="L2492">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L2493" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
-<span class="fc" id="L2495">			Connection db_conn = null;</span>
-<span class="fc" id="L2496">			PreparedStatement ps = null;</span>
-<span class="fc" id="L2497">			ResultSet rs = null;</span>
+<span class="nc" id="L2495">			Connection db_conn = null;</span>
+<span class="nc" id="L2496">			PreparedStatement ps = null;</span>
+<span class="nc" id="L2497">			ResultSet rs = null;</span>
 			try
 			{
-<span class="fc" id="L2500">				db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="nc" id="L2500">				db_conn = DBPool.getConnectionReadUncommited();</span>
 
-<span class="fc" id="L2502">				String sql=&quot;SELECT count(doc_id) AS pocet, last_doc_id &quot;+</span>
+<span class="nc" id="L2502">				String sql=&quot;SELECT count(doc_id) AS pocet, last_doc_id &quot;+</span>
 				&quot;FROM stat_views&quot;+suffixes[s]+&quot; &quot;+
 				&quot;WHERE doc_id=? AND view_time &gt;= ? AND view_time &lt;= ? &quot;+
 				&quot;GROUP BY last_doc_id &quot;+
 				&quot;ORDER BY pocet desc&quot;;
 
-<span class="fc" id="L2508">				Logger.debug(StatNewDB.class, &quot;getIncomingStats sql: &quot;+sql);</span>
+<span class="nc" id="L2508">				Logger.debug(StatNewDB.class, &quot;getIncomingStats sql: &quot;+sql);</span>
 
-<span class="fc" id="L2510">				ps = prepareStatement(db_conn, sql);</span>
-<span class="fc" id="L2511">				ps.setInt(1,docId);</span>
-<span class="fc" id="L2512">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L2513">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
-<span class="fc" id="L2514">				rs = ps.executeQuery();</span>
+<span class="nc" id="L2510">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L2511">				ps.setInt(1,docId);</span>
+<span class="nc" id="L2512">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L2513">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L2514">				rs = ps.executeQuery();</span>
 
-<span class="fc bfc" id="L2516" title="All 2 branches covered.">				while (rs.next())</span>
+<span class="nc bnc" id="L2516" title="All 2 branches missed.">				while (rs.next())</span>
 				{
-<span class="fc" id="L2518">					int lastDocId=rs.getInt(&quot;last_doc_id&quot;);</span>
-<span class="fc" id="L2519">					int pocet=rs.getInt(&quot;pocet&quot;);</span>
+<span class="nc" id="L2518">					int lastDocId=rs.getInt(&quot;last_doc_id&quot;);</span>
+<span class="nc" id="L2519">					int pocet=rs.getInt(&quot;pocet&quot;);</span>
 
-<span class="pc bpc" id="L2521" title="1 of 2 branches missed.">					if(lastDocId==-1)</span>
+<span class="nc bnc" id="L2521" title="All 2 branches missed.">					if(lastDocId==-1)</span>
 					{
-<span class="fc" id="L2523">						pocet = pocet - pocetPriamychPristupov;</span>
+<span class="nc" id="L2523">						pocet = pocet - pocetPriamychPristupov;</span>
 					}
 
-<span class="fc" id="L2526">					Column col = colTable.get(lastDocId);</span>
-<span class="fc bfc" id="L2527" title="All 2 branches covered.">					if (col == null)</span>
+<span class="nc" id="L2526">					Column col = colTable.get(lastDocId);</span>
+<span class="nc bnc" id="L2527" title="All 2 branches missed.">					if (col == null)</span>
 					{
-<span class="fc" id="L2529">						col = new Column();</span>
-<span class="fc" id="L2530">						col.setIntColumn2(pocet);</span>
+<span class="nc" id="L2529">						col = new Column();</span>
+<span class="nc" id="L2530">						col.setIntColumn2(pocet);</span>
 
-<span class="fc" id="L2532">						bdd = docDB.getBasicDocDetails(lastDocId, true);</span>
-<span class="fc" id="L2533">						String title=groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+bdd.getTitle();</span>
-<span class="fc" id="L2534">						col.setColumn1(title);</span>
-<span class="pc bpc" id="L2535" title="1 of 2 branches missed.">						if(lastDocId==-1)</span>
+<span class="nc" id="L2532">						bdd = docDB.getBasicDocDetails(lastDocId, true);</span>
+<span class="nc" id="L2533">						String title=groupsDB.getPath(bdd.getGroupId())+&quot;/&quot;+bdd.getTitle();</span>
+<span class="nc" id="L2534">						col.setColumn1(title);</span>
+<span class="nc bnc" id="L2535" title="All 2 branches missed.">						if(lastDocId==-1)</span>
 						{
-<span class="fc" id="L2537">							col.setColumn1(prop.getText(&quot;stat_doc.directAccess&quot;));</span>
+<span class="nc" id="L2537">							col.setColumn1(prop.getText(&quot;stat_doc.directAccess&quot;));</span>
 						}
-<span class="fc" id="L2539">						col.setColumn2(&quot;/apps/stat/admin/top-details/?docId=&quot;+lastDocId+&quot;&amp;title=&quot;+Tools.URLEncode(title));</span>
-<span class="fc" id="L2540">						ret.add(col);</span>
-<span class="fc" id="L2541">						colTable.put(lastDocId, col);</span>
-<span class="fc" id="L2542">					}</span>
+<span class="nc" id="L2539">						col.setColumn2(&quot;/apps/stat/admin/top-details/?docId=&quot;+lastDocId+&quot;&amp;title=&quot;+Tools.URLEncode(title));</span>
+<span class="nc" id="L2540">						ret.add(col);</span>
+<span class="nc" id="L2541">						colTable.put(lastDocId, col);</span>
+<span class="nc" id="L2542">					}</span>
 					else
 					{
-<span class="fc" id="L2545">						col.setIntColumn2(col.getIntColumn2()+pocet);</span>
+<span class="nc" id="L2545">						col.setIntColumn2(col.getIntColumn2()+pocet);</span>
 					}
-<span class="fc" id="L2547">				}</span>
-<span class="fc" id="L2548">				rs.close();</span>
-<span class="fc" id="L2549">				ps.close();</span>
-<span class="fc" id="L2550">				db_conn.close();</span>
-<span class="fc" id="L2551">				rs = null;</span>
-<span class="fc" id="L2552">				ps = null;</span>
-<span class="fc" id="L2553">				db_conn = null;</span>
+<span class="nc" id="L2547">				}</span>
+<span class="nc" id="L2548">				rs.close();</span>
+<span class="nc" id="L2549">				ps.close();</span>
+<span class="nc" id="L2550">				db_conn.close();</span>
+<span class="nc" id="L2551">				rs = null;</span>
+<span class="nc" id="L2552">				ps = null;</span>
+<span class="nc" id="L2553">				db_conn = null;</span>
 			}
 <span class="nc" id="L2555">			catch (Exception ex)</span>
 			{
@@ -2560,23 +2560,23 @@ public class StatNewDB
 			{
 				try
 				{
-<span class="pc bpc" id="L2563" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc bnc" id="L2563" title="All 2 branches missed.">					if (rs != null)</span>
 <span class="nc" id="L2564">						rs.close();</span>
-<span class="pc bpc" id="L2565" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc bnc" id="L2565" title="All 2 branches missed.">					if (ps != null)</span>
 <span class="nc" id="L2566">						ps.close();</span>
-<span class="pc bpc" id="L2567" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc bnc" id="L2567" title="All 2 branches missed.">					if (db_conn != null)</span>
 <span class="nc" id="L2568">						db_conn.close();</span>
 				}
 <span class="nc" id="L2570">				catch (Exception ex2)</span>
 				{
 <span class="nc" id="L2572">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L2573">				}</span>
+<span class="nc" id="L2573">				}</span>
 			}
 		}
 
 		//usporiadaj
-<span class="fc" id="L2578">		Collections.sort(ret, new Comparator&lt;Column&gt;()</span>
-<span class="fc" id="L2579">		{</span>
+<span class="nc" id="L2578">		Collections.sort(ret, new Comparator&lt;Column&gt;()</span>
+<span class="nc" id="L2579">		{</span>
 			@Override
 			public int compare(Column c1, Column c2)
 			{
@@ -2585,13 +2585,13 @@ public class StatNewDB
 		});
 
 		//ak je tam nieco zaporne (vyradenie priamych pristupov) vyhod
-<span class="fc" id="L2588">		List&lt;Column&gt; ret2 = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L2589" title="All 2 branches covered.">		for (Column col : ret)</span>
+<span class="nc" id="L2588">		List&lt;Column&gt; ret2 = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L2589" title="All 2 branches missed.">		for (Column col : ret)</span>
 		{
-<span class="pc bpc" id="L2591" title="1 of 2 branches missed.">			if (col.getIntColumn2()&gt;0) ret2.add(col);</span>
-<span class="fc" id="L2592">		}</span>
+<span class="nc bnc" id="L2591" title="All 2 branches missed.">			if (col.getIntColumn2()&gt;0) ret2.add(col);</span>
+<span class="nc" id="L2592">		}</span>
 
-<span class="fc" id="L2594">		return (ret2);</span>
+<span class="nc" id="L2594">		return (ret2);</span>
 	}
 	/**
 	 * Vygeneruje pre zvolene docID tabulku kolko z docId navstev islo na ktore docId
@@ -2603,37 +2603,37 @@ public class StatNewDB
 	 */
 	public static List&lt;Column&gt; getOutgoingStats(int docId, java.util.Date from, java.util.Date to)
 	{
-<span class="fc" id="L2606">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
-<span class="fc" id="L2607">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
-<span class="fc" id="L2608">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
-<span class="fc" id="L2609">		DocDB docDB = DocDB.getInstance();</span>
+<span class="nc" id="L2606">		List&lt;Column&gt; ret = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L2607">		Map&lt;Integer, Column&gt; colTable = new Hashtable&lt;&gt;();</span>
+<span class="nc" id="L2608">		GroupsDB groupsDB = GroupsDB.getInstance();</span>
+<span class="nc" id="L2609">		DocDB docDB = DocDB.getInstance();</span>
 		DocDetails bdd;
 		Column col;
 
-<span class="fc" id="L2613">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
-<span class="fc bfc" id="L2614" title="All 2 branches covered.">		for (int s=0; s&lt;suffixes.length; s++)</span>
+<span class="nc" id="L2613">		String[] suffixes = getTableSuffix(from.getTime(), to.getTime());</span>
+<span class="nc bnc" id="L2614" title="All 2 branches missed.">		for (int s=0; s&lt;suffixes.length; s++)</span>
 		{
-<span class="fc" id="L2616">			Connection db_conn = null;</span>
-<span class="fc" id="L2617">			PreparedStatement ps = null;</span>
-<span class="fc" id="L2618">			ResultSet rs = null;</span>
+<span class="nc" id="L2616">			Connection db_conn = null;</span>
+<span class="nc" id="L2617">			PreparedStatement ps = null;</span>
+<span class="nc" id="L2618">			ResultSet rs = null;</span>
 			try
 			{
-<span class="fc" id="L2621">				db_conn = DBPool.getConnectionReadUncommited();</span>
-<span class="fc" id="L2622">				String sql=&quot;SELECT count(last_doc_id) AS pocet, doc_id &quot;+</span>
+<span class="nc" id="L2621">				db_conn = DBPool.getConnectionReadUncommited();</span>
+<span class="nc" id="L2622">				String sql=&quot;SELECT count(last_doc_id) AS pocet, doc_id &quot;+</span>
 				&quot;FROM stat_views&quot;+suffixes[s]+&quot; &quot;+
 				&quot;WHERE last_doc_id= ? AND view_time &gt;= ? AND view_time &lt;= ? &quot;+
 				&quot;GROUP BY doc_id &quot;+
 				&quot;ORDER BY pocet desc&quot;;
 
-<span class="fc" id="L2628">				Logger.debug(StatNewDB.class, &quot;getOutgoingStats sql: &quot;+sql);</span>
+<span class="nc" id="L2628">				Logger.debug(StatNewDB.class, &quot;getOutgoingStats sql: &quot;+sql);</span>
 
-<span class="fc" id="L2630">				ps = prepareStatement(db_conn, sql);</span>
-<span class="fc" id="L2631">				ps.setInt(1,docId);</span>
-<span class="fc" id="L2632">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
-<span class="fc" id="L2633">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
-<span class="fc" id="L2634">				rs = ps.executeQuery();</span>
+<span class="nc" id="L2630">				ps = prepareStatement(db_conn, sql);</span>
+<span class="nc" id="L2631">				ps.setInt(1,docId);</span>
+<span class="nc" id="L2632">				ps.setTimestamp(2, new Timestamp(from.getTime()));</span>
+<span class="nc" id="L2633">				ps.setTimestamp(3, new Timestamp(to.getTime()));</span>
+<span class="nc" id="L2634">				rs = ps.executeQuery();</span>
 
-<span class="pc bpc" id="L2636" title="1 of 2 branches missed.">				while (rs.next())</span>
+<span class="nc bnc" id="L2636" title="All 2 branches missed.">				while (rs.next())</span>
 				{
 <span class="nc" id="L2638">					int docId2 = rs.getInt(&quot;doc_id&quot;);</span>
 <span class="nc" id="L2639">					col = colTable.get(docId2);</span>
@@ -2653,12 +2653,12 @@ public class StatNewDB
 <span class="nc" id="L2653">						col.setIntColumn2(col.getIntColumn2()+rs.getInt(&quot;pocet&quot;));</span>
 					}
 <span class="nc" id="L2655">				}</span>
-<span class="fc" id="L2656">				rs.close();</span>
-<span class="fc" id="L2657">				ps.close();</span>
-<span class="fc" id="L2658">				db_conn.close();</span>
-<span class="fc" id="L2659">				rs = null;</span>
-<span class="fc" id="L2660">				ps = null;</span>
-<span class="fc" id="L2661">				db_conn = null;</span>
+<span class="nc" id="L2656">				rs.close();</span>
+<span class="nc" id="L2657">				ps.close();</span>
+<span class="nc" id="L2658">				db_conn.close();</span>
+<span class="nc" id="L2659">				rs = null;</span>
+<span class="nc" id="L2660">				ps = null;</span>
+<span class="nc" id="L2661">				db_conn = null;</span>
 			}
 <span class="nc" id="L2663">			catch (Exception ex)</span>
 			{
@@ -2668,23 +2668,23 @@ public class StatNewDB
 			{
 				try
 				{
-<span class="pc bpc" id="L2671" title="1 of 2 branches missed.">					if (rs != null)</span>
+<span class="nc bnc" id="L2671" title="All 2 branches missed.">					if (rs != null)</span>
 <span class="nc" id="L2672">						rs.close();</span>
-<span class="pc bpc" id="L2673" title="1 of 2 branches missed.">					if (ps != null)</span>
+<span class="nc bnc" id="L2673" title="All 2 branches missed.">					if (ps != null)</span>
 <span class="nc" id="L2674">						ps.close();</span>
-<span class="pc bpc" id="L2675" title="1 of 2 branches missed.">					if (db_conn != null)</span>
+<span class="nc bnc" id="L2675" title="All 2 branches missed.">					if (db_conn != null)</span>
 <span class="nc" id="L2676">						db_conn.close();</span>
 				}
 <span class="nc" id="L2678">				catch (Exception ex2)</span>
 				{
 <span class="nc" id="L2680">					sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L2681">				}</span>
+<span class="nc" id="L2681">				}</span>
 			}
 		}
 
 		//usporiadaj
-<span class="fc" id="L2686">		Collections.sort(ret, new Comparator&lt;Column&gt;()</span>
-<span class="fc" id="L2687">		{</span>
+<span class="nc" id="L2686">		Collections.sort(ret, new Comparator&lt;Column&gt;()</span>
+<span class="nc" id="L2687">		{</span>
 			@Override
 			public int compare(Column c1, Column c2)
 			{
@@ -2692,7 +2692,7 @@ public class StatNewDB
 			}
 		});
 
-<span class="fc" id="L2695">		return (ret);</span>
+<span class="nc" id="L2695">		return (ret);</span>
 	}
 
 	/**

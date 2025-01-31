@@ -384,7 +384,7 @@ function checkComment() {
 						<div class="sectionTitle">
 							<b><iwcm:text key="components.map.settings"/></b>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.width.short"/>
 							</div>
@@ -393,7 +393,7 @@ function checkComment() {
 								<span>%</span>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.height.short"/>
 							</div>
@@ -402,15 +402,15 @@ function checkComment() {
 								<span>%</span>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.own.size"/>
 							</div>
 							<div class="col-sm-6">
-								<input type="checkbox" name="mapSizeSwticher" id="mapSizeSwticher" <%=pageParams.getBooleanValue("sizeInPercent", true) ? "" : "checked=\"checked\""%> value="" onchange="checkMapSize();" class="form-control"/>
+								<input type="checkbox" name="mapSizeSwticher" id="mapSizeSwticher" <%=pageParams.getBooleanValue("sizeInPercent", true) ? "" : "checked=\"checked\""%> value="" onchange="checkMapSize();"/>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.width.short"/>
 							</div>
@@ -419,7 +419,7 @@ function checkComment() {
 								<span>px</span>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.height.short"/>
 							</div>
@@ -428,7 +428,7 @@ function checkComment() {
 								<span>px</span>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.zoom"/>
 							</div>
@@ -436,7 +436,7 @@ function checkComment() {
 								<input type="number" max="21" min="0" id="zoom" size="3" class="form-control sizeFormat" value="<%=pageParams.getIntValue("zoom", 13)%>"/>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.enable_scrollwheel_short"/>
 							</div>
@@ -444,7 +444,7 @@ function checkComment() {
 								<input type="checkbox" name="scrollwheel" id="scrollwheel" <%=pageParams.getBooleanValue("scrollwheel", false) ? "checked=\"checked\"" : ""%> />
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.enable_controls"/>
 							</div>
@@ -458,7 +458,7 @@ function checkComment() {
 						<div class="sectionTitle">
 							<b><iwcm:text key="components.map.pin.settings" /></b>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.show_address"/>
 							</div>
@@ -466,7 +466,7 @@ function checkComment() {
 								<input type="checkbox" name="showLabel" id="showLabel" <%=pageParams.getBooleanValue("labelAddress", false) ? "checked=\"checked\"" : ""%> />
 							</div>
 						</div>
-						<div class="col-sm-12 checkLabelBox">
+						<div class="row form-group checkLabelBox">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.add.own_text"/>
 							</div>
@@ -474,7 +474,7 @@ function checkComment() {
 								<input type="checkbox" name="addComment" id="addComment" onchange="checkComment();" />
 							</div>
 						</div>
-						<div class="col-sm-12 addCommentBox">
+						<div class="row form-group addCommentBox">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.label"/>
 							</div>
@@ -482,7 +482,7 @@ function checkComment() {
 								<textarea id="label" class="form-control" style="min-height: 90px;" size="60" value="<%=ResponseUtils.filter(pageParams.getValue("label", ""))%>"><%=ResponseUtils.filter(pageParams.getValue("label", ""))%></textarea>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.offsetX.short"/>
 							</div>
@@ -490,7 +490,7 @@ function checkComment() {
 								<input type="input" id="offsetX" size="3" class="form-control" value="<%=pageParams.getIntValue("offsetX", 0)%>"/>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.offsetY.short"/>
 							</div>
@@ -498,7 +498,7 @@ function checkComment() {
 								<input type="input" id="offsetY" size="3" class="form-control" value="<%=pageParams.getIntValue("offsetY", 0)%>"/>
 							</div>
 						</div>
-						<div class="col-sm-12">
+						<div class="row form-group">
 							<div class="col-sm-6">
 								<iwcm:text key="components.map.close_label"/>
 							</div>

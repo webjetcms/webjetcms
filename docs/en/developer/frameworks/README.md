@@ -48,15 +48,16 @@ npm install
 
 ## Events
 
-**ATTENTION:** it is not possible to use event in JavaScript code `$(document).ready`, because the translation key store must be initialized first. We have implemented a custom function `window.domReady.add` in the library [ready](../libraries/ready-extender.md), which is executed only after the translation key store has been initialized.
+!>**Warning:** it is not possible to use event in JavaScript code `$(document).ready`, because the translation key store must be initialized first. We have implemented a custom function `window.domReady.add` in the library [ready](../libraries/ready-extender.md), which is executed only after the translation key store has been initialized.
+
 ```javascript
 window.domReady.add(function () {
-	//vas kod
+    //vas kod
 });
 
 //nastavenie poradia na 10, cize typicky na koniec
 window.domReady.add(function () {
-	//vas kod
+    //vas kod
 }, 10);
 ```
 
@@ -79,8 +80,8 @@ each js in WPF.js
         script(type='text/javascript', src=js)
 ```
 
-So if you need to insert a special JavaScript file for a page in the administration, create it in the folder `src/main/webapp/admin/v9/src/js/pages/`If you expect to use several separate JS files combined into one, create a subfolder. An example is `src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js` which is in the subfolder `web-pages-list` and in the script `web-pages-list.js` the class is imported from `preview.js`.
+So if you need to insert a special JavaScript file for a page in the administration, create it in the folder `src/main/webapp/admin/v9/src/js/pages/` If you expect to use several separate JS files combined into one, create a subfolder. An example is `src/main/webapp/admin/v9/src/js/pages/web-pages-list/web-pages-list.js` which is in the subfolder `web-pages-list` and in the script `web-pages-list.js` the class is imported from `preview.js`.
 
 This script is inserted only when the web page is called `web-pages-list.pug`, that is, at the URL address `/admin/v9/webpages/web-pages-list/`.
 
-The above procedure can only be used for PUG files, since the script is inserted into the generated HTML during compilation. For applications from `/apps` folders that use directly `.html` files is ready to insert JavaScript [file as a module](../../custom-apps/admin-menu-item/README.md#priloženie-javascript-súboru) while the HTML page is displayed.
+The above procedure can only be used for PUG files, since the script is inserted into the generated HTML during compilation. For applications from `/apps` folders that use directly `.html` files is ready to insert JavaScript [file as a module](../../custom-apps/admin-menu-item/README.md#attaching-a-javascript-file) while the HTML page is displayed.

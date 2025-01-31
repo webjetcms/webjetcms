@@ -336,8 +336,38 @@ static {
 	replaces.add(new OptionDto("far fa-image", "ti ti-photo", null));
 	replaces.add(new OptionDto("far fa-retweet", "ti ti-repeat", null));
 	replaces.add(new OptionDto("far fa-camera", "ti ti-camera", null));
-	
+
+	replaces.add(new OptionDto("fa fa-pencil-square-o", "ti ti-pencil", null));
+	replaces.add(new OptionDto("fa fa-pencil", "ti ti-pencil", null));
+	replaces.add(new OptionDto("fa fa-info-circle", "ti ti-info-circle", null));
+	replaces.add(new OptionDto("fa fa-exclamation", "ti ti-alert-triangle", null));
+	replaces.add(new OptionDto("fa fa-trash-alt", "ti ti-trash", null));
+	replaces.add(new OptionDto("fa fa-trash-o", "ti ti-trash", null));
+	replaces.add(new OptionDto("fa fa-trash", "ti ti-trash", null));
+
 	replaces.add(new OptionDto("org.apache.commons.dbcp.ConfigurableDataSource", "sk.iway.iwcm.system.dbpool.ConfigurableDataSource", null));
+
+	//datatables upgrade to v2
+	replaces.add(new OptionDto(".ajax.url()", ".getAjaxUrl()", ".html"));
+	replaces.add(new OptionDto(".ajax.url(", ".setAjaxUrl(", ".html"));
+	replaces.add(new OptionDto("dataTables_scrollHeadInner", "dt-scroll-headInner", ".html"));
+	replaces.add(new OptionDto("dataTables_scrollHead", "dt-scroll-head", ".html"));
+	replaces.add(new OptionDto("dataTables_scrollBody", "dt-scroll-body", ".html"));
+	replaces.add(new OptionDto("sorting_asc", "dt-ordering-asc", ".html"));
+	replaces.add(new OptionDto("sorting_desc", "dt-ordering-desc", ".html"));
+	replaces.add(new OptionDto("dataTables_info", "dt-info", ".html"));
+	replaces.add(new OptionDto("dataTables_paginate", "dt-paging", ".html"));
+	replaces.add(new OptionDto("dataTables_wrapper", "dt-container", ".html"));
+	replaces.add(new OptionDto("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu", "div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]", ".js"));
+	replaces.add(new OptionDto("dataTables_empty", "dt-empty", ".js"));
+
+	replaces.add(new OptionDto("data-dismiss=", "data-bs-dismiss=", ".jsp"));
+	replaces.add(new OptionDto("data-toggle=", "data-bs-toggle=", ".jsp"));
+	replaces.add(new OptionDto(".DATA.json[", ".DATA.json.data[", ".html"));
+
+	//basket - Transition from double to BigDecimal
+	replaces.add(new OptionDto("Math.abs( doc.getPrice() ) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
+	replaces.add(new OptionDto("Math.abs(doc.getPrice()) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

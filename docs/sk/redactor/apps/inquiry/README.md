@@ -8,11 +8,11 @@ Zobrazenie na web stránke odporúčame v užšom stĺpci, napr. v pravom:
 
 ![](inquiry-example.png)
 
-Editor ankety obsahuje tri karty, ktoré si teraz opíšeme.
+Editor ankety obsahuje 4 karty, ktoré si teraz opíšeme.
 
 ## Základné
 
-V karte Základné sa nachádzajú polia:
+V karte **Základné** sa nachádzajú polia:
 
 - Otázka - reprezentuje otázku ankety.
 - Aktívna - zapne/vypne zobrazovanie ankety na web stránke.
@@ -23,7 +23,7 @@ V karte Základné sa nachádzajú polia:
 
 ## Nastavenia
 
-V karte Nastavenia sú polia:
+V karte **Nastavenia** sú polia:
 
 - Skupina - ankety môžete radiť do skupín (napr. hlavná stránka, produkty atď) a následne na stránke zobrazovať anketu z vybranej skupiny. Zadajte znak ```*``` pre zobrazenie už existujúcich skupín.
 - Text po hlasovaní - text, ktorý sa zobrazí návštevníkovi po úspešnom hlasovaní v ankete.
@@ -35,7 +35,7 @@ V karte Nastavenia sú polia:
 
 ## Možné odpovede
 
-V karte Možné odpovede je vnorená data tabuľku, v ktorej môžeme pridávať/upravovať/duplikovať a mazať možné odpovede pre aktuálne otvorenú anketu (otázku).
+V karte **Možné odpovede** je vnorená data tabuľku, v ktorej môžeme pridávať/upravovať/duplikovať a mazať možné odpovede pre aktuálne otvorenú anketu (otázku).
 
 ![](inquiry-editor_answers.png)
 
@@ -49,3 +49,11 @@ Definovanie odpovede obsahuje nasledovné polia:
 ![](inquiry-answers_editor.png)
 
 Ak odpovede budete vytvárať hneď pri vytváraní ankety ale anketu neuložíte, tak všetky odpovede na túto neuloženú anketu sa stratia.
+
+## Štatistika
+
+Karta **Štatistika** ponúka rýchly prístup k štatistikám danej ankety. Okrem tabuľky s odpoveďami jednotlivých používateľov ponúka aj grafy.
+
+![](inquiry-editor_stat.png)
+
+Ide však iba o vnorenú verziu samostatne stránky [Štatistika ankety](./inquiry-stat.md). Ak si chcete prezrieť štatistiky ankety na samostatnej stránke, stačí označiť želanú anketu a stlačiť tlačidlo ![](inquiry-stat_button.png ":no-zoom").

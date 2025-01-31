@@ -34,11 +34,11 @@ The error appears when you have a directory on the server `/WEB-INF/lib/` Librar
 
 ## Display translation keys
 
-If you are seeing translation keys of type `components.monitoring.date_insert` instead of text like **Date of insertion**, probably not defined in the translation file. Follow the instructions on [defining translation keys](../datatables-editor/datatable-columns.md#preklady-názvov-stĺpcov).
+If you are seeing translation keys of type `components.monitoring.date_insert` instead of text like **Date of insertion**, probably not defined in the translation file. Follow the instructions on [defining translation keys](../datatables-editor/datatable-columns.md#translations-of-column-headings).
 
 ## Error NoSuchMethodError (Ljava/lang/String;)V
 
-An error may appear if a parent class that contains an annotation `@MappedSuperclass` has methods generated using Lombok annotations as `@Data, @Getter alebo @Setter`as Lombok is not adapted to inheritance methods. In this case, you need to remove the Lombok annotations and generate all the necessary methods and constructors directly in the parent class.
+An error may appear if a parent class that contains an annotation `@MappedSuperclass` has methods generated using Lombok annotations as `@Data, @Getter alebo @Setter` as Lombok is not adapted to inheritance methods. In this case, you need to remove the Lombok annotations and generate all the necessary methods and constructors directly in the parent class.
 
 ## StackOverflowError
 
@@ -84,7 +84,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
 
 ## Problem with entity saving
 
-If you encounter an error when creating/modifying an entity `Content type 'application/json;charset=UTF-8' not supported`
+If you encounter an error when creating/modifying an entity `Content type 'application/json;charset=UTF-8' not supported` this may be due to a nested table.
 
 ```java
     @Transient
@@ -102,6 +102,6 @@ If you encounter an error when creating/modifying an entity `Content type 'appli
     private List<StatClicksEntity> statClicksTab;
 ```
 
-`@OneToMany` or `@ManyToOne``@JsonManagedReference``@JsonIgnore`
+An error occurs if the Entity of the nested table (in this case StatClicksEntity) contains a mapping `@OneToMany` or `@ManyToOne` and in this mapping the annotation is used `@JsonManagedReference`. At a glance, it helps to use annotation `@JsonIgnore` (it will stop displaying the error) but it won't work.
 
-`@JsonManagedReference`.
+The solution is to remove the annotation `@JsonManagedReference`.

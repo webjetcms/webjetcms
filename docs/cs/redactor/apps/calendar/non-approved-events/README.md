@@ -4,7 +4,7 @@ Sekce Události v kalendáři -> Neschválené události slouží k procesu schv
 
 ![](page.png)
 
-**Varování:** po schválení/neschválení události již není událost nadále **se nezobrazí** v sekci Neschválené události, takže svůj výběr nebudete moci změnit. Událost však bude stále viditelná v sekci [Seznam událostí](../README.md).
+!>**Varování:** po schválení/neschválení události již není událost nadále **se nezobrazí** v sekci Neschválené události, takže svůj výběr nebudete moci změnit. Událost však bude stále viditelná v sekci [Seznam událostí](../README.md).
 
 ## Schválení události
 

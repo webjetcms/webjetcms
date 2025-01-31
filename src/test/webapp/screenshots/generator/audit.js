@@ -4,21 +4,24 @@ Before(({ I, login }) => {
     login('admin');
 });
 
-Scenario("audit - screenshots", ({ I, DTE, Document }) => {
+Scenario("audit - screenshots", ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/apps/audit-search/");
     Document.screenshot("/sysadmin/audit/audit-search.png");
     I.wait(1);
 
     I.amOnPage("/admin/v9/apps/audit-changed-webpages/");
+    DT.waitForLoader();
     Document.screenshot("/sysadmin/audit/audit-changed-webpages.png");
     I.wait(1);
 
     I.amOnPage("/admin/v9/apps/audit-awaiting-publish-webpages/");
+    DT.waitForLoader();
     Document.screenshot("/sysadmin/audit/audit-awaiting-publish-webpages.png");
 
     I.amOnPage("/admin/v9/apps/audit-notifications/");
+    DT.waitForLoader();
     Document.screenshot("/sysadmin/audit/audit-notification.png");
-    I.click("button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     const docId = 164;
     const auditEvent = `UPDATE:
@@ -32,10 +35,10 @@ date_created: `;
     DTE.cancel();
 });
 
-Scenario("log levels", async ({ I, DTE, Document }) => {
+Scenario("log levels", async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/apps/audit-log-levels/");
     Document.screenshot("/sysadmin/audit/audit-log-levels-datatable.png");
-    I.click("button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     Document.screenshotElement("div.DTE_Action_Create", "/sysadmin/audit/audit-log-levels-editor.png");
 });

@@ -14,6 +14,7 @@ module.exports = {
     login(name, emailDomain = "fexpost.com"){
         I.say('Prihlasujem sa do TempMail-u');
         I.amOnPage('https://tempmail.plus/en/#!');
+        I.switchTo();
         I.fillField('input#pre_button', name);
         I.clickCss('button#domain');
         I.click(locate("button.dropdown-item").withText(emailDomain));
@@ -27,9 +28,9 @@ module.exports = {
     openLatestEmail(){
         I.say('Otvaram najnovsi mail');
         I.waitForElement("div.inbox", 10);
-        I.waitForElement("div.inbox > div:nth-of-type(2) div.subj");
+        I.waitForElement("div.inbox > div:nth-of-type(2) div.subj", 60);
         I.clickCss("div.inbox > div:nth-of-type(2) div.subj");
-        I.waitForElement("div#info");
+        I.waitForElement("div#info", 10);
         I.wait(1);
     },
 
@@ -56,9 +57,9 @@ module.exports = {
      */
     deleteCurrentEmail() {
         I.click("#delete_mail");
-        I.waitForElement("#modal-destroy-mail");
+        I.waitForElement("#modal-destroy-mail", 10);
         I.click("#confirm_mail");
-        I.waitForInvisible("#modal-destroy-mail");
+        I.waitForInvisible("#modal-destroy-mail", 60);
     },
 
     /**
@@ -73,6 +74,6 @@ module.exports = {
             I.clickCss("button#confirm");
         }
 
-        I.waitForElement(".loading.m-auto");
+        I.waitForElement(".loading.m-auto", 60);
     },
 }

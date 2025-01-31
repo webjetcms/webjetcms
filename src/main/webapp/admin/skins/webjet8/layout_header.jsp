@@ -44,7 +44,7 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 			<!-- BEGIN LOGO -->
 			<style>.page-header.navbar .navbar-brand { padding-top: 4px; }</style>
 			<a class="navbar-brand" href="/admin/v9/">
-				<img src="/admin/v9/dist/images/logo-<%=InitServlet.getBrandSuffix()%>.png" alt="logo" data-toggle="tooltip" data-title="<iwcm:text key="admin.top.webjet_version"/> <%=sk.iway.iwcm.InitServlet.getActualVersionLong()%>" data-placement="bottom" />
+				<img src="/admin/v9/dist/images/logo-<%=InitServlet.getBrandSuffix()%>.png" alt="logo" data-bs-toggle="tooltip" title="<iwcm:text key="admin.top.webjet_version"/> <%=sk.iway.iwcm.InitServlet.getActualVersionLong()%>" data-bs-placement="bottom" />
 			</a>
 			<%
 				if (InitServlet.isTypeCloud()==false && Constants.getBoolean("enableStaticFilesExternalDir"))
@@ -85,7 +85,7 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 						$('.top-menu').toggle();
 				}
 			</script>
-			<a href="javascript:showHide_topMenu(this);" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+			<a href="javascript:showHide_topMenu(this);" class="navbar-toggle" data-bs-toggle="collapse" data-target=".navbar-collapse">
 				<img src="/admin/skins/webjet8/assets/global/img/wj/menu-toggler.png" alt=""/>
 			</a>
 			<!-- END RESPONSIVE MENU TOGGLER -->
@@ -98,21 +98,21 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 				</li>
 
 				<li class="dropdown" style="padding-right: 1px;">
-					<a class="btn btn-sm btn-outline-secondary js-search-toggler" href="/admin/searchall.jsp">
+					<a class="btn btn-sm js-search-toggler" href="/admin/searchall.jsp">
 						<i class="ti ti-search fs-6"></i>
 					</a>
 				</li>
 
 				<!-- BEGIN USER LOGIN DROPDOWN -->
 				<li class="dropdown user">
-					<a href="#" class="dropdown-toggle" data-toggle="dropdown" data-close-others="true">
+					<a id="userDropdownMenu" href="#" class="dropdown-toggle" data-bs-toggle="dropdown" data-close-others="true">
 						<i class="ti ti-id"></i>
 						<span class="username">
 							 <bean:write name="iwcm_useriwcm" property="fullName"/>
 						</span>
 						<i class="ti ti-chevron-down"></i>
 					</a>
-					<ul class="dropdown-menu">
+					<ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
 						<li style="display: none;">
 							<a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
 								<i class="ti ti-user"></i> <iwcm:text key="components.forum.bb.profile"/>
@@ -131,7 +131,7 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 						</li>
 						</iwcm:menu>
 						<li>
-							<a href="<%=Constants.getString("adminLogoffLink") %>">
+							<a href="javascript:document.adminLogoffForm.submit()">
 								<i class="ti ti-logout"></i> <iwcm:text key="menu.logout"/>
 							</a>
 						</li>
@@ -139,9 +139,12 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 				</li>
 
 	            <li class="dropdown dropdown-quick-sidebar-toggler">
-	                <a class="dropdown-toggle" href="/logoff.do?forward=/admin/index.jsp">
+	                <a class="dropdown-toggle js-logout-toggler" href="javascript:document.adminLogoffForm.submit()">
 						<i class="ti ti-logout"></i>
 	                </a>
+					<form action="<%=Constants.getString("adminLogoffLink") %>" method="post" name="adminLogoffForm" style="display:none">
+						<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
+					</form>
 	            </li>
 
 

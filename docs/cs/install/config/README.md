@@ -1,4 +1,4 @@
-# Konfigurace
+# Základní konfigurace
 
 Nejčastěji používané [konfigurační proměnné](../../admin/setup/configuration/README.md).
 

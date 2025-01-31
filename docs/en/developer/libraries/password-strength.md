@@ -6,6 +6,7 @@ Our implementation encapsulates the library [zxcvbn-ts](https://zxcvbn-ts.github
 - repeating sequences of the type `abcabc`
 - common names and surnames
 - well-known slogans such as `password`
+
 The library has **built-in dictionary of the most commonly used entries** and the names against which it checks the password.
 
 The check is implemented in the administration when creating/modifying a user but also in the login page in the administration, where it informs the user about the quality of the entered password.
@@ -16,8 +17,9 @@ The check is implemented in the administration when creating/modifying a user bu
 
 Automatic use in a datatable is simple, the class constructor `WjPasswordStrength` uses the following options:
 - `element` - HTML DOM element, or the element ID (which is subsequently obtained as `document.querySelector`)
+
 ```javascript
-new WjPasswordStrength({ element: "#DTE_Field_password" }).load();
+(new WjPasswordStrength({element: "#DTE_Field_password"})).load();
 ```
 
 When used in this way, it is automatically set to the specified `element` initializes the password quality check. The element is searched for the appropriate `div[data-dte-e=msg-info]` to which information about the quality of the password is written.
@@ -37,7 +39,7 @@ Password quality information uses translation keys from WebJET `wj-password-stre
 The library is imported in `app.js` and available globally:
 
 ```javascript
-import { WjPasswordStrength } from "./libs/wj-password-strength";
+import { WjPasswordStrength } from './libs/wj-password-strength';
 global.WjPasswordStrength = WjPasswordStrength;
 ```
 
@@ -45,7 +47,7 @@ global.WjPasswordStrength = WjPasswordStrength;
 
 The library is also used on the login screen to the administration.
 
-But since the login is implemented in the old JSP format and we don't want to make the JavaScript files of the full administration available on the login screen anymore, we use the login screen directly `zxcvbn-ts` library. Since the directory `node_modules` is not directly available, files are copied from directories in `node_modules/@zxcvbn-ts` to directories in `admin/skins/webjet8/assets/js/zxcvbn`to ensure that libraries are updated after an update via `npm update`.
+But since the login is implemented in the old JSP format and we don't want to make the JavaScript files of the full administration available on the login screen anymore, we use the login screen directly `zxcvbn-ts` library. Since the directory `node_modules` is not directly available, files are copied from directories in `node_modules/@zxcvbn-ts` to directories in `admin/skins/webjet8/assets/js/zxcvbn` to ensure that libraries are updated after an update via `npm update`.
 
 The use of the library is implemented directly in `logon-spring.js` similarly to this library, the translation texts are also entered directly in the JSP file (but via translation keys synchronized with the administration).
 

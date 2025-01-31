@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.gallery;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import sk.iway.iwcm.Identity;
@@ -16,11 +17,17 @@ public class GalleryJsTreeItem extends JsTreeItem {
     @JsonProperty("galleryDimension")
     private GalleryDimension galleryDimension;
 
+    @JsonIgnore
+    private long lastModified = 0;
+    @JsonIgnore
+    private long createDate = 0;
+
     public GalleryJsTreeItem(IwcmFile f, String currentDir, GalleryDimensionRepository repository, Identity user) {
         setId(f.getVirtualPath());
         setChildren(f.listFiles(IwcmFile::isDirectory).length > 0);
         setIcon("ti ti-folder-filled");
         setVirtualPath(f.getVirtualPath());
+        lastModified = f.lastModified();
         JsTreeItemState jsTreeItemState = new JsTreeItemState();
 
         // defaultne otvoreny adresar gallery
@@ -39,6 +46,7 @@ public class GalleryJsTreeItem extends JsTreeItem {
         Optional<GalleryDimension> galleryDimensionOptional = repository.findFirstByPathAndDomainId(getVirtualPath(), CloudToolsForCore.getDomainId());
         if (galleryDimensionOptional.isPresent()) {
             galleryDimension = galleryDimensionOptional.get();
+            if (galleryDimension.getDate()!=null) createDate = galleryDimension.getDate().getTime();
         }
         else {
             galleryDimension = GalleryDimenstionRestController.getNewEntity(f.getVirtualPath());
@@ -64,5 +72,13 @@ public class GalleryJsTreeItem extends JsTreeItem {
 
     public void setGalleryDimension(GalleryDimension galleryDimension) {
         this.galleryDimension = galleryDimension;
+    }
+
+    public long getLastModified() {
+        return lastModified;
+    }
+
+    public long getCreateDate() {
+        return createDate;
     }
 }

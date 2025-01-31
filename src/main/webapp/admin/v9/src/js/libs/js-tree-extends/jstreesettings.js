@@ -46,7 +46,9 @@ export class JstreeSettings {
             $("#jstree-settings-showorder").prop("checked", self.isPriotityShow());
             $("#jstree-settings-showpages").prop("checked", self.isPagesShow());
             $("#jstree-settings-showfolders-dt").prop("checked", self.isShowFoldersDt());
-            $("#jstree-settings-treeWidth").selectpicker("val", ""+self.getTreeWidth());
+            $("#jstree-settings-treeWidth").selectpicker("val", "" + self.getTreeWidth());
+            $("#jstree-settings-treeSortType").selectpicker("val", self.getTreeSortType());
+            $("#jstree-settings-treeSortOrderAsc").prop("checked", self.isTreeSortOrderAsc());
             self.settingsModal.show();
         });
 
@@ -60,12 +62,20 @@ export class JstreeSettings {
             var treeWidth = parseInt($("#jstree-settings-treeWidth").val());
             settings.treeWidth = treeWidth;
 
-            //console.log("settings: ", settings);
+            let newTreeSortType = $("#jstree-settings-treeSortType").val();
+            let newTreeSortOrderAsc = $("#jstree-settings-treeSortOrderAsc").is(":checked");
+            let treeSortChange = false;
+            if(newTreeSortType !== self.getTreeSortType() || newTreeSortOrderAsc !== self.isTreeSortOrderAsc()) {
+                treeSortChange = true;
+                settings.treeSortType = newTreeSortType;
+                settings.treeSortOrderAsc = newTreeSortOrderAsc;
+            }
 
             self.saveSettings(settings);
             self.settingsModal.hide();
 
             self.jstreeReload();
+            self.jstree.refresh();
 
             if (self.isShowFoldersDt()) $("body").addClass("showfolders-dt")
             else $("body").removeClass("showfolders-dt")
@@ -116,6 +126,19 @@ export class JstreeSettings {
         let width = this.getSettings().treeWidth;
         if (typeof width != "undefined") return parseInt(width);
         return 4;
+    }
+
+    getTreeSortType() {
+        //console.log("treeSortType=", this.getSettings().treeSortType);
+        let sortType = this.getSettings().treeSortType;
+        if (typeof sortType != "undefined") return sortType;
+        return "priority";
+    }
+
+    isTreeSortOrderAsc() {
+        let order = (true === this.getSettings().treeSortOrderAsc);
+        //console.log("treeSortOrderAsc=", order);
+        return order;
     }
 
     jstreeReload() {

@@ -66,7 +66,7 @@ Správná struktura html kódu, nad kterou se může inicializovat nástroj Page
 
 Styling se doporučuje pouze u `section`, `container` a `column content` protože pouze tyto prvky může uživatel upravovat pomocí nástroje Page Builder.
 
-**Varování:** v `column` není dovoleno používat přímo text, je nutné použít alespoň prvek P. Navíc kvůli možnosti nastavení odsazení (`margin/padding`) v rámci `column` obsah prvku je po otevření v nástroji Page Builder zabalen do prvku DIV s třídou CSS `column-content`.
+!>**Varování:** v `column` není dovoleno používat přímo text, je nutné použít alespoň prvek P. Navíc kvůli možnosti nastavení odsazení (`margin/padding`) v rámci `column` obsah prvku je po otevření v nástroji Page Builder zabalen do prvku DIV s třídou CSS `column-content`.
 
 Tedy z kódu:
 

@@ -25,8 +25,8 @@ import sk.iway.iwcm.Tools;
  */
 public class WebJETQueryParser extends QueryParser
 {
-	private static String numericFields[] = {"author_id", "group_id", "temp_id", "sort_priority", "password_protected"};
-	
+	private static String numericFields[] = {"author_id", "group_id", "temp_id", "sort_priority", "password_protected", "root_group_l1", "root_group_l2", "root_group_l3"};
+
 	private boolean isNumericField(String name)
 	{
 		for (String field : numericFields)
@@ -42,14 +42,14 @@ public class WebJETQueryParser extends QueryParser
 	}
 
 	@Override
-	public org.apache.lucene.search.Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException 
+	public org.apache.lucene.search.Query getRangeQuery(String field, String part1, String part2, boolean inclusive) throws ParseException
 	{
 		Logger.debug(WebJETQueryParser.class, "Range query");
 		TermRangeQuery query = (TermRangeQuery)super.getRangeQuery(field, part1, part2, inclusive);
-		
-		if (isNumericField(field)) 
+
+		if (isNumericField(field))
 		{
-			Logger.debug(WebJETQueryParser.class, "Range query - numeric, name="+field+" low="+query.getLowerTerm()+" up="+query.getUpperTerm());		
+			Logger.debug(WebJETQueryParser.class, "Range query - numeric, name="+field+" low="+query.getLowerTerm()+" up="+query.getUpperTerm());
 			return NumericRangeQuery.newIntRange(field, Tools.getIntValue(query.getLowerTerm(), 0), Tools.getIntValue(query.getUpperTerm(), 0), query.includesLower(), query.includesUpper());
 		}
 		return query;
@@ -59,14 +59,14 @@ public class WebJETQueryParser extends QueryParser
 	protected org.apache.lucene.search.Query getFieldQuery(String field, String queryText, boolean quoted) throws ParseException
 	{
 		org.apache.lucene.search.Query superQuery = super.getFieldQuery(field, queryText, quoted);
-		
+
 		if (isNumericField(field))
 		{
-			Logger.debug(WebJETQueryParser.class, "Som numeric field: "+field+" text="+queryText);			
+			Logger.debug(WebJETQueryParser.class, "Som numeric field: "+field+" text="+queryText);
 			superQuery = new TermQuery(new org.apache.lucene.index.Term(field, NumericUtils.intToPrefixCoded(Tools.getIntValue(queryText, 0))));
 		}
-		
+
 		return superQuery;
 	}
-	
+
 }

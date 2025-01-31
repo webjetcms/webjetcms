@@ -95,7 +95,7 @@ Scenario('testy zaloziek', async ({I, DT, DTE}) => {
 
 Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/calendar/admin/");
-    DT.filter("title", "DomainTest_Test23");
+    DT.filterContains("title", "DomainTest_Test23");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("calendarEventsDataTable");
@@ -109,9 +109,9 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     DTE.cancel();
 
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("title", "DomainTest_Test23");
+    DT.filterContains("title", "DomainTest_Test23");
     I.see("DomainTest_Test23");
-    DT.filter("title", "Deň zdravia");
+    DT.filterContains("title", "Deň zdravia");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 

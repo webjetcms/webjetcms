@@ -6,7 +6,7 @@ Bring your page to life with an interactive image carousel. Click on a small ver
 
 ### Style
 
-In this section you can choose the style of the application. The available styles are Classic, Fashion, Gallery, Rotator, Simplicity, Stylish
+In this section you can choose the style of the application. The available styles are: `Classic, Fashion, Gallery, Rotator, Simplicity, Stylish`
 
 ![](editor-style.png)
 

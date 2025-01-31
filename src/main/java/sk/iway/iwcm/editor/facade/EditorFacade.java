@@ -150,6 +150,7 @@ public class EditorFacade {
 	 */
 	public DocDetails saveAsBVariant(DocDetails entity) {
 		String virtualPath = entity.getVirtualPath();
+		virtualPath = Tools.replace(virtualPath, "*", "");
 		if (virtualPath.contains(Constants.getString("ABTestingName"))) {
 			editorService.addNotify(new NotifyBean("components.abtesting.dialog_title", editorService.getProp().getText("editor.save_as_abtest.notify.isbvariant", entity.getTitle(), String.valueOf(entity.getId())), NotifyType.INFO, 5000));
 			return null;

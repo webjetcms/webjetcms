@@ -587,7 +587,7 @@ public class WriteTag extends BodyTagSupport
 							canInclude = true;
 							isSpringComponent = true;
 						}
-						else if(includeFileName.startsWith("/components"))
+						else if(includeFileName.startsWith("/components") || includeFileName.startsWith("/apps") || includeFileName.startsWith("/templates"))
 						{
 							canInclude = true;
 						}

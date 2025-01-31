@@ -52,4 +52,7 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     //For change password service - only ADMINS
     List<UserDetailsEntity> findAllByEmailAndAdminTrueOrderByIdDesc(String email);
     List<UserDetailsEntity> findByLoginAndAdminTrueOrderByIdDesc(String login);
+
+    //get users by id list
+    List<UserDetailsEntity> findAllByIdIn(List<Long> ids);
 }

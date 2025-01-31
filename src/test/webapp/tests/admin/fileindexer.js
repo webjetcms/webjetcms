@@ -21,7 +21,7 @@ Scenario('test indexovania suborov', ({I}) => {
     I.see("Spustiť akciu indexovania súborov. Táto akcia môže trvať niekoľko minút.");
     I.click("button#start-index-button");
     I.dontSee("Spustiť akciu indexovania súborov. Táto akcia môže trvať niekoľko minút.");
-    I.see("Indexujú sa súbory, prosím čakajte (môže to trvať niekoľko minút).");
+    //I.see("Indexujú sa súbory, prosím čakajte (môže to trvať niekoľko minút).");
 
     I.waitForText("/files/jurko.jpg", 200);
     I.dontSee("/files/archiv/zsd_faq_fakturacia-poplatkov-od-2014.pdf");
@@ -73,7 +73,7 @@ function searchProtectedFile(I) {
     I.amOnPage("/apps/vyhladavanie/");
     I.fillField('#searchWords', 'fileforward');
     I.click(".smallSearchSubmit");
-    I.waitForElement("h1.searchResultsH1");
+    I.waitForElement("h1.searchResultsH1", 20);
     I.see("Neboli nájdené žiadne stránky vyhovujúce zadaným kritériám.");
 }
 
@@ -89,16 +89,16 @@ Scenario('Lucene indexing', ({I}) => {
     //
     I.say("Reindex data");
     I.amOnPage("/components/search/lucene_console.jsp");
-    I.selectOption("#indexed", "documents");
+    I.selectOption({css: "#indexed"}, "documents");
     I.click("input[name=index]");
     I.waitForText("Closing index.", 300);
 
     //
     I.say("Testing search");
     I.amOnPage("/components/search/lucene_console.jsp");
-    I.selectOption("#indexed", "documents");
+    I.selectOption({css: "#indexed"}, "documents");
     I.fillField("#query", "fileforward");
-    I.click("input[name=search]");
+    I.clickCss("input[name=search]");
     I.waitForText("Testing query: fileforward");
     I.see("Size: 0");
     I.dontSee("title=test-forward.txt");

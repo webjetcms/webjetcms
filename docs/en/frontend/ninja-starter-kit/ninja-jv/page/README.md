@@ -1,8 +1,23 @@
 # Information about the site
 
-| Method | Type | Description | | | ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- | | ${ninja.page.seoTitle}       | *String*     | | | | ${ninja.page.seoDescription} | *String*     | Description | | ${ninja.page.seoImage}       | *String*     | Image link | | ${ninja.page.url}            | *String*     | Url address | ${ninja.page.urlDomain}      | *String*     | Domain | | ${ninja.page.urlPath}        | *String*     | Virtual address | ${ninja.page.urlParameters}  | *Map*        | | | ${ninja.page.robots}         | *String*     | Indexing settings | ${ninja.page.doc}            | *DocDetails* | All properties | | | ${ninja.page.title}          | *String*     | Page title with space after `&nbsp;` entity after the conjunction (`Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero`) | | ${ninja.page.perex}          | *String*     | Perex pages with space after `&nbsp;` entity after the conjunction | | ${ninja.page.perexPlace}     | *String*     | Perex instead of a page with a space after `&nbsp;` entity after the coupling |
+| Method | Type | Description |
+| ---------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| ${ninja.page.seoTitle}       | *String*     | Title |
+| ${ninja.page.seoDescription} | *String*     | Description |
+| ${ninja.page.seoImage}       | *String*     | Image link |
+| ${ninja.page.url}            | *String*     | Url address |
+| ${ninja.page.urlDomain}      | *String*     | Domain |
+| ${ninja.page.urlPath}        | *String*     | Virtual Address |
+| ${ninja.page.urlParameters}  | *Map*        | Parameters from URL |
+| ${ninja.page.robots}         | *String*     | Indexing Settings |
+| ${ninja.page.doc}            | *DocDetails* | All properties |
+| ${ninja.page.title}          | *String*     | Page title with space after `&nbsp;` entity after the conjunction (`Peter a Miro aj Fero -> Peter a&nbsp;Miro aj&nbsp;Fero`) |
+| ${ninja.page.perex}          | *String*     | Perex pages with space after `&nbsp;` entity after the coupling |
+| ${ninja.page.perexPlace}     | *String*     | Perex instead of a page with a space after `&nbsp;` entity after the coupling |
+| ${ninja.abVariant}           | *String*     | Identifier representing the version of the page in the form of the character a/b |
 
-!\&gt;**Note**: replacing the space after the conjunction with `&nbsp;` entity can be set in the configuration variable `ninjaNbspReplaceRegex`. On the first line is the regex expression, on the second is the replacement text.
+!>**Note**: replacing the space after the conjunction with `&nbsp;` entity can be set in the configuration variable `ninjaNbspReplaceRegex`. On the first line is the regex expression, on the second is the replacement text.
+
 ## Name *String*
 
 Searches for text in the optional R :carousel\_horse field: `getFieldR()` (SEO headline), if the field is empty, it will use the website name :carousel\_horse: `getTitle()`.
@@ -28,7 +43,8 @@ ${ninja.page.seoDescription}
 Used in :ghost:<code>head.jsp</code>
 
 ```html
-<meta name="description" content="${ninja.page.seoDescription}" /> <meta property="og:description" content="${ninja.page.seoDescription}" />
+<meta name="description" content="${ninja.page.seoDescription}" />
+<meta property="og:description" content="${ninja.page.seoDescription}" />
 ```
 
 ## Link to the picture *String*
@@ -47,7 +63,7 @@ Used in :ghost:<code>head.jsp</code>
 
 ## Url address *String*
 
-Url address of a web page without parameters composed of `${ninja.page.urlDomain}` + `${ninja.page.urlPath}`.
+Url address of a web page without parameters consisting of `${ninja.page.urlDomain}` + `${ninja.page.urlPath}`.
 
 ```java
 ${ninja.page.url}
@@ -56,7 +72,8 @@ ${ninja.page.url}
 Used in :ghost:<code>head.jsp</code>
 
 ```html
-<meta property="og:url" content="${ninja.page.url}" /> <link rel="canonical" href="${ninja.page.url}" />
+<meta property="og:url" content="${ninja.page.url}" />
+<link rel="canonical" href="${ninja.page.url}" />
 ```
 
 ## Domain *String*
@@ -111,7 +128,7 @@ Used in :ghost:<code>debug-info.jsp</code>
 
 ## Indexing settings *String*
 
-If the website has checked `Prehľadávateľné` in the Advanced Data tab, then return the value `index, follow`if not so `nofollow`. The check value is returned by the :carousel\_horse method: `isSearchable()`.
+If the website has the `Prehľadávateľné` on the Advanced Data tab, it returns the value `index, follow` if not so `nofollow`. The check value is returned by the :carousel\_horse method: `isSearchable()`.
 
 ```java
 ${ninja.page.robots}
@@ -123,9 +140,9 @@ Used in :ghost:<code>head.jsp</code>
 <meta name="robots" content="${ninja.page.robots}" />
 ```
 
-## *DocDetails*
+## All features *DocDetails*
 
-
+Accesses the entire :carousel\_horse: docDetails - all properties of the web page.
 
 ```java
 ${ninja.page.doc}

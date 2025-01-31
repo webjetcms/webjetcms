@@ -263,6 +263,12 @@ html.pg-iframe {
 }
 .elfinder-perms::before { content: $ti-icon-lock-filled; }
 
+.elfinder-cwd-view-icons .elfinder-perms {
+    bottom: 29px !important;
+    left: 43px !important;
+    position: absolute !important;
+}
+
 /* CLOSED NAVBAR FOLDER ICON */
 .elfinder-navbar-dir > .elfinder-navbar-arrow {
     background: none !important;
@@ -892,4 +898,37 @@ div.ui-dialog-content:has(div.CodeMirror) {
 
 .elfinder-dialog-notify {
     width: 350px !important;
+}
+
+/* Mobile version */
+.elfinder-mobile {
+    .elfinder-navbar-arrow {
+        zoom: 1 !important;
+    }
+    .elfinder-toolbar {
+        /* always show toolbar even on mobile devices */
+        display: block !important;
+        zoom: 0.8;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+        height: auto !important;
+        .elfinder-button-search {
+            width: 40px;
+            margin-right: 4px !important;
+            .ui-icon-close {
+                display: none !important;
+            }
+        }
+    }
+    .elfinder-toolbar-swipe-handle {
+        display: none !important;
+    }
+    .elfinder-workzone .elfinder-cwd-selectall {
+        right: 7px !important;
+    }
+    div.dt-buttons {
+        float: left !important;
+        width: auto !important;
+        margin-right: 2px !important;
+    }
 }

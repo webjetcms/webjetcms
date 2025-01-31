@@ -47,7 +47,14 @@ public class ConfDetails
       title = "admin.conf_editor.value",
       tab = "basic",
       sortAfter = "name",
-      className = "wrap show-html"
+      className = "wrap show-html",
+      editor = {
+         @DataTableColumnEditor(
+             attr = {
+                 @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
+             }
+         )
+     }
    )
    private String value;
 
@@ -78,11 +85,13 @@ public class ConfDetails
       title = "admin.conf_editor.date_change",
       tab = "basic",
       sortAfter = "description",
+      className = "not-export",
       editor = {
          @DataTableColumnEditor(
             type = "datetime",
             attr = {
-               @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
+               @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
+               @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
             }
             /*className: 'hide-on-create'*/
          )

@@ -203,4 +203,13 @@
     <cve>CVE-2020-23064</cve>
   </suppress>
 
+  <!-- zly warning na jquery 3.0.0 ktory je len minimal dependency -->
+  <suppress>
+    <notes><![CDATA[
+    file name: bootstrap-select:1.14.0-beta
+    ]]></notes>
+    <packageUrl regex="true">^pkg:nuget/bootstrap-select@.*$</packageUrl>
+    <cpe>cpe:/a:jquery:jquery</cpe>
+  </suppress>
+
 </suppressions>

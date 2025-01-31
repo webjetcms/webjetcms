@@ -6,14 +6,8 @@ Scenario('admin-password-recovery', ({ I, Document, TempMail }) => {
     doScreens(I, Document, TempMail, true);
 });
 
-Scenario('delete cache objects to prevent logon form wrong password counting, 4 @singlethread', async ({ I }) => {
-    I.relogin("admin");
-    I.amOnPage("/admin/v9/settings/cache-objects/");
-    I.clickCss("button.btn-delete-all");
-    I.waitForElement("div.toast-message");
-    I.clickCss("div.toast-message button.btn-primary");
-    I.closeOtherTabs();
-    I.logout();
+Scenario('delete cache objects to prevent logon form wrong password counting, 4 @singlethread', ({ I, Document }) => {
+    Document.deleteAllCacheObjects();
 });
 
 Scenario('user-password-recovery', ({ I, Document, TempMail }) => {

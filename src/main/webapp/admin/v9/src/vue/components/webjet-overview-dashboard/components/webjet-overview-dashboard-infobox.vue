@@ -94,7 +94,6 @@ export default {
 
     &__title {
         padding: 25px 40px 100px;
-        background: url('https://www.webjetnet.sk/templates/interway/webjet_net/assets/images/features/features-contact.png');
         background-size: 350px;
         background-repeat: no-repeat;
         background-position: right bottom 15px;

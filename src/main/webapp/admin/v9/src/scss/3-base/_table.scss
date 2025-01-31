@@ -67,7 +67,7 @@ table.table {
                 border-top: 1px solid $nice-gray-100;
                 color: $secondary;
 
-                &.dataTables_empty {
+                &.dt-empty {
                     text-align: left;
                 }
 
@@ -134,6 +134,12 @@ table.table {
     }
 }
 
+// in extfilter datatableInit is on div.row class
+.datatableInit .filter-input:focus,
+.md-breadcrumb input.form-control:focus {
+    box-shadow: none;
+}
+
 table.datatableInit {
     margin-top: 0 !important;
 
@@ -173,75 +179,30 @@ table.datatableInit {
         }
     }
 
-    //sorting icons
-    thead tr > th {
-        &.sorting:before,
-        &.sorting:after,
-        &.sorting_asc:before,
-        &.sorting_asc:after,
-        &.sorting_desc:before,
-        &.sorting_desc:after,
-        &.sorting_asc_disabled:before,
-        &.sorting_asc_disabled:after,
-        &.sorting_desc_disabled:before,
-        &.sorting_desc_disabled:after {
-            display: none;
-        }
-
-        &.sorting:before,
-        &.sorting_asc:before,
-        &.sorting_desc:before {
-            display: inline-block;
-            content: "";
-            width: 10px;
-            height: auto;
-            top: 50%;
-            right: 14px;
-            left: auto;
-            bottom: auto;
-            transform: translateY(-50%);
-            text-align: center;
-            opacity: 1;
-            font-style: normal;
-            font-variant: normal;
-            text-rendering: auto;
-            -webkit-font-smoothing: antialiased;
-            font-weight: 300;
-            font-size: 14px;
-            font-family: $ti-font-name-filled;
-        }
-
-
-        &.sorting {
-            &:hover::before {
-                content: $ti-icon-caret-up-filled;
-                font-weight: 900;
-            }
-        }
-
-        &.sorting_asc {
-            color: $primary;
-            &::before {
-                content: $ti-icon-caret-up-filled;
+    tbody {
+        tr {
+            &:first-child {
+                td {
+                    border-top-width: 0px;
                 }
-            &:hover::before {
-                font-weight: 900;
             }
-        }
+            &.dte-highlight {
+                animation-name: none;
+                animation-duration: unset;
+                td {
+                    background-color: $nice-primary;
+                }
+            }
+            td {
+                transition: background-color 500ms linear;
 
-        &.sorting_desc {
-            color: $primary;
-            &::before {
-                content: $ti-icon-caret-down-filled;
-            }
-            &:hover::before {
-                font-weight: 900;
-                content: $ti-icon-caret-down-filled;
+                &.dt-select-td {
+                    text-align: left;
+                }
+                a:hover { text-decoration: none; }
             }
         }
     }
-
-    tbody tr td a:hover { text-decoration: none; }
 
     tbody tr td.dt-image
     {
@@ -289,36 +250,89 @@ table.datatableInit {
         }
     }
 
+    //sorting icons
     thead {
         display: table-header-group;
-    }
 
-    thead tr th {
+        tr {
+            &:first-child > th {
+                span {
+                    &.dt-column-order {
+                        font-family: $ti-font-name-filled;
+                        font-size: 18px;
+                        right: 8px;
+                        &::before {
+                            content: $ti-icon-caret-up-filled;
+                        }
+                        &:after {
+                            content: $ti-icon-caret-down-filled;
+                        }
+                    }
+                    &.dt-column-title {
+                        padding-right: 14px;
+                    }
+                }
 
-        .show > .btn-outline-secondary.dropdown-toggle {
-            background-color: $primary;
-            color: $white !important;
-            border-color: $nice-gray-300;
-        }
-        .btn-outline-secondary:hover, .dropdown-item:hover {
-            background-color: $nice-gray;
-            color: $secondary;
-        }
-        div.filter-input-prepend .btn-outline-secondary:hover {
-            background-position-x: 5px !important;
-        }
+                &.dt-ordering-asc {
+                    color: $primary;
+                }
 
-        div.filter-option-inner {
-            div.filter-option-inner-inner i {
-                line-height: 27px;
-                font-size: 90%;
+                &.dt-ordering-desc {
+                    color: $primary;
+                }
+                &.dt-orderable-none {
+                    span.dt-column-order {
+                        display: none;
+                    }
+                }
             }
-        }
+            &:nth-child(2) {
+                th {
+                    padding-top: 0;
+                    padding-bottom: 8px;
+                }
+            }
 
-        //nezobrazuj placeholder v selectoch hlavicky
-        button.dropdown-toggle.bs-placeholder {
-            div.filter-option-inner {
-                display: none;
+            th {
+                .show > .btn-outline-secondary.dropdown-toggle {
+                    background-color: $primary;
+                    color: $white !important;
+                    border-color: $nice-gray-300;
+                }
+                .btn-outline-secondary:hover, .dropdown-item:hover {
+                    background-color: $nice-gray;
+                    color: $secondary;
+                }
+                div.filter-input-prepend .btn-outline-secondary:hover {
+                    background-position-x: 5px !important;
+                }
+
+                div.filter-option-inner {
+                    div.filter-option-inner-inner i {
+                        line-height: 27px;
+                        font-size: 90%;
+                    }
+                }
+
+                //nezobrazuj placeholder v selectoch hlavicky
+                button.dropdown-toggle.bs-placeholder {
+                    div.filter-option-inner {
+                        display: none;
+                    }
+                }
+
+                form {
+                    user-drag: none;
+                    -webkit-user-drag: none;
+	                -moz-user-select: none;
+                }
+
+                &.dt-type-numeric, &.dt-type-date {
+                    text-align: left;
+                }
+                &:hover {
+                    outline-width: 0px;
+                }
             }
         }
     }
@@ -326,6 +340,12 @@ table.datatableInit {
     &.cardView
     {
         width: 100% !important;
+
+        colgroup {
+            col[data-dt-column="0"] {
+                width: 100% !important;
+            }
+        }
 
         tbody tr {
             float: left;
@@ -340,7 +360,7 @@ table.datatableInit {
                 border-top-width: 0px;
             }
 
-            td.dataTables_empty {
+            td.dt-empty {
                 display: block;
                 width: auto !important;
             }
@@ -425,6 +445,12 @@ table.datatableInit {
             td.dt-image, td.dt-select-td { width: 300px; height: 200px; padding-left: 0px !important; }
         }
     }
+
+    tbody tr td.dtcr-moving {
+        background-color: $nice-gray;
+        border-left-width: 0px;
+        border-right-width: 0px;
+    }
 }
 
 .rounded-bg {
@@ -450,7 +476,7 @@ table.datatableInit {
     ul.pagination {
         //v audite su velke pocty stran a zbytocne to berie miesto
         letter-spacing: -1px;
-        a {
+        button {
             padding-left: 4px !important;
             padding-right: 4px !important;
         }
@@ -627,7 +653,7 @@ table.datatableInit {
     display: none;
 }
 
-div.dataTables_wrapper {
+div.dt-container {
 
     thead tr:last-child th {
         padding-top: 0;
@@ -638,7 +664,7 @@ div.dataTables_wrapper {
         z-index: 3;
     }
 
-    div.dataTables_paginate ul.pagination {
+    div.dt-paging ul.pagination {
         margin:0;
         .page-link {
             padding: 0.25rem 0.5rem;
@@ -653,18 +679,27 @@ div.dataTables_wrapper {
         }
     }
 
-    div.dataTables_info {
+    div.dt-info {
         padding: 0;
         font-size: 14px;
         line-height: 31px;
         color: #656b7c;
     }
 
+    div.col-sum {
+        font-size: 14px;
+        font-weight: bold;
+        color: #656b7c;
+        p {
+            margin: 0;
+        }
+    }
+
 }
 
 //vnorena datatabulka v editore
 div.datatableFieldType {
-    div.dataTables_paginate ul.pagination {
+    div.dt-paging ul.pagination {
         .page-link {
             padding: 1px;
         }
@@ -686,7 +721,7 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
     overflow: scroll;
 }
 
-.dt-button-collection .dropdown-menu > .btn-group {
+.dt-button-collection div[role=menu] > .btn-group {
     width: 100%;
     > .btn {
         text-align: left;
@@ -702,177 +737,183 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
     }
 }
 
-div.dt-header-row .dt-dropdown-menu .dt-button-collection {
-    min-width: 778px !important;
-    width: 778px;
-    padding-top: 12px;
-    padding-bottom: 12px;
-    position: fixed;
-    margin:0 !important;
-    transform: translate(-50%, 0%);
-    top: 5% !important;
-    left: 50% !important;
-}
-.dt-dropdown-menu .dt-dropdown-menu {
-    button {
-        width: 100%;
-        margin:4px;
-    }
-    button:nth-last-child(1),
-    button:nth-last-child(2),
-    button:nth-last-child(3),
-    button:nth-last-child(4),
-    button:nth-last-child(5) {
-        width: auto;
-        margin-top: 16px;
-    }
-
-    button:nth-last-child(3),
-    button:nth-last-child(4),
-    button:nth-last-child(5){
-        float: left;
-    }
-
-
-    button:nth-last-child(2),
-    button:nth-last-child(1) {
-        float: right;
-    }
-
-    div.dt-button-collection-title {
-        padding:0 16px 16px 16px;
-        border-bottom: 1px solid #dee2e6;
-        margin-left: -12px;
-        margin-bottom: 16px;
-        width: 588px;
-        text-align: left;
-        font-size: 1.25rem;
-        line-height: 1.5;
-    }
-
-    .dropdown-divider {
-        padding: 0;
+div.dt-header-row div[role=menu] {
+    .dt-button-collection {
+        min-width: 778px !important;
         width: 778px;
-        border-radius: 0;
-        border: 0;
-        margin: 0;
-        margin-left: -12px;
-        margin-top: 16px;
-        height: 1px;
-        border-top: 1px solid #dee2e6;
-        clear: both;
-        overflow: hidden;
-        float: left;
+        padding-top: 12px;
+        padding-bottom: 12px;
+        position: fixed;
+        margin:0 !important;
+        transform: translate(-50%, 0%);
+        top: 5% !important;
+        left: 50% !important;
     }
-
-    button.buttons-columnVisibility,
-    button.button-page-length,
-    button.colvis-prefix {
-        text-align: left;
-        width: 180px;
-        margin: 4px;
-        float: left;
-        white-space: nowrap;
-        overflow: hidden;
-        -o-text-overflow: ellipsis;
-        text-overflow: ellipsis;
-        color: $secondary;
-        font-size: 16px;
-        // border: 1px solid $secondary;
-        &::before {
-            font-family: $ti-font-name-filled;
-            font-weight: 300;
-            content: $ti-icon-square;
-            margin-right: 4px;
+    div[role=menu] {
+        button {
+            width: 100%;
+            margin:4px;
         }
-        //oznacena moznost v nastaveni DT v dialogu (napr. pocet riadkov)
-        &.active {
-            background-color: $primary;
-            color: $white;
-            border: 1px solid $primary;
-            border-radius: 6px;
-            font-size: 16px;
+        button:nth-last-child(1),
+        button:nth-last-child(2),
+        button:nth-last-child(3),
+        button:nth-last-child(4),
+        button:nth-last-child(5) {
+            width: auto;
+            margin-top: 16px;
+        }
 
+        button:nth-last-child(3),
+        button:nth-last-child(4),
+        button:nth-last-child(5){
+            float: left;
+        }
+
+
+        button:nth-last-child(2),
+        button:nth-last-child(1) {
+            float: right;
+        }
+
+        div.dt-button-collection-title {
+            padding:0 16px 16px 16px;
+            border-bottom: 1px solid #dee2e6;
+            margin-left: -12px;
+            margin-bottom: 16px;
+            width: 588px;
+            text-align: left;
+            font-size: 1.25rem;
+            line-height: 1.5;
+        }
+
+        .dropdown-divider {
+            padding: 0;
+            width: 778px;
+            border-radius: 0;
+            border: 0;
+            margin: 0;
+            margin-left: -12px;
+            margin-top: 16px;
+            height: 1px;
+            border-top: 1px solid #dee2e6;
+            clear: both;
+            overflow: hidden;
+            float: left;
+        }
+
+        button.buttons-columnVisibility,
+        button.button-page-length,
+        button.colvis-prefix {
+            text-align: left;
+            width: 180px;
+            margin: 4px;
+            padding-right: 6px;
+            float: left;
+            white-space: nowrap;
+            overflow: hidden;
+            -o-text-overflow: ellipsis;
+            text-overflow: ellipsis;
+            color: $secondary;
+            font-size: 16px;
+            // border: 1px solid $secondary;
             &::before {
-                content: "\eb28";
+                font-family: $ti-font-name-filled;
+                font-weight: 300;
+                content: $ti-icon-square;
+                margin-right: 4px;
+            }
+            &::after {
+                display: none !important;
+            }
+            //oznacena moznost v nastaveni DT v dialogu (napr. pocet riadkov)
+            &.dt-button-active {
+                background-color: $primary;
+                color: $white;
+                border: 1px solid $primary;
+                border-radius: 6px;
+                font-size: 16px;
+
+                &::before {
+                    content: "\eb28";
+                }
+            }
+
+        }
+
+        button.colvis-prefix {
+            border-width: 0px;
+            margin-top: 0px;
+            margin-bottom: 0px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+            &::before {
+                visibility: hidden;
             }
         }
 
-    }
-
-    button.colvis-prefix {
-        border-width: 0px;
-        margin-top: 0px;
-        margin-bottom: 0px;
-        padding-top: 0px;
-        padding-bottom: 0px;
-        &::before {
-            visibility: hidden;
-        }
-    }
-
-    button.buttons-columnVisibility, button.colvis-prefix {
-        width: 99%;
-        float: right;
-        color: $nice-black;
-        text-overflow: unset;
-        &.active {
+        button.buttons-columnVisibility, button.colvis-prefix {
+            width: 99%;
+            float: right;
             color: $nice-black;
-            background-color: transparent;
-            border-color: transparent;
+            text-overflow: unset;
+            &.dt-button-active {
+                color: $nice-black;
+                background-color: transparent;
+                border-color: transparent;
 
+            }
+            &:hover {
+                background-color: $nice-gray;
+            }
+            &>span {
+                display: inline-flex;
+            }
+            span.tab-title {
+                color: $nice-gray-300;
+                width: 120px;
+                margin-right: 5px;
+                display: inline-flex;
+                overflow: hidden;
+                text-overflow: clip;
+            }
+            span.tab-columntext {
+                width: 575px;
+                display: inline-flex;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            span.tab-headline {
+                color: $nice-gray-300;
+                display: inline-block;
+            }
+            span.btn-tooltip {
+                padding: 0px;
+                line-height: 20px;
+            }
         }
-        &:hover {
-            background-color: $nice-gray;
-        }
-        &>span {
-            display: inline-flex;
-        }
-        span.tab-title {
-            color: $nice-gray-300;
-            width: 120px;
-            margin-right: 5px;
-            display: inline-flex;
-            overflow: hidden;
-            text-overflow: clip;
-        }
-        span.tab-columntext {
-            width: 575px;
-            display: inline-flex;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        span.tab-headline {
-            color: $nice-gray-300;
-            display: inline-block;
-        }
-        span.btn-tooltip {
-            padding: 0px;
-            line-height: 20px;
-        }
-    }
 
-    div.colvisprefix_wrapper {
-        border-bottom: 1px solid $nice-gray;
-        height: 30px;
-        clear: both;
-    }
-    div.colvisbtn_wrapper {
-        overflow: auto;
-        max-height: 60vh;
-    }
-    div.colvispostfix_wrapper {
-        border-top: 1px solid $nice-gray;
-        padding-bottom: 8px;
-    }
-
-    button.button-page-length {
-        &::before {
-            content: "\ea6b";
+        div.colvisprefix_wrapper {
+            border-bottom: 1px solid $nice-gray;
+            height: 30px;
+            clear: both;
         }
-        &.active {
+        div.colvisbtn_wrapper {
+            overflow: auto;
+            max-height: 60vh;
+        }
+        div.colvispostfix_wrapper {
+            border-top: 1px solid $nice-gray;
+            padding-bottom: 8px;
+        }
+
+        button.button-page-length {
             &::before {
-                content: "\efb1";
+                content: "\ea6b";
+            }
+            &.dt-button-active {
+                &::before {
+                    content: "\efb1";
+                }
             }
         }
     }
@@ -883,62 +924,6 @@ div.dt-button-collection div.btn-group button:last-child {
     border-top-left-radius: 4px !important;
     border-bottom-left-radius: 4px !important;
 }
-
-// table.table:not(.DTCR_clonedTable) {
-//     width: 100% !important;
-// }
-
-// table.table.DTCR_clonedTable {
-//     background-color: red !important;
-// }
-
-// table.table .input-group {
-//     width: 230px;
-// }
-
-
-// div.dataTables_scrollBody table tbody tr:first-child th,
-// div.dataTables_scrollBody table tbody tr:first-child td {
-//     border-top: 1px solid #dee2e6;;
-// }
-
-// div.DTFC_LeftBodyWrapper table tbody tr:first-child th,
-// div.DTFC_LeftBodyWrapper table tbody tr:first-child td,
-// div.DTFC_RightBodyWrapper table tbody tr:first-child th,
-// div.DTFC_RightBodyWrapper table tbody tr:first-child td {
-//     border-top: 1px solid #dee2e6;
-// }
-
-// // .DTFC_LeftBodyLiner table.dataTable tbody td {
-// //     border-top-right-radius: 0;
-// //     border-bottom-right-radius: 0;
-// // }
-
-// // .DTFC_RightBodyLiner table.dataTable tbody td {
-// //     border-top-left-radius: 0;
-// //     border-bottom-left-radius: 0;
-// // }
-
-// // .DTFC_LeftBodyLiner,
-// // .DTFC_RightBodyLiner {
-// //     overflow: hidden;
-// // }
-
-// .DTFC_LeftHeadWrapper,
-// .DTFC_LeftBodyWrapper {
-//     border-right: 1px solid #dee2e6 !important;
-// }
-
-// .DTFC_RightHeadWrapper,
-// .DTFC_RightBodyWrapper {
-//     border-left: 1px solid #dee2e6 !important;
-// }
-
-
-
-// div.dataTables_wrapper div.dataTables_paginate ul.pagination {
-//     justify-content: flex-start;
-// }
 
 .datatableInit {
 
@@ -969,7 +954,7 @@ div.dt-button-collection div.btn-group button:last-child {
         }
         th.dt-th-editorFields-statusIcons {
             width: 75px;
-            max-width: 75px;
+            max-width: 90px;
             div.dropdown {
                 max-width: 54px;
             }
@@ -1296,16 +1281,16 @@ body.datatable-cell-editing {
     }
 }
 
-.dataTables_scrollBody.autoHeight {
+.dt-scroll-body.autoHeight {
     height: calc(100vh - 306px);
 }
 
-body.datatableNoHeader .dataTables_scrollBody .autoHeight {
+body.datatableNoHeader .dt-scroll-body .autoHeight {
     height: calc(100vh - 240px);
 }
 
 body.datatable-labels-shown {
-    div.dataTables_scrollBody .autoHeight {
+    div.dt-scroll-body .autoHeight {
         height: calc(100vh - 317px);
     }
     div.dt-header-row {
@@ -1324,10 +1309,10 @@ body.datatable-labels-shown {
 //v editor_component vlozena DT, napr. anketa, galeria
 //ma schovany .md-breadcrumb s nadpisom stranky
 html.in-iframe-show-table {
-    .dataTables_scrollBody .autoHeight {
+    .dt-scroll-body .autoHeight {
         height: calc(100vh - 186px);
     }
-    body.datatableNoHeader .dataTables_scrollBody .autoHeight {
+    body.datatableNoHeader .dt-scroll-body .autoHeight {
         height: calc(100vh - 120px) !important;
     }
 }
@@ -1337,26 +1322,26 @@ html.in-iframe-show-table {
         padding-top: 3px;
         padding-bottom: 3px;
     }
-    .dataTables_scrollBody.autoHeight {
+    .dt-scroll-body.autoHeight {
         height: calc(100vh - 195px);
     }
     //datatableNoHeader je v galerii
-    body.datatableNoHeader .dataTables_scrollBody {
+    body.datatableNoHeader .dt-scroll-body {
         height: calc(100vh - 129px) !important;
     }
     //v editor_component vlozena DT, napr. anketa, galeria
     //ma schovany .md-breadcrumb s nadpisom stranky
     html.in-iframe-show-table {
-        .dataTables_scrollBody {
+        .dt-scroll-body {
             height: calc(100vh - 155px);
         }
-        body.datatableNoHeader .dataTables_scrollBody {
+        body.datatableNoHeader .dt-scroll-body {
             height: calc(100vh - 88px) !important;
         }
     }
 
     body.datatable-labels-shown {
-        div.dataTables_scrollBody {
+        div.dt-scroll-body {
             height: calc(100vh - 216px);
         }
         div.jstree {
@@ -1401,7 +1386,7 @@ div.dt-datetime table td.selectable.selected button, div.dt-datetime table td.se
 }
 
 div.dt-datetime table td.selectable button:hover,
-.dt-button-collection .dropdown-menu > .btn-group > .btn:hover {
+.dt-button-collection div[role=menu] > .btn-group > .btn:hover {
     background-color: $nice-gray;
     color: $secondary;
 }
@@ -1476,12 +1461,12 @@ div.btn-group div.dt-button-collection div.dropdown-menu div.btn-group div.dt-bu
 }
 
 div.DTE_Field_Type_datatable {
-    div.dataTables_info span.select-info {
+    div.dt-info span.select-info {
         display: inline;
     }
 }
 
-div.dataTables_scrollBody > table {
+div.dt-scroll-body > table {
     //fix zobrazenia horizontalneho scrollbaru, pri niektorych rozliseniach a zaokruhleni vysla sirka vacsia ako parenta
     //ratanie total v _fnCalculateColumnWidths
     max-width: 100% !important;
@@ -1492,7 +1477,28 @@ div.dataTables_scrollBody > table {
     white-space: pre-line;
 }
 
-div.dataTables_processing {
+div.dt-processing {
     //in inner tables search button in header is over loader
     z-index: 9;
+}
+
+table.table.dataTable > tbody > tr.selected a {
+    color: white;
+}
+table.table.dataTable > tbody > tr.selected.is-not-public a {
+    color: #FF4B58;
+}
+
+//inner datatable in editor
+div.DTE_Field_Type_datatable div.dt-container table.dataTable, div.DTE_Field_Type_datatable div.dataTables_wrapper table.dataTable {
+    border-width: 0px;
+    tr {
+        td {
+            border-top: 1px solid $nice-gray-100;
+        }
+    }
+}
+
+table.dataTable thead > tr > th.dt-orderable-asc:hover, table.dataTable thead > tr > th.dt-orderable-desc:hover, table.dataTable thead > tr > td.dt-orderable-asc:hover, table.dataTable thead > tr > td.dt-orderable-desc:hover {
+    outline: none;
 }

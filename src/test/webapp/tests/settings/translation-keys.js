@@ -47,7 +47,7 @@ function cellEdit(text, field, I, DT) {
 Scenario('celledit', ({ I, DT, DTE }) =>{
     if (testingData != null) {
         let key = testingData[0].replace("-chan.ge", "");
-        DT.filter("key", key);
+        DT.filterContains("key", key);
         I.forceClick("div.buttons-select-cel");
         I.wait(2);
 
@@ -56,13 +56,13 @@ Scenario('celledit', ({ I, DT, DTE }) =>{
         cellEdit("value-en", "C", I, DT);
 
         I.amOnPage("/admin/v9/settings/translation-keys/");
-        DT.filter("key", key);
+        DT.filterContains("key", key);
         I.see("value-sk-celledit");
         I.see("value-cz-celledit");
         I.see("value-en-celledit");
 
         I.click("td.dt-select-td.sorting_1");
-        I.click("button.buttons-edit");
+        I.click(DT.btn.edit_button);
         DTE.waitForEditor();
 
         I.seeInField("#DTE_Field_fieldA", "value-sk-celledit");
@@ -77,15 +77,15 @@ Scenario('zoznam prekladovych klucov - zmazanie kluca', ({ I, DT, DTE }) =>{
     if (testingData != null) {
         //vyhladaj aj kluc pred doplnenim change, kedze ten zostava
         let key = testingData[0].replace("-chan.ge", "");
-        DT.filter("key", key);
+        DT.filterContains("key", key);
 
         I.click("td.dt-select-td.sorting_1");
-        I.click("button.buttons-remove");
+        I.click(DT.btn.delete_button);
         DTE.waitForEditor();
         I.waitForText("Zmazať", 10, "div.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
         DTE.waitForLoader();
-        I.dontSee(key, "div.dataTables_scrollBody table.datatableInit");
+        I.dontSee(key, "div.dt-scroll-body table.datatableInit");
     }
 });
 
@@ -98,7 +98,7 @@ Scenario('zobrazenie poli', async ({ I, DT, DTE, Document }) => {
     I.see("Prekladové kľúče", "div.md-breadcrumb");
 
     var entity = "temp-group-2.project.name";
-    DT.filter("key", entity);
+    DT.filterContains("key", entity);
 
     I.click(entity);
     DTE.waitForEditor();
@@ -135,7 +135,7 @@ Scenario('zobrazenie poli', async ({ I, DT, DTE, Document }) => {
 Scenario('vyplnenie poli', async ({ I, DT, DTE }) => {
     newEntityName = "autotest-delete-" + randomNumber;
 
-    I.click("button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
     //Check that originalValueFields are hidden
@@ -160,7 +160,7 @@ Scenario('vyplnenie poli', async ({ I, DT, DTE }) => {
 
     DTE.save();
 
-    DT.filter("key", newEntityName);
+    DT.filterContains("key", newEntityName);
 
     //Check of save
     I.click(newEntityName);
@@ -176,14 +176,14 @@ Scenario('vyplnenie poli', async ({ I, DT, DTE }) => {
 });
 
 Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
-    DT.filter("key", newEntityName);
+    DT.filterContains("key", newEntityName);
 
     //Check field filter
-    DT.filter("fieldA", value1);
-    DT.filter("fieldB", value2);
+    DT.filterContains("fieldA", value1);
+    DT.filterContains("fieldB", value2);
 
     I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.click(DT.btn.delete_button);
     DTE.waitForEditor();
 
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -197,16 +197,16 @@ Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
  Scenario('overenie zmazania kluca zo suboru', async ({ I, DT, DTE }) => {
     var entity = "admin.fck.last_pages";
 
-    DT.filter("key", entity);
+    DT.filterContains("key", entity);
 
     I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.click(DT.btn.delete_button);
     DTE.waitForEditor();
 
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     //We cant remove allready set keys in file
-    I.see("Zvolený prekladový kľúč pre jazyky SK,CZ,EN,DE,HU je načítaný zo súboru, a preto ho nie je možné zmazať. Mazať je možné len upravené alebo novo vytvorené kľuče.");
+    I.waitForText("Zvolený prekladový kľúč pre jazyky SK,CZ,EN,DE,HU je načítaný zo súboru, a preto ho nie je možné zmazať. Mazať je možné len upravené alebo novo vytvorené kľuče.", 10);
     I.wait(5);
 
     //now check update plus again delete :D
@@ -231,8 +231,7 @@ Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
     DTE.cancel();
 
     //Now all values can bee delete, so delete without popup msg
-    I.click("td.dt-select-td.sorting_1");
-    I.click("button.buttons-remove");
+    I.click(DT.btn.delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee("Kľúč nie je možné zmazať");
 
@@ -245,11 +244,11 @@ Scenario('overenie filtrovania', async ({ I, DT, DTE }) => {
 
  Scenario('overenie zobrazenia so zakladnymi pravami', ({ I, DT }) => {
     I.amOnPage("/admin/v9/settings/translation-keys");
-    DT.filter("key", "components.banner.add_new_banner");
+    DT.filterContains("key", "components.banner.add_new_banner");
     I.see("Pridať nový banner");
 
     I.amOnPage("/admin/v9/settings/translation-keys?removePerm=prop.show_all_texts");
-    DT.filter("key", "components.banner.add_new_banner");
+    DT.filterContains("key", "components.banner.add_new_banner");
     I.dontSee("Pridať nový banner");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
@@ -261,15 +260,15 @@ Scenario("odhlasenie", ({ I }) => {
 Scenario("vyhladavanie zacina na/konci na", ({ I, DT }) => {
 
     I.amOnPage("/admin/v9/settings/translation-keys/");
-    DT.filter("key", "qa.r", "Začína na");
+    DT.filterStartsWith("key", "qa.r");
     I.waitForText("qa.result.ok", 120);
     I.dontSee("components.qa.");
 
-    DT.filter("key", ".answer", "Končí na");
+    DT.filterEndsWith("key", ".answer");
     I.see("qa.form.answer");
     I.dontSee("inquiry.answer_text_ok_default");
 
-    DT.filter("key", "inquiry.answer", "Rovná sa");
+    DT.filterEquals("key", "inquiry.answer");
     I.see("inquiry.answer");
     I.see("Záznamy 1 až 1 z 1");
 });
@@ -285,7 +284,7 @@ Scenario('import nema moznost aktualizovat zaznam podla', async ({ I, DT, DTE })
 Scenario("BUG key with tab prefix/suffix", ({ I, DT, DTE }) => {
 
     DT.waitForLoader();
-    I.click("button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
     var key = "autotest-"+I.getRandomText();
@@ -298,7 +297,7 @@ Scenario("BUG key with tab prefix/suffix", ({ I, DT, DTE }) => {
 
     //
     I.say("Filtering key");
-    DT.filter("key", key);
+    DT.filterContains("key", key);
 
     I.see(key);
     I.see("Záznamy 1 až 1 z 1");
@@ -312,7 +311,7 @@ Scenario("BUG key with tab prefix/suffix", ({ I, DT, DTE }) => {
     I.see("Záznamy 1 až 1 z 1");
 
     I.forceClick("td.dt-select-td");
-    I.click("button.buttons-remove");
+    I.click(DT.btn.delete_button);
     DTE.waitForEditor();
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();

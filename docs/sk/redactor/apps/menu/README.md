@@ -1,4 +1,4 @@
-# Menu
+# Menu (navigačné)
 
 Aplikácia menu generuje navigačné menu pre celé web sídlo (tzv. horné menu, alebo ľavé menu). Grafická podoba menu sa definuje pomocou kaskádových štýlov (CSS). Príklady zobrazenia horného a ľavého menu:
 

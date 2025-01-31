@@ -14,7 +14,7 @@ Balíček slouží jako malá knihovna, která obsahuje statické funkce ošetř
 import {Tools} from 'tools/tools';
 ```
 
-**Varování:** Balíček není v systému implementován globálně, takže je třeba jej přidat všude, kde se používá.
+!>**Varování:** Balíček není v systému implementován globálně, takže je třeba jej přidat všude, kde se používá.
 
 Volání funkcí se provádí kdekoli v **WebJET** Soubory Javascript nebo `<script>` html značky pomocí volání:
 

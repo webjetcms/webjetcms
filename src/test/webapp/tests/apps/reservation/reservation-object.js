@@ -63,7 +63,7 @@ Scenario('reservation object + custom times test', ({I, DT, DTE}) => {
     //Save this reservation object
     DTE.save();
 
-    DT.filter("name", base_reservation_object)
+    DT.filterContains("name", base_reservation_object)
     I.click(base_reservation_object);
     DTE.waitForEditor("reservationObjectDataTable");
     I.clickCss('#pills-dt-reservationObjectDataTable-chooseDays-tab');
@@ -144,7 +144,7 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     DTE.save();
 
     I.say("During edit we see tab special prices");
-    DT.filter("name", prices_reservation_object);
+    DT.filterContains("name", prices_reservation_object);
     I.click(prices_reservation_object);
     DTE.waitForEditor("reservationObjectDataTable");
     I.seeElement("#pills-dt-reservationObjectDataTable-specialPrice-tab");
@@ -210,15 +210,15 @@ function addPriceEntity(I, DTE, modal, dateFrom, dateTo, price) {
 
 Scenario('Domain test', ({I, DT, Document}) => {
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
-    DT.filter("name", "TestDomain_webjet9_object");
+    DT.filterContains("name", "TestDomain_webjet9_object");
     I.see("TestDomain_webjet9_object");
-    DT.filter("name", "TestDomain_test23_object");
+    DT.filterContains("name", "TestDomain_test23_object");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("name", "TestDomain_webjet9_object");
+    DT.filterContains("name", "TestDomain_webjet9_object");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    DT.filter("name", "TestDomain_test23_object");
+    DT.filterContains("name", "TestDomain_test23_object");
     I.see("TestDomain_test23_object");
 });
 

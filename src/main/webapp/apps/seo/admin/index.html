@@ -61,8 +61,8 @@
 
         ChartTools.bindFilter(getDataAndUpdateAmcharts);
 
-        async function createAmcharts() { 
-            window.initAmcharts().then(module => { 
+        async function createAmcharts() {
+            window.initAmcharts().then(module => {
 
                 $.ajax({url: getGraphUrl(ChartTools.ChartType.Pie), success: function(result) {
                     pieChartVisits = new ChartTools.PieChartForm("visits", "name", '[[#{components.seo.seBots}]]', "bots-pieVisits", result);
@@ -95,7 +95,7 @@
             WJ.hideLoader();
 
             //add table filter params
-            botsDataTable.ajax.url(WJ.urlAddParam(botsDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
+            botsDataTable.setAjaxUrl(WJ.urlAddParam(botsDataTable.getAjaxUrl(), "searchRootDir", $('#rootDir').val()));
 
             //reload table values
             botsDataTable.ajax.reload();
@@ -107,7 +107,7 @@
             //Load values
             let rootDir = $('#rootDir').val();
             let searchDateValue = ChartTools.getDateRange(null);
-        
+
             if(chartType == ChartTools.ChartType.Pie) {
                 tmpDefURL = url + "/pieChartData?dayDate=" + searchDateValue;
                 tmpDefURL += "&rootDir=" + rootDir;

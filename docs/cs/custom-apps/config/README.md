@@ -2,7 +2,7 @@
 
 Chcete-li zobrazit pouze konkrétní konfigurační proměnné na základě jejich prefixu, můžete použít konfiguraci prefixu. Jedná se o zjednodušenou verzi oddílu [Konfigurace](../../admin/setup/configuration/README.md), kde se na základě zadané předpony zobrazí konfigurační proměnné.
 
-**Varování:** transformace konfigurace s předponou se zobrazují také ty, které se neliší od přednastavených hodnot, což je hlavní rozdíl oproti standardní sekci Konfigurace.
+!>**Varování:** transformace konfigurace s předponou se zobrazují také ty, které se neliší od přednastavených hodnot, což je hlavní rozdíl oproti standardní sekci Konfigurace.
 
 Implementace této zjednodušené verze konfigurace je ideální, pokud chcete zobrazit pouze ty hodnoty konfigurace, které přímo ovlivňují určitou sekci nebo aplikaci. Příklad lze vidět v části [AB testování](../../redactor/apps/abtesting/abtesting.md) Sekce konfigurace. V této části jsou zobrazeny všechny konfigurační proměnné, které mají vliv na testování AB, tj. začínají předponou `ABTesting`.
 
@@ -28,7 +28,7 @@ Příklad implementace z `AbTestingRestController`:
 
 Jak je ukázáno v příkladu výše, k jeho použití stačí mít kontrolér, který bude z abstraktního souboru `AbstractConfigurationController` dědit. Tato nadřazená třída má již implementovanou logiku, která se stará o vše ostatní (získání všech dat, získání jednoho záznamu, změna záznamu).
 
-**Varování:** je třeba zavolat nadřazený konstruktor s následujícími parametry (prefix konfiguračních proměnných, instance `ConfDetailsMapper`).
+!>**Varování:** je třeba zavolat nadřazený konstruktor s následujícími parametry (prefix konfiguračních proměnných, instance `ConfDetailsMapper`).
 
 Povolena je pouze akce editace záznamu, všechny ostatní akce, jako je přidání/odstranění/duplikace, jsou zakázány.
 

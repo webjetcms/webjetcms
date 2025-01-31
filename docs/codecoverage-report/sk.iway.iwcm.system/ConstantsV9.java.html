@@ -21,7 +21,7 @@ public class ConstantsV9 {
 <span class="fc" id="L21">		Constants.setString(&quot;mariaDbDefaultEngine&quot;, &quot;InnoDB&quot;);</span>
 <span class="fc" id="L22">		Constants.setString(&quot;chunksQuantity&quot;, &quot;25&quot;);</span>
 <span class="fc" id="L23">		Constants.setString(&quot;propertiesAdminKeys&quot;,</span>
-				&quot;button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*&quot;);
+				&quot;button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info&quot;);
 <span class="fc" id="L25">		Constants.setInt(&quot;webpagesTreeAutoOpenLimit&quot;, 2);</span>
 <span class="fc" id="L26">		Constants.setString(&quot;deepl_auth_key&quot;, &quot;&quot;, &quot;translations&quot;, &quot;Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov&quot;);</span>
 <span class="fc" id="L27">		Constants.setString(&quot;deepl_api_url&quot;, &quot;https://api-free.deepl.com/v2/translate&quot;, &quot;translations&quot;, &quot;Domena pre API volanie DeepL, ak mate PRO ucet pouzite https://api.deepl.com/v2/translate&quot;);</span>
@@ -109,7 +109,9 @@ public class ConstantsV9 {
 <span class="fc" id="L109">		Constants.setInt(&quot;dashboardRecentSize&quot;, 8, &quot;dashboard&quot;, &quot;Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke&quot;);</span>
 
 <span class="fc" id="L111">		Constants.setInt(&quot;contentBlockTypeCount&quot;, 5, &quot;contentBlock&quot;, &quot;Pocet dostupnych typov blokov pre obsah&quot;);</span>
-<span class="fc" id="L112">	}</span>
+
+<span class="fc" id="L113">		Constants.setBoolean(&quot;elfinderMoveConfirm&quot;, true, &quot;files&quot;, &quot;Zobrazi potvrdzovaci dialog pri presune priecinkov a suborov&quot;);</span>
+<span class="fc" id="L114">	}</span>
 
 	/**
 	 * Returns coma separated value as Array
@@ -119,7 +121,7 @@ public class ConstantsV9 {
 	 */
 	@Deprecated
 	public static String[] getArray(String name) {
-<span class="nc" id="L122">		return Constants.getArray(name);</span>
+<span class="nc" id="L124">		return Constants.getArray(name);</span>
 	}
 
 	/**
@@ -129,14 +131,14 @@ public class ConstantsV9 {
 	 * @return
 	 */
 	public static String[] getArrayCached(String name, int cacheMinutes) {
-<span class="nc" id="L132">		String CACHE_KEY = name+&quot;.arrayCache-&quot;+cacheMinutes;</span>
-<span class="nc" id="L133">		Cache c = Cache.getInstance();</span>
-<span class="nc" id="L134">		String[] arr = (String[])c.getObject(CACHE_KEY);</span>
-<span class="nc bnc" id="L135" title="All 2 branches missed.">		if (arr == null) {</span>
-<span class="nc" id="L136">			arr = Constants.getArray(name);</span>
-<span class="nc" id="L137">			c.setObject(CACHE_KEY, arr, cacheMinutes);</span>
+<span class="nc" id="L134">		String CACHE_KEY = name+&quot;.arrayCache-&quot;+cacheMinutes;</span>
+<span class="nc" id="L135">		Cache c = Cache.getInstance();</span>
+<span class="nc" id="L136">		String[] arr = (String[])c.getObject(CACHE_KEY);</span>
+<span class="nc bnc" id="L137" title="All 2 branches missed.">		if (arr == null) {</span>
+<span class="nc" id="L138">			arr = Constants.getArray(name);</span>
+<span class="nc" id="L139">			c.setObject(CACHE_KEY, arr, cacheMinutes);</span>
 		}
-<span class="nc" id="L139">		return arr;</span>
+<span class="nc" id="L141">		return arr;</span>
 	}
 
 	/**
@@ -145,16 +147,16 @@ public class ConstantsV9 {
 	 * @return
 	 */
 	public static List&lt;ConfDetails&gt; getValuesStartsWith(String prefix) {
-<span class="nc" id="L148">		List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L149" title="All 2 branches missed.">		for (String key : Constants.getAllKeys()) {</span>
-<span class="nc bnc" id="L150" title="All 4 branches missed.">			if (key!=null &amp;&amp; key.startsWith(prefix)) {</span>
-<span class="nc" id="L151">				ConfDetails conf = new ConfDetails();</span>
-<span class="nc" id="L152">				conf.setName(key);</span>
-<span class="nc" id="L153">				conf.setValue(Constants.getString(key));</span>
-<span class="nc" id="L154">				filtered.add(conf);</span>
+<span class="nc" id="L150">		List&lt;ConfDetails&gt; filtered = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">		for (String key : Constants.getAllKeys()) {</span>
+<span class="nc bnc" id="L152" title="All 4 branches missed.">			if (key!=null &amp;&amp; key.startsWith(prefix)) {</span>
+<span class="nc" id="L153">				ConfDetails conf = new ConfDetails();</span>
+<span class="nc" id="L154">				conf.setName(key);</span>
+<span class="nc" id="L155">				conf.setValue(Constants.getString(key));</span>
+<span class="nc" id="L156">				filtered.add(conf);</span>
 			}
-<span class="nc" id="L156">		}</span>
-<span class="nc" id="L157">		return filtered;</span>
+<span class="nc" id="L158">		}</span>
+<span class="nc" id="L159">		return filtered;</span>
 	}
 
 }

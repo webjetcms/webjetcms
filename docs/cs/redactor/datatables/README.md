@@ -1,5 +1,7 @@
 # Datové tabulky
 
+## Základy práce s datovými tabulkami
+
 Datové tabulky jsou základem rozhraní v CMS WebJET, podívejte se na instruktážní video, jak pracovat s tabulkami.
 
 <div class="video-container">
@@ -51,7 +53,7 @@ V okně se zobrazí následující sloupce:
 
 V nastavení zobrazení sloupců je k dispozici také tlačítko **Obnovit** který obnoví **výchozí nastavení seznamu sloupců**. Kromě toho jsou zde také tlačítka **Zobrazit všechny** a **Skrýt vše**, který jedním kliknutím zapne nebo vypne zobrazení všech sloupců.
 
-**Varování:** čím více sloupců máte zobrazeno, tím déle bude počítači trvat zobrazení tabulky.
+!>**Varování:** čím více sloupců máte zobrazeno, tím déle bude počítači trvat zobrazení tabulky.
 
 ## Počet záznamů na stránku
 

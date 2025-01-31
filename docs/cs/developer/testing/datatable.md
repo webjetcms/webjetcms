@@ -92,12 +92,12 @@ Scenario('zakladne testy', async ({I, DataTables}) => {
 Při ukládání nového záznamu se tento záznam uloží také do objektu `options.testingData` uloží pole vyplněných povinných polí. Můžete je použít např. ve funkci `editSearchSteps` Stejně jako:
 
 ```javascript
-    I.see(`${options.testingData[0]}-change`, "div.dataTables_scrollBody");
+    I.see(`${options.testingData[0]}-change`, "div.dt-scroll-body");
 ```
 
 Objekt `options` je vrácena z `baseTest` a lze je použít i v jiných scénářích, příkladem je funkce [translation-keys.js](../../../../src/test/webapp/tests/settings/translation-keys.js)
 
-**Varování:** Automatizované testování základních operací nenahrazuje komplexní testování. Má sloužit jako základ testu, vaším úkolem je doplnit testovací scénáře o specifické vlastnosti. Ideální jako **samostatné scénáře** nebo přidáním kroků do funkcí `createSteps, editSteps, editSearchSteps, beforeDeleteSteps`.
+!>**Varování:** Automatizované testování základních operací nenahrazuje komplexní testování. Má sloužit jako základ testu, vaším úkolem je doplnit testovací scénáře o specifické vlastnosti. Ideální jako **samostatné scénáře** nebo přidáním kroků do funkcí `createSteps, editSteps, editSearchSteps, beforeDeleteSteps`.
 
 ## Možnosti nastavení
 
@@ -167,7 +167,7 @@ await DataTables.baseTest({
 });
 ```
 
-**Varování:** Zadání tohoto parametru je povinné, aby se při zobrazení datové tabulky vždy testovala práva. U vnořené datové tabulky však může být tento test problematický kvůli odhlášení, můžete zadat prázdnou hodnotu nebo znak `-`.
+!>**Varování:** Zadání tohoto parametru je povinné, aby se při zobrazení datové tabulky vždy testovala práva. U vnořené datové tabulky však může být tento test problematický kvůli odhlášení, můžete zadat prázdnou hodnotu nebo znak `-`.
 
 ## Podrobnosti o provádění
 
@@ -203,6 +203,6 @@ Funkce `I.getDataTableColumns` je definován v [custom\_helper.js](../../../../s
 
 Všechny funkce jsou asynchronní kvůli volání `I.getDataTableColumns`.
 
-**Varování:** během implementace se nám stalo, že jsme měli druhé volání `this.helpers['Playwright'];` odhlásí přihlášeného uživatele (resetuje soubory cookie), zatímco probíhá test. Toto volání jsme chtěli použít při formátování dat, bohužel to v současné době není možné. Předpokládáme, že se jedná o chybu v CodeceptJS.
+!>**Varování:** během implementace se nám stalo, že jsme měli druhé volání `this.helpers['Playwright'];` odhlásí přihlášeného uživatele (resetuje soubory cookie), zatímco probíhá test. Toto volání jsme chtěli použít při formátování dat, bohužel to v současné době není možné. Předpokládáme, že se jedná o chybu v CodeceptJS.
 
 Poté se provedou jednotlivé kroky testu, jak je běžně známe.

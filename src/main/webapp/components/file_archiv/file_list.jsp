@@ -137,21 +137,21 @@ Prop prop = Prop.getInstance(request);
 
 <div class="tabbable tabbable-custom tabbable-full-width">
 	<ul class="nav nav-tabs">
-		<li class="active">
-			<a href="#tabMenu1" data-toggle="tab">
+		<li class="nav-item">
+			<a class="active" href="#tabMenu1" data-bs-toggle="tab">
 				<iwcm:text key="components.filter"/>
 			</a>
 		</li>
-		<li class="">
-			<a href="#tabMenu2" data-toggle="tab" onclick="loadComponentIframe();">
+		<li class="nav-item">
+			<a href="#tabMenu2" data-bs-toggle="tab" onclick="loadComponentIframe();">
 				<iwcm:text key="components.file_archiv.waiting_files"/>
 			</a>
 		</li>
 	</ul>
 
 	<div class="tab-content">
-		<div id="tabMenu1" class="tab-pane active">
-			<div class="form-group">
+		<div id="tabMenu1" class="tab-pane active show">
+			<div class="container-fluid">
 				<button onclick="openPopupDialogFromLeftMenu('/components/file_archiv/file_archiv_upload.jsp')" type="button" class="btn default imageButton">
 					<i class="wjIconBig wjIconBig-uploadDoc"></i>
 					<iwcm:text key="components.file_archiv.insert_new"/>
@@ -159,7 +159,7 @@ Prop prop = Prop.getInstance(request);
 				<!-- filter -->
 				<form name="fileArchivFilterForm" method="GET" action="<%=PathFilter.getOrigPath(request)%>" class="zobrazenie">
 					<fieldset>
-						<div class="form-group">
+						<div class="row">
 							<div class="col-lg-3 col-sm-3">
 								<p><label for="file_bean_id"><iwcm:text key="components.file_archiv.file_bean_id"/></label>
 								<input type="text" id="file_bean_id" class="form-control" value="<%=getVal(request, "file_bean_id") %>" placeHolder="<iwcm:text key="components.file_archiv.file_bean_id"/>" name="file_bean_id" /></p>
@@ -177,7 +177,7 @@ Prop prop = Prop.getInstance(request);
 								<input type="text" id="dir" class="form-control" value="<%=getVal(request, "dir") %>" placeHolder="<iwcm:text key="components.file_archiv.directory"/>" name="dir" /></p>
 							</div>
 						</div>
-						<div class="form-group">
+						<div class="row">
 							<div class="col-lg-3 col-sm-3">
 								<p>
 									<label for="product"><iwcm:text key="components.file_archiv.product"/></label>
@@ -236,7 +236,7 @@ Prop prop = Prop.getInstance(request);
 								</script>
 							</div>
 						</div>
-						<div class="form-group">
+						<div class="row">
 							<div class="col-lg-12 col-sm-12">
 								<p>
 									<label for="onlyMainFile"><iwcm:text key="components.file_archiv.filter.main_files"/></label>
@@ -249,7 +249,7 @@ Prop prop = Prop.getInstance(request);
 								</p>
 							</div>
 						</div>
-						<div class="form-group">
+						<div class="row">
 							<div class="col-lg-12 col-sm-12">
 								<p><input type="submit" class="button50" value="<iwcm:text key="components.tips.view"/>" />
 								<input type="hidden" name="formSend" value="true" /></p>

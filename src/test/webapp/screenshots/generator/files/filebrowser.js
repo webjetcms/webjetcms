@@ -88,8 +88,20 @@ Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) 
     I.waitForVisible("#DTE_Field_imageName");
     Document.screenshot("/redactor/files/fbrowser/file-edit/edit_image_gallery.png");
 
-    I.amOnPage("/admin/v9/apps/image-editor/?iID=-1&dir=/images/produkty/mobily/zoznam/iphone-x-256gb&name=1034382.jpg");
-    Document.screenshot("/redactor/files/fbrowser/file-edit/edit_image_tui.png");
+    I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy96by1zdmV0YS1maW5hbmNpaQ_E_E");
+
+    I.waitForElement(`.elfinder-cwd-filename[title="foto-1.jpg"]`);
+    I.rightClick(`.elfinder-cwd-filename[title="foto-1.jpg"]`);
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjeditswitch');
+    
+    I.waitForVisible("#modalIframeIframeElement");
+    I.switchTo('#modalIframeIframeElement');
+    I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
+    I.waitForVisible("#galleryTable_modal");
+    I.switchTo();
+
+    Document.screenshotElement("#modalIframe > div.modal-dialog", "/redactor/files/fbrowser/file-edit/edit_image_tui.png");
 });
 
 Scenario('filebrowser - search screens', ({ I, Document, i18n }) => {
@@ -116,25 +128,23 @@ Scenario('filebrowser - workspace screens', ({ I, Document }) => {
 
     I.waitForElement("#iwcm_1_L2ZpbGVz");
     I.doubleClick( locate("#iwcm_1_L2ZpbGVz" ) );
-    I.waitForElement("#iwcm_1_L2ZpbGVzL2FwcHM_E");
+    I.waitForElement("#iwcm_1_L2ZpbGVzL2p1cmtvLmpwZw_E_E");
 
     I.rightClick( locate("div.elfinder-cwd-wrapper > div.elfinder-cwd") );
     I.waitForVisible("div.elfinder-contextmenu.elfinder-contextmenu-ltr");
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_workspace.png");
 
-    I.rightClick( locate("#iwcm_1_L2ZpbGVzL2FwcHM_E") );
+    I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_folder.png");
 
-    I.rightClick( locate("#iwcm_1_L2ZpbGVzL2p1cmtvLmpwZw_E_E") );
+    I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );
     Document.screenshotElement("div.elfinder-contextmenu.elfinder-contextmenu-ltr", "/redactor/files/fbrowser/rc_file.png");
 });
 
 Scenario('filebrowser - folder properties screens', ({ I, DTE, Document, i18n }) => {
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ZpbGVz");
-    I.waitForVisible( locate("#iwcm_1_L2ZpbGVzL2FwcHM_E") );
-    I.rightClick( locate("#iwcm_1_L2ZpbGVzL2FwcHM_E") );
-
-
+    I.waitForVisible( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );
+    I.rightClick( locate("#iwcm_1_L2ZpbGVzL3Byb3RlY3RlZA_E_E") );
 
     I.click( locate("div.elfinder-contextmenu.elfinder-contextmenu-ltr").find( locate("div.elfinder-contextmenu-item").withChild( locate("span").withText(i18n.get("Folder properties")) ) ) );
     I.waitForVisible("iframe#modalIframeIframeElement");
@@ -185,6 +195,7 @@ Scenario('filebrowser - folder properties screens', ({ I, DTE, Document, i18n })
 
     I.amOnPage("/admin/v9/webpages/web-pages-list?docid=59071");
     DTE.waitForEditor();
+    I.wait(5);
     Document.screenshot("/redactor/files/fbrowser/folder-settings/folder_link_A.png");
 
     I.amOnPage("/apps/galery.html");
@@ -240,15 +251,15 @@ Scenario('filebrowser - file properties screens', ({ I, DTE, Document, i18n }) =
     Document.screenshot("/redactor/files/fbrowser/file-settings/file_link_B.png");
 });
 
-Scenario('Elfinder Move Confirm', ({ I, Document }) => {
+Scenario('Elfinder Move Confirm', ({ I, Document, i18n }) => {
     I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
     I.clickCss('#nav-iwcm_2_L2ZpbGVzL3Rlc3QtbW92ZS1kaXI_E');
-    createFolder(I,'outer');
-    createFolder(I,'inner');
+    createFolder(I, i18n,'outer');
+    createFolder(I, i18n,'inner');
 
     const outerSelector = '.elfinder-cwd-filename[title="outer"]';
     const innerSelector = '.elfinder-cwd-filename[title="inner"]';
-    I.dragAndDrop(innerSelector, outerSelector);
+    I.dragAndDrop(innerSelector, outerSelector, { force: true });
 
     I.waitForVisible('div.ui-dialog.ui-widget.elfinder-dialog-confirm', 10);
 
@@ -257,10 +268,10 @@ Scenario('Elfinder Move Confirm', ({ I, Document }) => {
     deleteFile(I,'outer');
 });
 
-function createFolder(I, folderName) {
+function createFolder(I, i18n, folderName) {
     I.say('Creating a folder');
     I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
-    I.fillField({ css: '.elfinder-cwd-filename[title="Nový priečinok"]' }, folderName);
+    I.fillField({ css: `.elfinder-cwd-filename[title="${i18n.get('NewFolder')}"]` }, folderName);
     I.pressKey('Enter');
     I.waitForVisible('.elfinder-toast', 10);
     I.waitForInvisible('.elfinder-toast', 10);

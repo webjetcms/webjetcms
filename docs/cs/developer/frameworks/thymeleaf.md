@@ -88,7 +88,7 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
-**Varování:** upozornění na kontrolu práv na volání `user.isEnabledItem("menuWebpages")`, jsou data vložena přímo do stránky a obejdou kontrolu práv služby REST. Kontrolu práv tedy musíte zajistit implicitně. Ve výchozím nastavení je objekt `webpagesInitialJson` vloží řetězec `null`, protože model není možné nastavit přímo. `null` objekt. Řetězec je však správně vložen do souboru pug jako `null` hodnota, zpracování HTML kódu selže a použije se volání REST (protože hodnota `initialData` objektu bude `null`).
+!>**Varování:** upozornění na kontrolu práv na volání `user.isEnabledItem("menuWebpages")`, jsou data vložena přímo do stránky a obejdou kontrolu práv služby REST. Kontrolu práv tedy musíte zajistit implicitně. Ve výchozím nastavení je objekt `webpagesInitialJson` vloží řetězec `null`, protože model není možné nastavit přímo. `null` objekt. Řetězec je však správně vložen do souboru pug jako `null` hodnota, zpracování HTML kódu selže a použije se volání REST (protože hodnota `initialData` objektu bude `null`).
 
 ## LayoutService
 
@@ -198,7 +198,7 @@ kromě toho je možné použít také `Literal substitutions` https://www.thymel
 <span data-th-text="|Welcome to our application, ${layout.user.fullName}!|">
 ```
 
-**Varování:** pokud vyhodí chybu jako: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. Jedná se o speciální značku pro preprocesor:
+!>**Varování:** pokud vyhodí chybu jako: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. Jedná se o speciální značku pro preprocesor:
 
 https://www.thymeleaf.org/doc/tutorials/2.1/usingthymeleaf.html#preprocessing
 

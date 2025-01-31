@@ -117,6 +117,12 @@ public class NewsActionBean extends WebJETActionBean
 	private boolean alsoSubGroups = false;
 
 	@PageParamOnly
+	private int subGroupsDepth = -1;
+
+	@PageParamOnly
+	private int docMode = 0;
+
+	@PageParamOnly
 	private boolean loadData = false;
 
 	@PageParamOnly
@@ -187,9 +193,6 @@ public class NewsActionBean extends WebJETActionBean
 	private List<Integer> groupIdsExpanded = null;
 
 	private String author;
-
-	@PageParamOnly
-	private boolean removeDefaultDocs = false;
 
 	@DefaultHandler
 	public Resolution news()
@@ -473,19 +476,31 @@ public class NewsActionBean extends WebJETActionBean
 				groupIdsExpanded.add(groupId);
 				if (alsoSubGroups)
 				{
-					List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
-					for (GroupDetails g : groupList)
-					{
-						groupIdsExpanded.add(g.getGroupId());
-						defaultDocs.add(g.getDefaultDocId());
+					//All subgroups
+					if(subGroupsDepth < 1) { 
+						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false);
+						for (GroupDetails g : groupList) {
+							groupIdsExpanded.add(g.getGroupId());
+							defaultDocs.add(g.getDefaultDocId());
+						}
+					} else {
+						//Subgroups to specific depth
+						List<GroupDetails> groupList = gdb.getGroupsTree(groupId, false, false, false, subGroupsDepth);
+						for (GroupDetails g : groupList) {
+							groupIdsExpanded.add(g.getGroupId());
+							defaultDocs.add(g.getDefaultDocId());
+						}
 					}
 				}
 			}
 			newsQuery.addCriteria(DatabaseCriteria.in(FieldEnum.GROUP_ID, groupIdsExpanded));
 		}
 
-		if (removeDefaultDocs && defaultDocs.size() > 0)
-		{
+		//Tricky part, if we want only "defaultDocs" and there are no "defaultDocs" we must add un existing docId, so the query will return nothing
+		if(docMode == 1) {
+			defaultDocs.add(-666);
+			newsQuery.addCriteria(DatabaseCriteria.in(FieldEnum.DOC_ID, defaultDocs));
+		} else if(!defaultDocs.isEmpty() && docMode == 2) {
 			newsQuery.addCriteria(DatabaseCriteria.notIn(FieldEnum.DOC_ID, defaultDocs));
 		}
 	}
@@ -1467,6 +1482,14 @@ public class NewsActionBean extends WebJETActionBean
 		this.alsoSubGroups = alsoSubGroups;
 	}
 
+	public void setSubGroupsDepth(int subGroupsDepth) {
+		this.subGroupsDepth = subGroupsDepth;
+	}
+
+	public void setDocMode(int docMode) {
+		this.docMode = docMode;
+	}
+
 	public String getGroupIdsString()
 	{
 		StringBuilder result = new StringBuilder();
@@ -1518,6 +1541,14 @@ public class NewsActionBean extends WebJETActionBean
 	public boolean isAlsoSubGroups()
 	{
 		return alsoSubGroups;
+	}
+
+	public int getSubGroupsDepth() {
+		return subGroupsDepth;
+	}
+
+	public int getDocMode() {
+		return docMode;
 	}
 
 	public int[] getPerexGroup()
@@ -1841,13 +1872,5 @@ public class NewsActionBean extends WebJETActionBean
 
 	public void setAuthor(String author) {
 		this.author = author;
-	}
-
-	public boolean isRemoveDefaultDocs() {
-		return removeDefaultDocs;
-	}
-
-	public void setRemoveDefaultDocs(boolean removeDefaultDocs) {
-		this.removeDefaultDocs = removeDefaultDocs;
 	}
 }

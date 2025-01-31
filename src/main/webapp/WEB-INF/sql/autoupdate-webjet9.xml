@@ -1303,9 +1303,9 @@
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>29.07.2024</string></void>
                 <void property="desc"><string>Nastav stlpec name v tabuľke enumeration_type ako required.</string></void>
-                <void property="mysql"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR(255) NOT NULL;</string></void>
-                <void property="mssql"><string>ALTER TABLE enumeration_type ALTER COLUMN name NVARCHAR(255) NOT NULL;</string></void>
-                <void property="oracle"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR2(255) NOT NULL;</string></void>
+                <void property="mysql"><string>ALTER TABLE enumeration_type MODIFY name VARCHAR(255) NOT NULL</string></void>
+                <void property="mssql"><string>ALTER TABLE enumeration_type ALTER COLUMN name NVARCHAR(255) NOT NULL</string></void>
+                <void property="oracle"><string>ALTER TABLE enumeration_type MODIFY name NVARCHAR2(255) NOT NULL</string></void>
             </object>
         </void>
 
@@ -1314,10 +1314,10 @@
                 <void property="author"><string>sivan</string></void>
                 <void property="date"><string>23.07.2024</string></void>
                 <void property="desc"><string>Pridanie boolean stlpca notify_page_author do tabulky forum.</string></void>
-                <void property="mysql"><string>ALTER TABLE forum ADD notify_page_author tinyint(1) NULL DEFAULT 0;</string></void>
-                <void property="mssql"><string>ALTER TABLE forum ADD notify_page_author INT NULL DEFAULT 0;</string></void>
-                <void property="oracle"><string>ALTER TABLE forum ADD notify_page_author SMALLINT NULL DEFAULT 0;</string></void>
-                <void property="pgsql"><string>ALTER TABLE forum ADD notify_page_author BOOLEAN NULL DEFAULT FALSE;</string></void>
+                <void property="mysql"><string>ALTER TABLE forum ADD notify_page_author tinyint(1) NULL DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE forum ADD notify_page_author INT NULL DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE forum ADD notify_page_author SMALLINT DEFAULT 0 NULL</string></void>
+                <void property="pgsql"><string>ALTER TABLE forum ADD notify_page_author BOOLEAN NULL DEFAULT FALSE</string></void>
             </object>
         </void>
 
@@ -1351,15 +1351,16 @@
              <void property="date"><string>19.09.2024</string></void>
              <void property="desc"><string>gallery - zmena typu stlpca author</string></void>
              <void property="mysql"><string>ALTER TABLE gallery MODIFY author TEXT;</string></void>
-             <void property="mssql"><string>ALTER TABLE gallery ALTER COLUMN author NTEXT;</string></void>
-             <void property="oracle">
-                <string>
+             <void property="mssql"><string>
+                ALTER TABLE gallery DROP CONSTRAINT {CONSTRAIN:author};
+                ALTER TABLE gallery ALTER COLUMN author NTEXT;
+             </string></void>
+             <void property="oracle"><string>
                     ALTER TABLE gallery ADD (author2 CLOB);
                     UPDATE gallery SET author2=author;
                     ALTER TABLE gallery DROP COLUMN author;
                     ALTER TABLE gallery RENAME COLUMN author2 TO author;
-                </string>
-             </void>
+             </string></void>
              <void property="pgsql"><string>ALTER TABLE gallery ALTER COLUMN author TYPE TEXT;</string></void>
             </object>
         </void>
@@ -1380,6 +1381,198 @@
                 </string>
              </void>
              <void property="pgsql"><string>ALTER TABLE adminlog_notify ALTER COLUMN text TYPE TEXT;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>21.10.2024</string></void>
+                <void property="desc"><string>Pridanie stlpcov perex_group_name_[sk, cz, en, de, pl, ru, hu, cho, esp] do tabulky perex_groups</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE perex_groups ADD perex_group_name_sk VARCHAR(255), ADD perex_group_name_cz VARCHAR(255), ADD perex_group_name_en VARCHAR(255), ADD perex_group_name_de VARCHAR(255), ADD perex_group_name_pl VARCHAR(255);
+                        ALTER TABLE perex_groups ADD perex_group_name_ru VARCHAR(255), ADD perex_group_name_hu VARCHAR(255), ADD perex_group_name_cho VARCHAR(255), ADD perex_group_name_esp VARCHAR(255);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE perex_groups ADD perex_group_name_sk NVARCHAR(255), perex_group_name_cz NVARCHAR(255), perex_group_name_en NVARCHAR(255), perex_group_name_de NVARCHAR(255), perex_group_name_pl NVARCHAR(255);
+                        ALTER TABLE perex_groups ADD perex_group_name_ru NVARCHAR(255), perex_group_name_hu NVARCHAR(255), perex_group_name_cho NVARCHAR(255), perex_group_name_esp NVARCHAR(255);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE perex_groups ADD (perex_group_name_sk NVARCHAR2(255), perex_group_name_cz NVARCHAR2(255), perex_group_name_en NVARCHAR2(255), perex_group_name_de NVARCHAR2(255), perex_group_name_pl NVARCHAR2(255));
+                        ALTER TABLE perex_groups ADD (perex_group_name_ru NVARCHAR2(255), perex_group_name_hu NVARCHAR2(255), perex_group_name_cho NVARCHAR2(255), perex_group_name_esp NVARCHAR2(255));
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE perex_groups ADD COLUMN perex_group_name_sk VARCHAR(255), ADD COLUMN perex_group_name_cz VARCHAR(255), ADD COLUMN perex_group_name_en VARCHAR(255), ADD COLUMN perex_group_name_de VARCHAR(255), ADD COLUMN perex_group_name_pl VARCHAR(255);
+                        ALTER TABLE perex_groups ADD COLUMN perex_group_name_ru VARCHAR(255), ADD COLUMN perex_group_name_hu VARCHAR(255), ADD COLUMN perex_group_name_cho VARCHAR(255), ADD COLUMN perex_group_name_esp VARCHAR(255);
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>28.11.2024</string></void>
+                <void property="desc"><string>Pridanie stlpca id do perex_group_doc tabulky</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE perex_group_doc ADD id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE perex_group_doc ADD id INT IDENTITY(1,1) PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE SEQUENCE S_perex_group_doc START WITH 1;
+                        CREATE TRIGGER T_perex_group_doc BEFORE INSERT ON perex_group_doc
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_perex_group_doc.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                        ALTER TABLE perex_group_doc ADD id INT DEFAULT S_perex_group_doc.NEXTVAL NOT NULL;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_perex_group_doc START WITH 1;
+                        ALTER TABLE perex_group_doc ADD id INT DEFAULT NEXTVAL('S_perex_group_doc') NOT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>29.10.2024</string></void>
+                <void property="desc"><string>documents - index on sync_id for faster languange_switcher</string></void>
+                <void property="mysql"><string>CREATE INDEX i_sync_id ON documents(sync_id)</string></void>
+                <void property="mssql"><string>CREATE INDEX i_sync_id ON documents(sync_id)</string></void>
+                <void property="oracle"><string>CREATE INDEX i_sync_id ON documents(sync_id)</string></void>
+                <void property="pgsql"><string>CREATE INDEX i_sync_id ON documents(sync_id);</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>21.11.2024</string></void>
+                <void property="desc"><string>forms regexp - fix email address validation type name@domain,com</string></void>
+                <void property="mysql"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\\._-]*[a-zA-Z0-9]+\\\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' ]]></string></void>
+                <void property="mssql"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' ]]></string></void>
+                <void property="oracle"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\.[a-zA-Z]{2,16}$' ]]></string></void>
+                <void property="pgsql"><string><![CDATA[ UPDATE form_regular_exp SET reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\\.[a-zA-Z]{2,16}$' WHERE reg_exp='^[a-zA-Z0-9]+[a-zA-Z0-9\._+=#$%&-]*[a-zA-Z0-9]+@[a-zA-Z0-9]+[a-zA-Z0-9\._-]*[a-zA-Z0-9]+\.[a-zA-Z]{2,16}$' ]]></string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>lbalat</string></void>
+                <void property="date"><string>27.11.2024</string></void>
+                <void property="desc"><string>pgsql - drop index on title - exceeds btree version 4</string></void>
+                <void property="mysql"><string></string></void>
+                <void property="mssql"><string></string></void>
+                <void property="oracle"><string></string></void>
+                <void property="pgsql"><string>
+                    DROP INDEX idx_80893_search;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.10.2024</string></void>
+                <void property="desc"><string>Pridanie stlpca id do inquiry_users tabulky</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE inquiry_users ADD id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE inquiry_users ADD id INT IDENTITY(1,1) PRIMARY KEY NOT NULL;
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        CREATE SEQUENCE S_inquiry_users START WITH 1;
+                        CREATE TRIGGER T_inquiry_users BEFORE INSERT ON inquiry_users
+                            FOR EACH ROW
+                                DECLARE
+                                    val INTEGER|
+                                BEGIN
+                                    IF :new.id IS NULL THEN
+                                        SELECT S_inquiry_users.nextval into val FROM dual|
+                                        :new.id:= val|
+                                    END IF|
+                                END|
+                        ;
+                        ALTER TABLE inquiry_users ADD id INT DEFAULT S_inquiry_users.NEXTVAL NOT NULL;
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        CREATE SEQUENCE S_inquiry_users START WITH 1;
+                        ALTER TABLE inquiry_users ADD id INT DEFAULT NEXTVAL('S_inquiry_users') NOT NULL;
+                    </string>
+                </void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>23.10.2024</string></void>
+                <void property="desc"><string>gallery - pridanie stlpca image_source</string></void>
+                <void property="mysql"><string>ALTER TABLE gallery ADD image_source TEXT</string></void>
+                <void property="mssql"><string>ALTER TABLE gallery ADD image_source NTEXT</string></void>
+                <void property="oracle"><string>ALTER TABLE gallery ADD image_source CLOB</string></void>
+                <void property="pgsql"><string>ALTER TABLE gallery ADD image_source TEXT</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>10.12.2024</string></void>
+                <void property="desc"><string>Pridanie stlpcov field_a-f do tabulky perex_groups</string></void>
+                <void property="mysql">
+                    <string>
+                        ALTER TABLE perex_groups ADD field_a VARCHAR(255), ADD field_b VARCHAR(255), ADD field_c VARCHAR(255), ADD field_d VARCHAR(255), ADD field_e VARCHAR(255), ADD field_f VARCHAR(255);
+                    </string>
+                </void>
+                <void property="mssql">
+                    <string>
+                        ALTER TABLE perex_groups ADD field_a NVARCHAR(255), field_b NVARCHAR(255), field_c NVARCHAR(255), field_d NVARCHAR(255), field_e NVARCHAR(255), field_f NVARCHAR(255);
+                    </string>
+                </void>
+                <void property="oracle">
+                    <string>
+                        ALTER TABLE perex_groups ADD (field_a NVARCHAR2(255), field_b NVARCHAR2(255), field_c NVARCHAR2(255), field_d NVARCHAR2(255), field_e NVARCHAR2(255), field_f NVARCHAR2(255));
+                    </string>
+                </void>
+                <void property="pgsql">
+                    <string>
+                        ALTER TABLE perex_groups ADD COLUMN field_a VARCHAR(255), ADD COLUMN field_b VARCHAR(255), ADD COLUMN field_c VARCHAR(255), ADD COLUMN field_d VARCHAR(255), ADD COLUMN field_e VARCHAR(255), ADD COLUMN field_f VARCHAR(255);
+                    </string>
+                </void>
             </object>
         </void>
 

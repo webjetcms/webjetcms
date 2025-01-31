@@ -16,7 +16,6 @@ module.exports = {
           I.click({ css: "div.modal-dialog div.DTE_Field_Name_" + name + " button.dropdown-toggle" });
           I.waitForElement(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
           I.waitForVisible(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
-          I.waitForEnabled(locate('div.dropdown-menu.show .dropdown-item').withText(text), 5);
           I.click(locate('div.dropdown-menu.show .dropdown-item').withText(text));
           I.wait(0.3);
      },
@@ -105,6 +104,7 @@ module.exports = {
       * @param {String} id - The ID of the modal to wait for
       */
      waitForModalClose(id) {
+          if (typeof id == "undefined") { id = "datatableInit_modal"; }
           I.waitForInvisible("#" + id);
           I.wait(0.2);
      },
@@ -189,6 +189,7 @@ module.exports = {
       * @param {String} value - Value to fill; WARNING: currently does not handle diacritics due to typing command
       */
     fillCleditor(parentSelector, value) {
+     I.waitForElement(parentSelector+" div.cleditorMain", 10);
      I.click(parentSelector+" div.cleditorMain", null, { position: { x: 10, y: 30 } });
      I.wait(0.3);
      I.pressKey(['CommandOrControl', 'A']);

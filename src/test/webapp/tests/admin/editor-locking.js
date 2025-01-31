@@ -44,7 +44,7 @@ Scenario('Kontrolova editor locking hlasenia', ({ I, DT, DTE }) => {
 
     //over zobrazenie medii
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("mediaTitleSk", "asdfasdfasdf");
+    DT.filterContains("mediaTitleSk", "asdfasdfasdf");
     I.click("asdfasdfasdf");
     DTE.waitForEditor("mediaTable");
     I.see("Záznam má v editore otvorený aj:", "div.toast-message");
@@ -71,7 +71,7 @@ Scenario('Kontrolova editor locking hlasenia', ({ I, DT, DTE }) => {
 
     //over ne zobrazenie medii
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("mediaTitleSk", "asdfasdfasdf");
+    DT.filterContains("mediaTitleSk", "asdfasdfasdf");
     I.click("asdfasdfasdf");
     DTE.waitForEditor("mediaTable");
     I.dontSee("Záznam má v editore otvorený aj:");

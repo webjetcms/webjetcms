@@ -1,12 +1,16 @@
 # Features
 
-| | function | | description | | --------------- | ---------------------- | | init(config) | | initializing the plugin | | | log(param) | logging in the console | | | isTouchDevice() | detecting the device |
+| Function | Description |
+| --------------- | ---------------------- |
+| init(config) | Plugin Initialization |
+| log(param) | Logging in console |
+| isTouchDevice() | device detection |
 
 ## Plugin initialization
 
 In order to use the Ninja plugin, you need to initialize it.
 
-!\&gt; It is necessary to have the scripts needed for the Ninja plugin in the template, which are in `global-functions.min.js`
+!> It is necessary to have the scripts needed for the Ninja plugin in the template, which are in `global-functions.min.js`
 
 Plugin initialization:
 
@@ -18,14 +22,14 @@ Initialization of the plugin with settings and events used:
 
 ```javascript
 Nina.init({
-	debug: true,
-	fireTime: 300,
-	onMobileDownBlink: function () {
-		// do something...
-	},
-	onDesktop: function () {
-		// do something...
-	},
+    debug: true,
+    fireTime: 300,
+    onMobileDownBlink:function() {
+        // do something...
+    },
+    onDesktop:function() {
+        // do something...
+    }
 });
 ```
 
@@ -37,7 +41,7 @@ Ninja.log basically calls console.warn, which is wrapped with a condition that i
 
 So you can have a lot of Ninja.logs in your scripts that help you in development and you don't have to delete them, just disable debug mode and the log won't be executed.
 
-!\&gt; console.warm() is also a log, like console.log() or console.info() etc. But it is color-coded. It is yellow by default. This distinguishes between logs that are with the Ninja plugin and standard logs outside of the Ninja plugin.
+!> console.warm() is also a log, like console.log() or console.info() etc. But it is color-coded. It is yellow by default. This distinguishes between logs that are with the Ninja plugin and standard logs outside of the Ninja plugin.
 
 Example of use:
 
@@ -59,10 +63,10 @@ A code that, when called, checks to see if it is a touch-tone device:
 
 ```javascript
 var isTouchDevice = false,
-	supportsTouch = false;
+    supportsTouch = false;
 
-if ("ontouchstart" in window || window.navigator.msPointerEnabled || "ontouchstart" in document.documentElement) {
-	supportsTouch = true;
+if ( ('ontouchstart' in window) || (window.navigator.msPointerEnabled) || ('ontouchstart' in document.documentElement) ) {
+    supportsTouch = true;
 }
 
 isTouchDevice = Modernizr.touchevents || supportsTouch;

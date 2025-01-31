@@ -1,6 +1,6 @@
 # Web stránky
 
-## Základné ovládacie prvky
+## Základná práca
 
 ### Výber domény
 
@@ -39,7 +39,7 @@ V pravej sekcii je možné zobraziť nasledovné karty:
 - **Web stránky** - zobrazuje štandardný zoznam web stránok vo vybranom priečinku v stromovej štruktúre.
 - **Naposledy upravené** - zobrazuje zoznam vašich posledné upravených stránok.
 - **Čakajúce na schválenie** - ak schvaľujete zmeny vo web stránkach zobrazia sa v tejto karte stránky, ktoré čakajú na vaše schválenie.
-- **Priečinky** - prepne zobrazenie zo zoznamu web stránok na zoznam priečinkov. Kliknutím na priečinok v stromovej štruktúre sa zobrazí zvolený priečinok a jeho pod priečinky. Ak označíte v stromovej štruktúre viaceré priečinky (napr. pomocou stlačenia klávesy ```CTRL```) zobrazia sa označené priečinky. Tabuľkové zobrazenie priečinkov umožňuje napr. vykonávať hromadné operácie s priečinkami (napr. zmena šablóny), použiť funkciu Úprava bunky alebo funkciu Duplikovať.
+- **Priečinky** - prepne zobrazenie zo zoznamu web stránok na zoznam priečinkov. Kliknutím na priečinok v stromovej štruktúre sa zobrazí zvolený priečinok a jeho pod priečinky. Ak označíte v stromovej štruktúre viaceré priečinky (napr. pomocou stlačenia klávesy ```CTRL```) zobrazia sa označené priečinky. Tabuľkové zobrazenie priečinkov umožňuje napr. vykonávať hromadné operácie s priečinkami (napr. zmena šablóny), použiť funkciu Upraviť v zobrazení mriežky alebo funkciu Duplikovať.
 
 !>**Upozornenie**: zobrazenie priečinkov musíte najskôr zapnúť v [nastavenia zobrazenia stromovej štruktúry](#nastavenie-zobrazenia-stromovej-štruktúry).
 
@@ -90,7 +90,26 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 - **ID** - Pred názvom zobrazí aj ID adresára vo forme #ID. Zobrazenie je vhodné, ak potrebujete manuálne do niektorej aplikácie zadať ID priečinka, alebo migrujete stránky medzi prostrediami a potrebujete rýchlo skontrolovať nastavenie vložených aplikácií.
 - **Poradie usporiadania** - Za názvom zobrazí poradie usporiadania vo forme (poradie).
 - **Web Stránky** - Zobrazí v stromovej štruktúre aj web stránky. **Upozornenie:** znižuje výkon a rýchlosť načítania údajov. Možnosť odporúčame zapnúť len ak potrebujete presúvať web stránky pomocou funkcie ```Drag&Drop```.
-- **Priečinky stromovej štruktúry ako tabuľku** - Zobrazí kartu Priečinky v datatabuľke. Umožňuje používať funkcie datatabuľky ako hromadné operácie, duplikovať, úprava bunky atď. s priečinkami stromovej štruktúry.
+- **Priečinky stromovej štruktúry ako tabuľku** - Zobrazí kartu Priečinky v datatabuľke. Umožňuje používať funkcie datatabuľky ako hromadné operácie, duplikovať, upraviť v zobrazení mriežky atď. s priečinkami stromovej štruktúry.
 - **Pomer šírky stĺpcov strom:tabuľka** - Nastaví pomer šírky stĺpcov zobrazenej stromovej štruktúry a datatabuľky pre lepšie využitie šírky monitora. Štandardný pomer je 4:8. Upozornenie: pri niektorých pomeroch a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
+- **Zoradiť strom podľa** - Výber parametra adresára, podľa ktorého sa má strom priečinkov usporiadať. Výberové pole podporuje nasledujúce parametre
+  - **Priorita**
+  - **Názov**
+  - **Dátum vytvorenie**
+- **Zoradiť strom smerom** - Prepínanie medzi smerom usporiadania stromu priečinkov. Výberom možnosti sa použije smer **Vzostupne (ASC)** a nezvolením možnosti sa použije smer **Zostupne (DESC)**.
 
 ![](jstree-settings.png)
+
+## Vyhľadávanie v stromovej štruktúre
+
+Filter nad stromovou štruktúrou Vám umožní rýchle vyhľadávanie priečinkov podľa ich názvu. Vyhľadávanie funguje v **celej stromovej štruktúre**, čiže nie je potrebné otvárať priečinky pre ich prehľadanie. Vyhľadávanie medzi jednotlivými kartami **Priečinok** / **Systém** / **Kôš** je oddelené, čiže v karte **Systém** vyhľadávaním nenájdete priečinky patriace do karty **Kôš** atď.
+
+![](jstree-search-form.png)
+
+Po zadaní hodnoty do poľa sa filtrovanie spustí stlačením klávesy `Enter` alebo ikony ![](jstree-search-button.png ":no-zoom"). Pre lepší prehľad kde sa nájdený priečinok nachádza, zobrazujeme celú cestu až ku koreňovému priečinku. Každý priečinok vyhovujúci hľadanému výrazu je zvýraznený.
+
+![](jstree-search-result.png)
+
+Vyhľadávanie sa zruší stlačením tlačidla ![](jstree-search-cancel-button.png ":no-zoom") alebo ak skúsite vyhľadať prázdny reťazec.
+
+!>**Upozornenie:** Ak máte aktívne vyhľadávanie (práve ste vyhľadávali nejaký reťazec) v jednej karte, tak pri prepnutí do druhej karty sa vyhľadávanie zruší. Čiže vyhľadávaný reťazec napr. "blog" sa pri prepnutí do inej karty odstráni z poľa.

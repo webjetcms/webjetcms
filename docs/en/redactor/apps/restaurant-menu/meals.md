@@ -1,6 +1,6 @@
 # Dishes
 
-Part of `Jedlá` falls under the Restaurant Menu section. It allows you to define the dishes that are used when creating a restaurant menu. It is possible to add/edit/duplicate/delete dishes as well as import and export them.
+Part of **Dishes** falls under the Restaurant Menu section. It allows you to define the dishes that are used when creating a restaurant menu. It is possible to add/edit/duplicate/delete dishes as well as import and export them.
 
 ![](meals-data-table.png)
 
@@ -14,6 +14,6 @@ When creating a new dish, the following parameters are in the editor:
 
 ![](meals-editor.png)
 
-Allergens are selected from a selection menu in which several options can be selected. There are 14 allergens (the number can be set in the conf. variable `restaurantMenu.alergensCount`) and are defined in translation keys with the prefix `components.restaurant_menu.alergen`:
+Allergens are selected from a selection menu in which several options can be selected. There are 14 allergens (the number can be set in the configuration variable `restaurantMenu.alergensCount`) and are defined in translation keys with the prefix `components.restaurant_menu.alergen`:
 
 ![](meals-allergens-list.png)

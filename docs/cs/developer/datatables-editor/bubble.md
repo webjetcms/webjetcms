@@ -1,10 +1,10 @@
-# Úprava buňky
+# Úpravy v zobrazení mřížky
 
-Datové tabulky podporují přímé úpravy buněk v režimu úprav `bubble`. Chcete-li režim zapnout, klikněte na **Úprava buňky** na panelu nástrojů. Poté klikněte na buňku a zobrazí se dialogové okno s editorem vybrané buňky.
+Datové tabulky podporují přímé úpravy buněk v režimu úprav `bubble`. Chcete-li režim zapnout, klikněte na **Úpravy v zobrazení mřížky** na panelu nástrojů. Poté klikněte na buňku a zobrazí se dialogové okno s editorem vybrané buňky.
 
 ## Inicializace režimu
 
-Modifikace buňky je inicializována v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) Kód:
+Úpravy v zobrazení mřížky jsou inicializovány v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) Kód:
 
 ```javascript
 // aktivuj rezim uprava bunky / bubble

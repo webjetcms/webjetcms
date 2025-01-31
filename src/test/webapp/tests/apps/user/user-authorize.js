@@ -1,4 +1,4 @@
-Feature('apps.user-authorize');
+Feature('apps.user.user-authorize');
 
 var randomText = null;
 var tempMailAddress = "webjetcms@fexpost.com";
@@ -156,9 +156,9 @@ Scenario('Admin auth @singlethread', async ({ I, DT, DTE, TempMail }) => {
 
         I.relogin("admin");
         I.amOnPage("/admin/v9/users/user-list/");
-        DT.filter("login", userName);
-        DT.filter("firstName", firstName);
-        DT.filter("lastName", lastName);
+        DT.filterContains("login", userName);
+        DT.filterContains("firstName", firstName);
+        DT.filterContains("lastName", lastName);
         I.see(userName);
 
         I.clickCss("td.dt-select-td.sorting_1");
@@ -196,13 +196,13 @@ Scenario('delete cache objects to prevent logon form wrong password counting @si
     I.closeOtherTabs();
 });
 
-Scenario('Test email sending after adding to userGroup @singlethread', async ({ I, DTE, TempMail }) => {
+Scenario('Test email sending after adding to userGroup @singlethread', async ({ I, DT, DTE, TempMail }) => {
     I.relogin("admin");
 
     let userName = "autotest_sendinguserGroupMails_" + randomText;
 
     I.amOnPage("/admin/v9/users/user-list/");
-    I.clickCss("button.buttons-create");
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
 
     //Just because we need to fill it
@@ -250,13 +250,17 @@ async function prepareRegistrationForm(I, DTE, registrationType) {
 
     //
     await openRegisterForm(I, DTE);
+    I.switchTo("iframe.cke_dialog_ui_iframe");
+    I.waitForElement("#editorComponent", 5);
+    I.switchTo("#editorComponent");
+    I.waitForElement("input[name=requireEmailVerification]", 5);
 
     if(registrationType == RegistrationType.One) {
-        //Vyžadovať potvrdenie e-mailovej adresy
-        I.uncheckOption("#div_1 > form > div:nth-child(6) > div > span > input");
+        //NE Vyžadovať potvrdenie e-mailovej adresy
+        I.uncheckOption("input[name=requireEmailVerification]");
     } else {
         //Vyžadovať potvrdenie e-mailovej adresy
-        I.checkOption("#div_1 > form > div:nth-child(6) > div > span > input");
+        I.checkOption("input[name=requireEmailVerification]");
     }
 
     //Select wanted user groups
@@ -274,12 +278,12 @@ function removeUser(I, DT) {
     I.wait(10);
     I.relogin("admin");
     I.amOnPage("/admin/v9/users/user-list/");
-    DT.filter("login", userName);
-    DT.filter("firstName", firstName);
-    DT.filter("lastName", lastName);
+    DT.filterContains("login", userName);
+    DT.filterContains("firstName", firstName);
+    DT.filterContains("lastName", lastName);
 
     I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
+    I.click(DT.btn.delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee(userName);
 }
@@ -297,27 +301,23 @@ async function openRegisterForm(I, DTE) {
     I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
     I.switchTo();
 
-    I.switchTo("iframe.cke_dialog_ui_iframe");
-    I.switchTo("#editorComponent");
-    I.switchTo("#tabMenu1");
 }
 async function selectUserGroups(I, wantedGroupIds) {
-    I.switchTo(locate("#div_1 > form > div:nth-child(1) > div:nth-child(1)").withText("Používateľské skupiny:"));
+    const userGroupsSelector = locate("#div_1 > form > div:nth-child(1) > div:nth-child(1)").withText("Používateľské skupiny:");
 
-    let numOfElements = await I.grabNumberOfVisibleElements("label");
-    let index = 0;
+    let numOfElements = await I.grabNumberOfVisibleElements(userGroupsSelector.find("div > label > input"));
+    I.say("numOfElements=" + numOfElements);
     for(let i = 1; i <= numOfElements; i++) {
 
-        if(i == 1) index = 1;
-        else index += 2;
-
-        let userGroupId = await I.grabValueFrom("div > label:nth-child(" + index + ") > div > span > input");
+        let inputLocator = userGroupsSelector.find("div > label > input").at(i);
+        let userGroupId = await I.grabValueFrom(inputLocator);
 
         if(wantedGroupIds.includes(Number(userGroupId)))
-            I.checkOption("div > label:nth-child(" + index + ") > div");
+            I.checkOption(inputLocator);
         else
-            I.uncheckOption("div > label:nth-child(" + index + ") > div");
+            I.uncheckOption(inputLocator);
     }
+
 }
 
 async function save(I, DTE) {
@@ -339,14 +339,15 @@ function register(I, isEmailUsed, registrationType) {
     I.fillField("#usrEmail", tempMailAddress);
 
     //Submit
+    I.waitForElement('#bSubmitIdAjax');
     I.clickCss("#bSubmitIdAjax");
     I.wait(1);
 
     if(!isEmailUsed) {
         //
-        if(registrationType == RegistrationType.One) I.see("Registrácia úspešne uložená. Boli ste automaticky prihlásený, môžete pristupovať do privátných zón web sídla.");
-        else if(registrationType == RegistrationType.Two) I.see("Na vašu e-mailovú adresu bol zaslaný e-mail v ktorom musíte kliknutím na autorizačnú linku potvrdiť vašu registráciu.");
-        else if(registrationType == RegistrationType.Three) I.see("Vaša registrácia podlieha schváleniu, po schválení registrácie dostanete e-mailovú správu s prihlasovacími údajmi.");
+        if(registrationType == RegistrationType.One) I.waitForText("Registrácia úspešne uložená. Boli ste automaticky prihlásený, môžete pristupovať do privátných zón web sídla.", 10);
+        else if(registrationType == RegistrationType.Two) I.waitForText("Na vašu e-mailovú adresu bol zaslaný e-mail v ktorom musíte kliknutím na autorizačnú linku potvrdiť vašu registráciu.",10);
+        else if(registrationType == RegistrationType.Three) I.waitForText("Vaša registrácia podlieha schváleniu, po schválení registrácie dostanete e-mailovú správu s prihlasovacími údajmi.", 10);
 
         I.dontSee("Zadaný e-mail je už použitý, ak neviete prístupové heslo, môžete si ho nechať poslať");
     } else {
@@ -392,6 +393,8 @@ async function checkVerifyEmail_One(I, TempMail) {
 
 async function checkVerifyEmail_Two_Phase_1(I, TempMail) {
     let authLink = "";
+
+    I.switchTo();
 
     //Vefiry mail body context
     I.see("Potvrdenie registrácie na serveri");
@@ -480,7 +483,7 @@ async function removeFexpostUsers(I, DT, DTE, emailAddress) {
     I.amOnPage("/admin/v9/users/user-list/");
 
     //Find users with that email
-    DT.filter("email", emailAddress);
+    DT.filterContains("email", emailAddress);
 
     //Find gow many rows in DB we have (have many users have this email)
     let numberOfUsers = await I.getTotalRows();
@@ -488,7 +491,7 @@ async function removeFexpostUsers(I, DT, DTE, emailAddress) {
     //If there is more that 0, delete them all
     if(numberOfUsers > 0) {
         I.clickCss("button.buttons-select-all");
-        I.clickCss("button.buttons-remove");
+        I.click(DT.btn.delete_button);
         DTE.waitForEditor();
         //bug wrong filter, delete all users on first page
         I.dontSee("vipklient", "div.DTE_Action_Remove");

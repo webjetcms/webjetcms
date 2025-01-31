@@ -1,7 +1,5 @@
 Feature('wj9-webpage-mirroring-translate');
 
-var add_webButton = (locate('#datatableInit_wrapper').find('.buttons-create.btn-success'));
-var remove_webButton = (locate('#datatableInit_wrapper').find('.buttons-remove.btn-danger'));
 var docDataSK = '<p class="text-center"><strong>Názov stránky</strong></p><p>Test prekladu stránky s&nbsp;rôznymi slovami.</p><ol>	<li>dnes</li>	<li>zajtra</li>	<li>pozajtra</li></ol>';
 
 var skVersionName = "dobré nové ráno";
@@ -29,7 +27,7 @@ Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/docmirroring/language.png");
     DTE.cancel();
 
-    I.click(add_webButton);
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.waitForVisible("#DTE_Field_title");
     I.fillField("#DTE_Field_title", skVersionName);
@@ -40,14 +38,14 @@ Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {
     DTE.save();
 
     //TODO redo this part
-    DT.filter("title", skVersionName);
+    DT.filterContains("title", skVersionName);
     I.click(skVersionName);
     DTE.waitForEditor();
     Document.screenshot("/redactor/apps/docmirroring/doc-sk.png");
     DTE.cancel();
 
     I.click( locate("a.jstree-anchor").withText("preklad_en") );
-    DT.filter("title", enVersionName);
+    DT.filterContains("title", enVersionName);
     I.click(enVersionName);
     DTE.waitForEditor();
 
@@ -68,7 +66,7 @@ Scenario('generovanie screenov', async ({I, DT, DTE, Document}) => {
 });
 
 function removePage(I, DT, pageName, confLng, all = false) {
-    DT.filter("title", pageName);
+    DT.filterContains("title", pageName);
 
     if(all === true) {
         I.clickCss("button.buttons-select-all");
@@ -76,7 +74,7 @@ function removePage(I, DT, pageName, confLng, all = false) {
         I.forceClick("#datatableInit tbody tr:nth-child(1) td.dt-select-td");
     }
     
-    I.click(remove_webButton);
+    I.click(DT.btn.delete_button);
 
     switch (confLng) {
         case 'sk':

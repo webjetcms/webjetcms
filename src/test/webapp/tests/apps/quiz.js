@@ -155,13 +155,13 @@ Scenario("Test priradenia otazok a odpovedi k ESTE nevytvorenemu dotazniku", asy
     I.wait(1);
 
     I.clickCss("#DTE_Field_question > div.editor.ql-container > div.ql-editor");
-    I.fillField("#DTE_Field_question", quizQuestionName);
+    I.fillField('#DTE_Field_question div.ql-editor', quizQuestionName);
 
     I.clickCss("#DTE_Field_option1 > div.editor.ql-container > div.ql-editor");
-    I.fillField("#DTE_Field_option1", "option1");
+    I.fillField("#DTE_Field_option1 div.ql-editor", "option1");
 
     I.clickCss("#DTE_Field_option2 > div.editor.ql-container > div.ql-editor");
-    I.fillField("#DTE_Field_option2", "option2");
+    I.fillField("#DTE_Field_option2 div.ql-editor", "option2");
     //TODO - pridanie a otestovanie obrazku (aktu=alne nefunguje vlo6enie cey linku)
     I.clickCss(quizQuestions + "modal > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");
     DT.waitForLoader();
@@ -183,27 +183,27 @@ Scenario("Test priradenia otazok a odpovedi k ESTE nevytvorenemu dotazniku", asy
     DTE.cancel();
 
     I.say("Test if saved question/answer is not visible for another quiz");
-    DT.filter("name", "RAted_quiz");
+    DT.filterContains("name", "RAted_quiz");
     I.click("Rated_quiz");
     DTE.waitForEditor("quizDataTable");
 
     questionsTab(I);
-    DT.filter("question", quizQuestionName);
+    DT.filterContains("question", quizQuestionName);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     answersTab(I);
-    DT.filter("description", quizAnswerName);
+    DT.filterContains("description", quizAnswerName);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     DTE.cancel();
 
     I.say("Try create QUIZ and check that last saved question/answer IS THERE");
     openNewQuiz(I, DTE);
     questionsTab(I);
-    DT.filter("question", quizQuestionName);
+    DT.filterContains("question", quizQuestionName);
     I.see(quizQuestionName);
 
     answersTab(I);
-    DT.filter("description", quizAnswerName);
+    DT.filterContains("description", quizAnswerName);
     I.see(quizAnswerName);
 
     I.say("Save new quiz");
@@ -212,22 +212,22 @@ Scenario("Test priradenia otazok a odpovedi k ESTE nevytvorenemu dotazniku", asy
     DTE.save();
 
     I.say("Check, that nnew saved quiz CONTAINS question/answer");
-    DT.filter("name", quizName);
+    DT.filterContains("name", quizName);
     I.see(quizName);
     I.click(quizName);
     DTE.waitForEditor("quizDataTable");
 
     questionsTab(I);
-    DT.filter("question", quizQuestionName);
+    DT.filterContains("question", quizQuestionName);
     I.see(quizQuestionName);
 
     answersTab(I);
-    DT.filter("description", quizAnswerName);
+    DT.filterContains("description", quizAnswerName);
     I.see(quizAnswerName);
 
     I.say('Delete this quiz');
     DTE.cancel();
-    DT.filter("name", quizName);
+    DT.filterContains("name", quizName);
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");
@@ -288,8 +288,8 @@ Scenario("Test quiz stat sekcie", async ({ I, DT }) => {
     I.amOnPage("/apps/quiz/admin/");
 
     I.say("Filter  Rated_quiz and go to it's statistics");
-    DT.filter("id", 7);
-    DT.filter("name", "Rated_quiz");
+    DT.filterId("id", 7);
+    DT.filterContains("name", "Rated_quiz");
     I.see("Rated_quiz");
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-statistics");
@@ -307,22 +307,22 @@ Scenario("Test quiz stat sekcie", async ({ I, DT }) => {
     I.say("Set date  and check values first");
     I.fillField({css: "input.dt-filter-to-dayDate"}, "20.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
-    DT.checkTableRow("quizStatDataTable", 1, ["Kruh je", "", "61", "13", "82,43", "5,93", "8,00"]);
-    DT.checkTableRow("quizStatDataTable", 2, ["Úsečka je", "", "61", "13", "82,43", "2,95", "5,00"]);
-    DT.checkTableRow("quizStatDataTable", 3, ["Čo je toto", "/images/gallery/test/dsc04082.jpeg", "12", "62", "16,22", "0,16", "1,00"]);
+    DT.checkTableRow("quizStatDataTable", 1, ["Čo je toto", "/images/gallery/test/dsc04082.jpeg", "12", "62", "16,22", "0,16", "1,00"]);
+    DT.checkTableRow("quizStatDataTable", 2, ["Kruh je", "", "61", "13", "82,43", "5,93", "8,00"]);
+    DT.checkTableRow("quizStatDataTable", 3, ["Úsečka je", "", "61", "13", "82,43", "2,95", "5,00"]);
 
     I.say("Set date  and check values second");
     I.fillField({css: "input.dt-filter-from-dayDate"}, "18.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
-    DT.checkTableRow("quizStatDataTable", 1, ["Kruh je", "", "56", "11", "83,58", "6,04", "8,00"]);
-    DT.checkTableRow("quizStatDataTable", 2, ["Úsečka je", "", "58", "9", "86,57", "3,07", "5,00"]);
-    DT.checkTableRow("quizStatDataTable", 3, ["Čo je toto", "/images/gallery/test/dsc04082.jpeg", "9", "58", "13,43", "0,13", "1,00"]);
+    DT.checkTableRow("quizStatDataTable", 1, ["Čo je toto", "/images/gallery/test/dsc04082.jpeg", "9", "58", "13,43", "0,13", "1,00"]);
+    DT.checkTableRow("quizStatDataTable", 2, ["Kruh je", "", "56", "11", "83,58", "6,04", "8,00"]);
+    DT.checkTableRow("quizStatDataTable", 3, ["Úsečka je", "", "58", "9", "86,57", "3,07", "5,00"]);
 
     I.say("GO back throu clicable title");
     I.forceClick(locate("a").withChild( locate("span.statPageTitle") ) );
     I.waitForElement("#quizDataTable", 10);
-    DT.filter("id", 2);
-    DT.filter("name", "Answer_quiz");
+    DT.filterId("id", 2);
+    DT.filterContains("name", "Answer_quiz");
     I.see("Answer_quiz");
     I.clickCss("button.buttons-select-all");
     I.clickCss("button.buttons-statistics");
@@ -342,15 +342,15 @@ Scenario("Test quiz stat sekcie", async ({ I, DT }) => {
     I.fillField({css: "input.dt-filter-to-dayDate"}, "20.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
     DT.checkTableRow("quizStatDataTable", 1, ["Aké zviera je na obrázku", "/images/gallery/test/koala.jpg", "45", "17", "72,58"]);
-    DT.checkTableRow("quizStatDataTable", 2, ["Na obrázku vidíme", "/images/gallery/test/penguins.jpg", "25", "37", "40,32"]);
-    DT.checkTableRow("quizStatDataTable", 3, ["Čo je to", "/images/gallery/test/desert.jpg", "19", "43", "30,65"]);
+    DT.checkTableRow("quizStatDataTable", 2, ["Čo je to", "/images/gallery/test/desert.jpg", "19", "43", "30,65"]);
+    DT.checkTableRow("quizStatDataTable", 3, ["Na obrázku vidíme", "/images/gallery/test/penguins.jpg", "25", "37", "40,32"]);
 
     I.say("Set date  and check values fourth");
     I.fillField({css: "input.dt-filter-from-dayDate"}, "17.12.2023");
     I.clickCss("button.dt-filtrujem-dayDate");
     DT.checkTableRow("quizStatDataTable", 1, ["Aké zviera je na obrázku", "/images/gallery/test/koala.jpg", "42", "16", "72,41"]);
-    DT.checkTableRow("quizStatDataTable", 2, ["Na obrázku vidíme", "/images/gallery/test/penguins.jpg", "21", "37", "36,21"]);
-    DT.checkTableRow("quizStatDataTable", 3, ["Čo je to", "/images/gallery/test/desert.jpg", "15", "43", "35,86"]);
+    DT.checkTableRow("quizStatDataTable", 2, ["Čo je to", "/images/gallery/test/desert.jpg", "15", "43", "35,86"]);
+    DT.checkTableRow("quizStatDataTable", 3, ["Na obrázku vidíme", "/images/gallery/test/penguins.jpg", "21", "37", "36,21"]);
 });
 
 function checkAnswer(I, answId, optionId, classes) {
@@ -400,7 +400,7 @@ function answersTab(I) {
 }
 
 function seeInnerColumn(I, columnName, see) {
-    let key = quizQuestions + "wrapper > div:nth-child(2) > div > div > div.dataTables_scroll > div.dataTables_scrollHead > div > table > thead > tr:nth-child(1) > th.dt-th-" + columnName;
+    let key = quizQuestions + "wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(1) > th.dt-th-" + columnName;
     if (see) {
         I.seeElement(key)
     } else {

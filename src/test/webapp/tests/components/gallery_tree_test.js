@@ -54,7 +54,8 @@ Scenario('Vytvorenie, presun a zmazanie adresaru', ({ I, DTE }) => {
 
     I.dragAndDrop(
         { id: '\\/images\\/gallery\\/' + dragdrop + '_anchor'},
-        { id: '\\/images\\/gallery\\/' + dragdrop + '\\/' + dragdropSubfolder1 + '_anchor'}
+        { id: '\\/images\\/gallery\\/' + dragdrop + '\\/' + dragdropSubfolder1 + '_anchor'},
+        { force: true }
     );
 
     I.seeElement({ id: '\\/images\\/gallery\\/' + dragdrop });
@@ -64,7 +65,8 @@ Scenario('Vytvorenie, presun a zmazanie adresaru', ({ I, DTE }) => {
     // dokazes dropnut dragdrop-subfolder2-timestamp do dragdrop-subfolder1-timestamp
     I.dragAndDrop(
         { id: '\\/images\\/gallery\\/' + dragdrop + '\\/' + dragdropSubfolder2 + '_anchor'},
-        { id: '\\/images\\/gallery\\/' + dragdrop + '\\/' + dragdropSubfolder1 + '_anchor'}
+        { id: '\\/images\\/gallery\\/' + dragdrop + '\\/' + dragdropSubfolder1 + '_anchor'},
+        { force: true }
     );
 
     I.wait(2);

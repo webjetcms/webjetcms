@@ -77,9 +77,10 @@ Scenario('Reservation validation tests + delete logic', ({I, DT, DTE}) => {
     I.waitForText("Bol dosiahnutý maximalný počet rezervácií pre zvolené obdobie a rezervačný objekt.", 5);
 
     DTE.cancel();
-    DT.filter("editorFields.selectedReservation", base_reservation_object);
+    DT.filterContains("editorFields.selectedReservation", base_reservation_object);
 
     I.say("Delete all reservations bind with our object + delete logic test");
+    I.clickCss("button.buttons-select-all");
     deleteReservationsWitPassword(I, delete_password+ "_wrong");
 
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
@@ -94,9 +95,10 @@ Scenario('Reservation validation tests + delete logic', ({I, DT, DTE}) => {
 
 Scenario('remove reservations', async ({I, DT}) => {
     I.amOnPage("/apps/reservation/admin/");
-    DT.filter("editorFields.selectedReservation", base_reservation_object);
+    DT.filterContains("editorFields.selectedReservation", base_reservation_object);
     let rows = await I.getTotalRows();
     if(rows > 0) {
+        I.clickCss("button.buttons-select-all");
         deleteReservationsWitPassword(I, delete_password);
     }
 });
@@ -149,13 +151,13 @@ Scenario('Admin EDIT test with discount logic', ({I, DT, DTE}) => {
     I.say("Edit reservation by admin, discount must by STILL 40% - as user who created reservation");
     I.amOnPage("/apps/reservation/admin/");
     DT.waitForLoader();
-    DT.filter("name", "Tester_L2");
-    DT.filter("editorFields.selectedReservation", "Tenisovy kurt A");
+    DT.filterContains("name", "Tester_L2");
+    DT.filterContains("editorFields.selectedReservation", "Tenisovy kurt A");
     I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
     I.click("Tester_L2");
     DTE.waitForEditor("reservationDataTable");
     I.say("Change day to 10.01.2045");
-    SL.setReservation(I, "Tenisovy kurt A", "10.01.2045", "10.01.2045", "13:00", "16:00");
+    SL.setReservation(I, null, "10.01.2045", "10.01.2045", "13:00", "16:00");
     I.seeInField("#DTE_Field_price", 180); //STILL 40% discount
     DTE.save();
 
@@ -170,8 +172,8 @@ Scenario('remove reservations by object and user', async ({I, DT}) => {
     I.amOnPage("/apps/reservation/admin/");
     DT.waitForLoader();
 
-    DT.filter("name", "Tester_L2");
-    DT.filter("editorFields.selectedReservation", "Tenisovy kurt A");
+    DT.filterContains("name", "Tester_L2");
+    DT.filterContains("editorFields.selectedReservation", "Tenisovy kurt A");
 
     let rows = await I.getTotalRows();
     if(rows > 0) {
@@ -185,9 +187,9 @@ Scenario('remove reservations by object and user', async ({I, DT}) => {
 
 Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/reservation/admin/");
-    DT.filter("editorFields.selectedReservation", "TestDomain_webjet9_object");
+    DT.filterContains("editorFields.selectedReservation", "TestDomain_webjet9_object");
     I.see("TestDomain_webjet9_object");
-    DT.filter("editorFields.selectedReservation", "TestDomain_test23_object");
+    DT.filterContains("editorFields.selectedReservation", "TestDomain_test23_object");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.clickCss("button.buttons-create");
@@ -201,9 +203,9 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     DTE.cancel();
 
     Document.switchDomain("test23.tau27.iway.sk");
-    DT.filter("editorFields.selectedReservation", "TestDomain_webjet9_object");
+    DT.filterContains("editorFields.selectedReservation", "TestDomain_webjet9_object");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
-    DT.filter("editorFields.selectedReservation", "TestDomain_test23_object");
+    DT.filterContains("editorFields.selectedReservation", "TestDomain_test23_object");
     I.see("TestDomain_test23_object");
 });
 
@@ -224,7 +226,6 @@ async function checkReservation(I, DTE, Error,  ...tableData) {
 }
 
 function deleteReservationsWitPassword(I, deletePassword) {
-    I.clickCss("button.buttons-select-all");
     I.clickCss(".custom-buttons-remove");
     I.seeElement("#toast-container-webjet");
     I.see("Zadajte heslo");

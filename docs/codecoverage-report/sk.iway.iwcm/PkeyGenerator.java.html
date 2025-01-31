@@ -295,53 +295,55 @@ public class PkeyGenerator
 		}
 <span class="nc" id="L296">		catch (Exception ex)</span>
 		{
-<span class="nc" id="L298">			sk.iway.iwcm.Logger.error(ex);</span>
+<span class="nc" id="L298">			String message = ex.getMessage();</span>
+<span class="nc bnc" id="L299" title="All 2 branches missed.">			if (message.contains(&quot;doesn't exist&quot;)) throw new RuntimeException(&quot;Table pkey_generator doesn't exist, please create it.&quot;);</span>
+<span class="nc" id="L300">			sk.iway.iwcm.Logger.error(ex);</span>
 		}
 		finally
 		{
 			try
 			{
-<span class="pc bpc" id="L304" title="1 of 2 branches missed.">				if (db_conn != null)</span>
-<span class="fc" id="L305">					db_conn.close();</span>
-<span class="pc bpc" id="L306" title="1 of 2 branches missed.">				if (ps != null)</span>
-<span class="nc" id="L307">					ps.close();</span>
+<span class="pc bpc" id="L306" title="1 of 2 branches missed.">				if (db_conn != null)</span>
+<span class="fc" id="L307">					db_conn.close();</span>
+<span class="pc bpc" id="L308" title="1 of 2 branches missed.">				if (ps != null)</span>
+<span class="nc" id="L309">					ps.close();</span>
 			}
-<span class="nc" id="L309">			catch (Exception ex2)</span>
+<span class="nc" id="L311">			catch (Exception ex2)</span>
 			{
-<span class="nc" id="L311">				sk.iway.iwcm.Logger.error(ex2);</span>
-<span class="fc" id="L312">			}</span>
+<span class="nc" id="L313">				sk.iway.iwcm.Logger.error(ex2);</span>
+<span class="fc" id="L314">			}</span>
 		}
-<span class="fc" id="L314">	}</span>
+<span class="fc" id="L316">	}</span>
 
 	public static String getUniqueKey()
 	{
-<span class="fc" id="L318">		Object o = new Object();</span>
-<span class="fc" id="L319">		String key = Tools.getNow() + &quot;1552&quot; + o.hashCode() + (random.nextInt(Integer.MAX_VALUE));</span>
+<span class="fc" id="L320">		Object o = new Object();</span>
+<span class="fc" id="L321">		String key = Tools.getNow() + &quot;1552&quot; + o.hashCode() + (random.nextInt(Integer.MAX_VALUE));</span>
 
-<span class="fc" id="L321">		byte[] defaultBytes = key.getBytes();</span>
+<span class="fc" id="L323">		byte[] defaultBytes = key.getBytes();</span>
 		try
 		{
-<span class="fc" id="L324">			MessageDigest algorithm = MessageDigest.getInstance(&quot;MD5&quot;);</span>
-<span class="fc" id="L325">			algorithm.reset();</span>
-<span class="fc" id="L326">			algorithm.update(defaultBytes);</span>
-<span class="fc" id="L327">			byte[] messageDigest = algorithm.digest();</span>
+<span class="fc" id="L326">			MessageDigest algorithm = MessageDigest.getInstance(&quot;MD5&quot;);</span>
+<span class="fc" id="L327">			algorithm.reset();</span>
+<span class="fc" id="L328">			algorithm.update(defaultBytes);</span>
+<span class="fc" id="L329">			byte[] messageDigest = algorithm.digest();</span>
 
-<span class="fc" id="L329">			StringBuilder hexString = new StringBuilder();</span>
-<span class="fc bfc" id="L330" title="All 2 branches covered.">			for (int i=0;i&lt;messageDigest.length;i++)</span>
+<span class="fc" id="L331">			StringBuilder hexString = new StringBuilder();</span>
+<span class="fc bfc" id="L332" title="All 2 branches covered.">			for (int i=0;i&lt;messageDigest.length;i++)</span>
 			{
-<span class="fc" id="L332">				hexString.append(Integer.toHexString(0xFF &amp; messageDigest[i])); //NOSONAR</span>
+<span class="fc" id="L334">				hexString.append(Integer.toHexString(0xFF &amp; messageDigest[i])); //NOSONAR</span>
 			}
 
-<span class="fc" id="L335">			Logger.debug(PkeyGenerator.class, &quot;getUniqueKey: key=&quot;+key+&quot; hex=&quot;+hexString.toString());</span>
+<span class="fc" id="L337">			Logger.debug(PkeyGenerator.class, &quot;getUniqueKey: key=&quot;+key+&quot; hex=&quot;+hexString.toString());</span>
 
-<span class="fc" id="L337">			key = hexString.toString();</span>
+<span class="fc" id="L339">			key = hexString.toString();</span>
 		}
-<span class="nc" id="L339">		catch(Exception e)</span>
+<span class="nc" id="L341">		catch(Exception e)</span>
 		{
-<span class="nc" id="L341">			sk.iway.iwcm.Logger.error(e);</span>
-<span class="fc" id="L342">		}</span>
+<span class="nc" id="L343">			sk.iway.iwcm.Logger.error(e);</span>
+<span class="fc" id="L344">		}</span>
 
-<span class="fc" id="L344">		return key;</span>
+<span class="fc" id="L346">		return key;</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

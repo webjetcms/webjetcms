@@ -6,7 +6,7 @@ Our insights and guidance on the JPA.
 
 ## Succession in JPA entities
 
-If two or more tables contain a larger number of identical columns that we do not want to declare multiple times, we can use Inheritance. An example is a table `documents` a `documents_history`that have most of the columns identical, but we want to work with them as two independent entities.
+If two or more tables contain a larger number of identical columns that we do not want to declare multiple times, we can use Inheritance. An example is a table `documents` a `documents_history` that have most of the columns identical, but we want to work with them as two independent entities.
 
 We will create a parent class in which we will store the common columns (we can name it basic, for example). This class must contain an annotation `@MappedSuperclass` (inheritance by annotation `@Inheritance` is not suitable for this type of inheritance).
 

@@ -396,14 +396,14 @@ private static String combineCss(String cssStyle)
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Logger.println(ShowDoc.class,"ShowDoc SERVLET CALLED - GET");
+        Logger.debug(ShowDoc.class,"ShowDoc SERVLET CALLED - GET");
         execute(request,response);
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Logger.println(ShowDoc.class,"ShowDoc SERVLET CALLED - POST");
+        Logger.debug(ShowDoc.class,"ShowDoc SERVLET CALLED - POST");
         execute(request,response);
     }
 
@@ -1398,8 +1398,8 @@ private static String combineCss(String cssStyle)
                 {
                     //skontroluj, ci sablona skutocne existuje
 
-                    forward = getForward(request, prop, tempBrowserDetector, bd, forward);
-                    if (forward == null) return;
+                forward = getForward(request, prop, temp, tempBrowserDetector, bd, forward);
+                if (forward == null) return;
 
                     Logger.debug(this,"forward="+forward);
                 }
@@ -1470,10 +1470,18 @@ private static String combineCss(String cssStyle)
         request.setAttribute("doc_data", perex);
     }
 
-    private String getForward(HttpServletRequest request, Prop prop, TemplateDetails tempBrowserDetector, BrowserDetector bd, String forward) {
+    private String getForward(HttpServletRequest request, Prop prop, TemplateDetails temp, TemplateDetails tempBrowserDetector, BrowserDetector bd, String forward) {
         try {
             //ak mame sablonu pre browserDevice, uz nehladame iny JSP subor pre forward
             if (tempBrowserDetector != null && tempBrowserDetector.getTempId() > 0) bd = null;
+
+            if (temp != null && Tools.isNotEmpty(temp.getTemplateInstallName())) {
+                File f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath("/templates/" + temp.getTemplateInstallName())), forward, bd);
+                if (f.exists()) {
+                    Logger.debug(ShowDoc.class, "___FORWARDFILE (tempInstallName)="+ f.getAbsolutePath());
+                    return "/templates/" + temp.getTemplateInstallName() + "/" + forward;
+                }
+            }
 
             if (Tools.isNotEmpty(Constants.getLogInstallName()))
             {
@@ -1493,7 +1501,7 @@ private static String combineCss(String cssStyle)
             f = TemplatesDB.getDeviceTemplateFile(new File(Tools.getRealPath("/templates/")), forward, bd);
             if (!f.exists()) {
                 StatDB.addError(request.getRequestURI() + "?" + request.getQueryString(), prop.getText("admin.showdoc_error_message.template") + " " + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!");
-                Logger.error(this, prop.getText("admin.showdoc_error_message.template") + " /templates/" + forward + " " + prop.getText("admin.showdoc_error_message.not_exists=") + "!");
+                Logger.error(this, prop.getText("admin.showdoc_error_message.template") + " /templates/" + forward + " " + prop.getText("admin.showdoc_error_message.not_exists") + "!");
                 //sablona neexistuje, asi som na testovacom serveri u jeeffa...
 
                 forward = "tmp_generic.jsp";

@@ -284,7 +284,7 @@ public class Cache
 	 */
 	public void setObjectSeconds(String name, Object object, int cacheInSeconds, boolean allowSmartRefresh)
 	{
-		long expiryTime = Tools.getNow() + (1000 * cacheInSeconds);
+		long expiryTime = Tools.getNow() + (1000l * cacheInSeconds);
 		setObjectByExpiry(name, object, expiryTime, allowSmartRefresh);
 	}
 
@@ -303,7 +303,7 @@ public class Cache
 		cb.setExpiryTime(expiryTime);
 		cb.setAllowSmartRefresh(allowSmartRefresh);
 
-		//Logger.println(this,"Cache.setObject("+name+") " + Tools.getNow() + " exp=" + expiryTime);
+		Logger.println(this,"Cache.setObject("+name+") " + Tools.formatDateTimeSeconds(Tools.getNow()) + " exp=" + Tools.formatDateTimeSeconds(expiryTime));
 
 		//vloz ho do HashTabulky
 		removeObject(name);

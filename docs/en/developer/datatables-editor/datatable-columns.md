@@ -96,19 +96,19 @@ Original documentation on the site [datatables.net](https://datatables.net/refer
 
 Required fields:
 - `inputType` - Abbreviation, `enum DataTableColumnType` - specifies the data field type. It is also possible to use a concatenated value (e.g.: `inputType = { DataTableColumnType.OPEN_EDITOR, DataTableColumnType.JSON },`).
-- `title` - if not specified is automatically generated as `components.meno_beanu_bez_dto_alebo_bean_na_konci.name` - https://datatables.net/reference/option/columns.title, see documentation for [translated by](#preklady-názvov-stĺpcov). ATTENTION: if the title is empty (or hard space), the attribute is automatically set to the column `hidden=true`.
+- `title` - if not specified is automatically generated as `components.meno_beanu_bez_dto_alebo_bean_na_konci.name` - https://datatables.net/reference/option/columns.title, see documentation for [translated by](#translations-of-column-headings). **Warning:** if title is empty (or hard space) then the attribute is automatically set to the column `hidden=true`.
 
 Optional fields:
 - `tab` - shortcut for setting `{editor: {tab: String}}`
-
 - `className` - additional CSS style set to `TD` element, if you want to replace the CSS style set by `inputType` enter it with the sign `!` at the beginning - https://datatables.net/reference/option/columns.className. There are special CSS classes:
-	- `disabled` - sets the field to gray, which evokes that it is non-editable.
-	- `DTE_Field_Has_Checkbox` - sets the offset from the bottom to `-14px` so that no gap is left before the next field.
-	- `hide-on-create` - hides the field when creating a new record.
-	- `hide-on-edit` - hides the field when editing a record.
-	- `not-export` - the field will not be exported.
-	- `show-html` - the HTML code in the value is displayed, including entities of type `&#39;`, sets the attribute to the column `entityDecode: false`.
-	- `wrap` - enables text wrapping, primarily used in fields of type `textarea`.
+  - `disabled` - sets the field to gray, which evokes that it is non-editable.
+  - `DTE_Field_Has_Checkbox` - sets the offset from the bottom to `-14px` so that no gap is left before the next field.
+  - `hide-on-create` - hides the field when creating a new record.
+  - `hide-on-edit` - hides the field when editing a record.
+  - `not-export` - the field will not be exported.
+  - `show-html` - the HTML code in the value is displayed, including entities of type `&#39;`, sets the attribute to the column `entityDecode: false`.
+  - `wrap` - enables text wrapping, primarily used in fields of type `textarea`.
+  - `multiweb-noteditable` - in the MultiWeb installation, the field is shown in grey, which evokes that it is non-editable.
 - `name` - https://datatables.net/reference/option/columns.name
 - `data` - https://datatables.net/reference/option/columns.data
 - `defaultContent` - https://datatables.net/reference/option/columns.defaultContent
@@ -123,12 +123,11 @@ Optional fields:
 - `visible` - the field is hidden, but the user can view it https://datatables.net/reference/option/columns.visible
 - `filter` - if false, the filter is not displayed in the table header
 - `perms` - value for checking rights (e.g. multiDomain), the field will not be displayed unless the logged in user has the specified right enabled
-
-- `defaultValue` - default value for new record (only used if set `fetchOnCreate` at `false`because for this case the data preset from the server will be returned). It can contain macros:
-	- `{currentDomain}` - is replaced with the currently selected domain
-	- `{currentDate}` - shall be replaced by the current date
-	- `{currentDateTimeSeconds}` - is replaced by the current date and time including seconds
-	- `{currentTime}` - is replaced for the current time
+- `defaultValue` - default value for new record (only used if set `fetchOnCreate` at `false` because for this case the data preset from the server will be returned). It can contain macros:
+  - `{currentDomain}` - is replaced with the currently selected domain
+  - `{currentDate}` - shall be replaced by the current date
+  - `{currentDateTimeSeconds}` - is replaced by the current date and time including seconds
+  - `{currentTime}` - is replaced for the current time
 - `alwaysCopyProperties` - when editing a record, the blank `null` values are preserved and copied from an existing object in the database. This does not apply to date/time fields, they are overwritten automatically. If you need to use this for another type of field and also transfer `null` set the attribute value to `true`, or to `false` if you don't want automatic overwriting for date fields.
 
 ## Properties @DataTableColumnEditor
@@ -136,25 +135,25 @@ Optional fields:
 - `type` - type `input` element
 - `label` - the translation key of the field name in the editor (if different from `DatatableColumn.title`)
 - `message` - translation key for tooltip display, if not specified automatically searches for translation key according to `DatatableColumn.title.tooltip`. Supports specifying formatting using basic [Markdown](../frameworks/webjetjs.md#markdown-parser).
-- `tab` - [the tab in which the field is located](README.md#karty-v-editore)
+- `tab` - [the tab in which the field is located](README.md#tabs-in-the-editor)
 - `attr` - `HashMap` HTML attributes to be set to the input field
-	- `data-dt-field-hr` (`before/after`) - adds a dividing line before or after the element
-	- `data-dt-field-headline` (translation key) - adds a title before the element
-	- `data-dt-field-full-headline` (translation key) - adds a full-width title in front of the element (including the gray area with element names), used for the title in front of a nested datatable in a separate tab
+  - `data-dt-field-hr` (`before/after`) - adds a dividing line before or after the element
+  - `data-dt-field-headline` (translation key) - adds a title before the element
+  - `data-dt-field-full-headline` (translation key) - adds a full-width title in front of the element (including the gray area with element names), used for the title in front of a nested datatable in a separate tab
 - `multiple` - sets the attribute `multiple` on the HTML field (used for fields of type `MULTISELECT`).
 - `separator` - sets the separator character for the type field `MULTISELECT`. If empty the data is sent and received as an array, if set as a string separated by the specified character (typically a comma).
 - `data-dt-escape-slash` - by setting it to `true` turn on character replacement `/` for the entity `&#47;`. It is used in the case of a web page and a folder where a character in the title is needed `/` replace, as it is used to separate the road.
+
 Translation key for tooltip is automatically searched by translation key `title` with suffix `.tooltip`. So if you have an annotation `@DataTableColumn(title = "group.superior_directory"` automatically searches for the translation text with the key `group.superior_directory.tooltip`. If it exists, it shall be used.
 
 ## DataTableColumnType properties
 
 Sets the field type, more in the list [standard form fields](standard-fields.md).
-
 - `ID` - primary key column
 - `OPEN_EDITOR` - automatically creates a link on the column to open the editor, it should be used on the main text field, ideally the first one in the sequence
 - `TEXT` - standard text field (one line)
 - `TEXTAREA` - standard field for entering multiple lines of text
-- `SELECT` - selection field, we recommend sending the options via [REST service](../datatables/restcontroller.md#číselníky-pre-select-boxy)
+- `SELECT` - selection field, we recommend sending the options via [REST service](../datatables/restcontroller.md#dials-for-select-boxes)
 - `MULTISELECT` - selection box for multiple choice
 - `BOOLEAN` - check box with options `true/false`
 - `CHECKBOX` - checkbox with special value, option for selected and unselected value can be set by editor attribute `@DataTableColumnEditorAttr(key = "unselectedValue", value = "")`
@@ -182,10 +181,11 @@ Special:
 ## Selection field options
 
 Field type `DataTableColumnType.SELECT` you can set `option` values over:
-- [REST service](../datatables/restcontroller.md#Číselníky-pre-select-boxy) and setting dials for select boxes. This is the preferred solution for standard datatables.
+- [REST service](../datatables/restcontroller.md#Dials-for-select-boxes) and setting dials for select boxes. This is the preferred solution for standard datatables.
 - Setting options attributes directly using annotation `@DataTableColumnEditorAttr(key = "Slovensky", value = "sk")`.
 - By calling a static method using annotation `@DataTableColumnEditorAttr(key = "method:sk.iway.basecms.contact.ContactRestController.getCountries", value = "label:value")`. V `key` attribute is specified by prefix `method:` class and the method that must return `List` objects. In the attribute `value = "label:value"` annotation is given the attribute name for the description and the attribute name for the value of the selection field (in the example it is called `objekt.getLabel() a objekt.getValue()`).
 - Connecting to the dials application by entering `@DataTableColumnEditorAttr(key = "enumeration:Okresne Mestá", value = "string1:string2")`. V `key` prefix is specified in the attribute `enumeration:` name or dial ID. In the attribute `value = "string1:string2"` annotation is given the name of the attribute for the description and the name of the attribute for the value of the selection field - in the example it is called `objekt.getString1() a objekt.getString2()`.
+
 ```java
 @DataTableColumn(inputType = DataTableColumnType.SELECT, tab = "basic", editor = {
         @DataTableColumnEditor(
@@ -210,7 +210,8 @@ private String country;
 Required fields can be annotated:
 - `@NotEmpty` - does not empty the field, does not allow to enter a space or tab
 - `@NotBlank` - does not empty the field, but allows to enter a space
-Other validation options are described in the documentation for [restcontroller](../datatables/restcontroller.md#validácia--povinné-polia).
+
+Other validation options are described in the documentation for [restcontroller](../datatables/restcontroller.md#validation---required-fields).
 
 ## Validation
 
@@ -233,12 +234,12 @@ File `app-init.js` contains the function `WJ.DataTable.mergeColumns` to add prop
 
 ```javascript
 WJ.DataTable.mergeColumns(columns, {
-	name: "datatableImage",
-	render: function (data, type, row) {
-		return '<div class="img" style="background-image:url(/thumb' + row.imagePath + "/" + row.imageName + "?w=600&h=400&q=90&v=" + new Date().getTime() + ');"></div>';
-	},
-	className: "dt-image",
-	renderFormat: "dt-format-none",
+    name: "datatableImage",
+    render: function (data, type, row) {
+        return '<div class="img" style="background-image:url(/thumb' + row.imagePath + '/' + row.imageName + '?w=600&h=400&q=90&v=' + (new Date()).getTime() + ');"></div>';
+    },
+    className: "dt-image",
+    renderFormat: "dt-format-none"
 });
 ```
 
@@ -246,14 +247,14 @@ If you just need to add a new column you can do it by simply adding it to the li
 
 ```javascript
 columns.push({
-	data: "availableGroups",
-	name: "availableGroups",
-	title: "[[#{admin.temp.edit.showForDir}]]",
-	visible: false,
-	editor: {
-		type: "text",
-		tab: "accessTab",
-	},
+        data : "availableGroups",
+        name : "availableGroups",
+        title : "[[\#{admin.temp.edit.showForDir}]]",
+        visible: false,
+        editor: {
+                type : "text",
+                tab : "accessTab"
+        }
 });
 ```
 
@@ -263,10 +264,11 @@ It is often necessary to add additional attributes to the entity for the editor 
 
 Implemented class `EditorFields`, e.g. [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) typically contains methods `fromDocDetails` for setting attributes in `editorFields` class before editing and `toDocDetails` for setting attributes back in `DocDetails` before saving. These methods need to be called implicitly in your Java code.
 
-**ATTENTION:** if the entity is cached (as e.g. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) attribute setting `editorFields` will also remain in the cache and may unnecessarily take up memory and create unnecessarily large data during JSON serialization. V `GroupDetails` in editorFields refers to `parentGroupDetails`.
+!>**Warning:** if the entity is cached (as e.g. [GroupDetails](../../../src/main/java/sk/iway/iwcm/doc/GroupDetails.java)) attribute setting `editorFields` will also remain in the cache and may unnecessarily take up memory and create unnecessarily large data during JSON serialization. V `GroupDetails` in editorFields refers to `parentGroupDetails`.
+
 In the standard procedure, each `GroupDetails` objects set `editorFields` object. When serializing a deeply nested directory, the objects editorFields.parentGroupDetails.editorFields.parentGroupDetails, etc., are then nested. The GroupDetails object just didn't have the necessary first editorFields. The solution is to first object `GroupDetails` clone it and then set into it `editorFields`. An example is in `GroupEditorField.fromGroupDetails` which clones the object and then returns it. The usage in the code is then as `group = gef.fromGroupDetails(group);`.
 
-Common methods for datatable are in the class [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java)that your class can extend. Includes methods for adding a CSS class line and adding an icon to a caption. See the documentation for [styling of the datatable](../datatables/README.md#štýlovanie-riadku).
+Common methods for datatable are in the class [BaseEditorFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java) that your class can extend. Includes methods for adding a CSS class line and adding an icon to a caption. See the documentation for [styling of the datatable](../datatables/README.md#line-styling).
 
 For embedding annotation of nested attributes it is possible to use the annotation `@DatatableColumnNested` such as in [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) on the attribute `editorFields`:
 
@@ -367,6 +369,7 @@ As mentioned above, the attribute `title` contains the column name. Due to trans
 When the attribute `title` you do not enter, the translation key is automatically searched for in the format `components.meno_beanu_bez_dto_alebo_bean_na_konci.name`, e.g. `components.monitoring.date_insert`.
 
 **If you are editing an existing application/component** from WebJET 8 to WebJET 2021, it is best to search for the original translation keys. This saves time in translation, as WeBJET 8 is already translated into several languages.
+
 In the file [src/main/webapp/files/translations.properties](../../../src/main/webapp/files/preklady.properties) is the original translation file from WebJET 8 (just for example, do not modify it in any way). You can search for the desired text in it and into the `title` attribute to specify the translation key found.
 
 Another option is to display the original page with the URL parameter `?showTextKeys=true` which causes the translation keys to be displayed before the text. The page will probably be broken from a design point of view (as the text will be too long), but you can look at the keys through the inspector.
@@ -380,10 +383,11 @@ http://iwcm.interway.sk/components/server_monitoring/admin_monitoring_all.jsp?sh
 If you already submit the form on the page, you will of course see the original texts, the parameter you add as `&showTextKeys=true`, but you will probably see a 403/404 page due to WebJET protection. The solution is to use the JavaScript console where you type:
 
 ```javascript
-window.location.href = window.location.href + "&showTextKeys=true";
+window.location.href=window.location.href+"&showTextKeys=true";
 ```
 
 it will correctly pass through WebJET's protection and the keys will be displayed to you.
 
 **If you have created a new application or have not found a suitable translation key** it needs to be added to the file [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties).
+
 After adding the translation you need to reload the file `text-webjet9.properties` WebJETom. You do this by calling [home page with parameter ?userlngr=true](http://iwcm.interway.sk/admin/?userlngr=true) or by restarting the application server.

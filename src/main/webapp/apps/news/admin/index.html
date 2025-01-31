@@ -64,7 +64,7 @@
 
                 setGroupIdFilterSelect(data);
 
-                let url = "/admin/rest/web-pages";
+                let url = "/admin/rest/news/news-list";
 
                 //rename title column
                 window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("apps.news.newsTitle.js") });
@@ -93,7 +93,7 @@
 
                 $("#groupIdFilterSelect").on("change", function() {
                     var value = this.value;
-                    newsDataTable.ajax.url(WJ.urlUpdateParam( newsDataTable.ajax.url() , "groupIdList", this.value));
+                    newsDataTable.setAjaxUrl(WJ.urlUpdateParam( newsDataTable.getAjaxUrl() , "groupIdList", this.value));
                     newsDataTable.ajax.reload();
                 });
             }

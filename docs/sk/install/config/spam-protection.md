@@ -32,7 +32,7 @@ Limity je možné upraviť špecificky pre niektoré moduly/aplikácie pridaním
 
 Predvolene sú už upravené nasledovné hodnoty:
 
-- `spamProtectionHourlyLimit-ThumbServlet` - počet požiadaviek na generovanie [náhľadov obrázkov](../../frontend/thumb-servlet/README.md) `/thumb` nastavené na hodnotu 300.
+- `spamProtectionHourlyLimit-ThumbServlet` - počet požiadaviek na generovanie [náhľadov obrázkov](../../frontend/thumb-servlet/README.md), `/thumb` nastavené na hodnotu 300.
 - `spamProtectionTimeout-ThumbServlet` - nastavené na hodnotu `-2`, čo znamená, že limitovanie rozostupu medzi požiadavkami sa pre `/thumb` neaplikuje, je to z toho dôvodu, že v stránke môže byť naraz viacero takýchto obrázkov a HTTP požiadavky sú vykonané paralelne.
 - `spamProtectionHourlyLimit-search` - počet požiadaviek na vyhľadávanie cez aplikáciu vyhľadávanie, nastavené na hodnotu 200.
 - `spamProtectionTimeout-search` - hodnota znížená na 10, aby bolo možné rýchlejšie vykonať ďalšie vyhľadávanie/prejsť na ďalšiu stranu výsledkov.

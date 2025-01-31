@@ -2,15 +2,15 @@
 
 The bulk email app allows you to send bulk **personalised** email messages to multiple users. Each message is sent separately, individual recipients do not see the email addresses of other recipients.
 
-The advantage is that every email can be personalized - if you put the !name! the recipient's real name will be inserted instead.
+The advantage is that each email can be personalised - if you put a tag in the body of the email `!name!` the recipient's real name is inserted instead.
 
 Email can be sent to visitors who are registered in the admin part of the Web JET system, or create a file with a list of names and email addresses and then import them as email recipients.
 
 ![](dataTable.png)
 
-## Tab - Basic
+## Basic
 
-When creating a new record, we have only one tab to choose from with the basic information we need to fill in, namely "Subject" and "Web page". The sender details will be filled in automatically according to the logged in user, but you can of course change them.
+When creating a new record, we have in the tab **Basic** there is only one tab to choose from with the basic information we need to fill in, namely "Subject" and "Web page". The sender details will be filled in automatically according to the logged in user, but you can of course change them.
 
 The text of the email is taken from the selected web page (including its design). We recommend creating a folder in the Web pages section, e.g. `Newsletter` with the appropriate template set. In this folder, first create a web page with the text of the email and then select it in the campaign.
 
@@ -43,9 +43,9 @@ If the recipient is from the WebJET CMS user database it is also possible to use
 - `!LOGGED_USER_FIELDE!` - free field E
 - `!LOGGED_USER_GROUPS!` - list of user groups
 
-## Card - Advanced
+## Advanced
 
-You can set the email message fields for reply, copy and hidden copy.
+In the charts **Advanced** you can set the email message fields for reply, copy and hidden copy.
 
 If you enter a date in the start date field, the emails will start sending after the specified time (so you can schedule your email campaign in advance).
 
@@ -53,26 +53,27 @@ You can attach up to 3 attachments (files) to your email.
 
 ![](advanced.png)
 
-## Card - Groups
+## Groups
 
-In the Groups tab, selecting/checking a specific user group will **after saving the campaign** add users belonging to these groups as recipients. Which means they will receive emails from this campaign.
+In the charts **Groups** selecting/checking a specific user group will **after saving the campaign** add users belonging to these groups as recipients. Which means they will receive emails from this campaign.
 
 Actions to watch out for:
 - when changing the list of beneficiaries, it is necessary **re-save the campaign** (if it has not been saved yet), for correct counting of recipients and sent emails.
 - if you change the recipient list AFTER the emails are sent, the resulting statistics will not be correct and may give the impression of a sending problem.
+
 When the campaign is saved, the real list of recipients and already sent emails is calculated from the database table `emails`.
 
 ![](users.png)
 
-## Tab - Beneficiaries
+## Beneficiaries
 
-In the Recipients tab we can see a summary of all recipients who will receive the campaign emails. Recipients can be added, edited, duplicated or deleted in the table.
+In the charts **Beneficiaries** we can see an overview of all recipients who will receive the campaign emails. Recipients can be added, edited, duplicated or deleted in the table.
 
 ![](receivers.png)
 
-**Warning,** the list of recipients is treated against certain non-conforming values:
+!>**Warning,** the list of recipients is treated against certain non-conforming values:
 - Duplication protection, checking for duplication in the entered emails as well as with those already existing in the campaign
-- protection against inappropriate email, the email must comply with the standard format **meno@domena.sk** (special exception for [Import from xlsx](#import-z-xlsx))
+- protection against inappropriate email, the email must comply with the standard format **meno@domena.sk** (special exception for [Import from xlsx](#import-from-xlsx))
 - protection against unsubscribed emails, it is not possible to add a recipient whose email address is in the list [Unsubscribed emails](../unsubscribed/README.md)
 
 ### Email status
@@ -81,14 +82,14 @@ Important is the "Email Status" column which can contain values:
 - New - newly added email, you need to save the campaign to add this email to the campaign.
 - Saved - the email is saved, waiting in the queue to be sent
 - Sent - the email is sent, the exact date and time the email was sent is stored in the Send Date column
-- Stopped - the email is ready to send, select the campaign in the campaign list table and click the button `Spustiť odosielanie` to send an email.
+- Stopped - the email is ready to send, select the campaign in the campaign list table and click the button **Start sending** to send an email.
 - Sending error - the number of attempts to send an email was exceeded (default 3 attempts). Either the email is incorrect or there is another error in the campaign.
 
 ### Manual addition
 
-To manually add emails to your campaign, click on the "Add" button. Required is the "Email" field, in which you must enter one or more emails separated by **comma, semicolon, space or newline**. You can use multiple department types at the same time, such as "test1@test.sk, test2@test.sk; test3@test.sk test4@test.sk". The specified emails will then be added to the recipients of the campaign.
+To manually add emails to your campaign, click on the "Add" button. Required is the "Email" field, in which you must enter one or more emails separated by **comma, semicolon, space or newline**. You can use multiple types of compartments at the same time, such as. `test1@test.sk, test2@test.sk; test3@test.sk  test4@test.sk`. The entered emails will then be added to the recipients of the campaign.
 
-The "Name" field is optional. If you do not fill it in, the recipient's name will be retrieved from the user database based on an email match (if any). If no such email is found in the database, the value "- -" is inserted as the name. If you fill in the "Name" field, it will be set to all the emails you are currently entering via the "Email" field.
+Field **Name** is optional. If you do not fill it in, the recipient's name will be retrieved from the user database based on an email match (if any). If there is no such email in the database, the value is inserted as the name `- -`. If the field **Name** you fill in, it will be set to all the emails you are currently entering via the field **E-mail**.
 
 ![](raw-import.png)
 
@@ -122,18 +123,19 @@ In the file in the first line you need to have the following names defined:
 
 You can get the correct import file simply by exporting the recipients. You can then delete the ID column and fill in the names and email addresses for importing the recipients.
 
-**Warning:**
+!>**Warning:**
+
 - Importing from an xlxs file does not support adding multiple emails in one cell as in the case of manual addition. There must only ever be one email address in a cell.
-- Importing from an xlxs file supports the email format exception. When manually adding, each mail must have the format **meno@domena.sk**. However, if you are copying emails from outlook, the copied value may have the format `"Ján Tester <jan_tester@test.com>"`. If the value contains characters `<>`(in that exact order)**, the value in between shall be used. In this case, it would just be the value **. This value must have the format `jan_tester@test.com`meno@domena.sk**.**Tab - Openings
+- Importing from an xlxs file supports the email format exception. When manually adding, each mail must have the format **meno@domena.sk**. However, if you are copying emails from e.g. Outlook, the copied value may have the format `"Ján Tester <jan_tester@test.com>"`. If the value contains characters `<>`, **(in that exact order)**, the value in between shall be used. In this case, it would just be the value `jan_tester@test.com`. This value must have the format **meno@domena.sk**.
 
-## The open tab records the recipient opening the email. This is done using an embedded image. Not all recipients will confirm the image has been retrieved from the server, so the list is not complete.
+## Openings
 
-Tab - Clicks
+In the charts **Openings** the opening of the email by the recipient is recorded. This is done by means of an embedded image. Not all recipients will confirm that the image has been retrieved from the server, so the list is not complete.
 
 ![](opens.png)
 
-## Displays a list of clicks on a link in an email. A recipient can click on a link multiple times, so multiple clicks from a single recipient can be recorded in the table.
+##
 
-
+Card **Click** shows a list of clicks on a link in an email. A recipient can click on a link multiple times, so multiple clicks from a single recipient can be recorded in the table.
 
 ![](clicks.png)

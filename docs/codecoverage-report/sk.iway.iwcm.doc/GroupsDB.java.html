@@ -3040,13 +3040,13 @@ public class GroupsDB extends DB
 				{
 <span class="fc" id="L3041">					int index = Collections.binarySearch(groups, group, groupsDbSorter);</span>
 <span class="pc bpc" id="L3042" title="1 of 2 branches missed.">					if (index &gt; 0)</span>
-<span class="nc" id="L3043">						groups.remove(index);</span>
+<span class="fc" id="L3043">						groups.remove(index);</span>
 					else
 					{
 						//zmenilo sa jej sort priority - nemozeme vyhladat binarne, musime sekvencne
-<span class="fc" id="L3047">						group = getGroup(group.getGroupId());</span>
-<span class="fc" id="L3048">						index = groups.indexOf(group);</span>
-<span class="fc" id="L3049">						groups.remove(index);</span>
+<span class="nc" id="L3047">						group = getGroup(group.getGroupId());</span>
+<span class="nc" id="L3048">						index = groups.indexOf(group);</span>
+<span class="nc" id="L3049">						groups.remove(index);</span>
 					}
 				}
 <span class="fc" id="L3052">			}</span>
@@ -3074,10 +3074,10 @@ public class GroupsDB extends DB
 				}
 			}
 		}
-<span class="fc" id="L3077">		catch (ConcurrentModificationException|ArrayIndexOutOfBoundsException e)</span>
+<span class="nc" id="L3077">		catch (ConcurrentModificationException|ArrayIndexOutOfBoundsException e)</span>
 		{
 			//nastala nam chyba, najrozumnejsie je spravit nacitanie novej instancie
-<span class="fc" id="L3080">			GroupsDB.getInstance(true);</span>
+<span class="nc" id="L3080">			GroupsDB.getInstance(true);</span>
 <span class="fc" id="L3081">		}</span>
 <span class="fc" id="L3082">	}</span>
 
@@ -3095,12 +3095,12 @@ public class GroupsDB extends DB
 <span class="fc" id="L3095">				int index = Collections.binarySearch(groups, newGroup, groupsDbSorter);</span>
 				//vlastnost binarySearch - ak neobsahuje takyto prvok, tak vrati zaporny index
 				//toho, kde by sa mal nachadzat zmenseny o 1
-<span class="fc bfc" id="L3098" title="All 2 branches covered.">				if (index &lt; 0)</span>
+<span class="pc bpc" id="L3098" title="1 of 2 branches missed.">				if (index &lt; 0)</span>
 <span class="fc" id="L3099">					index = - index - 1;</span>
 
 				//double check
-<span class="fc bfc" id="L3102" title="All 2 branches covered.">				Optional&lt;GroupDetails&gt; existing = groups.stream().filter(g -&gt; g.getGroupId()==newGroup.getGroupId()).findFirst();</span>
-<span class="fc bfc" id="L3103" title="All 2 branches covered.">				if (existing.isPresent()==false) {</span>
+<span class="pc bpc" id="L3102" title="1 of 2 branches missed.">				Optional&lt;GroupDetails&gt; existing = groups.stream().filter(g -&gt; g.getGroupId()==newGroup.getGroupId()).findFirst();</span>
+<span class="pc bpc" id="L3103" title="1 of 2 branches missed.">				if (existing.isPresent()==false) {</span>
 <span class="fc" id="L3104">					groups.add(index, newGroup);</span>
 				}
 <span class="fc" id="L3106">			}</span>

@@ -32,7 +32,9 @@ TO_CHAR(
 OFFSET - check limit
 
 /usr/local/opt/postgresql@16/bin/pg_dump -h publish.services.npp.int-dev.iway -p 10082 -U postgres -b -c -f wjdump.sql postgres
-/usr/local/opt/postgresql@16/bin/psql -f wjdump.sql
+
+/usr/local/opt/postgresql@16/bin/pg_dump -b -c -f webjet8v9-integer.sql webjet8v9-integer
+/usr/local/opt/postgresql@16/bin/psql -f webjet8v9-integer.sql webjet8v9-integer
 
 #boolean->smallint
 ALTER TABLE wj.groups_scheduler ALTER COLUMN menu_type drop default;

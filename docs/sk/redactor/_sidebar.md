@@ -8,6 +8,7 @@
   - [Hlavné ovládacie prvky](/redactor/admin/README.md)
   - [Úvodná obrazovka](/redactor/admin/welcome.md)
   - [Poslať správu](/redactor/admin/send-message.md)
+  - [Vyhľadávanie](/redactor/admin/search/README.md)
 - Datatabuľky
   - [Základy práce s data tabuľkami](/redactor/datatables/README.md)
   - [Export a import](/redactor/datatables/export-import.md)
@@ -34,7 +35,9 @@
   - AB testovanie
     - [Úvod](/redactor/apps/abtesting/README.md)
     - [AB Testovanie](/redactor/apps/abtesting/abtesting.md)
-  - [Anketa](/redactor/apps/inquiry/README.md)
+  - Anketa
+    - [Anketa](/redactor/apps/inquiry/README.md)
+    - [Štatistika ankety](/redactor/apps/inquiry/inquiry-stat.md)
   - [Archív súborov](/redactor/apps/file_archiv/README.md)
   - Bannerový systém
     - [Zoznam bannerov](/redactor/apps/banner/README.md)
@@ -49,7 +52,12 @@
   - [Dátum](/redactor/apps/app-date/README.md)
   - [Disqus komentáre](/redactor/apps/app-disqus/README.md)
   - [Dotazníky](/redactor/apps/quiz/README.md)
-  - [Elektronický obchod](/redactor/apps/basket/README.md)
+  - Elektronický obchod
+    - [Zoznam objednávok](/redactor/apps/eshop/invoice/README.md)
+    - [Platby](/redactor/apps/eshop/invoice/payments.md)
+    - [Položky](/redactor/apps/eshop/invoice/items.md)
+    - [Zoznam produktov](/redactor/apps/eshop/product-list/README.md)
+    - [Nastavenie aplikácie](/redactor/apps/basket/README.md)
   - [Emotikony](/redactor/apps/emoticon/README.md)
   - [Export dát](/redactor/apps/export/README.md)
   - [Facebook Like Box](/redactor/apps/app-facebook_like_box/README.md)
@@ -74,7 +82,7 @@
   - [Google vyhľadávanie](/redactor/apps/app-vyhladavanie/README.md)
   - Hromadný e-mail
     - [Kampane](/redactor/apps/dmail/campaings/README.md)
-    - [Formulár pre prihlásenie/odhlásenie](/redactor/apps/dmail/form/README.md)
+    - [Formulár pre prihlásenia a odhlásenie](/redactor/apps/dmail/form/README.md)
     - [Doménové limity](/redactor/apps/dmail/domain-limits/README.md)
     - [Odhlásené e-maily](/redactor/apps/dmail/unsubscribed/README.md)
     - [Ako funguje odosielanie emailov](/redactor/apps/dmail/campaings/how-sender-works.md)
@@ -106,7 +114,7 @@
   - [Proxy](/redactor/apps/proxy/README.md)
   - [Príbuzné stránky](/redactor/apps/related-pages/README.md)
   - Rezervácie
-    - [Zoznam rezervácii](/redactor/apps/reservation/reservations/README.md)
+    - [Zoznam rezervácií](/redactor/apps/reservation/reservations/README.md)
     - [Štatistika rezervácií](/redactor/apps/reservation/reservations-stat/README.md)
     - [Zoznam rezervačných objektov](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikácia Rezervácia času](/redactor/apps/reservation/time-book-app/README.md)

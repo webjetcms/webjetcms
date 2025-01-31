@@ -32,7 +32,7 @@ Scenario('BUG - URL address without slash at end', ({ I, DT, DTE }) => {
     I.fillField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2");
     DTE.save();
 
-    I.see("Zadaná virtuálna cesta je už použitá na stránke:", "div.toast-message");
+    I.see("Zadaná URL adresa je už použitá na stránke:", "div.toast-message");
     I.click(".toast-close-button");
 
     //
@@ -40,7 +40,7 @@ Scenario('BUG - URL address without slash at end', ({ I, DT, DTE }) => {
     I.click("News duplikat");
     DTE.waitForEditor();
     I.click("#pills-dt-datatableInit-basic-tab");
-    I.seeInField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2-1.html");
+    I.seeInField("#DTE_Field_virtualPath", "/test-stavov/automaticke-generovanie-url/news-2-2.html");
     DTE.cancel();
 
     //

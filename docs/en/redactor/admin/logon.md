@@ -24,4 +24,4 @@ The logout link is located in the administration header in the upper right part 
 
 Click on the logout icon to log out of WebJET CMS. For security reasons, we recommend that you **always check out after work** and not just close the browser window.
 
-**Warning:** when the window size is smaller, the header is not displayed, click on the hamburger menu icon ![](icon-hamburger.png ":no-zoom") to view the header.
+!>**Warning:** when the window size is smaller, the header is not displayed, click on the hamburger menu icon ![](icon-hamburger.png ":no-zoom") to view the header.

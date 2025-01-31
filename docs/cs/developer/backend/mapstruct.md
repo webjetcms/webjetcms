@@ -2,7 +2,7 @@
 
 Pokud chcete mapovat objekty, můžete použít knihovnu [mapstruct](https://mapstruct.org).
 
-Příkladem je mapování objektů [DocDetails](../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na adrese [DocHistoryDto](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
+Příkladem je mapování objektů [DocDetails](../../../../src/main/java/sk/iway/iwcm/doc/DocDetails.java) na adrese [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java).
 
 Je nutné připravit objekt DTO a `interface` třída pro `mapper`. Vytvořené rozhraní je automaticky implementováno během kompilace, v programu `build.gradle` je povoleno nastavením:
 
@@ -21,7 +21,7 @@ dependencies {
 
 ## Objekt DTO
 
-Při implementaci nejprve připravte objekt DTO, např. [DocHistoryDto](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
+Při implementaci nejprve připravte objekt DTO, např. [DocHistoryDto](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDto.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;
@@ -58,7 +58,7 @@ public class DocHistoryDto {
 
 ## Mapování
 
-**Varování:** třída mapování musí v názvu obsahovat výraz `Mapper` kvůli kompilaci na `Jenkins` server, např. [DocHistoryDtoMapper](../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
+!>**Varování:** třída mapování musí v názvu obsahovat výraz `Mapper` kvůli kompilaci na `Jenkins` server, např. [DocHistoryDtoMapper](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryDtoMapper.java):
 
 ```java
 package sk.iway.iwcm.editor.rest;

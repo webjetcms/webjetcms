@@ -280,7 +280,7 @@ var datatables_globalConfig = {
             }
         });
 
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="tooltip"]').tooltip();
 
         $('.date-picker').datepicker({
             rtl: Metronic.isRTL(),
@@ -318,7 +318,7 @@ var datatables_globalConfig = {
                     row.child( showControllerRow(row.data() ) ).show();
                     row.child().addClass("tr-controller");
                     tr.addClass('doc-controller-shown');
-                    $('.tr-controller [data-toggle="tooltip"]').tooltip();
+                    $('.tr-controller [data-bs-toggle="tooltip"]').tooltip();
                 }
                 else {
                     console.log('showControlerRow() not exist');
@@ -360,7 +360,7 @@ var datatables_globalConfig = {
     }, //fn_initComplete
 
     fn_drawCallback: function(table){
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="tooltip"]').tooltip();
     } //fn_drawCallback
 };
 

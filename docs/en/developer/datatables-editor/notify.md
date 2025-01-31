@@ -8,7 +8,7 @@ Currently, the following operations are supported to display the notification:
 - `/all` - obtaining all records
 - `/{id}` - getting an entry into the editor (when using the `fetchOnCreate/fetchOnEdit`)
 - `/editor` - saving the record in the editor
-- `/action/{action}` - execution [server actions](../datatables/README.md#tlačidlo-pre-vykonanie-serverovej-akcie) in the table
+- `/action/{action}` - execution [server actions](../datatables/README.md#button-to-perform-a-server-action) in the table
 
 You simply add the notification in your REST service:
 
@@ -36,7 +36,7 @@ NotifyBean notify = new NotifyBean(prop.getText("text.warning"), prop.getText("e
 notify.addButton(new NotifyButton(
     prop.getText("editor.notify.editFromHistory"), //text tlacidla
     "btn btn-primary", //CSS trieda
-    "far fa-pencil", //FontAwesome ikona
+    "ti ti-pencil", //TablerIcons ikona
     "editFromHistory("+history.get(0).getDocId()+", "+history.get(0).getHistoryId()+")") //onclick funkcia
 );
 addNotify(notify);
@@ -46,7 +46,7 @@ addNotify(notify);
 
 ### Backend
 
-Notifications are stored in the REST service while it is running. `ThreadLocal` object `ThreadBean`so that they can be added at any time. They are then generated into an output JSON object:
+Notifications are stored in the REST service while it is running. `ThreadLocal` object `ThreadBean` so that they can be added at any time. They are then generated into an output JSON object:
 - For `DatatableResponse` the list of notifications is added as `if(hasNotify()) response.setNotify(getThreadData().getNotify());`
 - for the returned entity to `BaseEditorFields` object as `addNotifyToEditorFields(T entity);`, actual only when calling `getOne`
 
@@ -56,4 +56,5 @@ Notification display is implemented directly in `index.js` in 2 places:
 - `EDITOR.on('submitSuccess', function (e, json, data, action)` - called when saved in the editor, notifications are retrieved from `json.notify`
 - `_executeAction(action, ids)` - called when a server action is executed in the table, notifications are obtained from `json.notify`
 - `refreshRow(id, callback)` - this call is used when `fetchOnCreate/fetchOnEdit`, notifications are obtained from `json.editorFields.notify` object
-The notification display itself is implemented in the function `showNotify(notifyList)` which for each element of the notification list calls the display via [WJ.notify](../frameworks/webjetjs.md#notifikácie)
+
+The notification display itself is implemented in the function `showNotify(notifyList)` which for each element of the notification list calls the display via [WJ.notify](../frameworks/webjetjs.md#notifications)

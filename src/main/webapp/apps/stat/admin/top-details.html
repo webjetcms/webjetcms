@@ -268,7 +268,7 @@
             if(searchDateValue == undefined || searchDateValue == null) {
                 searchDateValue = dateRange;
                 //Update dateRange value docNewUrl
-                docNewDataTable.ajax.url(WJ.urlUpdateParam(docNewUrl, "searchDayDate", searchDateValue));
+                docNewDataTable.setAjaxUrl(WJ.urlUpdateParam(docNewUrl, "searchDayDate", searchDateValue));
                 //Add new param
 
                 //Reload table values

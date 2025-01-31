@@ -9,11 +9,11 @@ Před vytvořením sestavení je třeba ručně provést/kontrolovat následují
 - upravit soubor `docs/README.md` - přidejte poslední verzi ze seznamu změn na začátek a odstraňte poslední verzi dole (README.md ukazuje posledních 5 verzí).
 - upravit překladový klíč `admin.overview.changelog` se souhrnem změn aktuální verze zobrazeným pod uvítacím textem na domovské obrazovce.
 - Upravit podle `src/main/webapp/admin/v9/json/wjnews.LANG.json` - přidat shrnutí a odkaz na seznam změn nejnovější verze.
-- v souboru `src/main/webapp/admin/v9/json/apps.LANG.vue` přidat aplikace upravené pro verzi 2023
 
 Pokud se verze změní, aktualizujte ji v:
-- `InitServlet.java`
 - `ant/build.xml`
+
+odtud se také přenáší do `build.properties` pro zobrazení verze v administraci.
 
 ## Úloha ANT
 

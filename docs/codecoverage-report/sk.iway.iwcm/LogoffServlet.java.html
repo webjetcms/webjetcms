@@ -22,14 +22,14 @@ import java.util.Map;
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-<span class="fc" id="L25">        Logger.println(LogoffServlet.class,&quot;LogoffServlet  CALLED - GET&quot;);</span>
+<span class="fc" id="L25">        Logger.debug(LogoffServlet.class,&quot;LogoffServlet  CALLED - GET&quot;);</span>
 <span class="fc" id="L26">        execute(request,response);</span>
 <span class="fc" id="L27">    }</span>
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-<span class="nc" id="L32">        Logger.println(LogoffServlet.class,&quot;LogoffServlet  CALLED - POST&quot;);</span>
+<span class="nc" id="L32">        Logger.debug(LogoffServlet.class,&quot;LogoffServlet  CALLED - POST&quot;);</span>
 <span class="nc" id="L33">        execute(request,response);</span>
 <span class="nc" id="L34">    }</span>
 

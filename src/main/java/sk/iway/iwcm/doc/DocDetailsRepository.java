@@ -88,11 +88,15 @@ public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, J
 
     Page<DocDetails> findAllByOrderByDateCreatedDesc(Pageable pageable);
 
+    //select data which contains (/components/eshop/ OR /components/basket) AND (product-list.jsp OR products.jsp)
+    @Query(value = "SELECT DISTINCT(dd.groupId) FROM DocDetails dd WHERE (dd.data LIKE :path1 OR dd.data LIKE :path2) AND (dd.data LIKE :file1 OR dd.data LIKE :file2)")
+    List<Integer> getDistGroupIdsByDataLike(@Param("path1")String path1, @Param("path2")String path2, @Param("file1")String file1, @Param("file2")String file2);
+
     //Used in DocPublicableService
     @Transactional
     @Modifying
     @Query(value = "UPDATE DocDetails dd SET dd.available = :available, dd.disableAfterEnd = :disableAfterEnd WHERE dd.id = :docId")
-    public void updateAvailableAndDisabledAfterEnd(@Param("available")boolean available, @Param("disableAfterEnd")boolean disableAfterEnd, @Param("docId")Integer docId);   
+    public void updateAvailableAndDisabledAfterEnd(@Param("available")boolean available, @Param("disableAfterEnd")boolean disableAfterEnd, @Param("docId")Integer docId);
 
     List<DocDetails> findAllByDisableAfterEndTrue();
 }

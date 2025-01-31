@@ -745,9 +745,7 @@ function Ok()
 				<label for="file" class="control-label block"><iwcm:text key="components.video_player.file_video"/></label>
 				<div class="input-group">
 					<input class="form-control" name="file" value="<%=ResponseUtils.filter(pageParams.getValue("file", ""))%>" id="file" />
-					<span class="input-group-btn">
-						<input type="button" class="btn green" onclick="openElFinderDialogWindow('videoForm', 'file')" value="Vybrať" name="videoSelect">
-					</span>
+					<input type="button" class="btn btn-primary" onclick="openElFinderDialogWindow('videoForm', 'file')" value="Vybrať" name="videoSelect">
 				</div>
 			</div>
 			<div class="form-group col-sm-12">

@@ -48,7 +48,7 @@ Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
 
     DTE.save();
 
-    DT.filter("headerName", "TestHeader_" + randomNumber);
+    DT.filterContains("headerName", "TestHeader_" + randomNumber);
     I.click("/test");
     DTE.waitForEditor("responseHeadersDataTable");
 
@@ -61,7 +61,7 @@ Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
 
     DTE.save();
 
-    DT.filter("headerName", "TestHeader_" + randomNumber + "_changed");
+    DT.filterContains("headerName", "TestHeader_" + randomNumber + "_changed");
 
     I.see("TestHeader_" + randomNumber + "_changed");
     I.click("td.dt-select-td.sorting_1");

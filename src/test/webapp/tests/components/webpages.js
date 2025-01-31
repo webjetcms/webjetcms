@@ -1,7 +1,11 @@
 Feature('components.webpages');
+const assert = require('assert');
 var randomNumber;
 var container = "div.tree-col";
 var containerPage = "#datatableInit_wrapper";
+
+var settings_button = locate('div.dt-header-row.clearfix.wp-header-tree button.btn.btn-sm.btn-outline-secondary.buttons-jstree-settings.buttons-right');
+var refresh_button = locate('div.dt-header-row.clearfix.wp-header-tree button.btn.btn-sm.btn-outline-secondary.buttons-refresh.buttons-right');
 
 Before(({ I, login }) => {
     login('admin');
@@ -12,12 +16,13 @@ Before(({ I, login }) => {
 });
 
 Scenario('zoznam stranok', ({ I, DT}) => {
+    I.jstreeReset();
     I.waitForText("Newsletter", 20);
     I.click("Newsletter", container);
     I.see("Testovaci newsletter");
 
     //over prava
-    DT.checkPerms("menuWebpages,cmp_blog,cmp_blog_admin,cmp_news,cmp_abtesting", "/admin/v9/webpages/web-pages-list/?groupid=0", "datatableInit");
+    DT.checkPerms("menuWebpages", "/admin/v9/webpages/web-pages-list/?groupid=0", "datatableInit");
 });
 
 Scenario('logout', async ({I}) => {
@@ -206,21 +211,6 @@ Scenario('Zmena domeny-logout', ({ I }) => {
     I.logout();
 });
 
-Scenario('Import/export stranok', ({ I, DT }) => {
-    //pause();
-    //I.seeElement("#datatableInit_wrapper div.dt-buttons button.buttons-import-export.disabled");
-    I.waitForText("Test stavov", 10, "#SomStromcek");
-    I.click("Test stavov", "#SomStromcek");
-    DT.waitForLoader();
-    I.dontSeeElement("#datatableInit_wrapper div.dt-buttons button.buttons-import-export.disabled");
-    I.seeElement("#datatableInit_wrapper div.dt-buttons button.buttons-import-export");
-    I.clickCss("#datatableInit_wrapper div.dt-buttons button.buttons-import-export");
-    I.wait(4);
-    I.switchToNextTab();
-    I.see("Importovať web stránky zo ZIP archívu (xml)");
-    I.closeCurrentTab();
-});
-
 Scenario('Overenie zobrazenia sablon podla adresarov', ({ I, DTE }) => {
     I.click("Jet portal 4", container);
     I.clickCss("button.buttons-edit", container);
@@ -259,11 +249,13 @@ Scenario('Overenie zalozky Naposledy Upravene', ({ I, DT }) => {
 
 Scenario('Overenie zalozky Na schvalenie', ({ I, DT }) => {
     DT.waitForLoader();
-    I.see("Čakajúce na schválenie", "#pills-pages");
+    DT.resetTable();
+    I.waitForText("Čakajúce na schválenie", 10, "#pills-pages");
     I.click("Čakajúce na schválenie", "#pills-pages");
     DT.waitForLoader();
+    DT.resetTable();
     //nemame prilis ine co otestovat
-    I.see("Čakajúce na schválenie-zmena titulku", "#datatableInit_wrapper");
+    I.waitForText("Čakajúce na schválenie-zmena titulku", 10, "#datatableInit_wrapper");
 
     //prepni domenu a over, ze tam nie je nic ine
     I.clickCss("div.js-domain-toggler div.bootstrap-select button");
@@ -287,7 +279,7 @@ Scenario('Overenie nova web stranka', ({ I, DT, DTE }) => {
     let newValue = "autotest-title";
 
     I.jstreeNavigate(["Test stavov"]);
-    DT.filter("title", oldValue);
+    DT.filterContains("title", oldValue);
     I.click(oldValue);
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
@@ -365,8 +357,8 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
 
     //
     I.say("Test filter of fullTextIndex of files");
-    DT.filter("title", ".png");
-    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#datatableInit_wrapper div.dataTables_scrollBody");
+    DT.filterContains("title", ".png");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10, "#datatableInit_wrapper div.dt-scroll-body");
     DT.clearFilter("title");
 
     //pridaj stlpec šablon medzi videne
@@ -382,7 +374,7 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     I.see("Microsite - blue");
 
     //rozklikni select
-    I.clickCss("div.dataTables_scrollHeadInner div.dt-filter-tempId button");
+    I.clickCss("div.dt-scroll-headInner div.dt-filter-tempId button");
     I.see("Microsite - blue", "ul.dropdown-menu.inner.show");
     I.wait(1);
 
@@ -406,20 +398,20 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.wait(1);
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Prehľadávať");
     I.click("Povoliť prístup len pre skupinu používateľov");
     I.click("Priradiť stránku k hromadnému emailu");
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     //prehladavat
     I.see("Newsletter", container);
@@ -441,20 +433,20 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
 
     I.see("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);
-    DT.filter("editorFields.emails", "Vianočné pozdravy");
+    DT.filterContains("editorFields.emails", "Vianočné pozdravy");
     I.dontSee("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 });
 
 Scenario('Overenie vyhladania po nacitani', ({ I, DT }) => {
     //wj mal bug, ze hned po nacitani ked som zadal vyhladavanie neprenieslo korektne groupId
-    DT.filter("authorName", "tester");
+    DT.filterContains("authorName", "tester");
     DT.waitForLoader();
     I.see("Nenašli sa žiadne vyhovujúce záznamy", "#datatableInit_wrapper");
 });
@@ -465,7 +457,7 @@ Scenario('Otestuj nove stlpce tempFieldDocId', ({ I, DT, DTE }) => {
 
     //Select list in tree
     I.jstreeClick("Test stavov");
-    DT.filter("title", name);
+    DT.filterContains("title", name);
 
     //Edit entity
     I.click(name);
@@ -595,7 +587,7 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
 
     //Select list in tree
     I.jstreeClick("Test stavov");
-    DT.filter("title", name);
+    DT.filterContains("title", name);
 
     //Edit entity
     I.click(name);
@@ -667,8 +659,9 @@ Scenario('Otestuj nove stlpce show_in', ({ I, DT, DTE }) => {
     I.waitForVisible("#pills-dt-datatableInit-history", 20);
     I.wait(2);
 
-    I.fillField("#datatableFieldDTE_Field_editorFields-history_wrapper input.dt-filter-title", name + "_" +randomNumber);
-    I.pressKey('Enter', "input.dt-filter-key");
+    I.fillField("#datatableFieldDTE_Field_editorFields-history_wrapper th.dt-th-title input.dt-filter-title", name + "_" +randomNumber);
+    DT.waitForLoader("#datatableFieldDTE_Field_editorFields-history_processing");
+    I.forceClick("#datatableFieldDTE_Field_editorFields-history_wrapper th.dt-th-title button.dt-filtrujem-title");
     I.wait(1);
 
     I.clickCss("#datatableFieldDTE_Field_editorFields-history_wrapper button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
@@ -798,28 +791,28 @@ Scenario('Stavove ikony', ({ I, DT }) => {
     DT.waitForLoader();
 
     DT.filterSelect("editorFields.statusIcons", "Zobrazený v menu");
-    I.see("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Nezobrazená v menu", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Hlavná stránka adresára", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Nezobrazená v menu", "#datatableInit_wrapper .dt-scroll-body");
 
     DT.filterSelect("editorFields.statusIcons", "Nezobrazený v menu");
-    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see("Nezobrazená v menu", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dt-scroll-body");
+    I.see("Nezobrazená v menu", "#datatableInit_wrapper .dt-scroll-body");
 
     DT.filterSelect("editorFields.statusIcons", "Dostupné len pre prihláseného návštevníka");
-    I.see("Zaheslovaná", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Zaheslovaná", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dt-scroll-body");
 
     DT.filterSelect("editorFields.statusIcons", "Stránka s vypnutým zobrazením");
-    I.see("Stránka s vypnutým zobrazením", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Stránka s vypnutým zobrazením", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dt-scroll-body");
 
     DT.filterSelect("editorFields.statusIcons", "Stránka je presmerovaná");
-    I.see("Presmerovaná extrená linka", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Presmerovaná extrená linka", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dt-scroll-body");
 
     DT.filterSelect("editorFields.statusIcons", "Stránka sa nedá vyhľadať");
-    I.see("Nevyhľadateľná", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Nevyhľadateľná", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Hlavná stránka adresára", "#datatableInit_wrapper .dt-scroll-body");
 
 });
 
@@ -827,12 +820,12 @@ Scenario('Stavove ikony - default_doc', ({ I, DT }) => {
     //hlavna stranka adresara
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=23");
     DT.waitForLoader();
-    I.see("Úvodná stránka", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see("Osobný bankár", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Úvodná stránka", "#datatableInit_wrapper .dt-scroll-body");
+    I.see("Osobný bankár", "#datatableInit_wrapper .dt-scroll-body");
 
     DT.filterSelect("editorFields.statusIcons", "Hlavná stránka");
-    I.see("Úvodná stránka", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Osobný bankár", "#datatableInit_wrapper .dataTables_scrollBody");
+    I.see("Úvodná stránka", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Osobný bankár", "#datatableInit_wrapper .dt-scroll-body");
 
     //zapni aj rekurziu
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=23");
@@ -840,17 +833,17 @@ Scenario('Stavove ikony - default_doc', ({ I, DT }) => {
     I.wait(2);
     I.forceClick("#dtRecursiveSwitch");
     DT.waitForLoader();
-    I.see("Úvodná stránka", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see("Osobný bankár", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see("Test podadresar", "#datatableInit_wrapper .dataTables_scrollBody")
-    I.see("Nesmie sa dať presunúť", "#datatableInit_wrapper .dataTables_scrollBody")
+    I.see("Úvodná stránka", "#datatableInit_wrapper .dt-scroll-body");
+    I.see("Osobný bankár", "#datatableInit_wrapper .dt-scroll-body");
+    I.see("Test podadresar", "#datatableInit_wrapper .dt-scroll-body")
+    I.see("Nesmie sa dať presunúť", "#datatableInit_wrapper .dt-scroll-body")
 
     DT.filterSelect("editorFields.statusIcons", "Hlavná stránka");
 
-    I.see("Úvodná stránka", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.dontSee("Osobný bankár", "#datatableInit_wrapper .dataTables_scrollBody");
-    I.see("Test podadresar", "#datatableInit_wrapper .dataTables_scrollBody")
-    I.see("Nesmie sa dať presunúť", "#datatableInit_wrapper .dataTables_scrollBody")
+    I.see("Úvodná stránka", "#datatableInit_wrapper .dt-scroll-body");
+    I.dontSee("Osobný bankár", "#datatableInit_wrapper .dt-scroll-body");
+    I.see("Test podadresar", "#datatableInit_wrapper .dt-scroll-body")
+    I.see("Nesmie sa dať presunúť", "#datatableInit_wrapper .dt-scroll-body")
 });
 
 function testSaveStandard(I, DTE) {
@@ -991,17 +984,17 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.clickCss(container+" button.buttons-settings");
     I.waitForVisible('.btn.buttons-collection.dropdown-toggle.buttons-colvis');
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Značky", container+" div.colvisbtn_wrapper");
     I.forceClick("button.btn.colvis-postfix.btn-primary.dt-close-modal");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 
     I.see("News", container);
     I.see("McGregor sales force", container);
@@ -1009,7 +1002,7 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
     I.see(" Loyalty club: Vacation in Nha Trang", container);
     I.see("Konsolidácia naprieč trhmi", container);
 
-    DT.filter("perexGroups", "podnika");
+    DT.filterContains("perexGroups", "podnika");
 
     I.dontSee("News", container);
     I.see("McGregor sales force", container);
@@ -1019,9 +1012,9 @@ Scenario('BUG - vyhladavanie podla perex skupin', ({ I, DT }) => {
 
     I.clickCss(container+" button.buttons-settings");
     I.clickCss(container+" button.buttons-colvis");
-    I.waitForVisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     I.click("Obnoviť");
-    I.waitForInvisible("div.dt-button-collection div.dropdown-menu.dt-dropdown-menu div.dt-button-collection div.dropdown-menu.dt-dropdown-menu");
+    I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
 });
 
 Scenario('BUG - prepinanie kariet a zobrazenie stranok', ({ I, DT }) => {
@@ -1055,7 +1048,7 @@ Scenario('BUG #54953-6 - pri prvom nacitani sa citalo len 10 zaznamov, musi sa r
     I.wait(1);
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     //over, ze mame viac ako 10 riadkov
-    I.see("Záznamy 1 až 12 z", "#datatableInit_wrapper .dataTables_info");
+    I.see("Záznamy 1 až 12 z", "#datatableInit_wrapper .dt-info");
     I.see("11 stránka v Adresári", "#datatableInit_wrapper");
 });
 
@@ -1212,6 +1205,8 @@ function changeGroupMainDoc(I, arr, id) {
     I.waitForElement("#jsTree");
     for(let i = 0; i < arr.length; i++) {
         I.click(locate('#jsTree .jstree-node.jstree-closed').withText(arr[i]).find('.jstree-icon.jstree-ocl'));
+        I.wait(1);
+        I.waitForInvisible("#jsTree li.jstree-loading");
     }
     I.clickCss("#docId-" + id + "_anchor");
 }
@@ -1233,3 +1228,257 @@ Scenario('BUG - webpage with name B will have error data_asc cannot be null #563
     I.dontSee("Could not commit JPA transaction", "div.DTE_Form_Error");
     I.waitForModalClose("datatableInit_modal");
 });
+
+Scenario('Jstree filtering', async ({ I }) => {
+    const pageName = 'Zo sveta financií';
+
+    //
+    I.say('1. I can filter the folder by name.');
+    I.jstreeFilter('sveta');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+
+    //
+    I.say('2. Change search type functionality')
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+
+    I.jstreeFilter('zo', 'Začína na');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('Zobrazený v menu'));
+    I.seeElement(locate('.jstree-anchor').withText('Test stavov'));
+
+    I.jstreeFilter('financií', 'Končí na');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+
+    I.jstreeFilter(pageName, 'Rovná sa');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+
+    //
+    I.say("2.a Check filtering accent insensitive");
+    I.jstreeFilter('galeria', 'Obsahuje');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText("Galéria"));
+    I.seeElement(locate('.jstree-anchor').withText('Aplikácie'));
+    I.dontSeeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+
+    I.jstreeFilter('sveta', 'Obsahuje');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+
+    //
+    I.say('3. All filtering is cleared');
+    I.jstreeClick("Zo sveta financií");
+    I.jstreeFilter('');
+    I.seeElement(locate('.jstree-node.jstree-open .jstree-node a.jstree-clicked').withText("Zo sveta financií"));
+
+    I.jstreeFilter('sveta');
+    I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
+    I.clickCss('#tree-folder-search-clear-button');
+    I.waitForInvisible("div.dt-processing", 40);
+    I.dontSeeInField('#tree-folder-search-input', pageName);
+    I.seeElement(locate('.jstree-node.jstree-open').withText("Jet portal 4"));
+
+    I.say('4. When switching between Folders/System/Recycle Bin, their data MUST be separated correctly.');
+
+    I.clickCss('#pills-folders-tab');
+    I.jstreeFilter(pageName);
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.jstreeFilter('Pätičky');
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Pätičky'));
+
+    I.clickCss('#pills-system-tab');
+    I.jstreeFilter(pageName);
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.jstreeFilter('Pätičky');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('Pätičky'));
+
+    I.clickCss('#pills-trash-tab');
+    I.jstreeFilter(pageName);
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText(pageName));
+    I.jstreeFilter('Pätičky');
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Pätičky'));
+
+    I.say("5. When filtering in the Folders tab and switching to the Trash tab, the filter must be cleared and the input should be empty.");
+    I.jstreeFilter(pageName);
+    I.clickCss('#pills-trash-tab');
+    I.dontSeeInField('#tree-folder-search-input', pageName);
+    I.dontSeeElement('.jstree-node.jstree-open');
+
+    I.say('6. new Loader');
+    I.seeCssPropertiesOnElements('.webjetAnimatedLoader', { display: 'none' });
+
+    I.say('7. Check that when filtering in the System/Recycle Bin cards, they dont go out of hierarchy');
+    I.clickCss('#pills-system-tab');
+
+    I.jstreeFilter('Pätičky');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('Pätičky'));
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
+
+    I.jstreeFilter('test-move-dir');
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('test-move-dir'));
+    I.say("Cant see parent folder because it's in another tab, specail case")
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Jet portal 4'));
+
+    I.clickCss('#pills-trash-tab');
+    I.jstreeFilter('test');
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Kôš'));
+    I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
+});
+Scenario('Set default ordering setting before', ({ I }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    setTreeSorting(I, 'Názov', true);
+    setCheckBox(I, '#jstree-settings-showorder', false);
+    I.relogin('tester4');
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    setCheckBox(I, '#jstree-settings-showid', false);
+});
+
+Scenario('jstree - sorting method', async ({ I }) => {
+    I.say("1. The tree correctly sorts when changing the order type and direction.");
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+
+    setTreeSorting(I, 'Názov', true);
+    var items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
+    assertIfSortedByName(items, true);
+
+    setTreeSorting(I, 'Názov', false);
+    items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
+    assertIfSortedByName(items, false);
+
+    I.say("2. Order selection remains saved after refreshing the page");
+    setTreeSorting(I, 'Poradie usporiadania', false);
+
+    checkTreeSorting(I, 'Poradie usporiadania', false, '#jstree-settings-showorder');
+    items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
+    assertIfSortedByPriority(items, false);
+
+    I.say("3. Create a new user, and verify on him that when he switches between him and the tester, order selection remains saved");
+
+    I.relogin('tester4');
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    setTreeSorting(I, 'Dátum vytvorenia', true);
+
+    I.relogin('admin');
+    checkTreeSorting(I, 'Poradie usporiadania', false, '#jstree-settings-showorder');
+    items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
+    assertIfSortedByPriority(items, false);
+    setCheckBox(I, '#jstree-settings-showorder', false);
+
+    I.relogin('tester4');
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    checkTreeSorting(I, 'Dátum vytvorenia', true, '#jstree-settings-showid');
+    items = await I.grabTextFromAll('#SomStromcek > ul > li.jstree-closed');
+    assertIfSortedByCreationDate(items, true);
+    setCheckBox(I, '#jstree-settings-showid', false);
+});
+
+Scenario('Set default ordering setting after', ({ I }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.jstreeReset();
+    I.relogin('tester4');
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.jstreeReset();
+});
+
+Scenario('Inserting various links through the dialog', ({ I, DTE }) => {
+    const links = [
+        '/en/',
+        'http://www.interway.sk',
+        'https://www.webjetcms.com',
+        'https://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991'
+    ];
+
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=112027');
+    DTE.waitForEditor();
+
+    for (const input of links) {
+        I.clickCss('#cke_44');
+        I.switchTo('#wjLinkIframe');
+        I.wait(1); //necessary static waiting
+        I.waitForElement('#txtUrl', 10);
+        I.fillField('#txtUrl', input);
+        I.switchTo();
+        I.clickCss('.cke_dialog_ui_button_ok');
+
+        I.clickCss('#datatableInit_modal button.btn.btn-warning.btn-preview');
+        I.switchToNextTab();
+        I.see(input);
+        I.seeInSource(input);
+        I.seeInSource(`href="${input}"`);
+        I.switchToPreviousTab();
+        I.closeOtherTabs();
+        I.switchTo();
+    }
+});
+
+
+function setCheckBox(I, optionToCheck, value) {
+    I.click(settings_button);
+    I.waitForVisible('#jstreeSettingsModal');
+    if (value)
+        I.checkOption(optionToCheck);
+    else
+        I.uncheckOption(optionToCheck);
+    I.clickCss('#jstree-settings-submit');
+    I.waitForInvisible('#jstreeSettingsModal');
+}
+
+function setTreeSorting(I, category, ascending = true) {
+    I.click(settings_button);
+    I.waitForVisible('#jstreeSettingsModal');
+    I.clickCss('button[data-id="jstree-settings-treeSortType"]');
+    I.click(category);
+    if (ascending)
+        I.checkOption('#jstree-settings-treeSortOrderAsc');
+    else
+        I.uncheckOption('#jstree-settings-treeSortOrderAsc');
+    I.clickCss('#jstree-settings-submit');
+    I.forceClick(refresh_button);
+}
+
+function checkTreeSorting(I, category, ascending, optionToCheck) {
+    I.amOnPage('/admin/v9/webpages/web-pages-list');
+    I.click(settings_button);
+    I.waitForVisible('#jstreeSettingsModal');
+    I.see(category);
+    if (ascending)
+        I.seeCheckboxIsChecked('#jstree-settings-treeSortOrderAsc');
+    else
+        I.dontSeeCheckboxIsChecked('#jstree-settings-treeSortOrderAsc');
+    I.checkOption(optionToCheck);
+    I.clickCss('#jstree-settings-submit');
+    I.waitForInvisible('#jstreeSettingsModal');
+    I.forceClick(refresh_button);
+}
+
+function assertIfSortedByName(items, ascending = true) {
+    const filteredItems = items.filter(item => !item.startsWith(' '));
+    const sortedItems = [...filteredItems].sort((a, b) => {
+        return ascending ? a.localeCompare(b) : b.localeCompare(a);
+    });
+    assert.deepStrictEqual(filteredItems, sortedItems, 'Items are not sorted alphabetically');
+}
+
+function assertIfSortedByPriority(items, ascending = true) {
+    const filteredItems = items.filter(item => !item.startsWith(' '));
+    const sortedItems = [...filteredItems].sort((a, b) => {
+        const priorityA = parseInt(a.match(/\((\d+)\)/)[1], 10);
+        const priorityB = parseInt(b.match(/\((\d+)\)/)[1], 10);
+        return ascending ? priorityA - priorityB : priorityB - priorityA;
+    });
+    assert.deepStrictEqual(filteredItems, sortedItems, 'Items are not sorted by priority');
+}
+
+function assertIfSortedByCreationDate(items, ascending = true) {
+    const filteredItems = items.filter(item => !item.startsWith(' '));
+    const sortedItems = [...filteredItems].sort((a, b) => {
+        const dateA = parseInt(a.match(/^#(\d+)/)[1], 10);
+        const dateB = parseInt(b.match(/^#(\d+)/)[1], 10);
+        return ascending ? dateA - dateB : dateB - dateA;
+    });
+
+    assert.deepStrictEqual(filteredItems, sortedItems, 'Items are not sorted by creation date');
+}
+

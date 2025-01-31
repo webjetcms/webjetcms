@@ -1,15 +1,14 @@
 Feature('apps.emoticon');
-var doc_add_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success"));
 
 Before(({ login }) => {
     login('admin');
 });
 
-Scenario('Emotikon', ({ I, DT, DTE, Document }) => {
+Scenario('Emotikon', ({ I, DT, DTE, Document, i18n }) => {
     DT.waitForLoader();
     Document.screenshot("/redactor/apps/contact/contact.png");
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
-    I.click(doc_add_button);
+    I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.wait(5);
     I.clickCss('#pills-dt-datatableInit-content-tab');
@@ -18,12 +17,12 @@ Scenario('Emotikon', ({ I, DT, DTE, Document }) => {
     I.waitForElement('#editorComponent', 10);
     I.switchTo('#editorComponent');
     I.waitForElement('#search', 10);
-    I.fillField('#search', 'Emotikony');
+    I.fillField('#search', i18n.get('Emoticons'));
     I.wait(4);
     I.dontSeeElement('div.promoApp');
 
-    I.clickCss('#components-emoticon-title'); 
-    I.click("Vložiť do stránky"); 
+    I.clickCss('#components-emoticon-title');
+    i18n.click("Add to page");
     Document.screenshot("/redactor/apps/emoticon/editor.png");
     I.fillField('#imgPath', 'biggrin.gif');
     I.switchTo();

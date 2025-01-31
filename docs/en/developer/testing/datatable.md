@@ -3,21 +3,22 @@
 <!-- @import "[TOC]" {cmd="toc" depthFrom=2 depthTo=6 orderedList=false} -->
 
 <!-- code_chunk_output -->
+- [Automatic DataTables testing](#automatic-testing-of-datatables)
+  - [Use](#use)
+  - [Setting options](#setting-options)
+  - [Method of generating mandatory fields](#method-of-generating-mandatory-fields)
+  - [Testing of audit trails](#testing-of-audit-trails)
+  - [Rights testing](#rights-testing)
+  - [Implementation details](#implementation-details)
 
-- [Automatic DataTables testing](#automatické-testovanie-datatables)
-	- [Use](#použitie)
-	- [Setting options](#možnosti-nastavenia)
-	- [Method of generating mandatory fields](#spôsob-generovania-povinných-polí)
-	- [Testing of audit trails](#testovanie-auditných-záznamov)
-	- [Rights testing](#testovanie-práv)
-	- [Implementation details](#detaily-implementácie)
 <!-- /code_chunk_output -->
 
-In the administration, most of the datatable tests are identical in form `CRUD (Create, Read, Update, Delete)` operations. To avoid repeating the standard datatable test procedures over and over again, we have prepared **automated testing**. The implementation is in the file [DataTables.js](../../../src/test/webapp/pages/DataTables.js) and includes the following steps:
+In the administration, most of the datatable tests are identical in form `CRUD (Create, Read, Update, Delete)` operations. To avoid repeating the standard datatable test procedures over and over again, we have prepared **automated testing**. The implementation is in the file [DataTables.js](../../../../src/test/webapp/pages/DataTables.js) and includes the following steps:
 - adding a new record
-	- verification of mandatory fields
+  - verification of mandatory fields
 - search for an added record
 - record editing
+- control of inter-domain separation of records
 - search for an edited record
 - deleting an entry
 - verification of the entry of audit records
@@ -40,63 +41,64 @@ window.domReady.add(function () {
 Then in the test scenario you can use the basic test as:
 
 ```javascript
-Scenario("zakladne testy", async ({ I, DataTables }) => {
-	await DataTables.baseTest({
-		//meno objektu vo web stranke s datatabulkou
-		dataTable: "tempsTable",
-	});
+Scenario('zakladne testy', async ({I, DataTables}) => {
+    await DataTables.baseTest({
+        //meno objektu vo web stranke s datatabulkou
+        dataTable: 'tempsTable'
+    });
 });
 ```
 
-to `dataTable` you are setting up **Name** variable in the page. It is also possible to use other test parameters (example in file [templates.js](../../../src/test/webapp/tests/components/templates.js)):
+to `dataTable` you are setting up **Name** variable in the page. It is also possible to use other test parameters (example in file [templates.js](../../../../src/test/webapp/tests/components/templates.js)):
 
 ```javascript
-Scenario("zakladne testy", async ({ I, DataTables }) => {
-	await DataTables.baseTest({
-		//meno objektu vo web stranke s datatabulkou
-		dataTable: "tempsTable",
-		//zoznam povinnych poli, ak nie su zadane nacitaju sa automaticky z columns definicie (maju atribut required: true)
-		requiredFields: ["oldUrl", "newUrl"],
-		//nepovinne, ak zadate, tak pre pole nazovPola sa vyplni test-hodnota namiesto generovanej autotest-xxxx
-		//je to potrebne, ked polia maju specificky format/dlzku (napr. email)
-		testingData: {
-			nazovPola: "test-hodnota",
-			email: "email@domena.sk",
-		},
-		//kroky, ktore sa vykonaju ako prve pri novom zazname
-		createSteps: function (I, options, DT, DTE) {
-			I.fillField("#xxx", "yyy");
-		},
-		//kroky, ktore sa vykonaju po ulozeni zaznamu
-		afterCreateSteps: function (I, options, requiredFields, DT, DTE) {
-			requiredFields.push("nazovPola");
-			options.testingData[2] = "test-hodnota";
-		},
-		//ktoky, ktore sa vykonaju pri zmene existujuceho zaznamu
-		editSteps: function (I, options, DT, DTE) {
-			I.fillField("#xxx", "yyy-edited");
-		},
-		//kroky, ktore sa vykonaju pri vyhladani zmeneneho zaznamu
-		editSearchSteps: function (I, options, DT, DTE) {
-			I.fillField("input.dt-filter-availableGrooupsList", "News");
-		},
-		//kroky, ktore sa vykonaju pred zmazanim zaznamu
-		beforeDeleteSteps: function (I, options, DT, DTE) {
-			I.wait(20);
-		},
-	});
+Scenario('zakladne testy', async ({I, DataTables}) => {
+    await DataTables.baseTest({
+        //meno objektu vo web stranke s datatabulkou
+        dataTable: 'tempsTable',
+        //zoznam povinnych poli, ak nie su zadane nacitaju sa automaticky z columns definicie (maju atribut required: true)
+        requiredFields: ['oldUrl', 'newUrl'],
+        //nepovinne, ak zadate, tak pre pole nazovPola sa vyplni test-hodnota namiesto generovanej autotest-xxxx
+        //je to potrebne, ked polia maju specificky format/dlzku (napr. email)
+        testingData: {
+          nazovPola: "test-hodnota",
+          email: "email@domena.sk"
+        },
+        //kroky, ktore sa vykonaju ako prve pri novom zazname
+        createSteps: function(I, options, DT, DTE) {
+            I.fillField("#xxx", "yyy");
+        },
+        //kroky, ktore sa vykonaju po ulozeni zaznamu
+        afterCreateSteps: function(I, options, requiredFields, DT, DTE) {
+            requiredFields.push("nazovPola");
+            options.testingData[2] = "test-hodnota";
+        },
+        //ktoky, ktore sa vykonaju pri zmene existujuceho zaznamu
+        editSteps: function(I, options, DT, DTE) {
+            I.fillField("#xxx", "yyy-edited");
+        },
+        //kroky, ktore sa vykonaju pri vyhladani zmeneneho zaznamu
+        editSearchSteps: function(I, options, DT, DTE) {
+            I.fillField("input.dt-filter-availableGrooupsList", "News");
+        },
+        //kroky, ktore sa vykonaju pred zmazanim zaznamu
+        beforeDeleteSteps: function(I, options, DT, DTE) {
+            I.wait(20);
+        },
+    });
 });
 ```
 
 When a new record is saved, it is also saved to the object `options.testingData` saves an array of completed mandatory field data. You can use these e.g. in the function `editSearchSteps` Like:
 
 ```javascript
-I.see(`${options.testingData[0]}-change`, "div.dataTables_scrollBody");
+    I.see(`${options.testingData[0]}-change`, "div.dt-scroll-body");
 ```
 
-Object `options` is returned from `baseTest` function and can be used in other scenarios, an example is in [translation\_keys.js](../../../src/test/webapp/tests/components/translation_keys.js)
+Object `options` is returned from `baseTest` function and can be used in other scenarios, an example is in [translation-keys.js](../../../../src/test/webapp/tests/settings/translation-keys.js)
 
-**ATTENTION**A: Automated testing of basic operations is not a substitute for comprehensive testing. It is meant to serve as the basis of the test, your job is to add test scenarios of specific characteristics. Ideal as **separate scenarios**, or by adding steps to functions `createSteps, editSteps, editSearchSteps, beforeDeleteSteps`.
+!>**Warning:** Automated testing of basic operations is not a substitute for comprehensive testing. It is meant to serve as the basis of the test, your job is to add test scenarios of specific characteristics. Ideal as **separate scenarios**, or by adding steps to functions `createSteps, editSteps, editSearchSteps, beforeDeleteSteps`.
+
 ## Setting options
 
 Via `options` object mandatory to set:
@@ -108,6 +110,9 @@ Options:
 - `container` - the possibility to define the CSS selector of the container in which the datatable is embedded (to be defined for nested datatable).
 - `containerModal` - option to define CSS container selector of datatable editor dialog (to be defined for nested datatable).
 - `skipRefresh` - if set to `true` the web page is not refreshed after the record is added.
+- `skipSwitchDomain` - if set to `true` Inter-domain separation of records check is not performed.
+- `switchDomainName` - possibility to define a different domain than the default `mirroring.tau27.iway.sk` to control inter-domain separation of records.
+- `skipDuplication` - if set to `true` no record duplication test is performed.
 - `createSteps` - a function that adds testing steps when a new record is created.
 - `afterCreateSteps` - the function is executed after the new record is saved. If the table does not have any mandatory fields, it is possible by setting `requiredFields.push("string1");options.testingData[0] = string1;` define the field and set its value.
 - `editSteps` - function adding testing steps when editing a record.
@@ -129,10 +134,10 @@ const randomText = I.getRandomText();
 const randomTextShort = I.getRandomTextShort();
 
 //definovanie textu povinneho pola
-if (field.toLocaleLowerCase().indexOf("email") != -1) {
-	testingData[index] = `${field}-autotest-${randomTextShort}@onetimeusemail.com`;
+if (field.toLocaleLowerCase().indexOf("email")!=-1) {
+    testingData[index] = `${field}-autotest-${randomTextShort}@onetimeusemail.com`;
 } else {
-	testingData[index] = `${field}-autotest-${randomText}`;
+    testingData[index] = `${field}-autotest-${randomText}`;
 }
 
 //vyplnenie hodnoty
@@ -157,16 +162,16 @@ Example of use:
 
 ```javascript
 await DataTables.baseTest({
-	dataTable: "mediaGroupsTable",
-	perms: "editor_edit_media_group",
+    dataTable: 'mediaGroupsTable',
+    perms: 'editor_edit_media_group'
 });
 ```
 
-NOTE: Specifying this parameter is mandatory so that the rights are always tested when the datatable is displayed. For a nested datatable, however, this test can be problematic due to logout, you can specify an empty value or a character `-`.
+!>**Warning:** Specifying this parameter is mandatory so that the rights are always tested when the datatable is displayed. For a nested datatable, however, this test can be problematic due to logout, you can specify an empty value or a character `-`.
 
 ## Implementation details
 
-The test is implemented in a file [DataTables.js](../../../src/test/webapp/pages/DataTables.js). The key is to get a columns definition:
+The test is implemented in a file [DataTables.js](../../../../src/test/webapp/pages/DataTables.js). The key is to get a columns definition:
 
 ```javascript
 const columns = await I.getDataTableColumns(dataTable);
@@ -174,7 +179,7 @@ const columns = await I.getDataTableColumns(dataTable);
 
 From which the list of fields, their settings, etc. are read. If no mandatory fields are defined, they are obtained from the columns definition by attribute `required: true`.
 
-Feature `I.getDataTableColumns` is defined in [custom\_helper.js](../../../src/test/webapp/custom_helper.js):
+Feature `I.getDataTableColumns` is defined in [custom\_helper.js](../../../../src/test/webapp/custom_helper.js):
 
 ```javascript
   /**
@@ -198,5 +203,6 @@ Feature `I.getDataTableColumns` is defined in [custom\_helper.js](../../../src/t
 
 All functions are asynchronous because of the call `I.getDataTableColumns`.
 
-**ATTENTION**: during the implementation we happened to have a second call `this.helpers['Playwright'];` logs out the logged-in user (resets cookies) while the test is running. We wanted to use this call when formatting dates, unfortunately this is not currently possible. We assume that this is a bug in CodeceptJS.
+!>**Warning:** during the implementation we happened to have a second call `this.helpers['Playwright'];` logs out the logged-in user (resets cookies) while the test is running. We wanted to use this call when formatting dates, unfortunately this is not currently possible. We assume that this is a bug in CodeceptJS.
+
 Then, the individual steps of the test as we normally know them are carried out.

@@ -1,8 +1,6 @@
 Feature('webpages.folderRights-and-loginWebPage');
 
 var folder_name, subfolder_one, subfolder_two;
-var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var edit_button = (locate('.tree-col').find('.btn.btn-sm.buttons-selected.buttons-edit.btn-warning'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -15,12 +13,12 @@ Before(({ I, login }) => {
      }
 });
 
-Scenario('Prava na adresar', ({ I, DTE }) => {
+Scenario('Prava na adresar', ({ I, DTE, DT }) => {
      I.waitForText('Zoznam web stránok', 10);
 
      // 1. vytvorenie noveho priecinka name-autotest
      I.say('1. Pridanie noveho priecinka name-autotest');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', folder_name);
      I.groupSetRootParent();
@@ -31,7 +29,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      // 2. pridaj prava na adresar name-autotest
      I.say('2. Pridanie prav na adresar name-autotest');
      I.jstreeClick(folder_name);
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_0').find('.form-check-label'));
@@ -46,7 +44,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      // 3. zrusenie ikony zamku priecinka name-autotest
      I.say('3. Zrusenie prav na priecinok name-autotest');
      // zrusenie pridanych prav pre priecinok name-autotest
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_0').find('.form-check-label'));
@@ -63,7 +61,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.say('4. Vytvorenie podadresarov priecinka name-autotest');
      // folder-autotest
      I.jstreeClick(folder_name);
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', subfolder_one);
      DTE.save();
@@ -71,7 +69,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.wait(1);
      // folder2-autotest
      I.jstreeClick(folder_name);
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', subfolder_two);
      DTE.save();
@@ -81,7 +79,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      // 5. pridanie prav pre priecinok name-autotest a aplikovanie na vsetky jeho podpriecinky
      I.say('5. Pridanie prav pre priecinok name-autotest a aplikovanie na vsetky jeho podpriecinky');
      I.jstreeClick(folder_name);
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_0').find('.form-check-label'));
@@ -96,7 +94,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      // 6. zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky
      I.say('6. Zrusenie prav pre priecinok name-autotest a aplikovanie zmien na vsetky jeho podpriecinky');
      I.jstreeClick(folder_name);
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-permisions_0').find('.form-check-label'));
@@ -126,7 +124,7 @@ Scenario('Prava na adresar', ({ I, DTE }) => {
      I.dontSee(folder_name, '.jstree-anchor');
 });
 
-Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
+Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE, DT }) => {
 
      //regenerate new folder name if folder from previous scenario was not deleted
      randomNumber = I.getRandomText();
@@ -136,7 +134,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
 
      // 1. vytvorenie noveho priecinka name-autotest
      I.say('1. Pridanie noveho priecinka name-autotest');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', folder_name);
      I.groupSetRootParent();
@@ -147,7 +145,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
      // 2. pridanie login stranky - nesmie to byt adresar
      I.say('2. Pridanie login stranky - nesmie to byt adresar');
      I.jstreeClick(folder_name);
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.click(locate('#editorAppDTE_Field_editorFields-logonPage').find('.btn.btn-outline-secondary.btn-vue-jstree-item-edit'));
@@ -158,7 +156,9 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
      I.wait(1);
      // vyber web stranku z adresara name-autotest
      I.click(locate('.jstree-node.jstree-closed').withText(folder_name).find('.jstree-icon.jstree-ocl'));
-     I.click(locate('.jstree-node.is-default-page.jstree-leaf').withText(folder_name).find('.jstree-anchor'));
+     var page = locate('.jstree-node.is-default-page.jstree-leaf').withText(folder_name).find('.jstree-anchor');
+     I.waitForElement(page, 10);
+     I.click(page);
      DTE.save();
      I.waitForText(folder_name, 20);
      I.wait(1);
@@ -166,7 +166,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
      // 3. stranka s formularom na prihlasenie je z priecinka name-autotest
      I.say('3. Stranka s formularom na prihlasenie je z priecinka name-autotest');
      I.jstreeClick(folder_name);
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.seeInField('#DTE_Field_editorFields-logonPage', folder_name);
@@ -177,7 +177,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
      // 4. pouzitie zakladnych nastaveni na stranku s formularom na prihlasenie
      I.say('4. Pouzitie zakladnych nastaveni');
      I.jstreeClick(folder_name);
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_editorFields-useDefaultLogonPage_0').find('.form-check-label'));
@@ -185,7 +185,7 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE }) => {
      I.waitForText(folder_name, 20);
      I.wait(1);
      // kontrola vykonanych zmien
-     I.click(edit_button);
+     I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("groups-datatable");
      I.click('#pills-dt-groups-datatable-access-tab');
      I.seeInField('#DTE_Field_editorFields-logonPage', '"docId": 0');

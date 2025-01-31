@@ -187,7 +187,7 @@ public class Identity extends UserDetails
 		if (Tools.isEmpty(separator)) return !isDisabledItem(name);
 
 		int counter = 0;
-		String[] names = name.split(separator);
+		String[] names = Tools.getTokens(name, separator);
 		for (String n : names)
 		{
 			if (!isDisabledItem(n)) counter++;

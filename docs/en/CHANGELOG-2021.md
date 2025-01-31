@@ -5,13 +5,14 @@
 > Version 2021.52 has a new design even for old versions of applications, improves responsiveness, adds new fields to web pages, and improves the behavior of page URLs when they are moved to a different directory.
 
 **Redesign of version 8**
+
 We have modified the design of the old version 8 applications so that the colour scheme and layout corresponds with the design of the new version of WebJET CMS. The menu behaves the same as in the new version for a more comfortable transition between the old and new applications (#54233).
 
 By clicking on the "Switch to version 8" icon in the header, you can still switch the interface to the version 8 design.
 
 ![](_media/changelog/2021q4/redesign-wj8.png)
 
-**Website**
+**Web pages**
 
 - Added option to save [a working version of the website](redactor/webpages/README.md). It will be saved to history and will not be available to visitors of the web site (#54161) for the time being.
 
@@ -38,7 +39,7 @@ By clicking on the "Switch to version 8" icon in the header, you can still switc
 
 ![](_media/changelog/2021q4/editor-fielda-d.png)
 
-- New options added [automatic generation of the page URL](redactor/webpages/editor.md#url-adresa) by Menu Item Name (when moving to another folder, the URL will automatically change), or the option to automatically inherit the beginning of the URL from the folder (when moving to another folder, the beginning part of the URL will automatically change) (#54237).
+- New options added [automatic generation of the page URL](redactor/webpages/editor.md#url-address) by Menu Item Name (when moving to another folder, the URL will automatically change), or the option to automatically inherit the beginning of the URL from the folder (when moving to another folder, the beginning part of the URL will automatically change) (#54237).
 
 ![](redactor/webpages/virtual-path-title.png)
 
@@ -54,7 +55,7 @@ For widths less than 992 pixels, the editor window displays the full size of the
 
 **Optional fields**
 
-Added option [multiple choice selection box](frontend/webpages/customfields/README.md#výberové-pole-viac-možností) by entering the prefix `multiple:` before the list of possible values. The values are then stored in the field separated by a character `|`.
+Added option [multiple choice selection box](frontend/webpages/customfields/README.md#selection-box-multiple-options) by entering the prefix `multiple:` before the list of possible values. The values are then stored in the field separated by a character `|`.
 
 ![](frontend/webpages/customfields/webpages-select-multi.png)
 
@@ -81,11 +82,11 @@ Added option [multiple choice selection box](frontend/webpages/customfields/READ
 - Added the ability to insert `tooltip` to fields in the editor with formatting using [Markdown format](developer/frameworks/webjetjs.md#markdown-parser). For security reasons, you cannot insert links and non-basic Markdown tags.
 - Translation key for tooltip is automatically searched by translation key `title` with suffix `.tooltip`. So if you have an annotation `@DataTableColumn(title = "group.superior_directory"` automatically searches for the translation text with the key `group.superior_directory.tooltip`. If it exists, it shall be used.
 - Fixed search by date in tables with client pagination and some columns not displayed (wrong column index).
-- Added setting option [status icons](developer/datatables/README.md#stavové-ikony), removed the original option to add icons to the link to open the editor using the function `addTextIcon` (this was inappropriate from a UX perspective).
+- Added setting option [status icons](developer/datatables/README.md#status-icons), removed the original option to add icons to the link to open the editor using the function `addTextIcon` (this was inappropriate from a UX perspective).
 
 **Deployment**
 
-Modified deployment to artifactory server. Do `ant/build.xml` added task `createUpdateZip`which creates and uploads to the license server an update in the format used for the transition to `gradle` version. It is thus easy to update older WebJET installations in the classic way via the Control Panel->WebJET Update menu (#54225).
+Modified deployment to artifactory server. Do `ant/build.xml` added task `createUpdateZip` which creates and uploads to the license server an update in the format used for the transition to `gradle` version. It is thus easy to update older WebJET installations in the classic way via the Control Panel->WebJET Update menu (#54225).
 
 Modified and compared archives against the old version 8 to include all necessary files. Added missing fonts for the library `pd4ml` for generating PDF files.
 
@@ -104,9 +105,9 @@ Please note: due to the large number of changes in the spring libraries, it will
 - Completed documentation for the function [WJ.openIframeModal](developer/frameworks/webjetjs.md?id=iframe-dialóg) for the possibility to set the button text, the position of the close button and the event `onload` executed after loading the modal window content.
 - Completed documentation for the function [WJ.hasPermission(permission)](developer/frameworks/webjetjs.md?id=kontrola-práv) to control user rights.
 - Completed documentation for the function [WJ.parseMarkdown(markdownText, options)](developer/frameworks/webjetjs.md#markdown-parser) to convert Markdown format to HTML code.
-- Redesigned icon setup documentation for use [status icons](developer/datatables/README.md#stavové-ikony).
+- Redesigned icon setup documentation for use [status icons](developer/datatables/README.md#status-icons).
 - Supplemented manal for the editor about applications [Menu](redactor/apps/menu/README.md), [Navigation bar](redactor/apps/navbar/README.md) a [Site Map](redactor/apps/sitemap/README.md).
-- Created documentation on the possibilities of generating URLs [automatic generation of the page URL](redactor/webpages/editor.md#url-adresa).
+- Created documentation on the possibilities of generating URLs [automatic generation of the page URL](redactor/webpages/editor.md#url-address).
 
 **Tests**
 
@@ -130,7 +131,7 @@ Please note: due to the large number of changes in the spring libraries, it will
 - Fixed filter display on page title in server monitoring and GDPR application.
 - Fixed marking all rows in client pagination - only the current page (#54281) is marked.
 
-![meme](_media/meme/2021-52.jpg)
+![meme](_media/meme/2021-52.jpg ":no-zoom")
 
 ## 2021.47
 
@@ -154,7 +155,7 @@ Please note: due to the large number of changes in the spring libraries, it will
 
 ![](redactor/apps/banner/editor.png)
 
-**Website**
+**Web pages**
 
 - Added notification when publishing a page that is subject to approval and notification if the page has pending/unapproved changes.
 
@@ -192,13 +193,13 @@ Please note: due to the large number of changes in the spring libraries, it will
 
 - Fixed cache updating `TemplatesDB` when saving the page in the local (domain) System directory.
 
-![meme](_media/meme/2021-47.jpg)
+![meme](_media/meme/2021-47.jpg ":no-zoom")
 
 ## 2021.45
 
-> Version 2021.45 adds a list view of web pages from subdirectories, improves the view of administration on mobile devices and adds a Q\&amp;A application. In addition, it includes many changes under the hood when working with the list of websites (switching to server paging and search, using Spring DATA for database access).
+> Version 2021.45 adds a list view of web pages from subdirectories, improves the view of administration on mobile devices and adds a Q&A application. In addition, it includes many changes under the hood when working with the list of websites (switching to server paging and search, using Spring DATA for database access).
 
-**Website**
+**Web pages**
 
 Added the ability to view web pages from subdirectories by toggling the switch **View pages also from subdirectories** in the datatable header. When you switch to the mode of displaying pages from subdirectories, the pages from the currently selected directory are displayed in the tree structure, including its subdirectories. You can click on another directory in the tree structure, which again causes the pages from the selected directory and its subdirectories to be displayed.
 
@@ -206,7 +207,7 @@ Added the ability to view web pages from subdirectories by toggling the switch *
 
 - REST service for getting a list of sites rebuilt to use Spring DATA repositories.
 - It allows server paging and search, which is convenient when there are a large number of pages in the directory.
-- A class was formed `DocBasic`which contains common data between tables `documents` a `documents_history` and subsequent classes `DocDetails` a `DocHistory`. Class backward compatibility is maintained `DocDetails` with WebJET version 8, although we have converted primitive types to objects (it concerns mainly date objects that use names due to name collision `publishStartDate, publishEndDate, startDateDate`). It is used [inheritance in JPA entities](developer/backend/jpa.md#dedenie-v-jpa-entitách).
+- A class was formed `DocBasic` which contains common data between tables `documents` a `documents_history` and subsequent classes `DocDetails` a `DocHistory`. Class backward compatibility is maintained `DocDetails` with WebJET version 8, although we have converted primitive types to objects (it concerns mainly date objects that use names due to name collision `publishStartDate, publishEndDate, startDateDate`). It is used [inheritance in JPA entities](developer/backend/jpa.md#inheritance-in-jpa-entities).
 - Access tab divided into user group section - access for registered users and bulk email groups similar to the users.
 - Editor - added setting of the Format styles selection box according to the currently displayed page/template.
 - Editor - added a floating toolbar for properties of objects in the editor (e.g. images, tables, forms).
@@ -242,7 +243,7 @@ Usage is easy by extending the Spring DATA repository from the class `DomainIdRe
 
 **General**
 
-- JS function added `WJ.htmlToText` for conversion [HTML code to text](developer/frameworks/webjetjs.md#ostatné-funkcie).
+- JS function added `WJ.htmlToText` for conversion [HTML code to text](developer/frameworks/webjetjs.md#other-functions).
 
 **Security**
 
@@ -279,16 +280,16 @@ We have modified the build process for the new version artifacts. In this versio
 - Established the basis for safety documentation. Contains information on [unsafe HTML code](developer/backend/security.md).
 - Documentation created for [Domain Data Department](developer/datatables/domainid.md).
 - Enhanced example of use [optional fields](developer/datatables-editor/customfields.md) in the editor using the class `BaseEditorFields`.
-- Documentation created on the possibility of use [inheritance in entities](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
-- Documentation created for use [inheritance in JPA entities](developer/datatables/restcontroller.md#dedenie-v-jpa-entitách).
+- Documentation created on the possibility of use [inheritance in entities](developer/datatables/restcontroller.md#inheritance-in-jpa-entities).
+- Documentation created for use [inheritance in JPA entities](developer/datatables/restcontroller.md#inheritance-in-jpa-entities).
 
-![meme](_media/meme/2021-45.jpg)
+![meme](_media/meme/2021-45.jpg ":no-zoom")
 
 ## 2021.40
 
 > Version 2021.40 brings a redesigned user, group and group rights management and a redesigned GDPR application to the WebJET 2021 visual. In addition, it adds a number of minor enhancements and fixes.
 
-**Users of**
+**Users**
 
 - [List of users](admin/users/README.md), [user groups](admin/users/user-groups.md) a [groups of rights](admin/users/perm-groups.md) converted to a datatable and REST interface.
 - Supplemented by [highlighting groups of rights](admin/users/README.md) in individual rights. Using colored circles to highlight the rights in a group of rights, you can identify at a glance the rights that the group contains.
@@ -316,7 +317,7 @@ We have modified the build process for the new version artifacts. In this versio
 
 - Established basis for [creation of customer applications](custom-apps/admin-menu-item.md). These are created in the directory `/apps/` unlike the old version from the directory `/components/` (#54045).
 - Applications are embedded in the design [directly from html code](custom-apps/admin-menu-item.md#frontend), there is no need to create and compile pug files.
-- Created function [WJ.breadcrumb](developer/frameworks/webjetjs.md#navigačná-lišta) to generate the navigation bar.
+- Created function [WJ.breadcrumb](developer/frameworks/webjetjs.md#navigation-bar) to generate the navigation bar.
 - The navigation bar can be accessed using the macro `{LANGUAGE-SELECT}` insert a selection field for the language.
 
 **Export and import**
@@ -331,10 +332,10 @@ We have modified the build process for the new version artifacts. In this versio
 
 WebJET integrates the possibility [translation of texts](admin/setup/translation.md), the currently supported compiler [DeepL](https://www.deepl.com/). Automatic translation is supported in the application [mirroring of the structure](redactor/apps/docmirroring/README.md).
 
-**Website**
+**Web pages**
 
 - Added option of forced [restoration of tree structure](developer/apps/docmirroring.md) by setting the attribute `RequestBean.setAttribute("forceReloadTree", Boolean.TRUE);`.
-- Added display of "Processing" text when using drag\&amp;drop in a tree structure (which can take a few seconds when using structure mirroring).
+- Added display of "Processing" text when using drag&drop in a tree structure (which can take a few seconds when using structure mirroring).
 - By `DocDetails` a `GroupDetails` attribute annotation added `fullPath` with the full path to the website/address. It is not displayed by default, in the datatable settings it is possible to enable the display.
 
 **Forms**
@@ -351,25 +352,25 @@ WebJET integrates the possibility [translation of texts](admin/setup/translation
 
 - Added JPA converter `DocDetailsConverter` a `DocDetailsNotNullConverter` between `doc_id` in the database and the object `DocDetailsDto` for easier use of the JSON type field for selecting the page ID. Converter `NotNull` returns at `NULL` object value `-1`.
 - Added JPA converter `GroupDetailsConverter` between `group_id` in the database and the object `GroupDetails` for easier use of the JSON type field for selecting the directory ID.
-- For an array of type JSON [to select one page or directory](developer/datatables-editor/field-json.md#možnosti-classname) added the possibility to delete the set value by setting the field type to the value `dt-tree-group-null` for a directory or `alebo dt-tree-page-null` for the web page.
+- For an array of type JSON [to select one page or directory](developer/datatables-editor/field-json.md#classname-options) added the possibility to delete the set value by setting the field type to the value `dt-tree-group-null` for a directory or `alebo dt-tree-page-null` for the web page.
 - Added option for JSON type field `null` object `Group/DocDetails`. Original version for `null` object didn't even display the directory/page selection field, the new version will display an empty field.
-- Added option [heading settings](developer/datatables-editor/datatable-columns.md#vlastnosti-datatablecolumneditor) in front of the nested datatable on a separate tab by setting the attribute `data-dt-field-full-headline`.
-- Added option [forced display of columns](developer/datatables/README.md#možnosti-konfigurácie) (e.g. for a nested datatable) by setting the configuration option `forceVisibleColumns`.
-- Added ability to call JavaScript function for [edit the list of columns](developer/datatables/README.md#možnosti-konfigurácie) (e.g. for a nested datatable) by setting the configuration option `updateColumnsFunction`.
-- Added option [add CSS style with tab switcher](developer/datatables-editor/README.md#karty-v-editore) in the editor by attribute `className`, using CSS style `hide-on-create` it is possible to hide the card when creating a new record.
-- Added option [hide card based on rights](developer/datatables-editor/README.md#karty-v-editore) in the editor by attribute `perms`.
+- Added option [heading settings](developer/datatables-editor/datatable-columns.md#datatablecolumneditor-properties) in front of the nested datatable on a separate tab by setting the attribute `data-dt-field-full-headline`.
+- Added option [forced display of columns](developer/datatables/README.md#configuration-options) (e.g. for a nested datatable) by setting the configuration option `forceVisibleColumns`.
+- Added ability to call JavaScript function for [edit the list of columns](developer/datatables/README.md#configuration-options) (e.g. for a nested datatable) by setting the configuration option `updateColumnsFunction`.
+- Added option [add CSS style with tab switcher](developer/datatables-editor/README.md#tabs-in-the-editor) in the editor by attribute `className`, using CSS style `hide-on-create` it is possible to hide the card when creating a new record.
+- Added option [hide card based on rights](developer/datatables-editor/README.md#tabs-in-the-editor) in the editor by attribute `perms`.
 - To class `DatatableRestControllerV2` added method `public void afterSave(T entity, T saved)` called after saving the entity (object `entity` is the original sent object, `saved` is the saved version - when a new record is `ID` found only in `saved` entity).
 - To class `DatatableRestControllerV2` added method `public void afterDelete(T entity, long id)` called after deleting an entity.
 - Added field type `jstree` to view [tree structures](developer/datatables-editor/field-jstree.md) with selection fields of tree nodes.
 - Field type `json` extended with the option [selecting a list of file system directories](developer/datatables-editor/field-json.md).
 - Added fields `HIDDEN, RADIO, PASSWORD` For `DatatableColumnType`.
-- Simplified process of working with [additional/nested attributes](developer/datatables-editor/datatable-columns.md#vnorené-atribúty), `editorFields` in the REST controller. By implementing the methods `processFromEntity` a `processToEntity` ensure correct data mapping between the entity and `editorFields` object.
+- Simplified process of working with [additional/nested attributes](developer/datatables-editor/datatable-columns.md#nested-attributes), `editorFields` in the REST controller. By implementing the methods `processFromEntity` a `processToEntity` ensure correct data mapping between the entity and `editorFields` object.
 - Import - added conditions for `domainId` to update only the records of the current domain when importing.
 - Import - modified import with matching records by selected column to use API `insertItem` a `editItem` to make the import work also for REST interfaces not using Spring DATA repositories.
 - Import - modified the dialog to display an error message from the server when an import error occurs.
 - API - added method `getOneItem(long id)` to get one item. The use is instead of the original `getOne` which is a REST method (overriding REST methods is not recommended).
 - Fixed design bugs with selection fields when mouseover and hidden column display.
-- Added option [view HTML code](developer/datatables/README.md#zobrazenie-html-kódu) in the cell by setting the CSS style `allow-html` (#53989).
+- Added option [view HTML code](developer/datatables/README.md#display-html-code) in the cell by setting the CSS style `allow-html` (#53989).
 - When calling `getAllItems` the option is automatically detected `serverSide` (based on URL parameter `size`). If it is not detected the call is used `repo.findAll()` without `Pageable` parameter to return all records.
 - The filter display for date entry adjusts to the size - if the blank field is narrow so it doesn't take up column width unnecessarily, the field will automatically enlarge when a value is entered. The field size is also different for date and date+time fields (#54097).
 - Added retrieving all row data from the server before editing a cell, since the datatable itself may not always contain all the data needed for the editor (#54109).
@@ -382,6 +383,7 @@ Integrated password quality control. Uses the library [zxcvbn-ts](https://zxcvbn
 - repeating sequences of the type `abcabc`
 - common names and surnames
 - well-known slogans such as `password`
+
 The library has **built-in dictionary of the most commonly used entries** and the names against which it checks the password.
 
 The check is implemented in the administration when creating/modifying a user but also in the login page in the administration, where it informs the user about the quality of the entered password.
@@ -411,7 +413,7 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 - Documentation created for [translator](admin/setup/translation.md).
 - User rights documentation created - [for the administrator](admin/users/README.md), [for the developer](developer/apps/users/README.md).
 - Documentation created for [of the jstree field type](developer/datatables-editor/field-jstree.md).
-- Added documentation about the possibility of extending the type field `json` o [custom version](developer/datatables-editor/field-json.md#vlastná-konfigurácia-zobrazenej-stromovej-štruktúry) jsTree structures.
+- Added documentation about the possibility of extending the type field `json` o [custom version](developer/datatables-editor/field-json.md#custom-configuration-of-the-displayed-tree-structure) jsTree structures.
 - Supplemented documentation [Definition of finished](developer/guidelines/definition-of-done.md) about the conditions for testing the export and import of datatables.
 - Documentation created [list of users](admin/users/README.md), [user groups](admin/users/user-groups.md) a [groups of rights](admin/users/perm-groups.md).
 
@@ -419,24 +421,24 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 
 - Datatables - fixed setting of optional fields in newly created record.
 
-![meme](_media/meme/2021-40.jpg)
+![meme](_media/meme/2021-40.jpg ":no-zoom")
 
 ## 2021.26
 
 **Data tables**
 
-- Added option `onRowCallback` for the possibility [line styling](developer/datatables/README.md#štýlovanie-riadku-a-ikony) on the client side (e.g. marking a row as inactive).
-- Added option to set [default value](developer/datatables-editor/datatable-columns.md#vlastnosti-datatablecolumn) when creating a new record using the attribute `defaultValue` Annotations `@DatatableColumn`. Macros for setting the currently selected domain or date and time are also supported.
+- Added option `onRowCallback` for the possibility [line styling](developer/datatables/README.md#line-and-icon-styling) on the client side (e.g. marking a row as inactive).
+- Added option to set [default value](developer/datatables-editor/datatable-columns.md#datatablecolumn-properties) when creating a new record using the attribute `defaultValue` Annotations `@DatatableColumn`. Macros for setting the currently selected domain or date and time are also supported.
 
 **Tests**
 
-- Added option to generate [allure](developer/testing/README.md#generovanie-html-reportu) Reports.
+- Added option to generate [allure](developer/testing/README.md#html-report-generation) Reports.
 
 ## 2021.24
 
 > Version 2021.24 adds the ability to duplicate records in data tables, automatic opening of root directories if the domain contains e.g. only Slovak and English directories (max. 2 directories), allows to perform bulk editing in web pages and improves in several places the comfort of work.
 
-**Website**
+**Web pages**
 
 - Domain name renaming with the option to automatically rename the domain prefix in translation keys and configuration variables with the prefix of the old domain.
 - If the tree structure contains a maximum of 2 directories (configurable in the webpagesTreeAutoOpenLimit configuration variable) they will automatically appear open for more convenient work (#53805).
@@ -459,13 +461,12 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 
 - Added functionality to duplicate records in the table. Added purple Duplicate button to the toolbar. It is also possible to select multiple rows at once.
 
-<img class="changelog" src="_media/changelog/2021q2/2021-24-duplicate-button.png" />
-
+![changelog](_media/changelog/2021q2/2021-24-duplicate-button.png ":no-zoom")
 - Added option to restore the displayed columns to the original settings from the server. The user settings are deleted and the original visibility of the columns is restored.
 - Added to the editor by opening the help by clicking on the question mark icon in the footer of the dialog box.
 - Added highlighting of the required field using the \* character.
 - When checking the required fields, the message next to the save buttons is also displayed. It can happen that the required field is in a different tab than the currently displayed tab, and the user does not know why nothing happened after clicking save. Thus, a visible error message is always displayed.
-- Redesigned field validation using annotations on [translation keys from WebJET](developer/datatables/restcontroller.md#validácia--povinné-polia). Modified the displayed error messages to the format "What caused the error. What the user should do".
+- Redesigned field validation using annotations on [translation keys from WebJET](developer/datatables/restcontroller.md#validation---required-fields). Modified the displayed error messages to the format "What caused the error. What the user should do".
 
 **Tests**
 
@@ -475,8 +476,8 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 
 - Added description of data types and mandatory fields for [datatable annotations](developer/datatables-editor/datatable-columns.md).
 - Created documentation for the data field [wysiwyg](developer/datatables-editor/field-wysiwyg.md).
-- Supplemented labelling documentation [mandatory fields](developer/datatables-editor/datatable-columns.md#povinné-polia) in the annotations.
-- Extended documentation on [validations using annotations](developer/datatables/restcontroller.md#validácia--povinné-polia).
+- Supplemented labelling documentation [mandatory fields](developer/datatables-editor/datatable-columns.md#required-fields) in the annotations.
+- Extended documentation on [validations using annotations](developer/datatables/restcontroller.md#validation---required-fields).
 
 **Error correction**
 
@@ -485,7 +486,7 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 - Server monitoring - corrected default chart range to the value of the last 14 days.
 - Datatable - corrected highlighting of selected rows after saving, if received data contains CSS row style setting - CSS style will be preserved `selected` Also `highlight`.
 
-![meme](_media/meme/2021-24.jpg)
+![meme](_media/meme/2021-24.jpg ":no-zoom")
 
 ## 2021.20
 
@@ -495,11 +496,11 @@ REST datatable interfaces adapted for use `ThreadLocal` object that holds local 
 
 We have implemented universal functionality of optional fields (original name Custom Fields in WebJET 8) into web pages and web page directories (directories were not possible to set field types in WebJET 8). This makes it easy to set different field types in web pages and directories.
 
-<img class="changelog" src="frontend/webpages/customfields/webpages.png" />
+![changelog](frontend/webpages/customfields/webpages.png ":no-zoom")
 
 We have prepared documentation with information on [settings of optional fields](frontend/webpages/customfields/README.md) for the frontend programmer and documentation with [technical information](developer/datatables-editor/customfields.md) for the backend programmer.
 
-**Website**
+**Web pages**
 
 - Added a button to the datatable toolbar to display the web page. Multiple rows can be selected and selected web pages can be displayed in new sheets at once.
 
@@ -517,32 +518,33 @@ We have prepared documentation with information on [settings of optional fields]
 
 **Error correction**
 
-- Web pages - corrected use of API function `wjEdit`, added function `wjEditFetch`which also restores data from the server. Modified automatic opening of the page according to the specified `docid` URL of the parameter to use the function `wjEditFetch` to get a list of available fields.
+- Web pages - corrected use of API function `wjEdit`, added function `wjEditFetch` which also restores data from the server. Modified automatic opening of the page according to the specified `docid` URL of the parameter to use the function `wjEditFetch` to get a list of available fields.
 - Translation keys - added check for rights to change translation key, fixed duplication of key after change.
 - Translation keys - added key change invocation in the internal cache and in the cluster cache.
 - Translation keys - added check and test for the right Text editing - view all texts.
 
-![meme](_media/meme/2021-20.jpg)
+![meme](_media/meme/2021-20.jpg ":no-zoom")
 
 ## 2021.18
 
 > Version 2021.18 will automatically create [Domain](frontend/setup/README.md), `System` folder, adds editing [brands](redactor/webpages/perexgroups.md) (perex groups), improves cell editing behavior, and fixes a bug in the display of dial values in the datatable. Administration uses a new font `Asap`.
 
-**Website**
+**Web pages**
 
 - Added automatic creation `System` folder when saving the domain root directory in configuration variable enabled mode `templatesUseDomainLocalSystemFolder=true` (#53685).
 - In the list of headers, footers, menus, and free objects in a web page and template, the `templatesUseDomainLocalSystemFolder=true` also show web pages from [of the first level under the folders](frontend/setup/README.md) for the possibility of their organization (#53685).
 - Editor - added automatic deletion of the text New web page in the page title after clicking in the box. Automatic transfer of the value also to the field Name of the menu item and deletion of the URL if it contains the expression New web page.
 - Template Groups - modified folder list - complete folder contents are displayed `/templates`, and in folders starting with the (log)installation name, the installation name is automatically removed from the value (it is then added `combine.jsp`, but in the database the value is stored without the installation name).
+
 **Tags (perex groups)**
+
 - Added ability to add/edit/delete [tags (perex groups)](redactor/webpages/perexgroups.md), available as a new menu item under Web pages (#53701).
 
 **Datatable**
 
 - Edit cell - added edit option [single cells](developer/datatables-editor/bubble.md) directly in the datatable also for the editor containing separate sheets (so far it worked only in the editor without sheets). Added option to set non-editable cells.
 
-<img class="changelog" src="_media/changelog/2021q2/2021-17-media-bubble.png" />
-
+![changelog](_media/changelog/2021q2/2021-17-media-bubble.png ":no-zoom")
 - Modified override method option `searchItem` v `DatatableRestControllerV2` for searching. It is not recommended to override the REST method directly `findByColumns`, because it makes this an internal problem in Spring for customer projects (#53677).
 
 **Administration**
@@ -568,7 +570,7 @@ We have prepared documentation with information on [settings of optional fields]
 - Text editing - corrected search in customer projects.
 - Datatables - fixed display of dial data in custom column list view (#53653).
 
-![meme](_media/meme/2021-18.jpg)
+![meme](_media/meme/2021-18.jpg ":no-zoom")
 
 ## 2021.13
 
@@ -587,7 +589,7 @@ We have optimised [speed of displaying the list of web pages](developer/apps/web
 - Library for importing data from `XLSX` is initialized after the import dialog is opened.
 - In the nested datatable, we have optimized data retrieval - the datatable (e.g. Media or History sheet in the page list) is initialized and retrieves data from the REST service only after clicking on the sheet. If the user doesn't need to view the media or history then the REST service doesn't need to be called unnecessarily and the nested datatable doesn't need to be initialized from the processor's point of view.
 
-**Website**
+**Web pages**
 
 - Added the ability to edit a page according to the specified page ID (`docid`) in the URL parameter or by typing it into the text field in the datatable. A directory structure is automatically opened for the specified ID, and then the page editor is opened. When entered via the URL parameter, the domain is also set correctly in the domain selection field (#53429).
 - Added the ability to specify a directory ID for editing by typing it into a text field or as a URL parameter.
@@ -595,11 +597,11 @@ We have optimised [speed of displaying the list of web pages](developer/apps/web
 - Directory - added display of scheduled versions and directory history with the ability to edit the record by historical/scheduled version.
 - Added display of the Last Modified list (a list of pages last modified by any user in the current domain) and Pending Approval list (displayed only if there are pages to be approved by the currently logged in user) (#53493).
 
-<img class="changelog" src="_media/changelog/2021q1/2021-13-awaiting-approve.png" />
+![changelog](_media/changelog/2021q1/2021-13-awaiting-approve.png ":no-zoom")
 
 **Administration**
 
-- Added [publishing the event](developer/frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu), `ThymeleafEvent` when you view the administration page. Allows you to dynamically insert objects into the page model.
+- Added [publishing the event](developer/frameworks/thymeleaf.md#inserting-custom-objects-into-the-model), `ThymeleafEvent` when you view the administration page. Allows you to dynamically insert objects into the page model.
 
 **Translations**
 
@@ -617,7 +619,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Added the ability to encrypt the value and plan to change the value in the future.
 - Added Planning sheet to show planned changes, values can be deleted in the future.
 
-<img class="changelog" src="_media/changelog/2021q1/2021-13-configuration-history.png" />
+![changelog](_media/changelog/2021q1/2021-13-configuration-history.png ":no-zoom")
 
 **Datatables**
 
@@ -625,15 +627,15 @@ The whole translation system for JavaScript files is implemented as a library an
 - Method `DatatableRestControllerV2.throwError(String errorKey)` modified to use translation keys (automatically translates the specified key to text), modified to use the method in the current code (fixed texts changed to translation keys).
 - Added support for inserting a nested datatable in a sheet that already contains other fields. Modified datatable height calculation to take into account other fields. Reworked indentation in CSS to allow nested datatable to be edge to edge and display gray block under field names.
 - Added support `DATE` fields, the original version supported only `DATETIME`.
-- Added option to automatically [hide some buttons](developer/datatables/README.md#možnosti-konfigurácie) in the datatable toolbar by setting the option `hideButtons`.
+- Added option to automatically [hide some buttons](developer/datatables/README.md#configuration-options) in the datatable toolbar by setting the option `hideButtons`.
 - Added ability to use primary data directly from a variable instead of calling a REST service by setting the object to a property `initialData` in the datatable configuration.
-- Generalized [search by user name](\(developer/datatables/restcontroller.md#zobrazenie-mena-používateľa-a-vyhľadávanie\)) when storing only the ID in the database.
+- Generalized [search by user name](\(developer/datatables/restcontroller.md#display-user-name-and-search\)) when storing only the ID in the database.
 - Added option to set custom function to manage editor opening via option `onEdit` datatable configurations.
 - Added remembering set columns in datatable view. Settings are saved in the browser and remembered for the currently logged in user. (#53545)
 
 **General**
 
-- Added option to use `autocomplete` Also [outside datatables](developer/datatables-editor/autocomplete.md#použitie-mimo-datatabuľky).
+- Added option to use `autocomplete` Also [outside datatables](developer/datatables-editor/autocomplete.md#use-outside-the-datatable).
 - Added new login screen to administration (for unambiguous resolution of WebJET 2021) (#53617).
 
 **Tests**
@@ -646,11 +648,11 @@ The whole translation system for JavaScript files is implemented as a library an
 - Documentation created for [translation in JavaScript files](developer/frameworks/jstranslate.md)
 - Documentation created for new libraries [Translator](developer/libraries/translator.md), [StorageHandler](developer/libraries/storage-handler.md), [Store](developer/libraries/store.md), [Tools](developer/libraries/tools.md), [ReadyExtender](developer/libraries/ready-extender.md).
 - Documentation created for [optimising display speed](developer/apps/webpages/README.md) list of websites.
-- Supplemented documentation to the datatable - supplemented [list of configuration options](developer/datatables/README.md#možnosti-konfigurácie).
-- Created documentation on the possibility [inserting custom objects](developer/frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu) to the model in `Thymeleaf` on the backend.
-- Documentation for the jstree library added to include information about embedding [initialization data](developer/jstree/README.md#konfigurácia).
-- Added documentation on raising a general error in the datatable and on [to prevent editing or deletion](developer/datatables/restcontroller.md#zabránenie-zmazania--editácie-záznamu) of record.
-- Supplemented documentation for [view and search by user name](developer/datatables/restcontroller.md#zobrazenie-mena-používateľa-a-vyhľadávanie) when storing only the ID in the database.
+- Supplemented documentation to the datatable - supplemented [list of configuration options](developer/datatables/README.md#configuration-options).
+- Created documentation on the possibility [inserting custom objects](developer/frameworks/thymeleaf.md#inserting-custom-objects-into-the-model) to the model in `Thymeleaf` on the backend.
+- Documentation for the jstree library added to include information about embedding [initialization data](developer/jstree/README.md#Configuration).
+- Added documentation on raising a general error in the datatable and on [to prevent editing or deletion](developer/datatables/restcontroller.md#preventing-the-deletion--editing-of-a-record) of record.
+- Supplemented documentation for [view and search by user name](developer/datatables/restcontroller.md#display-user-name-and-search) when storing only the ID in the database.
 - Supplemented documentation on operation [list of websites](developer/apps/webpages/README.md) - view the sheets last edited and awaiting approval
 
 **Error correction**
@@ -658,11 +660,11 @@ The whole translation system for JavaScript files is implemented as a library an
 - Fixed display of template list when adding/editing web page directory. Templates are now displayed conditionally according to the set directories (the original version displayed all templates everywhere).
 - Fixed distribution version for other projects (Spring DATA repositories, missing files, updated dependency libraries).
 
-![meme](_media/meme/2021-13.jpg)
+![meme](_media/meme/2021-13.jpg ":no-zoom")
 
 ## 2021.12
 
-**Website**
+**Web pages**
 
 - Added icon for importing and exporting pages in XML format according to the original WebJET 8 functionality (#53497).
 
@@ -674,15 +676,15 @@ The whole translation system for JavaScript files is implemented as a library an
 
 > Version 2021.11 adds a web page history view with edit, view and compare options.
 
-**Website**
+**Web pages**
 
 - History function sheet in the page editor. Allows you to load a web page from history into the editor, view the page from history, and compare the current version against the historical version (#53385).
 
-<img class="changelog" src="redactor/webpages/history.png" />
+![changelog](redactor/webpages/history.png ":no-zoom")
 
 **Datatables**
 
-- Added function `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` to display the button when it is marked exactly [one line](developer/datatables/README.md#pridanieodobratie-tlačidiel).
+- Added function `$.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);` to display the button when it is marked exactly [one line](developer/datatables/README.md#adding-or-removing-buttons).
 - Extended configuration option [nested datatables](developer/datatables-editor/field-datatable.md) in the editor using Java annotations. Allows you to set the layout or disable server pagination.
 
 **General**
@@ -695,7 +697,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Editor's manual supplemented with basic information on [page history](redactor/webpages/history.md).
 - Added documentation to view [website history](developer/apps/webpages/README.md).
 - Added documentation and sample mapping [DTO objects](developer/backend/mapstruct.md) through the framework `mapstruct`.
-- Extended documentation on adding [datatable buttons](developer/datatables/README.md#pridanieodobratie-tlačidiel).
+- Extended documentation on adding [datatable buttons](developer/datatables/README.md#adding-or-removing-buttons).
 
 **Error correction**
 
@@ -703,13 +705,13 @@ The whole translation system for JavaScript files is implemented as a library an
 - Nested datatable - added call `deselect` before loading new data of the nested datatable, to set the buttons correctly (deactivate them if they require the selected row).
 - Corrected call `TABLE.hideButton` - hide buttons only in the given table, not in all tables (added restriction on table ID when searching for buttons in DOM tree).
 
-![meme](_media/meme/2021-11.jpg)
+![meme](_media/meme/2021-11.jpg ":no-zoom")
 
 ## 2021.10
 
 > Version 2021.10 fixes a dialog size error in the page editor and fixes several grammatical errors in application descriptions.
 
-**Website**
+**Web pages**
 
 - Based on the tests of working with the web page, the texts in the list of applications have been modified.
 - Fixed dialog box size setting when inserting application or form elements in the page editor.
@@ -720,7 +722,7 @@ The whole translation system for JavaScript files is implemented as a library an
 
 - Added tests for web page content (add table, find and replace, insert image, step back, insert special character).
 
-![meme](_media/meme/2021-10.jpg)
+![meme](_media/meme/2021-10.jpg ":no-zoom")
 
 ## 2021.8
 
@@ -733,7 +735,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Added Media menu item with the ability to edit all media and manage media groups to the Web page menu.
 - Added the Media - All Media Management right to display a list of all media with the ability to edit media globally (e.g. find all media linking to a specific link or image).
 
-<img class="changelog" src="redactor/webpages/media.png" />
+![changelog](redactor/webpages/media.png ":no-zoom")
 
 **Datatables**
 
@@ -755,21 +757,21 @@ The whole translation system for JavaScript files is implemented as a library an
 
 **Tests**
 
-- Added option to programmatically [take away rights](developer/testing/README.md#odobratie-práva) to the currently logged in user (only applies to users with a login name `tester`).
-- Added option to automated datatable test [law controls](developer/testing/datatable.md#testovanie-práv).
+- Added option to programmatically [take away rights](developer/testing/README.md#revocation-of-the-right) to the currently logged in user (only applies to users with a login name `tester`).
+- Added option to automated datatable test [law controls](developer/testing/datatable.md#rights-testing).
 - Added the ability to test a nested datatable (datatable field) to automated datatable tests using the `options.container`.
 - Modified tests for new database setup - multi domain, added audit record types, improved timing.
 - Added usage test [CSRF token](../src/test/webapp/tests/admin/security.js).
-- Added function `DT.checkPerms(perms, url)` For [control of rights](developer/testing/README.md#odobratie-práva) REST service calls.
-- Added function `I.jstreeNavigate(pathArray)` For [successive clicks](developer/testing/README.md#webjet-doplnkové-funkcie) to the specified names.
+- Added function `DT.checkPerms(perms, url)` For [control of rights](developer/testing/README.md#revocation-of-the-right) REST service calls.
+- Added function `I.jstreeNavigate(pathArray)` For [successive clicks](developer/testing/README.md#webjet-additional-features) to the specified names.
 - Added tests for [Media](../src/test/webapp/tests/webpages/media-groups.js) a [media groups](../src/test/webapp/tests/webpages/media-groups.js).
 
 **Documentation**
 
-- Added documentation to the feature [WJ.dispatchEvent](developer/frameworks/webjetjs.md#ostatné-funkcie).
+- Added documentation to the feature [WJ.dispatchEvent](developer/frameworks/webjetjs.md#other-functions).
 - Added documentation to the data field [datatable](developer/datatables-editor/field-datatable.md).
-- Supplemented documentation for [setting options](developer/testing/datatable.md#možnosti-nastavenia) DATATables.
-- Added documentation for the option [withdrawal of rights](developer/testing/README.md#odobratie-práva) during testing.
+- Supplemented documentation for [setting options](developer/testing/datatable.md#setting-options) DATATables.
+- Added documentation for the option [withdrawal of rights](developer/testing/README.md#revocation-of-the-right) during testing.
 - Added documentation basic documentation for [use of Media](redactor/webpages/media.md) for the editor
 
 **Error correction**
@@ -777,7 +779,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Modal window - fixed click event settings for modal window called via `WJ.openIframeModal`. Since the modal window is used for different addresses of the embedded iframe it is necessary to dynamically set the function after the click. The original version did not change it after setting it and after closing the dialog and opening a new one, the original `click` Action. This e.g. caused the setting of the line from `elfinder` data field into multiple fields in the editor.
 - Menu - corrected display of menu and active item when calling `/admin/v9/` addresses without a slash at the end. URLs of menu items normalized with a slash at the end.
 
-![meme](_media/meme/2021-08.jpg)
+![meme](_media/meme/2021-08.jpg ":no-zoom")
 
 ## 2021.7
 
@@ -789,14 +791,13 @@ The whole translation system for JavaScript files is implemented as a library an
 - Added addition of the old value and description also for the newly added configuration variable (#52999).
 - Modified the display of the warning about displaying only changed configuration variables to a standard toast notification that hides after 10 seconds.
 
-<img class="changelog" src="_media/changelog/2021q1/2021-6-autocomplete.png" />
+![changelog](_media/changelog/2021q1/2021-6-autocomplete.png ":no-zoom")
 
-**Website**
+**Web pages**
 
 - We've improved the visibility of the Editor's Note field - when you load a page that doesn't have a blank editor's note, you'll get a standard notification with the text of the note. It is displayed for 15 seconds.
 
-<img class="changelog" src="_media/changelog/2021q1/2021-7-poznamka-redaktora.png" />
-
+![changelog](_media/changelog/2021q1/2021-7-poznamka-redaktora.png ":no-zoom")
 - We have functionalized the System and Basket cards and prepared the first text [manual for the editor](redactor/webpages/README.md) with a description of the behaviour of these cards.
 - The list of web pages is filtered by the selected domain (only folders and web pages from the currently selected domain will be displayed)
 - When you create a new folder, the domain is automatically set
@@ -809,11 +810,11 @@ The whole translation system for JavaScript files is implemented as a library an
 
 **General**
 
-- We have added WJ functions to [date and time formatting](developer/frameworks/webjetjs.md#formátovanie-dátumu-a-času) in JavaScript (#52999).
+- We have added WJ functions to [date and time formatting](developer/frameworks/webjetjs.md#date-and-time-formatting) in JavaScript (#52999).
 - We have added a system for maintaining the connection to the server and displaying an error message when the connection is broken and when a security token error occurs (#53119).
 - Notifications - when hovering over a notification with a progress bar, the progress bar will restart when the mouse leaves. (#53131)
 
-<img class="changelog" src="_media/changelog/2021q1/2021-7-refresher.png" />
+![changelog](_media/changelog/2021q1/2021-7-refresher.png ":no-zoom")
 
 **Tests**
 
@@ -828,11 +829,11 @@ The whole translation system for JavaScript files is implemented as a library an
 **Documentation**
 
 - Added documentation for [whisperer/autocomplete](developer/datatables-editor/autocomplete) text fields
-- Added documentation for CSS classes [disable-on/hide-on](developer/datatables-editor/README#možnosti-konfigurácie-columns-objektu) for the editor
-- Maintenance documentation completed [connections to the server](developer/frameworks/webjetjs.md#udržiavanie-spojenia-so-serverom-refresher) (#53119)
+- Added documentation for CSS classes [disable-on/hide-on](developer/datatables-editor/README#columns-object-configuration-options) for the editor
+- Maintenance documentation completed [connections to the server](developer/frameworks/webjetjs.md#maintaining-the-connection-to-the-refresher-server) (#53119)
 - Added formatting of command line samples (shell formatting used)
 - Supplemented documentation to [generation of screenshots](developer/testing/screenshots.md) for documentation
-- We have created a foundation [definitions of terms/terms used](developer/guidelines/terms.md)so that the same terminology is used everywhere
+- We have created a foundation [definitions of terms/terms used](developer/guidelines/terms.md) so that the same terminology is used everywhere
 - We have added a spell checker extension to VS Code and checked the spelling in the changelog.md file
 
 **Error correction**
@@ -843,13 +844,13 @@ The whole translation system for JavaScript files is implemented as a library an
 - Configuration - fixed error when adding and then editing a configuration variable (#53137)
 - Web pages - fixed functionality of switching domains in the administration header
 
-![meme](_media/meme/2021-07.jpg)
+![meme](_media/meme/2021-07.jpg ":no-zoom")
 
 ## 2021.5
 
 > Version 2021.5 continues to fix bugs. We have focused on automated tests in the website section, and have summarized the experience in a new Best Practices section in the testing documentation.
 
-**Website**
+**Web pages**
 
 - Carried over form editing changes from WebJET 8 - use Bootstrap CSS classes for forms and tables.
 - After deleting a directory, the contents of the root directory are loaded into the list of web pages (the list of pages of the deleted directory is not left there).
@@ -876,7 +877,7 @@ The whole translation system for JavaScript files is implemented as a library an
 - Datatables - error messages from previous save (#52639) are no longer displayed when opening the dialog.
 - Datatables - corrected display of the message Do you really want to delete this entry? in editing (after undelete) (#52639).
 
-![meme](_media/meme/2021-05.jpg)
+![meme](_media/meme/2021-05.jpg ":no-zoom")
 
 ## 2021.4
 
@@ -893,44 +894,46 @@ The whole translation system for JavaScript files is implemented as a library an
 - added translations of text when marking multiple lines
 - added the ability to search locally in HTML code (by default the datatable automatically removes HTML code when searching). The function is activated automatically on fields of type `DataTableColumnType.TEXTAREA`, if necessary, can be activated by setting `className` to the value of `html-input`.
 
-**Website**
+**Web pages**
 
 - updated PageBuilder blocks
 
 **Tests**
 
 - window size setting added to login sequence
-- Added [support for visual testing](developer/testing/README.md#vizuálne-testovanie) (image comparisons), the result is a visual highlighting of the faulty area in pink: ![](developer/testing/autotest-insert-script-settings-diff.png)
-- added function for easy setting of datatable filter selection field [DT.filterSelect(name, value)](developer/testing/README.md#webjet-doplnkové-funkcie)
+- Added [support for visual testing](developer/testing/README.md#visual-testing) (image comparisons), the result is a visual highlighting of the faulty area in pink: ![](developer/testing/autotest-insert-script-settings-diff.png)
+- added function for easy setting of datatable filter selection field [DT.filterSelect(name, value)](developer/testing/README.md#webjet-additional-features)
 
 **Documentation**
 
-- Tests - added documentation for the option [running a specific scenario](developer/testing/README.md#spustenie-testovania)
-- Tests - supplemented documentation for [support for visual testing](developer/testing/README.md#vizuálne-testovanie)
+- Tests - added documentation for the option [running a specific scenario](developer/testing/README.md#start-of-testing)
+- Tests - supplemented documentation for [support for visual testing](developer/testing/README.md#visual-testing)
 - Deployment - we have added a description of the activities that need to be performed before deployment [new versions](developer/install/deployment.md).
 
 **Error correction**
 
 - Web pages - setting configuration variables `pixabayEnabled` a `editorImageAutoTitle`
-- Web pages - inserting an image via Drag\&amp;Drop in the page editor
+- Web pages - inserting an image via Drag&Drop in the page editor
 - Web pages - delete directories containing the : character in the name
 - Datatables - corrected display of datatable settings (display of selection menu without cropping and position)
 
-![meme](_media/meme/2021-04.jpg)
+![meme](_media/meme/2021-04.jpg ":no-zoom")
 
 ## 2021.2
 
 > Version 2021.2 introduces a data field for nested datatables (e.g., a list of media in a web page) and a link selection to a file/image/other web page (e.g., a redirect field or a perex image). We have created the first version of the Definition of Done documentation.
 
 **Data field elfinder**
+
 #52609 - We have added a data field for [Datatables Editor - Elfinder](developer/datatables-editor/field-elfinder.md) - file selection. Integrates file link selection into the datatable editor using elfinder/files. The field appears as a text field, with a pencil icon at the end. Clicking on the icon opens the elfinder/file select dialog.
 
 **Data field datatable**
+
 #52351 - We have added a new data field for Datatable Editor - [nested datatable](developer/datatables-editor/field-datatable.md). Allows you to view another datatable within the datatable editor. For example, in the page editor, display a datatable of attached media.
 
 We refactored the code in index.js and moved the definition of the json and datatable data fields to separate files [field-type-json.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-json.js) a [field-type-datatable.js](../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js)
 
-**Website**
+**Web pages**
 
 - added a Navigation sheet similar to the one for the folder containing the order of arrangement and menu display settings (#52609)
 - added perex image selection and link redirection via new elfinder type field (#52609)
@@ -941,7 +944,7 @@ We refactored the code in index.js and moved the definition of the json and data
 - #52351 - option added `nestedModal` (boolean): if set to true, it is a datatable inserted as a field in the editor - [nested datatable](../datatables-editor/field-datatable.md), the nested table has an added CSS class `DTE_nested_modal`.
 - #52351 - modified import for the possibility of inserting nested properties (e.g. `editorField.groupDetails`)
 - #52351 - the generated JSON from the object annotation contains the attribute `array`, which defines that it is an object of type array. It is used when importing data to set the correct value.
-- modified CSS line styles setting from option `createdRow` at `rowCallback`that is also called after a data change (so that the CSS classes of the row are applied after a state change, e.g. after the web page display has been turned off the color has changed to red) (#52609)
+- modified CSS line styles setting from option `createdRow` at `rowCallback` that is also called after a data change (so that the CSS classes of the row are applied after a state change, e.g. after the web page display has been turned off the color has changed to red) (#52609)
 - due to the high number of letters in the web pages, the ratio between the label and the value of the `col-sm-5/col-sm-6` at `col-sm-4/col-sm-7` (#52609)
 
 **Documentation**
@@ -957,7 +960,7 @@ We refactored the code in index.js and moved the definition of the json and data
 - datatables editor - fixed CSS styles setting to `multi checkboxoch` (overthrow `custom-switch`). Originally the CSS was only set when the window was first opened, but when changing `options` values (e.g. when moving to another directory) are regenerated and displayed as standard checkboxes instead of sliders. The setting is now made each time the editor window is opened. (#52609)
 - datatables editor - fixed a bug where the backdrop of the dialog remained displayed after closing the window (occurred in the situation open editor window, cancel, open folder window, cancel, reopen editor window, cancel - backdrop remained open). Added call `$("div.modal-backdrop").hide();` when you close the editor window. (#52609)
 
-![meme](_media/meme/2021-02.jpg)
+![meme](_media/meme/2021-02.jpg ":no-zoom")
 
 ## 2021.1
 
@@ -990,16 +993,16 @@ Added TODO entries to the directory edit dialog (in addition to history and sche
 
 **Testing**
 
-- #52444 Updated CodeceptJS framework to version 3.0.4. The old version 2.x did not work correctly on macOS Big Sur (because of the old version `playwright`). The modification also required modification of the notation of all test scenarios. Fixed tests for jstree drag \&amp; drop.
+- #52444 Updated CodeceptJS framework to version 3.0.4. The old version 2.x did not work correctly on macOS Big Sur (because of the old version `playwright`). The modification also required modification of the notation of all test scenarios. Fixed tests for jstree drag & drop.
 
 **Documentation**
 
-- supplemented documentation for [using editorField](developer/datatables-editor/datatable-columns.md#vnorené-atribúty)
-- supplemented documentation for [line and icon styling](developer/datatables/README.md#štýlovanie-riadku-a-ikony)
-- documentation on the possibility of [triggering an error message](developer/datatables/restcontroller.md#validácia--povinné-polia) when editing an item (method `throwError`)
+- supplemented documentation for [using editorField](developer/datatables-editor/datatable-columns.md#nested-attributes)
+- supplemented documentation for [line and icon styling](developer/datatables/README.md#line-and-icon-styling)
+- documentation on the possibility of [triggering an error message](developer/datatables/restcontroller.md#validation---required-fields) when editing an item (method `throwError`)
 - supplemented documentation for
 
-![meme](_media/meme/2021-01.jpg)
+![meme](_media/meme/2021-01.jpg ":no-zoom")
 
 ## 2021.0
 
@@ -1009,23 +1012,23 @@ Added TODO entries to the directory edit dialog (in addition to history and sche
 
 First draft of the splash screen added. So far it includes a list of logged in administrators, ToDo, list of applications modified for WebJET 2021, summary of the changelog and server monitoring graphs. Implemented using Vue components.
 
-**Website**
+**Web pages**
 
 - #52396 - added "Reload data from server" icon for tree structure (restore directory tree structure)
 - #52396 - tree structure modified so that when you click on a directory it automatically opens (for better usability)
 - #52396 - tree structure shows only directories, web pages are displayed in datatable
 - #52396 - modified display of directory icons, added display of icons for web pages
-- #52396 - drag\&amp;drop is enabled only when "Enable dragging" option is active, the dragged object is styled
+- #52396 - drag&drop is enabled only when "Enable dragging" option is active, the dragged object is styled
 
 **Datatables**
 
-- [Documentation](developer/datatables/README.md#štýlovanie-riadku-a-ikony).
-- `title`
+- #52396 - Added ability to style rows and add additional icons, [Documentation](developer/datatables/README.md#line-and-icon-styling).
+- #52396 - Columns with empty `title` (or containing a hard space) will not be displayed in the table (usually this is some additional checkbox)
 
 **Documentation**
 
-- `docsify`
-- [](developer/jstree/README.md#spôsob-použitia-ikon) a [](developer/datatables/README.md#štýlovanie-riadku-a-ikony)
-- [npm](developer/frameworks/README.md#npm)
+- #52384 - documentation also launched on http://docs.webjetcms.sk/ domain and split into documentation for WebJET 8 and WebJET 2021, modified links, set `docsify`
+- #52396 - added documentation on the use of icons in [jstree](developer/jstree/README.md#how-to-use-icons) a [datatable](developer/datatables/README.md#line-and-icon-styling)
+- #52444 - supplemented application documentation [npm](developer/frameworks/README.md#npm)
 
-![meme](_media/meme/2021-00.jpg)
+![meme](_media/meme/2021-00.jpg ":no-zoom")

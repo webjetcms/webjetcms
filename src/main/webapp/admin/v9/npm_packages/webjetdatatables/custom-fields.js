@@ -93,7 +93,7 @@ export function update(EDITOR, action) {
     if (typeof json == "undefined") {
         //je to novy zaznam, ziskaj nastavenia z prveho zaznamu
         try {
-            json = EDITOR.TABLE.DATA.json[0];
+            json = EDITOR.TABLE.DATA.json.data[0];
             //zduplikuj
             json = JSON.parse(JSON.stringify(json));
             //console.log("json=", json);
@@ -120,6 +120,14 @@ export function update(EDITOR, action) {
     var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
     var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid" type="text">';
+    var colorTemplate = `
+        <div class="input-group">
+            <span class="input-group-text color-preview" style="background-color: {value}"></span>
+            <input id="DTE_Field_{customPrefix}{identifier}" value="{value}" {disabled} class="form-control" type="text"/>
+            <button class="btn btn-outline-secondary btn-clear" type="button"><i class="ti ti-circle-x"></i></button>
+        </div>
+        <color-picker id="DTE_Field_{customPrefix}{identifier}_picker" label-title="${WJ.translate("datatables.field.color.title.js")}" label-hue="${WJ.translate("datatables.field.color.hue.js")}" label-saturation="${WJ.translate("datatables.field.color.saturation.js")}" label-lightness="${WJ.translate("datatables.field.color.lightness.js")}" label-opacity="${WJ.translate("datatables.field.color.alpha.js")}" label-ok="${WJ.translate("datatables.field.color.ok.js")}"></color-picker>
+    `
 
     //JICH - add
     var hiddenTemplate = '<input value="{value}" id="DTE_Field_field{identifier}" class="form-control" type="hidden"><div id="fieldDisplay{identifier}"></div>';
@@ -262,6 +270,8 @@ export function update(EDITOR, action) {
                 }
             }
             template = hiddenTemplate.replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), value);
+        } else if (v.type == 'color') {
+            template = colorTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{maxlength}', 'g'), maxlength).replace(new RegExp('{warninglength}', 'g'), warninglength).replace(new RegExp('{warningMessage}', 'g'), warningMessage).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         }
         //JICH - add end
 
@@ -405,6 +415,42 @@ export function update(EDITOR, action) {
                 //there was problem that new page overwrite value, so we generate new uuid
                 if (inputField.val()=="") inputField.val(generateUUID());
             }, 1000);
+        } else if ("color"==v.type) {
+            var conf = {};
+            var htmlCode = inputBox;
+            conf._preview = htmlCode.find(".color-preview");
+            conf._input = htmlCode.find("input");
+            conf._clear = htmlCode.find(".btn-clear");
+            conf._picker = htmlCode.find("color-picker")[0];
+
+            function setColor(conf, val) {
+                //console.log("Update color, val=", val);
+                conf._input.val(val);
+                conf._preview.css("background-color", val);
+            }
+
+            setTimeout(function() {
+                conf._input.on("click", function() {
+                    conf._picker.setAttribute('open', true);
+                    conf._picker.setAttribute('hex', conf._input.val());
+                });
+                conf._input.parent().find(".color-preview").on("click", function() {
+                    conf._picker.setAttribute('open', true);
+                    conf._picker.setAttribute('hex', conf._input.val());
+                });
+                conf._input.on("change", function() {
+                    const val = conf._input.val();
+                    conf._preview.css("background-color", val);
+                });
+
+                conf._clear.on("click", function() {
+                    setColor(conf, "");
+                });
+
+                conf._picker.addEventListener('update-color', function(e) {
+                    setColor(conf, e.detail.hex);
+                });
+            }, 500);
         }
 
         //JICH - add

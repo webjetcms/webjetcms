@@ -1,6 +1,7 @@
 package sk.iway.iwcm.editor.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -180,6 +181,30 @@ public class GroupsService extends NotifyService {
         return system;
     }
 
+	/**
+	 * Sort list of groups into tree structure (deeper one last)
+	 * @param groups
+	 * @return
+	 */
+	public static List<GroupDetails> sortItIntoTree(List<GroupDetails> groups) {
+        Collections.sort(groups, (s1, s2) -> { return s1.getFullPath().split("/").length - s2.getFullPath().split("/").length; });
+
+        List<GroupDetails> sorted = new ArrayList<>();
+
+        for(GroupDetails group : groups) {
+            int parentIndex = -1;
+            for(int i = 0; i < sorted.size(); i++) {
+                if(group.getParentGroupId() == sorted.get(i).getGroupId()) {
+                    parentIndex = i;
+                    break;
+                }
+            }
+            if(parentIndex == -1) sorted.add(0, group);
+            else sorted.add(parentIndex + 1, group);
+        }
+
+        return sorted;
+    }
 
 	/**
 	 * Check if title is syncable between group and webpage

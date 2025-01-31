@@ -70,7 +70,7 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     I.click(".btn.more");
     Document.screenshotElement(".cookies-list", basePath+"/components/gdpr/screenshot-2.jpg");
     I.amOnPage("/apps/gdpr/admin/");
-    DT.filter("cookieName", "__");
+    DT.filterContains("cookieName", "__");
     Document.screenshot(basePath+"/components/gdpr/screenshot-3.jpg");
 
     screenshotWebAndApp(I, Document, 25209, "/components/menu", "header", tabLinkNone, null);

@@ -1,9 +1,9 @@
 Feature('webpages.perex');
 
-var doc_add_button = (locate("#datatableInit_wrapper > div.dt-header-row.clearfix.wp-header > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success"));
-
-Before(({ I, login }) => {
+Before(({ login, DT }) => {
     login('admin');
+
+    DT.addContext('perex', '#perexDataTable_wrapper');
 });
 
 Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
@@ -12,8 +12,31 @@ Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
         dataTable: 'perexDataTable',
         perms: 'editor_edit_perex',
         createSteps: function(I, options) {
+            I.clickCss("#pills-dt-perexDataTable-fields-tab");
+
+            I.click("input#DTE_Field_fieldA");
+            I.fillField("#DTE_Field_fieldA", "auto");
+            I.waitForVisible( locate(".ui-menu-item-wrapper").withText("Autocomplete Iná možnosť") );
+            I.click( locate(".ui-menu-item-wrapper").withText("Autocomplete Iná možnosť") );
+            I.checkOption("#DTE_Field_fieldB");
+            I.fillField("#DTE_Field_fieldC", "test fieldC");
+            I.fillField("#DTE_Field_fieldD", "test fieldD");
+            I.fillField("#DTE_Field_fieldE", "test fieldE");
+            I.fillField("#DTE_Field_fieldF", "test fieldF");
+
+            I.clickCss("#pills-dt-perexDataTable-basic-tab");
         },
         editSteps: function(I, options) {
+            I.clickCss("#pills-dt-perexDataTable-fields-tab");
+
+            I.seeInField("#DTE_Field_fieldA", "Autocomplete Iná možnosť");
+            I.seeCheckboxIsChecked("#DTE_Field_fieldB");
+            I.seeInField("#DTE_Field_fieldC", "test fieldC");
+            I.seeInField("#DTE_Field_fieldD", "test fieldD");
+            I.seeInField("#DTE_Field_fieldE", "test fieldE");
+            I.seeInField("#DTE_Field_fieldF", "test fieldF");
+
+            I.clickCss("#pills-dt-perexDataTable-basic-tab");
         },
         editSearchSteps: function(I, options) {
         },
@@ -27,7 +50,7 @@ Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
 Scenario('verify all domains selection for available groups', ({I, DT, DTE}) => {
     I.amOnPage("/admin/v9/webpages/perex/");
     I.see("demotest.webjetcms.sk:/Newsletter", "#perexDataTable td.dt-style-json");
-    DT.filter("perexGroupName", "PerexWithGroup_");
+    DT.filterContains("perexGroupName", "PerexWithGroup_");
     I.see("demotest.webjetcms.sk:/Newsletter", "#perexDataTable td.dt-style-json");
     I.dontSee("/Test stavov/Zaheslovaný", "#perexDataTable td.dt-style-json");
     I.click("PerexWithGroup_B");
@@ -160,7 +183,7 @@ async function checkElements(I, DTE, DT, shouldSeeCheckbox) {
     I.waitForText("McGregorov obchodný úder", 10, "#datatableInit td.dt-row-edit");
     I.see("Trhy sú naďalej vydesené", "#datatableInit td.dt-row-edit");
 
-    DT.filter('perexGroups','odni'); //PODNIKANIE
+    DT.filterContains('perexGroups','odni'); //PODNIKANIE
 
     I.waitForText("McGregorov obchodný úder", 10, "#datatableInit td.dt-row-edit");
     I.dontSee("Trhy sú naďalej vydesené", "#datatableInit td.dt-row-edit");
@@ -190,6 +213,125 @@ async function checkElements(I, DTE, DT, shouldSeeCheckbox) {
     DTE.cancel();
 }
 
+Scenario('Delete language mutation perex', async ({ I, DT, DTE }) => {
+    I.relogin('admin', true, true, 'sk');
+    await deletePerex(I, DT, DTE, 'Skupina jazyková mutácia');
+});
+
+Scenario('Testing language mutation perex', ({ I, DT, DTE }) => {
+    const perexGroupName = 'Skupina jazyková mutácia';
+    const perexGroupNameSk = 'Jazyková mutácia';
+    const perexGroupNameEn = 'Language mutation';
+
+    I.amOnPage('/admin/v9/webpages/perex');
+    I.click(DT.btn.perex_add_button);
+    I.waitForVisible('.DTE.modal-content');
+    I.clickCss('#perexDataTable_modal button.btn.btn-primary');
+    I.see('Chyba: niektoré polia neobsahujú správne hodnoty.');
+    DTE.fillField('perexGroupName', perexGroupName);
+    I.clickCss('#pills-dt-perexDataTable-translates-tab');
+    DTE.fillField('perexGroupNameSk', perexGroupNameSk);
+    DTE.fillField('perexGroupNameEn', perexGroupNameEn);
+    I.clickCss('#perexDataTable_modal button.btn.btn-primary');
+    DTE.waitForLoader();
+
+    checkPerex(I, DT, perexGroupNameSk, true, 'Nenašli sa žiadne vyhovujúce záznamy');
+
+    //
+    I.say("Verify on admin it's still main title not translated");
+    I.relogin('admin', true, true, 'en');
+    I.amOnPage('/admin/v9/webpages/perex/');
+    checkPerex(I, DT, perexGroupName, true, 'Nenašli sa žiadne vyhovujúce záznamy');
+
+    I.relogin('admin', true, true, 'cs');
+    I.amOnPage('/admin/v9/webpages/perex/');
+    checkPerex(I, DT, perexGroupName, true, 'Nenašli sa žiadne vyhovujúce záznamy');
+});
+
+Scenario('Testing language mutation perex-logout', ({ I }) => {
+    //logout because of the language mutation in previous test
+    I.logout();
+});
+
+const perexName = 'Import perex';
+Scenario('Before - Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
+    I.relogin('admin', true, true, 'sk');
+    await deletePerex(I, DT, DTE, perexName);
+});
+
+Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
+    const webPageName = 'Test import perex';
+
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
+    I.jstreeNavigate(['Test stavov', webPageName]);
+    I.forceClick(DT.btn.import_export_button)
+
+    I.switchToNextTab();
+    I.waitForVisible('.wjDialogHeaderTable');
+    I.clickCss('#type3');
+    I.clickCss('#btnOk');
+    I.attachFile('input[name="archive"]', 'tests/webpages/demotest.webjetcms.sk-test_import_perex.zip');
+
+    //SIVAN - without resize window, the checkOption is not working
+    I.resizeWindow(1920, 1080);
+
+    I.wait(1);
+    I.clickCss('#btnOk');
+
+    I.waitForText("Vybrané priečinky", 10);
+
+    //I.checkOption crashed the window...
+    I.forceClick(`//tr[td/strong[contains(text(), "/Test stavov/${webPageName}")]]//input[@type="checkbox"]`);
+    I.forceClick(`//tr[td[contains(text(), "${webPageName}")]]//input[@type="checkbox"]`);
+
+    I.clickCss('#btnOk');
+    I.waitForVisible('#btnCancel', 60);
+    I.clickCss('#btnCancel');
+    I.switchToNextTab()
+
+    I.say("Verify that perex was created");
+    I.amOnPage('/admin/v9/webpages/perex');
+    checkPerex(I, DT, perexName, true, 'Nenašli sa žiadne vyhovujúce záznamy');
+
+    I.say("Verify that perex is in web page and is checked");
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
+    I.jstreeNavigate(['Test stavov', webPageName]);
+
+    I.clickCss("button.buttons-select-all");
+    I.click(DT.btn.edit_button);
+    DTE.waitForEditor();
+    I.clickCss("#pills-dt-datatableInit-perex-tab");
+
+    I.seeElement( locate(".DTE_Field_Name_perexGroups").find( locate("label").withText("Import perex") ) );
+    I.seeCheckboxIsChecked(locate(".DTE_Field_Name_perexGroups div.form-switch").withText("Import perex").find("input"));
+});
+
+/**
+ * Deletes a specified perex entry from the perex administration page if it exists.
+ *
+ * @param {Object} I
+ * @param {Object} DT
+ * @param {Object} DTE
+ * @param {string} perexName - The name of the perex to be deleted.
+ */
+async function deletePerex(I, DT, DTE, perexName) {
+    I.amOnPage('/admin/v9/webpages/perex');
+
+    DT.filterEquals('perexGroupName', perexName);
+    const isPerexDeleted = await I.grabNumberOfVisibleElements('td.dt-empty');
+    I.say("isPerexDeleted: " + isPerexDeleted);
+
+    if (isPerexDeleted === 0) {
+        I.clickCss('button.buttons-select-all');
+        I.click(DT.btn.perex_delete_button);
+        I.waitForVisible('.DTE.modal-content.DTE_Action_Remove');
+        I.see(perexName, '.DTE.modal-content.DTE_Action_Remove');
+        I.click('Zmazať', 'div.DTE_Action_Remove');
+        DTE.waitForLoader();
+    }
+    I.see('Nenašli sa žiadne vyhovujúce záznamy');
+}
+
 /**
  * Checks the visibility of a specified perex group name in the filtered results.
  *
@@ -199,14 +341,41 @@ async function checkElements(I, DTE, DT, shouldSeeCheckbox) {
  * @param {boolean} [shouldSee=true] - A flag indicating whether the specified name should
  *        be visible (true) or not (false). Defaults to true.
  */
-function checkPerex(I, DT,  name, shouldSee = true) {
-    DT.filter("perexGroupName", name);
+function checkPerex(I, DT, name, shouldSee = true, message = 'Nenašli sa žiadne vyhovujúce záznamy') {
+    DT.filterContains("perexGroupName", name);
 
     if(shouldSee) {
         I.see(name);
-        I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
+        I.dontSee(message);
     } else {
         I.dontSee(name);
-        I.see("Nenašli sa žiadne vyhovujúce záznamy");
+        I.see(message);
     }
 }
+
+Scenario('Check language variants in news', ({ I, DTE }) => {
+    I.amOnPage("/zo-sveta-financii/");
+    I.see("PODNIKANIE", ".portfolio-item .tag");
+    I.see("INVESTÍCIA", ".portfolio-item .tag");
+
+    I.say("Verify custom fields - F = background color");
+    I.seeCssPropertiesOnElements(".portfolio-item span.tag.c2", {
+        "background-color": "#01A3E0"
+    });
+    I.seeInSource(    '<span class="tag c2" style="background-color: #01A3E0">podnikanie</span>');
+    I.dontSeeInSource('<span class="tag c1" style="background-color: $perexGroup.fieldF">')
+
+    //
+    I.say("CZ version")
+    I.amOnPage("/zo-sveta-financii/?language=cz");
+    I.dontSee("PODNIKANIE", ".portfolio-item .tag");
+    I.dontSee("INVESTÍCIA", ".portfolio-item .tag");
+    I.see("PODNIKÁNÍ", ".portfolio-item .tag");
+    I.see("INVESTICE", ".portfolio-item .tag");
+
+    //
+    I.say("HU version not set, show default")
+    I.amOnPage("/zo-sveta-financii/?language=hu");
+    I.see("PODNIKANIE", ".portfolio-item .tag");
+    I.see("INVESTÍCIA", ".portfolio-item .tag");
+});

@@ -92,10 +92,10 @@ module.exports = {
                         options: {
                             presets: ['@babel/preset-env'],
                             plugins: [
-                                ['@babel/plugin-proposal-class-properties', { loose: true }],
-                                ["@babel/plugin-proposal-private-property-in-object", { "loose": true }],
-                                ["@babel/plugin-proposal-private-methods", { "loose": true }],
-                                '@babel/plugin-syntax-dynamic-import'
+                                //['@babel/plugin-proposal-class-properties', { loose: true }], - https://www.npmjs.com/package/@babel/plugin-proposal-class-properties
+                                //["@babel/plugin-proposal-private-property-in-object", { "loose": true }], - https://www.npmjs.com/package/@babel/plugin-proposal-private-property-in-object
+                                //["@babel/plugin-proposal-private-methods", { "loose": true }], - https://www.npmjs.com/package/@babel/plugin-proposal-private-methods
+                                //'@babel/plugin-syntax-dynamic-import'
                             ]
                         }
                     }
@@ -211,6 +211,8 @@ module.exports = {
         new HtmlWebpackPlugin(generateHtmlPlugins("/files/folder_prop")),
         new HtmlWebpackPlugin(generateHtmlPlugins("/files/file_prop")),
 
+        new HtmlWebpackPlugin(generateHtmlPlugins("/search/index")),
+
         //new WebjetModifyPlugin(['imageEditor']),
 
         new CopyPlugin({
@@ -219,7 +221,8 @@ module.exports = {
                 { from: 'src/images/logo-dms.png', to: 'images/' },
                 { from: 'src/images/logo-lms.png', to: 'images/' },
                 { from: 'src/images/logo-msg.png', to: 'images/' },
-                { from: 'src/images/logo-net.png', to: 'images/' }
+                { from: 'src/images/logo-net.png', to: 'images/' },
+                { from: 'src/images/features-contact.png', to: 'images/' }
             ]
         }),
         new VueLoaderPlugin(),

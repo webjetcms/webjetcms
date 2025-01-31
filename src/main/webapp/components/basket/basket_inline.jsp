@@ -70,9 +70,9 @@
 
   <script type="text/javascript">
   <!--
-    document.write('<style type="text/css" media="all">@import url("/components/basket/basket.css");</style>');
-
     ;(function($) {
+
+      $('head').append('<style type="text/css" media="all">@import url("/components/basket/css/basket.css");</style>');
 
       $.basket = function(options) {
 
@@ -145,7 +145,7 @@
         });
 
            // remove item form basket
-        $("div.basketBox .deleteItem").on("click", function(){
+        $("div.basketBox").on("click", ".deleteItem", function(){
           var options = {
             act: "set",
             basketItemId: getItemId($(this)),
@@ -157,14 +157,14 @@
         });
 
            // add item to basket
-           $(".priceSpan a.addToBasket, .priceDiv a.addToBasket").on("click", function(){
-               $("div.basketSmallBox").show();
-          var options = {
-            act: "add",
-            basketItemId: getClassValue($(this).attr("class"), "itemId")
-          }
+           $(".priceSpan a.addToBasket, .priceDiv a.addToBasket, .col-addToBasket a.addToBasket").on("click", function(){
+              $("div.basketSmallBox").show();
+              var options = {
+                act: "add",
+                basketItemId: getClassValue($(this).attr("class"), "itemId")
+              }
 
-          sendData(options);
+              sendData(options);
            });
 
            $("a.newWindow").on("click", function(){
@@ -172,7 +172,7 @@
                return false;
            })
 
-           $("a.showBasket").on("click", function(){
+           $("a.showBasket, .showBasketBlock").on("click", function(){
               $("div.basketBox").stop().slideDown();
            });
 

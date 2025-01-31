@@ -1,28 +1,21 @@
 package sk.iway.iwcm.rest;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.HandlerMapping;
 
-import sk.iway.iwcm.Adminlog;
-import sk.iway.iwcm.DBPool;
-import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.i18n.PropDB;
-import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.users.UsersDB;
 
 /**
  *  PropertiesController.java
@@ -63,10 +56,7 @@ public class PropertiesRestController extends sk.iway.iwcm.rest.RestController
 	@RequestMapping(path={"/rest/properties/{lng}/{prefix:.+}"}, method=RequestMethod.GET)
 	public Map<String, String> getKeysWithPrefix(HttpServletRequest request, @PathVariable String lng, @PathVariable String prefix)
 	{
-		Identity user = UsersDB.getCurrentUser(request);
-		if(user!=null && user.isAdmin() && user.isEnabledItem("menuTemplatesGroup")) {
-			//potrebujeme to pre admin cast, konkretne skupiny sablon, pristup povol
-		} else if (!isIpAddressAllowed(request)) {
+		if (!isIpAddressAllowed(request)) {
 			return null;
 		}
 
@@ -76,8 +66,28 @@ public class PropertiesRestController extends sk.iway.iwcm.rest.RestController
 	public Map<String, String> getKeysWithPrefixWithoutIpValidation(HttpServletRequest request, String lng, String prefix)
 	{
 		Prop prop = Prop.getInstance(lng);
-		Map<String, String> result = prop.getTextStartingWith(prefix);
-		return result;
+
+		if(isKeyAllowed(prefix) == false) return new HashMap<>();
+
+		return prop.getTextStartingWith(prefix);
+	}
+
+	/**
+	 * Verify if key prefix is allowed
+	 * @param key
+	 * @return
+	 */
+	private boolean isKeyAllowed(String key) {
+		String propertiesRestControllerAllowedKeysPrefixes = Constants.getString("propertiesRestControllerAllowedKeysPrefixes");
+		if (Tools.isEmpty(propertiesRestControllerAllowedKeysPrefixes)) return false;
+		if ("*".equals(propertiesRestControllerAllowedKeysPrefixes)) return true;
+
+		String[] allowedPrefixes = Constants.getArray("propertiesRestControllerAllowedKeysPrefixes");
+		for (String prefix : allowedPrefixes) {
+			if (key.startsWith(prefix)) return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -108,7 +118,7 @@ public class PropertiesRestController extends sk.iway.iwcm.rest.RestController
 				@PathVariable String key,
 				@PathVariable String lng)
 	{
-		if(!isIpAddressAllowed(request))
+		if(isIpAddressAllowed(request) == false || isKeyAllowed(key) == false)
 			return null;
 
 		Prop prop = Prop.getInstance(lng);
@@ -133,61 +143,6 @@ public class PropertiesRestController extends sk.iway.iwcm.rest.RestController
 		}
 
 		Entry<String, String> result = new SimpleEntry<String, String>(key, value);
-		return result;
-	}
-
-
-	/**
-	 *
-	 * Create/Update text property
-	 *
-	 * @param lng
-	 * @param key
-	 * @param value
-	 * @return
-	 */
-	@RequestMapping(path={"/admin/rest/property/set"}, method=RequestMethod.POST)
-	@PreAuthorize("@WebjetSecurityService.hasPermission('edit_text')")
-	public Entry<String, String> setText(HttpServletRequest request, String lng, String key, String value){
-		Connection db_conn = null;
-		PreparedStatement ps = null;
-		Identity user = UsersDB.getCurrentUser(request);
-		try
-		{
-			if (PropDB.canEdit(user, key))
-			{
-
-				db_conn = DBPool.getConnection();
-				ps = db_conn.prepareStatement("DELETE FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE prop_key = ? AND lng = ?");
-				ps.setString(1,key);
-				ps.setString(2,lng);
-				ps.execute();
-				ps.close();
-
-				ps = db_conn.prepareStatement("INSERT INTO " + ConfDB.PROPERTIES_TABLE_NAME + " (prop_key, lng, prop_value) VALUES(?, ?, ?)");
-				ps.setString(1,key);
-				ps.setString(2,lng);
-				ps.setString(3, PropDB.escapeUnsafeValue(user, lng, key, value));
-				ps.execute();
-				ps.close();
-				db_conn.close();
-
-				Prop.getInstance(true);
-
-				Entry<String, String> result = new SimpleEntry<>(key, value);
-
-				StringBuilder log = new StringBuilder().append("Zmeneny internacionalizovany text: ").append(lng).append(',').append(key).append(',').append(value);
-				Adminlog.add(Adminlog.TYPE_PROP_UPDATE, log.toString(), -1, -1);
-
-				return result;
-			}
-		}
-		catch (Exception ex)
-		{
-			sk.iway.iwcm.Logger.error(ex);
-		}
-
-		Entry<String, String> result = new SimpleEntry<>("message", "vyskytol sa problem");
 		return result;
 	}
 }

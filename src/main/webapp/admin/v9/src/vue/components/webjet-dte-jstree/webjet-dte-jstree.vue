@@ -180,8 +180,15 @@
                 }
             },
             _validateGroupPageClick(that, data) {
-                //If group is marked with this icon (no permitted group) after click on it, nothing happens - sekjurity
-                if(data.node.icon !== undefined && "ti ti-folder-x" == data.node.icon) {
+                //If group is marked with this icon (no permitted group) after click on it open node and do not select it
+                if(data.node.icon !== undefined && data.node.icon.indexOf("ti ti-folder-x") != -1) {
+                    data.instance.open_node(data.node.id);
+                    return false;
+                }
+
+                if(that.click.indexOf("alldomains")!=-1 && data.node.icon !== undefined && data.node.icon.indexOf("ti ti-home") != -1) {
+                    //it's not possible to select domain root because it's not a real group in alldomains select
+                    data.instance.open_node(data.node.id);
                     return false;
                 }
 

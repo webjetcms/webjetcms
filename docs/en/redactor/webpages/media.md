@@ -45,4 +45,4 @@ A media group can have a restriction set to show the group only in a specific di
 
 All Media records are filtered by the currently selected domain.
 
-In the case of records from `Správa všetkých médií` the table name parameter is set to the value **documents** automatically in the background. The url parameter ensures that the datatable is called from this section `isCalledFromTable=true`.
+In the case of records from **Manage all media** the table name parameter is set to the value **documents** automatically in the background. To identify whether the datatable is called from this section, the url parameter `isCalledFromTable=true`.

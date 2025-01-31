@@ -170,6 +170,7 @@ Minimálna konfigurácia:
 - `customFieldsUpdateColumnsPreserveVisibility {boolean}` - nastavením na hodnotu `true` sa pre používateľa zachová nastavenie zobrazenia stĺpcov pre režim `customFieldsUpdateColumns`. Je možné použiť len v prípade, kedy pre datatabuľku nie sú menené stĺpce počas zobrazenia. Napr. v sekcii Prekladové kľúče sa dáta nemenia, je možné nastaviť na `true`, ale v sekcii Číselníky sa menia aj stĺpce pri zmene číselníka, tam táto možnosť nie je použiteľná.
 - ```autoHeight {boolean}``` - predvolene tabuľka počíta svoju výšku aby maximálne využila priestor okna. Nastavením na hodnotu ```false``` bude mať tabuľka výšku podľa obsahu (počtu riadkov).
 - ```editorLocking {boolean}``` - predvolene tabuľka volá službu notifikácie pri editácii rovnakého záznamu viacerými používateľmi, ak je toto neželané nastavte na hodnotu `false`.
+- ```updateEditorAfterSave {boolean}``` - nastavením na `true` sa aktualizuje obsah editora po uložení dát (ak editor zostáva otvorený).
 
 ```javascript
 let columns = [
@@ -714,7 +715,7 @@ Viac informácií je v dokumentácii pre [vývojára](export-import.md) alebo pr
 //zoznam selectnutych riadkov
 galleryTable.rows( { selected: true }).data();
 //zmena URL adresy
-galleryTable.ajax.url("/admin/rest/nova-url");
+galleryTable.setAjaxUrl("/admin/rest/nova-url");
 //refresh dat
 galleryTable.ajax.reload();
 //nastavenie filtra a reload dat

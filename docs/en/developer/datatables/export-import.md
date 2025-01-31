@@ -13,7 +13,8 @@ After implementing import and export in your datatable, don't forget to use [aut
 - Server data processing takes place outside the datatable (for performance reasons), it is re-generated `datetime` columns and `radio buttony` (supported are `date-time, date, *-select, *-boolean`).
 - When exporting, a list of columns is prepared in the first row, **the import is consequently not sensitive to the order of the columns**.
 - For **selection fields** (select/digits) with **export text value** and reconstructs back to the ID on import. This allows to have **different IDs of bound records** between environments (e.g. template ID for a web page), if the name matches, the record is correctly paired. Consequently, there is also human readable text in the export instead of the ID value.
-The implementation is in the file `export-import.js` in the function of `bindExportButton(TABLE, DATA) `which is initialized directly in the `index.js` when initializing the datatable. The HTML code of the export dialog is in the file `datatables-data-export.pug` which is through `include` inserted into `layout.pug`.
+
+The implementation is in the file `export-import.js` in the function of `bindExportButton(TABLE, DATA) ` which is initialized directly in the `index.js` when initializing the datatable. The HTML code of the export dialog is in the file `datatables-data-export.pug` which is through `include` inserted into `layout.pug`.
 
 ### Data preparation before export
 
@@ -23,7 +24,7 @@ When using `serverSide=false` it is not possible to use all export options on th
 
 ### Performing an export
 
-The export options are set in the dialog box. After clicking the export button, the current data is retrieved from the server by calling the function `getDataToExport(serverSide, TABLE, pageVal, searchVal, orderVal)`that are processed after the call `.then(response => {`. For each row of the obtained JSON object `formatedData = content.map(c => {` row array is generated for data export by iterating over the editor fields `DATA.fields.forEach((dc) => {`.
+The export options are set in the dialog box. After clicking the export button, the current data is retrieved from the server by calling the function `getDataToExport(serverSide, TABLE, pageVal, searchVal, orderVal)` that are processed after the call `.then(response => {`. For each row of the obtained JSON object `formatedData = content.map(c => {` row array is generated for data export by iterating over the editor fields `DATA.fields.forEach((dc) => {`.
 
 Data fields of type `json` are treated specially. For types `dt-tree-page, dt-tree-group, dt-tree-dir` the value of z is generated in the output `v.fullPath` (or `v.virtualPath` For `dt-tree-dir`). The result is that the export will not contain the whole JSON object but the value of type `["/Portal/Novinky", "/English/News"]`.
 
@@ -37,21 +38,21 @@ If you need to implement a special export type, just add the following element i
 
 ```html
 <div class="hidden" id="datatableExportModalCustomOptions">
-	<div class="form-check">
-		<input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-extend-custom" value="custom" data-hide="#datatableExportModal .file-name,#pills-export-advanced-tab" />
-		<label class="form-check-label" for="dt-settings-extend-custom">[[\#{admin.conf_editor.custom-xml-export}]]</label>
-	</div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-extend-custom" value="custom" data-hide="#datatableExportModal .file-name,#pills-export-advanced-tab">
+        <label class="form-check-label" for="dt-settings-extend-custom">[[\#{admin.conf_editor.custom-xml-export}]]</label>
+    </div>
 </div>
 ```
 
 in the attribute `data-hide` it is possible to specify a list of elements that are automatically hidden after setting the above option.
 
-Need to implement JS function `window.exportDialogCustomCallback(type, TABLE)`that is made under this option:
+Need to implement JS function `window.exportDialogCustomCallback(type, TABLE)` that is made under this option:
 
 ```javascript
 function exportDialogCustomCallback(type, TABLE) {
-	WJ.openPopupDialog("/admin/conf_export.jsp");
-	return true;
+    WJ.openPopupDialog("/admin/conf_export.jsp");
+    return true;
 }
 ```
 
@@ -59,8 +60,9 @@ function exportDialogCustomCallback(type, TABLE) {
 
 - Enables **import data as new** (to be added to the database) or **match existing data according to the selected column** (e.g. name, URL, etc.). When matching, it first looks up the record in the database and then updates it. If it does not exist, it creates a new record.
 - **Imported from xlsx format**.
-- Import is carried out **successively in batches of 25 records**so as not to overload the server.
-The implementation is in the file `export-import.js` in the function of `bindImportButton(TABLE, DATA) `which is initialized directly in the `index.js` when initializing the datatable. The HTML code of the import dialog is in the file `datatables-data-import.pug` which is through `include` inserted into `layout.pug`.
+- Import is carried out **successively in batches of 25 records** so as not to overload the server.
+
+The implementation is in the file `export-import.js` in the function of `bindImportButton(TABLE, DATA) ` which is initialized directly in the `index.js` when initializing the datatable. The HTML code of the import dialog is in the file `datatables-data-import.pug` which is through `include` inserted into `layout.pug`.
 
 The import dialog box displays a list of columns by which data can be imported. This list is implemented directly in `index.js` when you click the button to display the import dialog. Options are generated with the list `DATA.fields.forEach((col, index) => {`. Skipped are attributes of type `hidden` or attributes with annotation `data-dt-import-hidden`.
 
@@ -72,6 +74,7 @@ Processing data from Excel in the object `excelData` takes place in `$( document
 - A JSON object is generated, using the value from the table header after the | character as the attribute name.
 - The structure of the resulting JSON object is the same as the standard retrieval/deposition of data in a datatable.
 - It converts dates, text values of code data to ID value and for fields of JSON types, the conversion from string to real JSON object is performed.
+
 Importing is done by calling the same REST service as when using the standard record editor. However, multiple records are sent at the same time, up to a maximum of `chunks`. For a large number of entries, the REST service is called sequentially. `/editor`, with a maximum of `chunks` records (default 25, defined in conf. variable `chunksQuantity`). A progress bar is also displayed, similar to the one in the gallery when uploading a file.
 
 ### Update by column
@@ -82,9 +85,9 @@ After finding matching records in the database, you need to modify the entity ID
 
 In simple terms, all the code searches for an existing record in the database and sets the imported entity `id` value to the value of the found record.
 
-> WARNING: during the implementation we have identified a problem that for classes annotated via Lombook it is not possible to use `BeanUtils.setProperty` nor `BeanUtils.copyProperties`. It is necessary to use `BeanWrapperImpl` a `NullAwareBeanUtils.copyProperties`.
+> **Warning:** during the implementation we identified the problem that for classes annotated via Lombook it is not possible to use `BeanUtils.setProperty` nor `BeanUtils.copyProperties`. It is necessary to use `BeanWrapperImpl` a `NullAwareBeanUtils.copyProperties`.
 
-> NOTE: it is technically possible to import only some columns, so do not assume that the import will always contain all the data. Otherwise you will get errors like `NullPointerException`. Especially in `editorFields.toEntity` need to control `null` values on attributes so that their transmission does not crash.
+> **Warning:** it is technically possible to import only some of the columns, so do not assume that the import will always contain all the data. Otherwise you will get errors like `NullPointerException`. Especially in `editorFields.toEntity` need to control `null` values on attributes so that their transmission does not crash.
 
 ### Supported annotations
 
@@ -100,27 +103,27 @@ If you need to implement a special import type, just add the following element i
 
 ```html
 <div class="hidden" id="datatableImportModalCustomOptions">
-	<div class="form-check">
-		<input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-import-extend-custom" value="custom" data-hide="#datatableImportModal .file-name,#import-settings" />
-		<label class="form-check-label" for="dt-settings-import-extend-custom">[[\#{admin.conf_editor.custom-xml-export}]]</label>
-	</div>
+    <div class="form-check">
+        <input class="form-check-input" type="radio" name="dt-settings-extend" id="dt-settings-import-extend-custom" value="custom" data-hide="#datatableImportModal .file-name,#import-settings">
+        <label class="form-check-label" for="dt-settings-import-extend-custom">[[\#{admin.conf_editor.custom-xml-export}]]</label>
+    </div>
 </div>
 ```
 
 in the attribute `data-hide` it is possible to specify a list of elements that are automatically hidden after setting the above option.
 
-Need to implement JS function `window.importDialogCustomCallback(type, TABLE)`that is made under this option:
+Need to implement JS function `window.importDialogCustomCallback(type, TABLE)` that is made under this option:
 
 ```javascript
 function importDialogCustomCallback(type, TABLE) {
-	WJ.openPopupDialog("/admin/conf_import.jsp");
-	return true;
+    WJ.openPopupDialog("/admin/conf_import.jsp");
+    return true;
 }
 ```
 
 ## Notes on implementation
 
-Numeric values (select) are exported as a text value. In the file [datatables-wjfunctions.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js) are functions `getOptionsTableExport` a `getOptionsTableImport`which will prepare a table with the key `fieldName-value` (export) and `fieldName-label` (import) for easy translation between value and label.
+Numeric values (select) are exported as a text value. In the file [datatables-wjfunctions.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js) are functions `getOptionsTableExport` a `getOptionsTableImport` which will prepare a table with the key `fieldName-value` (export) and `fieldName-label` (import) for easy translation between value and label.
 
 The most complicated part is reading data from the server during server paging. When an export request is made, a REST service call must be made. This is done in the function `getDataToExport` where it is used and modified `DATA.urlLatestParams` (parameters such as size, page, etc are replaced). The data is retrieved by a standard ajax call outside the datatable API (we don't want the datatable to load such a large amount of data - fear of crashing it). The trick with using such data is in the export button in the option `customizeData: function(d)`, where we replace the data in the datatable with the newly obtained data.
 
@@ -131,5 +134,6 @@ Conversion from xlsx to JSON format is implemented in `export-import.js`. The li
 The modal window for import/export is global, if there are multiple datatables on the page it is necessary to specify in which one the import/export is happening. There are variables:
 - `window.datatableExportModal.tableId` - Table ID for export (selector)
 - `window.datatableImportModal.tableId` - Table ID for import (selector)
-- `window.datatableImportModal.TABLE`
-Class `DatatableRestControllerV2``isExporting()``isImporting()``validateEditor`.
+- `window.datatableImportModal.TABLE` - table instance for import
+
+Class `DatatableRestControllerV2` contains methods `isExporting()` for export detection and `isImporting()` imports. These can be used in your REST controller implementation, e.g. to validate data in the method `validateEditor`.

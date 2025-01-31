@@ -8,7 +8,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
     I.amOnPage("/apps/banner/admin/");
 
     //delete FAILED autotest-group banners
-    DT.filter("bannerGroup", "autotest-group");
+    DT.filterContains("bannerGroup", "autotest-group");
     DT.filterSelect("editorFields.viewable", "Áno");
 
     I.dontSee("Exspirovaný dátum", "#bannerDataTable");
@@ -103,7 +103,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
             //
             I.say("execute job to write statistics");
             I.amOnPage("/admin/v9/settings/cronjob/");
-            DT.filter("task", "sk.iway.iwcm.stat.StatWriteBuffer");
+            DT.filterContains("task", "sk.iway.iwcm.stat.StatWriteBuffer");
             I.clickCss("td.dt-select-td");
             I.clickCss("button.button-execute-task");
             I.waitForElement("#toast-container-webjet");
@@ -117,7 +117,7 @@ Scenario('banner zakladne testy @baseTest', async ({I, DataTables, DT, DTE}) => 
             //
             I.say("reload page");
             I.amOnPage("/apps/banner/admin/");
-            DT.filter("name", options.testingData[0]);
+            DT.filterContains("name", options.testingData[0]);
 
             I.see("1", "#bannerDataTable tr td:nth-child(7)");
             I.see("1", "#bannerDataTable tr td:nth-child(8)");

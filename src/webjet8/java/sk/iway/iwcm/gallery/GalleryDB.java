@@ -63,12 +63,14 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.LabelValueDetails;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.GalleryDBTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
+import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -1099,6 +1101,9 @@ public class GalleryDB
 			ps.close();
 			if (iID <= 0)
 			{
+				//update pkey generator
+				PkeyGenerator.getNextValue("gallery");
+
 				// ziskaj ID z databazy
 				ps = db_conn.prepareStatement("SELECT image_id FROM gallery WHERE image_path = ? AND image_name = ?"+CloudToolsForCore.getDomainIdSqlWhere(true));
 				ps.setString(1, dir);
@@ -1203,8 +1208,12 @@ public class GalleryDB
 
 
 		int priority = getNewPriority(dir);
+		String imageSource = GalleryService.getPixabayImageUrl(name, true);
+		query.execute("INSERT INTO gallery (image_path, image_name, image_source, upload_datetime, sort_priority, domain_id) VALUES(?, ?, ?, ?, ?, ?)", dir, name, imageSource, new Timestamp(Tools.getNow()),priority, CloudToolsForCore.getDomainId());
 
-		query.execute("INSERT INTO gallery (image_path, image_name, upload_datetime, sort_priority, domain_id) VALUES(?, ?, ?, ?, ?)", dir, name, new Timestamp(Tools.getNow()),priority, CloudToolsForCore.getDomainId());
+		//update pkey generator
+		PkeyGenerator.getNextValue("gallery");
+
 		try
 		{
 			return query.forInt("SELECT image_id FROM gallery WHERE image_path = ? AND image_name = ?"+CloudToolsForCore.getDomainIdSqlWhere(true), dir, name);
@@ -2659,10 +2668,17 @@ public class GalleryDB
 			String imageName = fOrigImg.getName();
 			if (imageName.startsWith("s_") || imageName.startsWith("o_"))
 				imageName = imageName.substring(2);
+
 			if (realPathSmall.indexOf(Tools.replace(Constants.getString("thumbServletCacheDir"), "/", String.valueOf(File.separatorChar) ))==-1)
 			{
 				//toto vykoname len ak sa nejedna o thumb obrazok
 				//ulozi obrazok do tabulky gallery, ak je uz ulozeny a nema nastaveny upload_datetime, tak ho nastavi
+
+				//Check if it's pixabay
+				String pixabayName = GalleryDB.getImagePathNormal( fSmallImg.getName() );
+				if( Tools.isNotEmpty( GalleryService.getPixabayImageUrl(pixabayName, false) ) )
+					imageName = pixabayName;
+
 				GalleryDB.setImage(fOrigImg.getVirtualParent(), imageName);
 			}
 
@@ -3314,6 +3330,9 @@ public class GalleryDB
 				ps.setString(2, imgPath.substring(imgPath.lastIndexOf('/')+1));
 				ps.setInt(3, CloudToolsForCore.getDomainId());
 				ps.executeUpdate();
+
+				//update pkey generator
+				PkeyGenerator.getNextValue("gallery");
 			}
 
 			ps.close();

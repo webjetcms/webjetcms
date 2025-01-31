@@ -51,12 +51,12 @@ public class DocNewRestController extends DatatableRestControllerV2&lt;DocNewDTO
     @Override
     public Page&lt;DocNewDTO&gt; getAllItems(Pageable pageable) {
         //Process params from request into FilterHeaderDto
-<span class="fc" id="L54">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
-<span class="fc" id="L55">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
+<span class="nc" id="L54">        FilterHeaderDto filter = StatService.processRequestToStatFilter(getRequest(), null);</span>
+<span class="nc" id="L55">        int docId = Tools.getIntValue(getRequest().getParameter(&quot;docId&quot;), -1);</span>
 
-<span class="fc" id="L57">        List&lt;Column&gt; aVariantColumns = getAvariantColumns(docId, filter);</span>
-<span class="fc" id="L58">        DatatablePageImpl&lt;DocNewDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToItems(aVariantColumns, filter));</span>
-<span class="fc" id="L59">        return page;</span>
+<span class="nc" id="L57">        List&lt;Column&gt; aVariantColumns = getAvariantColumns(docId, filter);</span>
+<span class="nc" id="L58">        DatatablePageImpl&lt;DocNewDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToItems(aVariantColumns, filter));</span>
+<span class="nc" id="L59">        return page;</span>
     }
 
     @Override
@@ -196,10 +196,10 @@ public class DocNewRestController extends DatatableRestControllerV2&lt;DocNewDTO
     public Page&lt;InOutDTO&gt; getInLineChartData(
                         @RequestParam(&quot;docId&quot;) String docId,
                         @RequestParam(&quot;dayDate&quot;) String stringRange) {
-<span class="fc" id="L199">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
-<span class="fc" id="L200">        List&lt;Column&gt; incomingStats = StatNewDB.getIncomingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1], null, getRequest());</span>
-<span class="fc" id="L201">        DatatablePageImpl&lt;InOutDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToInOutItems(incomingStats));</span>
-<span class="fc" id="L202">        return page;</span>
+<span class="nc" id="L199">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="nc" id="L200">        List&lt;Column&gt; incomingStats = StatNewDB.getIncomingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1], null, getRequest());</span>
+<span class="nc" id="L201">        DatatablePageImpl&lt;InOutDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToInOutItems(incomingStats));</span>
+<span class="nc" id="L202">        return page;</span>
     }
 
     @RequestMapping(value=&quot;/outgoing&quot;, params={&quot;docId&quot;, &quot;dayDate&quot;})
@@ -207,25 +207,25 @@ public class DocNewRestController extends DatatableRestControllerV2&lt;DocNewDTO
     public Page&lt;InOutDTO&gt; getOutLineChartData(
                         @RequestParam(&quot;docId&quot;) String docId,
                         @RequestParam(&quot;dayDate&quot;) String stringRange) {
-<span class="fc" id="L210">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
-<span class="fc" id="L211">        List&lt;Column&gt; incomingStats = StatNewDB.getOutgoingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1]);</span>
-<span class="fc" id="L212">        DatatablePageImpl&lt;InOutDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToInOutItems(incomingStats));</span>
-<span class="fc" id="L213">        return page;</span>
+<span class="nc" id="L210">        Date[] dateRangeArr = StatService.processDateRangeString(stringRange);</span>
+<span class="nc" id="L211">        List&lt;Column&gt; incomingStats = StatNewDB.getOutgoingStats(Integer.parseInt(docId), dateRangeArr[0], dateRangeArr[1]);</span>
+<span class="nc" id="L212">        DatatablePageImpl&lt;InOutDTO&gt; page = new DatatablePageImpl&lt;&gt;(columnsToInOutItems(incomingStats));</span>
+<span class="nc" id="L213">        return page;</span>
     }
 
     private List&lt;InOutDTO&gt; columnsToInOutItems(List&lt;Column&gt; columns) {
-<span class="fc" id="L217">        List&lt;InOutDTO&gt; items = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L217">        List&lt;InOutDTO&gt; items = new ArrayList&lt;&gt;();</span>
 
-<span class="fc" id="L219">        int order = 1;</span>
-<span class="fc bfc" id="L220" title="All 2 branches covered.">        for(Column column : columns) {</span>
-<span class="fc" id="L221">            InOutDTO item = new InOutDTO();</span>
-<span class="fc" id="L222">            item.setOrder(order);</span>
-<span class="fc" id="L223">            item.setName(column.getColumn1());</span>
-<span class="fc" id="L224">            item.setCount(column.getIntColumn2());</span>
-<span class="fc" id="L225">            items.add(item);</span>
-<span class="fc" id="L226">            order++;</span>
-<span class="fc" id="L227">        }</span>
-<span class="fc" id="L228">        return items;</span>
+<span class="nc" id="L219">        int order = 1;</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">        for(Column column : columns) {</span>
+<span class="nc" id="L221">            InOutDTO item = new InOutDTO();</span>
+<span class="nc" id="L222">            item.setOrder(order);</span>
+<span class="nc" id="L223">            item.setName(column.getColumn1());</span>
+<span class="nc" id="L224">            item.setCount(column.getIntColumn2());</span>
+<span class="nc" id="L225">            items.add(item);</span>
+<span class="nc" id="L226">            order++;</span>
+<span class="nc" id="L227">        }</span>
+<span class="nc" id="L228">        return items;</span>
     }
 
     @RequestMapping(value=&quot;/doc-title&quot;, params={&quot;docId&quot;}, produces = &quot;text/plain;charset=UTF-8&quot;)

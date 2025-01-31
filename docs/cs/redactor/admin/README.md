@@ -13,6 +13,7 @@ Záhlaví se nachází v horní části:
 obsahuje následující možnosti:
 - Vyberte doménu, se kterou pracujete (v případě instalace s více doménami).
 - Odkaz na otevření nápovědy.
+- ![](icon-search.png ":no-zoom") Ikona pro otevření stránky [Vyhledávání](search/README.md)
 - Jméno aktuálně přihlášeného uživatele, po kliknutí na jméno se zobrazí následující možnosti:
   - Profil - úprava vlastního profilu (jméno, e-mail... - po změně profilu se musíte odhlásit a znovu přihlásit).
   - Dvoufázové ověřování - možnost aktivovat dvoufázové ověřování pomocí aplikace. `Google Authenticate` při přihlašování do administrace. Tím se zvýší bezpečnost vašeho účtu, protože kromě hesla musíte pro přihlášení zadat také kód z mobilního zařízení. Doporučujeme toto nastavení u všech účtů, jejichž prostřednictvím lze spravovat uživatelské účty a práva. Pokud používáte ověřování proti `ActiveDirectory/SSO` serveru, můžete tuto položku nabídky zakázat nastavením proměnné conf. `2factorAuthEnabled` na hodnotu `false`.
@@ -29,10 +30,6 @@ V levé části pod logem WebJET jsou ikony představující hlavní sekce nabí
 Kliknutím na ikonu hlavní sekce zobrazíte položky nabídky vybrané sekce:
 
 ![](menu-items.png)
-
-Položky nabídky se zobrazují v tmavších a světlejších barvách. Tmavší zatím nebyly přepracovány, což je vidět v odkazu na aplikaci statistik. Kliknutím na tuto položku se aplikace zobrazí ve starém designu. Kliknutím na již přepracovanou část, např. úvod, se přepne ze staré verze zpět na novou.
-
-Přepínání mezi starou a novou verzí probíhá automaticky v závislosti na tom, zda již byla aplikace přepracována, či nikoli. V případě potřeby je možné zcela přepnout na starou verzi kliknutím na ikonu ![](icon-switch8.png ":no-zoom") V záhlaví přepněte na verzi 8.
 
 ## Zobrazení na mobilních zařízeních
 

@@ -19,11 +19,14 @@ After setting the configuration variable `serverMonitoringEnablePerformance` at 
 
 After setting the configuration variable `serverMonitoringEnableJPA` at `true` is also available:
 - **SQL queries** - SQL query execution speed statistics. It shows the number of executions, average execution time, slowest and fastest execution and the SQL query itself.
-**NOTICE:** Activating monitoring affects server performance and memory load. In addition to the ability to log values, enabling monitoring has an impact on server performance. All data except for the logged values section is held only in the server's memory, so it will start logging again when the server is restarted.
-**NOTICE:** modular options **Applications**, **WEB pages** a **SQL queries** use a unique common logic, which is described in more detail in [Server monitoring by selected node](nodes-logic.md)
+
+!>**Warning:** Activating monitoring affects server performance and memory load. In addition to the ability to log values, enabling monitoring has an impact on server performance. All data except for the logged values section is held only in the server's memory, so it will start logging again when the server is restarted.
+
+!>**Warning:** modular options **Applications**, **WEB pages** a **SQL queries** use a unique common logic, which is described in more detail in [Server monitoring by selected node](nodes-logic.md)
+
 ## Remote monitoring of the server runtime
 
-If you need to monitor the status of WebJET via [Nagios](http://www.nagios.org)/[Zabbix](https://www.zabbix.com) or other service, WebJET provides at the URL `/components/server_monitoring/monitor.jsp` your condition. HTTP Responses **state 200 if everything is fine**, or **with a status of 500** (Internal Server Error) if **not all controls are met**.
+If you need to monitor the status of WebJET via [Nagios](http://www.nagios.org) /[Zabbix](https://www.zabbix.com) or other service, WebJET provides at the URL `/components/server_monitoring/monitor.jsp` your condition. HTTP Responses **state 200 if everything is fine**, or **with a status of 500** (Internal Server Error) if **not all controls are met**.
 
 This URL can also be called at one-second intervals, and we recommend using it within the cluster to monitor the availability of individual nodes.
 
@@ -35,6 +38,7 @@ The component monitors the following parts:
 - **Availability of templates** - if the list of initialized templates is less than 3 responds with the text `NOT ENOUGHT TEMPLATES`.
 - **Recording of statistics data** - verifies that there are not suspiciously many records in the statistics write stack (the number of records is set in the configuration variable `statBufferSuspicionThreshold`, default 1000). If the statistics write stack contains a larger amount of data to write, this indicates either a SQL Server performance problem or a problem with background jobs. If the number of records is exceeded, it responds with the text `STAT BUFFER SUSPICION`.
 - If it occurs **other error** replies with the text `EXCEPTION: xxxx`.
+
 WebJET is also possible manually **switch to service mode** by setting the configuration variable `monitorMaintenanceMode` for real. Then monitor.jsp responds with the text `UNAVAILABLE`.
 
 If all is well it replies with the text `OK`. For monitoring **it is sufficient to monitor the HTTP status** answers, the text is only informative for a more precise determination of the problem.
@@ -48,3 +52,4 @@ If all is well it replies with the text `OK`. For monitoring **it is sufficient 
 - `serverMonitoringEnableJPA` - if set to `true`, triggers SQL query execution speed monitoring for JPA, but results in an increase in server memory load (default: false)
 - `serverMonitoringEnableIPs` - List of IP addresses from which the component is available `monitor.jsp` for server monitoring (default: 127.0.0.1,192.168.,10.,62.65.161.,85.248.107.,195.168.35.)
 - `monitoringPreheatTime` - The number of seconds required for the web site to warm up (cache load) after a reboot, during which it will `monitor.jsp` component returning unavailability of cluster node (default: 0)
+- `monitoringEnableCountUsersOnAllNodes` - If the public nodes of the cluster do not have the ability to write to the table `_conf_/webjet_conf` set to `false`. Total number of `sessions` will then only be available by summing the individual records in the server monitoring.

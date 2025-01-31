@@ -10,11 +10,12 @@ Check the following conf. variables:
 - `smtpServer` - SMTP server address + variables `smtpUsername, smtpPassword, smtpPort, smtpUseTLS` and the like.
 - `emailProtectionSenderEmail` - set the email address to be used as the sender's email, it can be different for each environment, it must be enabled on the SMTP server.
 - `proxyHost/proxyPort` - proxy settings
-- `webEnabledIPs` - the list of IP addresses from which the web is accessible, on the DEV environment set by default to `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,#klient,`
+- `webEnabledIPs` - the list of IP addresses from which the web is accessible, on the DEV environment set by default to `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,62.168.118.90,62.168.118.67,#klient,`
 - `adminEnabledIPs` - the list of IP addresses from which it is possible to access the administration, by default set to `#localhost,127.0.0.1,10.,192.168.,#interway,85.248.107.8,195.168.35.4,#klient,`
 - `multidomainAdminHost` - if set to verify domain, it is used to set the domain for the CMS on a multi-domain installation.
 - `serverBeyoundProxy` - Set the location of the application server behind the proxy/load balancer.
 - `logLevel` - on production to leave on `normal`, on the development environment you can change to `debug`.
+
 Check all other conf. variables and consider their impact on the project and the appropriateness of the setting.
 
 ## Domain addresses

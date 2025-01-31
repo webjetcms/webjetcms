@@ -17,6 +17,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.FileIndexerTools;
 import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.components.gallery.GalleryService;
 import sk.iway.iwcm.findexer.FileIndexer;
 import sk.iway.iwcm.findexer.ResultBean;
 import sk.iway.iwcm.i18n.Prop;
@@ -49,6 +50,8 @@ public class GalleryActionBean extends WebJETActionBean
 
 	@PageParamOnly
 	String style = "photoSwipe";
+
+	private static final String PIXABAY = "pixabay.com";
 
 	List<GalleryBean> photoList;
 	int itemsCount;
@@ -255,6 +258,10 @@ public class GalleryActionBean extends WebJETActionBean
 		return Tools.isNotEmpty(perexGroup);
 	}
 
+	/**
+	 * Save image from pixabay URL into WebJET
+	 * @return
+	 */
 	public Resolution saveImage()
 	{
 		JSONObject result = new JSONObject();
@@ -296,7 +303,14 @@ public class GalleryActionBean extends WebJETActionBean
 			String realPathFileSmall = Tools.getRealPath(smallFileUrl);
 
 			FileTools.downloadFile(img, file);
+
+			//save pixabay image URL for later use
+			if(this.img.contains(PIXABAY)) {
+				GalleryService.savePixabayImageUrl(realPathFileSmall.substring(realPathFileSmall.lastIndexOf('/') + 1), this.img);
+			}
+
 			GalleryDB.resizePicture(realPathFile, realPathFileSmall, width, height);
+
 			new IwcmFile(realPathFile).delete();
 
 			//ak je treba, aplikujem vodotlac na obrazky

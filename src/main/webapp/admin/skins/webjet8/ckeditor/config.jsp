@@ -1,6 +1,6 @@
 <%@page import="sk.iway.iwcm.Tools"%><%@page import="sk.iway.iwcm.FileTools"%><%@page import="sk.iway.iwcm.Constants"%><%@ page import="sk.iway.iwcm.components.dictionary.DictionaryDB"%><%@ page import="sk.iway.iwcm.editor.InlineEditor"%><%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
-	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/ckeditor/custom/config.js", null, request, response);
+	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/_tmp_/ckeditor/custom/config.js", null, request, response);
 %><%@ page pageEncoding="utf-8" contentType="text/javascript" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><iwcm:checkLogon admin="true" perms='<%=Constants.getString("webpagesFunctionsPerms")%>'/>
 CKEDITOR.editorConfig = function( config )
@@ -82,7 +82,9 @@ CKEDITOR.editorConfig = function( config )
 	};
 	<%
 	boolean hasFontAwesome = false;
-	if (FileTools.isFile("/css/font-awesome.min.css") || Constants.getBoolean("editorEnableFontAwesome")==true) hasFontAwesome = true;
+	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");
+	System.out.println("editorFontAwesomeCssPath="+editorFontAwesomeCssPath);
+	if (Tools.isNotEmpty(editorFontAwesomeCssPath)) hasFontAwesome = true;
 	boolean hasTooltip = false;
 	if (FileTools.isFile("/components/tooltip/tooltip.jsp"))
 	{
@@ -112,6 +114,8 @@ CKEDITOR.editorConfig = function( config )
 	{
 		config.bodyClass = 'webjetInline';
 	}
+	config.editorFontAwesomeCssPath = "<%=editorFontAwesomeCssPath.replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n")%>";
+	config.fontAwesomeCustomIcons = "<%=Constants.getString("editorFontAwesomeCustomIcons").replaceAll("\r", "\\\\r").replaceAll("\n", "\\\\n")%>";
 
 	config.toolbar = [
 		<% if ("true".equals(Tools.getRequestParameter(request, "inline"))) { %>

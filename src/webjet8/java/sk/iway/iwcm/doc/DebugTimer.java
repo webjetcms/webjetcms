@@ -20,6 +20,7 @@ public class DebugTimer
    private String name;
    private long startTimestamp;
    private long lastTimestamp;
+   private boolean enabled = true;
 
    /**
     *  Constructor for the DebugTimer object
@@ -43,7 +44,7 @@ public class DebugTimer
    	long now = System.currentTimeMillis();
       long diff = now - startTimestamp;
       long lastDiff = now - lastTimestamp;
-      Logger.debug(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
+      if (enabled) Logger.debug(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
       lastTimestamp = now;
 
       return lastDiff;
@@ -64,13 +65,12 @@ public class DebugTimer
       long lastDiff = now - lastTimestamp;
       if(lastDiff>0)
       {
-      	Logger.debug(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
+      	if (enabled) Logger.debug(this,name + " " + diff + " ms (+"+lastDiff+"): " + message);
       	ret=true;
       }
       lastTimestamp = now;
       return ret;
    }
-
 
    public long getDiff()
    {
@@ -83,5 +83,13 @@ public class DebugTimer
       long lastDiff = now - lastTimestamp;
       lastTimestamp = now;
       return(lastDiff);
+   }
+
+   public boolean isEnabled() {
+      return enabled;
+   }
+
+   public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
    }
 }

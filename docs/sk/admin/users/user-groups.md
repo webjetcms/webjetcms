@@ -9,9 +9,9 @@ Systémovo rozlišujeme dva typy skupín:
 
 Tabuľka ponúka rýchle akcie nad skupinami pomocou tlačidiel:
 
-- ![](user-groups-addGroupToAll.png ":no-zoom") **Pridať zvolenú skupinu všetkým používateľom**- zvolené skupiny budú pridané všetkým existujúcim používateľom.
-- ![](user-groups-removeGroupFromAll.png ":no-zoom") **Odobrať zvolenú skupinu všetkým používateľom** - zvolené skupiny budú odobraté všetkým existujúcim používateľom.
-- ![](user-groups-removeUsersFromGroup.png ":no-zoom") **Zmazať všetkých používateľov zvolenej skupiny** - používatelia ktorý majú aspoň jednu zo zvolenej skupiny budú vymazaný.
+- ![](user-groups-addGroupToAll.png ":no-zoom"), **Pridať zvolenú skupinu všetkým používateľom** - zvolené skupiny budú pridané všetkým existujúcim používateľom.
+- ![](user-groups-removeGroupFromAll.png ":no-zoom"), **Odobrať zvolenú skupinu všetkým používateľom** - zvolené skupiny budú odobraté všetkým existujúcim používateľom.
+- ![](user-groups-removeUsersFromGroup.png ":no-zoom"), **Zmazať všetkých používateľov zvolenej skupiny** - používatelia ktorý majú aspoň jednu zo zvolenej skupiny budú vymazaný.
 
 ![](user-groups-datatable.png)
 

@@ -49,7 +49,7 @@ Při úpravách registračního formuláře můžete kromě vzhledu formuláře 
 - **Zobrazená pole** a **Povinná pole** nastavit vzhled samotného formuláře a pole, která jsou povinná.
 - **E-mailová adresa musí být jedinečná** pokud je vybrána, systém zkontroluje, zda je uživatel se zadanou e-mailovou adresou již registrován, a pokud ano, bude opětovná registrace zamítnuta.
 - **DocID stránky, která se zobrazí po úspěšné registraci.**, zde zadejte ID stránky, která obsahuje text o úspěšné registraci.
-- **Oznámení o registraci vám bude zasláno na váš e-mail.** pokud je vybrána, bude na tento e-mail zasláno oznámení při každé registraci nového uživatele (pokud je prázdná, nebudou zasílána žádná oznámení).
+- **Oznámení o registraci vám bude zasláno na váš e-mail.** &#x70;okud je vybrána, bude na tento e-mail zasláno oznámení při každé registraci nového uživatele (pokud je prázdná, nebudou zasílána žádná oznámení).
 - **Vyžadovat potvrzení e-mailové adresy**, bude vyžadováno ověření e-mailové adresy uživatelem nebo schválení správcem. Další informace o této možnosti naleznete na adrese [Typy ověření](#typy-ověřování).
 
 ![](docs-register-2.png)
@@ -94,9 +94,9 @@ K okamžitému schválení nového registrovaného uživatele dojde pouze v př�
 
 Pokud jsou tyto požadavky splněny, bude uživatel automaticky schválen a přihlášen ihned po registraci. Uživatel také obdrží e-mail o úspěšné registraci, který bude obsahovat přihlašovací jméno a heslo uživatele.
 
-**Varování:** Pokud skupina uživatelů vyžaduje schválení, ale uživatel nemá povoleno přidávání/odebírání ze skupiny, parametr **Vyžaduje schválení** bude ignorován, i když bude zvolen a dojde k okamžitému schválení.
+!>**Varování:** Pokud skupina uživatelů vyžaduje schválení, ale uživatel nemá povoleno přidávání/odebírání ze skupiny, parametr **Vyžaduje schválení** bude ignorován, i když bude zvolen a dojde k okamžitému schválení.
 
-**Varování:** Pokud je parametr **Povolit přidání/odebrání ze skupiny samotným uživatelem** není pro skupinu uživatelů vybrána, nebude skupina k uživateli přidána, i když samotná registrace proběhne úspěšně. To může vést k situaci, kdy uživatel není přidán do žádné skupiny a nemůže se přihlásit do zaheslované sekce (registrace je úspěšná a není hlášena žádná chyba, ale přihlášení není možné).
+!>**Varování:** Pokud je parametr **Povolit přidání/odebrání ze skupiny samotným uživatelem** není pro skupinu uživatelů vybrána, nebude skupina k uživateli přidána, i když samotná registrace proběhne úspěšně. To může vést k situaci, kdy uživatel není přidán do žádné skupiny a nemůže se přihlásit do zaheslované sekce (registrace je úspěšná a není hlášena žádná chyba, ale přihlášení není možné).
 
 ### Potvrzení e-mailové adresy
 
@@ -110,7 +110,7 @@ Může nastat situace, kdy je uživatel požádán, aby nejprve ověřil svůj e
 
 Pokud jsou tyto požadavky splněny, bude uživateli na jeho e-mailovou adresu zaslán e-mail s odkazem, na který musí kliknout pro ověření. Po úspěšném ověření se uživatel bude moci přihlásit do zaheslované sekce a obdrží také e-mail o úspěšné registraci obsahující přihlašovací jméno uživatele, nikoli však heslo.
 
-**Varování:** Pokud je parametr **Povolit přidání/odebrání ze skupiny samotným uživatelem** není pro skupinu uživatelů vybrána, nebude skupina k uživateli přidána, i když samotná registrace proběhne úspěšně. To může vést k situaci, kdy uživatel není přidán do žádné skupiny a nemůže se přihlásit do zaheslované sekce (registrace je úspěšná a není hlášena žádná chyba, ale přihlášení není možné).
+!>**Varování:** Pokud je parametr **Povolit přidání/odebrání ze skupiny samotným uživatelem** není pro skupinu uživatelů vybrána, nebude skupina k uživateli přidána, i když samotná registrace proběhne úspěšně. To může vést k situaci, kdy uživatel není přidán do žádné skupiny a nemůže se přihlásit do zaheslované sekce (registrace je úspěšná a není hlášena žádná chyba, ale přihlášení není možné).
 
 ### Schválení správcem
 
@@ -130,4 +130,4 @@ Schválení lze provést:
 - pomocí tlačítka ![](user-list-page-approve_1.png ":no-zoom") na panelu nástrojů, kde budou schváleni uživatelé ve zvýrazněných řádcích. Po tomto schválení se uživatel bude moci přihlásit do zaheslované sekce a obdrží také e-mail o úspěšné registraci obsahující přihlašovací jméno uživatele.
 - pomocí tlačítka ![](user-list-page-approve_2.png ":no-zoom") na panelu nástrojů, kde se uživatelé ve zvýrazněných řádcích a jejich hesla změní na náhodně vygenerovaná. Po tomto ověření se uživatel bude moci přihlásit do zaheslované sekce a obdrží také e-mail o úspěšné registraci obsahující přihlašovací jméno uživatele a nově VYGENEROVANÉ heslo.
 
-**Varování:** Pokud skupina uživatelů vyžaduje schválení, ale uživatel nemá povoleno přidávání/odebírání ze skupiny, parametr **Vyžaduje schválení** bude ignorován, i když je vybrán, a typ schválení bude proveden v závislosti na hodnotě parametru **Vyžadovat potvrzení e-mailové adresy**.
+!>**Varování:** Pokud skupina uživatelů vyžaduje schválení, ale uživatel nemá povoleno přidávání/odebírání ze skupiny, parametr **Vyžaduje schválení** bude ignorován, i když je vybrán, a typ schválení bude proveden v závislosti na hodnotě parametru **Vyžadovat potvrzení e-mailové adresy**.

@@ -7,9 +7,6 @@
         "**/.settings": true,
         "**/.factorypath": true
     },
-    "spellright.documentTypes": [
-        "markdown"
-    ],
     "markdown.validate.enabled": true,
     "java.compile.nullAnalysis.mode": "automatic",
     "sqltools.useNodeRuntime": true,
@@ -38,21 +35,18 @@
             "username": "postgres"
         }
     ],
-    "cSpell.language": "en,sk,en-US",
-    "cSpell.words": [
-        "InterWay",
-        "iway",
-        "iwcm",
-        "konštruktor",
-        "prelínajúce",
-        "Schvaľovateľ",
-        "Servlet",
-        "viactémová",
-        "viactémovej",
-        "WebJET"
-    ],
     "gitPrefix.pattern": ".*/(\\d+)-.*",
     "coverage-gutters.coverageBaseDir": "docs/codecoverage-report/",
     "coverage-gutters.coverageReportFileName": 	"docs/codecoverage-report/index.html",
-    "terminal.integrated.shellIntegration.enabled": false
+    "terminal.integrated.shellIntegration.enabled": false,
+
+    "spellright.language": [ "sk_SK" ],
+    "spellright.groupDictionaries": false,
+    "spellright.documentTypes": [
+        "markdown"
+    ],
+    "spellright.suggestionsInHints": false,
+    "spellright.ignoreRegExpsByClass": {
+        "markdown": [ "/\\[[^]*?\\]/g", "/\\([^]*?\\)/g"]
+    },
 }

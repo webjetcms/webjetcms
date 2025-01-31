@@ -24,4 +24,4 @@ Odkaz na odhlášení se nachází v záhlaví administrace v pravé horní čá
 
 Kliknutím na ikonu odhlášení se odhlásíte ze systému WebJET CMS. Z bezpečnostních důvodů doporučujeme, abyste **vždy se po práci odhlaste** a ne jen zavřít okno prohlížeče.
 
-**Varování:** pokud je velikost okna menší a záhlaví se nezobrazuje, klikněte na ikonu nabídky hamburgeru. ![](icon-hamburger.png ":no-zoom") zobrazit záhlaví.
+!>**Varování:** pokud je velikost okna menší a záhlaví se nezobrazuje, klikněte na ikonu nabídky hamburgeru. ![](icon-hamburger.png ":no-zoom") zobrazit záhlaví.

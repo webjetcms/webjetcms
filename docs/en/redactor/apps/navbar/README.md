@@ -9,7 +9,7 @@ The display of an item in the navigation bar depends on the setting of the Navig
 - Show - the item will be displayed in the navigation bar.
 - Don't show - the item will not appear in the navigation bar (including sub-folders).
 
-For the display option, you can set the display option for the web page that is still displayed (typically, this is a scrolled item in the navigation bar). This is also in the Navigation tab and contains the options:
+For the display option, you can set the display option for the web page that is still displayed (typically this is the last item in the navigation bar). This is also in the Navigation tab and contains the options:
 - View - the web page will be displayed in the navigation bar.
 - Do not show - the web page will not be displayed in the navigation bar.
 
@@ -20,7 +20,7 @@ For the display option, you can set the display option for the web page that is 
 The navigation bar is inserted directly into the JSP template as a tag:
 
 ```html
-<iwcm:write name="navbar" />
+<iwcm:write name="navbar"/>
 ```
 
 or it can be inserted directly into the web page as an expression:

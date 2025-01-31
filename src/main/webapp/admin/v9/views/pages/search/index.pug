@@ -1,0 +1,304 @@
+extends ../../partials/layout
+
+block content
+
+    +breadcrumb(
+        'search',
+        [
+            [ '#searchTab', '[[\#{components.search.title}]]', true],
+            [ '#dateRange', '{filter}', false],
+        ]
+    )
+
+    +breadcrumb(
+        'tabsFilter',
+        [
+            [ '#webPages', '[[\#{webpages.tab.pages}]]', true],
+            [ '#files', '[[\#{menu.root.files}]]', false],
+            [ '#translationKeys', '[[\#{sk.iway.iwcm.search.PropertiesSearch}]]', false]
+        ]
+    )
+
+    script.
+        // WebPages
+        let webPageHasPerm = WJ.hasPermission("menuWebpages");
+        let webPageUrl = "/admin/rest/web-pages";
+        let webPageColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})];
+        var webPagesDataTable;
+
+        // Translation keys
+        let translationKeysHasPerm = WJ.hasPermission("edit_text");
+        let translationKeysUrl = "/admin/v9/settings/translation-keys";
+        let translaionKeysColumns =[(${layout.getDataTableColumns('sk.iway.iwcm.components.translation_keys.jpa.TranslationKeyEntity')})];
+        var translationKeysDataTable;
+
+        // WebPages
+        let filesUrl = "/admin/rest/web-pages";
+        let filesColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})];
+        var filesDataTable;
+
+        window.openFileLocation = function (externalLink) {
+            if(externalLink !== undefined && externalLink !== null) {
+                externalLink = externalLink.substring(0, externalLink.lastIndexOf('/'));
+                window.open("/admin/v9/files/index/#elf_iwcm_1_" + WJ.base64encode(externalLink), '_blank');
+            }
+        }
+        window.openFile = function (externalLink) {
+            if(externalLink !== undefined && externalLink !== null) {
+                window.open(externalLink, '_blank');
+            }
+        }
+
+        function afterLoadInitialize() {
+            if(webPageHasPerm && translationKeysHasPerm) {
+                $("#translationKeysDataTable_wrapper").hide();
+                $("#filesDataTable_wrapper").hide();
+
+            } else if(webPageHasPerm) {
+                $("#translationKeysDataTable").hide();
+                $("#filesDataTable_wrapper").hide();
+
+                $("#pills-translationKeys-tab").hide();
+            } else if(translationKeysHasPerm) {
+                $("#filesDataTable").hide();
+                $("#webPagesDataTable").hide();
+
+                $("#pills-translationKeys-tab")[0].click();
+                $("#pills-files-tab").hide();
+                $("#pills-webPages-tab").hide();
+            }
+        }
+
+        window.domReady.add(function () {
+
+            WJ.selectMenuItem("/admin/v9/");
+
+            afterLoadInitialize();
+
+            ChartTools.initGroupIdSelect();
+
+            $("#pills-dateRange-tab").html("");
+            $("div#searchDataTable_extfilter").appendTo("#pills-dateRange-tab");
+            //init BS toggle
+            $('div#searchDataTable_extfilter [data-bs-toggle="tooltip"]').tooltip();
+
+            $("#pills-tabsFilter").on("click", "a.nav-link", function() {
+                switchTab();
+            });
+
+            $("#searchDataTable_extfilter").on("click", "button.filtrujem", function() {
+                getData();
+            });
+
+            $("#searchDataTable_extfilter").on("keypress", "input#searchText", function(e) {
+                if (e.which === 13) { // Enter key pressed
+                    getData();
+                }
+            });
+
+            $("#rootDir").on('change', function() {
+                getData();
+            });
+
+            // ************* WebPages ****************
+            if(webPageHasPerm) {
+                window.importWebPagesDatatable().then(module => {
+
+                    // URL param that says thi is search all version
+                    webPageUrl = WJ.urlAddParam(webPageUrl, "isSearchVersion", true);
+                    webPageUrl = WJ.urlAddParam(webPageUrl, "searchType", "docs");
+
+                    // search use this columns, so we CANT filter on top of them
+                    window.WJ.DataTable.mergeColumns(webPageColumns, { name: "data", filter: false });
+                    window.WJ.DataTable.mergeColumns(webPageColumns, { name: "virtualPath", visible: true });
+
+                    let wpdInstance = new module.WebPagesDatatable({
+                        url: webPageUrl,
+                        columns: webPageColumns,
+                        id: "webPagesDataTable",
+                        idAutoOpener: false,
+                        initialData: dtWJ.getEmptyData(true)
+                    });
+                    webPagesDataTable = wpdInstance.createDatatable();
+
+                    afterLoadInitialize();
+
+                    setTimeout(() => {
+                        var searchParam = WJ.urlGetParam("text");
+                        if(typeof searchParam != "undefined" && searchParam !== null) {
+                            $("#searchText").val(searchParam);
+                            getData();
+                        }
+                    }, 500);
+                });
+            }
+
+            // ************* Translation keys ****************
+            if(translationKeysHasPerm) {
+                // URL param that says thi is search all version
+                translationKeysUrl = WJ.urlAddParam(translationKeysUrl, "isSearchVersion", true);
+                translationKeysUrl = WJ.urlAddParam(translationKeysUrl, "searchText", "");
+
+                translationKeysDataTable = WJ.DataTable({
+                    url: translationKeysUrl,
+                    columns: translaionKeysColumns,
+                    id: "translationKeysDataTable",
+                    serverSide: true,
+                    idAutoOpener: false,
+                    customFieldsUpdateColumns: true,
+                    customFieldsUpdateColumnsPreserveVisibility: true,
+                    initialData: dtWJ.getEmptyData(true)
+                });
+            }
+
+            // ************* Files ****************
+            if(webPageHasPerm) {
+                window.importWebPagesDatatable().then(module => {
+
+                    // URL param that says thi is search all version
+                    filesUrl = WJ.urlAddParam(filesUrl, "isSearchVersion", true);
+                    filesUrl = WJ.urlAddParam(filesUrl, "searchType", "files");
+
+                    //
+                    window.WJ.DataTable.mergeColumns(
+                        filesColumns,
+                        {
+                            name: "title",
+                            renderFormat: "dt-format-text",
+                            className: "required",
+                            renderFormatLinkTemplate: "javascript:openFile('{{externalLink}}')",
+                            renderFormatPrefix: "<i class='ti ti-eye'></i>",
+                            title: "[[\#{fbrowse.file_name}]]"
+                        }
+                    );
+                    window.WJ.DataTable.mergeColumns(filesColumns, { name: "data", filter: false });
+                    window.WJ.DataTable.mergeColumns(filesColumns, {
+                        name: "externalLink",
+                        visible: true,
+                        title: "[[\#{searchall.url}]]",
+                        renderFormat: "dt-format-text",
+                        renderFormatLinkTemplate: "javascript:openFileLocation('{{externalLink}}')",
+                    });
+                    window.WJ.DataTable.mergeColumns(filesColumns, { name: "editorFields.statusIcons", hidden : true });
+
+                    let wpdInstance = new module.WebPagesDatatable({
+                        url: filesUrl,
+                        columns: filesColumns,
+                        id: "filesDataTable",
+                        newPageTitleKey: "components.blog.articles.new_article.js",
+                        showPageTitleKey: "admin.search.showFile.js",
+                        idAutoOpener: false,
+                        initialData: dtWJ.getEmptyData(true),
+                    });
+                    filesDataTable = wpdInstance.createDatatable();
+
+                    filesDataTable.hideButton("create");
+                    filesDataTable.hideButton("edit");
+                    filesDataTable.hideButton("remove");
+                    filesDataTable.hideButton("duplicate");
+                    filesDataTable.hideButton("celledit");
+                    filesDataTable.hideButton("import");
+                    filesDataTable.hideButton("export");
+                    filesDataTable.hideButton("abtest");
+                    filesDataTable.hideButton("stat");
+
+                    filesDataTable.button().add(1, {
+                        text: '<i class="ti ti-folder-open"></i>',
+                        action: function (e, dt, node) {
+                            //console.log("btn, e=",e,"dt=",dt,"node=",node);
+                            //ziskaj data selectnuteho riadku
+                            let selectedRows = dt.rows({ selected: true }).data();
+                            //console.log("selectedRows=", selectedRows);
+                            for (let i=0; i<selectedRows.length; i++) {
+                                openFileLocation(selectedRows[i].externalLink);
+                            }
+                        },
+                        init: function ( dt, node, config ) {
+                            $.fn.dataTable.Buttons.showIfOneRowSelected(this, dt);
+                        },
+                        className: 'btn btn-outline-secondary buttons-elfinder-goto-folder',
+                        attr: {
+                            'title': "[[\#{admin.search.showFolder}]]",
+                            'data-toggle': 'tooltip'
+                        }
+                    });
+
+                    afterLoadInitialize();
+                });
+            }
+
+            function switchTab() {
+                let allTabs = $("#pills-tabsFilter").find("a.nav-link");
+                let activeTab = $("#pills-tabsFilter").find("a.nav-link.active").attr("id");
+
+                // Hide groups selector if not in webPages tab
+                if("pills-webPages-tab" === activeTab) {
+                    $(".rootDirDiv").show();
+                } else if("pills-files-tab" === activeTab) {
+                    $(".rootDirDiv").hide();
+                } else {
+                    $(".rootDirDiv").hide();
+                }
+
+                for(let i = 0; i < allTabs.length; i++) {
+                    let tabId = $(allTabs[i]).attr("id");
+                    let wrapper = $("#" + tabId.split("-")[1] + "DataTable_wrapper");
+
+                    if(tabId === activeTab) {
+                        wrapper.show();
+                        wrapper.find("table.dataTable").show();
+                    } else {
+                        wrapper.hide();
+                    }
+                }
+
+                // REFRESH data
+                getData();
+            }
+
+            function getData() {
+                if( $("#pills-webPages-tab").hasClass("active") && webPageHasPerm) {
+                    webPagesDataTable.setAjaxUrl(WJ.urlUpdateParam(webPageUrl, "searchText", $('#searchText').val()));
+                    webPagesDataTable.setAjaxUrl(WJ.urlUpdateParam(webPagesDataTable.getAjaxUrl(), "searchRootGroupId", $('#rootDir').val()));
+                    webPagesDataTable.setAjaxUrl(WJ.urlUpdateParam(webPagesDataTable.getAjaxUrl(), "searchType", "docs"));
+
+                    //reload table values
+                    webPagesDataTable.ajax.reload();
+                } else if( $("#pills-files-tab").hasClass("active") && webPageHasPerm) {
+                    filesDataTable.setAjaxUrl(WJ.urlUpdateParam(filesUrl, "searchText", $('#searchText').val()));
+                    filesDataTable.setAjaxUrl(WJ.urlUpdateParam(filesDataTable.getAjaxUrl(), "searchType", "files"));
+
+                    //reload table values
+                    filesDataTable.ajax.reload();
+                } else if( $("#pills-translationKeys-tab").hasClass("active") && translationKeysHasPerm) {
+                    translationKeysDataTable.setAjaxUrl(WJ.urlUpdateParam(translationKeysUrl, "searchText", $('#searchText').val()));
+
+                    //reload table values
+                    translationKeysDataTable.ajax.reload();
+                }
+            }
+
+            afterLoadInitialize();
+            $("#searchText").focus();
+        });
+
+    style.
+        label.is-url-icon::after {
+            content: "\eb54" !important;
+            font-size: 18px !important;
+        }
+
+    #searchDataTable_extfilter
+        .row
+            .col-auto(style='width :450px;')
+                .input-group
+                    input#searchText.form-control.form-control-sm.filter-input(type='text' data-th-placeholder='#{searchall.text}')
+                    button.filtrujem.btn.btn-sm.btn-outline-secondary(type='submit')
+                        i.ti.ti-search
+
+            .rootDirDiv.col-auto(data-th-title='#{components.stat.filter.showOnlyFromGroup}' data-bs-toggle='tooltip')
+                input#rootDir.webjet-dte-jstree(type='text' value='-1' data-th-data-text='#{components.stat.stats.root_dirs.all}' data-th-data-text-empty='#{components.stat.stats.root_dirs.all}')
+
+    table#webPagesDataTable.datatableInit.table
+    table#translationKeysDataTable.datatableInit.table(style='display: none;')
+    table#filesDataTable.datatableInit.table(style='display: none;')

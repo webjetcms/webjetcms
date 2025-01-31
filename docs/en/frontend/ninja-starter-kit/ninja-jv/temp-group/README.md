@@ -1,6 +1,17 @@
 # Information about the project
 
-| Method | Type | Description | | | ------------------------------ | -------- | ----------------------- | | ${ninja.temp.group.siteName}   | *String* | | | ${ninja.temp.group.autor}      | *String* | Author | | | ${ninja.temp.group.copyright}  | *String* | Copyright | | ${ninja.temp.group.developer}  | *String* | Developer | | ${ninja.temp.group.generator}  | *String* | Generator | | | ${ninja.temp.group.textPrefix} | *String* | Text key prefix | | ${ninja.temp.group.fieldA}     | *String* | Field A | | ${ninja.temp.group.fieldB}     | *String* | Field B | | ${ninja.temp.group.fieldC}     | *String* | Field C | | ${ninja.temp.group.fieldD}     | *String* | Field D |
+| Method | Type | Description |
+| ------------------------------ | -------- | ----------------------- |
+| ${ninja.temp.group.siteName}   | *String* | Project name |
+| ${ninja.temp.group.autor}      | *String* | Author |
+| ${ninja.temp.group.copyright}  | *String* | Copyright |
+| ${ninja.temp.group.developer}  | *String* | Developer |
+| ${ninja.temp.group.generator}  | *String* | Generator |
+| ${ninja.temp.group.textPrefix} | *String* | Text key prefix |
+| ${ninja.temp.group.fieldA}     | *String* | Field A |
+| ${ninja.temp.group.fieldB}     | *String* | Field B |
+| ${ninja.temp.group.fieldC}     | *String* | Field C |
+| ${ninja.temp.group.fieldD}     | *String* | Field D |
 
 ## Project name *String*
 
@@ -27,7 +38,8 @@ ${ninja.temp.group.autor}
 Used in :ghost:<code>head.jsp</code>
 
 ```html
-<title>${ninja.page.doc.title} | ${ninja.temp.group.author}</title> <meta name="author" content="${ninja.temp.group.author}" />
+<title>${ninja.page.doc.title} | ${ninja.temp.group.author}</title>
+<meta name="author" content="${ninja.temp.group.author}" />
 ```
 
 ## Copyright *String*
@@ -72,7 +84,7 @@ Used in :ghost:<code>head.jsp</code>
 <meta name="generator" content="${ninja.temp.group.generator}" />
 ```
 
-## *String*
+## Prefix of text keys *String*
 
 The value set for the template group in the :european\_castle field: `Prefix textových kľúčov`.
 
@@ -80,7 +92,7 @@ The value set for the template group in the :european\_castle field: `Prefix tex
 ${ninja.temp.group.textPrefix}
 ```
 
-## *String*
+## Field A *String*
 
 The value set for the template group in the :european\_castle field: `Pole A`.
 
@@ -88,7 +100,7 @@ The value set for the template group in the :european\_castle field: `Pole A`.
 ${ninja.temp.group.fieldA}
 ```
 
-## *String*
+## Field B *String*
 
 The value set for the template group in the :european\_castle field: `Pole B`.
 
@@ -96,7 +108,7 @@ The value set for the template group in the :european\_castle field: `Pole B`.
 ${ninja.temp.group.fieldB}
 ```
 
-## *String*
+## Field C *String*
 
 The value set for the template group in the :european\_castle field: `Pole C`.
 
@@ -104,7 +116,7 @@ The value set for the template group in the :european\_castle field: `Pole C`.
 ${ninja.temp.group.fieldC}
 ```
 
-## *String*
+## Field D *String*
 
 The value set for the template group in the :european\_castle field: `Pole D`.
 

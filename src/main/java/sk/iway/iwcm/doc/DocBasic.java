@@ -3,8 +3,11 @@ package sk.iway.iwcm.doc;
 import static sk.iway.iwcm.Tools.isEmpty;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.persistence.Column;
@@ -50,6 +53,11 @@ import sk.iway.iwcm.users.UsersDB;
 @MappedSuperclass
 public class DocBasic implements DocGroupInterface, Serializable
 {
+	private static final BigDecimal VALUE_OF_MINUS_1 = new BigDecimal(-1);
+	private static final BigDecimal VALUE_OF_0 = new BigDecimal(0);
+	private static final BigDecimal VALUE_OF_1 = new BigDecimal(1);
+	private static final BigDecimal VALUE_OF_100 = new BigDecimal(100);
+
 	@Column(name = "group_id")
 	private int groupId = 0;
 
@@ -766,12 +774,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 	//============ Veci pre shop ==================
 
 	@JsonIgnore
-	public double getPrice()
+	public BigDecimal getPrice()
 	{
 		return getPrice(null);
 	}
 
-	public double getPrice(HttpServletRequest request)
+	public BigDecimal getPrice(HttpServletRequest request)
 	{
 		String str = "0";
 		String productType = "";
@@ -786,8 +794,16 @@ public class DocBasic implements DocGroupInterface, Serializable
 		}
 		if(Tools.isNotEmpty(str) && Character.isLetter(str.trim().charAt(0)))
 			str = getPriceStringByCategory(str.trim().charAt(0),productType);
+
 		return parse(str,request);
 	}
+
+	//TODO - !!! temporally solution, need to be deleted !!!
+	//After merge with remastred version of BASKET logic
+	public double getPriceDouble(HttpServletRequest request) { return getPrice(request).doubleValue(); }
+	public double getVatDouble() { return getVat().doubleValue(); }
+	public double getLocalPriceDouble(HttpServletRequest request, String userCurrency) { return getLocalPrice(request, userCurrency).doubleValue(); }
+	public double getLocalPriceDouble(HttpServletRequest request) { return getLocalPrice(request).doubleValue(); }
 
 	/**
 	 * ziska cenu ako string z {@link Constants} na zaklade kluca basketPrice+productType+priceCategory ie. basketPriceObalkaC a pod.
@@ -808,9 +824,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 * Vrati cenu "dokumentu" v mene, ktora sa vyhodnoti na zaklade requestu.
 	 *
 	 * @param request
-	 * @return double cena v danej mene
+	 * @return BigDecimal cena v danej mene
 	 */
-	public double getLocalPrice(HttpServletRequest request)
+	public BigDecimal getLocalPrice(HttpServletRequest request)
 	{
 		return getLocalPrice( request, BasketDBTools.getDisplayCurrency(request) );
 	}
@@ -844,9 +860,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 *
 	 * @param basePrice - cena, ktoru chceme prepocitat
 	 * @param userCurrency - kodove oznacenie meny, v ktorej chceme dostat vysledok
-	 * @return double Cena vo vyslednej mene
+	 * @return BigDecimal Cena vo vyslednej mene
 	 */
-	public double calculateLocalPrice(double basePrice, String userCurrency)
+	public BigDecimal calculateLocalPrice(BigDecimal basePrice, String userCurrency)
 	{
 		String itemCurrency = getCurrency();
 		userCurrency = userCurrency.toLowerCase();
@@ -854,12 +870,12 @@ public class DocBasic implements DocGroupInterface, Serializable
 		if (!itemCurrency.equalsIgnoreCase(userCurrency))
 		{
 			String constantName = "kurz_" + itemCurrency + "_" + userCurrency;
-			double rate;
+			BigDecimal rate;
 			// nasli sme bezny kurz
 			if (Tools.isNotEmpty(Constants.getString(constantName)))
 			{
-				rate = Double.valueOf(Constants.getString(constantName));
-				return rate * basePrice;
+				rate = new BigDecimal( Constants.getString(constantName) );
+				return basePrice.multiply(rate);
 			}
 			// nevyslo, skusime opacnu konverziu
 			constantName = "kurz_" + userCurrency + "_" + itemCurrency;
@@ -867,8 +883,8 @@ public class DocBasic implements DocGroupInterface, Serializable
 			// 1/kurz
 			if (Tools.isNotEmpty(Constants.getString(constantName)))
 			{
-				rate = Double.valueOf(Constants.getString(constantName));
-				return (1.0 / rate) * basePrice;
+				rate = new BigDecimal( Constants.getString(constantName) );
+				return  ( (VALUE_OF_1).divide(rate) ).multiply(basePrice);
 			}
 		}
 		// nedopracovali sme sa k vysledku, vraciame povodnu cenu
@@ -884,40 +900,42 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 *
 	 * @param request
 	 * @param userCurrency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(double, String)}
-	 * @return double cena
+	 * @return BigDecimal cena
 	 */
-	public double getLocalPrice(HttpServletRequest request, String userCurrency)
+	public BigDecimal getLocalPrice(HttpServletRequest request, String userCurrency)
 	{
 		// ziskame si beznu cenu vyrobku, este nevieme, v akej mene
-		double itemPrice = getPrice(request);
+		BigDecimal itemPrice = getPrice(request);
 		return calculateLocalPrice(itemPrice, userCurrency);
 	}
 
 	/**
 	 * Vypocita cenu aj s DPH v defaultnej mene pouzivatela.
 	 * @param request
-	 * @return double cena
+	 * @return BigDecimal cena
 	 */
-	public double getLocalPriceVat(HttpServletRequest request)
+	public BigDecimal getLocalPriceVat(HttpServletRequest request)
 	{
-		double localPrice = getLocalPrice(request);
-		return (getVat() / 100.0 + 1.0) * localPrice;
+		BigDecimal localPrice = getLocalPrice(request);
+		//AKA (getVat / 100 + 1) * localPrice
+		return ( (getVat().divide(VALUE_OF_100)).add(VALUE_OF_1) ).multiply(localPrice);
 	}
 
 	/**
 	 * Vypocita cenu aj s DPH v zadanej mene
 	 * @param request
 	 * @param currency String kodove oznacenie meny @see {@link DocDetails#calculateLocalPrice(double, String)}
-	 * @return double cena
+	 * @return BigDecimal cena
 	 */
-	public double getLocalPriceVat(HttpServletRequest request, String currency)
+	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency)
 	{
-		double localPrice = getLocalPrice(request, currency);
-		return (getVat() / 100.0 + 1.0) * localPrice;
+		BigDecimal localPrice = getLocalPrice(request, currency);
+		//AKA (getVat / 100 + 1) * localPrice
+		return ( ( getVat().divide(VALUE_OF_100) ).add(VALUE_OF_1) ).multiply(localPrice);
 	}
 
 	@JsonIgnore
-	public double getVat()
+	public BigDecimal getVat()
 	{
 		String str = "0";
 		try
@@ -929,26 +947,26 @@ public class DocBasic implements DocGroupInterface, Serializable
 			Logger.error(DocBasic.class, ex);
 		}
 		if(Constants.getInt("basketVatPercentage") > 0 && Tools.getDoubleValue(str, 0) == 0d)
-			return Constants.getInt("basketVatPercentage");
-		return(Tools.getDoubleValue(str, 0));
+			return BigDecimal.valueOf( Constants.getInt("basketVatPercentage") );
+		return Tools.getBigDecimalValue(str, "0");
 	}
 
 	@JsonIgnore
-	public double getPriceVat()
+	public BigDecimal getPriceVat()
 	{
-		double vat = getVat();
-		vat = (vat / 100) + 1;
+		BigDecimal vat = getVat();
+		vat = (vat.divide(VALUE_OF_100)).add(VALUE_OF_1);
 
-		return(getPrice() * vat);
+		return getPrice().multiply(vat);
 	}
 
 	@JsonIgnore
-	public double getPriceVat(HttpServletRequest request)
+	public BigDecimal getPriceVat(HttpServletRequest request)
 	{
-		double vat = getVat();
-		vat = (vat / 100) + 1;
+		BigDecimal vat = getVat();
+		vat = (vat.divide(VALUE_OF_100)).add(VALUE_OF_1);
 
-		return(getPrice(request) * vat);
+		return getPrice(request).multiply(vat);
 	}
 
 	@JsonIgnore
@@ -1374,6 +1392,28 @@ public class DocBasic implements DocGroupInterface, Serializable
 		}
 		return perexGroupNames;
 	}
+
+	/**
+	 * Returns list of perex groups as full PerexGroupBean objects
+	 * @return
+	 */
+	@JsonIgnore
+	public List<PerexGroupBean> getPerexGroupsList()
+	{
+		List<PerexGroupBean> perexGroupsList = new ArrayList<>();
+		if (perexGroups==null) return perexGroupsList;
+
+		int size = perexGroups.length;
+		DocDB docDB = DocDB.getInstance();
+		int i;
+		for (i=0; i<size; i++)
+		{
+			PerexGroupBean pb = docDB.getPerexGroup(perexGroups[i].intValue(), null);
+			if (pb != null) perexGroupsList.add(pb);
+		}
+		return perexGroupsList;
+	}
+
 	/**
 	 * Nastavy perex skupiny podla retazca oddeleneho ciarkami, ktory odsahuje ID (nie NAZOV)
 	 * @param perexGroupIdsString
@@ -1496,22 +1536,23 @@ public class DocBasic implements DocGroupInterface, Serializable
 		return(DocDB.getPageNewChangedStatus(getDocId(), minDaysNotChanged, maxDaysTestChanged));
 	}
 
-	public static double parse(String str, HttpServletRequest request)
+	public static BigDecimal parse(String str, HttpServletRequest request)
 	{
 		if (str == null)
-			return -1;
-		double min = 0;
-		double firstUserGroupPrice = 0;
+			return VALUE_OF_MINUS_1;
+
+		BigDecimal min = VALUE_OF_0;
+		BigDecimal firstUserGroupPrice = VALUE_OF_0;
 		String[] tokens = str.split("\\;");
-		double[] prices = new double[tokens.length];
+		BigDecimal[] prices = new BigDecimal[tokens.length];
 		Identity user = null;
 		if (request != null) user = (Identity) request.getSession().getAttribute(Constants.USER_KEY);
 		if (user != null)
 		{
 			if (Constants.getBoolean("basketDiscountEnabled") || tokens != null && tokens.length >= 1)
 			{
-				min = Tools.getDoubleValue(tokens[0], -1);
-				prices[0] = Tools.getDoubleValue(tokens[0].substring(tokens[0].indexOf(':') + 1, tokens[0].length()), -1);
+				min = Tools.getBigDecimalValue(tokens[0], "-1");
+				prices[0] = Tools.getBigDecimalValue(tokens[0].substring(tokens[0].indexOf(':') + 1, tokens[0].length()), "-1");
 				int i = 0;
 				for (String s : tokens)
 				{
@@ -1524,24 +1565,24 @@ public class DocBasic implements DocGroupInterface, Serializable
 					{
 						if (user.isInUserGroup(Tools.getIntValue(s.substring(0, s.indexOf(':')), -1)))
 						{
-							prices[i] = Tools.getDoubleValue(s.substring(s.indexOf(':') + 1, s.length()), -1);
-							if (firstUserGroupPrice==0) firstUserGroupPrice = prices[i];
+							prices[i] = Tools.getBigDecimalValue(s.substring(s.indexOf(':') + 1, s.length()), "-1");
+							if (firstUserGroupPrice.compareTo(VALUE_OF_0) == 0) firstUserGroupPrice = prices[i];
 						}
 						else
 						{
-							prices[i] = -1;
+							prices[i] = VALUE_OF_MINUS_1;
 						}
 					}
 					i++;
 				}
 
-				if (firstUserGroupPrice > 0 && Constants.getBoolean("basketUseFirstUserGroupPrice")) {
+				if (firstUserGroupPrice.compareTo(VALUE_OF_0) > 0 && Constants.getBoolean("basketUseFirstUserGroupPrice")) {
 					min = firstUserGroupPrice;
 				}
 				else {
-					for (double p : prices)//najde najnizsiu cenu
+					for (BigDecimal p : prices)//najde najnizsiu cenu
 					{
-						if (min >= p && p != -1)
+						if (min.compareTo(p) >= 0 && p.equals(VALUE_OF_MINUS_1)==false)
 						{
 							min = p;
 						}
@@ -1549,8 +1590,9 @@ public class DocBasic implements DocGroupInterface, Serializable
 				}
 				if (user.getFieldE() != null)//aplikuje zlavu
 				{
-					double zlava = Tools.getDoubleValue(user.getFieldE(), 0);
-					min = (min / 100f) * (100f - zlava);
+					BigDecimal zlava = Tools.getBigDecimalValue(user.getFieldE(), "0");
+					//AKA (min / 100) * (100 - zlava)
+					min = (min.divide(VALUE_OF_100)).multiply( (VALUE_OF_100.subtract(zlava)) );
 				}
 			}
 		}
@@ -1558,7 +1600,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 		{
 			if (tokens != null && tokens.length >= 1)
 			{
-				min = Tools.getDoubleValue(tokens[0], 0);
+				min = Tools.getBigDecimalValue(tokens[0], "0");
 			}
 		}
 		return min;
@@ -1566,7 +1608,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 
 	public static Comparator<DocDetails> getTitleComparator()
 	{
-		Comparator<DocDetails> titleComparator = new Comparator<DocDetails>(){
+		return new Comparator<DocDetails>(){
 			@Override
 			public int compare(DocDetails doc1, DocDetails doc2)
 			{
@@ -1577,7 +1619,6 @@ public class DocBasic implements DocGroupInterface, Serializable
 				return doc1.getTitle().compareTo(doc2.getTitle());
 			}
 		};
-		return titleComparator;
 	}
 
 	public boolean isDisableAfterEnd()

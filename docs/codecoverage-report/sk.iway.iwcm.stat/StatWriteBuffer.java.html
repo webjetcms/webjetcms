@@ -141,7 +141,7 @@ import sk.iway.iwcm.Logger;
 		try
 		{
 <span class="fc" id="L143">			long rndSleep = random.nextInt(10000);</span>
-<span class="fc" id="L144">			Logger.println(StatWriteBuffer.class, &quot;sleep for: &quot;+rndSleep+&quot; ms&quot;);</span>
+<span class="fc" id="L144">			Logger.debug(StatWriteBuffer.class, &quot;sleep for: &quot;+rndSleep+&quot; ms&quot;);</span>
 <span class="fc" id="L145">			Thread.sleep(rndSleep);</span>
 		}
 <span class="pc" id="L147">		catch (InterruptedException e){sk.iway.iwcm.Logger.error(e);}</span>

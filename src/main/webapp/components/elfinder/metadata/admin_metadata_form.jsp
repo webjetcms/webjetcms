@@ -107,7 +107,7 @@ request.setAttribute("userGroupsList", userGroupsDB.getUserGroups());
 			<div class="panel panel-default">
 				<div class="panel-heading" role="tab" id="headingOne">
 					<h4 class="panel-title">
-						<a role="button" data-toggle="collapse" data-parent="#accordion${id}" href="#accordion${id}" aria-expanded="false" aria-controls="accordion${id}">
+						<a role="button" data-bs-toggle="collapse" data-parent="#accordion${id}" href="#accordion${id}" aria-expanded="false" aria-controls="accordion${id}">
 							${entry.key}
 						</a>
 					</h4>
@@ -118,8 +118,12 @@ request.setAttribute("userGroupsList", userGroupsDB.getUserGroups());
 						<input type="hidden" class="fileName" name="fileName[${id}]" value="${entry.key}"/>
 
 						<ul class="nav nav-tabs" role="tablist">
-						    <li role="presentation" class="active"><a href="#permissions${id}" aria-controls="permissions${id}" role="tab" data-toggle="tab">Klasifikačné metadáta</a></li>
-							<li role="presentation"><a href="#accesible${id}" aria-controls="accesible${id}" role="tab" data-toggle="tab"><iwcm:text key="editor.group.permissions"/></a></li>
+						    <li role="presentation" class="nav-item">
+								<a class="active" href="#permissions${id}" aria-controls="permissions${id}" role="tab" data-bs-toggle="tab">Klasifikačné metadáta</a>
+							</li>
+							<li role="presentation" class="nav-item">
+								<a href="#accesible${id}" aria-controls="accesible${id}" role="tab" data-bs-toggle="tab"><iwcm:text key="editor.group.permissions"/></a>
+							</li>
 						</ul>
 
 						<!-- Tab panes -->

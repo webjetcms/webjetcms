@@ -14,116 +14,164 @@ If you don't need to change the folder ID value, you can of course remove the AJ
 
 ```html
 <script data-th-inline="javascript">
-	var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ "";
+    var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
 </script>
 <script type="text/javascript">
-	var newsDataTable;
-	var idsConstantName = "newsAdminGroupIds";
+    var newsDataTable;
+    var idsConstantName = "newsAdminGroupIds";
 
-	window.domReady.add(function () {
-		WJ.breadcrumb({
-			id: "newsBreadcrumb",
-			tabs: [
-				{
-					url: "/apps/news/admin/",
-					title: "[[#{components.menu.news}]]",
-					active: true,
-				},
-				{
-					url: "#newsGroup",
-					title: "{filter}",
-					active: false,
-				},
-			],
-		});
+    window.domReady.add(function () {
 
-		function setGroupIdFilterSelect(data) {
-			//Get object, select
-			let filterSelect = document.getElementById("groupIdFilterSelect");
-			//Remove all options except the default one
-			while (filterSelect.options.length > 1) {
-				filterSelect.remove(1);
-			}
-			//Add new options
-			for (const s of data) {
-				filterSelect.add(new Option(s.label, s.value));
-			}
+        WJ.breadcrumb({
+            id: "newsBreadcrumb",
+            tabs: [
+                {
+                    url: '/apps/news/admin/',
+                    title: '[[#{components.menu.news}]]',
+                    active: true
+                },
+                {
+                    url: '#newsGroup',
+                    title: '{filter}',
+                    active: false
+                }
+            ]
+        });
 
-			//set selected value
-			var hash = window.location.hash;
-			if (hash != "") $(filterSelect).val(hash.substr(1));
+        function setGroupIdFilterSelect(data) {
+            //Get object, select
+            let filterSelect = document.getElementById('groupIdFilterSelect');
+            //Remove all options except the default one
+            while(filterSelect.options.length > 1) {
+                filterSelect.remove(1);
+            }
+            //Add new options
+            for (const s of data) {
+                filterSelect.add(new Option(s.label, s.value));
+            }
 
-			//Refresh object
-			$("#groupIdFilterSelect").selectpicker("refresh");
-		}
+            //set selected value
+            var hash = window.location.hash;
+            if (hash != "") $(filterSelect).val(hash.substr(1));
 
-		//move filter to top navbar
-		$("#pills-newsGroup-tab").html("");
-		$("div#groupId_extfilter").appendTo("#pills-newsGroup-tab");
+            //Refresh object
+            $("#groupIdFilterSelect").selectpicker('refresh');
+        }
 
-		let urlGroupIdFilter = "/admin/rest/news/news-list/convertIdsToNamePair?ids=constant:" + idsConstantName;
-		let data = {};
-		var includeParameter = WJ.urlGetParam("include");
-		if (includeParameter != null) {
-			data.include = includeParameter;
-		}
+        //move filter to top navbar
+        $("#pills-newsGroup-tab").html("");
+        $("div#groupId_extfilter").appendTo("#pills-newsGroup-tab");
 
-		$.ajax({
-			url: urlGroupIdFilter,
-			data: data,
-			method: "post",
-			success: function (data) {
-				setGroupIdFilterSelect(data);
+        let urlGroupIdFilter = "/admin/rest/news/news-list/convertIdsToNamePair?ids=constant:"+idsConstantName;
+        let data = {};
+        var includeParameter = WJ.urlGetParam("include");
+        if (includeParameter != null) {
+            data.include = includeParameter
+        }
 
-				let url = "/admin/rest/web-pages";
+        $.ajax({
+            url: urlGroupIdFilter,
+            data: data,
+            method: "post",
+            success: function (data) {
 
-				//rename title column
-				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("apps.news.newsTitle.js") });
-				//add column visibility
-				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "publishStartDate", visible: true });
-				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "publishEndDate", visible: true });
-				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "htmlData", visible: true });
-				window.WJ.DataTable.mergeColumns(webpageColumns, { name: "perexImage", visible: true });
+                setGroupIdFilterSelect(data);
 
-				window.importWebPagesDatatable().then((module) => {
-					var order = [];
-					order.push([4, "desc"]);
+                let url = "/admin/rest/web-pages";
 
-					let wpdInstance = new module.WebPagesDatatable({
-						url: WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val()),
-						columns: webpageColumns,
-						id: "newsDataTable",
-						order: order,
-					});
-					newsDataTable = wpdInstance.createDatatable();
-				});
+                //rename title column
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("apps.news.newsTitle.js") });
+                //add column visibility
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "publishStartDate", visible: true });
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "publishEndDate", visible: true });
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "htmlData", visible: true });
+                window.WJ.DataTable.mergeColumns(webpageColumns, { name: "perexImage", visible: true });
 
-				$("#groupIdFilterSelect").on("change", function () {
-					var value = this.value;
-					var newUrl = WJ.urlAddParam(url, "groupIdList", this.value);
-					newsDataTable.ajax.url(newUrl);
-					newsDataTable.ajax.reload();
-				});
-			},
-		});
-	});
+                window.importWebPagesDatatable().then(module => {
+
+                    var order = [];
+                    order.push([4, 'desc']);
+
+                    let wpdInstance = new module.WebPagesDatatable({
+                        url: WJ.urlAddParam(url, "groupIdList", $("#groupIdFilterSelect").val()),
+                        columns: webpageColumns,
+                        id: "newsDataTable",
+                        order: order,
+                        newPageTitleKey: "apps.news.newsTitle.js", //optional, title of new page
+                        showPageTitleKey: "admin.search.showFile.js", //optional, title of Show Page (eye) button
+                    });
+                    newsDataTable = wpdInstance.createDatatable();
+                });
+
+                $("#groupIdFilterSelect").on("change", function() {
+                    var value = this.value;
+                    var newUrl = WJ.urlAddParam(url, "groupIdList", this.value);
+                    newsDataTable.setAjaxUrl(newUrl);
+                    newsDataTable.ajax.reload();
+                });
+            }
+
+        });
+
+    });
 </script>
 
 <style type="text/css">
-	#pills-newsGroup-tab .bootstrap-select,
-	#pills-newsGroup-tab .bootstrap-select button {
-		min-width: 220px;
-		width: auto;
-	}
+    #pills-newsGroup-tab .bootstrap-select,
+    #pills-newsGroup-tab .bootstrap-select button {
+        min-width: 220px;
+        width: auto;
+    }
 </style>
 
 <div id="groupId_extfilter">
-	<div class="row datatableInit">
-		<div class="col-auto">
-			<select id="groupIdFilterSelect"></select>
-		</div>
-	</div>
+    <div class="row datatableInit">
+        <div class="col-auto">
+            <select id="groupIdFilterSelect">
+            </select>
+        </div>
+    </div>
 </div>
 
 <table id="newsDataTable" class="datatableInit table"></table>
+```
+
+If the user does not have direct access to the web pages, you need to add your application right to the conf. variable `webpagesFunctionsPerms`, which lists the rights to work with the website. This includes functions for inserting an image and the like.
+
+## Backend
+
+If you need a specific REST service for providing a list of web pages/news you can use the ready class [WebpagesDatatable](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) which you can extend and override the methods to suit your needs.
+
+```java
+@Datatable
+@RestController
+@RequestMapping("/admin/rest/abtesting/list")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_abtesting')")
+public class AbTestingRestController extends WebpagesDatatable {
+
+    @Autowired
+    public AbTestingRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+        super(docDetailsRepository, editorFacade, docAtrDefRepository);
+    }
+
+    @Override
+    public Page<DocDetails> getAllItems(Pageable pageable) {
+        GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
+        return AbTestingService.getAllItems(options);
+    }
+
+    @Override
+    public void beforeSave(DocDetails entity) {
+        //In abtesting version user cant edit/insert/duplicate page's
+        throwError(getProp().getText("admin.editPage.error"));
+    }
+
+    @Override
+    public boolean deleteItem(DocDetails entity, long id) {
+        //In abtesting version user cant delete page's
+        throwError(getProp().getText("admin.editPage.error"));
+
+        return false;
+    }
+}
 ```

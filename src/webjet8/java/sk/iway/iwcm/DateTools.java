@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Podporne metody
@@ -518,4 +519,49 @@ public class DateTools
 
 		return 0;
 	}
+
+		/**
+	 * Vrati list dni medzi dateFrom(vratane) a dateTo(vratane), vynuluje casou zlozku a nastavi hodinu
+	 *
+	 * @param dateFrom
+	 * @param dateTo
+	 * @param hourOfDay
+	 * @return
+	 */
+	public static List<Date> getDatesBetweenInclude(Date dateFrom, Date dateTo, int hourOfDay)
+	{
+		List<Date> dates = new ArrayList<>();
+		Calendar c1 = new GregorianCalendar();
+		c1.setTime(dateFrom);
+
+		c1.set(Calendar.HOUR_OF_DAY, hourOfDay);
+		c1.set(Calendar.MINUTE, 0);
+		c1.set(Calendar.SECOND, 0);
+		c1.set(Calendar.MILLISECOND, 0);
+
+		Calendar c2 = new GregorianCalendar();
+		c2.setTime(dateTo);
+
+		dates.add(dateFrom);
+		while ((c1.get(Calendar.YEAR) != c2.get(Calendar.YEAR)) || (c1.get(Calendar.MONTH) != c2.get(Calendar.MONTH))
+					|| (c1.get(Calendar.DATE) != c2.get(Calendar.DATE)))
+		{
+			c1.add(Calendar.DATE, 1);
+			dates.add(new Date(c1.getTimeInMillis()));
+		}
+		return dates;
+	}
+
+	public static long getDaysBetween(Date dateFrom, Date dateTo) {
+        Calendar start = Calendar.getInstance();
+        start.setTime(dateFrom);
+		hourOfDay(start, 12);
+			
+        Calendar end = Calendar.getInstance();
+        end.setTime(dateTo);
+		hourOfDay(end, 12);
+
+        long diffInMillis = end.getTimeInMillis() - start.getTimeInMillis();
+        return TimeUnit.DAYS.convert(diffInMillis, TimeUnit.MILLISECONDS);
+    }
 }

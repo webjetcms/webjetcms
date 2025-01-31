@@ -51,7 +51,7 @@ public class ViewsRestController extends DatatableRestControllerV2<VisitsDTO, Lo
     @Override
     public Page<VisitsDTO> searchItem(Map<String, String> params, Pageable pageable, VisitsDTO search) {
         //Process received params into FilterHeaderDto
-        filter = StatService.processMapToStatFilter(params, null);
+        filter = StatService.processMapToStatFilter(params, null, getUser());
 
         DatatablePageImpl<VisitsDTO> page = new DatatablePageImpl<>( getDataAndConvertIntoPageItems() );
         return page;

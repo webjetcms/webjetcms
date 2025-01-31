@@ -178,7 +178,7 @@ export function saveSearchCriteria(DATA) {
 
         var value = $input.val();
 
-        //console.log("name=", name, "value=", value, "input=", $input);
+        //console.log("saveSearchCriteria: name=", name, "value=", value, "input=", $input);
         if ("true"===value) {
             //it's checkbox
             value = $("#"+DATA.id+"_extfilter "+name).is(":checked");
@@ -481,7 +481,7 @@ export async function createAmchart(chartForm, update) {
         am5_dark.new(root),
         WebjetTheme.new(root)
     ]);
-    
+
     if(update === true) {
         //We need to remove previous header in order too push new ONE -> if we want update chart title
         let previousHeader = $('#' + chartForm.chartDivId).prev();
@@ -973,9 +973,9 @@ async function createDoublePieChart(root, chartForm) {
 /**
  * Set SUM label inside PIE chart. This label is set in the center of chart and show sum of values in chart.
  * In case of DoublePieChartForm, you can decide if you want to show sum of inner or outer series via chartForm.labelSeries param (inner/outer).
- * @param {PieChartForm} chartForm 
- * @param {DoublePieChartForm} chartForm 
- * @returns 
+ * @param {PieChartForm} chartForm
+ * @param {DoublePieChartForm} chartForm
+ * @returns
  */
 function setPieSumLabel(chartForm) {
 
@@ -1030,10 +1030,10 @@ function setPieSumLabel(chartForm) {
 
 /**
  * Remove old SUM label from PIE chart and set new one.
- * 
- * @param {PieChartForm} chartForm 
- * @param {DoublePieChartForm} chartForm 
- * @returns 
+ *
+ * @param {PieChartForm} chartForm
+ * @param {DoublePieChartForm} chartForm
+ * @returns
  */
 function updatePieSumLabels(chartForm) {
     //MUST be PIE chart
@@ -1592,7 +1592,7 @@ export async function setWebPagesSelect(dataUrl, valueToSelect) {
  * @param {String} dataUrl - url of endpoint where we obtain data for select
  * @param {*} valueToSelect - value that will be auto selected (if is in the list of obtained data)
  */
-export async function setSelect(dataUrl, valueToSelect, elementId) {
+export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault = false) {
     await $.ajax({url: dataUrl, success: function(mapOfDirs) {
         //Get object, select
         let select = document.getElementById(elementId);
@@ -1600,11 +1600,13 @@ export async function setSelect(dataUrl, valueToSelect, elementId) {
         while(select.options.length > 1)
         select.remove(1);
 
+        if(removeDefault === true) select.remove(0);
+
         //Add new options
         let isInList = false;
-        for (const [key, value] of Object.entries(mapOfDirs)) {
-            select.add(new Option(value, key));
-            if(valueToSelect == key) isInList = true;
+        for(let i = 0; i < mapOfDirs.length; i++) { 
+            select.add(new Option(mapOfDirs[i]['label'], mapOfDirs[i]['value']));
+            if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
         }
 
         //If valueToSelect is in list of valued, select it

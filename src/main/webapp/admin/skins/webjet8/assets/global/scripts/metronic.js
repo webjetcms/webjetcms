@@ -149,11 +149,11 @@ var Metronic = function () {
 
     // Handles custom checkboxes & radios using jQuery Uniform plugin
     var handleUniform = function () {
-        if (!$().uniform) {
+        /*if (!$().uniform) {
             return;
         }
         //jeeff: zakomentovane lebo to nereaguje na JS zmeny v checkboxoch
-        /**/
+        /*
         var test = $("input[type=checkbox]:not(.toggle, .make-switch), input[type=radio]:not(.toggle, .star, .make-switch)");
         if (test.size() > 0) {
             test.each(function () {
@@ -167,10 +167,13 @@ var Metronic = function () {
     }
 
     var handleBootstrapSwitch = function () {
-        if (!$().bootstrapSwitch) {
+        /*if (!$().bootstrapSwitch) {
             return;
         }
-        $('.make-switch').bootstrapSwitch();
+        $('.make-switch').bootstrapSwitch();*/
+
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+        const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
     }
 
     // Handles Bootstrap Accordions.
@@ -307,7 +310,7 @@ var Metronic = function () {
 
     // Handle Hower Dropdowns
     var handleDropdownHover = function () {
-        $('[data-hover="dropdown"]').dropdownHover();
+        //$('[data-hover="dropdown"]').dropdownHover();
     }
 
     // Handles Bootstrap Popovers
@@ -382,12 +385,12 @@ var Metronic = function () {
 
     // Handle Select2 Dropdowns
     var handleSelect2 = function() {
-        if ($().select2) {
+        /*if ($().select2) {
             $('.select2me').select2({
                 placeholder: "Select",
                 allowClear: true
             });
-        }
+        }*/
     }
 
     //* END:CORE HANDLERS *//
@@ -673,7 +676,7 @@ var Metronic = function () {
 
             var id = Metronic.getUniqueID("Metronic_alert");
 
-            var html = '<div id="'+id+'" class="Metronic-alerts alert alert-'+options.type+' fade in">' + (options.close ? '<button type="button" class="close" data-dismiss="alert" aria-hidden="true"></button>' : '' ) + (options.icon != "" ? '<i class="fa-lg fa fa-'+options.icon + '"></i>  ' : '') + options.message+'</div>'
+            var html = '<div id="'+id+'" class="Metronic-alerts alert alert-'+options.type+' fade in">' + (options.close ? '<button type="button" class="close" data-bs-dismiss="alert" aria-hidden="true"></button>' : '' ) + (options.icon != "" ? '<i class="fa-lg fa fa-'+options.icon + '"></i>  ' : '') + options.message+'</div>'
 
             if (options.reset) {0
                 $('.Metronic-alerts').remove();

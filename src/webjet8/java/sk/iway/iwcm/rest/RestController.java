@@ -22,26 +22,39 @@ import sk.iway.iwcm.Tools;
  */
 public class RestController
 {
-	public static boolean isIpAddressAllowed(HttpServletRequest request)
+	/**
+	 * Verify if IP address is available to call this REST service
+	 * @param request
+	 * @return
+	 */
+	public boolean isIpAddressAllowed(HttpServletRequest request)
 	{
 		String callerIpAddress = Tools.getRemoteIP(request);
 
 		if(Tools.isNotEmpty(callerIpAddress))
 		{
-			String allowedIpsString = Constants.getString("restAllowedIpAddresses");
+			String allowedIpsString = null;
+			//specific version for className
+			String className = this.getClass().getSimpleName();
+			if(Tools.isNotEmpty(className)) {
+				allowedIpsString = Constants.getString("restAllowedIpAddresses-" + className);
+			}
+
+			if(Tools.isEmpty(allowedIpsString)) allowedIpsString = Constants.getString("restAllowedIpAddresses");
+
 			if ("*".equals(allowedIpsString)) return true;
-			if(Tools.isNotEmpty(allowedIpsString))
-			{
+
+			if(allowedIpsString !=null && Tools.isNotEmpty(allowedIpsString)) {
 				String[] allowedIps = allowedIpsString.split(",");
-				for(String ip : allowedIps)
-				{
-					if(callerIpAddress.trim().startsWith(ip.trim()))
+				for(String ip : allowedIps) {
+					if(callerIpAddress.trim().startsWith(ip.trim())) {
 						return true;
+					}
 				}
 			}
 		}
 
-		Logger.debug(RestController.class, "Not allowed access!");
+		Logger.debug(RestController.class, "Not allowed access, ip: " + callerIpAddress);
 		throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
 	}
 }

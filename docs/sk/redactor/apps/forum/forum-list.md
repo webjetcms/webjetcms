@@ -30,9 +30,9 @@ Nastavenie vlastností pre celé fórum/diskusiu (všetky príspevky na jednej w
 
 Obsahuje základné údaje o diskusnom fóre v poliach:
 
-- **Stav diskusného fóra** - informuje o aktivite diskusie. V prípade, že je presiahnuté niektoré z obmedzení, alebo je manuálne vypnutá aktivita, bude stav diskusného fóra: "uzavreté" (viac v [Sekcia - Platnosť](#sekcia---platnosť))
+- **Stav diskusného fóra** - informuje o aktivite diskusie. V prípade, že je presiahnuté niektoré z obmedzení, alebo je manuálne vypnutá aktivita, bude stav diskusného fóra: "uzavreté" (viac v [Sekcia - Platnosť](#sekcia-platnosť))
 - **Typ fóra** - má hodnotu "jednoduchá diskusia pod článkom" alebo "viactémová diskusia (```Message Board```)"
-- **Oznamy - podtémy môžu vytvárať len administrátori** - toto pole sa zobrazí iba v prípade "viactémovej diskusie". Ak je táto možnosť zvolená, oznamy/pod-témy budú môcť vytvárať iba administrátori (viac v [Sekcia - Prístupové práva](#sekcia---prístupové-práva))
+- **Oznamy - podtémy môžu vytvárať len administrátori** - toto pole sa zobrazí iba v prípade "viactémovej diskusie". Ak je táto možnosť zvolená, oznamy/pod-témy budú môcť vytvárať iba administrátori (viac v [Sekcia - Prístupové práva](#sekcia-prístupové-práva))
 - **Potvrdzovanie príspevkov** - ak označíte túto možnosť, tak pri každom pridaní nového príspevku, sa na uvedenú adresu odošle mail s textom príspevku a odkazom na túto tabuľku, v ktorej sa príspevok automatický vy-filtrujeme
 - **Žiadosť o potvrdenie poslať na e-mail** - pole obsahujúce email kam sa žiadosti o potvrdenie odošlú. Samotné pole sa zobrazí iba v prípade, ak je možnosť **Potvrdzovanie príspevkov** vybraná. V takomto prípade bude editor vyžadovať zadanie tohto emailu.
 -  **Notifikáciu poslať na e-mail** - toto pole má rovnakú úlohu ako pole obsahuje emailovú adresu, na ktorú sa odošle email vždy, keď akýkoľvek príspevok pribudne do diskusného fóra.

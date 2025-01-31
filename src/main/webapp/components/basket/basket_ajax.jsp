@@ -9,41 +9,41 @@
 <%
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
-	
+
 	int itemId = Tools.getIntValue(request.getParameter("basketItemId"), -1);
 	if (itemId == -1) {
 		out.print("{}");
 		return;
 	}
-	
+
 	boolean ok = false;
-	
+
 	if ("add".equals(request.getParameter("act")))
-	{	
+	{
 		ok = BasketDB.setItemFromDoc(request);
 	}
-	
+
 	if ("set".equals(request.getParameter("act")))
 	{
 		ok = BasketDB.setItemFromDoc(request);
 	}
-	
+
 	if (ok)
-	{			
-		List<BasketItemBean> items = BasketDB.getBasketItems(request);		
+	{
+		List<BasketItemBean> items = BasketDB.getBasketItems(request);
 		DocDB docDB = DocDB.getInstance();
-		
+
 		%>{
 			"itemId": 					"<%= itemId %>",
-			"totalItems": 				"<%= BasketDB.getTotalItems(items) %>&nbsp;<iwcm:text key="components.basket.basket_small_qty_title"/>",
+			"totalItems": 				"<%= BasketDB.getTotalItems(items) %>",
 			"displayCurrency": 		"<%= BasketDB.getDisplayCurrency(request) %>",
 			"totalLocalPrice": 	"<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= BasketDB.getTotalLocalPrice(items,request) %></iway:curr>",
 			"totalLocalPriceVat": 	"<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= BasketDB.getTotalLocalPriceVat(items,request) %></iway:curr>",
 			"items": [
-				<%	
+				<%
 				boolean isFirst = true;
-				for (BasketItemBean item : items) 
-				{ 
+				for (BasketItemBean item : items)
+				{
 				%><%= (!isFirst) ? "," : "" %>{
 				 		"id": "<%= item.getItemId() %>",
 				 		"image": "<%= item.getDoc().getPerexImage() %>",
@@ -58,7 +58,7 @@
 						"priceVatQty": "<iway:curr currency="<%=BasketDB.getDisplayCurrency(request) %>"><%= item.getItemPriceVatQty() %></iway:curr>"
 					}<%
 					isFirst=false;
-				} 
+				}
 				%>
 			]
 		}<%

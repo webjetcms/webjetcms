@@ -137,7 +137,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.wait(3);
 
     I.amOnPage("/admin/v9/users/user-list/");
-    DT.filter("login", "user_slabeheslo");
+    DT.filterContains("login", "user_slabeheslo");
     I.click("user_slabeheslo");
     DTE.waitForEditor();
 

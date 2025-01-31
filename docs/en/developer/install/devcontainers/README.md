@@ -17,6 +17,7 @@ It is therefore particularly suitable for the following scenarios:
 - You are working on multiple projects, each using a different version of Java, NodeJS, and it is difficult to coordinate versions on your machine.
 - Occasionally, you need to work on an outdated project that uses technologies that are no longer supported and are difficult to keep on your computer.
 - You need to launch/test/verify/test the project quickly.
+
 Of course development has its drawbacks - running in a container is a bit slower, especially working with the file system. Installing `node_modules` is significantly slower (but you typically rarely perform it) and the WebJET CMS start is about 20% slower. Similarly `git commit/push` lasts a few seconds longer.
 
 When you run a project in a container, the standard HTTP ports 80,443,8080 are mapped to the local machine, so that you will see the WebJET running from the container in your browser by default, just as you would if you were running the project on your own machine.
@@ -71,7 +72,7 @@ You can use a DNS record in the container `host.docker.internal` to connect to y
 
 ## Gitlab/SSH keys
 
-In order to get a connection to the gitlab server using SSH keys to work in the container, you need to configure [key sharing](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) via `ssh-agent` between your computer and the container. Technically, you could copy the SSH key directly to a folder `/home/vscode/.ssh`but this is not an ideal solution.
+In order to get a connection to the gitlab server using SSH keys to work in the container, you need to configure [key sharing](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials) via `ssh-agent` between your computer and the container. Technically, you could copy the SSH key directly to a folder `/home/vscode/.ssh` but this is not an ideal solution.
 
 First you need to start the ssh-agent (one-time operation):
 
@@ -108,7 +109,7 @@ ssh-add -l
 
 You can then verify this in the container terminal.
 
-After restarting devcontainers, you should be able to connect to git/gitlab just like on your machine. The above settings are also in the script `.devcontainer/localInit.sh`which is executed before each container start, so you don't need to execute these commands manually.
+After restarting devcontainers, you should be able to connect to git/gitlab just like on your machine. The above settings are also in the script `.devcontainer/localInit.sh` which is executed before each container start, so you don't need to execute these commands manually.
 
 If you have a problem connecting to the git server, you can always switch to the local version and `pull/push` the operation is performed locally.
 
@@ -184,28 +185,34 @@ The following is a list of sample files that you can use as a basis for your pro
 			"version": "16"
 		}
 	},
-	"runArgs": [
+    "runArgs": [
 		//publish ports
 		"--publish=80:80",
 		"--publish=443:443",
 		"--publish=8080:8080"
-	],
+    ],
 
-	"initializeCommand": ".devcontainer/localInit.sh || true",
+	"initializeCommand" : ".devcontainer/localInit.sh || true",
 	"postCreateCommand": ".devcontainer/postCreateCommand.sh",
 	"postStartCommand": ".devcontainer/postStartCommand.sh",
 
 	//https://www.oddbird.net/2022/11/30/headed-playwright-in-docker/
 	"containerEnv": {
-		"DISPLAY": "host.docker.internal:0"
-	},
+        "DISPLAY": "host.docker.internal:0"
+    },
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	//"forwardPorts": []
 
 	// Configure tool-specific properties.
 	"customizations": {
-		"extensions": ["SonarSource.sonarlint-vscode", "vscjava.vscode-gradle", "naco-siren.gradle-language", "mutantdino.resourcemonitor", "srmeyers.git-prefix"],
+		"extensions": [
+			"SonarSource.sonarlint-vscode",
+			"vscjava.vscode-gradle",
+			"naco-siren.gradle-language",
+			"mutantdino.resourcemonitor",
+			"srmeyers.git-prefix"
+		],
 		"settings": {
 			"window.title": "${activeEditorMedium}${separator}${rootName}",
 			"editor.stickyScroll.enabled": true,

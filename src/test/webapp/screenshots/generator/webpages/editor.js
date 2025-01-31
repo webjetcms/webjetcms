@@ -32,7 +32,7 @@ Scenario('editor', ({I, DTE, Document}) => {
     Document.screenshot("/redactor/webpages/editor/html-mode.png");
 });
 
-Scenario('working-in-editor', ({ I, Document, DTE }) => {
+Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=100605");
     DTE.waitForEditor();
 
@@ -110,6 +110,34 @@ Scenario('working-in-editor', ({ I, Document, DTE }) => {
         I.waitForVisible("table.urlFormTable");
         I.switchTo();
         Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog.png');
+
+        I.say("Image - pixabay");
+            I.click( locate( "div.cke_dialog_tabs" ).find( locate("a").withText("Fotobanka") ) );
+            I.waitForVisible("#wjImagePixabayIframeElement");
+            I.switchTo("#wjImagePixabayIframeElement");
+            I.fillField("#search", "car");
+            I.clickCss('button[type="submit"]');
+            I.switchTo();
+            Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay.png');
+
+            I.switchTo("#wjImagePixabayIframeElement");
+            I.clickCss('img[src="https://cdn.pixabay.com/photo/2015/06/03/13/38/plymouth-796441_150.jpg"]');
+            I.waitForVisible("#imageModal > div.modal-dialog");
+            I.switchTo();
+            Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay-add.png');
+
+            I.switchTo("#wjImagePixabayIframeElement");
+            I.fillField(locate("#imageModal").find("#imageWidth"), 800);
+            I.switchTo();
+            Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay-add2.png');
+
+            I.switchTo("#wjImagePixabayIframeElement");
+            I.clickCss('button.btn.btn-primary.saveImage');
+            I.waitForInvisible("#imageModal");
+            I.switchTo();
+            I.wait(1);
+            Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/image_dialog-pixabay-save.png');
+
         I.clickCss(".cke_dialog_ui_button_cancel");
         I.waitForInvisible( locate(".cke_dialog.cke_browser_webkit.cke_ltr").find("iframe#wjImageIframeElement"), 5);
 
@@ -158,25 +186,25 @@ Scenario('working-in-editor', ({ I, Document, DTE }) => {
 
         I.say("Table - setting -> RIADOK");
         I.switchTo(locate(settingDialogA + " > iframe.cke_panel_frame").last());
-        I.click("span.cke_menuitem > a.cke_menubutton[title=Riadok]");
+        I.click(`span.cke_menuitem > a.cke_menubutton[title=${i18n.get('Row')}]`);
         I.switchTo();
         Document.screenshotElement(locate(settingDialogA).last() , '/redactor/webpages/working-in-editor/table_edit_row.png');
 
         I.say("Table - setting -> STLPEC");
         I.switchTo(locate(settingDialogA + " > iframe.cke_panel_frame").first());
-        I.click("span.cke_menuitem > a.cke_menubutton[title=Stĺpec]");
+        I.click(`span.cke_menuitem > a.cke_menubutton[title=${i18n.get('Column')}]`);
         I.switchTo();
         Document.screenshotElement(locate(settingDialogA).last() , '/redactor/webpages/working-in-editor/table_edit_column.png');
 
         I.say("Table - setting -> BUNKA");
         I.switchTo(locate(settingDialogA + " > iframe.cke_panel_frame").first());
-        I.click("span.cke_menuitem > a.cke_menubutton[title=Bunka]");
+        I.click(`span.cke_menuitem > a.cke_menubutton[title=${i18n.get('Cell')}]`);
         I.switchTo();
         Document.screenshotElement(locate(settingDialogA).last() , '/redactor/webpages/working-in-editor/table_edit_cell.png');
 
         I.say("Table - setting -> BUNKA -> VLASTNOSTI");
         I.switchTo(locate(settingDialogA + " > iframe.cke_panel_frame").last());
-        I.click("Vlastnosti bunky");
+        i18n.click("Cell Properties");
         I.switchTo();
         I.waitForVisible(locate(".cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page").last(), 5);
         Document.screenshotElement(locate(".cke_dialog.cke_browser_webkit.cke_ltr.cke_single_page").last(), "/redactor/webpages/working-in-editor/table_edit_cell_edit.png");
@@ -193,7 +221,31 @@ Scenario('working-in-editor', ({ I, Document, DTE }) => {
     I.clickCss(".cke_dialog_ui_button_cancel");
 });
 
-Scenario('appstore', ({ I, DTE, Document }) => {
+Scenario('remove Pixabay image', ({ I, Document }) => {
+    I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy90ZXN0LXN0YXZvdi9tYW51YWx0ZXN0cGFnZQ_E_E");
+
+    I.waitForElement(`.elfinder-cwd-filename`);
+    I.rightClick(`.elfinder-cwd-filename`);
+    I.waitForVisible('.elfinder-contextmenu', 10);
+
+    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjeditswitch');
+    I.switchToNextTab();
+    I.waitForVisible("#galleryTable_modal");
+    I.clickCss("#pills-dt-galleryTable-metadata-tab");
+
+    Document.screenshotElement("#galleryTable_modal", '/redactor/webpages/working-in-editor/image_dialog-pixabay-edit.png');
+    I.closeCurrentTab();
+
+    I.waitForElement(`.elfinder-cwd-filename`);
+    I.rightClick(`.elfinder-cwd-filename`);
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss("span.elfinder-button-icon.elfinder-button-icon-rm");
+    I.waitForVisible( locate("div.ui-dialog-titlebar > span.elfinder-dialog-title").withText("Vymazať") );
+    I.click( locate("button.ui-button > span.ui-button-text").withText("Vymazať") );
+    I.waitForInvisible(`.elfinder-cwd-filename`); 
+});
+
+Scenario('appstore', ({ I, DTE, Document, i18n }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=17321");
     DTE.waitForEditor();
@@ -212,7 +264,7 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.switchTo("#editorComponent")
 
     I.waitForVisible("input#search");
-    I.fillField("input#search", "mapa");
+    I.fillField("input#search", i18n.get("map"));
     I.waitForVisible("#components-map-title", 10);
     I.wait(2);
     Document.screenshot("/redactor/webpages/working-in-editor/appstore-search.png");
@@ -230,4 +282,14 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.switchTo();
     I.clickCss(".cke_dialog_ui_button_cancel");
     DTE.cancel();
+});
+
+Scenario('fontawesome', ({ I, DTE, Document }) => {
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=21");
+    DTE.waitForEditor();
+    I.wait(4);
+    Document.screenshotElement("a[title='Insert Font Awesome']", "/frontend/webpages/fontawesome/editor-toolbar-icon.png");
+    I.clickCss("a[title='Insert Font Awesome']");
+    I.wait(3);
+    Document.screenshot("/frontend/webpages/fontawesome/editor.png");
 });

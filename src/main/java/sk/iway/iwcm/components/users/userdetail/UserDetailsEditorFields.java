@@ -211,8 +211,13 @@ public class UserDetailsEditorFields extends BaseEditorFields {
             for(GroupsApproveEntity group : groups) {
                 getModeText(group.getApproveMode(), sb, prop);
                 sb.append(" ");
-                if (Tools.isNotEmpty(group.getGroup().getDomainName())) sb.append(group.getGroup().getDomainName()).append(":");
-                sb.append(group.getGroup().getFullPath()).append("<br />");
+                if (group.getGroup()==null) {
+                    sb.append("???");
+                } else {
+                    if (Tools.isNotEmpty(group.getGroup().getDomainName())) sb.append(group.getGroup().getDomainName()).append(":");
+                    sb.append(group.getGroup().getFullPath());
+                }
+                sb.append("<br />");
             }
             groupsApproveShow = sb.toString();
         }

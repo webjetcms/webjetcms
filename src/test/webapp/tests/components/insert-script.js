@@ -56,9 +56,9 @@ Scenario('pridanie platnosti od-do do upravovaneho zaznamu @baseTest', async ({ 
                I.fillField('.datetimepicker.max.form-control.form-control-sm.dt-filter-to-validTo', '01.01.2022 00:00:00');
                I.pressKey('Enter', "input.dt-filter-availableGrooupsList");
                DT.waitForLoader();
-               I.see("01.01.2021 00:00:00", "div.dataTables_scrollBody");
-               I.see("01.01.2022 00:00:00", "div.dataTables_scrollBody");
-               I.see(`${options.testingData[0]}-chan.ge`, "div.dataTables_scrollBody");
+               I.see("01.01.2021 00:00:00", "div.dt-scroll-body");
+               I.see("01.01.2022 00:00:00", "div.dt-scroll-body");
+               I.see(`${options.testingData[0]}-chan.ge`, "div.dt-scroll-body");
           },
      });
 });
@@ -97,9 +97,9 @@ Scenario('pridanie adresara a webstranky do edit zaznamu @baseTest', async ({ I,
                I.fillField('.form-control.form-control-sm.filter-input.dt-filter-docIds', '/Test stavov/Presmerovaná extrená linka');
                I.pressKey('Enter', "input.dt-filter-availableGrooupsList");
                DT.waitForLoader();
-               I.see("/Test stavov/Zobrazený v menu", "div.dataTables_scrollBody");
-               I.see("/Test stavov/Presmerovaná extrená linka", "div.dataTables_scrollBody");
-               I.see(`${options.testingData[0]}-chan.ge`, "div.dataTables_scrollBody");
+               I.see("/Test stavov/Zobrazený v menu", "div.dt-scroll-body");
+               I.see("/Test stavov/Presmerovaná extrená linka", "div.dt-scroll-body");
+               I.see(`${options.testingData[0]}-chan.ge`, "div.dt-scroll-body");
           },
      });
 });
@@ -127,8 +127,8 @@ Scenario('pridanie sriptu do edit zaznamu @baseTest', async ({ I, DataTables, DT
                I.fillField('.form-control.form-control-sm.filter-input.dt-filter-scriptBody', '<!-- auto test script -->');
                I.pressKey('Enter', "input.dt-filter-availableGrooupsList");
                DT.waitForLoader();
-               I.see("<!-- auto test script -->", "div.dataTables_scrollBody"); // TODO filter nevyhlada zaznam podla scriptu
-               I.see(`${options.testingData[0]}-chan.ge`, "div.dataTables_scrollBody");
+               I.see("<!-- auto test script -->", "div.dt-scroll-body"); // TODO filter nevyhlada zaznam podla scriptu
+               I.see(`${options.testingData[0]}-chan.ge`, "div.dt-scroll-body");
           },
      });
 });
@@ -175,8 +175,8 @@ Scenario('zmena hodnoty cookie @baseTest', async ({ I, DataTables, DT, DTE }) =>
                I.say('zmenena cookie v edit zazname');
                // cakam na neklasifikovane cookie vo vyhladanom zazname
                DT.filterSelect('cookieClass', 'Neklasifikované');
-               I.see("Neklasifikované", "div.dataTables_scrollBody");
-               I.see(`${options.testingData[0]}-chan.ge`, "div.dataTables_scrollBody");
+               I.see("Neklasifikované", "div.dt-scroll-body");
+               I.see(`${options.testingData[0]}-chan.ge`, "div.dt-scroll-body");
           },
      });
 });

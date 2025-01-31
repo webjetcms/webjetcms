@@ -40,18 +40,18 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.Column;
 
 public class FilePropertiesService {
-    
+
     private FilePropertiesService() {
         // private constructor to hide the implicit public one
     }
-    
+
     public static FilePropertiesDTO getOneItem(HttpServletRequest request, Identity user) {
         String dirPath = request.getParameter("dirPath");
         String fileName = request.getParameter("fileName");
 
         if(Tools.isEmpty(dirPath) || Tools.isEmpty(fileName))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-           
+
         //Remove excessive spaces
         dirPath = dirPath.replaceAll("\\s+","");
         fileName = fileName.replaceAll("\\s+","");
@@ -59,7 +59,7 @@ public class FilePropertiesService {
         //Check perms
         if(user.isFolderWritable(dirPath) == false)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-                
+
         FilePropertiesDTO filePropertiesDTO = new FilePropertiesDTO();
         filePropertiesDTO.setDirPath(dirPath);
         filePropertiesDTO.setFileName(fileName);
@@ -171,7 +171,7 @@ public class FilePropertiesService {
 					// zmenim udaje v suboroch
 					Column col;
 					String stranka="";
-					List<Column> zoznamUsage = FileTools.getFileUsage(oldFile);
+					List<Column> zoznamUsage = FileTools.getFileUsage(oldFile, user);
 					for(int i=0;i<zoznamUsage.size();i++)
 					{
 						col = zoznamUsage.get(i);

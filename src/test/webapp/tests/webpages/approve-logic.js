@@ -3,7 +3,6 @@ Feature('webpages.approve-logic');
 var randomNumber;
 var deletePrefix = "[DELETE] ";
 var changePostfix = "_change";
-var add_webpage = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 var awaitingApproveFolderLink = "/admin/v9/webpages/web-pages-list/?groupid=5343";
 
 var urlCakajuceNaSchvalenieZmenaTitulku = "/admin/v9/webpages/web-pages-list/?groupid=5343";
@@ -14,7 +13,7 @@ Before(({ I }) => {
     }
 });
 
-Scenario('creating/editing pages that need to be approved - logic', ({I, DTE, Document, DT}) => {
+Scenario('creating/editing pages that need to be approved - logic', async ({I, DTE, Document, DT}) => {
     var pageNameA = "onelevel-approve-autotest-" + randomNumber;
     var pageNameB = pageNameA + changePostfix;
 
@@ -27,15 +26,15 @@ Scenario('creating/editing pages that need to be approved - logic', ({I, DTE, Do
 
         I.amOnPage(awaitingApproveFolderLink);
 
-        I.click(add_webpage);
-        setPageName(I, pageNameA);
+        I.click(DT.btn.add_button);
+        setPageName(I, DTE, pageNameA, true);
 
         //Save
         DTE.save();
         Document.notifyCheckAndClose("Žiadosť o schválenie vytvorenia novej web stránky dostal: Tester Playwright");
 
     I.say("Until we are logged, we must see page");
-        DT.filter("title", pageNameA);
+        DT.filterContains("title", pageNameA);
         I.amOnPage("/test-stavov/cakajuce-schvalenie-zmena-titulku/" + pageNameA.toLowerCase() + ".html");
         I.see(pageNameA.toUpperCase());
 
@@ -61,20 +60,19 @@ Scenario('creating/editing pages that need to be approved - logic', ({I, DTE, Do
     I.say("Check that page was approved by admin");
         I.clickCss("#pills-pages-tab");
         I.click(pageNameA);
-        I.dtWaitForEditor();
+        DTE.waitForEditor();
         I.clickCss("#pills-dt-datatableInit-history-tab");
-
-        I.switchTo("#pills-dt-datatableInit-history");
-            DT.filter("historyApprovedByName", "Tester Playwright");
+        I.waitForElement("#pills-dt-datatableInit-history");
+        await within("#pills-dt-datatableInit-history", () => {
+            DT.filterContains("historyApprovedByName", "Tester Playwright");
             I.see(pageNameA);
             I.see("Tester Playwright");
 
             //Check that disapproved is not set
-            DT.filter("historyDisapprovedByName", "Tester Playwright");
+            DT.filterContains("historyDisapprovedByName", "Tester Playwright");
             I.see("Nenašli sa žiadne vyhovujúce záznamy");
-
-            DTE.cancel();
-        I.switchTo();
+        });
+        DTE.cancel();
 
     I.say("Logoff and check that page is still visible (was published)");
         checkCreatedPage(I, pageNameA, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", true, null);
@@ -85,10 +83,10 @@ Scenario('creating/editing pages that need to be approved - logic', ({I, DTE, Do
     I.say("Edit page name");
         I.relogin("tester2");
         I.amOnPage(awaitingApproveFolderLink);
-        DT.filter("title", pageNameA);
+        DT.filterContains("title", pageNameA);
         I.see(pageNameA);
         I.click(pageNameA);
-        setPageName(I, pageNameB);
+        setPageName(I, DTE, pageNameB);
         //Save
         DTE.save();
         Document.notifyCheckAndClose("Žiadosť o schválenie web stránky dostal: Tester Playwright");
@@ -100,19 +98,18 @@ Scenario('creating/editing pages that need to be approved - logic', ({I, DTE, Do
         //Log as admin
         I.relogin("admin");
         I.amOnPage(awaitingApproveFolderLink);
-        DT.filter("title", pageNameA);
+        DT.filterContains("title", pageNameA);
         I.see(pageNameA);
         I.click(pageNameA);
-        I.dtWaitForEditor();
+        DTE.waitForEditor();
         Document.notifyCheckAndClose("Existuje rozpracovaná alebo neschválená verzia tejto stránky. Skontrolujte kartu História.");
         I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
 
-        I.switchTo("#pills-dt-datatableInit-history");
-            DT.filter("historyApprovedByName", "neschválené");
+        within("#pills-dt-datatableInit-history", () => {
+            DT.filterContains("historyApprovedByName", "neschválené");
             I.see(pageNameA);
-
-            DTE.cancel();
-        I.switchTo();
+        });
+        DTE.cancel();
 
     I.say("Check waiting tab");
         checkWaitingTab(I, DT, pageNameB, true);
@@ -127,16 +124,16 @@ Scenario('creating/editing pages that need to be approved - logic', ({I, DTE, Do
     I.say("Check history tab again (that history record is Dis-Approved corretly)");
     I.say("Beware, we are still working with name pageNameA because pageNameB was rejected");
         I.clickCss("#pills-pages-tab");
-        DT.filter("title", pageNameA);
+        DT.filterContains("title", pageNameA);
         I.click(pageNameA);
-        I.dtWaitForEditor();
+        DTE.waitForEditor();
         Document.notifyCheckAndClose("Existuje rozpracovaná alebo neschválená verzia tejto stránky. Skontrolujte kartu História.");
         I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
 
-        I.switchTo("#pills-dt-datatableInit-history");
-            DT.filter("historyDisapprovedByName", "Tester Playwright");
+        within("#pills-dt-datatableInit-history", () => {
+            DT.filterContains("historyDisapprovedByName", "Tester Playwright");
             I.see(pageNameB);
-        I.switchTo();
+        });
 
     I.say("Logoff and check page");
         checkCreatedPage(I, pageNameA, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", true, null);
@@ -171,9 +168,10 @@ Scenario('creating/editing/deleting page thatDONT need to be approved - logic', 
         //Set folder
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
         I.jstreeNavigate([folderName, subFolderName]);
+        DT.waitForLoader();
         //Add new page
-        I.click(add_webpage);
-        setPageName(I, newPageName);
+        I.click(DT.btn.add_button);
+        setPageName(I, DTE, newPageName, true);
         //Save
         DTE.save();
         I.say("Logoff and check that page is still visble (auto publish because its without approve)");
@@ -192,14 +190,14 @@ Scenario('creating/editing/deleting page thatDONT need to be approved - logic', 
     I.say("Admin has auto - approve (thats diff)");
         I.clickCss("#pills-pages-tab");
         I.click(newPageName);
-        I.dtWaitForEditor();
+        DTE.waitForEditor();
         I.clickCss("#pills-dt-datatableInit-history-tab");
 
-        I.switchTo("#pills-dt-datatableInit-history");
-            DT.filter("historyApprovedByName", "neschvaľovalo sa");
+        within("#pills-dt-datatableInit-history", () => {
+            DT.filterContains("historyApprovedByName", "neschvaľovalo sa");
             I.see(newPageName);
             I.see("Tester2 Playwright2");
-        I.switchTo();
+        });
 
         DTE.cancel();
 
@@ -212,9 +210,9 @@ Scenario('creating/editing/deleting page thatDONT need to be approved - logic', 
         I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
         I.jstreeNavigate([folderName, subFolderName]);
         //Change
-        DT.filter("title", newPageName);
+        DT.filterContains("title", newPageName);
         I.click(newPageName);
-        setPageName(I, newPageName + changePostfix);
+        setPageName(I, DTE, newPageName + changePostfix);
         //Save change
         DTE.save();
         I.dontSee("Žiadosť o schválenie web stránky dostal");
@@ -233,14 +231,14 @@ Scenario('creating/editing/deleting page thatDONT need to be approved - logic', 
 
     I.clickCss("#pills-pages-tab");
     I.click(newPageName + changePostfix);
-    I.dtWaitForEditor();
+    DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
 
-    I.switchTo("#pills-dt-datatableInit-history");
-        DT.filter("historyApprovedByName", "neschvaľovalo sa");
+    within("#pills-dt-datatableInit-history", () => {
+        DT.filterContains("historyApprovedByName", "neschvaľovalo sa");
         I.see(newPageName + changePostfix);
         I.see("Tester2 Playwright2");
-    I.switchTo();
+    });
 
     DTE.cancel();
 
@@ -270,8 +268,8 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
     I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
 
     //Add new page
-    I.click(add_webpage);
-    setPageName(I, newPageName);
+    I.click(DT.btn.add_button);
+    setPageName(I, DTE, newPageName, true);
 
     //Save
     DTE.save();
@@ -282,13 +280,13 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
 
     I.clickCss("#pills-pages-tab");
     I.click(newPageName);
-    I.dtWaitForEditor();
+    DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
 
-    I.switchTo("#pills-dt-datatableInit-history");
-        DT.filter("historyApprovedByName", "Tester Playwright");
+    within("#pills-dt-datatableInit-history", () => {
+        DT.filterContains("historyApprovedByName", "Tester Playwright");
         I.see(newPageName);
-    I.switchTo();
+    });
 
     I.say("Check auto publish");
         checkCreatedPage(I, newPageName, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", true, null);
@@ -299,9 +297,9 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
         //Log back
         I.relogin("admin");
         I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
-        DT.filter("title", newPageName);
+        DT.filterContains("title", newPageName);
         I.click(newPageName);
-        setPageName(I, newPageName + changePostfix);
+        setPageName(I, DTE, newPageName + changePostfix);
 
     //Save change
     DTE.save();
@@ -311,13 +309,13 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
 
     I.clickCss("#pills-pages-tab");
     I.click(newPageName + changePostfix);
-    I.dtWaitForEditor();
+    DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
 
-    I.switchTo("#pills-dt-datatableInit-history");
-        DT.filter("historyApprovedByName", "Tester Playwright");
+    within("#pills-dt-datatableInit-history", () => {
+        DT.filterContains("historyApprovedByName", "Tester Playwright");
         I.see(newPageName + changePostfix);
-    I.switchTo();
+    });
 
     I.say("Logoff and check change");
         checkCreatedPage(I, newPageName, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", true, (newPageName + changePostfix));
@@ -340,8 +338,8 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
     I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
 
     //Add new page
-    I.click(add_webpage);
-    setPageName(I, newPageName);
+    I.click(DT.btn.add_button);
+    setPageName(I, DTE, newPageName, true);
     //Save
     DTE.save();
 
@@ -437,8 +435,8 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
         I.amOnPage(groupUrl);
 
         //Add new page
-        I.click(add_webpage);
-        setPageName(I, pageName);
+        I.click(DT.btn.add_button);
+        setPageName(I, DTE, pageName, true);
 
         //Save
         DTE.save();
@@ -451,7 +449,7 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
 
         //Check we see page
         I.say("Until we are logged, we must see page");
-            DT.filter("title", pageName);
+            DT.filterContains("title", pageName);
             I.amOnPage(baseUrl + pageName.toLowerCase() + ".html");
             I.see(pageName.toUpperCase());
 
@@ -470,7 +468,7 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
             I.amOnPage(groupUrl);
 
             I.click(pageName);
-            setPageName(I, pageName + "_change");
+            setPageName(I, DTE, pageName + "_change");
             DTE.save();
             I.see("Žiadosť o schválenie web stránky dostal: "+approverName);
 
@@ -498,19 +496,19 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
         I.say("Check that page was disapproved by admin L2");
             I.clickCss("#pills-pages-tab");
             I.dontSee(pageName + "_change");
-            DT.filter("title", pageName);
+            DT.filterContains("title", pageName);
             I.click(pageName);
-            I.dtWaitForEditor();
+            DTE.waitForEditor();
             I.toastrClose();
             I.click("#pills-dt-datatableInit-history-tab", null, { position: { x: 0, y: 0 } }); //because after toastr close cursor stays in close button tooltip
 
-            I.switchTo("#pills-dt-datatableInit-history");
-                //dispprove is always Tester_L2 Playwright no matter of includeFirstStepApprove
-                DT.filter("historyDisapprovedByName", "Tester_L2 Playwright");
+            within("#pills-dt-datatableInit-history", () => {
+                // disapprove is always Tester_L2 Playwright no matter of includeFirstStepApprove
+                DT.filterContains("historyDisapprovedByName", "Tester_L2 Playwright");
                 I.see(pageName + "_change");
                 I.see("Tester_L2 Playwright");
-                DTE.cancel();
-            I.switchTo();
+            });
+            DTE.cancel();
 
             //Check page wasnt changed
             I.say("Logoff and check that page name wasnt changed");
@@ -521,7 +519,7 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
             I.amOnPage(groupUrl);
 
             I.click(pageName);
-            setPageName(I, pageName + "_change_2");
+            setPageName(I, DTE, pageName + "_change_2");
             DTE.save();
             I.see("Žiadosť o schválenie web stránky dostal: "+approverName);
 
@@ -632,7 +630,7 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
     //But after loading, because pageName (original) is needed for link
     if(changedName != null) pageName = changedName;
 
-    I.say("isPublic : ", isPublic);
+    I.say("isPublic: " + isPublic);
 
     if(!isPublic) {
         I.dontSee(pageName.toUpperCase());
@@ -645,27 +643,35 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
 
 function approvePage(I, pageName, hasSecondLevelApprove=false) {
     I.say("approvePage "+pageName);
+    I.wait(1);
     //Switch to tab
     I.switchToNextTab();
+    I.closeOtherTabs();
+    I.switchTo();
 
     //Check we see page name
+
     I.switchTo("#right");
         I.see(pageName.toUpperCase());
     I.switchTo();
-
     //Approve
     I.switchTo("#approveFormId");
         I.fillField("textarea[name=notes]", "Suhlasim");
-        I.clickCss("#tabMenu1 input.btn.green");
+        let approveBtn = locate("#tabMenu1 .btn.green")
+        I.waitForElement(approveBtn, 10);
+        I.click(approveBtn);
+        //I.click("Schváliť");
 
-        if (hasSecondLevelApprove) I.waitForText("Žiadosť o schválenie je posunutá na druhú úroveň. Žiadosť dostal Tester_L2 Playwright.");
-        else I.waitForText("Web stránka bola schválená, je publikovaná na verejnej časti web stránky", 10);
-
+        if (hasSecondLevelApprove)
+            I.waitForText("Žiadosť o schválenie je posunutá na druhú úroveň. Žiadosť dostal Tester_L2 Playwright.");
+        else
+            I.waitForText("Web stránka bola schválená, je publikovaná na verejnej časti web stránky", 10);
     I.switchTo();
 
     //Close tab
     I.wait(2);
     I.closeOtherTabs();
+    I.switchTo();
 }
 
 function disApprovePage(I, pageName) {
@@ -676,16 +682,15 @@ function disApprovePage(I, pageName) {
     I.switchToNextTab();
 
     //Check original name
-    I.switchTo("#right");
-        I.see(pageName.toUpperCase());
-    I.switchTo();
-
+    within({frame: "#right"}, () => {
+    I.see(pageName.toUpperCase());
+    });
     //Dis-approve page
-    I.switchTo("#approveFormId");
+    within({frame: "#approveFormId"}, () => {
         I.fillField("textarea[name=notes]", "Zamietam");
         I.clickCss("#tabMenu1 input.btn.red");
         I.waitForText("Pripomienky k web stránke boli zaslané, stránka ešte nie je publikovaná na verejnej časti web stránky.", 50);
-    I.switchTo();
+    });
 
     //Close tab
     I.wait(2);
@@ -699,17 +704,18 @@ function approveDelete(I, pageName, hasSecondLevelApprove=false) {
     I.switchToNextTab();
 
     //Check page name
-    I.switchTo("#bodyFrameId");
-        I.see(pageName.toUpperCase());
-    I.switchTo();
-
+    within({frame :"#bodyFrameId"}, () => {
+    I.see(pageName.toUpperCase());
+    });
     //Approve delete button
-    I.switchTo("#approveDelFormId");
+    within({frame : "#approveDelFormId"}, () => {
         I.fillField("textarea[name=notes]", "Suhlasim so zmazanim");
         I.clickCss("#tabMenu1 input.btn.green");
-        if (hasSecondLevelApprove) I.waitForText("Žiadosť o schválenie je posunutá na druhú úroveň. Žiadosť dostal Tester_L2 Playwright.");
-        else I.waitForText("Stránka bola vymazaná", 10);
-    I.switchTo();
+        if (hasSecondLevelApprove)
+            I.waitForText("Žiadosť o schválenie je posunutá na druhú úroveň. Žiadosť dostal Tester_L2 Playwright.");
+        else
+            I.waitForText("Stránka bola vymazaná", 10);
+    });
 
     //Close tab
     I.wait(3);
@@ -723,16 +729,15 @@ function disApproveDelete(I, pageName) {
     I.switchToNextTab();
 
     //Check
-    I.switchTo("#bodyFrameId");
+    within({frame : "#bodyFrameId"}, () => {
         I.see(pageName.toUpperCase());
-    I.switchTo();
-
+    });
     //Reject button
-    I.switchTo("#approveDelFormId");
+    within({frame:"#approveDelFormId"}, () => {
         I.fillField("textarea[name=notes]", "Zamietam zmazanie");
         I.clickCss("#tabMenu1 input.btn.red");
         I.waitForText("Vymazanie stránky zamietnuté", 10);
-    I.switchTo();
+    });
 
     //Close tab
     I.wait(3);
@@ -742,12 +747,12 @@ function disApproveDelete(I, pageName) {
 function deletePage(I, DT, pageName, checkDelete) {
     I.say("deletePage "+pageName)
     //Filter page
-    DT.filter("title", pageName);
+    DT.filterContains("title", pageName);
     //Check we see page
     I.see(pageName);
     //Bevare of delete, normal selector will delete whole folder
-    I.clickCss("#datatableInit_wrapper div.dataTables_scrollHead button.buttons-select-all.dt-filter-id");
-    I.clickCss("#datatableInit_wrapper button.buttons-remove");
+    I.clickCss("#datatableInit_wrapper div.dt-scroll-head button.buttons-select-all.dt-filter-id");
+    I.click(DT.btn.delete_button);
     I.click("Zmazať", "div.DTE_Action_Remove");
 
     if(checkDelete) {
@@ -757,27 +762,26 @@ function deletePage(I, DT, pageName, checkDelete) {
     }
 }
 
-function setPageName(I, pageName) {
+function setPageName(I, DTE, pageName, setNavbar=false) {
     I.say("setPageName "+pageName);
-    I.dtWaitForEditor();
+    DTE.waitForEditor();
     I.clickCss('#pills-dt-datatableInit-basic-tab');
     I.waitForElement('#DTE_Field_title');
-    I.clickCss('#DTE_Field_title');
-    I.clearField('#DTE_Field_title');
-    I.fillField('#DTE_Field_title', pageName);
+    DTE.fillField('title', pageName);
+    if (setNavbar) DTE.fillField("navbar", pageName);
 }
 
 function checkWaitingTab(I, DT, pageName, shouldBeThere) {
     I.say("checkWaitingTab "+pageName);
     I.clickCss("#pills-waiting-tab");
     DT.waitForLoader();
-    DT.filter("title", pageName);
+    DT.filterContains("title", pageName);
 
     if(shouldBeThere) {
-        I.see(pageName, "#datatableInit_wrapper div.dataTables_scrollBody");
+        I.see(pageName, "#datatableInit_wrapper div.dt-scroll-body");
         I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
     } else {
-        I.dontSee(pageName, "#datatableInit_wrapper div.dataTables_scrollBody");
+        I.dontSee(pageName, "#datatableInit_wrapper div.dt-scroll-body");
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
     }
 }
@@ -820,8 +824,8 @@ Scenario("logoff", ({I}) => {
 async function checkAwaiting(I, DT, shouldBeThere) {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=59157");
     I.clickCss("#pills-waiting-tab");
-    DT.filter("title", "Test_samo_schvalenia_none_");
-    DT.filter("authorName", "Tester_L2 Playwright");
+    DT.filterContains("title", "Test_samo_schvalenia_none_");
+    DT.filterContains("authorName", "Tester_L2 Playwright");
 
     if(shouldBeThere) {
         I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
@@ -833,19 +837,19 @@ async function checkAwaiting(I, DT, shouldBeThere) {
 async function updatePagesLogic(I, DTE, insertText, shouldBeApproved, controlText) {
     //Parent
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73276");
-    I.dtWaitForEditor();
+    DTE.waitForEditor();
     await updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlText);
 
     //Child
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73277");
-    I.dtWaitForEditor();
+    DTE.waitForEditor();
     await updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlText);
 }
 
 async function updatePagesLogic2(I, DTE, insertText, shouldBeApproved, controlText) {
     //Check previous set text
     if(controlText != null) {
-        I.switchTo("#cke_data");
+        I.waitForElement('#cke_data');
         I.switchTo("iframe.cke_reset");
         I.see(controlText);
         I.switchTo();

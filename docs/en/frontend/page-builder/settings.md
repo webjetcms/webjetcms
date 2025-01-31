@@ -7,12 +7,13 @@ When editing a page, the editor is initialized to individual editable blocks, i.
 The editor is automatically initialized to:
 - column elements (`class="col-*"`)
 - elements marked with CSS class `pb-editable` (`class="pb-editable"`)
+
 **Setup and configuration:**
 
 To run Page Builder correctly, set:
 - in the properties of the template group Page editor type to Page Builder
 - if you want Page Builder to be available also when the page is displayed on the frontend, set the configuration variable `inlineEditingEnabled` at `true`
-- in case of non-standard `bootstrap gridu`, configuration variable `bootstrapColumns`which specifies the number of columns `gridu`
+- in case of non-standard `bootstrap gridu`, configuration variable `bootstrapColumns` which specifies the number of columns `gridu`
 
 Other conf. variables that can be modified:
 - `inlineEditableObjects` - objects to which editing is applied in addition to doc\_data (e.g. doc\_header, doc\_footer, doc\_right\_menu)
@@ -29,12 +30,7 @@ The mode is set for a group of templates if you need to **specific template mode
 Page Builder in the editor is initialized to the full page, it is loaded including CSS styles and template into the iframe element. But in this mode we don't want to display other elements of the web page (header, footer...) so these elements are set to empty value. Additionally, when the page is displayed, the CSS attribute `display: none` the following elements are hidden:
 
 ```css
-body div.header,
-body header,
-body div.footer,
-body footer {
-	display: none;
-}
+ body div.header, body header, body div.footer, body footer { display: none; }
 ```
 
 ## CSS class convention with support for Ninja page builder
@@ -43,50 +39,56 @@ The correct html code structure over which Page Builder can initialize is as fol
 
 ```html
 <section>
-	<div class="container">
-		<div class="pb-editable">
-			<h1>Some editable heading</h1>
-		</div>
-		<p>Some NOT editable text</p>
-		<p class="pb-editable">Editable paragraph</p>
-		<div class="row">
-			<div class="col-4">
-				<p>Some editable paragraph</p>
-			</div>
-			<div class="col-4 pb-not-editable">
-				<p>Some not editable content</p>
-			</div>
-			<div class="col-4">
-				<p>Some editable content</p>
-			</div>
-		</div>
-	</div>
+    <div class="container">
+        <div class="pb-editable">
+            <h1>Some editable heading</h1>
+        </div>
+        <p>
+            Some NOT editable text
+        </p>
+        <p class="pb-editable">
+            Editable paragraph
+        </p>
+        <div class="row">
+            <div class="col-4">
+               <p>Some editable paragraph</p>
+            </div>
+            <div class="col-4 pb-not-editable">
+               <p>Some not editable content</p>
+            </div>
+            <div class="col-4">
+               <p>Some editable content</p>
+            </div>
+        </div>
+    </div>
 </section>
 ```
 
-Styling is only recommended on `section`, `container` a `column content`because only these elements can be customized by the user using Page Builder.
+Styling is only recommended on `section`, `container` a `column content` because only these elements can be customized by the user using Page Builder.
 
-**ATTENTION:** v `column` elements are not allowed to use text directly, it is necessary to use at least P element. Additionally, because of the possibility of setting indentations (`margin/padding`) in the framework of `column` element content is wrapped in a DIV element with CSS class after opening in Page Builder `column-content`.
+!>**Warning:** v `column` elements are not allowed to use text directly, it is necessary to use at least P element. Additionally, because of the possibility of setting indentations (`margin/padding`) in the framework of `column` element content is wrapped in a DIV element with CSS class after opening in Page Builder `column-content`.
 
 That is, from code:
 
 ```html
-<div class="col-4">Some content</div>
+<div class="col-4">
+   Some content
+</div>
 ```
 
 will be created after initializing the Page Builder code:
 
 ```html
 <div class="col-4">
-	<div class="column-content">
-		<p>Some content</p>
-	</div>
+    <div class="column-content">
+        <p>Some content</p>
+    </div>
 </div>
 ```
 
 ## Styling of elements
 
-### SECTION (blue)
+### `SECTION` (blue colour)
 
 Initialization when using the element: `<section>`.
 
@@ -98,7 +100,7 @@ Styling by class, with prefix: `pb-style-section-`
 
 By setting the CSS class `pb-not-section` the element \**will not be considered as a section* element.
 
-### CONTAINER (red)
+### `CONTAINER` (red)
 
 Initialization when using CSS classes: `container` or `pb-custom-container`. By setting the CSS class `pb-not-container` with the element **will not be considered as a container** even if it has a CSS class `container`.
 
@@ -108,11 +110,11 @@ Styling by class, with prefix: `pb-style-container-`
 <div class="container pb-style-container-group-26"></div>
 ```
 
-### ROW
+### `ROW`
 
 `<div class="row">` is currently not editable with Page Builder, it is used for bootstrap compatibility reasons.
 
-### COLUMN (green)
+### `COLUMN` (green colour)
 
 Initialization when using the class: `col-` OR `pb-col-` (if the DIV element is not a standard bootstrap `col-`). Values are also accepted `pb-col` a `pb-col-auto` - if the element contains these CSS styles, the column width setting icon will not appear in the toolbar.
 
@@ -154,9 +156,11 @@ If you need a unique ID to be used in the blocks you can use the value `__ID__`,
 
 ```html
 <div class="carousel slide" id="carouselControls__ID__" data-bs-ride="carousel">
-	<div class="carousel-inner row">...</div>
-	<button class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#carouselControls__ID__" type="button"></button>
-	<button class="carousel-control-next" data-bs-slide="next" data-bs-target="#carouselControls__ID__" type="button"></button>
+    <div class="carousel-inner row">
+        ...
+    </div>
+    <button class="carousel-control-prev" data-bs-slide="prev" data-bs-target="#carouselControls__ID__" type="button"></button>
+    <button class="carousel-control-next" data-bs-slide="next" data-bs-target="#carouselControls__ID__" type="button"></button>
 </div>
 ```
 
@@ -165,8 +169,8 @@ If you need a unique ID to be used in the blocks you can use the value `__ID__`,
 PageBuilder will call the `windows` several events. You can listen to them as follows:
 
 ```javascript
-window.addEventListener("WJ.PageBuilder.gridChanged", function (e) {
-	//
+window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
+    //
 });
 ```
 

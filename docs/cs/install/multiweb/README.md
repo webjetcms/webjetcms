@@ -1,5 +1,7 @@
 # MultiWeb
 
+## Úvod
+
 MultiWeb je speciální typ instalace pro více uživatelů/více nájemců v jednom WebJETu. Domény jsou navenek oddělené a každá se tváří jako samostatná instalace systému WebJET CMS.
 
 Instalace obsahuje řídicí doménu (první vytvořenou), prostřednictvím které jsou k dispozici zvýšená oprávnění (např. pro konfiguraci, překladové klíče atd.). Aplikace, které mají dopad na všechny domény, nejsou v jednotlivých doménách nájemců dostupné.

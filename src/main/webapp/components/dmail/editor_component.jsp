@@ -94,7 +94,6 @@
 					<select name="type" id="typeId">
 						<option value="subscribe"><iwcm:text key="components.user.reg_form"/></option>
 						<option value="subscribe-simple"><iwcm:text key="components.dmail.subscribeSimple"/></option>
-						<option value="unsubscribe"><iwcm:text key="components.dmail.unsubscribeForm"/></option>
 					</select>
 				</div>
 			</div>

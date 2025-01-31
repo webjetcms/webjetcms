@@ -56,12 +56,12 @@ Pomocou preddefinovaných štýlov môžete text na stránke aj zvýrazňovať. 
 
 Ďalší spôsob formátovania textu je pomocou nasledujúcich štandardných nástrojov (aplikujú sa označením textu, ktorý chcete upraviť):
 
-- ![](bold.png ":no-zoom" ) **hrubé písmo**
-- ![](italic.png ":no-zoom" ) *kurzíva*
-- ![](underline.png ":no-zoom" ) <ins>podčiarknutie</ins>
-- ![](strike.png ":no-zoom" ) ~~prečiarknutie~~
-- ![](subscript.png ":no-zoom" ) <sub>horný index</sub>
-- ![](superscript.png ":no-zoom" ) <sup>dolný  index</sup>
+- ![](bold.png ":no-zoom"), **hrubé písmo**
+- ![](italic.png ":no-zoom"), *kurzíva*
+- ![](underline.png ":no-zoom"), <ins>podčiarknutie</ins>
+- ![](strike.png ":no-zoom"), ~~prečiarknutie~~
+- ![](subscript.png ":no-zoom"), <sub>horný index</sub>
+- ![](superscript.png ":no-zoom"), <sup>dolný  index</sup>
 
 Formátovanie textu pomocou nástroja na zmenu farby textu ![](bcg_color.png ":no-zoom") a podfarbenia textu ![](text_color.png ":no-zoom") odporúčame nepoužívať, nakoľko spôsobuje grafickú nekonzistentnosť web stránky a degraduje jej hodnotu v rámci web sídla.
 
@@ -133,11 +133,39 @@ Po kliknutí na ikonku sa vám zobrazí dialógové okno na vloženie obrázka:
 
 ![](image_dialog.png)
 
+### Karta Obsah
+
 Ak sa súbor obrázka už nachádza na serveri, môžete ho vyhľadať v adresárovej štruktúre a kliknutím naň sa umiestnenie obrázka automaticky zapíše do políčka URL adresa.
 
 Pri obrázkoch je potrebné zadefinovať aj Alternatívny text pre obrázok, ktorý sa využíva hlavne pre komunikáciu so slabozrakými a nevidiacimi návštevníkmi web stránky, alebo keď má používateľ vypnuté zobrazovanie obrázkov na web stránkach. Alternatívny text by mal vystihovať, čoho sa obrázok týka alebo čo je na ňom zobrazené.
 
 Po zvolení obrázka sa automaticky vyplnia polia šírka a výška, ktoré definujú aktuálnu veľkosť zvoleného obrázka.
+
+### Karta Fotobanka
+
+Karta **Fotobanka** umožňuje získanie (stiahnutie) obrázkov z bezplatnej online platformy [Pixabay](https://pixabay.com). Táto platforma poskytuje rozsiahlu zbierku obrázkov, ktoré je [možné použiť zdarma](https://pixabay.com/service/license-summary/).
+
+Po zadaní a vyhľadaní výrazu, Vám budú ponúknuté vyhovujúce obrázky. Ponuka obsahuje niekoľko strán, medzi ktorými viete prechádzať.
+
+![](image_dialog-pixabay.png)
+
+Po kliknutí na niektorý z ponúkaných obrázkov sa zobrazí dialóg, s náhľadom a hodnotami **šírka** / **výška** daného obrázka.
+
+![](image_dialog-pixabay-add.png)
+
+Ak si želáte zmeniť rozmery obrázka, môžete upraviť hodnotu **šírka** a jeho **výška** sa automaticky vypočíta podľa pôvodného pomeru obrázka.
+
+![](image_dialog-pixabay-add2.png)
+
+Následne po kliknutí na tlačidlo **Uložiť do WebJET** sa obrázok stiahne a uloží. Automaticky sa prepne karta na **Obsah**, kde máte okamžite tento obrázok dostupný.
+
+![](image_dialog-pixabay-save.png)
+
+**URL adresa zdroja obrázku**
+
+Uložené obrázky z **Fotobanky** majú automaticky vyplnenú hodnotu **URL adresa zdroja obrázku**. Túto hodnotu si viete pozrieť/upraviť v časti [Prieskumník](../../files/fbrowser/README.md) pri akcii [Úprava súborov](../../files/fbrowser/file-edit/README.md).
+
+![](image_dialog-pixabay-edit.png)
 
 ### Video súbory
 
@@ -157,7 +185,7 @@ Tabuľku je možné vytvoriť dvomi spôsobmi. Použiť preddefinovanú oštýlo
 
 ### Vytvorenie farebnej tabuľky
 
-Tabuľku vytvoríte kliknutím na ikonku **Vložiť tabuľku**  ![](table.png ":no-zoom"):
+Tabuľku vytvoríte kliknutím na ikonku **Vložiť tabuľku**,  ![](table.png ":no-zoom"):
 
 ![](table_preview.png)
 
@@ -234,8 +262,11 @@ Zobrazenie blokov vykonáte kliknutím na ikonu ![](../../apps/htmlbox/htmlbox_i
 Viac informácii v opise aplikácie [pred-pripravené bloky](../../apps/htmlbox/README.md).
 
 ## Vkladanie špeciálnych znakov
+
 Môžu nastať prípady, keď budete potrebovať pri písaní napísať aj znaky, ktoré slovenská klávesnica neobsahuje, napríklad znak Dolára (```$```), Euro (```€```) alebo zavináč (```@```). Na uľahčenie práce máte k dispozícii vkladanie špeciálnych znakov pomocou pripraveného modulu. Kliknutím na ikonku ![](specialchar.png ":no-zoom") sa vám zobrazí dialógové okno s ponukou špeciálnych (ale aj štandardných) znakov.
 
 ![](specialchar_dialog.png)
 
 Po kliknutí na požadovaný znak sa vám daný znak napíše na pozíciu kurzora. Špeciálne znaky sa vkladajú ako text, takže nemajú žiadne ďalšie nastavenia.
+
+!> Upozornenie: ikona pre vkladanie špeciálnych znakov môže byť v niektorých prípadoch zmenená na ikonu ![](../../../frontend/webpages/fontawesome/editor-toolbar-icon.png ":no-zoom") pre vkladanie [FontAwesome](../../../frontend/webpages/fontawesome/README.md) obrázkov.

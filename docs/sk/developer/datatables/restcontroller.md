@@ -858,7 +858,8 @@ Ak potrebujete špeciálne kontrolovať práva (napr. pri web stránkach povolen
 ## Vyvolanie chyby
 
 Programovo kontrolované chyby je potrebné ošetriť preťažením metódy ```validateEditor``` (viď príklad vyššie), kde môžete vykonať validácie pred uložením záznamu. Z parametra ```target.getAction()``` (DatatableRequest)  môžete identifikovať typ akcie.
-!>**Upozornenie:** validateEditor sa volá aj pre vymazanie, môžete ho testovať ako ```if ("remove".equals(target.getAction()) ...```.
+
+!>**Upozornenie:** metóda `validateEditor` sa volá aj pre vymazanie, môžete ho testovať ako ```if ("remove".equals(target.getAction()) ...```.
 
 V prípade chyby detegovanej až pri uložení (napr. v metóde ```editItem```) môžete vyvolať všeobecné chybové hlásenie volaním metódy ```throwError(String error)``` alebo ```throwError(List<String> errors)```. Príklad je v [GroupsRestController](../../../../src/main/java/sk/iway/iwcm/editor/rest/GroupsRestController.java).
 

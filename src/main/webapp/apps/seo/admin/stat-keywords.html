@@ -25,7 +25,7 @@
     window.getSearchEnginesDetails = function (order) {
         let daydate = statKeywordsDataTable.DATA.columns[1].searchVal;
         if(daydate == null && daydate == undefined) daydate = "";
-        let queryName = statKeywordsDataTable.DATA.json[order - 1]['queryName'];
+        let queryName = statKeywordsDataTable.DATA.json.data[order - 1]['queryName'];
         window.location.href="/apps/seo/admin/stat-keywords-details?queryName=" +  encodeURIComponent(queryName) + "&dayDate=" + (statKeywordsDataTable.DATA.columns[1].searchVal);
     }
 
@@ -47,7 +47,8 @@
                 data.fixed_searchRootDir = $('#rootDir').val();
                 data.fixed_searchWebPage = $('#webPageSelect').val();
                 data.fixed_searchEngine = $('#searchEngineSelect').val();
-            }
+            },
+            autoHeight: false
         });
         statKeywordsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
 
@@ -64,15 +65,15 @@
             updateTablesAndCharts("dayDate");
         });
 
-        $("#rootDir").on("change", function() { 
+        $("#rootDir").on("change", function() {
             updateTablesAndCharts("rootDir");
         });
 
-        $("#searchEngineSelect").on("change", function() { 
+        $("#searchEngineSelect").on("change", function() {
             updateTablesAndCharts("searchEngineSelect");
         });
 
-        $("#webPageSelect").on("change", function() { 
+        $("#webPageSelect").on("change", function() {
             updateTablesAndCharts("webPageSelect");
         });
 
@@ -111,9 +112,9 @@
 
         function reloadQueryTable() {
             //add table filter params
-            statKeywordsDataTable.ajax.url(WJ.urlUpdateParam(url, "searchRootDir", $('#rootDir').val()));
-            statKeywordsDataTable.ajax.url(WJ.urlUpdateParam(statKeywordsDataTable.ajax.url(), "searchEngine", $('#searchEngineSelect').val()));
-            statKeywordsDataTable.ajax.url(WJ.urlUpdateParam(statKeywordsDataTable.ajax.url(), "searchWebPage", $('#webPageSelect').val()));
+            statKeywordsDataTable.setAjaxUrl(WJ.urlUpdateParam(url, "searchRootDir", $('#rootDir').val()));
+            statKeywordsDataTable.setAjaxUrl(WJ.urlUpdateParam(statKeywordsDataTable.getAjaxUrl(), "searchEngine", $('#searchEngineSelect').val()));
+            statKeywordsDataTable.setAjaxUrl(WJ.urlUpdateParam(statKeywordsDataTable.getAjaxUrl(), "searchWebPage", $('#webPageSelect').val()));
             //reload tables values
             statKeywordsDataTable.ajax.reload();
         }
@@ -133,13 +134,13 @@
                 tmpDefURL += "&searchRootDir=" + rootDir;
                 tmpDefURL += "&searchEngine=" + filterEngine;
                 tmpDefURL += "&searchWebPage=" + filterWebPage;
-            } 
+            }
             else if(type == "searchEngineSelect") {
                 tmpDefURL += url + "/searchEnginesSelect?";
                 tmpDefURL += "dayDate=" + searchDateValue;
                 tmpDefURL += "&rootDir=" + rootDir;
                 tmpDefURL += "&webPage=" + filterWebPage;
-            } 
+            }
             else if(type == "webPageSelect") {
                 tmpDefURL += url + "/webPageSelect?";
                 tmpDefURL += "rootDir=" + rootDir;

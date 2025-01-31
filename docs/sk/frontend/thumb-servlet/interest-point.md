@@ -32,7 +32,7 @@ To isté ako `ip=1` len máme zadanú iba výšku, šírka sa dopočíta, výsle
 
 ## Fixná šírka a výška vyplnená farbou
 
-Výrez sa zmestí celý do zvolenej veľkosti `w` a `h` **nie** je centrovaný a zvyšok je zafarbený farbou z parametra `c` (predvolene biela)
+Výrez sa zmestí celý do zvolenej veľkosti `w` a `h`, **nie** je centrovaný a zvyšok je zafarbený farbou z parametra `c` (predvolene biela)
 
 Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zmestiť, obrázok ale môže byť reálne menší ako zadaná časť, v tomto prípade `300x200` bodov, pravá strana sa zafarbí zadanou farbou (v ukážke predvolená biela bez zadaného `c` parametra).
 
@@ -44,7 +44,7 @@ Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zm
 
 Výrez sa zmestí celý do zvolenej veľkosti `w` a `h`, je centrovaný a zvyšok je zafarbený farbou z parametra `c` (predvolene biela)
 
-Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zmestiť, obrázok ale môže byť reálne menší ako zadaná časť. V tomto prípade `300x200` bodov, okolie sa zafarbí zvolenou farbou, takže obrázok má VŽDY zadaný rozmer (nebude poskakovať). Farba sa zadáva ako hex hodnota parametrom `c` (bez znaku #).
+Máte zadanú PRESNÚ veľkosť obrázku, do ktorej sa zvolená oblasť musí zmestiť, obrázok ale môže byť reálne menší ako zadaná časť. V tomto prípade `300x200` bodov, okolie sa zafarbí zvolenou farbou, takže obrázok má VŽDY zadaný rozmer (nebude poskakovať). Farba sa zadáva ako hex hodnota parametrom `c` (bez znaku `#`).
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=300&h=200&ip=4&c=ffff00`
 

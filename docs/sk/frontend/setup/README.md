@@ -12,6 +12,7 @@ Pri správe viacerých domén je potrebné zadefinovať nasledovné konfiguračn
 - ```enableStaticFilesExternalDir=true``` - zapnutie delenia dát aplikácii pre domény samostatne a použitie externého adresára na statické súbory.
 - ```cloudStaticFilesDir=/cesta/na/disku/``` - nastavenie cesty k externým súborom domén. Jedná sa o cestu na disku (napr. ```/mnt/cluster/static-files/```), ktorá môže byť aj mimo priečinku s web aplikáciou (napr. na sieťovom disku zdieľanom medzi uzlami clustra). V prípade potreby môžete ale doménové súbory mať v priečinku s web aplikáciou, vtedy môžete nastaviť hodnotu ```{FILE_ROOT}static-files``` pri ktorom sa makro ```{FILE_ROOT}``` nahradí za priečinok, z ktorého je web aplikácia spustená.
 - ```templatesUseDomainLocalSystemFolder=true``` - zapnutie používania lokálneho ```System``` adresára pre domény
+- ```multiDomainAdminHost``` - ak máte samostatnú/vyhradenú doménu pre prístup do administrácie nastavte doménové meno. Ak hodnota bude prázdna bude možné pristúpiť do administrácie na všetkých doménách.
 
 Po nastavení týchto premenných odporúčame reštart servera, alebo minimálne zmazanie všetkých cache objektov.
 

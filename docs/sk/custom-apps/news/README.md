@@ -98,6 +98,7 @@ Ak nepotrebujete meniť hodnotu ID priečinka, môžete samozrejme odstrániť A
                         id: "newsDataTable",
                         order: order,
                         newPageTitleKey: "apps.news.newsTitle.js", //optional, title of new page
+                        showPageTitleKey: "admin.search.showFile.js", //optional, title of Show Page (eye) button
                     });
                     newsDataTable = wpdInstance.createDatatable();
                 });
@@ -105,7 +106,7 @@ Ak nepotrebujete meniť hodnotu ID priečinka, môžete samozrejme odstrániť A
                 $("#groupIdFilterSelect").on("change", function() {
                     var value = this.value;
                     var newUrl = WJ.urlAddParam(url, "groupIdList", this.value);
-                    newsDataTable.ajax.url(newUrl);
+                    newsDataTable.setAjaxUrl(newUrl);
                     newsDataTable.ajax.reload();
                 });
             }
@@ -136,3 +137,41 @@ Ak nepotrebujete meniť hodnotu ID priečinka, môžete samozrejme odstrániť A
 ```
 
 Ak používateľ nemá priamo prístup k web stránkam je potrebné pridať ešte vaše právo aplikácie do konf. premennej `webpagesFunctionsPerms`, ktorá obsahuje zoznam práv, ktoré získavajú právo na prácu s web stránkami. Jedná sa aj o funkcie pre vloženie obrázku a podobne.
+
+## Backend
+
+Ak potrebujete špecifickú REST službu pre poskytovanie zoznamu web stránok/noviniek môžete využiť pripravenú triedu [WebpagesDatatable](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) ktorú rozšírite a prepíšete metódy podľa vašich potrieb.
+
+```java
+@Datatable
+@RestController
+@RequestMapping("/admin/rest/abtesting/list")
+@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_abtesting')")
+public class AbTestingRestController extends WebpagesDatatable {
+
+    @Autowired
+    public AbTestingRestController(DocDetailsRepository docDetailsRepository, EditorFacade editorFacade, DocAtrDefRepository docAtrDefRepository) {
+        super(docDetailsRepository, editorFacade, docAtrDefRepository);
+    }
+
+    @Override
+    public Page<DocDetails> getAllItems(Pageable pageable) {
+        GetAllItemsDocOptions options = getDefaultOptions(pageable, true);
+        return AbTestingService.getAllItems(options);
+    }
+
+    @Override
+    public void beforeSave(DocDetails entity) {
+        //In abtesting version user cant edit/insert/duplicate page's
+        throwError(getProp().getText("admin.editPage.error"));
+    }
+
+    @Override
+    public boolean deleteItem(DocDetails entity, long id) {
+        //In abtesting version user cant delete page's
+        throwError(getProp().getText("admin.editPage.error"));
+
+        return false;
+    }
+}
+```

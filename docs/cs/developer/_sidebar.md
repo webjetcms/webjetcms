@@ -22,7 +22,7 @@
   - [jsTree](/developer/jstree/README.md)
   - Použité knihovny
     - [Nástroje](/developer/libraries/tools.md)
-    - [Obchod](/developer/libraries/store.md)
+    - [Store](/developer/libraries/store.md)
     - [StorageHandler](/developer/libraries/storage-handler.md)
     - [Translator](/developer/libraries/translator.md)
     - [ReadyExtender](/developer/libraries/ready-extender.md)
@@ -48,12 +48,13 @@
   - [Pole jstree - stromová struktura](/developer/datatables-editor/field-jstree.md)
   - [Výběrové pole s úpravami](/developer/datatables-editor/field-select-editable.md)
   - [Automatické dokončování](/developer/datatables-editor/autocomplete.md)
-  - [Úprava buňky](/developer/datatables-editor/bubble.md)
+  - [Úpravy v zobrazení mřížky](/developer/datatables-editor/bubble.md)
   - [Volitelná pole](/developer/datatables-editor/customfields.md)
   - [Oznámení](/developer/datatables-editor/notify.md)
   - [Oznámení o konfliktu](/developer/datatables-editor/editor-locking.md)
 - Testování
   - [Testování](/developer/testing/README.md)
+  - [Překlady textů](/developer/testing/i18n.md)
   - [Automatické testování DataTables](/developer/testing/datatable.md)
   - [DataTables - testování importu](/developer/testing/datatable-import.md)
   - [Generování snímků obrazovky dokumentace](/developer/testing/screenshots.md)
@@ -61,6 +62,7 @@
   - [Pokrytí kódu](/developer/testing/codecoverage.md)
   - [Souběžné provádění testů](/developer/testing/parallel.md)
 - [Překlad dokumentace](/developer/documentation-translate/README.md)
+- [Export dokumentace do PDF](/developer/documentation-export/README.md)
 - Ukázka kódu
   - [Aplikace PugJS](/developer/frameworks/example.md)
 - Backend

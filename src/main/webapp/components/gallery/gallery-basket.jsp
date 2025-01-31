@@ -202,7 +202,7 @@ String imageUrl = image.getImageUrl();
 	<ul class="preview-thumbnail nav nav-tabs photoSwipe photoSwipeImages">
 		<%if(!perexImagePath.isEmpty()){ %>
 
-			<li class="<% if(i==0) out.print("active"); %>"><a data-target="#pic-<%=i%>" data-toggle="tab"><img src="/thumb<%=perexImagePath %>?w=390&ip=1" /></a></li>
+			<li class="nav-item"><a class="<% if(i==0) out.print("active"); %>" data-target="#pic-<%=i%>" data-bs-toggle="tab"><img src="/thumb<%=perexImagePath %>?w=390&ip=1" /></a></li>
 	<%}
 		i++; %>
 		<c:forEach items="${images}" var="image">
@@ -214,7 +214,7 @@ String imageUrl = image.getImageUrl();
 
 		if(!perexImagePath.equals(imageUrl)){ %>
 
-		<li class="<% if(i==0) out.print("active"); %>"><a data-target="#pic-<%=i%>" data-toggle="tab"><img src="/thumb${image.imagePath}/${image.imageName}?w=390&ip=1" /></a></li>
+		<li class="nav-item"><a class="<% if(i==0) out.print("active"); %>" data-target="#pic-<%=i%>" data-bs-toggle="tab"><img src="/thumb${image.imagePath}/${image.imageName}?w=390&ip=1" /></a></li>
 		<% i++; %>
 		<%} %>
 		</c:forEach>

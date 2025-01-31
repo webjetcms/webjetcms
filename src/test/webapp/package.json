@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Automatizovane testovanie",
   "scripts": {
+    "postinstall": "npx playwright install",
     "codeceptjs": "codeceptjs run --steps",
     "codeceptjs:ui": "codecept-ui --app",
     "all": "CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_AUTODELAY='true' codeceptjs run -p allure",
@@ -40,17 +41,18 @@
   },
   "author": "Lubos Balat, InterWay, a. s.",
   "devDependencies": {
-    "@codeceptjs/configure": "^0.8.0",
-    "@codeceptjs/ui": "^0.4.7",
-    "acorn": "^8.8.0",
-    "allure-commandline": "^2.18.1",
-    "codeceptjs": "^3.3.5",
-    "codeceptjs-chai": "^2.3.3",
+    "@codeceptjs/configure": "^1.0.1",
+    "@codeceptjs/ui": "^1.2.0",
+    "acorn": "^8.14.0",
+    "allure-codeceptjs": "^3.0.8",
+    "allure-commandline": "^2.32.0",
+    "codeceptjs": "^3.6.10",
+    "codeceptjs-chai": "^2.3.5",
     "mochawesome": "^7.1.3",
-    "moment": "^2.29.4",
-    "playwright": "^1.25.1"
+    "moment": "^2.30.1",
+    "playwright": "^1.49.1"
   },
   "dependencies": {
-    "codeceptjs-pixelmatchhelper": "^1.0.5"
+    "codeceptjs-pixelmatchhelper": "^1.0.6"
   }
 }

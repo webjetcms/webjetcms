@@ -1,7 +1,5 @@
 package sk.iway.iwcm.admin.jstree;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -27,7 +25,7 @@ import java.util.Map;
  *
  */
 public abstract class JsTreeRestController<T> {
-    private static Logger log = LoggerFactory.getLogger(JsTreeRestController.class);
+
     private Prop prop;
 
     @Autowired
@@ -43,9 +41,7 @@ public abstract class JsTreeRestController<T> {
     public ResponseEntity<Map<String, Object>> tree(@RequestBody JsTreeMoveItem item) {
         Map<String, Object> result = new HashMap<>();
 
-        log.debug("Pre tree");
         tree(result, item);
-        log.debug("After tree");
 
         return ResponseEntity.ok(result);
     }
@@ -60,9 +56,7 @@ public abstract class JsTreeRestController<T> {
     public ResponseEntity<Map<String, Object>> moveItem(@RequestBody JsTreeMoveItem item) {
         Map<String, Object> result = new HashMap<>();
 
-        log.debug("Pre move");
         move(result, item);
-        log.debug("After move");
 
         return ResponseEntity.ok(result);
     }
@@ -77,9 +71,7 @@ public abstract class JsTreeRestController<T> {
     public ResponseEntity<Map<String, Object>> saveItem(@RequestBody T item) {
         Map<String, Object> result = new HashMap<>();
 
-        log.debug("Pre save");
         save(result, item);
-        log.debug("After save");
 
         return ResponseEntity.ok(result);
     }
@@ -94,9 +86,7 @@ public abstract class JsTreeRestController<T> {
     public ResponseEntity<Map<String, Object>> deleteItem(@RequestBody T item) {
         Map<String, Object> result = new HashMap<>();
 
-        log.debug("Pre delete");
         delete(result, item);
-        log.debug("After delete");
 
         return ResponseEntity.ok(result);
     }

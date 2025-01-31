@@ -27,7 +27,7 @@ Každý auditní záznam automaticky zaznamenává datum a čas, ID přihlášen
 - `FILE_DELETE` - při mazání souboru nebo adresáře zaznamená cestu.
 - `FILE_EDIT` - přejmenování nebo úpravě souboru zaznamená cestu.
 - `FILE_SAVE` - uložení souboru, např. při kopírování/přesouvání atd. Zaznamenat cestu k souboru
-- `FILE_UPLOAD` - Nahrání souboru do WebJETu, a to buď klasickým odesláním, nebo metodou Drag \&amp; Drop. Obvykle se zaznamená cesta k nahranému souboru.
+- `FILE_UPLOAD` - Nahrání souboru do WebJETu, a to buď klasickým odesláním, nebo metodou Drag & Drop. Obvykle se zaznamená cesta k nahranému souboru.
 - `FORMMAIL` - odeslání formuláře. Úspěšné odeslání zaznamená pomocí zprávy `FormMail formName:` název formuláře, seznam příjemců a `referer`. V případě neúspěchu zaznamená důvod neodeslání spolu s hlášením. `ERROR: formName:` název formuláře, `fail:` důvod neposílání. Zaznamenává také detekci spamu hlášením `detectSpam TRUE:` důvod pro detekci jako spamu.
 - `FORM_ARCHIVE` - archivace formuláře, zaznamená název formuláře.
 - `FORM_DELETE` - smazání formuláře, zaznamená název formuláře a případně ID, pokud se jedná o smazání jednoho záznamu.

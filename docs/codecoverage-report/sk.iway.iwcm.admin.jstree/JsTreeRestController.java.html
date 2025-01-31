@@ -43,11 +43,9 @@ import java.util.Map;
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; tree(@RequestBody JsTreeMoveItem item) {
 <span class="fc" id="L44">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L46">        log.debug(&quot;Pre tree&quot;);</span>
-<span class="fc" id="L47">        tree(result, item);</span>
-<span class="fc" id="L48">        log.debug(&quot;After tree&quot;);</span>
+<span class="fc" id="L46">        tree(result, item);</span>
 
-<span class="fc" id="L50">        return ResponseEntity.ok(result);</span>
+<span class="fc" id="L48">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -58,13 +56,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/move&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; moveItem(@RequestBody JsTreeMoveItem item) {
-<span class="fc" id="L61">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L59">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="fc" id="L63">        log.debug(&quot;Pre move&quot;);</span>
-<span class="fc" id="L64">        move(result, item);</span>
-<span class="fc" id="L65">        log.debug(&quot;After move&quot;);</span>
+<span class="fc" id="L61">        move(result, item);</span>
 
-<span class="fc" id="L67">        return ResponseEntity.ok(result);</span>
+<span class="fc" id="L63">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -75,13 +71,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/save&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; saveItem(@RequestBody T item) {
-<span class="nc" id="L78">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L74">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L80">        log.debug(&quot;Pre save&quot;);</span>
-<span class="nc" id="L81">        save(result, item);</span>
-<span class="nc" id="L82">        log.debug(&quot;After save&quot;);</span>
+<span class="nc" id="L76">        save(result, item);</span>
 
-<span class="nc" id="L84">        return ResponseEntity.ok(result);</span>
+<span class="nc" id="L78">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -92,13 +86,11 @@ import java.util.Map;
     @PreAuthorize(value = &quot;@WebjetSecurityService.checkAccessAllowedOnController(this)&quot;)
     @PostMapping(&quot;/delete&quot;)
     public ResponseEntity&lt;Map&lt;String, Object&gt;&gt; deleteItem(@RequestBody T item) {
-<span class="nc" id="L95">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L89">        Map&lt;String, Object&gt; result = new HashMap&lt;&gt;();</span>
 
-<span class="nc" id="L97">        log.debug(&quot;Pre delete&quot;);</span>
-<span class="nc" id="L98">        delete(result, item);</span>
-<span class="nc" id="L99">        log.debug(&quot;After delete&quot;);</span>
+<span class="nc" id="L91">        delete(result, item);</span>
 
-<span class="nc" id="L101">        return ResponseEntity.ok(result);</span>
+<span class="nc" id="L93">        return ResponseEntity.ok(result);</span>
     }
 
     /**
@@ -133,22 +125,22 @@ import java.util.Map;
     public abstract boolean checkAccessAllowed(HttpServletRequest request);
 
     protected Prop getProp() {
-<span class="pc bpc" id="L136" title="1 of 2 branches missed.">        if (prop == null) {</span>
-<span class="fc" id="L137">            prop = Prop.getInstance(getRequest());</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (prop == null) {</span>
+<span class="fc" id="L129">            prop = Prop.getInstance(getRequest());</span>
         }
-<span class="fc" id="L139">        return prop;</span>
+<span class="fc" id="L131">        return prop;</span>
     }
 
     public HttpServletRequest getRequest() {
-<span class="fc" id="L143">        return request;</span>
+<span class="fc" id="L135">        return request;</span>
     }
 
     public void setRequest(HttpServletRequest request) {
-<span class="nc" id="L147">        this.request = request;</span>
-<span class="nc" id="L148">    }</span>
+<span class="nc" id="L139">        this.request = request;</span>
+<span class="nc" id="L140">    }</span>
 
     public Identity getUser(){
-<span class="fc" id="L151">		return UsersDB.getCurrentUser(getRequest());</span>
+<span class="fc" id="L143">		return UsersDB.getCurrentUser(getRequest());</span>
 	}
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

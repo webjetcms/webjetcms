@@ -1,8 +1,6 @@
 Feature('webpages.group-defaultdocid');
 
 var auto_name, auto_folder, auto_webPage, auto_todo;
-var add_button = (locate('.tree-col').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
-var add_webButton = (locate('#datatableInit_wrapper').find('.btn.btn-sm.buttons-create.btn-success.buttons-divider'));
 
 Before(({ I, login }) => {
      login('admin');
@@ -18,14 +16,14 @@ Before(({ I, login }) => {
 
 });
 
-Scenario('Hlavna stranka priecinka @singlethread', ({ I, DT, DTE }) => {
+Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.waitForText('Zoznam web stránok', 10);
      DT.resetTable();
 
      // 1. pridanie noveho priecinka folder-autotest
      I.say('1. Pridanie noveho priecinka folder-autotest');
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', auto_folder);
      I.groupSetRootParent();
@@ -37,7 +35,7 @@ Scenario('Hlavna stranka priecinka @singlethread', ({ I, DT, DTE }) => {
      I.say('2. Pridanie noveho priecinka name-autotest');
      I.refreshPage();
      I.waitForText('Zoznam web stránok', 10);
-     I.click(add_button);
+     I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', auto_name);
      I.groupSetRootParent();
@@ -52,14 +50,12 @@ Scenario('Hlavna stranka priecinka @singlethread', ({ I, DT, DTE }) => {
 
      // 4. pridanie novej stranky
      I.say('4. Priradenie novej stranky priecinku name-autotestu');
-     I.click(add_webButton);
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.wait(2);
      // pridanie obsahu
      I.clickCss("#pills-dt-datatableInit-content-tab");
-     I.waitForElement('#cke_data', 10);
-     I.clickCss('#cke_data');
-     I.fillField('#cke_data', 'This is an autotest');
+     await DTE.fillCkeditor('<p>This is an autotest</p>');
      // pridanie nazvu web stranky a polozky v menu
      I.click(locate('#pills-dt-datatableInit-basic-tab').withText('Základné'));
      I.fillField('#DTE_Field_title', auto_webPage);
@@ -147,7 +143,7 @@ Scenario('Ulozenie prazdnej stranky', ({ I, DT, DTE }) => {
      I.jstreeClick("Test stavov");
      I.jstreeClick("Tento nie je interný");
      I.wait(1);
-     I.click(add_webButton);
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForText('Obsah', 10);
      I.forceClick('Pridať', '#datatableInit_modal');
@@ -155,9 +151,9 @@ Scenario('Ulozenie prazdnej stranky', ({ I, DT, DTE }) => {
      I.dontSee('Target object must not be null');
 
      //zmaz vytvorenu web stranku
-     DT.filter("title", "Nová web stránka");
-     I.clickCss("div.dataTables_scrollHeadInner button.dt-filter-id");
-     I.clickCss("#datatableInit_wrapper button.buttons-remove");
+     DT.filterContains("title", "Nová web stránka");
+     I.clickCss("div.dt-scroll-headInner button.dt-filter-id");
+     I.click(DT.btn.delete_button);
      //polozku/y preto len polozk
      I.waitForText("Naozaj chcete zmazať položk", 10);
      I.wait(1);
@@ -165,13 +161,13 @@ Scenario('Ulozenie prazdnej stranky', ({ I, DT, DTE }) => {
      DTE.waitForLoader();
 });
 
-Scenario('Chybne texty', ({ I, DTE }) => {
+Scenario('Chybne texty', ({ I, DTE, DT }) => {
      // Zalozka SABLONA - title pre 'Volne objekty' je v anglictine 'Nothing selected'
      I.waitForText('Zoznam web stránok', 10);
      I.jstreeClick("Test stavov");
      I.jstreeClick("Tento nie je interný");
      I.wait(1);
-     I.click(add_webButton);
+     I.click(DT.btn.add_button);
      DTE.waitForEditor();
      I.waitForElement(locate('#pills-dt-datatableInit-basic-tab.active'), 10);
 

@@ -1,6 +1,9 @@
 # Settings
 
-| Settings | Type | Presets | Description | | ---------- | --------- | ------------- | ---------------------------- | | fireTime | *Integer* | 200 | Event call delay | | debug | *Boolean* | false | Debug mode |
+| Settings | Type | Presets | Description |
+| ---------- | --------- | ------------- | ---------------------------- |
+| fireTime | *Integer* | 200 | Event call delay |
+| debug | *Boolean* | false | Debug mode |
 
 ## Delayed event call *Integer*
 
@@ -10,7 +13,7 @@ Example setup:
 
 ```javascript
 Nina.init({
-	fireTime: 300,
+    fireTime: 300
 });
 ```
 
@@ -22,8 +25,8 @@ Example of switching on:
 
 ```javascript
 Nina.init({
-	debug: true,
+    debug: true
 });
 ```
 
-!\&gt; **Attention:** If the parameter is set in the URL `NinjaDebug` at `true`, this debug mode is also forced on. For more information, see [Debug mode](/ninja-starter-kit/ninja-jv/debug/?id=debug-režim-boolean).
+!> **Warning:** If the parameter is set in the URL `NinjaDebug` at `true`, this debug mode is also forced on. For more information, see [Debug mode](/ninja-starter-kit/ninja-jv/debug/?id=debug-režim-boolean).

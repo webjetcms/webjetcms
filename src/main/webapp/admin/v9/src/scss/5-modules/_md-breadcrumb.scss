@@ -137,8 +137,14 @@
                 position: absolute;
                 border-top-right-radius: 0 !important;
                 border-bottom-right-radius: 0 !important;
-                height: 30px;
+                height: 31px;
                 line-height: 26px;
+                padding-left: 6px;
+                padding-top: 4px;
+
+                &:hover {
+                    background-position: right 7px center !important;
+                }
             }
         }
         .form-group button {

@@ -345,7 +345,7 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
 	public void beforeSave(ReservationEntity entity) {
         //Email is NULL, because this is ADMIN section, so admin must be logged in
 <span class="fc" id="L347">        int userId = ReservationService.getUserToPay(null, entity.getId(), reservationRepository, getRequest());</span>
-        
+
         //INSERT action
 <span class="pc bpc" id="L350" title="1 of 4 branches missed.">        if(entity.getId() == null || entity.getId() == -1) {</span>
             //Set domain id, not null
@@ -353,7 +353,7 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
 
             //Set creator id
 <span class="fc" id="L355">            entity.setUserId(userId);</span>
-            
+
 <span class="fc" id="L357">            entity.setId(-1L);</span>
         }
 
@@ -461,20 +461,21 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
     public void validateEditor(HttpServletRequest request, DatatableRequest&lt;Long, ReservationEntity&gt; target, Identity user, Errors errors, Long id, ReservationEntity entity) {
 <span class="pc bpc" id="L462" title="1 of 6 branches missed.">        if(target.getAction().equals(&quot;create&quot;) || target.getAction().equals(&quot;edit&quot;) &amp;&amp; entity.getEditorFields() != null) {</span>
             //Is object set as ALL DAY reservation ? - if yes, we do not need to check time
-<span class="fc" id="L464">            boolean allDay = ror.isReservationForAllDay(entity.getReservationObjectId());</span>
-<span class="pc bpc" id="L465" title="1 of 2 branches missed.">            if(allDay == false) {</span>
-<span class="pc bpc" id="L466" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeFrom() == null)</span>
-<span class="nc" id="L467">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeFrom&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
-<span class="pc bpc" id="L468" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeTo() == null)</span>
-<span class="nc" id="L469">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeTo&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="fc" id="L464">            Boolean allDay = false;</span>
+<span class="pc bpc" id="L465" title="1 of 2 branches missed.">            if (entity.getReservationObjectId()!=null) allDay = ror.isReservationForAllDay(entity.getReservationObjectId());</span>
+<span class="pc bpc" id="L466" title="1 of 2 branches missed.">            if(Tools.isFalse(allDay)) {</span>
+<span class="pc bpc" id="L467" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeFrom() == null)</span>
+<span class="nc" id="L468">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeFrom&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
+<span class="pc bpc" id="L469" title="1 of 2 branches missed.">                if(entity.getEditorFields().getReservationTimeTo() == null)</span>
+<span class="nc" id="L470">                    errors.rejectValue(&quot;errorField.editorFields.reservationTimeTo&quot;, null, getProp().getText(&quot;javax.validation.constraints.NotBlank.message&quot;));</span>
             }
 
-<span class="pc bpc" id="L472" title="2 of 4 branches missed.">            if(Tools.isEmpty(entity.getEmail()) == false &amp;&amp; Tools.isEmail(entity.getEmail()) == false)</span>
-<span class="nc" id="L473">                errors.rejectValue(&quot;errorField.email&quot;, null, getProp().getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
+<span class="pc bpc" id="L473" title="2 of 4 branches missed.">            if(Tools.isEmpty(entity.getEmail()) == false &amp;&amp; Tools.isEmail(entity.getEmail()) == false)</span>
+<span class="nc" id="L474">                errors.rejectValue(&quot;errorField.email&quot;, null, getProp().getText(&quot;javax.validation.constraints.Email.message&quot;));</span>
         }
 
-<span class="fc" id="L476">        super.validateEditor(request, target, user, errors, id, entity);</span>
-<span class="fc" id="L477">    }</span>
+<span class="fc" id="L477">        super.validateEditor(request, target, user, errors, id, entity);</span>
+<span class="fc" id="L478">    }</span>
 
     @RequestMapping(
         value=&quot;/compute-reservation-price&quot;,
@@ -487,8 +488,8 @@ public class ReservationRestController extends DatatableRestControllerV2&lt;Rese
         @RequestParam(&quot;object-id&quot;) Long objectId,
         @RequestParam(&quot;reservation-id&quot;) Long reservationId) {
             //Email is NULL, because this is ADMIN section, so admin must be logged in
-<span class="fc" id="L490">            int userId = ReservationService.getUserToPay(null, reservationId, reservationRepository, getRequest());</span>
-<span class="fc" id="L491">            return ReservationService.calculateReservationPrice(dateFrom, dateTo, timeFrom, timeTo, objectId, userId, ror, ropr);</span>
+<span class="fc" id="L491">            int userId = ReservationService.getUserToPay(null, reservationId, reservationRepository, getRequest());</span>
+<span class="fc" id="L492">            return ReservationService.calculateReservationPrice(dateFrom, dateTo, timeFrom, timeTo, objectId, userId, ror, ropr);</span>
         }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

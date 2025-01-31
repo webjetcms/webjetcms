@@ -6,9 +6,9 @@ Sample Spring MVC application in administration with file upload to backend.
 
 ## Backend
 
-In the administration, the page view is realized by [AdminThymeleafController](../../developer/frameworks/README.md). The form/data for the MVC application are inserted into the model by listening [events for displaying the page in the administration](../../developer/frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu).
+In the administration, the page view is realized by [AdminThymeleafController](../../developer/frameworks/README.md). The form/data for the MVC application are inserted into the model by listening [events for displaying the page in the administration](../../developer/frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
 
-Processing the uploaded file is more complicated, if you need to use the file we recommend to extend the class [AbstractUploadListener](../../../javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html)which simplifies the processing of the uploaded file.
+Processing the uploaded file is more complicated, if you need to use the file we recommend to extend the class [AbstractUploadListener](../../../javadoc/sk/iway/iwcm/admin/AbstractUploadListener.html) which simplifies the processing of the uploaded file.
 
 Class `AbstractUploadListener` ensure processing `multipart requestu` in the constructor by calling `super.processForm(event);` and setting the attributes of the specified bean (form). Calling `getForm()` gets the form object and the call `getBindingResult()` get any error messages - verification of mandatory fields, etc.
 
@@ -99,7 +99,7 @@ public class Form {
 }
 ```
 
-
+The following translation keys are used:
 
 ```
 form.p1.not_blank=Pole P1 nemôže byť prázdne
@@ -109,62 +109,65 @@ form.document.not_null=Dokument nemôže byť prázdny
 
 ## Frontend
 
+The HTML code of the page contains standard `Spring MVC` Form.
 
+The sample includes a display of the name of the uploaded file, which is obtained from the attribute `importedFileName`, which is set on the backend after the file has been successfully uploaded.
 
-`importedFileName`
-
-`fields.errors`
+Error messages are retrieved from the object `fields.errors` and if any are displayed in the form.
 
 ```html
 <script type="text/javascript">
-	window.domReady.add(function () {
-		WJ.breadcrumb({
-			id: "upload",
-			tabs: [
-				{
-					url: "/apps/contact/admin/upload/",
-					title: "Spring MVC upload example",
-					active: true,
-				},
-			],
-		});
-	});
+window.domReady.add(function () {
+    WJ.breadcrumb({
+        id: "upload",
+        tabs: [
+            {
+                url: '/apps/contact/admin/upload/',
+                title: 'Spring MVC upload example',
+                active: true
+            }
+        ]
+    });
+});
 </script>
 <section class="my-3">
-	<div class="container">
-		<div class="row">
-			<div class="col-md-8 mx-auto">
-				<p data-th-if="${importedFileName ne null}" class="alert alert-success">File successfully uploaded, fileName: <span data-th-text="${importedFileName}"></span></p>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
 
-				<form method="post" data-th-action="@{/apps/contact/admin/upload/}" data-th-object="${form}" enctype="multipart/form-data">
-					<div data-th-if="${#fields.hasErrors('*')}" class="alert alert-danger">
-						<ul style="margin-bottom: 0;">
-							<li data-th-each="error : ${#fields.errors('*')}" data-th-text="${error}">error</li>
-						</ul>
-					</div>
+                <p data-th-if="${importedFileName ne null}" class="alert alert-success">
+                    File successfully uploaded, fileName: <span data-th-text="${importedFileName}"></span>
+                </p>
 
-					<div class="form-group mb-3">
-						<label for="p1" class="form-label">P1</label>
-						<input type="text" data-th-field="*{p1}" id="p1" class="form-control" />
-					</div>
-					<div class="form-group mb-3">
-						<label for="p2" class="form-label">P2</label>
-						<input type="text" data-th-field="*{p2}" id="p2" class="form-control" />
-					</div>
-					<div class="form-group mb-3">
-						<label for="document" class="form-label">Dokument</label>
-						<input type="file" data-th-field="*{document}" id="document" class="form-control" />
-					</div>
-					<div class="form-group mb-3 text-end">
-						<button type="submit" class="btn btn-primary">[[#{button.submit}]]</button>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+                <form method="post" data-th-action="@{/apps/contact/admin/upload/}" data-th-object="${form}" enctype="multipart/form-data">
+                    <div data-th-if="${#fields.hasErrors('*')}" class="alert alert-danger">
+                        <ul style="margin-bottom: 0;">
+                            <li data-th-each="error : ${#fields.errors('*')}" data-th-text="${error}">error</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="p1" class="form-label">P1</label>
+                        <input type="text" data-th-field="*{p1}" id="p1" class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="p2" class="form-label">P2</label>
+                        <input type="text" data-th-field="*{p2}" id="p2" class="form-control">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="document" class="form-label">Dokument</label>
+                        <input type="file" data-th-field="*{document}" id="document" class="form-control">
+                    </div>
+                    <div class="form-group mb-3 text-end">
+                        <button type="submit" class="btn btn-primary">[[#{button.submit}]]</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </section>
 ```
 
 ## Notes on implementation
 
-`V9SpringConfig.multipartResolver()``ThymeleafAdminController.appHandlerPost()``consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }`.
+The configuration for uploading the file is set in `V9SpringConfig.multipartResolver()` and served through `ThymeleafAdminController.appHandlerPost()`, which handles `consumes = { MediaType.MULTIPART_FORM_DATA_VALUE }`.

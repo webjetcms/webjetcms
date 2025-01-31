@@ -76,39 +76,39 @@ public class FolderPropertiesService {
 <span class="fc" id="L76">    }</span>
 
     public static void copyFolderProperties(String srcPath, String newPath, HttpServletRequest request) {
-<span class="nc bnc" id="L79" title="All 4 branches missed.">        if(Tools.isEmpty(srcPath) == true || Tools.isEmpty(newPath) == true)</span>
+<span class="pc bpc" id="L79" title="2 of 4 branches missed.">        if(Tools.isEmpty(srcPath) == true || Tools.isEmpty(newPath) == true)</span>
 <span class="nc" id="L80">            return;</span>
 
-<span class="nc" id="L82">        Identity loggedUser = UsersDB.getCurrentUser(request);    </span>
-<span class="nc bnc" id="L83" title="All 2 branches missed.">        if(loggedUser.isFolderWritable(srcPath) == false) </span>
+<span class="fc" id="L82">        Identity loggedUser = UsersDB.getCurrentUser(request);    </span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if(loggedUser.isFolderWritable(srcPath) == false) </span>
 <span class="nc" id="L84">            return;</span>
 
-<span class="nc" id="L86">        FolderPropertiesRepository folderPropertiesRepository = Tools.getSpringBean(&quot;folderPropertiesRepository&quot;, FolderPropertiesRepository.class);</span>
-<span class="nc" id="L87">        FolderPropertiesEntity fromEntity = folderPropertiesRepository.findByDirUrl(srcPath).orElse(null);</span>
-<span class="nc" id="L88">        FolderPropertiesEntity toEntity = folderPropertiesRepository.findByDirUrl(newPath).orElse(null);</span>
+<span class="fc" id="L86">        FolderPropertiesRepository folderPropertiesRepository = Tools.getSpringBean(&quot;folderPropertiesRepository&quot;, FolderPropertiesRepository.class);</span>
+<span class="fc" id="L87">        FolderPropertiesEntity fromEntity = folderPropertiesRepository.findByDirUrl(srcPath).orElse(null);</span>
+<span class="fc" id="L88">        FolderPropertiesEntity toEntity = folderPropertiesRepository.findByDirUrl(newPath).orElse(null);</span>
 
-<span class="nc bnc" id="L90" title="All 4 branches missed.">        if(fromEntity != null &amp;&amp; toEntity != null) {</span>
+<span class="pc bpc" id="L90" title="3 of 4 branches missed.">        if(fromEntity != null &amp;&amp; toEntity != null) {</span>
             //SWAP values
 <span class="nc" id="L92">            toEntity.setLogonDocId(fromEntity.getLogonDocId());</span>
 <span class="nc" id="L93">            toEntity.setIndexFullText(fromEntity.isIndexFullText());</span>
 <span class="nc" id="L94">            toEntity.setPasswordProtected(fromEntity.getPasswordProtected());</span>
 
 <span class="nc" id="L96">            folderPropertiesRepository.save(toEntity);</span>
-<span class="nc bnc" id="L97" title="All 4 branches missed.">        } else if(fromEntity != null &amp;&amp; toEntity == null) {</span>
+<span class="pc bpc" id="L97" title="3 of 4 branches missed.">        } else if(fromEntity != null &amp;&amp; toEntity == null) {</span>
             //Create new entity for new path
 <span class="nc" id="L99">            fromEntity.setId(null);</span>
 <span class="nc" id="L100">            fromEntity.setDirUrl(newPath);</span>
 
 <span class="nc" id="L102">            folderPropertiesRepository.save(fromEntity);</span>
-<span class="nc bnc" id="L103" title="All 4 branches missed.">        } else if(fromEntity == null &amp;&amp; toEntity == null) {</span>
+<span class="pc bpc" id="L103" title="2 of 4 branches missed.">        } else if(fromEntity == null &amp;&amp; toEntity == null) {</span>
             //BOTH null, create empty entity for new path
-<span class="nc" id="L105">            toEntity = new FolderPropertiesEntity();</span>
-<span class="nc" id="L106">            toEntity.setDirUrl(newPath);</span>
-<span class="nc" id="L107">            toEntity.setLogonDocId(-1);</span>
+<span class="fc" id="L105">            toEntity = new FolderPropertiesEntity();</span>
+<span class="fc" id="L106">            toEntity.setDirUrl(newPath);</span>
+<span class="fc" id="L107">            toEntity.setLogonDocId(-1);</span>
 
-<span class="nc" id="L109">            folderPropertiesRepository.save(toEntity);</span>
+<span class="fc" id="L109">            folderPropertiesRepository.save(toEntity);</span>
         }
-<span class="nc" id="L111">    }</span>
+<span class="fc" id="L111">    }</span>
 
     public static void deleteFolderProperties(String path, HttpServletRequest request) {
 <span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if(Tools.isEmpty(path) == true) </span>

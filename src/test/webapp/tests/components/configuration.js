@@ -3,7 +3,7 @@ Feature('components.configuration');
 var randomNumber, name, value;
 var datatableName = "configurationDatatable";
 
-Before(({ I, login }) => {
+Before(({ I, login, DT }) => {
 
     login('admin');
     I.amOnPage("/admin/v9/settings/configuration");
@@ -13,6 +13,7 @@ Before(({ I, login }) => {
         name = "name-autotest-" + randomNumber;
         value = "value-autotest-" + randomNumber+"<script>alert('TEST');</script> &#39; poKUS frame-ancestors 'self'";
     }
+    DT.addContext('config','#configurationDatatable_wrapper');
 });
 
 Scenario('zoznam konfiguracnych premennych', ({ I }) => {
@@ -90,7 +91,7 @@ Scenario("upravenie konfiguracnej premennej", ({ I, DTE }) => {
 //detto pri editacii existujuceho, ked sa ulozilo a dalo sa znova editovat padlo
 Scenario("overenie nastavenia ID-edit", ({ I, DT, DTE }) => {
 
-    DT.filter("name", name)
+    DT.filterContains("name", name)
     I.click(name);
     DTE.waitForEditor(datatableName);
     DTE.save();
@@ -162,10 +163,10 @@ Scenario("overenie prav editacie vsetkych premennych", ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/settings/configuration/?removePerm=conf.show_all_variables");
     I.dontSee("structureMirroringConfig");
 
-    DT.filter("name", "structureMirroringConfig");
+    DT.filterContains("name", "structureMirroringConfig");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
-    I.click("button.buttons-create");
+    I.click(DT.btn.config_add_button);
     DTE.waitForEditor("configurationDatatable");
 
     I.dontSee("História", "#pills-dt-editor-configurationDatatable");

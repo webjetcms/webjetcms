@@ -65,10 +65,10 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         title = "reservation.reservations.info_title",
-        visible = false,
         sortAfter = "dateTo",
         tab = "basic",
-        className = "wrap"
+        className = "wrap",
+        hidden = true
     )
     private String infoLabel1;
 
@@ -101,9 +101,9 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TEXTAREA,
         title = "reservation.reservations.info_title",
-        visible = false,
         tab = "basic",
-        className = "wrap"
+        className = "wrap",
+        hidden = true
     )
     private String infoLabel2;
 

@@ -15,7 +15,7 @@ Odesílání e-mailových kampaní probíhá na pozadí tzv. `Sender`. Funguje t
 - Tělo e-mailu bude aktualizováno pomocí značky pro sledování kliknutí na odkaz v e-mailu.
 - K tělu e-mailu bude připojen obrázek, který umožní sledovat otevření e-mailu.
 - E-mail bude odeslán.
-- Z odpovědi serveru SMTP se vyhodnotí, zda byl e-mail úspěšně odeslán (kromě stavového kódu je možné v proměnné conf. nastavit další chybové odpovědi). `dmailBadEmailSmtpReplyStatuses`)
+- Z odpovědi serveru SMTP se vyhodnotí, zda byl e-mail úspěšně odeslán (kromě stavového kódu je možné v proměnné conf. nastavit další chybové odpovědi `dmailBadEmailSmtpReplyStatuses`)
 - Pokud je odeslání neúspěšné, datum odeslání e-mailu se v databázi vymaže a odesílání se zastaví na dobu nastavenou v proměnné conf. `dmailSleepTimeAfterException`.
 
 ## Správné nastavení
@@ -46,14 +46,14 @@ Další nastavitelné konfigurační proměnné:
 - `senderRunOnNode` - pokud používáte cluster více aplikačních serverů, můžete nastavit seznam názvů oddělených čárkou. `nodu` ze kterého budou odesílány hromadné e-maily. Poznámka: pokud jsou e-maily odesílány z více `nodov` Mohou být odeslány duplicitní e-maily.
 - `dmailTrackopenGif` - virtuální cesta k obrázku, která označuje, že e-mail byl otevřen (ve výchozím nastavení `/components/dmail/trackopen.gif`).
 - `dmailStatParam` - název parametru URL pro statistiku kliknutí (výchozí hodnota `webjetDmsp`).
-- `replaceExternalLinks` - pokud je nastavena na `true` externí odkazy budou také nahrazeny přesměrováním přes server, na kterém je spuštěn hromadný e-mail pro statistiky sledování (ve výchozím nastavení). `false`).
+- `replaceExternalLinks` - pokud je nastavena na `true` externí odkazy budou také nahrazeny přesměrováním přes server, na kterém je spuštěn hromadný e-mail pro statistiky sledování (ve výchozím nastavení `false`).
 
 ## Nastavení zrychlení
 
 Pokud potřebujete zrychlit odesílání, můžete provést následující kroky:
 - Zvýšení limitů domén, doporučujeme nastavit vyšší limity domén. `gmail.com` a doménou vaší společnosti.
 - Upravit podle `dmailWaitTimeout` na hodnotu `500`, což zvýší rychlost volání pro odeslání e-mailu kvůli blokování (viz výše). To neznamená, že e-mail bude odeslán každých 500 ms.
-- Pokud databáze obsahuje velké množství neplatných e-mailů, snižte. `dmailSleepTimeAfterException`. **Varování:** pokud váš server SMTP skutečně vypadne, budou e-maily velmi rychle označeny jako odeslané, protože počet `dmailMaxRetryCount`.
+- Pokud databáze obsahuje velké množství neplatných e-mailů, snižte. `dmailSleepTimeAfterException`. **Varování:** &#x70;okud váš server SMTP skutečně vypadne, budou e-maily velmi rychle označeny jako odeslané, protože počet `dmailMaxRetryCount`.
 - Sada `natUrlTranslate` pro přímé stahování textu e-mailu z místního aplikačního serveru. Pokud máte instalaci s více doménami, může nastat problém s výběrem správné domény. Doporučujeme v `hosts` v souboru serveru nastavíte všechny domény na IP adresu 127.0.0.1, v takovém případě nastavíte pouze přesměrování portů z 80 na 8080 (nebo jakýkoli port, na kterém běží místní aplikační server).
 - Minimalizujte obrázky a přílohy. Ty zvyšují zatížení serveru a objem e-mailu. Případně nastavte konfigurační proměnnou `dmailDisableInlineImages` na adrese `false` zakázat připojování obrázků přímo do těla e-mailu.
 - Pokud máte cluster, můžete povolit paralelní odesílání z více uzlů, ale tím se zvyšuje riziko, že příjemci bude odesláno více duplicitních e-mailů. Seznam uzlů, ze kterých se e-mail odesílá, se nastavuje v proměnné conf. `senderRunOnNode`.

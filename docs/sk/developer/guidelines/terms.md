@@ -9,6 +9,7 @@ Pri písaní textu je potrebné dodržať rovnakú terminológiu. Používajte l
 - nástrojová lišta = `toolbar` - Google Translate
 - viacnásobné výberové pole `multi selection field` - Google Translate
 - rozbaľovacia ponuka = `dropdown` - Google Translate
+- koncový bod = `endpoint` - Google Translate
 
 ## Názvoslovie pre kód
 

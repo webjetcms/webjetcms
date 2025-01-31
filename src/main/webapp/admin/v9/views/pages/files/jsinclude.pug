@@ -251,6 +251,10 @@ script.
                 //console.log(msg);
                 elFinderInstance.exec("open", msg.volume).done(function () {
                     //console.log("open root");
+                    try {
+                        //fixes problem with setting last selected file in elfinder after "open" call
+                        if (url != null && url.indexOf(":default")==-1) selectLink(url);
+                    } catch (e) {}
                     setTimeout(function () {
                         elFinderInstance.request({
                             data: {cmd: 'parents', target: msg.hashParent},
@@ -267,8 +271,7 @@ script.
                                             try {
                                                 //console.log("select file " + msg.hash);
                                                 elFinderInstance.selectfiles({files: [msg.hash]})
-                                            } catch (e) {
-                                            }
+                                            } catch (e) {}
                                         }, 300);
                                     });
                                 }, 100);
@@ -409,7 +412,6 @@ script.
         return "";
     }
 
-    const initialElfinderHeight = setInterval(setInitialElfinderHeight, 1500);
     function setInitialElfinderHeight() {
         let elfinder = $('#finder');
         //Check if elfinder is already initialized
@@ -431,12 +433,16 @@ script.
 
         //Set height of elfinder
         setElfinderHeight();
-        clearTimeout(initialElfinderHeight);
 
         const search =  window.location.href;
         const urlParams = new URLSearchParams(window.location.search);
         const stop_resizing = urlParams.get('stop_resizing');
         if(stop_resizing == undefined || stop_resizing == null || stop_resizing != "true") {
+            setTimeout(()=>{ setElfinderHeight(); }, 100);
+            //override height set by elfinder as soon as posiible
+            setTimeout(()=>{ setElfinderHeight(); }, 1000);
+            setTimeout(()=>{ setElfinderHeight(); }, 1500);
+            setTimeout(()=>{ setElfinderHeight(); }, 2000);
             const resizingInterval = setInterval(setElfinderHeight, 5000);
         }
     }
@@ -449,6 +455,8 @@ script.
 
         let availableSpace = computeAvailableSpaceHeight();
         let redundantSpace = computeElfinderRedundantHeight();
+
+        //console.log("availableSpace=", availableSpace, "redundantSpace=", redundantSpace, "workzone=", (availableSpace - redundantSpace - 1));
 
         elfinder.css("width", "100%");
         elfinder.css("height", (availableSpace - 1) + "px");
@@ -490,7 +498,11 @@ script.
     }
 
     function computeElfinderRedundantHeight() {
-        return parseInt( $(".elfinder-toolbar").outerHeight() ) + parseInt( $(".elfinder-statusbar").outerHeight() );
+        var toolbarHeight = $(".elfinder-toolbar").outerHeight();
+        if ($('#finder').hasClass("elfinder-mobile")) {
+            toolbarHeight = toolbarHeight * 0.8; //zoom level 0.8 on mobile devices
+        }
+        return parseInt( toolbarHeight ) + parseInt( $(".elfinder-statusbar").outerHeight() );
     }
 
     var lastDialogOptions = {};

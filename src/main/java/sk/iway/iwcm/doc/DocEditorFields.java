@@ -16,7 +16,6 @@ import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefEntity;
 import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.editor.rest.DocHistoryDto;
-import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.BaseEditorFields;
@@ -145,9 +144,6 @@ public class DocEditorFields extends BaseEditorFields {
         )
     })
     private List<DocHistoryDto> history;
-
-    //zoznam volnych poli
-    public List<Field> fieldsDefinition;
 
     //zoznam CSS stylov
     List<Map<String, String>> styleComboList;
@@ -278,7 +274,12 @@ public class DocEditorFields extends BaseEditorFields {
 
                 RequestBean.addTextKeyPrefix("temp-"+tempId, false);
             }
-            fieldsDefinition = getFields(doc, "editor", 'T');
+
+            setFieldsDefinition( getFields(doc, "editor", 'T') );
+
+            if (doc instanceof DocDetails) {
+                styleComboList = EditorService.getCssListJson(doc);
+            }
         }
 
         //TODO: do DB modelu pridat

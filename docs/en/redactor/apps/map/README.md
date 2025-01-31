@@ -9,6 +9,7 @@ Inserts an interactive map (Google maps or Open Street Map) into the page accord
 In this section you can set the positional attributes:
 - Address
 - Latitude, Longitude
+
 It is mandatory to set either the address or the latitude and longitude. The location can be set by clicking on the map and specifying the point. This step displays a pin on the map and overwrites the Latitude and Longitude values.
 
 ![](editor-address.png)
@@ -30,6 +31,7 @@ After checking the box I want to enter the exact size:
 - Offset from above
 - Offset left
 - Enable close description
+
 After changing the attributes it is possible to preview using the button
 
 ![](editor-settings.png)

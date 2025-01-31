@@ -1,14 +1,19 @@
 {
     "news": [
         {
+            "title": "Verzia 2024.52",
+            "perex": "Vo verzii 2024.52 Web stránky pridávajú možnosť nastaviť **spôsob usporiadania** a **vyhľadávať v stromovej štruktúre**, import ZIP umožňuje nastaviť spôsob porovnania existujúcej verzie stránky. **Elektronický obchod** dostal nový dizajn zoznamu objednávok a produktov. Pridaná **štatistika ankiet**, lepší editor obrázkov v prieskumníku a vylepšené vyhľadávanie v administrácii. V **hromadných e-mailoch** pribudla možnosť **nastaviť potvrdenie odhlásenia**. Galéria obsahuje nové pole pre **URL adresu zdroja obrázku**, ktoré je vyplnené automaticky pri použití fotobanky, **Značky** pridávajú **jazykové mutácie** a voliteľné polia.",
+            "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202452"
+        },
+        {
             "title": "Verzia 2024.40",
             "perex": "Vo verzii 2024.40 Prieskumník prináša **potvrdenie pri presune súborov drag&drop**, čím sa znižuje riziko chýb. Editor obrázkov umožňuje nastavenie **veľkosti a orezanie podľa šablón**, čo uľahčuje úpravy. Nastavenia viacerých **aplikácií** boli prepracované do **nového dizajnu**. Autor stránky dostáva **notifikácie pri časovom publikovaní a pridaní príspevku** do fóra. Nová aplikácia pre rezervácie umožňuje **jednoduché rezervovanie objektov** a ponúka štatistiky pre lepšiu správu. Vylepšili sme PageBuilder a opravili chyby v Archíve súborov pre lepšiu stabilitu.",
-            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202440"
+            "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202440"
         },
         {
             "title": "Verzia 2024.18",
             "perex": "WebJET 2024.18 obsahuje **novú sadu ikon**, Formulár ľahko doplnený o **pokročilé nastavenia** (príjemcovia, presmerovania...), do nového dizajnu sú prerobené aplikácie AB Testovanie, Audit (čaká na publikovanie, zmenené stránky), Blog, Dotazníky, Kalendár udalostí (schvaľovanie). Pridáva **podporu inštalácie typu MultiWeb** (oddelenie údajov domén) v Šablónach, Hromadnom e-maile a ďalších aplikáciách. Nová knižnica na **detekciu prehliadačov**, v Štatistika-Prehliadače dôjde k drobným rozdielom, ale údaje o prehliadači anonymizovane zaznamenávame aj bez Cookies súhlasu.",
-            "link": "http://docs.webjetcms.sk/latest/sk/CHANGELOG-2024?id=_202418"
+            "link": "http://docs.webjetcms.sk/v2024/sk/CHANGELOG-2024?id=_202418"
         },
         {
             "title": "Verzia 2024.0",
@@ -31,26 +36,6 @@
             "title": "Verzia 2023.0",
             "perex": "Verzia 2023.0 je zhodná s verziou 2022.52",
             "link": "http://docs.webjetcms.sk/v2023/#/CHANGELOG-2023?id=_20230"
-        },
-        {
-            "title": "Verzia 2022.52",
-            "perex": "Verzia 2022.52 je zameraná na zlepšenie použiteľnosti, obsahuje vylepšenia na základe pripomienok používateľov. Prerobené do nového dizajnu sú aplikácie Anketa, definovanie atribútov, Kontrola odkazov a prázdnych stránok, Štatistika, Rezervácie. Aplikácia Banner pridáva možnosť použitia voliteľných polí, v galérii je množstvo drobných zlepšení.",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202252"
-        },
-        {
-            "title": "Verzia 2022.40",
-            "perex": "2022.40 sa zamieriava na zlepšenie bezpečnosti. Obsahuje aktualizované Java aj JavaScript knižnice a skontrolované zraniteľnosti. Prináša ale aj množstvo iných zmien pre zlepšenie práce na základe spätnej väzby - zapamätanie posledného priečinka vo web stránkach, pamätanie poradia stĺpcov a usporiadania v data tabuľkách, možnosť posúvať okno atď. Jemne upravuje dizajn používateľského rozhrania (novšia sada ikon, jemnejšia farebnosť menu).",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202240"
-        },
-        {
-            "title": "Verzia 2022.18",
-            "perex": "2022.18 pridáva integráciu nástroja PageBuilder do web stránok, možnosť používať dizajnové šablóny písané vo frameworku Thymeleaf, zobrazenie posledných správ v logoch, mnohé zlepšenia použiteľnosti na základe pripomienok používateľov, prerobené aplikácie Formuláre - regulárne výrazy, Hromadný email - odhlásené emaily. Na úvodnú stránku pridané mini aplikácie Záložky a spätná väzba.",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_202218"
-        },
-        {
-            "title": "Verzia 2022.0",
-            "perex": "2022.0 prináša bezpečnostnú aktualizáciu závislostí Java a JavaScript knižníc.",
-            "link": "http://docs.webjetcms.sk/v2022/#/CHANGELOG-2022?id=_20220"
         }
     ]
 }

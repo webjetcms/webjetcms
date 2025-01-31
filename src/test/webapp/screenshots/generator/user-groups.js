@@ -10,7 +10,7 @@ Scenario('User groups screenshots', ({ I, DT, DTE, Document }) => {
 
     Document.screenshot("/admin/users/user-groups-datatable.png");
 
-    DT.filter("userGroupName", "ReservationDiscount");
+    DT.filterContains("userGroupName", "ReservationDiscount");
     I.clickCss("td.dt-select-td.sorting_1");
 
     Document.screenshotElement("button.buttons-addGroupToAll", "/admin/users/user-groups-addGroupToAll.png");

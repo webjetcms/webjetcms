@@ -10,15 +10,16 @@ import com.github.jk1.license.filter.LicenseBundleNormalizer
  */
 
 plugins {
-    id 'java-library'
+    id 'java'
     id 'war'
+    https://github.com/gretty-gradle-plugin/gretty
     id 'org.gretty' version "3.1.1"
-    id "com.jfrog.artifactory" version "4.26.1"
-    id 'idea'
-    //https://docs.freefair.io/gradle-plugins/current/reference/ + https://projectlombok.org
-    id "io.freefair.lombok" version "8.0.1"
-    id "org.owasp.dependencycheck" version "8.2.1"
+    //https://plugins.gradle.org/plugin/io.freefair.lombok
+    id "io.freefair.lombok" version "8.11"
+    http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
+    id "org.owasp.dependencycheck" version "11.1.0"
     id 'maven-publish'
+    //https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
     //https://github.com/jk1/Gradle-License-Report
     id 'com.github.jk1.dependency-license-report' version '2.5'
@@ -38,10 +39,19 @@ repositories {
 
 ext {
     //pri zmene verzie je potrebne to zmenit aj v build.xml a compile.xml
-    mapstructVersion = "1.4.2.Final";
+    lombokVersion = "1.18.34";
+    lombokMapstructBindingVersion = "0.2.0";
+    mapstructVersion = "1.6.1";
     springVersion = "5.3.+";
     springSecurityVersion = "5.8.+";
 }
+
+lombok {
+    version = "${lombokVersion}"
+    //zrusene kvoli zbytocnym problemom s ActiveRecord config['lombok.accessors.chain'] = 'true'
+    //config['lombok.addLombokGeneratedAnnotation'] = 'false'
+}
+
 
 war {
     zip64 = true
@@ -97,6 +107,13 @@ sourceSets {
 
 dependencies {
 
+    //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
+    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
+    //implementation "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
+    //annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    //annotationProcessor "org.projectlombok:lombok-mapstruct-binding:${lombokMapstructBindingVersion}"
+
     //WebJET dependencies
     //implementation("com.amazonaws:aws-java-sdk-core:1.12.+")
     //implementation("com.amazonaws:aws-java-sdk-ses:1.12.+")
@@ -110,7 +127,7 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.1.0'
 
     implementation("commons-fileupload:commons-fileupload:1.+")
-    implementation("commons-io:commons-io:2.11.0")
+    implementation("commons-io:commons-io:2.18.0")
     implementation("commons-lang:commons-lang:2.6") //v2 is used in displaytag
     implementation("org.apache.commons:commons-lang3:3.12.0")
 
@@ -174,10 +191,10 @@ dependencies {
     implementation("org.json:json:20231013")
     //implementation("cryptix:cryptix:3.2.0") //HERE
     implementation("com.sun.mail:javax.mail:1.6.2")
-    implementation("com.google.crypto.tink:tink:1.12.0")
+    implementation("com.google.crypto.tink:tink:1.15.0")
     //implementation("com.google.protobuf:protobuf-java:3.21.7")
-    implementation("ch.qos.logback:logback-core:1.3.14")
-    implementation("ch.qos.logback:logback-classic:1.3.14")
+    implementation("ch.qos.logback:logback-core:1.3.15") //1.3 is latest branch with support for Java EE java.* namespace
+    implementation("ch.qos.logback:logback-classic:1.3.15")
     implementation("org.slf4j:slf4j-api:1.7.36")
     implementation("org.slf4j:jcl-over-slf4j:1.7.36")
     implementation("org.slf4j:log4j-over-slf4j:1.7.36")
@@ -185,17 +202,19 @@ dependencies {
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:1.9.19")
     implementation("org.aspectj:aspectjweaver:1.9.19")
-    implementation("xerces:xercesImpl:2.12.2")
-    //implementation("org.apache.taglibs:taglibs-standard-spec:1.2.5")
-    //implementation("org.apache.taglibs:taglibs-standard-impl:1.2.5")
-    // https://mvnrepository.com/artifact/javax.servlet/jstl
-    implementation 'javax.servlet:jstl:1.2'
+
+    // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-spec
+    implementation 'org.apache.taglibs:taglibs-standard-spec:1.2.5'
+    // https://mvnrepository.com/artifact/org.apache.taglibs/taglibs-standard-impl
+    runtimeOnly 'org.apache.taglibs:taglibs-standard-impl:1.2.5'
 
     implementation("sk.iway.wjstruts:wjstruts-core:1.3.10")
     implementation("sk.iway.wjstruts:wjstruts-taglib:1.3.10")
         implementation("commons-digester:commons-digester:2.0") //update to 2.0 version
 
-    implementation("sk.iway:wjdaisydiff:1.0-SNAPSHOT")
+    implementation("sk.iway:wjdaisydiff:1.1-SNAPSHOT-shaded")
+        // https://mvnrepository.com/artifact/org.htmlunit/neko-htmlunit
+        implementation 'org.htmlunit:neko-htmlunit:4.5.0'
 
     providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
     providedCompile "javax.servlet:servlet-api:2.5"
@@ -206,16 +225,13 @@ dependencies {
     //  https://mvnrepository.com/artifact/org.thymeleaf/thymeleaf-spring5
     implementation group: 'org.thymeleaf', name: 'thymeleaf-spring5', version: '3.1.2.RELEASE'
 
-    //mapstruct, upgradnuty z WJ8 na 1.4.2
-    implementation "org.mapstruct:mapstruct:${mapstructVersion}"
-    annotationProcessor "org.mapstruct:mapstruct-processor:${mapstructVersion}"
-
     // https://mvnrepository.com/artifact/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
     implementation group: 'com.googlecode.owasp-java-html-sanitizer', name: 'owasp-java-html-sanitizer', version: '20240325.1'
 
     //Java 11/17 - JAXB-API - do not update to v3, packages changed from javax.xml.bind to jakarta.xml.bind
-    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:2.3.3'
-    implementation 'com.sun.xml.bind:jaxb-ri:2.3.3'
+    // https://mvnrepository.com/artifact/com.sun.xml.bind/jaxb-impl
+    implementation 'com.sun.xml.bind:jaxb-impl:2.3.9'
+
 
     // https://mvnrepository.com/artifact/org.postgresql/postgresql
     runtimeOnly 'org.postgresql:postgresql:42.7.2'
@@ -228,8 +244,23 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.2'
     testImplementation 'org.hamcrest:hamcrest:2.2'
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    testImplementation 'org.mockito:mockito-core:5.15.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
     testRuntimeOnly 'org.glassfish:javax.el:3.0.0'
+
+    //============ UPDATED VERSIONS BECAUSE OF VULNERABILITIES ==========
+    // used in io.springfox:springfox-swagger2
+    // https://mvnrepository.com/artifact/io.github.classgraph/classgraph
+    implementation 'io.github.classgraph:classgraph:4.8.177'
+
+    // used in com.google.crypto.tink:tink
+    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
+    implementation 'com.google.protobuf:protobuf-java:3.25.5'
+
+    // used in velocity-tools-generic
+    // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
+    implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 }
 
 configurations {
@@ -237,10 +268,10 @@ configurations {
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
     all*.exclude group: 'log4j', module: 'log4j'
-    all*.exclude group: 'xml-apis', module: 'xml-apis'
+    //all*.exclude group: 'xml-apis', module: 'xml-apis'
 
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
-    all*.exclude group: 'javax.xml.stream', module: 'stax-api'
+    //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
 
     grettyRunnerTomcat85 {
 
@@ -254,6 +285,11 @@ configurations {
 
 test {
     useJUnitPlatform()
+    systemProperty 'sun.net.client.defaultConnectTimeout', '10000'
+    systemProperty 'sun.net.client.defaultReadTimeout', '10000'
+    systemProperty 'file.encoding', 'UTF-8'
+    systemProperty 'user.language', 'sk'
+    systemProperty 'user.country', 'SK'
 }
 
 java {
@@ -268,12 +304,6 @@ compileJava {
     options.encoding = "utf-8"
     options.forkOptions.memoryMaximumSize = '1g'
     //options.forkOptions.jvmArgs = ['-XX:MaxPermSize=512m', '-Xms512m', '-Xmx1g']
-}
-
-lombok {
-    version = "1.18.28"
-    //zrusene kvoli zbytocnym problemom s ActiveRecord config['lombok.accessors.chain'] = 'true'
-    //config['lombok.addLombokGeneratedAnnotation'] = 'false'
 }
 
 //TASKY
@@ -320,13 +350,19 @@ task rsyncExplodedWar() {
             commandLine "cp","src/main/resources/poolman.xml","build/updatezip/finalwar/WEB-INF/classes/"
         }
         exec {
-            commandLine "/usr/local/bin/wj-rsync.sh","webjet4.dev.iway.sk","build/updatezip/finalwar","/www/tomcat_au27/webapps/${rootProject.name}","tomcat_au27.service","tomcat_au27"
+            commandLine "/usr/local/bin/wj-rsync-norestart.sh","webjet.local","build/updatezip/finalwar","/www/tomcat/webapps/${rootProject.name}","tomcat.service","tomcat"
         }
         exec {
             commandLine "cp","src/main/resources/poolman-pentest.xml","build/updatezip/finalwar/WEB-INF/classes/poolman.xml"
         }
         exec {
-            commandLine "/usr/local/bin/wj-rsync.sh","webjet2b.srv.iway.local","build/updatezip/finalwar","/www/tomcat_au20/webapps/webjet8v9_pentest","tomcat_au20","tomcat_au20"
+            commandLine "/usr/local/bin/wj-rsync.sh","webjet.local","build/updatezip/finalwar","/www/tomcat/webapps/webjet8v9_pentest","tomcat","tomcat"
+        }
+        exec {
+            commandLine "cp","src/main/resources/poolman-eshop.xml","build/updatezip/finalwar/WEB-INF/classes/poolman.xml"
+        }
+        exec {
+            commandLine "/usr/local/bin/wj-rsync.sh","webjet.local","build/updatezip/finalwar","/www/tomcat/webapps/shop.webjetcms.sk","tomcat","tomcat"
         }
     }
 }
@@ -343,7 +379,7 @@ task rsyncDocs() {
             commandLine project.ext.'npmExe', 'run', 'sitemap'
         }
         exec {
-            commandLine "/usr/local/bin/wj-rsync.sh","webjet2b.srv.iway.local","docs","/www/tomcat_au20/webapps/docs.webjetcms.sk/latest/","tomcat_au20","tomcat_au20"
+            commandLine "/usr/local/bin/wj-rsync-norestart.sh","webjet.local","docs","/www/tomcat/webapps/docs.webjetcms.sk/latest/","tomcat","tomcat"
         }
     }
 }
@@ -377,7 +413,7 @@ task rune2etestfirefox {
     }
 }
 
-//dependency check
+//dependency check - http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html
 dependencyCheck {
     scanConfigurations=["runtimeClasspath"]
     //format vid https://gist.github.com/milo-minderbinder/1e1ed911c5b2264dc659578f1baaef16
@@ -393,6 +429,12 @@ dependencyCheck {
             skipDevDependencies=true
             pnpmEnabled=false
         }
+    }
+    nvd {
+        //api key for NVD database for dependency check
+        apiKey=''
+        maxRetryCount=20
+        delay=8000
     }
 }
 
@@ -643,6 +685,7 @@ task writePom() {
             //zmen scope z runtime na compile
             Node scope = it.get("scope").first()
             def scopeValue = scope.value().first()
+            //println "groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+scopeValue
             if ("runtime".equals(scopeValue)) scope.value = "compile";
 
             if (artifactName.endsWith("servlet-api") || artifactName.endsWith(".jsp-api") || artifactName.endsWith(".el-api") || "jsr250-api".equals(artifactName)) scope.value = "provided";

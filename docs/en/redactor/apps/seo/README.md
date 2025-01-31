@@ -10,7 +10,7 @@ This section displays the statistics of search engine accesses to the website. Y
 
 ![](seo-admin-page.png)
 
-Also included is a table whose column `Názov servera` redirects us to the statistics detail of a particular search engine.
+Also included is a table whose column **Server name** redirects us to the statistics detail of a particular search engine.
 
 ![](seo-admin-details-page.png)
 
@@ -18,7 +18,7 @@ Also included is a table whose column `Názov servera` redirects us to the stati
 
 This section displays the statistics of search terms searched on search engines when navigating to your page. It gives information what words visitors are searching for on search engines and what page they came to your site for that word.
 
-For more information please click here [Search engines](../stat/README.md#vyhľadávače)
+For more information please click here [Search engines](../stat/README.md#search-engines)
 
 ## Keyword management
 
@@ -38,7 +38,7 @@ This section displays the search statistics of the defined keywords, showing the
 
 ![](seo-stat-keywords-page.png)
 
-The contained datatable contains a column `Názov výrazu`, which redirects us to the statistics detail of a specific keyword after clicking.
+The contained datatable contains a column **Name of expression**, which redirects us to the statistics detail of a specific keyword after clicking.
 
 ![](seo-stat-keywords-detail-page.png)
 
@@ -48,7 +48,7 @@ This section displays position statistics and the evolution of keyword positions
 
 ![](seo-positions-page.png)
 
-The contained datatable contains a column `Názov`, which redirects us to the details of the development of the position of a particular keyword.
+The contained datatable contains a column **Name**, which redirects us to the details of the development of the position of a particular keyword.
 
 ![](seo-positions-details-page.png)
 
@@ -71,6 +71,7 @@ The application analyzes the readability of the text, uses the technique of anal
 - 8 to 10 are magazine and newspaper articles, short stories, easy to read and understand.
 - 11 to 14 are already reaching more specialist articles. Scientific papers usually reach the level of 15 to 20 and already require full concentration from the reader.
 - Above 20, only texts where the writer completely ignores the reader.
+
 The table shows the occurrence of the defined keywords in the text of the current web page. You can edit the list of keywords in the Keywords field (separate individual words/phrases with a comma) and click OK to refresh the table.
 
 ![](seo-app.png)

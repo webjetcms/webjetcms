@@ -33,7 +33,7 @@ Scenario('calendar non-approved events screens', async ({I, DT, DTE, Document}) 
     I.amOnPage("/apps/calendar/admin/non-approved-events/");
     Document.screenshot("/redactor/apps/calendar/non-approved-events/page.png");
 
-    DT.filter("title", eventNameA);
+    DT.filterContains("title", eventNameA);
     I.clickCss("td.sorting_1");
     Document.screenshotElement("button.buttons-approve", "/redactor/apps/calendar/non-approved-events/approve_button.png");
     Document.screenshotElement("button.buttons-reject", "/redactor/apps/calendar/non-approved-events/reject_button.png");
@@ -44,7 +44,7 @@ Scenario('calendar non-approved events screens', async ({I, DT, DTE, Document}) 
     Document.screenshotElement("div.toast-container div.toast", "/redactor/apps/calendar/non-approved-events/approved_toast.png");
     I.forceClickCss("div.toast-container .toast-close-button");
 
-    DT.filter("title", eventNameB);
+    DT.filterContains("title", eventNameB);
     I.clickCss("td.sorting_1");
 
     I.clickCss("button.buttons-reject");
@@ -53,13 +53,13 @@ Scenario('calendar non-approved events screens', async ({I, DT, DTE, Document}) 
     Document.screenshotElement("div.toast-container div.toast", "/redactor/apps/calendar/non-approved-events/rejected_toast.png");
 
     I.amOnPage("/apps/calendar/admin/");
-    DT.filter("title", eventNameA);
+    DT.filterContains("title", eventNameA);
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");
     I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
 
-    DT.filter("title", eventNameB);
+    DT.filterContains("title", eventNameB);
     I.clickCss("td.sorting_1");
     I.clickCss("button.buttons-remove");
     I.waitForElement("div.DTE_Action_Remove");

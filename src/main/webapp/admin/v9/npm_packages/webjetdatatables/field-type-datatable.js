@@ -43,7 +43,7 @@ export function typeDatatable() {
             //toto su velkosti vnorenej DT
             const h = container.find('.dt-header-row').outerHeight();
             const f = container.find('.dt-footer-row').outerHeight();
-            const s = container.find('.dataTables_scrollHead').outerHeight();
+            const s = container.find('.dt-scroll-head').outerHeight();
 
             //toto je vyska row-full-headline
             let headline = DTE_Field.find('div.row-full-headline').outerHeight();
@@ -59,7 +59,7 @@ export function typeDatatable() {
             }
             //console.log("Set height, a=",a,"d=",d,"tmt=",tmt,"tmb=",tmb,"h=",h,"f=",f,"s=",s,"otherElementsHeight=",otherElementsHeight,"height=",height);
 
-            const scrollBody = container.find('.dataTables_scrollBody');
+            const scrollBody = container.find('.dt-scroll-body');
             scrollBody.attr('style', 'height:' + height + 'px !important;');
             scrollBody.css({'overflow-y': 'auto'});
             //console.log("WJtable set style, height=", height);
@@ -183,7 +183,7 @@ export function typeDatatable() {
                     //pri opakovanom otvoreni DTED uz len reloadni data
                     //console.log("Setting URL:", url, "dted=", conf.datatable);
                     conf.datatable.rows().deselect();
-                    conf.datatable.ajax.url(url);
+                    conf.datatable.setAjaxUrl(url);
                     conf.datatable.ajax.reload();
                     conf.datatable.DATA.url = url;
                     conf.datatable.EDITOR.ajax().url = WJ.urlAddPath(url, '/editor');

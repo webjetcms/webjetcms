@@ -434,7 +434,7 @@ public class MenuULLI
 
 					//ak default stranka adresara nie je available adresar nezobrazme
 <span class="fc" id="L436">					groupDocDetails = docDB.getBasicDocDetails(group.getDefaultDocId(), false);</span>
-<span class="pc bpc" id="L437" title="1 of 4 branches missed.">					if (groupDocDetails != null &amp;&amp; groupDocDetails.isAvailable()==false)</span>
+<span class="fc bfc" id="L437" title="All 4 branches covered.">					if (groupDocDetails != null &amp;&amp; groupDocDetails.isAvailable()==false)</span>
 					{
 						//Logger.debug(MenuULLI.class, &quot;docDetails is not available: &quot;+groupDocDetails.getDocId()+&quot; available=&quot;+groupDocDetails.isAvailable());
 <span class="fc" id="L440">						continue;</span>

@@ -80,7 +80,7 @@ function phase1(I, DT) {
  * Check that remove button (remove current records) works
  */
 function phase2(I, DT) {
-  DT.filter("whatWasExecuted", "");
+  DT.filterContains("whatWasExecuted", "");
   I.click("button.buttons-remove")
   DT.waitForLoader();
   I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5);
@@ -99,7 +99,7 @@ function phase3(I, DT) {
   I.click({css: "button.buttons-refresh"});
   DT.waitForLoader();
   I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 5);
-  I.waitForElement("#webjetAnimatedLoader", 5);
+  I.waitForElement(".webjetAnimatedLoader", 5);
   I.seeElement("#toast-container-webjet");
   I.see("Získavanie dát");
 }
@@ -111,11 +111,11 @@ Scenario("Monitoring server components", ({I, DT}) => {
 
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/components/");
-  DT.filter("whatWasExecuted", "/components/banner/banner.jsp");
+  DT.filterContains("whatWasExecuted", "/components/banner/banner.jsp");
   I.see("/components/banner/banner.jsp");
   I.dontSee("/components/menu/menu_ul_li.jsp");
 
-  DT.filter("whatWasExecuted", "/components/menu/menu_ul_li.jsp");
+  DT.filterContains("whatWasExecuted", "/components/menu/menu_ul_li.jsp");
   I.see("/components/menu/menu_ul_li.jsp");
   I.dontSee("/components/banner/banner.jsp");
 
@@ -131,11 +131,11 @@ Scenario("Monitoring server documents @singlethread", ({I, DT}) => {
 
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/documents/");
-  DT.filter("whatWasExecuted", "/admin/v9/webpages/web-pages-list/");
+  DT.filterContains("whatWasExecuted", "/admin/v9/webpages/web-pages-list/");
   I.see("/admin/v9/webpages/web-pages-list/");
   I.dontSee("/apps/server_monitoring/admin/documents/");
 
-  DT.filter("whatWasExecuted", "/apps/server_monitoring/admin/documents/");
+  DT.filterContains("whatWasExecuted", "/apps/server_monitoring/admin/documents/");
   I.see("/apps/server_monitoring/admin/documents/");
   I.dontSee("/admin/v9/webpages/web-pages-list/");
 
@@ -152,11 +152,11 @@ Scenario("Monitoring server sql", ({I, DT}) => {
   //Check values
   I.amOnPage("/apps/server_monitoring/admin/sql/");
   DT.waitForLoader();
-  DT.filter("whatWasExecuted", "SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
+  DT.filterContains("whatWasExecuted", "SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
   I.see("SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
   I.dontSee("SELECT id, group_id, banner_id FROM banner_gr WHERE (banner_id = ?)");
 
-  DT.filter("whatWasExecuted", "SELECT id, group_id, banner_id FROM banner_gr WHERE (banner_id = ?)");
+  DT.filterContains("whatWasExecuted", "SELECT id, group_id, banner_id FROM banner_gr WHERE (banner_id = ?)");
   I.see("SELECT id, group_id, banner_id FROM banner_gr WHERE (banner_id = ?)");
   I.dontSee("SELECT id, doc_id, banner_id FROM banner_doc WHERE (banner_id = ?)");
 

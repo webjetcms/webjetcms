@@ -219,7 +219,7 @@ Scenario('Overenie chyby nastavenia zaporneho groupId', ({ I, DT }) => {
 
     I.clickCss("#pills-changes-tab");
     DT.waitForLoader();
-    DT.filter("title", "page-2021-02-23-134924-937");
+    DT.filterContains("title", "page-2021-02-23-134924-937");
 
     I.see("page-2021-02-23-134924-937", "table.datatableInit tbody");
 
@@ -241,7 +241,7 @@ Scenario('Pole typu select-editable', ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
 
     DT.waitForLoader();
-    DT.filter("title", "vnorenu editaciu");
+    DT.filterContains("title", "vnorenu editaciu");
     DT.waitForLoader();
 
     I.click("Test zmeny sablony cez vnorenu editaciu");

@@ -98,17 +98,14 @@ function initClosure() {
         }
         var search = location.search;
         if (search!=null && search.indexOf("?menu=")==0) current = current + search;
+        var currentWithHash = current+window.location.hash;
+        currentWithHash = currentWithHash.replace("?#", "#");
         if ("/admin/v9/webpages/linkcheck/"==current) current = "/admin/v9/webpages/web-pages-list/";
         $('.md-main-menu__item__link, .md-main-menu__item__sub-menu__item__link').each(function () {
             var $this = $(this);
 
             //console.log("Comparing: this=", $this.attr('href'), "current=", current, " eq=", ($this.attr('href')==current));
-            if ($this.attr('href').indexOf("/v9") === -1 && $this.attr('href').indexOf("/apps") != 0) {
-                //to co nie je v9 daj CSS triedu v8version
-                $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--v8version");
-            }
-
-            if ($this.attr('href') === current) {
+            if ($this.attr('href') === current || $this.attr('href') === currentWithHash) {
                 $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
                 $this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
@@ -128,10 +125,6 @@ function initClosure() {
                     hasSomeV9 = true;
                 }
             });
-
-            if (hasSomeV9 === false) {
-                $this.addClass("md-main-menu__item--v8version");
-            }
         });
 
         //scrolll selected left menu item into view
@@ -144,6 +137,14 @@ function initClosure() {
                 }, 50);
             }
         }
+
+        $(".ly-sidebar .menu-wrapper a").on("click", function () {
+            var $this = $(this);
+            if ($this.parent().hasClass("md-main-menu__item--has-children")) return;
+            var href = $(this).attr("href");
+			if (href.indexOf("javascript:") === 0) return;
+            WJ.selectMenuItem(href);
+        });
     });
 
     //sidebar toogler responsive
@@ -166,6 +167,7 @@ function initClosure() {
     // TOOLTIP INIT
     // =======================
     WJ.initTooltip($('[data-toggle*="tooltip"]'));
+    WJ.initTooltip($('[data-bs-toggle*="tooltip"]'));
 
     // =======================
     // ALERT POSITION CHANGE
@@ -360,13 +362,32 @@ function initClosure() {
                             window.jstreeCustomizeData(data.items);
                         }
 
+                        if(getJstreeUrl().indexOf("treeSearchValue") > 0) {
+                            data.items.forEach((item) => {
+                                //for search we need to clear children, it's send as false bud jstree needs empty array
+                                item.children = [];
+                                item.state['opened']  = true;
+                            });
+                        }
+
                         callback.call(this, data.items);
                     }
                 });
             }
         },
+        "search": {
+            "show_only_matches": true,
+            "search_callback": function(word, node) {
+                word = WJ.internationalToEnglish(word).toLowerCase();
+                if (WJ.internationalToEnglish(node.text || "").toLowerCase().indexOf(word) >= 0) {
+                    return true;
+                }
+                return false;
+            }
+        },
         "plugins": [
-            "dnd"
+            "dnd",
+            "search"
         ],
         "types": {
             "#": {
@@ -395,6 +416,120 @@ function initClosure() {
         }
     });
 
+    //
+    var select = `
+        <select id="tree-folder-search-type" class="filter-input-prepend">
+            <option value="contains" selected data-content="<i class=\'ti ti-arrows-horizontal\'></i><small>${WJ.translate('datatables.select.contains.js')}</small>">${WJ.translate('datatables.select.contains.js')}</option>
+            <option value="startwith" data-content="<i class=\'ti ti-arrow-left-bar\'></i><small>${WJ.translate('datatables.select.startwith.js')}</small>">${WJ.translate('datatables.select.startwith.js')}</option>
+            <option value="endwith" data-content="<i class=\'ti ti-arrow-right-bar\'></i><small>${WJ.translate('datatables.select.endwith.js')}</small>">${WJ.translate('datatables.select.endwith.js')}</option>
+            <option value="equals" data-content="<i class=\'ti ti-equal\'></i><small>${WJ.translate('datatables.select.equals.js')}</small>">${WJ.translate('datatables.select.equals.js')}</option>
+        </select>
+    `;
+
+    // Create the new element
+    var searchModul = $(
+        '<table class="table datatableInit dataTable no-footer" data-server-side="true" style="margin-left: 0px;" id="jstreeSearchTable">' +
+            '<thead>' +
+                '<tr>' +
+                    `<th class="dt-format-selector dt-select-td cell-not-editable" tabindex="0" aria-controls="datatableInit" rowspan="1" colspan="1" data-column-index="0" style="padding: 8px 24px 4px 0px !important;">${WJ.translate('editor.directory_name')}</th>` +
+                '</tr>' +
+                '<tr>' +
+                    '<th class="dt-format-text" data-column-index="2" rowspan="1" colspan="1" style="padding: 0px 0px 4px 0px !important;">' +
+                        '<div class="input-group">' +
+                            select +
+                            '<input id="tree-folder-search-input" class="form-control form-control-sm filter-input">' +
+                            '<button id="tree-folder-search-button" class="btn btn-sm btn-outline-secondary btn-search"><i class="ti ti-search"></i></button>' +
+                            '<button id="tree-folder-search-clear-button" class="btn btn-sm btn-outline-secondary btn-clear" style="padding-top: 4px;"><i class="ti ti-circle-x"></i></button>' +
+                        '</div>' +
+                    '</th>' +
+                '</tr>' +
+            '</thead>' +
+        '</table>');
+
+    // Insert the new element before the somStromcek element
+    searchModul.insertBefore(somStromcek);
+
+    const DT_SELECTPICKER_OPTS_NOSEARCH = {
+        container: "body",
+        style: "btn btn-sm btn-outline-secondary",
+        width: "100%",
+        noneSelectedText: '\xa0' //nbsp
+    };
+
+    $('select.filter-input-prepend').selectpicker(DT_SELECTPICKER_OPTS_NOSEARCH);
+
+    // Check if jsTree is loaded - hide loader
+    window.jstree.on('ready.jstree', function (e, data) {
+        WJ.hideLoader();
+    });
+
+    $('button#tree-folder-search-button').on('click', function () {
+        var searchInput = $('input#tree-folder-search-input');
+        if(searchInput !== null && searchInput !== undefined && searchInput.length > 0) {
+            var searchString = searchInput.val();
+
+            //Show loader
+            WJ.showLoader(null, '.hide-while-loading');
+
+            if(searchString === null || searchString === "" || searchString.length < 1) {
+                //EMPTY SEARCH
+                cancelSearch();
+            } else {
+                // Update url with search string - fire refresh
+                let url = WJ.urlUpdateParam( getJstreeUrl() , "treeSearchValue", searchString);
+                url = WJ.urlUpdateParam( url , "treeSearchType", $('#tree-folder-search-type').val());
+
+                somStromcek.data('rest-url', url);
+                somStromcek.jstree(true).refresh();
+            }
+        }
+    });
+
+    // Enter key press on search input
+    $('#tree-folder-search-input').on('keypress', function (e) {
+        if (e.which === 13) { // Enter key pressed
+            e.preventDefault(); // Prevent the default form submission
+            $('button#tree-folder-search-button').click(); // Trigger the search button click
+        }
+    });
+
+    window.jstree.on('refresh.jstree', function (e, data) {
+        let searchValue = $("#tree-folder-search-input").val();
+        if(searchValue !== undefined && searchValue !== null  && searchValue.length > 0) {
+            // Search value after tree id refreshed
+            somStromcek.jstree(true).search(searchValue);
+        } else {
+            //NEEDS to be there - clear search after change of tabs
+            somStromcek.jstree(true).search("");
+        }
+        // Hide loader
+        WJ.hideLoader();
+    });
+
+    $('button#tree-folder-search-clear-button').on('click', function () {
+        var searchInput = $('input#tree-folder-search-input');
+        if(searchInput !== null && searchInput !== undefined && searchInput.length > 0) {
+            cancelSearch();
+        }
+    });
+
+    function cancelSearch() {
+        var searchInput = $('input#tree-folder-search-input');
+        if(searchInput !== null && searchInput !== undefined && searchInput.length > 0) {
+            // Clear input
+            searchInput.val("");
+
+            // Cancel search
+            somStromcek.jstree(true).search("");
+
+            // Clean url - fire refresh
+            let url = getJstreeUrl().replace(/&treeSearchValue=[^&]*/g, '');
+            url = url.replace(/&treeSearchType=[^&]*/g, '');
+            somStromcek.data('rest-url', url);
+            somStromcek.jstree(true).refresh();
+        }
+    }
+
     window.jstree.on("move_node.jstree", function (e, data) {
         //console.log("Drop node " + data.node.id + " to " + data.parent);
         //console.log("Data", data);
@@ -408,7 +543,7 @@ function initClosure() {
             position: data.position
         };
 
-        $("div.dataTables_processing").show();
+        $("div.dt-processing").show();
         $.ajax({
             url: WJ.urlAddPath(getJstreeUrl(), "/move"),
             method: 'post',
@@ -416,7 +551,7 @@ function initClosure() {
             contentType: 'application/json',
             data: JSON.stringify(json),
             success: function (response) {
-                $("div.dataTables_processing").hide();
+                $("div.dt-processing").hide();
                 if (!response.result) {
                     WJ.notifyError(response.error);
                     setTimeout(function() {
@@ -429,7 +564,7 @@ function initClosure() {
                 window.jstree.jstree(true).refresh(data.parent);
             },
             error: () => {
-                $("div.dataTables_processing").hide();
+                $("div.dt-processing").hide();
             }
         })
     });
@@ -462,6 +597,7 @@ function initClosure() {
     });
 
     $('.tree-col .dt-header-row .buttons-refresh').on("click", function () {
+        WJ.showLoader(null, ".hide-while-loading");
         window.jstree.jstree("refresh");
     });
 

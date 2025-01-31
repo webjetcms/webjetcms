@@ -1,6 +1,5 @@
 package sk.iway.iwcm.components.perex_groups;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,12 +8,13 @@ import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 @Getter
 @Setter
-public class PerexGroupsEditorFields implements Serializable{
+public class PerexGroupsEditorFields extends BaseEditorFields {
 
     public PerexGroupsEditorFields(){}
 

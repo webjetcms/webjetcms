@@ -6,7 +6,7 @@ Zobrazuje události, které byly schváleny (automaticky nebo správcem) a jejic
 
 ![](page.png)
 
-**Varování:** po doporučení/nedoporučení pokračuje událost v realizaci **zobrazí** v tabulce, aby bylo možné změnit jejich stav doporučení. Když se však začátek události dostane do minulosti, **přestat zobrazovat**. Události však budou stále viditelné v [Seznam událostí](../README.md)
+!>**Varování:** po doporučení/nedoporučení pokračuje událost v realizaci **zobrazí** v tabulce, aby bylo možné změnit jejich stav doporučení. Když se však začátek události dostane do minulosti, **přestat zobrazovat**. Události však budou stále viditelné v [Seznam událostí](../README.md)
 
 ## Doporučení k události
 

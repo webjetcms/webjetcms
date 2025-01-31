@@ -30,7 +30,7 @@ When exporting in Excel format, the **export columns by editor**, not by the col
 
 Click on the Import icon ![](import-icon.png ":no-zoom") opens a dialog for importing from Excel (xlsx) format. In the import settings you can select:
 - Add as new records - records are imported as new, the ID column is ignored. An error may occur during import if a duplication constraint is encountered (e.g. login name in the user list that must be unique).
-- Update existing records - this option displays a selection box **By column**, in which you can select the column based on which the data will be updated. When importing, the database will contain **identical records (there may be more than one**if for example it is imported by Last Name or another column that is not unique) and these are updated according to the data in Excel. If no record is found in the database by the specified column, the **creates as a new record**.
+- Update existing records - this option displays a selection box **By column**, in which you can select the column based on which the data will be updated. When importing, the database will contain **identical records (there may be more than one** if for example it is imported by Last Name or another column that is not unique) and these are updated according to the data in Excel. If no record is found in the database by the specified column, the **creates as a new record**.
 - Import only new records - in the field **By column** select the column by which the existence of the record is identified. Only records that are not found by the specified column are imported.
 
 ![](import-dialog.png)
@@ -51,4 +51,4 @@ If this option is **Enabled**, the import does not stop when an error is found, 
 
 ![](import_err_notification.png)
 
-More notifications can be displayed, as the data is processed in batches - they are sent sequentially in 25 records, for each of which an error message can be displayed. More technical information can be found in [Conversion from Excel](../../developer/datatables/export-import.md#konverzia-z-excelu).
+More notifications can be displayed, as the data is processed in batches - they are sent sequentially in 25 records, for each of which an error message can be displayed. More technical information can be found in [Conversion from Excel](../../developer/datatables/export-import.md#conversion-from-excel).

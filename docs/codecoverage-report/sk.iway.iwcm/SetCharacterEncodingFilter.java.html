@@ -241,8 +241,8 @@ import java.util.regex.Pattern;
 			// ak niekto nechal otvorene transakcie, spravime rollback
 <span class="pc bpc" id="L242" title="1 of 2 branches missed.">			if (transaction != null)</span>
 			{
-<span class="pc bpc" id="L244" title="1 of 2 branches missed.">				if (transaction.isActive())</span>
-<span class="nc" id="L245">					transaction.rollback();</span>
+<span class="fc bfc" id="L244" title="All 2 branches covered.">				if (transaction.isActive())</span>
+<span class="fc" id="L245">					transaction.rollback();</span>
 			}
 <span class="fc bfc" id="L247" title="All 2 branches covered.">			if (entityManager.isOpen())</span>
 			{

@@ -25,7 +25,6 @@ body { background-color: #f5f5f5; }
 div.results { background-color: white; padding: 5px; padding-top: 10px; }
 div.pixabayBox { margin: 0px; }
 .pixabayBox .imageSearch { padding: 10px; padding-top: 10px; }
-.pixabayBox .imageSearch .input-group-btn, .pixabayBox .imageSearch input.form-control { margin-left: 10px; }
 .pixabayBox .paging { padding-top: 10px; }
 div.no_results { color: red; font-weight: bold; text-align: center; }
 </style>
@@ -454,14 +453,11 @@ $(document).ready(function(){
 <div class="pixabayBox">
 	<form class="form-inline imageSearch">
 		<div class="form-group">
-			<label for="search"><iwcm:text key="editor.pixabay.searchImages" /></label>
+			<label for="search" class="form-label"><iwcm:text key="editor.pixabay.searchImages" /></label>
 			<div class="input-group">
-             <input type="text" name="search" id="search" class="form-control" />
-             <span class="input-group-btn">
-                 <button type="submit" class="btn green"><iwcm:text key="searchall.search" /></button>
-             </span>
-         </div>
-
+				<input type="text" name="search" id="search" class="form-control" />
+				<button type="submit" class="btn btn-outline-secondary"><iwcm:text key="searchall.search" /></button>
+            </div>
 		</div>
 	</form>
 
@@ -488,19 +484,21 @@ $(document).ready(function(){
 		<div class="modal-dialog" role="document">
 			<div class="modal-content">
 				<div class="modal-header">
-					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
 					<h4 class="modal-title" id="exampleModalLabel"><iwcm:text key="pixabay.modal.title" /></h4>
 				</div>
 				<div class="modal-body">
 					<div class="row">
-						<div class="col-sm-3">
+						<div class="col-sm-4">
 							<img class="img-responsive" src="" alt="" />
 						</div>
-						<div class="col-sm-6">
+						<div class="col-sm-8">
 							<form class="form-horizontal" role="form">
                                 <div class="form-body">
-                                	<div class="form-group">
-                                        <label for="imageWidth" class="col-xs-2 control-label"><iwcm:text key="editor.table.width"/></label>
+                                	<div class="row">
+										<div class="col-xs-2">
+                                        	<label for="imageWidth" class="control-label"><iwcm:text key="editor.table.width"/></label>
+										</div>
                                         <div class="col-xs-10">
                                         	<div class="input-icon right">
 					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid width" data-container="body"></i>
@@ -508,8 +506,10 @@ $(document).ready(function(){
 					                        </div>
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="imageHeight" class="col-xs-2 control-label"><iwcm:text key="editor.table.height"/></label>
+                                    <div class="row">
+										<div class="col-xs-2">
+                                        	<label for="imageHeight" class="control-label"><iwcm:text key="editor.table.height"/></label>
+										</div>
                                         <div class="col-xs-10">
                                         	<div class="input-icon right">
 					                        	<i class="ti ti-exclamation-mark tooltips" data-original-title="Please write a valid height" data-container="body"></i>
@@ -525,7 +525,7 @@ $(document).ready(function(){
 					</div>
 				</div>
 				<div class="modal-footer">
-					<button type="button" class="btn btn-default" data-dismiss="modal"><iwcm:text key="webpages.modal.close" /></button>
+					<button type="button" class="btn btn-default" data-bs-dismiss="modal"><iwcm:text key="webpages.modal.close" /></button>
 					<button type="button" class="btn btn-primary saveImage"><iwcm:text key="pixabay.modal.save" /></button>
 				</div>
 			</div>

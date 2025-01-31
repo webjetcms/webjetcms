@@ -19,6 +19,7 @@ import sk.iway.iwcm.system.cron.CronDB;
 import sk.iway.iwcm.system.cron.CronFacade;
 import sk.iway.iwcm.system.cron.CronTask;
 import sk.iway.iwcm.system.datatable.Datatable;
+import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
@@ -39,7 +40,8 @@ public class CronjobController extends DatatableRestControllerV2<CronTask, Long>
 
     @Override
     public Page<CronTask> getAllItems(Pageable pageable) {
-        return cronjobService.getCronTasks(pageable);
+        List<CronTask> tasks = cronjobService.getCronTasks();
+        return new DatatablePageImpl<>(tasks);
     }
 
     @Override

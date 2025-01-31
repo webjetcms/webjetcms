@@ -17,7 +17,7 @@ Several types of editors are available depending on the setting of the template 
 
 The most important parameter of every web page is its title (headline). The title is entered in the text field in the Basic tab. If you create a new web page in an empty folder, the system automatically takes the title from the name of this folder. Otherwise, when you create a new web page, the text "New Web Page" is there, which of course you must change to a meaningful title that defines the content of the web page. The title is normally entered with both accents and spaces as plain text.
 
-The folder home page has synchronized by default [the name of the web page with the name of the folder](group.md#synchronizácia-názvu-priečinka-a-web-stránky).
+The folder home page has synchronized by default [the name of the web page with the name of the folder](group.md#synchronisation-of-folder-name-and-web-page).
 
 ![](editor/tab-basic.png)
 
@@ -28,6 +28,7 @@ Every page that is to be publicly viewable on the website must have "Yes" entere
 You can save the web page to **multiple folders**, a list of which can be found in the Classification section of the tree structure. The main folder is labeled as the Parent Folder, additional folders are in the Web Page Copy v. Technically, copies of the web page will be created in all the selected folders. When any page is saved, all data is copied to the other copies of the web page except:
 - URL address - the page and its copies can have their URL address modified if necessary (unless the Automatically generate URL from menu item name option is selected)
 - Layout order - if necessary, you can set the appropriate layout order for the page copy
+
 In the event that **delete a copy of the web page** so it will be moved to the trash. While this copy is in the recycle bin, the original page from the parent folder will have its copy folder address changed to the recycle bin when it is edited. Of course, you can continue to add more copies, even to the folder where we deleted the first copy from. Deleted copies of a web page will no longer appear as an existing copy when editing the original page, once permanently deleted from the trash.
 
 In the event that **delete the original web page** from the parent folder, it will be moved to the Recycle Bin without affecting existing copies of that page. Note though that when editing the page it will have the Display attribute turned off, which of course you can turn back on to display the page. After permanent **deletion of the original** web pages from the trash with **permanently delete all copies of it**. This means that these copies will no longer be available (even in the Recycle Bin) and cannot be restored.
@@ -48,6 +49,7 @@ If you select this option, the URL of the page will change automatically:
 - when changing the value of the field Name of the menu item
 - when changing the value of the URL field, the address of the folder where the web page is located but also of the parent folders
 - when moving a web page to another folder
+
 When you change the URL of a page, a redirect is automatically created in the Path Redirects application from the old URL to the new one.
 
 ![](virtual-path-title.png)
@@ -59,6 +61,7 @@ With this option, you can specify the end URL of the web page, with the start UR
 The URL value will change when:
 - when changing the value of the URL field, the address of the folder where the web page is located but also of the parent folders
 - when moving a web page to another folder
+
 while as written above the end part is taken according to the specified value.
 
 When you change the URL of a page, a redirect is automatically created in the Path Redirects application from the old URL to the new one.
@@ -69,11 +72,11 @@ When you change the URL of a page, a redirect is automatically created in the Pa
 
 In the Base tab, there is an Editor's Note field. The entered text will be displayed at the top of the editor as a warning for all editors/administrators when editing the web page. This is an internal attribute that is not displayed in the public part of the web site. The note is not stored in the page history, it is always updated with the entered/current value.
 
-Allows you to display information such as: `Pozor, na stránku vedie odkaz z VOP, nikdy nemeňte adresu stránky`.
+Allows you to display information such as: **Please note: there is a link to the site from the GTC, never change the address of the site**.
 
 ## Managing multiple domains
 
-If WebJET [set up to manage multiple domains](../../frontend/setup/README.md#správa-viacerých-domén) so on the Basic tab, the Domain field is displayed for folders in the root folder.
+If WebJET [set up to manage multiple domains](../../frontend/setup/README.md#management-of-multiple-domains) so on the Basic tab, the Domain field is displayed for folders in the root folder.
 
 ### Creating a new domain
 
@@ -83,6 +86,7 @@ If you need to create a new domain, follow these steps:
 - Change the Parent Folder to the Root Folder.
 - When set to the root folder, the Domain field appears, enter the domain name.
 - Save the folder by clicking the Add button.
+
 The folder is created and a new domain is created in WebJET CMS and the list of web pages is automatically switched to it. The available domains are displayed in the administration header in the domain selection box. You can switch between them via this selection box.
 
 ![](../webpages/domain-select.png)
@@ -95,6 +99,7 @@ You rename the domain in the folder's edit window. In the Domain field, enter a 
 - The specified domain is also set for all subdomains.
 - The domain is also set for the folder `Systém`.
 - Changes the domain from the old value to the new value in path redirection, configuration variables, and translation texts.
+
 If you have multiple root folders in your domain (for example, by language), make the domain change on all folders one at a time.
 
 ## Card Template
@@ -129,9 +134,23 @@ In the Perex tab, you can set the validity of a page view, or set it to be delay
 
 ![](editor/tab-perex.png)
 
-The Start, End and Date fields are usually only used for news, press releases, events and conferences. However, the Start and End fields also have a special function if you want to time the publication or cancellation of a page from some point in the future. This function is activated when you check the "Publish page after this date" and "Unpublish page after this date" checkboxes, respectively. The value of the Start and End fields must be filled in for all events and conferences in the event calendar. For news events, simply enter the start date.
+Fields **Start date**, **End date** a **Date of the event** are usually only used for news, press releases, events and conferences. Field **Start date** a **End date** However, they also have a special feature if you want to time the publishing or cancellation of a page from a certain point in time in the future. This function is activated by checking the box **Publish page after this date**, respectively. **Publish a page after this date**. The value of the fields **Start date** a **End date** must be filled in for all events and conferences in the event calendar. For news, just enter the start date.
 
-Perex (Annotation) contains a brief description of what the page is about. It should be no longer than about 160 characters. Perex is mainly used when writing news, press releases, events and conferences, where it is a short description of the article that is displayed in the news list. You can define an image via the icon that appears after the Image field
+Perex (Annotation) contains a brief description of what the page is about. It should be no longer than about 160 characters. Perex is mainly used when writing news, press releases, events and conferences, where it is a short description of the article that is displayed in the news list.
+
+You can define the image via the icon behind the field **Image**.
+
+### Publishing a web page
+
+If you have timed the publication of a web page and want to be as **author of the page** informed, just set the configuration variable `webpagesNotifyAutorOnPublish`. The preset value is **true** that is, whenever a new version of the web page is published, the following information email is sent to its author.
+
+![](editor/publish-email-notification.png)
+
+The end of the email contains a link to a page where you can check the new version of the page. If you do not want these informational emails, you must set the value of the configuration variable `webpagesNotifyAutorOnPublish` at **false**.
+
+This event will [Audited by](../../sysadmin/audit/README.md) where the audit type is `SAVEDOC` and the description of the audited action shall include information `publishStatus: Webpage was published` so you can easily find publishing actions.
+
+![](editor/publish-audit-logs.png)
 
 ## Media card
 
@@ -149,7 +168,8 @@ In the Preview Image field, the link can be set to an appropriate preview image 
 
 The arrangement defines the order of the links. Media assigned to different groups do not affect each other. The order numbers can also be the same, in which case the system will sort the links alphabetically.
 
-**Warning:** the newly added media will only start appearing on the web page after the web page has been saved. This way, you can time the addition of the media along with the web page if necessary, if you set the page to delay publishing.
+!>**Warning:** the newly added media will only start appearing on the web page after the web page has been saved. This way, you can time the addition of the media along with the web page if necessary, if you set the page to delay publishing.
+
 ## Optional fields tab
 
 In the Optional Fields tab, you can set optional attributes (values, texts) for the web page and directory according to your needs. The values can then be transferred and used in the page template. Types (text, number, selection field, file selection...) and field names can be set as required, see the section [Optional fields](../../frontend/webpages/customfields/README.md).
@@ -182,7 +202,7 @@ At the same time, saving the working version does not close the editor window, s
 
 Click on the button `Náhľad` in the footer of the editor window, a new tab opens in the browser with a preview of the complete page without the need to save it. You can make changes to the page and see how it will look after saving.
 
-At the same time, if you do not close the preview window, the preview is automatically updated when you save the page. This is an advantageous use with the [Save working version](#uložiť-pracovnú-verziu) where you can move the preview window to a second monitor and keep it open while you work. Each time you save, the preview is automatically updated.
+At the same time, if you do not close the preview window, the preview is automatically updated when you save the page. This is an advantageous use with the [Save working version](#save-the-working-version) where you can move the preview window to a second monitor and keep it open while you work. Each time you save, the preview is automatically updated.
 
 <div class="video-container">
   <iframe width="560" height="315" src="https://www.youtube.com/embed/6OSTrMJj8z4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

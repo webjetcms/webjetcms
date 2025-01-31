@@ -1,4 +1,4 @@
-# Zoznam blogerov
+# Správa blogerov
 
 Sekcia Zoznam blogerov slúži na vytváranie a správu používateľov typu **bloger**.
 

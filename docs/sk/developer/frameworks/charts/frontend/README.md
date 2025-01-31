@@ -49,7 +49,7 @@ window.initAmcharts().then(module => {
 Toto bola ukážka ako môže vyzerať vytvorenie/nastavenie grafu. Dôležitá je tu trieda ```PieChartForm```, ktorá reprezentuje graf typu ```PIE```, jeho dáta a všetky parametre potrebné k správnemu vytvoreniu a nastaveniu grafu. Podpora pre 3 typy grafov je reprezentovaná prostredníctvom 3 tried (alebo ako sme spomenuli formulárov) dostupných z ```window.ChartTools``` :
 
 -   trieda ```PieChartForm```, reprezentuje grafy typu ```Pie```
--   trieda ```DoublePieChartForm```, reprezentuje grafy typu ```Pie```, ktorý pozostáva z dvoch vnorených grafov typu ```Pie``` 
+-   trieda ```DoublePieChartForm```, reprezentuje grafy typu ```Pie```, ktorý pozostáva z dvoch vnorených grafov typu ```Pie```
 -   trieda ```BarChartForm```, reprezentuje grafy typu ```Bar```
 -   trieda ```LineChartForm```, reprezentuje grafy typu ```Line```
 
@@ -108,9 +108,9 @@ Príklad použitia:
 
 ```javascript
 //Pridanie parametrov do url
-topDataTable.ajax.url(WJ.urlAddParam(url, "chartType", ChartType.Not_Chart));
-topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchRootDir", $('#rootDir').val()));
-topDataTable.ajax.url(WJ.urlAddParam(topDataTable.ajax.url(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
+topDataTable.setAjaxUrl(WJ.urlAddParam(url, "chartType", ChartType.Not_Chart));
+topDataTable.setAjaxUrl(WJ.urlAddParam(topDataTable.getAjaxUrl(), "searchRootDir", $('#rootDir').val()));
+topDataTable.setAjaxUrl(WJ.urlAddParam(topDataTable.getAjaxUrl(), "searchFilterBotsOut", $('#botFilterOut').is(':checked')));
 
 //Refresh tabuľky
 topDataTable.ajax.reload();

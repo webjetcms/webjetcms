@@ -86,7 +86,7 @@ Wo **WebJET** v souboru probíhá volání [app-init.js](https://github.com/webj
 
 ***
 
-**Varování:** V případě, že chceme externě nastavit [id](#id) je dobré použít metodu před [loaded()](#Převzato-z) ve kterém můžeme volat [next()](#další) a testovat [notFound](#notfound).
+!>**Varování:** V případě, že chceme externě nastavit [id](#id) je dobré použít metodu před [loaded()](#Převzato-z) ve kterém můžeme volat [next()](#další) a testovat [notFound](#notfound).
 
 ```javascript
 /** @type {JsTreeDocumentOpener} jstdo */
@@ -103,7 +103,7 @@ jstdo.id = 4;
 
 Problémem implementace bylo čekání na načtení stromové struktury a synchronizaci datové tabulky. Původní implementace používala události `this.dataTable.on('draw.dt', (evt, settings) => ` který nebyl vhodný pro použití při přepínání karet Složky, Systém a Koš, protože datová tabulka se načetla ihned po přepnutí karty.
 
-Kód používá funkci `setInterval` s počítáním volání ve funkci `waitForDatatableRowLoaded` a čekání na nezobrazení `div.dataTables_processing:visible`. Pokud se nezobrazí, počítá další 3 intervaly nezobrazení a poté pokračuje ve vyhledávání webové stránky. Podobně je řešeno i načítání stromové struktury, čekání je implementováno ve funkci `waitForJsTreeLoaded`. Funkce jsou implementovány přímo v `abstract-js-tree-opener.js`.
+Kód používá funkci `setInterval` s počítáním volání ve funkci `waitForDatatableRowLoaded` a čekání na nezobrazení `div.dt-processing:visible`. Pokud se nezobrazí, počítá další 3 intervaly nezobrazení a poté pokračuje ve vyhledávání webové stránky. Podobně je řešeno i načítání stromové struktury, čekání je implementováno ve funkci `waitForJsTreeLoaded`. Funkce jsou implementovány přímo v `abstract-js-tree-opener.js`.
 
 Vyhledávání je komplikované také kvůli stránkování a rozdílům mezi stránkováním na klientovi a serveru. V obou případech prochází postupně každou stránku a hledá prvek se zadaným ID. Pokud je nalezen, otevře editor.
 

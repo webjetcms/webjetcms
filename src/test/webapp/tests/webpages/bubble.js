@@ -8,7 +8,7 @@ Before(({ I, login }) => {
 Scenario('editacia kde nie su listy - najskor editor', async ({I, DTE, DT}) => {
     I.relogin("admin");
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("mediaLink", "/files/cennik.pdf");
+    DT.filterContains("mediaLink", "/files/cennik.pdf");
 
     I.click("td.dt-row-edit a");
     DTE.waitForEditor("mediaTable");
@@ -43,7 +43,7 @@ Scenario('editacia kde nie su listy - najskor editor', async ({I, DTE, DT}) => {
 
 Scenario('editacia kde nie su listy - najskor bubble', async ({I, DTE, DT}) => {
     I.amOnPage("/admin/v9/webpages/media/");
-    DT.filter("mediaLink", "/files/cennik.pdf");
+    DT.filterContains("mediaLink", "/files/cennik.pdf");
 
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
@@ -80,7 +80,7 @@ Scenario('editacia kde nie su listy - najskor bubble', async ({I, DTE, DT}) => {
 
 Scenario('editacia kde su listy - najskor editor', async ({I, DTE, DT}) => {
     I.amOnPage("/admin/v9/apps/insert-script/");
-    DT.filter("name", "Pokus 02");
+    DT.filterContains("name", "Pokus 02");
 
     I.click("td.dt-row-edit a");
     DTE.waitForEditor("insertScriptTable");
@@ -118,7 +118,7 @@ Scenario('editacia kde su listy - najskor editor', async ({I, DTE, DT}) => {
 
 Scenario('editacia kde su listy - najskor bubble', async ({I, DTE, DT}) => {
     I.amOnPage("/admin/v9/apps/insert-script/");
-    DT.filter("name", "Pokus 02");
+    DT.filterContains("name", "Pokus 02");
 
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
@@ -227,10 +227,10 @@ Scenario('BUG okno mimo dosah', ({I, DTE, DT}) => {
 
     I.click("#galleryTable tbody tr td:nth-child(6)");
     //bubble element must be visible with below CSS class
-    I.waitForElement("div.DTE.DTE_Bubble.below", 10);
+    I.waitForElement(".DTE_Bubble_Liner", 10);
 });
 
-Scenario('BUG okno mimo dosah-reset settings', ({I, DTE, DT}) => {
+Scenario('BUG okno mimo dosah-reset settings', ({I, DT}) => {
     I.amOnPage("/admin/v9/apps/gallery/");
     DT.waitForLoader();
     I.click("button.btn-gallery-size-s");

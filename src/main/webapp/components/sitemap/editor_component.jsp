@@ -114,10 +114,12 @@ function showHelp(select)
 		<table border="0" cellspacing="0" cellpadding="1">
 			<form method=get name=textForm>
 			<tr>
-				<td><iwcm:text key="components.sitemap.root_group"/>:</td>
+				<td><iwcm:text key="components.sitemap.root_group"/></td>
 				<td>
-					<input type=text name=groupId size=5 maxlength="10" value="<%=groupId%>">
-					<input type="button" name="groupSelect" class="btn green" value='<iwcm:text key="components.sitemap.change"/>' onClick='popupFromDialog("/admin/grouptree.jsp", 300, 450);'>
+					<div class="input-group">
+						<input type=text name=groupId size=5 maxlength="10" value="<%=groupId%>" class="form-control">
+						<input type="button" name="groupSelect" class="btn btn-primary" value='<iwcm:text key="components.sitemap.change"/>' onClick='popupFromDialog("/admin/grouptree.jsp", 300, 450);'>
+					</div>
 				</td>
 			</tr>
 			<tr>
@@ -140,11 +142,11 @@ function showHelp(select)
 		<form name="ulForm" >
 		  <table>
 				<tr>
-					<td nowrap><iwcm:text key="components.sitemap.max_depth"/>:</td>
+					<td nowrap><iwcm:text key="components.sitemap.max_depth"/></td>
 					<td><input type="text" name="maxDepth" size=5 maxlength="5" value="<%=pageParams.getIntValue("maxLevel", 5)%>"></td>
 				</tr>
 				<tr>
-					<td nowrap><iwcm:text key="components.sitemap.cols_num"/>:</td>
+					<td nowrap><iwcm:text key="components.sitemap.cols_num"/></td>
 					<td><input type="text" name="colsNum" size=5 maxlength="5" value="<%=pageParams.getIntValue("colsNum", 1)%>"></td>
 				</tr>
 			</table>
@@ -155,7 +157,7 @@ function showHelp(select)
 		<form name="ulJQueryForm" >
 		  <table>
 				<tr>
-					<td nowrap><iwcm:text key="components.sitemap.max_depth"/>:</td>
+					<td nowrap><iwcm:text key="components.sitemap.max_depth"/></td>
 					<td><input type="text" name="maxDepth" size=5 maxlength="5" value="<%=pageParams.getIntValue("maxLevel", 5)%>"></td>
 				</tr>
 			</table>

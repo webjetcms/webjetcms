@@ -61,7 +61,7 @@ Použijte `data-iwcm-remove` zjednodušené z hlediska kódu HTML prováděného
 </article>
 ```
 
-což znamená, že při zobrazení html šablony přímo v prohlížeči se zobrazí. `<article>Lorem ipsum</article>`. Když je šablona spuštěna v aplikaci WebJET, vše, co je uvnitř, se `<article data-iwcm-write="doc_data">` pro html kód webové stránky (včetně obalů) `<div class="container">....`).
+což znamená, že při zobrazení html šablony přímo v prohlížeči se zobrazí. `<article>Lorem ipsum</article>`. Když je šablona spuštěna v aplikaci WebJET, vše, co je uvnitř, se `<article data-iwcm-write="doc_data">` pro html kód webové stránky (včetně obalů `<div class="container">....`).
 
 ## Kombinování souborů
 

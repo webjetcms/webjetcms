@@ -143,7 +143,8 @@ function deletePage(I, DT, DTE) {
     I.clickCss("#datatableInit_wrapper table thead button.buttons-select-all");
     I.see("Záznamy 1 až 1 z 1", "#datatableInit_wrapper .dt-footer-row");
     I.see("1 riadok označený", "#datatableInit_wrapper .dt-footer-row");
-    I.clickCss("#datatableInit_wrapper button.buttons-remove");
+    I.click(DT.btn.delete_button);
+    DTE.waitForEditor();
     I.click("Zmazať", "div.DTE_Action_Remove");
     DTE.waitForLoader();
     I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 20, "#datatableInit_wrapper");
@@ -156,7 +157,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
 
     //
     I.say("Create master with copy (slave)");
-        I.clickCss("#datatableInit_wrapper > div.dt-header-row button.buttons-create");
+        I.click(DT.btn.add_button);
         DTE.waitForEditor();
         I.waitForElement("#DTE_Field_title");
         I.click("#DTE_Field_title");
@@ -167,7 +168,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
     //
     I.say("Check and delete slva + delete check -soft");
         I.jstreeClick("Slave");
-        DT.filter("title", docName);
+        DT.filterContains("title", docName);
         I.see(docName);
         deletePage(I, DT, DTE);
 
@@ -181,9 +182,9 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
 
     //
     I.say("Add slave again but this time delete MASTER + check that slave still works (not deleted)");
-        DT.filter("title", docName);
+        DT.filterContains("title", docName);
         I.clickCss("#datatableInit_wrapper button.buttons-select-all");
-        I.clickCss("#datatableInit_wrapper div.dt-header-row button.buttons-edit");
+        I.click(DT.btn.edit_button)
         DTE.waitForEditor();
 
         I.click("#pills-dt-datatableInit-basic-tab");
@@ -208,13 +209,13 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
         I.click("#pills-trash-tab");
         DT.waitForLoader();
         DT.waitForLoader();
-        DT.filter("title", docName);
+        DT.filterContains("title", docName);
         deletePage(I, DT, DTE);
 
         //
         I.say("Check soft delete")
         I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=57592");
-        DT.filter("title", docName);
+        DT.filterContains("title", docName);
         I.dontSee(docName);
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -222,7 +223,7 @@ Scenario('multigroup - delete slaves after master hard delete', ({ I, DT, DTE })
         I.say("Check hard delete");
         I.click("#pills-trash-tab");
         DT.waitForLoader();
-        DT.filter("title", docName);
+        DT.filterContains("title", docName);
         I.dontSee(docName);
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
