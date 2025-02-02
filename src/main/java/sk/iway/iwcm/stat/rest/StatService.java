@@ -288,6 +288,8 @@ public class StatService {
         filter.setUrl(Tools.getStringValue(request.getParameter("searchUrl"), ""));
         if("".equals( filter.getUrl() ))
             filter.setUrl(Tools.getStringValue(request.getParameter("url"), ""));
+        if("".equals( filter.getUrl() ))
+            filter.setUrl(Tools.getStringValue(request.getParameter("searchurl"), ""));
 
         //Set search engine name
         filter.setSearchEngineName(Tools.getStringValue(request.getParameter("searchEngine"), ""));

@@ -1114,4 +1114,100 @@ public class DB
 		boolean nValue = rs.getBoolean(colName);
 		return rs.wasNull() ? null : nValue;
 	}
+
+	/**
+	 * prepare SQL query for datatable search, usage:
+	 *
+	 * List<Object> params = new ArrayList<>();
+	 * sql += DB.getSqlQueryDatatable("url", url, true, params);
+	 * sql += DB.getSqlQueryDatatable("query_string", errorText, true, params);
+	 * sql += DB.getSqlQueryDatatable("count", countRange, true, params);
+	 * int psCounter = 1;
+	 * psCounter = DB.getSqlParamsDatatable(params, ps, psCounter);
+	 *
+	 * @param fieldName - name of database column
+	 * @param searchText - searched text from request
+	 * @param addAnd - true to add AND before condition
+	 * @param params - list of parameters for PreparedStatement
+	 * @return - SQL WHERE query part
+	 */
+	public static String getSqlQueryDatatable(String fieldName, String searchText, boolean addAnd, List<Object> params) {
+
+		if (Tools.isEmpty(searchText)) return "";
+
+		StringBuilder sb = new StringBuilder();
+		if (addAnd) sb.append(" AND ");
+		sb.append(fieldName).append(" ");
+
+		if (searchText.startsWith("range:") || searchText.startsWith("daterange:")) {
+
+			boolean isDateRange = searchText.startsWith("daterange:");
+			String value = searchText.substring(searchText.indexOf(":") + 1);
+
+			if (value.startsWith("-")) {
+				sb.append(" <= ? ");
+
+				if (isDateRange) params.add(new Timestamp(Tools.getLongValue(value.substring(1), 0)));
+				else params.add(Tools.getIntValue(value.substring(1), 0));
+			} else if (value.contains("-")) {
+				sb.append(" BETWEEN ? AND ? ");
+
+				String[] values = Tools.getTokens(value, "-");
+				if (isDateRange) {
+					params.add(new Timestamp(Tools.getLongValue(values[0], 0)));
+					params.add(new Timestamp(Tools.getLongValue(values[1], 0)));
+				} else {
+					params.add(Tools.getIntValue(values[0], 0));
+					params.add(Tools.getIntValue(values[1], 0));
+				}
+			} else {
+				sb.append(" >= ? ");
+
+				if (isDateRange) params.add(new Timestamp(Tools.getLongValue(value, 0)));
+				else params.add(Tools.getIntValue(value, 0));
+			}
+		} else {
+			String operator = "LIKE";
+			if (searchText.startsWith("^") && searchText.endsWith("$")) operator = "";
+
+			sb.append(operator).append(" ? ");
+
+			if (searchText.startsWith("^") && searchText.endsWith("$")) params.add(searchText);
+			else if (searchText.startsWith("^")) params.add(searchText.substring(1) + "%");
+			else if (searchText.endsWith("$")) params.add("%" + searchText.substring(0, searchText.length() - 1));
+			else params.add("%" + searchText.substring(1, searchText.length() - 1) + "%");
+		}
+
+		return sb.toString();
+	}
+
+	/**
+	 * Fill PreparedStatement with parameters
+	 * @param params - list of Parameters
+	 * @param ps - prepared statement
+	 * @param psCounter - counter of parameters, starts with 1 for first parameter
+	 * @return - new counter of parameters
+	 * @throws SQLException
+	 */
+	public static int getSqlParamsDatatable(List<Object> params, PreparedStatement ps, int psCounter) throws SQLException {
+
+		//set list of params to PreparedStatemend based of instanceof
+		for (Object param : params) {
+			if (param instanceof Timestamp) {
+				ps.setTimestamp(psCounter++, (Timestamp) param);
+			} else if (param instanceof Long) {
+				ps.setLong(psCounter++, (Long) param);
+			} else if (param instanceof Integer) {
+				ps.setInt(psCounter++, (Integer) param);
+			} else if (param instanceof String) {
+				ps.setString(psCounter++, (String) param);
+			} else if (param instanceof Boolean) {
+				ps.setBoolean(psCounter++, (Boolean) param);
+			}
+		}
+
+		return psCounter;
+	}
+
+
 }

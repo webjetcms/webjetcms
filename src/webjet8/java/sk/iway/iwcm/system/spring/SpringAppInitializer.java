@@ -189,7 +189,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		return logInstallName;
 	}
 
-	private static String getConstant(String name) {
+	protected static String getConstant(String name) {
 		String value = null;
 		try
 		{

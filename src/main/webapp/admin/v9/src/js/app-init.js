@@ -97,17 +97,14 @@ function initClosure() {
         }
         var search = location.search;
         if (search!=null && search.indexOf("?menu=")==0) current = current + search;
+        var currentWithHash = current+window.location.hash;
+        currentWithHash = currentWithHash.replace("?#", "#");
         if ("/admin/v9/webpages/linkcheck/"==current) current = "/admin/v9/webpages/web-pages-list/";
         $('.md-main-menu__item__link, .md-main-menu__item__sub-menu__item__link').each(function () {
             var $this = $(this);
 
             //console.log("Comparing: this=", $this.attr('href'), "current=", current, " eq=", ($this.attr('href')==current));
-            if ($this.attr('href').indexOf("/v9") === -1 && $this.attr('href').indexOf("/apps") != 0) {
-                //to co nie je v9 daj CSS triedu v8version
-                $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--v8version");
-            }
-
-            if ($this.attr('href') === current) {
+            if ($this.attr('href') === current || $this.attr('href') === currentWithHash) {
                 $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
                 $this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
@@ -127,10 +124,6 @@ function initClosure() {
                     hasSomeV9 = true;
                 }
             });
-
-            if (hasSomeV9 === false) {
-                $this.addClass("md-main-menu__item--v8version");
-            }
         });
 
         //scrolll selected left menu item into view
@@ -143,6 +136,14 @@ function initClosure() {
                 }, 50);
             }
         }
+
+        $(".ly-sidebar .menu-wrapper a").on("click", function () {
+            var $this = $(this);
+            if ($this.parent().hasClass("md-main-menu__item--has-children")) return;
+            var href = $(this).attr("href");
+			if (href.indexOf("javascript:") === 0) return;
+            WJ.selectMenuItem(href);
+        });
     });
 
     //sidebar toogler responsive

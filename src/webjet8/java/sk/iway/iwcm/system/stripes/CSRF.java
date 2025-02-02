@@ -231,4 +231,12 @@ public class CSRF
 	public static String getCSRFTokenQuery(HttpSession session, boolean saveToSession){
 		return PARAMETER_NAME + "=" + getCsrfToken(session,saveToSession);
 	}
+
+	/**
+	 * Returns CSRF token parameter name
+	 * @return
+	 */
+	public static String getParameterName() {
+		return PARAMETER_NAME;
+	}
 }

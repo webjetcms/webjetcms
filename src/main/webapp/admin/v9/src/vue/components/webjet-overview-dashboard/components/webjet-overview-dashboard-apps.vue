@@ -47,13 +47,15 @@
             if ("en"===window.userLng) lngkey = "en";
             else if ("cs"===window.userLng) lngkey = "cs";
             let url = '/admin/v9/json/apps.'+lngkey+'.json?v=1';
-            $.get({
-                url: url,
-                success: function(data) {
-                    //console.log("data=", data);
-                    self.apps = data.apps;
-                }
-            });
+            setTimeout(() => {
+                $.get({
+                    url: url,
+                    success: function(data) {
+                        //console.log("data=", data);
+                        self.apps = data.apps;
+                    }
+                });
+            }, 500);
         }
     }
 </script>

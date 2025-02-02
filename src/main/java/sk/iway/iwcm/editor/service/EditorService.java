@@ -1287,7 +1287,7 @@ public class EditorService {
 		}
 
 		//aktualizuj pripadne aj tab. perex_group_doc
-		DocDB.udpdatePerexGroupDoc(editedDoc.getDocId(), editedDoc.getPerexGroupString());
+		DocDB.udpdatePerexGroupDoc(editedDoc.getDocId(), editedDoc.getPerexGroupIdsString());
 		dt.diff("after update perex group doc");
 	}
 

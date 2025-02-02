@@ -694,7 +694,7 @@ public class IwcmDocGroupFsVolume implements FsVolume
 		if (itemSrc != null && itemSrc.getDoc()!=null)
 		{
 			docId = itemSrc.getDoc().getDocId();
-			externalLink = itemSrc.getDoc().getExternalLink();
+			//we want to use real URL without redirect if the redirect will be changed in future SO DO NOT USE externalLink = itemSrc.getDoc().getExternalLink();
 		}
 		else if (itemSrc != null && itemSrc.getGroup()!=null)
 		{

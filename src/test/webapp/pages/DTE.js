@@ -69,7 +69,7 @@ module.exports = {
           if (id.endsWith("ImportModal")) I.wait(0.6);
      },
 
-     waitForModalClose(id) {
+     waitForModalClose(id="datatableInit_modal") {
           I.waitForInvisible("#" + id);
           I.wait(0.2);
      },

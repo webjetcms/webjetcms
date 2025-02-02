@@ -478,10 +478,6 @@ div.row.title.title-hidden .page-title {
     margin-bottom: 200px
 }
 
-.md-main-menu__item:not(.md-main-menu__item--has-children) .md-main-menu__item__link[href*="#"] {
-    opacity: .3
-}
-
 .md-main-menu__item__link {
     position: relative;
     display: block;
@@ -546,10 +542,6 @@ div.row.title.title-hidden .page-title {
     transition: .3s ease
 }
 
-.md-main-menu__item__sub-menu__item__link[href*="#"] {
-    opacity: .3
-}
-
 .md-main-menu__item__sub-menu__item__link::before {
     content: "";
     position: absolute;
@@ -609,16 +601,6 @@ div.row.title.title-hidden .page-title {
     background-color: transparent;
     transform: translate(-50%, -50%) scale(2)
 }
-
-/*
-.md-main-menu .md-main-menu__item__sub-menu__item--v8version .md-main-menu__item__sub-menu__item__link {
-    opacity: .8
-}
-
-.md-main-menu .md-main-menu__item--v8version .md-main-menu__item__link {
-    opacity: .8
-}
-*/
 
 .md-main-menu--open {
     display: block

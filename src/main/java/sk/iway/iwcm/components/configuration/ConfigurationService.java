@@ -174,4 +174,25 @@ public class ConfigurationService {
 
         return ConfDB.filterByPerms(user, keysToSort);
     }
+
+    public List<ConfDetailsDto> findConfDetailsBy(String propertyName, ConfDetailsDto original, Identity user) {
+
+        List<ConfDetailsDto> all = getAll(user);
+        List<ConfDetailsDto> result = new ArrayList<>();
+
+        //iterate all and filted by propertyName
+        for (ConfDetailsDto c : all) {
+            if (propertyName.equals("id") && c.getName().equals(original.getName())) {
+                result.add(c);
+            } else if (propertyName.equals("name") && c.getName().equals(original.getName())) {
+                result.add(c);
+            } else if (propertyName.equals("value") && c.getValue().equals(original.getValue())) {
+                result.add(c);
+            } else if (propertyName.equals("description") && c.getDescription().equals(original.getDescription())) {
+                result.add(c);
+            }
+        }
+
+        return result;
+    }
 }

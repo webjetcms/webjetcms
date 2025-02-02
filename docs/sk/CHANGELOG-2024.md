@@ -25,7 +25,29 @@ WebJET CMS verzie 2024 prešiel na Java verzie 17. Obsahuje nasledovné zmeny:
 
 ### Oprava chýb
 
-2024.0.X
+2024.0.52
+
+- Web stránky - opravené nastavenie značiek pri nastavenej konfiguračnej premennej `perexGroupUseJoin=true` (#57453).
+- Štatistika - chybné stránky - zväčšený limit maximálneho počtu záznamov z 1000 na hodnotu podľa konfiguračnej premennej `datatablesExportMaxRows`, predvolene `50000`. Tabuľka upravená na stránkovanie a vyhľadávanie na serveri (#57453).
+- Stripes - opravené formátovanie dátumu a času za použitia `Tools.formatDate/Time` pre konzistentné formáty dátumov a času (#57405).
+- Bezpečnosť - opravená možnosť presmerovať na externú doménu pri odhlásení používateľa (#57521).
+- Bezpečnosť - pridaná možnosť zakázať `basic` a `api-token` autorizáciu [pre REST služby](sysadmin/pentests/README.md#konfigurácia) nastavením konfiguračnej premennej `springSecurityAllowedAuths` (#57521).
+- Bezpečnosť - pridaná možnosť chrániť odhlásenie používateľa [CSRF tokenom](custom-apps/spring/rest-url.md) nastavením konfiguračnej premennej `logoffRequireCsrfToken` na hodnotu `true` (#57521).
+- Bezpečnosť - pridaná možnosť [vyžadovať CSRF token](custom-apps/spring/rest-url.md#csrf-token) pre zadané URL adresy nastavením konfiguračnej premennej `csrfRequiredUrls` (#57521).
+- Administrácia - upravené zvýrazňovanie menu položiek pre podporu `#hash-tag` v URL adrese pre aplikácie v `Angular/Vue` v administrácii (#57557)
+- Vyhľadávanie - opravené vyhľadávanie stránok z iných ako aktuálnej domény (#57573).
+- Používatelia - opravená možnosť výberu doménového priečinka - priečinok s názvom domény nie je skutočný priečinok v databáze (#54273-54).
+- Používatelia - doplnený dátum registrácie a dátum posledného prihlásenia do  exportu, polia sa zobrazia (needitovateľne) aj v editácii používateľa v karte Základné (#56393-19).
+- Používatelia - opravené zobrazenie zoznamu používateľov ak niektorý používateľ obsahuje schvaľovanie zmazaného priečinka (#56393-21).
+- Konfigurácia - opravený import z XML ak názov premennej obsahuje špeciálne znaky `[].` (#54273-54).
+- Konfigurácia - upravený import z Excelu - pridaná možnosť aktualizovať záznam podľa mena, importovať iba nové záznamy, zrušené nepotrebné stĺpce z exportu (#54273-54).
+- Web stránky - pri editácii odkazu, ktorý obsahuje URL parametre typu `/odhlasenie-z-odberu-noviniek.html?email=!RECIPIENT_EMAIL!` sú pri úprave odkazu, alebo jeho zmene zachované URL parametre. Môžete tak ľahko zmeniť odkaz na inú web stránku so zachovaním potrebných parametrov (#57529).
+- Bezpečnosť - aktualizovaná knižnica `logback`.
+- Úvod - opravené čítanie ilustračného obrázka z externej domény, upravené načítanie zoznamu noviniek WebJET na oneskorené pre rýchlejšie zobrazenie celej stránky.
+- `Multi Domain` - upravené získanie doménového mena, ak v HTTP hlavičke obsahuje aj port (niekedy ho tam vkladá proxy server).
+- Web stránky - opravené vloženie odkazu na stránku, ktorá v URL adrese/parametri obsahuje znak `:` tak, aby aj protokol zostal zobrazený (#56393-19).
+
+2024.0.47
 
 - Datatabuľky - opravené zobrazené meno stĺpca pri nastavení zobrazenia stĺpcov ak je upravené ich poradie (#56393-14).
 - Export do HTML - opravená kontrola práv, opravené zobrazenie generovaných súborov v priečinku `/html` (#57141).

@@ -55,12 +55,15 @@ div.ly-container.container
                             i.far.fa-key
                             <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
                     li
-                        a.dropdown-item(data-th-href="${layout.getConstant('adminLogoffLink')}")
+                        a.dropdown-item(href="javascript:document.adminLogoffForm.submit()")
                             i.far.fa-sign-out
                             <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
                 |
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(data-th-href="${layout.getConstant('adminLogoffLink')}" data-th-title="\#{menu.logout}" data-toggle="tooltip")
+            a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(href="javascript:document.adminLogoffForm.submit()" data-th-title="\#{menu.logout}" data-toggle="tooltip")
                 i.far.fa-sign-out
+
+    form(data-th-action="${layout.getConstant('adminLogoffLink')}" method="post" name="adminLogoffForm" style="display:none;")
+        input(type="hidden" data-th-name="${layout.csrfParameterName}" data-th-value="${layout.csrfToken}")

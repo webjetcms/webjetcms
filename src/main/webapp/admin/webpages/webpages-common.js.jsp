@@ -2415,7 +2415,7 @@ function initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, configL
 			}
 			else if ( dialogName == 'link')
 			{
-				//console.log("link dialog open");
+				//console.log("link dialog open OLD version");
 
 				dialogDefinition.minWidth = 800;
 				dialogDefinition.minHeight = 445;

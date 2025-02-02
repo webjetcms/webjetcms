@@ -181,6 +181,25 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @Column(name = "writable_folders")
     private String writableFolders;
 
+    @Column(name = "reg_date")
+    @Temporal(TemporalType.TIMESTAMP)
+    @DataTableColumn(
+        title = "components.forum.regdate",
+        inputType = DataTableColumnType.DATETIME,
+        visible = false,
+        tab = "personalInfo",
+        sortAfter = "editorFields.allowWeakPassword",
+        className = "hide-on-create",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
+                }
+            )
+        }
+    )
+    private Date regDate;
+
     //vo WJ8 sa settuje v triede UsersDB na riadku 88
     @Transient
     private String lastLogon;
@@ -190,27 +209,22 @@ public class UserDetailsEntity extends UserDetailsBasic {
     @DataTableColumn(
         title = "admin.users.lastlogon",
         inputType = DataTableColumnType.DATETIME,
-        hiddenEditor = true,
-        tab = "rightsTab",
-        sortAfter = "admin"
+        tab = "personalInfo",
+        sortAfter = "regDate",
+        className = "hide-on-create",
+        editor = {
+            @DataTableColumnEditor(
+                attr = {
+                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
+                }
+            )
+        }
     )
     private Date lastLogonAsDate;
 
     // private String modulePerms;
 
     // private String disabledItems;
-
-    @Column(name = "reg_date")
-    @Temporal(TemporalType.TIMESTAMP)
-    @DataTableColumn(
-        title = "components.forum.regdate",
-        inputType = DataTableColumnType.DATETIME,
-        hiddenEditor = true,
-        visible = false,
-        tab = "rightsTab",
-        sortAfter = "lastLogonAsDate"
-    )
-    private Date regDate;
 
     @Column(name = "forum_rank")
     @DataTableColumn(

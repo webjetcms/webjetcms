@@ -10,6 +10,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
+import sk.iway.iwcm.system.stripes.CSRF;
 
 /**
  * LayoutBean - drzi atributy pre model
@@ -85,5 +86,13 @@ public class LayoutBean {
         int count = DocDB.getInstance().getPerexGroups().size();
         if (count > 30) return true;
         return false;
+    }
+
+    /**
+     * Returns CSRF token parameter name
+     * @return
+     */
+    public String getCsrfParameterName() {
+        return CSRF.getParameterName();
     }
 }

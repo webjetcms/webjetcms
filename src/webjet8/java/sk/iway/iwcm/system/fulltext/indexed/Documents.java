@@ -177,10 +177,10 @@ public class Documents extends Indexed
 
             String htmlData = SearchTools.htmlToPlain(rs.getString("html_data"));
 
-				Field headings = new Field("headings", Lemmas.get(language, parseHeadings(dataDB)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS);
-				headings.setBoost(5.0f);
+			Field headings = new Field("headings", Lemmas.get(language, parseHeadings(dataDB)), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS);
+			headings.setBoost(5.0f);
 
-				document.add(headings);
+			document.add(headings);
             document.add(new Field("data", nvl(data), Field.Store.YES, Field.Index.ANALYZED, Field.TermVector.WITH_POSITIONS_OFFSETS));
             document.add(new Field("external_link", nvl(rs.getString("external_link")), Field.Store.NO, Field.Index.ANALYZED));
             document.add(new Field("date_created", nvl(dateToLucene(rs.getTimestamp("date_created"))), Field.Store.YES, Field.Index.ANALYZED));
@@ -203,9 +203,11 @@ public class Documents extends Indexed
             addStringValueField(rs.getString("perex_group"), "perex_group", document);
             document.add(new Field("event_date", nvl(dateToLucene(rs.getTimestamp("event_date"))), Field.Store.YES, Field.Index.ANALYZED));
 
+			//this are in BasicDocDetails
             document.add(new Field("field_a", nvl(rs.getString("field_a")), Field.Store.NO, Field.Index.ANALYZED));
             document.add(new Field("field_b", nvl(rs.getString("field_b")), Field.Store.NO, Field.Index.ANALYZED));
             document.add(new Field("field_c", nvl(rs.getString("field_c")), Field.Store.NO, Field.Index.ANALYZED));
+
             document.add(new Field("field_d", nvl(rs.getString("field_d")), Field.Store.YES, Field.Index.ANALYZED));
             document.add(new Field("field_e", nvl(rs.getString("field_e")), Field.Store.YES, Field.Index.ANALYZED));
             document.add(new Field("field_f", nvl(rs.getString("field_f")), Field.Store.YES, Field.Index.ANALYZED));
@@ -215,14 +217,21 @@ public class Documents extends Indexed
             document.add(new Field("field_j", nvl(rs.getString("field_j")), Field.Store.YES, Field.Index.ANALYZED));
             document.add(new Field("field_k", nvl(rs.getString("field_k")), Field.Store.YES, Field.Index.ANALYZED));
             document.add(new Field("field_l", nvl(rs.getString("field_l")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_m", nvl(rs.getString("field_m")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_n", nvl(rs.getString("field_n")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_o", nvl(rs.getString("field_o")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_p", nvl(rs.getString("field_p")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_q", nvl(rs.getString("field_q")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_r", nvl(rs.getString("field_r")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_s", nvl(rs.getString("field_s")), Field.Store.YES, Field.Index.ANALYZED));
-				document.add(new Field("field_t", nvl(rs.getString("field_t")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_m", nvl(rs.getString("field_m")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_n", nvl(rs.getString("field_n")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_o", nvl(rs.getString("field_o")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_p", nvl(rs.getString("field_p")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_q", nvl(rs.getString("field_q")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_r", nvl(rs.getString("field_r")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_s", nvl(rs.getString("field_s")), Field.Store.YES, Field.Index.ANALYZED));
+			document.add(new Field("field_t", nvl(rs.getString("field_t")), Field.Store.YES, Field.Index.ANALYZED));
+
+			/* 	uncommend this when you will do some refactor which will require Lucene reindexing
+			    also uncomment multiDomainEnabled/root_group_l1 condition in LuceneSearchAction
+			document.add(new NumericField("root_group_l1", Field.Store.YES, true).setIntValue(rs.getInt("root_group_l1")));
+			document.add(new NumericField("root_group_l2", Field.Store.YES, true).setIntValue(rs.getInt("root_group_l2")));
+			document.add(new NumericField("root_group_l3", Field.Store.YES, true).setIntValue(rs.getInt("root_group_l3")));
+			*/
 
             document.add(typeField("documents"));
             String url = DocDB.getInstance().getDocLink(rs.getInt("doc_id"));

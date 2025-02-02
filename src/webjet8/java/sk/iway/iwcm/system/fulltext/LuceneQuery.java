@@ -86,7 +86,7 @@ public class LuceneQuery
 
 			try
 			{
-				QueryParser parser = new WebJETQueryParser(Version.LUCENE_30, Indexed.defaultField(), AnalyzerFactory.getAnalyzer(Version.LUCENE_31,this.language));
+				QueryParser parser = new WebJETQueryParser(Version.LUCENE_30, Indexed.defaultField(), AnalyzerFactory.getAnalyzer(Version.LUCENE_31, this.language));
 				//QueryParser parser = new QueryParser(Version.LUCENE_30, Indexed.defaultField(), new CustomAnalyzer(Version.LUCENE_31,this.language));
 				parsedQuery = parser.parse(query);
 

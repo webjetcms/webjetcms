@@ -2,6 +2,8 @@
 
 echo "WARNING: CHECK VERSION IN build.xml"
 
+nvm use
+
 date
 
 ./mount-license.sh

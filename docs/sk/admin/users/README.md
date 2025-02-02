@@ -87,7 +87,7 @@ Kliknutím na ikonu ceruzky pri už pridanom adresári/stránke je možné adres
 
 Štandardne administrátor, ktorý **nemá zvolené žiadne právo na adresár/stránku automaticky získava práva na všetky adresáre a web stránky**.
 
-V multi doménovej inštalácii je v editácii používateľa a skupín práv možné vyberať priečinky web stránok a jednotlivé web stránky bez ohľadu na aktuálne zvolenú doménu. Domény sa zobrazia ako koreňové priečinky. Zobrazenie vybranej položky obsahuje prefix s doménovým menom, aby bolo možné rozlíšiť jednotlivé priečinky (často sa volajú v rôznych doménach rovnako, napr. Slovensky).
+V multi doménovej inštalácii je v editácii používateľa a skupín práv možné vyberať priečinky web stránok a jednotlivé web stránky bez ohľadu na aktuálne zvolenú doménu. Domény sa zobrazia ako koreňové priečinky, pričom priečinok s názvom domény nie je možné vybrať. Je potrebné vybrať jednotlivé priečinky v doméne, keďže doména samotná nie je reálny priečinok. Zobrazenie vybranej položky obsahuje prefix s doménovým menom, aby bolo možné rozlíšiť jednotlivé priečinky (často sa volajú v rôznych doménach rovnako, napr. Slovensky).
 
 ![](users-tab-right-existing.png)
 

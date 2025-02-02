@@ -35,6 +35,18 @@
 		{
 			var urlPath = link;
 
+			//console.log("selectLink: ", link, "current=", GetE('txtUrl').value);
+			//if current link contains URL parameters copy them to the new link
+			var current = GetE('txtUrl').value;
+			var i = current.indexOf("?");
+			if (i != -1)
+			{
+				if (urlPath.indexOf("?") == -1)
+				{
+					urlPath += "?" + current.substring(i+1);
+				}
+			}
+
 			//window.parent.CKEDITOR.dialog.getCurrent().getContentElement("info", "url").setValue(link);
 
 			GetE('txtUrl').value=urlPath;

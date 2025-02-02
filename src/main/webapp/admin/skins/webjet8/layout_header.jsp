@@ -131,7 +131,7 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 						</li>
 						</iwcm:menu>
 						<li>
-							<a href="<%=Constants.getString("adminLogoffLink") %>">
+							<a href="javascript:document.adminLogoffForm.submit()">
 								<i class="icon-logout"></i> <iwcm:text key="menu.logout"/>
 							</a>
 						</li>
@@ -139,9 +139,12 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 				</li>
 
 	            <li class="dropdown dropdown-quick-sidebar-toggler">
-	                <a class="dropdown-toggle" href="/logoff.do?forward=/admin/index.jsp">
+	                <a class="dropdown-toggle js-logout-toggler" href="javascript:document.adminLogoffForm.submit()">
 						<i class="far fa-sign-out"></i>
 	                </a>
+					<form action="<%=Constants.getString("adminLogoffLink") %>" method="post" name="adminLogoffForm" style="display:none">
+						<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
+					</form>
 	            </li>
 
 

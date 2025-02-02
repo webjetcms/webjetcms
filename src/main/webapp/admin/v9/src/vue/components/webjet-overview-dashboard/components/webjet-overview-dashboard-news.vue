@@ -44,13 +44,15 @@
             if ("en"===window.userLng) lngkey = "en";
             else if ("cs"===window.userLng) lngkey = "cs";
             let url = window.vueOverviewApp.config.globalProperties.$overviewJsonUrl+'wjnews.'+lngkey+'.json';
-            $.get({
-                url: url,
-                success: function(data) {
-                    //console.log("data=", data);
-                    self.news = data.news;
-                }
-            });
+            setTimeout(() => {
+                $.get({
+                    url: url,
+                    success: function(data) {
+                        //console.log("data=", data);
+                        self.news = data.news;
+                    }
+                });
+            }, 500);
         },
         methods: {
             processMarkdown: function(perex) {

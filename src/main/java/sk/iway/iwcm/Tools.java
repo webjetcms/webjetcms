@@ -2136,6 +2136,10 @@ public class Tools
 			}
         }
 
+		//sometimes serverName is send with :port at the end by some k8s proxy, remove it
+		int index = serverName.indexOf(':');
+		if (index > 0) serverName = serverName.substring(0, index);
+
 		if (useAlias)
 		{
 			String domainName = DomainRedirectDB.getDomainFromAlias(serverName);

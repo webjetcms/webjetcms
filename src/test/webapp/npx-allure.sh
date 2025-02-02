@@ -28,7 +28,7 @@ else
 fi
 
 if [[ -z "$3" ]]; then
-        HOST_USER="tomcat_au20"
+        HOST_USER="tomcat"
 else
         HOST_USER="$3"
 fi
@@ -40,7 +40,7 @@ else
 fi
 
 if [[ -z "$5" ]]; then
-        HOST_DIR="/www/tomcat_au20/webapps/docs.webjetcms.sk/allure/"
+        HOST_DIR="/www/tomcat/webapps/docs.webjetcms.sk/allure/"
 else
         HOST_DIR="$5"
 fi
@@ -54,8 +54,8 @@ fi
 echo "Browser version=$BROWSER_VERSION"
 
 #skopiruj z docs servera posledne history udaje, aby sa zobrazila historia testov na grafe
-#TODO: tomcat_au20@
-#rsync -rtlpPI tomcat_au20@webjet2b.srv.iway.local:/www/tomcat_au20/webapps/docs.webjetcms.sk/allure/chromium/history ../../../build/test
+#TODO: tomcat@
+#rsync -rtlpPI tomcat@webjet2b.srv.iway.local:/www/tomcat/webapps/docs.webjetcms.sk/allure/chromium/history ../../../build/test
 #echo "Executing: rsync -r $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history ../../../build/test"
 echo "Excecuting scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/history"
 scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/history
@@ -80,7 +80,7 @@ printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODE
 npx allure generate --clean ../../../build/test -o ../../../build/test-results
 
 #uloz na docs server vysledok
-#TODO: tomcat_au20@
+#TODO: tomcat@
 rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-results/ $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER
 
 #npx allure open ../../../build/test-results

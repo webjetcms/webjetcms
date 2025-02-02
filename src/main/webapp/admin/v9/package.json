@@ -9,7 +9,7 @@
         "dev": "webpack --config webpack.dev.js",
         "prod": "webpack --config webpack.prod.js",
         "watch": "npm run dev -- --watch",
-        "postinstall": "node node_modules/datatables.net-editor/install.js src/js/plugins/Editor-2.1.2.zip && npx replace-in-file exports exportsall node_modules/xlsx/package.json && cd node_modules/tui-image-editor && npm install && npm run build:image-editor && cd ../../ && rm -rf node_modules/jquery-ui/external/jquery*"
+        "postinstall": "node node_modules/datatables.net-editor/install.js src/js/plugins/Editor-2.1.2.zip && npx replace-in-file exports exportsall node_modules/xlsx/package.json && rm -rf node_modules/jquery-ui/external/jquery*"
     },
     "keywords": [],
     "author": "",
@@ -74,7 +74,7 @@
         "smooth-scrollbar": "^8.8.3",
         "tiny-emitter": "^2.1.0",
         "toastr": "^2.1.4",
-        "tui-image-editor": "github:antonaavik/tui.image-editor#feat/fabricUpdate5.2.4",
+        "@webjetcms/tui-image-editor": "^3.15.301",
         "vue": "^3.3.2",
         "vue-advanced-cropper": "^2.8.8",
         "vue-router": "^4.2.0",

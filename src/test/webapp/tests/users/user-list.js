@@ -435,6 +435,28 @@ Scenario("logout 2", ({I}) => {
      I.logout();
 });
 
+Scenario("BUG - do not allow to edit disabled fields", async ({I, DTE}) => {
+     let regDate = "14.11.2018 13:49:22";
+     let wrongDate = "15.11.2010 13:49:22";
+     I.amOnPage("/admin/v9/users/user-list/?id=9");
+     DTE.waitForEditor();
+     I.seeInField("#DTE_Field_regDate", regDate);
+
+     //force date change
+     I.executeScript((wrongDate) => {
+          document.querySelector("#DTE_Field_regDate").value = wrongDate;
+     }, wrongDate);
+     I.seeInField("#DTE_Field_regDate", wrongDate);
+
+     DTE.save();
+     DTE.waitForModalClose();
+
+     //verify date is unchanged
+     I.amOnPage("/admin/v9/users/user-list/?id=9");
+     DTE.waitForEditor();
+     I.seeInField("#DTE_Field_regDate", regDate);
+
+});
 
 //TODO: dalsie testy, overenie jednotlivych kariet, overenie prihlasenia vytvoreneho pouzivatela
 

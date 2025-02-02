@@ -1,9 +1,15 @@
 package sk.iway.demo8;
 
+import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.system.spring.SpringSecurityConf;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -57,5 +63,38 @@ public class DemoRestController
 		result.append("\n<br>").append("\n<br>");
 
 		return result.toString();
+	}
+
+	/**
+	 * Get current basic auth status. It's used in autotests api-auth.js
+	 * @return
+	 */
+	@GetMapping(path={"/rest/basic-auth-enabled"})
+	public String isBasicAuthEnabled()
+	{
+		return "{ \"result\": " + SpringSecurityConf.isBasicAuthEnabled() + " }";
+	}
+
+	/**
+	 * Test private URL with basic auth in api-auth.js
+	 * @return
+	 */
+	@GetMapping(path={"/private/rest/demo-test"})
+	@PreAuthorize(value = "@WebjetSecurityService.isLogged()")
+	public String testPrivateUrl()
+	{
+		return "{ \"result\": \"Demo OK\" }";
+	}
+
+	/**
+	 * Test POST url referrers in api-auth.js
+	 * @param id
+	 * @return
+	 */
+	@PostMapping(value="/private/rest/demo-post", consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(value = "@WebjetSecurityService.isLogged()")
+	public String testPrivatePostUrl(@RequestBody DocDetails doc)
+	{
+		return "{ \"result\": \"Demo OK\", \"id\": " + doc.getId() + " }";
 	}
 }

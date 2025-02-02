@@ -83,6 +83,12 @@ public class ConstantsV9 {
 		Constants.setString("ntlmLogonAction.charsetEncoding", "windows-1250", "ntlm", "Nazov kodovania, ktore sa pouzije pre prekodovanie znakov ziskanych z LDAP servera. Ak je hodnota prazdna, tak sa nevykona ziadne prekodovanie.");
 
 		Constants.setString("amchartLicense", "", Constants.MOD_STAT, "Licencny kluc pre amchart kniznicu");
+
+		Constants.setString("stripes.FormatterFactory.Class", "sk.iway.iwcm.system.stripes.StripesFormatterFactory", Constants.MOD_CONFIG, "Stripes custom FormatterFactory to use WebJET Tools.formatDate/Time formatters");
+
+		Constants.setString("springSecurityAllowedAuths", "basic,api-token", Constants.MOD_SECURITY, "Allowed auth methods for REST services, after change restart server.");
+		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_SECURITY, "If true, /logoff.do requires CSRF token");
+		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 	}
 
 	/**

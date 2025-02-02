@@ -9,6 +9,11 @@ block content
         ]
     )
 
+    style.
+        .overview__dashboard__title {
+            background-image: url('/admin/v9/dist/images/features-contact.png');
+        }
+
     div(data-th-if="${layout.getConstantBoolean('statWebJET7Converted')==false}").row.mt-3
         div.col
             div.alert.alert-danger.mb-0
@@ -26,7 +31,9 @@ block content
                 span(data-th-text="${javaVersionWarningText}") Required java version is below 17
 
     <div id="webjet-overview-dashboard">
+        <a name="overview-dashboard-a" style="scroll-margin-top: 10em;"></a>
         <webjet-overview-dashboard th:v-bind:overviewUser="${overviewUser}" th:v-bind:overviewbackdata="${overviewBackData}" th:v-bind:overviewadmins="${overviewAdmins}" th:v-bind:overviewrecentpages="${overviewRecentPages}" th:v-bind:overviewchangedpages="${overviewChangedPages}" th:v-bind:overviewadminlog="${overviewAdminlog}" th:v-bind:overviewtodo="${overviewTodo}"></webjet-overview-dashboard>
+        <a name="overview-dashboard-b" style="scroll-margin-top: 10em;"></a>
     </div>
 
     script.

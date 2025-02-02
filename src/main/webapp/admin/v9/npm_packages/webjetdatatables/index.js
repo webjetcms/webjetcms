@@ -2111,8 +2111,12 @@ export const dataTableInit = options => {
                             //tu nastavujeme iny stlpec pre parovanie v importe, pretoze to moze byt v editorFields.login, ale hladat a parovat budeme podla login atributu
                             data = col.attr["data-dt-import-updateByColumn"];
                         }
-                        if (typeof col.attr != "undefined" && typeof col.attr["data-dt-import-hidden"] == "true") {
+                        if (typeof col.attr != "undefined" && col.attr["data-dt-import-hidden"] === "true") {
                             //toto nechceme zobrazovat v moznosti parovania importu
+                            if (col.name === "id" && select.options.length === 1) {
+                                //remove also ID option
+                                select.options.length = 0;
+                            }
                             return;
                         }
 

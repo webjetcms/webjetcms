@@ -822,6 +822,23 @@ async function testLink(link, fixedLink, I, DT, DTE) {
      I.waitForElement("#txtUrl", 10);
      I.seeInField("#txtUrl", fixedLink);
      I.dontSeeInField("#txtUrl", "http://"+fixedLink);
+
+     //if URL startsWith / wait for ckeditor select by hash
+     if (fixedLink.indexOf("/")===0) {
+          I.wait(5);
+          I.seeInField("#txtUrl", fixedLink);
+          I.dontSeeInField("#txtUrl", "http://"+fixedLink);
+
+          if (fixedLink.indexOf("/?email=")===0) {
+               //click on another page and verify URL contains email parameter
+               //I.forceClick("Banner neprihlásený", "div.elfinder-cwd-filename");
+               I.click("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E");
+               I.waitForElement("#iwcm_doc_group_volume_L2RvYzo1Mw_E_E.ui-selected", 10);
+               I.wait(1);
+               I.seeInField("#txtUrl", "/banner-neprihlaseny.html?email=!RECIPIENT_EMAIL!");
+          }
+     }
+
      I.switchTo();
      I.click(locate('.cke_dialog_ui_button').withText('Zrušiť'));
 
@@ -859,22 +876,41 @@ Scenario('Various link types', async ({ I, DT, DTE, Document }) => {
      I.click("#pills-dt-datatableInit-content-tab");
 
      I.say("Testing phone links");
-     //await testLink("tel:090312366", I, DT, DTE);
+     await testLink("tel:0903123666", null, I, DT, DTE);
+     await testLink("tel:+421903123666", null, I, DT, DTE);
+     await testLink("tel:+421-903-123-666", null, I, DT, DTE);
+     await testLink("tel:09/53788888", null, I, DT, DTE);
+     await testLink("tel:09-5378-8888", null, I, DT, DTE);
 
+     //
+     I.say("test link with URL parameter");
+     await testLink("/?email=!RECIPIENT_EMAIL!", null, I, DT, DTE);
+
+     //
+     I.say("Testing links with : in URL parameter");
+     await testLink("https://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991", null, I, DT, DTE);
+     await testLink("eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991", "http://eur-lex.europa.eu/legal-content/CS/TXT/HTML/?uri=OJ:L_202401991", I, DT, DTE);
+
+     //
      I.say("Testing web links");
      await testLink("www.interway.sk", "http://www.interway.sk", I, DT, DTE);
      await testLink("http://docs.webjetcms.sk", null, I, DT, DTE);
      await testLink("https://docs.webjetcms.sk", null, I, DT, DTE);
      await testLink("docs.webjetcms.sk", "http://docs.webjetcms.sk", I, DT, DTE);
 
-     await testLink("/sk/", null, I, DT, DTE);
-     await testLink("/sk/podstranka.html", null, I, DT, DTE);
-     await testLink("/files/file.pdf", null, I, DT, DTE);
+     //
+     I.say("Testing local links");
+     await testLink("/apps/formular/", null, I, DT, DTE);
+     await testLink("/apps/formular/potvdenie-double-optin.html", null, I, DT, DTE);
+     await testLink("/files/jurko.jpg", null, I, DT, DTE);
+     await testLink("/files/do-not-exist.pdf", null, I, DT, DTE);
 
+     //
      I.say("Testing email links");
      await testLink("info@webjetcms.sk", "mailto:info@webjetcms.sk", I, DT, DTE);
      await testLink("mailto:info@webjetcms.sk", null, I, DT, DTE);
 
+     //
      I.say("Testing tiktok links");
      await testLink("https://www.tiktok.com/@webjetcms", null, I, DT, DTE);
      await testLink("www.tiktok.com/@webjetcms", "http://www.tiktok.com/@webjetcms", I, DT, DTE);

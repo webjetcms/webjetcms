@@ -31,6 +31,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConstantsV9;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.spring.NullAwareBeanUtils;
@@ -1663,6 +1665,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 */
 	private void copyEntityIntoOriginal(T entity, T one) {
 		List<String> alwaysCopyProperties = new ArrayList<>();
+		List<String> ignoreProperties = new ArrayList<>();
 
 		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
 		for (Field field : declaredFields) {
@@ -1671,8 +1674,31 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				boolean[] hiddenEditor = annotation.hiddenEditor();
 				if (hiddenEditor.length > 0) {
 					//ak je hiddenEditor preskoc
-					if (hiddenEditor[0]==true) continue;
+					if (hiddenEditor[0]==true) {
+						ignoreProperties.add(field.getName());
+						continue;
+					}
 				}
+
+				//also skip if editor.attr.disabled=disabled
+				DataTableColumnEditor editor[] = annotation.editor();
+				if (editor.length > 0) {
+					boolean isDisabled = false;
+					DataTableColumnEditorAttr attrs[] = editor[0].attr();
+					if (attrs.length > 0) {
+						for (DataTableColumnEditorAttr attr : attrs) {
+							if ("disabled".equals(attr.key())) {
+								isDisabled = true;
+								break;
+							}
+						}
+					}
+					if (isDisabled) {
+						ignoreProperties.add(field.getName());
+						continue;
+					}
+				}
+
 				boolean alwaysCopy = false;
 				if (annotation.alwaysCopyProperties().length>0) {
 					alwaysCopy = annotation.alwaysCopyProperties()[0];
@@ -1686,6 +1712,6 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			}
 		}
 
-		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, (String[]) null);
+		NullAwareBeanUtils.copyProperties(entity, one, alwaysCopyProperties, ignoreProperties.toArray(new String[0]));
 	}
 }

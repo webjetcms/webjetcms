@@ -70,7 +70,7 @@ public class InitServlet extends HttpServlet
 	 */
 	private static final long serialVersionUID = 3175770407979840865L;
 
-	private static String actualVersion = "2024.0.47.{minor.number} {build.date}";
+	private static String actualVersion = "2024.0.52.{minor.number} {build.date}";
 
 	private static final int DOMAIN_LEN = 10;
 

@@ -388,6 +388,37 @@ public class LuceneSearchAction
 				luceneQuery.append(sqlProtected.toString());
 			}
 
+			//multidomain
+			String domainName = DocDB.getDomain(request);
+			/* this will require to uncomment indexing in Documents and also full reindexing
+			if (Constants.getBoolean("multiDomainEnabled")) {
+				//we must filter by domain using root_group_l1
+				String domainName = DocDB.getDomain(request);
+				if (Tools.isNotEmpty(domainName)) {
+					List<Integer> rootGroupIds = new ArrayList<>();
+
+					List<GroupDetails> rootGroups = GroupsDB.getRootGroups();
+					for (GroupDetails rootGroup : rootGroups) {
+						if (domainName.equals(rootGroup.getDomainName())) {
+							//add ID to list
+							rootGroupIds.add(rootGroup.getGroupId());
+						}
+					}
+
+					//add ids into Lucene query as AND root_group_l1:(1 OR 2 OR 3)
+					if (rootGroupIds.size() > 0) {
+						for (int i = 0; i < rootGroupIds.size(); i++) {
+							if (i == 0) {
+								luceneQuery.append(" AND root_group_l1:(").append(rootGroupIds.get(i));
+							} else {
+								luceneQuery.append(" OR ").append(rootGroupIds.get(i));
+							}
+						}
+						luceneQuery.append(") ");
+					}
+				}
+			}*/
+
 			//dodatocne parametre
 			luceneQuery.append(addInputParamsLucene(request));
 
@@ -600,7 +631,19 @@ public class LuceneSearchAction
 					DocDetails actualDoc = docDB.getBasicDocDetails(qDet.getDocId(), false);
 					if (actualDoc == null)
 					{
+						totalResults--;
 						continue;
+					}
+
+					if (Constants.getBoolean("multiDomainEnabled"))
+					{
+						//verify domain name
+						GroupDetails docGroupDetails = groupsDB.getGroup(actualDoc.getGroupId());
+						if (Tools.isNotEmpty(domainName) && domainName.equals(docGroupDetails.getDomainName())==false)
+						{
+							totalResults--;
+							continue;
+						}
 					}
 
 					qDet.setTitle(actualDoc.getTitle());

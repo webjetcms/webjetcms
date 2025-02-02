@@ -67,8 +67,9 @@ public class ConfDB
 			String name;
 			while (rs.next())
 			{
-				name = DB.getDbString(rs, "name");
-				value = DB.getDbString(rs, "value");
+				//for e.g. export we need unfiltered values
+				name = DB.getDbString(rs, "name", false);
+				value = DB.getDbString(rs, "value", false);
 
 				if (Tools.isEmpty(prefix) || name.startsWith(prefix))
 				{

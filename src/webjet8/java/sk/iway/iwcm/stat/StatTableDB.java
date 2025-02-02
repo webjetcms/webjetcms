@@ -449,7 +449,11 @@ public class StatTableDB {
 	 *
 	 * @return				Vrati sa zoznam stranok, ktore zodpovedaju filtrovacim parametrom, ak citanie z databazy prebehne v poriadku. Inak sa vrati prazdny zoznam.
 	 */
-	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url)
+	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url) {
+		return getErrorPages(max_size, from, to, url, null, null);
+	}
+
+	public static List<Column> getErrorPages(int max_size, java.util.Date from, java.util.Date to, String url, String errorText, String countRange)
 	{
 		List<Column> ret = new ArrayList<>();
 
@@ -464,8 +468,10 @@ public class StatTableDB {
 			String sql = "SELECT DISTINCT year, week, url, query_string, sum(count) as count FROM stat_error"+suffixes[s]+" ";
 			sql += StatDB.getYearTimeSQL(from, to, true);
 
-			if(Tools.isNotEmpty(url))
-				sql += " AND url LIKE ? ";
+			List<Object> params = new ArrayList<>();
+			sql += DB.getSqlQueryDatatable("url", url, true, params);
+			sql += DB.getSqlQueryDatatable("query_string", errorText, true, params);
+			sql += DB.getSqlQueryDatatable("count", countRange, true, params);
 
 			sql += " GROUP BY url, year, week, query_string ORDER BY year DESC, week DESC, count DESC";
 
@@ -476,8 +482,8 @@ public class StatTableDB {
 				db_conn = DBPool.getConnection();
 				ps = db_conn.prepareStatement(sql);
 
-				if(Tools.isNotEmpty(url))
-					ps.setString(1, "%" + url + "%");
+				int psCounter = 1;
+				psCounter = DB.getSqlParamsDatatable(params, ps, psCounter);
 
 				rs = ps.executeQuery();
 

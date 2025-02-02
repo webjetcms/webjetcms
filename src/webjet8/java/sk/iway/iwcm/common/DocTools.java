@@ -10,6 +10,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -63,7 +64,7 @@ public class DocTools {
         {
             xssProtectionStrictUrlException = xssProtectionStrictUrlException.toLowerCase();
 
-            StringTokenizer st = new StringTokenizer(xssProtectionStrictUrlException, ",+;");
+            StringTokenizer st = new StringTokenizer(xssProtectionStrictUrlException, ",+;\n");
             while (st.hasMoreTokens())
             {
                 String token = st.nextToken();
@@ -665,6 +666,16 @@ public class DocTools {
             catch (Exception ex)
             {
                 sk.iway.iwcm.Logger.error(ex);
+            }
+
+            //update CSRF token
+            if (text.indexOf("!CSRF_TOKEN!")!=-1)
+            {
+                text = Tools.replace(text, "!CSRF_TOKEN!", CSRF.getCsrfToken(request.getSession(), true));
+            }
+            if (text.indexOf("!CSRF_INPUT!")!=-1)
+            {
+                text = Tools.replace(text, "!CSRF_INPUT!", CSRF.getCsrfTokenInputFiled(request.getSession(), true));
             }
 
             text = updateUserCodes(user, text);

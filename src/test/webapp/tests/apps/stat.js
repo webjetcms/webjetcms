@@ -129,10 +129,33 @@ Scenario("error", ({ I, DT }) => {
     setDates(I, "01.05.2022", "31.05.2022");
 
     I.amOnPage("/apps/stat/admin/error/");
+    DT.resetTable("errorDataTable");
 
     checkDates(I, "01.05.2022", "31.05.2022");
 
     DT.checkTableRow("errorDataTable", 2, ["2", "2 022", "22", "/templates/aceintegration/jet/assets/fonts/geomanist/geomanist", "referer: http://demotest.webjetcms.sk/components/_common/combine", "14"]);
+
+    DT.filter("url", "/wp-login.php");
+    DT.checkTableRow("errorDataTable", 1, ["1", "2 022", "22", "/wp-login.php", "", "3"]);
+
+    DT.filter("from-count", "2");
+    DT.filter("to-count", "10");
+
+    I.waitForText("Záznamy 1 až 5 z 5", 10, ".dt-footer-row");
+
+    //
+    I.say("BUG: Verify that we will load more than 1000 rows");
+    setDates(I, "01.10.2023", "31.10.2023");
+    I.amOnPage("/apps/stat/admin/error/");
+    I.waitForText("Záznamy 1 až 11 z 1,217", 10, ".dt-footer-row");
+
+    DT.checkTableRow("errorDataTable", 1, ["1", "2 023", "44", "/", "", "9"]);
+
+    //
+    I.say("goto page 2");
+    I.click(locate("li.page-item a").withText("2"));
+    DT.waitForLoader();
+    DT.checkTableRow("errorDataTable", 1, ["12", "2 023", "44", "/css/page.css", "referer: http://demotest.webjetcms.sk/components/user/logon.jsp", "2"]);
 });
 
 Scenario("logon-user", ({ I, DT }) => {

@@ -19,6 +19,8 @@ import sk.iway.iwcm.Logger;
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled=true)
 public class SpringSecurityConf extends WebSecurityConfigurerAdapter
 {
+	private static boolean basicAuthEnabled = false;
+
 	@Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception
 	{
@@ -40,7 +42,12 @@ public class SpringSecurityConf extends WebSecurityConfigurerAdapter
     	Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http");
 
 		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
-		http.httpBasic();
+		String springSecurityAllowedAuths = SpringAppInitializer.getConstant("springSecurityAllowedAuths");
+		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
+			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
+			basicAuthEnabled = true;
+			http.httpBasic();
+		}
 
 		//toto nastavuje WebJET - https://docs.spring.io/spring-security/site/docs/4.2.x/reference/html/headers.html
       http.headers().xssProtection().disable();
@@ -132,5 +139,15 @@ public class SpringSecurityConf extends WebSecurityConfigurerAdapter
 		}
 
 		Logger.info(SpringSecurityConf.class, "configure - SpringAppInitializer - end - " + className);
+	}
+
+	/**
+	 * Returns true if Basic Auth is enabled, it is initilized on startup,
+	 * so tests can't rely on springSecurityAllowedAuths conf value
+	 * @return
+	 */
+	public static boolean isBasicAuthEnabled()
+	{
+		return basicAuthEnabled;
 	}
 }
