@@ -46,6 +46,12 @@ Explanation of the pictograms used:
 - [ ] Reservations - new app for all day reservations (#57389).
 - [ ] Applications - convert the application settings dialog in the web page editor from the old JSP to a data table (#57409).
 - [ ] Bulk email - optimizing recipient list creation (#57537).
+- [ ] +Background Tasks - option to manually run the task on `node` that has the task set, now it will run on `node` where the user is logged in.
+- [ ] +Forms - disable `GET` call to `FormMail/FormMailAjax`.
+- [ ] +Ecommerce - add to email `JSON-LD` Data https://schema.seznam.cz/objednavky/dokumentace/.
+- [ ] +Dial, Blog, News - edit so that the selection of the type of dial or folder for news is on the left, similar to the gallery/web pages. They don't have to be tabs then but all displayed at once.
+- [ ] +Translation Keys - show tree structure of translation keys for better orientation.
+- [ ] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
 
 ## 2024
 

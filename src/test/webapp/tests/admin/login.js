@@ -21,7 +21,7 @@ Scenario('zle zadane heslo @singlethread', ({ I }) => {
 function login(I, correctPassword=false, checkText=true) {
     I.wait(1);
     I.fillField("username", "tester");
-    if (correctPassword) I.fillField("password", secret("*********"));
+    if (correctPassword) I.fillField("password", secret(I.getDefaultPassword()));
     else I.fillField("password", "tralala");
     I.click("#login-submit");
 
@@ -75,7 +75,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     I.amOnPage('/admin/');
     I.fillField("username", "tester");
 
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(I.getDefaultPassword()));
     I.click("login-submit");
     //konecne som prihlaseny, pockame na VUE load
     I.wait(5);
@@ -94,7 +94,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     //kliknem na odhlasenie, vsimnite si, ze to selectujem podla textu linky
     I.click("Odhlásenie");
     //overim, ci sa zobrazi text Prihlasenie (som korektne odhlaseny)
-    I.see("PRIHLÁSENIE");
+    I.see("Meno alebo e-mail používateľa");
 });
 
 Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
@@ -130,7 +130,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     //musel som spravit takto skaredo, lebo login funkcia inak nesla
     I.fillField("username", "tester");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(I.getDefaultPassword()));
     I.forceClick("Prihlásiť sa");
     I.waitForText("Tester Playwright", 60);
 
@@ -201,8 +201,8 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.fillField("#retypeNewPassword", newPassword);
     I.click("#login-submit");
 
-    I.see("Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie, alebo mu vypršala platnosť.")
-    I.see("nesmie byť použité v minulosti");
+    I.see("Pri spracovaní formuláru nastali chyby")
+    I.see("toto heslo bolo už použité v minulosti, použite nové heslo");
     if (Browser.isFirefox()) I.wait(1);
 
     I.fillField("#newPassword", "x"+newPassword);
@@ -223,7 +223,7 @@ Scenario('kontrola presmerovanie .do linky @singlethread', ({ I }) => {
     I.amOnPage("/admin/logon.do");
 
     I.dontSee("Chyba 404 - požadovaná stránka neexistuje");
-    I.see("PRIHLÁSENIE");
+    I.see("Meno alebo e-mail používateľa");
 });
 
 Scenario('NTLM prihlasenie', async ({ I }) => {

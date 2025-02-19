@@ -353,14 +353,21 @@ function calculateAutoHeight(DATA) {
     if (inIframe==false) {
         if ("fixed"==$(".ly-header").css("position")) lyHeader = $(".ly-header").outerHeight();
         var breadcrumbElemets = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb");
+        //console.log("breadcrumbElemets=", breadcrumbElemets);
         if (breadcrumbElemets.length>0) {
             //iterate all breadcrumbs and get total sum of outerHeight
             breadcrumbElemets.each(function() {
-                breadcrumb += $(this).outerHeight();
+                let $this = $(this);
+                //if display is none skip
+                if ($this.css("display")=="none") return;
+                breadcrumb += $this.outerHeight();
             });
         } else {
-            var breadcrumb = $('#' + DATA.id + '_wrapper').parent().find(".md-breadcrumb").outerHeight();
-            breadcrumb = $(".md-breadcrumb").outerHeight();
+            var breadcrumbElement = $(".md-breadcrumb:first");
+            //console.log("breadcrumbElement=", breadcrumbElement);
+            if (breadcrumbElement.length>0) {
+                if (breadcrumbElement.css("display")!="none") breadcrumb = breadcrumbElement.outerHeight();;
+            }
         }
     } else {
         //restaurant-menu has show-in-iframe class on breadcrumb because of the date selector
@@ -383,7 +390,7 @@ function calculateAutoHeight(DATA) {
     if (inIframe==false) breadcrumb = $(".tree-col .md-breadcrumb").outerHeight();
     dtHeaderRow = $('.tree-col .dt-header-row').outerHeight();
     let filterHeight = $("div.tree-col .datatableInit").outerHeight();
-    height = vh - lyHeader - breadcrumb - dtHeaderRow - filterHeight;
+    height = vh - lyHeader - dtHeaderRow - filterHeight;
 
     //console.log("vh=", vh, "lyHeader=", lyHeader, "breadcrumb=", breadcrumb, "dtHeaderRow=", dtHeaderRow, "height=", height);
     $("#SomStromcek").css("height", height + "px");
@@ -429,7 +436,7 @@ export function bindOnResize(TABLE, DATA) {
 export function bindDialogDragDrop(TABLE) {
 
     if ($("html").hasClass("in-iframe")) return; //in iframe disable drag & drop, window is full screen
-    
+
     if(window.location.href.indexOf("showOnlyEditor=true") != -1) return; //showOnlyEditor sets the window to full screen, disable drag & drop
 
     $("body").on("mousedown", "#"+TABLE.DATA.id+"_modal .DTE_Header", function (mousedownEvt) {

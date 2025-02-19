@@ -5,22 +5,6 @@
 
         window.helpLink = "/redactor/apps/calendar/calendar-types/README";
 
-        WJ.breadcrumb({
-            id: "calendarTypes",
-            tabs: [
-                {
-                    url: '/apps/calendar/admin/',
-                    title: /*[[#{menu.calendar}]]*/ 'title',
-                    active: false
-                },
-                {
-                    url: '/apps/calendar/admin/calendar-types/',
-                    title: /*[[#{calendar_edit.configType}]]*/ 'title',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/calendar/types";
         let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.calendar.jpa.CalendarTypesEntity")})]*/ [];
 

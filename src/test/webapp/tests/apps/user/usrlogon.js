@@ -6,7 +6,7 @@ let password;
 let firstName = "firstName_";
 let lastName = "lastName_";
 
-var defaultPassword = "*********";
+var defaultPassword = null;
 
 Before(({ I }) => {
     if (randomText == null) {
@@ -17,6 +17,8 @@ Before(({ I }) => {
         lastName += randomText;
 
         password = "Pas!23"+randomText;
+
+        defaultPassword = I.getDefaultPassword()
     }
 });
 
@@ -101,7 +103,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     I.dontSee("Odhlásenie", "#menu");
 
     I.fillField("username", "tester");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(defaultPassword));
     I.click(".login-submit");
 
     I.see("tento text sa zobrazí len prihlásenému používateľovi.");
@@ -123,7 +125,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
 
     var address = "autotest-address-"+I.getRandomText();
     I.fillField("#usrAdress", address);
-    I.fillField("#usrOldPassword", secret("*********"));
+    I.fillField("#usrOldPassword", secret(defaultPassword));
 
     I.click("#bSubmitIdAjax");
     I.dontSee("Prosím, opravte nasledovné chyby", "#ajaxFormResultContainer");
@@ -253,7 +255,7 @@ Scenario('odhlasenie 5 @singlethread', ({ I }) => {
 Scenario('user with no access to this user group @singlethread', ({ I }) => {
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
     I.fillField("username", "tester2");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(defaultPassword));
     I.click(".login-submit");
     I.waitForText("Nemáte dostatočné práva pre prístup do tejto sekcie.", 10);
     I.dontSee("nespĺňa bezpečnostné nastavenia aplikácie");

@@ -590,7 +590,7 @@ public class Modules
 
 
 		sub = new ModuleInfo();
-		sub.setNameKey("admin.temp_list.zoznam_sablon");
+		sub.setNameKey("components.templates.dialog_title");
 		sub.setPath("/admin/v9/dist/views/templates/temps-list.html");
 		sub.setWjVersions(modVersions.get("menu.templates"));
 		sub.setItemKey("menuTemplates");
@@ -600,7 +600,7 @@ public class Modules
 		templates.addSubmenu(sub);
 
         sub = new ModuleInfo();
-        sub.setNameKey("admin.temp_group_list.title");
+        sub.setNameKey("menu.group_templates");
         sub.setPath("/admin/v9/dist/views/templates/temps-groups-list.html");
         sub.setWjVersions(modVersions.get("menu.templates"));
         sub.setItemKey("menuTemplatesGroup");
@@ -639,7 +639,7 @@ public class Modules
 		//pouzivatelia
 		ModuleInfo users = new ModuleInfo("menu.users", "menuUsers", "/components/user", null, true, true, "/admin/v9/users/user-list/", modVersions.get("menu.users"), 30);
 		users.setGroup("users");
-		users.setLeftMenuNameKey("users.list");
+		users.setLeftMenuNameKey("menu.users");
 		loadModule(users);
 
 		//toto je tu kvoli menu, aby sa vypisala moznost Zoznam pouzivatelov
@@ -836,7 +836,7 @@ public class Modules
 		sub.setMenuIcon("refresh");
 		loadModule(sub);
 
-		sub = new ModuleInfo().setMenuOrder(7320);
+		sub = new ModuleInfo().setMenuOrder(7290);
 		sub.setLeftMenuNameKey("components.user.perms.replaceAll");
 		sub.setNameKey("components.user.perms.replaceAll");
 		sub.setPath("/admin/replaceall.jsp");

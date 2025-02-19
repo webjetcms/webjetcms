@@ -1,36 +1,40 @@
 include ../pug/mixins
 
 <div class="dt-header-row clearfix">
-    <div class="dt-buttons">
-        <button class="btn btn-sm buttons-create btn-success buttons-divider" type="button" data-toggle="tooltip modal" data-th-title="\#{button.add}" data-target="#galleryFolderEdit">
-            <span><i class="ti ti-plus"></i></span>
-        </button>
+    <div class="row">
+        <div class="col-auto">
+            <div class="dt-buttons">
+                <button class="btn btn-sm buttons-create btn-success buttons-divider" type="button" data-toggle="tooltip modal" data-th-title="\#{button.add}" data-target="#galleryFolderEdit">
+                    <span><i class="ti ti-plus"></i></span>
+                </button>
 
-        <button class="btn btn-sm buttons-selected buttons-edit btn-warning" data-toggle="tooltip modal" data-th-title="\#{button.edit}" data-target="#galleryFolderEdit">
-            <span><i class="ti ti-pencil"></i></span>
-        </button>
+                <button class="btn btn-sm buttons-selected buttons-edit btn-warning" data-toggle="tooltip modal" data-th-title="\#{button.edit}" data-target="#galleryFolderEdit">
+                    <span><i class="ti ti-pencil"></i></span>
+                </button>
 
-        <button class="btn btn-sm buttons-selected buttons-remove btn-danger buttons-divider" data-toggle="tooltip" data-th-title="\#{button.delete}">
-            <span><i class="ti ti-trash"></i></span>
-        </button>
+                <button class="btn btn-sm buttons-selected buttons-remove btn-danger buttons-divider" data-toggle="tooltip" data-th-title="\#{button.delete}">
+                    <span><i class="ti ti-trash"></i></span>
+                </button>
 
-        <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="\#{groupedit.allowDragDrop}">
-            <input type="checkbox" class="form-check-input" id="treeAllowDragDrop" value="true"/>
-            <label class="form-check-label is-icon-arrows-v" for="treeAllowDragDrop"></label>
+                <div class="btn btn-sm custom-control form-switch" data-toggle="tooltip" data-th-title="\#{groupedit.allowDragDrop}">
+                    <input type="checkbox" class="form-check-input" id="treeAllowDragDrop" value="true"/>
+                    <label class="form-check-label is-icon-arrows-v" for="treeAllowDragDrop"></label>
+                </div>
+
+                <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
+                    <span><i class="ti ti-adjustments-horizontal"></i></span>
+                </button>
+
+                <button class="btn btn-sm btn-outline-secondary buttons-refresh buttons-right" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
+                    <span><i class="ti ti-refresh"></i></span>
+                </button>
+
+                <button style="display: none;" class="btn btn-sm btn-outline-secondary buttons-settings" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
+                    <span><i class="ti ti-adjustments-horizontal"></i></span>
+                </button>
+
+            </div>
         </div>
-
-        <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
-            <span><i class="ti ti-adjustments-horizontal"></i></span>
-        </button>
-
-        <button class="btn btn-sm btn-outline-secondary buttons-refresh buttons-right" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
-            <span><i class="ti ti-refresh"></i></span>
-        </button>
-
-        <button style="display: none;" class="btn btn-sm btn-outline-secondary buttons-settings" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}">
-            <span><i class="ti ti-adjustments-horizontal"></i></span>
-        </button>
-
     </div>
 </div>
 

@@ -6,11 +6,9 @@ Pokud jste zapomněli své heslo, můžete jej obnovit následujícím způsobem
 
 Pokud jste zapomněli heslo do sekce správce, můžete si na přihlašovací stránce vyžádat obnovení hesla.
 
-Klikněte na možnost ![](admin-recover-password-btn.png ":no-zoom") zobrazí se skryté pole pro obnovení.
+Klikněte na možnost ![](admin-recover-password-btn.png ":no-zoom") zobrazí se formulář pro obnovení hesla.
 
-| Před | Po |
-| :---------------: | :--------------------------: |
-| ![](../logon.png) | ![](admin-recovery-page.png) |
+![](admin-recovery-page.png)
 
 Musíte zadat svůj **e-mailová adresa** nebo **přihlašovací jméno**. Chcete-li žádost odeslat, stiskněte tlačítko ![](admin-send-btn.png ":no-zoom"). Upozornění vás upozorní, že pokud účet existuje, bude vám na příslušnou e-mailovou adresu zaslán e-mail.
 

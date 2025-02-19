@@ -3,66 +3,6 @@
     var WPF = htmlWebpackPlugin.files
     var publicPath = WPD.publicPath
 
-mixin breadcrumb(id,tabs,backLink=false,setTitle=true)
-
-    -
-        var attrDefault = {
-            "data-bs-toggle": "tab",
-            "role": "presentation"
-        }
-        var attrLink = {};
-        var attr;
-        var idNoHash = "";
-        var href = "";
-
-    div.md-breadcrumb
-        ul.nav(id=`pills-${id}` role='tablist')
-
-            if backLink
-                li.nav-item
-                    a.nav-link.back-link(href=`${backLink[0]}`)
-                        i.ti.ti-chevron-left
-                        |   #{backLink[1]}
-
-            each tab, index in tabs
-                li.nav-item
-                    -
-                        idNoHash = tab[0];
-                        if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
-                        href = "#pills-"+idNoHash;
-                        attr = attrDefault;
-                        //ak je to URL nepridavaj #pills-
-                        if (idNoHash.indexOf("/")==0) {
-                             href = idNoHash;
-                             attr = attrLink;
-                        }
-
-                    if (setTitle && tab[2]===true && tab[0].indexOf("#export")==-1 && tab[0].indexOf("#import")==-1)
-                        script.
-                            if (document.title.indexOf("|")==-1) document.title = "#{tab[1]} | " + document.title;
-
-                    if tab[1] == "{LANGUAGE-SELECT}"
-                        script.
-                            var breadcrumbLanguage = window.userLngWebjet;
-                        div.breadcrumb-language-select
-                            select(name="languageSelect" id="breadcrumbLanguageSelect" onchange="breadcrumbLanguage=$(this).val()")
-                                option(data-th-each="language : ${layoutService.getLanguages(false, true, 'language.append')}" data-th-text="${language.label}" data-th-value="${language.value}" data-th-selected="${language.value==layout.lngWebjet}")
-
-                    else if tab[1].indexOf("{")==0
-                        div.navbar-container(id=`pills-${idNoHash}-tab`)
-                            |   #{tab[1]}
-
-                    else
-                        a.nav-link(
-                            id=`pills-${idNoHash}-tab`
-                            href=`${href}`
-                            data-bs-target=`#pills-${idNoHash}`
-                            aria-controls=`pills-${idNoHash}`
-                            aria-selected=`${tab[2]}`
-                            class={active: tab[2]}
-                        )&attributes(attr)
-                            |   #{tab[1]}
-
 mixin jstreesettings(type="webpages")
     #jstreeSettingsModal.modal.DTED.fade(tabindex='-1' role='dialog' aria-labelledby='jstreeSettingsModalLabel' aria-hidden='true')
         .modal-dialog.modal-dialog-scrollable.modal-lg(role='document')

@@ -2,24 +2,27 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'search',
-        [
-            [ '#searchTab', '[[\#{components.search.title}]]', true],
-            [ '#dateRange', '{filter}', false],
-        ]
-    )
-
-    +breadcrumb(
-        'tabsFilter',
-        [
-            [ '#webPages', '[[\#{webpages.tab.pages}]]', true],
-            [ '#files', '[[\#{menu.root.files}]]', false],
-            [ '#translationKeys', '[[\#{sk.iway.iwcm.search.PropertiesSearch}]]', false]
-        ]
-    )
-
     script.
+        WJ.setTitle('[[\#{components.search.title}]]');
+
+        WJ.headerTabs({
+            id: 'tabsFilter',
+            tabs: [
+                { url: '#webPages', title: '[[\#{menu.root.websites}]]', active: true },
+                { url: '#files', title: '[[\#{menu.root.files}]]', active: false },
+                { url: '#translationKeys', title: '[[\#{sk.iway.iwcm.search.PropertiesSearch}]]', active: false }
+            ]
+        });
+
+        WJ.breadcrumb({
+            id: 'search',
+            noBorderBottom: true,
+            tabs: [
+                { url: '#searchTab', title: '[[\#{components.filter}]]', active: true },
+                { url: '#dateRange', title: '{filter}', active: false }
+            ]
+        });
+
         // WebPages
         let webPageHasPerm = WJ.hasPermission("menuWebpages");
         let webPageUrl = "/admin/rest/web-pages";

@@ -1,4 +1,4 @@
-Feature('license-expiration');
+Feature('admin.license-expiration');
 
 Before(({ login }) => {
     login("admin");
@@ -8,7 +8,7 @@ Scenario('Test and check license expiration notification', ({I, Document}) => {
     //Base
     let actualDate = new Date();
     let monthMillis = 30 * 24 * 60 * 60 * 1000;
-    let elementSelector = ".license-expiration-warning";
+    let elementSelector = "#toast-container-overview .toast.toast-warning";
     let text = "Platnosť vašej licencie čoskoro vyprší";
 
     I.say("Say license expiration date to 3 months from now");

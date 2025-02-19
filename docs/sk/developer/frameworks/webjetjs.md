@@ -17,6 +17,7 @@ WebJET v súbore webjet.js zapúzdruje API použitých knižníc. Cieľom je, ab
   - [Dialóg pre výber súboru/odkazu](#dialóg-pre-výber-súboruodkazu)
   - [Udržiavanie spojenia so serverom (refresher)](#udržiavanie-spojenia-so-serverom-refresher)
   - [Navigačná lišta](#navigačná-lišta)
+  - [Karty v hlavičke](#karty-v-hlavičke)
   - [Kontrola práv](#kontrola-práv)
   - [Markdown parser](#markdown-parser)
   - [Perzistentné nastavenia používateľa](#perzistentné-nastavenia-používateľa)
@@ -31,7 +32,7 @@ WebJET v súbore webjet.js zapúzdruje API použitých knižníc. Cieľom je, ab
 
 Pre notifikácie používame knižnicu [toastr](https://github.com/CodeSeven/toastr), pripravené sú nasledovné JS funkcie:
 
-**WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting=false)** - zobrazí toast notifikáciu (ekvivalent ```window.alert```), parametre:
+`WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null)` - zobrazí toast notifikáciu (ekvivalent ```window.alert```), parametre:
 
 - ```type``` (String) - typ zobrazenej notifikácie, možnosti: ```success, info, warning, error```
 - ```title``` (String) - titulok zobrazenej notifikácie
@@ -39,6 +40,7 @@ Pre notifikácie používame knižnicu [toastr](https://github.com/CodeSeven/toa
 - ```timeout``` (int) - čas, po ktorom sa notifikácia schová, nepovinné, hodnota 0 znamená, že sa notifikácia bude zobrazovať, pokiaľ ju používateľ nezatvorí
 - ```buttons``` (json) - pole tlačidiel zobrazených pod textom notifikácie
 - ```appendToExisting``` (boolean) - po nastavení na `true` je text pridaný do existujúcej notifikácie rovnakého typu. Ak ešte neexistuje, vytvorí sa nová notifikácia.
+- ```containerId``` (String) - CSS ID kontajnera, do ktorého bude notifikácia vložená.
 
 Pripravené sú aj skrátené verzie, odporúčame používať tie:
 
@@ -71,10 +73,11 @@ Ak potrebujete zobraziť tlačidlo zadáte ho ako JSON pole:
 ```javascript
 [
     {
-        "title":"Editovať poslednú verziu", //text tlacidla
-        "cssClass":"btn btn-primary", //CSS trieda
-        "icon":"ti ti-pencil", //Tabler ikona
-        "click":"editFromHistory(38, 33464)" //onclick funkcia
+        title: "Editovať poslednú verziu", //button title
+        cssClass: "btn btn-primary", //button CSS class
+        icon: "ti ti-pencil", //optional: Tabler icon
+        click: "editFromHistory(38, 33464)", //onclick function
+        closeOnClick: true //close toastr on button click, default true
     }
 ]
 ```
@@ -219,9 +222,7 @@ Ochrana pre CSRF tokeny a spojenie so serverom je okrem časovača nastavená aj
 
 ## Navigačná lišta
 
-Navigačná lišta typicky zobrazuje názov stránky. Niekedy ale môže obsahovať aj meno aplikácie, ak sa jedná o aplikáciu, ktorá má viaceré pod-stránky (napr. GDPR alebo Štatistika).
-
-Pri generovaní stránky z ```pug``` súboru sa využíva mixin ```+breadcrumb```, pri štandardnej stránke aplikácie v ```/apps/``` adresári je ale potrebné navigačnú lištu vygenerovať volaním JS funkcie ```JS.breadcrumb```, tá ako parameter dostáva konfiguračný JSON objekt vo formáte:
+Navigačnú lištu typicky s filrom, alebo návratom späť, vygenerujete volaním JS funkcie ```JS.breadcrumb```, tá ako parameter dostáva konfiguračný JSON objekt vo formáte:
 
 ```javascript
 {
@@ -291,6 +292,23 @@ do navigačnej lišty je takto dynamicky vložené výberové pole so zoznamom j
 
 ```javascript
 $("#breadcrumbLanguageSelect").change(function() {
+    let lng = $(this).val();
+    //console.log("Select changed, language=", lng);
+    url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
+    cookiesDataTable.setAjaxUrl(url);
+    cookiesDataTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
+    cookiesDataTable.ajax.reload();
+});
+```
+
+Výber jazyka môžete vložiť aj priamo do nástrojovej lišty tabuľky, príklad vloženia ako prvej položky pred tlačidlo na pridanie záznamu:
+
+```javascript
+let select = $("div.breadcrumb-language-select").first();
+$("#cookiesDataTable_wrapper .dt-header-row .row .col-auto .dt-buttons").prepend(select);
+select.show();
+
+$("#cookiesDataTable_wrapper .dt-header-row .row .col-auto .dt-buttons div.breadcrumb-language-select select").change(function() {
     let lng = $(this).val();
     //console.log("Select changed, language=", lng);
     url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
@@ -374,6 +392,24 @@ Ak v navigačnej lište potrebujete mat externý filter je možné použiť ako 
 ```
 
 Pre [zvýraznenie menu položky](../../custom-apps/admin-menu-item/README.md#frontend) v ```master-detail``` stránkach je možné použiť funkciu ```WJ.selectMenuItem(href)```.
+
+## Karty v hlavičke
+
+V hlavičke sa štandardne zobrazujú navigačné karty ako položky navigácie druhej úrovne. V niektorých prípadoch (napr. v sekcii web stránky) sa ale používajú na filtrovanie zoznamu web stránok (Aktívne, Neschválené, Systémové...). Môžete použiť funkciu `WJ.headerTabs(config)` pre ich vygenerovanie:
+
+```JavaScript
+WJ.headerTabs({
+    id: 'pages',
+    tabs: [
+        { url: '#pages', title: '[[\#{webpages.tab.pages}]]', active: true },
+        { url: '#changes', title: '[[\#{webpages.tab.changes}]]' },
+        { url: '#waiting', title: '[[\#{webpages.tab.waiting}]]' },
+        { url: '#system', title: '[[\#{webpages.tab.system}]]' },
+        { url: '#trash', title: '[[\#{webpages.tab.trash}]]' },
+        { url: '#folders-dt', title: '[[\#{webpages.tab.folders}]]' }
+    ]
+});
+```
 
 ## Kontrola práv
 
@@ -514,7 +550,7 @@ Ak potrebujete skryť počas nahrávania určitý blok môžete mu nastaviť CSS
 
 ## Ostatné funkcie
 
-- ```WJ.showHelpWindow()``` - Volanie spôsobí zobrazenie okna s pomocníkom. Na základe aktuálneho URL sa pokúsi otvoriť príslušnú stránku v pomocníkovi.
+- ```WJ.showHelpWindow(link)``` - Volanie spôsobí zobrazenie okna s pomocníkom. Hodnota otvoreného odkazu sa získa z parametra `link` alebo z `window.helpLink`.
 - ```WJ.changeDomain(select)``` - Vyvolá akciu zmeny zvolenej domény. Používa sa v hlavičke okna pri multidomain inštalácii s externými súbormi. V takomto režime sú k zvolenej doméne viazané súbory ale aj dáta aplikácií (napr. bannery, skripty).
 - ```WJ.translate(key, ...params)``` - Funkcia na [preklad kľúča na text](jstranslate.md).
 - ```WJ.openPopupDialog(url, width, height)``` - Otvorí vyskakovacie okno so zadaným URL a zadanou veľkosťou okna, odporúčame ale využiť [WJ.openIframeModal](#iframe-dialog) ak je to možné

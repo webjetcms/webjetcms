@@ -3,7 +3,7 @@ Feature('admin.password-reset');
 const assert = require('assert');
 
 const passwordRequirementsErr_nonAdmin = 'Zadané heslo nespĺňa bezpečnostné nastavenia aplikácie';
-const passwordRequirementsErr_admin = 'Zadajte nové heslo';
+const passwordRequirementsErr_admin = 'Pri spracovaní formuláru nastali chyby';
 const passwordRetypeErr_nonAdmin = 'Nové heslo nebolo zopakované správne.';
 const passwordRetypeErr_admin = 'Nové heslo a opakovanie nového hesla sa nezhodujú';
 

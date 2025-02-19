@@ -36,18 +36,18 @@ Scenario('export to html tests', async ({ I }) => {
 
     I.amOnPage("/admin/offline.jsp");
     I.fillField('#groupId1', '23');
-    I.clickCss('.button50');
+    I.clickCss('#groupSelectBtn');
     I.switchToNextTab();
     I.see('Adresáre');
     I.switchToPreviousTab();
     I.closeOtherTabs();
+    I.switchTo();
     I.dontSee('Vyberte priečinky');
 
     I.checkOption('#makeZipArchiveId');
     I.see('Vyberte priečinky');
 
-    const directories = ['apps','components','files','images',
-                        'static-files','templates','WEB-INF','wjerrorpages'];
+    const directories = ['apps','components','files','images','static-files','templates','WEB-INF','wjerrorpages'];
     directories.forEach((directory) => {
         I.see(directory);
     });

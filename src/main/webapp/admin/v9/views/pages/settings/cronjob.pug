@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'cronjob',
-        [
-            [ '#cronjob', '[[\#{admin.crontab.view}]]', true ]
-        ]
-    )
-
     script.
         var cronTable;
         window.domReady.add(function () {

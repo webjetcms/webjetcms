@@ -222,7 +222,7 @@ export const dataTableInit = options => {
         noneSelectedText: '\xa0' //nbsp
     };
 
-    const MAXIMIZE_HTML = '<div class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></div>';
+    const DIALOG_BUTTONS = '<div class="dialog-buttons"><span class="show-help" onclick="WJ.showHelpWindow()"><i class="ti ti-help" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"></i></span><span class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i></span><span class="minimize"><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></span></div>';
 
     function filterColumnsByPerms(columns) {
         var filtered = [];
@@ -488,6 +488,9 @@ export const dataTableInit = options => {
                 breadcrumbElemets.each(function() {
                     var $this = $(this);
 
+                    //console.log("display=", $this.css("display"));
+                    if ($this.css("display")=="none") return;
+
                     //do not count if $this has .tree-col parent
                     if ($this.parents(".tree-col").length>0) {
                         //console.log("breadcrumb has tree-col parent");
@@ -518,7 +521,7 @@ export const dataTableInit = options => {
             var scrollbarWidth = dtWJ.getScrollbarWidth();
 
             height = height - headerHeight - breadcrumbHeight - dtToolbarRowHeight - dtScrollHeadHeight - dtFooterHeight - scrollbarWidth;
-            //console.log("Computed height: ", height, "scrollbarWidth=", scrollbarWidth, "breadcrumbHeight=", breadcrumbHeight);
+            //console.log("height=", height, "headerHeight=", headerHeight, "breadcrumbHeight=", breadcrumbHeight, "dtToolbarRowHeight=", dtToolbarRowHeight, "dtScrollHeadHeight=", dtScrollHeadHeight, "dtFooterHeight=", dtFooterHeight, "scrollbarWidth=", scrollbarWidth);
 
             pageLength = Math.floor(height / 41);
             //console.log("Computed pageLength=", pageLength);
@@ -552,7 +555,9 @@ export const dataTableInit = options => {
                     imgWidth = 6 + imgWidth + 6;
                     imgHeight = 6 + 24 + imgHeight + 6;
 
-                    var colWidth = 15 + $("#"+DATA.id).width() + 15;
+                    var colWidth = $("#"+DATA.id+"_wrapper .dt-scroll-body").width();
+                    if (typeof colWidth == "undefined") colWidth = $("#"+DATA.id).width() + 15 + 15; //before render it has 15 px padding on left and right
+
                     var columns = Math.floor(colWidth / imgWidth);
                     var rows = Math.floor((height + dtScrollHeadHeight) / imgHeight);
                     //console.log("colWidth=", colWidth, "imgWidth=", imgWidth, "dtScrollHeadHeight=", dtScrollHeadHeight, "height=", height, "imgHeight=", imgHeight, "columns=", columns, "rows=", rows, "breadcrumbHeight=", breadcrumbHeight);
@@ -833,7 +838,7 @@ export const dataTableInit = options => {
                     '<div class="modal-dialog modal-dialog-scrollable" />' +
                 '</div>'
                 ),
-                close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-circle-x"></i>')
+                close: $('<button class="close btn-close-editor" data-toggle="tooltip"><i class="ti ti-x"></i>')
             }
             dom.close.on('click', function () {
                 dte.close('icon');
@@ -873,7 +878,7 @@ export const dataTableInit = options => {
             if(window.location.href.indexOf("showOnlyEditor=true") != -1) {
                 $(dom.content).find("div.modal-dialog").addClass("modal-fullscreen");
                 $(append).find("button.btn-close-editor").hide();
-                $(append).find("div.maximize").hide();
+                $(append).find("div.dialog-buttons").hide();
             }
 
             // This is a bit horrible, but if you mousedown and then drag out of the modal container, we don't
@@ -1149,12 +1154,12 @@ export const dataTableInit = options => {
                 close: WJ.translate("datatables.modal.close.js"),
                 create: {
                     button: WJ.translate('button.add'),
-                    title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+                    title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
                     submit: '<i class="ti ti-check"></i> ' + WJ.translate('button.add')
                 },
                 edit: {
                     button: WJ.translate('button.edit'),
-                    title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.edit') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+                    title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.edit') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
                     submit: '<i class="ti ti-check"></i> ' + WJ.translate('button.save')
                 },
                 remove: {
@@ -1361,7 +1366,7 @@ export const dataTableInit = options => {
 
                     //taby
                     let tabsHtml = "";
-                    tabsHtml += '<div class="md-breadcrumb">';
+                    tabsHtml += '<div class="md-tabs">';
                     tabsHtml += '<ul class="nav" id="pills-dt-editor-' + DATA.id + '" role="tablist">';
                     for (let i = 0; i < DATA.tabsFolders.length; i++) {
                         var tab = DATA.tabsFolders[i];
@@ -1518,7 +1523,7 @@ export const dataTableInit = options => {
                 }
 
                 //prepinanie maximalizacie okna, je to vzdy, kedze HTML kod headeru sa replacne pri kazdom otvoreni
-                $('#' + DATA.id + '_modal div.DTE_Header div.maximize').on("click", function() {
+                $('#' + DATA.id + '_modal div.DTE_Header div.dialog-buttons .maximize, #' + DATA.id + '_modal div.DTE_Header div.dialog-buttons .minimize').on("click", function() {
                     $('#' + DATA.id + '_modal div.modal-dialog').toggleClass("modal-fullscreen");
                     dtWJ.resizeTabContent(EDITOR);
                     WJ.dispatchEvent('WJ.DTE.resize', {
@@ -1577,7 +1582,7 @@ export const dataTableInit = options => {
                 }
 
                 $('#' + DATA.id + '_modal .DTE_Form_Buttons').find(".btn").addClass("btn-primary");
-                $('#' + DATA.id + '_modal .DTE_Form_Buttons').prepend('<span class="buttons-footer-left"><button type="button" class="btn btn-link" onclick="WJ.showHelpWindow()"><i class="ti ti-help me-1"></i>' + WJ.translate('button.help') + '</button></span> <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="ti ti-x"></i> ' + WJ.translate('button.cancel') + '</button>');
+                $('#' + DATA.id + '_modal .DTE_Form_Buttons').prepend('<span class="buttons-footer-left"></span> <button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="ti ti-x"></i> ' + WJ.translate('button.cancel') + '</button>');
 
                 //nastav checkboxy, toto treba pri kazdom otvoreni, pretoze sa nam menia moznosti select boxov
                 $('#' + DATA.id + '_modal .DTE_Form_Content').find('input[type="checkbox"]').parent("div").addClass("custom-control form-switch");
@@ -1848,7 +1853,7 @@ export const dataTableInit = options => {
                                     TABLE.buttons(".buttons-edit").processing(false);
                                     EDITOR
                                     .edit( TABLE.rows( {selected: true} ).indexes(), {
-                                        title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+                                        title: '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
                                         buttons: '<i class="ti ti-check"></i> ' + WJ.translate('button.duplicate')
                                     } )
                                     .mode( 'create' );
@@ -1861,7 +1866,7 @@ export const dataTableInit = options => {
                         // Start in edit mode, and then change to create
                         EDITOR
                             .edit( TABLE.rows( {selected: true} ).indexes(), {
-                                title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+                                title: '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.duplicate') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
                                 buttons: '<i class="ti ti-check"></i> ' + WJ.translate('button.duplicate')
                             } )
                             .mode( 'create' );
@@ -3249,7 +3254,7 @@ export const dataTableInit = options => {
     TABLE.wjCreate = function () {
         //console.log("wjCreate");
         EDITOR.create(
-            '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+            '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.add') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
             DATA.createButtons
         );
     }
@@ -3257,7 +3262,7 @@ export const dataTableInit = options => {
     TABLE.wjEdit = function (row) {
         //console.log("wjEdit, row=", row);
         EDITOR.edit(row, {
-            title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.edit') + '</h5></div><div class="col-sm-8" id="dt-header-tabs-' + DATA.id + '"></div></div>'+MAXIMIZE_HTML,
+            title: '<div class="row"><div class="col-12"><h5 class="modal-title">' + WJ.translate('button.edit') + '</h5></div><div class="col-12" id="dt-header-tabs-' + DATA.id + '"></div></div>'+DIALOG_BUTTONS,
             buttons: DATA.editorButtons
         });
     }
@@ -3367,7 +3372,7 @@ export const dataTableInit = options => {
                 //title vypiseme len pri editacii jedneho zaznamu
                 let title = dtWJ.getTitle(EDITOR);
                 if (title != null && title != "") {
-                    $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(title);
+                    $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content h5.modal-title").text(WJ.translate('button.edit')+": "+title);
                 }
             }
         }

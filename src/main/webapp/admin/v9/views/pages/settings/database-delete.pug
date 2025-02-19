@@ -2,15 +2,15 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'date-dependent-entries',
-        [
-            [ '#date-dependent-entries', '[[\#{components.memory_cleanup.database_deleting}]]', true ],
-            [ '#dateRange', '{filter}', false ]
-        ]
-    )
-
     script.
+        WJ.breadcrumb({
+            id: 'date-dependent-entries',
+            noBorderBottom: true,
+            tabs: [
+                { url: '#dateRange', title: '{filter}', active: false }
+            ]
+        });
+
         var dateDependentEntriesTable;
         window.domReady.add(function () {
 

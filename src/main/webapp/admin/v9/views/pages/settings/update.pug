@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'update',
-        [
-            [ '#update', '[[\#{admin.conf_editor.update_system}]]', true ]
-        ]
-    )
-
     script.
         let versionsJson = null;
         let versionSelectorOptionTemplate = '<a id=\"REPLACE_ID\" class=\"list-group-item list-group-item-action d-flex justify-content-between align-items-center REPLACE_CLASS\" data-toggle=\"list\" onclick=\"showVersionContent(\'REPLACE_FN_PARAM\')\" role=\"tab\" aria-controls=\"home\">REPLACE_A</a>';

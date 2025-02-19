@@ -499,7 +499,7 @@ public class Sender extends TimerTask
 							//dalo by sa to aj z urlCon, ale to neviem zistit contextPath
 							baseHref = url.substring(0, index);
 						}
-						if (body.contains("SENDER: DO NOT SEND THIS EMAIL") || body.contains("Chyba 404 - požadovaná stránka neexistuje") || body.contains(Prop.getInstance().getText("stat.error.404")))
+						if (body.contains("SENDER: DO NOT SEND THIS EMAIL") || body.contains("Chyba 404 - požadovaná stránka neexistuje") || body.contains(Prop.getInstance().getText("stat.error.404")) || body.contains("301 Moved Permanently") || body.contains("302 Found"))
 						{
 							//pre automaticky generovane emaily (napr. zoznam zmien)
 							//ak obsahuje tento text, neposle sa to

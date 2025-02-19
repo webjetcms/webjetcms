@@ -2,14 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-notifications',
-        [
-            [ '#', '[[\#{components.adminlog.notif}]]', true ]
-        ],
-        [ '/admin/v9/apps/audit-search/', '[[\#{components.adminlog.adminlog}]]' ]
-    )
-
     script.
         window.helpLink = "/sysadmin/audit/audit-notifications";
         let auditNotificationsTable;

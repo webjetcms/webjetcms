@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-changed-webpages',
-        [
-            [ '/admin/v9/apps/audit-changed-webpages/', '[[#{components.adminlog.changedWebPages}]]', true]
-        ]
-    )
-
     script.
         window.helpLink = "/sysadmin/audit/audit-changed-webpages";
         var changedWebPagesDataTable;

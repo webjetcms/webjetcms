@@ -4,11 +4,11 @@
     border: 0;
     padding: 48px 0 0 0;
     margin: 0;
-    background-color: #2b303b;
+    background-color: $sidebar-bg;
 
     height: 100%;
     width: 100%;
-    max-width: 220px;
+    max-width: $sidebar-width;
 
     position: fixed;
     top: 0;
@@ -23,8 +23,6 @@
     }
 
     .navbar-brand {
-        background-color: #272b35;
-        border-bottom: 1px solid #232730;
         width: 100%;
         height: 48px;
         position: absolute;
@@ -35,18 +33,74 @@
             position: absolute;
             top: 8px;
             left: 50%;
-            height: 30px;
+            height: 32px;
             width: auto;
             transform: translateX(-50%);
 
         }
     }
 
+    .js-domain-toggler {
+        max-width: $sidebar-width;
+        padding: 9px 14px 0px 14px;
+        .bootstrap-select {
+            width: 100% !important;
+        }
+        .ti {
+            margin-left: 3px;
+            margin-right: 3px;
+            font-size: 16px;
+            vertical-align: text-bottom;
+        }
+        button.btn-outline-secondary {
+            background-image: url('data:image/svg+xml,<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><g clip-path="url(%23clip0_3621_15868)"><path d="M4.66675 5.25033L7.00008 2.91699L9.33342 5.25033" stroke="%23DDDFE6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.33342 8.75L7.00008 11.0833L4.66675 8.75" stroke="%23DDDFE6" stroke-linecap="round" stroke-linejoin="round"/></g><defs><clipPath id="clip0_3621_15868"><rect width="14" height="14" fill="white"/></clipPath></defs></svg>');
+            background-repeat: no-repeat;
+            background-position: right 3px center !important;
+            background-size: auto;
+            background-color: $sidebar-select-bg !important;
+            border-color: $sidebar-select-bg !important;
+            color: $nice-gray-100;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            padding-right: 15px;
+            font-size: 14px;
+
+            &:hover, &.show {
+                color: $nice-gray-100;
+                background-color: $sidebar-active-bg !important;
+                border-color: $sidebar-active-bg !important;
+                i.ti {
+                    display: inline !important;
+                }
+            }
+            &:focus {
+                outline: none !important;
+            }
+        }
+        div.filter-option-inner-inner {
+            text-overflow: ellipsis;
+        }
+    }
+}
+
+.bs-container.dropdown.domain-toggler-select {
+    .dropdown-menu {
+        a.dropdown-item {
+            padding-left: 15px;
+            padding-right: 15px;
+            .ti {
+                margin-left: 0px;
+                margin-right: 2px;
+                font-size: 16px;
+                vertical-align: text-bottom;
+            }
+        }
+    }
 }
 
 @media (max-width: $bp-laptop - 1) {
     .ly-sidebar {
-        left: -220px;
+        left: -$sidebar-width;
         transition: all ease-in-out 300ms;
         top: 0px;
     }

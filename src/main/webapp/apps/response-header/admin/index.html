@@ -6,17 +6,6 @@
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "responseHeadersDataTable",
-            tabs: [
-                {
-                    url: '/apps/headers/admin/',
-                    title: '[[#{apps.response-header.table_name}]]',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/response-header";
 
         responseHeadersDataTable = WJ.DataTable({

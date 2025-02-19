@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'cache-objects',
-        [
-            ['#cache-objects', '[[\#{components.memory_cleanup.cache_objects.list}]]', true]
-        ]
-    )
-
     script.
         var cacheObjectsTable;
         window.domReady.add(function () {

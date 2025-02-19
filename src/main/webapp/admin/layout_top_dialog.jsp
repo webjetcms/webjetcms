@@ -94,6 +94,8 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
 		if (request.getAttribute("closeTable")!=null)
 			height="";
+
+		String submenu = request.getAttribute("submenu") != null ? (String)request.getAttribute("submenu") : "";
 	%>
 
 	<%@page import="java.io.*"%>
@@ -125,10 +127,7 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
 		<link rel="stylesheet" type="text/css" href="/admin/css/datepicker.css" media="all"/>
 		<link type="text/css" rel="stylesheet" href="/components/cmp.css" media="all"/>
-		<!-- mho edit - v�mena za webjet8/css/fck_dialog.css
-		<link type="text/css" rel="stylesheet" href="/admin/FCKeditor/editor/skins/webjet/fck_dialog.css" media="all"/>
-		-->
-		<link rel="stylesheet" href="/admin/skins/webjet8/css/fck_dialog.css" />
+
 
 		<style type="text/css" media="print">
 			.noprint { display: none; }
@@ -165,39 +164,57 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 			.table.table-wj tr.odd td, table.sort_table tr td { background: #ffffff url(/admin/skins/webjet8/assets/global/img/wj/bg-table-td-odd.png) left bottom repeat-x !important; }
 			.table.table-wj tr.even td, table.sort_table tr:nth-child(2n) td { background: #f6f9fd !important; }
 
-			.input-group {
-			    position: relative;
-			    display: table;
-			    border-collapse: separate;
-			    max-width: 532px;
+            div.padding10:before, div.padding10:after { display: table; content: " "; box-sizing: border-box; }
+            div.padding10:after { clear: both; }
+			<logic:present name="hideHeaderFooter">
+				#headerTopRow, #buttonsBottomRow { display: none !important; }
+				div.padding10 {background-color: white;}
+			</logic:present>
+
+
+			.padding10 {
+				padding: 10px 10px 0px 10px;
+				width: 100%;
 			}
-			.input-group-btn {
-			    position: relative;
-			    font-size: 0px;
-			    white-space: nowrap;
+
+			input[type="text"], input[type="password"], select, textarea {
+				max-width:530px;
+				font-size: 16px;
+				padding: 6px 12px;
 			}
-			.input-group-addon, .input-group-btn {
-			    width: 1%;
-			    white-space: nowrap;
-			    vertical-align: middle;
+
+			.ti {
+				font-size: 16px;
 			}
-			.input-group-addon, .input-group-btn, .input-group .form-control {
-			    display: table-cell;
+			.btn .ti {
+				line-height: 24px;
 			}
-			.input-group .form-control {
-			    position: relative;
-			    z-index: 2;
-			    float: left;
-			    width: 100%;
-			    margin-bottom: 0px;
+
+			input, select, textarea, #iframePreview { border: 1px solid #bdbcbc;}
+			label{ cursor: pointer; font-size:16px; line-height:16px; }
+			.PopupBody { margin: 0px; padding: 0px; background-color: #ECEEF0;}
+			hr{ border: 0px; height: 0px; font-size: 0px; line-height: 0px; display: none;}
+			iframe#docLink{ border: 1px solid #bdbcbc; background-color: #ffffff;}
+
+			.PopupButtons {
+				height: 50px;
+				width: 100%;
+				padding: 0;
 			}
-			.input-group-btn:last-child > .btn, .input-group-btn:last-child > .btn-group {
-			    margin-left: -2px;
-			}
-			.btn {
+			.PopupButtons { height:50px; width:100%; padding: 0; }
+			.PopupButtons table { border-top:1px solid #d7d7d7; background-color: #fff; width: 100%; height:50px; position:absolute; bottom:0; }
+			.PopupButtons table td{ padding: 10px;}
+
+			#btnOk, #btnCancel, #btnSaveAs, body .button70,
+			.button220x20,
+			.button150x20,
+			.button50, .button100, .button150, a.button50, a.button100, a.button150, a.button100:link, a.button100:visited,
+			.button100, a.button100, a.button100:link, a.button100:visited,
+			.button150, a.button150, #btnHelp, .button {
+
 				border-width: 0px;
 				padding: 7px 14px;
-				font-size: 14px;
+				font-size: 16px;
 				outline: medium none !important;
 				background-image: none !important;
 				filter: none;
@@ -205,28 +222,57 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 				text-shadow: none;
 				color: #FFF;
 				background-color: #0063fb;
-				cursor: pointer;
+				cursor:pointer;
+				border-radius: 6px !important;
 			}
-			.input-group-btn > .btn {
-				display:inline-block;
-			    position: relative;
-			    padding: 0 14px;
-			    height:30px;
-			    min-height:30px;
-			    max-height:30px;
-			    line-height:30px;
+
+			#btnOk:hover, #btnCancel:hover, #btnSaveAs:hover, body .button70:hover,
+			.button220x20:hover,
+			.button150x20:hover,
+			.button50:hover, .button100:hover, .button150:hover, a.button50:hover, a.button100:hover, a.button150:hover,
+			.button100:hover, a.button100:hover,
+			.button150:hover, a.button150:hover,#btnHelp:hover, .button:hover {
+			background-color:#004fc9;
+			color:white;
+			text-decoration:none;
 			}
-			.input-group-btn > .btn:hover {
-			    background-color:#004fc9;
-				color:#fff;
-				text-decoration:none;
+
+			#btnCancel { background-color: white; color:#13151b; border-color: #868ea5; border-width: 1px; }
+			#btnCancel:hover { background-color: #13151b; border-color: #13151b; color: white; }
+
+			#btnHelp { background-color: #fabd00; color:#13151b; }
+			#btnHelp:hover { background-color: #fbc41a; color:#13151b; }
+
+			.btn {
+				font-size: 16px;
 			}
-            div.padding10:before, div.padding10:after { display: table; content: " "; box-sizing: border-box; }
-            div.padding10:after { clear: both; }
-			<logic:present name="hideHeaderFooter">
-				#headerTopRow, #buttonsBottomRow { display: none !important; }
-				div.padding10 {background-color: white;}
-			</logic:present>
+
+			.form-control, .btn-outline-secondary {
+				border-color: #868EA5 !important;
+				color: #23262E;
+			}
+
+			#headerTopRow {
+				border-bottom: 1px solid #DDDFE6;
+			}
+			.box_tab {
+				background-color: #F3F3F6;
+			}
+			.box_tab ul.tab_menu li {
+				margin-bottom: 0px;
+				padding-left: 10px;
+			}
+
+			.panel .panel-body {
+				font-size: 16px;
+			}
+			ul.tab_menu {
+				margin-left: 0px;
+			}
+			#dialogCentralRow form tr td {
+				padding-top: 16px !important;
+				font-size: 14px;
+			}
 		</style>
 
 		<% if (BrowserDetector.isSmartphoneOrTablet(request)) {%>
@@ -280,10 +326,11 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 					<td class="header" >
 						<h1><%=title%></h1>
 						<%=desc%>
+						<%=submenu%>
 					</td>
 
 					<td class="header headerImage" nowrap="nowrap" valign="middle" align="right">
-						<div style="background-image: url(<%=iconLink%>);">&nbsp;</div>
+						<div>&nbsp;</div>
 					</td>
 				</tr>
 			</table>
@@ -299,10 +346,11 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 				<td class="header" >
 					<h1><%=title%></h1>
 					<%=desc%>
+					<%=submenu%>
 				</td>
 
 				<td class="header headerImage" nowrap="nowrap" valign="middle" align="right">
-					<div style="background-image: url(<%=iconLink%>);">&nbsp;</div>
+					<div>&nbsp;</div>
 				</td>
 			</tr>
 
@@ -342,7 +390,6 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 
 	<link rel="stylesheet" type="text/css" href="/admin/css/datepicker.css" media="all"/>
 	<link type="text/css" rel="stylesheet" href="/components/cmp.css" media="all"/>
-	<link rel="stylesheet" href="/admin/skins/webjet8/css/fck_dialog.css" />
 
 	<logic:notEmpty name="widgetData">
 		<link rel="stylesheet" href="/css/page.css" />
@@ -375,62 +422,6 @@ Prop prop2 = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), reques
 		.table.table-wj tr.odd td, table.sort_table tr td { background: #ffffff url(/admin/skins/webjet8/assets/global/img/wj/bg-table-td-odd.png) left bottom repeat-x !important; }
 		.table.table-wj tr.even td, table.sort_table tr:nth-child(2n) td { background: #f6f9fd !important; }
 
-		.input-group {
-		    position: relative;
-		    display: table;
-		    border-collapse: separate;
-		    max-width: 532px;
-		}
-		.input-group-btn {
-		    position: relative;
-		    font-size: 0px;
-		    white-space: nowrap;
-		}
-		.input-group-addon, .input-group-btn {
-		    width: 1%;
-		    white-space: nowrap;
-		    vertical-align: middle;
-		}
-		.input-group-addon, .input-group-btn, .input-group .form-control {
-		    display: table-cell;
-		}
-		.input-group .form-control {
-		    position: relative;
-		    z-index: 2;
-		    float: left;
-		    width: 100%;
-		    margin-bottom: 0px;
-		}
-		.input-group-btn:last-child > .btn, .input-group-btn:last-child > .btn-group {
-		    margin-left: -2px;
-		}
-		.btn {
-			border-width: 0px;
-			padding: 7px 14px;
-			font-size: 14px;
-			outline: medium none !important;
-			background-image: none !important;
-			filter: none;
-			box-shadow: none;
-			text-shadow: none;
-			color: #FFF;
-			background-color: #0063fb;
-			cursor: pointer;
-		}
-		.input-group-btn > .btn {
-			display:inline-block;
-		    position: relative;
-		    padding: 0 14px;
-		    height:30px;
-		    min-height:30px;
-		    max-height:30px;
-		    line-height:30px;
-		}
-		.input-group-btn > .btn:hover {
-		    background-color:#004fc9;
-			color:#fff;
-			text-decoration:none;
-	}
 	</style>
 	<% if (BrowserDetector.isSmartphoneOrTablet(request)) {%>
       <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=0.3, maximum-scale=3.0" />

@@ -4,7 +4,7 @@
 
 ### Výber domény
 
-Vo vrchnej časti sa pre viac doménové web sídla zobrazuje výber domény. V stromovej štruktúre stránok sa zobrazujú len priečinky so zvolenej domény a priečinky, ktoré nemajú doménu nastavenú.
+V ľavom menu sa pre viac doménové web sídla zobrazuje výber domény. V stromovej štruktúre stránok sa zobrazujú len priečinky so zvolenej domény a priečinky, ktoré nemajú doménu nastavenú.
 
 ![](domain-select.png)
 

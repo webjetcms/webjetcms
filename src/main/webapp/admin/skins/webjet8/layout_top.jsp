@@ -80,7 +80,7 @@ if (Tools.isEmpty(adminJqueryVersion)) adminJqueryVersion = "adminJqueryJs";
 <!-- END HEAD -->
 <!-- BEGIN BODY -->
 <%--<body class="page-header-fixed page-quick-sidebar-over-content">--%>
-<body id="mainBodyElement" class="page-header-fixed page-quick-sidebar-over-content page-sidebar-fixed page-sidebar-closed-hide-logo SmallWindow-ShowHeader<%
+<body id="mainBodyElement" class="webjetcms-admin-body page-header-fixed page-quick-sidebar-over-content page-sidebar-fixed page-sidebar-closed-hide-logo SmallWindow-ShowHeader<%
 	String wjPageRefere = request.getHeader("Referer");
 	boolean wjIframed = false;
 	if (wjPageRefere != null || "true".equalsIgnoreCase(Tools.getRequestParameter(request, "iframed")))

@@ -25,7 +25,7 @@ Scenario('test user perms', ({I}) => {
     I.relogin("tester3");
     I.say("User has this perms from group Admini");
     I.amOnPage("/admin/v9/settings/update/");
-    I.see("Aktualizácia WebJETu", ".ly-container a.nav-link.active");
+    I.see("Aktualizácia WebJETu", ".header-title");
     I.amOnPage("/admin/v9/webpages/media/");
     I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
 });

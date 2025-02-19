@@ -642,7 +642,7 @@ export class DatatablesCkEditor {
 							type: 'html',
 							id: 'wjFormRestrictionsIframe',
 							//html: '<div><iframe id="wjFormAttributesIframeElement" style="width: 600px; height: 455px;" src="/components/form/admin_form_attributes.jsp" border="0"/></div>'
-							html: '<div><div id="restrictionsContent" style="height: 150px;">'+that.translate("waitPlease")+'</div></div>'
+							html: '<div><div id="restrictionsContent" style="height: 150px; width: 670px; padding-top: 16px;">'+that.translate("waitPlease")+'</div></div>'
 						}
 						]
 					});

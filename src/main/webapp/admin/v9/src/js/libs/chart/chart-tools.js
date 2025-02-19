@@ -1604,7 +1604,7 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
 
         //Add new options
         let isInList = false;
-        for(let i = 0; i < mapOfDirs.length; i++) { 
+        for(let i = 0; i < mapOfDirs.length; i++) {
             select.add(new Option(mapOfDirs[i]['label'], mapOfDirs[i]['value']));
             if(valueToSelect == mapOfDirs[i]['value']) isInList = true;
         }
@@ -1613,7 +1613,8 @@ export async function setSelect(dataUrl, valueToSelect, elementId, removeDefault
         if(isInList) $("#" + elementId).val(valueToSelect);
 
         //Refresh object
-        $("#" + elementId).selectpicker('refresh');
+        let $select = $("#" + elementId);
+        if ($select.hasClass("no-picker")==false) $select.selectpicker('refresh');
     }});
 }
 

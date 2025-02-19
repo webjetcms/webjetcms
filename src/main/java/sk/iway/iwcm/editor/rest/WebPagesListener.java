@@ -214,6 +214,8 @@ public class WebPagesListener {
             model.addAttribute("hasSystemTab", Boolean.valueOf(hasSystemTab));
             model.addAttribute("hasTrashTab", Boolean.valueOf(hasTrashTab));
 
+
+            request.getSession().setAttribute("userWasInWebpages", "true");
          } catch (Exception ex) {
             Logger.error(WebPagesListener.class, ex);
         }

@@ -4,7 +4,7 @@
 
 ### Výběr domény
 
-U webových stránek s více doménami se výběr domény zobrazuje nahoře. Ve stromové struktuře webu se zobrazí pouze složky s vybranou doménou a složky, které nemají nastavenou doménu.
+U webových stránek s více doménami se v levém menu zobrazí výběr domény. Ve stromové struktuře webu se zobrazí pouze složky s vybranou doménou a složky, které nemají nastavenou doménu.
 
 ![](domain-select.png)
 

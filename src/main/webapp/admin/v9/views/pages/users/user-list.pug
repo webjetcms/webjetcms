@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'users',
-        [
-            [ '#users', '[[\#{users.list}]]', true ]
-        ]
-    )
-
     style.
         div.DTE_Field span.taggroup {
             position: absolute;
@@ -236,6 +229,20 @@ block content
                     } );
 
                     if ($("#DTE_Field_admin_0").is(":checked")) $("#panel-body-dt-datatableInit-rightsTab").addClass("adminaccess");
+
+                    $("#DTE_Field_lastName").on("blur", function() {
+                        let login = $("#DTE_Field_editorFields-login").val();
+                        if (login == "") {
+                            let lastName = $(this).val();
+                            let firstName = $("#DTE_Field_firstName").val();
+                            if (firstName.length > 1) firstName = firstName.substring(0, 1);
+                            //login = first letter from firstName + lastName
+                            login = firstName + lastName;
+                            login = WJ.removeChars(WJ.internationalToEnglish(login.toLowerCase()));
+
+                            $("#DTE_Field_editorFields-login").val(login);
+                        }
+                    });
                 }
             });
 

@@ -2,14 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'forms',
-        [
-            [ '#form-detail', '[[\#{admin.temp_list.zoznam_sablon}]]', true ]
-        ],
-        [ '/admin/v9/templates/temps-groups-list', '[[\#{admin.temp_group_list.title}]]' ]
-    )
-
     script.
 
         window.helpLink = "/frontend/setup/README";
@@ -20,7 +12,7 @@ block content
             {id: 'templatesTab', title: '[[\#{templates.temps-list.templatesTab}]]', selected: false},
             {id: 'accessTab', title: '[[\#{templates.temps-list.accessTab}]]', selected: false},
             {id: 'folders', title: '[[\#{user.groups.folders}]]', className: "hide-on-create"},
-            {id: 'sites', title: '[[\#{webpages.tab.pages}]]', className: "hide-on-create"},
+            {id: 'sites', title: '[[\#{menu.root.websites}]]', className: "hide-on-create"},
         ];
 
         var tempsTable;

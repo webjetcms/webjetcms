@@ -8,17 +8,6 @@
     window.domReady.add(function () {
         window.helpLink = "/redactor/apps/abtesting/README";
 
-        WJ.breadcrumb({
-            id: "newsBreadcrumb",
-            tabs: [
-                {
-                    url: '/apps/abtesting/admin/',
-                    title: '[[#{components.abtesting.ab_page_list}]]',
-                    active: true
-                }
-            ]
-        });
-
         window.importWebPagesDatatable().then(module => {
             //Hide author name
             window.WJ.DataTable.mergeColumns(webpageColumns, { name: "authorName", visible: false });

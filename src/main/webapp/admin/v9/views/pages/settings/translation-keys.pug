@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'translation-keys',
-        [
-            [ '#translation-keys', '[[\#{admin.conf_editor.edit_text}]]', true ]
-        ]
-    )
-
     script.
         var translationKeysTable;
         window.domReady.add(function () {

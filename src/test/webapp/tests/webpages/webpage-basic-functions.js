@@ -88,7 +88,7 @@ Scenario('Zakladne funkcie webstranky - zalozka Zakladne', ({ I, DT, DTE }) => {
      I.waitForVisible('#modalIframeIframeElement', 15);
      I.waitForLoader(".WJLoaderDiv");
      I.switchTo('#modalIframeIframeElement');
-     I.waitForElement(locate('#nav-iwcm_doc_group_volume_').withText('Zoznam web stránok'), 15);
+     I.waitForElement(locate('#nav-iwcm_doc_group_volume_').withText('Webové stránky'), 15);
      I.wait(1);
      I.waitForElement(locate(".ui-state-active.elfinder-subtree-loaded").withText("Obrázky"), 15);
      I.wait(1);

@@ -6,11 +6,9 @@ If you have forgotten your password, you can reset it as follows.
 
 If you have forgotten your password for the admin section, you can request a password reset on the login page.
 
-Click on the option ![](admin-recover-password-btn.png ":no-zoom") a hidden recovery box will appear.
+Click on the option ![](admin-recover-password-btn.png ":no-zoom") the password reset form will appear.
 
-| Before | After |
-| :---------------: | :--------------------------: |
-| ![](../logon.png) | ![](admin-recovery-page.png) |
+![](admin-recovery-page.png)
 
 You must enter your **email address** or **login name**. To send your request, press the ![](admin-send-btn.png ":no-zoom"). A notification will alert you that if the account exists, an email will be sent to the appropriate email address.
 

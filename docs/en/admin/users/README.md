@@ -136,7 +136,3 @@ When you add a record, click the + (Add) icon to select Directory (from the web 
 More information is in [documentation for the editor](../../redactor/webpages/approve/README.md).
 
 ![](users-tab-approving.png)
-
-## Differences to version 8
-
-The "Short menu in editor" right is modified to the "Full menu in editor" right so that it is not sensory inverse and all items can be marked for full rights.

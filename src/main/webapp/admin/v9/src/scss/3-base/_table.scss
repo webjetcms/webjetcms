@@ -21,6 +21,20 @@ div.dt-buttons  {
     button.btn.buttons-right {
         float: right;
     }
+
+    .breadcrumb-language-select {
+        display: inline-block;
+        float: left;
+        margin-right: 12px;
+        button {
+            padding-top: 3px !important;
+            padding-bottom: 2px !important;
+
+            &:hover {
+                background-color: $nice-gray !important;
+            }
+        }
+    }
 }
 button.btn.dropdown-toggle.buttons-colvis::after, button.btn.dropdown-toggle.buttons-page-length::after {
     //disable arrow down on settings button
@@ -347,6 +361,10 @@ table.datatableInit {
             }
         }
 
+        tbody {
+            position: absolute;
+        }
+
         tbody tr {
             float: left;
             margin: 6px;
@@ -464,11 +482,6 @@ table.datatableInit {
     padding-bottom: 8px;
     //robi problem pri zalomeni poloziek max-height: 60px;
 }
-.dt-header-row {
-    padding-top: 8px;
-    padding-bottom: 0px;
-}
-
 
 .dt-footer-row {
     background-color: $nice-gray;
@@ -489,6 +502,9 @@ table.datatableInit {
     margin-left: -15px;
     margin-right: -15px;
     background-color: $nice-gray;
+    padding-top: 7px;
+    padding-bottom: 0px;
+    border-top: 1px solid $nice-gray-100 !important;
     border-bottom: 1px solid $nice-gray-100 !important;
     //nemoze byt-overflovuje to potom aj cubmenu na nastaveni DT overflow: hidden;
 
@@ -607,7 +623,6 @@ table.datatableInit {
             text-align: center;
             padding-left: 0;
             padding-right: 0;
-            border-radius: 50%;
         }
 
         .btn-outline-secondary {
@@ -622,6 +637,21 @@ table.datatableInit {
 
         .buttons-settings {
             border-radius: $border-radius !important;
+        }
+
+        .buttons-select {
+            padding-left: 0px;
+            padding-top: 0px;
+            padding-bottom: 0px;
+            margin-bottom: 0px;
+            border-width: 0px;
+        }
+        .form-select {
+            display: inline-block;
+            padding-top: 8px;
+            padding-bottom: 7px;
+            font-size: 14px;
+            line-height: 14px;
         }
 
     }
@@ -754,6 +784,9 @@ div.dt-header-row div[role=menu] {
             width: 100%;
             margin:4px;
         }
+        button.dt-close-modal {
+            padding-bottom: 6px;
+        }
         button:nth-last-child(1),
         button:nth-last-child(2),
         button:nth-last-child(3),
@@ -788,11 +821,10 @@ div.dt-header-row div[role=menu] {
 
         .dropdown-divider {
             padding: 0;
-            width: 778px;
+            width: 776px;
             border-radius: 0;
             border: 0;
             margin: 0;
-            margin-left: -12px;
             margin-top: 16px;
             height: 1px;
             border-top: 1px solid #dee2e6;
@@ -896,6 +928,11 @@ div.dt-header-row div[role=menu] {
             border-bottom: 1px solid $nice-gray;
             height: 30px;
             clear: both;
+
+            button.colvis-prefix:hover {
+                background-color: transparent !important;
+                cursor: default;
+            }
         }
         div.colvisbtn_wrapper {
             overflow: auto;
@@ -904,6 +941,11 @@ div.dt-header-row div[role=menu] {
         div.colvispostfix_wrapper {
             border-top: 1px solid $nice-gray;
             padding-bottom: 8px;
+            padding-left: 16px;
+            padding-right: 16px;
+            .btn {
+                padding-bottom: 6px;
+            }
         }
 
         button.button-page-length {
@@ -914,6 +956,17 @@ div.dt-header-row div[role=menu] {
                 &::before {
                     content: "\efb1";
                 }
+            }
+        }
+    }
+
+    .btn-group:nth-child(2) {
+        div[role=menu] {
+            button.btn {
+                margin-left: 16px;
+            }
+            button.dt-close-modal.btn-primary {
+                margin-right: 16px;
             }
         }
     }
@@ -1325,10 +1378,6 @@ html.in-iframe-show-table {
     .dt-scroll-body.autoHeight {
         height: calc(100vh - 195px);
     }
-    //datatableNoHeader je v galerii
-    body.datatableNoHeader .dt-scroll-body {
-        height: calc(100vh - 129px) !important;
-    }
     //v editor_component vlozena DT, napr. anketa, galeria
     //ma schovany .md-breadcrumb s nadpisom stranky
     html.in-iframe-show-table {
@@ -1466,6 +1515,9 @@ div.DTE_Field_Type_datatable {
     }
 }
 
+div.dt-container div.dt-scroll-body {
+    border-bottom-color: transparent;
+}
 div.dt-scroll-body > table {
     //fix zobrazenia horizontalneho scrollbaru, pri niektorych rozliseniach a zaokruhleni vysla sirka vacsia ako parenta
     //ratanie total v _fnCalculateColumnWidths

@@ -370,7 +370,7 @@ Pokud je atribut `title` nezadáte, překladový klíč se automaticky vyhledá 
 
 **Pokud upravujete existující aplikaci/komponentu.** z WebJET 8 do WebJET 2021, je nejlepší vyhledat původní překladové klíče. Ušetříte tak čas při překladu, protože WeBJET 8 je již přeložen do několika jazyků.
 
-V souboru [src/main/webapp/files/translations.properties](../../../src/main/webapp/files/preklady.properties) je původní soubor překladu z WebJET 8 (jen pro příklad, nijak jej neupravujte). Můžete v něm vyhledat požadovaný text a do `title` atribut pro zadání nalezeného překladového klíče.
+V souboru [src/main/webapp/files/text.properties](../../../../src/main/webapp/WEB-INF/classes/text.properties) je původní soubor překladu z WebJET 8 (jen pro příklad, nijak jej neupravujte). Můžete v něm vyhledat požadovaný text a do `title` atribut pro zadání nalezeného překladového klíče.
 
 Další možností je zobrazit původní stránku s parametrem URL `?showTextKeys=true` což způsobí, že se před textem zobrazí překladové klávesy. Stránka bude z hlediska designu pravděpodobně nefunkční (protože text bude příliš dlouhý), ale na klíče se můžete podívat prostřednictvím inspektora.
 

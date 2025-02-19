@@ -852,7 +852,7 @@ public class Constants {
 				"Určuje minimálny počet výskytu čísel v hesle pre administrátora");
 		setInt("passwordExpiryDays", 0, mods(MOD_SECURITY, MOD_USER),
 				"Určuje počet dní platnosti hesla pre bežného užívateľa. Po uplynutí času, bude užívateľ vyzvaný si zmeniť heslo.");
-		setInt("passwordAdminExpiryDays", 0, mods(MOD_SECURITY, MOD_USER),
+		setInt("passwordAdminExpiryDays", 365, mods(MOD_SECURITY, MOD_USER),
 				"Určuje počet dní platnosti hesla pre administrátora. Po uplynutí času, bude užívateľ vyzvaný si zmeniť heslo.");
 
 		setString("stripes.MultipartWrapper.Class", "sk.iway.iwcm.system.stripes.MultipartWrapper", MOD_CONFIG,
@@ -1070,7 +1070,7 @@ public class Constants {
 		// /admin/FCKeditor/editor/skins/webjet/fck_dialog.css,
 		// /admin/css/tabpane-luna.css je tam kvoli zalozkam na frontende (docman)
 		setString("allowAdminUrls",
-				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$,/admin/scripts/qrcode.js",
+				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$,/admin/scripts/qrcode.js,/admin/v9/dist/fonts/,/admin/v9/dist/images/logo-",
 				"admin",
 				"URL prefixy stranok a suborov v admin casti, ktore budu pristupne aj pre neprihlaseneho pouzivatela.");
 

@@ -5,26 +5,9 @@
 <script type="text/javascript">
     var bloggerArticlesDataTable;
 
-    WJ.breadcrumb({
-        id: "bloggerArticles",
-        tabs: [
-            {
-                url: '/apps/blog/admin/',
-                title: '[[#{components.blog.articles.title}]]',
-                active: true
-            },
-            {
-                url: '#dateRange',
-                title: '{filter}',
-                active: false
-            }
-        ]
-    });
-
     window.domReady.add(function () {
         //Add filter to tab
         $("#pills-dateRange-tab").html("");
-        $("div#bloggerArticlesDataTable_extfilter").appendTo("#pills-dateRange-tab");
 
         //Prepare columns
         window.WJ.DataTable.mergeColumns(webpageColumns, { name: "fullPath", visible: true });
@@ -53,13 +36,15 @@
                     'data-toggle': 'tooltip'
                 }
             });
-        });
 
-        //Init select
-        ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");
+            $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select">[[#{editor.div_properties.section}]] <select class="form-select no-picker" id="groupSelect"><option value="-1">[[#{components.blog.all_groups}]]</option></select></div>');
 
-        $("#groupSelect").on("change", function() {
-            updateTable();
+            //Init select
+            ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");
+
+            $("#groupSelect").on("change", function() {
+                updateTable();
+            });
         });
 
         function updateTable() {
@@ -111,16 +96,9 @@
     #pills-dt-bloggerArticlesDataTable-template-tab {
         display: none;
     }
+    #groupSelect {
+        max-width: 250px;
+    }
 </style>
-
-<div id="bloggerArticlesDataTable_extfilter">
-    <div class="row datatableInit">
-        <div class="col-auto">
-            <select id="groupSelect">
-                <option value="-1">[[#{components.blog.all_groups}]]</option>
-            </select>
-        </div>
-    </div>
-</div>
 
 <table id="bloggerArticlesDataTable" class="datatableInit table"></table>

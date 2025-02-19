@@ -370,7 +370,7 @@ When the attribute `title` you do not enter, the translation key is automaticall
 
 **If you are editing an existing application/component** from WebJET 8 to WebJET 2021, it is best to search for the original translation keys. This saves time in translation, as WeBJET 8 is already translated into several languages.
 
-In the file [src/main/webapp/files/translations.properties](../../../src/main/webapp/files/preklady.properties) is the original translation file from WebJET 8 (just for example, do not modify it in any way). You can search for the desired text in it and into the `title` attribute to specify the translation key found.
+In the file [src/main/webapp/files/text.properties](../../../../src/main/webapp/WEB-INF/classes/text.properties) is the original translation file from WebJET 8 (just for example, do not modify it in any way). You can search for the desired text in it and into the `title` attribute to specify the translation key found.
 
 Another option is to display the original page with the URL parameter `?showTextKeys=true` which causes the translation keys to be displayed before the text. The page will probably be broken from a design point of view (as the text will be too long), but you can look at the keys through the inspector.
 

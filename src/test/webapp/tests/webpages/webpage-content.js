@@ -116,7 +116,7 @@ Scenario('Obsah web stranky - zakladne ikony', ({ I, DT, DTE, Browser, Document 
 
      I.waitForLoader(".WJLoaderDiv");
 
-     I.forceClick(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-navbar-collapsed.native-droppable.ui-droppable.elfinder-subtree-loaded').withText('Zoznam web stránok'), null, { position: { x: 70, y: 15 } });
+     I.forceClick(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-navbar-collapsed.native-droppable.ui-droppable.elfinder-subtree-loaded').withText('Webové stránky'), null, { position: { x: 70, y: 15 } });
      I.waitForElement(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest-'+randomNumber), 20);
      I.doubleClick(locate('.elfinder-cwd-file.directory.ui-corner-all.ui-droppable.native-droppable.ui-selectee').withText('name-autotest-'+randomNumber));
      I.waitForElement('.elfinder-cwd-file.ui-corner-all.ui-selectee', 10);
@@ -279,6 +279,7 @@ Scenario('Zadanie neexistujúceho docid', ({I}) => {
      I.say('Testuje zobrazenie hlášky. Musí sa zobraziť.');
      I.waitForVisible(alert);
      I.waitForText(errorMessage, 10);
+     I.toastrClose();
 
      I.say('Zmaž hodnotu v inpute');
      I.fillField(input, '');

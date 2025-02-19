@@ -12,22 +12,6 @@
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "suggestEvents",
-            tabs: [
-                {
-                    url: '/apps/calendar/admin/',
-                    title: /*[[#{menu.calendar}]]*/ 'title',
-                    active: false
-                },
-                {
-                    url: '/apps/calendar/admin/suggest-events/',
-                    title: /*[[#{calendar.suggest_evens}]]*/ 'title',
-                    active: true
-                }
-            ]
-        });
-
         window.WJ.DataTable.mergeColumns(columns, { name: "suggest", visible: true });
         window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatLinkTemplate: "javascript:redirect({{id}});" });
         window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatPrefix: "" });

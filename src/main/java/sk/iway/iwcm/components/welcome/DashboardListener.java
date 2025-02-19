@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.ui.ModelMap;
@@ -23,6 +24,7 @@ import sk.iway.iwcm.admin.layout.UserDto;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.components.todo.ToDoBean;
 import sk.iway.iwcm.components.todo.ToDoDB;
+import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
@@ -38,6 +40,10 @@ import sk.iway.iwcm.users.UsersDB;
  */
 @Component
 public class DashboardListener {
+
+    @Autowired
+    UserDetailsRepository userDetailsRepository;
+
     /**
      * Pripravi data pre overview/welcome obrazovku, zatial taketo skarede natvrdo
      * riesenie
@@ -53,6 +59,7 @@ public class DashboardListener {
             ModelMap model = event.getSource().getModel();
             HttpServletRequest request = event.getSource().getRequest();
             Identity user = UsersDB.getCurrentUser(request);
+            Prop prop = Prop.getInstance(request);
 
             // backdata
             WelcomeDataBean backData = WelcomeDataBackTime.getWelcomeDataBackTime();
@@ -113,10 +120,10 @@ public class DashboardListener {
 
             //ak existuje subor /WEB-INF/update/error-log.txt tak zobrazime link nanho
             IwcmFile logFile = new IwcmFile(Tools.getRealPath("/WEB-INF/update/error-log.txt"));
-            IwcmFile tmpLogFile = new IwcmFile(Tools.getRealPath("/files/protected/admin/error-log.txt"));
             boolean showErrorLog = false;
             if(logFile.exists())
             {
+                IwcmFile tmpLogFile = new IwcmFile(Tools.getRealPath("/files/protected/admin/error-log.txt"));
                 FileTools.copyFile(logFile, tmpLogFile);
                 showErrorLog = true;
             }
@@ -134,7 +141,6 @@ public class DashboardListener {
                 if (i > 0) {
                     int currentJavaVersionMajor = Tools.getIntValue(currentJavaVersion.substring(0, i), -1);
                     if (currentJavaVersionMajor > 0 && requiredJavaVersion > currentJavaVersionMajor) {
-                        Prop prop = Prop.getInstance(request);
                         String message = prop.getText("system.javaVersionWarningText", ""+requiredJavaVersion, currentJavaVersion);
                         model.addAttribute("javaVersionWarningText", message);
                     }
@@ -148,17 +154,25 @@ public class DashboardListener {
                 cal.add(Calendar.MONTH, 2);
                 if(cal.getTimeInMillis() >= expirationDate)
                 {
-                    Prop prop = Prop.getInstance(request);
                     String message = prop.getText("overview.license.expirationWarning", Tools.formatDate(expirationDate));
                     model.addAttribute("licenceExpirationWarningText", message);
                 }
             }
 
             if (Constants.getBoolean("useAmazonSES")) {
-                Prop prop = Prop.getInstance(request);
                 String message = prop.getText("overview.useAmazonSES.deprecated");
                 model.addAttribute("amazonSesWarningText", message);
             }
+
+            boolean show2FARecommendation = false;
+            String overview2fawarning = prop.getText("overview.2fa.warning");
+            if (Tools.isEmpty(Constants.getString("ldapProviderUrl")) && Tools.isEmpty(Constants.getString("adminLogonMethod")) && Tools.isNotEmpty(overview2fawarning) && overview2fawarning.length() > 2) {
+                String mobileDevice = userDetailsRepository.getMobileDeviceByUserId((long)user.getUserId());
+                if (Tools.isEmpty(mobileDevice)) {
+                    show2FARecommendation = true;
+                }
+            }
+            model.addAttribute("show2FARecommendation", show2FARecommendation);
 
         } catch (JsonProcessingException e) {
             Logger.error(DashboardListener.class, e);

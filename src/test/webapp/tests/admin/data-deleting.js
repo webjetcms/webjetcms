@@ -32,14 +32,15 @@ Scenario("overenie prvotneho zoznamu", async ({ I, DT, DTE }) => {
 
 Scenario('cache-objects', ({ I, DT }) => {
   I.amOnPage("/admin/v9/settings/cache-objects/");
-  I.waitForText('Zoznam cache objektov', 10);
+  I.waitForText('Čistenie databázy', 10);
+  I.waitForText('Cache objekty', 10, '.nav-link.active');
   DT.filterContains("name", "browser");
   I.see("browserDetector-");
   DT.filterContains("name", "welcome");
   I.see("welcomeDataBackTimes-domainId=");
 
   I.amOnPage("/admin/v9/settings/persistent-cache-objects/");
-  I.waitForText('Zoznam persistent cache objektov', 10);
+  I.waitForText('Persistent cache objekty', 10, '.nav-link.active');
   I.see("demotest.webjetcms.sk/admin/mem.jsp");
   //check there is current date on update field, so the data was updated tody
   I.see(I.formatDate(new Date()), "#datatableInit tbody tr:nth-child(1) td:nth-child(5)");

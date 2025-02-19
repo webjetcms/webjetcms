@@ -515,7 +515,7 @@ export function update(EDITOR, action) {
             input.on('input', function(){
                 if (dataWarningLength <= input.val().length) {
                     toastr.remove();
-                    toastr["warning"](dataWarningMessage);
+                    WJ.notifyWarning(dataWarningMessage, null, 5000, null);
                 } else {
                     toastr.remove();
                 }

@@ -11,23 +11,7 @@
     }
 
     window.domReady.add(function () {
-
-        WJ.breadcrumb({
-            id: "nonApprovedEvents",
-            tabs: [
-                {
-                    url: '/apps/calendar/admin/',
-                    title: /*[[#{menu.calendar}]]*/ 'title',
-                    active: false
-                },
-                {
-                    url: '/apps/calendar/admin/non-approved-events/',
-                    title: /*[[#{calendar.non_approved_events}]]*/ 'title',
-                    active: true
-                }
-            ]
-        });
-
+        
         window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatLinkTemplate: "javascript:redirect({{id}});" });
         window.WJ.DataTable.mergeColumns(columns, { name: "title", renderFormatPrefix: "" });
 

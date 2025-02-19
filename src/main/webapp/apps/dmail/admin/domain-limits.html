@@ -5,22 +5,6 @@
 
         window.helpLink = "/redactor/apps/dmail/domain-limits/README";
 
-        WJ.breadcrumb({
-            id: "domainlimits",
-            tabs: [
-                {
-                    url: '/apps/dmail/admin/',
-                    title: '[[#{components.dmail.dialog_title}]]',
-                    active: false
-                },
-                {
-                    url: '/apps/dmail/admin/domain-limits/',
-                    title: '[[#{components.dmail.domainlimits.list}]]',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/dmail/domain-limits";
         let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.dmail.DomainLimitBean")})];
 

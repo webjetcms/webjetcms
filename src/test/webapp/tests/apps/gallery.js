@@ -223,7 +223,7 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
     var position = 4;
     if (Browser.isFirefox()) {
         I.dragAndDrop(
-            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz[aria-label*=\"Názov <span class='lang-shortcut'>cz</span>: Activate to sort\"]",
+            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
             "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imageName",
             {
                 force: true,
@@ -234,10 +234,12 @@ Scenario('bug-remember column order', ({ I, DT, Browser }) => {
         position = 5;
     } else {
         I.dragAndDrop(
-            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz[aria-label*=\"Názov <span class='lang-shortcut'>cz</span>: Activate to sort\"]",
+            "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-descriptionShortCz",
             "#galleryTable_wrapper div.dt-scroll-headInner th.dt-th-imagePath",
             {
-                force: true
+                force: true,
+                sourcePosition: {x: 10, y: 10},
+                targetPosition: { x: 10, y: 10 }
             }
         );
     }

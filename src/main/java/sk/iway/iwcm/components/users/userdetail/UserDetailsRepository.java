@@ -36,6 +36,9 @@ public interface UserDetailsRepository extends JpaRepository<UserDetailsEntity, 
     @Query(value = "SELECT mobile_device FROM users WHERE user_id=?1", nativeQuery=true)
     String getMobileDeviceByUserId(Long userId);
 
+    @Query(value = "SELECT password FROM users WHERE user_id=?1", nativeQuery=true)
+    String getPasswordByUserId(Long userId);
+
     @Query(value = "SELECT password_salt FROM users WHERE user_id=?1", nativeQuery=true)
     String getPasswordSaltByUserId(Long userId);
 

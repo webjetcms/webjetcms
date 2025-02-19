@@ -91,9 +91,9 @@ public class MenuService {
             //website
             { "menuWebpages", "ti ti-file-text" },
             { "cmp_clone_structure", "ti ti-copy" },
-            { "cmp_attributes", "ti ti-file-invoice" },
+            { "cmp_attributes", "ti ti-row-insert-bottom" },
             { "cmp_redirects", "ti ti-external-link" },
-            { "export_offline", "ti ti-database-export" },
+            { "export_offline", "ti ti-file-zip" },
             { "editorMiniEdit", "ti ti-filter" },
             { "editorFullMenu", "ti ti-box-padding" },
             { "addPage", "ti ti-plus" },
@@ -142,8 +142,8 @@ public class MenuService {
             { "cmp_content-block", "ti ti-triangle-square-circle" },
             //files
             { "menuFbrowser", "ti ti-folders" },
-            { "cmp_file_archiv", "ti ti-archive" },
-            { "make_zip_archive", "ti ti-server-bolt" },
+            { "cmp_file_archiv", "ti ti-book-2" },
+            { "make_zip_archive", "ti ti-database-export" },
             { "fbrowser_delete_directory", "ti ti-trash" },
             { "menuFileArchivExportFiles", "ti ti-upload" },
             { "menuFileArchivImportFiles", "ti ti-download" },
@@ -163,13 +163,12 @@ public class MenuService {
             //config
             { "menuConfig", "ti ti-adjustments" },
             { "edit_text", "ti ti-language" },
-            { "cmp_data_deleting", "ti ti-database" },
             { "cmp_crontab", "ti ti-settings-automation" },
             { "modUpdate", "ti ti-cloud-download" },
             { "modRestart", "ti ti-power" },
             { "conf.show_all_variables", "ti ti-user-shield" },
             { "prop.show_all_texts", "ti ti-user-shield" },
-            { "replaceAll", "ti ti-search" }
+            { "replaceAll", "ti ti-arrows-left-right" }
         };
         for (String[] pair : icons) {
             iconsMap.put(pair[0], pair[1]);
@@ -178,9 +177,9 @@ public class MenuService {
             //welcome
             { "cmp_adminlog", "7041" },
             //website
-            { "cmp_clone_structure", "2040" },
+            { "cmp_redirects", "2020" },
             { "cmp_attributes", "2050" },
-            { "cmp_redirects", "2060" },
+            { "cmp_clone_structure", "7010" },
             //news
             { "cmp_blog", "3030" }
         };

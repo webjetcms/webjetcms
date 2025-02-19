@@ -62,7 +62,7 @@ Scenario('Validate basket operations: add, modify, remove, and view', ({ I }) =>
     I.say('Opening and closing basket');
     openBasket(I);
     I.clickCss('#orderContinurButton > a');
-    I.dontSeeElement('.basketBox');
+    I.waitForInvisible('.basketBox', 10);
     openBasket(I);
     closeBasket(I);
 
@@ -125,11 +125,7 @@ Scenario('Create and submit order', async ({ I, DT }) => {
     I.amOnPage('/apps/basket/admin/');
     DT.filterEquals('deliveryName', testerName);
     I.dontSeeElement('Nenašli sa žiadne vyhovujúce záznamy');
-    DT.checkTableCell('basketInvoiceDataTable', '1', '2', testerName );
-    DT.checkTableCell('basketInvoiceDataTable', '1', '4', 'Nová' );
-    DT.checkTableCell('basketInvoiceDataTable', '1', '6', deliveryMethod );
-    DT.checkTableCell('basketInvoiceDataTable', '1', '7', '2' );
-    DT.checkTableCell('basketInvoiceDataTable', '1', '8', '20,91');
+    DT.checkTableRow('basketInvoiceDataTable', '1', ['', testerName, getTodayDate(), 'Nová', '', deliveryMethod.split(':')[0], '3', '22,91', 'eur']);
 });
 
 Scenario('Delete order', ({ I, DT, DTE }) => {
@@ -189,7 +185,7 @@ function modifyBasket(I, nameProduct, action) {
 
 function checkBasketSmallBox(I, expectedNumOfItems, expectedTotalPrice){
     I.seeElement('.basketSmallBox')
-    I.see(`${expectedNumOfItems}`,'.basketSmallBox .basketSmallItems > span');
+    I.waitForText(`${expectedNumOfItems}`,'.basketSmallBox .basketSmallItems > span');
     I.see(`${expectedTotalPrice}\u00A0€`,'.basketSmallBox .basketSmallPrice > span');
 }
 
@@ -202,6 +198,7 @@ function checkAmountInBasket(I, nameProduct, expectedAmount){
 }
 
 function fillDeliveryForm(I) {
+    I.waitForElement('#deliveryNameId', 10);
     I.fillField('#deliveryNameId', testerName);
     I.fillField('#deliverySurNameId', 'buyer');
     I.clearField('#contactEmailId');
@@ -209,4 +206,13 @@ function fillDeliveryForm(I) {
     I.fillField('#deliveryStreetId', 'Mlýnske Nivy 71');
     I.fillField('#deliveryCityId', 'Bratislava');
     I.fillField('#deliveryZipId', '82105');
+}
+
+function getTodayDate() {
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+
+    return `${day}.${month}.${year}`;
 }

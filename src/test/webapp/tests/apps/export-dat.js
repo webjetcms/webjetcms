@@ -43,7 +43,7 @@ Scenario('Export dat json a XML', ({I, Browser}) => {
 
     I.amOnPage("/export-dat/xml/");
     I.see("<title>RSS Feed</title>");
-    I.see("<link>https://demotest.webjetcms.sk/en/zo-sveta-financii/mcgregorov-obchodny-uder.html</link>");
+    I.see("://demotest.webjetcms.sk/en/zo-sveta-financii/mcgregorov-obchodny-uder.html");
 });
 
 Scenario('Overenie filtrovania primitivneho boolean', ({I, DT}) => {

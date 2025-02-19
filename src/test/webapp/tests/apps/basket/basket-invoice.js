@@ -31,6 +31,7 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document}) => {
     I.clickCss("button.addToBasket");
 
     I.say("Go to basket");
+    I.click(".webjetToolbarClose");
     I.clickCss("body > div.ly-page-wrapper > header > div.container > nav > div.menu-holder > div > a");
     I.clickCss("#orderButton > a");
     I.fillField("#deliveryNameId", testerName);

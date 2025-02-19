@@ -32,8 +32,8 @@ export function typeIframe() {
             conf._id = id;
             conf.val = "";
 
-            //tato jquery konstrukcia vytvori len pole objektov, nie su to este normalne elementy
-            const htmlCode = $(`<div class="iframeFieldType"><iframe id="${id}" src="about:blank" width="100%" height="523"></iframe></div>`);
+            //if you change HEIGHT change also .form-group.row.DTE_Field_Type_iframe in _modal.scss
+            const htmlCode = $(`<div class="iframeFieldType"><iframe id="${id}" src="about:blank" width="100%" height="490"></iframe></div>`);
 
             return htmlCode;
         },

@@ -6,22 +6,6 @@
 <script type="text/javascript">
     var abtestingConfDataTable;
 
-    WJ.breadcrumb({
-        id: "configValues",
-        tabs: [
-            {
-                url: '/apps/abtesting/admin/',
-                title: '[[#{components.abtesting.dialog_title}]]',
-                active: false
-            },
-            {
-                url: '/apps/abtesting/admin/config/',
-                title: '[[#{webjet.left_conf.konfiguracia}]]',
-                active: true
-            }
-        ]
-    });
-
     window.domReady.add(function () {
         window.helpLink = "/redactor/apps/abtesting/README";
         abtestingConfDataTable = WJ.DataTable({

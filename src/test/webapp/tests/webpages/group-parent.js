@@ -14,7 +14,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('1. pridanie noveho priecinka name-autotest', ({ I, DTE, DT }) => {
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
 
      // 1. pridanie noveho priecinka name-autotest
      I.say('1. Pridanie noveho priecinka '+root1_name);
@@ -35,7 +35,7 @@ Scenario('2. otvorenie noveho priecinka a vytvorenie jeho podpriecinka', ({ I, D
      I.fillField('#DTE_Field_groupName', subfolder_name);
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', root1_name, 10);
      DTE.save();
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
 });
 
 Scenario('3. overenie vytvoreneho podpriecinka', ({ I }) => {
@@ -134,7 +134,7 @@ Scenario('5b. test negativnych/chybnych ciest - na priecinku z 1. kroku', ({ I, 
      I.waitForValue('#editorAppDTE_Field_editorFields-parentGroupDetails .input-group input', '/', 10);
      I.wait(1);
      DTE.save();
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      I.dontSee('Priečinok nemôže byť súčasne zvolený ako svoj nadradený priečinok');
      I.dontSee('Nadradený priečinok nemôže byť vybraný zo svojho potomka');
 });
@@ -150,7 +150,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      I.waitForText('Názov priečinku', 5);
      I.dontSee('Na tento priečinok nemáte prístupové práva. Skúste o úroveň nižšie.');
      I.clickCss('.btn.btn-outline-secondary.btn-close-editor');
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      // vymazanie priecinka folder-autotest
      I.clickCss('div.tree-col .btn.btn-sm.buttons-selected.buttons-remove.btn-danger.buttons-divider');
      I.waitForText('Zmazať', 5);
@@ -158,7 +158,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      I.click('Zmazať', "#groups-datatable_modal .DTE_Form_Buttons");
      DT.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).'); // hlasku by nemalo zobrazovat
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      I.dontSeeElement(root2_name, '.jstree-anchor');
 
      // b) vymazanie podpriecinka value-autotest
@@ -174,7 +174,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
 
      I.dontSee('Na tento priečinok nemáte prístupové práva. Skúste o úroveň nižšie.'); // TODO upravit slovo pristupve  - hlasku by nemalo zobrazovat
      I.clickCss('.btn.btn-outline-secondary.btn-close-editor');
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      I.wait(1);
      // vymazanie podpriecinka value-autotest
      I.clickCss('div.tree-col .dt-buttons .buttons-remove');
@@ -184,7 +184,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      I.click('Zmazať', "#groups-datatable_modal .DTE_Form_Buttons");
      DT.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).'); // hlasku by nemalo zobrazovat
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      I.dontSeeElement(subfolder_name, '.jstree-anchor');
 
      // vymazanie priecinka name-autotest
@@ -195,7 +195,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      I.waitForText('Názov priečinku', 5);
      I.dontSee('Na tento priečinok nemáte prístupové práva. Skúste o úroveň nižšie.'); // hlasku by nemalo zobrazovat
      I.clickCss('.btn.btn-outline-secondary.btn-close-editor');
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      // vymazanie priecinka folder-autotest
      I.clickCss('.tree-col .dt-buttons .buttons-remove');
      DTE.waitForEditor("groups-datatable");
@@ -204,7 +204,7 @@ Scenario('6. vymazanie vytvorenych priecinkov', ({ I, DT, DTE }) => {
      I.click('Zmazať', "#groups-datatable_modal .DTE_Form_Buttons");
      DT.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).'); // hlasku by nemalo zobrazovat
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      I.dontSeeElement(root1_name, '.jstree-anchor');
 
      // TODO

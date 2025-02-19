@@ -1,7 +1,8 @@
 .md-large-menu {
     position: relative;
-    padding: 56px 15px 0 15px;
+    padding: 47px 14px 10px 14px;
     overflow: hidden;
+    min-height: 153px;
 
     &__item {
         float: left;
@@ -10,16 +11,16 @@
 
         &__headline {
             color: $nice-gray-400;
-            font-size: 15px;
+            font-size: 14px;
             line-height: 16px;
             font-family: $secondary-font-family;
-            font-weight: 700;
+            font-weight: 500;
             text-align: center;
 
             padding-left: 0;
             padding-right: 0;
-            padding-top: 15px;
-            padding-bottom: 15px;
+            padding-top: 16px;
+            padding-bottom: 16px;
 
             position: absolute;
             top: 0;
@@ -37,9 +38,10 @@
         &__link {
             display: block;
             position: relative;
-            padding-bottom: 100%;
-            border: 1px solid transparent;
+            width: 48px;
+            height: 48px;
             border-radius: $border-radius;
+            border: 1px solid $sidebar-bg;
             overflow: hidden;
 
             color: $nice-gray-400;
@@ -52,17 +54,20 @@
                 left: 50%;
                 transform: translate(-50%,-50%);
 
-                font-size: 24px;
+                font-size: 18px;
                 color: $nice-gray-400;
 
                 transition: all 0.3s ease;
             }
 
             &:hover {
-                color: $nice-primary;
+                //color: $nice-primary;
+                background-color: $sidebar-active-bg;
+                //outline: 1px solid $sidebar-bg;
+                //use inner outline
                 text-decoration: none;
                 i {
-                    color: $nice-primary;
+                    //color: $nice-primary;
                 }
             }
         }
@@ -71,11 +76,10 @@
 
 .md-large-menu__item--active {
     .md-large-menu__item__link {
-        border-color: $nice-primary;
-        background-color: $nice-primary;
-        color:$secondary !important;
+        background-color: $sidebar-active-bg;
+        color: $sidebar-active !important;
         i {
-            color: $secondary !important;
+            color: $sidebar-active !important;
         }
     }
 }
@@ -84,7 +88,7 @@
     .md-large-menu__item__link {
         color: $nice-primary;
         i {
-            color: $nice-primary;
+            //color: $nice-primary;
         }
     }
 }

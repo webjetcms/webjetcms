@@ -157,7 +157,7 @@ exports.config = {
 
             //odosli prihlasenie
             I.fillField("username", "tester");
-            I.fillField("password", secret("*********"));
+            I.fillField("password", secret(I.getDefaultPassword()));
             I.forceClick(loginButtonText);
             I.waitForText("Tester Playwright", 30, "button.js-profile-toggler");
           },

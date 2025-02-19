@@ -25,4 +25,8 @@ html.pg-homepage(data-th-lang="${layout.lng}")
             div.ly-content(data-scrollbar)
                 div.ly-container.container
 
+                    div.breadcrumb-language-select(style="display:none")
+                        select(name="languageSelect" id="breadcrumbLanguageSelect")
+                            option(data-th-each="language : ${layoutService.getLanguages(false, true, 'language.append')}" data-th-text="${language.label}" data-th-value="${language.value}" data-th-selected="${language.value==layout.lngWebjet}")
+
                     block content

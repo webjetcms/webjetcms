@@ -295,7 +295,7 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 
 	%>
 	<div class="page-sidebar-wrapper">
-		<div class="page-sidebar">
+		<div class="page-sidebar ly-sidebar">
 			<div class="md-large-menu">
 				<div class="md-large-menu__wrapper clearfix">
 					<% for (MenuBean menuItem : menu) { pageContext.setAttribute("menuItem", menuItem); %>
@@ -321,7 +321,6 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 									<a class="md-main-menu__item__link" href="${subMenuItem.href}">
 										<i class="${subMenuItem.icon}"></i>
 										${subMenuItem.text}
-										<% if (!subMenuItem.getChildrens().isEmpty()) out.print("<i class='ti ti-chevron-down'></i>"); %>
 									</a>
 									<% if (!subMenuItem.getChildrens().isEmpty()) { %>
 										<div class="md-main-menu__item__sub-menu">
@@ -343,6 +342,33 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 				</div>
 			</div>
 
+			<%
+				if (InitServlet.isTypeCloud()==false && Constants.getBoolean("enableStaticFilesExternalDir"))
+				{
+					List<String> userDomains = GroupsDB.getInstance().getUserRootDomainNames(UsersDB.getCurrentUser(request).getEditableGroups());
+					request.setAttribute("userDomains", userDomains);
+					request.setAttribute("actualDomain", DocDB.getDomain(request));
+					%>
+					<script type="text/javascript">
+						function changeDomain()
+						{
+							if (confirm("<iwcm:text key='admin.top.domena.confirm'/>")) {
+								$.ajax({method: "POST", url: "/admin/skins/webjet8/change_domain_ajax.jsp", data: {domain: $("#actualDomainNameSelectId").val()}}).done(function(msg) {location.reload();});
+							}
+						}
+					</script>
+					<div class="js-domain-toggler" id="actualDomainNameDiv" <% if (userDomains.size()<1) out.print("style='display: none;'"); %>>
+						<i class="ti ti-device-desktop"></i>
+						<select  name="actualDomainNameSelect" id="actualDomainNameSelectId" onchange="changeDomain();">
+						<c:forEach items="${userDomains}" var="domain">
+							<option value="${domain}" <c:if test="${domain == actualDomain}">selected="selected"</c:if>>${domain}</option>
+						</c:forEach>
+						</select>
+					</div>
+					<%
+				}
+			%>
+
 			<div style="display: none;" id="refresherDataDiv"></div>
 		</div>
 	</div>
@@ -362,12 +388,15 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 				if ($(this).siblings(".md-main-menu__item__sub-menu").length) {
 					e.preventDefault();
 
+					//find first child A element and click on it
+					var firstChild = $(this).parent().find(".md-main-menu__item__sub-menu a");
+					if (firstChild.length>0) {
+						firstChild[0].click();
+						return;
+					}
+
+					//failsafe if no child A element found
 					$(this).parent(".md-main-menu__item").toggleClass('md-main-menu__item--open');
-					// if ($(this).parent(".md-main-menu__item").hasClass("md-main-menu__item--open")) {
-					//     $(this).parent(".md-main-menu__item").removeClass("md-main-menu__item--open");
-					// } else {
-					//     $(this).parent(".md-main-menu__item").addClass("md-main-menu__item--open");
-					// }
 				}
 			});
 
@@ -415,14 +444,83 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 				if ($this.attr('href') === current || $this.attr('href') === currentWithQs || $this.attr('href') === currentWithHash) {
 					$this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
-					$this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
-					$this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
+					let mainMenuItem = $this.parents(".md-main-menu__item");
+					mainMenuItem.addClass("md-main-menu__item--active");
+					//mainMenuItem.addClass("md-main-menu__item--open");
 
-					$this.parents(".md-main-menu").addClass("md-main-menu--open");
-					var menuId = $this.parents(".md-main-menu").data("menu-id");
+					let mainMenu = $this.parents(".md-main-menu");
+					mainMenu.addClass("md-main-menu--open");
+					let menuId = mainMenu.data("menu-id");
 					$('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
+
+					let mainTitle = mainMenuItem.find(".md-main-menu__item__link").text();
+
+					//move submenu items to tabs
+					let tabs = mainMenuItem.find(".md-main-menu__item__sub-menu div");
+					//console.log("tabs=", tabs);
+					if (tabs.length>0) {
+						//iterate over all tabs, find A elements and create UL - LI structure
+						let ul = $("<ul class='nav' role='tablist'></ul>");
+						tabs.each(function() {
+							let $this = $(this);
+							let aOriginal = $this.find("a");
+							let active = $this.hasClass("md-main-menu__item__sub-menu__item--active") ? " active" : "";
+							let li = $("<li class='nav-item' role='presentation'></li>");
+							let a = $("<a class='nav-link"+active+"' role='tab'>"+aOriginal.text()+"</a>");
+							a.attr("href", aOriginal.attr("href"));
+							li.append(a);
+							ul.append(li);
+
+							if (" active"===active) {
+								hideFirstBreadcrumbItem(a, mainTitle);
+							}
+						});
+						//wrap UL with md-tabs div
+						ul = $("<div class='md-tabs md-tabs-dropdown'></div>").append(ul);
+
+						//append UL to main menu
+						$(".ly-submenu").html(ul);
+						$("body").addClass("ly-submenu-active");
+					}
+
+					//set main title
+					let $headerTitle = $(".header-title");
+					$headerTitle.text(mainTitle);
+					hideFirstBreadcrumbItem($headerTitle, mainTitle);
+
+					//handle tabs click - we need also to execute link so it cant be BS tabs
+					$(".ly-submenu .md-tabs li").on("click", "a", function(e) {
+						let $this = $(this);
+						let isActive = $this.hasClass("active");
+						$this.parents(".md-tabs").find("li a.active").removeClass("active");
+						if (isActive) {
+							$this.addClass("active");
+							//this is click on active tab burger menu on small device, prevent click, just open/close menu
+							if ($this.closest('ul').css("position")=="relative") {
+								$this.closest('ul').toggleClass("open");
+								e.preventDefault();
+							}
+						} else {
+							$this.addClass("active");
+							$this.closest('ul').removeClass("open");
+						}
+					});
 				}
 			});
+
+			//scrolll selected left menu item into view
+			let $menuItem = $("div.md-main-menu__item--active");
+			if ($menuItem.length>0) {
+				let top = $menuItem.position().top;
+				if (top > 150) {
+					setTimeout(()=> {
+						//scrollbarMenu.scrollTop = top-22;
+						$(".page-sidebar-menu").slimScroll({
+							scrollToY: (top-52)+'px'
+						});
+					}, 50);
+				}
+			}
 
 			$('.md-main-menu__item').each(function () {
 				var $this = $(this);
@@ -463,13 +561,32 @@ private static String renderLeftMenu(String group, List<ModuleInfo> customItems,
 				$this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
 				$this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
-				$this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
+				//$this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
 
 				$this.parents(".md-main-menu").addClass("md-main-menu--open");
 				var menuId = $this.parents(".md-main-menu").data("menu-id");
 				$('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
 			}
 		});
+
+		function hideFirstBreadcrumbItem(a, mainTitle) {
+			//if there is element in .md-breadcrumb .nav .nav-item .nav-link with same name hide it
+			let breadcrumb = $(".ly-content .md-breadcrumb .nav .nav-item");
+			let hidenCount = 0;
+			breadcrumb.each(function() {
+				let $this = $(this);
+				//console.log("Comparing: this=", $this.text(), "a=", a.text());
+				if ($this.text()==a.text() || $this.text()==mainTitle) {
+					$this.hide();
+					hidenCount++;
+				}
+			});
+			if (breadcrumb.length===hidenCount) {
+				//console.log("Hiding whole breadcrumb, length=", breadcrumb.length, "hidenCount=", hidenCount);
+				//if only one element in breadcrumb hide whole breadcrumb
+				breadcrumb.first().parents(".md-breadcrumb").hide();
+			}
+		}
 
 		function openPopupDialogFromLeftMenu(url)
 		{

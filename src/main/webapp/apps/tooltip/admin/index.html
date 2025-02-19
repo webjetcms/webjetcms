@@ -6,17 +6,6 @@
 
             window.helpLink = "/redactor/apps/tooltip/README";
 
-            WJ.breadcrumb({
-                id: "tooltip",
-                tabs: [
-                    {
-                        url: '/apps/tooltip/admin/',
-                        title: '[[#{components.tooltip.dialog_title}]]',
-                        active: true
-                    }
-                ]
-            });
-
             let url = "/admin/rest/tooltip";
             let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.dictionary.model.DictionaryBean")})];
 

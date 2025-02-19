@@ -22,7 +22,7 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
     //
     I.say("click on button to correctly logoff");
     I.click(".js-logout-toggler");
-    I.waitForText("Prihlásenie", 10, "h3.form-title");
+    I.waitForText("Meno alebo e-mail používateľa", 10, "#userForm");
 
     //
     I.say("Test OLD v8 JSP admin page");
@@ -31,7 +31,7 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
 
     I.say("click on button to correctly logoff");
     I.click(".js-logout-toggler");
-    I.waitForText("Prihlásenie", 10, "h3.form-title");
+    I.waitForText("Meno alebo e-mail používateľa", 10, "#userForm");
 
     //
     I.relogin("admin");

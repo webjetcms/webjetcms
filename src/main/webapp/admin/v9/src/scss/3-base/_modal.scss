@@ -11,10 +11,16 @@ body.modal-open {
 
 .modal {
     &-title {
-        text-align: right;
+        text-align: left;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        font-size: 18px;
+        font-weight: 500;
+        margin-right: 80px;
+        //space for possible input elements in title
+        padding-top: 2px;
+        padding-bottom: 2px;
     }
     &-footer {
         .buttons-footer-left {
@@ -45,19 +51,6 @@ body.modal-open {
     &-body {
         padding-top: 0px;
         padding-bottom: 15px;
-        .modal-body-bg {
-            position: relative;
-            &::before {
-                content: " ";
-                position: absolute;
-                top: -15px;
-                bottom: 0px;
-                left: -15px;
-                background-color: $nice-gray;
-                width: calc(33.3333% + 10px);
-                z-index: 0;
-            }
-        }
         // padding:0;
         hr {
             margin-top: 15px;
@@ -107,6 +100,29 @@ body.modal-open {
         .DTE_Field_Type_checkbox {
             .DTE_Field_InputControl {
                 padding-top: 6px;
+            }
+        }
+        .DTE_Field_Type_text {
+            .form-switch {
+                .form-check-label {
+                    margin-left: .75em;
+                }
+            }
+        }
+        .DTE_Field_Type_datetime, .DTE_Field_Type_date, .DTE_Field_Type_time {
+            .form-control {
+                //ti-calendar-week, stroke 1.25
+                background-image: url('data:image/svg+xml,%3Csvg%20%20xmlns=%22http://www.w3.org/2000/svg%22%20%20width=%2224%22%20%20height=%2224%22%20%20viewBox=%220%200%2024%2024%22%20%20fill=%22none%22%20%20stroke=%22currentColor%22%20%20stroke-width=%221.25%22%20%20stroke-linecap=%22round%22%20%20stroke-linejoin=%22round%22%20%20class=%22icon%20icon-tabler%20icons-tabler-outline%20icon-tabler-calendar-week%22%3E%3Cpath%20stroke=%22none%22%20d=%22M0%200h24v24H0z%22%20fill=%22none%22/%3E%3Cpath%20d=%22M4%207a2%202%200%200%201%202%20-2h12a2%202%200%200%201%202%202v12a2%202%200%200%201%20-2%202h-12a2%202%200%200%201%20-2%20-2v-12z%22%20/%3E%3Cpath%20d=%22M16%203v4%22%20/%3E%3Cpath%20d=%22M8%203v4%22%20/%3E%3Cpath%20d=%22M4%2011h16%22%20/%3E%3Cpath%20d=%22M7%2014h.013%22%20/%3E%3Cpath%20d=%22M10.01%2014h.005%22%20/%3E%3Cpath%20d=%22M13.01%2014h.005%22%20/%3E%3Cpath%20d=%22M16.015%2014h.005%22%20/%3E%3Cpath%20d=%22M13.015%2017h.005%22%20/%3E%3Cpath%20d=%22M7.01%2017h.005%22%20/%3E%3Cpath%20d=%22M10.01%2017h.005%22%20/%3E%3C/svg%3E');
+                background-repeat: no-repeat;
+                background-position: right 10px center;
+                background-size: 22px 22px;
+                padding-right: 40px;
+            }
+            &.dt-style-time {
+                .form-control {
+                    //ti-clock-hour-3, stroke 1.25
+                    background-image: url('data:image/svg+xml,%3Csvg%20%20xmlns=%22http://www.w3.org/2000/svg%22%20%20width=%2224%22%20%20height=%2224%22%20%20viewBox=%220%200%2024%2024%22%20%20fill=%22none%22%20%20stroke=%22currentColor%22%20%20stroke-width=%221.25%22%20%20stroke-linecap=%22round%22%20%20stroke-linejoin=%22round%22%20%20class=%22icon%20icon-tabler%20icons-tabler-outline%20icon-tabler-clock-hour-3%22%3E%3Cpath%20stroke=%22none%22%20d=%22M0%200h24v24H0z%22%20fill=%22none%22/%3E%3Cpath%20d=%22M12%2012m-9%200a9%209%200%201%200%2018%200a9%209%200%201%200%20-18%200%22%20/%3E%3Cpath%20d=%22M12%2012h3.5%22%20/%3E%3Cpath%20d=%22M12%207v5%22%20/%3E%3C/svg%3E');
+                }
             }
         }
         .form-group.row.DTE_Field_Type_wysiwyg {
@@ -191,11 +207,15 @@ body.modal-open {
             div.dt-buttons {
                 padding-bottom: 0px;
             }
+            div.dt-header-row {
+                //remove duplicite border in datatables
+                margin-top: -1px;
+            }
         }
         .form-group.row.DTE_Field_Type_iframe {
             margin-top: 0px;
             div.iframeFieldType {
-                height: 523px;
+                height: 490px;
             }
         }
 
@@ -278,7 +298,9 @@ body.modal-open {
     &-header {
         display: block;
         padding-top: 8px;
-        padding-bottom: 8px;
+        padding-bottom: 0px;
+        padding-right: 52px; //because of close btn on small devices
+        background-color: $nice-gray;
         .md-breadcrumb {
             border: 0;
             background-color: transparent;
@@ -286,26 +308,39 @@ body.modal-open {
             padding:0;
         }
 
-        button.close {
-            border: 0px;
-            background-color: transparent;
-            padding: 0px;
-        }
-
-        button.close, div.maximize {
-            position: absolute;
-            right: 4px;
-            top: 3px;
+        button.close, div.dialog-buttons span {
+            display: inline-block;
             cursor: pointer;
             color: $nice-gray-300;
-            font-size: 15px;
+            font-size: 6px;
+
+            border: 1px solid $nice-gray-300;
+            border-radius: $border-radius;
+            padding: 5px 6px;
+
+            margin-right: 4px;
+
+            .ti {
+                font-size: 18px;
+                color: $secondary;
+            }
 
             &:hover {
                 color: $nice-black;
+                background-color: $nice-gray-300;
             }
         }
-        div.maximize {
-            right: 25px;
+        button.close, div.dialog-buttons {
+            position: absolute;
+            right: 16px;
+            top: 8px;
+        }
+        button.close {
+            background-color: transparent;
+            margin-right: 0px;
+        }
+        div.dialog-buttons {
+            right: 48px;
         }
     }
 
@@ -325,40 +360,8 @@ body.modal-open {
                 max-width: $modal-xl;
             }
 
-            div.maximize i.ti-arrows-minimize {
+            div.dialog-buttons span.minimize {
                 display: none;
-            }
-
-            &.modal-fullscreen {
-                margin: 0px;
-                width: 100%;
-                max-width: 100%;
-                height: 100%;
-                max-height: 100%;
-
-                .modal-content {
-                    height: 100%;
-                    max-height: 100%;
-
-                    div.modal-body-bg {
-                        min-height: 100%;
-                    }
-                    .modal-body.has-content {
-                        //ak ma content, napr. ckeditor tak musi mat auto height
-                        div.modal-body-bg {
-                            min-height: auto;
-                        }
-                    }
-                }
-
-                div.maximize {
-                    i.ti-arrows-maximize {
-                        display: none;
-                    }
-                    i.ti-arrows-minimize {
-                        display: inline-block;
-                    }
-                }
             }
 
             div.modal-content.processing {
@@ -555,13 +558,9 @@ body.modal-open {
         visibility: visible;
         opacity: 1;
         position: absolute;
-        right: 5px;
-        top: 0px;
-        border: 0px;
+        right: 16px;
+        top: 8px;
         background-color: transparent;
-        font-size: 19px;
-        padding: 0px;
-        color: $nice-gray-300;
 
         &:hover {
             color: $nice-black;
@@ -572,9 +571,9 @@ body.modal-open {
         }
     }
 
-    .modal-header div.maximize {
-        right: 28px;
-        top: 5px;
+    .modal-header div.dialog-buttons {
+        right: 48px;
+        top: 8px;
     }
 
     .DTE_Footer {
@@ -628,6 +627,9 @@ div.DTE_Bubble {
     div.DTE_Bubble_Liner.type_quill {
         width: 800px;
         margin-left: -450px;
+    }
+    .DTE_Bubble_Close {
+        display: none;
     }
 }
 div.DTE_Bubble_Background {
@@ -732,6 +734,7 @@ div.DTE_Bubble_Background {
             max-width: 100%;
             margin: 0px;
         }
+        /* IFRAME model opened, not needed anymore
         .modal-header {
             padding-top: 5px;
             padding-bottom: 5px;
@@ -749,6 +752,7 @@ div.DTE_Bubble_Background {
                 }
             }
         }
+        */
 
         .modal-footer {
             padding-top: 4px;
@@ -776,7 +780,7 @@ div.DTE_Bubble_Background {
                     }
                 }
                 div.DTE_Header_Content {
-                    div.maximize {
+                    div.dialog-buttons {
                         display: none;
                     }
                 }
@@ -898,39 +902,73 @@ div.DTE_Bubble_Background {
 #modalIframeLoader {
     display: none;
 }
+
+
+.modal.DTED .modal-dialog.modal-fullscreen,
+html.in-iframe-show-table .modal.DTED .modal-dialog,
+html.in-iframe .modal.DTED .modal-dialog {
+    margin: 0px;
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+
+    .modal-content {
+        height: 100%;
+        max-height: 100%;
+        border-radius: 0px;
+
+        div.modal-body-bg {
+            min-height: 100%;
+        }
+        .modal-body.has-content {
+            //ak ma content, napr. ckeditor tak musi mat auto height
+            div.modal-body-bg {
+                min-height: auto;
+            }
+        }
+    }
+
+    div.dialog-buttons {
+        span.maximize {
+            display: none;
+        }
+        span.minimize {
+            display: inline-block;
+        }
+    }
+}
+
 html.in-iframe, html.in-iframe-show-table {
+
+    .DTE_Header.modal-header {
+        //in gallery app dialog fotos tab iframe needs this
+        margin-top: 0px !important;
+        border-bottom-width: 0px !important;
+    }
 
     .DTE_nested_modal.show .modal-dialog {
         margin-top: 8px;
     }
 
     .modal:not(.DTE_nested_modal) .modal-dialog-scrollable {
-        width: 100%;
-        max-width: 100%;
-        height: 100%;
-        max-height: 100%;
-        margin: 0px;
 
         div.modal-content {
-            height: 100%;
             top: 0px !important;
-            border-radius: 0px;
             border-width: 0px;
+            /* IFRAME model opened, not needed anymore
             div.modal-header {
                 padding-top: 0px;
                 padding-bottom: 4px;
                 margin-top: -6px;
-            }
-            div.modal-body-bg {
-                min-height: 100%;
             }
             div.modal-footer {
                 padding-top: 0px;
                 padding-bottom: 0px;
                 //schovaj spodnu ciaru
                 margin-bottom: -1px;
-
             }
+            */
 
             div.DTE_Field_Type_datatable {
                 div.dt-footer-row {
@@ -946,7 +984,7 @@ html.in-iframe, html.in-iframe-show-table {
         div.DTE_Header_Content .row .col-sm-8 {
             width: auto;
         }
-        button.close, div.maximize {
+        button.close, div.dialog-buttons {
             display: none;
         }
     }
@@ -1031,9 +1069,19 @@ html.in-iframe-show-table {
             border: 0px;
             button.btn-close {
                 position: absolute;
-                right: 16px;
-                top: 5px;
+                right: 24px;
+                top: 16px;
                 z-index: 999;
+                border: 1px solid #868EA5;
+                padding: 0px 6px 9px 5px;
+                color: $secondary;
+
+                .ti {
+                    font-size: 18px;
+                }
+                &:hover {
+                    background-color: $nice-gray-300;
+                }
             }
         }
     }

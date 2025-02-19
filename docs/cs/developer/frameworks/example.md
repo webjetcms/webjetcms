@@ -21,14 +21,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-notifications',
-        [
-            [ '#', 'Zoznam notifikácií', false ]
-        ],
-        [ '/admin/v9/apps/audit-search/', 'Audit' ]
-    )
-
     script.
         let auditNotificationsTable;
         window.domReady.add(function () {

@@ -11,16 +11,6 @@
     }
 
     window.domReady.add(function () {
-        WJ.breadcrumb({
-            id: "forum",
-            tabs: [
-                {
-                    url: '/apps/forum/admin/',
-                    title: '[[#{components.forum.zoznam_diskusii}]]',
-                    active: true
-                }
-            ]
-        });
 
         var tabs = [
             { id: 'main', title: '[[#{components.forum.post}]]', selected: true},

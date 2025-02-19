@@ -2,17 +2,10 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'in-memory-logging',
-        [
-            [ '/admin/v9/apps/audit-search/', '[[#{components.adminlog.adminlog}]]', false ],
-            [ '/admin/v9/settings/in-memory-logging/', '[[#{components.in-memory-logging.title}]]', true ]
-        ]
-    )
-
     <table class="datatableInit table"></table>
 
     script.
+
         window.helpLink = "/sysadmin/audit/memory-logging";
         let table,
             url = "/admin/rest/in-memory-logging";
@@ -66,7 +59,7 @@ block content
                 return;
             }
 
-            $('#pills-in-memory-logging').append('<li><select id="nodes"></select></li>');
+            $('.dt-buttons').append('<div class="btn btn-sm buttons-select">[[\#{components.monitoring.node_name}]] <select class="form-select" id="nodes"></select></div>');
             $('select#nodes').append($('<option class="currentNode" selected="selected" value="' + currentNode.value + '">' + currentNode.label + '</option>'));
 
             $(nodes).each(function(i, v){

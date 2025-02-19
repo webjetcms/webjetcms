@@ -5,13 +5,15 @@ var deletePrefix = "[DELETE] ";
 var changePostfix = "_change";
 var awaitingApproveFolderLink = "/admin/v9/webpages/web-pages-list/?groupid=5343";
 
-var urlCakajuceNaSchvalenieZmenaTitulku = "/admin/v9/webpages/web-pages-list/?groupid=5343";
-
 Before(({ I }) => {
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
     }
 });
+
+function jstreBaseFolder(I) {
+    I.jstreeNavigate(["Test stavov", "Čakajúce na schválenie-zmena titulku"]);
+}
 
 Scenario('creating/editing pages that need to be approved - logic', async ({I, DTE, Document, DT}) => {
     var pageNameA = "onelevel-approve-autotest-" + randomNumber;
@@ -58,7 +60,8 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
 
     //
     I.say("Check that page was approved by admin");
-        I.clickCss("#pills-pages-tab");
+        I.clickCss("#pills-folders-tab");
+        jstreBaseFolder(I);
         I.click(pageNameA);
         DTE.waitForEditor();
         I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -123,7 +126,8 @@ Scenario('creating/editing pages that need to be approved - logic', async ({I, D
 
     I.say("Check history tab again (that history record is Dis-Approved corretly)");
     I.say("Beware, we are still working with name pageNameA because pageNameB was rejected");
-        I.clickCss("#pills-pages-tab");
+        I.clickCss("#pills-folders-tab");
+        jstreBaseFolder(I);
         DT.filterContains("title", pageNameA);
         I.click(pageNameA);
         DTE.waitForEditor();
@@ -188,7 +192,8 @@ Scenario('creating/editing/deleting page thatDONT need to be approved - logic', 
     //
     I.say("Check that page was auto - approved (Better say, not approved at all) !!");
     I.say("Admin has auto - approve (thats diff)");
-        I.clickCss("#pills-pages-tab");
+        I.clickCss("#pills-folders-tab");
+        I.jstreeNavigate([folderName, subFolderName]);
         I.click(newPageName);
         DTE.waitForEditor();
         I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -229,7 +234,8 @@ Scenario('creating/editing/deleting page thatDONT need to be approved - logic', 
     I.say("Chck that is no waiting for approve");
     checkWaitingTab(I, DT, newPageName + changePostfix, false);
 
-    I.clickCss("#pills-pages-tab");
+    I.clickCss("#pills-folders-tab");
+    I.jstreeNavigate([folderName, subFolderName]);
     I.click(newPageName + changePostfix);
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -265,7 +271,7 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
 
     I.relogin("admin");
 
-    I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+    I.amOnPage(awaitingApproveFolderLink);
 
     //Add new page
     I.click(DT.btn.add_button);
@@ -278,7 +284,8 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
     //Check its not waiting or approve
     checkWaitingTab(I, DT, newPageName, false);
 
-    I.clickCss("#pills-pages-tab");
+    I.clickCss("#pills-folders-tab");
+    jstreBaseFolder(I);
     I.click(newPageName);
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -296,7 +303,7 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
     I.say("Editing page");
         //Log back
         I.relogin("admin");
-        I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+        I.amOnPage(awaitingApproveFolderLink);
         DT.filterContains("title", newPageName);
         I.click(newPageName);
         setPageName(I, DTE, newPageName + changePostfix);
@@ -307,7 +314,8 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
     //Check its not waiting or approve
     checkWaitingTab(I, DT, newPageName + changePostfix, false);
 
-    I.clickCss("#pills-pages-tab");
+    I.clickCss("#pills-folders-tab");
+    jstreBaseFolder(I);
     I.click(newPageName + changePostfix);
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-history-tab");
@@ -325,7 +333,7 @@ Scenario('creating/editing/deleting page that NEED approve but it is automatic -
     //Page needs approve but we are admin and delete should be approved automaticly (self - approve)
     I.say("Deleteing page");
         I.relogin("admin");
-        I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+        I.amOnPage(awaitingApproveFolderLink);
         deletePage(I, DT, newPageName + changePostfix, true);
         checkCreatedPage(I, newPageName, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", false, (newPageName + changePostfix));
 
@@ -335,7 +343,7 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
     var newPageName = "approve-delete-autotest-" + randomNumber;
     /* Create page as approver */
     I.relogin('admin');
-    I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+    I.amOnPage(awaitingApproveFolderLink);
 
     //Add new page
     I.click(DT.btn.add_button);
@@ -348,7 +356,7 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
 
     /* Try delete page as non approver and then REJECT request as approver */
     I.relogin("tester2");
-    I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+    I.amOnPage(awaitingApproveFolderLink);
     deletePage(I, DT, newPageName, false);
 
     //Log as admin and reject delete request
@@ -358,7 +366,7 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
         checkCreatedPage(I, newPageName, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", true, null);
 
     I.relogin('admin');
-    I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+    I.amOnPage(awaitingApproveFolderLink);
     checkWaitingTab(I, DT, deletePrefix + newPageName, true);
     //Cant click at name ... probably problem with [] in name
     I.clickCss("#datatableInit td.dt-row-edit a");
@@ -373,7 +381,7 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
 
     /* Try delete page as non approver and then ACCEPT request as approver */
     I.relogin("tester2");
-    I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+    I.amOnPage(awaitingApproveFolderLink);
     deletePage(I, DT, newPageName, false);
 
     //Log as admin and accept delete request
@@ -383,7 +391,7 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
         checkCreatedPage(I, newPageName, "/test-stavov/cakajuce-schvalenie-zmena-titulku/", true, null);
 
     I.relogin('admin');
-    I.amOnPage(urlCakajuceNaSchvalenieZmenaTitulku);
+    I.amOnPage(awaitingApproveFolderLink);
     checkWaitingTab(I, DT, deletePrefix + newPageName, true);
     //Cant click at name ... probably problem with [] in name
     I.clickCss("#datatableInit td.dt-row-edit a");
@@ -394,7 +402,8 @@ Scenario('deleting page that NEED approve - logic', ({I, DT, DTE}) => {
     checkWaitingTab(I, DT, deletePrefix + newPageName, false);
 
     //Test among pages
-    I.clickCss("#pills-pages-tab");
+    I.clickCss("#pills-folders-tab");
+    jstreBaseFolder(I);
     I.dontSee(newPageName);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
@@ -494,7 +503,8 @@ Scenario('L2 approve logic test', ({I, DT, DTE}) => {
             I.dontSeeElement("#pills-waiting-tab");
 
         I.say("Check that page was disapproved by admin L2");
-            I.clickCss("#pills-pages-tab");
+            I.clickCss("#pills-folders-tab");
+            I.jstreeNavigate(["Aplikácie", "Schvaľovanie stránok", "l2_parent", "l2_child"]);
             I.dontSee(pageName + "_change");
             DT.filterContains("title", pageName);
             I.click(pageName);

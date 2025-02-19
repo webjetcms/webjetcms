@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'missing-keys',
-        [
-            [ '#missing-keys', '[[\#{admin.conf_editor.missing}]]', true ]
-        ]
-    )
-
     script.
         var missingKeysTable;
         window.domReady.add(function () {

@@ -91,14 +91,14 @@ Scenario('SearchAll - webpages tab tests', async ({ I, DT }) => {
 
     I.clickCss('#editorApprootDir button');
     I.click('English');
-    I.see('Nenašli sa žiadne vyhovujúce záznamy');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
 
     I.clickCss('#editorApprootDir button');
     I.click('Jet portal 4');
     I.waitForText('Záznamy 1 až 2 z 2');
 
     filter(I, DT, 'test-podadresar');
-    I.see('Nenašli sa žiadne vyhovujúce záznamy');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
 
     I.say('overiť že keď použijem ten externý filter tak súčasne funguje aj filtrovanie nad stĺpcami a že ak externý filter niečo vrátil, tak filter nad stĺpcom nemôže vratiť nič naviac');
 
@@ -181,14 +181,14 @@ Scenario('SearchAll - domains', ({ I, DT }) => {
     I.say('Testing webpages in another domain');
     I.click('#pills-webPages-tab');
     filter(I, DT, 'Investičný vklad');
-    I.see('Nenašli sa žiadne vyhovujúce záznamy');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
     filter(I, DT, 'Vstup');
     I.see('Vstup', 'table tr');
 
     I.say('Testing files in another domain');
     I.clickCss('#pills-files-tab');
     filter(I, DT, 'jurko.jpg');
-    I.see('Nenašli sa žiadne vyhovujúce záznamy');
+    I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
 
     switchDomainTo(I, DT, "demotest.webjetcms.sk");
     filter(I, DT, 'Vstup');
@@ -216,7 +216,7 @@ Scenario('Searchall - file link and the clickable URL redirection', async ({ I, 
 
     I.waitForElement('.elfinder-cwd-wrapper', 20);
     within('.elfinder-cwd-wrapper', () => {
-        I.seeElement('#iwcm_1_L2ZpbGVzL3phaGVzbG92YW5lL2Zvci1iYW5rZXJzLnR4dA_E_E')
+        I.waitForElement('#iwcm_1_L2ZpbGVzL3phaGVzbG92YW5lL2Zvci1iYW5rZXJzLnR4dA_E_E', 10);
     });
 });
 
@@ -315,15 +315,7 @@ async function togglePermission(I, selector, shouldCheck) {
     }
 }
 
-function verifyHeaders(I, headers, visibleWrapper, hiddenWrappers) {
-    for (const header of headers) {
-        I.see(header, 'tr > th');
-    }
-    I.seeElement(visibleWrapper);
-    for (const wrapper of hiddenWrappers) {
-        I.dontSeeElement(wrapper);
-    }
-}
+
 
 async function verifyRecordCountChange(I, DT, column, value, tableWrapper) {
     const tableInfo = tableWrapper.replace('wrapper', 'info');
@@ -340,7 +332,7 @@ async function verifyRecordCountChange(I, DT, column, value, tableWrapper) {
 
 function verifyHeaders(I, headers, visibleWrapper, hiddenWrappers) {
     for (const header of headers) {
-        I.see(header, 'tr > th');
+        I.waitForText(header, 'tr > th');
     }
     I.seeElement(visibleWrapper);
     for (const wrapper of hiddenWrappers) {

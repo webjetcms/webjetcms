@@ -6,8 +6,31 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
 %><%
-Prop prop = Prop.getInstance(request);
-String brandSuffix = InitServlet.getBrandSuffix();
+    Prop prop = Prop.getInstance(request);
+    String brandSuffix = InitServlet.getBrandSuffix();
+    //brandSuffix = "net";
+    String title = prop.getText("logon.welcome.title");
+    String subtitle = prop.getText("logon.welcome.subtitle");
+    try {
+        //get texts from logon.welcome.titles, split by lines and then by ;, get random line into title and subtitle
+        String[] lines = prop.getText("logon.welcome.titles."+brandSuffix).split("\n");
+        if (lines.length>0) {
+            int index = (int)(Math.random()*lines.length);
+            int id = Tools.getIntValue(request.getParameter("id"), -1);
+            if (id!=-1 && id<lines.length) {
+                index = id;
+            }
+            String[] parts = lines[index].split(";");
+            if (parts.length==2) {
+                title = parts[0];
+                subtitle = parts[1];
+            }
+        }
+    } catch (Exception e) {
+
+    }
+    pageContext.setAttribute("title", title);
+    pageContext.setAttribute("subtitle", subtitle);
 %><!DOCTYPE html>
 <!--[if IE 8]> <html class="ie8 no-js"> <![endif]-->
 <!--[if IE 9]> <html class="ie9 no-js"> <![endif]-->
@@ -58,8 +81,9 @@ String brandSuffix = InitServlet.getBrandSuffix();
 </head>
 <body id="login" class="login">
 
-<div class="logo">
-    <img src="/admin/skins/webjet8/assets/global/img/wj/logo-<%=brandSuffix%>.png" style="max-width: 350px;" alt="" />
+<div class="welcome-title">
+    <h1><c:out value="${title}"/></h1>
+    <h2><c:out value="${subtitle}"/></h2>
 </div>
 
 <%
@@ -71,35 +95,62 @@ String brandSuffix = InitServlet.getBrandSuffix();
 <div class="container">
     <div class="container-inner">
         <div class="content">
-            <h3 class="form-title"><iwcm:text key="logon.logon"/></h3>
-                <div class="alert alert-danger display -hide">
-                        <p style="color: black;">
-                            <c:if test="${empty param.auth}">
-                                <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
-                            </c:if>
-                            <c:if test="${not empty param.auth}">
-                                <iwcm:text key="logon.password.enter_new_password"/><br/>
-                            </c:if>
-                            <%if (Constants.getInt("password"+constStr+"MinLength") > 0) { %>
-                                - <iwcm:text key="logon.change_password.min_length" param1='<%=Constants.getString("password"+constStr+"MinLength")%>'/><br/>
-                            <% } if (Constants.getInt("password"+constStr+"MinCountOfDigits") > 0) { %>
-                                - <iwcm:text key="logon.change_password.count_of_digits" param1='<%=Constants.getString("password"+constStr+"MinCountOfDigits")%>'/><br/>
-                            <% } if (Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0) { %>
-                                - <iwcm:text key="logon.change_password.count_of_upper_case" param1='<%=Constants.getString("password"+constStr+"MinUpperCaseLetters")%>'/><br/>
-                            <% } if (Constants.getInt("password"+constStr+"MinCountOfSpecialSigns") > 0) { %>
-                                - <iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=Constants.getString("password"+constStr+"MinCountOfSpecialSigns")%>'/><br/>
-                            <% } %>
-                                - <iwcm:text key="logon.change_password.used_in_history2"/><br/>
-                        </p>
-                        <logic:present name="errors">
-                            <span>
+            <div class="form-group language-select">
+                    <div class="custom-select" style="cursor: default;">
+                        <span class="selected-value">&nbsp;</span>
+                    </div>
+            </div>
+
+            <div class="form-group logo">
+                <img src="/admin/skins/webjet8/assets/global/img/wj/logo-<%=brandSuffix%>.png" alt="WebJET CMS" />
+            </div>
+
+                <div class="alert-wrapper">
+                    <div class="alert alert-danger">
+                        <span>
+                            <logic:notPresent name="errorsList">
+                                <c:if test="${empty param.auth}">
+                                    <iwcm:text key="logon.change_password.nesplna_nastavenia"/><br/>
+                                </c:if>
+                                <c:if test="${not empty param.auth}">
+                                    <iwcm:text key="logon.password.enter_new_password"/><br/>
+                                </c:if>
+                            </logic:notPresent>
+                            <logic:present name="errorsList">
                                 <iwcm:text key="user.form.errors"/>
-                            </span>
+                            </logic:present>
+                        </span>
+                    </div>
+                    <div class="infotext">
+                        <logic:notPresent name="errorsList">
+                        <ul>
+                            <%if (Constants.getInt("password"+constStr+"MinLength") > 0) { %>
+                                <li><iwcm:text key="logon.change_password.min_length" param1='<%=Constants.getString("password"+constStr+"MinLength")%>'/></li>
+                            <% } if (Constants.getInt("password"+constStr+"MinCountOfDigits") > 0) { %>
+                                <li><iwcm:text key="logon.change_password.count_of_digits" param1='<%=Constants.getString("password"+constStr+"MinCountOfDigits")%>'/></li>
+                            <% } if (Constants.getInt("password"+constStr+"MinUpperCaseLetters") > 0) { %>
+                                <li><iwcm:text key="logon.change_password.count_of_upper_case" param1='<%=Constants.getString("password"+constStr+"MinUpperCaseLetters")%>'/></li>
+                            <% } if (Constants.getInt("password"+constStr+"MinCountOfSpecialSigns") > 0) { %>
+                                <li><iwcm:text key="logon.change_password.count_of_special_sign" param1='<%=Constants.getString("password"+constStr+"MinCountOfSpecialSigns")%>'/></li>
+                            <% } %>
+                                <li><iwcm:text key="logon.change_password.used_in_history2"/></li>
+                        </ul>
+                        </logic:notPresent>
+                        <logic:present name="errors">
                             <ul>
                                 <li>${errors}</li>
                             </ul>
                         </logic:present>
+                        <logic:present name="errorsList">
+                            <ul>
+                                <c:forEach var="error" items="${errorsList}">
+                                    <li>${error.values[0]}</li>
+                                </c:forEach>
+                            </ul>
+                        </logic:present>
                     </div>
+                </div>
+
                 <div class="login_content">
                     <form:form action="changePassword" method="post" modelAttribute="userForm">
                         <c:if test="${empty param.auth}">
@@ -128,8 +179,8 @@ String brandSuffix = InitServlet.getBrandSuffix();
                             <label class="control-label"><iwcm:text key="logon.retype_new_password"/>:</label>
                             <form:password path="retypeNewPassword" maxlength="64" size="16" cssClass="form-control"/>
                         </div>
-                        <div class="form-actions text-end">
-                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.submit"/></button>
+                        <div class="form-group">
+                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.submit"/><i class="ti ti-arrow-right"></i></button>
                             <input type="hidden" name="language" value="<%=org.apache.struts.util.ResponseUtils.filter(lng)%>"/>
                             <form:hidden path="login"/>
                             <form:hidden path="auth"/>
@@ -147,7 +198,6 @@ String brandSuffix = InitServlet.getBrandSuffix();
 
 </body>
 
-<iwcm:combine type="js" set="adminStandardJs" />
 <iwcm:combine type="js" set="adminLogonJs" />
 
 <script>
@@ -221,10 +271,6 @@ String brandSuffix = InitServlet.getBrandSuffix();
     };
 
     jQuery(document).ready(function() {
-        Metronic.init(); // init metronic core components
-        Layout.init(); // init current layout
-
-
         try {
             bindPasswordStrength();
         } catch (e) {console.log(e);}

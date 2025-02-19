@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'insert-script',
-        [
-            [ '#insert-script', '[[\#{components.insert_script.list}]]', true ]
-        ]
-    )
-
     script.
         var insertScriptTable;
         window.domReady.add(function () {

@@ -248,6 +248,7 @@ static {
 	//iwcm:forEach
 	replaces.add(new OptionDto("<iwcm:forEach items=\"$"+"{galleryActionBean.photoList}\" var=\"image\" type=\"sk.iway.iwcm.gallery.GalleryBean\">", "<c:forEach items=\"$"+"{galleryActionBean.photoList}\" var=\"image\"><"+"%sk.iway.iwcm.gallery.GalleryBean image = (sk.iway.iwcm.gallery.GalleryBean)pageContext.getAttribute(\"image\");%"+">", null));
 	replaces.add(new OptionDto("<iwcm:forEach items=\"$"+"{perexGroupsNot}\" var=\"option\" type=\"sk.iway.iwcm.doc.PerexGroupBean\">", "<c:forEach items=\"$"+"{perexGroupsNot}\" var=\"option\"><"+"%sk.iway.iwcm.doc.PerexGroupBean option = (sk.iway.iwcm.doc.PerexGroupBean)pageContext.getAttribute(\"option\");%"+">", null));
+	replaces.add(new OptionDto("<iwcm:forEach ", "<c:forEach ", null));
 	replaces.add(new OptionDto("</iwcm:forEach>", "</c:forEach>", null));
 
 	//remove datetime.tld

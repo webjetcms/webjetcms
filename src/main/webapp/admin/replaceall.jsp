@@ -224,10 +224,6 @@ public List<GroupDetails> replaceTextGroups(String oldText, String newText, Stri
 <%@page import="sk.iway.iwcm.doc.DocDetails"%>
 <%@page import="sk.iway.iwcm.doc.GroupDetails"%>
 
-<div class="row title">
-    <h1 class="page-title"><i class="fa icon-refresh"></i><iwcm:text key="components.user.perms.replaceAll"/></h1>
-</div>
-
 <div id="waitDiv" style="text-align:center; color: red;">
    <iwcm:text key="fbrowser.edit.loading_please_wait"/><br/>
    <img src="/admin/images/loading-anim.gif" />

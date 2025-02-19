@@ -218,11 +218,15 @@ module.exports = {
         new CopyPlugin({
             patterns:[
                 { from: 'src/images/logo-cms.png', to: 'images/' },
+                { from: 'src/images/logo-cms.svg', to: 'images/' },
                 { from: 'src/images/logo-dms.png', to: 'images/' },
+                { from: 'src/images/logo-dms.svg', to: 'images/' },
                 { from: 'src/images/logo-lms.png', to: 'images/' },
+                { from: 'src/images/logo-lms.svg', to: 'images/' },
                 { from: 'src/images/logo-msg.png', to: 'images/' },
+                { from: 'src/images/logo-msg.svg', to: 'images/' },
                 { from: 'src/images/logo-net.png', to: 'images/' },
-                { from: 'src/images/features-contact.png', to: 'images/' }
+                { from: 'src/images/logo-net.svg', to: 'images/' }
             ]
         }),
         new VueLoaderPlugin(),

@@ -103,8 +103,8 @@ Scenario('Vyhladavanie v poliach @singlethread', ({ I, DT }) => {
 
     I.see("page-2022-03-27-213028-11");
 
-    //CAKAJUCE NA SCHVALENIE - tab
-    I.click("Čakajúce na schválenie", "#pills-pages");
+    //Neschválené - tab
+    I.click("Neschválené", "#pills-pages");
 
     I.fillField({css: "input.dt-filter-title"}, "Čakajúce");
     I.pressKey('Enter', "input.dt-filter-name");
@@ -151,20 +151,22 @@ Scenario('Overenie funkcionalit stranok na frontende', ({ I }) => {
 
     //Konsolidacia napriec trhmi - clanok
     I.click("Konsolidácia naprieč trhmi");
-    I.see("KONSOLIDÁCIA NAPRIEČ TRHMI"); //Nadpis
-    I.see("DLHOPISOVÉ TRHY");
-    I.see("KOMODITNÉ TRHY");
-    I.see("DEVÍZOVÉ TRHY");
+    I.waitForText("KONSOLIDÁCIA NAPRIEČ TRHMI", 10); //Nadpis
+    I.waitForText("DLHOPISOVÉ TRHY", 10);
+    I.waitForText("KOMODITNÉ TRHY", 10);
+    I.waitForText("DEVÍZOVÉ TRHY", 10);
 
     I.click("Zo sveta financií");
 
     //Graf týždňa: Svetové akciové indexy majú vyšší podiel klesajúcich aktív - clanok
+    I.waitForText("Graf týždňa: Svetové akciové indexy majú vyšší podiel klesajúcich aktív", 10);
     I.click("Graf týždňa: Svetové akciové indexy majú vyšší podiel klesajúcich aktív");
     I.see("GRAF TÝŽDŇA: SVETOVÉ AKCIOVÉ INDEXY MAJÚ VYŠŠÍ PODIEL KLESAJÚCICH AKTÍV"); //Nadpis
 
     I.click("Zo sveta financií");
 
     //Trhy sú naďalej vydesené - clanok
+    I.waitForText('Trhy sú naďalej vydesené');
     I.click("Trhy sú naďalej vydesené");
     I.see("TRHY SÚ NAĎALEJ VYDESENÉ"); //Nadpis
 
@@ -202,12 +204,12 @@ Scenario('Overenie funkcionalit stranok na frontende', ({ I }) => {
 
     I.see("KONTAKT"); //Nadpis
 
-    I.see("Meno a priezvisko");
+    I.waitForText("Meno a priezvisko", 10);
 
     //----------Produktová stránka-----------------
     I.click("Produktová stránka");
 
-    I.see("Etiam sit amet");
+    I.waitForText("Etiam sit amet", 10);
 });
 
 /**
@@ -223,7 +225,7 @@ Scenario('Overenie chyby nastavenia zaporneho groupId', ({ I, DT }) => {
 
     I.see("page-2021-02-23-134924-937", "table.datatableInit tbody");
 
-    I.clickCss("#pills-pages-tab");
+    I.clickCss("#pills-folders-tab");
 
     I.dontSee("page-2021-02-23-134924-937", "table.datatableInit tbody");
 

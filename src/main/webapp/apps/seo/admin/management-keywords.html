@@ -5,18 +5,7 @@
 var managementKeywordsDataTable;
 
 window.domReady.add(function () {
-
-    WJ.breadcrumb({
-        id: "managementKeywords",
-        tabs: [
-            {
-                url: '/apps/seo/admin/management-keywords/',
-                title: '[[#{components.seo.management_keywords}]]',
-                active: true
-            }
-        ]
-    });
-
+    
     let url = "/admin/rest/seo/management-keywords";
 
     managementKeywordsDataTable = WJ.DataTable({

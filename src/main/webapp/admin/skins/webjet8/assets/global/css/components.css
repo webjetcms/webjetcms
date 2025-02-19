@@ -1,58 +1,15 @@
 /********************
  METRONIC COMPONENTS
 ********************/
-/***
-General reset
-***/
-@font-face {
-  font-family: 'Open Sans';
-  font-style: light;
-  font-weight: 300;
-  src: local("Open Sans"),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-light-webfont.woff2') format('woff2'),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-light-webfont.woff') format('woff')
-}
 
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 400;
-  src: local("Open Sans"),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-regular-webfont.woff2') format('woff2'),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-regular-webfont.woff') format('woff')
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  font-style: italic;
-  font-weight: 400;
-  src: local("Open Sans"),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-italic-webfont.woff2') format('woff2'),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-italic-webfont.woff') format('woff')
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 600;
-  src: local("Open Sans"),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-semibold-webfont.woff2') format('woff2'),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-semibold-webfont.woff') format('woff')
-}
-
-@font-face {
-  font-family: 'Open Sans';
-  font-style: normal;
-  font-weight: 700;
-  src: local("Open Sans"),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-bold-webfont.woff2') format('woff2'),
-  url('/admin/skins/webjet8/assets/global/fonts/Open-sans/opensans-bold-webfont.woff') format('woff')
-}
+@font-face{font-family:"Asap";font-style:normal;font-weight:400;src:url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.eot);src:local(""),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.eot?#iefix) format("embedded-opentype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff2) format("woff2"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.woff) format("woff"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.ttf) format("truetype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-regular.svg#Asap) format("svg")}
+@font-face{font-family:"Asap";font-style:normal;font-weight:700;src:url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.eot);src:local(""),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.eot?#iefix) format("embedded-opentype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff2) format("woff2"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.woff) format("woff"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.ttf) format("truetype"),url(/admin/v9/dist/fonts/asap-v15-latin-ext_latin-700.svg#Asap) format("svg")}
+@font-face{font-family:"Asap";font-style:normal;font-weight:100;src:url(/admin/v9/dist/fonts/asap-thin.woff2) format("woff2")}
 
 /* Set default body */
 body {
   color: #333333;
-  font-family: "Open Sans", sans-serif;
+  font-family: "Asap", sans-serif;
   padding: 0px !important;
   margin: 0px !important;
   font-size: 13px;
@@ -134,7 +91,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Open Sans", sans-serif;
+  font-family: "Asap", sans-serif;;
   font-weight: 300;
 }
 
@@ -286,7 +243,7 @@ Utilities
 }
 
 .primary-font {
-  font-family: "Open Sans", sans-serif !important;
+  font-family: "Asap", sans-serif !important;
 }
 
 .bold {
@@ -1211,13 +1168,13 @@ Customized Bootstrap Buttons
 
 .btn-success {
   color: white;
-  background-color: #45b6af;
-  border-color: #3ea49d;
+  background-color: #0063FB;
+  border-color: #0063FB;
 }
 .btn-success:hover, .btn-success:focus, .btn-success:active, .btn-success.active {
   color: white;
-  background-color: #3a9893;
-  border-color: #307f7a;
+  background-color: #0054d5;
+  border-color: #0054d5;
 }
 .open .btn-success.dropdown-toggle {
   color: white;
@@ -1533,7 +1490,7 @@ Charts and statistics
   overflow: hidden;
   height: 300px;
   width: 100%;
-  font-family: "Open Sans", sans-serif !important;
+  font-family: "Asap", sans-serif !important;
   font-size: 14px;
 }
 
@@ -2648,7 +2605,7 @@ Customized Bootstrap Labels
   font-weight: 300;
   padding: 3px 6px 3px 6px;
   color: #fff;
-  font-family: "Open Sans", sans-serif;
+  font-family: "Asap", sans-serif;
 }
 .label.label-sm {
   font-size: 12px;
@@ -4639,7 +4596,7 @@ Light Table
   font-weight: 600;
   font-size: 13px;
   color: #a7b3b9;
-  font-family: "Open Sans", sans-serif;
+  font-family: "Asap", sans-serif;
   border: 0;
   border-bottom: 1px solid #F2F5F8;
 }

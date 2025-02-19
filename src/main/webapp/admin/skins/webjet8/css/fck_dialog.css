@@ -273,7 +273,7 @@ a.iconDelete:hover, a.iconLaunch:hover, a.iconReplace:hover, a.iconJumpToLine:ho
 table { border-collapse: collapse;}
 table.noPadding td{ padding: 2px 0px;}
 
-.padding10{ padding: 10px 10px 0px 10px; width: 100%; background:#f6f6f6; }
+.padding10{ padding: 10px 10px 0px 10px; width: 100%; }
 * HTML BODY .padding10{ width: 100%;}
 
 .size input{ margin: 0px 5px 0px 0px;}

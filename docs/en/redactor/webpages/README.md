@@ -4,7 +4,7 @@
 
 ### Choosing a domain
 
-For multi-domain web sites, the domain selection is displayed at the top. In the tree structure of the site, only folders with the selected domain and folders that do not have a domain set are displayed.
+For multi-domain web sites, the left menu displays the domain selection. Only folders with the selected domain and folders that do not have a domain set are displayed in the site tree structure.
 
 ![](domain-select.png)
 

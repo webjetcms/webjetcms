@@ -12,7 +12,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
 
     I.say("domenovy selektor");
     I.click("div.js-domain-toggler div.bootstrap-select button");
-    Document.screenshot("/redactor/webpages/domain-select.png", 1360, 220);
+    Document.screenshot("/redactor/webpages/domain-select.png", 1360, 450);
     I.click("div.js-domain-toggler div.bootstrap-select button");
 
     I.say("priecinky system/kos");
@@ -84,7 +84,7 @@ Scenario('web-pages-list', ({ I, DT, DTE, Document }) => {
     I.say("zobrazenie poctu zaznamov");
     I.click(container+" button.buttons-settings");
     I.click(container+" button.buttons-page-length");
-    I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
+    I.waitForElement("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]", 10);
 
     Document.screenshot("/redactor/datatables/dt-pagelength.png");
 
@@ -147,7 +147,7 @@ Scenario('media', ({ I, DT, DTE, Document }) => {
     //bubble editacia
     I.click({css: "div.buttons-select-cel"});
     I.wait(1);
-    I.click("#mediaTable tbody tr td:nth-child(4)");
+    I.click("#mediaTable tbody tr:nth-child(3) td:nth-child(4)");
     Document.screenshot("/_media/changelog/2021q2/2021-17-media-bubble.png", 1280, 400);
 
     //media skupiny
@@ -158,7 +158,7 @@ Scenario('media', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/webpages/media-groups.png", 1280, 490);
 });
 
-Scenario('historia', ({ I, DT, DTE, Document }) => {
+Scenario('historia', ({ I, DT, DTE, Document, i18n }) => {
     //media
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22956");
     DTE.waitForEditor();
@@ -172,11 +172,15 @@ Scenario('historia', ({ I, DT, DTE, Document }) => {
 
     Document.screenshotElement(null, "/redactor/webpages/history.png");
 
+    I.fillField(".dt-filter-from-publishStartStringExtra", i18n.getDate("01/10/2025"));
+    I.clickCss("button.dt-filtrujem-publishStartStringExtra");
+    DT.waitForLoader();
     I.click("#datatableFieldDTE_Field_editorFields-history tr:nth-child(1) td.dt-select-td");
 
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-edit", "/redactor/webpages/history-btn-edit.png");
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-preview", "/redactor/webpages/history-btn-preview.png");
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-compare", "/redactor/webpages/history-btn-compare.png");
+
     Document.screenshotElement("#panel-body-dt-datatableInit-history button.buttons-history-remove", "/redactor/webpages/history-btn-remove.png");
 
 });
@@ -265,6 +269,9 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldM').css("padding-top", "10px");
         $('div.DTE_Action_Edit div.DTE_Field_Name_fieldM').css("padding-bottom", "10px");
 
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldN').css("padding-top", "10px");
+        $('div.DTE_Action_Edit div.DTE_Field_Name_fieldN').css("padding-bottom", "10px");
+
     });
     Document.screenshotElement("div.DTE_Action_Edit div.DTE_Field_Name_fieldA", "/frontend/webpages/customfields/webpages-text.png");
 
@@ -291,7 +298,6 @@ Scenario('custom-fields', async({ I, DT, DTE, Document }) => {
     I.resizeWindow(1280, 400);
     I.scrollTo("div.DTE_Action_Edit div.DTE_Field_Name_fieldI");
     I.fillField("div.DTE_Action_Edit div.DTE_Field_Name_fieldI input", "123456");
-    I.moveCursorTo('#toast-container');
     Document.screenshot("/frontend/webpages/customfields/webpages-length.png");
     I.wjSetDefaultWindowSize();
 
@@ -391,18 +397,18 @@ Scenario('apps-qa', ({ I, DT, DTE, Document }) => {
 
 Scenario('logon', ({ I, Document, i18n }) => {
     I.amOnPage('/logoff.do?forward=/admin/');
+    I.amOnPage('/admin/logon/?language='+I.getConfLng()+'&id=2');
 
-    i18n.selectOption("language", "English");
     I.fillField("#password", "12345");
     Document.screenshot("/redactor/admin/logon.png", 1080, 685);
-    Document.screenshotElement('.btn.lost-password', '/admin-recover-password-btn.png');
+    Document.screenshotElement('.btn.lost-password', '/redactor/admin/password-recovery/admin-recover-password-btn.png');
 
     I.clickCss('.btn.lost-password');
     Document.screenshot("/redactor/admin/password-recovery/admin-recovery-page.png");
     Document.screenshotElement("#register-submit-btn", "/redactor/admin/password-recovery/admin-send-btn.png");
 
+    I.fillField("input[name=loginName]", "tester");
     I.clickCss("#register-submit-btn");
-    i18n.selectOption("language", "English");
     Document.screenshot('/redactor/admin/password-recovery/admin-recovery-page-notif.png');
 
     I.fillField("#username", "testerslabeheslo");
@@ -415,17 +421,20 @@ Scenario('logon', ({ I, Document, i18n }) => {
 Scenario('customer zone', ({ I, Document }) => {
     I.logout();
     I.amOnPage('/apps/prihlaseny-pouzivatel/zakaznicka-zona/');
+    I.wait(30); //password expiry time
     Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-1.png');
     I.click('Zabudli ste vaše heslo?');
-    Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-2.png');
+    Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-2.png', 1280, 900);
     I.clickCss('#register-submit-btn');
     Document.screenshot('/redactor/admin/password-recovery/user-recovery-page-notif.png');
 });
 
-Scenario('layout-menu', ({ I, Document }) => {
-    I.amOnPage('/admin/v9/');
+Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
+    I.amOnPage("/apps/stat/admin/");
+    DT.setDates(i18n.getDate("05/01/2022"), i18n.getDate("05/31/2022"), "#statsDataTable_extfilter");
 
     Document.screenshot("/redactor/admin/welcome.png", 1360, 685);
+
     Document.screenshotElement("div.ly-header", "/redactor/admin/header.png");
     Document.screenshotElement(".js-search-toggler", "/redactor/admin/icon-search.png");
 
@@ -436,6 +445,8 @@ Scenario('layout-menu', ({ I, Document }) => {
 
     Document.screenshotElement("div.md-large-menu", "/redactor/admin/menu-main-sections.png");
     Document.screenshotElement("div.menu-wrapper", "/redactor/admin/menu-items.png");
+
+    Document.screenshotElement("div.js-domain-toggler", "/redactor/admin/domain-selector.png");
 
     I.resizeWindow(1199, 685);
     Document.screenshotElement(".js-sidebar-toggler", "/redactor/admin/icon-hamburger.png");
@@ -482,25 +493,19 @@ Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
 
 });
 
-Scenario('pagebuilder', ({ I, DTE, Document }) => {
-
-    //POZOR: tento scnreenshot neviem automatizovat, je tam schvalne cakanie 5 sekund
-    //je treba kurzorom focusnut text, aby sa zobrazili PB zvyraznenia pre screenshot
+Scenario('pagebuilder', async ({ I, DTE, Document }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
 
     DTE.waitForEditor();
-    I.wait(10);
-
-    I.switchTo('#DTE_Field_data-pageBuilderIframe');
-    I.say("Klikni kurzorom do textu a drz focus");
-    I.say("Klikni kurzorom do textu a drz focus");
-    I.say("Klikni kurzorom do textu a drz focus");
-    I.say("Klikni kurzorom do textu a drz focus");
-    I.say("Klikni kurzorom do textu a drz focus");
     I.wait(5);
 
-    //I.moveCursorTo("p.text-center:nth-child(2)");
+    //add PB classes to simulate mouse over
+    await I.executeScript(()=>{
+        var pbElement = $('#DTE_Field_data-pageBuilderIframe')[0].contentWindow.$("div.col-3.text-center.pb-column.pb-grid-element").first()
+        pbElement.addClass("pb-has-toolbar-active").closest(".container").addClass("pb-has-child-toolbar-active").closest("section").addClass("pb-has-child-toolbar-active")
+        pbElement.find("aside.pb-toolbar").trigger("click")
+    });
 
     Document.screenshot("/redactor/webpages/pagebuilder.png");
 
@@ -520,7 +525,7 @@ Scenario('welcome', ({ I, Document }) => {
     I.executeScript(function() {
         $('div.overview-logged.bookmark').css("padding-top", "40px");
     });
-    I.moveCursorTo("div.overview-logged.bookmark .overview-logged__head__icon");
+    I.moveCursorTo("div.overview-logged.bookmark .overview-logged__head__more");
     Document.screenshotElement("div.overview-logged.bookmark", "/redactor/admin/bookmarks.png");
 
     I.amOnPage("/admin/v9/");

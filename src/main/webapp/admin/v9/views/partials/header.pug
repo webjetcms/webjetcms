@@ -7,10 +7,7 @@ div.ly-container.container
         .btn.btn-sm.btn-outline-secondary.js-sidebar-toggler
             i.ti.ti-menu-2
 
-        .js-domain-toggler
-            i.ti.ti-browser
-            select(data-th-field="${layout.header.currentDomain}" onchange="WJ.changeDomain(this);" data-th-data-previous="${layout.header.currentDomain}")
-                option(data-th-each="domain : ${layout.header.domains}" data-th-text="${domain}" data-th-value="${domain}")
+        .header-title
 
     div.header-link-wrapper
 
@@ -23,7 +20,7 @@ div.ly-container.container
         div.header-link-group
 
             a.btn.btn-sm.btn-outline-secondary.js-search-toggler(data-th-if="${layout.hasPermission('menuWebpages|edit_text')}" href="/admin/v9/search/index/" data-th-title="\#{components.search.title}" data-bs-toggle="tooltip")
-                i.ti.ti-search
+                i.ti.ti-search.notext
 
             .btn.btn-sm.btn-outline-secondary.js-tasks-toggler(style="display:none")
                 i.ti.ti-list-check.todo
@@ -38,7 +35,7 @@ div.ly-container.container
 
             div.dropdown
                 button.btn.btn-sm.btn-outline-secondary.js-profile-toggler.form-select(id="dropdownMenuUser" data-bs-toggle="dropdown" aria-expanded="false")
-                    i.ti.ti-id
+                    i.ti.ti-user
                     <span data-th-text="${layout.user.fullName}" style="padding-left: 3px;">WebJET User</span>
 
                 ul.dropdown-menu(aria-labelledby="dropdownMenuUser")
@@ -47,7 +44,7 @@ div.ly-container.container
                             i.ti.ti-user
                             <span data-th-text="\#{components.forum.bb.profile}" data-th-remove="tag">Profil</span>
                     li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
-                        a.dropdown-item(data-th-data-userid="${layout.user.userId}" onclick="WJ.openPopupDialog('/admin/2factorauth.jsp?userid='+$(this).data('userid'))")
+                        a.dropdown-item(onclick="WJ.openPopupDialog('/admin/2factorauth.jsp')")
                             i.ti.ti-device-mobile-message
                             <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
                     li(data-th-if="${layout.hasPermission('cmp_form')}")
@@ -60,10 +57,12 @@ div.ly-container.container
                             <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
                 |
 
-        div.header-link-group
+        div.header-link-group(style="margin-left: 4px;")
 
             a.btn.btn-sm.btn-outline-secondary.js-logout-toggler(href="javascript:document.adminLogoffForm.submit()" data-th-title="\#{menu.logout}" data-bs-toggle="tooltip")
-                i.ti.ti-logout.fs-5
+                i.ti.ti-logout.notext
 
     form(data-th-action="${layout.getConstant('adminLogoffLink')}" method="post" name="adminLogoffForm" style="display:none;")
         input(type="hidden" data-th-name="${layout.csrfParameterName}" data-th-value="${layout.csrfToken}")
+
+    div.ly-submenu

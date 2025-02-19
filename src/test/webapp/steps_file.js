@@ -10,6 +10,10 @@ module.exports = function () {
       return lng;
     },
 
+    getDefaultPassword() {
+      return process.env.CODECEPT_DEFAULT_PASSWORD;
+    },
+
     // Define custom steps here, use 'this' to access default methods of I.
     // It is recommended to place a general 'login' function here.
     fillAreaField(area, generateRandomNum) {
@@ -105,7 +109,7 @@ module.exports = function () {
       //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna
       //odosli prihlasenie
       this.fillField("username", user);
-      this.fillField("password", secret("*********"));
+      this.fillField("password", secret(this.getDefaultPassword()));
       this.click("login-submit");
       if (waitForText===true) this.waitForText(helper, 10);
     },
@@ -437,7 +441,7 @@ module.exports = function () {
       var auto_name = 'name-autotest-' + randomNumber;
       this.say('Zmazanie priecinka name-autotest');
       this.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
-      this.waitForText('Zoznam web stránok', 10);
+      this.waitForText('Webové stránky', 10);
       this.click(locate('.jstree-anchor').withText(auto_name));
       this.dtWaitForLoader();
       this.wait(1);

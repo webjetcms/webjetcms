@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'domain-redirect',
-        [
-            [ '#domain-redirect', '[[\#{components.redirect.leftmenuName}]]', true ]
-        ]
-    )
-
     script.
         var domainRedirectTable;
         window.domReady.add(function () {

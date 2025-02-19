@@ -19,7 +19,8 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %>
 <meta http-equiv="Content-Type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" />
 
-<iwcm:combine type="css" set="adminStandardCss" />
+<iwcm:combine type="css" set="adminStandardCssWj9" />
+<link href="/admin/skins/webjet8/assets/global/css/webjet2021.css" rel="stylesheet" type="text/css"/>
 <style>
 	<jsp:include page="/admin/css/perms-css.jsp"/>
 

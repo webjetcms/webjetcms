@@ -576,6 +576,12 @@ dependencies {
 
 2024.0.x
 
+- Web pages - corrected order of web pages when used `Drag&Drop` in tree structure (#57657-1).
+- Web pages - when duplicating a web page/folder, the value is set `-1` in the Order of Arrangement field for inclusion at the end of the list. The value `-1` can also be entered manually to obtain a new value for the order of the arrangement (#57657-1).
+- Web pages - import web pages - fixed media group settings when importing pages containing media. When importing, all Media Groups (even unused ones) are automatically created due to the fact that the Media Group set for the media application is also translated when importing pages `/components/media/media.jsp` in the page (which may also contain the media ID of a group outside the imported pages) (#57657-1).
+
+2024.0.52
+
 - Web pages - corrected setting of tags for set configuration variable `perexGroupUseJoin=true` (#57453).
 - Statistics - erroneous pages - increased limit of maximum number of records from 1000 to the value according to the configuration variable `datatablesExportMaxRows`, by default `50000`. Table modified for paging and searching on the server (#57453).
 - `Stripes` - corrected date and time formatting using `Tools.formatDate/Time` for consistent date and time formats (#57405).

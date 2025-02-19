@@ -1,0 +1,144 @@
+@charset "UTF-8";
+
+.md-tabs {
+    padding: 5px 15px 0px 15px;
+    margin-left: -15px;
+    margin-right: -15px;
+    background-color: white;
+
+    border-bottom: 1px solid $nice-gray-100;
+    margin-bottom: -1px;
+
+    &.border-top {
+        border-top: 1px solid $nice-gray-100;
+    }
+
+    a.nav-link {
+        font-family: $admin-font-family;
+        font-size: 15px;
+        color: $dark-60;
+        padding:0;
+        margin-right: 16px;
+        border-bottom: 2px solid transparent;
+        padding-top: 11px;
+        padding-bottom: 9px;
+
+        &:hover {
+            color: $primary;
+        }
+
+        &.active {
+            color: $primary;
+            border-bottom-color: $primary;
+            &:hover {
+                cursor: default;
+            }
+        }
+
+    }
+}
+
+body.ly-submenu-active {
+    .ly-header {
+        height: 95px;
+        padding-bottom: 0px;
+    }
+    .ly-header .ly-container {
+        height: auto;
+    }
+    .ly-content {
+        height: calc(100vh - 95px);
+    }
+    .ly-content-wrapper {
+        padding-top: 95px;
+    }
+}
+
+.modal.DTED {
+    .md-tabs {
+        background-color: transparent;
+        padding-top: 0px;
+        a.nav-link {
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+    }
+}
+
+//css to add hamburger and create dropdown
+.md-tabs.md-tabs-dropdown ul {
+ @media (max-width: 1199px) {
+      border: 1px solid $nice-gray-300;
+      border-radius: $border-radius;
+      overflow: hidden;
+      position: relative;
+      display: block;
+      width: 100%;
+      margin-top: 5px;
+      margin-bottom: 5px;
+
+      &::after {
+        content: "☰";
+        position: absolute;
+        top: 3px;
+        right: 15px;
+        z-index: 2;
+        pointer-events: none;
+        font-size: 16px;
+      }
+
+      &.open {
+        a {
+          position: relative;
+          display: block;
+        }
+
+        > li > a.active {
+          background-color: $nice-gray;
+        }
+      }
+
+
+    li {
+      display: block;
+      padding: 0;
+      vertical-align: bottom;
+    }
+
+    > li > a {
+      position: absolute;
+      top: 0;
+      left: 0;
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      border-color: transparent;
+      text-align: center;
+
+      padding-top: 6px;
+      padding-bottom: 4px;
+
+      &:focus,
+      &:hover,
+      &:active {
+        border-color: transparent;
+      }
+    }
+
+    > li > a.active {
+      display:block;
+      border-color: transparent;
+      position: relative;
+      z-index: 1;
+      background: #fff;
+
+      &:focus,
+      &:hover,
+      &:active {
+        border-color: transparent;
+      }
+
+    }
+  }
+}

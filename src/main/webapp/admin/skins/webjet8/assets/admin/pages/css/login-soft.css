@@ -2,44 +2,74 @@
 Login page
 ***/
 /* logo page */
+body {
+  font-size: 16px;
+  font-weight: 100;
+}
+
+body.login input.form-control, body.login select.form-select, body.login .btn {
+  font-size: 16px;
+  line-height: 26px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-width: 0px;
+}
+i.ti {
+  line-height: 26px;
+}
+
 html, body {
   height: 100%;
 }
-.login {
-  background-color: #666 !important;
+.form-control:focus {
+  box-shadow: none;
 }
 body {
   background-image: url('/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg');
   background-size: cover;
+  background-position: center;
 }
-.login .logo {
-  position: absolute;
-  left: 50px;
-  top: 50px;
-  margin: 0 auto;
-  padding: 15px;
-  text-align: center;
+label {
+  font-size: 16px;
+  margin-bottom: 4px;
+  line-height: 26px;
+  font-weight: 100;
+}
+body.login div.form-group {
+  margin-bottom: 24px;
+}
+body.login div.form-group:last-child {
+  margin-bottom: 0px;
+}
+.btn .ti {
+  padding-left: 32px;
+}
+.input-icon > .form-control {
+  padding-left: 48px;
+}
+.input-icon > i {
+  color: black;
+  margin-left: 16px;
 }
 .container {
   display: table;
-  height: 100%;
-  width: 100%;
+  max-width: none;
+  position: absolute;
+  right: 0px;
+  background-color: rgba(0, 18, 61, 0.4);
+  padding: 0px;
+  margin: 48px;
+  border-radius: 16px;
+  width: 496px;
 }
 .container-inner {
   display: table-cell;
-  vertical-align: middle;
-}
-div.content {
-  border-radius: 8px !important;
+  vertical-align: top;
+  backdrop-filter: blur(1px);
 }
 .login .content {
-  background: url(../img/bg-white-lock.png) repeat;
-  width: 360px;
-  margin: 0 auto;
-  margin-bottom: 0px;
-  padding: 30px;
-  padding-top: 20px;
-  padding-bottom: 15px;
+  margin: 0px;
+  padding: 48px;
 }
 
 .login .content h3 {
@@ -51,8 +81,9 @@ div.content {
 }
 
 .login .content p,
-.login .content label {
-  color: #fff;
+.login .content label,
+div.password-strength-info {
+  color: #D9DEFF;
 }
 
 .login .content .login-form,
@@ -62,7 +93,7 @@ div.content {
 }
 .login .content .form-control {
   border-radius: 6px !important;
-  border: 1px solid #b3b8c7;
+  border-width: 0px;
   background-color: white;
 }
 
@@ -82,8 +113,9 @@ div.content {
 }
 
 div.password-strength-info {
-  color: white;
-  text-shadow: 1px 1px 2px black;
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 22px;
 }
 
 .login .content .form-actions {
@@ -117,11 +149,13 @@ div.password-strength-info {
   display: inline-block;
 }
 
-.login .content .form-actions .btn {
+.login .content .form-group .btn {
   margin-top: 1px;
 }
 .btn {
   border-radius: 6px !important;
+  padding-left: 16px;
+  padding-right: 16px;
 }
 .login .content .form-actions .btn.blue {
   background-color: #0063FB;
@@ -129,13 +163,13 @@ div.password-strength-info {
 .login .content .form-actions .btn.blue:hover {
   background-color: #0054d5;
 }
-.login .content .form-actions .btn.lost-password {
+.login .content .form-actions .btn.btn-as-link {
   background-color: transparent;
   color: white;
   padding-left: 2px;
   border-width: 0px;
 }
-.login .content .form-actions .btn.lost-password:hover {
+.login .content .form-actions .btn.btn-as-link:hover {
   text-decoration: underline;
 }
 .login .content .forget-password {
@@ -192,69 +226,184 @@ div.password-strength-info {
   float: right;
 }
 
-@media (max-width: 1075px) {
-  body.login .logo {
-      display: none;
-  }
+@media (max-height: 740px) {
   body.login div.content {
       position: relative;
   }
-  body.login div.content:before {
-      content: "";
-      width: 150px;
-      height: 30px;
-      background-image: url(/admin/skins/webjet8/assets/global/img/wj/logo-cms.png);
-      background-size: 150px 30px;
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      opacity: 0.9;
-  }
 }
-@media (max-height: 500px) {
-  body.login .logo {
-      display: none;
-  }
-  body.login div.content {
-      position: relative;
-  }
-  body.login div.content:before {
-      content: "";
-      width: 150px;
-      height: 30px;
-      background-image: url(/admin/skins/webjet8/assets/global/img/wj/logo-cms.png);
-      background-size: 150px 30px;
-      position: absolute;
-      right: 10px;
-      top: 10px;
-      opacity: 0.9;
-  }
-}
-@media (max-width: 480px) {
-   /***
-  Login page
-  ***/
-  .login .logo {
-    margin-top: 10px;
-  }
 
+.welcome-title {
+  position: absolute;
+  right: 590px;
+  color: white;
+  top: 275px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.welcome-title h1 {
+  font-size: 60px;
+  line-height: 60px;
+  font-weight: 100;
+  margin: 0;
+  margin-bottom: 3px;
+  opacity: 0; /* Start with the element hidden */
+  transform: translate(-20px, -20px); /* Start with the element moved up and left */
+  animation: revealH1 1s ease-out forwards; /* Apply the animation */
+}
+
+.welcome-title h2 {
+  font-size: 33px;
+  font-weight: 100;
+  opacity: 0; /* Start with the element hidden */
+  transform: translate(20px, -10px); /* Start with the element moved up and right */
+  animation: revealH2 1s ease-out forwards; /* Apply the animation */
+  animation-delay: 0.3s; /* Delay the animation for h2 */
+}
+
+@keyframes revealH1 {
+  0% {
+    opacity: 0;
+    transform: translate(-20px, -20px); /* Start position */
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0); /* Final position */
+  }
+}
+
+@keyframes revealH2 {
+  0% {
+    opacity: 0;
+    transform: translate(20px, -10px); /* Start position */
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0); /* Final position */
+  }
+}
+
+.custom-select {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center the content horizontally */
+  background-color: transparent;
+  border: 0px;
+  text-align: center;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 100;
+}
+
+.custom-select i {
+  margin-right: 8px;
+}
+
+.custom-select select {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  text-align: center; /* Center the text */
+  text-align-last: center; /* Center the text in the last line for Firefox */
+}
+
+.custom-select select:focus {
+  outline: none; /* Remove the default outline */
+  border: none; /* Ensure no border is applied */
+  box-shadow: none; /* Remove any box shadow */
+}
+
+.logo {
+  margin-bottom: 48px !important;
+  text-align: center;
+}
+.logo img {
+  width: 300px;
+}
+button.btn-as-link {
+  background-color: transparent;
+  border-color: transparent;
+}
+.alert-danger {
+  background-color: #FF8389;
+  border-width: 0px;
+  color: #A9001C;
+  padding: 15px;
+  font-weight: 500;
+}
+.alert-success {
+  background-color: #51DCBD;
+  border-width: 0px;
+  color: #005E4D;
+  font-weight: 500;
+}
+.alert-wrapper {
+  margin-bottom: 24px;
+}
+.alert-wrapper .alert {
+  border-bottom-right-radius: 0px;
+  border-bottom-left-radius: 0px;
+  margin-bottom: 0px;
+}
+.alert-wrapper .infotext {
+  background-color: white;
+  color: #13151B;
+  border-bottom-right-radius: 6px;
+  border-bottom-left-radius: 6px;
+  padding: 16px;
+}
+.alert-wrapper .infotext ul {
+  margin-bottom: 0px;
+}
+.alert-wrapper .infotext p {
+  color: #13151B;
+  margin-top: 16px;
+}
+
+
+.qrImageWrapper {
+  text-align: center;
+}
+#qrImage {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: white;
+  border-radius: 6px;
+  width: auto;
+  display: inline-block;
+}
+
+@media (max-width: 880px) {
+  .container {
+    left: 50%;
+    transform: translateX(-50%);
+    right: auto; /* Reset the right position */
+    margin: 20px auto; /* Center the container horizontally */
+  }
+  .welcome-title {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .container {
+    width: 95%;
+  }
   .login .content {
-    padding: 30px;
-    width: 222px;
+    padding: 24px;
   }
-
-  .login .content h3 {
-    font-size: 22px;
+  .btn {
+    width: 100%;
   }
-
-  .login .checkbox {
-    font-size: 13px;
-  }
-
-  body.login .content {
-      width: auto;
-      max-width: 360px;
-      padding-top: 20px;
-      padding-bottom: 15px;
+  .logo img {
+    max-width: 300px;
+    width: 100%;
   }
 }

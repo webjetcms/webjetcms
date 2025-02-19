@@ -136,7 +136,3 @@ Při přidávání záznamu klikněte na ikonu + (Přidat) a vyberte Adresář (
 Více informací najdete v [dokumentace k editoru](../../redactor/webpages/approve/README.md).
 
 ![](users-tab-approving.png)
-
-## Rozdíly oproti verzi 8
-
-Právo "Krátká nabídka v editoru" je upraveno na právo "Plná nabídka v editoru", aby nebylo senzoricky inverzní a všechny položky mohly být označeny pro plná práva.

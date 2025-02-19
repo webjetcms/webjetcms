@@ -2,16 +2,16 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'linkcheck',
-        [
-            [ 'brokenLinks', '[[\#{linkcheck.linkcheck_vypis.broken_links}]]', true ],
-            [ 'hiddenPages', '[[\#{linkcheck.linkcheck_vypis.hidden_pages}]]', false ],
-            [ 'emptyPages', '[[\#{linkcheck.linkcheck_vypis.empty_pages}]]', false ]
-        ]
-    )
-
     script.
+        WJ.headerTabs({
+            id: 'linkcheck',
+            tabs: [
+                { url: 'brokenLinks', title: '[[\#{linkcheck.linkcheck_vypis.broken_links}]]', active: true },
+                { url: 'hiddenPages', title: '[[\#{linkcheck.linkcheck_vypis.hidden_pages}]]', active: false },
+                { url: 'emptyPages', title: '[[\#{linkcheck.linkcheck_vypis.empty_pages}]]', active: false }
+            ]
+        });
+
         var linkCheckUrl = "";
         var linkCheckDataTable = null;
 

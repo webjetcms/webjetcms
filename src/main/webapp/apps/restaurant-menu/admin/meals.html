@@ -9,17 +9,6 @@
 
         window.helpLink = "/redactor/apps/restaurant-menu/meals.md";
 
-        WJ.breadcrumb({
-            id: "meals",
-            tabs: [
-                {
-                    url: '/apps/restaurant-menu/admin/meals',
-                    title: '[[#{components.restaurant_menu.mealsList}]]',
-                    active: true
-                }
-            ]
-        });
-
         mealsDataTable = WJ.DataTable({
             url: url,
             serverSide: true,

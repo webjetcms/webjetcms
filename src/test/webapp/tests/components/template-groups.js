@@ -73,7 +73,7 @@ Scenario('overenie nacitania podla prihlaseneho jazyka', ({ I, DTE }) => {
     I.amOnPage("/admin/logon/?language=cz");
 
     I.fillField("username", "tester");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(I.getDefaultPassword()));
     I.forceClick("Přihlásit se");
     I.wait(3);
 

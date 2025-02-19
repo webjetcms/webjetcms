@@ -6,11 +6,9 @@ V prípade ak ste zabudli svoje heslo môžete ho obnoviť nasledujúcim spôsob
 
 Ak ste zabudli svoje heslo pre admin sekciu, môžete požiadať o obnovenie hesla na prihlasovacej stránke.
 
-Kliknutím na na možnosť ![](admin-recover-password-btn.png ":no-zoom") sa zobrazí skryté pole pre obnovenie.
+Kliknutím na na možnosť ![](admin-recover-password-btn.png ":no-zoom") sa zobrazí formulár pre obnovenie hesla.
 
-Pred                       |  Po
-:-------------------------:|:-------------------------:
-![](../logon.png)             |  ![](admin-recovery-page.png)
+![](admin-recovery-page.png)
 
 Do poľa musíte zadať Vašu **emailovú adresu** alebo **prihlasovacie meno**. Žiadosť odošlete stlačením tlačidla ![](admin-send-btn.png ":no-zoom"). Zobrazená notifikácia Vás upozorní, že ak konto existuje, bude zaslaný email na patričnú e-mailovú adresu.
 

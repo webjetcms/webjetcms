@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-search',
-        [
-            [ '/admin/v9/apps/audit-search/', '[[#{components.adminlog.adminlog}]]', true]
-        ]
-    )
-
     script.
         window.helpLink = "/sysadmin/audit/README";
         var auditTable;

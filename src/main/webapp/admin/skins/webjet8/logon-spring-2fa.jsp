@@ -1,7 +1,7 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page pageEncoding="utf-8"
-         import="sk.iway.iwcm.*"
+         import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"
 %><%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"
@@ -9,7 +9,31 @@
 %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway"
 %><%
-String brandSuffix = InitServlet.getBrandSuffix();
+    Prop prop = Prop.getInstance(request);
+    String brandSuffix = InitServlet.getBrandSuffix();
+    //brandSuffix = "net";
+    String title = prop.getText("logon.welcome.title");
+    String subtitle = prop.getText("logon.welcome.subtitle");
+    try {
+        //get texts from logon.welcome.titles, split by lines and then by ;, get random line into title and subtitle
+        String[] lines = prop.getText("logon.welcome.titles."+brandSuffix).split("\n");
+        if (lines.length>0) {
+            int index = (int)(Math.random()*lines.length);
+            int id = Tools.getIntValue(request.getParameter("id"), -1);
+            if (id!=-1 && id<lines.length) {
+                index = id;
+            }
+            String[] parts = lines[index].split(";");
+            if (parts.length==2) {
+                title = parts[0];
+                subtitle = parts[1];
+            }
+        }
+    } catch (Exception e) {
+
+    }
+    pageContext.setAttribute("title", title);
+    pageContext.setAttribute("subtitle", subtitle);
 %>
 <!DOCTYPE html>
 <!--[if IE 8]> <html class="ie8 no-js"> <![endif]-->
@@ -45,8 +69,9 @@ String brandSuffix = InitServlet.getBrandSuffix();
 </head>
 <body id="login" class="login">
 
-<div class="logo">
-    <img src="/admin/skins/webjet8/assets/global/img/wj/logo-<%=brandSuffix%>.png" style="max-width: 350px;" alt="" />
+<div class="welcome-title">
+    <h1><c:out value="${title}"/></h1>
+    <h2><c:out value="${subtitle}"/></h2>
 </div>
 
 <%
@@ -59,9 +84,13 @@ String brandSuffix = InitServlet.getBrandSuffix();
 <div class="container">
     <div class="container-inner">
         <div class="content">
-            <h3 class="form-title"><iwcm:text key="logon.logon"/></h3>
+
+            <div class="form-group logo">
+                <img src="/admin/skins/webjet8/assets/global/img/wj/logo-<%=brandSuffix%>.png" alt="WebJET CMS" />
+            </div>
+
             <logic:present name="errors">
-                <div class="alert alert-danger display -hide">
+                <div class="alert alert-danger">
                     <span>
                         <iwcm:text key="user.form.errors"/>
                     </span>
@@ -76,7 +105,9 @@ String brandSuffix = InitServlet.getBrandSuffix();
                         <logic:present name="QRURL" scope="session">
                             <div class="form-group">
                                 <label class="control-label"><iwcm:text key="user.gauth.instructions"/></label>
-                                <div id="qrImage"></div>
+                                <div class="qrImageWrapper">
+                                    <div id="qrImage"></div>
+                                </div>
                                 <p>
                                     <iwcm:text key='user.gauth.instructions2'/> <%=session.getAttribute("token")%>
                                 </p>
@@ -95,9 +126,9 @@ String brandSuffix = InitServlet.getBrandSuffix();
                                 <input type="text" name="token" size="16" maxlength="64" class="form-control placeholder-no-fix" autocomplete="off"/>
                             </div>
                         </div>
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-secondary" onclick="window.location.href='/logoff.do?forward=/admin/index.jsp';"><iwcm:text key="inlineToolbar.option.settings.logout"/></button>
-                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary pull-right"><iwcm:text key="button.submit"/></button>
+                        <div class="form-group">
+                            <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.submit"/><i class="ti ti-arrow-right"></i></button>
+                            <button type="button" class="btn btn-secondary btn-as-link pull-right" onclick="window.location.href='/logoff.do?forward=/admin/index.jsp';"><iwcm:text key="inlineToolbar.option.settings.logout"/></button>
                         </div>
                     </form:form>
                 </div>
@@ -122,8 +153,8 @@ String brandSuffix = InitServlet.getBrandSuffix();
         <logic:present name="QRURL" scope="session">
             var qrcode = new QRCode(document.getElementById("qrImage"), {
                 text: "<%=session.getAttribute("QRURL")%>",
-                width: 300,
-                height: 300,
+                width: 250,
+                height: 250,
                 colorDark : "#000000",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H

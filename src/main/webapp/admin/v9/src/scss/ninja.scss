@@ -86,6 +86,16 @@ $link-decoration: none;
 $grid-gutter-width: 30px;
 $input-disabled-border-color: $input-border-color;
 
+//sidebar
+$sidebar-width: 220px;
+$sidebar-bg: #353944;
+$sidebar-select-bg: #4D5262;
+$sidebar-active: #DDDFE6;
+$sidebar-active-bg: #23262E;
+
+//new dark colors
+$dark-60: #686F83;
+
 @import "~bootstrap/scss/bootstrap";
 
 @import "~@tabler/icons-webfont/dist/tabler-icons-filled";
@@ -159,6 +169,7 @@ $input-disabled-border-color: $input-border-color;
 @import "5-modules/md-debug-info";
 @import "5-modules/md-search";
 @import "5-modules/md-sitemap";
+@import "5-modules/md-tabs";
 
 @import "5-modules/md-main-menu";
 @import "5-modules/md-large-menu";

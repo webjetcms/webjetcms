@@ -21,7 +21,6 @@ request.setAttribute("userLanguage", userLanguage);
 <%@ include file="/admin/layout_top_popup.jsp" %>
 
 <style type="text/css">
-body { background-color: #f5f5f5; }
 div.results { background-color: white; padding: 5px; padding-top: 10px; }
 div.pixabayBox { margin: 0px; }
 .pixabayBox .imageSearch { padding: 10px; padding-top: 10px; }
