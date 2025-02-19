@@ -6,7 +6,7 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <div class="row">
-                                <div class="col-sm-6">
+                                <div class="col-sm-12">
                                     <h5 class="modal-title">{{ this.$WJ.translate('admin.welcome.feedback.dialog.title.js') }}</h5>
                                 </div>
                             </div>

@@ -27,9 +27,8 @@ Before(({ I, login }) => {
 Scenario('zoznam formularov', async ({ I, DT }) => {
     I.amOnPage("/apps/form/admin/");
     I.see("Názov formuláru");
-    within(".active", () => {
-        I.see("Zoznam formulárov");
-    });
+
+    I.seeElement(locate('.nav-link.active').withText("Zoznam formulárov"));
     DT.filterContains("formName", "Brexit");
     I.click("Brexit");
     DT.waitForLoader("#form-detail_processing");
@@ -41,9 +40,10 @@ Scenario('zoznam formularov', async ({ I, DT }) => {
     I.amOnPage(`/apps/form/admin/#/detail/${formName}`);
     assert.equal(formName, formNameFromUrl);
     within("#pills-forms", () => {
+        I.waitForElement(locate('a').withText('Brexit'), 10);
         I.click('//li[1]')
         I.wait(1);
-        I.see("Zoznam formulárov");
+        I.waitForInvisible(locate('a').withText('Brexit'), 10)
     });
     DT.waitForLoader("#forms-list_processing");
     I.amOnPage("/apps/form/admin/#/");

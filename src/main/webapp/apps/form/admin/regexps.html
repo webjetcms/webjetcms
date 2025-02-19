@@ -8,22 +8,6 @@
 
         window.helpLink = "/redactor/apps/form/regexps";
 
-        WJ.breadcrumb({
-            id: "regexps",
-            tabs: [
-                {
-                    url: '/apps/form/admin/',
-                    title: '[[#{forms.formsList.js}]]',
-                    active: false
-                },
-                {
-                    url: '/apps/form/admin/regexps/',
-                    title: '[[#{components.form.admin_form.table_reg_exp}]]',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/forms_regexp";
 
         regExpDataTable = WJ.DataTable({

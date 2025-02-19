@@ -465,7 +465,7 @@ block content
             }
 
         .tabbable.tabbable-custom.tabbable-full-width.tabbable-elfinder
-            .md-breadcrumb
+            .md-tabs
                 ul.nav( role='tablist')
                     li.nav-item(role='presentation')
                         a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')
@@ -480,12 +480,21 @@ block content
                     input#file.form-control.elfinder-url-input(name='file')
 
     script.
-        let tabs = $(".tabbable > .md-breadcrumb > ul.nav");
+        let tabs = $(".tabbable > .md-tabs > ul.nav");
         if( [(${pixabayEnabled})] == true) {
             tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
             tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'pixabay\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor.photobank}]]</a></li>' );
         } else {
             tabs.append( '<li class=\"nav-item last\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
+        }
+
+    style(type="text/css").
+        .tabbable-elfinder .md-tabs {
+            background-color: #F3F3F6;
+            border-bottom: 2px solid #DDDFE6;
+            padding-top: 0px;
+            margin-left: 0px;
+            margin-right: 0px;
         }
 
     #elfinder-modal.modal.fade(tabindex='-1' role='dialog' aria-labelledby='elfinder-modal')

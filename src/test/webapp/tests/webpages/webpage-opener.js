@@ -143,7 +143,7 @@ Scenario('Zapamatanie priecinka web', ({ I, DT }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
-    I.see("Systém", "div.md-breadcrumb a.nav-link.active")
+    I.see("Systémové", ".nav-link.active")
     I.see("Hlavičky", ".tree-col");
     I.see("Pätičky", ".tree-col");
     I.dontSee("Jet portal 4", ".tree-col");
@@ -160,7 +160,7 @@ Scenario('Zapamatanie priecinka web', ({ I, DT }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
-    I.see("Kôš", "div.md-breadcrumb a.nav-link.active")
+    I.see("Zmazané", ".nav-link.active")
     I.see("asdf", ".tree-col");
     I.dontSee("Pätičky", ".tree-col");
     I.dontSee("Jet portal 4", ".tree-col");

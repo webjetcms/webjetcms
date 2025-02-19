@@ -2,47 +2,9 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'dashboard',
-        [
-            [ 'dashboard', '[[\#{components.monitor.monitoring.info}]]', true ]
-        ]
-    )
-
     style.
-        .overview__dashboard__title {
-            background-image: url('/admin/v9/dist/images/features-contact.png');
-        }
-
-    div(data-th-if="${layout.getConstantBoolean('statWebJET7Converted')==false}").row.mt-3
-        div.col
-            div.alert.alert-warning.mb-0
-                i.ti.ti-alert-triangle &nbsp;
-                span(data-th-utext="\#{admin.update.databaseNotUpdatedToWebJET7}")
-
-    div(data-th-if="${showErrorLog==true}").row.mt-3
-        div.col
-            div.alert.alert-danger.mb-0
-                i.ti.ti-face-id-error &nbsp;
-                span(data-th-utext="\#{overview.update.showErrors}") Update error log
-
-    div(data-th-if="${javaVersionWarningText!=null}").row.mt-3
-        div.col
-            div.alert.alert-warning.mb-0
-                i.ti.ti-alert-triangle &nbsp;
-                span(data-th-text="${javaVersionWarningText}") Required java version is below 17
-
-    div(data-th-if="${licenceExpirationWarningText!=null}").row.mt-3
-        div.col
-            .alert.alert-warning.mb-0.license-expiration-warning
-                i.ti.ti-license &nbsp;
-                span(data-th-utext="${licenceExpirationWarningText}") Your license will expiry soon.
-
-    div(data-th-if="${amazonSesWarningText!=null}").row.mt-3
-        div.col
-            div.alert.alert-danger.mb-0
-                i.ti.ti-face-id-error &nbsp;
-                span(data-th-text="${amazonSesWarningText}") Amazon SES through API is deprecated, use SMTP instead
+        .ly-content-wrapper { padding-top: 34px; }
+        .ly-content { height: calc(100vh - 34px); }
 
     <div id="webjet-overview-dashboard">
         <a name="overview-dashboard-a" style="scroll-margin-top: 10em;"></a>
@@ -120,4 +82,53 @@ block content
             window.VueTools.setDefaultObjects(vueOverviewApp);
 
             vueOverviewApp.mount("#webjet-overview-dashboard");
+
+            let container = "toast-container-overview";
+            if ([(${show2FARecommendation==true})]) {
+                WJ.notify("info", "[[\#{user.gauth.title}]]", "[[\#{overview.2fa.warning}]]", 0, [
+                    {
+                        title: "[[\#{button.setup}]]",
+                        cssClass: "btn btn-outline-secondary",
+                        click: "WJ.openPopupDialog('/admin/2factorauth.jsp');",
+                        closeOnClick: false
+                    }
+                ], false, container);
+            }
+            if ([(${layout.getConstantBoolean('statWebJET7Converted')==false})]) {
+                WJ.notify("warning", "[[\#{text.warning}]]", "[[\#{admin.update.databaseNotUpdatedToWebJET7}]]", 0, [
+                    {
+                        title: "[[\#{admin.update.databaseNotUpdatedToWebJET7.startConversion}]]",
+                        cssClass: "btn btn-outline-secondary",
+                        click: "window.open('/admin/update/update_webjet7.jsp?act=fix')",
+                        closeOnClick: false
+                    }
+                ], false, container);
+            }
+            if ([(${showErrorLog==true})]) {
+                WJ.notify("error", "[[\#{update.failed}]]", "[[\#{overview.update.showErrors}]]", 0, [
+                    {
+                        title: "[[\#{button.show}]]",
+                        cssClass: "btn btn-outline-secondary",
+                        click: "window.open('/files/protected/admin/error-log.txt')",
+                        closeOnClick: false
+                    }
+                ], false, container);
+            }
+            if ([(${javaVersionWarningText!=null})]) {
+                WJ.notify("warning", "[[\#{text.warning}]]", "[[${javaVersionWarningText}]]", 0, [], false, container);
+            }
+            if ([(${licenceExpirationWarningText!=null})]) {
+                WJ.notify("warning", "[[\#{text.warning}]]", `[(${licenceExpirationWarningText})]`, 0, [], false, container);
+            }
+            if ([(${amazonSesWarningText!=null})]) {
+                WJ.notify("error", "[[\#{menu.email}]]", "[[${amazonSesWarningText}]]", 0, [
+                    {
+                        title: "[[\#{menu.top.help}]]",
+                        cssClass: "btn btn-outline-secondary",
+                        click: "WJ.showHelpWindow('/install/config/README');",
+                        closeOnClick: false
+                    }
+                ], false, container);
+            }
+
         });

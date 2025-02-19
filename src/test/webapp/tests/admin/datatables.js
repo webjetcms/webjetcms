@@ -50,14 +50,14 @@ Scenario('Bug oznacenia vsetkych riadkov', ({ I }) => {
     I.amOnPage("/admin/v9/settings/configuration/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("12 riadkov označených", "div.dt-info");
+    I.see("13 riadkov označených", "div.dt-info");
 
     //
     I.say("serverSide=true")
     I.amOnPage("/admin/v9/settings/redirect/");
 
     I.clickCss("button.buttons-select-all");
-    I.see("12 riadkov označených", "div.dt-info");
+    I.see("13 riadkov označených", "div.dt-info");
 });
 
 
@@ -108,12 +108,12 @@ Scenario('Maximalizovat - zrusene pre zmazanie zaznamu', ({ I, DT, DTE }) => {
 Scenario('Dynamicke urcenie poctu zaznamov', ({ I }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
 
-    I.see("Záznamy 1 až 12 z");
+    I.see("Záznamy 1 až 13 z");
 
     I.resizeWindow(1280, 900);
     I.refreshPage();
 
-    I.see("Záznamy 1 až 15 z");
+    I.see("Záznamy 1 až 16 z");
 });
 
 Scenario('Editacia bunky po presune stlpca', ({ I, DT, Browser }) => {
@@ -267,23 +267,23 @@ Scenario('pamatanie velkost stranky', ({ I, DT }) => {
     I.clickCss('.btn.buttons-collection.dropdown-toggle.buttons-page-length');
     I.waitForVisible("div.dt-button-collection");
 
-    I.click("Automaticky (12)");
+    I.click("Automaticky (13)");
     I.click("Uložiť");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 12 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 13 z", "div.dt-footer-row");
 
     //
     I.say("reloadni v auto rezime");
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 12 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 13 z", "div.dt-footer-row");
 
     //
     I.say("zvacsi okno a over, ze auto rezim funguje");
     I.resizeWindow(1280, 1000);
     I.amOnPage("/admin/v9/settings/redirect/");
     DT.waitForLoader();
-    I.see("Záznamy 1 až 18 z", "div.dt-footer-row");
+    I.see("Záznamy 1 až 19 z", "div.dt-footer-row");
 });
 
 Scenario('pamatanie velkost stranky-reset', ({ I, DT }) => {

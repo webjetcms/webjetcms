@@ -15,7 +15,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 <iwcm:checkLogon admin="true" perms="cmp_basket"/>
 <%@ include file="/admin/layout_top.jsp" %>
 <style type="text/css">
-body { background-image: none !important; background-color: #eceef0 !important; }
+body { background-image: none !important; background-color: white !important; }
 table.newsTable tr td  { border-bottom: 1px dotted #a5a6a8; padding-bottom: 16px; padding-top: 16px; padding-left: 8px; padding-right: 8px; }
 table.newsTable input.textInput { width: 800px; }
 table.newsTable input.textInputWithImage { width: 770px; }

@@ -18,7 +18,7 @@ Before(({ I, login }) => {
 
 Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      DT.resetTable();
 
      // 1. pridanie noveho priecinka folder-autotest
@@ -34,7 +34,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      // 2. pridanie noveho priecinka name-autotest
      I.say('2. Pridanie noveho priecinka name-autotest');
      I.refreshPage();
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      I.click(DT.btn.tree_add_button);
      DTE.waitForEditor("groups-datatable");
      I.fillField('#DTE_Field_groupName', auto_name);
@@ -85,7 +85,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      DTE.save();
      I.wait(1);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0'); // musim refreshnut stranku, pretoze v tomto kroku WJ prestane reagovat
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      DT.waitForLoader();
      I.click(auto_name);
      I.seeElement(locate('.even.is-default-page').withText(auto_webPage), 5);
@@ -103,7 +103,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.click(locate('.jstree-node.jstree-leaf.jstree-last').withText(auto_folder).find('a.jstree-anchor'));
      I.waitForText(auto_folder, 10);
      DTE.save();
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      I.dontSeeElement('.is-defalt-page');
      I.wait(1);
 
@@ -111,7 +111,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.say('7. Vymazanie vytvorenych priecinkov');
      // zmazanie folder-autotest
      I.refreshPage();
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      I.wait(4);
      I.click(locate('.jstree-anchor').withText(auto_folder));
      I.wait(2);
@@ -120,7 +120,7 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.click('Zmazať', "#groups-datatable_modal");
      DTE.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      DT.waitForLoader();
      I.dontSee(auto_folder);
      I.wait(1);
@@ -133,13 +133,13 @@ Scenario('Hlavna stranka priecinka @singlethread', async ({ I, DT, DTE }) => {
      I.wait(1);
      DT.waitForLoader();
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      I.dontSee(auto_name);
 });
 
 Scenario('Ulozenie prazdnej stranky', ({ I, DT, DTE }) => {
      // TODO "Target object must not be null" -> pridanie novej web stranky bez obsahu - po potvrdeni vypise hlasku v anglictine 'Target object must not be null'
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      I.jstreeClick("Test stavov");
      I.jstreeClick("Tento nie je interný");
      I.wait(1);
@@ -163,7 +163,7 @@ Scenario('Ulozenie prazdnej stranky', ({ I, DT, DTE }) => {
 
 Scenario('Chybne texty', ({ I, DTE, DT }) => {
      // Zalozka SABLONA - title pre 'Volne objekty' je v anglictine 'Nothing selected'
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
      I.jstreeClick("Test stavov");
      I.jstreeClick("Tento nie je interný");
      I.wait(1);

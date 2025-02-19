@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-awaiting-publish-webpages',
-        [
-            [ '/admin/v9/apps/audit-awaiting-publish-webpages/', '[[#{components.adminlog.wait_publishing}]]', true]
-        ]
-    )
-
     script.
         window.helpLink = "/sysadmin/audit/audit-awaiting-publish-webpages";
         var awaitingPublishWebpagesDataTable;

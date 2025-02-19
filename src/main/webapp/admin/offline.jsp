@@ -83,14 +83,18 @@
 			<tr>
 				<td><label for="groupId1"><iwcm:text key="stat_settings.group_id"/>:</label></td>
 				<td>
-					<input type="text" size=5 maxlength=5 name="groupId" value="<%=(""+groupId)%>" id="groupId1" />
-					<input type="button" class="button50" value="<iwcm:text key="stat_settings.change"/>" onclick='popup("/admin/grouptree.jsp?fcnName=setParentGroupId", 300, 450);' />
+					<div class="input-group">
+						<input type="text" class="form-control" size=5 maxlength=5 name="groupId" value="<%=(""+groupId)%>" id="groupId1" />
+						<div class="input-group-append">
+							<button type="button" name="groupSelect" id="groupSelectBtn" onclick='popup("/admin/grouptree.jsp?fcnName=setParentGroupId", 300, 450);' class="btn btn-outline-secondary"><i class="ti ti-focus-2"></i></button>
+						</div>
+					</div>
 				</td>
 			</tr>
 			<tr>
 				<td><label for="groupId2"><iwcm:text key="stat_settings.group_id2"/>:</label></td>
 				<td>
-					<input type="text" size=10 maxlength=25 name="destination" value="/html"" id="groupId2" />
+					<input class="form-control" type="text" size=10 maxlength=25 name="destination" value="/html"" id="groupId2" />
 				</td>
 			</tr>
 			<tr>

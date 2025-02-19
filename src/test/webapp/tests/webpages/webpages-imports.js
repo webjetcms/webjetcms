@@ -168,7 +168,7 @@ Scenario('Over importovanie web stránok z Excel súboru', async ({ I, DT, DTE }
 
     I.say("Verify import menu");
     I.waitForElement("#xlsImportForm");
-    const inportMenuFolderId = await I.grabValueFrom("#xlsImportForm > table > tbody > tr:nth-child(2) > td:nth-child(2) > input[type=text]:nth-child(1)");
+    const inportMenuFolderId = await I.grabValueFrom("input[name=parentGroupIdString]");
     I.assertEqual(folderId, inportMenuFolderId);
 
     I.say("Insert file and pres OK");

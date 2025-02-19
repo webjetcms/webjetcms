@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'persistent-cache-objects',
-        [
-            ['#persistent-cache-objects', '[[\#{components.memory_cleanup.persistent_cache_objects.title}]]', true]
-        ]
-    )
-
     script.
         var persistentCacheObjectsTable;
         window.domReady.add(function () {

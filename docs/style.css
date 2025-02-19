@@ -101,6 +101,7 @@ div.mermaid {
 .markdown-section img[alt=meme] {
   display: block;
   text-align: center;
+  max-width: 350px;
 }
 .markdown-section img.medium-zoom-image {
   background: var(--code-theme-background);

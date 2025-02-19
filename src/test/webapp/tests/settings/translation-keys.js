@@ -95,7 +95,7 @@ Scenario('zobrazenie poli', async ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/settings/translation-keys/");
 
     //Check headline
-    I.see("Prekladové kľúče", "div.md-breadcrumb");
+    I.see("Zoznam kľúčov", ".nav-link.active");
 
     var entity = "temp-group-2.project.name";
     DT.filterContains("key", entity);

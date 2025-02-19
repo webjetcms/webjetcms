@@ -9,13 +9,7 @@ include ../pug/mixins
                         <h5 class="modal-title ui-draggable-handle"> [[\#{components.datatables-data-export.Nastavenia_exportu}]]</h5>
                     </div>
                     <div class="col-sm-8">
-                        +breadcrumb(
-                            'exportData',
-                            [
-                                [ '#export-basic', '[[\#{datatable.tab.basic}]]', true ],
-                                [ '#export-advanced', '[[\#{datatable.tab.advanced}]]', false ]
-                            ]
-                        )
+                        <div id="pills-export-basic-tab" style="display: none;"></div>
                     </div>
                 </div>
             </div>

@@ -44,7 +44,6 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 	<iwcm:combine type="css" set="adminStandardCssWj9" />
 	<link href="/admin/skins/webjet8/assets/global/css/webjet2021.css" rel="stylesheet" type="text/css"/>
 
-	<link rel="stylesheet" href="/admin/skins/webjet8/css/fck_dialog.css" />
 	<link type="text/css" rel="stylesheet" media="screen" href="/admin/css/tabpane-luna.css" />
    <style type="text/css">
    	 td, input, select, textarea, label { font-size: 13px !important; }
@@ -59,7 +58,6 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 	    padding: 6px 12px;
    	 }
    	 div.toggle_content { padding: 0px; }
-   	 ul.tab_menu { margin-left: 10px; }
    	 body { overflow: hidden; }
    	 td.main { padding: 0px; }
    	 div.toggle_content { border-bottom: 0px !important; }
@@ -158,7 +156,7 @@ if ((new File(sk.iway.iwcm.Tools.getRealPath(iconLink))).isFile()==false)
 
 				if (hasFullHeightTab==false) {
 					$("#componentsWindowTableMainDiv").css("height", "100vh");
-					$("#componentsWindowTableMainDiv").css("overflow", "scroll");
+					$("#componentsWindowTableMainDiv").css("overflow", "auto");
 					$("#componentsWindowTableMainDiv").css("padding-bottom", "30px"); //video player
 				}
 			} catch (e) {console.log(e);}

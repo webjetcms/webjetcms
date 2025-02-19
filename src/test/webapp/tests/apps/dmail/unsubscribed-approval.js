@@ -43,6 +43,8 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
 
 
 Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I }) => {
+    await setUnsubscribeText(Apps, DTE, I, defaultText);
+
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
     I.waitForElement('#wjInline-docdata', 10);
     I.fillField('#unsubscribeEmail', randomName_1+'@fexpost.com');

@@ -357,7 +357,16 @@ var Layout = function () {
 
         if (Metronic.getViewPort().width >= 992)
         {
-            menu.attr("data-height", _calculateFixedSidebarViewportHeight());
+            //console.log("Layout.handleFixedSidebar(); - setting height to: "+_calculateFixedSidebarViewportHeight());
+            var sidebarViewport = _calculateFixedSidebarViewportHeight();
+            var largeMenu = $(".md-large-menu").outerHeight();
+            var domainToggler = $(".js-domain-toggler").outerHeight();
+
+            if ($("body").hasClass("ly-submenu-active")) sidebarViewport = sidebarViewport + 47;
+
+            //console.log("Layout.handleFixedSidebar(); - sidebarViewport="+sidebarViewport+" largeMenu="+largeMenu+" domainToggler="+domainToggler);
+
+            menu.attr("data-height", sidebarViewport - largeMenu - domainToggler - 40); //40 because bottom scrollbar
             Metronic.initSlimScroll(menu);
             //menu.attr("data-initialized", "1");
             handleSidebarAndContentHeight();

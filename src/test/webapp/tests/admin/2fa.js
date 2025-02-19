@@ -21,9 +21,9 @@ function base32tohex(base32) {
 	return hex;
 }
 
-function getOTP(secret) {
+function getOTP(secretValue) {
 	var mssg = Buffer.from((Array(16).fill(0).join('') + (Math.floor(Math.round(new Date().getTime() / 1000) / 30)).toString(16)).slice(-16), 'hex');
-	var key = Buffer.from(base32tohex(secret), 'hex');
+	var key = Buffer.from(base32tohex(secretValue), 'hex');
 	var hmac = crypto.createHmac('sha1', key);
 	hmac.setEncoding('hex');
 	hmac.update(mssg);
@@ -103,7 +103,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     DTE.waitForEditor();
     randomLogin = 'testerga' + I.getRandomText();
     I.fillField('#DTE_Field_editorFields-login', randomLogin);
-    I.fillField('#DTE_Field_password', "*********");
+    I.fillField('#DTE_Field_password', secret(I.getDefaultPassword()));
     DTE.save();
 
     I.say('Prihlasenie sa do nového účtu');
@@ -125,15 +125,15 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     //
     I.say("Verify QR code is valid");
 
-    const secret = await I.grabTextFrom('#secret');
-    I.say("secret: "+secret);
+    const secretValue = await I.grabTextFrom('#secret');
+    I.say("secret: "+secretValue);
 
     const qrCodeImageData = await I.grabAttributeFrom('img[alt="Scan me!"]', 'src');
     let responseData = await doRequest(qrCodeImageData);
     I.say("RESPONSE: "+responseData);
     const responseObj = JSON.parse(responseData);
     let qrCodeData = responseObj[0].symbol[0].data;
-    I.assertContain(qrCodeData, secret, 'Pri testovaní zobrazenia QR kódu sa nenašiel kľúč v kóde');
+    I.assertContain(qrCodeData, secretValue, 'Pri testovaní zobrazenia QR kódu sa nenašiel kľúč v kóde');
 
     I.clickCss("#btnOK");
 
@@ -150,7 +150,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
 
     //
     I.say('Prihlasujem so správnym kódom');
-    I.fillField('token', getOTP(secret));
+    I.fillField('token', getOTP(secretValue));
     I.clickCss('#login-submit');
 
     //
@@ -158,7 +158,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     const errorShown = await I.grabNumberOfVisibleElements("#login div.alert-danger");
     if (errorShown > 0) {
       I.say("Re-entering OTP");
-      I.fillField('token', getOTP(secret));
+      I.fillField('token', getOTP(secretValue));
       I.clickCss('#login-submit');
     }
 

@@ -28,9 +28,9 @@ Scenario('uvodne overenie prav', ({ I, DT }) => {
     I.seeElement("#datatableInit_wrapper button.buttons-remove");
 
     //over zobrazenie kariet System a Kos
-    I.see("Priečinky", "div.tree-col div.md-breadcrumb");
-    I.see("Systém", "div.tree-col div.md-breadcrumb");
-    I.see("Kôš", "div.tree-col div.md-breadcrumb");
+    I.seeElement(locate('.nav-link').withText("Aktívne"));
+    I.seeElement(locate('.nav-link').withText("Systémové"));
+    I.seeElement(locate('.nav-link').withText("Zmazané"));
 });
 
 Scenario('stranky-overenie prav na tlacidla', ({ I, DT, DTE }) => {
@@ -321,11 +321,12 @@ Scenario('tester2 nema pravo na System a Kos', ({ I }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
 
-    I.see("Priečinky", "div.tree-col div.md-breadcrumb");
-    I.dontSee("Systém", "div.tree-col div.md-breadcrumb");
-    I.dontSee("Kôš", "div.tree-col div.md-breadcrumb");
-
-    I.click("Priečinky", "div.tree-col div.md-breadcrumb");
+    I.seeElement(locate('.nav-link').withText("Aktívne"));
+    I.dontSeeElement(locate('.nav-link').withText("Systémové"));
+    I.dontSeeElement(locate('.nav-link').withText("Zmazané"));
+    
+    I.click(locate('.nav-link').withText("Aktívne"));
+    
     I.dontSee("Prístup na adresár zamietnutý");
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });

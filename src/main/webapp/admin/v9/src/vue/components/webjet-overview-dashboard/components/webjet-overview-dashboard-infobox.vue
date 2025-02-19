@@ -93,18 +93,11 @@ export default {
     border-radius: 10px;
 
     &__title {
-        padding: 25px 40px 100px;
-        background-size: 350px;
-        background-repeat: no-repeat;
-        background-position: right bottom 15px;
+        padding-bottom: 25px;
 
         h2,
         p {
             margin-bottom: 20px;
-            max-width: 600px;
-        }
-        p {
-            max-width: 70%;
         }
 
         @media screen and (max-width: 575px) {

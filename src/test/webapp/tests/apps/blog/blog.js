@@ -40,7 +40,7 @@ Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     });
     I.fillField("#DTE_Field_firstName", "InsertBlogger");
     I.fillField("#DTE_Field_lastName", "Autotest");
-    I.fillField("#DTE_Field_password", "*********");
+    I.fillField("#DTE_Field_password", secret(I.getDefaultPassword()));
 
     DTE.save();
 

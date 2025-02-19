@@ -2,7 +2,7 @@
 
 .ly-content-wrapper {
     padding-top: 48px;
-    padding-left: 220px;
+    padding-left: $sidebar-width;
     padding-right: 0;
     padding-bottom: 0;
 
@@ -14,18 +14,29 @@
 @media (max-width: ($bp-laptop - 1)) {
     .ly-content-wrapper {
         padding-left: 0;
-        padding-top: 34px;
-    }
-}
-@media (max-width: $bp-laptop - 1) {
-    .ly-content-wrapper {
         padding-top: 0px;
     }
+
+    div.dt-container .dt-header-row .row, .col-md-4.tree-col .dt-header-row .row {
+        margin-left: 32px;
+    }
+    //for wepages right toolbar has standard padding
+    .col-md-8 div.dt-container .dt-header-row .row {
+        margin-left: -15px;
+    }
+
+    body.ly-submenu-active .ly-content-wrapper {
+        padding-top: 0px !important;
+    }
+
 }
 
 html.in-iframe, html.in-iframe-show-table {
-     .ly-content-wrapper {
+    .ly-content-wrapper {
         padding-left: 0px;
         padding-top: 0px;
+    }
+    div.dt-container .dt-header-row .row, .col-md-4.tree-col .dt-header-row .row {
+        margin-left: -15px;
     }
 }

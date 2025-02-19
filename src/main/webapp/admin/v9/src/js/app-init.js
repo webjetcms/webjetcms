@@ -58,12 +58,15 @@ function initClosure() {
         if ($(this).siblings(".md-main-menu__item__sub-menu").length) {
             e.preventDefault();
 
+            //find first child A element and click on it
+            var firstChild = $(this).parent().find(".md-main-menu__item__sub-menu a");
+            if (firstChild.length>0) {
+                firstChild[0].click();
+                return;
+            }
+
+            //failsafe if no child A element found
             $(this).parent(".md-main-menu__item").toggleClass('md-main-menu__item--open');
-            // if ($(this).parent(".md-main-menu__item").hasClass("md-main-menu__item--open")) {
-            //     $(this).parent(".md-main-menu__item").removeClass("md-main-menu__item--open");
-            // } else {
-            //     $(this).parent(".md-main-menu__item").addClass("md-main-menu__item--open");
-            // }
         }
     });
 
@@ -86,6 +89,25 @@ function initClosure() {
         scrollbarMenu.scrollTop = 0;
     });
 
+    function hideFirstBreadcrumbItem(a, mainTitle) {
+        //if there is element in .md-breadcrumb .nav .nav-item .nav-link with same name hide it
+        let breadcrumb = $(".ly-content .md-breadcrumb .nav .nav-item");
+        let hidenCount = 0;
+        breadcrumb.each(function() {
+            let $this = $(this);
+            //console.log("Comparing: this=", $this.text(), "a=", a.text());
+            if ($this.text()==a.text() || $this.text()==mainTitle) {
+                $this.hide();
+                hidenCount++;
+            }
+        });
+        if (breadcrumb.length===hidenCount) {
+            //console.log("Hiding whole breadcrumb, length=", breadcrumb.length, "hidenCount=", hidenCount);
+            //if only one element in breadcrumb hide whole breadcrumb
+            breadcrumb.first().parents(".md-breadcrumb").hide();
+        }
+    }
+
     $(function () {
         var current = location.pathname;
         //../logon-user-details/ nemame v menu, chceme zobrazit menu polozku .../logon-user/
@@ -102,33 +124,78 @@ function initClosure() {
         currentWithHash = currentWithHash.replace("?#", "#");
         if ("/admin/v9/webpages/linkcheck/"==current) current = "/admin/v9/webpages/web-pages-list/";
         $('.md-main-menu__item__link, .md-main-menu__item__sub-menu__item__link').each(function () {
-            var $this = $(this);
+            let $this = $(this);
 
             //console.log("Comparing: this=", $this.attr('href'), "current=", current, " eq=", ($this.attr('href')==current));
             if ($this.attr('href') === current || $this.attr('href') === currentWithHash) {
                 $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
-                $this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
-                $this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
+                let mainMenuItem = $this.parents(".md-main-menu__item");
+                mainMenuItem.addClass("md-main-menu__item--active");
+                //mainMenuItem.addClass("md-main-menu__item--open");
 
-                $this.parents(".md-main-menu").addClass("md-main-menu--open");
-                var menuId = $this.parents(".md-main-menu").data("menu-id");
+                let mainMenu = $this.parents(".md-main-menu");
+                mainMenu.addClass("md-main-menu--open");
+                let menuId = mainMenu.data("menu-id");
                 $('.md-large-menu__item__link[data-menu-id="' + menuId + '"]').parents(".md-large-menu__item").addClass("md-large-menu__item--open md-large-menu__item--active");
+
+                let mainTitle = mainMenuItem.find(".md-main-menu__item__link").text();
+
+                //move submenu items to tabs
+                let tabs = mainMenuItem.find(".md-main-menu__item__sub-menu div");
+                //console.log("tabs=", tabs);
+                if (tabs.length>0) {
+                    //iterate over all tabs, find A elements and create UL - LI structure
+                    let ul = $("<ul class='nav' role='tablist'></ul>");
+                    tabs.each(function() {
+                        let $this = $(this);
+                        let aOriginal = $this.find("a");
+                        let active = $this.hasClass("md-main-menu__item__sub-menu__item--active") ? " active" : "";
+                        let li = $("<li class='nav-item' role='presentation'></li>");
+                        let a = $("<a class='nav-link"+active+"' role='tab'>"+aOriginal.text()+"</a>");
+                        a.attr("href", aOriginal.attr("href"));
+                        li.append(a);
+                        ul.append(li);
+
+                        if (" active"===active) {
+                            hideFirstBreadcrumbItem(a, mainTitle);
+                        }
+                    });
+                    //wrap UL with md-tabs div
+                    ul = $("<div class='md-tabs md-tabs-dropdown'></div>").append(ul);
+
+                    //append UL to main menu
+                    $(".ly-submenu").html(ul);
+                    $("body").addClass("ly-submenu-active");
+                }
+
+                //set main title
+                WJ.setTitle(mainTitle);
+                let $headerTitle = $(".header-title");
+                hideFirstBreadcrumbItem($headerTitle, mainTitle);
+
+                //handle tabs click - we need also to execute link so it cant be BS tabs
+                $(".ly-submenu .md-tabs li").on("click", "a", function(e) {
+                    let $this = $(this);
+                    let isActive = $this.hasClass("active");
+                    $this.parents(".md-tabs").find("li a.active").removeClass("active");
+                    if (isActive) {
+                        $this.addClass("active");
+                        //this is click on active tab burger menu on small device, prevent click, just open/close menu
+                        if ($this.closest('ul').css("position")=="relative") {
+                            $this.closest('ul').toggleClass("open");
+                            e.preventDefault();
+                        }
+                    } else {
+                        $this.addClass("active");
+                        $this.closest('ul').removeClass("open");
+                    }
+                });
             }
         });
 
-        $('.md-main-menu__item').each(function () {
-            var $this = $(this);
-            var hasSomeV9 = false;
-            $this.find("a").each(function () {
-                if ($(this).attr('href').indexOf("/v9") !== -1 || $(this).attr('href').indexOf("/apps") === 0) {
-                    hasSomeV9 = true;
-                }
-            });
-        });
-
         //scrolll selected left menu item into view
-        let $menuItem = $("div.md-main-menu__item--open");
+        let $menuItem = $("div.md-main-menu__item--active");
         if ($menuItem.length>0) {
             let top = $menuItem.position().top;
             if (top > 150) {
@@ -205,12 +272,21 @@ function initClosure() {
 
     $.fn.selectpicker.Constructor.BootstrapVersion = '5';
 
-    $('select').selectpicker({
-        container: "body",
-        style: "dropdown bootstrap-select btn-outline-secondary",
-        liveSearch: true,
-        showSubtext: true,
-        noneSelectedText: '\xa0' //nbsp
+    $('select').each(function() {
+        let $this = $(this);
+        if ($this.hasClass("no-picker")) return;
+        let options = {
+            container: "body",
+            style: "dropdown bootstrap-select btn-outline-secondary",
+            liveSearch: true,
+            showSubtext: true,
+            noneSelectedText: '\xa0', //nbsp
+            iconBase: 'ti',
+        }
+        let liveSearch = $this.data("live-search");
+        //console.log("liveSearch=", liveSearch);
+        if (typeof liveSearch !== "undefined") options.liveSearch = liveSearch;
+        $this.selectpicker(options);
     });
 
     // =======================

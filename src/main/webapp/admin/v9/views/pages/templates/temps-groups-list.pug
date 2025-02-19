@@ -2,15 +2,8 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'forms-group',
-        [
-            [ '#forms-groups-detail', '[[\#{admin.temp_group_list.title}]]', true ],
-            [ '#translation-keys-language', '{LANGUAGE-SELECT}', false ]
-        ]
-    )
-
     script.
+
         window.helpLink = "/frontend/setup/README";
         var tempsGroupsListTable;
         window.domReady.add(function () {
@@ -28,7 +21,11 @@ block content
                 editorId: "templatesGroupId"
             });
 
-            $("#breadcrumbLanguageSelect").change(function() {
+            let select = $("div.breadcrumb-language-select").first();
+            $("#datatableInit_wrapper .dt-header-row .row .col-auto .dt-buttons").prepend(select);
+            select.show();
+
+            $("#datatableInit_wrapper .dt-header-row .row .col-auto .dt-buttons div.breadcrumb-language-select select").change(function() {
                 //console.log("Select changed, language=", breadcrumbLanguage);
                 let lng = $(this).val();
                 //console.log("Select changed, language=", lng);

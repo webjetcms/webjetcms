@@ -6,6 +6,7 @@
 - [Manual for the administrator](/admin/README.md)
 - [Manual for operation](/sysadmin/README.md)
 - [List of changes](/CHANGELOG.md)
+  - [Version 2025](/CHANGELOG-2025.md)
   - [Version 2024](/CHANGELOG-2024.md)
   - [Version 2023](/CHANGELOG-2023.md)
   - [Version 2022](/CHANGELOG-2022.md)

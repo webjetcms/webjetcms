@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'redirect',
-        [
-            [ '#redirect', '[[\#{components.redirect.admin_list.search}]]', true ]
-        ]
-    )
-
     script.
         var redirectTable;
         window.domReady.add(function () {

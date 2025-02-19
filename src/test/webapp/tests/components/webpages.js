@@ -250,8 +250,8 @@ Scenario('Overenie zalozky Naposledy Upravene', ({ I, DT }) => {
 Scenario('Overenie zalozky Na schvalenie', ({ I, DT }) => {
     DT.waitForLoader();
     DT.resetTable();
-    I.waitForText("Čakajúce na schválenie", 10, "#pills-pages");
-    I.click("Čakajúce na schválenie", "#pills-pages");
+    I.waitForText("Neschválené", 10, "#pills-pages");
+    I.click("Neschválené", "#pills-pages");
     DT.waitForLoader();
     DT.resetTable();
     //nemame prilis ine co otestovat
@@ -266,7 +266,7 @@ Scenario('Overenie zalozky Na schvalenie', ({ I, DT }) => {
 
     I.wait(1);
 
-    I.dontSee("Čakajúce na schválenie", "#pills-pages");
+    I.dontSee("Neschválené", "#pills-pages");
 });
 
 Scenario('logout 2', ({ I }) => {
@@ -379,8 +379,18 @@ Scenario('Kontrola subFolder dat', ({ I, DT }) => {
     I.wait(1);
 
     I.clickCss("#pills-changes-tab");
-    I.wait(1);
-    I.clickCss("#pills-pages-tab");
+    DT.waitForLoader();
+
+    I.clickCss("#pills-folders-tab");
+
+    //over zobrazenie sablony v tabulke
+    I.see("Produktová stránka - B verzia");
+    I.see("Microsite - blue");
+
+    //
+    I.say("BUG: read again to verify it will also load recursive pages");
+    I.clickCss("#pills-folders-tab");
+    DT.waitForLoader();
 
     //over zobrazenie sablony v tabulke
     I.see("Produktová stránka - B verzia");

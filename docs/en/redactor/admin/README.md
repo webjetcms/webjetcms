@@ -1,6 +1,6 @@
 # Main controls
 
-The administration layout is standard. There is a header at the top and a menu on the left.
+The administration layout is standard. There is a header at the top and a menu on the left. The third level of the menu is shown as navigation tabs in the header.
 
 ![](welcome.png)
 
@@ -11,7 +11,6 @@ The header is located at the top:
 ![](header.png)
 
 contains the following options:
-- Select the domain you are working with (for a multi-domain installation).
 - Link to open the help.
 - ![](icon-search.png ":no-zoom") An icon to open the page [Search](search/README.md)
 - The name of the currently logged in user, click on the name to display the following options:
@@ -20,6 +19,8 @@ contains the following options:
   - Encryption Key Management - allows you to create a new encryption key for encrypting forms and specify an existing key for decrypting them. Requires the Forms right.
   - Logout - logout from the administration.
 - ![](icon-logoff.png ":no-zoom") An icon to log out of the administration.
+
+The header can display tabs to move to the third level of the menu.
 
 ## Menu
 
@@ -31,13 +32,17 @@ Click on the main section icon to display the menu items of the selected section
 
 ![](menu-items.png)
 
+Select the domain you are working with (for a multi-domain installation) at the bottom of the left menu.
+
+![](domain-selector.png)
+
 ## Display on mobile devices
 
 Administration adapts to mobile devices. When the window width is less than 1200 pixels, the page header and the left menu are hidden:
 
 ![](welcome-tablet.png)
 
-header and menu can be viewed by clicking on the hamburger menu icon ![](icon-hamburger.png ":no-zoom") top left. Then the menu and header will appear above the page:
+header and menu can be viewed by clicking on the hamburger menu icon ![](icon-hamburger.png ":no-zoom") top left. Then the menu and header will appear above the page. The navigation tabs appear as selection menus in the header.
 
 ![](welcome-tablet-showmenu.png)
 

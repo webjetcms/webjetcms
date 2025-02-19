@@ -218,6 +218,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("td.dt-select-td.sorting_1");
     I.clickCss("button.buttons-remove");
     DTE.waitForEditor("campaingsDataTable");
+    I.toastrClose();
     I.click("Zmazať", "div.DTE_Action_Remove");
     I.dontSee(entityName);
  });
@@ -542,6 +543,9 @@ Scenario("Duplicity check", ({I, DT, DTE}) => {
 
     addEmail(I, DTE, "", "test1@temp-mail.org");
     I.see("Záznamy 1 až 1 z 1", recipientsWrapper);
+
+    I.toastrClose();
+    I.toastrClose();
 
     //
     I.say("Checking duplicity email");

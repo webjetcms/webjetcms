@@ -466,7 +466,9 @@ script.
     }
 
     function computeAvailableSpaceHeight() {
-        let availableSpace = parseInt( $(".ly-content").outerHeight() ) - parseInt( $(".md-breadcrumb").outerHeight() );
+        let tabsHeight = $(".md-tabs").outerHeight();
+        if (typeof tabsHeight == "undefined") tabsHeight = 0;
+        let availableSpace = parseInt( $(".ly-content").outerHeight() ) - parseInt( tabsHeight );
 
         //Can contain additional height
         let url =  window.location.href;

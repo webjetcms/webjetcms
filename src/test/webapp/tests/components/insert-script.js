@@ -6,7 +6,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('insert script-zakladne testy @baseTest', async ({ I, DataTables}) => {
-     I.waitForText('Zoznam skriptov', 5);
+     I.waitForText('Skripty', 5);
      await DataTables.baseTest({
           dataTable: 'insertScriptTable',
           requiredFields: ['name', 'position'],
@@ -204,7 +204,7 @@ Scenario('Veci na prerobenie', ({ I }) => {
 });
 
 Scenario('insert script-import', async ({ I, DataTables }) => {
-     I.waitForText('Zoznam skriptov', 5);
+     I.waitForText('Skripty', 5);
      await DataTables.importTest({
           dataTable: 'insertScriptTable',
           requiredFields: ['name', 'position'],

@@ -213,7 +213,7 @@ public class WriteTag extends BodyTagSupport
 						showToolbar = false;
 					}
 
-					if (request.getSession().getAttribute(Constants.SESSION_GROUP_ID) == null)
+					if (request.getSession().getAttribute("userWasInWebpages") == null)
 					{
 						//este nebol realne v admin casti v menu WebStranky (mozno sa prihlasil ako normalny user)
 						showToolbar = false;

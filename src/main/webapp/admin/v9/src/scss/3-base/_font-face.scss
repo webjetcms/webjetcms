@@ -26,3 +26,11 @@
          url('../fonts/asap/bold/asap-v15-latin-ext_latin-700.ttf') format('truetype'), /* Safari, Android, iOS */
          url('../fonts/asap/bold/asap-v15-latin-ext_latin-700.svg#Asap') format('svg'); /* Legacy iOS */
   }
+
+/* asap-100 - latin-ext_latin */
+@font-face {
+     font-family: 'Asap';
+     font-style: normal;
+     font-weight: 100;
+     src: url('../fonts/asap/thin/asap-thin.woff2') format('woff2')
+   }

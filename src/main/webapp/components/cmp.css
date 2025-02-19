@@ -1,40 +1,74 @@
-body { background: #f5f5f5; overflow: auto; border: 0px; padding: 0px; margin: 0px; font-size: 12px; -webkit-text-size-adjust: 100%;}
+html {
+    font-size: 16px;
+}
+body { background: #f5f5f5; overflow: auto; border: 0px; padding: 0px; margin: 0px; font-size: 14px; }
 
 body, textarea { scrollbar-base-color: ButtonHighlight; scrollbar-face-color: ButtonFace; scrollbar-track-color: ButtonHighlight; scrollbar-arrow-color: ButtonText; scrollbar-3dlight-color: ButtonFace; scrollbar-darkshadow-color: default; scrollbar-highlight-color: ButtonHighlight; scrollbar-shadow-color: ButtonShadow; }
-body, textarea, input, th, td, select { font-family: Arial, Helvetica, sans-serif; font-size: 11px; }
+textarea, input, select, button { font-family: "Asap", sans-serif; font-size: 16px; }
 
 select, textarea, .main input.input{ background-color: #ffffff; border: 1px solid #caccce;}
 
-a { font-family: Arial, Helvetica, sans-serif; font-weight1: bold; color: #3366CC; text-decoration: none;}
-a:hover { font-family: Arial, Helvetica, sans-serif; color: #FF3333;  text-decoration: underline; }
+a { font-family: "Asap", sans-serif; font-weight1: bold; color: #3366CC; text-decoration: none;}
+a:hover { font-family: "Asap", sans-serif; color: #FF3333;  text-decoration: underline; }
 
 img{ border: 0px; }
 
 .main, .footer, .header, .headerImage { background-color: transparent; }
 
-.header { background-color: transparent; padding: 0px 10px 5px; height: 65px; vertical-align: middle; font-size:13px; line-height:16px; color: #fff;}
-.header a { color: white; text-decoration: underline; }
+.header { background-color: transparent; padding: 0px 10px 5px; height: 65px; vertical-align: middle; font-size:16px; line-height:16px; color: black;}
+.header a { color: #0063FB; text-decoration: underline; }
 
-.header h1, .main h1, .main h2, .main h3 { font-family: Open Sans, arial,helvetica; font-size: 18px; font-weight:normal; line-height:26px; font-weight: normal; border: 0px; padding: 5px 0; margin: 0px; color: #00ffff;}
+.header h1, .main h1, .main h2, .main h3 { font-family: "Asap", sans-serif; font-size: 18px; font-weight:normal; line-height:26px; font-weight: normal; border: 0px; padding: 5px 0; margin: 0px; color: black;}
 
 .main h1, .main h2, .main h3 { color: buttontext;}
-.main h2 { font-size: 14px; padding: 0px 0px 10px 0px;}
-.main h3 { font-size: 12px;}
+.main h2 { font-size: 18px; padding: 0px 0px 10px 0px;}
+.main h3 { font-size: 16px;}
 
 .headerImage { ve2rtical-align: middle; t2ext-align: right; f2loat: right; background-color: transparent; padding-left: 1px; padding-right: 20px; }
 .headerImage div { background-repeat: no-repeat; background-position:right center; width: 75px !important; height: 65px; }
 
+#dialogCentralRow {
+    background-color: white;
+}
+
 .main { padding: 5px 10px 0px 10px;}
 .mainTab { padding: 0px; background:transparent;}
 .mainNoTabs { background-color: #f6f6f6; }
-.mainTab ul.tab_menu { padding: 2px 0px 0px 10px;}
+.mainTab ul.tab_menu { padding: 2px 0px 0px 10px; border-bottom: 1px solid #DDDFE6; background-color: #F3F3F6; }
+
+.box_tab_thin {
+    padding-top: 0px !important;
+}
+.mainTab ul.tab_menu li a {
+    font-family: "Asap", sans-serif;
+    font-size: 15px;
+    color: #686F83;
+    border-bottom: 2px solid transparent;
+}
+.mainTab ul.tab_menu li a:hover {
+    color: #0063FB;
+    font-size: 15px;
+}
+.mainTab ul.tab_menu li.openFirst a, .mainTab ul.tab_menu li.openFirst a:hover {
+    color: #0063FB;
+    font-size: 15px;
+    border: 0px;
+    border-bottom: 2px solid #0063FB;
+    background-color: transparent;
+}
+
+div.toggle_content {
+    background-color: white;
+    border-bottom-width: 0px !important;
+}
+
 .footer { height: 45px; padding-right: 10px; text-align: right; border-top: 1px solid #d7d7d7; background-color: white; }
 .footer input { aawidth: 75px; }
 .footer span { font-weight: bold; }
 .footer input {
 	 border-width: 0px;
     padding: 7px 14px;
-    font-size: 14px;
+    font-size: 16px;
     outline: medium none !important;
     background-image: none !important;
     filter: none;
@@ -42,15 +76,15 @@ img{ border: 0px; }
     text-shadow: none;
     color: #333333;
     background-color: #e5e5e5;
-    cursor: pointer;	
+    cursor: pointer;
 }
 .footer #btnOK {
-	
+
 	color: #fff;
 	background-color: #35AA47;
 }
 
-.popupSizeFinder { 
+.popupSizeFinder {
 	position:absolute;
 	display:block;
 	top:0; bottom:0; left:0; right:0;
@@ -78,7 +112,7 @@ background-color: #edeff1;
 padding: 7px 10px 7px 10px;
 }
 
-span.error { color: #CC3333; font-size: 11px; }
+span.error { color: #CC3333; }
 ul.error li, span.error ul { font-weight: bold; }
 
 .button50 { width: auto; }
@@ -136,7 +170,7 @@ border-bottom: 1px solid buttonshadow;
 font-weight: bold;
 }
 
-.displaytagTable th.sorted a, .displaytagTable th.sortable a 
+.displaytagTable th.sorted a, .displaytagTable th.sortable a
 {
 background-position: right;
 background-repeat: no-repeat;
@@ -158,11 +192,11 @@ background-image: url(/admin/images/systemtable/arrow_up.png);
 .displaytagTable td
 {
 margin: 0px;
-color: windowtext; 
-font: menu; 
-padding: 1px; 
-padding-left: 5px; 
-padding-right: 5px;  
+color: windowtext;
+font: menu;
+padding: 1px;
+padding-left: 5px;
+padding-right: 5px;
 border-right: 1px solid buttonshadow;
 border-bottom: 1px solid buttonshadow;
 }
@@ -197,13 +231,13 @@ table.sort_table th.thCheckbox { padding: 4px 0px 12px 5px;}
 th.thCheckbox input{ float: left;}
 
 table.sort_table { background-color: white; }
-table.sort_table tr th, table.sort_table thead tr td { color: #666666; background-color: #fff; border-right: 1px solid #fff; cursor: default; background: url(/admin/skins/webjet6/images/th-bottom.gif) repeat-x 0px bottom; vertical-align: top; /*border-top: 1px solid #CCCCCC;*/ vertical-align: middle; padding: 4px 8px 12px 7px; font-family: Arial !important; font-size: 12px !important; font-weight: bold; text-align: left;}
+table.sort_table tr th, table.sort_table thead tr td { color: #666666; background-color: #fff; border-right: 1px solid #fff; cursor: default; background: url(/admin/skins/webjet6/images/th-bottom.gif) repeat-x 0px bottom; vertical-align: top; /*border-top: 1px solid #CCCCCC;*/ vertical-align: middle; padding: 4px 8px 12px 7px; font-family: "Asap", sans-serif !important; font-size: 12px !important; font-weight: bold; text-align: left;}
 
 table.sort_table tr th a, table.sort_table thead tr td a{ display: block; color: #666666; /*width: 100%;*/ font-size: 12px; padding: 0px; /*margin: 0px 28px 0px 0px;*/}
-table.sort_table tr th a:hover, table.sort_table thead tr td a:hover { color: #000000; text-decoration: none; font-family: Arial; font-size: 12px;}
+table.sort_table tr th a:hover, table.sort_table thead tr td a:hover { color: #000000; text-decoration: none; font-family: "Asap", sans-serif; font-size: 12px;}
 table.sort_table td{ border-bottom: 1px solid #CCCCCC; border-right: 0px; color: #555; border-right: 1px solid white; padding: 4px 8px 4px 7px; }
 table.sort_table tr.even td{ background: url(/admin/skins/webjet6/images/td-hover.gif) #F2F3F4 repeat-x 0px bottom; border-bottom: #cbdabd 1px solid; }
-table.sort_table tr th#activecell, table.sort_table thead tr td#activecell{ background: url(/admin/skins/webjet6/images/th-bottom-hover.gif) repeat-x 0px bottom; } 
+table.sort_table tr th#activecell, table.sort_table thead tr td#activecell{ background: url(/admin/skins/webjet6/images/th-bottom-hover.gif) repeat-x 0px bottom; }
 table.sort_table tbody tr#activerow td{ background: url(/admin/skins/webjet6/images/td-selected.gif) #f3faed repeat-x 0px bottom !important; }
 table.sort_table tbody td a{ color: #226600 !important; font-weight: normal; }
 table.sort_table tbody td a.groupsfalse { color: red !important; }
@@ -216,14 +250,14 @@ table.sort_table tr th.order2 a, table.sort_table thead tr td.order2 a { backgro
 
 /* DisplayTag koniec */
 
-/** 
+/**
 *	triedy potrebne pre pole na vyber casu - timePicker
 * http://labs.perifer.se/timedatepicker/
 * <script type="text/javascript" src="/components/_common/javascript/jquery.timePicker.js" ></script>
 *
 */
 
-div.time-picker 
+div.time-picker
 {
 position: absolute;
 height: 200px;
@@ -235,14 +269,14 @@ z-index: 99;
 margin-top: 2em;
 }
 
-div.time-picker ul 
+div.time-picker ul
 {
 list-style-type: none;
 margin: 0;
 padding: 0;
 }
 
-div.time-picker li 
+div.time-picker li
 {
 padding: 1px;
 cursor: pointer;
@@ -285,7 +319,8 @@ fieldset.noborder, div.box_toggle fieldset{ margin: 0px; padding: 0px; border: 0
 table.menuStyle {margin: 0 0 10px 11px;}
 table.menuStyle input {margin: 0px;}
 
-table.wjDialogHeaderTable, #componentsWindowTable { background: #f5f5f5 url(/admin/skins/webjet8/assets/global/img/wj/popup_bg_header.png) no-repeat top left; }
+table.wjDialogHeaderTable { background-color: #F3F3F6; }
+#componentsWindowTable { background-color: white; }
 
 ul.tab_menu { margin-left: 10px; }
 ul.tab_menu { padding: 2px 0 0 10px !important; }

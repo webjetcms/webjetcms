@@ -5,17 +5,6 @@
 
         window.helpLink = "/redactor/apps/export/README";
 
-        WJ.breadcrumb({
-            id: "exportdat",
-            tabs: [
-                {
-                    url: '/apps/export-dat/admin/',
-                    title: '[[#{components.export.dialog_title}]]',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/export-dat";
         let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.export.ExportDatBean")})];
 

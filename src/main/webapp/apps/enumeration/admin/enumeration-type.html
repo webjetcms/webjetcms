@@ -15,21 +15,6 @@
         ];
 
     window.domReady.add(function () {
-        WJ.breadcrumb({
-            id: "enumeration-type",
-            tabs: [
-                {
-                    url: '/apps/enumeration/admin/',
-                    title: '[[#{components.enumerations.list}]]',
-                    active: false
-                },
-                {
-                    url: '/apps/enumeration/admin/enumeration-type',
-                    title: '[[#{components.enumerations.modinfo.properties.typy_ciselnikov}]]',
-                    active: true
-                }
-            ]
-        });
 
         let url = "/admin/rest/enumeration/enumeration-type";
 

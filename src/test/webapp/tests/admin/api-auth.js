@@ -1,6 +1,8 @@
 Feature('admin.api-auth');
 
 let basicAuthEnabled = null;
+let loginText = "Meno alebo e-mail používateľa";
+let forgotPassword = "Zabudli ste heslo?";
 
 Before(({ I }) => {
     I.logout();
@@ -31,8 +33,8 @@ Scenario("API volanie", ({ I, Document }) => {
     setApiTokenAuthConf(I, Document, true);
 
     I.amOnPage("/admin/v9/");
-    I.see("PRIHLÁSENIE");
-    I.see("Zabudnuté heslo");
+    I.see(loginText);
+    I.see(forgotPassword);
 
     //default x-auth-token je v codecept.conf.js v casti REST
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
@@ -51,8 +53,8 @@ Scenario("API volanie", ({ I, Document }) => {
     //po API pristupne nesmie zostat prihlaseny
     I.say("Testujem, ze nezostal prihlaseny");
     I.amOnPage("/admin/v9/");
-    I.see("PRIHLÁSENIE");
-    I.see("Zabudnuté heslo");
+    I.see(loginText);
+    I.see(forgotPassword);
 });
 
 Scenario("API volanie - disabled", async ({ I, Document }) => {
@@ -62,8 +64,8 @@ Scenario("API volanie - disabled", async ({ I, Document }) => {
     setApiTokenAuthConf(I, Document, false);
 
     I.amOnPage("/admin/v9/");
-    I.see("PRIHLÁSENIE");
-    I.see("Zabudnuté heslo");
+    I.see(loginText);
+    I.see(forgotPassword);
 
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
     if (basicAuthEnabled) I.seeResponseCodeIs(401);
@@ -105,8 +107,8 @@ Scenario("API volanie zle heslo-cakanie 10s @singlethread", ({ I }) => {
 
 Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     I.amOnPage("/admin/v9/");
-    I.see("PRIHLÁSENIE");
-    I.see("Zabudnuté heslo");
+    I.see(loginText);
+    I.see(forgotPassword);
 
     //I.sendGetRequest('/admin/v9/', {'x-auth-token': '','wjlogontoken': 'FdGVzdGVyOlpaVlZydUNBdEhuM3F5Yzg|'});
     //I.seeResponseCodeIs(200);
@@ -124,8 +126,8 @@ Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     I.wait(5);
 
     I.amOnPage("/admin/v9/");
-    I.dontSee("PRIHLÁSENIE");
-    I.dontSee("Zabudnuté heslo");
+    I.dontSee(loginText);
+    I.dontSee(forgotPassword);
     I.see("Vitajte, Tester Playwright");
 
     I.logout();
@@ -143,8 +145,8 @@ Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     I.wait(5);
 
     I.amOnPage("/admin/v9/");
-    I.see("PRIHLÁSENIE");
-    I.see("Zabudnuté heslo");
+    I.see(loginText);
+    I.see(forgotPassword);
     I.dontSee("Vitajte, Tester Playwright");
 });
 
@@ -174,7 +176,7 @@ Scenario("basic auth @singlethread", async ({ I, Document }) => {
 
     await isBasicAuthEnabled(I);
 
-    let password = secret("*********");
+    let password = secret(I.getDefaultPassword());
 
     //
     I.say("Testing basic auth");

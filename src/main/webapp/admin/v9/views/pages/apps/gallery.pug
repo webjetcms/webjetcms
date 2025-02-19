@@ -4,24 +4,9 @@ block content
 
     div.row
         div.col-md-4.tree-col
-
-            +breadcrumb(
-                'gallery',
-                [
-                    [ 'gallery', '[[\#{webpages.tab.folders}]]', true ]
-                ]
-            )
-
             include ../../partials/folder-tree-galleria
 
         div.col-md-8.datatable-col
-
-            +breadcrumb(
-                'images',
-                [
-                    [ 'images', '[[\#{admin.fck_image.images}]]', true ]
-                ]
-            )
 
             style.
                 #pills-dt-galleryTable-photoeditor, #pills-dt-galleryTable-areaOfInterest { padding-bottom: 0px; }

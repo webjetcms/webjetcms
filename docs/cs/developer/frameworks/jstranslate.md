@@ -4,7 +4,7 @@ Abychom umožnili používání překladových klíčů v souborech JavaScript, 
 
 ## Backendové služby REST
 
-Služba REST pro získání překladových klíčů je implementována ve třídě [AdminPropRestController.java](../../../src/main/java/sk/iway/iwcm/admin/AdminPropRestController.java). Poskytuje tyto adresy:
+Služba REST pro získání překladových klíčů je implementována ve třídě [AdminPropRestController.java](../../../../src/main/java/sk/iway/iwcm/admin/AdminPropRestController.java). Poskytuje tyto adresy:
 - `/admin/rest/properties/{lng}/` - získání standardního seznamu klíčů pro jazyk zadaný v cestě `{lng}`.
 - `/admin/rest/properties/{lng}/{prefix:.+}` - získání seznamu klíčů pro jazyk zadaný v cestě `{lng}` obsahující jak standardní klíče, tak klíče určené předponou `{prefix}`. V předponě lze zadat více klíčů oddělených čárkou (přidají se všechny klíče začínající zadanou předponou).
 - `/admin/rest/properties/lastmodified/{lng}/` - získá datum poslední změny překladu.
@@ -21,15 +21,15 @@ Pokud je při volání služby REST odeslán parametr. `since` typu timestamp je
 - pokud od zadaného časového razítka nedošlo k žádné změně, je vrácen prázdný objekt
 - pokud dojde ke změně, jsou vráceny všechny klíče a klíč s názvem `lastmodified` obsahující časové razítko poslední změny na serveru.
 
-Datum poslední změny je také v [head.pug](../../../src/main/webapp/admin/v9/views/partials/head.pug) k dispozici jako `window.propertiesLastModified`. Tím se ušetří jedno volání služby REST, pokud není třeba klíče aktualizovat.
+Datum poslední změny je také v [head.pug](../../../../src/main/webapp/admin/v9/views/partials/head.pug) k dispozici jako `window.propertiesLastModified`. Tím se ušetří jedno volání služby REST, pokud není třeba klíče aktualizovat.
 
 ### Překladové texty
 
-Texty překladů pro WebJET 2021 jsou v souboru [text-webjet9.properties](../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties), je třeba do tohoto souboru přidat nové překladové klíče.
+Texty překladů pro WebJET 2021 jsou v souboru [text-webjet9.properties](../../../../src/main/webapp/WEB-INF/classes/text-webjet9.properties), je třeba do tohoto souboru přidat nové překladové klíče.
 
 Pro nové klíče doporučujeme použít příponu `.js` jménem klíče pro jeho automatické zahrnutí do odpovědi služby REST (např. `datatables.error.system.js`).
 
-Pokud je to možné, je vhodné znovu použít stávající překladové klíče z WebJETu 8 - ušetříte tak náklady na překlad nových textů. Tyto klíče najdete v souboru [translations.properties](../../../src/main/webapp/files/preklady.properties). Tento soubor neupravujte, je to jen statický seznam překladových klíčů z WebJET 8.
+Pokud je to možné, je vhodné znovu použít stávající překladové klíče z WebJETu 8 - ušetříte tak náklady na překlad nových textů. Tyto klíče najdete v souboru [text.properties](../../../../src/main/webapp/WEB-INF/classes/text.properties). Tento soubor neupravujte, je to jen statický seznam překladových klíčů z WebJET 8.
 
 Při použití existujícího klíče musí být jeho předpona nastavena v konfigurační proměnné s názvem `propertiesAdminKeys` přidat klíč do odpovědi služby REST.
 

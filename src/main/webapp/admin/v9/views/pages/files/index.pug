@@ -5,8 +5,12 @@ block content
     include jsinclude
 
     style(type="text/css").
-        .ly-content {
-            height: 100vh !important;
+        .md-tabs {
+            margin-bottom: 0;
+            padding-top: 2px;
+        }
+        .md-tabs ul {
+            padding-left: 15px;
         }
 
     script.
@@ -217,7 +221,7 @@ block content
         }
 
     .tabbable.tabbable-custom.tabbable-full-width.tabbable-elfinder
-        div.md-breadcrumb
+        div.md-tabs
             ul.nav( role='tablist')
                 li.nav-item(role='presentation')
                     a.nav-link.active(onclick="elfinderTabClick('file')" style='cursor:pointer' aria-selected=true data-bs-toggle='tab' role='presentation')

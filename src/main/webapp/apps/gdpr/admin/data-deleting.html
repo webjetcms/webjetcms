@@ -5,21 +5,6 @@
 
             window.helpLink = "/redactor/apps/gdpr/data-deleting";
 
-            WJ.breadcrumb({
-                id: "datadeleting",
-                tabs: [
-                    {
-                        url: '/apps/gdpr/admin/',
-                        title: '[[#{components.gdpr.menu}]]',
-                        active: false
-                    },
-                    {
-                        url: '/apps/gdpr/admin/data-deleting/',
-                        title: '[[#{components.data.deleting}]]'
-                    }
-                ]
-            })
-
             let url = "/admin/rest/gdpr/data_deleting";
             let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gdpr.GdprDataDeletingEntity")})];
 

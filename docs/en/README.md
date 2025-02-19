@@ -4,135 +4,53 @@ Welcome to the documentation for WebJET CMS version 2024. We recommend to read [
 
 # List of changes in the latest version
 
-## 2024.52
+## 2025.0
 
-> In version 2024.52, the Web site adds the ability to set **method of arrangement** a **search in tree structure**, ZIP import allows you to set the way to compare the existing version of the page. **Ecommerce** received a new design of the order list and products. Added **survey statistics**, a better image editor in the explorer and improved search in the administration. V **bulk emails** option added **set the logout confirmation**. The gallery contains a new field for **the URL of the image source**, which is filled in automatically when you use the photo bank, **Tags** They add **language mutations** and optional fields.
+> In the version **2025.0** we brought **new administration design** for even better clarity and user experience.
+>
+> One of the main changes is the transfer of **second level menu** to **tabs in the page header**, which simplifies navigation. In the website we also **merged folder and website tabs** to keep everything in one place. If the header does not contain tabs, the tables are automatically adjusted and displayed **extra line**.
+>
+> Please provide feedback via **Feedback form** if you identify when using the new version **any display problem**. You can also add a reminder **screenshot** to help us identify and resolve any deficiencies more quickly.
+>
+> Thank you for your cooperation and help in improving WebJET CMS!
 
-### Groundbreaking changes
+## Groundbreaking changes
 
-- Updated Java and JavaScript libraries to newer versions, check the changes in the programmer section below. You can use the update script `/admin/update/update-2023-18.jsp`.
-- Increased security [public REST services](custom-apps/spring/public-services.md) if you use them, you need to complete the permits. Cancelled REST service `/admin/rest/property/set` (#57202).
-- FontAwesome - modified embedding [FontAwesome Icons](frontend/webpages/fontawesome/README.md) in the editor (#57461).
-- E-commerce - methods in `DocDetails` to obtain the price adjusted from the return value `double` at `BigDecimal`. You can use the script `/admin/update/update-2023-18.jsp` for basic updating of your JSP files. If necessary, you can temporarily use the methods `getPriceDouble/getVatDouble/getLocalPriceDouble/getLocalPriceDouble` (#56385).
+- Web pages - inline editing cancelled. The ability to edit the page directly in view mode has been removed as it used an older version of the editor that is no longer supported. As an alternative, the toolbar displayed in the top right corner of the web page can be activated. This toolbar allows quick access to the web page editor, folder or template. You can turn it off or on using the configuration variable `disableWebJETToolbar`. Once activated, it will start to appear on the web page after entering the Web Pages section in the administration (#57629).
+- Login - set for administrators [password change request](sysadmin/pentests/README.md#password-rules) once a year. The value can be modified in the configuration variable `passwordAdminExpiryDays`, setting it to 0 disables the check (#57629).
+- Introduction - added requirement to activate two-factor authentication to increase login security. Prompt is not displayed if authentication is handled via `LDAP` or if the translation key is `overview.2fa.warning` set to empty (#57629).
 
-### Web pages
+### Design
 
-- Added option to select the method and direction for the arrangement [tree structures](redactor/webpages/README.md#setting-the-tree-structure-view) (#57257).
+In the version **2025.0** we brought an improved **administration design** which is clearer and more efficient.
 
-![](redactor/webpages/jstree-settings.png)
+- **Modified login dialogue** - new background and moving the login dialog to the right side. At **Login** it is possible to use not only the login name but **already have an email address**. ![](redactor/admin/logon.png)
+- **Clearer header** - the name of the current page or section is now displayed directly in the header.
+- **New navigation in the left menu** - under items are no longer part of the left menu, but are displayed **as cards at the top** Pages. ![](redactor/admin/welcome.png)
+- **Merged tabs in the Websites section** - Switching folder types and web page types are now displayed in a common section, simplifying navigation. **Choosing a domain** has been moved to the bottom of the left menu. ![](redactor/webpages/domain-select.png)
+- **Reorganised menu items**:
+  - **SEO** moved to section **Views**.
+  - **GDPR and Scripts** moved to section **Templates**.
+  - **Gallery** is now in the section **Files**.
+  - Some item names have been modified to better describe their function.
 
-- Tree structure - adding options [searches in tree structure](redactor/webpages/README.md#search-in-tree-structure) web site folders in depth (#57265).
+The rest of the list of changes to the changes is identical to the version [2024.52](CHANGELOG-2024.md).
 
-![](redactor/webpages/jstree-search-result.png)
+## Web pages
 
-- Tags - added option [language settings](redactor/webpages/perexgroups.md#card-translations) name of the perex group to display the title tag according to the language of the web page (#57273).
+- Added the ability to set increment order for folders in a configuration variable `sortPriorityIncrementGroup` and web pages in the configuration variable `sortPriorityIncrementDoc`. The default values are 10 (#57667-0).
 
-![](redactor/webpages/perex-groups_tab-translates.png)
+### Testing
 
-- FontAwesome - modified embedding [FontAwesome Icons](frontend/webpages/fontawesome/README.md) in the editor (#57461).
-- Importing web pages from a ZIP archive - adding the option to select a parameter [to compare the existence](redactor/webpages/import-export.md#importing-web-pages-from-zip-archive) web pages, modified visuals, added options about/from/label all pages/files, open/close folders and added information about import progress. Optional Field Comparison allows pages to set a Unique Identifier to uniquely identify the web page (#57441) via the Optional Field Type.
-
-![](redactor/webpages/imported-zip-window.png)
-
-- Importing web pages from the ZIP archive - added data separation at `multi-domain` where the data of another domain is ignored when looking for an existing version of the imported data (#57493).
-- Improved transfer of installation name from template to `CombineTag`. The value is stored in the `session` and will also be used in the retrieval of files during the execution of `combine` (#56325).
-- The JSP template file search takes into account the installation name set in the template (#56325).
-- Tags - added tab with [optional fields](redactor/webpages/perexgroups.md#tab-optional-fields) for the ability to add custom data to tags. For example, setting the tag color, tag design, etc (#57449).
-- Cloning structure - during cloning, the synchronization of the web page and folder name is disabled to preserve the names according to the original folder. Configuration variable `syncGroupAndWebpageTitle` is set to `false` and set to the original value (#57489) after the cloning is finished.
-- Modified numbering if there is a web page with the same name/URL address - the newly created page starts from number 2 instead of number 1, this creates URLs of the type `/en/page.html,/en/page-2.html,/en/page-3.html` instead of `/en/page.html,/en/page-1.html,/en/page-2.html` Where `-1.html` was not semantically optimal (#54273-50).
-- Added option to change the behaviour of the last `/` At [generating URLs for pages](frontend/setup/config.md). By default for the main page of a folder, the URL ends with the `/`, so for example `/en/products/`, after setting the configuration variable `virtualPathLastSlash` to the value of `false` the URL will be generated without the last `/` thus as `/en/products` (#54273-50).
-
-### Survey
-
-- Added [response statistics](redactor/apps/inquiry/inquiry-stat.md) polls (#57337).
-
-![](redactor/apps/inquiry/inquiry-editor_stat.png)
-
-### Ecommerce
-
-- [List of orders](redactor/apps/eshop/invoice/README.md) a [List of products](redactor/apps/eshop/product-list/README.md) modified to new design for datatables (#56325).
-
-![](redactor/apps/eshop/invoice/editor_items.png)
-
-- Methods in `DocDetails` to obtain the price adjusted from the return value `double` at `BigDecimal` (#56385).
-
-### Gallery
-
-- The default visual style type of the gallery can be set via the conf. variable `galleryDefaultStyle`, by default `photoSwipe` (#56393-18).
-- Added option to select the method and direction for the arrangement [tree structures](redactor/webpages/README.md#setting-the-tree-structure-view) (#57257).
-- Added an image source URL field with an option to specify the address from which you got the image. The field is automatically set when using [photo banks](redactor/webpages/working-in-editor/README.md#photobank-card) in the list of websites (#57313).
-- Added option **search in tree structure** by name, similar to the website (#57437).
-
-![](redactor/apps/gallery/admin-dt.png)
-
-### Bulk e-mail
-- Sending - when sending, the SSL certificate of the web page is ignored, as often a temporary SSL certificate (#57525) is used in the internal environment.
-- Logout - created a new application for logout settings. Added the ability to enter custom text before unsubscribing and the ability to display a confirmation instead of immediately unsubscribing by clicking a link in the email (#57525).
-- Unsubscribe - modified bulk email unsubscribe form - added option to show confirmation of unsubscribe and option to return email again after unsubscribing (#57525).
-
-![](redactor/apps/dmail/unsubscribed/unsubscribed-form.png)
-
-### Explorer
-
-- Complete image editor replacement in action [file editing](redactor/files/fbrowser/file-edit/README.md) in the explorer section after the editor in the form `DataTable` according to the photo gallery (#57313).
-- Improved display on mobile phones for better usability - adjusted height, size (#55645).
-
-### Other
-
-- Redesigned search in administration to data tables (#57333).
-
-![](redactor/admin/search/search.png)
-
-- Renamed the Edit Cell option to Edit in the grid view according to the nomenclature used in `Microsoft SharePoint`.
-- Search - modified the search form on the web page for the possibility of defining placeholder text (`placeholder`) instead of the standard Search. You can then enter custom text to be displayed in the form, such as Search Web Page (#54273-53).
-
-### Security
-
-- Modified startup log - sensitive information like passwords, token, certificates from configuration variables are replaced with expression `********` (#MR643).
-- [For public REST services](custom-apps/spring/public-services.md) added option to set allowed IP addresses for each service separately (#57202).
-- Translation keys - added the ability to filter keys in the REST service [/rest/properties/](custom-apps/spring/public-services.md) by conf. variable `propertiesRestControllerAllowedKeysPrefixes` to make it impossible to publicly retrieve all keys from the WebJET CMS (#57202).
-- HTTP header added to audit `Referer` (#57565).
+- Standard password for `e2e` tests are obtained from `ENV` variable `CODECEPT_DEFAULT_PASSWORD` (#57629).
 
 ### Error correction
 
-- Fixed URL generation for AB Testing if the original URL contains a character `*` (#54273-50).
-- Image editor - fixed renaming of image in image editor opened from explorer (#57269).
-- Domain redirects - fixed the ability to specify a protocol for the redirect domain. Added redirection logic to `https` version when selecting the option `http` of the original protocol - assumed redirection to `https` Version (#56393-20).
-- Web pages - Page Builder - fixed inserting applications and blocks at the correct cursor location (#57613).
-- Web Pages - Blocks - Fixed deleting blank space in Firefox when inserting a block (#57613).
+- Web pages - inserting links to a file in PageBuilder (#57649).
+- Web pages - added link information (file type, size) to the Auxiliary caption attribute `alt` (#57649).
+- Web pages - corrected order of web pages when used `Drag&Drop` in tree structure (#57657-1).
+- Web pages - when duplicating a web page/folder, the value is set `-1` in the Order of Arrangement field for inclusion at the end of the list. The value `-1` can also be entered manually to obtain a new value for the order of the arrangement (#57657-1).
+- Websites - importing web pages - fixed media group settings when importing pages containing media. When importing, all Media Groups (even unused ones) are automatically created due to the fact that the media group set for the media application is also translated when importing pages `/components/media/media.jsp` in the page (which may also contain the media ID of a group outside the imported pages) (#57657-1).
+- Firefox - reduced version of the set `Tabler Icons` at `3.0.1` because Firefox puts a significant load on the processor when using newer versions. Optimised CSS style reading `vendor-inline.style.css` (#56393-19).
 
-### Documentation
-
-- Documentation created for [improve server performance](sysadmin/performance/README.md) (#57357).
-- Created documentation in PDF for [of the editor](_media/manuals/webjetcms-redactor.pdf), [Administrator](_media/manuals/webjetcms-admin.pdf), [traffic](_media/manuals/webjetcms-sysadmin.pdf) a [install](_media/manuals/webjetcms-install.pdf). The PDF documentation is generated automatically from the current MarkDown documentation and includes the WebJET CMS version date (#57269).
-
-### For the programmer
-
-- Changed API for datatable `table.ajax.url(newUrl); -> table.setAjaxUrl(newUrl);`, `table.ajax.url() -> table.getAjaxUrl()` (#57365).
-- Updated `Swagger-UI` at `/admin/swagger-ui/` to version `org.webjars:swagger-ui:5.17.14` (#57365).
-- Updated library `Bootstrap` from 4.6.1 to 5.3.3 and `jQuery` from 3.5.1 to 3.7.1 for old v8 administration (#57365).
-- Libraries removed in version 8 `bootstrap-modal,bootstrap-switch,bootstrap-toastr,uniform,simple-line-icons` (#57365).
-- Need to edit the tab switching in your JSP files, search for `data-toggle="tab"` and replace with `data-bs-toggle="tab"`, `LI` set the element `class="nav-item"` and to the first `A` set the element `class="active"`:
-
-```html
-<ul class="nav nav-tabs">
-    <li class="nav-item">
-        <a class="active" href="#tabMenu1" data-bs-toggle="tab">
-            <iwcm:text key="components.filter"/>
-        </a>
-    </li>
-    <li class="nav-item">
-        <a href="#tabMenu2" data-bs-toggle="tab" onclick="loadComponentIframe();">
-            <iwcm:text key="components.file_archiv.waiting_files"/>
-        </a>
-    </li>
-</ul>
-```
-- Removed methods `DocDB.searchTextAll,searchTextUrl`, use the class `sk.iway.iwcm.search.SearchService` (#57333).
-- Applications via `!INCLUDE` can also be inserted from folders `/apps` a `/templates` (#56325).
-- [Optional fields](frontend/webpages/customfields/README.md#paint) - added field type `color` for color selection (#57449).
-- For [application in the editor](custom-apps/appstore/README.md#use-of-annotation) it is possible to define multiple JSP files for which it will be used, for example `@WebjetAppStore(...componentPath = "/components/search/search.jsp,/components/search/lucene_search.jsp")`. The first JSP file in the list (#54273-53) is used when inserting a new application.
-
-[Full list of changes >>](CHANGELOG-2024.md)
-
-![meme](_media/meme/2024-52.jpg ":no-zoom")
+![meme](_media/meme/2025-0.jpg ":no-zoom")

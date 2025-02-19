@@ -6,10 +6,10 @@ Scenario("CZ verzia preklady", ({ I, DTE }) => {
     I.selectOption("language", "Česky");
     I.wait(5);
 
-    I.see("PŘIHLÁŠENÍ");
-    I.see("Zapomenuté heslo");
+    I.see("Uživatelské jméno nebo e-mail", "#userForm .control-label");
+    I.see("Zapomněli jste heslo?", "button.lost-password");
     I.fillField("username", "tester");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(I.getDefaultPassword()));
     I.click("login-submit");
 
     I.wait(3);
@@ -36,10 +36,10 @@ Scenario("EN verzia preklady", ({ I, DTE }) => {
     I.selectOption("language", "English");
     I.wait(5);
 
-    I.see("LOGIN");
-    I.see("Lost password");
+    I.see("Username or email", "#userForm .control-label");
+    I.see("Forgot your password?", "button.lost-password");
     I.fillField("username", "tester");
-    I.fillField("password", secret("*********"));
+    I.fillField("password", secret(I.getDefaultPassword()));
     I.click("login-submit");
 
     I.wait(3);

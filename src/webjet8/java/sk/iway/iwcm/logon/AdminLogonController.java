@@ -8,6 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.struts.action.ActionMessage;
+import org.apache.struts.action.ActionMessages;
 import org.apache.struts.util.ResponseUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -101,6 +103,7 @@ public class AdminLogonController {
         Identity user = null;
         String selectedLoginFromSelect = userForm.getSelectedLogin();
         String changePasswordAuth = userForm.getAuth();
+        ActionMessages errors = new ActionMessages();
 
         // This is special
         //  -> can contain only 1 login value when reseting password via login
@@ -125,15 +128,18 @@ public class AdminLogonController {
 
         // je tam daco a je to rovnake?
         if(Tools.isEmpty(userForm.getNewPassword()) || Tools.isEmpty(userForm.getRetypeNewPassword()) || !(userForm.getNewPassword().equals(userForm.getRetypeNewPassword()))) {
-            model.addAttribute("errors", prop.getText("logon.change_password.password_not_match"));
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors", prop.getText("logon.change_password.password_not_match")));
+            model.addAttribute("errorsList", errors.get(ActionMessages.GLOBAL_MESSAGE));
             return CHANGE_PASSWORD_FORM;
         }
 
-        if (Constants.getBoolean("passwordUseHash") && user.getPassword().equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), userDetailsRepository.getPasswordSaltByUserId((long)user.getUserId()))) || user.getPassword().equals(userForm.getNewPassword())) {
+        String currentPassword = userDetailsRepository.getPasswordByUserId((long)user.getUserId());
+        if (Constants.getBoolean("passwordUseHash") && currentPassword.equals(PasswordSecurity.calculateHash(userForm.getNewPassword(), userDetailsRepository.getPasswordSaltByUserId((long)user.getUserId()))) || currentPassword.equals(userForm.getNewPassword())) {
             // povodne heslo je rovnake ako nove heslo
-            model.addAttribute("errors", prop.getText("logon.change_password.old_password_match_new"));
+            errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors", prop.getText("logon.change_password.old_password_match_new")));
+            model.addAttribute("errorsList", errors.get(ActionMessages.GLOBAL_MESSAGE));
             return CHANGE_PASSWORD_FORM;
-        } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, null)){
+        } else if (Password.checkPassword(true, userForm.getNewPassword(), true, user.getUserId(), session, errors)){
             user.setPassword(userForm.getNewPassword());
             UserDetailsService.savePassword(userForm.getNewPassword(), user.getUserId());
 
@@ -164,6 +170,7 @@ public class AdminLogonController {
                 return "redirect:" + forwardAfterToken;
             }
         } else {
+            if (errors.size()>0) model.addAttribute("errorsList", errors.get(ActionMessages.GLOBAL_MESSAGE));
             return CHANGE_PASSWORD_FORM;
         }
     }

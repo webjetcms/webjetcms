@@ -8,13 +8,13 @@
 
 @media (max-width: ($bp-laptop - 1)) {
     .ly-content {
-        height: 100vh;
+        height: 100vh !important;
     }
 }
 
 @media (max-width: ($bp-mobile - 1)) {
     .ly-content {
-        height: 100%;
+        height: 100% !important;
     }
 }
 

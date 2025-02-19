@@ -27,9 +27,10 @@ const WJ = (() => {
         return translated;
     }
 
-    function showHelpWindow() {
+    function showHelpWindow(link=null) {
         var url = "http://docs.webjetcms.sk/latest/"+window.userLng;
-        if (typeof window.helpLink != "undefined") url += window.helpLink;
+        if (typeof link != "undefined" && link != null) url += link;
+        else if (typeof window.helpLink != "undefined") url += window.helpLink;
         else url += "/";
         window.open(url, '_blank');
     }
@@ -241,7 +242,10 @@ const WJ = (() => {
         }
     }
 
-    function toastNotify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false) {
+    function toastNotify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null) {
+
+        if (typeof containerId === "undefined" || containerId === null) containerId = 'toast-container-webjet';
+
         if (title === '' && text === '') {
             return false
         }
@@ -251,7 +255,7 @@ const WJ = (() => {
         if (appendToExisting) {
             var found = false;
             try {
-                $('#toast-container-webjet .toast-'+type).each(function() {
+                $('#'+containerId+' .toast-'+type).each(function() {
                     var $this = $(this);
                     var currentTitle = $this.find(".toast-title").html();
                     if (currentTitle === title) {
@@ -274,15 +278,22 @@ const WJ = (() => {
             extendedTimeOut: timeOut,
             progressBar: true,
             positionClass: 'toast-container toast-top-right',
-            containerId: 'toast-container-webjet'
+            containerId: containerId,
+            closeHtml: '<button class="btn btn-close toast-close-button"><i class="ti ti-x"></i></button>',
         };
 
+        if ("toast-container-webjet"!=containerId) {
+            options.showDuration = 0;
+            options.showMethod = "show";
+        }
+
         let buttonsHtml = null;
-        if (typeof buttons != "undefined" && buttons != null) {
+        if (typeof buttons != "undefined" && buttons != null && buttons.length > 0) {
             //vygeneruj HTML kod pre tlacidla
             buttonsHtml = `<div class="toast-links toast-links-standard">`;
             buttons.forEach(function(button, index) {
-                buttonsHtml += `<a class="${button.cssClass}" title="${button.title}" onclick="${button.click}"><i class="${button.icon}"></i> ${button.title}</a>`;
+                if (typeof button.closeOnClick == "undefined") button.closeOnClick = true;
+                buttonsHtml += `<a class="${button.cssClass}" title="${button.title}" onclick="${button.click}" data-close="${button.closeOnClick}"><i class="${button.icon}"></i> ${button.title}</a>`;
             });
             buttonsHtml += `</div>`;
 
@@ -311,8 +322,9 @@ const WJ = (() => {
 
         if (toastrInstance != null && buttonsHtml != null) {
             //console.log("TOASTR INSTANCE=", toastrInstance);
-            toastrInstance.on("click", "a.btn", () => {
-                //console.log("btn click");
+            toastrInstance.on("click", "a.btn", (e) => {
+                //console.log("btn click, this=", this, e);
+                if ("false"===$(e.target).attr("data-close")) return;
                 toastr.clear(toastrInstance);
             })
         }
@@ -780,6 +792,15 @@ const WJ = (() => {
         window.dispatchEvent(event);
     }
 
+    function setTitle(title) {
+        let $headerTitle = $(".header-title");
+        $headerTitle.text(title);
+
+        let pipeIndex = document.title.indexOf("|");
+        if (pipeIndex==-1) document.title = title + " | " + document.title;
+        else document.title = title + " " + document.title.substring(pipeIndex);
+    }
+
     /**
      * Vygeneruje hlavnu navigacnu listu vo web stranke, pouziva sa primarne v /apps/ adresari
      * @param {*} config - JSON objekt konfiguracie typu:
@@ -803,8 +824,16 @@ const WJ = (() => {
      *       }
      */
     function breadcrumb(config) {
+
         //console.log("navbar, config=", config);
-        let breadcrumb = $("div.ly-container.container div.md-breadcrumb");
+        let breadcrumb = $("div.ly-content div.ly-container.container div.md-breadcrumb");
+        if (breadcrumb.length === 0) {
+            breadcrumb = $("<div class='md-breadcrumb'></div>");
+            $("div.ly-content div.ly-container.container").prepend(breadcrumb);
+        }
+
+        //default is hidden, show it
+        breadcrumb.show();
 
         let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
 
@@ -814,7 +843,12 @@ const WJ = (() => {
         }
 
         let counter = 0;
+        let currentNavbarTab = $(".ly-submenu .nav-link.active").text();
         config.tabs.forEach(function(data, index) {
+
+            //skip with same name as navbar tab
+            if (currentNavbarTab!="" && currentNavbarTab === data.title) return;
+
             let li = $(`<li class="nav-item"></li>`);
 
             if ("{filter}"===data.title && typeof config.showInIframe == "undefined") {
@@ -822,7 +856,8 @@ const WJ = (() => {
             }
 
             if ("{LANGUAGE-SELECT}"===data.title) {
-                let select = $("div.breadcrumb-language-select");
+                let select = $("div.breadcrumb-language-select").first();
+                if (select.length==0) window.alert("Breadcrumb language select not found");
                 select.appendTo(li);
                 select.show();
             } else if (data.title.indexOf("{")==0) {
@@ -833,10 +868,6 @@ const WJ = (() => {
 
                 if (typeof data.active == "undefined" || data.active===true) {
                     anchor.addClass("active");
-
-                    let pipeIndex = document.title.indexOf("|");
-                    if (pipeIndex==-1) document.title = data.title + " | " + document.title;
-                    else document.title = data.title + " " + document.title.substring(pipeIndex);
                 } else {
                     if (counter == 0) {
 
@@ -858,9 +889,53 @@ const WJ = (() => {
         });
 
         breadcrumb.html("");
+        //console.log("Appending breadcrumb, ul=", ul.find("li").length);
         breadcrumb.append(ul);
 
+        if (ul.find("li").length === 0) breadcrumb.hide();
+
         if (config.showInIframe===true) breadcrumb.addClass("show-in-iframe");
+        if (config.noBorderBottom===true) breadcrumb.addClass("no-border-bottom");
+    }
+
+    function headerTabs(config) {
+        //console.log("headerTabs, config=", config);
+
+        let tabs = $("div.ly-header div.ly-submenu");
+
+        let ul = $(`<ul class="nav" id="pills-${config.id}" role="tablist"></ul>`);
+
+        config.tabs.forEach(function(data, index) {
+            let li = $(`<li class="nav-item" role="presentation"></li>`);
+
+            let idNoHash = data.url;
+            if (typeof idNoHash != "undefined" && idNoHash.indexOf("#")==0) idNoHash = idNoHash.substring(1);
+            let href = "#pills-"+idNoHash;
+            //ak je to URL nepridavaj #pills-
+            if (idNoHash.indexOf("/")==0) {
+                href = idNoHash;
+            }
+
+            let anchor = $(`<a class="nav-link" id="pills-${idNoHash}-tab">${data.title}</a>`);
+            anchor.attr("href", href);
+            if (href.indexOf("#")==0) {
+                anchor.attr("data-bs-toggle", "tab");
+                anchor.attr("role", "presentation");
+            }
+
+            if (typeof data.active != "undefined" && data.active===true) {
+                anchor.addClass("active");
+            }
+            li.append(anchor);
+            ul.append(li);
+        });
+
+        //wrap UL with md-tabs div
+        ul = $("<div class='md-tabs md-tabs-dropdown'></div>").append(ul);
+
+        tabs.html("");
+        tabs.append(ul);
+        $("body").addClass("ly-submenu-active");
     }
 
     const htmlToTextRegex = /(<([^>]+)>)/ig;
@@ -1098,7 +1173,7 @@ const WJ = (() => {
         $this.parents(".md-main-menu__item__sub-menu__item").addClass("md-main-menu__item__sub-menu__item--active");
 
         $this.parents(".md-main-menu__item").addClass("md-main-menu__item--active");
-        $this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
+        //$this.parents(".md-main-menu__item").addClass("md-main-menu__item--open");
 
         $this.parents(".md-main-menu").addClass("md-main-menu--open");
         var menuId = $this.parents(".md-main-menu").data("menu-id");
@@ -1124,8 +1199,8 @@ const WJ = (() => {
     }
 
     return {
-        showHelpWindow: () => {
-            return showHelpWindow();
+        showHelpWindow: (link) => {
+            return showHelpWindow(link);
         },
         changeDomain: select => {
             return changeDomain(select);
@@ -1145,8 +1220,8 @@ const WJ = (() => {
         openPopupDialog: (url, width, height) => {
             openPopupDialog(url, width, height);
         },
-        notify: (type, title, text, timeOut, buttons, appendToExisting=false) => {
-            return toastNotify(type, title, text, timeOut, buttons, appendToExisting)
+        notify: (type, title, text, timeOut, buttons, appendToExisting=false, conatinerId=null) => {
+            return toastNotify(type, title, text, timeOut, buttons, appendToExisting, conatinerId)
         },
         notifySuccess: (title, text, timeOut, buttons) => {
             return toastNotify('success', title, text, timeOut, buttons)
@@ -1273,8 +1348,14 @@ const WJ = (() => {
         log: (...data) => {
             return Tools.log('info', data);
         },
+        setTitle: (title) => {
+            return setTitle(title);
+        },
         breadcrumb: (config) => {
             return breadcrumb(config);
+        },
+        headerTabs: (config) => {
+            return headerTabs(config);
         },
         htmlToText: (html) => {
             return htmlToText(html);

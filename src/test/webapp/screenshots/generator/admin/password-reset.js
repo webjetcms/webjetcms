@@ -45,12 +45,13 @@ function doScreens(I, Document, TempMail, isAdmin) {
     I.say("Ask for password change");
     I.amOnPage(logonLink);
     I.waitForVisible(lostPasswordBtn);
-    I.clickCss(lostPasswordBtn);
-
-    I.waitForVisible("#sendPasswd");
-    Document.screenshot(basePath + screensPrefix + "-recovery-page.png", 1080, 685);
 
     Document.screenshotElement(lostPasswordBtn, basePath + screensPrefix + "-recover-password-btn.png");
+
+    I.clickCss(lostPasswordBtn);
+    I.wait(1);
+
+    Document.screenshot(basePath + screensPrefix + "-recovery-page.png", 1080, 685);
     Document.screenshotElement("#register-submit-btn", basePath + screensPrefix + "-send-btn.png");
 
     I.fillField('input[name="loginName"]', "sameMail@fexpost.com");

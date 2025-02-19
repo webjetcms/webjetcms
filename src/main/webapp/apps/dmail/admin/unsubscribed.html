@@ -8,22 +8,6 @@
 
         window.helpLink = "/redactor/apps/dmail/unsubscribed/README";
 
-        WJ.breadcrumb({
-            id: "unsubscribed",
-            tabs: [
-                {
-                    url: '/apps/dmail/admin/',
-                    title: '[[#{components.dmail.dialog_title}]]',
-                    active: false
-                },
-                {
-                    url: '/apps/admin/dmail/unsubscribed/',
-                    title: '[[#{components.admin_unsubscribed_email.unsubscribed_email}]]',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/dmail/unsubscribed";
         var order = [];
         order.push([2, 'desc']);

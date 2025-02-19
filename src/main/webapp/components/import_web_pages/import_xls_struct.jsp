@@ -94,13 +94,18 @@ catch (Exception ex)
 				<b><iwcm:text key="components.import_web_pages.xls.xls_file"/>:</b>&nbsp;
 			</td>
 			<td colspan="2" >
-				<input type="file" name="file" size="30">
+				<input type="file" class="form-control" name="file" size="30">
 			</td>
 		</tr>
 		<tr>
 			<td><b><iwcm:text key="components.import_web_pages.parent_group_id"/>:</b>&nbsp;</td>
-			<td><input type="text" name="parentGroupIdString" size="5" value="<%=groupId%>" />&nbsp;
-				<input type="button" name="selGroup" value='<iwcm:text key="components.import_web_pages.select_group"/>' class="btn btn-green" onclick="Javascript: openPopup();" />
+			<td>
+				<div class="input-group">
+					<input type="text" class="form-control" name="parentGroupIdString" size="5" value="<%=groupId%>" />
+					<div class="input-group-append">
+						<button name="selGroup" class="btn btn-outline-secondary" onclick="openPopup();"><i class="ti ti-focus-2"></i></button>
+					</div>
+				</div>
 			</td>
 		</tr>
 		<tr>

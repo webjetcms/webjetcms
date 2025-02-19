@@ -2,6 +2,7 @@
   <div class="overview">
     <div class="row">
       <div class="col-lg-9">
+        <div id="toast-container-overview" class="toast-container"></div>
         <webjet-overview-dashboard-infobox
           v-bind:overviewbackdata="overviewbackdata"
         ></webjet-overview-dashboard-infobox>

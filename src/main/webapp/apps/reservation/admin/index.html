@@ -6,22 +6,6 @@
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "reservationObject",
-            tabs: [
-                {
-                    url: '/apps/reservation/admin/',
-                    title: '[[#{components.reservation.title}]]',
-                    active: false
-                },
-                {
-                    url: '/apps/reservation/admin/reservation-objects/',
-                    title: '[[#{components.reservation.reservationList}]]',
-                    active: true
-                }
-            ]
-        });
-
         let innerTable = null;
         let showReservationValidity = false;
         let validReservationMsg = '[[#{reservation.reservations.valid_reservation}]]';

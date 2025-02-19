@@ -6,21 +6,6 @@
 
             window.helpLink = "/redactor/apps/gdpr/regexps";
 
-            WJ.breadcrumb({
-                id: "regexp",
-                tabs: [
-                    {
-                        url: '/apps/gdpr/admin/',
-                        title: '[[#{components.gdpr.menu}]]',
-                        active: false
-                    },
-                    {
-                        url: '/apps/gdpr/admin/regexps/',
-                        title: '[[#{components.gdpr.regexp.title}]]'
-                    }
-                ]
-            })
-
             let url = "/admin/rest/gdpr_regexp";
             let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.components.gdpr.model.GdprRegExpBean")})];
 

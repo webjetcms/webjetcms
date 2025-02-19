@@ -1,6 +1,6 @@
 # Hlavní ovládací prvky
 
-Rozložení administrace je standardní. V horní části je záhlaví a vlevo menu.
+Rozložení administrace je standardní. V horní části je záhlaví a vlevo menu. Třetí úroveň nabídky je zobrazena jako navigační karty v záhlaví.
 
 ![](welcome.png)
 
@@ -11,7 +11,6 @@ Záhlaví se nachází v horní části:
 ![](header.png)
 
 obsahuje následující možnosti:
-- Vyberte doménu, se kterou pracujete (v případě instalace s více doménami).
 - Odkaz na otevření nápovědy.
 - ![](icon-search.png ":no-zoom") Ikona pro otevření stránky [Vyhledávání](search/README.md)
 - Jméno aktuálně přihlášeného uživatele, po kliknutí na jméno se zobrazí následující možnosti:
@@ -20,6 +19,8 @@ obsahuje následující možnosti:
   - Správa šifrovacích klíčů - umožňuje vytvořit nový šifrovací klíč pro šifrování formulářů a zadat stávající klíč pro jejich dešifrování. Vyžaduje právo Formuláře.
   - Odhlášení - odhlášení ze správy.
 - ![](icon-logoff.png ":no-zoom") Ikona pro odhlášení ze správy.
+
+V záhlaví lze zobrazit karty pro přechod na třetí úroveň nabídky.
 
 ## Nabídka
 
@@ -31,13 +32,17 @@ Kliknutím na ikonu hlavní sekce zobrazíte položky nabídky vybrané sekce:
 
 ![](menu-items.png)
 
+V dolní části levého menu vyberte doménu, se kterou pracujete (v případě instalace s více doménami).
+
+![](domain-selector.png)
+
 ## Zobrazení na mobilních zařízeních
 
 Správa se přizpůsobuje mobilním zařízením. Pokud je šířka okna menší než 1200 pixelů, záhlaví stránky a levé menu se skryjí:
 
 ![](welcome-tablet.png)
 
-záhlaví a menu lze zobrazit kliknutím na ikonu hamburger menu. ![](icon-hamburger.png ":no-zoom") vlevo nahoře. Pak se nad stránkou zobrazí nabídka a záhlaví:
+záhlaví a menu lze zobrazit kliknutím na ikonu hamburger menu. ![](icon-hamburger.png ":no-zoom") vlevo nahoře. Pak se nad stránkou zobrazí nabídka a záhlaví. Navigační karty se zobrazí jako výběrové nabídky v záhlaví.
 
 ![](welcome-tablet-showmenu.png)
 

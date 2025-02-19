@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'user-groups',
-        [
-            [ '/admin/v9/users/user-groups/', '[[\#{user.admin.editUserGroups}]]', true]
-        ]
-    )
-
     script.
         window.helpLink = "/admin/users/user-groups";
         var userGroupsDataTable;
@@ -16,7 +9,7 @@ block content
         var tabs = [
             { id: 'basic', title: '[[\#{editor.tab.basic_info}]]', selected: true },
             { id: 'folders', title: '[[\#{user.groups.folders}]]', className: "hide-on-create" },
-            { id: 'sites', title: '[[\#{webpages.tab.pages}]]', className: "hide-on-create" },
+            { id: 'sites', title: '[[\#{menu.root.websites}]]', className: "hide-on-create" },
             { id: 'users', title: '[[\#{webpages.tab.users}]]', className: "hide-on-create" },
         ];
 

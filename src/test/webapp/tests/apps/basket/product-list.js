@@ -66,7 +66,7 @@ Scenario('Check ext filter plus filter by column', async ({I, DT, Document}) => 
 
     await changeDomain(I, Document, "/apps/basket/admin/product-list");
 
-    I.seeElement( locate("#pills-product-list > li > a").withText("Zoznam produktov") );
+    I.seeElement(locate(".nav-link.active").withText("Zoznam produktov"));
 
     DT.filterEquals("title", "iPhone X 256GB");
     DT.checkTableRow("productListDataTable", 1, ["92895", "", "iPhone X 256GB", "Tester Playwright"]);
@@ -119,6 +119,7 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, Document}) => {
     I.click ( locate("#productListDataTable_extfilter").find("button.dropdown-toggle") );
     I.waitForElement("div.dropdown-menu.show");
     I.seeElement( locate("div.dropdown-menu.show").find( locate("a.dropdown-item > span").withText("/shop.tau27.iway.sk/Produkty/" + newGroupA) ) );
+    I.click ( locate("#productListDataTable_extfilter").find("button.dropdown-toggle") );
 
     I.say("Try set same name in same folder - wait for err");
     I.clickCss("button.buttons-add-folder");
@@ -151,6 +152,7 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, Document}) => {
 
     I.say("Delete structure");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=72080");
+    I.waitForElement(locate(".jstree-anchor").withText(newGroupA), 10);
     I.click(locate(".jstree-anchor").withText(newGroupA));
     DT.waitForLoader();
 
@@ -158,8 +160,8 @@ Scenario('Creating new folder (cathegory)', async ({I, DT, Document}) => {
     I.waitForElement("div.DTE_Action_Remove");
     I.click("Zmazať", "div.DTE_Action_Remove");
 
-    I.dontSee(newGroupA);
-    I.dontSee(newGroupB);
+    I.waitForInvisible(newGroupA, 10);
+    I.waitForInvisible(newGroupB, 10);
 });
 
 Scenario('Logout to refresh selected domain', ({I}) => {
@@ -175,7 +177,7 @@ async function changeDomain(I, Document, url) {
 
     I.amOnPage(url);
 
-    const selectedDomain = await I.grabTextFrom("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-group > div.js-domain-toggler > div > button > div > div > div");
+    const selectedDomain = (await I.grabTextFrom('button[data-id="header.currentDomain"] > div > div > div')).trim();
 
     if(selectedDomain != "shop.tau27.iway.sk") {
         I.say("Switching domain to shop.tau27.iway.sk")
@@ -197,5 +199,5 @@ function checkToaster(I, success) {
     I.seeElement( locate("div.toast-title").withText("Pridanie kategórie produktov") );
     I.seeElement( locate("div.toast-message").withText("Pridanie novej kategórie bolo " + msgStatus) );
     I.clickCss("button.toast-close-button");
-    I.dontSeeElement("#toast-container-webjet");
+    I.waitForInvisible("#toast-container-webjet");
 }

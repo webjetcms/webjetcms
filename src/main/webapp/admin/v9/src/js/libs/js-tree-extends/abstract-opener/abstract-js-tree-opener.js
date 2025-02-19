@@ -662,7 +662,7 @@ export default class AbstractJsTreeOpener {
             'SYSTEM': '#pills-system-tab',
             'TRASH': '#pills-trash-tab'
         },
-        tabsEl = $('#pills-folders'),
+        tabsEl = $('.ly-submenu .md-tabs ul.nav'),
         tabEl = tabsEl.find(treeMapping[tab]);
 
         //console.log("switchTab, tab=", tab, "forceSwitch=", forceSwitch);

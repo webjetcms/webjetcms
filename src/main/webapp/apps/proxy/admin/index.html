@@ -9,17 +9,6 @@ window.domReady.add(function () {
 
     window.helpLink = "/redactor/apps/proxy/README";
 
-    WJ.breadcrumb({
-        id: "proxy",
-        tabs: [
-            {
-                url: '/apps/proxy/admin/',
-                title: '[[#{components.proxy.dialog_title}]]',
-                active: true
-            }
-        ]
-    });
-
     let url = "/admin/rest/proxy";
 
     var tabs = [

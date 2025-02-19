@@ -214,9 +214,12 @@ public class InlineEditor
 		//ak sa jedan o preview - preview.do (PreviewAction) - nezobrazime InlineEditor
 		boolean isPreview = request.getAttribute("isPreview") != null && (boolean) request.getAttribute("isPreview") == true;
 
-		boolean inlineEditingEnabled = Constants.getBoolean("inlineEditingEnabled");
+		boolean inlineEditingEnabled = false; //57629 - not enabled anymore Constants.getBoolean("inlineEditingEnabled");
 
 		if ("false".equals(request.getAttribute("isInlineEditing"))) return false;
+
+		//DEPRECATED - allow temporary force editing
+		if ("true".equals(request.getAttribute("isInlineEditing"))) inlineEditingEnabled = true;
 
 		//ak sa jedna o priamu editaciu v editore stranok
 		if ("true".equals(request.getParameter("inlineEditorAdmin"))) {

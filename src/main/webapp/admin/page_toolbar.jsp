@@ -18,17 +18,6 @@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><iwcm:checkLogon admin="tr
 		}
 	}
 
-function webjetToolbarPopup(url, width, height)
-{
-   var options = "toolbar=no,scrollbars=yes,resizable=yes,width="+width+",height="+height+";";
-   popupWindow=window.open(url,"_blank",options);
-}
-function openWebJETEditor(docId)
-{
-   var url = "<iwcm:cp/>/admin/editor.do?docid="+docId+"&isPopup=true";
-   var options = "toolbar=no,scrollbars=yes,resizable=yes,width=1024,height=700;";
-   popupWindow=window.open(url,"_blank",options);   
-}
 function closeWebJETToolbar()
 {
    if (document.getElementById)
@@ -94,17 +83,16 @@ pageContext.setAttribute("doc", doc);
 <div class="webjetToolbar noprint" id="webjetToolbar">
 	<div class="webjetToolbarContent">
 		<table class="webjetToolbarTable">
-		   <tr>	   
+		   <tr>
 			   <td colspan="2" class="header">
-				   <img src="/admin/skins/webjet8/assets/global/img/wj/logo_<%=InitServlet.getBrandSuffix()%>.png" />
-			   	<a href="javascript:closeWebJETToolbar()" class="webjetToolbarClose">&nbsp;</a>
+				   <img src="/admin/v9/dist/images/logo-<%=InitServlet.getBrandSuffix()%>.svg" />
+			   		<a href="javascript:closeWebJETToolbar()" class="webjetToolbarClose">&nbsp;</a>
 			   </td>
 			</tr>
 			<tr>
 			   <td><strong>DocID:</strong></td>
-			   <td>    
-			      <a href="javascript:openWebJETEditor(<bean:write name="doc" property="docId"/>);"><bean:write name="doc" property="docId"/></a>
-			      &nbsp;<a href='javascript:webjetToolbarPopup("/admin/dochistory.jsp?docid=<bean:write name="doc" property="docId"/>", 500, 200);'><img src="/admin/skins/webjet6/images/icon/arrow-history.gif" style="text-align: center; border: 0px; margin-bottom: -3px;" title="<iwcm:text key="groupslist.show_history"/>" alt=""/></a>
+			   <td>
+			      <a href='/admin/v9/webpages/web-pages-list/?docid=<bean:write name="doc" property="docId"/>' target="_blank"><bean:write name="doc" property="docId"/></a>
 				</td>
 			</tr>
 			<%if(!doc.isAvailable() || "false".equals((String)request.getAttribute("is_available"))){%>
@@ -112,27 +100,27 @@ pageContext.setAttribute("doc", doc);
 				<td colspan="2" class="warning">
 			      <img src="/admin/images/warning.gif" align="absmiddle" alt="" /> <strong><iwcm:text key="admin.page_toolbar.pozor_stranka_sa_verejne_nezobrazuje"/></strong>
 				</td>
-			</tr> 
+			</tr>
 			<%}
 			GroupDetails group = (GroupDetails)request.getAttribute("pageGroupDetails");
 			if (group != null)
 			{%>
 			<tr>
 				<td><strong><iwcm:text key="stat.group_name"/>:</strong></td>
-				<td><a href='javascript:webjetToolbarPopup("<%=GroupsController.BASE_URL%><%=group.getGroupId()%>/?Edit=Edituj&singlePopup=true", 600, 500);'><%=group.getGroupName()%></a></td>
+				<td><a href='<%=GroupsController.BASE_URL%><%=group.getGroupId()%>' target="_blank"><%=group.getGroupName()%></a></td>
 			</tr>
 			<%
 			}
-			
+
 			TemplatesDB tempDB = TemplatesDB.getInstance();
 			TemplateDetails temp = tempDB.getTemplate(doc.getTempId());
 			if(temp != null){%>
 			<tr>
 				<td><strong><iwcm:text key="editor.template"/>:</strong></td>
-				<td><a href='javascript:webjetToolbarPopup("/admin/listtemps.do?tempid=<%=temp.getTempId()%>", 600, 500);'><%=temp.getTempName()%></a></td>
+				<td><a href='/admin/v9/templates/temps-list/?tempId=<%=temp.getTempId()%>' target="_blank"><%=temp.getTempName()%></a></td>
 			</tr>
 			<%}%>
-				
+
 			<tr>
 				<td><strong><iwcm:text key="history.changedBy"/>:</strong></td>
 				<td><a href="mailto:<bean:write name="doc" property="authorEmail"/>"><bean:write name="doc" property="authorName"/></a></td>

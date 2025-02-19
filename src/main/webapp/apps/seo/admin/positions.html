@@ -10,17 +10,6 @@
         window.location.href="/apps/seo/admin/positions-details?keywordId=" + id;
     }
 
-    WJ.breadcrumb({
-        id: "positions",
-        tabs: [
-            {
-                url: '/apps/seo/admin/positions/',
-                title: '[[#{components.seo.leftMenu.positions}]]',
-                active: true
-            }
-        ]
-    });
-
     window.domReady.add(function () {
         //Add open dialog link
         WJ.DataTable.mergeColumns(columns, {

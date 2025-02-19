@@ -26,7 +26,7 @@ request.setAttribute("cmpName", "video");
 <style type="text/css">
 	td.main {padding: 0px;}
 
-	div.players {display: none; padding: 10px 10px 0 10px; background-color: #f5f5f5;}
+	div.players {display: none; padding: 10px 10px 0 10px; }
 	div.box_tab {display: none;}
 
 	a.choose {float: right;}
@@ -34,7 +34,7 @@ request.setAttribute("cmpName", "video");
 	input {border: 0 none;}
 	input.text {width: 250px; height: 25px; line-height: 25px; padding: 0 5px; border: 1px solid #BDBCBC}
 
-	div.choose {background-color: #f5f5f5;}
+	div.choose {}
 	div.choose ul {margin: 0; padding: 0; height: 200px;}
 	div.choose ul li {list-style: none; margin: 0px; padding: 0px; float: left; height: 100%; width: 25%;}
 	div.choose ul li a {display: block; text-indent: -9999px; outline: none; height: 100%;}

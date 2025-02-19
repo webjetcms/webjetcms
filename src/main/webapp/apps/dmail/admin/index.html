@@ -5,22 +5,6 @@
 
         window.helpLink = "/redactor/apps/dmail/campaings/README";
 
-        WJ.breadcrumb({
-            id: "campaings",
-            tabs: [
-                {
-                    url: '/apps/dmail/admin/',
-                    title: /*[[#{components.dmail.dialog_title}]]*/ '',
-                    active: false
-                },
-                {
-                    url: '/apps/dmail/admin/',
-                    title: /*[[#{components.dmail.campaings}]]*/ '',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/dmail/campaings";
         let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.dmail.jpa.CampaingsEntity")})]*/ [];
 

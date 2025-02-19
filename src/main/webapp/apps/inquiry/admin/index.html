@@ -6,17 +6,6 @@
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "inquiry",
-            tabs: [
-                {
-                    url: '/apps/inquiry/admin/',
-                    title: '[[#{components.inquiry.title}]]',
-                    active: true
-                }
-            ]
-        });
-
         var tabs = [
             { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
             { id: 'advanced', title: '[[#{components.banner.tab.advanced}]]'},

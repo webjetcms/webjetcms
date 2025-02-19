@@ -144,7 +144,3 @@ Pri pridaní záznamu kliknutím na ikonu + (Pridať) volíte Adresár (zo štru
 Viac informácií je v [dokumentácii pre redaktora](../../redactor/webpages/approve/README.md).
 
 ![](users-tab-approving.png)
-
-## Rozdiely voči verzii 8
-
-Právo "Skrátené menu v editore" je upravené na právo "Kompletné menu v editore" aby nebolo zmyslovo inverzné a pre plné práva bolo možné označiť všetky položky.

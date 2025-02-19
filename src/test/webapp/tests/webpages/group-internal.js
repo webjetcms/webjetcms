@@ -16,7 +16,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('Interny adresar', ({ I, DT, DTE }) => {
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
 
      // 1. vytvorenie priecinka name-autotest
      I.say('1. Pridanie noveho priecinka name-autotest');
@@ -138,7 +138,7 @@ Scenario('Interny adresar', ({ I, DT, DTE }) => {
      I.click('Zmazať');
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      DTE.waitForLoader();
-     I.waitForText('Zoznam web stránok', 5);
+     I.waitForText('Webové stránky', 5);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
      I.dontSee(auto_name, '.jstree-anchor');
 });

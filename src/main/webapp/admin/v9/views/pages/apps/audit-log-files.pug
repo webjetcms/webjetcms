@@ -2,15 +2,8 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-log-files',
-        [
-            [ '/admin/v9/apps/audit-log-files/', '[[#{audit_log_files.title}]]', true],
-            [ '#filter', '{filter}', false]
-        ]
-    )
-
     script.
+
         var logFilesDataTable;
         let url = "/admin/rest/audit/log-files";
         let columns = [(${layout.getDataTableColumns("sk.iway.iwcm.system.audit.jpa.LogFileBean")})];
@@ -48,7 +41,9 @@ block content
             $.ajax({
                 url: '/admin/rest/audit/log-files/log-dir',
                 success: function (data) {
-                    $("#absolutePath").html(sanitizeFileName(data));
+                    let textContainer = $("<div class='btn btn-sm buttons-text'></div>");
+                    textContainer.html(sanitizeFileName(data))
+                    $(".dt-buttons").append(textContainer);
                 }
             });
 
@@ -70,9 +65,5 @@ block content
             logFilesDataTable.hideButton('export');
             logFilesDataTable.hideButton('celledit');
         });
-
-    div#logFilesDataTable_extfilter(style='display:none;')
-        div.row(style='padding-left:15px')
-            p#absolutePath
 
     <table class="datatableInit table"></table>

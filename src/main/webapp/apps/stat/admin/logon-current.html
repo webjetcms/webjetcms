@@ -6,17 +6,6 @@
     var logonUserDataTable;
     var actualLogonUserDataTable;
 
-    WJ.breadcrumb({
-        id: "logonUser",
-        tabs: [
-            {
-                url: '/apps/stat/admin/logon-current',
-                title: '[[#{components.stat.actual_users}]]',
-                active: true
-            }
-        ]
-    });
-
     window.getUserDetails =  function (userId) {
         window.location.href="/apps/stat/admin/logon-user-details/?userId=" + userId;
     }

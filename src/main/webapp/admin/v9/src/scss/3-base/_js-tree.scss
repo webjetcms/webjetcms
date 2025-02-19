@@ -43,10 +43,20 @@
     margin-right: -15px;
     margin-left: -15px;
 }
+body.ly-submenu-active {
+  .jstree {
+    height: calc(100vh - 205px);
+  }
+}
 
 @media (max-width: ($bp-laptop - 1)) {
   .jstree {
-    height: calc(100vh - 91px);
+    height: calc(100vh - 110px);
+  }
+  body.ly-submenu-active {
+    .jstree {
+      height: calc(100vh - 149px);
+    }
   }
 }
 

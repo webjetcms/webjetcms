@@ -187,12 +187,12 @@ Scenario('jstree zobrazenie v datatabulke @singlethread', ({ I, DT }) => {
     //reset
     setSettings(I);
 
-    I.dontSee("Priečinky", "div.col-md-8");
+    I.dontSeeElement(locate('.nav-link').withText("Priečinky"));
 
     //zobrazenie priecinkov
     setSettings(I, ["showfolders-dt"]);
 
-    I.see("Priečinky", "div.col-md-8");
+    I.seeElement(locate('.nav-link').withText("Priečinky"));
 
     I.say("Zobrazi sa root a jeho podpriecinky");
     I.clickCss("#pills-folders-dt-tab");

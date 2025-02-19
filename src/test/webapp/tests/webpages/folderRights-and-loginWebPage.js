@@ -14,7 +14,7 @@ Before(({ I, login }) => {
 });
 
 Scenario('Prava na adresar', ({ I, DTE, DT }) => {
-     I.waitForText('Zoznam web stránok', 10);
+     I.waitForText('Webové stránky', 10);
 
      // 1. vytvorenie noveho priecinka name-autotest
      I.say('1. Pridanie noveho priecinka name-autotest');
@@ -120,7 +120,7 @@ Scenario('Prava na adresar', ({ I, DTE, DT }) => {
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      I.wait(1);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
-     I.waitForText('Zoznam web stránok', 20);
+     I.waitForText('Webové stránky', 20);
      I.dontSee(folder_name, '.jstree-anchor');
 });
 
@@ -205,6 +205,6 @@ Scenario('Nastavenie prihlasovacej stranky', ({ I, DTE, DT }) => {
      I.dontSee('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
      I.wait(1);
      I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
-     I.waitForText('Zoznam web stránok', 20);
+     I.waitForText('Webové stránky', 20);
      I.dontSee(folder_name, '.jstree-anchor');
 });

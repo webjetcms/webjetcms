@@ -81,7 +81,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   }
   I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
   I.click(close_button);
-  I.waitForText('Zoznam web stránok', 10);
+  I.waitForText('Webové stránky', 10);
 
   // kontrola podpriecinok folder_one
   I.say('kontrolujem podpriecinok folder_one');
@@ -108,7 +108,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   }
   I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
   I.click(close_button);
-  I.waitForText('Zoznam web stránok', 10);
+  I.waitForText('Webové stránky', 10);
 
   // kontrola podpriecinok folder2
   I.say('kontrolujem podpriecinok folder_two');
@@ -135,7 +135,7 @@ function testSubFolders(I, DT, DTE, randomNumber, nameOfTest, selectValue) {
   }
   I.waitForElement(locate('.dropdown-toggle.btn.btn-outline-secondary').withText(selectValue), 5);
   I.click(close_button);
-  I.waitForText('Zoznam web stránok', 10);
+  I.waitForText('Webové stránky', 10);
 };
 
 Scenario('1. Sablona pre web stranky - webPage', ({ I, DT, DTE }) => {

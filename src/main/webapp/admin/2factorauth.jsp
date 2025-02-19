@@ -21,8 +21,6 @@ GroupsDB groupsDB = GroupsDB.getInstance();
 boolean hasCustomSettings = false;
 String customSettingsPath = "/components/"+Constants.getInstallName()+"/admin/admin_user_settings.jsp";
 IwcmFile settingsFile = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(customSettingsPath));
-int userId = Tools.getIntValue(Tools.getRequestParameter(request, "userid"), -1);
-
 %>
 
 <%
@@ -77,7 +75,6 @@ table.sort_table td { vertical-align: top;}
         <p id="okToConfirm" style="display: none">
             <strong><iwcm:text key="user.gauth.clickOkToConfirm"/></strong>
         </p>
-
 
 </div>
 

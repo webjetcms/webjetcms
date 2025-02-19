@@ -15,6 +15,7 @@ WebJET zapouzdřuje rozhraní API knihoven používaných v souboru webjet.js. C
   - [Dialog pro výběr souboru/odkazu](#dialog-pro-výběr-odkazu-na-soubor)
   - [Udržování připojení k serveru (opakování)](#udržování-spojení-se-serverem-refresher)
   - [Navigační panel](#navigační-panel)
+  - [Karty v záhlaví](#karty-v-záhlaví)
   - [Kontrola práv](#kontrola-práv)
   - [Markdown parser](#markdown-parser)
   - [Trvalé uživatelské nastavení](#nastavení-trvalého-uživatele)
@@ -29,13 +30,14 @@ WebJET zapouzdřuje rozhraní API knihoven používaných v souboru webjet.js. C
 
 Pro oznámení používáme knihovnu [toastr](https://github.com/CodeSeven/toastr), jsou připraveny následující funkce JS:
 
-**WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting=false)** - zobrazí oznámení o přípitku (ekvivalentní `window.alert`), parametry:
+`WJ.notify(type, title, text, timeOut = 0, buttons = null, appendToExisting = false, containerId = null)` - zobrazí oznámení o přípitku (ekvivalentní `window.alert`), parametry:
 - `type` (String) - typ zobrazovaného oznámení, možnosti: `success, info, warning, error`
 - `title` (String) - název zobrazeného oznámení
 - `text` (String) - text zobrazeného oznámení, nepovinné
 - `timeout` (int) - doba, po které bude oznámení skryto, nepovinné, hodnota 0 znamená, že oznámení bude zobrazeno, dokud jej uživatel nezavře.
 - `buttons` (json) - pole tlačítek zobrazených pod textem oznámení
 - `appendToExisting` (boolean) - po nastavení na `true` je text přidaný ke stávajícímu oznámení stejného typu. Pokud ještě neexistuje, vytvoří se nové oznámení.
+- `containerId` (String) - CSS ID kontejneru, do kterého bude oznámení vloženo.
 
 K dispozici jsou také zkrácené verze, které doporučujeme používat:
 - `WJ.notifySuccess(title, text, timeOut=0, buttons=null)`
@@ -67,10 +69,11 @@ Pokud potřebujete zobrazit tlačítko, zadejte jej jako pole JSON:
 ```javascript
 [
     {
-        "title":"Editovať poslednú verziu", //text tlacidla
-        "cssClass":"btn btn-primary", //CSS trieda
-        "icon":"ti ti-pencil", //Tabler ikona
-        "click":"editFromHistory(38, 33464)" //onclick funkcia
+        title: "Editovať poslednú verziu", //button title
+        cssClass: "btn btn-primary", //button CSS class
+        icon: "ti ti-pencil", //optional: Tabler icon
+        click: "editFromHistory(38, 33464)", //onclick function
+        closeOnClick: true //close toastr on button click, default true
     }
 ]
 ```
@@ -209,9 +212,7 @@ Ochrana pro tokeny CSRF a připojení k serveru je nastavena navíc k časovači
 
 ## Navigační panel
 
-Na navigačním panelu se obvykle zobrazuje název stránky. Někdy však může obsahovat také název aplikace, pokud se jedná o aplikaci, která má více podstránek (např. GDPR nebo Statistiky).
-
-Při generování stránky z `pug` souboru je použit mixin `+breadcrumb`, se standardní stránkou aplikace v `/apps/` adresář, ale navigační panel musí být vygenerován voláním funkce JS `JS.breadcrumb`, který jako parametr obdrží konfigurační objekt JSON ve formátu:
+Navigační panel, typicky s filtrem nebo zpětnou vazbou, můžete vygenerovat zavoláním funkce JS. `JS.breadcrumb`, který jako parametr obdrží konfigurační objekt JSON ve formátu:
 
 ```javascript
 {
@@ -280,6 +281,23 @@ do navigačního panelu se dynamicky vloží výběrové pole se seznamem jazyk�
 
 ```javascript
 $("#breadcrumbLanguageSelect").change(function() {
+    let lng = $(this).val();
+    //console.log("Select changed, language=", lng);
+    url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
+    cookiesDataTable.setAjaxUrl(url);
+    cookiesDataTable.EDITOR.s.ajax.url = WJ.urlAddPath(url, '/editor');
+    cookiesDataTable.ajax.reload();
+});
+```
+
+Výběr jazyka můžete také vložit přímo do panelu nástrojů tabulky, například vložit jej jako první položku před tlačítko přidat záznam:
+
+```javascript
+let select = $("div.breadcrumb-language-select").first();
+$("#cookiesDataTable_wrapper .dt-header-row .row .col-auto .dt-buttons").prepend(select);
+select.show();
+
+$("#cookiesDataTable_wrapper .dt-header-row .row .col-auto .dt-buttons div.breadcrumb-language-select select").change(function() {
     let lng = $(this).val();
     //console.log("Select changed, language=", lng);
     url = "/admin/rest/cookies?breadcrumbLanguage="+lng;
@@ -363,6 +381,24 @@ Pokud potřebujete mít na navigačním panelu externí filtr, můžete použít
 ```
 
 Pro [zvýraznění položky nabídky](../../custom-apps/admin-menu-item/README.md#frontend) v `master-detail` stránky mohou používat funkci `WJ.selectMenuItem(href)`.
+
+## Karty v záhlaví
+
+Ve výchozím nastavení se navigační karty zobrazují v záhlaví jako navigační položky druhé úrovně. V některých případech (např. v sekci webových stránek) se však používají k filtrování seznamu webových stránek (Aktivní, Neschválené, Systémové...). Můžete použít tzv. `WJ.headerTabs(config)` k jejich generování:
+
+```JavaScript
+WJ.headerTabs({
+    id: 'pages',
+    tabs: [
+        { url: '#pages', title: '[[\#{webpages.tab.pages}]]', active: true },
+        { url: '#changes', title: '[[\#{webpages.tab.changes}]]' },
+        { url: '#waiting', title: '[[\#{webpages.tab.waiting}]]' },
+        { url: '#system', title: '[[\#{webpages.tab.system}]]' },
+        { url: '#trash', title: '[[\#{webpages.tab.trash}]]' },
+        { url: '#folders-dt', title: '[[\#{webpages.tab.folders}]]' }
+    ]
+});
+```
 
 ## Kontrola práv
 
@@ -499,7 +535,7 @@ Pokud potřebujete blok během nahrávání skrýt, můžete nastavit jeho tří
 
 ## Další funkce
 
-- `WJ.showHelpWindow()` - Vyvoláním se zobrazí okno nápovědy. Na základě aktuální adresy URL se pokusí otevřít odpovídající stránku nápovědy.
+- `WJ.showHelpWindow(link)` - Vyvolání způsobí zobrazení okna nápovědy. Hodnota otevřeného odkazu je získána z parametru `link` nebo z `window.helpLink`.
 - `WJ.changeDomain(select)` - Vyvolá akci změny pro vybranou doménu. Používá se v záhlaví okna při instalaci více domén s externími soubory. V tomto režimu jsou soubory i data aplikace (např. bannery, skripty) vázány na vybranou doménu.
 - `WJ.translate(key, ...params)` - Funkce na [překlad klíče do textu](jstranslate.md).
 - `WJ.openPopupDialog(url, width, height)` - Otevře vyskakovací okno se zadanou adresou URL a zadanou velikostí okna, ale doporučujeme použít funkci [WJ.openIframeModal](#dialog-iframe) pokud je to možné

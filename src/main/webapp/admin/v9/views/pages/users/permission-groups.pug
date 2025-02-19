@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'permission-groups',
-        [
-            [ '/admin/v9/users/permission-groups/', '[[#{users.perm_groups}]]', true]
-        ]
-    )
-
     script.
         window.helpLink = "/admin/users/perm-groups";
         window.jstreePerms = [(${jstreePerms})];

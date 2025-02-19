@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "sitemap": "node sitemapGenerator.js",
-    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid",
+    "translate": "node node_modules/@webjetcms/deepmark/dist/bin.mjs translate --mode hybrid && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'cs/' && copyfiles -u 1 -s 'sk/**/*.{png,jpg}' 'en/'",
     "pdf": "node convert-to-pdf.js",
     "postinstall": "npx replace-in-file \"browser.newPage();\" \"browser.newPage();\n\t\tpage.setDefaultTimeout(0);\" node_modules/docsify-to-pdf/src/render.js"
   },
@@ -22,6 +22,7 @@
     "xmlbuilder": "^15.1.1"
   },
   "devDependencies": {
-    "docsify-to-pdf": "^0.0.5"
+    "docsify-to-pdf": "^0.0.5",
+    "copyfiles": "^2.4.1"
   }
 }

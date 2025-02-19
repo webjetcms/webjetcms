@@ -2,13 +2,6 @@ extends ../../partials/layout
 
 block content
 
-    +breadcrumb(
-        'audit-log-levels',
-        [
-            [ '/admin/v9/apps/audit-log-levels/', '[[#{components.adminlog.logging}]]', true]
-        ]
-    )
-
     script.
         var logLevelsDataTable;
         let url = "/admin/rest/audit/log-levels";

@@ -526,9 +526,9 @@ public class MediaDB extends JpaDB<Media>
 			em.close();
 		}
 
-		Logger.info(MediaDB.class, "Size: "+media.size());
+		Logger.debug(MediaDB.class, "Size: "+media.size());
 		for (Media m: media){
-			Logger.info(MediaDB.class, "Media ID: "+m.getMediaId());
+			Logger.debug(MediaDB.class, "Media ID: "+m.getMediaId());
 			String oldGroups = m.getMediaGroup();
 			if(oldGroups == null) continue;
 			String[] oldGroupsArray = oldGroups.split(",");
@@ -538,11 +538,11 @@ public class MediaDB extends JpaDB<Media>
 				if(newGroup == null){
 					newGroup = new MediaGroupBean();
 					newGroup.setMediaGroupName(g);
-					Logger.info(MediaDB.class, "---> Vytvaram novu media skupinu: "+newGroup.getMediaGroupName()+"<br>");
+					Logger.debug(MediaDB.class, "---> Vytvaram novu media skupinu: "+newGroup.getMediaGroupName()+"<br>");
 
 				}
 				m.addGroup(newGroup);
-				Logger.info(MediaDB.class, "Priradujem media skupinu: "+newGroup.getMediaGroupName()+" ku mediu "+m.getMediaTitleSk()+"<br>");
+				Logger.debug(MediaDB.class, "Priradujem media skupinu: "+newGroup.getMediaGroupName()+" ku mediu "+m.getMediaTitleSk()+"<br>");
 				m.save();
 			}
 		}

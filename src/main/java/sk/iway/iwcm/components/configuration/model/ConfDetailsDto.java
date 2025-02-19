@@ -44,7 +44,7 @@ public class ConfDetailsDto extends ConfDetails {
                 type = "textarea",
                 attr = {
                     @DataTableColumnEditorAttr(key = "disabled", value = "disabled"),
-                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
+                    @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
                     @DataTableColumnEditorAttr(key = "data-dt-import-hidden", value = "true")
                 }
                 /*className: 'hide-on-create'*/
@@ -72,10 +72,10 @@ public class ConfDetailsDto extends ConfDetails {
 
     @DataTableColumn(
         hidden = true,
-        inputType = DataTableColumnType.DATE,
-        renderFormat = "dt-format-date-time",
+        inputType = DataTableColumnType.DATETIME,
         title = "admin.conf_editor.change_from",
-        tab = "advanced",
+        tab = "basic",
+        sortAfter = "encrypt",
         className = "not-export",
         editor = {
             @DataTableColumnEditor(

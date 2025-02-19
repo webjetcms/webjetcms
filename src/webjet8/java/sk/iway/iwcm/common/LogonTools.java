@@ -142,6 +142,7 @@ public class LogonTools {
             try
             {
                 String sql = "";
+                boolean hasEmailParam = false;
 
                 if (request.getParameter("emailLogon") != null && "true".equalsIgnoreCase(request.getParameter("emailLogon")))
                 {
@@ -149,7 +150,8 @@ public class LogonTools {
                 }
                 else
                 {
-                    sql = "SELECT * FROM  users WHERE "+DB.fixAiCiCol("login")+"=?";
+                    hasEmailParam = true;
+                    sql = "SELECT * FROM users WHERE "+DB.fixAiCiCol("login")+"=?"+" OR "+DB.fixAiCiCol("email")+"=? ORDER BY is_admin DESC, user_id ASC";
                 }
 
                 sql += UsersDB.getDomainIdSqlWhere(true);
@@ -158,6 +160,7 @@ public class LogonTools {
                 try
                 {
                     ps.setString(1, DB.fixAiCiValue(username));
+                    if (hasEmailParam) ps.setString(2, DB.fixAiCiValue(username));
                     ResultSet db_result = ps.executeQuery();
                     try
                     {

@@ -1020,14 +1020,6 @@ Zmena stylov pre uzke obrazovky
     height: 40px;
     min-height: 40px;
   }
-  .page-header.navbar .navbar-brand {
-    height: 40px;
-    padding: 10px 18px;
-  }
-  .page-header.navbar .navbar-brand img {
-    height: 20px;
-    width: auto;
-  }
   .page-header.navbar .navbar-version {
     top: 24px;
     left: 17px;

@@ -5,28 +5,9 @@ block content
     div.row
         div.col-md-4.tree-col
 
-                +breadcrumb(
-                    'folders',
-                    [
-                        [ 'folders', '[[\#{webpages.tab.folders}]]', true ],
-                        [ 'system', '[[\#{webpages.tab.system}]]', false ],
-                        [ 'trash', '[[\#{webpages.tab.trash}]]', false ]
-                    ]
-                )
-
                 include ../../partials/folder-tree
 
         div.col-md-8.datatable-col
-
-            +breadcrumb(
-                'pages',
-                [
-                    [ 'pages', '[[\#{webpages.tab.pages}]]', true ],
-                    [ 'changes', '[[\#{webpages.tab.changes}]]', false ],
-                    [ 'waiting', '[[\#{webpages.tab.waiting}]]', false],
-                    [ 'folders-dt', '[[\#{webpages.tab.folders}]]', false]
-                ]
-            )
 
             style.
                 .dt-header-row .form-switch.buttons-recursive .form-check-label.is-icon-arrows-v::after {
@@ -92,6 +73,23 @@ block content
                 let hasTrashTab = [(${hasTrashTab})];
                 let showTab = "[(${showTab})]";
 
+                let changesId =  [(${layout.getConstant('systemPagesRecentPages')})];
+
+                //we need to reload webpages after jstree reload into selected element, when user click from System tab to Active tab
+                let reloadWebpagesAfterJstree = false;
+
+                WJ.headerTabs({
+                    id: 'pages',
+                    tabs: [
+                        { url: '#folders', title: '[[\#{webpages.tab.pages}]]', active: true },
+                        { url: '#changes', title: '[[\#{webpages.tab.changes}]]' },
+                        { url: '#waiting', title: '[[\#{webpages.tab.waiting}]]' },
+                        { url: '#system', title: '[[\#{webpages.tab.system}]]' },
+                        { url: '#trash', title: '[[\#{webpages.tab.trash}]]' },
+                        { url: '#folders-dt', title: '[[\#{webpages.tab.folders}]]' }
+                    ]
+                });
+
                 window.domReady.add(function () {
 
                     if (hasPagesToApprove === false) {
@@ -103,6 +101,7 @@ block content
                         //server injected system tab
                         $("#pills-system-tab").parents("ul").find("li a").removeClass("active");
                         $("#pills-system-tab").addClass("active");
+                        showHideTableButtons("pills-system-tab");
                     }
                     if (hasTrashTab === false) {
                         $("#pills-trash-tab").parent().hide();
@@ -110,6 +109,7 @@ block content
                         //server injected trash tab
                         $("#pills-trash-tab").parents("ul").find("li a").removeClass("active");
                         $("#pills-trash-tab").addClass("active");
+                        showHideTableButtons("pills-trash-tab");
                         showHidePageRecoverButtons();
                     }
 
@@ -142,6 +142,12 @@ block content
                             if ("pills-changes-tab"==currentTab) {
                                 //Naposledy upravene
                                 //zadaj docid do input pola a vyvolaj event na tom pre nacitanie stromu
+
+                                //switch active to pills-folders-tab
+                                $("#pills-changes-tab").removeClass("active");
+                                $("#pills-folders-tab").addClass("active");
+                                showHideTreeCol("pills-folders-tab");
+
                                 let input = $("#tree-doc-id");
                                 input.val(row[0].id);
                                 var e = $.Event( "keyup", { keyCode: 13 } );
@@ -304,9 +310,19 @@ block content
                     });
 
                     $('#SomStromcek').on("changed.jstree", function(node, action, selected, event) {
-                        //console.log("changed.jstree node=", node, "action=", action);
+                        //console.log("changed.jstree node=", node, "action=", action, "reloadWebpagesAfterJstree=", reloadWebpagesAfterJstree);
 
                         showHidePageRecoverButtons();
+
+                        if (reloadWebpagesAfterJstree === true && "model"==action.action) {
+                            var currentSelected = getTreeNodeSelected();
+                            if ("group" === getTreeNodeType(currentSelected)) {
+                                var isEditable = true;
+                                if (typeof currentSelected.original.icon != "undefined" && currentSelected.original.icon.indexOf("ti-folder-x")!=-1) isEditable = false;
+                                setCurrentGroup(currentSelected.original.groupDetails, isEditable);
+                            }
+                            return;
+                        }
 
                         if ("model"==action.action || "ready"==action.action || "deselect_all"==action.action) return;
 
@@ -570,7 +586,6 @@ block content
                         $('#datatableInit_wrapper .dt-header-row .buttons-create').addClass("disabled");
                     }
 
-
                     loadTablesForGroup(groupDetails.groupId);
                 }
 
@@ -642,8 +657,6 @@ block content
 
                 function loadTablesForGroup(id) {
 
-                    if ($("#pills-folders-dt-tab").hasClass("active")==false) $('#pills-pages li:first-child a').tab('show');
-
                     //Set groupId param
                     webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", id));
 
@@ -681,183 +694,157 @@ block content
                 function showHidePageRecoverButtons() {
                     setTimeout(()=> {
                         //console.log("showHidePageRecoverButtons, trash=", $("#pills-trash-tab").hasClass("active"));
-                        var showRecoverGroup = false;
-                        var showRecoverPages = false;
-                        //Folder recover can be apply only if we are in TRASH tab
-                        if($("#pills-trash-tab").hasClass("active")) {
-                            let selected = getTreeNodeSelected();
-                            //console.log("selected=", selected, "webpagesDatatableGroupId=", webpagesDatatableGroupId);
-
-                            if (selected!==false) {
-                                showRecoverGroup = true;
-                            }
-
-                            //Page recover can be apply only if we are in TRASH tab + web page tab is pills-pages-tab
-                            if($("#pills-pages-tab").hasClass("active")) {
-                                //Page can be recovered only pages, that are not INSIDE of deleetd folder's (so no folder can be selected in tree)
-                                if(selected===false) {
-                                    showRecoverPages = true;
-                                }
-                            }
-
-                            $("#datatableInit_wrapper .dt-header-row button.buttons-create").hide();
-                        } else {
-                            $("#datatableInit_wrapper .dt-header-row button.buttons-create").show();
-                        }
-
-                        if (showRecoverGroup) {
-                            $('.tree-col .dt-header-row button.buttons-recover').show();
-                            $('.tree-col .dt-header-row button.buttons-remove').removeClass("buttons-divider");
-                        } else {
-                            $('.tree-col .dt-header-row button.buttons-recover').hide();
-                            $('.tree-col .dt-header-row button.buttons-remove').addClass("buttons-divider");
-                        }
-
-                        if (showRecoverPages) {
-                            $("#datatableInit_wrapper .dt-header-row button.buttons-recover").show();
-                            $('#datatableInit_wrapper .dt-header-row button.buttons-remove').removeClass("buttons-divider");
-                        } else {
-                            $("#datatableInit_wrapper .dt-header-row button.buttons-recover").hide();
-                            $('#datatableInit_wrapper .dt-header-row button.buttons-remove').addClass("buttons-divider");
-                        }
+                        showHideTableButtons();
                     }, 300);
                 }
 
                 showHidePageRecoverButtons();
 
-                $('#pills-folders a[data-bs-toggle="tab"]').on('click', function (e) {
-                    //console.log("tab clicked, e=", e, "shift=", e.shiftKey);
-                    let id = e.target.id;
-                    let click = groupsUrlClickParam;
-                    let urlGroupDetails = null;
-                    if ("pills-system-tab"==id) {
-                        click = "dt-tree-group-system";
-                        urlGroupDetails = "/admin/rest/groups/tree/system";
-                    } else if ("pills-trash-tab"==id) {
-                        click = "dt-tree-group-trash";
-                        urlGroupDetails = "/admin/rest/groups/tree/trash";
-                    } else if ("pills-folders-tab"==id && e.shiftKey === true) {
-                        //kliknutie na Priecinky zo Shiftom vypne filtrovanie System priecinku
-                        click = "dt-tree-group";
-                    }
-
-                    //ak je zvolene zobrazenie aj stranky zrus group vyraz
-                    if (window.jstreeSettings.isPagesShow()) {
-                        click = click.replace(/dt-tree-group/gi, "dt-tree");
-                    }
-
-                    showHidePageRecoverButtons();
-
-                    //zmaz groupid parameter z URL aby sa nam potom znova neoznacil adresar ale zobrazil root
-                    let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
-                    window.history.pushState({path: url}, '', url);
-                    //$("#SomStromcek").jstree(true).deselect_all(true);
-
-                    //clear search text
-                    $("#tree-folder-search-input").val("");
-
-                    //nacitaj strom
-                    window.jstree.data("rest-url", "/admin/rest/groups/tree?click="+click);
-                    //zabudni stav, inak sa zle reloadne DT (nekoresponduje so stromom)
-                    window.jstree.jstree(true).refresh(false, true);
-
-                    //ziskaj GroupDetails a setni DT
-                    if (urlGroupDetails != null) {
-                        $.get({
-                            url: urlGroupDetails,
-                            success: function(response) {
-                                //console.log("response=", response);
-                                selectedNode = {
-                                    id: ""+response.groupId,
-                                    original: {
-                                        id: ""+response.groupId,
-                                        groupDetails: response
-                                    }
-                                }
-                                //aby sa vzdy vyvolal reload
-                                window.lastGroup = null;
-                                setCurrentGroup(response, true);
-                                //skus selectnut vrateny nod (ked to je recursiveSystemFolder) - uz sa nepouziva, koliduje s /parents pri zadani ID stranky
-                                setTimeout(function() {
-                                    //console.log("Selecting ", response.groupId);
-                                    //window.jstree.jstree('select_node', ""+response.groupId);
-                                }, 2000);
-                            }
-                        });
-                    } else {
-                        //nacitali sme Priecinky, schovaj edit a trash button
-                        $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
-                        $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
-                        //reloadni tabulku na prazdnu
-                        webpagesDatatable.setAjaxUrl(webpagesInitialUrl);
-                        webpagesDatatable.ajax.reload();
-                        groupsDatatable.setAjaxUrl(groupsInitialUrl);
-                        groupsDatatable.ajax.reload();
-                    }
-                });
-
                 $('#pills-pages a[data-bs-toggle="tab"]').on('click', function (e) {
-                    //console.log("PILLS CLICK");
                     let id = e.target.id;
-                    let changesId =  [(${layout.getConstant('systemPagesRecentPages')})];
-                    let waitingId =  [(${layout.getConstant('systemPagesDocsToApprove')})];
 
-                    showHidePageRecoverButtons();
+                    //only accept pills-system-tab or pills-trash-tab
+                    if (id == "pills-folders-tab" || id == "pills-system-tab" || id == "pills-trash-tab") {
 
-                    if ("pills-folders-dt-tab" == id) {
-                        $("#datatableInit_wrapper").hide();
-                        $("#groups-datatable_wrapper").show();
-                        let selectedNodes = getTreeNodeSelectedGroups();
-                        //console.log("selectedNodes=", selectedNodes);
-                        if (selectedNodes.length<2) groupsDatatable.ajax.reload();
+                        //console.log("folders tab clicked, e=", e, "shift=", e.shiftKey);
+
+                        let click = groupsUrlClickParam;
+                        let urlGroupDetails = null;
+                        if ("pills-system-tab"==id) {
+                            click = "dt-tree-group-system";
+                            urlGroupDetails = "/admin/rest/groups/tree/system";
+                        } else if ("pills-trash-tab"==id) {
+                            click = "dt-tree-group-trash";
+                            urlGroupDetails = "/admin/rest/groups/tree/trash";
+                        } else if ("pills-folders-tab"==id && e.shiftKey === true) {
+                            //kliknutie na Priecinky zo Shiftom vypne filtrovanie System priecinku
+                            click = "dt-tree-group";
+                        }
+
+                        if ("pills-folders-tab"==id) reloadWebpagesAfterJstree = true;
+
+                        //ak je zvolene zobrazenie aj stranky zrus group vyraz
+                        if (window.jstreeSettings.isPagesShow()) {
+                            click = click.replace(/dt-tree-group/gi, "dt-tree");
+                        }
+
+                        showHidePageRecoverButtons();
+
+                        //zmaz groupid parameter z URL aby sa nam potom znova neoznacil adresar ale zobrazil root
+                        let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
+                        window.history.pushState({path: url}, '', url);
+                        //$("#SomStromcek").jstree(true).deselect_all(true);
+
+                        //clear search text
+                        $("#tree-folder-search-input").val("");
+
+                        //nacitaj strom
+                        window.jstree.data("rest-url", "/admin/rest/groups/tree?click="+click);
+                        //zabudni stav, inak sa zle reloadne DT (nekoresponduje so stromom)
+                        window.jstree.jstree(true).refresh(false, true);
+
+                        //ziskaj GroupDetails a setni DT
+                        if (urlGroupDetails != null) {
+                            $.get({
+                                url: urlGroupDetails,
+                                success: function(response) {
+                                    //console.log("response=", response);
+                                    selectedNode = {
+                                        id: ""+response.groupId,
+                                        original: {
+                                            id: ""+response.groupId,
+                                            groupDetails: response
+                                        }
+                                    }
+                                    //aby sa vzdy vyvolal reload
+                                    window.lastGroup = null;
+                                    setCurrentGroup(response, true);
+                                    //skus selectnut vrateny nod (ked to je recursiveSystemFolder) - uz sa nepouziva, koliduje s /parents pri zadani ID stranky
+                                    setTimeout(function() {
+                                        //console.log("Selecting ", response.groupId);
+                                        //window.jstree.jstree('select_node', ""+response.groupId);
+                                    }, 2000);
+                                }
+                            });
+                        } else {
+                            //nacitali sme Priecinky, schovaj edit a trash button
+                            $('.tree-col .dt-header-row .buttons-edit').addClass("disabled");
+                            $('.tree-col .dt-header-row .buttons-remove').addClass("disabled");
+                            //reloadni tabulku na prazdnu
+                            webpagesDatatable.setAjaxUrl(webpagesInitialUrl);
+                            //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
+                            webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
+
+                            webpagesDatatable.ajax.reload();
+                            groupsDatatable.setAjaxUrl(groupsInitialUrl);
+                            groupsDatatable.ajax.reload();
+                        }
                     } else {
-                        $("#datatableInit_wrapper").show();
-                        $("#groups-datatable_wrapper").hide();
+                        //console.log("PILLS pages CLICK");
+
+                        showHidePageRecoverButtons();
+
+                        if ("pills-folders-dt-tab" == id) {
+                            $("#datatableInit_wrapper").hide();
+                            $("#groups-datatable_wrapper").show();
+                            let selectedNodes = getTreeNodeSelectedGroups();
+                            //console.log("selectedNodes=", selectedNodes);
+                            if (selectedNodes.length<2) groupsDatatable.ajax.reload();
+                        } else {
+                            $("#datatableInit_wrapper").show();
+                            $("#groups-datatable_wrapper").hide();
+                        }
+
+                        if("pills-changes-tab" == id) {
+                            webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
+
+                            //console.log(changesId);
+                            webpagesDatatable.columns("dateCreated:name").order("desc").draw();
+                            //webpagesDatatable.ajax.reload();
+                        } else if("pills-waiting-tab" == id) {
+                            //console.log(waitingId);
+                            webpagesDatatable.setAjaxUrl("/admin/rest/webpages/toapprove");
+                            webpagesDatatable.columns("dateCreated:name").order("desc").draw();
+                            //webpagesDatatable.ajax.reload();
+                        }
+
+                        //In case of history tab, we dont want to allow delete awaiting requests (they must be approved or rejected)
+                        if ("pills-waiting-tab" == id)
+                            webpagesDatatable.hideButton("remove");
+                        else
+                            webpagesDatatable.showButton("remove");
                     }
 
-                    if("pills-pages-tab" == id) {
-                        $("button.buttons-linkcheck").show();
-                        $("button.buttons-abtest").show();
-                    } else {
-                        $("button.buttons-linkcheck").hide();
-                        $("button.buttons-abtest").hide();
-                    }
-
-                    if("pills-pages-tab" == id) {
-                        //console.log("pills-pages, webpagesDatatableGroupId=", webpagesDatatableGroupId);
-
-                        webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", webpagesDatatableGroupId));
-                        //Call method returnActualPathWithoutRecursionParam to erase recursive param from PATH and set this param again
-                        webpagesDatatable.setAjaxUrl(WJ.urlAddParam(returnActualPathWithoutRecursionParam(), "recursive", recursive));
-
-                        webpagesDatatable.columns("id:name").order("asc").draw();
-                        //webpagesDatatable.ajax.reload();
-                    } else if("pills-changes-tab" == id) {
-                        webpagesDatatable.setAjaxUrl(WJ.urlAddParam(webpagesUrl, "groupId", changesId));
-
-                        //console.log(changesId);
-                        webpagesDatatable.columns("dateCreated:name").order("desc").draw();
-                        //webpagesDatatable.ajax.reload();
-                    } else if("pills-waiting-tab" == id) {
-                        //console.log(waitingId);
-                        webpagesDatatable.setAjaxUrl("/admin/rest/webpages/toapprove");
-                        webpagesDatatable.columns("dateCreated:name").order("desc").draw();
-                        //webpagesDatatable.ajax.reload();
-                    }
-
-                    //In case of history tab, we dont want to allow delete awaiting requests (they must be approved or rejected)
-                    if ("pills-waiting-tab" == id)
-                        webpagesDatatable.hideButton("remove");
-                    else
-                        webpagesDatatable.showButton("remove");
+                    showHideTableButtons(id);
+                    showHideTreeCol(id);
                 });
 
+                function showHideTreeCol(id) {
+                    var showTreeCol = true;
+                    if ("pills-changes-tab" == id || "pills-waiting-tab" == id) {
+                        showTreeCol = false;
+                    }
 
-                $('#pills-pages a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
-                    //console.log("show.bs.tab, e=", e);
-                    //zabezpec schovanie/zobrazenie tlacidiel
+                    if (showTreeCol) {
+                        $(".tree-col").show();
+                        $(".datatable-col").removeClass("col-md-12").addClass("col-md-8");
+                    } else {
+                        $(".tree-col").hide();
+                        $(".datatable-col").removeClass("col-md-8").addClass("col-md-12");
+                    }
+                }
 
-                    if ("pills-pages-tab"==e.target.id) {
+                function showHideTableButtons(currentTab) {
+                    if (typeof currentTab === "undefined" || currentTab === null) currentTab = $("#pills-pages a.active").attr("id");
+
+                    //console.log("showHideTableButtons, currentTab=", currentTab, "webpagesDatatable=", webpagesDatatable);
+                    if (webpagesDatatable == null) {
+                        setTimeout(function() {
+                            showHideTableButtons(currentTab);
+                        }, 500);
+                        return;
+                    }
+                    if ("pills-folders-tab"==currentTab || "pills-system-tab"==currentTab || "pills-trash-tab"==currentTab) {
                         webpagesDatatable.showButton("create");
                         webpagesDatatable.showButton("edit");
                         webpagesDatatable.showButton("duplicate");
@@ -874,7 +861,53 @@ block content
                         webpagesDatatable.hideButton("wjimportexport");
                         webpagesDatatable.hideButton("showsubfolders");
                     }
-                });
+
+                    if("pills-folders-tab" == currentTab) {
+                        $("button.buttons-linkcheck").show();
+                        $("button.buttons-abtest").show();
+                    } else {
+                        $("button.buttons-linkcheck").hide();
+                        $("button.buttons-abtest").hide();
+                    }
+
+                    //if ("pills-trash-tab"==currentTab)
+                    {
+                        var showRecoverGroup = false;
+                        var showRecoverPages = false;
+                        //Folder recover can be apply only if we are in TRASH tab
+                        if("pills-trash-tab"==currentTab) {
+                            let selected = getTreeNodeSelected();
+                            //console.log("selected=", selected, "webpagesDatatableGroupId=", webpagesDatatableGroupId);
+
+                            if (selected!==false) {
+                                showRecoverGroup = true;
+                            }
+
+                            //Page can be recovered only pages, that are not INSIDE of deleetd folder's (so no folder can be selected in tree)
+                            if(selected===false) {
+                                showRecoverPages = true;
+                            }
+                        }
+
+                        //console.log("showRecoveGroup=", showRecoverGroup, "showRecoverPages=", showRecoverPages);
+
+                        if (showRecoverGroup) {
+                            $('.tree-col .dt-header-row button.buttons-recover').show();
+                            $('.tree-col .dt-header-row button.buttons-remove').removeClass("buttons-divider");
+                        } else {
+                            $('.tree-col .dt-header-row button.buttons-recover').hide();
+                            $('.tree-col .dt-header-row button.buttons-remove').addClass("buttons-divider");
+                        }
+
+                        if (showRecoverPages) {
+                            $("#datatableInit_wrapper .dt-header-row button.buttons-recover").show();
+                            $('#datatableInit_wrapper .dt-header-row button.buttons-remove').removeClass("buttons-divider");
+                        } else {
+                            $("#datatableInit_wrapper .dt-header-row button.buttons-recover").hide();
+                            $('#datatableInit_wrapper .dt-header-row button.buttons-remove').addClass("buttons-divider");
+                        }
+                    }
+                }
 
                 $("#DTE_Field_generateUrlFromTitle_0").on("change", function() {
                     let checked = $(this).is(":checked");

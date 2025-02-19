@@ -1,12 +1,6 @@
 extends ../../partials/layout
 
 block content
-    +breadcrumb(
-        'folder-prop',
-        [
-            [ '#folder-prop', '[[\#{elfinder.folder_prop.title}]]', true ]
-        ]
-    )
 
     script.
         const queryString = window.location.search;

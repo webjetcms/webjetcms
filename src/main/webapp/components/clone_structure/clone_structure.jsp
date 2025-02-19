@@ -49,31 +49,49 @@
 	}
 </script>
 
+<style type="text/css">
+	label {
+		text-align: right;
+		width: 100%;
+		padding-right: 16px;
+		max-width: 380px;
+	}
+</style>
+
 <div class="padding10">
+
 	<form name="pathForm" action="/apps/clone_structure/admin/clone/" method="post" ><%=org.apache.struts.taglib.html.FormTag.renderToken(session)%>
 		<table>
 			<tr>
-				<td><label for="srcGroupId1"><b><iwcm:text key="admin.clone.source_dir_id"/></b></label></td>
+				<td><label for="srcGroupId1"><iwcm:text key="admin.clone.source_dir_id"/></label></td>
 				<td>
-					<input type="text" name="srcGroupId" id="srcGroupId1" size="10"  required >&nbsp;
-					<input type="button" name="groupSelect" value="<iwcm:text key="button.select"/>" onclick='popup("/admin/grouptree.jsp?fcnName=setGroup", 300, 450);' class="button50" />
+					<div class="input-group">
+						<input type="text" class="form-control" name="srcGroupId" id="srcGroupId1" size="10"  required>
+						<div class="input-group-append">
+							<button name="groupSelect" onclick='popup("/admin/grouptree.jsp?fcnName=setGroup", 300, 450);' class="btn btn-outline-secondary"><i class="ti ti-focus-2"></i></button>
+						</div>
+					<div>
 				</td>
 			</tr>
 			<tr>
-				<td><label for="destGroupId1"><b><iwcm:text key="admin.clone.destination_dir_id"/></b></label></td>
+				<td><label for="destGroupId1"><iwcm:text key="admin.clone.destination_dir_id"/></label></td>
 				<td>
-					<input type="text" name="destGroupId" id="destGroupId1" size="10" required >&nbsp;
-					<input type="button" name="groupSelect2" value="<iwcm:text key="button.select"/>" onclick='popup("/admin/grouptree.jsp?fcnName=setGroup2", 300, 450);' class="button50" />
+					<div class="input-group">
+						<input type="text" class="form-control" name="destGroupId" id="destGroupId1" size="10" required >
+						<div class="input-group-append">
+							<button name="groupSelect2" onclick='popup("/admin/grouptree.jsp?fcnName=setGroup2", 300, 450);' class="btn btn-outline-secondary"><i class="ti ti-focus-2"></i></button>
+						</div>
+					</div>
 				</td>
 			</tr>
 			<tr>
-				<td><label><b><iwcm:text key="admin.clone.keepMirroring"/></b></label></td>
+				<td><label><iwcm:text key="admin.clone.keepMirroring"/></label></td>
 				<td>
 					<input type="checkbox" name="keepMirroring" value="true">
 				</td>
 			</tr>
 			<tr>
-				<td><label><b><iwcm:text key="admin.clone.keepVirtualPath"/></b></label></td>
+				<td><label><iwcm:text key="admin.clone.keepVirtualPath"/></label></td>
 				<td>
 					<input type="checkbox" name="keepVirtualPath" value="true">
 				</td>

@@ -40,120 +40,101 @@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 		</div>
 	</div>
 	<div id="SmallWindow-BigHeader">
-		<div class="header-inner">
+		<div class="header-inner ly-header">
 			<!-- BEGIN LOGO -->
 			<style>.page-header.navbar .navbar-brand { padding-top: 4px; }</style>
 			<a class="navbar-brand" href="/admin/v9/">
-				<img src="/admin/v9/dist/images/logo-<%=InitServlet.getBrandSuffix()%>.png" alt="logo" data-bs-toggle="tooltip" title="<iwcm:text key="admin.top.webjet_version"/> <%=sk.iway.iwcm.InitServlet.getActualVersionLong()%>" data-bs-placement="bottom" />
+				<img src="/admin/v9/dist/images/logo-<%=InitServlet.getBrandSuffix()%>.svg" alt="logo" data-bs-toggle="tooltip" title="<iwcm:text key="admin.top.webjet_version"/> <%=sk.iway.iwcm.InitServlet.getActualVersionLong()%>" data-bs-placement="bottom" />
 			</a>
-			<%
-				if (InitServlet.isTypeCloud()==false && Constants.getBoolean("enableStaticFilesExternalDir"))
-				{
-					List<String> userDomains = GroupsDB.getInstance().getUserRootDomainNames(UsersDB.getCurrentUser(request).getEditableGroups());
-					request.setAttribute("userDomains", userDomains);
-					request.setAttribute("actualDomain", DocDB.getDomain(request));
-					%>
-					<script type="text/javascript">
-						function changeDomain()
-						{
-							if (confirm("<iwcm:text key='admin.top.domena.confirm'/>")) {
-								$.ajax({method: "POST", url: "/admin/skins/webjet8/change_domain_ajax.jsp", data: {domain: $("#actualDomainNameSelectId").val()}}).done(function(msg) {location.reload();});
-							}
-						}
-					</script>
-					<div class="actual-domain" id="actualDomainNameDiv" <% if (userDomains.size()<1) out.print("style='display: none;'"); %>>
-						<i class="ti ti-browser"></i>
-						<select  name="actualDomainNameSelect" id="actualDomainNameSelectId" style="color: #000;" onchange="changeDomain();">
-						<c:forEach items="${userDomains}" var="domain">
-							<option value="${domain}" <c:if test="${domain == actualDomain}">selected="selected"</c:if>>${domain}</option>
-						</c:forEach>
-						</select>
-					</div>
-					<%
-				}
-			%>
-			<!-- END LOGO -->
-	        <!-- BEGIN VESION -->
-	        <div class="navbar-version">
+			<div class="header-container">
 
-	        </div>
-	        <!-- END VESION -->
-			<!-- BEGIN RESPONSIVE MENU TOGGLER -->
-			<script>
-				function showHide_topMenu(element){
-					if($('.top-menu').length>0)
-						$('.top-menu').toggle();
-				}
-			</script>
-			<a href="javascript:showHide_topMenu(this);" class="navbar-toggle" data-bs-toggle="collapse" data-target=".navbar-collapse">
-				<img src="/admin/skins/webjet8/assets/global/img/wj/menu-toggler.png" alt=""/>
-			</a>
-			<!-- END RESPONSIVE MENU TOGGLER -->
-			<!-- BEGIN TOP NAVIGATION MENU -->
-	        <div class="top-menu">
-			<ul class="nav navbar-nav pull-right">
+			<div class="header-title"></div>
+				<!-- END LOGO -->
+				<!-- BEGIN VESION -->
+				<div class="navbar-version">
 
-				<li class="dropdown helper">
-					<a href="javascript:m_click_help()"><i class="ti ti-help"></i><iwcm:text key="menu.top.help"/></a>
-				</li>
+				</div>
+				<!-- END VESION -->
+				<!-- BEGIN RESPONSIVE MENU TOGGLER -->
+				<script>
+					function showHide_topMenu(element){
+						if($('.top-menu').length>0)
+							$('.top-menu').toggle();
+						$("body").toggleClass("top-menu-open");
+					}
+				</script>
+				<a href="javascript:showHide_topMenu(this);" class="navbar-toggle">
+					<img src="/admin/skins/webjet8/assets/global/img/wj/menu-toggler.png" alt=""/>
+				</a>
+				<!-- END RESPONSIVE MENU TOGGLER -->
+				<!-- BEGIN TOP NAVIGATION MENU -->
+				<div class="top-menu">
+				<ul class="nav navbar-nav pull-right">
 
-				<li class="dropdown" style="padding-right: 1px;">
-					<a class="btn btn-sm js-search-toggler" href="/admin/searchall.jsp">
-						<i class="ti ti-search fs-6"></i>
-					</a>
-				</li>
+					<li class="dropdown helper">
+						<a href="javascript:m_click_help()"><i class="ti ti-help"></i><iwcm:text key="menu.top.help"/></a>
+					</li>
 
-				<!-- BEGIN USER LOGIN DROPDOWN -->
-				<li class="dropdown user">
-					<a id="userDropdownMenu" href="#" class="dropdown-toggle" data-bs-toggle="dropdown" data-close-others="true">
-						<i class="ti ti-id"></i>
-						<span class="username">
-							 <bean:write name="iwcm_useriwcm" property="fullName"/>
-						</span>
-						<i class="ti ti-chevron-down"></i>
-					</a>
-					<ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
-						<li style="display: none;">
-							<a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
-								<i class="ti ti-user"></i> <iwcm:text key="components.forum.bb.profile"/>
-							</a>
-						</li>
-						<li>
-							<a href="javascript:openPopupDialogFromLeftMenu('/admin/2factorauth.jsp?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
-								<i class="ti ti-device-mobile-message"></i> <iwcm:text key="user.gauth.title"/>
-							</a>
-						</li>
-						<iwcm:menu name="cmp_crypto">
-						<li>
-							<a href="javascript:openPopupDialogFromLeftMenu('/components/crypto/admin/keymanagement');">
-								<i class="ti ti-key"></i> <iwcm:text key="admin.keymanagement.title"/>
-							</a>
-						</li>
-						</iwcm:menu>
-						<li>
-							<a href="javascript:document.adminLogoffForm.submit()">
-								<i class="ti ti-logout"></i> <iwcm:text key="menu.logout"/>
-							</a>
-						</li>
-					</ul>
-				</li>
+					<li class="dropdown" style="padding-right: 1px;">
+						<a class="btn btn-sm js-search-toggler" href="/admin/searchall.jsp">
+							<i class="ti ti-search fs-6"></i>
+						</a>
+					</li>
 
-	            <li class="dropdown dropdown-quick-sidebar-toggler">
-	                <a class="dropdown-toggle js-logout-toggler" href="javascript:document.adminLogoffForm.submit()">
-						<i class="ti ti-logout"></i>
-	                </a>
-					<form action="<%=Constants.getString("adminLogoffLink") %>" method="post" name="adminLogoffForm" style="display:none">
-						<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
-					</form>
-	            </li>
+					<!-- BEGIN USER LOGIN DROPDOWN -->
+					<li class="dropdown user">
+						<a id="userDropdownMenu" href="#" class="dropdown-toggle" data-bs-toggle="dropdown" data-close-others="true">
+							<i class="ti ti-user"></i>
+							<span class="username">
+								<bean:write name="iwcm_useriwcm" property="fullName"/>
+							</span>
+							<i class="ti ti-chevron-down"></i>
+						</a>
+						<ul class="dropdown-menu" aria-labelledby="userDropdownMenu">
+							<li style="display: none;">
+								<a href="javascript:openPopupDialogFromLeftMenu('/admin/edituser.do?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
+									<i class="ti ti-user"></i> <iwcm:text key="components.forum.bb.profile"/>
+								</a>
+							</li>
+							<li>
+								<a href="javascript:openPopupDialogFromLeftMenu('/admin/2factorauth.jsp?userid=<bean:write name="iwcm_useriwcm" property="userId"/>');">
+									<i class="ti ti-device-mobile-message"></i> <iwcm:text key="user.gauth.title"/>
+								</a>
+							</li>
+							<iwcm:menu name="cmp_crypto">
+							<li>
+								<a href="javascript:openPopupDialogFromLeftMenu('/components/crypto/admin/keymanagement');">
+									<i class="ti ti-key"></i> <iwcm:text key="admin.keymanagement.title"/>
+								</a>
+							</li>
+							</iwcm:menu>
+							<li>
+								<a href="javascript:document.adminLogoffForm.submit()">
+									<i class="ti ti-logout"></i> <iwcm:text key="menu.logout"/>
+								</a>
+							</li>
+						</ul>
+					</li>
+
+					<li class="dropdown dropdown-quick-sidebar-toggler">
+						<a class="dropdown-toggle js-logout-toggler" href="javascript:document.adminLogoffForm.submit()">
+							<i class="ti ti-logout"></i>
+						</a>
+						<form action="<%=Constants.getString("adminLogoffLink") %>" method="post" name="adminLogoffForm" style="display:none">
+							<%=sk.iway.iwcm.system.stripes.CSRF.getCsrfTokenInputFiled(session)%>
+						</form>
+					</li>
 
 
-				<!-- END USER LOGIN DROPDOWN -->
-			</ul>
+					<!-- END USER LOGIN DROPDOWN -->
+				</ul>
 
-	        </div>
-			<!-- END TOP NAVIGATION MENU -->
+				</div>
+				<!-- END TOP NAVIGATION MENU -->
+			</div>
 		</div>
+
+		<div class="ly-submenu"></div>
 	</div>
 	<!-- END TOP NAVIGATION BAR -->
 </div>

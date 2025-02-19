@@ -7,22 +7,6 @@
 
     window.domReady.add(function () {
 
-        WJ.breadcrumb({
-            id: "blog",
-            tabs: [
-                {
-                    url: '/apps/blog/admin/',
-                    title: '[[#{components.blog.articles.title}]]',
-                    active: false
-                },
-                {
-                    url: '/apps/blog/admin/bloggers/',
-                    title: '[[#{components.blog.admin.blogers}]]',
-                    active: true
-                }
-            ]
-        });
-
         bloggerDataTable = WJ.DataTable({
             url: url,
             serverSide: false,

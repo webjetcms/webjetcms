@@ -5,17 +5,6 @@
 
         window.helpLink = "/redactor/apps/banner/README";
 
-        WJ.breadcrumb({
-            id: "banner",
-            tabs: [
-                {
-                    url: '/apps/banner/admin/',
-                    title: /*[[#{components.banner.title}]]*/ '',
-                    active: true
-                }
-            ]
-        });
-
         let url = "/admin/rest/banner";
         let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.banner.model.BannerBean")})]*/ [];
 

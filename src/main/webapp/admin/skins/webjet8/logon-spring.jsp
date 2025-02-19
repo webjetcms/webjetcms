@@ -7,6 +7,29 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%
     Prop prop = Prop.getInstance(request);
     String brandSuffix = InitServlet.getBrandSuffix();
+    //brandSuffix = "net";
+    String title = prop.getText("logon.welcome.title");
+    String subtitle = prop.getText("logon.welcome.subtitle");
+    try {
+        //get texts from logon.welcome.titles, split by lines and then by ;, get random line into title and subtitle
+        String[] lines = prop.getText("logon.welcome.titles."+brandSuffix).split("\n");
+        if (lines.length>0) {
+            int index = (int)(Math.random()*lines.length);
+            int id = Tools.getIntValue(request.getParameter("id"), -1);
+            if (id!=-1 && id<lines.length) {
+                index = id;
+            }
+            String[] parts = lines[index].split(";");
+            if (parts.length==2) {
+                title = parts[0];
+                subtitle = parts[1];
+            }
+        }
+    } catch (Exception e) {
+
+    }
+    pageContext.setAttribute("title", title);
+    pageContext.setAttribute("subtitle", subtitle);
 %><!DOCTYPE html>
 <html>
 <head>
@@ -50,79 +73,98 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 </head>
 <body id="login" class="login">
 
-<div class="logo">
-    <img src="/admin/skins/webjet8/assets/global/img/wj/logo-<%=brandSuffix%>.png" style="max-width: 350px;" alt="" />
+<div class="welcome-title">
+    <h1><c:out value="${title}"/></h1>
+    <h2><c:out value="${subtitle}"/></h2>
 </div>
 
 <!-- LOGIN CONTENT Start -->
 <div class="container">
     <div class="container-inner">
         <div class="content">
-            <h3 class="form-title"><iwcm:text key="logon.logon"/></h3>
-            <logic:present name="errors">
-                <div class="alert alert-danger display -hide">
-                    <span>
-                        <iwcm:text key="user.form.errors"/>
-                    </span>
-                    <ul>
-                        <li>
-                            ${errors}
-                        </li>
-                    </ul>
-                </div>
-            </logic:present>
-            <logic:present name="cancelChangePasswordAction">
-                <div class="alert alert-success display -hide">
-                    <span>
-                        <iwcm:text key="logon.change_password.action_canceled"/>
-                    </span>
-                </div>
-            </logic:present>
-            <logic:present name="changePasswordActionFailed">
-                <div class="alert alert-danger display -hide">
-                    <span>
-                        <iwcm:text key="logon.password.invalid_parameters"/>
-                    </span>
-                </div>
-            </logic:present>
-            <c:if test="${param.act eq 'changePasswordActionSuccess'}">
-                <div class="alert alert-success display -hide">
-                    <span>
-                        <iwcm:text key="logon.password.change_successful"/>
-                    </span>
-                </div>
-            </c:if>
-            <logic:present name="passResultEmail">
-                <div class="alert alert-danger">
-                    <button class="close" data-close="alert"></button>
-                    <span><iwcm:text key="logon.lost_password_send_success"/></span>
-                </div>
-            </logic:present>
+
+
             <form:form method="post" name="logonForm" modelAttribute="userForm" action="/admin/logon/">
-                <div class="form-group">
-                    <div class="input-icon">
-                        <i class="ti ti-user"></i>
-                        <form:input path="username" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.login")%>'/>
+
+                <div class="form-group language-select">
+                    <div class="custom-select">
+                        <i class="ti ti-world"></i>
+                        <span class="selected-value"></span>
+                        <form:select path="language" cssClass="lang select2 form-select" onchange="selectLanguage(this)">
+                            <form:option value="sk"><iwcm:text key="logon.language.slovak"/></form:option>
+                            <form:option value="cz"><iwcm:text key="logon.language.czech"/></form:option>
+                            <form:option value="en"><iwcm:text key="logon.language.english"/></form:option>
+                        </form:select>
                     </div>
                 </div>
-                <div class="form-group">
-                    <div class="input-icon">
-                        <i class="ti ti-lock"></i>
-                        <form:password path="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off" placeholder='<%=prop.getText("user.password")%>'/>
+
+                <div class="form-group logo">
+                    <img src="/admin/v9/dist/images/logo-<%=brandSuffix%>.svg" alt="WebJET <%=brandSuffix.toUpperCase()%>" />
+                </div>
+                <div id="logon-form-wrapper">
+
+                    <logic:present name="errors">
+                        <div class="alert-wrapper">
+                            <div class="alert alert-danger">
+                                <span>
+                                    <iwcm:text key="user.form.errors"/>
+                                </span>
+                            </div>
+                            <div class="infotext">
+                                <ul>
+                                    <li>
+                                        ${errors}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </logic:present>
+                    <logic:present name="cancelChangePasswordAction">
+                        <div class="alert alert-success">
+                            <span>
+                                <iwcm:text key="logon.change_password.action_canceled"/>
+                            </span>
+                        </div>
+                    </logic:present>
+                    <logic:present name="changePasswordActionFailed">
+                        <div class="alert alert-danger">
+                            <span>
+                                <iwcm:text key="logon.password.invalid_parameters"/>
+                            </span>
+                        </div>
+                    </logic:present>
+                    <c:if test="${param.act eq 'changePasswordActionSuccess'}">
+                        <div class="alert alert-success">
+                            <span>
+                                <iwcm:text key="logon.password.change_successful"/>
+                            </span>
+                        </div>
+                    </c:if>
+                    <logic:present name="passResultEmail">
+                        <div class="alert alert-success">
+                            <span><iwcm:text key="logon.lost_password_send_success"/></span>
+                        </div>
+                    </logic:present>
+
+                    <div class="form-group">
+                        <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
+                        <div class="input-icon">
+                            <i class="ti ti-user"></i>
+                            <form:input path="username" id="username" maxlength="255" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                        </div>
                     </div>
-                    <div class="password-strength-info"></div>
-                </div>
-                <div class="form-group">
-                <form:select path="language" cssClass="lang select2 form-select" onchange="selectLanguage(this)">
-                    <form:option value="sk"><iwcm:text key="logon.language.slovak"/></form:option>
-                    <form:option value="en"><iwcm:text key="logon.language.english"/></form:option>
-                    <form:option value="cz"><iwcm:text key="logon.language.czech"/></form:option>
-                    <form:option value="de"><iwcm:text key="logon.language.german"/></form:option>
-                </form:select>
-                </div>
-                <div class="form-actions">
-                    <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary pull-right"><iwcm:text key="button.login"/></button>
-                    <button type="button" class="btn btn-outline-secondary lost-password" onclick="$('#sendPassword').show('slow');"><i class="ti ti-lock-open"></i> <iwcm:text key="logon.mail.lost_password"/></button>
+                    <div class="form-group">
+                        <label class="control-label"><iwcm:text key="user.password"/></label>
+                        <div class="input-icon">
+                            <i class="ti ti-lock"></i>
+                            <form:password path="password" maxlength="64" size="16" cssClass="form-control placeholder-no-fix" autocomplete="off"/>
+                        </div>
+                        <div class="password-strength-info"></div>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" name="login-submit" id="login-submit" class="btn btn-primary"><iwcm:text key="button.login"/><i class="ti ti-arrow-right"></i></button>
+                        <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#sendPassword').show();$('#logon-form-wrapper').hide();"><iwcm:text key="logon.forgotYourPassword"/></button>
+                    </div>
                 </div>
             </form:form>
 
@@ -136,15 +178,18 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
 
             <div id="sendPassword" style="display: none;">
-                <br/><p><iwcm:text key="logon.lost_password_message"/></p>
-                <form id="sendPasswd" name="f_passwd" method="get" action="">
+                <form id="sendPasswd" name="f_passwd" method="get" action="/admin/logon/">
                     <div class="form-group">
-                        <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
+                        <label class="control-label"><iwcm:text key="logon.usernameOrEmail"/></label>
+                        <div class="input-icon">
+                            <i class="ti ti-user"></i>
+                            <input type="text" name="loginName" value="" class="form-control placeholder-no-fix" />
+                        </div>
+                        <div class="password-strength-info"><iwcm:text key="logon.recoverPassword.tooltip"/></div>
                     </div>
-                    <div class="form-actions text-end">
-                        <button type="submit" id="register-submit-btn" class="btn btn-primary">
-                            <iwcm:text key="button.send"/>
-                        </button>
+                    <div class="form-group">
+                        <button type="submit" id="register-submit-btn" class="btn btn-primary"><iwcm:text key="logon.recoverPassword"/><i class="ti ti-arrow-right"></i></button>
+                        <button type="button" class="btn btn-secondary btn-as-link lost-password pull-right" onclick="$('#logon-form-wrapper').show();$('#sendPassword').hide();"><iwcm:text key="button.login"/></button>
                     </div>
                 </form>
             </div>
@@ -159,7 +204,6 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
 </body>
 
-<iwcm:combine type="js" set="adminStandardJs" />
 <iwcm:combine type="js" set="adminLogonJs" />
 
 <script>
@@ -233,11 +277,9 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     };
 
     jQuery(document).ready(function() {
-        Metronic.init(); // init metronic core components
-        Layout.init(); // init current layout
-
         try {
             bindPasswordStrength();
+            $("#username").focus();
         } catch (e) {console.log(e);}
 
         //preserve hash
@@ -246,6 +288,15 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
             $form.attr('action', $form.attr('action') + window.location.hash);
         }
     });
+
+    const customSelect = document.querySelector('.custom-select');
+    const selectElement = customSelect.querySelector('select');
+    const selectedValue = customSelect.querySelector('.selected-value');
+
+    selectElement.addEventListener('change', function() {
+        selectedValue.textContent = selectElement.options[selectElement.selectedIndex].text;
+    });
+    selectedValue.textContent = selectElement.options[selectElement.selectedIndex].text;
 
 
 

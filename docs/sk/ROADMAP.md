@@ -47,6 +47,12 @@ Vysvetlenie použitých piktogramov:
 - [ ] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [ ] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
 - [ ] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
+- [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
+- [ ] +Formuláre - zakázať `GET` volanie na `FormMail/FormMailAjax`.
+- [ ] +Elektronický obchod - do emailu pridať `JSON-LD` dáta https://schema.seznam.cz/objednavky/dokumentace/.
+- [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
+- [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
+- [ ] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
 
 ## 2024
 
