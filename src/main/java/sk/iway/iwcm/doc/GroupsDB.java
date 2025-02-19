@@ -3063,7 +3063,7 @@ public class GroupsDB extends DB
 		{
 			if (grp.getSortPriority() > maxSortOrder) maxSortOrder = grp.getSortPriority();
 		}
-		return maxSortOrder + 10;
+		return maxSortOrder + Constants.getInt("sortPriorityIncrementGroup");
 	}
 
 	/**
@@ -4060,11 +4060,11 @@ public class GroupsDB extends DB
 
 		int priority = GroupsDB.getInstance().getGroup(groupId).getSortPriority();
 
-    	List<DocDetails> docDetailsList = DocDB.getInstance().getDocByGroup(groupId, DocDB.ORDER_PRIORITY, true, 0, 0, false);
+    	List<DocDetails> docDetailsList = DocDB.getInstance().getDocByGroup(groupId, DocDB.ORDER_PRIORITY, true, 0, 0, false, false);
 
 		for (DocDetails docDetails : docDetailsList) {
 			docDetails.setSortPriority(priority);
-			priority += 10;
+			priority += Constants.getInt("sortPriorityIncrementDoc");
 			DocDB.saveDoc(docDetails);
 		}
 
@@ -4073,7 +4073,7 @@ public class GroupsDB extends DB
 		priority = (int)Math.ceil(GroupsDB.getInstance().getGroup(groupId).getSortPriority()/10.0f) * 100;
 
 		for (GroupDetails groupDetails : groupDetailsList) {
-			priority += 10;
+			priority += Constants.getInt("sortPriorityIncrementGroup");
 			groupDetails.setSortPriority(priority);
 			GroupsDB.getInstance().setGroup(groupDetails);
 			this.regenerateSortPriority(groupDetails.getGroupId());

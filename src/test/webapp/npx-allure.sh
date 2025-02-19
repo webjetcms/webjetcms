@@ -3,7 +3,7 @@
 #priklady spustenia:
 #npx-allure.sh firefox http://iwcm.interway.sk
 #npx-allure.sh chromium http://iwcm.interway.sk
-#npx-allure.sh chromium http://demotest.webjetcms.sk
+#npx-allure.sh chromium https://demotest.webjetcms.sk
 
 echo "Creating test/history directory"
 pwd
@@ -23,7 +23,7 @@ else
 fi
 
 if [[ -z "$2" ]]; then
-        CODECEPT_URL="http://demotest.webjetcms.sk"
+        CODECEPT_URL="https://demotest.webjetcms.sk"
 else
         CODECEPT_URL="$2"
 fi

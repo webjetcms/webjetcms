@@ -8,15 +8,20 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="menuWebpages"/><%
 String link = Tools.getRequestParameter(request, "link");
 String title = Tools.getRequestParameter(request, "title");
-int tempId = Tools.getIntValue(Tools.getRequestParameter(request, "tempId"), -1);
-if(tempId != -1 && Tools.isNotEmpty(link) && Tools.isNotEmpty(link) && (link.startsWith("/files") || link.startsWith("/images")));
+if(Tools.isNotEmpty(link) && Tools.isNotEmpty(link) && (link.startsWith("/files") || link.startsWith("/images")));
 {
 	IwcmFile subor = new IwcmFile(sk.iway.iwcm.Tools.getRealPath(link));
 	if(subor != null && subor.exists())
 	{
+		Prop prop = null;
 		String ext = FileTools.getFileExtension(link).toUpperCase();
-		TemplateDetails td = TemplatesDB.getInstance().getTemplate(tempId);
-		Prop prop = Prop.getInstance(td.getLng());
+		int tempId = Tools.getIntValue(Tools.getRequestParameter(request, "tempId"), -1);
+		if (tempId > 0)
+		{
+			TemplateDetails td = TemplatesDB.getInstance().getTemplate(tempId);
+			if (td != null) prop = Prop.getInstance(td.getLng());
+		}
+		if (prop == null) prop = Prop.getInstance(request);
 		String size = FileTools.getFileLength(link);
 		if (Tools.isNotEmpty(size))
 		{

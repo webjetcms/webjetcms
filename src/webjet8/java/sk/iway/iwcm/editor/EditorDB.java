@@ -214,6 +214,7 @@ public class EditorDB
 			}
 
 			//zisti maximalnu prioritu a zvys o 10
+			int sortPriorityIncrementDoc = Constants.getInt("sortPriorityIncrementDoc");
 
 			doc.setSortPriority(0);
 			boolean dirIsEmpty = true;
@@ -228,11 +229,10 @@ public class EditorDB
 				if (maxP < parentGroup.getSortPriority())
 				{
 					//-10 lebo sa nam to o par riadkov nizsie navysi o 10
-					maxP = parentGroup.getSortPriority() - 10;
+					maxP = parentGroup.getSortPriority() - sortPriorityIncrementDoc;
 					doc.setSortPriority(maxP);
 				}
 			}
-
 
 			if (dirIsEmpty && group!=null)
 			{
@@ -240,7 +240,7 @@ public class EditorDB
 				doc.setNavbar(group.getNavbarName());
 			}
 
-			doc.setSortPriority(doc.getSortPriority()+10);
+			doc.setSortPriority(doc.getSortPriority()+sortPriorityIncrementDoc);
 		}
 		else
 		{

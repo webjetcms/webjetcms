@@ -126,6 +126,9 @@ public class ConstantsV9 {
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 
 		Constants.setBoolean("virtualPathLastSlash", true, Constants.MOD_CONFIG, "If true, virtual path will have last slash for main pages in folder");
+
+		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
+		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");
 	}
 
 	/**

@@ -303,7 +303,7 @@ public class Cache
 		cb.setExpiryTime(expiryTime);
 		cb.setAllowSmartRefresh(allowSmartRefresh);
 
-		Logger.println(this,"Cache.setObject("+name+") " + Tools.formatDateTimeSeconds(Tools.getNow()) + " exp=" + Tools.formatDateTimeSeconds(expiryTime));
+		//Logger.debug(this,"Cache.setObject("+name+") " + Tools.formatDateTimeSeconds(Tools.getNow()) + " exp=" + Tools.formatDateTimeSeconds(expiryTime));
 
 		//vloz ho do HashTabulky
 		removeObject(name);

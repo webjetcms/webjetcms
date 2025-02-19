@@ -229,17 +229,22 @@ public class GroupsTreeService {
     public void fixSortPriority(HttpServletRequest request, int docId, GroupDetails parent, int position) {
         DocDB docDB = DocDB.getInstance();
 
+        //we need to subtrack groups from position, because we have groups in the list
+        List<GroupDetails> groups = GroupsDB.getInstance().getGroups(parent.getGroupId());
+        position -= groups.size();
+
         DocDetails doc = docDB.getDoc(docId);
-        List<DocDetails> docsByGroup = docDB.getDocByGroup(parent.getGroupId());
+        List<DocDetails> docsByGroup = docDB.getDocByGroup(parent.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, false, false);
         List<DocDetails> collect = docsByGroup.stream().filter(d -> d.getDocId() != doc.getDocId()).sorted(Comparator.comparing(DocDetails::getSortPriority)).collect(Collectors.toList());
 
         int sortPriority = collect.size() > 0 ? collect.get(0).getSortPriority() : parent.getSortPriority() * 10;
         collect.add(position, doc);
 
+        int sortPriorityIncrementDoc = Constants.getInt("sortPriorityIncrementDoc");
         for (DocDetails document : collect) {
             document.setSortPriority(sortPriority);
             DocDB.saveDoc(document);
-            sortPriority += 10;
+            sortPriority += sortPriorityIncrementDoc;
         }
 
         EditorDB.cleanSessionData(request);

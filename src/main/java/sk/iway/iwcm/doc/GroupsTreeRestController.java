@@ -190,7 +190,7 @@ public class GroupsTreeRestController extends JsTreeRestController<DocGroupInter
             for (GroupDetails groupDetails : collect) {
                 groupDetails.setSortPriority(sortPriority);
                 groupsDB.save(groupDetails);
-                sortPriority += 10;
+                sortPriority += Constants.getInt("sortPriorityIncrementGroup");
             }
 
             // refresh

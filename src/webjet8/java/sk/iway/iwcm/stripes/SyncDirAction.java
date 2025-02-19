@@ -80,6 +80,7 @@ import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.spirit.MediaDB;
 import sk.iway.spirit.model.Media;
+import sk.iway.spirit.model.MediaGroupBean;
 
 /**
  *  SyncDirAction.java - synchronizacia adresara a web stranok zo vzdialeneho servera
@@ -123,6 +124,7 @@ public class SyncDirAction extends WebJETActionBean
 	private List<String> errorMessages = new ArrayList<>();
 
 	private String compareBy = null;
+	private Map<Integer, Integer> remoteToLocalMediaGroups = null;
 
 	/**
 	 * Nacita data zo vzdialeneho servera
@@ -135,6 +137,7 @@ public class SyncDirAction extends WebJETActionBean
 		//aby sa nam vymazala cache (ak je pouzita)
 		remoteGroups = null;
 		remoteDocs = null;
+		remoteToLocalMediaGroups = null;
 		Logger.debug(SyncDirAction.class, "btnLoadData Reading remote groups");
 
 		try
@@ -280,6 +283,9 @@ public class SyncDirAction extends WebJETActionBean
 			Date start = new Date();
 			foldersSync(request, writer);
 			historyGroupsIds = getNewGroups(start);
+
+			//prepare mediaGroups mapping
+			remoteToLocalMediaGroups = prepareRemoteToLocalMediaGroupMap();
 
 			//WEB PAGE SYNC
 			List<Integer> historyIds = pagesSync(request, writer);
@@ -623,6 +629,7 @@ public class SyncDirAction extends WebJETActionBean
 			else ef.setDocId(-1);
 
 			ef.setData(fixGroupIdsInContent(ef.getData()));
+			ef.setData(fixMediaGroupIdsInContent(ef.getData()));
 
 			ef.setGroupId(localGroup.getGroupId());
 			ef.setPublish("1");
@@ -647,60 +654,78 @@ public class SyncDirAction extends WebJETActionBean
 			//skontroluj, ci remoteDoc nie je nejake default doc a nastav na local group
 			fixDefaultDocId(remoteDoc, ef.getDocId());
 
-			//syncni media
-			List<Media> media = getRemoteMedia();
-			if (media != null)
-			{
-				//toto su media co uz mam
-				List<Media> mediaLocal = MediaDB.getMedia(getSession(), "documents", ef.getDocId(), null, 0, false);
-				//toto je set medii ktore som prepisal z remote, ostatne budem musiet premazat
-				Set<String> mediaLinks = new HashSet<>();
-
-				MediaDB mediaDB = new MediaDB();
-				for (Media m : media)
-				{
-					if (m.getMediaFkId()!=null && m.getMediaFkId().intValue()==remoteDoc.getDocId())
-					{
-						Media mLocal = getMediaByLink(mediaLocal, m.getMediaLink());
-						if (mLocal == null) mLocal = new Media();
-
-						mLocal.setMediaFkId(Integer.valueOf(ef.getDocId()));
-						mLocal.setMediaFkTableName(m.getMediaFkTableName());
-						mLocal.setMediaTitleSk(m.getMediaTitleSk());
-						mLocal.setMediaTitleCz(m.getMediaTitleCz());
-						mLocal.setMediaTitleEn(m.getMediaTitleEn());
-						mLocal.setMediaTitleDe(m.getMediaTitleDe());
-						mLocal.setMediaLink(m.getMediaLink());
-						mLocal.setMediaThumbLink(m.getMediaThumbLink());
-						mLocal.setMediaGroup(m.getMediaGroup());
-						mLocal.setMediaInfoSk(m.getMediaInfoSk());
-						mLocal.setMediaInfoCz(m.getMediaInfoCz());
-						mLocal.setMediaInfoEn(m.getMediaInfoEn());
-						mLocal.setMediaInfoDe(m.getMediaInfoDe());
-						mLocal.setMediaSortOrder(m.getMediaSortOrder());
-						mLocal.setLastUpdate(m.getLastUpdate());
-
-						Logger.debug(SyncDirAction.class, "Saving media: "+mLocal.getMediaId()+" title="+mLocal.getMediaTitleSk()+" link="+mLocal.getMediaLink());
-						mediaDB.save(mLocal);
-
-						mediaLinks.add(m.getMediaLink());
-					}
-				}
-
-				//pomaz media, ktore neboli aktualizovane
-				for (Media mLocal : mediaLocal)
-				{
-					if (mediaLinks.contains(mLocal.getMediaLink())) continue;
-
-					Logger.debug(SyncDirAction.class, "Deleting media: "+mLocal.getMediaId()+" title="+mLocal.getMediaTitleSk()+" link="+mLocal.getMediaLink());
-					mediaDB.delete(mLocal);
-				}
-			}
-
+			syncMedia(remoteDoc, ef);
 
 			return docid;
 		}
 		return -1;
+	}
+
+	private void syncMedia(DocDetails remoteDoc, EditorForm ef) {
+		//syncni media
+		List<Media> media = getRemoteMedia();
+		if (media != null)
+		{
+			//toto su media co uz mam
+			List<Media> mediaLocal = MediaDB.getMedia(getSession(), "documents", ef.getDocId(), null, 0, false);
+			//toto je set medii ktore som prepisal z remote, ostatne budem musiet premazat
+			Set<String> mediaLinks = new HashSet<>();
+
+			MediaDB mediaDB = new MediaDB();
+			for (Media m : media)
+			{
+				if (m.getMediaFkId()!=null && m.getMediaFkId().intValue()==remoteDoc.getDocId())
+				{
+					Media mLocal = getMediaByLink(mediaLocal, m.getMediaLink());
+					if (mLocal == null) mLocal = new Media();
+
+					mLocal.setMediaFkId(Integer.valueOf(ef.getDocId()));
+					mLocal.setMediaFkTableName(m.getMediaFkTableName());
+					mLocal.setMediaTitleSk(m.getMediaTitleSk());
+					mLocal.setMediaTitleCz(m.getMediaTitleCz());
+					mLocal.setMediaTitleEn(m.getMediaTitleEn());
+					mLocal.setMediaTitleDe(m.getMediaTitleDe());
+					mLocal.setMediaLink(m.getMediaLink());
+					mLocal.setMediaThumbLink(m.getMediaThumbLink());
+					mLocal.setMediaGroup(m.getMediaGroup());
+					mLocal.setMediaInfoSk(m.getMediaInfoSk());
+					mLocal.setMediaInfoCz(m.getMediaInfoCz());
+					mLocal.setMediaInfoEn(m.getMediaInfoEn());
+					mLocal.setMediaInfoDe(m.getMediaInfoDe());
+					mLocal.setMediaSortOrder(m.getMediaSortOrder());
+					mLocal.setLastUpdate(m.getLastUpdate());
+
+					//set groups list from m to mLocal - iterate list and find local media group by mediaGroupName
+					if (m.getGroups() != null && m.getGroups().size() > 0)
+					{
+						List <MediaGroupBean> mediaGroups = new ArrayList<>();
+						for (MediaGroupBean remoteGroup : m.getGroups())
+						{
+							MediaGroupBean localMediaGroup = MediaDB.getGroup(remoteGroup.getMediaGroupName());
+
+							//not mapped? why? it should be mapped with prepareRemoteToLocalMediaGroupMap()
+							if (localMediaGroup == null) continue;
+							mediaGroups.add(localMediaGroup);
+						}
+						mLocal.setGroups(mediaGroups);
+					}
+
+					Logger.debug(SyncDirAction.class, "Saving media: "+mLocal.getMediaId()+" title="+mLocal.getMediaTitleSk()+" link="+mLocal.getMediaLink());
+					mediaDB.save(mLocal);
+
+					mediaLinks.add(m.getMediaLink());
+				}
+			}
+
+			//pomaz media, ktore neboli aktualizovane
+			for (Media mLocal : mediaLocal)
+			{
+				if (mediaLinks.contains(mLocal.getMediaLink())) continue;
+
+				Logger.debug(SyncDirAction.class, "Deleting media: "+mLocal.getMediaId()+" title="+mLocal.getMediaTitleSk()+" link="+mLocal.getMediaLink());
+				mediaDB.delete(mLocal);
+			}
+		}
 	}
 
 	private Media getMediaByLink(List<Media> media, String mediaLink)
@@ -1662,6 +1687,54 @@ public class SyncDirAction extends WebJETActionBean
 		return htmlCode;
 	}
 
+	private String fixMediaGroupIdsInContent(String htmlCode)
+	{
+		int start = htmlCode.indexOf("/components/media/media");
+		if (start==-1) return htmlCode;
+
+		//prehladame hodnoty groupIds= a nahradime ich za novy vyraz
+		Matcher matcher = Pattern.compile("!INCLUDE\\(/components/media/media[^)]*groups=(['\"&quot;+1234567890]*)[^)]*\\)!").matcher(htmlCode);
+		while (matcher.find())
+		{
+		 	Logger.debug(SyncDirAction.class, "Mam:");
+		 	Logger.debug(SyncDirAction.class, matcher.group());
+		 	Logger.debug(SyncDirAction.class, matcher.group(1));
+			String mediaGroupIds = matcher.group(1);
+			Logger.debug(SyncDirAction.class, "mediaGroupIds="+mediaGroupIds);
+			String groupIdsOrig = mediaGroupIds;
+			mediaGroupIds = Tools.replace(mediaGroupIds, "&quot;", "\"");
+			mediaGroupIds = mediaGroupIds.replace('"', ' ');
+			mediaGroupIds = mediaGroupIds.replace('\'', ' ');
+			mediaGroupIds = mediaGroupIds.trim();
+			int[] mediaGroupIdsArr = Tools.getTokensInt(mediaGroupIds, "+");
+			StringBuilder newMediaGroupIds = new StringBuilder();
+			for (int remoteMediaGroupId : mediaGroupIdsArr)
+			{
+				Integer localMediaGroupId = remoteToLocalMediaGroups.get(remoteMediaGroupId);
+				if (localMediaGroupId == null) localMediaGroupId = remoteMediaGroupId;
+
+				if (newMediaGroupIds.length()>0) newMediaGroupIds.append('+');
+				newMediaGroupIds.append(localMediaGroupId);
+			}
+
+			if (Tools.isEmpty(groupIdsOrig) || Tools.isEmpty(newMediaGroupIds.toString())) continue;
+
+			Logger.debug(SyncDirAction.class, "replacing mediaGroup to:"+newMediaGroupIds.toString()+" original="+groupIdsOrig+";");
+
+			if (groupIdsOrig.charAt(0)=='"' || groupIdsOrig.charAt(0)=='\'')
+			{
+				newMediaGroupIds.insert(0, groupIdsOrig.charAt(0));
+				newMediaGroupIds.append(groupIdsOrig.charAt(0));
+			}
+
+			htmlCode = Tools.replace(htmlCode, "groups="+groupIdsOrig+",", "groups="+newMediaGroupIds.toString()+",");
+			htmlCode = Tools.replace(htmlCode, "groups="+groupIdsOrig+")", "groups="+newMediaGroupIds.toString()+")");
+			htmlCode = Tools.replace(htmlCode, "groups="+groupIdsOrig+" ", "groups="+newMediaGroupIds.toString()+" ");
+		}
+
+		return htmlCode;
+	}
+
 	/**
 	 * Vrati jazyk do ktoreho sa ma vykonat preklad pri klonovani
 	 * @return
@@ -1841,5 +1914,50 @@ public class SyncDirAction extends WebJETActionBean
 		}
 
 		return new ByteArrayInputStream(bytes);
+	}
+
+	/**
+	 * Prepare map of MEDIA groups and create local MediaGroups if not exists
+	 */
+	private Map<Integer, Integer> prepareRemoteToLocalMediaGroupMap() {
+		Map<Integer, Integer> remoteToLocalMediaGroupMap = new HashMap<>();
+
+		List<Media> media = getRemoteMedia();
+		if (media != null)
+		{
+			for (Media m : media)
+			{
+				for (MediaGroupBean remoteGroup : m.getGroups()) {
+					if (remoteToLocalMediaGroupMap.get(remoteGroup.getMediaGroupId()) != null) {
+						continue;
+					}
+
+					MediaGroupBean localMediaGroup = MediaDB.getGroup(remoteGroup.getMediaGroupName());
+					if (localMediaGroup == null) {
+						localMediaGroup = new MediaGroupBean();
+						localMediaGroup.setMediaGroupName(remoteGroup.getMediaGroupName());
+
+						//try to map availableGroups
+						if (Tools.isNotEmpty(remoteGroup.getAvailableGroups())) {
+							int[] remoteGroupIds = Tools.getTokensInt(remoteGroup.getAvailableGroups(), ",");
+							StringBuilder availableGroups = new StringBuilder();
+							for (int remoteGroupId : remoteGroupIds) {
+								GroupDetails localGroup = getLocalGroup(remoteGroupId);
+								if (localGroup != null) {
+									if (availableGroups.length() > 0) availableGroups.append(",");
+									availableGroups.append(String.valueOf(localGroup.getGroupId()));
+								}
+							}
+							localMediaGroup.setAvailableGroups(availableGroups.toString());
+						}
+
+						localMediaGroup.save();
+					}
+					remoteToLocalMediaGroupMap.put(remoteGroup.getMediaGroupId(), localMediaGroup.getMediaGroupId());
+				}
+			}
+		}
+
+		return remoteToLocalMediaGroupMap;
 	}
 }

@@ -581,6 +581,7 @@ export class WebPagesDatatable {
                         $("#pills-dt-"+self.webpagesDatatable.DATA.id+"-basic-tab").trigger("click");
                         $("#DTE_Field_navbar").val("");
                         $("#DTE_Field_virtualPath").val("");
+                        $("#DTE_Field_sortPriority").val("-1");
                     }
                 }, 700);
 
