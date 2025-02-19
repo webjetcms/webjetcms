@@ -394,7 +394,7 @@ public class ImportStructureExcel extends ExcelImportJXL
 			DocDB docDB = DocDB.getInstance();
 			//	zisti kolko je v grupe stranok a zvys pocitadlo
 			ef.setSortPriority(0);
-			for (DocDetails doc2 : docDB.getDocByGroup(group.getGroupId()))
+			for (DocDetails doc2 : docDB.getDocByGroup(group.getGroupId(), DocDB.ORDER_PRIORITY, true, -1, -1, false, false))
 			{
 				if (doc2!=null)
 				{

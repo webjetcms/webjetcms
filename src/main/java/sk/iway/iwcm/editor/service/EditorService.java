@@ -435,6 +435,25 @@ public class EditorService {
 		editedDoc.setTempId(group.getTempId());
 		/*zisti maximalnu prioritu a zvys o 10*/
 		editedDoc.setSortPriority(0);
+		boolean dirIsEmpty = setSortPriority(editedDoc, group);
+
+		if (dirIsEmpty) {
+			editedDoc.setTitle(group.getGroupName());
+			editedDoc.setNavbar(group.getNavbarName());
+		}
+
+		WebpagesService.processFromEntity(editedDoc, ProcessItemAction.GETONE, request, true);
+
+		return editedDoc;
+	}
+
+	/**
+	 * Set next available sort priority for doc
+	 * @param editedDoc
+	 * @param group
+	 * @return
+	 */
+	public boolean setSortPriority(DocDetails editedDoc, GroupDetails group) {
 		boolean dirIsEmpty = true;
 		int maxPriority = DocDB.getMaxSortPriorityInGroup(group.getGroupId());
 		if(maxPriority > 0) {
@@ -442,24 +461,18 @@ public class EditorService {
 			dirIsEmpty = false;
 		}
 
+		int sortPriorityIncrementDoc = Constants.getInt("sortPriorityIncrementDoc");
 		if (Constants.getBoolean("sortPriorityIncremental")) {
 			GroupDetails parentGroup = groupsDB.getGroup(group.getParentGroupId());
 			if (parentGroup != null && maxPriority < parentGroup.getSortPriority()) {
 				//-10 lebo sa nam to o par riadkov nizsie navysi o 10
-				maxPriority = parentGroup.getSortPriority() - 10;
+				maxPriority = parentGroup.getSortPriority() - sortPriorityIncrementDoc;
 				editedDoc.setSortPriority(maxPriority);
 			}
 		}
 
-		if (dirIsEmpty) {
-			editedDoc.setTitle(group.getGroupName());
-			editedDoc.setNavbar(group.getNavbarName());
-		}
-		editedDoc.setSortPriority(editedDoc.getSortPriority() + 10);
-
-		WebpagesService.processFromEntity(editedDoc, ProcessItemAction.GETONE, request, true);
-
-		return editedDoc;
+		editedDoc.setSortPriority(editedDoc.getSortPriority() + sortPriorityIncrementDoc);
+		return dirIsEmpty;
 	}
 
 	/**

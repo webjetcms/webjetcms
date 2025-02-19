@@ -296,7 +296,7 @@ export class DatatablesCkEditor {
 							elements: [
 							{
 								type: 'html',
-								id: 'wjImageIframe',
+								id: 'wjImagePixabayIframe',
 								html: '<div><iframe id="wjImagePixabayIframeElement" style="width: 800px; height: 455px;" src="/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp" border="0"/></div>'
 							}
 							]
@@ -371,22 +371,25 @@ export class DatatablesCkEditor {
 
 						setTimeout( function()
 						{
+							//for next open update data
 							try
 							{
-								var wjImageIframe = that.ckEditorObject.document.getById( 'wjImageIframeElement' );
-								if (wjImageIframe && wjImageIframe.$)
+								var wjImageIframe = cke_dialog_ui_html.find("iframe").$[0]; //that.ckEditorObject.document.getById( 'wjImageIframeElement' );
+								//console.log("wjImageIframe=", wjImageIframe);
+								window.wjImageIframe = wjImageIframe;
+								if (wjImageIframe)
 								{
 									//console.log("INITIALIZED: "+wjImageIframe.$.contentWindow.elFinderInitialized);
 
-									wjImageIframe.$.contentWindow.refreshValuesFromCk();
+									wjImageIframe.contentWindow.refreshValuesFromCk();
 
-									if (wjImageIframe.$.contentWindow.elFinderInitialized == true) wjImageIframe.$.contentWindow.updateElfinderCustomData();
+									if (wjImageIframe.contentWindow.elFinderInitialized == true) wjImageIframe.contentWindow.updateElfinderCustomData();
 								}
 							}
 							catch (e)
 							{
 								//toto moze nastat pri prvom nacitani, vtedy sa ale refresh zavola priamo v iframe kode
-								//console.log("Error image dialog show, e="+e);
+								//console.log("Error image dialog show, e=", e);
 							}
 						}, 200);
 
@@ -481,10 +484,12 @@ export class DatatablesCkEditor {
 					dialogDefinition.minWidth = 800;
 					dialogDefinition.minHeight = 445;
 
-					//console.log("dialogDefinition=", dialogDefinition);
+					//console.log("dialogDefinition link=", dialogDefinition);
 
 					dialogDefinition.dialog.on( 'show', function()
 					{
+						var dialog = this;
+
 						this.getContentElement("info", "url").getElement().hide();
 						this.getContentElement("info", "protocol").getElement().hide();
 						this.getContentElement("info", "linkType").getElement().hide();
@@ -492,7 +497,11 @@ export class DatatablesCkEditor {
 						//console.log("ON SHOW 1");
 						var urlElement = this.getContentElement("info", "url").getElement();
 
-						if (that.ckEditorObject.document.getById("wjLinkIframe") == null)
+						var iframeInsertElement = urlElement.getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent();
+						//console.log("iframeInsertElement=", iframeInsertElement.getParent().$.innerHTML);
+						var iframeElement = dialog.iframeElement;
+						//console.log("iframeElement=", iframeElement);
+						if (typeof iframeElement == "undefined")
 						{
 							//console.log("Creating iframe");
 							var iframeElement = new that.ckEditorObject.dom.element("IFRAME");
@@ -505,6 +514,8 @@ export class DatatablesCkEditor {
 							iframeElement.setStyle("margin-left", "-12px");
 							iframeElement.setStyle("margin-right", "-12px");
 
+							dialog.iframeElement = iframeElement;
+
 							//
 							var tabpanel = this.getContentElement("info", "linkDisplayText").getElement().getParent().getParent().getParent().getParent().getParent();
 							tabpanel.setStyle("min-height", "auto");
@@ -513,24 +524,23 @@ export class DatatablesCkEditor {
 							tabpanel.getParent().setStyle("padding", "0px");
 
 							//urlElement.$.insertBefore(iframeElement, .$);
-							urlElement.getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().insertBeforeMe(iframeElement);
+							iframeInsertElement.insertBeforeMe(iframeElement);
 							//schovaj celu tabulku lebo ma paddingy a pod URL fieldom sa zobrazuje sedy pas
-							urlElement.getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().getParent().hide();
+							iframeInsertElement.hide();
 						}
 
 						//console.log("SHOW EVENT: "+urlElement);
-
-						var dialog = this;
 						setTimeout( function()
 						{
 							try
 							{
 								//console.log("ON SHOW");
 
-								var wjLinkIframe = that.ckEditorObject.document.getById( 'wjLinkIframe' );
+								//var wjLinkIframe = that.ckEditorObject.document.getById( 'wjLinkIframe' );
+								var wjLinkIframe = dialog.iframeElement;
 								if (wjLinkIframe && wjLinkIframe.$)
 								{
-									//console.log("Idem updatnut");
+									//console.log("Idem updatnut, wjLinkIframe=", wjLinkIframe);
 
 									var phone = dialog.getContentElement("info", "telNumber").getValue();
 									//console.log("phone=", phone);

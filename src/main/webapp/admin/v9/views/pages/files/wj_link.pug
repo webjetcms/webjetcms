@@ -95,9 +95,12 @@ block content
         {
             try
             {
-                if (window.parent && window.parent.tempId)
+                if (window.parent)
                 {
-                    var tempId = window.parent.editorForm.tempId.value;
+                    var tempId = -1;
+                    try {
+                        tempId = window.parent.$("#DTE_Field_tempId").val();
+                    } catch (e) { }
                     var title = window.parent.CKEDITOR.dialog.getCurrent().getValueOf("advanced", "advTitle");
                     $.ajax({
                         type: "POST",

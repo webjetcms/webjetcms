@@ -71,6 +71,12 @@ public class EditorFacade {
 	 * @return
 	 */
 	public DocDetails save(DocDetails entity) {
+
+		if (entity.getSortPriority() == -1 && entity.getEditorFields() != null && entity.getEditorFields().getGroupDetails() != null) {
+			//if sort priority is 0/empty calculate new one
+			editorService.setSortPriority(entity, entity.getEditorFields().getGroupDetails());
+		}
+
 		//najskor over multigroup mapping
 		int docIdOriginal = entity.getDocId();
 		int originalSortPriority = entity.getSortPriority();

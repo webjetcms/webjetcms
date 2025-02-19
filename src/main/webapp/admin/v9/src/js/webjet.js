@@ -1143,7 +1143,7 @@ const WJ = (() => {
             return translate(key);
         },
         openPopupDialog: (url, width, height) => {
-            return openPopupDialog(url, width, height);
+            openPopupDialog(url, width, height);
         },
         notify: (type, title, text, timeOut, buttons, appendToExisting=false) => {
             return toastNotify(type, title, text, timeOut, buttons, appendToExisting)

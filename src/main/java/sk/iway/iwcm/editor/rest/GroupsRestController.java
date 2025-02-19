@@ -265,6 +265,11 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
             return entity;
         }
 
+        if (entity.getSortPriority() == -1) {
+            //calculate new sort priority
+            entity.setSortPriority(groupsDB.getDefaultSortPriority(entity.getParentGroupId()));
+        }
+
         GroupDetails groupDetails = groupsDB.getGroup(entity.getGroupId());
         GroupDetails oldGroupDetails = null;
         try {
@@ -543,7 +548,7 @@ public class GroupsRestController extends DatatableRestControllerV2<GroupDetails
                 for (String key : keys) {
                     String name = prop.getText(key);
 
-                    sortPriority+=10;
+                    sortPriority+=Constants.getInt("sortPriorityIncrementGroup");
                     //vytvor podadresare
                     GroupDetails subgroup = new GroupDetails();
                     subgroup.setGroupName(name);

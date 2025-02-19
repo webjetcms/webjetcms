@@ -17,6 +17,7 @@
 - [ ] Galéria - pridať test aplikovania vodoznaku, porovnať fotografie, presunúť test v `gallery-regenerate-images.js` z `users` do `watermark` priečinka.
 - [ ] Zlepšiť testy voliteľné polia - test `yellow` šablóny.
 - [ ] Aktualizovať `codeceptjs`, pozor na problém s `Allure`, asi aktualizovať podľa https://allurereport.org/docs/codeceptjs/, nahradiť v `I.jstreeClick` volanie `.withText(name)` za `.withTextEquals(name)`.
+- [ ] Web stránky - otestovať usporiadanie priečinkov a stránok, pridanie, presun drag&drop, regenerovanie, nastavenie `sortPriorityIncrementGroup,sortPriorityIncrementDoc`.
 
 
 ## PostgreSQL

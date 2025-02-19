@@ -586,6 +586,12 @@ dependencies {
 
 2024.0.x
 
+- Web stránky - opravené nastavenie poradia usporiadania web stránok pri použití `Drag&Drop` v stromovej štruktúre (#57657-1).
+- Web stránky - pri duplikovaní web stránky/priečinka sa nastaví hodnota `-1` do poľa Poradie usporiadania pre zaradenie na koniec zoznamu. Hodnotu `-1` môžete zadať aj manuálne pre získanie novej hodnoty poradia usporiadania (#57657-1).
+- Web stránky - import web stránok - opravené nastavenie média skupín pri importe stránok obsahujúcich média. Pri importe sa automaticky vytvoria všetky Média skupiny (aj nepoužívané) z dôvodu, že sa pri importe stránok prekladá aj média skupina nastavená pre média aplikáciu `/components/media/media.jsp` v stránke (tá môže obsahovať aj ID média skupiny mimo importovaných stránok) (#57657-1).
+
+2024.0.52
+
 - Web stránky - opravené nastavenie značiek pri nastavenej konfiguračnej premennej `perexGroupUseJoin=true` (#57453).
 - Štatistika - chybné stránky - zväčšený limit maximálneho počtu záznamov z 1000 na hodnotu podľa konfiguračnej premennej `datatablesExportMaxRows`, predvolene `50000`. Tabuľka upravená na stránkovanie a vyhľadávanie na serveri (#57453).
 - `Stripes` - opravené formátovanie dátumu a času za použitia `Tools.formatDate/Time` pre konzistentné formáty dátumov a času (#57405).

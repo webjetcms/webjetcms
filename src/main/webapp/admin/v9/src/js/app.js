@@ -81,7 +81,10 @@ import 'bootstrap';
 import '../scss/ninja.scss';
 
 //extra css file for inline editing
-import(/* webpackChunkName: "inline" */ '../scss/inline.scss');
+const createInlineCss = () => {
+    return import(/* webpackChunkName: "inline" */ '../scss/inline.scss');
+};
+window.createInlineCss = createInlineCss;
 
 const bootstrap = (window.bootstrap = require('bootstrap'));
 
