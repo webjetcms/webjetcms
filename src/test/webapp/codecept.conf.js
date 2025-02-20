@@ -5,7 +5,7 @@ const { devices } = require('playwright');
 // HEADLESS=true npx codecept run
 setHeadlessWhen(process.env.HEADLESS);
 
-let url = process.env.CODECEPT_URL || process.env.CODECEPT_DEFAULT_DOMAIN_NAME || 'http://iwcm.interway.sk';
+let url = process.env.CODECEPT_URL || "https://"+process.env.CODECEPT_DEFAULT_DOMAIN_NAME;
 let codeceptShow = process.env.CODECEPT_SHOW;
 let browser = process.env.CODECEPT_BROWSER || "chromium";
 let restart = process.env.CODECEPT_RESTART || "context";
