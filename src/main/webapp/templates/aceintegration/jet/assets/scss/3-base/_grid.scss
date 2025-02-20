@@ -1,0 +1,119 @@
+@charset "UTF-8";
+
+.queryHolders {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
+    > *::before {
+        display: none;
+        visibility: hidden;
+        opacity: 0;
+        content: "false";
+    }
+}
+
+.bootstrap-grid-test {
+    background-color: #eee;
+    > .row div {
+        background-color: red;
+        margin-bottom: 2px;
+    }
+}
+
+.breakpoint-test {
+    width: 100%;
+    >div { margin: 10px 0; clear: both; overflow: hidden; }
+    div > div {
+        width: 20%;
+        height: 20px;
+        background-color: #eee;
+        border: 1px solid #aaa;
+        color: #333;
+        line-height: 20px;
+        font-size: 12px;
+        text-align: center;
+        &.active { background-color: yellow; border-color:red; }
+        &.notFire { background-color: orange; }
+    }
+    .css,
+    .js {
+        div {
+            float: left;
+        }
+    }
+    .css-up,
+    .js-up {
+        div {
+            float: right; clear: both;
+            &.dinosaur { float: left; }
+            &.mobile { width: 80%;}
+            &.tablet { width: 60%; }
+            &.laptop { width: 40%; }
+        }
+    }
+    .css-down,
+    .js-down {
+        div {
+            float: left; clear: both;
+            &.dinosaur { float: left; }
+            &.mobile { width: 40% }
+            &.tablet { width: 60%; }
+            &.laptop { width: 80%; }
+            &.desktop { margin-left: 80%; }
+        }
+    }
+}
+
+
+@media screen and (max-width: $bp-dinosaur - 1) {
+    .onChange_dinosaur::before { content: "true"; }
+    .breakpoint-test .css div.dinosaur { background-color: green; }
+}
+@media screen and (min-width:$bp-dinosaur) and (max-width: $bp-mobile - 1) {
+    .onChange_mobile::before { content: "true"; }
+    .breakpoint-test .css div.mobile { background-color: green; }
+}
+@media screen and (min-width: $bp-mobile) and (max-width: $bp-tablet - 1)  {
+    .onChange_tablet::before { content: "true"; }
+    .breakpoint-test .css div.tablet { background-color: green; }
+}
+@media screen and (min-width: $bp-tablet) and (max-width: $bp-laptop - 1)  {
+    .onChange_laptop::before { content: "true"; }
+    .breakpoint-test .css div.laptop { background-color: green; }
+}
+@media screen and (min-width: $bp-laptop) {
+    .onChange_desktop::before { content: "true"; }
+    .breakpoint-test .css div.desktop { background-color: green; }
+}
+@media screen and (min-width: $bp-dinosaur) {
+    .onChangeUp_dinosaur::before { content: "true"; }
+    .breakpoint-test .css-up div.mobile { background-color: green; }
+}
+@media screen and (min-width: $bp-mobile) {
+    .onChangeUp_mobile::before { content: "true"; }
+    .breakpoint-test .css-up div.tablet{ background-color: green; }
+}
+@media screen and (min-width: $bp-tablet) {
+    .onChangeUp_tablet::before { content: "true"; }
+    .breakpoint-test .css-up div.laptop { background-color: green; }
+}
+@media screen and (min-width: $bp-laptop) {
+    .onChangeUp_laptop::before { content: "true"; }
+    .breakpoint-test .css-up div.desktop { background-color: green; }
+}
+@media screen and (max-width: $bp-dinosaur - 1) {
+    .onChangeDown_mobile::before { content: "true"; }
+    .breakpoint-test .css-down div.dinosaur { background-color: green; }
+}
+@media screen and (max-width: $bp-mobile - 1) {
+    .onChangeDown_tablet::before { content: "true"; }
+    .breakpoint-test .css-down div.mobile { background-color: green; }
+}
+@media screen and (max-width: $bp-tablet - 1) {
+    .onChangeDown_laptop::before { content: "true"; }
+    .breakpoint-test .css-down div.tablet { background-color: green; }
+}
+@media screen and (max-width: $bp-laptop - 1) {
+    .onChangeDown_desktop::before { content: "true"; }
+    .breakpoint-test .css-down div.laptop { background-color: green; }
+}

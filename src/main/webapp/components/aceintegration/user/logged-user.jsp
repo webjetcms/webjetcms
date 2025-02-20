@@ -9,10 +9,10 @@
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 
 <%
-    
+
   String lng = PageLng.getUserLng(request);
   pageContext.setAttribute("lng", lng);
-  
+
   Identity user = UsersDB.getCurrentUser(session);
   if(user != null)
   {
@@ -20,7 +20,7 @@
 %>
 
 <a class="logout btn" href="/logoff.do?forward=/">
-	<img src="/thumb<%if((user.getPhotoOriginal()).equals("")){out.print("/templates/aceintegration/jet/assets/images/person.jpg");}else {out.print(user.getPhotoOriginal());} %>?w=36&h=36&ip=5" alt="<%=user.getFullName()%>">
+	<img src="/thumb<%if((user.getPhotoOriginal()).equals("")){out.print("/images/gallery/user/admin.jpg");}else {out.print(user.getPhotoOriginal());} %>?w=36&h=36&ip=5" alt="<%=user.getFullName()%>">
 	<%=user.getFullName()%><br />
 	<span>Log out</span>
 </a>

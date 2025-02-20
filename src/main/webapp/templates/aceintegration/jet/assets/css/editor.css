@@ -1,0 +1,24 @@
+.baretest1 {
+    color: blue;
+}
+
+.baretest2 {
+background-color: yellow;
+}
+
+a.btn.btn-primary {
+/*bootstrap default*/
+}
+a.btn.btn-secondary {
+/*bootstrap default*/
+}
+
+table.table.table.table-dark {
+/*bootstrap default*/
+}
+table.table.table.table-striped {
+/*bootstrap default*/
+}
+table.table.table-bordered {
+/*bootstrap default*/
+}

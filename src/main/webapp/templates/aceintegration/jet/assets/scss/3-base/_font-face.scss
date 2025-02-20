@@ -1,0 +1,49 @@
+@charset "UTF-8";
+
+/* @font-face {
+    font-family: 'roboto';
+    src: url(#{$wj-fonts}roboto/roboto-light-webfont.woff2) format('woff2'),
+         url(#{$wj-fonts}roboto/roboto-light-webfont.woff) format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto';
+    src: url(#{$wj-fonts}roboto/roboto-regular-webfont.woff2) format('woff2'),
+         url(#{$wj-fonts}roboto/roboto-regular-webfont.woff) format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'roboto';
+    src: url(#{$wj-fonts}roboto/roboto-bold-webfont.woff2) format('woff2'),
+         url(#{$wj-fonts}roboto/roboto-bold-webfont.woff) format('woff');
+    font-weight: 700;
+    font-style: normal;
+} */
+
+@font-face {
+    font-family: 'geomanist';
+    src: url(#{$wj-fonts}geomanist/geomanist-light-webfont.woff2) format('woff2'),
+         url(#{$wj-fonts}geomanist/geomanist-light-webfont.woff) format('woff');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'geomanist';
+    src: url(#{$wj-fonts}geomanist/geomanist-regular-webfont.woff2) format('woff2'),
+         url(#{$wj-fonts}geomanist/geomanist-regular-webfont.woff) format('woff');
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'geomanist';
+    src: url(#{$wj-fonts}geomanist/geomanist-bold-webfont.woff2) format('woff2'),
+         url(#{$wj-fonts}geomanist/geomanist-bold-webfont.woff) format('woff');
+    font-weight: 700;
+    font-style: normal;
+}

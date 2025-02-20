@@ -1,0 +1,50 @@
+@charset "UTF-8";
+
+.md-debug-info {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    max-width: 300px;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    color: white;
+    background-color: #222;
+    border: 1px solid #555;
+    z-index: 9999999999999;
+    .debug-table {
+        display: table;
+        width: 100%;
+    }
+    .debug-table-row {
+        display: table-row;
+    }
+    .debug-table-cell {
+        display: table-cell;
+        padding: 4px 6px;
+        border-left: 1px solid #555;
+        border-bottom: 1px solid #555;
+        word-wrap: break-word;
+        word-break: break-all;
+        word-break: break-word;
+        &:first-child {
+            border-left-width: 0;
+        }
+        span {
+            display: block;
+            width: 100%;
+            border-bottom: 1px solid #444;
+            &:last-child {
+                border-bottom-width: 0;
+            }
+        }
+    }
+    .debug-table:last-of-type {
+        .debug-table-row:last-of-type {
+            .debug-table-cell { border-bottom-width:0; }
+        }
+    }
+}

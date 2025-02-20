@@ -1,0 +1,13 @@
+@charset "UTF-8";
+
+::selection {
+    background: $c-selection-bg;
+}
+
+::-moz-selection {
+    background: $c-selection-bg;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
