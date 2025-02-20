@@ -1,0 +1,47 @@
+<p>
+    Demo component view, params:
+    <br/>
+    test1: <span data-th-utext="${test}"></span>
+    <br/>
+    stringField: <span data-th-utext="${demoComponent.stringField}"></span>
+    <br/>
+    primitiveBooleanField: <span data-th-utext="${demoComponent.primitiveBooleanField}"></span>
+    <br/>
+    primitiveIntegerField: <span data-th-utext="${demoComponent.primitiveIntegerField}"></span>
+    <br/>
+    primitiveDoubleField: <span data-th-utext="${demoComponent.primitiveDoubleField}"></span>
+    <br/>
+    primitiveFloatField: <span data-th-utext="${demoComponent.primitiveFloatField}"></span>
+</p>
+
+<p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>
+
+<p>
+    Base64:
+    <br/>
+    base64textarea: <span data-th-utext="${demoComponent.base64textarea}"></span>
+    <br/>
+    base64textareaDecoded: <span data-th-text="${T(sk.iway.iwcm.Tools).base64Decode(demoComponent.base64textarea)}" style="white-space: pre"></span>
+    <br/>
+    base64text: <span data-th-utext="${demoComponent.base64text}"></span>
+    <br/>
+    base64textDecoded: <span data-th-text="${T(sk.iway.iwcm.Tools).base64Decode(demoComponent.base64text)}"></span>
+</p>
+
+<p>dirSimple: <span data-th-utext="${demoComponent.dirSimple}"></span></p>
+
+<p>groupDetails: <span data-th-text="${demoComponent.groupDetails}"></span></p>
+
+<p>docDetails: <span data-th-text="${demoComponent.docDetails}"></span></p>
+
+<p>groupDetailsList:</p>
+<ul data-th-each="grp : ${demoComponent.groupDetailsList}">
+    <li data-th-text="${grp}">GroupDetails</li>
+</ul>
+
+<p>docDetailsList:</p>
+<ul data-th-each="doc : ${demoComponent.docDetailsList}">
+    <li data-th-text="${doc}">DocDetails</li>
+</ul>
+
+<p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
