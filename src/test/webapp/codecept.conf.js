@@ -90,7 +90,7 @@ exports.config = {
     REST: {
       endpoint: url,
       defaultHeaders: {
-        'x-auth-token': '*********'
+        'x-auth-token': I.getDefaultAuthToken()
       },
     },
     JSONResponse: {},

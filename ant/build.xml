@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<project name="webjet9" default="deployRepoIwmspSk" basedir="../" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+<project name="webjetcms" default="makejars" basedir="../" xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
     <path id="maven-ant-tasks.classpath" path="ant/maven-ant-tasks-2.1.3.jar" />
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath" />
@@ -39,14 +39,10 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.0-SNAPSHOT" />
+        <property name="artifact.version" value="2025.SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
-
-        <property name="nexus.url" value="*********" />
-        <property name="nexus.user" value="iw-webjet-dev" />
-        <property name="nexus.password" value="*********" />
 
         <echo message="Artifact group: ${artifact.group}"/>
         <echo message="Artifact name: ${artifact.name}"/>
@@ -434,27 +430,6 @@
                 <include name="wjnews*.json"/>
             </fileset>
         </copy>
-    </target>
-
-    <!-- ATTENTION: it will fail during the very first deployment, it is necessary to manually upload one artifact in the nexus to create the file sk/iway/webjet/maven-metadata.xml where the versions are known, then the deployment goes -->
-    <!-- https://maven.apache.org/plugins/maven-deploy-plugin/file-deployment.html -->
-    <target name="deployRepoIwmspSk" depends="define-artifact-properties,makejars,makepom" description="Deploy JAR files to nexus server https://repo.iwmsp.sk">
-
-        <artifact:deploy file="${artifact.dir}/${artifact.name}-${artifact.version}.jar" uniqueVersion="false">
-
-            <remoteRepository url="${nexus.url}">
-                <authentication username="${nexus.user}" password="${nexus.password}" />
-            </remoteRepository>
-
-            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar" classifier="sources"/>
-
-            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar" classifier="admin" type="jar" />
-            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-components.jar" classifier="components" type="jar" />
-            <attach file="${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar" classifier="libs" type="jar" />
-
-            <pom file="${artifact.pom}" />
-
-        </artifact:deploy>
     </target>
 
     <target name="fixSrc" description="Fix for VS Code source files - there is problem with annotation in VS Code, so we must revert changes before deployment">
