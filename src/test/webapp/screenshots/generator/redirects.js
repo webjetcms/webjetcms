@@ -13,7 +13,7 @@ Scenario('redirects screenshots', ({ I, DT, DTE, Document }) => {
     DTE.fillField('oldUrl', '/test-stavov/virtualpath/podla-title.html');
     DTE.fillField('newUrl', '/test-stavov/virtualpath/podla-zmena-title.html');
     DTE.fillField('redirectCode', '301');
-    DTE.fillField('domainName', 'demotest.webjetcms.sk');
+    DTE.fillField('domainName', I.getDefaultDomainName());
     Document.screenshotElement('.DTE.modal-content.DTE_Action_Create',"/redactor/webpages/redirects/path-editor.png");
 
 
@@ -23,7 +23,7 @@ Scenario('redirects screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/webpages/redirects/redirect-domain.png");
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
-    DTE.fillField('redirectFrom', 'demotest.webjetcms.sk');
+    DTE.fillField('redirectFrom', I.getDefaultDomainName());
     DTE.selectOption('protocol', 'alias');
 
     I.checkOption('#DTE_Field_active_0');

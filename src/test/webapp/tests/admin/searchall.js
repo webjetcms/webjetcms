@@ -190,7 +190,7 @@ Scenario('SearchAll - domains', ({ I, DT }) => {
     filter(I, DT, 'jurko.jpg');
     I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
 
-    switchDomainTo(I, DT, "demotest.webjetcms.sk");
+    switchDomainTo(I, DT, I.getDefaultDomainName());
     filter(I, DT, 'Vstup');
     I.dontSee('Vstup', 'table tr');
 });

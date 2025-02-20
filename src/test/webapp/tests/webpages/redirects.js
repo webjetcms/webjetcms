@@ -44,7 +44,7 @@ Scenario('Filter by actual doimain', ({ I, DT, Document }) => {
     I.see("302");
 
     //Actual domain
-    DT.filterContains("domainName", "demotest.webjetcms.sk");
+    DT.filterContains("domainName", I.getDefaultDomainName());
     DT.filterContains("oldUrl", "/images/drag-drop-test/lighthouse.jpg");
     I.see("8387");
     I.see("/images/drag-drop-test/lighthouse.jpg");

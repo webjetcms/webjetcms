@@ -23,7 +23,7 @@ else
 fi
 
 if [[ -z "$2" ]]; then
-        CODECEPT_URL="https://demotest.webjetcms.sk"
+        CODECEPT_URL="https://$CODECEPT_DEFAULT_DOMAIN_NAME"
 else
         CODECEPT_URL="$2"
 fi
@@ -63,9 +63,6 @@ scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/te
 
 ls -la ../../../build/test
 ls -la ../../../build/test/allure-results/history
-
-#generovanie screenshotu
-#CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npx codeceptjs run tests/admin/datatables.js --grep 'Nastavenie tabulky'
 
 NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure
 RET_CODE=$?

@@ -57,7 +57,7 @@ Scenario("Unsubscibed emails", ({I, DT, DTE, Document}) => {
     Document.switchDomain("test23.tau27.iway.sk");
     unsubscribeEmail(I, "/test23-newsletter/email-unsubscribe.html", email2);
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
-    Document.switchDomain("demotest.webjetcms.sk");
+    Document.switchDomain(I.getDefaultDomainName());
 
     I.amOnPage("/apps/dmail/admin/unsubscribed/");
 
@@ -79,7 +79,7 @@ Scenario("Unsubscibed emails", ({I, DT, DTE, Document}) => {
     //
     I.say("Deleting emails");
     deleteUnsubscribed(I, DT, DTE, email2);
-    Document.switchDomain("demotest.webjetcms.sk");
+    Document.switchDomain(I.getDefaultDomainName());
     deleteUnsubscribed(I, DT, DTE, email1);
 });
 

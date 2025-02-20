@@ -73,10 +73,10 @@ class ToolsTest extends BaseWebjetTest {
 
         String domainAlias = DomainRedirectDB.getDomainFromAlias(request.getServerName());
         System.out.println("domainAlias: " + domainAlias);
-        assertEquals("webjet9.tau27.iway.sk", domainAlias);
+        assertEquals(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"), domainAlias);
 
         String serverName = Tools.getServerName(request, true);
-        assertEquals("webjet9.tau27.iway.sk", serverName);
+        assertEquals(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"), serverName);
     }
 
     @Test
