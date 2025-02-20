@@ -60,8 +60,10 @@ jobs:
       uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
     - name: Build with Gradle Wrapper
+      env:
+        CODECEPT_DEFAULT_DOMAIN_NAME: ${{ vars.CODECEPT_DEFAULT_DOMAIN_NAME }}
       run: |
-        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root CODECEPT_DEFAULT_DOMAIN_NAME=${{ env.CODECEPT_DEFAULT_DOMAIN_NAME }} ./gradlew cleanTest test
+        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
 
   dependency-submission:
 
