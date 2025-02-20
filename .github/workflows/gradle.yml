@@ -42,6 +42,11 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    #- name: Update .npmrc with NPM registry
+    #  run: |
+    #    echo "@datatables.net:registry=https://npm.datatables.net/" >> src/main/webapp/admin/v9/.npmrc
+    #    echo "//npm.datatables.net/:_authToken=${{ secrets.NPM_AUTH_TOKEN }}" >> src/main/webapp/admin/v9/.npmrc
+
     - name: Install MariaDB Client
       run: sudo apt-get update && sudo apt-get install -y mariadb-client
 
@@ -56,7 +61,7 @@ jobs:
 
     - name: Build with Gradle Wrapper
       run: |
-        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root ./gradlew cleanTest test
+        webjetDbPassword=root_password webjetDbUrl=jdbc:mysql://127.0.0.1:33006/webjetcms_web webjetDbUserName=root CODECEPT_DEFAULT_DOMAIN_NAME=${{ env.CODECEPT_DEFAULT_DOMAIN_NAME }} ./gradlew cleanTest test
 
   dependency-submission:
 
