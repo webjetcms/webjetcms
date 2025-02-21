@@ -37,7 +37,7 @@
                 }
             });
 
-            $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select">[[#{editor.div_properties.section}]] <select class="form-select no-picker" id="groupSelect"><option value="-1">[[#{components.blog.all_groups}]]</option></select></div>');
+            $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupSelect"><option value="-1">[[#{components.blog.all_groups}]]</option></select></div>');
 
             //Init select
             ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");

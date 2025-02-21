@@ -417,16 +417,16 @@ Scenario("form with note field", ({ I, DT }) => {
     I.dontSee("Toto je poznamka vo formulari z frontendu");
 });
 
-function handleDownload(I, fileName, ext, url=null) {
-    I.handleDownloads("downloads/"+fileName+"-"+randomNumber+ext);
+async function handleDownload(I, fileName, ext, url=null) {
+    await I.handleDownloads("downloads/"+fileName+"-"+randomNumber+ext);
     if (url==null) I.click(locate("#form-detail td.cell-not-editable a").withText(fileName+ext));
     else {
-        I.executeScript((url) => {
+        await I.executeScript((url) => {
             window.location.href=url;
         }, url);
     }
     I.amInPath('../../../build/test/downloads');
-    I.waitForFile(fileName+"-"+randomNumber+ext, 30);
+    await I.waitForFile(fileName+"-"+randomNumber+ext, 30);
 }
 
 Scenario("form attachments", async ({ I }) => {
@@ -436,9 +436,9 @@ Scenario("form attachments", async ({ I }) => {
     I.amOnPage("/apps/form/admin/#/detail/multiupload");
     I.waitForText("testXlsxAttachmentFile.xlsx", 10);
 
-    handleDownload(I, "testJpgAttachmentFile", ".jpg");
+    await handleDownload(I, "testJpgAttachmentFile", ".jpg");
 
-    handleDownload(I, "11_size", ".txt", url11size);
+    await handleDownload(I, "11_size", ".txt", url11size);
 
     //
     I.say("Check perms");
@@ -449,7 +449,7 @@ Scenario("form attachments", async ({ I }) => {
     //
     I.say("User tester2 doesn't have access right to form Kontaktny_formular")
     I.relogin("tester2");
-    I.executeScript((url) => {
+    await I.executeScript((url) => {
         window.location.href=url;
     }, url11size);
     //should be redirected to homepage
