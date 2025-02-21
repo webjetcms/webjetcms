@@ -266,7 +266,7 @@
                 <exclude name="META-INF/**"/>
             </fileset>
             <fileset dir="${finalwar}/WEB-INF/lib">
-                <include name="webjet-*.jar"/>
+                <include name="webjetcms-*.jar"/>
                 <include name="wj*.jar"/>
                 <include name="*.zip"/>
             </fileset>
@@ -282,7 +282,7 @@
 
         <copy todir="${finalwar}/WEB-INF/lib/" overwrite="true">
             <fileset dir="${root}/artifacts/">
-                <include name="webjet-${artifact.version}*.jar"/>
+                <include name="webjetcms-${artifact.version}*.jar"/>
                 <exclude name="*-sources.jar"/>
             </fileset>
         </copy>
@@ -407,9 +407,9 @@
                 <include name="**/**"/>
             </zipfileset>
             <zipfileset dir="${artifact.dir}" prefix="WEB-INF/lib">
-                <include name="webjet-${artifact.version}-components.jar"/>
-                <include name="webjet-${artifact.version}-admin.jar"/>
-                <include name="webjet-${artifact.version}.jar"/>
+                <include name="webjetcms-${artifact.version}-components.jar"/>
+                <include name="webjetcms-${artifact.version}-admin.jar"/>
+                <include name="webjetcms-${artifact.version}.jar"/>
             </zipfileset>
             <zipfileset dir="${outdir}WEB-INF/fonts" prefix="WEB-INF/fonts">
                 <include name="**/**"/>
