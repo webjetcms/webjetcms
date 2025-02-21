@@ -348,7 +348,7 @@ dependencyCheck {
     }
     nvd {
         //api key for NVD database for dependency check
-        apiKey=''
+        apiKey=System.getenv('NVD_API_KEY') ?: ''
         maxRetryCount=20
         delay=8000
     }
