@@ -7,6 +7,9 @@
 
 echo "Creating test/history directory"
 pwd
+ls -la ../../../
+mkdir ../../../build
+ls -la ../../../build
 rm -rf ../../../build/test
 mkdir ../../../build/test
 mkdir ../../../build/test/allure-results
