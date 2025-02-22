@@ -13,9 +13,9 @@ ls -la ../../../build
 rm -rf ../../../build/test
 mkdir ../../../build/test
 mkdir ../../../build/test/allure-results
-#ls -la ../../../build/test
+ls -la ../../../build/test
 mkdir ../../../build/test/allure-results/history
-#ls -la ../../../build/test/history
+ls -la ../../../build/test/history
 
 # --------------------------------------------------------------------
 # ARGS
@@ -38,7 +38,7 @@ else
 fi
 
 if [[ -z "$4" ]]; then
-        HOST_NAME="webjet2b.srv.iway.local"
+        HOST_NAME="webjet.srv.local"
 else
         HOST_NAME="$4"
 fi
