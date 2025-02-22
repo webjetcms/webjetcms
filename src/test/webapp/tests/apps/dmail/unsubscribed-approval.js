@@ -46,7 +46,7 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
     await setUnsubscribeText(Apps, DTE, I, defaultText);
 
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
-    I.waitForElement('#wjInline-docdata', 10);
+    I.waitForElement('.ly-content .container', 10);
     I.fillField('#unsubscribeEmail', randomName_1+'@fexpost.com');
     I.seeElement(locate('a').withText('Nie, chcem zostať'));
     I.see(defaultText);
@@ -55,7 +55,7 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
 
     await setUnsubscribeText(Apps, DTE, I, '');
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
-    I.waitForElement('#wjInline-docdata', 10);
+    I.waitForElement('.ly-content .container', 10);
     I.fillField('#unsubscribeEmail', randomName_2+'@fexpost.com');
     I.dontSeeElement(locate('a').withText('Nie, chcem zostať'));
     I.dontSee(defaultText);
@@ -64,7 +64,7 @@ Scenario('Test unsubscribe text - default, empty, edited', async ({ Apps, DTE, I
 
     await setUnsubscribeText(Apps, DTE, I, changedText);
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
-    I.waitForElement('#wjInline-docdata', 10);
+    I.waitForElement('.ly-content .container', 10);
     I.see(changedText);
 });
 
