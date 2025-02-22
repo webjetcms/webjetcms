@@ -1,0 +1,71 @@
+@charset "UTF-8";
+
+*:not(.fas) {
+    font-family: 'geomanist', sans-serif;
+}
+
+body {
+    color: $c-text-main;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    padding: 0;
+    margin: 0;
+}
+
+h1 {}
+h2 {font-size: 21px;}
+h3 {color: $c-text-highlight; font-size: 19px;}
+h4 {}
+h5 {}
+h6 {}
+
+p {
+    padding: 0 0 30px 0;
+    margin: 0;
+}
+
+b {}
+strong {}
+i {}
+em {}
+mark {}
+del {}
+small {}
+sub {}
+sup {}
+
+hr {}
+
+center {}
+
+a:hover {
+    text-decoration: none;
+    color: $c-text-highlight;
+    transition: all 0.2s ease;
+}
+
+.cs-error {color: red;}
+
+.videoBox {
+    margin-bottom: 30px;
+}
+
+.more-info1 {
+    /* editor */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}
+
+span.more-info2 {
+    /* editor */
+    font-size: 150%;
+    background-color: orange;
+    color: white;
+}

@@ -35,7 +35,7 @@ public class GdprCronTest extends BaseWebjetTest {
 
         SetCharacterEncodingFilter.registerDataContext(null);
         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-        rb.setDomain("webjet9.tau27.iway.sk");
+        rb.setDomain(System.getenv("CODECEPT_DEFAULT_DOMAIN_NAME"));
 
         //hladaj rodne cislo
         String[] args = new String[]{"emails=tester@balat.sk", "regexps=[0-9]{6}/[0-9]{4}", "modules=WEB_STRANKY,FORMULARE"};

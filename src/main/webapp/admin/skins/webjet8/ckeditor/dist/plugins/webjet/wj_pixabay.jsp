@@ -233,9 +233,9 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 										var inputElement = window.parent.$(".row:not(.template) input.elfinder-url-input");
 										//console.log("FILE: ", inputElement);
 										inputElement.val(data.virtualPath + "?v=" + new Date().getTime());
-										window.parent.$(".md-breadcrumb ul.nav li:first a").trigger("click");
-										window.parent.$(".md-breadcrumb ul.nav li.nav-item a.active").removeClass("active");
-										window.parent.$(".md-breadcrumb ul.nav li:first a").addClass("active");
+										window.parent.$(".md-tabs ul.nav li:first a").trigger("click");
+										window.parent.$(".md-tabs ul.nav li.nav-item a.active").removeClass("active");
+										window.parent.$(".md-tabs ul.nav li:first a").addClass("active");
 									}
 									else
 									{

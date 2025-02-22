@@ -30,7 +30,7 @@ Scenario('frontend', ({ I, Document }) => {
 
     //editacia
     I.click("Upraviť", "div.container table.table tbody tr:nth-child(2)");
-    I.waitForVisible("#wjInline-docdata");
+    I.waitForVisible(".ly-content .container");
     Document.screenshot("/custom-apps/spring-mvc/edit.png");
 
     I.amOnPage("/apps/spring-app/kontakty/?NO_WJTOOLBAR=true");
@@ -56,7 +56,7 @@ Scenario('admin-with-upload', ({ I, Document }) => {
         default:
             throw new Error("Unknown language: " + I.getConfLng());
     }
-    
+
 
     //cela stranka
     Document.screenshot("/custom-apps/spring-mvc/admin-upload.png");

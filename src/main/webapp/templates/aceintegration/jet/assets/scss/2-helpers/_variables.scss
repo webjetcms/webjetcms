@@ -1,0 +1,38 @@
+@charset "UTF-8";
+
+//WJ DIR
+$wj-install-name : "aceintegration";
+$wj-template-name : "jet";
+$wj-assets : "/templates/#{$wj-install-name}/#{$wj-template-name}/assets/";
+//$wj-assets : "../";
+$wj-images : "#{$wj-assets}images/";
+$wj-fonts : "#{$wj-assets}fonts/";
+
+//BREAKPOINT
+$bp-dinosaur : 576px;
+$bp-mobile : 768px;
+$bp-tablet : 992px;
+$bp-laptop : 1200px;
+$bp-desktop : 1600px;
+
+//BASIC COLOR PALLETE
+$c-selection-bg: DodgerBlue;
+
+$c-text-main: #404e57;
+$c-text-highlight: #00a3e0;
+$c-text-highlight2: #ffaa00;
+
+//WIDTH
+//$w-element-name:1px;
+
+//HEIGHT
+//$h-element-name:1px;
+
+//PADDING
+//$p-element-name:1px;
+
+//MARGIN
+//$m-element-name:1px;
+
+//Z-INDEX
+//$z-element-name: 1;

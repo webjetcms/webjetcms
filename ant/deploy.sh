@@ -16,7 +16,6 @@ ant update-version
 #ant fixSrc
 
 #ant deploy
-ant -Dcompress=true deployRepoIwmspSk
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
 

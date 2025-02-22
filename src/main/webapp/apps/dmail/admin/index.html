@@ -109,7 +109,7 @@
         window.addEventListener('WJ.DTE.tabclick', function (e) {
             //console.log("tabclick, id=", e.detail.id, " e=", e);
             let id = e.detail.id;
-            //console.log("tab clicked, e=", e, "id=", id);
+            console.log("tab clicked, e=", e, "id=", id);
             if ("campaingsDataTable-preview"===id) {
                 let url = null;
                 try {
@@ -123,7 +123,7 @@
                 if (url == null) {
                     url = "about:blank";
                 }
-                //console.log("url=", url);
+                console.log("url=", url);
 
                 $("#emailPreviewIframe").attr("src", url);
             }

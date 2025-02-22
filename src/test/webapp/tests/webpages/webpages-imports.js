@@ -3,15 +3,17 @@ Feature('webpages.webpages-imports');
 var randomNumber;
 var importGroupName;
 
+let fileInput = "#form > div > input[type=file][name=archive]";
+let zipFileLocation;
+
 Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
+        zipFileLocation = "tests/webpages/"+I.getDefaultDomainName()+"-export.zip";
    }
 });
 
-let fileInput = "#form > div > input[type=file][name=archive]";
-let zipFileLocation = "tests/webpages/demotest.webjetcms.sk-export.zip";
 Scenario('Over importovanie web stránok zo zip súboru (XML)', async ({ I, DT, DTE }) => {
 
     importGroupName = "Zip-Import-autotest-" + randomNumber;

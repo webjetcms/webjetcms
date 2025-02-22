@@ -1,0 +1,108 @@
+@charset "UTF-8";
+
+.md-welcome {
+    background: #010101 url(#{$wj-images}promo.jpg) right bottom no-repeat;
+    height: 465px;
+    padding: 30px 100px 0 40px;
+    position: relative;
+
+    .vietnam & {
+        background: #010101 url(#{$wj-images}scooterloan1.jpg) center no-repeat;
+        &.logged {
+            background: #010101 url(#{$wj-images}scooterloan2.jpg) center no-repeat;
+        }
+    }
+
+    h2 {
+        padding: 20px 0;
+        color: #fff;
+    }
+
+    p {
+        color: #fff;
+        font-size: 21px;
+        padding: 0 0 30px 0;
+        position: relative;
+        z-index: 1;
+        font-weight: 300;
+
+        strong {
+            color: #fff; 
+            white-space: nowrap;
+        }
+
+    }
+
+    .btn {
+        font-size: 17px;
+        padding: 0 20px;
+        line-height: 50px;
+        height: 50px;
+    }
+
+    /* &:before {
+        content: "";
+        display: block;
+        width: 480px;
+        height: 240px;
+        position: absolute;
+        left: 30px;
+        bottom: 30px;
+        background: url(#{$wj-images}graf.png);
+    } */
+
+}
+
+.md-bankar {
+    height: 225px;
+    background: #fff;
+    margin: 0 0 15px 0;
+    padding: 0;
+    background: $c-text-main;
+    position: relative;
+
+    .col-lg-3 {display: none;}
+    .col-lg-3:first-child {
+        display: block;
+        float: left;
+        margin: 0 30px 0 0;
+        padding: 20px;
+        width: 150px;
+        max-width: 150px;
+        height: 100%;
+        background: darken($color: $c-text-main, $amount: 3);
+
+        p {
+            padding: 0;
+            font-size: 13px;
+            text-align: center;
+            white-space: nowrap;
+
+            strong {font-weight: 400; color: #fff;}
+        }
+    }
+
+    img {
+        max-width: 100%;
+        margin: 0 0 10px 0;
+    }
+
+    h2 {
+        color: #fff;
+        font-size: 21px;
+        padding: 35px 30px 10px 0;
+        text-transform: uppercase;
+    }
+
+    p {
+        color: darken($color: #fff, $amount: 20);
+        padding: 0 30px 20px 0;
+    }
+
+    .btn {
+        position: absolute;
+        right: 30px; 
+        bottom: 30px;
+        margin: 0;
+    }
+}

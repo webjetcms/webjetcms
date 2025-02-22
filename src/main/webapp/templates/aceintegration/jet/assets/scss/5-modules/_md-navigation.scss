@@ -1,0 +1,120 @@
+@charset "UTF-8";
+
+#menu {
+    display: block;
+    padding: 0 330px 0 200px;
+    margin: 0;
+    text-align: center;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    transform: translate(0,-50%);
+
+
+    li {
+        display: inline-block;
+        margin: 0 -2px;
+        padding: 0;
+
+        &.open a {
+            text-decoration: none;
+            color: $c-text-highlight;
+        }
+
+    }
+
+    a {
+        display: block;
+        padding: 0 15px;
+        color: $c-text-main;
+        font-weight: normal;
+        line-height: 40px;
+        font-size: 14px;
+
+        &:hover {
+            text-decoration: none;
+            color: $c-text-highlight;
+        }
+    }
+}
+
+a.showMenu {
+    display: none;
+}
+
+@media screen and (max-width: $bp-tablet) {
+
+   a.showMenu {
+       display: block; 
+       height: 40px;
+       position: absolute;
+       top: 15px;
+       right: 30px;
+       font-weight: 400;
+       text-transform: uppercase;
+       color: $c-text-main;
+       padding: 0 50px 0 0;
+       line-height: 40px;
+
+        span {
+            display: block;
+            width: 40px;
+            height: 4px;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            margin: -2px 0 0 0;
+            background: $c-text-main;
+
+            &:after,
+            &:before {
+                content: "";
+                width: 40px;
+                height: 4px;
+                position: absolute;
+                background: $c-text-main;
+                left: 0;
+                top: -8px;
+            }
+
+            &:before {
+                top: 8px;
+            }
+
+        }
+
+   }
+
+   #menuBox {
+       position: absolute;
+       left: 0;
+       top: 70px;
+       width: 100%;
+       background: $c-text-main;
+       opacity: 0;
+       height: 0;
+       transition: all 0.3s ease;
+
+        &.active {
+            opacity: 1;
+            height: auto;
+        }
+
+   }
+
+   #menu {
+       position: relative;
+       transform: none;
+       padding: 0;
+       top: 0;
+
+        a {
+            display: block;
+            padding: 20px;
+            color: #fff;
+        }
+
+   }
+
+}

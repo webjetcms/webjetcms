@@ -49,15 +49,15 @@ Scenario('perex-zakladne testy @baseTest', async ({I, DataTables }) => {
 
 Scenario('verify all domains selection for available groups', ({I, DT, DTE}) => {
     I.amOnPage("/admin/v9/webpages/perex/");
-    I.see("demotest.webjetcms.sk:/Newsletter", "#perexDataTable td.dt-style-json");
+    I.see(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
     DT.filterContains("perexGroupName", "PerexWithGroup_");
-    I.see("demotest.webjetcms.sk:/Newsletter", "#perexDataTable td.dt-style-json");
+    I.see(I.getDefaultDomainName()+":/Newsletter", "#perexDataTable td.dt-style-json");
     I.dontSee("/Test stavov/Zaheslovaný", "#perexDataTable td.dt-style-json");
     I.click("PerexWithGroup_B");
     DTE.waitForEditor("perexDataTable");
     I.click("button.btn-vue-jstree-add");
     I.waitForElement("#jsTree");
-    I.waitForText("demotest.webjetcms.sk", 5, "#jsTree a.jstree-anchor");
+    I.waitForText(I.getDefaultDomainName(), 5, "#jsTree a.jstree-anchor");
     I.waitForText("mirroring.tau27.iway.sk", 5, "#jsTree a.jstree-anchor");
     I.click("a.close-custom-modal");
     DTE.cancel();
@@ -270,7 +270,7 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
     I.waitForVisible('.wjDialogHeaderTable');
     I.clickCss('#type3');
     I.clickCss('#btnOk');
-    I.attachFile('input[name="archive"]', 'tests/webpages/demotest.webjetcms.sk-test_import_perex.zip');
+    I.attachFile('input[name="archive"]', 'tests/webpages/'+I.getDefaultDomainName()+'-test_import_perex.zip');
 
     //SIVAN - without resize window, the checkOption is not working
     I.resizeWindow(1920, 1080);

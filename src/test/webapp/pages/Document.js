@@ -241,7 +241,7 @@ module.exports = {
     if(baseUrl.includes("iwcm.interway.sk") || baseUrl.includes("localhost")) {
         //get URL part after domain
         I.amOnPage(currentUrl.substring(currentUrl.indexOf("/", 10)));
-    } else if(currentUrl.includes("demotest.webjetcms.sk")) {
+    } else if(currentUrl.includes(I.getDefaultDomainName())) {
       //we moved server to tau20, so we need to change domain
       //get URL part after domain
       I.amOnPage(currentUrl.substring(currentUrl.indexOf("/", 10)));

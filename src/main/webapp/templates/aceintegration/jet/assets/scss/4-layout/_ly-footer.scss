@@ -1,0 +1,27 @@
+@charset "UTF-8";
+
+.ly-footer {
+    padding: 30px 0;
+    background: $c-text-highlight;
+
+    p {
+        text-align: center;
+        color: #fff;
+        font-size: 14px;
+        text-transform: uppercase;
+        padding: 0;
+    }
+
+    a {
+        color: #fff;
+        text-decoration: underline;
+
+        &:hover {
+            text-decoration: none;
+        }
+    }
+}
+
+#loginModal {
+    .panel-heading {display: none;}
+}

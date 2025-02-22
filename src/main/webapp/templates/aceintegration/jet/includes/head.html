@@ -1,0 +1,33 @@
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta data-th-charset="${ninja.temp.charset}">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta http-equiv="Content-type" data-th-content="${'text/html;charset=' + ninja.temp.charset}" />
+
+<title data-th-text="${ninja.page.doc.title + ' | ' + ninja.temp.group.author}"></title>
+<meta name="description" data-th-content="${ninja.page.seoDescription}" />
+<meta name="author" data-th-if="${!#strings.isEmpty(ninja.temp.group.author)}" data-th-content="${ninja.temp.group.author}" />
+<meta name="developer" data-th-content="${ninja.temp.group.developer}" />
+<meta name="generator" data-th-content="${ninja.temp.group.generator}" />
+<meta name="copyright" data-th-content="${ninja.temp.group.copyright}" />
+<meta name="robots" data-th-content="${ninja.page.robots}" />
+<link rel="canonical" data-th-href="${ninja.page.url}" />
+<link rel="icon" data-th-href="${ninja.temp.basePathImg + 'favicon.ico'}" type="image/x-icon" />
+
+<div basePath="|${ninja.temp.basePath}assets/|" data-iwcm-combine="
+${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : 'css/ninja.min.css'}
+js/plugins/jquery.min.js
+js/plugins/jquery.cookie.js
+js/plugins/modernizr-custom.js
+js/plugins/bootstrap.bundle.min.js
+js/global-functions.min.js
+js/plugins/aos.js
+js/ninja.min.js
+${ninja.webjet.pageFunctionsPath}
+" />
+
+<div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
+<div data-th-text="${ninja.webjet.insertJqueryFake}" data-th-remove="tag" />
+<div data-iwcm-write="group_htmlhead_recursive" />
+<div data-iwcm-write="html_head" />
+
+<div data-iwcm-script="head"/>

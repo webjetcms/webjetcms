@@ -1,6 +1,7 @@
 Feature('apps.blog');
 
 var randomNumber;
+var sectionSelector = "#groupSelect_wrapper button.dropdown-toggle";
 
 Before(({ I }) => {
     if (typeof randomNumber == "undefined") {
@@ -79,7 +80,7 @@ Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     I.see("Váš prvý článok");
 
     I.say("Check folders");
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.seeElement( locate("a.dropdown-item > span").withText("Všetky sekcie") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/" + newBlogger) );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/" + newBlogger + "/Nezaradené") );
@@ -120,7 +121,7 @@ Scenario('Test group select logic', async ({I}) => {
     I.relogin("tester");
     I.amOnPage("/apps/blog/admin/");
 
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.seeElement( locate("a.dropdown-item > span").withText("Všetky sekcie") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger/Nezaradené") );
@@ -130,7 +131,7 @@ Scenario('Test group select logic', async ({I}) => {
     I.say("Blogger can see only his folders");
     I.relogin("bloggerPerm");
     I.amOnPage("/apps/blog/admin/");
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.seeElement( locate("a.dropdown-item > span").withText("Všetky sekcie") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm/Nezaradené") );
@@ -151,7 +152,7 @@ Scenario('Test create subgroup logic', async ({I, DTE, DT}) => {
     I.toastrClose();
 
     I.say("Check, that name of new subgroup must be set (or error toad)");
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-info");
@@ -174,7 +175,7 @@ Scenario('Test create subgroup logic', async ({I, DTE, DT}) => {
     I.toastrClose();
 
     I.say("Verify that folder select was updated");
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.seeElement( locate("a.dropdown-item > span").withText("Všetky sekcie") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
     I.seeElement( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm/" + subFolder) );
@@ -209,7 +210,7 @@ Scenario('Test webpage logic', ({I, DT, DTE}) => {
     DTE.cancel();
 
     I.say("Select folder");
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
 
     //Too fast for DTE, wait for a while
@@ -247,7 +248,7 @@ Scenario('Test webpage logic', ({I, DT, DTE}) => {
     I.dontSee("edit_" + newPageName);
 
     I.say("Go to all folder and verify that page was deleted");
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.click( locate("a.dropdown-item > span").withText("Všetky sekcie") );
     I.dontSee(newPageName);
     I.dontSee("edit_" + newPageName);

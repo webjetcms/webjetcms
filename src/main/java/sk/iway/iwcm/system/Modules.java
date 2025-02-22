@@ -782,7 +782,7 @@ public class Modules
 		sub = new ModuleInfo().setMenuOrder(7020);
 		sub.setLeftMenuNameKey("admin.conf_editor.edit_text");
 		sub.setNameKey("menu.config.rights.edit_text");
-		sub.setPath("javascript:void()");
+		sub.setPath("/admin/v9/settings/translation-keys/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
 		sub.setItemKey("edit_text");

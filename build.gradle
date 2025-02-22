@@ -329,90 +329,6 @@ task npminstall {
     }
 }
 
-task docs {
-    doLast {
-        exec {
-            workingDir 'docs'
-            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
-            commandLine 'npx', 'http-server', '.'
-        }
-    }
-}
-
-//CI-CD tasky
-task rsyncExplodedWar() {
-    doLast {
-        exec {
-            workingDir "./ant/"
-            commandLine "ant","finalwar"
-        }
-        exec {
-            commandLine "cp","src/main/resources/poolman.xml","build/updatezip/finalwar/WEB-INF/classes/"
-        }
-        exec {
-            commandLine "/usr/local/bin/wj-rsync-norestart.sh","webjet.local","build/updatezip/finalwar","/www/tomcat/webapps/${rootProject.name}","tomcat.service","tomcat"
-        }
-        exec {
-            commandLine "cp","src/main/resources/poolman-pentest.xml","build/updatezip/finalwar/WEB-INF/classes/poolman.xml"
-        }
-        exec {
-            commandLine "/usr/local/bin/wj-rsync.sh","webjet.local","build/updatezip/finalwar","/www/tomcat/webapps/webjet8v9_pentest","tomcat","tomcat"
-        }
-        exec {
-            commandLine "cp","src/main/resources/poolman-eshop.xml","build/updatezip/finalwar/WEB-INF/classes/poolman.xml"
-        }
-        exec {
-            commandLine "/usr/local/bin/wj-rsync.sh","webjet.local","build/updatezip/finalwar","/www/tomcat/webapps/shop.webjetcms.sk","tomcat","tomcat"
-        }
-    }
-}
-task rsyncDocs() {
-    doLast {
-        exec {
-            workingDir 'docs'
-            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
-            commandLine project.ext.'npmExe', 'install'
-        }
-        exec {
-            workingDir "docs"
-            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
-            commandLine project.ext.'npmExe', 'run', 'sitemap'
-        }
-        exec {
-            commandLine "/usr/local/bin/wj-rsync-norestart.sh","webjet.local","docs","/www/tomcat/webapps/docs.webjetcms.sk/latest/","tomcat","tomcat"
-        }
-    }
-}
-
-//testovanie
-task npminstalltest {
-    doLast {
-        exec {
-            workingDir 'src/test/webapp/'
-            project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
-            commandLine project.ext.'npmExe', 'install'
-        }
-    }
-}
-
-task rune2etest {
-    doLast {
-        exec {
-            workingDir 'src/test/webapp/'
-            commandLine './npx-allure.sh', 'chromium'
-        }
-    }
-}
-
-task rune2etestfirefox {
-    doLast {
-        exec {
-            workingDir 'src/test/webapp/'
-            commandLine './npx-allure.sh', 'firefox'
-        }
-    }
-}
-
 //dependency check - http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html
 dependencyCheck {
     scanConfigurations=["runtimeClasspath"]
@@ -432,7 +348,7 @@ dependencyCheck {
     }
     nvd {
         //api key for NVD database for dependency check
-        apiKey=''
+        apiKey=System.getenv('NVD_API_KEY') ?: ''
         maxRetryCount=20
         delay=8000
     }

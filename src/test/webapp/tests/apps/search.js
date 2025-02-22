@@ -106,7 +106,7 @@ Scenario('Revert changes', async ({ I, DTE, Apps }) => {
 
 function searchTestMultidomain(I, isTest23, searchUrl="/apps/vyhladavanie/") {
 
-    const testText9 = "Toto je search test result demotest.webjetcms.sk searchtestresult";
+    const testText9 = "Toto je search test result "+I.getDefaultDomainName()+" searchtestresult";
     const testText23 = "Toto je search test result test23.tau27.iway.sk searchtestresult";
 
     I.amOnPage(searchUrl);

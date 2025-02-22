@@ -53,6 +53,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
 - [ ] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu.
 - [ ] +Pridať podporu prihlasovania sa do administrácie cez [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
+- [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu.
+- [ ] +Galéria - ak nastavujem perex obrázok na obrázok v galérii, stiahnem z fotobanky, a obrázok premenujem na existujúci v databáze (ak je súbor zmazaný z disku) tak vznikne v `gallery` tabuľke duplicitný záznam. Naviac sa nepremenujú ostatné obrázky `o_,s_`. Treba pamätať na to, že teoreticky môžem premenovať ľubovoľný, malo by to detegovať, že som v galérii a premenovať všetky verzie.
 
 ## 2024
 

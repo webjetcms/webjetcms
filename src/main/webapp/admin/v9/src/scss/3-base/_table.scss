@@ -646,6 +646,22 @@ table.datatableInit {
             margin-bottom: 0px;
             border-width: 0px;
         }
+        div.buttons-select {
+            display: inline-flex;
+            label {
+                padding-top: 5px;
+                padding-right: 6px;
+            }
+            .bootstrap-select {
+                padding: 0px;
+                button.dropdown-toggle {
+                   padding-top: 3px;
+                   padding-bottom: 3px;
+                   font-size: 14px;
+                   background-color: transparent;
+                }
+            }
+        }
         .form-select {
             display: inline-block;
             padding-top: 8px;

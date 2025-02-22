@@ -14,6 +14,14 @@ module.exports = function () {
       return process.env.CODECEPT_DEFAULT_PASSWORD;
     },
 
+    getDefaultAuthToken() {
+      return process.env.CODECEPT_DEFAULT_AUTH_TOKEN;
+    },
+
+    getDefaultDomainName() {
+      return process.env.CODECEPT_DEFAULT_DOMAIN_NAME;
+    },
+
     // Define custom steps here, use 'this' to access default methods of I.
     // It is recommended to place a general 'login' function here.
     fillAreaField(area, generateRandomNum) {

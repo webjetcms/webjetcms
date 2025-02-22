@@ -279,6 +279,7 @@ public class MenuService {
             { "/components/reservation/admin_object_list.jsp", "/apps/reservation/admin/reservation-objects/"},
             { "/components/reservation/admin_reservation_list.jsp", "/apps/reservation/admin/"},
             //stat
+            {"/components/stat/stat_intro.jsp", "/apps/stat/admin/"},
             {"/components/stat/stat_days_new.jsp", "/apps/stat/admin/"},
             {"/components/stat/stat_weeks_new.jsp", ""},
             {"/components/stat/stat_months_new.jsp", ""},

@@ -117,7 +117,7 @@ Scenario("error", ({ I, DT }) => {
 
     DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
-    DT.checkTableRow("errorDataTable", 2, ["2", "2 022", "22", "/templates/aceintegration/jet/assets/fonts/geomanist/geomanist", "referer: http://demotest.webjetcms.sk/components/_common/combine", "14"]);
+    DT.checkTableRow("errorDataTable", 2, ["2", "2 022", "22", "/templates/aceintegration/jet/assets/fonts/geomanist/geomanist", "referer: http://"+I.getDefaultDomainName()+"/components/_common/combine", "14"]);
 
     DT.filterContains("url", "/wp-login.php");
     DT.checkTableRow("errorDataTable", 1, ["1", "2 022", "22", "/wp-login.php", "", "3"]);
@@ -139,7 +139,7 @@ Scenario("error", ({ I, DT }) => {
     I.say("goto page 2");
     I.click(locate("li.page-item .page-link").withText("2"));
     DT.waitForLoader();
-    DT.checkTableRow("errorDataTable", 2, ["13", "2 023", "44", "/css/page.css", "referer: http://demotest.webjetcms.sk/ntlm/logon.do", "2"]);
+    DT.checkTableRow("errorDataTable", 2, ["13", "2 023", "44", "/css/page.css", "referer: http://"+I.getDefaultDomainName()+"/ntlm/logon.do", "2"]);
 });
 
 Scenario("logon-user", ({ I, DT }) => {

@@ -19,6 +19,6 @@ Scenario('unsubscribed', ({ I, Document }) => {
 Scenario('Unsubscribed aproval', ({ Document, I }) => {
     Document.screenshotAppEditor(87513, "/redactor/apps/dmail/form/editor.png");
     I.amOnPage('/newsletter/odhlasenie-z-newsletra.html');
-    I.waitForElement('#wjInline-docdata', 10);
+    I.waitForElement('.ly-content .container', 10);
     Document.screenshot("/redactor/apps/dmail/form/form.png")
 });

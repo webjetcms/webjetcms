@@ -3,11 +3,12 @@ Feature('webpages.import-export');
 let zipFileInput = "#form input[type=file]";
 let excelFileInput = "#xlsImportForm > table > tbody > tr:nth-child(1) > td:nth-child(2) > input[type=file]";
 
-let zipFileLocation = "tests/webpages/demotest.webjetcms.sk-export.zip";
+let zipFileLocation = null;
 let excelFileLocation = "tests/webpages/import_struct.xls";
 
-Before(({ login }) => {
+Before(({ login, I }) => {
     login('admin');
+    if (zipFileLocation==null) zipFileLocation = "tests/webpages/"+I.getDefaultDomainName()+"-export.zip"
 });
 
 Scenario('Screens', ({ I, DT, Document }) => {

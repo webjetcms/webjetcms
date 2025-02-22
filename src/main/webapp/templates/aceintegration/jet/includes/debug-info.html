@@ -1,0 +1,35 @@
+<div data-th-if="${ninja.debug}">
+  <div class="md-debug-info">
+      <div class="debug-table">
+          <div class="debug-table-row"><div class="debug-table-cell" data-th-text="${ninja.temp.lngIso + ninja.temp.charset + ninja.webjet.generatedTime}"></div></div>
+          <div class="debug-table-row"><div class="debug-table-cell" data-th-text="${ninja.page.urlDomain}"></div></div>
+          <div class="debug-table-row"><div class="debug-table-cell"data-th-text="${ninja.page.urlPath}"></div></div>
+      </div>
+      <div class="debug-table">
+        
+          <div class="debug-table-row" data-th-each="parameter: ${ninja.page.urlParameters}">
+              <div class="debug-table-cell">${parameter.key}</div>
+              <div class="debug-table-cell">
+                    <span data-th-each="value: ${parameter.value}">${value}</span>
+              </div>
+          </div>
+          
+      </div>
+      <div class="debug-table">
+          <div class="debug-table-row">
+              <div class="debug-table-cell" data-th-text="${ninja.userAgent.browserName + ninja.userAgent.browserVersion + '<br>' + ninja.userAgent.deviceType + '<br>' + ninja.userAgent.deviceOS}">
+              </div>
+          </div>
+          <div class="debug-table-row">
+              <div class="debug-table-cell html-class-list">no-js</div>
+          </div>
+          <div class="debug-table-row">
+              <div class="debug-table-cell window-info">
+                  <strong class="device-type-from-css"></strong>&nbsp;
+                  <strong class="device-resize-w-info">false</strong>&nbsp;/&nbsp;<strong class="device-resize-h-info">false</strong>&nbsp;
+                  <strong class="device-size"></strong><strong class="device-resize-new-size"></strong>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>

@@ -1,0 +1,1 @@
+//another template for autotest

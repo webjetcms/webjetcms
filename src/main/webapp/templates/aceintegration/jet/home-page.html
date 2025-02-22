@@ -1,0 +1,21 @@
+<!doctype html>
+    <html class="no-js pg-homepage" data-th-lang="${ninja.temp.lngIso}" data-th-data-browser-name="${ninja.userAgent.browserName}" data-th-data-browser-version="${ninja.userAgent.browserVersion}" data-th-data-device-type="${ninja.userAgent.deviceType}" data-th-data-device-os="${ninja.userAgent.deviceOS}">
+    <head>
+        <div data-th-replace="/templates/aceintegration/jet/includes/head.html"></div>
+    </head>
+    <body data-th-class="${docDetails.fieldA}">
+
+        <div data-iwcm-script="after-body"/>
+
+		<header class="ly-header" data-aos="fade-down" data-aos-duration="600">
+            <div data-th-replace="/templates/aceintegration/jet/includes/header.html"></div>
+		</header>
+
+		<div data-iwcm-write="doc_data" style="margin-top: 100px;"/>
+
+		<footer class="ly-footer" id="blindBlock-footer">
+            <div data-th-replace="/templates/aceintegration/jet/includes/footer.html"></div>
+		</footer>
+
+    </body>
+</html>

@@ -114,7 +114,9 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     I.amOnPage("/admin/v9/");
     I.clickCss("#dropdownMenuUser");
     I.click(locate("li").withText("Dvojstupňové overovanie"));
+    I.wait(1);
     I.switchToNextTab();
+    I.waitForElement('#gauthCheckbox', 10);
     I.clickCss('#gauthCheckbox');
 
     I.say('Overenie QR kódu');

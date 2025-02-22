@@ -230,7 +230,7 @@ Scenario('folder for new page by title', ({I, DTE, Browser}) => {
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
 
-    I.waitForElement("#iwcm_fs_ap_volume_L2ltYWdlcy96by1zdmV0YS1maW5hbmNpaS91dG9yb2stMDIvc2F2ZS13YXJuaW5nLnBuZw_E_E", 10); //utorok/save-varning.png
+    I.waitForElement("#iwcm_fs_ap_volume_L2ltYWdlcy96by1zdmV0YS1maW5hbmNpaS91dG9yb2stMDIvc2F2ZS13YXJuaW5nLnBuZw_E_E", 10); ///images/zo-sveta-financii/utorok-02/save-warning.png
 
     I.switchTo();
     I.clickCss(".cke_dialog_ui_button_cancel");
@@ -253,7 +253,7 @@ Scenario('folder for new page by title', ({I, DTE, Browser}) => {
     I.switchTo('#wjImageIframeElement');
     I.waitForLoader(".WJLoaderDiv");
 
-    I.waitForElement("#iwcm_fs_ap_volume_L2ltYWdlcy96by1zdmV0YS1maW5hbmNpaS9wb25kZWxvay9tYXhyZXNkZWZhdWx0LmpwZw_E_E", 10); //pondelok/maxresdefault.jpg
+    I.waitForElement("#iwcm_fs_ap_volume_L2ltYWdlcy96by1zdmV0YS1maW5hbmNpaS9wb25kZWxvay9tYXhyZXNkZWZhdWx0LmpwZw_E_E", 10); ///images/zo-sveta-financii/pondelok/maxresdefault.jpg
 
     I.switchTo();
     I.clickCss(".cke_dialog_ui_button_cancel");

@@ -1,0 +1,19 @@
+@charset "UTF-8";
+
+.print,
+.only-print {
+    display: none;
+}
+
+@media print {
+
+   .noprint,
+   .no-print {
+       display: none;
+   }
+   .print,
+   .only-print {
+        display: block;
+   }
+
+}
