@@ -42,7 +42,7 @@ console.log("restart=", restart);
 console.log("autoDelayEnabled=", autoDelayEnabled);
 
 exports.config = {
-  tests: './tests/admin/**/*.js',
+  tests: './tests/**/*.js',
   output: '../../../build/test',
   helpers: {
     Playwright: {
