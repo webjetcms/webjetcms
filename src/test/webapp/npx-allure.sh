@@ -58,7 +58,6 @@ fi
 echo "Browser version=$BROWSER_VERSION"
 
 #skopiruj z docs servera posledne history udaje, aby sa zobrazila historia testov na grafe
-#TODO: tomcat@
 #rsync -rtlpPI tomcat@webjet2b.srv.iway.local:/www/tomcat/webapps/docs.webjetcms.sk/allure/chromium/history ../../../build/test
 #echo "Executing: rsync -r $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history ../../../build/test"
 echo "Excecuting scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/allure-results/history"
@@ -81,7 +80,6 @@ printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODE
 npx allure generate --clean ../../../build/test/allure-results -o ../../../build/test-results
 
 #uloz na docs server vysledok
-#TODO: tomcat@
 rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-results/ $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER
 
 #npx allure open ../../../build/test-results
