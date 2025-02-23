@@ -1,0 +1,2 @@
+<%@ page pageEncoding="windows-1250" %>
+lang="${ninja.temp.lngIso}" data-browser-name="${ninja.userAgent.browserName}" data-browser-version="${ninja.userAgent.browserVersion}" data-device-type="${ninja.userAgent.deviceType}" data-device-os="${ninja.userAgent.deviceOS}" data-ab-variant="${ninja.abVariant}"

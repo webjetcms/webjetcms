@@ -179,9 +179,8 @@ Scenario("overenie prav editacie vsetkych premennych", ({ I, DT, DTE }) => {
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty.");
 
     //skus vyplnit planovanu zmenu
-    I.click("#pills-dt-configurationDatatable-advanced-tab");
     I.fillField("#DTE_Field_datePrepared", "09.09.2037 08:40:15");
-    I.click("#pills-dt-configurationDatatable-basic-tab");
+    I.pressKey("Tab");
     DTE.save();
     I.see("Na editáciu tejto konfiguračnej premennej nemáte právo");
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty.");

@@ -398,7 +398,7 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.clickCss('.cke_button__image');
     I.switchTo("#wjImageIframeElement");
     I.waitForElement('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', 10);
-    I.forceClick('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms');
+    I.click('#nav-iwcm_fs_ap_volume_ > span.elfinder-perms', null, { position: { x: 3, y: 3 } });
     I.wait(2)
     I.forceClick('#nav-iwcm_fs_ap_volume_L2ltYWdlcy9nYWxsZXJ5L2FwcHM_E');
     I.waitForVisible('.elfinder-button-icon.elfinder-button-icon-mkdir', 10);

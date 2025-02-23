@@ -53,23 +53,6 @@ function initClosure() {
     // MENU EVENTS INIT
     // =======================
 
-    $(".md-main-menu__item__link").on("click", function (e) {
-
-        if ($(this).siblings(".md-main-menu__item__sub-menu").length) {
-            e.preventDefault();
-
-            //find first child A element and click on it
-            var firstChild = $(this).parent().find(".md-main-menu__item__sub-menu a");
-            if (firstChild.length>0) {
-                firstChild[0].click();
-                return;
-            }
-
-            //failsafe if no child A element found
-            $(this).parent(".md-main-menu__item").toggleClass('md-main-menu__item--open');
-        }
-    });
-
     $(".md-large-menu__item__link").on("click", function (e) {
 
         e.preventDefault();

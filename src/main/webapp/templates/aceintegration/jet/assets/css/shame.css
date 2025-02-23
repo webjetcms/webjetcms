@@ -1,0 +1,106 @@
+ul.navbar-nav.other-languages {
+    flex-direction: row;
+}
+ul.navbar-nav.other-languages li a {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+section.testimonial h2 {
+    font-size: 3.75rem;
+    line-height: 4.125rem;
+    padding: .625rem 3.5rem .625rem 3.5rem;
+    position: relative;
+    margin-top: 0px;
+    margin-bottom: 1.875rem;
+    text-align: center;
+}
+section.testimonial h2:before {
+    content: "";
+    display: block;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-color: #f16e00;
+    height: 2.25rem;
+    width: 2.5rem;
+    mask-size: contain;
+    mask-image: url('data:image/svg+xml;charset=utf-8,<svg width="20" height="18" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M0 0h7.551v7.551c0 1.36-.159 2.653-.476 3.878-.272 1.179-.726 2.222-1.36 3.129A6.652 6.652 0 013.4 16.735c-.907.544-2.018.816-3.333.816V14.15c.771 0 1.406-.182 1.905-.545.499-.408.907-.93 1.224-1.564a6.33 6.33 0 00.613-2.109c.136-.816.204-1.61.204-2.381H0V0zm12.449 0H20v7.551c0 1.36-.159 2.653-.476 3.878-.272 1.179-.726 2.222-1.36 3.129a6.653 6.653 0 01-2.314 2.177c-.907.544-2.018.816-3.333.816V14.15c.771 0 1.406-.182 1.905-.545.499-.408.907-.93 1.224-1.564a6.331 6.331 0 00.613-2.109c.136-.816.204-1.61.204-2.381h-4.014V0z"/></svg>');
+    left: 0;
+    bottom: 0;
+    font-size: 3.75rem;
+    line-height: 4.125rem;
+}
+section.testimonial h2:after {
+    content: "";
+    display: block;
+    position: absolute;
+    background-repeat: no-repeat;
+    background-color: #f16e00;
+    height: 2.25rem;
+    width: 2.5rem;
+    mask-size: contain;
+    mask-image: url('data:image/svg+xml;charset=utf-8,<svg width="20" height="18" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.551 17.551H0V10c0-1.36.136-2.63.408-3.81.318-1.224.771-2.29 1.36-3.197A7.288 7.288 0 014.15.816C5.102.272 6.213 0 7.483 0v3.401c-.771 0-1.406.204-1.905.613-.499.362-.907.861-1.224 1.496-.318.635-.544 1.36-.68 2.177A19.78 19.78 0 003.536 10h4.014v7.551zm12.449 0h-7.551V10c0-1.36.136-2.63.408-3.81.318-1.224.771-2.29 1.36-3.197A7.289 7.289 0 0116.6.816C17.55.272 18.662 0 19.932 0v3.401c-.771 0-1.406.204-1.905.613-.499.362-.907.861-1.224 1.496-.318.635-.544 1.36-.68 2.177A19.78 19.78 0 0015.985 10H20v7.551z"/></svg>');
+    right: 0;
+    top: 0;
+    font-size: 3.75rem;
+    line-height: 4.125rem;
+}
+section.testimonial p {
+    font-size: 1.5rem;
+    line-height: 1.625rem;
+    margin-top: 0;
+    margin-bottom: 1.25rem;
+    font-weight: 700;
+    text-align: center;
+}
+.bg-gray {
+    background: #dadada;
+    color: #000000;
+}
+
+body.is-edit-mode article.ly-content div.container > h1, body.is-edit-mode article.ly-content > h1 {
+    display: none;
+}
+body.is-edit-mode article.ly-content div.container > div.row.banner {
+    display: none;
+}
+body.is-edit-mode article.ly-content {
+    padding-top: 60px;
+}
+
+div.md-accordion-item {
+    border: 1px solid #dadada;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+div.md-accordion-header {
+    font-size: 16px;
+    font-weight: 700;
+    padding-top: 6px;
+    padding-left: 10px;
+}
+div.md-accordion-body {
+    padding-left: 10px;
+}
+div.md-accordion-header p, div.md-accordion-body p {
+    padding: 0 0 10px 0;
+}
+
+section.header7 {
+    padding: 40px 0 120px 0;
+    min-height: 450px;
+    background-size: cover;
+}
+section.header7 h3 {
+    line-height: 65px;
+    text-align: center;
+    color: black;
+    font-size: 42px;
+    text-transform: none;
+}
+section.header7 .landing-page-btn {
+    min-width: 200px;
+    background-color: #f16e00;
+    padding: 0px 24px;
+    color: #fff;
+}

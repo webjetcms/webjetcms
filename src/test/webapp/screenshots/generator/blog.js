@@ -1,5 +1,7 @@
 Feature('apps.blog');
 
+var sectionSelector = "#groupSelect_wrapper button.dropdown-toggle";
+
 Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.relogin("bloggerPerm");
     I.amOnPage("/apps/blog/admin/");
@@ -10,7 +12,7 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     Document.screenshotElement("button.buttons-create", "/redactor/apps/blog/add_article.png");
     Document.screenshotElement("button.buttons-add-folder", "/redactor/apps/blog/add_folder.png");
 
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     Document.screenshotElement("body > div.bs-container.dropdown.bootstrap-select > div", "/redactor/apps/blog/groupFilter_allValues.png");
 
     I.clickCss("button.buttons-add-folder");
@@ -18,7 +20,7 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.moveCursorTo("#toast-container-webjet > .toast-warning");
     Document.screenshotElement("#toast-container-webjet > .toast-warning", "/redactor/apps/blog/adding_folder_warning.png");
 
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-info");
@@ -39,10 +41,10 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.moveCursorTo("#toast-container-webjet > .toast-success");
     Document.screenshotElement("#toast-container-webjet > .toast-success", "/redactor/apps/blog/adding_folder_success.png");
 
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm/NewSubFolder") );
     I.wait(1);
-    I.clickCss("#bloggerArticlesDataTable_extfilter > div > div > div > button.dropdown-toggle");
+    I.clickCss(sectionSelector);
     Document.screenshotElement("body > div.bs-container.dropdown.bootstrap-select > div", "/redactor/apps/blog/groupFilter_allValues_withNew.png");
 
     I.say("remove added folder");

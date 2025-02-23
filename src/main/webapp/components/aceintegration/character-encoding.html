@@ -1,0 +1,15 @@
+<!-- Search Form -->
+<form method="post">
+    <div class="form-group">
+        <label for="name" data-th-text="#{editor.search}">Search by Name</label>
+        <input type="text" id="name" name="name" class="form-control" placeholder="Enter name" value="ľščťžýá" />
+    </div>
+    <button type="submit" class="btn btn-primary" data-th-text="#{button.submit}">Search</button>
+</form>
+
+<h2>HTML version</h2>
+
+<p class="name-request" th:text="${param.name}">Name request</p>
+<p class="name-model" th:text="${name}">Name model</p>
+<p class="encoding" th:text="${encoding}">Encoding</p>
+<p class="userId" th:text="${userId}">User ID</p>

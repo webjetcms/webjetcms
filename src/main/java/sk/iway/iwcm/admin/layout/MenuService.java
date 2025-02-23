@@ -279,6 +279,7 @@ public class MenuService {
             { "/components/reservation/admin_object_list.jsp", "/apps/reservation/admin/reservation-objects/"},
             { "/components/reservation/admin_reservation_list.jsp", "/apps/reservation/admin/"},
             //stat
+            {"/components/stat/stat_intro.jsp", "/apps/stat/admin/"},
             {"/components/stat/stat_days_new.jsp", "/apps/stat/admin/"},
             {"/components/stat/stat_weeks_new.jsp", ""},
             {"/components/stat/stat_months_new.jsp", ""},
@@ -560,6 +561,12 @@ public class MenuService {
                 } else {
                     childrens.add(children);
                 }
+
+                //if user doesnt have perms for children.href use first subitem from thirdChildrens
+                if (thirdChildrens.isEmpty() == false && Tools.isNotEmpty(m.getItemKey()) && user.isEnabledItem(m.getItemKey())==false) {
+                    children.setHref(thirdChildrens.get(0).getHref());
+                }
+
                 children.setChildrens(thirdChildrens);
             }
         }

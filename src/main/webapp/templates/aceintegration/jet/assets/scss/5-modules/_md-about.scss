@@ -1,0 +1,77 @@
+@charset "UTF-8";
+
+.md-about {
+
+    padding: 0 0 150px 0;
+
+    .container {
+        background: $c-text-main;
+        color: #fff;
+        position: relative;
+
+        .row div + div {
+            padding: 0 50px 50px 50px;
+            position: inherit;
+        }
+    }
+
+    img {
+        width: 100%;
+        margin: 0;
+    }
+
+    p {
+        color: #fff;
+        font-size: 17px;
+        padding: 0;
+
+        &:first-child {
+            font-weight: normal;
+            font-size: 14px;
+            text-transform: uppercase;
+            padding: 0 0 5px 0;
+        }
+    }
+
+    .btn {
+        position: absolute;
+        bottom: 50px;
+        right: 50px;
+
+        &:hover {
+            background: $c-text-highlight;
+            color: #fff;
+        }
+    }
+
+    h2 {
+        color: #fff;
+        font-weight: bold;
+        font-size: 27px;
+        position: relative;
+        padding: 0 0 25px 0;
+        margin: 0 0 20px 0;
+
+        &:after {
+            content: "";
+            display: block;
+            width: 50px;
+            height: 2px;
+            background: $c-text-highlight;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+        }
+    }
+}
+
+@media screen and (max-width: $bp-tablet) {
+
+    .md-about {
+        padding: 0 0 40px 0;
+    }
+    .md-about .container .row div+div {
+        padding: 50px 50px 100px 50px;
+    }
+
+}

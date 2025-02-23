@@ -257,18 +257,18 @@ Scenario('kampanovy banner', ({I, DT, DTE}) => {
     I.amOnPage("/apps/banner/admin/?id=124");
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
-    I.dontSee("://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign");
+    I.dontSee("://"+I.getDefaultDomainName()+"/apps/bannerovy-system/?utm_campaign");
     I.fillField("#DTE_Field_campaignTitle", "test");
     I.pressKey('Tab');
     I.waitForElement("#campaignTitleUrlShowcase", 10);
-    I.waitForText("://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
+    I.waitForText("://"+I.getDefaultDomainName()+"/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
 
     I.amOnPage("/apps/banner/admin/?id=3602");
     DT.waitForLoader();
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
     I.waitForElement("#campaignTitleUrlShowcase", 10);
-    I.waitForText("://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
+    I.waitForText("://"+I.getDefaultDomainName()+"/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
 });
 
 Scenario('Kontrola prava cmp_banner_seeall', ({I, DT}) => {
@@ -344,7 +344,7 @@ async function testShowedBanners(I, url, arrayOfBanners) {
         for(var i = 0; i < (arrayOfBanners.length * 2); i++) {
             I.amOnPage(url);
 
-            let value = await I.grabTextFrom('#wjInline-docdata');
+            let value = await I.grabTextFrom('.ly-content .container');
 
             var supported = false;
             //Check taht value is supported
@@ -404,23 +404,23 @@ Scenario('Test video in banner', ({I}) => {
     //
     I.say("Video banner MP4");
         I.amOnPage("/apps/bannerovy-system/klasicky_video_banner_mp4.html");
-        I.seeElement("#wjInline-docdata > a > div.embed-responsive > video");
+        I.seeElement(".ly-content .container > a > div.embed-responsive > video");
 
     //
     I.say("Video bannner YouTube");
         I.amOnPage("/apps/bannerovy-system/klasicky_video_banner_yt.html");
         //Check iframe video is there
-        I.seeElement("#wjInline-docdata > a > div.embed-responsive > iframe.video")
+        I.seeElement(".ly-content .container > a > div.embed-responsive > iframe.video")
 
     //
     I.say("Obsahovy video banner MP4");
         I.amOnPage("/apps/bannerovy-system/obsahovy_video_banner_mp4.html");
-        I.seeElement("#wjInline-docdata > div.jumbotron > video");
+        I.seeElement(".ly-content .container > div.jumbotron > video");
 
      //
      I.say("Obsahovy video banner YouTube");
         I.amOnPage("/apps/bannerovy-system/obsahovy_video_banner_yt.html");
-        I.seeElement("#wjInline-docdata > div.jumbotron > iframe.video");
+        I.seeElement(".ly-content .container > div.jumbotron > iframe.video");
 });
 
 Scenario('Device type specific banner', ({I, DTE}) => {
@@ -431,20 +431,20 @@ Scenario('Device type specific banner', ({I, DTE}) => {
    selectDevices(I, DTE, [pcId]);
 
     I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=pc");
-        I.seeElement("#wjInline-docdata > a > img");
+        I.seeElement(".ly-content .container > a > img");
     I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=phone");
-        I.dontSeeElement("#wjInline-docdata > a > img");
+        I.dontSeeElement(".ly-content .container > a > img");
     I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=tablet");
-        I.dontSeeElement("#wjInline-docdata > a > img");
+        I.dontSeeElement(".ly-content .container > a > img");
 
     selectDevices(I, DTE, [phoneId, tabletId]);
 
     I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=pc");
-        I.dontSeeElement("#wjInline-docdata > a > img");
+        I.dontSeeElement(".ly-content .container > a > img");
     I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=phone");
-        I.seeElement("#wjInline-docdata > a > img");
+        I.seeElement(".ly-content .container > a > img");
     I.amOnPage("/test-stavov/device_specific_baner/?forceBrowserDetector=tablet");
-        I.seeElement("#wjInline-docdata > a > img");
+        I.seeElement(".ly-content .container > a > img");
 });
 
 function selectDevices(I, DTE, selectDevices) {

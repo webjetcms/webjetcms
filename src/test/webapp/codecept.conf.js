@@ -5,7 +5,7 @@ const { devices } = require('playwright');
 // HEADLESS=true npx codecept run
 setHeadlessWhen(process.env.HEADLESS);
 
-let url = process.env.CODECEPT_URL || 'http://iwcm.interway.sk';
+let url = process.env.CODECEPT_URL || "https://"+process.env.CODECEPT_DEFAULT_DOMAIN_NAME;
 let codeceptShow = process.env.CODECEPT_SHOW;
 let browser = process.env.CODECEPT_BROWSER || "chromium";
 let restart = process.env.CODECEPT_RESTART || "context";
@@ -90,7 +90,7 @@ exports.config = {
     REST: {
       endpoint: url,
       defaultHeaders: {
-        'x-auth-token': '*********'
+        'x-auth-token': process.env.CODECEPT_DEFAULT_AUTH_TOKEN
       },
     },
     JSONResponse: {},

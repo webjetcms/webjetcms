@@ -41,7 +41,7 @@ block content
             $.ajax({
                 url: '/admin/rest/audit/log-files/log-dir',
                 success: function (data) {
-                    let textContainer = $("<div class='btn btn-sm buttons-text'></div>");
+                    let textContainer = $("<div class='btn btn-sm buttons-text' id='absolutePath'></div>");
                     textContainer.html(sanitizeFileName(data))
                     $(".dt-buttons").append(textContainer);
                 }

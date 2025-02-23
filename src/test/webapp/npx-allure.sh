@@ -7,12 +7,15 @@
 
 echo "Creating test/history directory"
 pwd
+ls -la ../../../
+mkdir ../../../build
+ls -la ../../../build
 rm -rf ../../../build/test
 mkdir ../../../build/test
 mkdir ../../../build/test/allure-results
-#ls -la ../../../build/test
+ls -la ../../../build/test
 mkdir ../../../build/test/allure-results/history
-#ls -la ../../../build/test/history
+ls -la ../../../build/test/history
 
 # --------------------------------------------------------------------
 # ARGS
@@ -23,7 +26,7 @@ else
 fi
 
 if [[ -z "$2" ]]; then
-        CODECEPT_URL="https://demotest.webjetcms.sk"
+        CODECEPT_URL="https://$CODECEPT_DEFAULT_DOMAIN_NAME"
 else
         CODECEPT_URL="$2"
 fi
@@ -35,7 +38,7 @@ else
 fi
 
 if [[ -z "$4" ]]; then
-        HOST_NAME="webjet2b.srv.iway.local"
+        HOST_NAME="webjet.srv.local"
 else
         HOST_NAME="$4"
 fi
@@ -55,7 +58,6 @@ fi
 echo "Browser version=$BROWSER_VERSION"
 
 #skopiruj z docs servera posledne history udaje, aby sa zobrazila historia testov na grafe
-#TODO: tomcat@
 #rsync -rtlpPI tomcat@webjet2b.srv.iway.local:/www/tomcat/webapps/docs.webjetcms.sk/allure/chromium/history ../../../build/test
 #echo "Executing: rsync -r $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history ../../../build/test"
 echo "Excecuting scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/test/allure-results/history"
@@ -63,9 +65,6 @@ scp $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER/history/* ../../../build/te
 
 ls -la ../../../build/test
 ls -la ../../../build/test/allure-results/history
-
-#generovanie screenshotu
-#CODECEPT_URL="http://demotest.webjetcms.sk" CODECEPT_SHOW=false npx codeceptjs run tests/admin/datatables.js --grep 'Nastavenie tabulky'
 
 NODE_OPTIONS='--max-old-space-size=4000' CODECEPT_RESTART='session' CODECEPT_SHOW=false CODECEPT_BROWSER=$CODECEPT_BROWSER CODECEPT_URL=$CODECEPT_URL npx codeceptjs run --plugins allure
 RET_CODE=$?
@@ -81,7 +80,6 @@ printf "Browser=$CODECEPT_BROWSER\nBrowser.Version=$BROWSER_VERSION\nStand=$CODE
 npx allure generate --clean ../../../build/test/allure-results -o ../../../build/test-results
 
 #uloz na docs server vysledok
-#TODO: tomcat@
 rsync -rtlpPI --delete --inplace --quiet --chmod=ug+rwX ../../../build/test-results/ $HOST_USER@$HOST_NAME:$HOST_DIR$CODECEPT_BROWSER
 
 #npx allure open ../../../build/test-results
