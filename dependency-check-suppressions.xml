@@ -134,6 +134,20 @@
     <packageUrl regex="true">^pkg:maven/org\.apache\.struts/struts\-taglib@.*$</packageUrl>
     <cve>CVE-2023-34149</cve>
   </suppress>
+  <suppress>
+   <notes><![CDATA[
+   file name: wjstruts-taglib-1.3.10.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/sk\.iway\.wjstruts/wjstruts-taglib@.*$</packageUrl>
+   <cve>CVE-2023-34396</cve>
+  </suppress>
+  <suppress>
+   <notes><![CDATA[
+   file name: wjstruts-taglib-1.3.10.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/sk\.iway\.wjstruts/wjstruts-taglib@.*$</packageUrl>
+   <cve>CVE-2023-34149</cve>
+  </suppress>
 
  <!-- NOTE: it is reported as vulnerable, but due to incorrectly specified spring versions in the vulnerabilities -->
  <suppress>

@@ -14,6 +14,7 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
+- ```2025.0``` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny
 - ```2024.52``` - stabilizovaná verzia 2024.52, nepribúdajú do nej denné zmeny
 - ```2024.0.52``` - stabilizovaná verzia 2024.0.52 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - ```2024.0.47``` - stabilizovaná verzia 2024.0.47 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).

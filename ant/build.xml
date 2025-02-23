@@ -39,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2025.SNAPSHOT" />
+        <property name="artifact.version" value="2025.0" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -346,7 +346,7 @@
 
     </target>
 
-    <target name="createUpdateZip" depends="define-artifact-properties"  description="Create update.zip for update directly from WebJET CMS in old/expanded mode (no jar packaging)">
+    <target name="createUpdateZip" depends="define-artifact-properties,makejars,makepom"  description="Create update.zip for update directly from WebJET CMS in old/expanded mode (no jar packaging)">
         <exec executable="ant/mount-license.sh">
         </exec>
         <echo message="Sleeping for 60 seconds"/>

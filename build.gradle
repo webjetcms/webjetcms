@@ -17,7 +17,7 @@ plugins {
     //https://plugins.gradle.org/plugin/io.freefair.lombok
     id "io.freefair.lombok" version "8.11"
     http://jeremylong.github.io/DependencyCheck/dependency-check-gradle/index.html
-    id "org.owasp.dependencycheck" version "11.1.0"
+    id "org.owasp.dependencycheck" version "12.1.0"
     id 'maven-publish'
     //https://docs.gradle.org/current/userguide/jacoco_plugin.html
     id 'jacoco'
