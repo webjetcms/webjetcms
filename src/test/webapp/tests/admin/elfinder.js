@@ -190,9 +190,9 @@ Scenario('remember last elfinder dir in webpages', ({I, DTE, Browser}) => {
     I.click("Trhy sú naďalej vydesené");
     DTE.waitForEditor();
 
-    I.clickCss('#trEditor');
+    I.click(locate('#trEditor'), null, { position: { x: 50, y: 250 } });
     if (Browser.isFirefox()) I.wait(2);
-    I.clickCss('#trEditor');
+    I.click(locate('#trEditor'), null, { position: { x: 50, y: 250 } });
     I.pressKey('ArrowDown');
 
     I.clickCss('.cke_button.cke_button__image.cke_button_off');

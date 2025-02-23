@@ -86,10 +86,13 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
 
         //
         I.say("Delete forum (soft delete)");
+        I.wait(1);
         I.clickCss(".buttons-select-all");
+        I.wait(1);
         I.clickCss("button.buttons-remove");
         I.waitForElement("div.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
+        DTE.waitForModalClose("forumDataTable_modal");
         I.wait(1);
 
         I.see(subject + "_2");
@@ -196,7 +199,9 @@ function addPagePermision(I, DT, DTE, elelentId) {
 
     I.click(locate('.btn.btn-outline-secondary.btn-vue-jstree-add').withText('Pridať web stránku'));
     I.click(locate('.jstree-node.jstree-closed').withText(I.getDefaultDomainName()).find('.jstree-icon.jstree-ocl'));
+    I.waitForElement(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'), 10);
     I.click(locate('.jstree-node.jstree-closed').withText('Aplikácie').find('.jstree-icon.jstree-ocl'));
+    I.waitForElement(locate('.jstree-node.jstree-closed').withText('Diskusia').find('.jstree-icon.jstree-ocl'), 10);
     I.click(locate('.jstree-node.jstree-closed').withText('Diskusia').find('.jstree-icon.jstree-ocl'));
     I.clickCss("#" + elelentId);
 

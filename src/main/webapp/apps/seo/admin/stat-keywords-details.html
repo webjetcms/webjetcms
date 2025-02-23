@@ -52,6 +52,7 @@
         });
         statKeywordsDetailsDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
 
+        let amchartsCreated = false;
         enginesCountDataTable = WJ.DataTable({
             url: enginesCountUrl,
             columns: ChartTools.filterColumns(["order", "serverName", "queryCount", "percentage"], enginesCountColumns),
@@ -63,12 +64,19 @@
             onPreXhr: function(TABLE, e, settings, data) {
                 data.fixed_searchUrl = $("#searchQuery").val();
                 data.fixed_searchDayDate = dayDate;
+            },
+            onXhr: function() {
+                if (amchartsCreated===false) {
+                    amchartsCreated = true;
+                    setTimeout(()=>{
+                        //Create and set amcharts
+                        createAmcharts();
+                    }, 100);
+                }
             }
         });
         enginesCountDataTable.hideButtons(["create", "edit", "remove", "celledit", "import", "duplicate"]);
 
-        //Create and set amcharts
-        createAmcharts();
 
         //Onchange events - update table
         $("#statKeywordsDetailsDataTable_extfilter").on("click", "button.filtrujem", function() {

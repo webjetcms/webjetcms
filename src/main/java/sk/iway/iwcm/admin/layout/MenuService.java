@@ -561,6 +561,12 @@ public class MenuService {
                 } else {
                     childrens.add(children);
                 }
+
+                //if user doesnt have perms for children.href use first subitem from thirdChildrens
+                if (thirdChildrens.isEmpty() == false && Tools.isNotEmpty(m.getItemKey()) && user.isEnabledItem(m.getItemKey())==false) {
+                    children.setHref(thirdChildrens.get(0).getHref());
+                }
+
                 children.setChildrens(thirdChildrens);
             }
         }
