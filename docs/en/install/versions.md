@@ -13,6 +13,7 @@ ext {
 ```
 
 Currently there are the following versions of WebJET:
+- `2025.0` - Stabilized version 2025.0, no daily changes added
 - `2024.52` - stabilized version 2024.52, no daily changes added
 - `2024.0.52` - Stabilized version 2024.0.52 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).
 - `2024.0.47` - Stabilized version 2024.0.47 with bug fixes against version 2024.0 (without adding enhancements from SNAPSHOT version).

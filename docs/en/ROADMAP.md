@@ -52,6 +52,8 @@ Explanation of the pictograms used:
 - [ ] +Dial, Blog, News - edit so that the selection of the type of dial or folder for news is on the left, similar to the gallery/web pages. They don't have to be tabs then but all displayed at once.
 - [ ] +Translation Keys - show tree structure of translation keys for better orientation.
 - [ ] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
+- [ ] +Photobank - add option to set file name before downloading from photobank, automatically set by search term.
+- [ ] +Gallery - if I set the perex image to an image in the gallery, download from the photo library, and rename the image to an existing one in the database (if the file is deleted from the disk) it will be created in `gallery` duplicate record in the table. Additionally, other images are not renamed `o_,s_`. The thing to remember is that theoretically I can rename any, it should detect that I'm in the gallery and rename all versions.
 
 ## 2024
 

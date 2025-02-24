@@ -27,7 +27,6 @@ odtud se také přenáší do `build.properties` pro zobrazení verze v administ
 - `makepom` - generace `POM` soubor, který je generován úlohou gradle `writePom` na základě definovaných závislostí v `build.gradle`. Úloha zajišťuje, že správná verze je získána také z definic verzí typu `5.3.+` a odstranění závislostí na samotném WebJETu (které pocházejí ze závislostí na v8).
 - `finalwar` - vytvoří ve složce `build/updatezip/finalwar` nová struktura se sestavenými třídami, včetně `AspectJ`. Vytváří archivy JAR `WEB-INF/lib/webjet-VERZIA.jar` s třídami Java, soubory JSP administrátorské části a aplikacemi ve formě `JarPackaging`.
 - `prepareAllJars` - připraví všechny soubory JAR k publikování do úložišť.
-- `deployRepoIwmspSk` - ukládání artefaktů na samotném serveru. `repo.iwmsp.sk`.
 - `deployStaging` - nasadit verzi na adrese https://repo1.maven.org/maven2/com/webjetcms/webjetcms/, před jejím spuštěním je třeba zavolat úlohu `prepareAllJars`, prováděné v rámci projektu od `github`.
 
 Postup generování nové verze:

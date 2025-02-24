@@ -431,11 +431,22 @@ async function loadVersion(lng) {
     //minor.number=033
     //build.date=20.01.2025 9\:39\:09
 
-    const propertiesFile = await fs.readFile('../src/main/webapp/WEB-INF/build.properties', 'utf8');
+    let propertiesFile = await fs.readFile('../src/main/webapp/WEB-INF/build.properties', 'utf8');
+
+    //we need to replace . with some special chars to preserve exact version number withou number parsing
+    propertiesFile = propertiesFile.replace(/\./g, ';');
+
+    //console.log(propertiesFile);
     const parsedProperties = properties.parse(propertiesFile);
 
     const content = {'sk' : 'Verzia', 'en': 'Version', 'cs' : 'Verze'}
 
-    version = `${content[lng]}: ${parsedProperties['major.number']}.${parsedProperties['minor.number']} ${parsedProperties['build.date']}`;
+    let majorNumber = (""+parsedProperties['major;number']).replace(/;/g, '.');
+    let minorNumber = parsedProperties['minor;number'];
+    let buildDate = (""+parsedProperties['build;date']).replace(/;/g, '.');
+
+    console.log("majorNumber=", majorNumber, "minorNumber=", minorNumber, "properties=", parsedProperties);
+
+    version = `${content[lng]}: ${majorNumber}.${minorNumber} ${buildDate}`;
     console.log(version);
 }

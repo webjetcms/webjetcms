@@ -52,6 +52,8 @@ Vysvětlení použitých piktogramů:
 - [ ] +Dial, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo, podobně jako u galerie/webových stránek. Nemusí to pak být záložky, ale všechny se zobrazí najednou.
 - [ ] +Překladové klíče - zobrazí stromovou strukturu překladových klíčů pro lepší orientaci.
 - [ ] +Přidání podpory pro přihlášení do administrace prostřednictvím [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/)
+- [ ] +Fotobanka - přidání možnosti nastavit název souboru před stažením z fotobanky, automaticky nastavený podle hledaného výrazu.
+- [ ] +Galerie - pokud nastavím obrázek perexu na obrázek v galerii, stáhnu ho z knihovny fotografií a přejmenuji ho na existující obrázek v databázi (pokud je soubor z disku smazán), vytvoří se v databázi. `gallery` duplicitní záznam v tabulce. Kromě toho se nepřejmenovávají další obrázky. `o_,s_`. Je třeba si uvědomit, že teoreticky mohu přejmenovat jakoukoli, mělo by to zjistit, že jsem v galerii a přejmenovat všechny verze.
 
 ## 2024
 
