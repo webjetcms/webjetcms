@@ -6,9 +6,9 @@
         {
             "label": "appStart",
             "type": "shell",
-            "command": "./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-mysqldevel.xml ./gradlew appStartDebug",
             "windows": {
-                "command": ".\\gradlew.bat appStartDebug"
+                "command": "SET webjetDbname=/poolman-local-mysqldevel.xml && .\\gradlew.bat appStartDebug"
             },
             "group": "build",
             "problemMatcher": {

@@ -6,11 +6,15 @@
         function isLngSelectDisabled() {
             //Hide button ok, doesnt make sense (User gonna use link referencing to admin section)
             var btn = document.getElementById("btnOk");
-            if(btn != null) btn.style.display = "none";
+            if(btn != null) btn.innerHTML = /*[[#{button.login}]]*/ "";
 
             var disableSelect = /*[[${disableLng}]]*/ false;
             return disableSelect;
         }
+        function submitAction() {
+            window.location.href = "/admin/";
+        }
+
     /*]]>*/
     </script>
 
@@ -21,7 +25,7 @@
 
     <p>[[#{setup.saved.text_3}]]</p>
 
-    <p>
+    <p style="margin-bottom: 24px">
         [[#{setup.saved.text_4}]]
         <a href="http://www.interway.sk/" target="_blank">[[#{setup.saved.text_5}]]</a>.
     </p>

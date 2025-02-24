@@ -2,9 +2,82 @@
 <head>
    <title>WebJET CMS Setup</title>
    <style data-th-text="${cmpCss}"></style>
+   <style type="text/css">
+        body, textarea, input, th, td, select { font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
+        body, .container-table {
+            background-color: #7F7F7F;
+        }
+        .container-table {
+            margin-top: 24px;
+            margin-bottom: 24px;
+        }
+        table.dialog-table {
+            border:1px solid rgba(0, 0, 0, 0.176);
+            border-radius: 6px;
+            width:750px;
+            background-color:#FFFFFF;
+        }
+        .header, .headerImage {
+            background-color: #f3f3f6;
+            border-bottom: 1px solid rgb(222, 226, 230);
+        }
+        .header {
+            padding-left: 15px;
+            padding-top: 8px;
+        }
+        .bottomButtons {
+            background-color: white;
+            border-top: 1px solid rgb(222, 226, 230);
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+        table.setup-table tr td { padding-top: 15px; color: rgb(19, 21, 27); }
+        table.setup-table tr td:first-child {
+            text-align: right;
+            font-size: 14px;
+        }
+        table.setup-table tr td input, table.setup-table tr td select, .btn {
+            padding: 6px 12px;
+            border: 1px solid #868ea5;
+            border-radius: 6px;
+            font-size: 16px;
+            color: rgb(35, 38, 46);
+        }
+        .btn {
+            line-height: 24px;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background-color: #0054d5;
+            border-color: #0054d5;
+        }
+        table.setup-table h1 {
+            font-size: 18px;
+            line-height: 18px;
+            padding: 0px;
+        }
+        table.setup-table hr {
+            margin-top: 15px;
+            margin-bottom: 15px;
+            color: #dddfe6;
+            opacity: 1;
+            border: 0px solid;
+            border-top-width: 1px;
+        }
+        td.header p {
+            margin: 3px 0px;
+            font-size: 12px;
+            color: #686f83;
+        }
+        .btn-primary {
+            background-color: #0063fb;
+            border-color: #0063fb;
+            color: white;
+        }
+   </style>
 </head>
 
-<body style="background-color: #FFFFFF" leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
+<body leftmargin="2" topmargin="2" marginwidth="2" marginheight="2">
 
 <script type="text/javascript">
 	function setLanguage(initial) {
@@ -46,12 +119,12 @@
     }
 </style>
 
-<table border=0 cellspacing=0 cellpadding=0 width="100%" height="100%">
+<table border=0 cellspacing=0 cellpadding=0 width="100%" height="100%" class="container-table">
    <tr>
-      <td align="center" valign="middle" style="background-color: #FFFFFF;">
+      <td align="center" valign="middle">
 
-			<table border=0 cellspacing=0 cellpadding=0 width="600" style="border:2px outset buttonface;">
-			<tr style="background-color: #2b4b7a;">
+			<table border=0 cellspacing=0 cellpadding=0 class="dialog-table">
+			<tr>
 			   <td class="header" >
 					<h1 data-th-if="${isSetup} == true">
 						[[#{setup.setup.headline}]]

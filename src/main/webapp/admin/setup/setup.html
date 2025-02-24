@@ -74,8 +74,6 @@
     </script>
 
     <form data-th-action="@{/wjerrorpages/setup/perform-setup}" data-th-object="${setupForm}" method="post">
-        <h1>[[#{setup.setup.db.headline}]]</h1>
-
         <!-- Just used to deliver selected language ID to BE -->
         <input type="text" id="pageLngIndicator" data-th-field="*{pageLngIndicator}" size="30" style="display: none;"/>
 
@@ -91,9 +89,15 @@
             </div>
         </div>
 
-        <table>
+        <table class="setup-table">
             <tr>
-                <td>[[#{setup.setup.db.type}]]:</td>
+                <td></td>
+                <td>
+                    <h1>[[#{setup.setup.db.headline}]]</h1>
+                </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.db.type}]]</td>
                 <td>
                     <select id="dbDriver" data-th-field="*{dbDriver}" onchange="dbDriverChange()">
                         <option value="org.mariadb.jdbc.Driver">MariaDB</option>
@@ -104,68 +108,76 @@
                 </td>
             </tr>
             <tr>
-                <td>[[#{setup.setup.db.domain}]]:</td>
+                <td>[[#{setup.setup.db.domain}]]</td>
                 <td> <input type="text" data-th-field="*{dbDomain}"  size="30"/> </td>
             </tr>
             <tr>
-                <td>[[#{setup.setup.db.port}]]:</td>
+                <td>[[#{setup.setup.db.port}]]</td>
                 <td> <input type="text" id="dbPort" data-th-field="*{dbPort}" size="6"/> <small>[[#{setup.setup.db.port_info}]]</small> </td>
             </tr>
             <tr>
-                <td>[[#{user.login}]]:</td>
+                <td>[[#{user.login}]]</td>
                 <td> <input type="text" data-th-field="*{dbUsername}" size="30"/> </td>
             </tr>
             <tr>
-                <td>[[#{user.password}]]:</td>
+                <td>[[#{user.password}]]</td>
                 <td> <input type="text" data-th-field="*{dbPassword}" size="30"/> </td>
             </tr>
             <tr>
-                <td>[[#{setup.setup.db.parameters}]]:</td>
+                <td>[[#{setup.setup.db.parameters}]]</td>
                 <td> <input type="text" id="dbParameters" data-th-field="*{dbParameters}" size="60"/> </td>
             </tr>
             <tr>
-                <td id="tdDbName">[[#{setup.setup.db.name}]]:</td>
+                <td id="tdDbName">[[#{setup.setup.db.name}]]</td>
                 <td> <input type="text" data-th-field="*{dbName}" size="30"/> </td>
             </tr>
             <tr>
-                <td colspan="2">
-                    [[#{setup.setup.db.super_user}]]:
-                    <input id="dbUseSuperuser" type="checkbox" data-th-field="*{dbUseSuperuser}" onclick="dbUseSuperuserClick(false);"/>
+                <td></td>
+                <td>
+                    <label><input id="dbUseSuperuser" type="checkbox" data-th-field="*{dbUseSuperuser}" onclick="dbUseSuperuserClick(false);"/> [[#{setup.setup.db.super_user}]]</label>
                 </td>
              </tr>
-            <tr id="superuserTr" style="display:none">
+            <tr id="superuserTr" style="display:none; text-align: left;">
                 <td></td>
                 <td>
                     <table>
                         <tr>
-                            <td>[[#{user.login}]]:</td>
+                            <td>[[#{user.login}]]</td>
                             <td> <input type="text" data-th-field="*{dbSuperuserUsername}" size="30"/> </td>
                         </tr>
                         <tr>
-                            <td>[[#{user.password}]]:</td>
+                            <td>[[#{user.password}]]</td>
                             <td> <input type="text" data-th-field="*{dbSuperuserPassword}" size="30"/> </td>
                         </tr>
                     </table>
                 </td>
             </tr>
-        </table>
-
-        <h1>[[#{setup.setup.sys.headline}]]</h1>
-	    <table>
             <tr>
-                <td>[[#{setup.setup.sys.install_name}]]:</td>
+                <td></td>
+                <td>
+                    <hr/>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <h1>[[#{setup.setup.sys.headline}]]</h1>
+                </td>
+            </tr>
+            <tr>
+                <td>[[#{setup.setup.sys.install_name}]]</td>
                 <td> <input type="text" data-th-field="*{conf_installName}" size="30"/> </td>
             </tr>
             <tr>
-                <td>[[#{components.map.licenseKey}]]:</td>
+                <td>[[#{components.map.licenseKey}]]</td>
                 <td> <input type="text" data-th-field="*{conf_license}" size="60"/> </td>
             </tr>
             <tr>
-                <td>[[#{setup.setup.sys.smtp_server}]]:</td>
+                <td>[[#{setup.setup.sys.smtp_server}]]</td>
                 <td> <input type="text" data-th-field="*{conf_smtpServer}" size="30"/> </td>
             </tr>
             <tr>
-                <td>[[#{setup.setup.sys.default_language}]]:</td>
+                <td>[[#{setup.setup.sys.default_language}]]</td>
                 <td>
                     <select data-th-field="*{conf_defaultLanguage}">
                         <option value="" >[[#{logon.language.slovak}]]</option>
@@ -176,20 +188,8 @@
                 </td>
              </tr>
              <tr>
-                <td>[[#{setup.setup.sys.encoding}]]:</td>
+                <td>[[#{setup.setup.sys.encoding}]]</td>
                 <td> <input type="text" data-th-field="*{encoding}" size="30"/> </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
             </tr>
         </table>
         <input type="submit" id="submitBtn" style="display:none"/>

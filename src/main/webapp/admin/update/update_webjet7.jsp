@@ -639,7 +639,7 @@ if (Constants.getBoolean("statWebJET7Converted")==false)
 		}
 		catch (Exception ex)
 		{
-		   if (ex.getMessage().contains("does not exist")) {
+		   if (ex.getMessage().contains("exist")) {
 			//stat table doesnt exists, it's ok
 		   } else {
 			sk.iway.iwcm.Logger.error(ex);

@@ -1416,18 +1416,20 @@ public class InitServlet extends HttpServlet
 	{
 		boolean ret = false;
 
-		touch("/WEB-INF/lib/webjet-8.7-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-8.8-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-8.9-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-2021.0-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-2022.0-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-2023.0-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-2024.0-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/webjet-2025.0-SNAPSHOT.jar");
-
-		touch("/WEB-INF/lib/wjstripes-1.6.0-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/wjcron4j-2.2.5-SNAPSHOT.jar");
-		touch("/WEB-INF/lib/wjdisplaytag-1.2-SNAPSHOT.jar");
+		File dir = new File(Tools.getRealPath("/WEB-INF/lib"));
+		File[] files = dir.listFiles();
+		if (files != null)
+		{
+			for (File f : files)
+			{
+				if (f.getName().contains("webjet") && f.getName().endsWith(".jar"))
+				{
+					Logger.println(InitServlet.class,"RESTART request InitServlet " + f.getAbsolutePath());
+					f.setLastModified(Tools.getNow()); //NOSONAR
+					ret = true;
+				}
+			}
+		}
 
 		File f = new File(Tools.getRealPath("/WEB-INF/classes/sk/iway/iwcm/InitServlet.class"));
 		if (f.exists())
@@ -1469,18 +1471,6 @@ public class InitServlet extends HttpServlet
 		Logger.error(InitServlet.class,"RESTART request ret="+ret);
 
 		return(ret);
-	}
-
-	private static boolean touch(String url) {
-		boolean ret = false;
-		File f = new File(Tools.getRealPath(url));
-		if (f.exists())
-		{
-			Logger.println(InitServlet.class,"RESTART request InitServlet " + f.getAbsolutePath());
-			f.setLastModified(Tools.getNow()); //NOSONAR
-			ret = true;
-		}
-		return ret;
 	}
 
 	public static int getLicenseId()

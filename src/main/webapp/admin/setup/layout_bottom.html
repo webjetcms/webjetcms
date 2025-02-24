@@ -2,13 +2,13 @@
                 </tr>
                 <tr>
                     <td class="bottomButtons" align="right" nowrap="nowrap" colspan="2">
-                        <select id="languageSelect" onchange="setLanguage(false)" style="display: inline-block; margin-right: 75%;">
+                        <select id="languageSelect" onchange="setLanguage(false)" class="btn" style="display: inline-block; float: left;">
                             <option value="sk">[[#{logon.language.slovak}]]</option>
                             <option value="en">[[#{logon.language.english}]]</option>
                             <option value="cz">[[#{logon.language.czech}]]</option>
                             <option value="de">[[#{logon.language.german}]]</option>
                         </select>
-                        <input id="btnOk" style="width:65px;" type="button" value="OK" onClick="submitAction();"/> 
+                        <button id="btnOk" type="button" class="btn btn-primary" onclick="submitAction();">[[#{button.submit}]]</button>
                     </td>
                 </tr>
             </table>

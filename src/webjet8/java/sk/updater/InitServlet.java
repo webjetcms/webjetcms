@@ -835,6 +835,20 @@ public class InitServlet extends HttpServlet
 
 	private static void restart(ServletContext sc)
 	{
+		File dir = new File(sc.getRealPath("/WEB-INF/lib"));
+		File[] files = dir.listFiles();
+		if (files != null)
+		{
+			for (File f : files)
+			{
+				if (f.getName().contains("webjet") && f.getName().endsWith(".jar"))
+				{
+					Logger.println(InitServlet.class,"RESTART request update.InitServlet " + f.getAbsolutePath());
+					f.setLastModified(System.currentTimeMillis());
+				}
+			}
+		}
+
 		touch(sc, "/WEB-INF/classes/sk/updater/InitServlet.class");
 		touch(sc, "/WEB-INF/web.xml");
 		touch(sc, "/WEB-INF/classes/sk/iway/iwcm/InitServlet.class");
