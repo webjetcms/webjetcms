@@ -340,7 +340,7 @@ module.exports = {
 
         //reloadni DT a over, ci to je skutocne zmazane
         I.say("Obnovenie DT a overenie zmazania");
-        //I.click("#dt-filter-labels-link-availableGrooupsList");
+        //I.clickCss("#dt-filter-labels-link-availableGrooupsList");
         I.clickCss(container+'.dt-buttons .buttons-refresh');
         DT.waitForLoader();
         I.dontSee(`${testingData[0]}chan.ge`, ".dt-scroll-body table.dataTable tbody");

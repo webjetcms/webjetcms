@@ -16,7 +16,7 @@ Scenario('banner admin', ({ I, DT, DTE, Document }) => {
     DTE.waitForEditor("bannerDataTable");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/banner/editor.png");
 
-    I.click("#pills-dt-bannerDataTable-restrictions-tab");
+    I.clickCss("#pills-dt-bannerDataTable-restrictions-tab");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/apps/banner/editor-restrictions.png");
 });
 
@@ -88,21 +88,20 @@ Scenario('Device type specific banner screens', ({ I, DTE, Document }) => {
 
         //Open banner setting
         I.waitForElement(".cke_wysiwyg_frame.cke_reset", 30);
-        I.switchTo("iframe.cke_reset");
+        I.switchTo(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
         I.waitForElement("iframe.wj_component", 10);
-        I.switchTo("iframe.wj_component");
+        I.switchTo(locate("iframe.wj_component").first());
         I.wait(1);
-            I.forceClick("div.inlineComponentButtons > a:nth-child(1)");
-        I.switchTo("");
-        I.switchTo("");
+            I.forceClickCss(".inlineComponentButtons > .inlineComponentButton.cke_button");
+        I.switchTo();
 
         I.waitForElement("table.cke_dialog");
 
-        I.switchTo("#cke_121_iframe") //iframe
-        I.switchTo("#editorComponent") //iframe
-
-        I.click("#tabLinkcommonAdvancedSettings");
+        I.switchTo("#cke_121_iframe");
+        I.switchTo("#editorComponent");
+        I.waitForElement("#tabLinkcommonAdvancedSettings");
+        I.clickCss("#tabLinkcommonAdvancedSettings");
 
     Document.screenshot("/redactor/apps/banner/banner-device-setting-tab.png");
 });

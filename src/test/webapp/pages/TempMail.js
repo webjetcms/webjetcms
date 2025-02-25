@@ -56,9 +56,9 @@ module.exports = {
      * Delete currently opened email
      */
     deleteCurrentEmail() {
-        I.click("#delete_mail");
+        I.clickCss("#delete_mail");
         I.waitForElement("#modal-destroy-mail", 10);
-        I.click("#confirm_mail");
+        I.clickCss("#confirm_mail");
         I.waitForInvisible("#modal-destroy-mail", 60);
     },
 

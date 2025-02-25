@@ -36,9 +36,9 @@ Scenario('app map', ({ I, DT, DTE, Document }) => {
 
     I.wait(1);
 
-    I.click("#tabLink1");
+    I.clickCss("#tabLink1");
     Document.screenshot("/redactor/apps/map/editor-address.png");
-    I.click("#tabLink2");
+    I.clickCss("#tabLink2");
     Document.screenshot("/redactor/apps/map/editor-settings.png");
     
 });

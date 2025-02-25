@@ -89,19 +89,17 @@ Scenario('filebrowser - toolbar + navbar screens', ({ I, DTE, Document, i18n }) 
     Document.screenshot("/redactor/files/fbrowser/file-edit/edit_image_gallery.png");
 
     I.amOnPage("/admin/v9/files/index/#elf_iwcm_1_L2ltYWdlcy96by1zdmV0YS1maW5hbmNpaQ_E_E");
-
     I.waitForElement(`.elfinder-cwd-filename[title="foto-1.jpg"]`);
     I.rightClick(`.elfinder-cwd-filename[title="foto-1.jpg"]`);
     I.waitForVisible('.elfinder-contextmenu', 10);
     I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjeditswitch');
     
-    I.waitForVisible("#modalIframeIframeElement");
-    I.switchTo('#modalIframeIframeElement');
+    I.wait(5);
+    I.switchToNextTab();
     I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
     I.waitForVisible("#galleryTable_modal");
-    I.switchTo();
 
-    Document.screenshotElement("#modalIframe > div.modal-dialog", "/redactor/files/fbrowser/file-edit/edit_image_tui.png");
+    Document.screenshotElement("#galleryTable_modal", "/redactor/files/fbrowser/file-edit/edit_image_tui.png");
 });
 
 Scenario('filebrowser - search screens', ({ I, Document, i18n }) => {
@@ -118,8 +116,7 @@ Scenario('filebrowser - search screens', ({ I, Document, i18n }) => {
 
     i18n.click("In Subfolders");
 
-    I.waitForVisible("div.elfinder-dialog.elfinder-dialog-notify");
-    I.waitForInvisible("div.elfinder-dialog.elfinder-dialog-notify");
+    I.waitForVisible(".elfinder-button-search-menu.ui-corner-all.elfinder-frontmost > div", 10);
     Document.screenshot("/redactor/files/fbrowser/search_recursive.png");
 });
 
@@ -152,6 +149,7 @@ Scenario('filebrowser - folder properties screens', ({ I, DTE, Document, i18n })
     I.waitForVisible("#pills-dt-datatableInit-basic-tab");
     I.switchTo();
     Document.screenshotElement("#modalIframe > div.modal-dialog", "/redactor/files/fbrowser/folder-settings/folder_settings_basic.png");
+
     I.switchTo("#modalIframeIframeElement");
     I.clickCss("#pills-dt-datatableInit-index-tab");
     I.waitForVisible("button#start-index-button");
@@ -271,7 +269,7 @@ Scenario('Elfinder Move Confirm', ({ I, Document, i18n }) => {
 function createFolder(I, i18n, folderName) {
     I.say('Creating a folder');
     I.click('.elfinder-button-icon.elfinder-button-icon-mkdir');
-    I.fillField({ css: `.elfinder-cwd-filename[title="${i18n.get('NewFolder')}"]` }, folderName);
+    I.fillField({ css: `.elfinder-cwd-filename[title="${i18n.get('NewFolder')}"] textarea` }, folderName);
     I.pressKey('Enter');
     I.waitForVisible('.elfinder-toast', 10);
     I.waitForInvisible('.elfinder-toast', 10);
@@ -280,11 +278,10 @@ function createFolder(I, i18n, folderName) {
 async function deleteFile(I, fileName) {
     const numVisible = await I.grabNumberOfVisibleElements(`.elfinder-cwd-filename[title="${fileName}"]`);
     if (numVisible) {
-        within('.elfinder-cwd-message-board', () => {
-            I.rightClick(fileName);
-            I.waitForVisible('.elfinder-contextmenu', 10);
-            I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rm');
-            I.clickCss('.elfinder-confirm-accept');
-        });
+        I.rightClick(fileName, ".elfinder-cwd-wrapper");
+        I.waitForVisible('.elfinder-contextmenu', 10);
+        I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-rm');
+        I.clickCss('.elfinder-confirm-accept');
+        I.waitForInvisible(fileName);
     }
 }

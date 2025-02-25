@@ -179,7 +179,7 @@ Scenario('SearchAll - domains', ({ I, DT }) => {
     switchDomainTo(I, DT, "mirroring.tau27.iway.sk");
 
     I.say('Testing webpages in another domain');
-    I.click('#pills-webPages-tab');
+    I.clickCss('#pills-webPages-tab');
     filter(I, DT, 'Investičný vklad');
     I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
     filter(I, DT, 'Vstup');

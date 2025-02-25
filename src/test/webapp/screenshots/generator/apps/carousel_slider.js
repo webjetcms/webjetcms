@@ -10,11 +10,11 @@ Scenario('app carousel slider', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/carousel_slider/carousel.png");
 
     Document.screenshotAppEditor(77872, "/redactor/apps/carousel_slider/editor-style.png", function(Document, I, DT, DTE) {
-        I.click("#tabLink2");
+        I.clickCss("#tabLink2");
         Document.screenshot("/redactor/apps/carousel_slider/editor-items.png");
-        I.click("#tabLink3");
-        I.checkOption('.checker input[name="custom_properties"]');
+        I.clickCss("#tabLink3");
+        I.checkOption('input[name="custom_properties"]');
         Document.screenshot("/redactor/apps/carousel_slider/editor-settings.png");
-        I.click("#tabLink1");
+        I.clickCss("#tabLink1");
     });
 });

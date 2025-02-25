@@ -3,6 +3,7 @@ Feature('password-recovery');
 var basePath = "/redactor/admin/password-recovery/"
 
 Scenario('admin-password-recovery', ({ I, Document, TempMail }) => {
+    I.logout();
     doScreens(I, Document, TempMail, true);
 });
 

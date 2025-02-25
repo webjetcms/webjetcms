@@ -855,7 +855,7 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click(locate('.jstree-node.jstree-closed').withText('Hromadný e-mail').find('.jstree-icon.jstree-ocl'));
     I.click( locate("li.jstree-node.jstree-leaf > a.jstree-anchor").withText("Hromadný e-mail") );
 
-    I.click("#pills-dt-campaingsDataTable-receivers-tab");
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-create") );
 
     I.waitForElement( locate("#datatableFieldDTE_Field_recipientsTab_modal").find("div.DTE_Action_Create") );
@@ -863,7 +863,7 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     let name = "testInsert_" + randomNumber;
     let email = "testInsertEmail" + randomNumber + "@test.sk";
 
-    I.click("#DTE_Field_recipientName");
+    I.clickCss("#DTE_Field_recipientName");
     I.fillField("#DTE_Field_recipientName", name);
     I.fillField("#DTE_Field_recipientEmail", email);
 
@@ -876,7 +876,7 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click(campaign);
     DTE.waitForEditor("campaingsDataTable");
 
-    I.click("#pills-dt-campaingsDataTable-receivers-tab");
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.see(name);
 
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.btn.btn-sm.btn-outline-secondary.buttons-refresh');

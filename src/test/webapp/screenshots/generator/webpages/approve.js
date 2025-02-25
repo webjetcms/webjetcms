@@ -18,7 +18,7 @@ Scenario('approving', ({I, DT, Document}) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/");
     DT.waitForLoader();
-    I.click("#pills-waiting-tab");
+    I.clickCss("#pills-waiting-tab");
     DT.waitForLoader();
     Document.screenshot("/redactor/webpages/approve/approve-tab.png");
 

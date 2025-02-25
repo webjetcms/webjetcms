@@ -9,12 +9,12 @@ let testOptions = {
     requiredFields: ['tempName', 'forward'],
     perms: 'menuTemplates',
     editSteps: function(I, options, DT, DTE) {
-        I.click("#pills-dt-datatableInit-accessTab-tab");
+        I.clickCss("#pills-dt-datatableInit-accessTab-tab");
         I.click("Pridať");
         I.waitForVisible("div.jsTree-wrapper");
         I.wait(1);
         I.click("Newsletter", "#jsTree");
-        I.click("#pills-dt-datatableInit-basic-tab");
+        I.clickCss("#pills-dt-datatableInit-basic-tab");
     },
     editSearchSteps: function(I, options, DT, DTE) {
         I.fillField("input.dt-filter-availableGrooupsList", "News");
@@ -70,7 +70,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.say("Create OLD template (template we want to replace)");
         I.click({css: "div.dt-buttons button.buttons-create"});
         DTE.waitForLoader();
-        I.click("#DTE_Field_tempName");
+        I.clickCss("#DTE_Field_tempName");
         I.fillField("#DTE_Field_tempName", oldTemplateName);
         I.fillField("#DTE_Field_forward", "default/homepage.jsp");
 
@@ -86,11 +86,11 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.say("Create NEW template (template that will replace OLD template)");
         I.click({css: "div.dt-buttons button.buttons-create"});
         DTE.waitForLoader();
-        I.click("#DTE_Field_tempName");
+        I.clickCss("#DTE_Field_tempName");
         I.fillField("#DTE_Field_tempName", newTemplateName);
         I.fillField("#DTE_Field_forward", "default/homepage.jsp");
         //check that new template hasn't option to merge
-        I.click("#pills-dt-datatableInit-templatesTab-tab");
+        I.clickCss("#pills-dt-datatableInit-templatesTab-tab");
         I.dontSee("Zlúčiť túto šablónu do zvolenej šablóny");
 
         //Save
@@ -112,14 +112,14 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.dontSee("Pole Menu (loggedMenuType) neobsahuje možnosť s ID -1");
 
         I.say("Setting group name");
-        I.click("#DTE_Field_groupName");
+        I.clickCss("#DTE_Field_groupName");
         I.fillField("#DTE_Field_groupName", groupDocName);
-        I.click("#DTE_Field_navbarName");
+        I.clickCss("#DTE_Field_navbarName");
         I.groupSetRootParent();
         I.wait(1);
 
         I.say("Setting template");
-        I.click("#pills-dt-groups-datatable-template-tab");
+        I.clickCss("#pills-dt-groups-datatable-template-tab");
         I.wait(2);
         DTE.selectOption("tempId", oldTemplateName);
 
@@ -135,12 +135,12 @@ Scenario('Template merge', ({I, DT, DTE}) => {
 
         //Check if we see fields (edit only)
         I.say("Check if we see fields (edit only)");
-        I.click("#pills-dt-datatableInit-templatesTab-tab");
+        I.clickCss("#pills-dt-datatableInit-templatesTab-tab");
         I.see("Zlúčiť túto šablónu do zvolenej šablóny");
 
         //Check if nothing happend (Because toggle is false)
         I.say("Check if nothing happend (Because toggle is false)");
-        I.click("#panel-body-dt-datatableInit-templatesTab > div.DTE_Field.form-group.row.DTE_Field_Type_select.DTE_Field_Name_editorFields\\.mergeToTempId.hide-on-create > div.col-sm-7 > div.DTE_Field_InputControl > div > button");
+        I.clickCss("#panel-body-dt-datatableInit-templatesTab > div.DTE_Field.form-group.row.DTE_Field_Type_select.DTE_Field_Name_editorFields\\.mergeToTempId.hide-on-create > div.col-sm-7 > div.DTE_Field_InputControl > div > button");
         I.fillField("body > div.bs-container.dropdown.bootstrap-select.form-select.dropup > div > div.bs-searchbox > input", newTemplateName);
         I.wait(2);
         I.click(locate("a.dropdown-item").withChild("span.text").withText(newTemplateName));
@@ -150,9 +150,9 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.say("Check loop error");
         I.click(oldTemplateName);
         DTE.waitForLoader();
-        I.click("#pills-dt-datatableInit-templatesTab-tab");
+        I.clickCss("#pills-dt-datatableInit-templatesTab-tab");
         DTE.selectOption("editorFields\\.mergeToTempId", oldTemplateName);
-        I.click("#DTE_Field_editorFields-mergeTemplates_0");
+        I.clickCss("#DTE_Field_editorFields-mergeTemplates_0");
         DTE.save();
         DTE.waitForLoader();
         I.see("Nemôžete nahradiť šablónu tou istou šablónou.");
@@ -174,7 +174,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.say("Check if replaced template is replaced in GROUPS");
         I.click("button.buttons-edit", containerTree);
         DTE.waitForEditor("groups-datatable");
-        I.click("#pills-dt-groups-datatable-template-tab");
+        I.clickCss("#pills-dt-groups-datatable-template-tab");
         I.see(newTemplateName);
         I.click("Zrušiť");
         DTE.waitForLoader();
@@ -184,7 +184,7 @@ Scenario('Template merge', ({I, DT, DTE}) => {
         I.click("td.dt-select-td.sorting_1");
         I.click(containerTable + " button.buttons-edit");
         DTE.waitForLoader("webpagesDatatable");
-        I.click("#pills-dt-datatableInit-template-tab");
+        I.clickCss("#pills-dt-datatableInit-template-tab");
         I.see(newTemplateName);
         I.click("Zrušiť")
         DTE.waitForLoader();

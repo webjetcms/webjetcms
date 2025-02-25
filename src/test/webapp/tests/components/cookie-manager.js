@@ -38,7 +38,7 @@ Scenario('cookie-manager testy-domeny-a-jazyka', async ({I, DT, DTE}) => {
     DTE.waitForEditor("cookiesDataTable");
     I.fillField("#DTE_Field_cookieName", entityName);
     //Prepni sa do založky "advanced" a vyplň field "purpouse" hodnotou "SK"
-    I.click('#pills-dt-cookiesDataTable-advanced-tab');
+    I.clickCss('#pills-dt-cookiesDataTable-advanced-tab');
     I.fillField("#DTE_Field_purpouse", "SK");
     DTE.save();
 
@@ -55,7 +55,7 @@ Scenario('cookie-manager testy-domeny-a-jazyka', async ({I, DT, DTE}) => {
     I.click(DT.btn.cookies_edit_button);
     DTE.waitForEditor("cookiesDataTable");
     //Prepni sa do založky "advanced" a vyplň field "purpouse" hodnotou "CZ"
-    I.click('#pills-dt-cookiesDataTable-advanced-tab');
+    I.clickCss('#pills-dt-cookiesDataTable-advanced-tab');
     I.fillField("#DTE_Field_purpouse", "CZ");
     DTE.save();
     I.see("CZ");
@@ -70,7 +70,7 @@ Scenario('cookie-manager testy-domeny-a-jazyka', async ({I, DT, DTE}) => {
     DTE.waitForEditor("cookiesDataTable");
 
     //Prepni sa do založky "advanced", over ze tu nieje hodnota "CZ" a je hodnota "SK"
-    I.click('#pills-dt-cookiesDataTable-advanced-tab');
+    I.clickCss('#pills-dt-cookiesDataTable-advanced-tab');
     I.dontSee("CZ");
     I.see("SK");
     DTE.save();

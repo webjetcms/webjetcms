@@ -127,7 +127,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     I.fillField("#usrAdress", address);
     I.fillField("#usrOldPassword", secret(defaultPassword));
 
-    I.click("#bSubmitIdAjax");
+    I.clickCss("#bSubmitIdAjax");
     I.dontSee("Prosím, opravte nasledovné chyby", "#ajaxFormResultContainer");
     I.see("Profil úspešne uložený", "#ajaxFormResultContainer");
 
@@ -212,14 +212,14 @@ Scenario('change passowrd by user @singlethread', ({ I, DT, DTE }) => {
     I.amOnPage("/apps/prihlaseny-pouzivatel/moj-profil/");
     I.see("Úprava údajov používateľa");
     I.fillField("#usrPassword", password2);
-    I.click("#bSubmitIdAjax");
+    I.clickCss("#bSubmitIdAjax");
     I.waitForElement("#ajaxFormResultContainer", 10);
     I.waitForText("Zle zadané staré heslo", 10, "#ajaxFormResultContainer");
     //spam protection
     I.wait("30");
 
     I.fillField("#usrOldPassword", secret(password1));
-    I.click("#bSubmitIdAjax");
+    I.clickCss("#bSubmitIdAjax");
 
     I.waitForElement("#ajaxFormResultContainer", 10);
     I.waitForText("Profil úspešne uložený", 10, "#ajaxFormResultContainer");

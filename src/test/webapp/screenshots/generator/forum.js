@@ -10,7 +10,7 @@ Scenario('Forum types', async ({I, DTE, Document}) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=63768");
     DTE.waitForEditor();
-    I.click('#trEditor', null, { position: { x: 177, y: 400 } });
+    I.clickCss('#trEditor', null, { position: { x: 177, y: 400 } });
     I.pressKey(['Ctrl', 'Q']);
     Document.screenshot("/redactor/apps/forum/message-board-upload.png");
 });
@@ -22,7 +22,7 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     DT.filterContains("subject", "diskusia testovací príspevok");
     Document.screenshot("/redactor/apps/forum/forum-list.png", 1500, 800);
 
-    I.click("#forumDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-select.dt-th-editorFields-statusIcons > form > div > div > button");
+    I.clickCss("#forumDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-select.dt-th-editorFields-statusIcons > form > div > div > button");
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/forum/forum-list-statusSelect.png")
 
     DT.filterContains("question", "Toto je jednoduchá diskusia pod článkom");
@@ -38,8 +38,8 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     I.click("button.buttons-edit");
     DTE.waitForEditor("forumDataTable");
     Document.screenshot("/redactor/apps/forum/forum-list-editor.png");
-    I.click("#pills-dt-forumDataTable-advanced-tab");
-    I.click("#DTE_Field_forumGroupEntity-messageConfirmation_0");
+    I.clickCss("#pills-dt-forumDataTable-advanced-tab");
+    I.clickCss("#DTE_Field_forumGroupEntity-messageConfirmation_0");
     Document.screenshot("/redactor/apps/forum/forum-list-editor-advanced.png", 1000, 1100);
     DTE.cancel();
 
@@ -61,7 +61,7 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     Document.screenshot("/redactor/apps/forum/forum-list-forum.png");
 
     I.resizeWindow(1200, 900);
-    I.click("#forumContentDiv > div.row > div > a");
+    I.clickCss("#forumContentDiv > div.row > div > a");
     I.waitForElement("div.ui-dialog.ui-corner-all");
     Document.screenshot("/redactor/apps/forum/forum-list-forum-add.png");
     //Resize back
@@ -115,14 +115,14 @@ Scenario('Forum list', async ({I, DT, DTE, Document}) => {
     DT.filterContains("subject", "diskusia testovací príspevok");
     I.click("Re: Viactémová diskusia testovací príspevok");
     DTE.waitForEditor("forumDataTable");
-    I.click("#pills-dt-forumDataTable-advanced-tab");
-    I.click("#DTE_Field_forumGroupEntity-active_0");
+    I.clickCss("#pills-dt-forumDataTable-advanced-tab");
+    I.clickCss("#DTE_Field_forumGroupEntity-active_0");
     DTE.save();
     Document.screenshot("/redactor/apps/forum/forum-list-state-combination.png", 1000, 700);
         //UNDO this action
         I.click("Re: Viactémová diskusia testovací príspevok");
         DTE.waitForEditor("forumDataTable");
-        I.click("#pills-dt-forumDataTable-advanced-tab");
-        I.click("#DTE_Field_forumGroupEntity-active_0");
+        I.clickCss("#pills-dt-forumDataTable-advanced-tab");
+        I.clickCss("#DTE_Field_forumGroupEntity-active_0");
         DTE.save();
 });

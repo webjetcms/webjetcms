@@ -154,7 +154,7 @@ Scenario('Recovery folder logic', ({ I, DT, DTE }) => {
 
     //
     I.say("Check folder position");
-    I.click("#pills-folders-tab");
+    I.clickCss("#pills-folders-tab");
     I.jstreeNavigate(["Test stavov", "page_folder_recovery", "recoverSubFolderOne"]);
     I.click(DT.btn.tree_edit_button);
     DTE.waitForLoader();
@@ -173,7 +173,7 @@ function checkAvailable(I, DTE, pageName, available) {
     I.say("Check available status of page: " + pageName);
     I.click(pageName);
     DTE.waitForLoader();
-    I.click("#pills-dt-datatableInit-basic-tab");
+    I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.waitForElement("#DTE_Field_available_0")
     if (available) {
         I.seeCheckboxIsChecked("#DTE_Field_available_0");

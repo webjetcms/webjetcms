@@ -12,7 +12,7 @@ Before(({ I, login }) => {
 });
 
 function clearFilter(I, name) {
-    I.click("#dt-filter-labels-link-"+name);
+    I.clickCss("#dt-filter-labels-link-"+name);
     I.wait(2);
 }
 
@@ -31,7 +31,7 @@ Scenario('datatables header select', ({ I, DT, DTE }) => {
     I.click(key);
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
 
     I.seeInField("#DTE_Field_projectDeveloper", 'InterWay Developer SK');
     DTE.cancel();
@@ -212,14 +212,14 @@ Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DTE, Document }) 
     //pri druhom zobrazeni DT v editore bol bug, kedy sa zle zobrazia selecty
     I.amOnPage("/admin/v9/users/user-groups/?id=2");
     DTE.waitForEditor("userGroupsDataTable");
-    I.click("#pills-dt-userGroupsDataTable-sites-tab");
+    I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
     await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
 
     DTE.cancel();
     I.click("Obchodní partneri");
     DTE.waitForEditor("userGroupsDataTable");
-    I.click("#pills-dt-userGroupsDataTable-sites-tab");
+    I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
     I.wait(1);
     await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
 });

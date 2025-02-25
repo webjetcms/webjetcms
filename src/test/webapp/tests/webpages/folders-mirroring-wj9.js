@@ -276,7 +276,7 @@ Scenario('vypnutie synchronizacie na DE a overenie ze sa nezmeni', ({ I, DT, DTE
      I.jstreeClick(auto_folder_sk);
      I.click(auto_folder_sk, "#datatableInit_wrapper");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-menu-tab");
+     I.clickCss("#pills-dt-datatableInit-menu-tab");
      DTE.fillField("sortPriority", "11");
      DTE.save();
 
@@ -285,7 +285,7 @@ Scenario('vypnutie synchronizacie na DE a overenie ze sa nezmeni', ({ I, DT, DTE
      I.jstreeClick(auto_folder_en);
      I.click(auto_folder_en, "#datatableInit_wrapper");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-menu-tab");
+     I.clickCss("#pills-dt-datatableInit-menu-tab");
      I.seeInField("#DTE_Field_sortPriority", "11");
      DTE.cancel();
 
@@ -294,7 +294,7 @@ Scenario('vypnutie synchronizacie na DE a overenie ze sa nezmeni', ({ I, DT, DTE
      I.jstreeClick(auto_folder_de);
      I.click(auto_folder_de, "#datatableInit_wrapper");
      DTE.waitForEditor();
-     I.click("#pills-dt-datatableInit-menu-tab");
+     I.clickCss("#pills-dt-datatableInit-menu-tab");
      I.seeInField("#DTE_Field_sortPriority", "10");
      DTE.cancel();
 

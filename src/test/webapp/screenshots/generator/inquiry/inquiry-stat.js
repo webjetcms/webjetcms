@@ -8,7 +8,7 @@ Scenario('inquiry stat screens', async ({I, DT, DTE, Document}) => {
     I.amOnPage("/apps/inquiry/admin/?id=578");
     DTE.waitForEditor("inquiryDataTable");
 
-    I.click("#pills-dt-inquiryDataTable-votes-tab");
+    I.clickCss("#pills-dt-inquiryDataTable-votes-tab");
     I.switchTo('#statIframe');
 
     I.waitForVisible("div.dt-extfilter-dayDate");

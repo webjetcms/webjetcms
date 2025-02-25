@@ -15,7 +15,7 @@ function modalWindow(I, DT, folder) {
      I.click(DT.btn.tree_edit_button);
      DTE.waitForEditor("galleryDimensionDatatable");
      I.seeInField('#DTE_Field_name', folder);
-     I.click('#pills-dt-galleryDimensionDatatable-sizes-tab'); // tab rozmery
+     I.clickCss('#pills-dt-galleryDimensionDatatable-sizes-tab'); // tab rozmery
      I.waitForVisible('#panel-body-dt-galleryDimensionDatatable-sizes', 10);
 }
 
@@ -72,7 +72,7 @@ async function regenerateDimensions(I, dimension) {
 // pregeneruj vodotlac
 async function regenerateWatermark(I, watermark) {
      var waterkarkFile = "/images/watermark.svg";
-     I.click('#pills-dt-galleryDimensionDatatable-watermark-tab');
+     I.clickCss('#pills-dt-galleryDimensionDatatable-watermark-tab');
      I.waitForVisible('#panel-body-dt-galleryDimensionDatatable-watermark', 15);
 
      if (watermark === 'change') {

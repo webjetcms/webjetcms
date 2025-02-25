@@ -32,12 +32,12 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     I.click(".ti.ti-pencil", "div.tree-col");
     DTE.waitForEditor("groups-datatable");
     Document.screenshot("/frontend/examples/template-bare/group-editor.png");
-    I.click("#pills-dt-groups-datatable-template-tab");
+    I.clickCss("#pills-dt-groups-datatable-template-tab");
     Document.screenshot("/frontend/examples/template-bare/group-editor-temp.png");
     DTE.cancel();
 
     //stranka hlavicka
-    I.click("#pills-system-tab");
+    I.clickCss("#pills-system-tab");
     DT.waitForLoader();
     I.jstreeClick("Hlavičky");
     I.click("Default Hlavička");
@@ -76,7 +76,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     Document.screenshot("/frontend/examples/template-bare/tempgroup-editor.png");
-    I.click("#pills-dt-datatableInit-metadata-tab");
+    I.clickCss("#pills-dt-datatableInit-metadata-tab");
     Document.screenshot("/frontend/examples/template-bare/tempgroup-editor-metadata.png");
 
     //screenshot sablona
@@ -86,7 +86,7 @@ Scenario('template-bare', async({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     Document.screenshot("/frontend/examples/template-bare/temp-editor.png");
-    I.click("#pills-dt-datatableInit-style-tab");
+    I.clickCss("#pills-dt-datatableInit-style-tab");
     Document.screenshot("/frontend/examples/template-bare/temp-editor-style.png");
 
     //screenshot web stranka
@@ -111,7 +111,7 @@ Scenario('editor style combo', ({ I, DTE, Document }) => {
 
     //sprav screenshot standardneho selectu
     I.waitForElement('#trEditor', 10);
-    I.click('#trEditor');
+    I.clickCss('#trEditor');
     I.click('p');
 
     I.click(".cke_combo__styles .cke_combo_button");
@@ -122,7 +122,7 @@ Scenario('editor style combo', ({ I, DTE, Document }) => {
     //I.resizeWindow(1280, 700);
 
     //sprav screenshot ked je kurzor v tabulke
-    I.click('#trEditor');
+    I.clickCss('#trEditor');
     I.click('.cke_button.cke_button__table.cke_button_.cke_button_off');
     I.waitForElement('.cke_button.cke_button__table.cke_button_.cke_button_on', 10);
     // volba velkosti tabulky
@@ -170,7 +170,7 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     I.click("i.fa-pencil", "div.tree-col");
     DTE.waitForEditor("groups-datatable");
     Document.screenshot("/frontend/examples/templates-creative/group-editor.png");
-    I.click("#pills-dt-groups-datatable-template-tab");
+    I.clickCss("#pills-dt-groups-datatable-template-tab");
     Document.screenshot("/frontend/examples/templates-creative/group-editor-temp.png");
     DTE.cancel();
 
@@ -189,7 +189,7 @@ Scenario('template-creative', async({ I, DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     Document.screenshot("/frontend/examples/templates-creative/temp-editor.png");
-    I.click("#pills-dt-datatableInit-style-tab");
+    I.clickCss("#pills-dt-datatableInit-style-tab");
     Document.screenshot("/frontend/examples/templates-creative/temp-editor-style.png");
 
     //web stranka

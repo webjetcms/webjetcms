@@ -75,7 +75,7 @@ Scenario('bug - prepnutie editora', ({I, DTE, Document}) => {
     I.wait(2);
 
     I.waitForElement('.cke_wysiwyg_frame.cke_reset', 10);
-    I.click('#trEditor', null, { position: { x: 177, y: 400 } });
+    I.clickCss('#trEditor', null, { position: { x: 177, y: 400 } });
     I.pressKey(['Ctrl', 'Q']);
     I.see("Suspendisse interdum dolor justo, ac venenatis massa");
 
@@ -92,7 +92,7 @@ Scenario('bug - prepnutie editora', ({I, DTE, Document}) => {
     I.dontSee("This is old page");
     I.switchTo();
 
-    I.click('#trEditor', null, { position: { x: 177, y: 400 } });
+    I.clickCss('#trEditor', null, { position: { x: 177, y: 400 } });
     I.pressKey(['Ctrl', 'Q']);
     I.dontSee("Suspendisse interdum dolor justo, ac venenatis massa");
 
@@ -165,7 +165,7 @@ Scenario('bug - nova stranka sablona podla priecinka', ({I, DT, DTE}) => {
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
     I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
-    I.click("#pills-dt-datatableInit-content-tab");
+    I.clickCss("#pills-dt-datatableInit-content-tab");
     I.waitForVisible("#DTE_Field_data-pageBuilderIframe", 5);
     I.waitForElement("div.exit-inline-editor", 10);
     I.waitForText("Page Builder", 10, "div.exit-inline-editor button .filter-option-inner-inner");

@@ -37,13 +37,13 @@ Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
 
     I.see("Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).");
 
-    I.click("#DTE_Field_url");
+    I.clickCss("#DTE_Field_url");
     I.fillField("#DTE_Field_url", "/test");
 
-    I.click("#DTE_Field_headerName");
+    I.clickCss("#DTE_Field_headerName");
     I.fillField("#DTE_Field_headerName", "TestHeader_" + randomNumber);
 
-    I.click("#DTE_Field_headerValue");
+    I.clickCss("#DTE_Field_headerValue");
     I.fillField("#DTE_Field_headerValue", "Test_value");
 
     DTE.save();
@@ -56,7 +56,7 @@ Scenario('zakladne testy-manual', ({I, DT, DTE}) => {
     I.see("TestHeader_" + randomNumber);
     I.see("Test_value");
 
-    I.click("#DTE_Field_headerName");
+    I.clickCss("#DTE_Field_headerName");
     I.fillField("#DTE_Field_headerName", "TestHeader_" + randomNumber + "_changed");
 
     DTE.save();

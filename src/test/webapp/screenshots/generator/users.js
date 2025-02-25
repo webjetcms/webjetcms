@@ -20,7 +20,7 @@ Scenario('users', ({ I, DT, DTE, Document }) => {
     I.clickCss("button.buttons-create");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-rightsTab-tab");
+    I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
     I.checkOption("#DTE_Field_admin_0");
 
     I.scrollTo("#perms_welcome-leaf_anchor");
@@ -28,7 +28,7 @@ Scenario('users', ({ I, DT, DTE, Document }) => {
     I.click("label[for=DTE_Field_editorFields-permGroups_3]");
     Document.screenshot("/developer/datatables-editor/field-type-jstree.png", 1280, 700);
 
-    I.click("#pills-dt-datatableInit-personalInfo-tab");
+    I.clickCss("#pills-dt-datatableInit-personalInfo-tab");
     I.scrollTo("#DTE_Field_password");
     I.fillField("#DTE_Field_password", "admin");
     I.executeScript(function() {
@@ -75,16 +75,16 @@ Scenario('users-docs-screens', ({ I, DT, Document }) => {
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-personalInfo.png");
 
     //Tab contact
-    I.click("#pills-dt-datatableInit-contactTab-tab");
+    I.clickCss("#pills-dt-datatableInit-contactTab-tab");
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-contact.png");
 
     //Tab groups
-    I.click("#pills-dt-datatableInit-groupsTab-tab");
+    I.clickCss("#pills-dt-datatableInit-groupsTab-tab");
     I.wait(1);
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-groups.png");
 
     //Tab rights - create new user (without admin section)
-    I.click("#pills-dt-datatableInit-rightsTab-tab");
+    I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
     Document.screenshotElement("div.DTE_Action_Create", "/admin/users/users-tab-right-without-admin-section.png");
     I.click("button.btn-close-editor", "div.DTE_Footer");
     I.wait(1);
@@ -98,7 +98,7 @@ Scenario('users-docs-screens', ({ I, DT, Document }) => {
     I.click("button.buttons-edit");
     I.wait(1);
 
-    I.click("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
+    I.clickCss("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit", "/admin/users/users-tab-right-with-admin-section.png");
 
     //Saving admin - withou perms - error
@@ -125,11 +125,11 @@ Scenario('users-docs-screens-adminuser', ({ I , DT, DTE, Document }) => {
     DTE.waitForEditor();
 
     //Tab free items
-    I.click("#pills-dt-datatableInit-freeItems-tab");
+    I.clickCss("#pills-dt-datatableInit-freeItems-tab");
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit", "/admin/users/users-tab-freeItems.png");
 
     //Tab approving
-    I.click("#pills-dt-datatableInit-approvingTab-tab");
+    I.clickCss("#pills-dt-datatableInit-approvingTab-tab");
     Document.screenshotElement("div.modal.show div.DTE_Action_Edit", "/admin/users/users-tab-approving.png");
 });
 
@@ -138,7 +138,7 @@ Scenario('users-docs-existing-user', ({ I, DTE, Document }) => {
     I.click("dwaynejohnson");
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
+    I.clickCss("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
     I.checkOption("#DTE_Field_admin_0");
     I.pressKey("ArrowDown");
     I.pressKey("ArrowDown");
@@ -151,7 +151,7 @@ Scenario('users-docs-permsfilter', ({ I , DTE, Document}) => {
     I.click({css: "button.buttons-create"});
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
+    I.clickCss("#pills-dt-datatableInit-rightsTab-tab"); //rights with admin section
     I.checkOption("#DTE_Field_admin_0");
 
     I.scrollTo("#perms_welcome-leaf_anchor");

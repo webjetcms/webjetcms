@@ -37,7 +37,7 @@ function wj8CreateMirroringWebpage(I, randomNumber) {
      I.clearField('#docTitleWrapper>input');
      I.fillField('#docTitleWrapper>input', auto_webpage1_sk);
      I.wait(1);
-     I.click('#btn-publish');
+     I.clickCss('#btn-publish');
      I.waitForLoader(".WJLoaderDiv");
      I.wait(1);
      I.waitForVisible('#treeScrollDiv', 10);
@@ -58,7 +58,7 @@ function wj8CreateMirroringWebpage(I, randomNumber) {
      I.clearField('#docTitleWrapper>input');
      I.fillField('#docTitleWrapper>input', auto_webpage2_sk);
      I.wait(1);
-     I.click('#btn-publish');
+     I.clickCss('#btn-publish');
      I.waitForLoader(".WJLoaderDiv");
      I.wait(1);
      I.waitForVisible('#treeScrollDiv', 10);
@@ -164,7 +164,7 @@ function wj8MoveSubpage(I, randomNumber) {
      I.switchToNextTab();
      I.waitForVisible(locate('#tabLink2').withText('Základné'), 10);
      I.click(locate('#tabLink2').withText('Základné'));
-     I.click('#btn-publish');
+     I.clickCss('#btn-publish');
      I.waitForLoader(".WJLoaderDiv");
      I.wait(1);
      I.waitForVisible('#treeScrollDiv', 10);
@@ -198,7 +198,7 @@ function wj8ChangeMainPage(I, randomNumber) {
      I.rightClick(locate('.jstree-anchor').withChild('.jstree-icon.jstree-themeicon.fa.fa-file.icon-state-success.jstree-themeicon-custom').withText(auto_webpage1_sk));
      I.waitForVisible('.vakata-context.jstree-contextmenu.jstree-default-contextmenu', 5);
      I.click('.glyphicon.glyphicon-certificate');
-     I.click('#btn-publish');
+     I.clickCss('#btn-publish');
      I.waitForLoader(".WJLoaderDiv");
      I.wait(1);
      I.waitForVisible('#treeScrollDiv', 10);

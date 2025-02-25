@@ -10,7 +10,7 @@ Scenario('custom-fields-webpages', async ({ I, DT, DTE }) => {
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=8487");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-fields-tab");
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
 
     I.see("text - A", "#datatableInit_modal div.DTE_Field_Name_fieldA");
@@ -27,7 +27,7 @@ Scenario('custom-fields-webpages', async ({ I, DT, DTE }) => {
     DTE.cancel();
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-fields-tab");
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
     var uuid = await I.grabValueFrom("#datatableInit_modal div.DTE_Field_Name_fieldM input.field-type-uuid");
     //check uuid has 36 chars
@@ -39,7 +39,7 @@ Scenario('custom-fields-webpages', async ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Zobrazený v menu"]);
     I.click("Zobrazený v menu", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-fields-tab");
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
     DT.waitForLoader();
 
     I.see("Pole A", "#datatableInit_modal div.DTE_Field_Name_fieldA");
@@ -59,7 +59,7 @@ Scenario('custom-fields-groups', ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Voliteľné polia"]);
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-fields-tab");
+    I.clickCss("#pills-dt-groups-datatable-fields-tab");
     DT.waitForLoader();
 
     I.see("group text - A", "#groups-datatable_modal div.DTE_Field_Name_fieldA");
@@ -76,7 +76,7 @@ Scenario('custom-fields-groups', ({ I, DT, DTE }) => {
     I.jstreeNavigate(["Test stavov", "Zobrazený v menu"]);
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-fields-tab");
+    I.clickCss("#pills-dt-groups-datatable-fields-tab");
     DT.waitForLoader();
 
     I.dontSee("group text - A", "#groups-datatable_modal div.DTE_Field_Name_fieldA");
@@ -125,7 +125,7 @@ Scenario('custom-fields-list @singlethread', ({ I, DT, DTE }) => {
     I.say("open webpage, yellow has different custom fields, it should not change header");
     I.click("Yellow Subpage", "#datatableInit_wrapper");
     DTE.waitForEditor();
-    I.click("#pills-dt-datatableInit-fields-tab");
+    I.clickCss("#pills-dt-datatableInit-fields-tab");
     I.see("temp-6 - A", "label[for=DTE_Field_fieldA]");
     I.see("temp6-select - B", "label[for=DTE_Field_fieldB]");
     DTE.cancel();

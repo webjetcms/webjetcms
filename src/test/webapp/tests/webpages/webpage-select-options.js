@@ -35,7 +35,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
 
      // ------------------------ ZALOZKA SABLONA ------------------
      I.say('Select options na zalozke Sablona');
-     I.click('#pills-dt-datatableInit-template-tab');
+     I.clickCss('#pills-dt-datatableInit-template-tab');
      I.waitForText('Šablóna web stránky', 10);
 
      // Sablona web stranky
@@ -63,7 +63,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
 
      // ------------------------ ZALOZKA NAVIGACIA ------------------
      I.say('Select options na zalozke Navigacia');
-     I.click('#pills-dt-datatableInit-menu-tab');
+     I.clickCss('#pills-dt-datatableInit-menu-tab');
      I.waitForText('Poradie usporiadania', 10);
 
      // Zobrazenie odkazu neprihlasenemu uzivatelovi - Menu
@@ -74,7 +74,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      // ------------------------ KONTROLA ULOZENIA UDAJOV ------------------
      // Zalozka SABLONA
      I.checkEditedWebPage(randomNumber);
-     I.click('#pills-dt-datatableInit-template-tab');
+     I.clickCss('#pills-dt-datatableInit-template-tab');
      I.waitForText('Šablóna web stránky', 10);
      I.waitForElement(locate('.filter-option-inner-inner').withText('Homepage'), 10); // Sablona web stranky
      I.waitForElement(locate('.filter-option-inner-inner').withText('Prázdne'), 10); // Hlavicka
@@ -84,7 +84,7 @@ Scenario('Webstranky - vyber z moznosti', ({ I, DTE }) => {
      I.seeInField('#DTE_Field_htmlHead', '<title>This is an autotest</title>');
 
      // Zalozka NAVIGACIA
-     I.click('#pills-dt-datatableInit-menu-tab');
+     I.clickCss('#pills-dt-datatableInit-menu-tab');
      I.waitForText('Poradie usporiadania', 10);
      I.waitForElement(locate('.filter-option-inner-inner').withText('Nezobraziť'), 10); // Zobrazenie odkazu neprihlasenemu uzivatelovi - Menu
      I.dtEditorCancel();

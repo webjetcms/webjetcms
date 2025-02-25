@@ -14,7 +14,7 @@ Scenario('menu editor', async ({ I, DTE, Document }) => {
 
     I.click(".tree-col .buttons-edit");
     DTE.waitForEditor("groups-datatable");
-    I.click("#pills-dt-groups-datatable-menu-tab");
+    I.clickCss("#pills-dt-groups-datatable-menu-tab");
     Document.screenshot("/redactor/apps/menu/groups-dialog.png");
 
     I.amOnPage("/apps/menu/");

@@ -43,7 +43,7 @@ Scenario('Setup action', ({I, Document}) => {
 
     I.say("We dont set license key - start as free version");
 
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     if("sk" === confLng) {
         I.waitForText("WebJET je nakonfigurovaný", 300);
@@ -84,7 +84,7 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
     Document.screenshot("/install/setup/first-login.png");
 
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
 
     I.waitForElement("#newPassword");
 
@@ -93,7 +93,7 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
     Document.screenshot("/install/setup/change-password.png");
 
-    I.click("#login-submit");
+    I.clickCss("#login-submit");
 
     Document.screenshot("/install/setup/main-page.png");
 
@@ -105,7 +105,7 @@ Scenario('First login/password change /and others', ({I, DTE, Document}) => {
 
     Document.screenshot("/install/setup/user-edit.png");
 
-    I.click("#pills-dt-datatableInit-rightsTab-tab");
+    I.clickCss("#pills-dt-datatableInit-rightsTab-tab");
 
     I.scrollTo("#perms_config-leaf");
 
@@ -136,7 +136,7 @@ Scenario('Pridanie/zmena licencie', ({I, Document}) => {
     I.say("Zadaj heslo a licencne cislo");
     pause();
 
-    I.click("#btnOk");
+    I.clickCss("#btnOk");
 
     switch (confLng) {
         case 'sk':
@@ -166,7 +166,7 @@ Scenario('License expiration notification test', ({I, login, Document}) => {
     Document.setConfigValue("licenseExpiryDate", actualDate.getTime() - monthMillis);
 
     I.amOnPage("/admin/v9/");
-    I.waitForElement(".license-expiration-warning", 5);
+    I.waitForElement("#toast-container-overview > div.toast.toast-warning", 5);
 
     Document.screenshot("/install/license/license-expiration-notification.png", 1200, 300);
 

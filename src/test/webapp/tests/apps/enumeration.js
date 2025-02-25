@@ -306,14 +306,14 @@ function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStr
     if(childEnumType !== null && childEnumType !== "") {
         //Select enum type child
         I.see("Prepojenie na číselník");
-        I.click("#DTE_Field_editorFields-childEnumTypeName");
+        I.clickCss("#DTE_Field_editorFields-childEnumTypeName");
         I.waitForElement("ul.ui-menu");
         I.fillField("#DTE_Field_editorFields-childEnumTypeName", childEnumType);
         I.click( locate("ul.ui-menu").find( locate("li.ui-menu-item > div").withText(childEnumType) ) );
     } else if(parentEnumData !== null && parentEnumData !== "") {
         //Select enum data parent
         I.see("Rodič");
-        I.click("#DTE_Field_editorFields-parentEnumDataName");
+        I.clickCss("#DTE_Field_editorFields-parentEnumDataName");
         I.waitForElement("ul.ui-menu");
         I.fillField("#DTE_Field_editorFields-parentEnumDataName", parentEnumData);
         I.click( locate("ul.ui-menu").find( locate("li.ui-menu-item > div").withText(parentEnumData) ) );

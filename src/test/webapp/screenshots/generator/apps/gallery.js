@@ -49,7 +49,7 @@ Scenario('thumb servlet', ({ I, DT, DTE, Document }) =>  {
     I.amOnPage('/admin/v9/apps/gallery/?dir=/images/gallery/test-vela-foto');
     I.click('dsc04068.jpeg');
     DTE.waitForEditor('galleryTable');
-    I.click("#pills-dt-galleryTable-areaOfInterest-tab");
+    I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
     I.fillField("#zoom", "65");
     I.wait(2);
     I.fillField("#x", "276");

@@ -239,7 +239,7 @@ function wj8MoveMainFolder(I, randomNumber) {
      I.waitForLoader(".WJLoaderDiv");
      I.click('.tree-settings>span>i.fa.fa-cog');
      I.waitForVisible('.modal-content', 10);
-     I.click('#newRootGroup');
+     I.clickCss('#newRootGroup');
      I.waitForElement("input.jstree-rename-input");
      I.type(test_folder);
      I.pressKey('Enter');

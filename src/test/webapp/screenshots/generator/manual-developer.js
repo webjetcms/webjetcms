@@ -9,7 +9,7 @@ Scenario('field-json', async({ I, DTE, Document }) => {
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("insertScriptTable");
-    I.click("#pills-dt-insertScriptTable-scriptPerms-tab");
+    I.clickCss("#pills-dt-insertScriptTable-scriptPerms-tab");
 
     //Add group and webpage for screenshot
     I.clickCss("#editorAppDTE_Field_groupIds > section > div.dt-tree-container-no-margin-top.form-group.row > div > button.btn-vue-jstree-add");
@@ -87,7 +87,7 @@ Scenario('field-select-editable', async({ I, DTE, Document }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=23485');
     DTE.waitForEditor();
 
-    I.click("#pills-dt-datatableInit-template-tab");
+    I.clickCss("#pills-dt-datatableInit-template-tab");
     Document.screenshot("/developer/datatables-editor/field-select.png", 1280, 400)
     Document.screenshotElement("div.DTE_Field_Name_tempId .btn-edit", "/developer/datatables-editor/field-select-icon-edit.png")
     Document.screenshotElement("div.DTE_Field_Name_tempId .btn-add", "/developer/datatables-editor/field-select-icon-add.png")
@@ -115,7 +115,7 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.click("#demo-komponenta");
+    I.clickCss("#demo-komponenta");
     I.wait(3);
 
     Document.screenshot("/custom-apps/appstore/democomponent-desc.png");
@@ -151,7 +151,7 @@ Scenario('appstore', ({ I, DTE, Document }) => {
     I.switchTo(".cke_dialog_ui_iframe");
     I.switchTo("#editorComponent");
 
-    I.click("#apps-contact-title");
+    I.clickCss("#apps-contact-title");
     I.wait(3);
 
     switch (confLng) {

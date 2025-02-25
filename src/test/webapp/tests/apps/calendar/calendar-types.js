@@ -18,7 +18,7 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
     I.click("button.buttons-create");
     DTE.waitForEditor('calendarTypesDataTable');
 
-    I.click("#DTE_Field_name");
+    I.clickCss("#DTE_Field_name");
     I.fillField("#DTE_Field_name", entityName);
     I.see("Žiaden schvaľovateľ");
     I.click(locate('button').withText('Žiaden schvaľovateľ'));
@@ -30,7 +30,7 @@ Scenario('zakladne testy', ({I, DT, DTE}) => {
     I.click(entityName);
     DTE.waitForEditor('calendarTypesDataTable');
 
-    I.click("#DTE_Field_name");
+    I.clickCss("#DTE_Field_name");
     I.fillField("#DTE_Field_name", entityName + ".changed");
     I.see("WebJET Admin");
     I.click(locate('button').withText('WebJET Admin'));

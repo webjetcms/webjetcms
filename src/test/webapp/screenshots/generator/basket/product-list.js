@@ -44,12 +44,12 @@ Scenario('Product list screens', async ({I, DT, DTE, Document}) => {
     DT.filter("title", "iPhone X 256GB");
     I.click("iPhone X 256GB");
     DTE.waitForEditor("productListDataTable");
-    I.click("#pills-dt-productListDataTable-perex-tab");
+    I.clickCss("#pills-dt-productListDataTable-perex-tab");
     I.waitForElement("div.DTE_Field_Name_perexGroups");
     Document.screenshotElement("div.DTE_Field_Name_perexImage", "/redactor/apps/eshop/product-list/new-product-image.png");
     Document.screenshotElement("div.DTE_Field_Name_perexGroups", "/redactor/apps/eshop/product-list/new-product-perex.png");
 
-    I.click("#pills-dt-productListDataTable-attributes-tab");
+    I.clickCss("#pills-dt-productListDataTable-attributes-tab");
     Document.screenshotElement("#productListDataTable_modal > div > div.DTE_Action_Edit", "/redactor/apps/eshop/product-list/new-product-attr.png");
 });
 
