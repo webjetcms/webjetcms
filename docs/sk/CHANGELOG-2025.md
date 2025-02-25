@@ -4,6 +4,12 @@
 
 > Vývojová verzia
 
+## 2025.0.x
+
+### Oprava chýb
+
+- Dátové tabuľky - opravené chybné zobrazenie kariet, ktoré sa nemajú zobrazovať pri vytváraní nového záznamu (napr. v šablónach) (#57533).
+
 ## 2025.0
 
 > Vo verzii **2025.0** sme priniesli **nový dizajn administrácie** pre ešte lepšiu prehľadnosť a používateľský komfort.
