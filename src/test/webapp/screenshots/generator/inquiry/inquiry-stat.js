@@ -27,6 +27,7 @@ Scenario('inquiry stat screens', async ({I, DT, DTE, Document}) => {
     I.clickCss("button.buttons-statistics");
     I.waitForVisible("#pills-inquiryStat");
 
+    setDates(I, DT, '28.10.2024', '28.11.2024');
     Document.screenshot("/redactor/apps/inquiry/inquiry-stat_page.png");
     Document.screenshotElement("#pills-inquiryStat", "/redactor/apps/inquiry/inquiry-stat_filter.png");
     Document.screenshotElement("div.dt-extfilter-dayDate > form", "/redactor/apps/inquiry/inquiry-stat_filter_dayDate.png");
@@ -40,15 +41,16 @@ Scenario('inquiry stat screens', async ({I, DT, DTE, Document}) => {
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/apps/inquiry/inquiry-stat_filter_userSelect.png");
     I.clickCss('button[data-id="userSelect"]');
 
+    setDates(I, DT, '28.10.2024', '28.11.2024');
     await adjustScrollbar(I, "#inquiryStat-pieVotes");
     Document.screenshotElement("#inquiryStat-pieVotes", "/redactor/apps/inquiry/inquiry-stat_pie_chart.png");
 
+    setDates(I, DT, '28.10.2024', '28.11.2024');
     await adjustScrollbar(I, "#inquiryStat-lineVotes");
     Document.screenshotElement("#inquiryStat-lineVotes", "/redactor/apps/inquiry/inquiry-stat_line_chart.png");
 
     await adjustScrollbar(I, "#tableDiv");
     Document.screenshotElement("#tableDiv", "/redactor/apps/inquiry/inquiry-stat_table.png");
-
 });
 
 function setDates(I, DT, dateFrom, dateTo) {

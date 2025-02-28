@@ -72,15 +72,15 @@ function doScreens(I, Document, TempMail, isAdmin) {
 
     I.fillField('input[type="password"][name="newPassword"]', "asd");
     I.fillField(retypeInput, "asddd");
-    Document.screenshot(basePath + screensPrefix + "-recovery-form-1.png", 700, 550);
+    Document.screenshotElement("#login > div.container > div > div.content", basePath + screensPrefix + "-recovery-form-1.png");
 
     I.clickCss(submitBtn);
-    Document.screenshot(basePath + screensPrefix + "-recovery-form-2.png", 700, 650);
+    Document.screenshotElement("#login > div.container > div > div.content", basePath + screensPrefix + "-recovery-form-2.png");
 
     I.fillField('input[type="password"][name="newPassword"]', "asd");
     I.fillField(retypeInput, "asd");
     I.clickCss(submitBtn);
-    Document.screenshot(basePath + screensPrefix + "-recovery-form-3.png", 700, 650);
+    Document.screenshotElement("#login > div.container > div > div.content", basePath + screensPrefix + "-recovery-form-3.png");
 
     const randomPassword = 'password_P' + I.getRandomText();
     I.fillField('input[type="password"][name="newPassword"]', randomPassword);

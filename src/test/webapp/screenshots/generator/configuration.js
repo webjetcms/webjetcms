@@ -11,6 +11,7 @@ Scenario('Components configuration', ({ I, DTE, Document }) => {
 
     I.moveCursorTo('#toast-container-webjet');
     Document.screenshot("/admin/setup/configuration/page.png");
+    I.toastrClose();
 
     I.clickCss("button.buttons-create");
     DTE.waitForEditor(datatableName);
