@@ -6,9 +6,14 @@
 
 ## 2025.0.x
 
+> Opravná verzia pôvodnej verzie 2025.0.
+
 ### Oprava chýb
 
 - Dátové tabuľky - opravené chybné zobrazenie kariet, ktoré sa nemajú zobrazovať pri vytváraní nového záznamu (napr. v šablónach) (#57533).
+- Dátové tabuľky - doplnený limit počtu záznamov pri zobrazení všetky. Hodnota je zhodná s maximálnym počtom riadkov pre exportu, nastavuje sa v konfiguračnej premennej `datatablesExportMaxRows` (#57657-2).
+- Editor obrázkov - pri editácii obrázku zo vzdialeného servera doplnená notifikácia o potrebe stiahnutia obrázka na lokálny server (#57657-2).
+- Web stránky - opravené vloženie bloku obsahujúce aplikáciu (#57657-2).
 
 ## 2025.0
 

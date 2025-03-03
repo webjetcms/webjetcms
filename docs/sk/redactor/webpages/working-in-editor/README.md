@@ -121,6 +121,12 @@ Linky / odkazy na ďalšie stránky vkladáte podobne ako odkaz na dokument/súb
 
 - Ak chcete vložiť odkaz na stránku nachádzajúcu sa na inom web sídle (linka na externú web stránku), zadajte jej adresu priamo do poľa URL adresa (aj s prefixom ```https://```). Zároveň sa automaticky zmení pole **Cieľ** (v karte Cieľ) na hodnotu **Nové okno (```_blank```)**, čo zabezpečí, že po kliknutí na tento odkaz sa stránka otvorí v novom okne/karte prehliadača. Pole **Cieľ** sa na hodnotu  **Nové okno (```_blank```)** nastavuje aj v prípade, ak chcete vytvoriť odkaz na dokument na stiahnutie. Ak nechcete, aby sa odkaz otvoril do nového okna, treba parameter **Cieľ** nastaviť na hodnotu **To isté okno ```_self```**. Pri odkazoch na externé web stránky a na dokumenty je však otvorenie odkazu do nového okna odporúčané.
 
+## Tlačidlá
+
+Ak je vo web stránke vložený odkaz, alebo tlačidlo, ktoré má nastavený CSS štýl obsahujúci výraz `btn-` alebo CSS štýl má nastavenú hodnotu `display` obsahujúcu `block`, teda aj napríklad `inline-block` zobrazí sa po kliknutí na takýto odkaz v editore okno nastavenia tlačidla. V ňom je možné jednoducho zmeniť text tlačidla a nastaviť odkaz po kliknutí. Môžete prípadne aj zmeniť farbu pozadia, písma a zaoblenie rohov, štandardne ale tieto hodnoty neodporúčame meniť - mali by byť nastavené podľa CSS štýlov web stránky.
+
+![](link_dialog_button.png)
+
 ## Vkladanie obrázkov
 
 Ak chcete vložiť na stránku obrázok, umiestnite kurzor na riadok alebo do bunky tabuľky, kde sa obrázok má nachádzať, a kliknite na ikonku pre vloženie obrázku ![](image.png ":no-zoom").

@@ -68,6 +68,8 @@ Pod tabuľkou riadkov sa zobrazuje informácia o zobrazenom počte záznamov, ce
 
 Automatické nastavenie počtu riadkov tabuľky sa použije len v hlavnom okne, nie je použité vo vnorených tabuľkách v editore (napr. v karte História editácie web stránky).
 
+Hodnota všetky je limitovaná nastavením konfiguračnej premennej `datatablesExportMaxRows`, čiže pri hodnote Všetky sa reálne načíta maximálny počet riadkov definovaný v tejto konfiguračnej premennej. Riadky sa zobrazujú priamo v prehliadači a pri vysokom počte dôjde k vysokému zaťaženiu procesora.
+
 ## Klávesové skratky
 
 Pre efektívnejšiu prácu môžete použiť nasledovné klávesové skratky (```Windows/MacOS```):
