@@ -46,6 +46,7 @@ Scenario("seo - screenshots", ({ I, Document, DT, i18n }) => {
     I.click("Redakčný systém WebJET");
     DT.waitForLoader();
     I.waitForInvisible(".webjetAnimatedLoader");
+    DT.setDates(i18n.getDate("08/01/2023"), i18n.getDate("08/01/2024"), "#googlePoitionDataTable_extfilter");
     Document.screenshot("/redactor/apps/seo/seo-positions-details-page.png", 1500, 800);
 
     I.amOnPage("/apps/seo/admin/number-keywords/");

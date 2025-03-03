@@ -47,8 +47,7 @@ Scenario("log files", async ({ I, Document }) => {
     I.amOnPage("/admin/v9/apps/audit-log-files/");
     Document.screenshot("/sysadmin/audit/audit-log-files-datatable.png");
 
-    const fileFullPath = await I.grabTextFrom("table#datatableInit > tbody > tr > td:nth-child(1) > div > a");
-    I.click(fileFullPath);
+    I.click(locate("a").withText("test-log-file.txt"));
     I.waitForElement("#modalIframe");
 
     I.wait(1);
