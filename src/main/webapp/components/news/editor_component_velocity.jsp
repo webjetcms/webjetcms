@@ -1005,7 +1005,7 @@ function escapeHtml(unsafe) {
 							<c:forEach items="${fieldEnum}" var="enumValue">
 								<option data-field-type="${enumValue.fieldTypeString}">${enumValue}</option>
 							</c:forEach>
-						<select>
+						</select>
 
 						<div class="operationsBox">
 							<div class="operationsString operations">
@@ -1065,7 +1065,7 @@ function escapeHtml(unsafe) {
 									<c:set var="fieldType" value="${fn:replace(enumValue, '_', '')}"></c:set>
 									<option <c:if test="${key eq fieldType}">selected="selected"</c:if> data-field-type="${enumValue.fieldTypeString}">${enumValue}</option>
 								</c:forEach>
-							<select>
+							</select>
 
 							<div class="operationsBox">
 								<div class="operationsString operations">
