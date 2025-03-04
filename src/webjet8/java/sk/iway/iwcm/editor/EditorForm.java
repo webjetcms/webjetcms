@@ -51,7 +51,6 @@ import sk.iway.iwcm.utils.Pair;
 public class EditorForm implements Serializable
 {
 	private static final long serialVersionUID = -7904465994457304390L;
-	public static final String PRIVATE_SECRET = "omfegin430egkneg05ykgndf83";
 
 	/**
 	 *  Description of the Field
