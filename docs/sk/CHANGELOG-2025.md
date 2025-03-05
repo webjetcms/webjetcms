@@ -4,6 +4,17 @@
 
 > Vývojová verzia
 
+## 2025.0.x
+
+### Oprava chýb
+
+- Dátové tabuľky - opravené chybné zobrazenie kariet, ktoré sa nemajú zobrazovať pri vytváraní nového záznamu (napr. v šablónach) (#57533).
+- Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
+- Prihlásenie - opravená chyba prihlásenia pri exspirovaní časovej platnosti hesla (#54273-57).
+- Prihlásenie - opravené prihlásenie v multiweb inštalácii (#54273-57).
+- GDPR - opravené zobrazenie karty Čistenie databázy pri použití `Oracle/PostgreSQL` databázy (#54273-57).
+- Archív súborov - opravené zobrazenie ikon v dialógu dátumu a času (#54273-57).
+
 ## 2025.0
 
 > Vo verzii **2025.0** sme priniesli **nový dizajn administrácie** pre ešte lepšiu prehľadnosť a používateľský komfort.

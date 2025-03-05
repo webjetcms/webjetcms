@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
@@ -99,5 +100,13 @@ public class LayoutBean {
      */
     public String getCsrfParameterName() {
         return CSRF.getParameterName();
+    }
+
+    /**
+     * Return true for cloud/multiweb/multitenant instalation
+     * @return
+     */
+    public boolean isTypeCloud() {
+        return InitServlet.isTypeCloud();
     }
 }

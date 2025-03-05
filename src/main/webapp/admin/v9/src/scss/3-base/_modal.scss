@@ -431,7 +431,7 @@ body.modal-open {
                     visibility: hidden;
                 }
             }
-            div.md-breadcrumb {
+            div.md-tabs {
                 li.nav-item.hide-on-create {
                     display: none;
                 }
@@ -445,7 +445,7 @@ body.modal-open {
                     visibility: hidden;
                 }
             }
-            div.md-breadcrumb {
+            div.md-tabs {
                 li.nav-item.hide-on-edit {
                     display: none;
                 }
@@ -989,9 +989,9 @@ html.in-iframe, html.in-iframe-show-table {
         }
     }
 
-    div.ly-header, div.ly-sidebar, div.container > div.md-breadcrumb,
+    div.ly-header, div.ly-sidebar, div.container > div.md-tabs,
     //fotogaleria/web nadpisy nad tree/datatable
-    div.container > .row > .col-md-4 > div.md-breadcrumb, div.container > .row > .col-md-8 > div.md-breadcrumb {
+    div.container > .row > .col-md-4 > div.md-tabs, div.container > .row > .col-md-8 > div.md-tabs {
         display: none;
     }
 

@@ -334,3 +334,16 @@ Scenario('select - missing ID', ({ I, DT, DTE }) => {
     DTE.waitForEditor();
     checkTemplateIdValue(I, true);
 });
+
+Scenario("conditional tabs", ({ I, DT, DTE }) => {
+    //
+    I.say("hide-on-create");
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+    I.click(DT.btn.add_button);
+
+    DTE.waitForEditor();
+    I.seeElement(locate("#pills-dt-editor-datatableInit li a").withText("Základné"));
+    I.dontSeeElement("#pills-dt-editor-datatableInit li.hide-on-create");
+    I.dontSeeElement(locate("#pills-dt-editor-datatableInit li a").withText("Priečinky"));
+});
