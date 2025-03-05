@@ -151,10 +151,12 @@ public class LogonTools {
                 else
                 {
                     hasEmailParam = true;
-                    sql = "SELECT * FROM users WHERE "+DB.fixAiCiCol("login")+"=?"+" OR "+DB.fixAiCiCol("email")+"=? ORDER BY is_admin DESC, user_id ASC";
+                    sql = "SELECT * FROM users WHERE "+DB.fixAiCiCol("login")+"=?"+" OR "+DB.fixAiCiCol("email")+"=?";
                 }
 
                 sql += UsersDB.getDomainIdSqlWhere(true);
+
+                sql += "ORDER BY is_admin DESC, user_id ASC";
 
                 PreparedStatement ps = db_conn.prepareStatement(sql);
                 try
