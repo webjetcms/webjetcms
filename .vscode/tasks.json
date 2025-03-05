@@ -66,7 +66,7 @@
         {
             "label": "appStartDemoDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-webjet9demo.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-webjet9demo.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -93,7 +93,7 @@
         {
             "label": "appStartTemplatesDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-democms.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-democms.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -120,7 +120,7 @@
         {
             "label": "appStartEshopDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-eshop.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-eshop.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -174,7 +174,7 @@
         {
             "label": "appStartOracleDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-oracle.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-oracle.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",
@@ -201,7 +201,7 @@
         {
             "label": "appStartPgSQLDB",
             "type": "shell",
-            "command": "webjetDbname=/poolman-pgsql.xml ./gradlew appStartDebug",
+            "command": "webjetDbname=/poolman-local-pgsql.xml ./gradlew appStartDebug",
             "group": "build",
             "problemMatcher": {
                 "owner": "shell",

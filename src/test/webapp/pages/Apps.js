@@ -87,7 +87,7 @@ module.exports = {
      * Opens the application editor.
      * @param {string|null} docId - Optional document ID for the page to edit.
      */
-    openAppEditor(docId = null){
+    openAppEditor(docId = null, modalId = "component-datatable_modal"){
         I.say('Opening app editor');
         I.switchTo();
         if(docId){
@@ -108,7 +108,7 @@ module.exports = {
         I.switchTo('.cke_dialog_ui_iframe');
         I.wait(1);
         I.switchTo('#editorComponent');
-        DTE.waitForModal('component-datatable_modal');
+        DTE.waitForModal(modalId);
     },
 
     /**

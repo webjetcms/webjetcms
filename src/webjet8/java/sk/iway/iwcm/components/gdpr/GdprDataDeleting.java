@@ -71,6 +71,9 @@ public class GdprDataDeleting {
         {
             users.addAll(UsersDB.getUsersByWhereSql(" AND ( (last_logon<convert (datetime,'"+date+"')) OR ( last_logon IS NULL AND reg_date<convert (datetime,'"+date+"') ) ) "));
         }
+        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL) {
+            users.addAll(UsersDB.getUsersByWhereSql(" AND ( (last_logon < to_date('"+date+"','YYYY-MM-DD')) OR ( last_logon IS NULL AND reg_date<to_date('"+date+"','YYYY-MM-DD') ) ) "));
+        }
         else // na MYSQL a ORACLE to zbieha ako tent isty SQl dotaz
         {
             users.addAll(UsersDB.getUsersByWhereSql(" AND ( (last_logon < date '"+date+"') OR ( last_logon IS NULL AND reg_date<'"+date+"' ) ) "));
@@ -147,7 +150,7 @@ public class GdprDataDeleting {
         {
             return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < convert (datetime,'"+date+"')");
         }
-        else if(Constants.DB_TYPE == Constants.DB_ORACLE)
+        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
         {
             return sq.forInt("SELECT count(*) FROM emails WHERE sent_date < to_date('"+date+"','YYYY-MM-DD')");
         }
@@ -168,7 +171,7 @@ public class GdprDataDeleting {
         {
             sq.execute("DELETE FROM emails WHERE sent_date < convert (datetime,'"+date+"')");
         }
-        else if(Constants.DB_TYPE == Constants.DB_ORACLE)
+        else if(Constants.DB_TYPE == Constants.DB_ORACLE || Constants.DB_TYPE == Constants.DB_PGSQL)
         {
             sq.execute("DELETE FROM emails WHERE sent_date < to_date('"+date+"','YYYY-MM-DD')");
         }

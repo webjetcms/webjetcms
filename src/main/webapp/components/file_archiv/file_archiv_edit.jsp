@@ -167,7 +167,7 @@ if (Tools.getRequestParameter(request, "save") != null  )
 					<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 						<stripes:text id="validFrom" name="fab.validFrom" class="form-control datepicker" />
 						<span class="input-group-btn">
-								<button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
+								<button type="button" class="btn default"><i class="ti ti-calendar-week"></i></button>
 							</span>
 					</div>
 				</div>
@@ -182,7 +182,7 @@ if (Tools.getRequestParameter(request, "save") != null  )
 					<div data-date-format="dd.mm.yyyy" class="input-group date date-picker">
 						<stripes:text id="validTo" name="fab.validTo" class="form-control datepicker" />
 						<span class="input-group-btn">
-								<button type="button" class="btn default"><i class="ti ti-calendar"></i></button>
+								<button type="button" class="btn default"><i class="ti ti-calendar-week"></i></button>
 							</span>
 					</div>
 				</div>
