@@ -14,6 +14,11 @@
 - Dátové tabuľky - doplnený limit počtu záznamov pri zobrazení všetky. Hodnota je zhodná s maximálnym počtom riadkov pre exportu, nastavuje sa v konfiguračnej premennej `datatablesExportMaxRows` (#57657-2).
 - Editor obrázkov - pri editácii obrázku zo vzdialeného servera doplnená notifikácia o potrebe stiahnutia obrázka na lokálny server (#57657-2).
 - Web stránky - opravené vloženie bloku obsahujúce aplikáciu (#57657-2).
+- Aplikácie - opravené zobrazenie karty prekladové kľúče pri použití komponenty `editor_component_universal.jsp` (#54273-57).
+- Prihlásenie - opravená chyba prihlásenia pri exspirovaní časovej platnosti hesla (#54273-57).
+- Prihlásenie - opravené prihlásenie v multiweb inštalácii (#54273-57).
+- GDPR - opravené zobrazenie karty Čistenie databázy pri použití `Oracle/PostgreSQL` databázy (#54273-57).
+- Archív súborov - opravené zobrazenie ikon v dialógu dátumu a času (#54273-57).
 
 ## 2025.0
 

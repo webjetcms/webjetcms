@@ -369,6 +369,9 @@ static {
 	//basket - Transition from double to BigDecimal
 	replaces.add(new OptionDto("Math.abs( doc.getPrice() ) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
 	replaces.add(new OptionDto("Math.abs(doc.getPrice()) > 0", "doc.getPrice().abs().compareTo(java.math.BigDecimal.valueOf(0)) > 0", null));
+
+	//prop search
+	replaces.add(new OptionDto("/admin/prop_search.jsp?search=yes&text=", "/admin/v9/settings/translation-keys/#dt-filter-key=", ".jsp"));
 }
 
 private void checkDir(String url, boolean saveFile, boolean compileFile, JspWriter out, HttpServletRequest request, HttpServletResponse response) throws IOException

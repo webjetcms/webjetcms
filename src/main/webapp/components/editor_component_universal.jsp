@@ -254,7 +254,7 @@ if (height > 500) height = 500;
 </div>
 <% } %>
 
-<div class="tab-pane toggle_content" style="height: <%=height%>px; overflow: auto; min-width:700px;">
+<div class="tab-pane toggle_content" style="height: <%=height%>px !important; overflow: auto; min-width:700px;">
 
 	<div class="tab-page" id="tabMenu1" style="display: block; min-height: 400px;">
 		<table border="0" cellspacing="0" cellpadding="1">
@@ -398,7 +398,7 @@ if (height > 500) height = 500;
 
 	<% if (Tools.isNotEmpty(propSearchKey)) { %>
 	<div class="tab-page tab-page-iframe" id="tabMenu2">
-		<iframe src="/admin/prop_search.jsp?search=yes&text=<%=propSearchKey %>" width="100%" height="380<%--=height-20--%>" frameborder="0"></iframe>
+		<iframe id="propSearchIframe" src="/admin/v9/settings/translation-keys/#dt-filter-key=<%=propSearchKey %>" width="100%" height="<%=height%>" frameborder="0"></iframe>
 	</div>
 	<% } %>
 
