@@ -4,28 +4,7 @@
         <h3 class="editContent" style="text-transform: uppercase;text-align: center;margin-top: 15px;color: #fff;">Keep in touch</h3>
         <div class="row mt40 mb40">
             <div class="col-md-8 col-md-offset-2">
-                <form action="/formmail.do?savedb=ContactForm" method="post" name="formMailForm">
-                    <div class="col-md-6">
-                        <input type="text" name="first-name" class="form-control" data-name="First Name" placeholder="First Name" style="background-color: #282828;border-radius: 2px;margin-bottom: 25px;border: 2px solid #62b151;color: #f5f5f5;">
-                    </div>
-                    <div class="col-md-6">
-                        <input type="text" name="last-name" class="form-control" data-name="Last Name" placeholder="Last Name" style="background-color: #282828;border-radius: 2px;margin-bottom: 25px;border: 2px solid #62b151;color: #f5f5f5;">
-                    </div>
-                    <div class="col-md-6">
-                        <input type="email" name="email" class="form-control required" data-name="Email" placeholder="Email" required style="background-color: #282828;border-radius: 2px;margin-bottom: 25px;border: 2px solid #62b151;color: #f5f5f5;">
-                    </div>
-                    <div class="col-md-6">
-                        <input type="text" name="subject" class="form-control" data-name="Subject" placeholder="Subject" style="background-color: #282828;border-radius: 2px;margin-bottom: 25px;border: 2px solid #62b151;color: #f5f5f5;">
-                    </div>
-
-                    <div class="col-md-12">
-                        <textarea name="message" class="form-control textarea" data-name="Message" placeholder="Message" style="min-height: 100px;background-color: #282828;border-radius: 2px;margin-bottom: 25px;border: 2px solid #62b151;color: #f5f5f5;"></textarea>
-                    </div>
-
-                    <div class="text-center mb20 col-md-12">
-                        <input class="btn btn-default-orange" onclick="return invokeWJAjax('formMailForm', 'ajaxFormResultContainer', 'bSubmit', '/FormMailAjax.action');" type="submit" value="Send Message" />
-                    </div>
-                </form>
+                !INCLUDE(/components/formsimple/form.jsp, formName=&quot;Page Builder Demo&quot;, editorData=JTVCJTdCJTIyZmllbGRUeXBlJTIyOiUyMm1lbm9QcmllenZpc2tvJTIyLCUyMmxhYmVsJTIyOiUyMiUyMiwlMjJyZXF1aXJlZCUyMjpmYWxzZSwlMjJ0b29sdGlwJTIyOiUyMiUyMiU3RCwlN0IlMjJmaWVsZFR5cGUlMjI6JTIyZW1haWwlMjIsJTIybGFiZWwlMjI6JTIyJTIyLCUyMnJlcXVpcmVkJTIyOmZhbHNlLCUyMnRvb2x0aXAlMjI6JTIyJTIyJTdELCU3QiUyMmZpZWxkVHlwZSUyMjolMjJwb3puYW1rYSUyMiwlMjJsYWJlbCUyMjolMjIlMjIsJTIycmVxdWlyZWQlMjI6ZmFsc2UsJTIydG9vbHRpcCUyMjolMjIlMjIlN0QsJTdCJTIyZmllbGRUeXBlJTIyOiUyMnN1aGxhc1BvZG1pZW5reSUyMiwlMjJsYWJlbCUyMjolMjIlMjIsJTIycmVxdWlyZWQlMjI6ZmFsc2UsJTIydG9vbHRpcCUyMjolMjIlMjIlN0QsJTdCJTIyZmllbGRUeXBlJTIyOiUyMm9kb3NsYXQlMjIsJTIybGFiZWwlMjI6JTIyJTIyLCUyMnJlcXVpcmVkJTIyOmZhbHNlLCUyMnRvb2x0aXAlMjI6JTIyJTIyJTdEJTVE)!
             </div>
         </div>
     </div>

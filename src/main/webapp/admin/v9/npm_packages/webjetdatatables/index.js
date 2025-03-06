@@ -2706,8 +2706,8 @@ export const dataTableInit = options => {
             var start = data.start;
             var pageNum = (start === 0) ? 0 : (start / pageSize);
 
-            //chceme vsetky zaznamy
-            if (pageSize === -1) pageSize = 999999;
+            //chceme vsetky zaznamy - aby necrashol chrome dame max podla konf. premennej datatablesExportMaxRows
+            if (pageSize === -1) pageSize = window.datatablesExportMaxRows;
 
             // extract sort information
             var pageSort = null;
