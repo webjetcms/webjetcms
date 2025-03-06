@@ -86,16 +86,15 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     Document.screenshot(basePath+"/components/send_link/screenshot-1.jpg");
     //if (1==1) return;
 
-    screenshotWebAndApp(I, Document, 48204, "/components/inquiry", "#resultsDiv-1", tabLink1);
+    screenshotWebAndApp(I, Document, 48204, "/components/inquiry", "#resultsDiv-1", tabLink1Spring);
     screenshotWebAndApp(I, Document, 77667, "/components/inquirysimple", ".inquiryBoxDefault", tabLink1, tabLink2);
     screenshotWebAndApp(I, Document, 77668, "/components/file_archiv", ".documents", tabLinkNone, null, 640, 480);
     screenshotWebAndApp(I, Document, 21343, "/components/banner", ".banner-content", tabLinkNone, tabLink3, 640, 480);
 
     screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1, tabLink2, 800, 600);
     screenshotWebAndApp(I, Document, 63761, "/components/forum", "#forumContentDiv", tabLink1, tabLink2, 800, 600);
-    screenshotWebAndApp(I, Document, 60029, "/components/quiz", "#quiz", tabLink1, null, 800, 600);
-    screenshotWebAndApp(I, Document, 77767, "/components/app-date", ".dateapp", tabLinkNone, null, 800, 600);
-    screenshotWebAndApp(I, Document, 77768, "/components/date", ".dateapp", tabLinkNone, null, 800, 600);
+    screenshotWebAndApp(I, Document, 60029, "/components/quiz", "#quiz", tabLink1Spring, null, 800, 600);
+    screenshotWebAndApp(I, Document, 77767, "/components/app-date", ".ly-content .container", tabLinkNone, null, 800, 600);
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=22");
     DTE.waitForEditor();
@@ -119,7 +118,8 @@ Scenario('apps screenshot for editor-components.jsp', ({ I, DT, DTE, Document })
     Document.screenshot(basePath+"/components/emoticon/screenshot-1.jpg");
 
     screenshotWebAndApp(I, Document, 26180, "/components/formsimple", "#formMailForm-formular-lahko", tabLink1, tabLink2, 800, 600);
-    screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1, tabLink2, 800, 600);
+    screenshotWebAndApp(I, Document, 36038, "/components/calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
+    screenshotWebAndApp(I, Document, 120026, "/components/news-calendar", ".ly-content .container", tabLink1Spring, tabLink2Spring, 800, 600);
     screenshotWebAndApp(I, Document, 59889, "/components/map", "#map1", tabLink1, tabLink2, 1000, 1200);
     screenshotWebAndApp(I, Document, 24217, "/components/sitemap", ".sitemaptest", tabLinkNone, null, 640, 480);
 

@@ -142,6 +142,42 @@ Scenario('custom-fields-list @singlethread', ({ I, DT, DTE }) => {
     DT.resetTable();
 });
 
+Scenario('Optional fields - yellow template test', ({ I, DT, DTE }) => {
+    //
+    I.say("Test on Volitelne polia folder");
+    const fields_volitelne = ["text - A", "select - B", "autocomplete - D"];
+    checkOptionalFields(I, DTE, DT, fields_volitelne, '/admin/v9/webpages/web-pages-list/?groupid=7625', true);
+
+    //
+    I.say("Test on yellow folder - as jstree click");
+    const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D"];
+    I.jstreeClick("Yellow Folder");
+    checkOptionalFields(I, DTE, DT, fields_yellow, null, false);
+
+    //
+    I.say("Test on yellow folder - as loaded");
+    checkOptionalFields(I, DTE, DT, fields_yellow, '/admin/v9/webpages/web-pages-list/?groupid=81154', false);
+});
+
+function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
+    if (pageUrl != null) I.amOnPage(pageUrl);
+    const columnLabelSelector = "#datatableInit_wrapper tr > th > span.dt-column-title[role='button']";
+
+    if (showColumns) fields.forEach(field => DT.showColumn(field));
+
+    // over v stlpcoch
+    fields.forEach(field => I.see(field, columnLabelSelector));
+
+    // over v editore
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+    I.clickCss('#pills-dt-datatableInit-fields-tab');
+    fields.forEach(field => I.seeElement(locate('#panel-body-dt-datatableInit-fields label').withText(field)));
+
+    DTE.cancel();
+};
+
 Scenario('custom-fields-list-reset @singlethread', ({ I, DT }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
     DT.resetTable();

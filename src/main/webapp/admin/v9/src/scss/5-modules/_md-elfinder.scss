@@ -873,8 +873,8 @@ div.ui-dialog-content:has(div.CodeMirror) {
         border-color: $primary !important;
         color: white !important;
         &:hover {
-            background-color: #0054d5 !important;
-            border-color: #0054d5 !important;
+            background-color: $primary-hover !important;
+            border-color: $primary-hover !important;
         }
     }
 }

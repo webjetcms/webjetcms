@@ -107,6 +107,7 @@ Voliteľné polia:
   - `DTE_Field_Has_Checkbox` - nastaví odsadenie od spodu na hodnotu `-14px` aby nezostala medzera pred ďalším polom.
   - `hide-on-create` - schová pole pri vytváraní nového záznamu.
   - `hide-on-edit` - schová pole pri editácii záznamu.
+  - `hide-on-duplicate` - schová pole pri duplikovaní záznamu.
   - `not-export` - pole sa nebude exportovať.
   - `show-html` - zobrazí sa HTML kód v hodnote vrátane entít typu `&#39;`, stĺpcu nastaví atribút `entityDecode: false`.
   - `wrap` - zapne zalamovanie textu, používa sa primárne v poliach typu `textarea`.

@@ -77,6 +77,11 @@ function openTargetBlank(link, event)
     event.stopPropagation();
     return false;
 }
+function wjPopup(url, width, height)
+{
+	  var options = "toolbar=no,scrollbars=yes,resizable=yes,width="+width+",height="+height+";"
+	  popupWindow=window.open(url,"_blank",options);
+}
 
 <% if (Constants.getString("wjImageViewer").equals("photoswipe")) { %>
 $(document).ready(function()

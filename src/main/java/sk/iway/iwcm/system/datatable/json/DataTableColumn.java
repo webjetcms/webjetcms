@@ -585,6 +585,14 @@ public class DataTableColumn {
             }
             editor.setType("staticText");
         }
+
+        if (dataTableColumnType == DataTableColumnType.IMAGE_RADIO) {
+            renderFormat = "dt-format-image-radio";
+            if (editor == null) {
+                editor = new DataTableColumnEditor();
+            }
+            editor.setType("imageRadio");
+        }
     }
 
     private void setFinalProperties(Field field) {

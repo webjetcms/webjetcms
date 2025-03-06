@@ -11,7 +11,7 @@
 <%
     sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 %>
-<%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.*" %>
+<%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %>
 <%@ page import="sk.iway.iwcm.Tools" %>
 <%@ page import="sk.iway.iwcm.doc.DocDetails" %>
 <%@ page import="sk.iway.iwcm.doc.GroupDetails" %>

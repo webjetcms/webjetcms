@@ -2,7 +2,7 @@
 <%@page import="sk.iway.iwcm.Constants"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" import="java.io.*" %>
+%><%@ page pageEncoding="utf-8" import="java.io.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><iwcm:checkLogon admin="true"/>
 
 <%

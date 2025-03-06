@@ -745,3 +745,43 @@ Scenario('Various link types', async ({ I, DT, DTE }) => {
      await testLink("https://www.tiktok.com/@webjetcms", null, I, DT, DTE);
      await testLink("www.tiktok.com/@webjetcms", "http://www.tiktok.com/@webjetcms", I, DT, DTE);
 });
+
+Scenario('Test link elfinder - ALT field', async ({ I, DT, DTE }) => {
+     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
+     DT.waitForLoader();
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+     I.waitForElement("#pills-dt-datatableInit-basic-tab.active", 10);
+     I.click("#pills-dt-datatableInit-content-tab");
+
+     //
+     I.say("Testing link chosen by elfinder and check metadata");
+     await testLinkElfinder(DTE, I);
+});
+
+
+async function testLinkElfinder(DTE, I) {
+     await DTE.fillCkeditor("<p>Test</p>");
+
+     I.say('Adding link to the text');
+     I.clickCss('#trEditor');
+     I.pressKey(["CommandOrControl", "A"]);
+
+     I.clickCss('.cke_button_icon.cke_button__link_icon');
+     I.waitForText('Informácie o odkaze', 10);
+     I.switchTo();
+     I.waitForElement('#wjLinkIframe');
+     I.switchTo('#wjLinkIframe');
+
+     I.waitForLoader(".WJLoaderDiv");
+     I.click(locate('.ui-corner-all.elfinder-navbar-dir.elfinder-navbar-root.elfinder-tree-dir.elfinder-ro.elfinder-navbar-collapsed.ui-droppable.elfinder-subtree-loaded').withText('Médiá všetkých stránok'), null, { position: { x: 20, y: 5 } });
+     I.waitForText('Súbory', 10, ".elfinder-cwd-file");
+     I.doubleClick(".elfinder-cwd-filename[title='Súbory']");
+     I.click(".elfinder-cwd-filename[title='jurko.jpg']");
+     await I.waitForElement(".elfinder-stat-selected[title^='jurko.jpg']", 10);
+     I.switchTo();
+     I.clickCss(".cke_dialog_tab[title='Rozšírené']");
+     I.seeInField('#cke_262_textInput', 'Súbor JPG, veľkosť 465,15 kB');
+
+     I.click(locate('.cke_dialog_ui_button').withText('OK'));
+}

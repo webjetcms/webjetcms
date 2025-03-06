@@ -26,6 +26,7 @@ import sk.iway.iwcm.users.UsersDB;
     nameKey = "components.dmail.unsubscribe.title",
     descKey = "components.dmail.unsubscribe.desc",
     itemKey = "cmp_dmail",
+    variant = "unsubscribe",
     imagePath = "/components/dmail/editoricon.png",
     galleryImages = "/components/dmail/",
     componentPath = "/components/dmail/unsubscribe.jsp"
@@ -53,7 +54,7 @@ public class UnsubscribeApp extends WebjetComponentAbstract {
     private String senderName;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         tab = "basic",
         title = "components.dmail.unsubscribe.confirmUnsubscribe"
     )

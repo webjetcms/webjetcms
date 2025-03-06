@@ -18,7 +18,4 @@ div.kalendar table td.akcia	{color: #009390;}
 div.kalendar table td.akcia:hover	{color: #fff; background: url(../images/kalendar-den.png) bottom no-repeat; cursor: pointer;}
 div.kalendar table td.today	{color: #fff; background: url(../images/kalendar-den.png) top no-repeat;}
 
-div.kalendar a.btn	{float: none; display: inline-block; width: 133px; height: 26px; background: url(../images/kalendar-btn.png) top; text-decoration: none; line-height: 27px; color: #fff; font-size: 90%;}
-div.kalendar a.btn:hover {background-position: bottom;}
-
 div.kalendar p {margin: 0; padding: 10px 0 0 0; border-top: 1px solid #e6e6e6;}

@@ -10,7 +10,7 @@ import cn.bluejoe.elfinder.controller.executor.FsItemEx;
 import cn.bluejoe.elfinder.service.FsService;
 
 public class SizeCommandExecutor extends AbstractJsonCommandExecutor {
-    
+
     @Override
     protected void execute(FsService fsService, HttpServletRequest request, ServletContext servletContext, JSONObject json) throws Exception
     {

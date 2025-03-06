@@ -4,7 +4,7 @@
 <%@page import="sk.iway.iwcm.i18n.Prop"%>
 <%@page import="sk.iway.iwcm.users.SettingsAdminBean"%><%@ page import="sk.iway.iwcm.users.SettingsAdminDB" %><%@ page import="sk.iway.iwcm.users.UsersDB" %><%@ page import="java.util.Map" %>
 <%sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");%>
-<%@ page pageEncoding="windows-1250" %>
+<%@ page pageEncoding="utf-8" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>

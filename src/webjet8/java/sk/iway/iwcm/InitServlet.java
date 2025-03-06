@@ -41,10 +41,7 @@ import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.cluster.ClusterRefresher;
-import sk.iway.iwcm.system.cron.CronDB;
 import sk.iway.iwcm.system.cron.CronFacade;
-import sk.iway.iwcm.system.cron.CronTask;
-import sk.iway.iwcm.system.cron.WebjetDatabaseTaskSource;
 import sk.iway.iwcm.system.proxy.WebJETProxySelector;
 import sk.iway.iwcm.users.UserGroupsDB;
 /**
@@ -845,32 +842,6 @@ public class InitServlet extends HttpServlet
 
 		dt.diff("after cluster refresher");
 
-		//spusti cron4j
-		try
-		{
-			CronFacade cf = CronFacade.getInstance();
-			cf.setTaskSource(new WebjetDatabaseTaskSource());
-			cf.start();
-
-			//spustim tie ktore sa maju spustit hned po starte
-			List<CronTask> startupTasks = CronDB.getCronTasksRunAtStartup();
-			if(startupTasks != null)
-			{
-				for(CronTask t : startupTasks)
-				{
-					if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
-					{
-						Logger.println(InitServlet.class, "Spustam cron {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
-						cf.runSimpleTaskOnce(t);
-					}
-				}
-			}
-		}
-		catch (Exception e)
-		{
-			sk.iway.iwcm.Logger.error(e);
-		}
-
 		//Logger.println(InitServlet.class,"---------------- INIT DONE --------------");
 
 		dt.diff("Init done");
@@ -911,8 +882,6 @@ public class InitServlet extends HttpServlet
 		Constants.setLong("licenseExpiryDate", licenseExpiryDate);
 
 		dt.diff("DONE");
-
-		setWebjetInitialized(true);
 
 		return true;
 	}
@@ -1577,8 +1546,12 @@ public class InitServlet extends HttpServlet
 		InitServlet.valid = valid;
 	}
 
-	private static void setWebjetInitialized(boolean webjetInitialized) {
-		InitServlet.webjetInitialized = webjetInitialized;
+	private static void setWebjetInitialized(boolean initialized) {
+		InitServlet.webjetInitialized = initialized;
+	}
+
+	public static void setWebjetInitialized() {
+		InitServlet.webjetInitialized = true;
 	}
 
 	public static Date getServerStartDatetime() {

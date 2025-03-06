@@ -3,11 +3,12 @@ Feature('webpages.media');
 var editorContainer = "#datatableFieldDTE_Field_editorFields-media_modal";
 var randomText;
 
-Before(({ I, login }) => {
+Before(({ I, login, DT }) => {
     login('admin');
     if (typeof randomText=="undefined") {
         randomText = I.getRandomText();
     }
+    DT.addContext("media", "#datatableFieldDTE_Field_editorFields-media_wrapper");
 });
 
 function mediaEditSteps(I, DTE, options, isFromWebpage=false) {
@@ -201,6 +202,55 @@ Scenario('kontrola menu poloziek', ({I}) => {
 
     I.amOnPage("/admin/v9/webpages/media/#/");
     I.see("Média", "div.menu-wrapper");
+});
+
+Scenario('Test media - all permissions media', ({ I, DT, DTE}) => {
+    I.say('Logging in as tester2');
+    I.relogin('tester2');
+
+    I.say('Verifying access to media section');
+    I.amOnPage('/admin/v9/webpages/media/');
+    I.waitForText('Na túto aplikáciu/funkciu nemáte prístupové práva', 10);
+
+    I.say('Opening editor for document 120034');
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + 120034);
+
+    I.say('Add media and check');
+    I.waitForElement("#pills-dt-datatableInit-media-tab", 10);
+    I.clickCss("#pills-dt-datatableInit-media-tab");
+    I.click(DT.btn.media_add_button);
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
+    DTE.fillField("mediaTitleSk", `autotest-${randomText}`);
+    I.clickCss('.DTE_Field_Name_mediaThumbLink .btn[aria-label="Vybrať"]');
+    I.waitForElement("#modalIframeIframeElement", 10);
+    I.switchTo("#modalIframeIframeElement");
+    I.fillField("#file", "/images/gallery/watermark/subfolder1/nature-5411408.jpg");
+    I.switchTo();
+    I.click(locate("#modalIframe button").withText("Potvrdiť"));
+    I.click(locate('#datatableFieldDTE_Field_editorFields-media_modal div.DTE_Form_Buttons button').withText('Pridať'));
+    DT.checkTableRow("datatableInit_modal", 1, ["", "", `autotest-${randomText}`, "", "/images/gallery/watermark/subfolder1/nature-5411408.jpg"]);
+
+    I.say('Edit media and check');
+    I.clickCss("#datatableFieldDTE_Field_editorFields-media_wrapper button.buttons-select-all");
+    I.click(DT.btn.media_edit_button);
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
+    DTE.fillField("mediaTitleSk", `autotest-${randomText}-chan.ge`);
+    I.click(locate('#datatableFieldDTE_Field_editorFields-media_modal div.DTE_Form_Buttons button').withText('Uložiť'));
+    DT.checkTableRow("datatableInit_modal", 1, ["", "", `autotest-${randomText}-chan.ge`, "", "/images/gallery/watermark/subfolder1/nature-5411408.jpg"]);
+});
+
+Scenario('Delete media files', ({ I, DT, DTE }) => {
+    I.say('Logging in as tester2');
+    I.relogin('tester2');
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=" + 120034);
+    I.waitForElement("#pills-dt-datatableInit-media-tab", 10);
+    I.clickCss("#pills-dt-datatableInit-media-tab");
+    I.say('Delete media and check');
+    I.clickCss("#datatableFieldDTE_Field_editorFields-media_wrapper button.buttons-select-all");
+    I.click(DT.btn.media_delete_button);
+    DTE.waitForEditor("datatableFieldDTE_Field_editorFields-media");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.waitForText("Nenašli sa žiadne vyhovujúce záznamy", 10);
 });
 
 function testMediaGroups(I, DTE, editorContainer, shouldSee=true) {

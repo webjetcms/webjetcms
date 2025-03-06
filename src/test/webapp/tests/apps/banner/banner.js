@@ -257,18 +257,18 @@ Scenario('kampanovy banner', ({I, DT, DTE}) => {
     I.amOnPage("/apps/banner/admin/?id=124");
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
-    I.dontSee("http://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign");
+    I.dontSee("://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign");
     I.fillField("#DTE_Field_campaignTitle", "test");
     I.pressKey('Tab');
     I.waitForElement("#campaignTitleUrlShowcase", 10);
-    I.waitForText("https://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
+    I.waitForText("://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign=test", 10, "#campaignTitleUrlShowcase");
 
     I.amOnPage("/apps/banner/admin/?id=3602");
     DT.waitForLoader();
     DTE.waitForEditor("bannerDataTable");
     I.click({css: "#pills-dt-bannerDataTable-advanced-tab"});
     I.waitForElement("#campaignTitleUrlShowcase", 10);
-    I.waitForText("https://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
+    I.waitForText("://demotest.webjetcms.sk/apps/bannerovy-system/?utm_campaign", 10, "#campaignTitleUrlShowcase");
 });
 
 Scenario('Kontrola prava cmp_banner_seeall', ({I, DT}) => {
@@ -448,8 +448,10 @@ Scenario('Device type specific banner', ({I, DTE}) => {
 });
 
 function selectDevices(I, DTE, selectDevices) {
-    let allDevices = ["Phone", "Tablet", "Pc"];
-    let checkboxPrefix = "#commonAdvancedSettingsDevice";
+    let allDevices = {
+        "Phone" : '#DTE_Field_device_0',
+        "Tablet" : '#DTE_Field_device_1',
+        "Pc" : '#DTE_Field_device_2'};
 
     //Open page
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=73822");
@@ -470,15 +472,15 @@ function selectDevices(I, DTE, selectDevices) {
     I.switchTo("iframe.cke_dialog_ui_iframe") //iframe
     I.switchTo("#editorComponent") //iframe
 
-    I.waitForElement("#tabLinkcommonAdvancedSettings");
-    I.clickCss("#tabLinkcommonAdvancedSettings");
+    I.waitForElement("#pills-dt-component-datatable-commonSettings-tab");
+    I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
 
     //Check wanted, unchecke rest
-    allDevices.forEach((device) => {
+    Object.keys(allDevices).forEach((device) => {
         if(selectDevices.includes(device)) {
-            I.checkOption(checkboxPrefix + device);
+            I.checkOption(allDevices[device]);
         } else {
-            I.uncheckOption(checkboxPrefix + device);
+            I.uncheckOption(allDevices[device]);
         }
     });
 

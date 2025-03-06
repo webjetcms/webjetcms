@@ -118,14 +118,17 @@ public class ReservationEntity implements Serializable {
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
         title="reservation.reservations.status",
-        hiddenEditor = true,
+        className = "disabled hide-on-create",
         editor = {
 			@DataTableColumnEditor(
 				options = {
                     @DataTableColumnEditorAttr(key = "reservation.reservations.status.waiting", value = "null"),
 					@DataTableColumnEditorAttr(key = "reservation.reservations.status.accepted", value = "true"),
 					@DataTableColumnEditorAttr(key = "reservation.reservations.status.denied", value = "false")
-				}
+				},
+                attr = {
+                    @DataTableColumnEditorAttr(key = "disabled", value = "disabled")
+                }
 			)
 		}
     )
@@ -160,9 +163,11 @@ public class ReservationEntity implements Serializable {
     )
     private BigDecimal price;
 
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN, className = "not-export")
     @Column(name = "domain_id")
     private Integer domainId;
 
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     @Column(name = "user_id")
     private Integer userId;
 

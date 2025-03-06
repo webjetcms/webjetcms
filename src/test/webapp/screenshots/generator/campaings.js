@@ -32,6 +32,12 @@ Scenario('campaings', ({ I, DTE, Document }) => {
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
 
+    I.say("Do screen of confirm");
+    I.waitForVisible("#toast-container-webjet");
+    I.moveCursorTo("#toast-container-webjet");
+    Document.screenshotElement("#toast-container-webjet", "/redactor/apps/dmail/campaings/subject_confirm.png");
+    I.click(locate("#toast-container-webjet").find("button.btn-outline-secondary"));
+
     Document.screenshotElement("div.DTE_Action_Create", "/redactor/apps/dmail/campaings/editor.png");
 
     DTE.save();

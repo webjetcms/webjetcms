@@ -93,8 +93,13 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.sendlink",
     "sk.iway.iwcm.components.gdpr",
     "sk.iway.iwcm.components.sitebrowser",
-    "sk.iway.iwcm.components.basket.rest"
-
+    "sk.iway.iwcm.components.basket.rest",
+    "sk.iway.iwcm.components.inquiry",
+    "sk.iway.iwcm.components.dmail",
+    "sk.iway.iwcm.components.date",
+    "sk.iway.iwcm.components.appdate",
+    "sk.iway.iwcm.components.quiz",
+    "sk.iway.iwcm.components.calendarnews"
 
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {

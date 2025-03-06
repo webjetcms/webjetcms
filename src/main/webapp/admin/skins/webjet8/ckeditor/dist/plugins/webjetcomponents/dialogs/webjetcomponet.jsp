@@ -176,7 +176,7 @@ body { overflow: hidden; }
                 parameters = parameters.replace(/\&amp;nbsp;/gi, "&nbsp;")
                 //console.log("CURRENT PARAMETERS=", parameters);
 
-                var src = '/admin/v9/webpages/component?id=1&showOnlyEditor=true';
+                var src = '/admin/v9/webpages/component?id=1&showOnlyEditor=true&name=' + encodeURIComponent(c);
                 var iframe = $('#editorComponent');
                 iframe
                     .after($('<input type="hidden" id="className" />').val(c))

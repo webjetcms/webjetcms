@@ -86,6 +86,10 @@ export function bindExportButton(TABLE, DATA) {
                 value = moment(value).format("L HH:mm:ss");
             } else if (dc.renderFormat.indexOf("date") !== -1) {
                 value = moment(value).format("L");
+            } else if (dc.renderFormat.indexOf("time-hms") !== -1) {
+                value = moment(value).format("HH:mm:ss");
+            } else if (dc.renderFormat.indexOf("time-hm") !== -1) {
+                value = moment(value).format("HH:mm");
             } else if (dc.renderFormat.indexOf("-select") !== -1 || dc.renderFormat.indexOf("-checkbox") !== -1) {
                 var hashtableValue = optionsTable[dc.data + "-" + value];
                 //console.log("hashtableValue=", hashtableValue, " value=", value);
@@ -731,6 +735,22 @@ export function bindImportButton(TABLE, DATA) {
                             else if (col.renderFormat.indexOf("-date")!=-1) {
                                 //console.log("PARSING DATE, col=", col, " value=", value);
                                 value = parseInt(moment(value, "L").valueOf());
+                                //console.log("parsed date=", value, " moment.format=", moment(value).format("L HH:mm:ss"));
+                            }
+                            else if (col.renderFormat.indexOf("-time-hms")!=-1) {
+                                //console.log("PARSING time-mhs, col=", col, " value=", value, "typeof=", typeof value);
+                                if (typeof value === "object") {
+                                    value = value.getHours()+":"+value.getMinutes()+":"+value.getSeconds()
+                                }
+                                value = parseInt(moment("01.01.2000 "+value, "L HH:mm:ss").valueOf());
+                                //console.log("parsed date=", value, " moment.format=", moment(value).format("L HH:mm:ss"));
+                            }
+                            else if (col.renderFormat.indexOf("-time-hm")!=-1) {
+                                //console.log("PARSING time-mhs, col=", col, " value=", value, "typeof=", typeof value);
+                                if (typeof value === "object") {
+                                    value = value.getHours()+":"+value.getMinutes();
+                                }
+                                value = parseInt(moment("01.01.2000 "+value, "L HH:mm").valueOf());
                                 //console.log("parsed date=", value, " moment.format=", moment(value).format("L HH:mm:ss"));
                             }
                         }

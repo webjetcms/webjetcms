@@ -38,25 +38,34 @@ block content
 
             //console.log("parameters=", parameters);
 
-            $.ajax({
-                method: 'post',
-                url: '/admin/rest/components/component',
-                data: JSON.stringify({
+            let data = {
                     className: componentClass,
                     parameters: parameters,
                     docId: docId,
                     groupId: groupId,
                     pageTitle: title
-                }),
+            };
+
+            if (typeof window.appBeforeXhr === "function") {
+                window.appBeforeXhr(data);
+            }
+
+            $.ajax({
+                method: 'post',
+                url: '/admin/rest/components/component',
+                data: JSON.stringify(data),
                 dataType: 'json',
                 contentType: 'application/json',
                 success: function(response) {
 
                     //console.log("success, response=", response);
-
                     if (typeof response.error !== 'undefined') {
                         WJ.notifyError(response.error);
                         return;
+                    }
+
+                    if (typeof window.appAfterXhr === "function") {
+                        window.appAfterXhr(response);
                     }
 
                     componentColumns = response.columns;
@@ -136,6 +145,10 @@ block content
                             componentPath = paths[0];
                         }
                     }
+
+                    if (typeof window.appAfterInit === "function") {
+                        window.appAfterInit(response, componentDatatable);
+                    }
                 }
             });
         });
@@ -169,9 +182,12 @@ block content
                 }
 
                 if("select" == column.editor.type && true === column.editor.multiple) {
-                    //It's multichoise (select multichoise), convert to array
-                    if(fieldValue === null || fieldValue === undefined) fieldValue = [];
-                    else data[column.data] = fieldValue.split("+");
+                    if(fieldValue === null || fieldValue === undefined) {
+                        fieldValue = [];
+                    } else if (typeof fieldValue === "string") {
+                        //It's multichoice (select multichoice), convert to array
+                        data[column.data] = fieldValue.split("+");
+                    }
                 }
             }
 
@@ -182,6 +198,20 @@ block content
             try {
                 let params = componentDatatable.EDITOR.get();
                 delete params['id'];
+
+                if (typeof window.appGetComponentCode === "function") {
+                    let include = window.appGetComponentCode(componentPath, params, componentDatatable);
+                    //console.log("include=", include);
+                    if (typeof include != "undefined" && include != null) {
+                        $("#componentCode", window.parent.document).val(include);
+                        return true;
+                    }
+                }
+
+                if (typeof window.appGetComponentPath === "function") {
+                    componentPath = window.appGetComponentPath(componentPath, componentDatatable);
+                }
+
                 let include = "!INCLUDE(" + componentPath;
                 if (Object.keys(params).length > 0) {
                     include += ", " + convertObjectToInludeParams(params);
@@ -293,5 +323,7 @@ block content
             //console.log(includeParams);
             return includeParams;
         }
+
+    div(data-th-include="${appIncludePath}" data-th-remove="tag")
 
     <table id="component-datatable" class="datatableInit table"></table>

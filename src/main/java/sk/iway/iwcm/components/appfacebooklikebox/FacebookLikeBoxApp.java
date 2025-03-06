@@ -14,11 +14,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 @WebjetComponent("sk.iway.iwcm.components.appfacebooklikebox.FacebookLikeBoxApp")
 @WebjetAppStore(
-    nameKey = "components.app-facebook_like_box.title", 
-    descKey = "components.app-facebook_like_box.desc", 
-    itemKey = "cmp_app-facebook_like_box", 
-    imagePath = "/components/app-facebook_like_box/editoricon.png", 
-    galleryImages = "/components/app-facebook_like_box/", 
+    nameKey = "components.app-facebook_like_box.title",
+    descKey = "components.app-facebook_like_box.desc",
+    itemKey = "cmp_app-facebook_like_box",
+    imagePath = "/components/app-facebook_like_box/editoricon.png",
+    galleryImages = "/components/app-facebook_like_box/",
     componentPath = "/components/app-facebook_like_box/facebook_like_box.jsp"
 )
 
@@ -47,13 +47,13 @@ public class FacebookLikeBoxApp extends WebjetComponentAbstract {
     private Integer heightLikeBox = null;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         tab = "basic",
         title="components.app-facebook_like_box.showFaces")
     private boolean showFacesLikeBox = true;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         tab = "basic",
         title="components.app-facebook_like_box.showPost")
     private boolean showPostLikeBox = true;

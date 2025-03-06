@@ -1,6 +1,6 @@
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
+%><%@ page pageEncoding="utf-8"  import="sk.iway.iwcm.*,sk.iway.iwcm.doc.*"%>
 <%@ page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
@@ -72,21 +72,21 @@ for (i=2; i<=5; i++)
 
 if (resultsDocId == 0 && session.getAttribute("last_doc_id")!=null)
 {
-	resultsDocId = ((Integer)session.getAttribute("last_doc_id")).intValue(); 
+	resultsDocId = ((Integer)session.getAttribute("last_doc_id")).intValue();
 	//out.println(session.getAttribute("last_doc_id"));
 }
 
 DocDB docDB = DocDB.getInstance();
 %><%
 if (searchType != null)
-{	
+{
 	if ("form".equals(searchType) || "complete".equals(searchType))
 	{
 		String url = "/showdoc.do";
 		if (Constants.getInt("linkType")==Constants.LINK_TYPE_HTML) url = DocDB.getURLFromDocId(resultsDocId, request);
 %>
-	
-	
+
+
 <%@page import="org.apache.struts.util.ResponseUtils"%>
 <%@ page import="sk.iway.iwcm.system.stripes.CSRF" %>
 <%@ page import="sk.iway.iwcm.common.SearchTools" %>
@@ -112,7 +112,7 @@ if (searchType != null)
 	$(document).ready(function(){
 		var searchText = '<%=inputText%>'
 		var defaultText = '<%=normalInputText%>'
-	
+
     	$("#searchWords").focus(function () {
         	var text = $(this).val();
         	if(text == defaultText){
@@ -138,13 +138,13 @@ if (searchType != null)
 }
 
 
-	if ("results".equals(searchType) || "complete".equals(searchType))	
+	if ("results".equals(searchType) || "complete".equals(searchType))
 	{
-			
+
 		if ( request.getParameter("words") != null || SearchAction.hasInputParams(request) || request.getParameter("text")!=null)
 		{
 			String ret = "";
-			
+
 			if ("db".equals(engine)){
 				ret = SearchAction.search(request, response);
 			}
@@ -152,41 +152,41 @@ if (searchType != null)
 			{
 				ret = LuceneSearchAction.search(request);
 			}
-	
+
 			String newNextHref = "";
 			String newPrevHref = "";
-	
+
 			if(String.valueOf(request.getAttribute("nextHref")).startsWith("search.do"))
 			{
 				newNextHref	= String.valueOf(request.getAttribute("nextHref"));
 				newNextHref = PathFilter.getOrigPath(request)+newNextHref.substring(newNextHref.indexOf('?'));
 				if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) newNextHref += "&amp;docid=" +session.getAttribute("last_doc_id");
 			}
-	
+
 			if(String.valueOf(request.getAttribute("prevHref")).startsWith("search.do"))
 			{
-				newPrevHref	= String.valueOf(request.getAttribute("prevHref"));				
+				newPrevHref	= String.valueOf(request.getAttribute("prevHref"));
 				newPrevHref = PathFilter.getOrigPath(request) + newPrevHref.substring(newPrevHref.indexOf('?'));
 				if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) newPrevHref += "&amp;docid=" +session.getAttribute("last_doc_id");
 			}
-			
+
 			if(String.valueOf(request.getAttribute("nextHref")).startsWith("lucene_search.do"))
 			{
 				newNextHref	= String.valueOf(request.getAttribute("nextHref"));
 				newNextHref = PathFilter.getOrigPath(request)+newNextHref.substring(newNextHref.indexOf('?'));
 				if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) newNextHref += "&amp;docid=" +session.getAttribute("last_doc_id");
 			}
-	
+
 			if(String.valueOf(request.getAttribute("prevHref")).startsWith("lucene_search.do"))
 			{
-				newPrevHref	= String.valueOf(request.getAttribute("prevHref"));				
+				newPrevHref	= String.valueOf(request.getAttribute("prevHref"));
 				newPrevHref = PathFilter.getOrigPath(request) + newPrevHref.substring(newPrevHref.indexOf('?'));
 				if (Constants.getInt("linkType")==Constants.LINK_TYPE_DOCID) newPrevHref += "&amp;docid=" +session.getAttribute("last_doc_id");
 			}
 %>
 
  <h1 class="searchResultsH1"><iwcm:text key="components.search.search_results"/></h1>
- 
+
  <div class="search">
 	<logic:present name="totalResults">
 		<p class="totalResults">
@@ -195,11 +195,11 @@ if (searchType != null)
 	</logic:present>
 
   	<!-- VYSLEDKY VYHLADAVANIA -->
-	
+
 	<logic:present name="aList">
 		<logic:iterate id="search" name="aList" type="sk.iway.iwcm.doc.SearchDetails">
 				<p>
-					<a href="<%=docDB.getDocLink(search.getDocId(), search.getExternalLink(), request)%>">				
+					<a href="<%=docDB.getDocLink(search.getDocId(), search.getExternalLink(), request)%>">
 						<strong><jsp:getProperty name="search" property="title"/></strong>
 					</a>
 				</p>
@@ -213,7 +213,7 @@ if (searchType != null)
 			</dl>
 		</logic:iterate>
 	</logic:present>
-	
+
 	<logic:present name="prevHref">
 		<div class="navigation">
 			<a href="<%=newPrevHref%>">
@@ -221,7 +221,7 @@ if (searchType != null)
 			</a>
 		</div>
 	</logic:present>
-						
+
 	<logic:present name="nextHref">
 		<div class="navigation">
 			<a href="<%=newNextHref%>">
@@ -229,7 +229,7 @@ if (searchType != null)
 			</a>
 		</div>
 	</logic:present>
-		
+
 	<logic:present name="notfound">
 		<p>
 			<b>
@@ -237,7 +237,7 @@ if (searchType != null)
 			</b>
 		</p>
 	</logic:present>
-	
+
 	<logic:present name="emptyrequest">
 		<p>
 			<b>
@@ -245,23 +245,23 @@ if (searchType != null)
 			</b>
 		</p>
 	</logic:present>
-	
+
 	<logic:present name="crossHourlyLimit">
 		<p>
 			<strong>
 				<iwcm:text key="components.search.cross_hourly_limit" param1='<%=String.valueOf(request.getAttribute("wait")) %>'/>
 			</strong>
 		</p>
-	</logic:present>	
-	
+	</logic:present>
+
 	<logic:present name="crossTimeout">
 		<p>
 			<strong>
-				<iwcm:text key="components.search.cross_timeout" param1='<%=String.valueOf(Constants.getInt("spamProtectionTimeout-search")) %>'/> 
+				<iwcm:text key="components.search.cross_timeout" param1='<%=String.valueOf(Constants.getInt("spamProtectionTimeout-search")) %>'/>
 			</strong>
 		</p>
-	</logic:present>	
-	
+	</logic:present>
+
 	</div>
  <!-- KONIEC VYSLEDKOV VYHLADAVANIA -->
 

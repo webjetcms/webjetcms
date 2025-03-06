@@ -93,6 +93,7 @@
     - [Konfigurácia typov udalostí](/redactor/apps/calendar/calendar-types/README.md)
     - [Neschválené udalosti](/redactor/apps/calendar/non-approved-events/README.md)
     - [Odporučenie udalosti](/redactor/apps/calendar/suggest-events/README.md)
+  - [Kalendár noviniek](/redactor/apps/news-calendar/README.md)
   - [Kontakty](/redactor/apps/contact/README.md)
   - [Mapa](/redactor/apps/map/README.md)
   - [Mapa stránok](/redactor/apps/sitemap/README.md)

@@ -334,3 +334,29 @@ Scenario('select - missing ID', ({ I, DT, DTE }) => {
     DTE.waitForEditor();
     checkTemplateIdValue(I, true);
 });
+
+Scenario("conditional tabs", ({ I, DT, DTE }) => {
+    //
+    I.say("hide-on-create");
+    I.amOnPage("/admin/v9/templates/temps-list/");
+    DT.waitForLoader();
+    I.click(DT.btn.add_button);
+
+    DTE.waitForEditor();
+    I.seeElement(locate("#pills-dt-editor-datatableInit li a").withText("Základné"));
+    I.dontSeeElement("#pills-dt-editor-datatableInit li.hide-on-create");
+    I.dontSeeElement(locate("#pills-dt-editor-datatableInit li a").withText("Priečinky"));
+
+    //
+    DT.addContext("campaings", "#campaingsDataTable_wrapper");
+    I.say("hide-on-duplicate");
+    I.amOnPage("/apps/dmail/admin/");
+    DT.filterContains("subject", "testOfUnsucribed");
+    I.click(".buttons-select-all");
+    I.click(DT.btn.campaings_duplicate_button);
+    DTE.waitForEditor("campaingsDataTable");
+    I.seeElement(locate("#pills-dt-editor-campaingsDataTable li a").withText("Základné"));
+    I.dontSeeElement("#pills-dt-editor-campaingsDataTable li.hide-on-duplicate");
+    I.dontSeeElement(locate("#pills-dt-editor-campaingsDataTable li a").withText("Otvorenia"));
+
+});

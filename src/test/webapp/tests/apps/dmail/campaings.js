@@ -7,10 +7,11 @@ var opensWrapper = "#datatableFieldDTE_Field_opensTab_wrapper";
 
 var excelFile = "tests/apps/dmail/emails-import.xlsx";
 
+var baseEntityName, xlsEntityName, rawEntityName, ugEntityName, prijemcoviaEntityName;
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage("/apps/dmail/admin/");
-
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
@@ -19,11 +20,10 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('campaings-zakladne testy', ({I, DTE}) => {
+Scenario('campaings-zakladne testy', ({I, DT, DTE}) => {
+    baseEntityName = entityNameOriginal+"-zt";
 
-    var entityName = entityNameOriginal+"-zt";
-
-    /* CREATE TEST */
+    I.say("CREATE TEST");
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
 
@@ -31,63 +31,57 @@ Scenario('campaings-zakladne testy', ({I, DTE}) => {
     I.dontSeeElement('Otvorenia');
     I.dontSeeElement('Kliknutia');
 
-    I.clickCss("#DTE_Field_subject")
-    I.fillField("#DTE_Field_subject", entityName);
-
     I.clickCss("button.btn-vue-jstree-item-edit");
-
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
+
+    I.clickCss("#DTE_Field_subject")
+    I.fillField("#DTE_Field_subject", baseEntityName);
+
     DTE.save();
 
-    I.fillField("input.dt-filter-subject", entityName);
-    I.pressKey('Enter', "input.dt-filter-subject");
-    I.see(entityName);
-    I.see('Produktová stránka - B verzia');
+    DT.filterEquals("subject", baseEntityName);
+    I.see(baseEntityName);
 
-    /* EDIT TEST */
-    I.click(entityName);
+    I.say("EDIT TEST");
+    I.click(baseEntityName);
 
     //Hidden tabs control - now showed tabs
     I.dontSeeElement('Otvorenia');
     I.dontSeeElement('Kliknutia');
 
-    entityName += ".changed"
+    baseEntityName += ".changed"
 
     I.clickCss("#DTE_Field_subject")
-    I.fillField("#DTE_Field_subject", entityName);
+    I.fillField("#DTE_Field_subject", baseEntityName);
     DTE.save();
 
-    I.fillField("input.dt-filter-subject", entityName);
-    I.pressKey('Enter', "input.dt-filter-subject");
-    I.see(entityName);
+    DT.filterEquals("subject", baseEntityName);
+    I.see(baseEntityName);
+});
 
-    /* DELETE TEST */
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-
-    I.dontSee(entityName);
+Scenario('campaings-base delete', ({I, DT, DTE}) => {
+    deleteCampaingByName(I, DT, DTE, baseEntityName);
 });
 
 Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
-
-    var entityName = entityNameOriginal+"-xls";
+    xlsEntityName = entityNameOriginal + "-xls";
 
     /* PREPARE ENTITY */
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
-    I.clickCss("#DTE_Field_subject")
-    I.fillField("#DTE_Field_subject", entityName);
+
     I.clickCss("button.btn-vue-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
-    DTE.save();
-    DT.filterContains("subject", entityName);
 
-    I.click(entityName);
+    I.clickCss("#DTE_Field_subject")
+    I.fillField("#DTE_Field_subject", xlsEntityName);
+
+    DTE.save();
+    DT.filterContains("subject", xlsEntityName);
+
+    I.click(xlsEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.clickCss(recipientsWrapper + " button.btn-import-dialog");
@@ -105,39 +99,37 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     DTE.cancel();
 
     //Test changing status
-    I.click(entityName);
+    I.click(xlsEntityName);
     DTE.waitForEditor("campaingsDataTable");
     DTE.save();
-    I.click(entityName);
+    I.click(xlsEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.see("Import 06a");
     I.see("Import 06b");
+ });
 
-    /* DELETE TEST */
-    DTE.cancel();
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+ Scenario('campaings-XLS delete', ({I, DT, DTE}) => {
+    deleteCampaingByName(I, DT, DTE, xlsEntityName);
  });
 
  Scenario('campaings-RAW import testy', ({I, DT, DTE}) => {
-
-    var entityName = entityNameOriginal+"-raw";
+    rawEntityName = entityNameOriginal + "-raw";
 
     /* PREPARE ENTITY */
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
-    I.clickCss("#DTE_Field_subject")
-    I.fillField("#DTE_Field_subject", entityName);
     I.clickCss("button.btn-vue-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
+
+    I.clickCss("#DTE_Field_subject")
+    I.fillField("#DTE_Field_subject", rawEntityName);
+
     DTE.save();
 
-    DT.filterContains("subject", entityName);
-    I.click(entityName);
+    DT.filterContains("subject", rawEntityName);
+    I.click(rawEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
 
@@ -192,7 +184,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.clickCss("button.btn-close-editor", "div.DTE_Footer");
 
     //If we close (withou saving) and open same editor, records must be still there and saved as TEMPORAL
-    I.click(entityName);
+    I.click(rawEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
 
@@ -204,7 +196,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     //If we save editor and open it again, records must be there and saved sa PERNAMENT
     DTE.save();
 
-    I.click(entityName);
+    I.click(rawEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
 
@@ -212,34 +204,31 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.see("VIP Klient");
     I.see("WebJET Administrátor");
     I.dontSeeElement("NEULOŽENÝ");
+ });
 
-    //Remove entity
-    I.clickCss("button.btn-close-editor", "div.DTE_Footer");
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.dontSee(entityName);
+ Scenario('campaings-RAW delete', ({I, DT, DTE}) => {
+    deleteCampaingByName(I, DT, DTE, rawEntityName);
  });
 
  Scenario('testy skupiny pouzivatelov', ({I, DT, DTE}) => {
-
-    var entityName = entityNameOriginal+"-ug";
-    DT.waitForLoader();
+    ugEntityName = entityNameOriginal + "-ug";
 
     /* PREPARE ENTITY */
     I.clickCss("div.dt-buttons button.buttons-create");
     DTE.waitForEditor("campaingsDataTable");
-    I.clickCss("#DTE_Field_subject")
-    I.fillField("#DTE_Field_subject", entityName);
+
     I.clickCss("button.btn-vue-jstree-item-edit")
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Produktová stránka - B verzia');
+
+    I.clickCss("#DTE_Field_subject")
+    I.fillField("#DTE_Field_subject", ugEntityName);
+
     DTE.save();
 
     //Try add users by group
-    DT.filterContains("subject", entityName);
-    I.click(entityName);
+    DT.filterContains("subject", ugEntityName);
+    I.click(ugEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.wait(1);
@@ -249,7 +238,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.wait(1);
     DTE.save();
 
-    I.click(entityName);
+    I.click(ugEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.wait(1);
@@ -270,7 +259,7 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.wait(0.5);
     DTE.save();
 
-    I.click(entityName);
+    I.click(ugEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.wait(1);
@@ -294,24 +283,20 @@ Scenario('campaings-XLS import testy', ({I, DT, DTE}) => {
     I.wait(0.5);
     DTE.save();
 
-    I.click(entityName);
+    I.click(ugEntityName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
     I.wait(1);
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
 
-    //Remove entity
-    I.clickCss("button.btn-close-editor", "div.DTE_Footer");
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.dontSee(entityName);
+Scenario('campaings skupiny delete', ({I, DT, DTE}) => {
+    deleteCampaingByName(I, DT, DTE, ugEntityName);
 });
 
 Scenario('BUG pocty prijemcov', ({I, DTE}) => {
+    prijemcoviaEntityName = entityNameOriginal+"-prijemcovia";
 
-    var entityName = entityNameOriginal+"-prijemcovia";
     //It's 3 not 2 BUT one of them is invalid
     var pocetPrijemcovNewsletter = 2;
     // SOOO VianocnePozdravy got 3 emails. One is invalid, second is valid BUT is already in newsletter group, third is valid and only one not in newsletter group
@@ -321,13 +306,12 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     I.clickCss("div.dt-buttons button.buttons-create");
     I.dtWaitForEditor("campaingsDataTable");
 
-    I.clickCss("#DTE_Field_subject")
-    I.fillField("#DTE_Field_subject", entityName);
-
     I.clickCss("button.btn-vue-jstree-item-edit")
-
     I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
     I.click('Testovaci newsletter');
+
+    I.clickCss("#DTE_Field_subject")
+    I.fillField("#DTE_Field_subject", prijemcoviaEntityName);
 
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
 
@@ -339,38 +323,31 @@ Scenario('BUG pocty prijemcov', ({I, DTE}) => {
     DTE.save();
 
     //
-    overPocetPrijemcov(I, entityName, pocetPrijemcovNewsletter);
+    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
 
     // IN the end, number of recipients must be 3
     I.say("Pridam skupinu Vianocne pozdravy, overim pocet prijemcov");
-    I.click(entityName);
+    I.click(prijemcoviaEntityName);
     I.dtWaitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.click("Vianočné pozdravy", "div.DTE_Field_Name_editorFields\\.emails");
     DTE.save();
 
-    overPocetPrijemcov(I, entityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
+    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter+pocetPrijemcovVianocnePozdravy);
 
     //
     I.say("Odoberem skupinu Vianocne pozdravy, overim pocet prijemcov");
-    I.click(entityName);
+    I.click(prijemcoviaEntityName);
     I.dtWaitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-groupsTab-tab");
     I.click("Vianočné pozdravy", "div.DTE_Field_Name_editorFields\\.emails");
     DTE.save();
 
-    overPocetPrijemcov(I, entityName, pocetPrijemcovNewsletter);
+    overPocetPrijemcov(I, prijemcoviaEntityName, pocetPrijemcovNewsletter);
+});
 
-    /* DELETE TEST */
-    I.amOnPage("/apps/dmail/admin/");
-    I.dtFilter("subject", entityName)
-    I.dtWaitForLoader();
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-
-    I.dontSee(entityName);
+Scenario('campaings pocty prijemcov delete', ({I, DT, DTE}) => {
+    deleteCampaingByName(I, DT, DTE, prijemcoviaEntityName);
 });
 
 Scenario('zobrazenie nahladu emailu', ({I, DT}) => {
@@ -629,6 +606,7 @@ Scenario("BUG check - disabling buttons + emails/stat delete", ({I, DT, DTE}) =>
 Scenario('logout2', async ({I}) => {
     I.logout();
 });
+
 /* CHECK new custom constraint MultipleEmails */
 
 Scenario('Check BUG recipients + constraint MultipleEmails', ({ I, DT, DTE}) => {
@@ -795,12 +773,13 @@ function prepareCampaignForInsert(I, DTE, entityName) {
     DTE.waitForEditor("campaingsDataTable");
 
     //Needed fields
-        I.clickCss("#DTE_Field_subject")
-        I.fillField("#DTE_Field_subject", entityName);
-        I.clickCss("button.btn-vue-jstree-item-edit");
-        I.waitForElement("#jsTree");
-        I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
-        I.click('Testovaci newsletter');
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.waitForElement("#jsTree");
+    I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
+    I.click('Testovaci newsletter');
+
+    I.clickCss("#DTE_Field_subject")
+    I.fillField("#DTE_Field_subject", entityName);
 }
 
 function addEmail(I, DTE, recipientName, recipientEmail, checkModalClose=true, skipWrong = false) {
@@ -851,6 +830,10 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click(locate('.jstree-node.jstree-closed').withText('Hromadný e-mail').find('.jstree-icon.jstree-ocl'));
     I.click( locate("li.jstree-node.jstree-leaf > a.jstree-anchor").withText("Hromadný e-mail") );
 
+    I.say("Close dialog");
+    I.waitForVisible("#toast-container-webjet");
+    I.click(locate("#toast-container-webjet").find("button.btn-outline-secondary"));
+
     I.click("#pills-dt-campaingsDataTable-receivers-tab");
     I.click( locate("#datatableFieldDTE_Field_recipientsTab_wrapper").find("button.buttons-create") );
 
@@ -892,4 +875,87 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click("Zmazať", "div.DTE_Action_Remove");
     DT.waitForLoader();
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
+});
+
+let duplicatedName = "";
+Scenario('BUG recipients missing in duplicated entity', ({I, DT, DTE}) => {
+    let entityToDuplicate = "testRecipientsAfterDuplicate";
+    duplicatedName = entityToDuplicate + "_duplicated" + randomNumber + "_autotest";
+
+    I.say("Found entity for duplication and start duplication");
+    I.amOnPage("/apps/dmail/admin/");
+    DT.filterEquals("subject", entityToDuplicate);
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.btn-duplicate");
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.say("Check we dont see tabs for opens/clicks");
+    I.dontSeeElement("#pills-dt-campaingsDataTable-opens-tab");
+    I.dontSeeElement("#pills-dt-campaingsDataTable-clicks-tab");
+
+    I.say("Change name and save");
+    I.fillField("#DTE_Field_subject", duplicatedName);
+    DTE.save();
+
+    I.say("Check recipients in duplicated entity");
+    DT.filterContains("subject", duplicatedName);
+    I.click(duplicatedName);
+    DTE.waitForEditor("campaingsDataTable");
+    I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");
+    I.see("testRepicientA");
+    I.see("testrepicienta@balat.sk");
+    I.see("testRepicientB");
+    I.see("testrepicientb@balat.sk");
+});
+
+Scenario('BUG duplicate delete', ({I, DT, DTE}) => {
+    deleteCampaingByName(I, DT, DTE, duplicatedName);
+});
+
+function deleteCampaingByName(I, DT, DTE, entityName) {
+    I.amOnPage("/apps/dmail/admin/");
+
+    DT.filterEquals("subject", entityName);
+
+    I.clickCss("td.dt-select-td.sorting_1");
+    I.clickCss("button.buttons-remove");
+    DTE.waitForEditor("campaingsDataTable");
+    I.click("Zmazať", "div.DTE_Action_Remove");
+
+    I.dontSee(entityName);
+}
+
+Scenario('Feature setting of subject', ({I, DTE}) => {
+    I.amOnPage("/apps/dmail/admin/");
+    I.clickCss("button.buttons-create");
+    DTE.waitForEditor("campaingsDataTable");
+
+    I.say("Check that subject is empty");
+    I.seeInField("#DTE_Field_subject", "");
+
+    I.say("Select webpage and check that subject is set");
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
+    I.click('Produktová stránka - B verzia');
+    I.seeInField("#DTE_Field_subject", "Produktová stránka - B verzia");
+
+    I.say("Change webpage and wait for dialog");
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
+    I.click('Registracia do newsletra');
+    I.waitForVisible("#toast-container-webjet");
+
+    I.say("IF click cancel - subject wont change");
+    I.click(locate("#toast-container-webjet").find("button.btn-outline-secondary"));
+    I.seeInField("#DTE_Field_subject", "Produktová stránka - B verzia");
+
+    I.say("Change webpage and wait for dialog");
+    I.clickCss("button.btn-vue-jstree-item-edit");
+    I.click(locate('.jstree-node.jstree-closed').withText('Newsletter').find('.jstree-icon.jstree-ocl'));
+    I.click('Registracia do newsletra');
+    I.waitForVisible("#toast-container-webjet");
+
+    I.say("IF click OK - subject should be changed");
+    I.click(locate("#toast-container-webjet").find("button.btn-primary"));
+    I.seeInField("#DTE_Field_subject", "Registracia do newsletra");
 });

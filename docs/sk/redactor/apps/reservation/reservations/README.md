@@ -93,6 +93,8 @@ V tomto prípade sa kontroluje čí sa po pridaní rezervácie nebude pretínať
 
 Pri kontrole sa zoberú všetky rezervácie (ale iba tie ktoré boli schválené) nad objektom v rovnaký deň a testuje sa či po pridaní našej rezervácie sa tento limit neprekročí. Testuje sa to pre každý deň samostatne a ak čo i len jeden deň presiahne maximálny počet rezervácií v rovnakom čase, rezervácia bude označená za neplatnú.
 
+!>**Upozornenie:** na vlastné riziko máte možnosť uložiť rezerváciu aj v prípade nadmernej rezervácie, kedy sa prekročí maximálny počet rezervácií. Stačí v karte **základné** zvoliť možnosť **Povoliť prekročenie kapacity**.
+
 ## Schvaľovanie rezervácií
 
 Zmena stavu rezervácie je možná buď pomocou editoru a to presnejšie v karte [Schvaľovanie](../reservations/README.md#schvaľovanie), ktorá sa zobrazuje iba za určitých špecifických podmienok, alebo pomocou tlačidiel na zmenu stavu rezervácie.

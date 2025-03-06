@@ -1,5 +1,5 @@
 <script type="text/javascript" data-th-inline="javascript">
-    var campaingsDataTable;
+    var campaingsDataTable, columns;
 
     window.domReady.add(function () {
 
@@ -22,7 +22,7 @@
         });
 
         let url = "/admin/rest/dmail/campaings";
-        let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.dmail.jpa.CampaingsEntity")})]*/ [];
+        columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.dmail.jpa.CampaingsEntity")})]*/ [];
 
         var tabs = [
                 { id: 'main', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true},
@@ -30,8 +30,8 @@
                 { id: 'advanced', title: /*[[#{datatable.tab.advanced}]]*/ '' },
                 { id: 'groupsTab', title: /*[[#{user.admin.userGroups}]]*/ '' },
                 { id: 'receivers', title: /*[[#{components.dmail.campaings.tab.receivers}]]*/ '' },
-                { id: 'opens', title: /*[[#{components.dmail.campaings.tab.opens}]]*/ '' },
-                { id: 'clicks', title: /*[[#{components.dmail.campaings.tab.clicks}]]*/ '' }
+                { id: 'opens', title: /*[[#{components.dmail.campaings.tab.opens}]]*/ '', className: "hide-on-duplicate" },
+                { id: 'clicks', title: /*[[#{components.dmail.campaings.tab.clicks}]]*/ '', className: "hide-on-duplicate" }
             ];
 
         var order = [];
@@ -48,12 +48,41 @@
             order: order
         });
 
+        let iseventSet = false;
         campaingsDataTable.EDITOR.on('open', function (e, mode, action) {
             if(action == 'create') {
                 //$("#pills-dt-campaingsDataTable-users-tab").parent().hide();
                 //$("#pills-dt-campaingsDataTable-receivers-tab").parent().hide();
                 $("#pills-dt-campaingsDataTable-opens-tab").parent().hide();
                 $("#pills-dt-campaingsDataTable-clicks-tab").parent().hide();
+            }
+
+            if(iseventSet == false) {
+                $("#DTE_Field_editorFields-pageToSend").on("change", function() {
+                    setTimeout(function() {
+                        let oldSubject = campaingsDataTable.EDITOR.field("subject").val();
+                        let newValue = $("#editorAppDTE_Field_editorFields-pageToSend").find("input").val();
+                        if(newValue != undefined && newValue != null) {
+                            let newSubject = newValue.split("/").pop();
+
+                            if(oldSubject == null || oldSubject == "") {
+                                //Old value is empty, fill it
+                                campaingsDataTable.EDITOR.field("subject").val(newSubject);
+                            } else {
+                                //Old value is not empty, ask user if he want change it
+                                WJ.confirm({
+                                    title:  /*[[#{components.dmail.change_subject_title}]]*/ '',
+                                    message: WJ.translate("components.dmail.change_subject_question.js", newSubject),
+                                    success: function(value) {
+                                        campaingsDataTable.EDITOR.field("subject").val(newSubject);
+                                    }
+                                });
+                            }
+                        }
+                    }, 200);
+                });
+
+                iseventSet = true;
             }
         });
 

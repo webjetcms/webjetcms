@@ -91,7 +91,7 @@ Scenario('Device type specific banner screens', ({ I, DTE, Document }) => {
         I.switchTo("iframe.cke_reset");
         I.wait(1);
         I.waitForElement("iframe.wj_component", 10);
-        I.switchTo("iframe.wj_component");
+        I.switchTo(locate("iframe.wj_component").first());
         I.wait(1);
             I.forceClick("div.inlineComponentButtons > a:nth-child(1)");
         I.switchTo("");
@@ -101,8 +101,7 @@ Scenario('Device type specific banner screens', ({ I, DTE, Document }) => {
 
         I.switchTo("#cke_121_iframe") //iframe
         I.switchTo("#editorComponent") //iframe
-
-        I.click("#tabLinkcommonAdvancedSettings");
+        I.clickCss("#pills-dt-component-datatable-commonSettings-tab");
 
     Document.screenshot("/redactor/apps/banner/banner-device-setting-tab.png");
 });

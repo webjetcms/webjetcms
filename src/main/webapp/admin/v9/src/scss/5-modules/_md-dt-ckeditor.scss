@@ -44,13 +44,13 @@
         }
     }
     a.cke_dialog_ui_button_ok, .cke_dialog_footer_buttons a.cke_dialog_ui_button_ok {
-        background-color: #0063FB;
-        border: 1px solid #0063FB;
+        background-color: $primary;
+        border: 1px solid $primary;
         span {
             color: white;
         }
         &:hover {
-            background-color: #0054d5;
+            background-color: $primary-hover;
         }
     }
 }

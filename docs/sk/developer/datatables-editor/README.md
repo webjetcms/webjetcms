@@ -31,7 +31,7 @@ Voliteľne môže ```tabs``` definícia obsahovať atribút ```content``` s HTML
 
 Možné atribúty:
 - ```selected``` definuje predvolene zobrazenú kartu, mal by byť nastavený len na jednej karte.
-- ```className``` umožňuje doplniť CSS štýl k prepínaču kariet. Preddefinované sú CSS štýly ```hide-on-create``` pre schovanie karty pri vytváraní nového záznamu a ```hide-on-edit``` pre schovanie karty pri editácii už existujúceho záznamu.
+- ```className``` umožňuje doplniť CSS štýl k prepínaču kariet. Preddefinované sú CSS štýly ```hide-on-create``` pre schovanie karty pri vytváraní nového záznamu a ```hide-on-edit``` pre schovanie karty pri editácii už existujúceho záznamu, `hide-on-duplicate` pre schovanie karty pri duplikovaní.
 - ```perms``` umožňuje nezobraziť kartu ak používateľ nemá zadané právo (pozor, znak ```.``` v práve sa nadrádza za znak ```_```). Kontrolujú sa práva v JavaScript objekte ```nopermsJavascript```.
 - ```hideOnCreate``` nastavením na hodnotu ```true``` schová kartu pri vytváraní nového záznamu.
 - ```hideOnEdit``` nastavením na hodnotu ```true``` schová kartu pri editácii existujúceho záznamu.
