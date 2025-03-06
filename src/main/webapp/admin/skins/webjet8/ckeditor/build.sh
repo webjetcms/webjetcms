@@ -13,7 +13,7 @@ sdk use java 11.0.16.1-tem
 echo "Switched to JAVA version:"
 java -version
 
-cd ../../../../../../../../github.com_webjetcms/libs-ckeditor4/dev/builder
+cd ../../../../../../../../libs-ckeditor4/dev/builder
 build.sh
 
 #Zmaz nepotrebne subory
