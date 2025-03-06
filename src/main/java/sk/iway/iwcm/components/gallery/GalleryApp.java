@@ -149,7 +149,7 @@ public class GalleryApp extends WebjetComponentAbstract {
 			if (f.getName().startsWith("gallery-")==false) continue;
 			if (f.getName().contains("-prettyPhoto.jsp") || f.getName().contains("-photoSwipe.jsp")) continue;
 
-			try
+            try
 			{
 				String name = f.getName().substring("gallery-".length(), f.getName().length()-4);
                 addPair(name, styleOptions, prop);

@@ -35,7 +35,48 @@ module.exports = {
 
         I.fillField("#DTE_Field_priceDiscount", discount);
         DTE.save();
-    }
+    },
+
+    async deleteReservation(I, DT, DTE, name, value){
+        I.amOnPage('/apps/reservation/admin/');
+        DT.waitForLoader();
+        DT.filterEquals(name, value);
+        let rows = await I.getTotalRows();
+        if (rows > 0) {
+            I.clickCss('.buttons-select-all');
+            I.clickCss("button.custom-buttons-remove");
+            DTE.waitForModal('reservationDataTable_modal > div > div');
+            DTE.save();
+        }
+        I.see('Nenašli sa žiadne vyhovujúce záznamy');
+    }, 
+
+    generateReservationDatesAndTimes() {
+        const year = 2033;
+        const startDate = new Date(year, Math.random() * 11, Math.random() * 25);
+        const randomDays = Math.floor(Math.random() * 3) + 1; 
+        const endDate = new Date(startDate);
+        endDate.setDate(startDate.getDate() + randomDays);
+      
+        const formatDate = (date) =>
+          date
+            .toISOString()
+            .split("T")[0]
+            .split("-")
+            .reverse()
+            .join(".");
+      
+        const randomHour = Math.floor(Math.random() * (4 + 1)) + 8;
+        const randomStartTime = `${randomHour}:00`;
+        const randomEndTime = `${randomHour + Math.floor(Math.random() * 4) + 1}:00`;
+      
+        return {
+          startDate: formatDate(startDate),
+          endDate: formatDate(endDate),
+          startTime: randomStartTime,
+          endTime: randomEndTime,
+        };
+      }
 }
 
 function setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, infoMsg) {

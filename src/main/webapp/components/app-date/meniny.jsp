@@ -30,7 +30,7 @@ if ("long".equals(format))
 <% } else { 
 	if (name != null)
 	{
-		%><iwcm:text key="components.cloud.app-date.dnes_ma_meniny_bez_datumu"/>
+		%><iwcm:text key="components.app-date.dnes_ma_meniny_bez_datumu"/>
 		<%
 	   out.print(name);
 	}	

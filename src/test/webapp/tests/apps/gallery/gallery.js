@@ -1,6 +1,6 @@
 const assert = require('assert');
 
-Feature('apps.gallery');
+Feature('apps.gallery.gallery');
 
 var randomNumber;
 var autoName;
@@ -410,7 +410,7 @@ Scenario('Gallery - upload image test', ({I,DT, DTE}) => {
     I.doubleClick(autoName);
     I.clickCss('.elfinder-button-icon.elfinder-button-icon-upload');
     I.say('Uploading new file');
-    I.attachFile('input[type=file]', 'tests/apps/gallery.png');
+    I.attachFile('input[type=file]', 'tests/apps/gallery/gallery.png');
     waitForUpload(I);
     I.switchTo();
     I.clickCss('.cke_dialog_ui_button_cancel');
@@ -822,7 +822,7 @@ const arraysAreEqual = (I, arr1, arr2) => {
     assert.deepStrictEqual(sortedArr1, sortedArr2, 'Arrays are not equal');
 }
 
-Scenario('BUG - buttons-create disabled #56393-17 @singlethread', async ({ I, DTE }) => {
+Scenario('BUG - buttons-create disabled #56393-17 @singlethread', async ({ I, DTE, DT }) => {
     I.relogin("jtester");
     I.amOnPage("/admin/v9/apps/gallery/");
     I.waitForElement(".tree-col .dt-buttons button.buttons-create.disabled");
@@ -834,6 +834,32 @@ Scenario('BUG - buttons-create disabled #56393-17 @singlethread', async ({ I, DT
     DTE.waitForEditor("galleryDimensionDatatable");
     I.seeInField("#DTE_Field_path", "/images/gallery/test");
     DTE.cancel();
+
+    //
+    I.say("Verify server side disable create buttons");
+    I.jstreeClick('gallery');
+    await I.executeScript(() => {
+        document.querySelector('.tree-col .buttons-create').classList.remove('disabled');
+        document.querySelector('.tree-col .buttons-create').removeAttribute('disabled');
+    });
+
+    I.click(DT.btn.tree_add_button);
+    DTE.waitForEditor('galleryDimensionDatatable');
+    DTE.fillField('name', autoName);
+    DTE.save('galleryDimensionDatatable');
+    I.waitForText('Tento priečinok nie je možné upravovať.');
+    I.see('Chyba: niektoré polia neobsahujú správne hodnoty. Skontrolujte všetky polia na chybové hodnoty (aj v jednotlivých kartách).');
+});
+
+Scenario('Revert if last scenario fails', async ({ I, DT }) => {
+    I.amOnPage("/admin/v9/apps/gallery/");
+    const autotest = locate('.jstree-anchor').withText('autotest-');
+    while (await I.grabNumberOfVisibleElements(autotest)){
+        I.click(autotest);
+        I.click(DT.btn.tree_delete_button);
+        await I.waitForElement("div.DTE_Action_Remove", 5);
+        I.click("Zmazať", "div.DTE_Action_Remove");
+    }
 });
 
 Scenario('logout', ({ I }) => {

@@ -67,7 +67,7 @@ public class ReservationEditorFields {
         title = "reservation.reservations.info_title",
         sortAfter = "dateTo",
         tab = "basic",
-        className = "wrap",
+        className = "wrap not-export",
         hidden = true
     )
     private String infoLabel1;
@@ -76,10 +76,19 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.BOOLEAN,
         title = "reservation.reservations.validate_reservation",
         visible = false,
-        sortAfter = "purpose",
+        sortAfter = "accepted",
         tab = "basic"
     )
     private Boolean showReservationValidity;
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.BOOLEAN,
+        title = "reservation.reservations.allow_overbooking",
+        visible = false,
+        sortAfter = "editorFields.showReservationValidity",
+        tab = "basic"
+    )
+    private Boolean allowOverbooking;
 
     @DataTableColumn(
         inputType = DataTableColumnType.RADIO,
@@ -102,7 +111,7 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TEXTAREA,
         title = "reservation.reservations.info_title",
         tab = "basic",
-        className = "wrap",
+        className = "wrap not-export",
         hidden = true
     )
     private String infoLabel2;
@@ -237,6 +246,10 @@ public class ReservationEditorFields {
     }
 
     public void toReservationEntity(ReservationEntity originalEntity, ReservationRepository rr, HttpServletRequest request, boolean skipPrepare) {
+        toReservationEntity(originalEntity, rr, request, skipPrepare, false);
+    }
+
+    public void toReservationEntity(ReservationEntity originalEntity, ReservationRepository rr, HttpServletRequest request, boolean skipPrepare, boolean isImporting) {
         //Set domain id for new entity
         if(originalEntity.getDomainId() == null) originalEntity.setDomainId(CloudToolsForCore.getDomainId());
 
@@ -256,7 +269,7 @@ public class ReservationEditorFields {
         }
 
         //Validate reservation range
-        error = reservationService.checkReservationOverlappingValidity(originalEntity, reservationObject, rr);
+        error = reservationService.checkReservationOverlappingValidity(originalEntity, reservationObject, rr, isImporting);
         if(error != null) reservationService.throwError(error);
 
         //Now decide if reservation need acceptation or not

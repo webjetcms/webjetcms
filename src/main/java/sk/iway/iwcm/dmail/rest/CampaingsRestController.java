@@ -20,6 +20,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -96,8 +97,15 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
 
         if(id == -1) {
             entity = new CampaingsEntity();
-            entity.setSenderName(user.getFullName());
-            entity.setSenderEmail(user.getEmail());
+
+            String senderName = Constants.getString("dmailDefaultSenderName");
+            if(Tools.isEmpty(senderName)) senderName = user.getFullName();
+            entity.setSenderName(senderName);
+
+            String senderEmail = Constants.getString("dmailDefaultSenderEmail");
+            if(Tools.isEmpty(senderEmail)) senderEmail = user.getEmail();
+            entity.setSenderEmail(senderEmail);
+
             entity.setId(id);
             entity.setCountOfSentMails(0);
 
@@ -354,4 +362,17 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         return Long.valueOf(-user.getUserId());
     }
 
+    @Override
+    public void afterDuplicate(CampaingsEntity entity, Long originalId) {
+        //Create recipients for new campaign
+        List<EmailsEntity> emails = emailsRepository.findAllByCampainIdAndDomainIdOrderByIdDesc(originalId, CloudToolsForCore.getDomainId());
+        for (EmailsEntity email : emails) {
+            email.setId(-1L);
+            email.setCampainId(entity.getId());
+            email.setCreateDate(new Date());
+            email.setCreatedByUserId(getUser().getUserId());
+
+            emailsRepository.save(email);
+        }
+    }
 }

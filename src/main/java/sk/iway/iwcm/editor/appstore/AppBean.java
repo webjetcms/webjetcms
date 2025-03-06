@@ -29,6 +29,8 @@ public class AppBean
 	private List<String> galleryImages = null;
 	private String domainName = null;
 	private String itemKey = ""; //pouziva sa v AppManager kvoli filtracii prav
+	//variant of the app, for multiple apps with same itemKey set different variant to keep them separate
+	private String variant = "";
     private String descKey;
 	private boolean custom = false;
 	private String componentPath;
@@ -199,6 +201,13 @@ public class AppBean
 
 	public void setComponentPath(String componentPath) {
 		this.componentPath = componentPath;
+	}
+
+	public String getVariant() {
+		return variant;
+	}
+	public void setVariant(String variant) {
+		this.variant = variant;
 	}
 }
 

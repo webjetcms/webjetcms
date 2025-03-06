@@ -127,12 +127,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		//zachovaj thread bean, lebo volanie getOne ho zmaze a moze to byt nastavene z beforeSave metody
 		boolean forceReload = isForceReload();
 		List<NotifyBean> notify = getThreadData().getNotify();
+		boolean isImporting = isImporting();
 
 		//toto nam zabezpeci aby sa nam nestratili udaje, ktore nemame v editore
 		T one = getOne(id);
 
 		if (isForceReload()) setForceReload(forceReload);
 		if (notify!=null) addNotify(notify);
+		setImporting(isImporting);
 
 		copyEntityIntoOriginal(entity, one);
 
@@ -1231,6 +1233,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						response.setError(String.format("Field: %s not found", updateByColumn));
 						Logger.error(DatatableRestControllerV2.class, e);
 						return ResponseEntity.ok(response);
+					} catch(RuntimeException ex) {
+						//Ignore error if skipWrongData is true
+						if(skipWrongData == true) {
+							addImportedColumnError(ex);
+							continue;
+						}
+						throw ex;
 					}
 				}
 
@@ -1241,7 +1250,19 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					if (isDuplicate) afterDuplicate(entity, id);
 				} catch (ConstraintViolationException ex) {
 					//Ignore error if skipWrongData is true
-					if(skipWrongData == true) continue;
+					if(skipWrongData == true) {
+						Set<ConstraintViolation<T>> violations = new HashSet<>();
+						violations.add((ConstraintViolation<T>) ex);
+						addImportedColumnError(violations);
+						continue;
+					}
+					throw ex;
+				} catch(RuntimeException ex) {
+					//Ignore error if skipWrongData is true
+					if(skipWrongData == true) {
+						addImportedColumnError(ex);
+						continue;
+					}
 					throw ex;
 				}
 
@@ -1260,6 +1281,13 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 						response.setError(String.format("Field: %s not found", updateByColumn));
 						Logger.error(DatatableRestControllerV2.class, e);
 						return ResponseEntity.ok(response);
+					} catch(RuntimeException ex) {
+						//Ignore error if skipWrongData is true
+						if(skipWrongData == true) {
+							addImportedColumnError(ex);
+							continue;
+						}
+						throw ex;
 					}
 				}
 				else {
@@ -1707,7 +1735,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	/**
 	 * List of violated constraints during import (invalid rows during import) will be prepared and ADDED inside of threadData.InvalidImportedRowsErrors
 	 * This set of processed error's are used for Warning notification (FOR user). So user can by notified which rows are invalid and WHY.
-	 * @param violations - Set of ConstraintViolation
+	 * @param violations - Set of ConstraintViolations
 	 */
 	private void addImportedColumnError(Set<ConstraintViolation<T>> violations) {
 		if(violations == null || violations.size() < 1) return;
@@ -1730,6 +1758,18 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		errExplanation.append(" - ").append(firstViolation.getInvalidValue() == null ? "EMPTY" : firstViolation.getInvalidValue().toString()).append(" - ").append(errCause);
 		String errMsg = Prop.getInstance().getText("datatable.error.importRow", String.valueOf(lastImportedRow) , errExplanation.toString());
+
+		TreeMap<Integer, String> rowsErrors = getThreadData().getInvalidImportedRowsErrors();
+		if(rowsErrors == null) rowsErrors = new TreeMap<>();
+		rowsErrors.put(lastImportedRow, errMsg);
+		getThreadData().setInvalidImportedRowsErrors(rowsErrors);
+	}
+
+	private void addImportedColumnError(RuntimeException ex) {
+		String errExplanation = ex.getMessage();
+		int lastImportedRow = getLastImportedRow() == null ? 0 : getLastImportedRow().intValue();
+
+		String errMsg = Prop.getInstance().getText("datatable.error.importRow", String.valueOf(lastImportedRow) , errExplanation);
 
 		TreeMap<Integer, String> rowsErrors = getThreadData().getInvalidImportedRowsErrors();
 		if(rowsErrors == null) rowsErrors = new TreeMap<>();

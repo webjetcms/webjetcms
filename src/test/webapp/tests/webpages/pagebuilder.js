@@ -1,5 +1,7 @@
 Feature('webpages.pagebuilder');
 
+const assert = require('assert');
+
 Before(({ I, login }) => {
     login('admin');
 });
@@ -232,3 +234,104 @@ Scenario('reset PB settings', ({Document}) => {
     //reset PB settings
     Document.resetPageBuilderMode();
 });
+
+Scenario('bug - open window for file selection', ({ I, DTE ,Document}) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+
+    const links = [
+        { elementText: "Etiam orci", link: "/zo-sveta-financii/konsolidacia-napriec-trhmi.html" },
+        { elementText: "archiv", link: "/zo-sveta-financii/trhy-su-nadalej-vydesene.html" }
+    ];
+
+    I.waitForElement("#DTE_Field_data-pageBuilderIframe");
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    links.forEach(({ elementText, link }) => {
+         I.waitForElement(locate("h3").withText(elementText), 10);
+         I.click(locate("h3").withText(elementText));
+         I.pressKey("Enter");
+         insertLink(I, link);
+    });
+
+    I.switchTo();
+    I.clickCss('#datatableInit_modal button.btn.btn-warning.btn-preview');
+    I.wait(2);
+    I.switchToNextTab();
+    links.forEach(({ link }) => {
+         I.see(link);
+         I.seeInSource(`href="${link}"`);
+    });
+    I.switchToPreviousTab();
+    I.closeOtherTabs();
+    I.switchTo();
+});
+
+Scenario('bug - /thumb prefix and parameters in image url', async ({ I, DTE, Document }) => {
+    Document.resetPageBuilderMode();
+
+    I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=57");
+    DTE.waitForEditor();
+
+    await validateThumb(I, "Etiam orci");
+    await validateThumb(I, "intranetové riešenie");
+});
+
+function insertLink(I, link) {
+    I.clickCss(".cke_button.cke_button__link.cke_button_off");
+    I.switchTo("#wjLinkIframe");
+    I.wait(1); //necessary static waiting
+    I.waitForElement('#txtUrl', 10);
+    I.fillField("#txtUrl", link);
+    I.switchTo();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.clickCss('.cke_dialog_ui_button_ok');
+    I.executeScript(() => {
+    const element = document.querySelector('#cke_710_uiElement #wjLinkIframe');
+        if (element) {
+          element.remove();
+        }
+    });
+}
+
+async function validateThumb(I, elementText) {
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.waitForElement(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")), 10);
+    I.click(locate("div").withChild(locate("h3").withText(elementText)).find(locate(".fixedSize-160-160-5")));
+    I.switchTo('#wjImageIframeElement');
+
+    I.waitForElement('#txtUrl', 10);
+    I.wait(5);
+    const url = await I.grabValueFrom("#txtUrl");
+
+    //
+    I.say('Checking if the URL contains "/thumb/" only once.');
+    const regex = /^(?!.*\bthumb\b.*\bthumb\b).*thumb.*/;
+    assert.match(url, regex, 'URL does not contain "/thumb/" only once');
+
+    //
+    I.say('Checking if the URL contains the correct parameters: w=160, h=160, ip=5.');
+    assert.match(url, /w=160/);
+    assert.match(url, /h=160/);
+    assert.match(url, /ip=5/);
+
+    //
+    I.say('Checking if the parameters are not duplicated in the URL.');
+    assert.doesNotMatch(url, /w=160.*w=160/, "Parameter 'w' is duplicated in the URL");
+    assert.doesNotMatch(url, /h=160.*h=160/, "Parameter 'h' is duplicated in the URL");
+    assert.doesNotMatch(url, /ip=5.*ip=5/, "Parameter 'ip' is duplicated in the URL");
+
+    //
+    I.switchTo();
+    I.switchTo("#DTE_Field_data-pageBuilderIframe");
+    I.clickCss(".cke_dialog_ui_button_cancel");
+
+    await I.executeScript(() => {
+        const element = document.querySelector('#cke_672_uiElement #wjImageIframeElement');
+            if (element) {
+              element.remove();
+            }
+    });
+
+    I.switchTo();
+}

@@ -304,41 +304,41 @@ function componentClick(componentName, width, height)
 			<div class="content">
 				<div class="container">
 					<div class="row">
-				<%
-				for (AppBean app : appsList)
-				{
-					if (!appstorePromoList.contains(app.getComponentClickAction()) && !appstorePromoList.contains(app.getItemKey()))
-					{
-						continue;
-					}
-				%>
-			<div class=" col-sm-3 promoApp-col">
-						<div class="promoApp<%=appCounter %> promoApp <%= (appCounter%2==0) ? "promoAppLeft" : "promoAppRight" %>"  id="promo-<%=DocTools.removeChars(app.getNameKey(), true).replace('.', '-') %>">
-							<div class="img">
-								<%
-								if (app.getImagePath().contains("/") )out.println("<img src=\""+app.getImagePath()+"\" alt=\"\" />");
-								else if (app.getImagePath().startsWith("ti") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
-								%>
+						<%
+						for (AppBean app : appsList)
+						{
+							if (!appstorePromoList.contains(app.getComponentClickAction()) && !appstorePromoList.contains(app.getItemKey()))
+							{
+								continue;
+							}
+						%>
+						<div class=" col-sm-3 promoApp-col">
+							<div class="promoApp<%=appCounter %> promoApp <%= (appCounter%2==0) ? "promoAppLeft" : "promoAppRight" %>"  id="promo-<%=DocTools.removeChars(app.getNameKey(), true).replace('.', '-') %>">
+								<div class="img">
+									<%
+									if (app.getImagePath().contains("/") )out.println("<img src=\""+app.getImagePath()+"\" alt=\"\" />");
+									else if (app.getImagePath().startsWith("ti") && app.getImagePath().contains(" ")) out.println("<i class=\"fa-icon "+app.getImagePath()+"\"></i>");
+									%>
+								</div>
+								<div class="info">
+									<h3><iwcm:text key="<%=app.getNameKey() %>"/></h3>
+									<%	if (app.isFree()) {%><span class="price free"><iwcm:text key="components.cloud.appstore.free"/></span><% } else { %><span class="price"><%=app.getPriceEur() %> €</span><% } %>
+									<a href="javascript:componentClick('<%=app.getComponentClickAction()%>')" class="buy"><iwcm:text key="components.cloud.apps.insertToYourSite"/></a>
+								</div>
+								<div class="clearer"></div>
 							</div>
-							<div class="info">
-								<h3><iwcm:text key="<%=app.getNameKey() %>"/></h3>
-								<%	if (app.isFree()) {%><span class="price free"><iwcm:text key="components.cloud.appstore.free"/></span><% } else { %><span class="price"><%=app.getPriceEur() %> €</span><% } %>
-								<a href="javascript:componentClick('<%=app.getComponentClickAction()%>')" class="buy"><iwcm:text key="components.cloud.apps.insertToYourSite"/></a>
-							</div>
-							<div class="clearer"></div>
 						</div>
-		</div>
+						<%
+							appCounter++;
+						}
+						if (appCounter%2==1) {
+							//out.print("</div>");
+						}
+						%>
+					</div>
 
-				<%
-					appCounter++;
-				}
-				if (appCounter%2==1) {
-					//out.print("</div>");
-				}
-				%>
+				</div>
 			</div>
-
-			</div></div>
 		</div>
 
 		<%

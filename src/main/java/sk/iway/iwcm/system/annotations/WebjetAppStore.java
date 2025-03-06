@@ -17,5 +17,10 @@ public @interface WebjetAppStore {
     boolean commonSettings() default true;
     boolean[] custom() default {};
     String itemKey() default "";
+
+    //variant of the app, for multiple apps with same itemKey set different variant to keep them separate
+    String variant() default "";
+
     String componentPath() default ""; //If this APP is for old JSP components enter path to JSP file, eg. /components/gallery/gallery.jsp
+    String customHtml() default "";
 }

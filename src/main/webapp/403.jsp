@@ -12,7 +12,7 @@ if (fForward.exists())
 //nastav security hlavicky
 sk.iway.iwcm.SetCharacterEncodingFilter.setCommonHeaders(response, request);
 
-%><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.stat.*,sk.iway.iwcm.*"
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.stat.*,sk.iway.iwcm.*"
 %><%@ page import="sk.iway.iwcm.system.UrlRedirectDB,sk.iway.iwcm.doc.*" %><%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm"
 %><%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%
 

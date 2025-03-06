@@ -2,7 +2,7 @@
 <%@page import="sk.iway.iwcm.Constants"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" import="sk.iway.iwcm.Identity,sk.iway.iwcm.PageParams,sk.iway.iwcm.PathFilter,sk.iway.iwcm.FileTools" %>
+%><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.Identity,sk.iway.iwcm.PageParams,sk.iway.iwcm.PathFilter,sk.iway.iwcm.FileTools" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@page import="sk.iway.iwcm.Tools"%>
@@ -115,9 +115,9 @@ if (url.startsWith("/components/")) {
 			//je to spring komponenta, prepni sa na zobrazenie cez datatabulku
 			%>
 				<script type="text/javascript">
-					var src = '/admin/v9/webpages/component?id=1';
+					var src = '/admin/v9/webpages/component?id=1&name='+encodeURIComponent("<%=ResponseUtils.filter(componentName) %>");
 					var iframe = window.parent.$('#editorComponent');
-					//console.log("iframe=", iframe);
+					//console.log("iframe=", iframe, "src=", src);
 					iframe
 						.after($('<input type="hidden" id="className" />').val("<%=ResponseUtils.filter(componentName) %>"))
 						.after($('<input type="hidden" id="parameters" />').val(""))

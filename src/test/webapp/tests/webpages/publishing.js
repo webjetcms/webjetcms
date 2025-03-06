@@ -1,6 +1,6 @@
 Feature('webpages.publishing');
 
-var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber;
+var folder_name, subfolder_one, subfolder_two, auto_webPage, randomNumber, auto_title;
 
 const publishableWebpageUrl = "/test-stavov/test-casoveho-publikovania.html";
 const uncheckedPublishableWebpageUrl = "/test-stavov/test-casoveho-publikovania-nezaskrnute.html";
@@ -14,6 +14,7 @@ Before(({ I, login }) => {
           subfolder_one = 'subone-autotest-' + randomNumber;
           subfolder_two = 'subtwo-autotest-' + randomNumber;
           auto_webPage = 'webPage-autotest-' + randomNumber;
+          auto_title = 'title-autotest-' + randomNumber;
      }
 });
 
@@ -279,6 +280,51 @@ Scenario('casove odpublikovanie existujucej stranky @singlethread', async ({ I, 
      I.wait(5);
      I.amOnPage(publishableWebpageUrl);
      I.see("Chyba 404 - požadovaná stránka neexistuje");
+});
+
+async function createPublishPage(title, I, DTE, DT) {
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+
+     DTE.fillField('title', title);
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     await DTE.fillCkeditor("<p> Tato stranka bude odpublikovana v buducnosti konkretne zajtra </p>");
+
+     I.clickCss("#pills-dt-datatableInit-basic-tab");
+     I.checkOption("#DTE_Field_available_0");
+     I.clickCss("#pills-dt-datatableInit-perex-tab");
+
+     const tomorrow = new Date();
+     tomorrow.setDate(tomorrow.getDate() + 1);
+
+     const pad = num => num.toString().padStart(2, '0');
+
+     const formattedDate = `${pad(tomorrow.getDate())}.${pad(tomorrow.getMonth() + 1)}.${tomorrow.getFullYear()} ` +
+                           `${pad(tomorrow.getHours())}:${pad(tomorrow.getMinutes())}:${pad(tomorrow.getSeconds())}`;
+
+     I.checkOption("#DTE_Field_editorFields-publishAfterStart_0");
+     DTE.fillField("publishStartDate", formattedDate);
+     DTE.save();
+}
+
+Scenario('Webpages - Future publication validation and deletion', async ({ I, DTE, DT }) => {
+     await createPublishPage(auto_title, I, DTE, DT);
+     DT.filterContains('title', auto_title);
+     I.clickCss('.buttons-select-all');
+     I.click(DT.btn.edit_button);
+     DTE.waitForEditor();
+
+     // Overenie notifikácie o budúcej publikácii
+     I.see("Upozornenie", "div.toast-title");
+     I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky", "div.toast-message");
+     DTE.cancel();
+     I.clickCss('.toast-close-button');
+
+     // Mazanie stránky
+     I.click(DT.btn.delete_button);
+     I.click("Zmazať", "div.DTE_Action_Remove");
+     I.dontSeeElement('.DTE_Form_Error');
 });
 
 async function checkAudit(I, DT, Document, text, isDisabled = false) {

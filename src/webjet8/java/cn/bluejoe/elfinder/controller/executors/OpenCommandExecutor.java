@@ -41,26 +41,26 @@ public class OpenCommandExecutor extends AbstractJsonCommandExecutor
 				addSubfolders(files, root);
 			}
 		}
-		
+
 		FsItemEx cwd = findCwd(fsService, target);
-		
+
 		if (Tools.isNotEmpty(startPath) && files.size() > 0) {
-			
+
 			if (startPath.endsWith("/")) {
 				startPath = startPath.substring(0, startPath.length() - 1);
 			}
-			
+
 			for (Map.Entry<String, FsItemEx> file : files.entrySet())
 			{
 				FsItemEx item = file.getValue();
-				String path = item.getPath(); 
+				String path = item.getPath();
 				if (path.equals(startPath)) {
 					cwd = findCwd(fsService, file.getKey());
 					break;
 				}
 			}
 		}
-		
+
 		// LPA zakomentovane pretoze elfinder uz nepotrebuje cwd - #20705 - wj8 - elfinder update
 		//files.put(cwd.getHash(), cwd);
 		addChildren(files, cwd);

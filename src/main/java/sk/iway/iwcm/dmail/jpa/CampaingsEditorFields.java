@@ -28,17 +28,17 @@ import sk.iway.iwcm.users.UserGroupsDB;
 @Setter
 public class CampaingsEditorFields implements Serializable {
 
-    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "user.permissions.label", tab = "groupsTab", hidden = true, editor = {
-        @DataTableColumnEditor(attr = {
-            @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "user.admin.editUserGroups"),
-            @DataTableColumnEditorAttr(key = "unselectedValue", value = "") }) })
-    private Integer[] permisions;
-
     @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "groupedit.type_email", tab = "groupsTab", hidden = true, editor = {
         @DataTableColumnEditor(attr = {
             @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "menu.email"),
             @DataTableColumnEditorAttr(key = "unselectedValue", value = "") }) })
     private Integer[] emails;
+
+    @DataTableColumn(inputType = DataTableColumnType.CHECKBOX, title = "user.permissions.label", tab = "groupsTab", hidden = true, editor = {
+        @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-headline", value = "user.admin.editUserGroups"),
+            @DataTableColumnEditorAttr(key = "unselectedValue", value = "") }) })
+    private Integer[] permisions;
 
     //Replacement for CampaingsEntity.userGroupsIds, showen in table as text but hidden in editor
     @DataTableColumn(inputType = DataTableColumnType.TEXT,
@@ -71,8 +71,9 @@ public class CampaingsEditorFields implements Serializable {
         title="components.dmail.admin_email.emailUrl",
         className = "dt-tree-page",
         tab = "main",
-        sortAfter = "subject",
-        filter = false
+        sortAfter = "id",
+        filter = false,
+        hidden = true //because it will be first in DT
     )
     @NotEmpty
     private DocDetails pageToSend = null;

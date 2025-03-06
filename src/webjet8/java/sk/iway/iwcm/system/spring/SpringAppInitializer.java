@@ -9,6 +9,11 @@ import org.springframework.web.filter.DelegatingFilterProxy;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import sk.iway.iwcm.*;
+import sk.iway.iwcm.system.cluster.ClusterDB;
+import sk.iway.iwcm.system.cron.CronDB;
+import sk.iway.iwcm.system.cron.CronFacade;
+import sk.iway.iwcm.system.cron.CronTask;
+import sk.iway.iwcm.system.cron.WebjetDatabaseTaskSource;
 
 import javax.servlet.FilterRegistration;
 import javax.servlet.ServletContext;
@@ -88,10 +93,39 @@ public class SpringAppInitializer implements WebApplicationInitializer
 			final DelegatingFilterProxy springSecurityFilterChain = new DelegatingFilterProxy("springSecurityFilterChain");
 			final FilterRegistration.Dynamic addedFilter = servletContext.addFilter("springSecurityFilterChain", springSecurityFilterChain);
 			addedFilter.addMappingForUrlPatterns(null, false, "/*");
+
+			//run cron4j, it's here because it may need spring classes to run correctly
+			try
+			{
+				CronFacade cf = CronFacade.getInstance();
+				cf.setTaskSource(new WebjetDatabaseTaskSource());
+				cf.start();
+
+				//spustim tie ktore sa maju spustit hned po starte
+				List<CronTask> startupTasks = CronDB.getCronTasksRunAtStartup();
+				String clusterNodeName = Constants.getString("clusterMyNodeName");
+				if(startupTasks != null)
+				{
+					for(CronTask t : startupTasks)
+					{
+						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
+						{
+							Logger.println(InitServlet.class, "Spustam cron {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
+							cf.runSimpleTaskOnce(t);
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
 		} else {
 			//it is normally initialized in V9SpringConfig, but we need to add it here for setup/bad db connection
 			servletContext.addFilter("failedSetCharacterEncodingFilter", new SetCharacterEncodingFilter()).addMappingForUrlPatterns(null, false, "/*");
 		}
+
+		if (initialized) InitServlet.setWebjetInitialized();
 	}
 
 	private void loadConfigs(AnnotationConfigWebApplicationContext ctx) {

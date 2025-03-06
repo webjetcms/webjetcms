@@ -36,7 +36,6 @@ if (Tools.getRequestParameter(request, "bannerId") != null)
 <html>
 <head>
 <title><iwcm:text key="components.banner.banner_preview"/></title>
-<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1250">
 </head>
 
 <script type="text/javascript">

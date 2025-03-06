@@ -201,6 +201,14 @@ public class AppManager
 		return filterUserAppList(appsList, request);
 	}
 
+	private static boolean isVariantSame(String variant1, String variant2) {
+		if (variant1 == null) variant1 = "";
+		if (variant2 == null) variant2 = "";
+		variant1 = variant1.trim();
+		variant2 = variant2.trim();
+		return variant1.equals(variant2);
+	}
+
     private static void scanAnnotations(List<AppBean> apps) {
 
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
@@ -229,7 +237,8 @@ public class AppManager
 					if (Tools.isNotEmpty(itemKey)) {
 						//remove app from apps if there is already one with the same itemKey
 						for (AppBean app : apps) {
-							if (app.getItemKey().equals(itemKey)) {
+							if (app.getItemKey().equals(itemKey) && isVariantSame(appStore.variant(), app.getVariant())) {
+								Logger.debug("Removing app with itemKey="+itemKey);
 								apps.remove(app);
 								break;
 							}
@@ -245,6 +254,7 @@ public class AppManager
 					app.setDomainName(appStore.domainName());
 					app.setGalleryImages(appStore.galleryImages());
 					app.setComponentPath(appStore.componentPath());
+					app.setVariant(appStore.variant());
 
 					if (fqdn.startsWith("sk.iway.iwcm")) {
 						if (appStore.custom().length>1) app.setCustom(appStore.custom()[0]);

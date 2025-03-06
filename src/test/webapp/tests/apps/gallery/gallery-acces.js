@@ -1,7 +1,7 @@
-Feature('apps.gallery-access');
+Feature('apps.gallery.gallery-access');
 
-const DT = require("../../pages/DT");
-const DTE = require("../../pages/DTE");
+const DT = require("../../../pages/DT");
+const DTE = require("../../../pages/DTE");
 
 var randomNumber,
      mainFolder,
@@ -176,7 +176,7 @@ function uploadImage(I, folder, image) {
 
      I.click(folder);
      I.waitForElement(locate('a.jstree-anchor.jstree-clicked').withText(folder), 10);
-     I.attachFile('input.dz-hidden-input', 'tests/apps/' + image);
+     I.attachFile('input.dz-hidden-input', 'tests/apps/gallery/' + image);
      I.waitForVisible('#upload-wrapper', 25);
      I.waitForElement(locate('.toast-message').withText(image), 10);
 

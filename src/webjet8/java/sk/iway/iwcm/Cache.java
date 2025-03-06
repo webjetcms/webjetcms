@@ -117,8 +117,6 @@ public class Cache
 		List<String> removeNames = new ArrayList<>();
 		try
 		{
-			Logger.debug(Cache.class, "removeCheck");
-
 			Enumeration<CacheBean> e = objectCache.elements();
 			while (e.hasMoreElements())
 			{
@@ -390,8 +388,6 @@ public class Cache
 		List<String> removeNames = new ArrayList<>();
 		try
 		{
-			Logger.debug(Cache.class, "removeObjectStartsWithName: "+name);
-
 			Enumeration<CacheBean> e = objectCache.elements();
 			while (e.hasMoreElements())
 			{

@@ -1,7 +1,7 @@
-Feature('apps.gallery-regenerate-images');
+Feature('apps.gallery.gallery-regenerate-images');
 
-const DT = require("../../pages/DT");
-const DTE = require("../../pages/DTE");
+const DT = require("../../../pages/DT");
+const DTE = require("../../../pages/DTE");
 
 
 Before(({ login }) => {
@@ -72,7 +72,7 @@ async function regenerateDimensions(I, dimension) {
 // pregeneruj vodotlac
 async function regenerateWatermark(I, watermark) {
      var waterkarkFile = "/images/watermark.svg";
-     I.click('#pills-dt-galleryDimensionDatatable-watermark-tab');
+     I.clickCss('#pills-dt-galleryDimensionDatatable-watermark-tab');
      I.waitForVisible('#panel-body-dt-galleryDimensionDatatable-watermark', 15);
 
      if (watermark === 'change') {

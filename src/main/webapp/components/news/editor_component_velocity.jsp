@@ -7,7 +7,7 @@
 <%@page import="java.io.File"%>
 <%
 sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
-%><%@ page pageEncoding="windows-1250" %><%@
+%><%@ page pageEncoding="utf-8" %><%@
 taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %><%@
 taglib uri="/WEB-INF/iway.tld" prefix="iway" %><%@
 taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %><%@
@@ -1005,7 +1005,7 @@ function escapeHtml(unsafe) {
 							<c:forEach items="${fieldEnum}" var="enumValue">
 								<option data-field-type="${enumValue.fieldTypeString}">${enumValue}</option>
 							</c:forEach>
-						<select>
+						</select>
 
 						<div class="operationsBox">
 							<div class="operationsString operations">

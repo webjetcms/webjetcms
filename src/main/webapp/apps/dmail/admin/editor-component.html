@@ -1,0 +1,12 @@
+<script>
+
+    function appGetComponentPath(componentPath, datatable) {
+        let field = $("#DTE_Field_typeId").val();
+        if ("subscribe-simple" === field) {
+            //change component path to last_update.jsp
+            return "/components/dmail/subscribe-simple.jsp";
+        }
+        return "/components/dmail/subscribe.jsp";
+    }
+
+</script>

@@ -47,6 +47,7 @@ import * as fieldTypeIframe from './field-type-iframe';
 import * as fieldTypeColor from './field-type-color';
 import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
+import * as fieldTypeImageRadio from './field-type-imageradio';
 import * as dtWJ from './datatables-wjfunctions';
 import * as CustomFields from './custom-fields';
 import * as ExportImport from './export-import';
@@ -204,14 +205,16 @@ export const dataTableInit = options => {
         style: "btn btn-sm btn-outline-secondary",
         width: "100%",
         liveSearch: true,
-        noneSelectedText: '\xa0' //nbsp
+        noneSelectedText: '\xa0', //nbsp
+        multipleSeparator: " + "
     };
 
     var DT_SELECTPICKER_OPTS_NOSEARCH = {
         container: "body",
         style: "btn btn-sm btn-outline-secondary",
         width: "100%",
-        noneSelectedText: '\xa0' //nbsp
+        noneSelectedText: '\xa0', //nbsp
+        multipleSeparator: " + "
     };
 
     var DT_SELECTPICKER_OPTS_EDITOR = {
@@ -219,7 +222,8 @@ export const dataTableInit = options => {
         style: "btn btn-outline-secondary",
         liveSearch: true,
         showSubtext: true,
-        noneSelectedText: '\xa0' //nbsp
+        noneSelectedText: '\xa0', //nbsp
+        multipleSeparator: " + "
     };
 
     const DIALOG_BUTTONS = '<div class="dialog-buttons"><span class="show-help" onclick="WJ.showHelpWindow()"><i class="ti ti-help" title="' + WJ.translate('button.help') + '" data-toggle="tooltip"></i></span><span class="maximize"><i class="ti ti-arrows-maximize" title="'+WJ.translate("datatables.modal.maximize.js")+'" data-toggle="tooltip"></i></span><span class="minimize"><i class="ti ti-arrows-minimize" title="'+WJ.translate("datatables.modal.minimize.js")+'" data-toggle="tooltip"></i></span></div>';
@@ -1008,6 +1012,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.color = fieldTypeColor.typeColor();
         $.fn.dataTable.Editor.fieldTypes.base64 = fieldTypeBase64.typeBase64();
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
+        $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
 
         fieldTypeSelectEditable.typeSelectEditable();
 

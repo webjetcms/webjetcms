@@ -154,15 +154,20 @@ public class ReservationService {
      * @return If any of this validations are violated, text key with belonging error message is returned.
      *         Otherwise return null;
      */
-    public String checkReservationOverlappingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject, ReservationRepository rr) {
+    public String checkReservationOverlappingValidity(ReservationEntity reservation, ReservationObjectEntity reservationObject, ReservationRepository rr, boolean isImporting) {
 
         //validate date range
-        switch (DateTools.validateRange(reservation.getDateFrom(), reservation.getDateTo(), false) ){
-            case -1: return "datatable.error.fieldErrorMessage";
-            case 1 :return "reservation.reservations.range_in_past.js";
-            case 2: return "reservation.reservations.date_range_in_bad_order.js";
-            default:
-                break;
+        int result = DateTools.validateRange(reservation.getDateFrom(), reservation.getDateTo(), false);
+        if(result == 1 && isImporting) {
+            //Range is in past BUT we are importing - so it's allowed
+        } else {
+            switch (result){
+                case -1: return "datatable.error.fieldErrorMessage";
+                case 1 :return "reservation.reservations.range_in_past.js";
+                case 2: return "reservation.reservations.date_range_in_bad_order.js";
+                default:
+                    break;
+            }
         }
 
         Date reservationDateFrom = setTimeOfDate(reservation.getDateFrom(), 0, 0, 0, 0);
@@ -229,8 +234,16 @@ public class ReservationService {
 
         //+1 because we want add new reservation (+1 our new reservation)
         //Validate if still can add our reservation (due to number limitation)
-        if((maxOverlapCount + 1) > reservationObject.getMaxReservations())
-            return "reservation.reservations.max_reservations_error.js";
+        if((maxOverlapCount + 1) > reservationObject.getMaxReservations()) {
+            //We have too many reservations in same time
+            
+            if(isImporting || Tools.isTrue(reservation.getEditorFields().getAllowOverbooking())) {
+                //IF we are importing OR user is ok with this, we can add reservation
+            } else {
+                //Not allowed
+                return "reservation.reservations.max_reservations_error.js";
+            }
+        }
 
         //No problem found so return null
         return null;

@@ -305,10 +305,20 @@ public class IwcmFsVolume implements FsVolume
 	@Override
 	public long getSize(FsItem fsi)
 	{
-		if(!Constants.getBoolean("elfinderUseFastLoading"))
-			return asFile(fsi).length();
-		else
-			return 0;
+		if(Constants.getBoolean("elfinderUseFastLoading")) return 0;
+		IwcmFile file = asFile(fsi);
+		long size = file.getLength();
+		if (file.isDirectory())
+		{
+			size = 0;
+			//iterate over files in directory and sum their sizes
+			IwcmFile[] files = file.listFiles();
+			for (IwcmFile f : files)
+			{
+				size += f.getLength();
+			}
+		}
+		return size;
 	}
 
 	@Override

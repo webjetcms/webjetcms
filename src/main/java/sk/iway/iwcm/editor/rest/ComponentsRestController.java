@@ -227,6 +227,12 @@ public class ComponentsRestController {
                 return result;
             }
 
+            if (parameterType.getTypeName().equalsIgnoreCase("java.lang.String[]")) {
+                //get tokens, it's probably + separated list
+                String[] tokens = Tools.getTokens(value, "+");
+                return tokens;
+            }
+
             if (parameterType.getTypeName().equalsIgnoreCase("java.util.Date")) {
                 DateConverter dateConverter = new DateConverter();
                 return dateConverter.convert(value);

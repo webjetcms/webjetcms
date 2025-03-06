@@ -2511,8 +2511,9 @@ public class GalleryDB
 	}
 
 	private static boolean existImageMagickCompositeCommand()
-	{
-		return new IwcmFile(Constants.getString("imageMagickDir"), "composite").exists();
+	{	
+		String filename = System.getProperty("os.name").toLowerCase().contains("win") ? "magick.exe" : "composite";
+		return new IwcmFile(Constants.getString("imageMagickDir"), filename).exists();
 	}
 
 	/**
@@ -2568,7 +2569,9 @@ public class GalleryDB
 	private static void addWatermarkSignature(String realPath, GalleryDimension watermark)
 	{
 		List<String> args = new ArrayList<>();
-		String command = new IwcmFile(Constants.getString("imageMagickDir"), "composite").getAbsolutePath();
+
+		String filename = System.getProperty("os.name").toLowerCase().contains("win") ? "magick.exe" : "composite";
+		String command = new IwcmFile(Constants.getString("imageMagickDir"), filename).getAbsolutePath();
 
 		String watermarkPath = watermark.getWatermark().getAbsolutePath();
 		IwcmFile imageFile = new IwcmFile(realPath);
@@ -2581,6 +2584,8 @@ public class GalleryDB
 		}
 
 		args.add(command);
+		if (filename.contains("magick.exe"))
+			args.add("composite");
 		args.add("-dissolve");
 		args.add(watermark.getWatermarkSaturation()+"%");
 

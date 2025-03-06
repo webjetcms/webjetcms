@@ -109,7 +109,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             //Check if reservation object ID is set
             if(entity.getReservationObjectId() != null) {
                 entity.setReservationObjectForReservation( ror.findFirstByIdAndDomainId(entity.getReservationObjectId(), CloudToolsForCore.getDomainId()).orElse(null) );
-                entity.getEditorFields().toReservationEntity(entity, reservationRepository, getRequest(), false);
+                entity.getEditorFields().toReservationEntity(entity, reservationRepository, getRequest(), false, isImporting());
             } else throwError("");
         }
 
@@ -187,7 +187,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
             if(error != null) return error;
         }
 
-        error = reservationService.checkReservationOverlappingValidity(reservation, reservationObject, reservationRepository);
+        error = reservationService.checkReservationOverlappingValidity(reservation, reservationObject, reservationRepository, false);
         if(error != null) return error;
 
         return null;
@@ -288,7 +288,7 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
                 }
             }
 
-            String error2 = reservationService.checkReservationOverlappingValidity(entity, reservationObject, reservationRepository);
+            String error2 = reservationService.checkReservationOverlappingValidity(entity, reservationObject, reservationRepository, false);
             if(error2 != null) {
                 //REJECT entity auto
                 entity.setAccepted(Boolean.FALSE);
@@ -443,27 +443,28 @@ public class ReservationRestController extends DatatableRestControllerV2<Reserva
 
     @Override
     public void afterSave(ReservationEntity entity, ReservationEntity saved) {
-        //Check if we must send Acceptation email
-        ReservationObjectEntity reservationObject = entity.getReservationObjectForReservation();
-        ReservationService reservationService = new ReservationService(getProp());
+        if(!isImporting()) {
+            //Check if we must send Acceptation email
+            ReservationObjectEntity reservationObject = entity.getReservationObjectForReservation();
+            ReservationService reservationService = new ReservationService(getProp());
 
-        if(reservationObject != null && Tools.isTrue(reservationObject.getMustAccepted()) && entity.getAccepted() == null) {
-            //for some reason time part is lost even when in DB its saved good
-            entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()) );
-            entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()) );
-            reservationService.sendAcceptationEmail(entity, getRequest());
+            if(reservationObject != null && Tools.isTrue(reservationObject.getMustAccepted()) && entity.getAccepted() == null) {
+                //for some reason time part is lost even when in DB its saved good
+                entity.setDateFrom( DefaultTimeValueConverter.combineDateWithTime(entity.getDateFrom(), entity.getEditorFields().getReservationTimeFrom()) );
+                entity.setDateTo( DefaultTimeValueConverter.combineDateWithTime(entity.getDateTo(), entity.getEditorFields().getReservationTimeTo()) );
+                reservationService.sendAcceptationEmail(entity, getRequest());
+            }
+
+            reservationService.sendCreatedReservationEmail(saved, getRequest());
         }
-
-        reservationService.sendCreatedReservationEmail(saved, getRequest());
     }
 
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, ReservationEntity> target, Identity user, Errors errors, Long id, ReservationEntity entity) {
         if(target.getAction().equals("create") || target.getAction().equals("edit") && entity.getEditorFields() != null) {
             //Is object set as ALL DAY reservation ? - if yes, we do not need to check time
-            Boolean allDay = false;
-            if (entity.getReservationObjectId()!=null) allDay = ror.isReservationForAllDay(entity.getReservationObjectId());
-            if(Tools.isFalse(allDay)) {
+            boolean allDay = Tools.isTrue( ror.isReservationForAllDay(entity.getReservationObjectId()) );
+            if(!allDay) {
                 if(entity.getEditorFields().getReservationTimeFrom() == null)
                     errors.rejectValue("errorField.editorFields.reservationTimeFrom", null, getProp().getText("javax.validation.constraints.NotBlank.message"));
                 if(entity.getEditorFields().getReservationTimeTo() == null)

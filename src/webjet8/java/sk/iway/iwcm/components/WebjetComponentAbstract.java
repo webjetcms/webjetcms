@@ -75,6 +75,43 @@ public abstract class WebjetComponentAbstract implements WebjetComponentInterfac
 
     }
 
+    /**
+     * Verify, that value is in options, if not, add it
+     * @param options
+     * @param paramName
+     * @param componentRequest
+     */
+    public List<OptionDto> addCurrentValueToOptions(List<OptionDto> options, String value) {
+        if (value == null) return options;
+        String[] values = {value};
+        return addCurrentValueToOptions(options, values);
+    }
+
+    /**
+     * Verify, that values are in options, if not, add it
+     * @param options
+     * @param values
+     * @return
+     */
+    public List<OptionDto> addCurrentValueToOptions(List<OptionDto> options, String[] values) {
+        if (values != null && values.length > 0) {
+            for (String value : values) {
+                //iterate options and add if not found in value
+                boolean found = false;
+                for (OptionDto option : options) {
+                    if (option.getValue().equals(value)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    options.add(new OptionDto(value, value, null));
+                }
+            }
+        }
+        return options;
+    }
+
     @Override
     public String getViewFolder() {
         return viewFolder;

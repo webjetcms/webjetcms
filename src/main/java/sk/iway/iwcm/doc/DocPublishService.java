@@ -209,7 +209,7 @@ public class DocPublishService {
 	 * Read pages waiting for publishing or to be disabled
 	 */
 	public void refreshPagesToPublish() {
-		if(InitServlet.isWebjetInitialized() == true) {
+		if(InitServlet.isWebjetInitialized() == true && dhr != null && ddr != null) {
 			DebugTimer dt = new DebugTimer("readPagesToPublic");
 
 			prepareRepositories();

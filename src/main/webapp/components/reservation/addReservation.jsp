@@ -18,19 +18,18 @@
 <%@ taglib prefix="display" uri="/WEB-INF/displaytag.tld" %>
 <%@ taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<iwcm:checkLogon admin="true" perms="cmp_reservation"/>
 
 <%
 	String lng = PageLng.getUserLng(request);
 	pageContext.setAttribute("lng", lng);
 	PageLng.setUserLng(request, response, lng);
-	
+
 	PageParams pageParams = new PageParams(request);
 
 	request.setAttribute("cmpName", "reservation");
 	request.setAttribute("titleKey", "components.reservation.add.title");
 	request.setAttribute("descKey", "components.reservation.add.desc");
-	
+
 	request.setAttribute("dialogHasTabs", "true");
 %>
 
@@ -55,26 +54,27 @@
 			type : "POST",
 			url : "/components/reservation/reservation-ajax_utf-8.jsp",
 			data : "check_object=true&for_all_day=true&res_id=" + $("#reservationObjectId1").val(),
-		   dataType : "json",					
-			success : function(data) {				
+		   dataType : "json",
+			success : function(data) {
+				//console.log(data);
 
-				// disablujem startTime a finishTime, 
-				// ak ma parameter reservation_for_all_day z ResevationObject ma hodnotu true 
+				// disablujem startTime a finishTime,
+				// ak ma parameter reservation_for_all_day z ResevationObject ma hodnotu true
 				// a nastavim na hodnotu startTime = 14:00 a finishTime = 10:00
-				if ($.trim(data.for_all_day) == 'true') {					
-					$('label[for="starTimeId1"]').hide();					
+				if ($.trim(data.for_all_day) == 'true') {
+					$('label[for="starTimeId1"]').hide();
 					$("#starTimeId1").hide();
-					$('label[for="finishTimeId1"]').hide();					
-					$("#finishTimeId1").hide();	
+					$('label[for="finishTimeId1"]').hide();
+					$("#finishTimeId1").hide();
 					$("#starTimeId1").val("14:00");
 					$("#finishTimeId1").val("10:00");
-				} 
-				else {					
-					$('label[for="starTimeId1"]').show();					
+				}
+				else {
+					$('label[for="starTimeId1"]').show();
 					$("#starTimeId1").show();
-					$('label[for="finishTimeId1"]').show();					
-					$("#finishTimeId1").show();					
-				} 
+					$('label[for="finishTimeId1"]').show();
+					$("#finishTimeId1").show();
+				}
 
 				//ak mozeme zadat pocet prekrivajucich rezervacii > 1, tak disablujem datum do
 				if ($.trim(data.check_object) == 'true') {
@@ -91,7 +91,7 @@
 		});
 
 		$('#reservationTimes').load('/components/reservation/reservation-ajax_utf-8.jsp?load_reservation_times=true&res_id='+$("#reservationObjectId1").val());
-		
+
 		<%if(Tools.isEmpty(request.getParameter("showObjectIds")))
 		{%>
 			$('#reservationList').load('/components/reservation/reservation-ajax_utf-8.jsp?load_reservation_list=true&res_id='+$("#reservationObjectId1").val());
@@ -103,29 +103,29 @@
 	}
 
 	$(document).ready(function() {
-		loadReservation();		
+		loadReservation();
 		reservationObjectChange();
 		$("#reservationObjectId1").change(reservationObjectChange);
 		//$("#dateFrom").change(reservationObjectChange);
 		hideObjectSelectBox();
 	});
-	
+
 	function reservationObjectChange()
 	{
 		var val = $("#reservationObjectId1").val();
-		  
+
 		if (val != "") {
 			$.ajax({
 				'url': '/components/reservation/reservation-ajax_utf-8.jsp',
 				data : "date="+$("#dateFrom").val()+"&check_checkTimeUnit=true&res_id=" + $("#reservationObjectId1").val(),
 				dataType: 'json',
 				success: function(data) {
-					
+
 					var valuesStart = getOptionValues(data);
 					valuesStart.pop();
 					var valuesEnd = getOptionValues(data);
 					valuesEnd.shift();
-					
+
 					$('#startTimeId1, #finishTimeId1').empty();
 					$.each(valuesStart, function(i, v){
 						$('#startTimeId1').append('<option>' + v + '</option>')
@@ -137,7 +137,7 @@
 			})
 		}
 	}
-	
+
 	function getOptionValues(data)
 	{
 		var date = new Date();
@@ -147,27 +147,69 @@
 		endDate.setHours(Number(data.endHour), Number(data.endMin), 0, 0);
 		var result = [];
 		var day = date.getDay();
-		
-		while(true) {
+
+		var failsafe = 0;
+		while(failsafe++ < 1000) {
 			var hour = date.getHours() > 9 ? date.getHours() : "0" +date.getHours();
 			var minute = date.getMinutes() > 9 ? date.getMinutes() : "0" + date.getMinutes();
 			var d = hour + ":" + minute;
 			result.push(d);
-			
+
 			date.setMinutes(date.getMinutes() + Number(data.timeUnit));
 			if(date>endDate)
 				break;
 		}
-		
+
 		return result;
 	}
-	
+
 	function timeChange()
 	{
 		var index =	$("#startTimeId1 option:selected").index()+1;
 		$("#finishTimeId1 :nth-child("+index+")").prop('selected', true);
 	}
-	
+	function showHideTab(id)
+	{
+		$('ul.tab_menu li').removeClass('open openFirst openLast');
+
+		el = $("#tabLink" +id).parent();
+
+		if ($(el).attr('class')!=undefined)
+		{
+			if($(el).attr('class').indexOf("first") != -1 && $(el).attr('class').indexOf("openOnlyFirst") )
+			{
+				el.addClass('openFirst');
+			}
+			else if($(el).attr('class').indexOf("last") != -1 && $(el).attr('class').indexOf("openOnlyFirst"))
+			{
+				el.addClass('openLast');
+			}
+		}
+		else
+		{
+			el.addClass('open');
+		}
+
+		$("ul.tab_menu li a").each(function(i)
+		{
+			$(this).removeClass("activeTab");
+		});
+
+		$("#tabLink" +id).addClass("activeTab");
+
+		//Check if there is common advanced settings - we need to hide it manualy, because id ends with string, not  a number
+		if($("div#tabMenucommonAdvancedSettings").length>0) {
+			$("div#tabMenucommonAdvancedSettings").hide();
+		}
+
+		$("div.toggle_content div").each(function(i){
+			++i;
+			$("div#tabMenu0, div#tabMenu" + i).hide();
+		});
+
+		$("div#tabMenu" + id).show();
+	}
+
 	function hideObjectSelectBox()
 	{
 		if($("#reservationObjectId1").children().length == 2)
@@ -178,7 +220,7 @@
 			$("#selectObjectTrId").hide();
 		}
 	}
-	
+
 	function loadCalendarContent(fromHp) {
 		var ok = true;
 		resId = $("#reservationObjectId1").val();
@@ -258,14 +300,14 @@ Identity user = UsersDB.getCurrentUser(request);
 if (actionBean.getReservation()==null || actionBean.getReservation().getReservationId()<1)
 {
 	if (actionBean.getReservation()==null) actionBean.setReservation(new ReservationBean());
-	
+
 	if (user != null)
 	{
 		if (Tools.isEmpty(actionBean.getReservation().getName())) actionBean.getReservation().setName(user.getFirstName());
 		if (Tools.isEmpty(actionBean.getReservation().getSurname()))  actionBean.getReservation().setSurname(user.getLastName());
 		if (Tools.isEmpty(actionBean.getReservation().getEmail()))  actionBean.getReservation().setEmail(user.getEmail());
 	}
-	
+
 	if (actionBean.getReservation().getDateFrom()==null) actionBean.getReservation().setDateFrom(new Date());
 	if (actionBean.getReservation().getDateTo()==null) actionBean.getReservation().setDateTo(new Date());
 }
@@ -299,11 +341,11 @@ else
 		</ul>
 	</div>
 	<div class="tab-pane toggle_content" id="tab-pane-1">
-		<div class="tab-page" id="tabMenu1" style="display: block;">	
+		<div class="tab-page" id="tabMenu1" style="display: block;">
 		<iwcm:stripForm name="reservationForm" action="<%=PathFilter.getOrigPath(request)%>" method="post" beanclass="sk.iway.iwcm.components.reservation.ReservationAjaxAction" id="reservationForm">
 			<stripes:errors />
-		
-			<table border="0">		
+
+			<table border="0">
 				<tr id="selectObjectTrId">
 					<th><label for="reservationObjectId1"><iwcm:text key="components.reservation.reservation_list.object"/></label></th>
 					<td>
@@ -318,14 +360,14 @@ else
 					<td>
 						<stripes:text class="date required" id="dateFrom" maxlength="10" size="11" name="reservation.dateFrom" onblur="checkDate(document.getElementById('reservationForm').dateFrom); if (document.getElementById('reservationForm').dateTo.value=='' || $('.dateToCal').is(':hidden')) document.getElementById('reservationForm').dateTo.value=document.getElementById('reservationForm').dateFrom.value; checkForm.checkField(document.getElementById('reservationForm').dateTo); reservationObjectChange(); return false;" />
 						<img alt="" src="/components/calendar/calendar.gif" class="calendarIcon" onclick='showCalendar(this, document.getElementById("dateFrom"), "dd.mm.yyyy", null, 1)' />
-					</td>		
+					</td>
 					<th align="right"><label for="startTimeId1"><iwcm:text key="components.reservation.addReservation.time_from"/></label></th>
 					<td>
 						<stripes:select onchange="timeChange()" name="reservation.startTime" id="startTimeId1">
-						</stripes:select>						
-					</td>	
+						</stripes:select>
+					</td>
 				</tr>
-				
+
 				<tr>
 					<th><label for="dateTo"><iwcm:text key="components.reservation.addReservation.date_to"/></label></th>
 					<%System.out.println(">>> max: "+actionBean.getReservationObject().getMaxReservations());%>
@@ -337,13 +379,13 @@ else
 					<td id="trFinishTime">
 						<stripes:select name="reservation.finishTime" id="finishTimeId1">
 						</stripes:select>
-					</td>	
+					</td>
 				</tr>
 				<tr>
 					<th><label for="reservationNameId1"><iwcm:text key="components.reservation.addReservation.name"/></label></th>
 					<td colspan="3"><stripes:text id="reservationNameId1" name="reservation.name" class="required" size="26"/></td>
 				</tr>
-				
+
 				<tr>
 					<th><label for="surnameId1"><iwcm:text key="components.reservation.addReservation.surname"/></label></th>
 					<td colspan="3"><stripes:text name="reservation.surname" id="surnameId1" class="required" size="26" /></td>
@@ -359,23 +401,23 @@ else
 				<tr>
 					<th><label for="purposeId1"><iwcm:text key="components.reservation.addReservation.purpose"/></label></th>
 					<td colspan="3"><stripes:textarea name="reservation.purpose" id="purposeId1" class="required" rows="3" cols="40" /></td>
-				</tr>				
+				</tr>
 				<tr>
 					<td><stripes:submit name="bSaveReservation" value="Save" style="display: none;"/></td>
 				</tr>
-				
+
 			</table>
 		</iwcm:stripForm>
-		
+
 		<div id="reservationTimes"></div>
 		<p style="margin-bottom: 0px;"><iwcm:text key="components.reservation.reservation_list"/>:</p>
 		<style>
 			table.displaytagTable td { font-size: 11px;}
 		</style>
 		<div style="height: 100px; overflow: auto;" id="reservationList"></div>
-		
+
 		</div>
-		<div class="tab-page" id="tabMenu2">	
+		<div class="tab-page" id="tabMenu2">
 			<table id="pristupnost1"></table>
 			<table border="0" cellpadding="0" cellspacing="0" width="600">
 			   <tr>
@@ -383,7 +425,7 @@ else
 			      <td valign="top" align="left">
 			         <strong><iwcm:text key="schodzky_edit_time.day"/>:</strong>
 			         <input name="date" maxlength="10" size="8" id="dateId" onblur="checkDate(document.getElementById('dateId')); return false" class="input" type="text">&nbsp;<img class="calendarIcon" src="/components/calendar/calendar.gif" style="cursor: pointer; vertical-align: middle;" onclick='showCalendar(this, document.getElementById("dateId"), "dd.mm.yyyy")' alt="">
-			        
+
 			         <label for="startTimeId"><strong><app:text key="schodzky_edit_time.from"/></strong></label>
 			        	<select id="startTimeId" class="form-control">
 							<option value="00:30">00:30</option>
@@ -391,57 +433,57 @@ else
 							<option value="01:30">01:30</option>
 							<option value="02:00">02:00</option>
 							<option value="02:30">02:30</option>
-						
+
 							<option value="03:00">03:00</option>
 							<option value="03:30">03:30</option>
 							<option value="04:00">04:00</option>
 							<option value="04:30">04:30</option>
 							<option value="05:00">05:00</option>
 							<option value="05:30">05:30</option>
-						
+
 							<option value="06:00">06:00</option>
 							<option value="06:30">06:30</option>
 							<option value="07:00">07:00</option>
 							<option value="07:30">07:30</option>
 							<option value="08:00">08:00</option>
 							<option value="08:30">08:30</option>
-						
+
 							<option value="09:00">09:00</option>
 							<option value="09:30">09:30</option>
 							<option value="10:00">10:00</option>
 							<option value="10:30">10:30</option>
 							<option value="11:00">11:00</option>
 							<option value="11:30">11:30</option>
-						
+
 							<option value="12:00">12:00</option>
 							<option value="12:30">12:30</option>
 							<option value="13:00">13:00</option>
 							<option value="13:30">13:30</option>
 							<option value="14:00">14:00</option>
 							<option value="14:30">14:30</option>
-						
+
 							<option value="15:00">15:00</option>
 							<option value="15:30">15:30</option>
 							<option value="16:00">16:00</option>
 							<option value="16:30">16:30</option>
 							<option value="17:00">17:00</option>
 							<option value="17:30">17:30</option>
-						
+
 							<option value="18:00">18:00</option>
 							<option value="18:30">18:30</option>
 							<option value="19:00">19:00</option>
 							<option value="19:30">19:30</option>
 							<option value="20:00">20:00</option>
 							<option value="20:30">20:30</option>
-						
+
 							<option value="21:00">21:00</option>
 							<option value="21:30">21:30</option>
 							<option value="22:00">22:00</option>
 							<option value="22:30">22:30</option>
 							<option value="23:00">23:00</option>
-							<option value="23:30">23:30</option>				         	
+							<option value="23:30">23:30</option>
 			         </select>
-			         
+
 			         <label for="endTimeId"><strong><app:text key="schodzky_edit_time.till"/></strong></label>
 			        	<select id="endTimeId" class="form-control">
 							<option value="00:30">00:30</option>
@@ -449,57 +491,57 @@ else
 							<option value="01:30">01:30</option>
 							<option value="02:00">02:00</option>
 							<option value="02:30">02:30</option>
-						
+
 							<option value="03:00">03:00</option>
 							<option value="03:30">03:30</option>
 							<option value="04:00">04:00</option>
 							<option value="04:30">04:30</option>
 							<option value="05:00">05:00</option>
 							<option value="05:30">05:30</option>
-						
+
 							<option value="06:00">06:00</option>
 							<option value="06:30">06:30</option>
 							<option value="07:00">07:00</option>
 							<option value="07:30">07:30</option>
 							<option value="08:00">08:00</option>
 							<option value="08:30">08:30</option>
-						
+
 							<option value="09:00">09:00</option>
 							<option value="09:30">09:30</option>
 							<option value="10:00">10:00</option>
 							<option value="10:30">10:30</option>
 							<option value="11:00">11:00</option>
 							<option value="11:30">11:30</option>
-						
+
 							<option value="12:00">12:00</option>
 							<option value="12:30">12:30</option>
 							<option value="13:00">13:00</option>
 							<option value="13:30">13:30</option>
 							<option value="14:00">14:00</option>
 							<option value="14:30">14:30</option>
-						
+
 							<option value="15:00">15:00</option>
 							<option value="15:30">15:30</option>
 							<option value="16:00">16:00</option>
 							<option value="16:30">16:30</option>
 							<option value="17:00">17:00</option>
 							<option value="17:30">17:30</option>
-						
+
 							<option value="18:00">18:00</option>
 							<option value="18:30">18:30</option>
 							<option value="19:00">19:00</option>
 							<option value="19:30">19:30</option>
-							<option value="20:00">20:00</option>							
+							<option value="20:00">20:00</option>
 							<option value="20:30">20:30</option>
-						
+
 							<option value="21:00">21:00</option>
 							<option value="21:30">21:30</option>
 							<option value="22:00">22:00</option>
 							<option value="22:30">22:30</option>
 							<option value="23:00">23:00</option>
-							<option value="23:30">23:30</option>				         	
+							<option value="23:30">23:30</option>
 			         </select>
-			         
+
 			         <input type="submit" name="submit" value="<iwcm:text key="schodzky_edit_time.set"/>" styleClass="button" onclick="loadCalendarContent(false);"/>
 			      </td>
 			   </tr>

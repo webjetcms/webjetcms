@@ -69,21 +69,21 @@ public class MenuApp extends WebjetComponentAbstract {
     private String classes = "basic";
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.menu.generate_empty_span",
         tab = "advanced"
     )
     private Boolean generateEmptySpan;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.menu.open_all_items",
         tab = "advanced"
     )
     private Boolean openAllItems;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.menu.only_set_variables",
         tab = "advanced"
     )
@@ -104,7 +104,7 @@ public class MenuApp extends WebjetComponentAbstract {
     private String menuInfoDirName;
 
     @DataTableColumn(
-        inputType = DataTableColumnType.BOOLEAN,
+        inputType = DataTableColumnType.BOOLEAN_TEXT,
         title = "components.menu.menu_include_perex",
         tab = "advanced"
     )

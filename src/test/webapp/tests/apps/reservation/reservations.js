@@ -213,6 +213,202 @@ Scenario('logout', async ({I}) => {
     I.logout();
 });
 
+
+Scenario('Verify all objects are displayed when no object is selected', async ({ I }) => {
+    var columnData;
+    I.amOnPage('/apps/rezervacie');
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+    columnData = await getTableColumnData(I, 'Objekt');
+    const areObjectsDifferent = !areAllElementsEqual(columnData);
+    I.assertTrue(areObjectsDifferent, 'Objects in the table are all the same.');
+});
+
+Scenario('Verify filtering by selected object works correctly', async ({ I }) => {
+    var columnData;
+    I.amOnPage('/apps/rezervacie');
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+
+    I.selectOption('#filterObjectId1', 'Tenisovy kurt A');
+    I.clickCss('input.submit');
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+    columnData = await getTableColumnData(I, 'Objekt');
+    let areObjectsCorrect = columnData.every(item => item.includes('Tenisovy kurt A'));
+    I.assertTrue(areObjectsCorrect, 'All objects in the table should be same i.e. "Tenisovy kurt A".');
+
+    I.selectOption('#filterObjectId1', 'Tenisovy kurt B');
+    I.clickCss('input.submit');
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+    columnData = await getTableColumnData(I, 'Objekt');
+    areObjectsCorrect = columnData.every(item => item.includes('Tenisovy kurt B'));
+    I.assertTrue(areObjectsCorrect, 'All objects in the table should be same i.e. "Tenisovy kurt B".');
+});
+
+Scenario('Verify reservation creation in admin and price validation based on user type and date range selection in the calendar works correctly', async ({ I, DT, DTE }) => {
+    I.amOnPage('/apps/reservation/admin/');
+    DT.waitForLoader();
+    DT.addContext('reservation', '#reservationDataTable_wrapper');
+    I.click(DT.btn.reservation_add_button);
+    DTE.waitForEditor('reservationDataTable');
+    DTE.selectOption('reservationObjectId', 'Sauna');
+    DTE.fillField('dateFrom', '24.07.2028');
+    DTE.fillField('dateTo', '25.07.2028');
+    I.clickCss('#DTE_Field_purpose');
+    DTE.seeInField('price', '640');
+    DTE.fillField('purpose', `autotest-${randomNumber}`);
+    DTE.save();
+    I.amOnPage('/apps/rezervacie');
+    I.clickCss('#filterDateFromId');
+    await selectDate(I, '23', 'Júl', '2028');
+    I.clickCss('#filterDateToId');
+    await selectDate(I, '26', 'Júl', '2028');
+    I.selectOption('#filterObjectId1', 'Sauna');
+    I.clickCss('input.submit');
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+    I.see('24.07.2028');
+    I.see('25.07.2028');
+    I.see(`autotest-${randomNumber}`);
+});
+
+Scenario('Delete all Sauna reservations ', async ({ I, DT, DTE }) => {
+    await SL.deleteReservation(I, DT, DTE, 'editorFields.selectedReservation', 'Sauna');
+});
+
+Scenario('Verify reservation data in the table after applying filters', async ({ I }) => {
+    const filterDateFrom = '1. 1. 2045';
+    const filterDateTo = '3. 1. 2045';
+    I.amOnPage('/apps/rezervacie');
+    I.selectOption('#filterObjectId1', 'Tenisovy kurt B');
+    I.fillField('#filterDateFromId', filterDateFrom);
+    I.fillField('#filterDateToId', filterDateTo);
+    I.clickCss('input.submit');
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+    const columnDataFrom = await getTableColumnData(I, 'Dátum od');
+    let isFromFilteredCorrectly = columnDataFrom.every(date => new Date(date) >= new Date(filterDateFrom));
+    I.assertTrue(isFromFilteredCorrectly, 'Nesprávne filtrované hodnoty v Dátum od');
+    let columnDataTo = await getTableColumnData(I, 'Dátum do');
+    let isToFilteredCorrectly = columnDataTo.every(date => new Date(date) <= new Date(filterDateTo));
+    I.assertTrue(isToFilteredCorrectly, 'Nesprávne filtrované hodnoty v Dátum do:');
+});
+
+Scenario('Create reservation in calendar and check if works correctly', async ({ I }) => {
+    I.amOnPage('/apps/rezervacie');
+    I.waitForElement('.addReservation > a', 10);
+    I.clickCss('.addReservation > a');
+    I.wait(5);
+
+    I.switchToNextTab();
+    I.see('Pridajte rezerváciu');
+
+    I.selectOption('#reservationObjectId1', 'Sauna');
+    I.fillField('#dateFrom', '24.10.2028');
+    I.fillField('#dateTo', '25.10.2028');
+    I.selectOption('#startTimeId1', '13:00');
+    I.selectOption('#finishTimeId1', '14:00');
+    I.fillField('#purposeId1', `autotest-B${randomNumber}`);
+    I.clickCss('#btnOk');
+    I.wait(2);
+ });
+
+ Scenario('Verify reservation creation in admin from previous scenario', ({ I }) => {
+    I.amOnPage('/apps/rezervacie');
+
+    I.waitForText('Vyhľadávanie v rezerváciách', 10);
+    I.fillField('#filterDateFromId', '24.10.2028');
+    I.fillField('#filterDateToId', '25.10.2028');
+    I.selectOption('#filterObjectId1', 'Sauna');
+    I.clickCss('input.submit');
+    const getCell = (column) => locate('#tableReservations > tbody > tr:nth-child(1)').find(`td:nth-child(${column})`);
+    I.waitForText('Sauna', 10, getCell(2));
+    I.see('24.10.2028 13:00', getCell(3));
+    I.see('25.10.2028 14:00', getCell(4));
+    I.see('Tester Playwright', getCell(5));
+    I.see(`autotest-B${randomNumber}`, getCell(6));
+ });
+
+Scenario('Delete Sauna reservations from previous scenario', async ({ I, DT, DTE }) => {
+    await SL.deleteReservation(I, DT, DTE, 'editorFields.selectedReservation', 'Sauna');
+});
+
+Scenario('cleanup', ({ I, DT, DTE }) => {
+    I.openNewTab();
+    I.closeOtherTabs();
+});
+
+
+/**
+ * Selects a specific date from a date picker.
+ *
+ * This function automates the process of navigating through a date picker widget
+ * to select a specific day. It first ensures the date picker displays the desired
+ * month and year, then clicks on the target day to select it.
+ */
+async function selectDate(I, targetDay, targetMonth, targetYear) {
+    const targetDate = `${targetMonth} ${targetYear}`;
+    let currentText;
+    let moveCount = 0;
+    const moveLimit = 12*5;  //5 years
+    do {
+        currentText = (await I.grabTextFrom('#ui-datepicker-div > div > div')).normalize('NFKC').trim();
+
+        if (currentText !== targetDate) {
+            I.click('#ui-datepicker-div a.ui-datepicker-next');
+            I.wait(0.2);
+            moveCount++;
+        }
+        if (moveCount >= moveLimit) {
+            throw new Error('Out of move limit');
+        }
+    } while (currentText !== targetDate);
+    I.click(`td[data-handler="selectDay"] a[data-date="${targetDay}"]`);
+}
+
+
+
+/**
+ * Function to extract column data from a table from all pages.
+ * @param {string} columnName - The column name (e.g., 'Objekt', 'Dátum od').
+ * @returns {Promise<Array<string>>} - An array of strings containing the values of the specified column.
+ */
+async function getTableColumnData(I, columnName) {
+    const tableHeaderSelector = "#tableReservations thead tr th";
+    const tableRowSelector = "#tableReservations tbody tr";
+
+    const headers = await I.grabTextFromAll(tableHeaderSelector);
+    const columnIndex = headers.indexOf(columnName);
+
+    if (columnIndex === -1) {
+        throw new Error(`Column with name '${columnName}' not found in the table.`);
+    }
+
+    const columnData = [];
+    let hasNextPage = true;
+    while (hasNextPage) {
+        const rows = await I.grabNumberOfVisibleElements(tableRowSelector);
+        for (let i = 1; i <= rows; i++) {
+            const cellSelector = `#tableReservations tbody tr:nth-child(${i}) td:nth-child(${columnIndex + 1})`;
+            const cellText = await I.grabTextFrom(cellSelector);
+            columnData.push(cellText.trim());
+        }
+        hasNextPage = await I.grabNumberOfVisibleElements('a i.far.fa-angle-right') > 0;
+        if (hasNextPage) {
+            I.clickCss('a i.far.fa-angle-right');
+            I.waitForElement('#tableReservations tbody', 5);
+        }
+    }
+    return columnData;
+}
+
+
+/**
+ * Function to check if all elements in an array are the same.
+ * @param {Array<any>} array - The array to check.
+ * @returns {boolean} - True if all elements are the same, otherwise false.
+ */
+function areAllElementsEqual(array) {
+    if (array.length === 0) return true;
+    return array.every(element => element === array[0]);
+}
+
 async function checkReservation(I, DTE, Error,  ...tableData) {
     const [reservationObjectName, dateFrom, dateTo, timeFrom, timeTo] = tableData;
     SL.setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, Error);
@@ -233,6 +429,7 @@ function deleteReservationsWitPassword(I, deletePassword) {
     I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-input > input");
     I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", deletePassword);
     I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    I.seeElement("#reservationDataTable_modal > div > div");
+    I.wait(5);
+    I.waitForElement("#reservationDataTable_modal > div > div", 10);
     I.click("Zmazať", "div.DTE_Action_Remove");
 }

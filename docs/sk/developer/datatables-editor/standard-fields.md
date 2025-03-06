@@ -647,3 +647,60 @@ Zobrazenie statického textu na pozícii bežného vstupného poľa, čiže v pr
     )
     private String explain;
 ```
+
+### IMAGE_RADIO
+
+Zobrazenie výberu jednej z možností na základe obrázka. Používa sa napríklad v aplikácii Anketa. Obrázky sa získajú ako zoznam zo súborového systému, je potrebné ich plniť do objektu `options` odpovede REST služby. Odkaz na obrázok sa zadáva do objektu `OptionDto.original`.
+
+Nastavením `className = "image-radio-horizontal"` je možné prepnúť zobrazenie možností na horizontálne v riadku. Pridaním CSS triedy `image-radio-fullwidth` sa prepne zobrazenie popisku a výberu do riadku namiesto do stĺpca, v takom prípade odporúčame v karte nemať iné polia a nastaviť v definícii karty hodnotu `content = ""` aby karta nemala v pozadí šedý pruh podfarbujúci popisky.
+
+Implementácia je v súbore [field-type-imageradio.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-imageradio.js).
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.inquiry.InquiryApp")
+@WebjetAppStore(
+    nameKey = "components.inquiry.title",
+    descKey = "components.inquiry.desc",
+    itemKey= "cmp_inquiry",
+    imagePath = "/components/inquiry/editoricon.png",
+    galleryImages = "/components/inquiry/",
+    componentPath = "/components/inquiry/inquiry.jsp"
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "styleSelectArea", title = "components.roots.new.style", content = ""),
+    @DataTableTab(id = "componentIframeWindowTabList", title = "menu.inquiry", content = ""),
+})
+@Getter
+@Setter
+public class InquiryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = "components.roots.new.style",
+        tab = "styleSelectArea",
+        className = "image-radio-horizontal image-radio-fullwidth"
+    )
+    private String style = "01";
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = "components.catalog.color",
+        tab = "styleSelectArea",
+        className = "image-radio-horizontal image-radio-fullwidth"
+    )
+    private String color = "01";
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        //style & color options
+        options.put("style", DatatableTools.getImageRadioOptions("/components/inquiry/admin-styles/"));
+        options.put("color", DatatableTools.getImageRadioOptions("/components/inquiry/admin-colors/"));
+
+        return options;
+    }
+
+}
+```
