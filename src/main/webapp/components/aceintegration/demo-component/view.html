@@ -45,3 +45,7 @@
 </ul>
 
 <p class="currentDate">current date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(T(sk.iway.iwcm.Tools).getNow())}"></span></p>
+
+<form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${reservationEntity}" method="post">
+    Test FORM - ninja object for new webpage
+</form>

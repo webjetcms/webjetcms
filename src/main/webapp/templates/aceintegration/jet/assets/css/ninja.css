@@ -10340,24 +10340,29 @@
     font-weight: 700;
     font-style: normal;
 } */
-@font-face {
-  font-family: "geomanist";
-  src: url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-light-webfont.woff2) format("woff2"), url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-light-webfont.woff) format("woff");
-  font-weight: 300;
-  font-style: normal;
+/*@font-face {
+    font-family: 'geomanist';
+    src: url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-light-webfont.woff2) format('woff2'),
+         url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-light-webfont.woff) format('woff');
+    font-weight: 300;
+    font-style: normal;
 }
+
 @font-face {
-  font-family: "geomanist";
-  src: url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-regular-webfont.woff2) format("woff2"), url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-regular-webfont.woff) format("woff");
-  font-weight: 400;
-  font-style: normal;
+    font-family: 'geomanist';
+    src: url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-regular-webfont.woff2) format('woff2'),
+         url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-regular-webfont.woff) format('woff');
+    font-weight: 400;
+    font-style: normal;
 }
+
 @font-face {
-  font-family: "geomanist";
-  src: url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-bold-webfont.woff2) format("woff2"), url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-bold-webfont.woff) format("woff");
-  font-weight: 700;
-  font-style: normal;
-}
+    font-family: 'geomanist';
+    src: url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-bold-webfont.woff2) format('woff2'),
+         url(/templates/aceintegration/jet/assets/fonts/geomanist/geomanist-bold-webfont.woff) format('woff');
+    font-weight: 700;
+    font-style: normal;
+}*/
 body {
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;

@@ -58,12 +58,13 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
             if(!getUser().isEnabledItem("cmp_adminlog")) throw new IllegalArgumentException("Access is denied");
 
             GroupDetails gd = null;
-            DocDB ddb = DocDB.getInstance(true);
+            DocDB ddb = DocDB.getInstance();
+            GroupsDB groupsDB = GroupsDB.getInstance();
             List<DocBasic> publicableDocs = ddb.getPublicableDocs();
             List<DocHistoryDto> docDetailsList = new ArrayList<>();
 
             for(DocBasic publicableDoc : publicableDocs) {
-                gd = (GroupsDB.getInstance()).getGroup(publicableDoc.getGroupId());
+                gd = groupsDB.getGroup(publicableDoc.getGroupId());
                 if(gd != null) { //ak stranka ma adresar, pridam ju do zoznamu
                     if (publicableDoc instanceof DocDetails) {
                         DocHistoryDto dto = DocHistoryDtoMapper.INSTANCE.docToHistoryDto((DocDetails)publicableDoc);
