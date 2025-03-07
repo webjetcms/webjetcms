@@ -308,6 +308,13 @@
   <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-messaging@.*$</packageUrl>
   <cve>CVE-2024-38820</cve>
  </suppress>
+ <suppress>
+   <notes><![CDATA[
+   file name: spring-web-5.3.39.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/org\.springframework/spring-web@.*$</packageUrl>
+   <cve>CVE-2024-38820</cve>
+ </suppress>
 
  <!-- NOTE: we are not using WebMvc.fn or WebFlux.fn in WebJET CMS, 5.4.41 is not available for OpenSource projects, plan to migrate to Spring 6.x in 2025 -->
  <suppress>

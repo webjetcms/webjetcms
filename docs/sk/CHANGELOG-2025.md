@@ -76,6 +76,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Prihlásenie - opravené prihlásenie v multiweb inštalácii (#54273-57).
 - GDPR - opravené zobrazenie karty Čistenie databázy pri použití `Oracle/PostgreSQL` databázy (#54273-57).
 - Archív súborov - opravené zobrazenie ikon v dialógu dátumu a času (#54273-57).
+- Bezpečnosť - aktualizovaná knižnica `Swagger UI` na verziu `5.20.0`, doplnené výnimky v `dependency-check-suppressions.xml`.
 
 ## 2025.0
 
