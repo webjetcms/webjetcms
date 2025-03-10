@@ -20,8 +20,8 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsController;
@@ -98,12 +98,10 @@ public class CampaingsRestController extends DatatableRestControllerV2<Campaings
         if(id == -1) {
             entity = new CampaingsEntity();
 
-            String senderName = Constants.getString("dmailDefaultSenderName");
-            if(Tools.isEmpty(senderName)) senderName = user.getFullName();
+            String senderName = SendMail.getDefaultSenderName("dmail", user.getFullName());
             entity.setSenderName(senderName);
 
-            String senderEmail = Constants.getString("dmailDefaultSenderEmail");
-            if(Tools.isEmpty(senderEmail)) senderEmail = user.getEmail();
+            String senderEmail = SendMail.getDefaultSenderEmail("dmail", user.getEmail());
             entity.setSenderEmail(senderEmail);
 
             entity.setId(id);

@@ -78,7 +78,7 @@ public class ReservationObjectPriceRestController  extends DatatableRestControll
             if(entity.getDateFrom() == null || entity.getDateTo() == null) return;
 
             //validate date range
-            switch (DateTools.validateRange(entity.getDateFrom(), entity.getDateTo(), false) ){
+            switch (DateTools.validateRange(entity.getDateFrom(), entity.getDateTo(), false, true) ){
                 case -1: throw new IllegalArgumentException( getProp().getText("datatable.error.fieldErrorMessage") );
                 case 1 : throw new IllegalArgumentException( getProp().getText("components.reservation.reservation_object_prices.date_in_past_error") );
                 case 2 : throw new IllegalArgumentException( getProp().getText("components.reservation.reservation_object_prices.bad_order_error") );
@@ -92,13 +92,13 @@ public class ReservationObjectPriceRestController  extends DatatableRestControll
             ReservationService service = new ReservationService(getProp());
             for(ReservationObjectPriceEntity price : allPrices) {
                 if(target.getAction().equals("edit") && price.getId().equals(entity.getId())) continue; //Skip the current price (we are editing it
-                if(service.checkOverlap(price.getDateFrom(), price.getDateTo(), entity.getDateFrom(), entity.getDateTo(), null) == true) {
+                if(service.checkOverlap(price.getDateFrom(), price.getDateTo(), entity.getDateFrom(), entity.getDateTo(), null)) {
                     isOverlapping = true;
                     break;
                 }
             }
 
-            if(isOverlapping == true) {
+            if(isOverlapping) {
                 throw new IllegalArgumentException( getProp().getText("components.reservation.reservation_object_prices.overlapping_error") );
             }
         }

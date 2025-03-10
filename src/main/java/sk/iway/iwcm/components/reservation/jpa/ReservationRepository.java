@@ -24,4 +24,7 @@ public interface ReservationRepository extends DomainIdRepository<ReservationEnt
 
     @Query("SELECT re FROM ReservationEntity re JOIN ReservationObjectEntity roe ON re.reservationObjectId = roe.id WHERE re.dateFrom <= :dateFrom AND re.dateTo >= :dateTo AND roe.reservationForAllDay = :reservationForAllDay AND re.accepted = true AND re.domainId = :domainId")
     List<ReservationEntity> findByDateAndType(@Param("dateFrom") Date dateFrom, @Param("dateTo") Date dateTo, @Param("reservationForAllDay") Boolean reservationForAllDay, @Param("domainId") Integer domainId);
+
+    @Query("SELECT re.accepted FROM ReservationEntity re WHERE re.id = :id AND re.domainId = :domainId")
+    Boolean findAcceptedByIdAndDomainId(@Param("id") Long id, @Param("domainId") Integer domainId);
 }

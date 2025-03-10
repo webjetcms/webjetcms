@@ -119,6 +119,7 @@
     - [Štatistika rezervácií](/redactor/apps/reservation/reservations-stat/README.md)
     - [Zoznam rezervačných objektov](/redactor/apps/reservation/reservation-objects/README.md)
     - [Aplikácia Rezervácia času](/redactor/apps/reservation/time-book-app/README.md)
+    - [Aplikácia Rezervácia dní](/redactor/apps/reservation/day-book-app/README.md)
   - [SEO](/redactor/apps/seo/README.md)
   - [Skripty](/redactor/apps/insert-script/README.md)
   - [Slider](/redactor/apps/slider/README.md)

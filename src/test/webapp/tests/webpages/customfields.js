@@ -104,11 +104,11 @@ function checkCustomFieldsHeader(I, isCustom) {
     }
 }
 
-Scenario('custom-fields-list @singlethread', ({ I, DT, DTE }) => {
+Scenario('custom-fields-list @singlethread', async ({ I, DT, DTE }) => {
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=67");
     DT.resetTable();
-    DT.showColumn("Pole A");
-    DT.showColumn("Pole B");
+    await DT.showColumn("Pole A");
+    await DT.showColumn("Pole B");
 
     checkCustomFieldsHeader(I, false);
     I.jstreeClick("Voliteľné polia");
@@ -142,28 +142,32 @@ Scenario('custom-fields-list @singlethread', ({ I, DT, DTE }) => {
     DT.resetTable();
 });
 
-Scenario('Optional fields - yellow template test', ({ I, DT, DTE }) => {
+Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
     //
     I.say("Test on Volitelne polia folder");
     const fields_volitelne = ["text - A", "select - B", "autocomplete - D"];
-    checkOptionalFields(I, DTE, DT, fields_volitelne, '/admin/v9/webpages/web-pages-list/?groupid=7625', true);
+    await checkOptionalFields(I, DTE, DT, fields_volitelne, '/admin/v9/webpages/web-pages-list/?groupid=7625', true);
 
     //
     I.say("Test on yellow folder - as jstree click");
     const fields_yellow = ["temp-6 - A", "temp6-select - B", "Pole D"];
     I.jstreeClick("Yellow Folder");
-    checkOptionalFields(I, DTE, DT, fields_yellow, null, false);
+    await checkOptionalFields(I, DTE, DT, fields_yellow, null, false);
 
     //
     I.say("Test on yellow folder - as loaded");
-    checkOptionalFields(I, DTE, DT, fields_yellow, '/admin/v9/webpages/web-pages-list/?groupid=81154', false);
+    await checkOptionalFields(I, DTE, DT, fields_yellow, '/admin/v9/webpages/web-pages-list/?groupid=81154', false);
 });
 
-function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
+async function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
     if (pageUrl != null) I.amOnPage(pageUrl);
     const columnLabelSelector = "#datatableInit_wrapper tr > th > span.dt-column-title[role='button']";
 
-    if (showColumns) fields.forEach(field => DT.showColumn(field));
+    if (showColumns) {
+        for (const field of fields) {
+            await DT.showColumn(field);
+        }
+    }
 
     // over v stlpcoch
     fields.forEach(field => I.see(field, columnLabelSelector));

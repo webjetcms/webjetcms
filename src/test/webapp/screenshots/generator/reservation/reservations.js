@@ -13,7 +13,7 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
     I.say("Prepare some reservation object");
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
 
-    DT.filterContains("name", reservationObjectNameB);
+    DT.filterEquals("name", reservationObjectNameB);
     I.click(reservationObjectNameB);
     DTE.waitForEditor("reservationObjectDataTable");
 
@@ -37,16 +37,18 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
     I.clickCss("button.buttons-create");
     I.dtWaitForEditor("reservationDataTable");
 
-    setReservationObject(I, reservationObjectNameA);
-    I.clickCss("#DTE_Field_purpose");
+
+    setReservation(I, reservationObjectNameA, "01.01.2050", "01.01.2050", "08:00", "16:00");
+    I.resizeWindow(1280, 1110);
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_1.png");
+    I.resizeWindow(1280, 760);
 
     I.scrollTo("#DTE_Field_editorFields-reservationTimeRangeG");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_4.png");
 
     setReservationObject(I, reservationObjectNameB);
-    I.clickCss("#DTE_Field_purpose");
-    I.clickCss("#DTE_Field_editorFields-showReservationValidity_0");
+    setReservationCheckTime(I, "15:00", "10:00");
+
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_2.png");
 
     if("sk" === confLng || "cs" === confLng) {
@@ -56,8 +58,6 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
     }
 
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_basic_tab_3.png");
-
-    I.clickCss("#DTE_Field_editorFields-showReservationValidity_0");
 
     I.clickCss("#pills-dt-reservationDataTable-personalInfo-tab");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_personalInfo_tab.png");
@@ -69,19 +69,18 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
 
     if("sk" === confLng || "cs" === confLng) {
         setReservationDate(I, "01.01.2100", "01.01.2100");
+        setReservationCheckTime(I, "15:00", "10:00");
     } else if("en" === confLng) {
         setReservationDate(I, "01/01/2100", "01/01/2100");
+        setReservationCheckTime(I, "15:00", "10:00");
     }
 
     DTE.save();
-    I.wait(1);
 
-    I.fillField("#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input", reservationObjectNameB);
-    I.pressKey('Enter', "#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input");
-    I.wait(1);
+    //
+    DT.filterEquals("editorFields.selectedReservation", reservationObjectNameB);
 
     I.clickCss("td.sorting_1");
-    I.wait(1);
 
     Document.screenshotElement("button.buttons-approve", "/redactor/apps/reservation/reservations/button-approve.png");
     Document.screenshotElement("button.buttons-reject", "/redactor/apps/reservation/reservations/button-reject.png");
@@ -104,7 +103,7 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
 
     I.say("Change approver email");
     I.amOnPage("/apps/reservation/admin/reservation-objects/");
-    DT.filterContains("name", reservationObjectNameB);
+    DT.filterEquals("name", reservationObjectNameB);
     I.click(reservationObjectNameB);
     DTE.waitForEditor("reservationObjectDataTable");
 
@@ -115,16 +114,14 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
 
     I.say("Return to reservation page");
     I.amOnPage("/apps/reservation/admin/");
-    I.fillField("#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input", reservationObjectNameB);
-    I.pressKey('Enter', "#reservationDataTable_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-text.dt-th-editorFields-selectedReservation > form > div > input");
-    I.wait(1);
+    DT.filterEquals("editorFields.selectedReservation", reservationObjectNameB);
 
     I.click(reservationObjectNameB);
     I.clickCss("#pills-dt-reservationDataTable-acceptation-tab");
     Document.screenshot("/redactor/apps/reservation/reservations/reservation-editor_acceptation_tab.png");
 
     I.say("Approve - are you sure");
-        I.clickCss("#DTE_Field_editorFields-acceptation_0");
+        I.clickCss("button.approve");
         I.waitForVisible("#toast-container-webjet", 30);
         I.moveCursorTo('#toast-container-webjet');
         Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/approve_sure.png");
@@ -139,7 +136,7 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
         I.clickCss("button.toast-close-button");
 
     I.say("Reject - are you sure");
-        I.clickCss("#DTE_Field_editorFields-acceptation_1");
+        I.clickCss("button.reject");
         I.waitForElement("#toast-container-webjet", 30);
         I.moveCursorTo('#toast-container-webjet');
         Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reject_sure.png");
@@ -154,7 +151,7 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
         I.clickCss("button.toast-close-button");
 
     I.say("Reset - are you sure");
-        I.clickCss("#DTE_Field_editorFields-acceptation_2");
+        I.clickCss("button.reset");
         I.waitForElement("#toast-container-webjet", 30);
         I.moveCursorTo('#toast-container-webjet');
         Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/reset_sure.png");
@@ -194,7 +191,6 @@ Scenario('reservation screens', async ({ I, DT, DTE, Document }) => {
     Document.screenshotElement("#toast-container-webjet", "/redactor/apps/reservation/reservations/delete_error.png");
     I.clickCss("button.toast-close-button");
     I.say("Try delete, use GOOD password");
-        I.clickCss("td.sorting_1");
         I.clickCss("button.custom-buttons-remove");
         I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", deletePassword);
         I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
@@ -239,4 +235,18 @@ function setReservationTime(I, timeFrom, timeTo) {
     I.clickCss("#DTE_Field_editorFields-reservationTimeTo");
     I.fillField("#DTE_Field_editorFields-reservationTimeTo", timeTo);
     I.pressKey('Enter');
+
+    I.clickCss("#DTE_Field_purpose");
+}
+
+function setReservationCheckTime(I, arrivingTime, departureTime) {
+    I.clickCss("#DTE_Field_editorFields-arrivingTime");
+    I.fillField("#DTE_Field_editorFields-arrivingTime", arrivingTime);
+    I.pressKey('Enter');
+
+    I.clickCss("#DTE_Field_editorFields-departureTime");
+    I.fillField("#DTE_Field_editorFields-departureTime", departureTime);
+    I.pressKey('Enter');
+
+    I.clickCss("#DTE_Field_purpose");
 }

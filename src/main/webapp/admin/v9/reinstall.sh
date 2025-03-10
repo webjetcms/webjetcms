@@ -30,6 +30,11 @@ cp node_modules/@popperjs/core/dist/umd/popper.min.js ../skins/webjet8/assets/gl
 cp node_modules/@popperjs/core/dist/umd/popper.min.js.map ../skins/webjet8/assets/global/plugins/bootstrap/js/
 
 echo "Mame custom PUG loader, skontroluj ci uz nefixli zavislost na pug 3.0"
-echo "Mame upravene xlsx/package.jsp - odstranene exports kvoli amcharts4, ak je nova verzia odstran z postinstall a zrus package replace-in-file"
-echo "Mame upraveny tui-image-editor, skontroluj ci uz nefixli fabricjs"
+echo "Mame upravene xlsx/package.json - odstranene exports kvoli amcharts4, ak je nova verzia odstran z postinstall a zrus package replace-in-file"
+#echo "Mame upraveny tui-image-editor, skontroluj ci uz nefixli fabricjs"
 
+echo "Updating vanilla calendar PRO"
+
+curl -o ../../components/_common/vannila-calendar-pro/styles/index.css "https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3/styles/index.css"
+#curl -o ../../components/_common/vannila-calendar-pro/styles/layout.css "https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3/styles/layout.css"
+curl -o ../../components/_common/vannila-calendar-pro/index.js "https://cdn.jsdelivr.net/npm/vanilla-calendar-pro@3/index.js"

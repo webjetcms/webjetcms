@@ -50,6 +50,9 @@ public class Constants {
 	public static final String SERVER_NAME_MACRO = "SERVER_NAME";
 	public static final String MOD_CAPTCHA = "captcha";
 	public static final String MOD_FILE_ARCHIV = "file_archiv";
+	public static final String MOD_DMAIL = "dmail";
+	public static final String MOD_RESERVATION = "reservation";
+	public static final String MOD_FORMMAIL = "formmail";
 
 	public static final String MOD_OBSOLETE = "obsolete";
 
@@ -2338,6 +2341,8 @@ public class Constants {
 	 * - {SERVER_NAME}
 	 */
 	public static String executeMacro(String value) {
+		if (Tools.isEmpty(value)) return value;
+
 		value = Tools.replace(value, "{INSTALL_NAME}", getInstallName());
 
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();

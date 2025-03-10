@@ -13,6 +13,14 @@ module.exports = {
         setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, infoMsg);
     },
 
+    setWholeDayReservation(I, DTE, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, purpose) {
+        setWholeDayReservation(I, DTE, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, purpose);
+    },
+
+    changeReservationStatus(I, DT, DTE, buttonSelector, toastTitle, toastMessage, expectedStatus){
+        changeReservationStatus(I, DT, DTE, buttonSelector, toastTitle, toastMessage, expectedStatus);
+    },
+
     async deleteReservationObject(I, DT, reservationObjectName) {
         I.amOnPage("/apps/reservation/admin/reservation-objects/");
         DT.filterContains("name", reservationObjectName);
@@ -49,15 +57,15 @@ module.exports = {
             DTE.save();
         }
         I.see('Nenašli sa žiadne vyhovujúce záznamy');
-    }, 
+    },
 
     generateReservationDatesAndTimes() {
         const year = 2033;
         const startDate = new Date(year, Math.random() * 11, Math.random() * 25);
-        const randomDays = Math.floor(Math.random() * 3) + 1; 
+        const randomDays = Math.floor(Math.random() * 3) + 1;
         const endDate = new Date(startDate);
         endDate.setDate(startDate.getDate() + randomDays);
-      
+
         const formatDate = (date) =>
           date
             .toISOString()
@@ -65,11 +73,11 @@ module.exports = {
             .split("-")
             .reverse()
             .join(".");
-      
+
         const randomHour = Math.floor(Math.random() * (4 + 1)) + 8;
         const randomStartTime = `${randomHour}:00`;
         const randomEndTime = `${randomHour + Math.floor(Math.random() * 4) + 1}:00`;
-      
+
         return {
           startDate: formatDate(startDate),
           endDate: formatDate(endDate),
@@ -95,12 +103,27 @@ function setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, ti
     //Set reservation time
     setReservationFields(I, "#DTE_Field_editorFields-reservationTimeFrom", timeFrom, "#DTE_Field_editorFields-reservationTimeTo", timeTo);
 
+    //FIX - need to take focus from dateTo field
+    I.clickCss("#DTE_Field_purpose");
+
     //returns infoMsg if necessary
     if (infoMsg != null) {
-        I.checkOption("#DTE_Field_editorFields-showReservationValidity_0");
-        I.seeElement("#DTE_Field_editorFields-infoLabel2");
-        I.waitForValue("#DTE_Field_editorFields-infoLabel2", infoMsg, 10);
+        I.seeElement("#DTE_Field_editorFields-infoLabel");
+        I.waitForValue("#DTE_Field_editorFields-infoLabel", infoMsg, 10);
     }
+}
+
+function setWholeDayReservation(I, DTE, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, purpose) {
+    DTE.waitForEditor("reservationDataTable");
+    I.seeInField("#DTE_Field_editorFields-infoLabel", "Zadané časy nie sú platné");
+    DTE.selectOption("reservationObjectId", reservationObjectName);
+    DTE.fillField("dateFrom", dateFrom);
+    DTE.fillField("dateTo", dateTo);
+    DTE.fillField("editorFields-arrivingTime", timeFrom);
+    DTE.fillField("editorFields-departureTime", timeTo);
+    I.pressKey("Enter");
+    DTE.clickSwitch("purpose");
+    DTE.fillField("purpose", purpose);
 }
 
 function setReservationFields(I, fromSelector, fromValue, toSelector, toValue) {
@@ -113,3 +136,25 @@ function setReservationFields(I, fromSelector, fromValue, toSelector, toValue) {
     I.pressKey('Enter');
 }
 
+function changeReservationStatus(I, DT, DTE, buttonSelector, toastTitle, toastMessage, expectedStatus) {
+    I.click(DT.btn.reservation_edit_button);
+    DTE.waitForEditor("reservationDataTable");
+    I.clickCss("#pills-dt-reservationDataTable-acceptation-tab");
+    I.click(buttonSelector);
+    toastHandle(I, toastTitle, toastMessage, true, false);
+    I.clickCss("button.toast-close-button");
+    DTE.save("reservationDataTable");
+    DT.checkTableCell("reservationDataTable", 1, 13, expectedStatus);
+}
+
+function toastHandle(I, title, message, approve, shouldWait = true) {
+    I.waitForElement("#toast-container-webjet", 10);
+    I.waitForText(title, 10, ".toast-title");
+    I.waitForText(message, 10, ".toastr-message");
+    if (approve)
+      I.click(locate("#toast-container-webjet").find(".toastr-buttons button.btn-primary").withText("Potvrdiť"));
+    else
+      I.click(locate("#toast-container-webjet").find("button.toast-close-button"));
+    if (shouldWait)
+      I.waitForInvisible("#toast-container-webjet", 10);
+}

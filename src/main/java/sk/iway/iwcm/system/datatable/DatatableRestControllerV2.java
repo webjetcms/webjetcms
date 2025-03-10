@@ -139,7 +139,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		copyEntityIntoOriginal(entity, one);
 
 		//musime z editoFields najskor prepisat hodnoty do entity
-		T processed = processToEntity(one, ProcessItemAction.CREATE);
+		T processed = processToEntity(one, ProcessItemAction.EDIT);
 		//ulozime
 		T saved = repo.save(processed);
 		//nastavime editorFields atributy

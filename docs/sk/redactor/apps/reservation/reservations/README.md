@@ -12,18 +12,27 @@ Editor rezervácií obsahuje 4 karty, ktorých funkcie sú v nasledovnom opise.
 
 Karta **Základné** ako už napovedá názov, obsahuje základné informácie ohľadne rezervácie. Dôležitý je zoznam s výberom rezervačného objektu, ku ktorému sa rezervácia vzťahuje.
 
-![](reservation-editor_basic_tab_1.png)
+Hodinové rezervácie                       |  Celodenné rezervácie
+:----------------------------------------:|:---------------------------------------:
+![](reservation-editor_basic_tab_1.png)   |  ![](reservation-editor_basic_tab_2.png)
 
-Karta ďalej obsahuje dátumový výber od/do a časový výber od/do. Pri tomto výbere si treba uvedomiť jednu podstatnú vec. Ak si zvolíte dni od 01.01.2022 do 03.01.2022 v čase od 08:00 do 16:00, neznamená to, že rezervácia sa začína 01.01.2022 o 08:00 a trvá do 03.01.2022 16:00 a všetko v tom rozsahu je rezervované. NIE. Pri týchto zvolených hodnotách to v praxi znamená, že si tento rezervačný objekt rezervujete v čase od 08:00 do 16:00 pre každý deň zvlášť. Dôvod je prostý, týmto spôsobom si viete rezervovať objekt v určitom čase pre viac dní bez potreby rezervovania celého intervalu. Ak je rezervačný interval pre daný objekt nastavený od 05:00 do 20:00 tak pre jednotlivé dni sa rezervuje iba zadaný časový interval a zvyšok intervalu rezervovaný nie je, aj keď rezervácia trvá napríklad 3 dni.
+Kompozícia karty sa bude líšiť podľa toho, či zvolený rezervačný objekt je celodenný alebo nie. Viac informácií sa dozviete v časti [Zoznam rezervačných objektov](../reservation-objects/README.md).
 
-!>**Upozornenie:** ak sa rezervačný objekt dá rezervovať [IBA na celý deň](../reservation-objects/README.md) nasledovné možnosti sa skryjú a nebudú dostupné:
+**Celodenné rezervácie**
 
-- výberu času
-- prehľad rezervačných intervalov objektu pre jednotlivé dni
+V tomto režime sa rezervuje objekt na celý deň. Najlepším príkladom je rezervácia hotelovej izby. Potrebujete zadať dátumový rozsah rezervácie a čas príchodu/odchodu.
 
-![](reservation-editor_basic_tab_2.png)
+!>**Upozornenie:** ak sa rezervačný objekt dá rezervovať iba na celý deň, posledný deň v dátumovom rozsahu sa nepočíta, lebo v ten deň zákazník odchádza. Preto rezervačný rozsah pri celodenných rezerváciách musí byť minimálne 2 dni.
 
-Prepínač **Zobraziť platnosť vytváranej rezervácie ?** po zvolení odkryje textové pole, v ktorom budete informovaný o platnosti rezervácie. To znamená či sa rezervácia pre zvolený objekt dá v danom rozsahu vytvoriť alebo nie. Bližšie informácie o možných stavoch v tomto poli sú vysvetlené v sekcii [Validácia rezervácií](#validácia-rezervácií). Ak je rezervácia platná ohraničenie textového poľa zmení farbu na zelenú a ak nie je rezervácia platná, zmení farbu na červenú.
+**Hodinové rezervácie**
+
+Pri tomto type rezervácie si treba uvedomiť jednu podstatnú vec. Ak si zvolíte dni od 01.01.2022 do 03.01.2022 v čase od 08:00 do 16:00, neznamená to, že rezervácia sa začína 01.01.2022 o 08:00 a trvá do 03.01.2022 16:00 a všetko v tom rozsahu je rezervované. Ale tak to nie je. Pri týchto zvolených hodnotách to v praxi znamená, že si tento **rezervačný objekt rezervujete v čase od 08:00 do 16:00 pre každý deň zvlášť**. Dôvod je prostý, týmto spôsobom si viete rezervovať objekt v určitom čase pre viac dní bez potreby rezervovania celého intervalu. Ak je rezervačný interval pre daný objekt nastavený od 05:00 do 20:00 tak pre jednotlivé dni sa rezervuje iba zadaný časový interval a zvyšok intervalu rezervovaný nie je, aj keď rezervácia trvá napríklad 3 dni.
+
+V spodnej časti karty si môžete všimnúť prehľad s rezervačnými intervalmi objektu pre jednotlivé dni v týždni. Tieto časy sa nastavia podľa aktuálne zvoleného rezervačného objektu. Je to pomôcka pri vytváraní/úprave rezervácie, ak si presne nepamätáte kedy sa dá konkrétny rezervačný objekt rezervovať pre konkrétny deň v týždni. Tento prehľad sa zobrazuje **iba pre hodinové rezervácie**.
+
+![](reservation-editor_basic_tab_4.png)
+
+Pole **Upozornenie** zobrazuje informácie o platnosti vytváranej rezervácie. To znamená, či sa rezervácia pre zvolený objekt dá v danom rozsahu vytvoriť alebo nie. Bližšie informácie o možných stavoch v tomto poli sú vysvetlené v sekcii [Validácia rezervácií](#validácia-rezervácií). Ak je rezervácia platná ohraničenie textového poľa zmení farbu na zelenú a ak nie je rezervácia platná, zmení farbu na červenú.
 
 **Cena rezervácie** zobrazuje aktuálnu cenu vytváranej rezervácie. Cena sa odvíja o zvoleného rezervačného objektu, rezervačného intervalu a od nastavených špeciálnych cien k danému rezervačnému objektu.
 
@@ -34,10 +43,6 @@ Prepínač **Zobraziť platnosť vytváranej rezervácie ?** po zvolení odkryje
 Stav rezervácie ako aj cena rezervácie sa obnovujú vždy po zmene dátumu, času alebo rezervačného objektu.
 
 ![](reservation-editor_basic_tab_3.png)
-
-V spodnej časti karty si môžete všimnúť prehľad s rezervačnými intervalmi objektu pre jednotlivé dni v týždni. Tieto časy sa nastavia podľa aktuálne zvoleného rezervačného objektu. Je to pomôcka pri vytváraní/úprave rezervácie, ak si presne nepamätáte kedy sa dá konkrétny rezervačný objekt rezervovať pre konkrétny deň v týždni.
-
-![](reservation-editor_basic_tab_4.png)
 
 ## Osobné údaje
 
@@ -61,7 +66,7 @@ Podmienky pre zobrazenie karty:
 - potreba schválenia, rezervačný objekt, ktorý sa rezervácia snaží rezervovať musí mať parameter **Je potrebné schválenie** a musí mať zadaný email schvaľovateľa
 - schvaľovateľ, karta sa môže zobraziť iba osobe, ktorá ma povolenie danú rezerváciu schváliť. To znamená, že ak email prihláseného používateľa sa zhoduje s emailom schvaľovateľa zadaným v rezervačnom systéme a predošlé body boli splnené, karta sa používateľovi zobrazí
 
-Po zobrazení, karta obsahuje prepínač medzi tromi stavmi, ktoré rezervácia môže nadobudnúť. Pri prepnutí z jedného stavu na druhý, sa spustí akcia zmeny stavu rezervácie ako v prípade využitia tlačidiel na zmenu stavu. Tieto akcie budú lepšie vysvetlené v sekcií **Schvaľovanie rezervácií**.
+Po zobrazení, karta obsahuje 3 tlačidla na zmenu stavu rezervácie. Tieto akcie budú lepšie vysvetlené v sekcií **Schvaľovanie rezervácií**.
 
 ![](reservation-editor_acceptation_tab.png)
 
@@ -75,25 +80,49 @@ Rezervácia sa nebude dať uložiť/upraviť kým nebude spĺňať všetky pravi
 
 Dátum od musí byť menší rovný ako dátumu do (ak sú dátumy rovnaké tak rezervuje iba ten jeden deň).
 
+!>**Upozornenie:** v prípade **celodenných rezervácií**, musí byť rozsah **aspoň 2 dni**, nakoľko posledný deň rozsahu je deň odchodu, a do rezervácie ako takej sa nepočíta.
+
 ### Časový rozsah
 
-Čas od musí byť ostro menší ako čas do, pretože musíte rezervovať minimálne 1 minútu. Súčasne sa kontroluje či tento časový rozsah je väčší alebo aspoň rovný ako ako zadaná hodnota "Minimálna dĺžka rezervácie (v minútach)" nastavená pre daný rezervačný objekt.
+Validácia časového rozsahu sa líši podľa typu rezervácie.
+
+**Celodenné rezervácie**
+
+Pri celodenných rezerváciách sa časová zložka nevaliduje, nakoľko **Čas príchodu** / **Čas odchodu** nie sú v ten istý deň a je to len na vašom rozhodnutí.
+
+!>**Upozornenie:** silne doporučujeme, aby **Čas príchodu** bol väčší ako **Čas odchodu**, inak sa izba v deň odchodu starého zákazníka nebude dať rezervovať novým zákazníkom.
+
+**Hodinové rezervácie**
+
+**Čas od** musí byť ostro menší ako **Čas do**, pretože musíte rezervovať minimálne 1 minútu. Súčasne sa kontroluje či tento časový rozsah je väčší alebo aspoň rovný ako ako zadaná hodnota "Minimálna dĺžka rezervácie (v minútach)" nastavená pre daný rezervačný objekt.
 
 ### Rozsah v minulosti
 
 Nemôžete rezervovať deň/dni v minulosti. Ak sa snažíte robiť rezerváciu na dnešný deň tak časový interval nemôže byť v minulosti.
 
-### Platný rezervačný rozsah,
+!>**Upozornenie:** na vlastné riziko máte možnosť uložiť rezerváciu aj v prípade, že zvolený rozsah sa nachádza v minulosti. Stačí v karte **základné** zvoliť možnosť **Povoliť vytvorenie v minulosti**.
 
-Kontroluje sa, či zadaný časový rozsah je vnútri rezervačného intervalu objektu. Táto kontrola sa vykoná pre každý rezervovaný deň zvlášť. Napríklad ak sa snažíte rezervovať objekt v dobe od 08:00-09:00 na najbližšie 3 dni, a čo i len jeden z týchto dni má iný rezervačný interval tak rezervácia nie je platná. Samozrejme v úvahu sa berú aj špeciálne rezervačné intervaly pre jednotlivé dni v týždni, viac informácií v sekcií [časy podľa dní](../reservation-objects/README.md#časy-podľa-dní).
+### Platný rezervačný rozsah
+
+Táto kontrola sa vykonáva iba pre **hodinové rezervácie**. Kontroluje sa, či zadaný časový rozsah je vnútri rezervačného intervalu objektu. Táto kontrola sa vykoná pre každý rezervovaný deň zvlášť. Napríklad, ak sa snažíte rezervovať objekt v dobe od 08:00-09:00 na najbližšie 3 dni, a čo i len jeden z týchto dni má iný rezervačný interval, tak rezervácia nie je platná. Samozrejme v úvahu sa berú aj špeciálne rezervačné intervaly pre jednotlivé dni v týždni, viac informácií v sekcií [časy podľa dní](../reservation-objects/README.md#časy-podľa-dní).
 
 ### Maximálny počet rezervácií v rovnakom čase
 
-V tomto prípade sa kontroluje čí sa po pridaní rezervácie nebude pretínať viac rezervácií v rovnako čase ako je povolené parametrom **Maximálny počet rezervácií v rovnakom čase** daného objektu. Rezervácie sa považujú na prelínajúce ak sa ich časové intervaly prelínajú aspoň v jednej minúte (intervaly sa neprelínajú ak začiatok jedného je koniec druhého v rovnakú minútu). Napríklad ak máte 4 rezervácie, a ich časové intervaly sú ```08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00``` tak vidíme, že rezervácia v čase ```08:00-11:00``` sa prelína s 3 rôznymi rezerváciami, ale súčasne sa ich nikdy neprelína viac ako 2, pretože ostatné 3 rezervácie sa neprelínajú medzi sebou navzájom.
+V tomto prípade sa kontroluje čí sa po pridaní rezervácie nebude pretínať viac rezervácií v rovnako čase ako je povolené parametrom **Maximálny počet rezervácií v rovnakom čase** daného objektu. Rezervácie sa považujú na prelínajúce ak sa ich časové intervaly prelínajú aspoň v jednej minúte (intervaly sa neprelínajú ak začiatok jedného je koniec druhého v rovnakú minútu).
 
-Pri kontrole sa zoberú všetky rezervácie (ale iba tie ktoré boli schválené) nad objektom v rovnaký deň a testuje sa či po pridaní našej rezervácie sa tento limit neprekročí. Testuje sa to pre každý deň samostatne a ak čo i len jeden deň presiahne maximálny počet rezervácií v rovnakom čase, rezervácia bude označená za neplatnú.
+**Celodenné rezervácie**
 
-!>**Upozornenie:** na vlastné riziko máte možnosť uložiť rezerváciu aj v prípade nadmernej rezervácie, kedy sa prekročí maximálny počet rezervácií. Stačí v karte **základné** zvoliť možnosť **Povoliť prekročenie kapacity**.
+Pri týchto rezerváciách sme doporučili, aby **Čas príchodu** bol ostro väčší ako čas odchodu. Napr. ak čas príchodu je vždy 14:00 a čas odchodu je vždy 10:00, tak po odchode starého zákazníka o 10:00 je stále čas izbu upratať (alebo inak pripraviť) pre nového zákazníka, ktorý sa v tejto izbe ubytuje o 14:00. Takéto rezervácie sa nepretínajú a je možné izbu rezervovať v deň keď iný zákazník z nej odchádza. V realite to vyzerá, že rezervácie sa pretínajú, ale nie je to tak (nakoľko starý zákazník odíde pred príchodom nového).
+
+**Hodinové rezervácie**
+
+Napríklad ak máte 4 rezervácie, a ich časové intervaly sú ```08:00-11:00 / 08:00-09:00 / 09:00-10:00 / 10:00-11:00``` tak vidíme, že rezervácia v čase ```08:00-11:00``` sa prelína s 3 rôznymi rezerváciami, ale súčasne sa ich nikdy neprelína viac ako 2, pretože ostatné 3 rezervácie sa neprelínajú medzi sebou navzájom.
+
+Pri kontrole sa zoberú všetky rezervácie nad objektom v rovnaký deň a testuje sa či po pridaní našej rezervácie sa tento limit neprekročí. Testuje sa to pre každý deň samostatne a ak čo i len jeden deň presiahne maximálny počet rezervácií v rovnakom čase, rezervácia bude označená za neplatnú.
+
+!>**Upozornenie:** pri kontrole pretínania sa využívajú **iba schválené** rezervácie nad daným rezervačným objektom.
+
+!>**Upozornenie:** na vlastné riziko máte možnosť uložiť rezerváciu aj v prípade nadmernej rezervácie, kedy sa prekročí maximálny počet rezervácií. Stačí v karte **základné** zvoliť možnosť **Povoliť nadrezervácie**.
 
 ## Schvaľovanie rezervácií
 

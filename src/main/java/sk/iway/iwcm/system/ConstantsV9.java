@@ -125,10 +125,13 @@ public class ConstantsV9 {
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_SECURITY, "If true, /logoff.do requires CSRF token");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_SECURITY, "Comma separated list of URLs that require CSRF token");
 
+		Constants.setString("reservationAllDayStartTime", "14:00", "reservations", "Hodina, od ktorej sa začína celodenná rezervácia");
+		Constants.setString("reservationAllDayEndTime", "10:30", "reservations", "Hodina, do ktorej sa končí celodenná rezervácia");
+
 		Constants.setBoolean("virtualPathLastSlash", true, Constants.MOD_CONFIG, "If true, virtual path will have last slash for main pages in folder");
 
-		Constants.setString("dmailDefaultSenderName", "", "dmail", "If set, it will be used as sender name while creating new Campaigns.");
-		Constants.setString("dmailDefaultSenderEmail", "", "dmail", "If set, it will be used as sender email while creating new Campaigns.");
+		Constants.setString("defaultSenderName", "", Constants.mods(Constants.MOD_DMAIL, Constants.MOD_RESERVATION, Constants.MOD_FORMMAIL), "If set, it will be used as sender name. For modules dmail,reservation,formmail you can specify custom value by prefix. e.g. dmailDefaultSenderName.");
+		Constants.setString("defaultSenderEmail", "", Constants.mods(Constants.MOD_DMAIL, Constants.MOD_RESERVATION, Constants.MOD_FORMMAIL), "If set, it will be used as sender email. For modules dmail,reservation,formmail you can specify custom value by prefix. e.g. dmailDefaultSenderEmail.");
 
 		Constants.setInt("sortPriorityIncrementGroup", 10, Constants.MOD_EDITOR, "Increment for sort priority for groups");
 		Constants.setInt("sortPriorityIncrementDoc", 10, Constants.MOD_EDITOR, "Increment for sort priority for pages");

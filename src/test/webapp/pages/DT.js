@@ -197,12 +197,20 @@ module.exports = {
      * @param {string} columnText - The name of the column to be shown.
      * @param {string} tableId - The ID of the table wrapper (default is "datatableInit").
      */
-    showColumn(columnText, tableId="datatableInit") {
+    async showColumn(columnText, tableId="datatableInit") {
         var container = "#"+tableId+"_wrapper";
         I.clickCss(container+" button.buttons-settings");
         I.clickCss(container+" button.buttons-colvis");
         I.waitForVisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
-        I.click(locate("div.colvisbtn_wrapper button.buttons-columnVisibility").withText(columnText));
+
+        //First check, if button is already active
+        const count = await I.grabNumberOfVisibleElements(locate("div.colvisbtn_wrapper button.buttons-columnVisibility.dt-button-active").withText(columnText));
+
+        if (count == 0) {
+            //Not active, click
+            I.click(locate("div.colvisbtn_wrapper button.buttons-columnVisibility").withText(columnText));
+        }
+
         I.clickCss("button.btn.btn-primary.dt-close-modal");
         I.waitForInvisible("div.dt-button-collection div[role=menu] div.dt-button-collection div[role=menu]");
     },

@@ -146,10 +146,10 @@ Scenario('overenie filtrovania perexov podla prava', ({I, DT}) => {
 
 });
 
-Scenario('Check Perex Groups Rendering Behavior in Editor', ({ I, DT, DTE , Document }) => {
+Scenario('Check Perex Groups Rendering Behavior in Editor', async ({ I, DT, DTE , Document }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/');
     DT.resetTable();
-    DT.showColumn('Značky');
+    await DT.showColumn('Značky');
 
     checkElements(I, DTE, DT, true);
 

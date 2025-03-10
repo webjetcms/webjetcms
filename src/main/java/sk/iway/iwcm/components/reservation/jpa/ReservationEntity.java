@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
@@ -167,8 +168,8 @@ public class ReservationEntity implements Serializable {
     @Column(name = "domain_id")
     private Integer domainId;
 
-    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     @Column(name = "user_id")
+    @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
     private Integer userId;
 
     @Transient
@@ -184,4 +185,9 @@ public class ReservationEntity implements Serializable {
     public String getReservationObjectName() {
         return reservationObjectForReservation != null ? reservationObjectForReservation.getName() : "";
     }
+
+    //For date-book-app
+    @Transient
+    @JsonIgnore
+    private String actualDate;
 }

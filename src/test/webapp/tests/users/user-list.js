@@ -183,9 +183,9 @@ Scenario('test-prava-admin-user', ({ I }) => {
 });
 
 
-Scenario('filter by user group', ({ I, DT }) => {
+Scenario('filter by user group', async ({ I, DT }) => {
      DT.resetTable();
-     DT.showColumn("Prístupové práva k neverejným sekciám web sídla");
+     await DT.showColumn("Prístupové práva k neverejným sekciám web sídla");
 
      DT.filterContains("editorFields.permisions", "Bankári");
      I.see("Bankári, Obchodní partneri");
@@ -348,9 +348,9 @@ Scenario("logout", ({I}) => {
      I.logout();
 });
 
-Scenario("New select filter using permGroups", ({I, DT}) => {
+Scenario("New select filter using permGroups", async ({I, DT}) => {
 
-     DT.showColumn("Skupiny práv");
+     await DT.showColumn("Skupiny práv");
 
      DT.filterContains("login", "admin");
 

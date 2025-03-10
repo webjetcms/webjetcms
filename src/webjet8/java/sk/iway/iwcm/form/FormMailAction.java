@@ -2573,9 +2573,9 @@ public class FormMailAction extends HttpServlet
 			}
 
 			String authorName = Constants.getString("formmailSendUserInfoSenderName");
-			if(Tools.isEmpty(authorName)) authorName = doc.getAuthorName();
+			if(Tools.isEmpty(authorName)) authorName = SendMail.getDefaultSenderName("formmail", doc.getAuthorName());
 			String authorEmail = Constants.getString("formmailSendUserInfoSenderEmail");
-			if(Tools.isEmail(authorEmail) == false) authorEmail = doc.getAuthorEmail();
+			if(Tools.isEmail(authorEmail) == false) authorEmail = SendMail.getDefaultSenderEmail("formmail", doc.getAuthorEmail());
 			Logger.debug(FormMailAction.class,"sendUserInfoSenderName="+authorName+", sendUserInfoSenderEmail="+authorEmail);
 			SendMail.send(authorName, authorEmail, email, null, null, null, doc.getTitle(), "<html><body>"+data+"</body></html>", Tools.getBaseHref(request), attachments.toString());
 		}

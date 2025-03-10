@@ -1192,4 +1192,48 @@ public class SendMail
 		}
 		return email;
 	}
+
+	/**
+	 * Return senderName of various email from config value moduleDefaultSenderName or defaultSenderName if module version is not defined.
+	 * If config value is not defined, fallback is empty then domain name will be used.
+	 * @param module
+	 * @param fallbackName - if no defaultSenderName constants is defined this value will be used
+	 * @return
+	 */
+	public static String getDefaultSenderName(String module, String fallbackName) {
+		String senderName = Constants.getStringExecuteMacro(module + "DefaultSenderName");
+		if (Tools.isEmpty(senderName)) senderName = Constants.getStringExecuteMacro("defaultSenderName");
+		if (Tools.isEmpty(senderName)) {
+			senderName = fallbackName;
+		}
+		if (Tools.isEmpty(senderName)) {
+			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+			if (rb != null) {
+				senderName = rb.getDomain().replace("https://", "").replace("http://", "").replace("www.", "");
+			}
+		}
+		return senderName;
+	}
+
+	/**
+	 * Return senderEmail of various email from config value moduleDefaultSenderEmail or defaultSenderEmail if module version is not defined.
+	 * If config value is not defined, fallback is empty then domain name will be used.
+	 * @param module
+	 * @param fallbackEmail - if no defaultSenderEmail constants is defined this value will be used
+	 * @return
+	 */
+	public static String getDefaultSenderEmail(String module, String fallbackEmail) {
+		String senderEmail = Constants.getStringExecuteMacro(module + "DefaultSenderEmail");
+		if (Tools.isEmpty(senderEmail)) senderEmail = Constants.getStringExecuteMacro("defaultSenderEmail");
+		if (Tools.isEmpty(senderEmail)) {
+			senderEmail = fallbackEmail;
+		}
+		if (Tools.isEmpty(senderEmail)) {
+			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+			if (rb != null) {
+				senderEmail = "no-reply@"+rb.getDomain().replace("https://", "").replace("http://", "").replace("www.", "");
+			}
+		}
+		return senderEmail;
+	}
 }

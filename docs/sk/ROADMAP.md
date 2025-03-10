@@ -44,7 +44,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
 - [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
-- [ ] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
+- [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [ ] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
 - [ ] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
 - [ ] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený.
@@ -56,7 +56,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu.
 - [ ] +Galéria - ak nastavujem perex obrázok na obrázok v galérii, stiahnem z fotobanky, a obrázok premenujem na existujúci v databáze (ak je súbor zmazaný z disku) tak vznikne v `gallery` tabuľke duplicitný záznam. Naviac sa nepremenujú ostatné obrázky `o_,s_`. Treba pamätať na to, že teoreticky môžem premenovať ľubovoľný, malo by to detegovať, že som v galérii a premenovať všetky verzie.
 - [ ] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000`.
-
+- [ ] Datatable - opraviť počítanie označených riadkov po ich vymazaní.
 
 ## 2024
 
