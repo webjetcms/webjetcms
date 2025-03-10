@@ -479,16 +479,18 @@ public class DateTools
 	 * @param dateFrom the starting date of the range
 	 * @param dateTo the ending date of the range
 	 * @param canBeInPast a flag indicating whether the range can include past dates
+	 * @param canBeSameDay a flag indicating whether the range can include the same day
 	 * @return an integer value representing the validation result:
 	 *         <p> -1 if either dateFrom or dateTo is null,
 	 *         <p> 1 if the range is in the past and canBeInPast is false,
 	 *         <p> 2 if dateFrom is after dateTo,
+	 * 		   <p> 3 if dateFrom is the same as dateTo and canBeSameDay is false,
 	 *         <p> 0 if the range is valid
 	 */
-	public static int validateRange(Date dateFrom, Date dateTo, boolean canBeInPast) {
+	public static int validateRange(Date dateFrom, Date dateTo, Boolean canBeInPast, Boolean canBeSameDay) {
 		//Check for wrong values
 		if(dateFrom == null || dateTo == null) return -1;
-		return validateRange(dateFrom.getTime(), dateTo.getTime(), canBeInPast);
+		return validateRange(dateFrom.getTime(), dateTo.getTime(), canBeInPast, canBeSameDay);
 	}
 
 	/**
@@ -497,19 +499,27 @@ public class DateTools
 	 * @param dateFrom the starting date of the range
 	 * @param dateTo the ending date of the range
 	 * @param canBeInPast a flag indicating whether the range can be in the past
+	 * @param canBeSameDay a flag indicating whether the range can include the same day
 	 * @return an integer value representing the validation result:
 	 *         <p> -1 if either dateFrom or dateTo is negative,
 	 *         <p> 1 if the range is in the past and canBeInPast is false,
 	 *         <p> 2 if dateFrom is after dateTo,
+	 * 	   	   <p> 3 if dateFrom is the same as dateTo and canBeSameDay is false,
 	 *         <p> 0 if the range is valid
 	 */
-	public static int validateRange(long dateFrom, long dateTo, boolean canBeInPast) {
+	public static int validateRange(long dateFrom, long dateTo, Boolean canBeInPast, Boolean canBeSameDay) {
 		//Check for wrong values
 		if(dateFrom < 0 || dateTo < 0) return -1;
 
 		//Validate id range is in past
-		if(canBeInPast == false && (dateFrom < System.currentTimeMillis() || dateTo < System.currentTimeMillis()) ) {
+		if(Tools.isFalse(canBeInPast) && (dateFrom < System.currentTimeMillis() || dateTo < System.currentTimeMillis()) ) {
 			return 1;
+		}
+
+		if(Tools.isFalse(canBeSameDay)) {
+			//Need to compare only date part (without time part)
+			if(setTimePart(dateFrom, 0, 0, 0, 0).equals(setTimePart(dateTo, 0, 0, 0, 0)))
+				return 3;
 		}
 
 		//Validate if dateFrom is before dateTo
@@ -564,4 +574,64 @@ public class DateTools
         long diffInMillis = end.getTimeInMillis() - start.getTimeInMillis();
         return TimeUnit.DAYS.convert(diffInMillis, TimeUnit.MILLISECONDS);
     }
+
+	public static Date setTimePart(long date, int hour, int minute, int second, int millisecond) {
+		return setTimePart(new Date(date), hour, minute, second, millisecond);
+	}
+
+	public static Date setTimePart(Date date, int hour, int minute, int second, int millisecond) {
+		if(date == null) return null;
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.set(Calendar.HOUR_OF_DAY, hour);
+		calendar.set(Calendar.MINUTE, minute);
+		calendar.set(Calendar.SECOND, second);
+		calendar.set(Calendar.MILLISECOND, millisecond);
+		return calendar.getTime();
+	}
+
+	/**
+     * Return in milliseconds time difference between two TIME parts of the given dates (date part is ignored)
+     * @param from
+     * @param to
+     * @return
+     */
+    public static long timePartDiff(Date from, Date to) {
+        Calendar cal1 = Calendar.getInstance();
+        cal1.setTime(from);
+        cal1.set(Calendar.YEAR, 2000);
+        cal1.set(Calendar.MONTH, 0);
+        cal1.set(Calendar.DAY_OF_MONTH, 1);
+
+        Calendar cal2 = Calendar.getInstance();
+        cal2.setTime(to);
+        cal2.set(Calendar.YEAR, 2000);
+        cal2.set(Calendar.MONTH, 0);
+        cal2.set(Calendar.DAY_OF_MONTH, 1);
+
+        //Time diff in milliseconds for ONE DAY
+        return cal2.getTimeInMillis() - cal1.getTimeInMillis();
+    }
+
+	public static Calendar getFirstDateOfMonth(Date date, int monthShift) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+
+		cal.add(Calendar.MONTH, monthShift);
+
+		setMidnight(cal);
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH));
+		return cal;
+	}
+
+	public static Calendar getLastDateOfMonth(Date date, int monthShift) {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(date);
+
+		cal.add(Calendar.MONTH, monthShift);
+		
+		setMidnight(cal);
+		cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+		return cal;
+	}
 }

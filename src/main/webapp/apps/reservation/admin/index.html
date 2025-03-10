@@ -2,7 +2,19 @@
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.reservation.jpa.ReservationEntity")})]*/ '';
 </script>
 <script type="text/javascript">
-    var reservationDataTable;
+
+    class BaseParams {
+        constructor(dateFrom, dateTo, timeFrom, timeTo, reservationObjectId, reservationId, allowHistorySave, allowOverbooking) {
+            this.dateFrom = dateFrom;
+            this.dateTo = dateTo;
+            this.timeFrom = timeFrom;
+            this.timeTo = timeTo;
+            this.reservationObjectId = reservationObjectId;
+            this.reservationId = reservationId;
+            this.allowHistorySave = allowHistorySave;
+            this.allowOverbooking = allowOverbooking;
+        }
+    }
 
     window.domReady.add(function () {
 
@@ -24,19 +36,30 @@
             ]
         });
 
+        var reservationDataTable;
         let innerTable = null;
-        let showReservationValidity = false;
         let validReservationMsg = '[[#{reservation.reservations.valid_reservation}]]';
         let url = "/admin/rest/reservation/reservations";
+        let reservationForAllDay = false;
+        let isDuplicate = false;
+        let isLoadingEditor = true;
+
+        let originalBaseParams = null;
 
         //Map where we store ids and names of reservation objects, that need password to delete
         //So if 2 reseravations are above same reservation object (and object has set password), user must set password only once.
         const objectIdsNedeedPassw = new Map();
 
+        let content = '<div style="display: flex; justify-content: center; align-items: center; padding-top: 15px;">';
+        content += '<button class="btn btn-success approve" style="margin: 5px;">[[#{reservation.reservations.accept}]]</button>';
+        content += '<button class="btn btn-danger reject" style="margin: 5px;">[[#{reservation.reservations.reject}]]</button>';
+        content += '<button class="btn btn-primary reset" style="margin: 5px;">[[#{reservation.reservations.reset}]]</button>';
+        content += '</div>';
+
         var tabs = [
             { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true },
             { id: 'personalInfo', title: '[[#{reservation.reservations.personal_info}]]', selected: false },
-            { id: 'acceptation', title: '[[#{reservation.reservations.acceptation}]]', selected: false },
+            { id: 'acceptation', title: '[[#{reservation.reservations.actions}]]', selected: false, content: content },
             { id: 'specialPrice', title: '[[#{components.reservation.reservation_object_reservation_price.extra_price}]]', selected: false }
         ];
 
@@ -50,24 +73,32 @@
             fetchOnCreate: true
         });
 
+       //Add listener
+       $("button.btn-duplicate").on("click", function(e) {
+            isDuplicate = true;
+        });
+
         //Set loaded inner table into variable, so we can work we this table
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
             if(event.detail.conf.id == "DTE_Field_editorFields.objectPrices")
                 if(innerTable == null) innerTable = event.detail.conf.datatable;
         });
 
+        reservationDataTable.EDITOR.on('close', function (e, mode, action) {
+            isDuplicate = false;
+            isLoadingEditor = true;
+        });
+
         var eventsBinded = false;
         reservationDataTable.EDITOR.on('open', function (e, mode, action) {
-            reservationDataTable.EDITOR.field("editorFields.infoLabel1").disable();
-            reservationDataTable.EDITOR.field("editorFields.infoLabel2").disable();
-            reservationDataTable.EDITOR.field("editorFields.infoLabel1").hide();
+            reservationDataTable.EDITOR.field("editorFields.infoLabel").disable();
 
             if (eventsBinded===false) {
                 eventsBinded = true;
 
-                $("#DTE_Field_editorFields-acceptation_0").on("click", function(e) { changeReservationStatus(1, action) });
-                $("#DTE_Field_editorFields-acceptation_1").on("click", function(e) { changeReservationStatus(0, action) });
-                $("#DTE_Field_editorFields-acceptation_2").on("click", function(e) { changeReservationStatus(null, action) });
+                $("#pills-dt-reservationDataTable-acceptation").find("button.approve").on("click", function(e) { changeReservationStatus(1, action) });
+                $("#pills-dt-reservationDataTable-acceptation").find("button.reject").on("click", function(e) { changeReservationStatus(0, action) });
+                $("#pills-dt-reservationDataTable-acceptation").find("button.reset").on("click", function(e) { changeReservationStatus(null, action) });
 
                 //After click to tab with inner table, reload table with actually selected reservationObjectId
                 $("#pills-dt-reservationDataTable-specialPrice-tab").on("click", function(e) {
@@ -80,43 +111,98 @@
 
                 $("#DTE_Field_reservationObjectId").on("change", function(e) {
                     getReservationObjectTimesInfo(action);
-                    if(showReservationValidity) validateReservation();
-
-                    getReservationPrice();
-                });
-
-                $("#DTE_Field_editorFields-showReservationValidity_0").on("change", function(e) {
-                    showReservationValidity = reservationDataTable.EDITOR.field("editorFields.showReservationValidity").val()[0];
-
-                    if(showReservationValidity) {
-                        reservationDataTable.EDITOR.field("editorFields.infoLabel2").show();
-                        validateReservation();
-                    } else {
-                        reservationDataTable.EDITOR.field("editorFields.infoLabel2").hide();
-                    }
+                    onChangeActions();
                 });
 
                 $("#DTE_Field_dateFrom").on("change", function(e) {
-                    if(showReservationValidity) validateReservation();
-                    getReservationPrice();
+                    onChangeActions();
                 });
 
                 $("#DTE_Field_dateTo").on("change", function(e) {
-                    if(showReservationValidity) validateReservation();
-                    getReservationPrice();
+                    onChangeActions();
                 });
 
                 $("#DTE_Field_editorFields-reservationTimeFrom").on("change", function(e) {
-                    if(showReservationValidity) validateReservation();
-                    getReservationPrice();
+                    onChangeActions();
                 });
 
                 $("#DTE_Field_editorFields-reservationTimeTo").on("change", function(e) {
-                    if(showReservationValidity) validateReservation();
-                    getReservationPrice();
+                    onChangeActions();
+                });
+
+                $("#DTE_Field_editorFields-arrivingTime").on("change", function(e) {
+                    onChangeActions();
+                });
+
+                $("#DTE_Field_editorFields-departureTime").on("change", function(e) {
+                    onChangeActions();
+                });
+
+                $("#DTE_Field_editorFields-allowHistorySave_0").on("change", function(e) {
+                    onChangeActions();
+                });
+
+                $("#DTE_Field_editorFields-allowOverbooking_0").on("change", function(e) {
+                    onChangeActions();
                 });
             }
+
+            setTimeout(function() {
+                isLoadingEditor = false;
+
+                if(action === "edit") {
+                    hideInfo();
+                    originalBaseParams = getBaseParams();
+                } else {
+                    originalBaseParams = null;
+                }
+            }, 200);
         });
+
+        function onChangeActions() {
+            validateReservation();
+            getReservationPrice();
+            changeInfoVisibility(true);
+        }
+
+        function hideInfo() {
+            reservationDataTable.EDITOR.field("editorFields.infoLabel").hide();
+            reservationDataTable.EDITOR.field("editorFields.allowHistorySave").hide();
+            reservationDataTable.EDITOR.field("editorFields.allowOverbooking").hide();
+        }
+
+        function changeInfoVisibility(show) {
+            if(isLoadingEditor == false) {
+                //While editor is still loading do not change visibility
+                //this actins are called by initializating fields in editor
+
+                if(show == true) {
+                    if(originalBaseParams == null) return;
+
+                    let wasChanged = false;
+                    let actualBaseParams = getBaseParams();
+
+                    if(actualBaseParams == null) return;
+
+                    //Compare actual and original base params - if something importatnt was changed, show info about validation
+                    if(actualBaseParams.dateFrom != originalBaseParams.dateFrom) wasChanged = true;
+                    else if(actualBaseParams.dateTo != originalBaseParams.dateTo) wasChanged = true;
+                    else if(actualBaseParams.timeFrom != originalBaseParams.timeFrom) wasChanged = true;
+                    else if(actualBaseParams.timeTo != originalBaseParams.timeTo) wasChanged = true;
+                    else if(actualBaseParams.reservationObjectId != originalBaseParams.reservationObjectId) wasChanged = true;
+
+                    if(wasChanged) {
+                        reservationDataTable.EDITOR.field("editorFields.infoLabel").show();
+                        reservationDataTable.EDITOR.field("editorFields.allowHistorySave").show();
+                        reservationDataTable.EDITOR.field("editorFields.allowOverbooking").show();
+                    } else {
+                        hideInfo();
+                    }
+                } else {
+                    hideInfo();
+                }
+            }
+        }
 
         function changeReservationStatus(statusCode, action) {
             if(action !== "edit") return;
@@ -152,45 +238,36 @@
             //to prevent call it multimple times by onchange events at open editor
             clearTimeout(validateReservationTimer);
             validateReservationTimer = setTimeout(function() {
-                let dateFrom = reservationDataTable.EDITOR.field("dateFrom").val();
-                let dateTo = reservationDataTable.EDITOR.field("dateTo").val();
-                let timeFrom = reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").val();
-                let timeTo = reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").val();
-                //We dont set them, soo in case of null set 0
-                timeFrom = timeFrom == null ? 0 : timeFrom;
-                timeTo = timeTo == null ? 0 : timeTo;
-                let reservationObjectId = reservationDataTable.EDITOR.field("reservationObjectId").val();
-                let reservationId = reservationDataTable.EDITOR.field("id").val();
-                reservationId = reservationId == null ? -1 : reservationId;
+                //
+                let baseParams = getBaseParams();
+                if(baseParams == null) return;
 
-                let bonusUrl = "/check-reservation-validity?date-from=" + dateFrom;
-                bonusUrl += "&date-to=" + dateTo + "&time-from=" + timeFrom;
-                bonusUrl += "&time-to=" + timeTo + "&object-id=" + reservationObjectId + "&reservation-id=" + reservationId;
+                let bonusUrl = "/check-reservation-validity?date-from=" + baseParams.dateFrom;
+                bonusUrl += "&date-to=" + baseParams.dateTo + "&time-from=" + baseParams.timeFrom;
+                bonusUrl += "&time-to=" + baseParams.timeTo + "&object-id=" + baseParams.reservationObjectId;
+                bonusUrl += "&reservation-id=" + baseParams.reservationId + "&allow-history-save=" + baseParams.allowHistorySave;
+                bonusUrl += "&allow-overbooking=" + baseParams.allowOverbooking + "&isDuplicate=" + isDuplicate;
 
-                if (dateFrom != "" && dateTo != "") {
-                    $.ajax({
-                        type: "POST",
-                        url: url + bonusUrl,
-                        success: function(response){
-                            //console.log("response=", response);
-                            if(response == null || response.length < 1) {
-                                //If reseponse IS null, it means there arent errors and reservation is VALID
-                                //Push valid reservation text into infoLabel2
-                                $("#DTE_Field_editorFields-infoLabel2").val(validReservationMsg);
-                                $("#DTE_Field_editorFields-infoLabel2").css("border-color", "green");
-                            } else {
-                                //If reseponse IS NOT null, it means some error text was returned, so reservation is INVALID
-                                //Push this error text into infoLabel2.
-                                //console.log("response=", response, " translated=", WJ.translate(response));
-                                $("#DTE_Field_editorFields-infoLabel2").val(WJ.translate(response));
-                                $("#DTE_Field_editorFields-infoLabel2").css("border-color", "red");
-                            }
+                $.ajax({
+                    type: "POST",
+                    url: url + bonusUrl,
+                    success: function(response){
+                        //console.log("response=", response);
+                        if(response == null || response.length < 1) {
+                            //If reseponse IS null, it means there arent errors and reservation is VALID
+                            //Push valid reservation text into infoLabel
+                            $("#DTE_Field_editorFields-infoLabel").val(validReservationMsg);
+                            $("#DTE_Field_editorFields-infoLabel").css("border-color", "green");
+                        } else {
+                            //If reseponse IS NOT null, it means some error text was returned, so reservation is INVALID
+                            //Push this error text into infoLabel.
+                            //console.log("response=", response, " translated=", WJ.translate(response));
+                            $("#DTE_Field_editorFields-infoLabel").val(WJ.translate(response));
+                            $("#DTE_Field_editorFields-infoLabel").css("border-color", "red");
                         }
-                    });
-                } else {
-                    $("#DTE_Field_editorFields-infoLabel2").val("[[#{reservation.reservations.valid_reservation.invalid_dates}]]");
-                    $("#DTE_Field_editorFields-infoLabel2").css("border-color", "");
-                }
+                    }
+                });
+
             }, 100);
         }
 
@@ -200,15 +277,16 @@
                 type: "POST",
                 url: url + "/reservation-object/" + reservationObejctId,
                 success: function(response){
-
                     if(response != null) {
-
                         setAcceptationTabVisibility(action, response['mustAccepted'], response['emailAccepter']);
 
-                        if(response['reservationForAllDay']) {
+                        reservationForAllDay = response['reservationForAllDay'];
+                        if(reservationForAllDay) {
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").hide();
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").hide();
-                            reservationDataTable.EDITOR.field("editorFields.infoLabel1").show();
+
+                            reservationDataTable.EDITOR.field("editorFields.arrivingTime").show();
+                            reservationDataTable.EDITOR.field("editorFields.departureTime").show();
 
                             $("div.form-group.row-headline").hide();
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeA").hide();
@@ -221,7 +299,9 @@
                         } else {
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").show();
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").show();
-                            reservationDataTable.EDITOR.field("editorFields.infoLabel1").hide();
+
+                            reservationDataTable.EDITOR.field("editorFields.arrivingTime").hide();
+                            reservationDataTable.EDITOR.field("editorFields.departureTime").hide();
 
                             $("div.form-group.row-headline").show();
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeA").show();
@@ -261,13 +341,8 @@
                             return;
                         }
                     }
-                } else {
-                    //If object dont need acceptance show tab to everyone
-                    $("#pills-dt-reservationDataTable-acceptation-tab").show();
-                    return;
                 }
             }
-
             //Hide acceptation tab
             $("#pills-dt-reservationDataTable-acceptation-tab").hide();
         }
@@ -369,38 +444,60 @@
             });
         }
 
+        function getBaseParams() {
+            let dateFrom = reservationDataTable.EDITOR.field("dateFrom").val();
+            let dateTo = reservationDataTable.EDITOR.field("dateTo").val();
+            if (dateFrom == "" || dateTo == "") {
+                $("#DTE_Field_editorFields-infoLabel").val("[[#{reservation.reservations.valid_reservation.invalid_dates}]]");
+                $("#DTE_Field_editorFields-infoLabel").css("border-color", "red");
+                return null;
+            }
+
+            let timeFrom = reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").val();
+            let timeTo = reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").val();
+            if(reservationForAllDay) {
+                timeFrom = reservationDataTable.EDITOR.field("editorFields.arrivingTime").val();
+                timeTo = reservationDataTable.EDITOR.field("editorFields.departureTime").val();
+            }
+
+            if(timeFrom == "" || timeTo == "") {
+                $("#DTE_Field_editorFields-infoLabel").val("[[#{reservation.reservations.valid_reservation.invalid_times}]]");
+                $("#DTE_Field_editorFields-infoLabel").css("border-color", "red");
+                return null;
+            }
+
+            let reservationObjectId = reservationDataTable.EDITOR.field("reservationObjectId").val();
+            let reservationId = reservationDataTable.EDITOR.field("id").val();
+            reservationId = reservationId == null ? -1 : reservationId;
+
+            let allowHistorySave = reservationDataTable.EDITOR.field("editorFields.allowHistorySave").val();
+            let allowOverbooking = reservationDataTable.EDITOR.field("editorFields.allowOverbooking").val();
+
+            return new BaseParams(dateFrom, dateTo, timeFrom, timeTo, reservationObjectId, reservationId, allowHistorySave, allowOverbooking);
+        }
+
         let getReservationPriceTimer;
         function getReservationPrice() {
             //to prevent call it multimple times by onchange events at open editor
             clearTimeout(getReservationPriceTimer);
             getReservationPriceTimer = setTimeout(function() {
+                //
+                let baseParams = getBaseParams();
+                if(baseParams == null) return;
 
-                let dateFrom = reservationDataTable.EDITOR.field("dateFrom").val();
-                let dateTo = reservationDataTable.EDITOR.field("dateTo").val();
-                let timeFrom = reservationDataTable.EDITOR.field("editorFields.reservationTimeFrom").val();
-                let timeTo = reservationDataTable.EDITOR.field("editorFields.reservationTimeTo").val();
-                //We dont set them, soo in case of null set 0
-                timeFrom = timeFrom == null ? 0 : timeFrom;
-                timeTo = timeTo == null ? 0 : timeTo;
-                let reservationObjectId = reservationDataTable.EDITOR.field("reservationObjectId").val();
-                let reservationId = reservationDataTable.EDITOR.field("id").val();
-                reservationId = reservationId == null ? -1 : reservationId;
+                let bonusUrl = "/compute-reservation-price?date-from=" + baseParams.dateFrom;
+                    bonusUrl += "&date-to=" + baseParams.dateTo + "&time-from=" + baseParams.timeFrom;
+                    bonusUrl += "&time-to=" + baseParams.timeTo + "&object-id=" + baseParams.reservationObjectId + "&reservation-id=" + baseParams.reservationId;
 
-                let bonusUrl = "/compute-reservation-price?date-from=" + dateFrom;
-                    bonusUrl += "&date-to=" + dateTo + "&time-from=" + timeFrom;
-                    bonusUrl += "&time-to=" + timeTo + "&object-id=" + reservationObjectId + "&reservation-id=" + reservationId;
-
-                if (dateFrom != "" && dateTo != "") {
-                    $.ajax({
-                        type: "POST",
-                        url: url + bonusUrl,
-                        success: function(response) {
-                            if(response != null) {
-                                reservationDataTable.EDITOR.field("price").val(response);
-                            }
+                $.ajax({
+                    type: "POST",
+                    url: url + bonusUrl,
+                    success: function(response) {
+                        if(response != null) {
+                            reservationDataTable.EDITOR.field("price").val(response);
                         }
-                    });
-                }
+                    }
+                });
             }, 100);
         }
 

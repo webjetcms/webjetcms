@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.reservation.rest.ReservationService;
+import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -87,10 +87,10 @@ public class ReservationObjectPriceEntity implements Serializable {
 	private ReservationObjectEntity reservationObjectForPrice;
 
     public Date getDateFrom() {
-        return ReservationService.setTimeOfDate(this.dateFrom, 0, 0, 0, 0);
+        return DateTools.setTimePart(this.dateFrom, 0, 0, 0, 0);
     }
 
     public Date getDateTo() {
-        return ReservationService.setTimeOfDate(this.dateTo, 23, 59, 59, 999);
+        return DateTools.setTimePart(this.dateTo, 23, 59, 59, 999);
     }
 }

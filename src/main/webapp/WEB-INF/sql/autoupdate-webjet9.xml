@@ -1576,5 +1576,16 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>24.01.2025</string></void>
+                <void property="desc"><string>reservation_object - pridanie stlpca notif_emails</string></void>
+                <void property="mysql"><string>ALTER TABLE reservation_object ADD notif_emails TEXT</string></void>
+                <void property="mssql"><string>ALTER TABLE reservation_object ADD notif_emails NTEXT</string></void>
+                <void property="oracle"><string>ALTER TABLE reservation_object ADD notif_emails CLOB</string></void>
+                <void property="pgsql"><string>ALTER TABLE reservation_object ADD notif_emails TEXT</string></void>
+            </object>
+        </void>
     </object>
 </java>

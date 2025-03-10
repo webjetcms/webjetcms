@@ -32,16 +32,28 @@ Pre hromadný email je možné ešte nastaviť:
 - `dmailWaitTimeout` - rýchlosť odosielania emailov z hromadného emailu v milisekundách. Štandardne nastavené na 5000, čo znamená že sa email odošle raz za 5 sekúnd. Ak hodnotu znížite tak pri odosielaní emailov bude viac zaťažený web server a SMTP server. Hodnota sa prejaví až po reštarte servera.
 - `dmailBadEmailSmtpReplyStatuses` - zoznam čiarkou oddelených výrazov vrátených zo SMTP servera pre ktoré sa email nebude znova pokúšať odoslať.
 
+Pre rôzne systémové notifikácie je možné nastaviť meno a email odosielateľa:
+
+- `defaultSenderName` - meno odosielateľa - napríklad meno firmy
+- `defaultSenderEmail` - email adresa odosielateľa - napríklad `no-reply@company-name.com`
+
+konfiguračnú hodnotu je možné nastaviť špeciálne pre moduly pomocou prefixu, ako napríklad `reservationDefaultSenderEmail`. Ak takáto hodnota existuje použije sa prioritne pred hodnotou `defaultSenderEmail`. Je možné použiť nasledovné prefixy:
+
+- `dmail` - odosielateľ nového hromadného emailu.
+- `formmail` - odosielateľ notifikácie pre návštevníka, ktorý vyplnil formulár.
+- `reservation` - odosielateľ schválenia/zamietnutia rezervácie.
+
+
 ### Nastavenie Amazon SES
 
 Pre hromadný email odporúčame použiť službu [Amazon Simple Email Services/SES](https://aws.amazon.com/ses/) pre lepšie doručovanie emailov. Pôvodne WebJET CMS používal API prístup, ktorý sa aktivoval nastavením konf. premennej `useAmazonSES` na hodnotu `true`, aktuálne už je ale používaný [štandardný SMTP protokol](https://docs.aws.amazon.com/ses/latest/dg/send-email-smtp.html) v službe Amazon SES:
 
 - Vyberte [adresu SMTP servera](https://docs.aws.amazon.com/general/latest/gr/ses.html) pre váš región a nastavte ju do konf. premennej `smtpServer`, napr. `email-smtp.eu-west-1.amazonaws.com`. Tabuľky sú na stránke rolovateľné, vidno najskôr len US región, nebojte sa tabuľku rolovať.
 - Vytvorte [prihlasovacie údaje](https://docs.aws.amazon.com/ses/latest/dg/smtp-credentials.html) na SMTP server a nastavte ich do konf. premenných `smtpUser` a `smtpPassword`, pre heslo zvoľte možnosť Šifrovať.
-- Na stránke [Amazon SES](https://console.aws.amazon.com/ses/) v sekcii SMTP settings je pre zvolený región vidno aj jednotlivé porty, cez ktoré komunikuje, typicky je potrebné na firewall povoliť komunikáciu na port 587.
+- Na stránke [Amazon SES](https://console.aws.amazon.com/ses/) v sekcii `SMTP settings` je pre zvolený región vidno aj jednotlivé porty, cez ktoré komunikuje, typicky je potrebné na `firewall` povoliť komunikáciu na port 587.
 - Pre nový projekt po otestovaní požiadajte o navýšenie limitov odosielania emailov, štandardne sú nastavené nízko.
 - Nastavte konf. premennú `smtpUseTLS` na `true`.
-- V [Amazon SES](https://console.aws.amazon.com/ses/) v sekcii Identities je potrebné verifikovať identitu domény a nastaviť `DKIM` kľúče.
+- V [Amazon SES](https://console.aws.amazon.com/ses/) v sekcii `Identities` je potrebné verifikovať identitu domény a nastaviť `DKIM` kľúče.
 - Zmažte konf. premennú `useAmazonSES` ak ju máte nastavenú (pri starších projektoch kde sa pôvodne používal API prístup).
 - Reštartnite aplikačný server.
 - Vyskúšajte odoslať email, overte v hlavičkách emailu, že bol skutočne odoslaný cez službu Amazon SES.

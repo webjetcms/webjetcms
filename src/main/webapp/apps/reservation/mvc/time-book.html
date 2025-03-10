@@ -127,8 +127,6 @@
         let reservationDate = $("#reservationDate");
         $("#reservationDateHidden").val( reservationDate.val() );
         let reservationObjectId = $("#reservationObjectId");
-        let email = $("#email").val();
-        if(email == undefined || email == null) email = "";
 
         function addDays(days) {
             var chooseDate=new Date(reservationDate.val());
@@ -158,6 +156,9 @@
                 let firstInfo = selectedCellsArr[0].split("_");
                 let lastInfo = selectedCellsArr[selectedCellsArr.length - 1].split("_");
 
+                let email = $("#email").val();
+                if(email == undefined || email == null) email = "";
+
                 let url = "/rest/reservation-app/compute-reservation-price";
                 url =  urlUpdateParam(url, "reservation-date", reservationDate.val());
                 url =  urlUpdateParam(url, "time-range", firstInfo[1] + "-" + (Number(lastInfo[1]) + 1) );
@@ -168,7 +169,7 @@
                 clearTimeout(getReservationPriceTimer);
                 getReservationPriceTimer = setTimeout(function() {
                     $.ajax({
-                        type: "POST",
+                        type: "GET",
                         url: url,
                         success: function(response) {
                             if(response != null) {

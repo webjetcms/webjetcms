@@ -191,7 +191,7 @@ Scenario('odhlasenie', ({I}) => {
     I.logout();
 });
 
-Scenario('BUG filtrovanie aktivny', ({I, DT}) => {
+Scenario('BUG filtrovanie aktivny', async ({I, DT}) => {
     I.amOnPage("/apps/banner/admin/");
 
     I.dtWaitForLoader();
@@ -216,7 +216,7 @@ Scenario('BUG filtrovanie aktivny', ({I, DT}) => {
     I.say("Filter podla active");
     I.amOnPage("/apps/banner/admin/");
     I.dtResetTable("bannerDataTable");
-    DT.showColumn("Aktívny", "bannerDataTable");
+    await DT.showColumn("Aktívny", "bannerDataTable");
 
     I.dtFilterSelect("active", "Nie");
     I.see("Test banner vypnuty");

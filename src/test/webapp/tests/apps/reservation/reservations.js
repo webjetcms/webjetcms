@@ -2,16 +2,32 @@ const SL = require("./shared-logic");
 
 Feature('apps.reservation.reservations');
 
-var randomNumber;
+let randomNumber;
 const base_reservation_object = "reservation_base_tests";
 const delete_password = "right_password";
 const error_reservation_object = "reservation_error_tests";
 
-Before(({ I, login }) => {
+let dateInPastErr = 'Zadaný dátum a čas rezervácie sa nachádza v minulosti.';
+let badDateRangeOrdErr = 'Dátum rezervácie "od", musí byť väčší alebo rovný ako dátum rezervácie "do".';
+let badTimeRangeOrdErr = 'Čas rezervácie "od", musí byť väčší ako čas rezervácie "do".';
+let timeRangeValidityError = 'Čas rezervácie pre zvolený dátum a čas je mimo rozsah, ktorý je daný rezervačným objektom.';
+
+Before(({ I, login , DT}) => {
     login('admin');
 
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomText();
+        DT.addContext('reservation','#reservationDataTable_wrapper');
+    }
+});
+
+Scenario('remove reservations', async ({I, DT}) => {
+    I.amOnPage("/apps/reservation/admin/");
+    DT.filterContains("editorFields.selectedReservation", base_reservation_object);
+    let rows = await I.getTotalRows();
+    if(rows > 0) {
+        I.clickCss("button.buttons-select-all");
+        deleteReservationsWitPassword(I, delete_password);
     }
 });
 
@@ -93,24 +109,8 @@ Scenario('Reservation validation tests + delete logic', ({I, DT, DTE}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('remove reservations', async ({I, DT}) => {
-    I.amOnPage("/apps/reservation/admin/");
-    DT.filterContains("editorFields.selectedReservation", base_reservation_object);
-    let rows = await I.getTotalRows();
-    if(rows > 0) {
-        I.clickCss("button.buttons-select-all");
-        deleteReservationsWitPassword(I, delete_password);
-    }
-});
-
-
 //Testy na preverenie vratenych error sprav
 Scenario('Reservation error logic tests', async ({I, DTE}) => {
-    let dateInPastErr = 'Zadaný dátum a čas rezervácie sa nachádza v minulosti.';
-    let badDateRangeOrdErr = 'Dátum rezervácie "od", musí byť väčší alebo rovný ako dátum rezervácie "do".';
-    let badTimeRangeOrdErr = 'Čas rezervácie "od", musí byť väčší ako čas rezervácie "do".';
-    let timeRangeValidityError = 'Čas rezervácie pre zvolený dátum a čas je mimo rozsah, ktorý je daný rezervačným objektom.';
-
     //Go to reservation page
     I.amOnPage("/apps/reservation/admin/");
 
@@ -209,10 +209,107 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.see("TestDomain_test23_object");
 });
 
-Scenario('logout', async ({I}) => {
+Scenario('logout to change domain', async ({I}) => {
     I.logout();
 });
 
+Scenario('Allow Creation in the Past', async ({ I, DT, DTE }) => {
+    I.relogin("tester");
+    I.amOnPage("/apps/reservation/admin/");
+
+    I.click(DT.btn.reservation_add_button);
+    SL.setWholeDayReservation(I, DTE, "Spa celodenné", getShiftedDate(-2), getShiftedDate(-1), "08:00", "20:00", `autotest-inthepast-${randomNumber}`);
+    I.seeInField("#DTE_Field_editorFields-infoLabel", dateInPastErr);
+    DTE.clickSwitch("editorFields-allowHistorySave_0");
+    I.seeInField("#DTE_Field_editorFields-infoLabel", "Vami zadanú rezerváciu je možné uložiť.");
+    DTE.save("reservationDataTable");
+
+    DT.waitForLoader();
+    await DT.showColumn("Účel", "reservationDataTable");
+    DT.filterContains('purpose', `autotest-inthepast-${randomNumber}`);
+    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(-2), "08:00", getShiftedDate(-1), "20:00"]);
+    DT.resetTable("reservationDataTable");
+});
+
+Scenario('Overbooking', async ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/reservation/admin/") ;
+
+    I.click(DT.btn.reservation_add_button);
+    SL.setWholeDayReservation(I, DTE, "Spa celodenné", getShiftedDate(1), getShiftedDate(2), "09:00", "19:00", `autotest-overbooking1-${randomNumber}`);
+    DTE.save("reservationDataTable");
+
+    I.click(DT.btn.reservation_add_button);
+    SL.setWholeDayReservation(I, DTE, "Spa celodenné", getShiftedDate(1), getShiftedDate(2), "09:00", "19:00", `autotest-overbooking2-${randomNumber}`);
+    DTE.save("reservationDataTable");
+
+    I.click(DT.btn.reservation_add_button);
+    SL.setWholeDayReservation(I, DTE, "Spa celodenné", getShiftedDate(1), getShiftedDate(2), "09:00", "19:00", `autotest-overbooking3-${randomNumber}`);
+    I.seeInField("#DTE_Field_editorFields-infoLabel", "Bol dosiahnutý maximalný počet rezervácií pre zvolené obdobie a rezervačný objekt.");
+    DTE.clickSwitch("editorFields-allowOverbooking_0");
+    I.seeInField("#DTE_Field_editorFields-infoLabel", "Vami zadanú rezerváciu je možné uložiť.");
+    DTE.save("reservationDataTable");
+
+    DT.waitForLoader();
+    await DT.showColumn("Účel", "reservationDataTable");
+    DT.filterContains("purpose", "autotest-overbooking");
+    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "", "", "120,00", `autotest-overbooking1-${randomNumber}`]);
+    DT.checkTableRow("reservationDataTable", 2, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "", "", "120,00", `autotest-overbooking2-${randomNumber}`]);
+    DT.checkTableRow("reservationDataTable", 3, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "", "", "120,00", `autotest-overbooking3-${randomNumber}`]);
+});
+
+Scenario('Edit record', async ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/reservation/admin/");
+    DT.filterContains('purpose', `autotest-inthepast-${randomNumber}`);
+    I.clickCss("button.buttons-select-all");
+    I.click(DT.btn.reservation_edit_button);
+    DTE.waitForEditor("reservationDataTable");
+    const editFields = ["#DTE_Field_editorFields-allowHistorySave_0", "#DTE_Field_editorFields-allowOverbooking_0", "#DTE_Field_editorFields-infoLabel"];
+
+    editFields.forEach(editField => {
+        I.dontSeeElement(editField);
+    });
+
+    DTE.fillField("editorFields-departureTime", "19:00");
+    I.pressKey("Enter");
+    DTE.clickSwitch("purpose");
+    editFields.forEach(editField => {
+        I.waitForElement(editField, 10);
+    });
+
+    DTE.fillField("editorFields-departureTime", "20:00");
+    I.pressKey("Enter");
+    DTE.clickSwitch("purpose");
+    editFields.forEach(editField => {
+        I.waitForInvisible(editField, 10);
+    });
+
+    DTE.appendField("purpose", "-chan.ge");
+    DTE.save("reservationDataTable");
+    await DT.showColumn("Účel", "reservationDataTable");
+    DT.filterContains('purpose', `autotest-inthepast-${randomNumber}-chan.ge`);
+    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(-2), "08:00", getShiftedDate(-1), "20:00"]);
+});
+
+Scenario('Delete all Spa celodenne reservations ', async ({ I, DT, DTE }) => {
+    await SL.deleteReservation(I, DT, DTE, 'editorFields.selectedReservation', 'Spa celodenné');
+    I.amOnPage("/apps/reservation/admin/");
+    DT.resetTable("reservationDataTable");
+});
+
+Scenario('Tab actions and buttons verifications', ({ I, DT, DTE }) => {
+    I.amOnPage("/apps/reservation/admin/");
+    DT.resetTable("reservationDataTable");
+    DT.filterContains("id", "5528");
+    I.clickCss("button.buttons-select-all");
+
+    SL.changeReservationStatus(I, DT, DTE, '.btn-success.approve', 'Schváliť rezerváciu', 'Ste si istý, že chcete schváliť túto rezerváciu ?', 'Schválená');
+    SL.changeReservationStatus(I, DT, DTE, '.btn-danger.reject', 'Zamietnuť rezerváciu', 'Ste si istý, že chcete zamietnuť túto rezerváciu ?', 'Zamietnutá');
+    SL.changeReservationStatus(I, DT, DTE, '.btn-primary.reset', 'Resetovať stav rezervácie', 'Ste si istý, že chcete resetovať stav rezervácie ?', 'Nepotvrdená');
+});
+
+Scenario('logout', async ({I}) => {
+    I.logout();
+});
 
 Scenario('Verify all objects are displayed when no object is selected', async ({ I }) => {
     var columnData;
@@ -249,10 +346,7 @@ Scenario('Verify reservation creation in admin and price validation based on use
     DT.addContext('reservation', '#reservationDataTable_wrapper');
     I.click(DT.btn.reservation_add_button);
     DTE.waitForEditor('reservationDataTable');
-    DTE.selectOption('reservationObjectId', 'Sauna');
-    DTE.fillField('dateFrom', '24.07.2028');
-    DTE.fillField('dateTo', '25.07.2028');
-    I.clickCss('#DTE_Field_purpose');
+    SL.setReservation(I, 'Sauna', "24.07.2028", "25.07.2028", "08:00", "16:00", "Vami zadanú rezerváciu je možné uložiť.");
     DTE.seeInField('price', '640');
     DTE.fillField('purpose', `autotest-${randomNumber}`);
     DTE.save();
@@ -412,13 +506,9 @@ function areAllElementsEqual(array) {
 async function checkReservation(I, DTE, Error,  ...tableData) {
     const [reservationObjectName, dateFrom, dateTo, timeFrom, timeTo] = tableData;
     SL.setReservation(I, reservationObjectName, dateFrom, dateTo, timeFrom, timeTo, Error);
-    I.clickCss("#DTE_Field_editorFields-showReservationValidity_0");
-    I.clickCss("#DTE_Field_editorFields-showReservationValidity_0");
 
     //Try save if error msg will be shown
     DTE.save();
-    //Check returned error
-    I.see(Error);
 }
 
 function deleteReservationsWitPassword(I, deletePassword) {
@@ -432,4 +522,21 @@ function deleteReservationsWitPassword(I, deletePassword) {
     I.wait(5);
     I.waitForElement("#reservationDataTable_modal > div > div", 10);
     I.click("Zmazať", "div.DTE_Action_Remove");
+}
+
+/**
+ * Returns a formatted date (DD.MM.YYYY) shifted by a given number of days from today.
+ *
+ * @param {number} dayOffset - Number of days to shift (positive for future, negative for past).
+ * @returns {string} Formatted date in "DD.MM.YYYY" format.
+ */
+function getShiftedDate(dayOffset) {
+    const currentDate = new Date();
+    currentDate.setDate(currentDate.getDate() + dayOffset);
+
+    const day = String(currentDate.getDate()).padStart(2, '0');
+    const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+    const year = currentDate.getFullYear();
+
+    return `${day}.${month}.${year}`;
 }

@@ -1,0 +1,489 @@
+<script type="text/javascript" src="/components/_common/vannila-calendar-pro/index.js"></script>
+<link rel="stylesheet" type="text/css" href="/components/_common/vannila-calendar-pro/styles/index.css">
+
+<div class="day-book-app">
+
+    <div data-th-if="${saveMsg!=null}" class="alert alert-success">
+        <span data-th-text="${saveMsg}">After save message</span>
+    </div>
+
+    <div data-th-if="${errors!=null}" class="alert alert-danger">
+        <p data-th-text="#{chat.form_fill_error}"></p>
+        <ul style="margin: 0px;">
+            <li data-th-each="err : ${errors}">
+                <span data-th-text="#{components.reservation.reservation_list.__${err.field}__}">zložený prekladový kľúč zo statického prefixu a dynamického mena poľa</span> - <span data-th-text="${err.defaultMessage}">chybová správa</span>
+            </li>
+        </ul>
+    </div>
+
+    <div data-th-if="${customError!=null}" class="alert alert-danger">
+        <span data-th-text="${customError}">Custom error</span>
+    </div>
+
+    <div id="calendarContainer">
+        <div id="calendar"></div>
+    </div>
+
+    <div class="time-book-form">
+        <form id="reservationForm" data-th-action="${request.getAttribute('ninja').page.urlPathQString}" data-th-object="${reservationEntity}" method="post">
+
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.admin_addObject.name}" for="reservationObjectId">Reservation Object</label>
+                    <select id="reservationObjectId" class="form-control" th:field="*{reservationObjectId}" onchange="loadSupportData()">
+                        <option th:each="reservationObject : ${reservationObjects}" th:value="${reservationObject.value}" th:text="${reservationObject.label}"></option>
+                    </select>
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.reservations.price}" for="price">Reservation Price</label>
+                    <input type="text" class="form-control" data-th-field="*{price}" disabled>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.day_book.arriving}" for="dateFrom">Reservation Arriving</label>
+                    <input id="dateFrom" name="dateFrom" type="text" class="form-control" readonly="">
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.day_book.departure}" for="dateTo">Reservation Departure</label>
+                    <input id="dateTo" name="dateTo" type="text" class="form-control" readonly="readonly">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.user.newuser.firstName}" for="name">Name</label>
+                    <input type="text" class="form-control" data-th-field="*{name}" required>
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.user.newuser.lastName}" for="surname">Surname</label>
+                    <input type="text" class="form-control" data-th-field="*{surname}" required>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.user.newuser.email}" for="email">Email</label>
+                    <input type="email" id="email" class="form-control" data-th-field="*{email}" required>
+                </div>
+                <div class="form-group col-md-6 col-12">
+                    <label class="form-label" data-th-text="#{components.formsimple.label.telefon}" for="phoneNumber">Phone Number</label>
+                    <input type="text" class="form-control" data-th-field="*{phoneNumber}">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-12">
+                    <label class="form-label" data-th-text="#{components.reservation.reservation_list.purpose}" for="purpose">Purpose</label>
+                    <textarea class="form-control" data-th-field="*{purpose}"></textarea>
+                </div>
+            </div>
+
+            <input type="hidden" id="actualDate" data-th-field="*{actualDate}" />
+
+            <button type="submit" class="btn btn-primary" data-th-text="#{components.reservation.reservation_app.save_button}" name="saveForm" style="display: none;">Submit</button>
+        </form>
+    </div>
+
+    <script th:inline="javascript">
+        let reservationAllDayStartTime = /*[[${reservationAllDayStartTime}]]*/ "00:00";
+        let reservationAllDayEndTime = /*[[${reservationAllDayEndTime}]]*/ "00:00";
+        let selectedDateFrom = /*[[${selectedDateFrom}]]*/ null;
+        let selectedDateTo = /*[[${selectedDateTo}]]*/ null;
+        let localization = /*[[${localization}]]*/ "";
+        let currentYear = /*[[${currentYear}]]*/ 0;
+        let currentMonth = /*[[${currentMonth}]]*/ 0;
+        let currency = /*[[${currency}]]*/ "";
+
+        let selectedDates = [];
+        if(selectedDateFrom != null && selectedDateTo != null) {
+            selectedDates.push(selectedDateFrom);
+            selectedDates.push(selectedDateTo);
+            setReservationArrivingAndDeparture();
+        }
+
+        let calendar = null;
+        let reservationCountMap = [];
+        let disabledDays = [];
+        let maxReservationCount = 0;
+        let reservationPriceMap = [];
+        let checkOutOnlyDays = [];
+
+        loadSupportData();
+
+        function loadSupportData() {
+            let url = "/rest/reservation-app/calendar-support-values";
+            url =  urlUpdateParam(url, "reservation-object-id", document.getElementById("reservationObjectId").value);
+            let urlMonth = currentMonth + 1;
+            if(urlMonth < 10) urlMonth = "0" + urlMonth;
+            url =  urlUpdateParam(url, "reservation-date", currentYear + "-" + urlMonth);
+            url =  urlUpdateParam(url, "email", document.getElementById("email").value);
+
+            $("#actualDate").val(currentYear + "-" + urlMonth);
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function(response) {
+                    let object = JSON.parse(response);
+
+                    currentYear = object.currentYear;
+                    currentMonth = object.currentMonth;
+                    reservationCountMap = object.reservationCountMap;
+                    disabledDays = object.disabledDays;
+                    maxReservationCount = object.maxReservationCount;
+                    reservationPriceMap = object.reservationPriceMap;
+                    checkOutOnlyDays = object.checkOutOnlyDays;
+
+                    prepareCalendar();
+                }
+            });
+        }
+
+        function prepareCalendar() {
+
+            const options = {
+                selectedTheme: 'light',
+                type: 'multiple',
+                selectionDatesMode: 'multiple-ranged',
+                cancelableDay: false,
+                displayMonthsCount: 2,
+                monthsToSwitch: 1,
+                locale: 'sk-SK',
+                displayDatesOutside: false,
+                disableDatesPast: true,
+                selectedMonth: currentMonth,
+                selectedYear: currentYear,
+                disableDatesGaps: true,
+                enableEdgeDatesOnly: true,
+                disableDates: disabledDays,
+                selectedDates: selectedDates,
+                onClickArrow(self) {
+                    currentMonth = self.context.selectedMonth;
+                    currentYear = self.context.selectedYear;
+                    loadSupportData();
+                },
+                onClickMonth(self) {
+                    currentMonth = self.context.selectedMonth;
+                    currentYear = self.context.selectedYear;
+                    loadSupportData();
+                },
+                onClickYear(self) {
+                    currentMonth = self.context.selectedMonth;
+                    currentYear = self.context.selectedYear;
+                    loadSupportData();
+                },
+                onCreateDateEls(self, dateEl) {
+                    const dateParam = dateEl.getAttribute('data-vc-date');
+                    const btnEl = dateEl.querySelector('[data-vc-date-btn]');
+                    const isDisabled = dateEl.hasAttribute('data-vc-date-disabled')
+
+                    let reserved = reservationCountMap[dateParam];
+                    if(reserved === undefined || reserved === null) reserved = 0;
+
+                    let isCheckOutOnly = false;
+                    if(checkOutOnlyDays.includes(dateParam)) isCheckOutOnly = true;
+
+                    if(btnEl) {
+                        const day = btnEl.innerText;
+                        btnEl.style.flexDirection = 'column';
+
+                        //dateEl.innerHTML += '<div class="${self.styles.dateRangeTooltip}" data-vc-date-range-tooltip="">Check-out only</div>';
+
+                        if(isDisabled == true) {
+                            btnEl.innerHTML = `
+                                <span>${day}</span>
+                                <span style="font-size: 15px;padding-top: 5px;">&nbsp;</span><i class="ti ti-calendar"></i>
+                                <span style="font-size: 15px;padding-top: 5px;">&nbsp;</span>
+                            `;
+                        } else if(isCheckOutOnly == true) {
+                            btnEl.innerHTML = `
+                                <span>${day}</span>
+                                <span style="font-size: 15px;padding-top: 5px;">-</span><i class="ti ti-calendar"></i>
+                                <span style="font-size: 15px;padding-top: 5px;">-</span>
+                            `;
+
+                            //Add tooltip
+                            $(dateEl).append('<div class="vc-date__popup custom-popup" data-vc-date-popup="">Check-out ONLY</div>');
+                        } else {
+                            btnEl.innerHTML = `
+                                <span>${day}</span>
+                                <span style="font-size: 15px;padding-top: 5px;">${reserved}/${maxReservationCount}</span><i class="ti ti-calendar"></i>
+                                <span style="font-size: 15px;padding-top: 5px;">${reservationPriceMap[dateParam]} ${currency}</span>
+                            `;
+                        }
+                    }
+                },
+                onClickDate(self) {
+                    setDates(self, false);
+                },
+                onInit(self) {
+                    disableSecondSelect();
+                },
+                onUpdate(self) {
+                    disableSecondSelect();
+                },
+            };
+
+            if(calendar == null) {
+                //INIT
+                calendar = new VanillaCalendarPro.Calendar('#calendar', options);
+                calendar.init();
+            } else {
+                //UPDATE
+                //after change of reservation object OR change of moth/year
+                calendar.selectedMonth = currentMonth;
+                calendar.selectedYear = currentYear;
+                calendar.disableDates = disabledDays;
+
+                setDates(calendar, true);
+                calendar.update();
+            }
+        }
+
+        function setDates(calendar, isUpdate) {
+            selectedDates = calendar.context.selectedDates;
+
+            if(selectedDates.length == 1 && selectedDates[0] != undefined) {
+                //Find neereast check-out only day
+                const selectedDayId = selectedDates[0];
+
+                let nearestCheckOutDayId = findNearestCheckOutOnlyDay(selectedDayId);
+
+                //no chke-out only day found after selected day
+                if(nearestCheckOutDayId == null) return;
+
+                disableDaysAfter(nearestCheckOutDayId);
+            }
+
+            if(selectedDates.length == 2 && selectedDates[0] != undefined && selectedDates[1] != undefined) {
+
+                //If is update, check if range is valid, because reservation objects can have different disabled days
+                if(isUpdate) {
+                    if(checkRangeValidity() == false) {
+                        calendar.selectedDates = [];
+                        cancelSelection();
+                        return;
+                    } else {
+                        calendar.selectedDates = selectedDates;
+                    }
+                }
+
+                //Check if Check-out only days are not selected or selected just as Check-out
+                if(handleCheckOnlyDays(calendar) == false) {
+                    calendar.selectedDates = [];
+                    cancelSelection();
+                    calendar.update();
+                    return;
+                }
+
+                selectedDateFrom = selectedDates[0];
+                selectedDateTo = selectedDates[1];
+
+                setReservationPrice();
+                setReservationArrivingAndDeparture();
+
+                let submitButton = document.querySelector("button.btn-primary[name='saveForm']");
+                submitButton.style.display = "block";
+                return;
+            }
+
+            cancelSelection();
+        }
+
+        function cancelSelection() {
+            selectedDateFrom = null;
+            selectedDateTo = null;
+            selectedDates = [];
+
+            document.getElementById("price").value = "";
+            document.getElementById("dateFrom").value = "";
+            document.getElementById("dateTo").value = "";
+
+            let submitButton = document.querySelector("button.btn-primary[name='saveForm']");
+            submitButton.style.display = "none";
+        }
+
+        function checkRangeValidity() {
+            if (!selectedDateFrom || !selectedDateTo) return true;
+
+            const startDate = new Date(selectedDateFrom);
+            const endDate = new Date(selectedDateTo);
+
+            for (let i = 0; i < disabledDays.length; i++) {
+                const disabledDate = new Date(disabledDays[i]);
+                if (disabledDate >= startDate && disabledDate <= endDate) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        let getReservationPriceTimer;
+        function setReservationPrice() {
+            let reservationObjectId = document.getElementById("reservationObjectId").value;
+            let email = document.getElementById("email").value;
+            let priceInput = document.getElementById("price");
+
+            let url = "/rest/reservation-app/compute-reservation-price";
+            url =  urlUpdateParam(url, "reservation-date-from", selectedDateFrom);
+            url =  urlUpdateParam(url, "reservation-date-to", selectedDateTo);
+            url =  urlUpdateParam(url, "object-id", reservationObjectId);
+            url =  urlUpdateParam(url, "email", email);
+
+            //to prevent call it multimple times by onchange events at open editor
+            clearTimeout(getReservationPriceTimer);
+            getReservationPriceTimer = setTimeout(function() {
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    success: function(response) {
+                        if(response != null) {
+                            priceInput.value = response;
+                        }
+                    }
+                });
+            }, 100);
+        }
+
+        function setReservationArrivingAndDeparture() {
+            const startDate = new Date(selectedDateFrom);
+            const endDate = new Date(selectedDateTo);
+
+            const locateStartDate = startDate.toLocaleDateString(localization);
+            const locateEndDate = endDate.toLocaleDateString(localization);
+
+            let arriving = locateStartDate.replaceAll(" ", "");
+            arriving += " - " + reservationAllDayStartTime;
+
+            let departure = locateEndDate.replaceAll(" ", "");
+            departure += " - " + reservationAllDayEndTime;
+
+            document.getElementById("dateFrom").value = arriving;
+            document.getElementById("dateTo").value = departure;
+        }
+
+        function urlUpdateParam(url, paramName, paramValue) {
+            //Check if url includes this param
+            if(url.includes((paramName + '='))) {
+                //Url ends with param but without value
+                if(url.endsWith((paramName + '='))) return url + paramValue;
+                //Update parm value inside of url
+                let urlParams = (url.split("?")[1]).split("&")
+                for (var i = 0; i < urlParams.length; i++)
+                    if(urlParams[i].startsWith((paramName + '=')))
+                        urlParams[i] = paramName + "=" + paramValue
+                let newUrl = url.split("?")[0] + "?";
+                for (var i = 0; i < urlParams.length; i++) {
+                    newUrl += urlParams[i];
+                    if(i + 1 < urlParams.length) newUrl += "&"
+                }
+                return newUrl;
+            } else {
+                //Add params
+                return urlAddParam(url, paramName, paramValue);
+            }
+        }
+
+        function urlAddParam(url, paramName, paramValue) {
+            url += url.indexOf('?') === -1 ? '?' : '&';
+            url += paramName + '=' + paramValue;
+            return (url);
+        }
+
+        function disableSecondSelect() {
+            const header2 = document.querySelector("#calendar > div.vc-grid > div:nth-child(2) > div.vc-header > div");
+            if(header2) {
+                for( const child of header2.children) {
+                    child.disabled = true;
+                }
+            }
+        }
+
+        function handleCheckOnlyDays(calendar) {
+            selectedDates = calendar.context.selectedDates;
+
+            if(selectedDates.length == 2 && selectedDates[0] != undefined && selectedDates[1] != undefined) {
+                const startDate = new Date(selectedDates[0]);
+                const endDate = new Date(selectedDates[1]);
+
+                for (let i = 0; i < checkOutOnlyDays.length; i++) {
+                    const checkOutOnlyDay = new Date(checkOutOnlyDays[i]);
+                    if (checkOutOnlyDay >= startDate && checkOutOnlyDay < endDate) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        function findNearestCheckOutOnlyDay(selectedDayId) {
+            let nearest = null;
+            const selectedDay = new Date(selectedDayId);
+
+            for(let i = 0; i < checkOutOnlyDays.length; i++) {
+                const checkOutOnlyDay = new Date(checkOutOnlyDays[i]);
+
+                //Mst be after selected day
+                if(checkOutOnlyDay >= selectedDay) {
+                     if(nearest == null) {
+                         nearest = checkOutOnlyDay;
+                     } else {
+                         if(checkOutOnlyDay < nearest) {
+                             nearest = checkOutOnlyDay;
+                         }
+                     }
+                }
+            }
+
+            return nearest;
+        }
+
+        function disableDaysAfter(checkOutDay) {
+            //Get all days of current months taht are NOT disabled
+            let allDaysArr = $('div.vc-date[data-vc-date-month="current"]:not([data-vc-date-disabled])');
+            if(allDaysArr == undefined || allDaysArr == null || allDaysArr.length < 1) return;
+
+            //Filter out only those >= then Check-out only days
+            let beDaysArr = [];
+            for(let i = 0; i < allDaysArr.length; i++) {
+                let day = new Date( allDaysArr[i].getAttribute('data-vc-date') );
+                if(day > checkOutDay) {
+                    beDaysArr.push(allDaysArr[i]);
+                }
+            }
+
+            if(beDaysArr.length < 1) return;
+
+            setTimeout(function() {
+                for(let i = 0; i < beDaysArr.length; i++) {
+                    beDaysArr[i].setAttribute('data-vc-date-disabled', '');
+                }
+            }, 100);
+        }
+
+    </script>
+</div>
+
+<style>
+    .vc-date__btn {
+        font-size: 25px;
+        padding: 10px;
+        display: flex;
+    }
+
+    .vc-date {
+        padding-right: 1px;
+    }
+
+    .custom-popup {
+        font-size: 15px;
+        width: 150px;
+        min-height: 40px;
+        align-content: center;
+        text-align: center;
+        top: -40px;
+        background-color: #f1f5f9 !important;
+    }
+</style>

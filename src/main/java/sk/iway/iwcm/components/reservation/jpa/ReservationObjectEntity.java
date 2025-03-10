@@ -182,6 +182,15 @@ public class ReservationObjectEntity implements Serializable {
     @Size(max = 150)
     private String emailAccepter;
 
+    @Column(name = "notif_emails")
+    @DataTableColumn(
+        inputType = DataTableColumnType.TEXTAREA,
+        title="components.reservation.reservation_object.notifEmails",
+        tab = "advanced",
+        sortAfter = "emailAccepter"
+    )
+    private String notifEmails;
+
     @Column(name = "passwd")
     private String password;
 

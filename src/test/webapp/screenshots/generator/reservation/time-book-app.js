@@ -110,7 +110,6 @@ Scenario('reservation screens - admin section', ({ I, DTE, Document }) => {
     Document.screenshotElement("div.cke_dialog_body", "/redactor/apps/reservation/time-book-app/app-adding.png");
 });
 
-
 Scenario('reservation screens - PAGE section', ({ I, Document }) => {
     I.amOnPage("/apps/rezervacie/rezervacia-tenisovych-kurtov.html?NO_WJTOOLBAR=true&language="+I.getConfLng());
     I.waitForVisible("#reservationDate");

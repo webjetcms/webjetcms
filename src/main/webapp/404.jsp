@@ -245,7 +245,7 @@ if (redirectBean != null)
 {
 	response.setStatus(redirectBean.getRedirectCode());
 	String newUrl = redirectBean.getNewUrl();
-	System.out.println("redirectBean1="+redirectBean.getUrlRedirectId()+" path="+path+" newUrl="+newUrl);
+	//System.out.println("redirectBean1="+redirectBean.getUrlRedirectId()+" path="+path+" newUrl="+newUrl);
 
 	if (redirectIncludingQuery==false && Tools.isNotEmpty(queryString)) newUrl = Tools.addParametersToUrlNoAmp(newUrl, queryString);
 
@@ -255,7 +255,7 @@ if (redirectBean != null)
 	%>
 	<html><script>window.location.href='<%=newUrl%>';</script></html>
 	<%
-	System.out.println("SOM STRANKA 404, redirecting to:" + newUrl);
+	//System.out.println("SOM STRANKA 404, redirecting to:" + newUrl);
 	return;
 }
 

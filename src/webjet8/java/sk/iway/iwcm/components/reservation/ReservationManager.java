@@ -1943,8 +1943,8 @@ public class ReservationManager
 		String downloadUrl = Tools.getBaseHrefLoopback(request) + emailUrl + "?reservationId=" + reservation.getReservationId() + "&hash="+reservation.getHashValue() + canceledString;
 		String data = Tools.downloadUrl(downloadUrl);
 
-		String senderName = reservationObject.getName();
-		String fromEmail = "no-reply@"+Tools.getBaseHref(request).replace("https://", "").replace("http://", "").replace("www.", "");
+		String senderName = SendMail.getDefaultSenderName("reservation", reservationObject.getName());
+		String fromEmail = SendMail.getDefaultSenderEmail("reservation", null);
 		String toEmail = reservation.getEmail();
 		String subject = prop.getText("components.reservation.approved");
 		if(approved==false)

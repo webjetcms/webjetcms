@@ -44,9 +44,10 @@ Vysvetlenie použitých piktogramov:
 - [ ] Elektronický obchod - integrácia na platobnú bránu `GoPay` (#56609).
 - [ ] Pridať možnosť autorizácie cez `OAuth2`, možnosť použiť `mock` server https://github.com/navikt/mock-oauth2-server alebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [ ] Autorizácia cez ```SAML``` - integrovať knižnicu [Spring SAML](https://spring.io/projects/spring-security-saml) pre možnosť autentifikácie voči ```ADFS/SAML``` serveru.
-- [ ] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
+- [x] Rezervácie - nová aplikácia pre celo dennú rezerváciu (#57389).
 - [ ] Aplikácie - prerobiť dialóg nastavenia aplikácií v editore web stránok zo starého JSP na dátovú tabuľku (#57409).
 - [ ] Hromadný email - optimalizácia tvorby zoznamu príjemcov (#57537).
+- [ ] Datatable - opraviť počítanie označených riadkov po ich vymazaní.
 
 ## 2024
 
