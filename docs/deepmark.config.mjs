@@ -3,8 +3,9 @@
 /** @type {import("deepmark").UserConfig} */
 export default {
     sourceLanguage: 'sk',
-    outputLanguages: ['en-US', 'cs'],
+    outputLanguages: ['cs'],
     directories: [
         ['sk', '$langcode$'],
-    ]
+    ],
+    translationEngine: "google"
 };
