@@ -30,10 +30,15 @@ if (docId > 0) {
 	lng = doc.getGroup().getLng();
 }
 else {
-	int groupId =  Tools.getIntValue((String) request.getSession().getAttribute("iwcm_group_id"), 0);
+	int groupId = Tools.getIntValue(Tools.getRequestParameter(request, "groupId"), 0);
+	if (groupId < 1) groupId = Tools.getIntValue((String) request.getSession().getAttribute("iwcm_group_id"), 0);
+	//out.println("groupId: " + groupId);
 	if (groupId > 0) {
 		GroupDetails groupDetails = GroupsDB.getInstance().getGroup(groupId);
-		lng = groupDetails.getLng();
+		if (groupDetails != null) {
+			lng = groupDetails.getLng();
+			docId = groupDetails.getDefaultDocId();
+		}
 	}
 }
 //set language also to Spring Locale object
@@ -81,6 +86,7 @@ if (showForm)
 			<input type="hidden" name="componentCode" value="-"/>
 			<input type="hidden" name="cssStyles" value=""/>
 			<input type="hidden" name="docid" value=""/>
+			<input type="hidden" name="groupId" value=""/>
 		</form>
 		<script type="text/javascript">
 			var element = window.frameElement;
@@ -103,6 +109,7 @@ if (showForm)
 				if (win.parent.document.editorForm) editorWindow = win.parent;
 
 				document.componentForm.docid.value = editorWindow.document.editorForm.docId.value;
+				document.componentForm.groupId.value = editorWindow.document.editorForm.groupId.value;
 
 				//window.alert(editorWindow.getCkEditorInstance().config.contentsCss);
 				if (editorWindow.document.editorForm.ckEditorContentCss && editorWindow.document.editorForm.ckEditorContentCss.value)
@@ -113,7 +120,6 @@ if (showForm)
 				{
 					document.componentForm.cssStyles.value = editorWindow.getCkEditorInstance().config.contentsCss.join(",");
 				}
-
 
 			} catch (e) { console.log(e); }
 			var timeout = Math.floor(Math.random() * 200);
