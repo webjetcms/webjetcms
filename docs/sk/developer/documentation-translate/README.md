@@ -113,6 +113,31 @@ Ak sa preskakuje výpis časti súboru pomocou spomenutých značiek, do konzoly
 
 Originálny `deepmark` má problém so správnym formátovaním preložených súborov. Pridáva nadbytočné medzery/riadky, nepreloží korektne niektoré symboly alebo zlým odsadením zničí štruktúru zoznamov či tabuliek. Tento problém je v našej verzií `@webjetcms/deepmark` riešený niekoľkými krokmi aby sa zabránilo týmto chybám v preložených súborov. Nebude rozoberať všetky úpravy ale spomenieme si, že najdôležitejšia je metóda `customizeTranslatedMarkdown`, ktorá upravuje/formátuje už preložené súbory v niekoľkých krokoch.
 
+### Výber služby poskytujúcej preklady  
+
+V konfiguračnom súbore **`deepmark.config.mjs`** môžeme nastaviť službu poskytujúcu preklady pomocou premennej **`translationEngine`**. Táto premenná môže nadobúdať jednu z dvoch hodnôt:  
+
+- **[`deepl`](https://www.deepl.com/docs-api)** – **DeepL** predvolená služba, ak premenná nie je nastavená  
+- **[`google`](https://cloud.google.com/translate)** – **Google API** alternatívna služba pre preklady  
+
+Ak premenná **`translationEngine`** nie je definovaná, systém automaticky použije **DeepL**.
+
+#### Príklad konfigurácie  
+
+Nižšie je ukážka konfigurácie s použitím **Google Translate**:  
+
+```javascript
+/** @type {import("deepmark").UserConfig} */
+export default {
+    sourceLanguage: 'sk',
+    outputLanguages: ['en-US'],
+    directories: [
+        ['sk', '$langcode$'],
+    ],
+    translationEngine: "google"    // Voľba prekladovej služby
+};
+```
+
 ### Verzie závislostí
 
 Nakoľko `deepmark` využíva závislosti, ktorých verzie sú už zastarané, aktualizovali sme väčšinu závislostí na novšie verzie. Nie všade sme použili najviac aktuálne verzie, nakoľko nie všetky boli kompatibilné buď s inými závislosťami alebo so samotným použitým formátom v `deepmark`.
@@ -161,7 +186,8 @@ Zoznam **aktualizovaných** závislostí:
 	"micromark-extension-html-comment": "^0.0.1",
 	"micromark-extension-mdxjs": "^3.0.0",
 	"prettier": "^3.3.3",
-	"yaml": "^2.5.0"
+	"yaml": "^2.5.0",
+	"@google-cloud/translate": "^8.5.1"
 },
 ```
 
