@@ -1,5 +1,8 @@
 #!/bin/sh
 
+#RUN AS to save log:
+#./deploy.sh 2>&1 | tee deploy.log
+
 # Exit immediately if a command exits with a non-zero status
 set -e
 
