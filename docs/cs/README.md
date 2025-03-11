@@ -10,7 +10,7 @@ Vítejte v dokumentaci k WebJET CMS verze 2024. Doporučujeme přečíst si [sez
 >
 > Jednou z hlavních změn je přesunutí **druhé úrovně menu** do **karet v hlavičce stránky**, čímž se zjednodušila navigace. Ve webových stránkách jsme také **sloučily karty složek a webových stránek**, abyste měli vše přehledně na jednom místě. Pokud hlavička neobsahuje karty, tabulky se automaticky přizpůsobí a zobrazí **řádek navíc**.
 >
-> Prosíme vás o zpětnou vazbu prostřednictvím **formuláře Zpětná vazba**, pokud při používání nové verze identifikujete **jakýkoli problém se zobrazením**. Připomínku můžete doplnit do **fotku obrazovky**, což nám pomůže rychleji identifikovat a vyřešit případné nedostatky.
+> Prosíme vás o zpětnou vazbu prostřednictvím **formuláře Zpětná vazba**, pokud při používání nové verze identifikujete **jakýkoli problém se zobrazením**. Připomínku můžete doplnit také o **fotku obrazovky**, což nám pomůže rychleji identifikovat a vyřešit případné nedostatky.
 >
 > Děkujeme za spolupráci a pomoc při vylepšování WebJET CMS!
 

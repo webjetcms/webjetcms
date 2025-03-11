@@ -13,7 +13,7 @@
   "author": "InterWay, a. s.",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@webjetcms/deepmark": "^0.2.1",
+    "@webjetcms/deepmark": "^0.3.1",
     "fast-glob": "^3.3.3",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
