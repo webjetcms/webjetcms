@@ -82,7 +82,7 @@ všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie tex
 
 ## Možnosti className
 
-```dt-tree-group``` - vrátený JSON objekt typu ```GroupDetails``` a nahradí aktuálnu hodnotu. Ak má byť možnosť vybrať aj koreňový priečinok zadajte ```dt-tree-group-root```.
+```dt-tree-group``` - vrátený JSON objekt typu ```GroupDetails``` a nahradí aktuálnu hodnotu. Ak má byť možnosť vybrať aj koreňový priečinok zadajte ```dt-tree-group-root```. Možné je zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")``` kde `23` je ID priečinka vo webových stránkach, ktorý chcete použiť ako koreňový. Možné je zadať aj cestu k priečinku ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")```.
 ![](field-json-group.png)
 
 ```dt-tree-group-null``` - vrátený JSON objekt typu ```GroupDetails``` alebo ```NULL``` - umožňuje nastaviť žiadnu/prázdnu hodnotu poľu (napr. pre voliteľné pole), v GUI sa zobrazí aj ikona koša pre zmazanie hodnoty.
@@ -92,7 +92,7 @@ všimnite si použitie atribútu ```data-dt-json-addbutton``` pre nastavenie tex
 
 ```dt-tree-groupid/dt-tree-groupid-root``` - nastavuje do poľa len ID priečinku, do ```data-text``` nastaví cestu k priečinku (```fullPath```). Používa sa mimo editora v aplikácii štatistika pre výber priečinka.
 
-```dt-tree-page``` - vrátený JSON objekt typu ```DocDetails``` a nahradí aktuálnu hodnotu.
+```dt-tree-page``` - vrátený JSON objekt typu ```DocDetails``` a nahradí aktuálnu hodnotu. Možné je zadať koreňový priečinok ako ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "23")``` kde `23` je ID priečinka vo webových stránkach, ktorý chcete použiť ako koreňový. Možné je zadať aj cestu k priečinku ```@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")```.
 ![](field-json-page.png)
 
 ```dt-tree-page-null``` - vrátený JSON objekt typu ```DocDetails``` alebo ```NULL``` - umožňuje nastaviť žiadnu/prázdnu hodnotu poľu (napr. pre voliteľné pole), v GUI sa zobrazí aj ikona koša pre zmazanie hodnoty.
