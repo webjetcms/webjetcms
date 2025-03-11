@@ -58,6 +58,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Konfigurácia - doplniť možnosť nastavenia `Hikari` cez `poolman.xml/ENV` ako napríklad `spring.datasource.hikari.idle-timeout=30000, spring.datasource.hikari.max-lifetime=1800000, spring.datasource.hikari.connection-timeout=30000`.
 - [ ] Datatable - opraviť počítanie označených riadkov po ich vymazaní.
 - [ ] +Prieskumník - nastaviť vlastnosti priečinka (indexovanie, práva) podľa rodičovského (rekurzívne) pri prvom otvorení, ak priečinok nemá nastavenia v databáze.
+- [ ] +Pre pole typu `DataTableColumnType.JSON`, konkrétne `className = "dt-tree-page-null"` pridať možnosť definovať koreňový priečinok.
+- [ ] +Presunúť všetky `Converter` triedy ako napr. `DocDetailsNotNullConverter` do samostatného `package` kde nebudú iné entity aby bolo možné tento `Converter` použiť aj v projektoch kde je použitý samostatný `JPA`.
 
 ## 2024
 
