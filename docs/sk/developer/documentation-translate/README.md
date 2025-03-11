@@ -124,7 +124,7 @@ Ak premenná **`translationEngine`** nie je definovaná, systém automaticky pou
 
 #### Premenná prostredia
 
-Ak chcete použiť **Google Translate API**, musíte nastaviť premennú prostredia `GOOGLE_APPLICATION_CREDENTIALS` s autorizačným kľúčom ku **Google Translate API**ß.
+Ak chcete použiť **Google Translate API**, musíte nastaviť premennú prostredia `GOOGLE_AUTH_KEY` s autorizačným kľúčom ku **Google Translate API**ß.
 
 #### Príklad konfigurácie  
 
