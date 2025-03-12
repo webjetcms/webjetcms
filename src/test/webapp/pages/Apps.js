@@ -101,10 +101,10 @@ module.exports = {
         I.waitForElement("iframe.wj_component");
         I.wait(1);
 
-        within({frame: [".cke_wysiwyg_frame.cke_reset", "iframe.wj_component"]}, () => {
-            I.click("a.inlineComponentButton.cke_button");
-        });
-        I.waitForInvisible('Čakajte prosím');
+        I.switchTo(locate("iframe.wj_component").first());
+        I.click("a.inlineComponentButton.cke_button");
+        I.switchTo();
+        I.waitForInvisible('Čakajte prosím', 20);
         I.switchTo('.cke_dialog_ui_iframe');
         I.wait(1);
         I.switchTo('#editorComponent');
