@@ -41,8 +41,12 @@ import sk.iway.iwcm.system.Modules;
 import sk.iway.iwcm.system.UpdateDatabase;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.cluster.ClusterRefresher;
+import sk.iway.iwcm.system.cron.CronDB;
 import sk.iway.iwcm.system.cron.CronFacade;
+import sk.iway.iwcm.system.cron.CronTask;
+import sk.iway.iwcm.system.cron.WebjetDatabaseTaskSource;
 import sk.iway.iwcm.system.proxy.WebJETProxySelector;
+import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.users.UserGroupsDB;
 /**
  *  Inicializacia systemu, nastavenie databazy, overenie licencie
@@ -92,13 +96,42 @@ public class InitServlet extends HttpServlet
 	{
 		//not used anymore, initialized from spring on start
 		if (isWebjetInitialized()) {
+
+			//run cron4j, it's here because it may need spring classes to run correctly
+			try
+			{
+				SpringAppInitializer.dtDiff("Starting cron");
+
+				CronFacade cf = CronFacade.getInstance();
+				cf.setTaskSource(new WebjetDatabaseTaskSource());
+				cf.start();
+
+				//spustim tie ktore sa maju spustit hned po starte
+				List<CronTask> startupTasks = CronDB.getCronTasksRunAtStartup();
+				String clusterNodeName = Constants.getString("clusterMyNodeName");
+				if(startupTasks != null)
+				{
+					for(CronTask t : startupTasks)
+					{
+						if(ClusterDB.isServerRunningInClusterMode()==false || "all".equals(t.getClusterNode()) || clusterNodeName.equals(t.getClusterNode()))
+						{
+							Logger.println(InitServlet.class, "Running cron job {"+t.getId()+"} "+t.getTask()+" "+t.getParams());
+							cf.runSimpleTaskOnce(t);
+						}
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				sk.iway.iwcm.Logger.error(e);
+			}
+
 			Logger.println(InitServlet.class,"---------------- INIT DONE, version: "+InitServlet.getActualVersionLong()+" --------------");
+			SpringAppInitializer.dtDiff("WebJET INIT DONE");
 		}
 	}
 
-
-	public static boolean initializeWebJET(ServletContext servletContext) {
-		DebugTimer dt = new DebugTimer("InitServlet.init");
+	public static boolean initializeWebJET(DebugTimer dt, ServletContext servletContext) {
 
 		//toto musime setnut - inak nebude fungovat Tools.getRealPath pri inite Spring komponent
 		Constants.setServletContext(servletContext);
@@ -868,8 +901,8 @@ public class InitServlet extends HttpServlet
 		{
 			Logger.println(InitServlet.class,"VOLAM localconf.jsp");
 			//String localconf = Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp");
-			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp"), 30000);
-			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk/localconf.jsp"), 35000);
+			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk:8080/localconf.jsp"), 50000);
+			Tools.setTimeout(() -> Tools.downloadUrl("http://iwcm.interway.sk/localconf.jsp"), 55000);
 			//Logger.println(InitServlet.class,"VOLAM localconf.jsp, vystup:\n"+localconf);
 		}
 
@@ -881,7 +914,7 @@ public class InitServlet extends HttpServlet
 
 		Constants.setLong("licenseExpiryDate", licenseExpiryDate);
 
-		dt.diff("DONE");
+		dt.diff("InitServlet DONE");
 
 		return true;
 	}

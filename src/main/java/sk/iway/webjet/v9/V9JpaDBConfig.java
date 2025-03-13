@@ -19,6 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
+import sk.iway.iwcm.system.spring.SpringAppInitializer;
 
 /**
  * JpaDBConfig - zakladna konfiguracia JPA aby sme vedeli, co mame preniest potom do standardneho WJ
@@ -81,6 +82,8 @@ public class V9JpaDBConfig {
     @Bean("webjet2022EntityManager")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory()
     {
+        SpringAppInitializer.dtDiff("V9JpaDBConfig START");
+
         InMemoryLoggingDB.setQueueSize(Constants.getInt("loggingInMemoryQueueSize"));
 
         Logger.println(V9JpaDBConfig.class, "WebJET V9JpaDBConfig");
@@ -148,6 +151,8 @@ public class V9JpaDBConfig {
 
         WebJETJavaSECMPInitializer.setDefaultProperties(properties);
         emf.setJpaProperties(properties);
+
+        SpringAppInitializer.dtDiff("V9JpaDBConfig DONE");
 
         return emf;
     }

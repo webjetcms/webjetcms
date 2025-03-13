@@ -229,17 +229,39 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
 	      	puInfo.setTransactionType(PersistenceUnitTransactionType.RESOURCE_LOCAL);
 	      	puInfo.setPersistenceProviderClassName("sk.iway.iwcm.system.jpa.WebJETPersistenceProvider");
 	      	puInfo.setPersistenceUnitRootUrl(archive.getRootURL());
-	      	List<String> managedClasses = new ArrayList<>();
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/calendar"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/components"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/system"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/dmail"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/users"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/"+Constants.getInstallName()));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/spirit"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/io"));	//MRE - 20.05.2013 - pridane kvoli historii suborov
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/editor"));
-	      	managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/sk/iway/iwcm/doc"));
+
+            String[] packages = {
+                "sk.iway.iwcm.calendar",
+                "sk.iway.iwcm.components.banner.model",
+                "sk.iway.iwcm.components.basket",
+                "sk.iway.iwcm.components.dictionary.model",
+                "sk.iway.iwcm.components.domainRedirects",
+                "sk.iway.iwcm.components.enumerations.model",
+                "sk.iway.iwcm.components.export",
+                "sk.iway.iwcm.components.file_archiv",
+                "sk.iway.iwcm.components.gdpr",
+                "sk.iway.iwcm.components.insertScript",
+                "sk.iway.iwcm.components.inquirySimple",
+                "sk.iway.iwcm.components.reservation",
+                "sk.iway.iwcm.components.todo",
+                "sk.iway.iwcm.dmail",
+                "sk.iway.iwcm.doc",
+                "sk.iway.iwcm.editor",
+                "sk.iway.iwcm.io",
+                "sk.iway.iwcm.system.cache",
+                "sk.iway.iwcm.system.captcha",
+                "sk.iway.iwcm.system.jpa",
+                "sk.iway.iwcm.system.msg",
+                "sk.iway.iwcm.users",
+                "sk.iway.spirit.model"
+            };
+
+            List<String> managedClasses = new ArrayList<>();
+            for (String packageToScan : packages) {
+                managedClasses.addAll(JpaTools.getJpaClassNames("/WEB-INF/classes/" + packageToScan.replace(".", "/")));
+            }
+
+            managedClasses.add("sk.iway.iwcm.system.UrlRedirectBean");
 
 	      	if (Tools.isNotEmpty(Constants.getString("jpaAddPackages")))
 	      	{
@@ -259,20 +281,6 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
 
             List<URL> libUrlsList = new ArrayList<>();
 
-	      	File wjJar = new File(Tools.getRealPath("/WEB-INF/lib/1webjet.jar"));
-	      	if (wjJar.exists())
-	      	{
-	      		try
-				{
-	      			Logger.debug(WebJETJavaSECMPInitializer.class, "JPA: Adding webjet.jar");
-                    libUrlsList.add(wjJar.toURI().toURL());
-                }
-                catch (Exception e)
-                {
-                    sk.iway.iwcm.Logger.error(e);
-                }
-	      	}
-
             //pridaj lokacie z JarPackagingu
             try
             {
@@ -281,6 +289,8 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
                {
                   if (location == null) continue;
                   location = Tools.URLDecode(location);
+                  if (location.endsWith("-admin.jar") || location.endsWith("-components.jar")) continue;
+
                   Logger.debug(WebJETJavaSECMPInitializer.class, "JPA: Adding "+location);
                   libUrlsList.add(new File(location).toURI().toURL());
                }

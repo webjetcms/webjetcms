@@ -117,18 +117,16 @@ public class JpaTools
 		if (basePackage.startsWith("/WEB-INF/classes/")) basePackage = basePackage.substring(17);
 		basePackage = basePackage.replace('/', '.');
 
-		Logger.debug(JpaTools.class, "getJpaClassNamesByAnnotation.basePackage="+basePackage);
+		Logger.debug(JpaTools.class, "getJpaClassNames.basePackage="+basePackage);
 
-		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(true);
+		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false);
 		scanner.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Entity.class));
 		scanner.addIncludeFilter(new AnnotationTypeFilter(javax.persistence.Converter.class));
 		for (BeanDefinition bd : scanner.findCandidateComponents(basePackage))
 		{
-			Logger.debug(JpaTools.class, "found class: "+bd.getBeanClassName());
+			Logger.debug(JpaTools.class, "JPA: found class "+bd.getBeanClassName());
 			foundFiles.add(bd.getBeanClassName());
 		}
-
-		//hladanie JpaInfo uz nepotrebujeme, kedze entity hladame podla anotacie a nie nazvu suboru
 
 		return foundFiles;
 	}

@@ -13,6 +13,7 @@ import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.ninja.Ninja;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.i18n.Prop;
@@ -1296,6 +1297,8 @@ public class PathFilter implements Filter
 			DBPool.getInstance().logConnections();
 		}
 
+		if (handleStrutsRedirect(req, res)) return;
+
 		try
 		{
 			// Pass control on to the next filter
@@ -1319,7 +1322,42 @@ public class PathFilter implements Filter
 		}
 	}
 
+	private static String[] strutsUrlServletExceptions = {
+		"/showdoc.do",
+		"/admin/offline.do",
+		"/admin/docdel.do",
+		"/preview.do",
+		"/admin/multiplefileupload.do",
+		"/formmail.do",
+		"/logoff.do",
+		"/admin/logoff.do",
+		"/admin/logon.do"
+	};
 
+	/**
+	 * Handle old struts *.do calls, it will be redirected to *.struts mappings
+	 * @param request
+	 * @param response
+	 * @throws ServletException
+	 * @throws IOException
+	 */
+	private boolean handleStrutsRedirect(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+		String path = PathFilter.getOrigPath(request);
+		String doShowdocAction = request.getParameter("doShowdocAction");
+		if (Tools.isNotEmpty(doShowdocAction) && ShowDoc.isDoShowdocActionAllowed(doShowdocAction)) path = doShowdocAction;
+		if (path==null) path = request.getRequestURI();
+
+		if (path.endsWith(".do")) {
+
+			//this is handled directly by servlet, no need to forward
+			if (Tools.containsOneItem(strutsUrlServletExceptions, path)==false) {
+				Logger.debug(PathFilter.class, "Forwarding old struts path: " + path);
+				request.getRequestDispatcher(Tools.replace(path, ".do", ".struts")).forward(request, response);
+				return true;
+			}
+		}
+		return false;
+	}
 
 
 	/**

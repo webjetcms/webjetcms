@@ -86,6 +86,13 @@ repositories {
 
 Žiaľ GitHub Packages nie sú verejne dostupné, je preto potrebné nastaviť prihlasovacie údaje `gpr.user` a `gpr.api-key` v súbore `gradle.properties` alebo cez `ENV` premenné. Prihlasovacie údaje vám poskytneme na vyžiadanie.
 
+!> **Upozornenie:** upravená inicializácia Spring a JPA:
+
+- JPA entity sa v `package sk.iway.INSTALL-NAME` neinicializujú automaticky, predpokladá sa postupný prechod na Spring DATA. Ak potrebujete `@Entity` inicializovať nastavte konfiguračnú premennú `jpaAddPackages` na potrebnú hodnotu - napríklad `sk.iway.INSTALL-NAME`. Inicializujú sa len triedy obsahujúce anotáciu `@Entity` alebo `@Converter`.
+- Vo `web.xml` už nie je potrebná inicializácia `Apache Struts`, zmažte celú `<servlet>` sekciu obsahujúcu `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` obsahujúci `<servlet-name>action</servlet-name>`.
+- Upravené poradie inicializácie Spring - inicializácia WebJET tried sa vykoná pred zákazníckymi triedami `SpringConfig`.
+- Upravená inicializácia `Swagger` - ak nie je nastavená konfiguračná premenná `swaggerEnabled` na hodnotu `true` ani sa pri štarte nevykoná prehľadanie Java tried.
+
 ## Zmeny pri prechode na 2024.0-SNAPSHOT
 
 Podobne ako pre [Maven Central](https://mvnrepository.com/artifact/com.webjetcms/webjetcms) verziu je potrebné pridať do `dependencies` bloku časť `implementation("sk.iway:webjet:${webjetVersion}:libs")`:

@@ -23,6 +23,7 @@ public class SpringSecurityConf {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure filterChain");
+		SpringAppInitializer.dtDiff("configureSecurity START");
 
         Logger.debug(SpringSecurityConf.class, "SpringSecurityConf - configure auth provider");
         http.authenticationProvider(new WebjetAuthentificationProvider());
@@ -58,7 +59,9 @@ public class SpringSecurityConf {
 			configureSecurity(http, "sk.iway." + Constants.getLogInstallName() + ".SpringConfig");
 		}
 
-        return http.build();
+        SecurityFilterChain chain = http.build();
+		SpringAppInitializer.dtDiff("configureSecurity END");
+		return chain;
     }
 
     @Bean
@@ -75,7 +78,7 @@ public class SpringSecurityConf {
 
     protected void configureSecurity(HttpSecurity http, String className)
 	{
-		Logger.info(SpringSecurityConf.class, "configure - SpringAppInitializer - start - " + className);
+		Logger.info(SpringSecurityConf.class, "configure - SpringSecurityConf - start - " + className);
 
 		try
 		{
@@ -90,7 +93,7 @@ public class SpringSecurityConf {
 			// config class asi neexistuje.
 		}
 
-		Logger.info(SpringSecurityConf.class, "configure - SpringAppInitializer - end - " + className);
+		Logger.info(SpringSecurityConf.class, "configure - SpringSecurityConf - end - " + className);
 	}
 
 	/**

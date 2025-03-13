@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,14 +31,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import freemarker.core.Configurable;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FreemarkerHelpers;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
@@ -62,6 +64,7 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     public void configureSecurity(HttpSecurity http) throws Exception
     {
         Logger.println(BaseSpringConfig.class, "-------> Configure security, http="+http);
+        SpringAppInitializer.dtDiff("Configure security START");
 
         http
                 .authorizeHttpRequests()
@@ -73,27 +76,37 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
                     .loginPage("/admin/logon/")
                     .loginProcessingUrl("/admin/logon/")*/
                 ;
+
+        SpringAppInitializer.dtDiff("Configure security DONE");
     }
 
     @Bean
     public Docket api() {
+
+        Predicate<String> paths;
+        if (Constants.getBoolean("swaggerEnabled")) paths = PathSelectors.any();
+        else paths = PathSelectors.none();
+
         Logger.println(BaseSpringConfig.class, "-------> Docket api()");
-        return new Docket(DocumentationType.SWAGGER_2)
+        SpringAppInitializer.dtDiff("Docket api() START");
+
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))
-                .paths(PathSelectors.any())
+                .paths(paths)
                 .build().apiInfo(apiInfo());
+
+        SpringAppInitializer.dtDiff("Docket api() END");
+        return docket;
     }
 
     private ApiInfo apiInfo() {
-        return new ApiInfoBuilder()
-                .title("WebJet API")
-                .description("WebJET services")
-                .version("")
-                .license("")
-                .licenseUrl("https://www.interway.sk/kontakt/")
-                .contact(new Contact("Interway","http://www.interway.sk","web@interway.sk"))
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                .title("WebJET API")
+                .description("For more info visit https://docs.webjetcms.sk or http://github.com/webjetcms/webjetcms/")
+                .version(InitServlet.getActualVersion())
                 .build();
+        return apiInfo;
     }
 
     /**
@@ -155,6 +168,8 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 
         // treba prazdny string, inac neresolvuje freemarker views
         freeMarkerConfigurer.setTemplateLoaderPath("");
+
+        SpringAppInitializer.dtDiff("freemarkerConfig DONE");
         return freeMarkerConfigurer;
     }
 
@@ -166,5 +181,6 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         Logger.println(BaseSpringConfig.class, "-------> configureDefaultServletHandling()");
         configurer.enable();
+        SpringAppInitializer.dtDiff("configureDefaultServletHandling DONE");
     }
 }
