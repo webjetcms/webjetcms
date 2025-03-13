@@ -263,14 +263,14 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
 	      	if (wjJar.exists())
 	      	{
 	      		try
-					{
+				{
 	      			Logger.debug(WebJETJavaSECMPInitializer.class, "JPA: Adding webjet.jar");
-                  libUrlsList.add(wjJar.toURI().toURL());
-					}
-					catch (Exception e)
-					{
-						sk.iway.iwcm.Logger.error(e);
-					}
+                    libUrlsList.add(wjJar.toURI().toURL());
+                }
+                catch (Exception e)
+                {
+                    sk.iway.iwcm.Logger.error(e);
+                }
 	      	}
 
             //pridaj lokacie z JarPackagingu

@@ -37,6 +37,9 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		AnnotationConfigWebApplicationContext ctx = new AnnotationConfigWebApplicationContext();
 		customConfigs.add("sk.iway.iwcm.system.spring.BaseSpringConfig");
 
+		//WebJET 9/2021
+		customConfigs.add("sk.iway.webjet.v9.V9SpringConfig");
+
 		if (initialized) {
 			String contextDbName = servletContext.getInitParameter("webjetDbname");
 			Logger.debug(getClass(),"SPRING: contextDbName="+contextDbName);
@@ -60,9 +63,6 @@ public class SpringAppInitializer implements WebApplicationInitializer
 				}
 
 			}
-
-			//WebJET 9/2021
-			customConfigs.add("sk.iway.webjet.v9.V9SpringConfig");
 		}
 
 		ctx.setServletContext(servletContext);
@@ -164,7 +164,9 @@ public class SpringAppInitializer implements WebApplicationInitializer
 
 	private void addScanPackages(AnnotationConfigWebApplicationContext ctx) {
 		List<String> packages = new ArrayList<>();
-		packages.add("sk.iway.iwcm.calendar");
+		packages.add("sk.iway.iwcm.system.spring");
+
+		/*packages.add("sk.iway.iwcm.calendar");
 		packages.add("sk.iway.iwcm.system.spring");
 		packages.add("sk.iway.iwcm.users");
 		packages.add("sk.iway.iwcm.rest");
@@ -172,7 +174,7 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		packages.add("sk.iway.iwcm.users");
 		packages.add("sk.iway.iwcm.components");
 		packages.add("sk.iway.iwcm.editor");
-		packages.add("sk.iway.iwcm.admin");
+		packages.add("sk.iway.iwcm.admin");*/
 		/* vyhladava rekurzivne
 		packages.add("sk.iway.iwcm.components.events");
 		packages.add("sk.iway.iwcm.components.quiz");
@@ -181,21 +183,23 @@ public class SpringAppInitializer implements WebApplicationInitializer
 		packages.add("sk.iway.iwcm.components.inzercia");
 		packages.add("sk.iway.iwcm.components.restaurant_menu");
 		*/
-		packages.add("sk.iway.iwcm.doc.templates");
+		/*packages.add("sk.iway.iwcm.doc.templates");
 		packages.add("sk.iway.iwcm.system.datatables");
 		packages.add("sk.iway.iwcm.logon");
 		packages.add("sk.iway.iwcm.doc.groups");
 		packages.add("sk.iway.iwcm.grideditor");
 		//packages.add("sk.iway.intranet.dms");
-		packages.add("sk.iway.iwcm.localconf");
+		packages.add("sk.iway.iwcm.localconf");*/
 
 		String addPackages = Constants.getString("springAddPackages");
 		if (Tools.isNotEmpty(addPackages)) {
 			packages.addAll(Tools.getStringListValue(Tools.getTokens(addPackages, ",")));
 		}
 
-		Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
-		ctx.scan(packages.toArray(new String[packages.size()]));
+		if (packages.isEmpty()==false) {
+			Logger.println(getClass(), String.format("Spring scan packages: %s", Tools.join(packages, ", ")));
+			ctx.scan(packages.toArray(new String[packages.size()]));
+		}
 	}
 
 	/**

@@ -31,7 +31,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
 @Configuration
 @EnableWebMvc
 @ComponentScan({
-    "sk.iway.iwcm.admin.upload",
+    "sk.iway.iwcm.admin",
     "sk.iway.iwcm.doc",
     "sk.iway.iwcm.components.gallery",
     "sk.iway.iwcm.components.redirects",
@@ -65,10 +65,10 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.banner",
     "sk.iway.iwcm.dmail.jpa",
     "sk.iway.iwcm.stat.rest",
-    "sk.iway.iwcm.components.calendar.rest",
+    "sk.iway.iwcm.components.calendar",
     "sk.iway.iwcm.components.reservation.rest",
     "sk.iway.iwcm.components.inquiry.rest",
-    "sk.iway.iwcm.doc.attributes.jpa",
+    //"sk.iway.iwcm.doc.attributes.jpa",
     "sk.iway.iwcm.components.proxy.rest",
     "sk.iway.iwcm.components.enumerations.rest",
     "sk.iway.iwcm.components.response_header.rest",
@@ -76,7 +76,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.filebrowser",
     "sk.iway.iwcm.components.forum.rest",
     "sk.iway.iwcm.components.seo.rest",
-    "sk.iway.iwcm.doc.clone_structure",
+    //"sk.iway.iwcm.doc.clone_structure",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.xls",
     "sk.iway.iwcm.components.restaurant_menu.rest",
@@ -99,8 +99,23 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.date",
     "sk.iway.iwcm.components.appdate",
     "sk.iway.iwcm.components.quiz",
-    "sk.iway.iwcm.components.calendarnews"
-
+    "sk.iway.iwcm.components.calendarnews",
+    "sk.iway.iwcm.editor",
+    "sk.iway.iwcm.components.translation_keys",
+    "sk.iway.iwcm.logon",
+    "sk.iway.iwcm.system.datatables",
+    "sk.iway.iwcm.components.abtesting.rest",
+    "sk.iway.iwcm.components.configuration",
+    "sk.iway.iwcm.components.cronjob",
+    "sk.iway.iwcm.components.news",
+    "sk.iway.iwcm.components.templates",
+    "sk.iway.iwcm.components.template_groups",
+    "sk.iway.iwcm.components.inquirySimple",
+    "sk.iway.iwcm.components.todo",
+    "sk.iway.iwcm.grideditor.controller",
+    "sk.iway.iwcm.rest",
+    "sk.iway.iwcm.users",
+    "sk.iway.iwcm.components.monitoring.rest"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
