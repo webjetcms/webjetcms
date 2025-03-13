@@ -40,7 +40,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.forms",
     "sk.iway.iwcm.components.forms.archive",
     "sk.iway.iwcm.components.memory_cleanup.cache_objects",
-    "sk.iway.iwcm.editor.rest",
     "sk.iway.iwcm.components.translation_keys.rest",
     "sk.iway.webjet.v9",
     "sk.iway.iwcm.system.audit.rest",
@@ -68,7 +67,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.calendar",
     "sk.iway.iwcm.components.reservation.rest",
     "sk.iway.iwcm.components.inquiry.rest",
-    //"sk.iway.iwcm.doc.attributes.jpa",
     "sk.iway.iwcm.components.proxy.rest",
     "sk.iway.iwcm.components.enumerations.rest",
     "sk.iway.iwcm.components.response_header.rest",
@@ -76,7 +74,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.filebrowser",
     "sk.iway.iwcm.components.forum.rest",
     "sk.iway.iwcm.components.seo.rest",
-    //"sk.iway.iwcm.doc.clone_structure",
     "sk.iway.iwcm.update",
     "sk.iway.iwcm.xls",
     "sk.iway.iwcm.components.restaurant_menu.rest",
@@ -98,7 +95,6 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.dmail",
     "sk.iway.iwcm.components.date",
     "sk.iway.iwcm.components.appdate",
-    "sk.iway.iwcm.components.quiz",
     "sk.iway.iwcm.components.calendarnews",
     "sk.iway.iwcm.editor",
     "sk.iway.iwcm.components.translation_keys",
@@ -115,7 +111,9 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.grideditor.controller",
     "sk.iway.iwcm.rest",
     "sk.iway.iwcm.users",
-    "sk.iway.iwcm.components.monitoring.rest"
+    "sk.iway.iwcm.components.monitoring.rest",
+    "sk.iway.iwcm.calendar",
+    "sk.iway.iwcm.localconf"
 })
 public class V9SpringConfig implements WebMvcConfigurer, ConfigurableSecurity {
 
