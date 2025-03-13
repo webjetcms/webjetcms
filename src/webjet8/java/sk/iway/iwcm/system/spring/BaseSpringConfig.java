@@ -43,12 +43,9 @@ import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
-//@PropertySource("classpath:swagger.properties")
 @EnableSwagger2
 @EnableWebMvc
 @EnableAsync
-//@EnableJpaRepositories
-//@EnableTransactionManagement
 @ComponentScan({
     "sk.iway.iwcm.system.spring.components"
 })
@@ -126,20 +123,6 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         converters.add(new ResourceHttpMessageConverter(true));
     }
 
-    /*
-    JEEFF: nemozeme to mat async, lebo nam to potom robi problem na WebjetEvent - ON_START a AFTER_SAVE co sa vykonava asynchronne, co nechceme
-    async je potrebne zabezpecit v listeneri anotaciou @Async
-    dokumentacia: http://docs.webjetcms.sk/v2021/#/developer/backend/events
-
-    @Bean(name = "applicationEventMulticaster")
-    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
-        SimpleApplicationEventMulticaster eventMulticaster
-                = new SimpleApplicationEventMulticaster();
-
-        eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
-        return eventMulticaster;
-    }*/
-
     @Override
     public void addFormatters(FormatterRegistry registry) {
         Logger.println(BaseSpringConfig.class, "-------> addFormatters()");
@@ -184,52 +167,4 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         Logger.println(BaseSpringConfig.class, "-------> configureDefaultServletHandling()");
         configurer.enable();
     }
-
-    /* TOTO JE POTREBNE PRE TOMCAT 7 pretoze tam nie je WebjetComponentSpringConfig
-    @Bean
-    public ViewResolver viewResolver() {
-        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
-        viewResolver.setViewClass(JstlView.class);
-        viewResolver.setPrefix("/");
-        viewResolver.setSuffix(".jsp");
-
-        return viewResolver;
-    }
-    */
-
-    /*
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-        LocalContainerEntityManagerFactoryBean em
-                = new LocalContainerEntityManagerFactoryBean();
-
-        em.setPersistenceXmlLocation("classpath:META-INF/persistence-webjet.xml");
-        em.setDataSource(dataSource());
-
-        String scanPackages = Constants.getString("jpaAddPackages");
-        em.setPackagesToScan(scanPackages);
-
-        JpaVendorAdapter vendorAdapter = new EclipseLinkJpaVendorAdapter();
-        em.setJpaVendorAdapter(vendorAdapter);
-        Properties properties = new Properties();
-        properties.setProperty("eclipselink.weaving", "false");
-        em.setJpaProperties(properties);
-
-        return em;
-    }
-
-    @Bean
-    public DataSource dataSource(){
-        DataSource dataSource = DBPool.getInstance().getDataSource("iwcm");
-        return dataSource;
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory emf){
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(emf);
-
-        return transactionManager;
-    }
-    */
 }
