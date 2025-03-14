@@ -32,12 +32,13 @@ Scenario('Preparation - create random subscribers', ({ I, DT, DTE }) => {
         DTE.waitForEditor('datatableFieldDTE_Field_recipientsTab')
         DTE.fillField('recipientEmail', randomName + '@fexpost.com');
         DTE.save('datatableFieldDTE_Field_recipientsTab');
+
+        DT.filterContains('recipientEmail', randomName);
+        I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-select-all');
+        I.click(DT.btn.recipients_resend_button);
+        I.waitForElement('#toast-container-webjet');
+        I.clickCss('[id^="confirmationYes"]', "#toast-container-webjet");
     });
-    DT.filterContains('recipientEmail', 'autotest-');
-    I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.buttons-select-all');
-    I.click(DT.btn.recipients_resend_button);
-    I.waitForElement('#toast-container-webjet');
-    I.clickCss('[id^="confirmationYes"]', "#toast-container-webjet");
     DTE.save('campaingsDataTable');
 });
 
