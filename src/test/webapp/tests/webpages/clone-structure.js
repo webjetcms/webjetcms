@@ -24,6 +24,7 @@ Before(({ I, login }) => {
         randomNumber = I.getRandomTextShort();
         srcGroupName += randomNumber;
         destGroupName += randomNumber;
+        newDocName += randomNumber;
         srcGroupName_noUrlTranslate += randomNumber;
         destGroupName_noUrlTranslate += randomNumber;
     }

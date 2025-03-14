@@ -1,4 +1,4 @@
-Feature('apps.inquiry');
+Feature('apps.inquiry.inquiry');
 
 var randomNumber;
 var questionName = "name-autotest-";
@@ -220,7 +220,7 @@ Scenario('testovanie app - Inquiry', async ({ I, DTE, Apps }) => {
         displayVoteResults: 'true',
         style: '01',
         color: '01'
-    };    
+    };
 
     await Apps.assertParams(defaultParams);
 

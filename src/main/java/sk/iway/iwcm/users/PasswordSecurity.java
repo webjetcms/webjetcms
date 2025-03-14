@@ -66,7 +66,7 @@ public final class PasswordSecurity {
 			sb.append(ambiguousCharactersChar);
 		}
 
-		return RandomStringUtils.random(length, sb.toString());
+		return RandomStringUtils.secureStrong().next(length, sb.toString());
 	}
 
 	/**

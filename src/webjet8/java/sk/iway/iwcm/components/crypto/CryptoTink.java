@@ -11,8 +11,8 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.ConfDB;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Base64;
 
@@ -86,7 +86,7 @@ public class CryptoTink implements Crypto {
         return ALG_KEY;
     }
 
-    private KeysetHandle generateNewPrivateAndPublicKey2() {
+    protected KeysetHandle generateNewPrivateAndPublicKey2() {
         try {
             KeysetHandle privateKey = KeysetHandle.generateNew(KeyTemplates.get("ECIES_P256_HKDF_HMAC_SHA256_AES128_CTR_HMAC_SHA256"));
             KeysetHandle publiceKey = privateKey.getPublicKeysetHandle();
@@ -105,7 +105,7 @@ public class CryptoTink implements Crypto {
         return null;
     }
 
-    private KeysetHandle loadPublicKeyBase64(String publicKey) {
+    protected KeysetHandle loadPublicKeyBase64(String publicKey) {
         String string = new String(Base64.getDecoder().decode(publicKey));
         try {
             return loadKey(string);
@@ -115,7 +115,7 @@ public class CryptoTink implements Crypto {
         return null;
     }
 
-    private KeysetHandle loadPrivateKeyBase64(String privateKey) {
+    protected KeysetHandle loadPrivateKeyBase64(String privateKey) {
         String string = new String(Base64.getDecoder().decode(privateKey));
         try {
            return loadKey(string);
@@ -129,16 +129,14 @@ public class CryptoTink implements Crypto {
         return CleartextKeysetHandle.read(JsonKeysetReader.withString(key));
     }
 
-    private String getKeyBase64(KeysetHandle keysetHandle) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    protected String getKeyBase64(KeysetHandle keysetHandle) {
         try {
-            CleartextKeysetHandle.write(keysetHandle, JsonKeysetWriter.withOutputStream(outputStream));
-            outputStream.flush();
-            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+            String serializedKeyset = TinkJsonProtoKeysetFormat.serializeKeyset(keysetHandle, InsecureSecretKeyAccess.get());
+            return Base64.getEncoder().encodeToString(serializedKeyset.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             sk.iway.iwcm.Logger.error(e);
         }
-        return new String(outputStream.toByteArray());
+        return null;
     }
 
     public String getPublicKeyFromPrivateKeyBase64(KeysetHandle keysetHandle) {
@@ -150,11 +148,11 @@ public class CryptoTink implements Crypto {
         return null;
     }
 
-    private String getPrivateKeyBase64(KeysetHandle keysetHandle) {
+    protected String getPrivateKeyBase64(KeysetHandle keysetHandle) {
         return getKeyBase64(keysetHandle);
     }
 
-    private String getContextInfo() {
+    protected String getContextInfo() {
         String cryptoContextInfo = Constants.getString("cryptoContextInfo", "");
         if (Tools.isEmpty(cryptoContextInfo)) {
             cryptoContextInfo = Password.generateStringHash(16);

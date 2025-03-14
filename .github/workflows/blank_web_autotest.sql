@@ -55,7 +55,7 @@ VALUES
 	('defaultDisableUpload','false',NULL),
 	('disableWebJETToolbar','true',NULL),
 	('inlineEditingEnabled','true',NULL),
-	('installName','blank',NULL),
+	('installName','aceintegration',NULL),
 	('logLevel','debug',NULL),
 	('showDocActionAllowedDocids','4',NULL),
 	('smtpServer','smtp.local',NULL);
