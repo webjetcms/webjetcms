@@ -164,7 +164,7 @@ float: left;
 		%>
 		<p>
 			<stripes:label for="usrOldPassword" name="usr.oldPassword"><iwcm:text key="components.user.newuser.oldPassword"/></stripes:label>
-			<stripes:password id="usrOldPassword" name="usr.oldPassword" size="20" maxlength="16"/>
+			<stripes:password id="usrOldPassword" name="usr.oldPassword" size="20" maxlength="32"/>
 		</p>
 		<%
 			}

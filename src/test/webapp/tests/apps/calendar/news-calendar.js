@@ -5,7 +5,7 @@ Before(({ I, login, DT }) => {
     DT.addContext("calendar", "#calendarEventsDataTable_wrapper");
 });
 
-Scenario('testovanie app - Kalendar news', async ({ I, DTE, DT, Apps }) => {
+Scenario('testovanie app - Kalendar news', async ({ I, DTE, Document, Apps }) => {
     Apps.insertApp('Kalendár noviniek', '#components-calendarnews-title');
 
     const defaultParams = {
@@ -18,6 +18,7 @@ Scenario('testovanie app - Kalendar news', async ({ I, DTE, DT, Apps }) => {
 
     I.say('Default parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
     I.waitForElement("div.kalendar", 10);
@@ -30,9 +31,8 @@ Scenario('testovanie app - Kalendar news', async ({ I, DTE, DT, Apps }) => {
     const changedParams = {
         groupIds: '24',
         expandGroupIds: 'true',
-        perexGroup: '1032'
+        perexGroup: '1095'
     };
-
 
     I.clickCss("#editorAppDTE_Field_groupIds button");
     I.waitForElement("#custom-modal-id", 10);

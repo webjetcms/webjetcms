@@ -116,7 +116,11 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps }) => {
+Scenario('logout', async ({I}) => {
+    I.logout();
+});
+
+Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps, Document }) => {
     I.amOnPage("/apps/calendar/admin/");
     I.click(DT.btn.calendar_add_button);
     DTE.waitForEditor("calendarEventsDataTable");
@@ -135,6 +139,7 @@ Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps }) => {
 
     I.say('Default parameters visual testing');
     I.clickCss('button.btn.btn-warning.btn-preview');
+    await Document.waitForTab();
     I.switchToNextTab();
 
     I.waitForElement("div.calendar", 10);
@@ -167,8 +172,4 @@ Scenario('Revert', ({ I, DT }) => {
     I.amOnPage("/apps/calendar/admin/");
     DT.filterContains("title", "autotest-event-" + randomNumber);
     DT.deleteAll("calendarEventsDataTable");
-});
-
-Scenario('logout', async ({I}) => {
-    I.logout();
 });
