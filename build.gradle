@@ -290,6 +290,7 @@ test {
     systemProperty 'file.encoding', 'UTF-8'
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
+    systemProperty 'webjetDbname', '/poolman-local.xml'
 }
 
 java {

@@ -1330,8 +1330,7 @@ public class PathFilter implements Filter
 		"/admin/multiplefileupload.do",
 		"/formmail.do",
 		"/logoff.do",
-		"/admin/logoff.do",
-		"/admin/logon.do"
+		"/admin/logoff.do"
 	};
 
 	/**
