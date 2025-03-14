@@ -242,6 +242,7 @@ public class WebJETJavaSECMPInitializer extends JavaSECMPInitializer
                 "sk.iway.iwcm.components.gdpr",
                 "sk.iway.iwcm.components.insertScript",
                 "sk.iway.iwcm.components.inquirySimple",
+                "sk.iway.iwcm.components.quiz.jpa",
                 "sk.iway.iwcm.components.reservation",
                 "sk.iway.iwcm.components.todo",
                 "sk.iway.iwcm.dmail",
