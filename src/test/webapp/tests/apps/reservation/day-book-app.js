@@ -135,6 +135,7 @@ Scenario('Verify all objects are displayed when no object is selected', async ({
     I.clickCss('.cke_dialog_ui_button_ok');
     I.clickCss('.btn-preview');
 
+    I.wait(5);
     I.switchToNextTab();
     I.waitForElement('#reservationObjectId', 10);
     const actualOptions = await I.grabTextFromAll('#reservationObjectId');

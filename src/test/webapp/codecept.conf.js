@@ -136,6 +136,7 @@ exports.config = {
       users: {
         admin: {
           login: (I) => {
+            console.log("Date time: "+new Date());
             I.say("logging in");
             //start in new fresh tab
             I.openNewTab();
@@ -162,6 +163,7 @@ exports.config = {
             I.waitForText("Tester Playwright", 30, "button.js-profile-toggler");
           },
           check: (I) => {
+            console.log("Date time: "+new Date());
             I.say("checking logged user");
             I.see("Tester Playwright", "button.js-profile-toggler");
             //aby sme vzdy v kazdom scenari mali prednastavenu velkost okna

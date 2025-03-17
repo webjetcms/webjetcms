@@ -13,7 +13,7 @@ module.exports = {
      */
     login(name, emailDomain = "fexpost.com"){
         I.say('Prihlasujem sa do TempMail-u');
-        I.amOnPage('https://tempmail.plus/en/#!');
+        I.amOnPage('https://tempmail.plus');
         I.switchTo();
         I.fillField('input#pre_button', name);
         I.clickCss('button#domain');
