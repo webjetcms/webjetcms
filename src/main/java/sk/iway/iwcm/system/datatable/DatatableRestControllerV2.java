@@ -1250,9 +1250,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					if (isDuplicate) afterDuplicate(entity, id);
 				} catch (ConstraintViolationException ex) {
 					//Ignore error if skipWrongData is true
-					if(skipWrongData == true) {
+					if(skipWrongData) {
 						Set<ConstraintViolation<T>> violations = new HashSet<>();
-						violations.add((ConstraintViolation<T>) ex);
+						for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+							violations.add((ConstraintViolation<T>) violation);
+						}
 						addImportedColumnError(violations);
 						continue;
 					}
