@@ -1322,6 +1322,7 @@ public class PathFilter implements Filter
 		}
 	}
 
+	//these URL are nahdled by Servlet, so no need to forward it to Spring version
 	private static String[] strutsUrlServletExceptions = {
 		"/showdoc.do",
 		"/admin/offline.do",
@@ -1334,7 +1335,7 @@ public class PathFilter implements Filter
 	};
 
 	/**
-	 * Handle old struts *.do calls, it will be redirected to *.struts mappings
+	 * Handle old struts *.do calls, it will be redirected to *.struts mappings which is handled by Spring MVC
 	 * @param request
 	 * @param response
 	 * @throws ServletException

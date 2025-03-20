@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import sk.iway.iwcm.test.BaseWebjetTest;
 
+/**
+ * Use this class to generate new credentials for TEST database whe you need to change default passwords for TEST users.
+ */
 public class GenerateNewCredentials extends BaseWebjetTest {
 
     @Test

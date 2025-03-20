@@ -1,4 +1,4 @@
-Feature('apps.auiz.app-quiz');
+Feature('apps.quiz.app-quiz');
 
 Before(({ I, login }) => {
     login('admin');
