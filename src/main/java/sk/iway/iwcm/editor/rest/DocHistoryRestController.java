@@ -58,9 +58,9 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
             if(!getUser().isEnabledItem("cmp_adminlog")) throw new IllegalArgumentException("Access is denied");
 
             GroupDetails gd = null;
-            DocDB ddb = DocDB.getInstance();
+            DocDB docDB = DocDB.getInstance();
             GroupsDB groupsDB = GroupsDB.getInstance();
-            List<DocBasic> publicableDocs = ddb.getPublicableDocs();
+            List<DocBasic> publicableDocs = docDB.getPublicableDocs();
             List<DocHistoryDto> docDetailsList = new ArrayList<>();
 
             for(DocBasic publicableDoc : publicableDocs) {

@@ -209,28 +209,36 @@ public class DocPublishService {
 	 * Read pages waiting for publishing or to be disabled
 	 */
 	public void refreshPagesToPublish() {
-		if(InitServlet.isWebjetInitialized() == true && dhr != null && ddr != null) {
+		if(InitServlet.isWebjetInitialized() == true) {
 			DebugTimer dt = new DebugTimer("readPagesToPublic");
 
 			prepareRepositories();
 
-			//Clear list
-			List<DocBasic> publicableDocsLocal = new ArrayList<>();
+			if (dhr != null && ddr != null) {
 
-			//Get all pages that are publicable (publicable = true) and are not awaiting to approve (awaitingApprove = null or awaitingApprove = "")
-			List<DocHistory> publicableHistoryDocs = dhr.getPublicableThatAreNotAwaitingToApprove().orElse(new ArrayList<>());
-			publicableDocsLocal.addAll( publicableHistoryDocs );
+				//Clear list
+				List<DocBasic> publicableDocsLocal = new ArrayList<>();
 
-			//Add pages where disable_after_end = true
-			publicableDocsLocal.addAll( ddr.findAllByDisableAfterEndTrue() );
+				//Get all pages that are publicable (publicable = true) and are not awaiting to approve (awaitingApprove = null or awaitingApprove = "")
+				List<DocHistory> publicableHistoryDocs = dhr.getPublicableThatAreNotAwaitingToApprove().orElse(new ArrayList<>());
+				publicableDocsLocal.addAll( publicableHistoryDocs );
 
-			//filter pages in trash - boolean isInTrash = groupsDB.isInTrash(docDetails.getGroupId());
-			GroupsDB groupsDB = GroupsDB.getInstance();
-			publicableDocsLocal = publicableDocsLocal.stream().filter(doc -> groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());
+				//Add pages where disable_after_end = true
+				publicableDocsLocal.addAll( ddr.findAllByDisableAfterEndTrue() );
 
-			publicableDocs = publicableDocsLocal;
+				//filter pages in trash - boolean isInTrash = groupsDB.isInTrash(docDetails.getGroupId());
+				GroupsDB groupsDB = GroupsDB.getInstance();
+				publicableDocsLocal = publicableDocsLocal.stream().filter(doc -> groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());
 
-			dt.diff("done");
+				try {
+					publicableDocs.clear();
+					publicableDocs.addAll(publicableDocsLocal);
+				} catch (Exception e) {
+					Logger.error(this, "Error while refreshing pages to publish", e);
+				}
+
+				dt.diff("done, size="+publicableDocs.size());
+			}
 		}
 	}
 
