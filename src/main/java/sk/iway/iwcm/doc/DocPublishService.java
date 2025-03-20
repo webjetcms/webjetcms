@@ -231,7 +231,8 @@ public class DocPublishService {
 				publicableDocsLocal = publicableDocsLocal.stream().filter(doc -> groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());
 
 				try {
-					publicableDocs.clear();
+					if (publicableDocs == null) publicableDocs = new ArrayList<>();
+					else publicableDocs.clear();
 					publicableDocs.addAll(publicableDocsLocal);
 				} catch (Exception e) {
 					Logger.error(this, "Error while refreshing pages to publish", e);
