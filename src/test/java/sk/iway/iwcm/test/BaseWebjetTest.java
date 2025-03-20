@@ -53,6 +53,9 @@ public class BaseWebjetTest
 
 	protected SimpleQuery query = new SimpleQuery();
 
+	/**
+	 * Load constants from database, override default values from Constants class
+	 */
 	protected void loadConstantsFromDB() {
         try (Connection db_conn = DBPool.getConnection()) {
             Map<String, String> databaseValues = InitServlet.getDatabaseValues(db_conn);
