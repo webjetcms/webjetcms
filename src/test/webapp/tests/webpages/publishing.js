@@ -77,12 +77,12 @@ async function setPublishPageDefault(webpageText, webpageTitle, I, DTE, docId) {
      I.waitForText(webpageText, 10);
 }
 
-Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii a nasledne vypublikuje @singlethread', async ({ I, DT, DTE, Document }) => {
+Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii a nasledne vypublikuje @singlethread @current', async ({ I, DT, DTE, Document }) => {
      const webpageTitle = "Test casoveho publikovania";
      const docId = 22956;
      const webpageText = `Test casoveho publikovania stranky ID:${docId}`;
      const publishAfterMinutes = 3;
-     const keepPublishedMinutes = 2;
+     const keepPublishedMinutes = 10;
 
      await setPublishPageDefault(webpageText, webpageTitle, I, DTE, docId);
 
@@ -319,7 +319,7 @@ Scenario('Webpages - Future publication validation and deletion', async ({ I, DT
      I.see("Upozornenie", "div.toast-title");
      I.see("Stránka bola uložená, bude automaticky publikovaná do verejnej časti web stránky", "div.toast-message");
      DTE.cancel();
-     I.clickCss('.toast-close-button');
+     I.toastrClose();
 
      // Mazanie stránky
      I.click(DT.btn.delete_button);

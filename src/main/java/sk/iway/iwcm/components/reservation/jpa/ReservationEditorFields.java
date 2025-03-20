@@ -50,7 +50,7 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TIME_HM,
         title="reservation.reservations.time_from",
-        sortAfter = "dateTo",
+        sortAfter = "dateFrom",
         tab = "basic"
     )
     private Date reservationTimeFrom;
@@ -58,7 +58,7 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TIME_HM,
         title="reservation.reservations.time_to",
-        sortAfter = "editorFields.reservationTimeFrom",
+        sortAfter = "dateTo",
         tab = "basic"
     )
     private Date reservationTimeTo;
