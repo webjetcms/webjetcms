@@ -225,10 +225,10 @@ Scenario('Check created reservations', ({I, DT}) => {
 
     DT.filterContains("editorFields.selectedReservation", "Tenisovy kurt");
 
-    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Tenisovy kurt A", "01.01.2045", "", "01.01.2045", "", "13:00", "16:00", "210,00", "Schválená"]);
-    DT.checkTableRow("reservationDataTable", 2, ["", "Tester", "Playwright", "tester@balat.sk", "Tenisovy kurt A", "01.01.2045", "", "01.01.2045", "", "13:00", "15:00", "140,00", "Schválená"]);
-    DT.checkTableRow("reservationDataTable", 3, ["", "Tester", "Playwright", "tester@balat.sk", "Tenisovy kurt B", "01.01.2045", "", "01.01.2045", "", "14:00", "16:00", "60,00", "Nepotvrdená"]);
-    DT.checkTableRow("reservationDataTable", 4, ["", "UnknowUser", "UnknowSurname", "sebastian.ivan@interway.sk", "Tenisovy kurt B", "01.01.2045", "", "01.01.2045", "", "14:00", "16:00", "60,00", "Nepotvrdená"]);
+    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Tenisovy kurt A", "01.01.2045", "13:00", "01.01.2045", "16:00", "210,00", "Schválená"]);
+    DT.checkTableRow("reservationDataTable", 2, ["", "Tester", "Playwright", "tester@balat.sk", "Tenisovy kurt A", "01.01.2045", "13:00", "01.01.2045", "15:00", "140,00", "Schválená"]);
+    DT.checkTableRow("reservationDataTable", 3, ["", "Tester", "Playwright", "tester@balat.sk", "Tenisovy kurt B", "01.01.2045", "14:00", "01.01.2045", "16:00", "60,00", "Nepotvrdená"]);
+    DT.checkTableRow("reservationDataTable", 4, ["", "UnknowUser", "UnknowSurname", "sebastian.ivan@interway.sk", "Tenisovy kurt B", "01.01.2045", "14:00", "01.01.2045", "16:00", "60,00", "Nepotvrdená"]);
 });
 
 Scenario('Delete created reservations', async ({I, DT}) => {

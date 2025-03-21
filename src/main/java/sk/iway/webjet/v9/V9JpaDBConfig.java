@@ -19,6 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
+import sk.iway.iwcm.system.spring.SpringAppInitializer;
 
 /**
  * JpaDBConfig - zakladna konfiguracia JPA aby sme vedeli, co mame preniest potom do standardneho WJ
@@ -61,7 +62,6 @@ import sk.iway.iwcm.system.logging.InMemoryLoggingDB;
         "sk.iway.iwcm.components.calendar.jpa",
         "sk.iway.iwcm.components.reservation.jpa",
         "sk.iway.iwcm.components.inquiry.jpa",
-        "sk.iway.iwcm.doc.attributes.jpa",
         "sk.iway.basecms.contact",
         "sk.iway.iwcm.components.proxy.jpa",
         "sk.iway.iwcm.components.enumerations.model",
@@ -81,6 +81,8 @@ public class V9JpaDBConfig {
     @Bean("webjet2022EntityManager")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory()
     {
+        SpringAppInitializer.dtDiff("V9JpaDBConfig START");
+
         InMemoryLoggingDB.setQueueSize(Constants.getInt("loggingInMemoryQueueSize"));
 
         Logger.println(V9JpaDBConfig.class, "WebJET V9JpaDBConfig");
@@ -122,7 +124,6 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.components.calendar.jpa",
                             "sk.iway.iwcm.components.reservation.jpa",
                             "sk.iway.iwcm.components.inquiry.jpa",
-                            "sk.iway.iwcm.doc.attributes.jpa",
                             "sk.iway.basecms.contact",
                             "sk.iway.iwcm.components.proxy.jpa",
                             "sk.iway.iwcm.components.enumerations.model",
@@ -148,6 +149,8 @@ public class V9JpaDBConfig {
 
         WebJETJavaSECMPInitializer.setDefaultProperties(properties);
         emf.setJpaProperties(properties);
+
+        SpringAppInitializer.dtDiff("V9JpaDBConfig DONE");
 
         return emf;
     }

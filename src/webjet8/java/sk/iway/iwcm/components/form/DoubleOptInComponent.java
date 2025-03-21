@@ -30,10 +30,10 @@ public class DoubleOptInComponent extends WebjetComponentAbstract {
 
     @SuppressWarnings("unchecked")
     @DefaultHandler
-    public String render(HttpServletRequest request, ModelMap model, int formId, String hash) {
+    public String render(HttpServletRequest request, ModelMap model, Integer formId, String hash) {
 
         Status status = Status.FAIL;
-        if (formId > 0 && Tools.isNotEmpty(hash)) {
+        if (formId != null && formId.intValue() > 0 && Tools.isNotEmpty(hash)) {
             SimpleQuery simpleQuery = new SimpleQuery();
             List<String> list = simpleQuery.forList("SELECT * FROM forms WHERE id = ? AND double_optin_hash = ?", formId, hash);
 

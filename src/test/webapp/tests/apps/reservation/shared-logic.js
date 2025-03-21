@@ -144,7 +144,7 @@ function changeReservationStatus(I, DT, DTE, buttonSelector, toastTitle, toastMe
     toastHandle(I, toastTitle, toastMessage, true, false);
     I.clickCss("button.toast-close-button");
     DTE.save("reservationDataTable");
-    DT.checkTableCell("reservationDataTable", 1, 13, expectedStatus);
+    DT.checkTableCell("reservationDataTable", 1, 11, expectedStatus);
 }
 
 function toastHandle(I, title, message, approve, shouldWait = true) {

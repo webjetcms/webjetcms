@@ -1251,8 +1251,10 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				} catch (ConstraintViolationException ex) {
 					//Ignore error if skipWrongData is true
 					if(skipWrongData == true) {
-						Set<ConstraintViolation<T>> violations = new HashSet<>();
-						violations.add((ConstraintViolation<T>) ex);
+						List<ConstraintViolation<?>> violations = new ArrayList<>();
+						for (ConstraintViolation<?> violation : ex.getConstraintViolations()) {
+							violations.add(violation);
+						}
 						addImportedColumnError(violations);
 						continue;
 					}
@@ -1407,7 +1409,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		//Error will be always thrown, but prepare error message for user is we skipping wrong data
 		if (!violations.isEmpty()) {
-			addImportedColumnError(violations);
+			//convert violations to List<ConstraintViolation<?>>
+			List<ConstraintViolation<?>> violationsList = new ArrayList<>();
+			for (ConstraintViolation<T> violation : violations) {
+				violationsList.add(violation);
+			}
+			addImportedColumnError(violationsList);
 			throw new ConstraintViolationException("Invalid data", violations);
 		} else {
 			checkItemPermsThrows(entity, -1L);
@@ -1737,7 +1744,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	 * This set of processed error's are used for Warning notification (FOR user). So user can by notified which rows are invalid and WHY.
 	 * @param violations - Set of ConstraintViolations
 	 */
-	private void addImportedColumnError(Set<ConstraintViolation<T>> violations) {
+	private void addImportedColumnError(List<ConstraintViolation<?>> violations) {
 		if(violations == null || violations.size() < 1) return;
 		ConstraintViolation<?> firstViolation = violations.iterator().next();
 		String propertyName = firstViolation.getPropertyPath().toString();

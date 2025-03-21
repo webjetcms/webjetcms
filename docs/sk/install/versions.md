@@ -14,7 +14,7 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
-- ```2025.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [github-package](https://github.com/webjetcms/webjetcms/packages/2426502)
+- ```2025.0-SNAPSHOT``` - pravidelne aktualizovaná verzia z main repozitára verzie 2025, dostupná ako [GitHub-package](https://github.com/webjetcms/webjetcms/packages/2426502)
 - ```2025.0``` - stabilizovaná verzia 2025.0, nepribúdajú do nej denné zmeny
 - ```2024.52``` - stabilizovaná verzia 2024.52, nepribúdajú do nej denné zmeny
 - ```2024.0.52``` - stabilizovaná verzia 2024.0.52 s opravami chýb voči verzii 2024.0 (bez pridania vylepšení zo SNAPSHOT verzie).
@@ -85,6 +85,13 @@ repositories {
 ```
 
 Žiaľ GitHub Packages nie sú verejne dostupné, je preto potrebné nastaviť prihlasovacie údaje `gpr.user` a `gpr.api-key` v súbore `gradle.properties` alebo cez `ENV` premenné. Prihlasovacie údaje vám poskytneme na vyžiadanie.
+
+!> **Upozornenie:** upravená inicializácia Spring a JPA:
+
+- JPA entity sa v `package sk.iway.INSTALL-NAME` neinicializujú automaticky, predpokladá sa postupný prechod na Spring DATA. Ak potrebujete `@Entity` inicializovať nastavte konfiguračnú premennú `jpaAddPackages` na potrebnú hodnotu - napríklad `sk.iway.INSTALL-NAME`. Inicializujú sa len triedy obsahujúce anotáciu `@Entity` alebo `@Converter`.
+- Vo `web.xml` už nie je potrebná inicializácia `Apache Struts`, zmažte celú `<servlet>` sekciu obsahujúcu `<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>` a `<servlet-mapping>` obsahujúci `<servlet-name>action</servlet-name>`.
+- Upravené poradie inicializácie Spring - inicializácia WebJET tried sa vykoná pred zákazníckymi triedami `SpringConfig`.
+- Upravená inicializácia `Swagger` - ak nie je nastavená konfiguračná premenná `swaggerEnabled` na hodnotu `true` ani sa pri štarte nevykoná prehľadanie Java tried.
 
 ## Zmeny pri prechode na 2024.0-SNAPSHOT
 

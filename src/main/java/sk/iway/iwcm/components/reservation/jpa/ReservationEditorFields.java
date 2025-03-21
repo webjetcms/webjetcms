@@ -50,7 +50,7 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TIME_HM,
         title="reservation.reservations.time_from",
-        sortAfter = "dateTo",
+        sortAfter = "dateFrom",
         tab = "basic"
     )
     private Date reservationTimeFrom;
@@ -58,7 +58,7 @@ public class ReservationEditorFields {
     @DataTableColumn(
         inputType = DataTableColumnType.TIME_HM,
         title="reservation.reservations.time_to",
-        sortAfter = "editorFields.reservationTimeFrom",
+        sortAfter = "dateTo",
         tab = "basic"
     )
     private Date reservationTimeTo;
@@ -70,8 +70,8 @@ public class ReservationEditorFields {
         sortAfter = "accepted",
         tab = "basic"
     )
-    private Boolean allowHistorySave;    
-    
+    private Boolean allowHistorySave;
+
     @DataTableColumn(
         inputType = DataTableColumnType.BOOLEAN,
         title = "components.reservation.allow_overbooking",
@@ -179,7 +179,8 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TIME_HM,
         title="reservation.reservations.arrival_time",
         sortAfter = "dateFrom",
-        tab = "basic"
+        tab = "basic",
+        hidden = true
     )
     private Date arrivingTime;
 
@@ -187,14 +188,15 @@ public class ReservationEditorFields {
         inputType = DataTableColumnType.TIME_HM,
         title="reservation.reservations.departure_time",
         sortAfter = "dateTo",
-        tab = "basic"
+        tab = "basic",
+        hidden = true
     )
     private Date departureTime;
 
     public void fromReservationEntity(ReservationEntity originalEntity, ProcessItemAction action, HttpServletRequest request) {
 
         ReservationObjectEntity selected = originalEntity.getReservationObjectForReservation();
-        
+
         if(action == ProcessItemAction.CREATE) {
             //Logged user
             Identity user = UsersDB.getCurrentUser(request);
@@ -212,17 +214,16 @@ public class ReservationEditorFields {
             // !! CANT set time while CREATING - because we dont know if first selected reservationObject in select is for whole day or not
         } else {
             if(selected != null) {
+                reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateFrom());
+                reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());
+
                 if(Tools.isTrue(selected.getReservationForAllDay())) {
                     arrivingTime = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateFrom());
                     departureTime = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());
-                } else {
-                    //Set correct time range
-                    reservationTimeFrom = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateFrom());
-                    reservationTimeTo = DefaultTimeValueConverter.getValidTimeValue(originalEntity.getDateTo());
                 }
             }
         }
-    
+
         if(selected != null) {
             selectedReservation = selected.getName();
             if(Tools.isNotEmpty(selected.getPassword())) needPasswordToDelete = Boolean.TRUE;

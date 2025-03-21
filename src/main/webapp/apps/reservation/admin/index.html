@@ -272,6 +272,9 @@
                             reservationDataTable.EDITOR.field("editorFields.arrivingTime").show();
                             reservationDataTable.EDITOR.field("editorFields.departureTime").show();
 
+                            if ($("#DTE_Field_editorFields-arrivingTime").val()=="") $("#DTE_Field_editorFields-arrivingTime").val("[(${layout.getConstant('reservationAllDayStartTime')})]");
+                            if ($("#DTE_Field_editorFields-departureTime").val()=="") $("#DTE_Field_editorFields-departureTime").val("[(${layout.getConstant('reservationAllDayEndTime')})]");
+
                             $("div.form-group.row-headline").hide();
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeA").hide();
                             reservationDataTable.EDITOR.field("editorFields.reservationTimeRangeB").hide();

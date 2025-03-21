@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Predicate;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -30,25 +31,23 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
 
 import freemarker.core.Configurable;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FreemarkerHelpers;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.builders.RequestHandlerSelectors;
 import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
 import springfox.documentation.spi.DocumentationType;
 import springfox.documentation.spring.web.plugins.Docket;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @Configuration
-//@PropertySource("classpath:swagger.properties")
 @EnableSwagger2
 @EnableWebMvc
 @EnableAsync
-//@EnableJpaRepositories
-//@EnableTransactionManagement
 @ComponentScan({
     "sk.iway.iwcm.system.spring.components"
 })
@@ -65,6 +64,7 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     public void configureSecurity(HttpSecurity http) throws Exception
     {
         Logger.println(BaseSpringConfig.class, "-------> Configure security, http="+http);
+        SpringAppInitializer.dtDiff("Configure security START");
 
         http
                 .authorizeHttpRequests()
@@ -76,27 +76,37 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
                     .loginPage("/admin/logon/")
                     .loginProcessingUrl("/admin/logon/")*/
                 ;
+
+        SpringAppInitializer.dtDiff("Configure security DONE");
     }
 
     @Bean
     public Docket api() {
+
+        Predicate<String> paths;
+        if (Constants.getBoolean("swaggerEnabled")) paths = PathSelectors.any();
+        else paths = PathSelectors.none();
+
         Logger.println(BaseSpringConfig.class, "-------> Docket api()");
-        return new Docket(DocumentationType.SWAGGER_2)
+        SpringAppInitializer.dtDiff("Docket api() START");
+
+        Docket docket = new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.withClassAnnotation(RestController.class))
-                .paths(PathSelectors.any())
+                .paths(paths)
                 .build().apiInfo(apiInfo());
+
+        SpringAppInitializer.dtDiff("Docket api() END");
+        return docket;
     }
 
     private ApiInfo apiInfo() {
-        return new ApiInfoBuilder()
-                .title("WebJet API")
-                .description("WebJET services")
-                .version("")
-                .license("")
-                .licenseUrl("https://www.interway.sk/kontakt/")
-                .contact(new Contact("Interway","http://www.interway.sk","web@interway.sk"))
+        ApiInfo apiInfo = new ApiInfoBuilder()
+                .title("WebJET API")
+                .description("For more info visit https://docs.webjetcms.sk or http://github.com/webjetcms/webjetcms/")
+                .version(InitServlet.getActualVersion())
                 .build();
+        return apiInfo;
     }
 
     /**
@@ -125,20 +135,6 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
         //aby isla tlac do PDF (application/octet-stream)
         converters.add(new ResourceHttpMessageConverter(true));
     }
-
-    /*
-    JEEFF: nemozeme to mat async, lebo nam to potom robi problem na WebjetEvent - ON_START a AFTER_SAVE co sa vykonava asynchronne, co nechceme
-    async je potrebne zabezpecit v listeneri anotaciou @Async
-    dokumentacia: http://docs.webjetcms.sk/v2021/#/developer/backend/events
-
-    @Bean(name = "applicationEventMulticaster")
-    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
-        SimpleApplicationEventMulticaster eventMulticaster
-                = new SimpleApplicationEventMulticaster();
-
-        eventMulticaster.setTaskExecutor(new SimpleAsyncTaskExecutor());
-        return eventMulticaster;
-    }*/
 
     @Override
     public void addFormatters(FormatterRegistry registry) {
@@ -172,6 +168,8 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
 
         // treba prazdny string, inac neresolvuje freemarker views
         freeMarkerConfigurer.setTemplateLoaderPath("");
+
+        SpringAppInitializer.dtDiff("freemarkerConfig DONE");
         return freeMarkerConfigurer;
     }
 
@@ -183,53 +181,6 @@ public class BaseSpringConfig implements WebMvcConfigurer, ConfigurableSecurity
     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
         Logger.println(BaseSpringConfig.class, "-------> configureDefaultServletHandling()");
         configurer.enable();
+        SpringAppInitializer.dtDiff("configureDefaultServletHandling DONE");
     }
-
-    /* TOTO JE POTREBNE PRE TOMCAT 7 pretoze tam nie je WebjetComponentSpringConfig
-    @Bean
-    public ViewResolver viewResolver() {
-        InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
-        viewResolver.setViewClass(JstlView.class);
-        viewResolver.setPrefix("/");
-        viewResolver.setSuffix(".jsp");
-
-        return viewResolver;
-    }
-    */
-
-    /*
-    @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
-        LocalContainerEntityManagerFactoryBean em
-                = new LocalContainerEntityManagerFactoryBean();
-
-        em.setPersistenceXmlLocation("classpath:META-INF/persistence-webjet.xml");
-        em.setDataSource(dataSource());
-
-        String scanPackages = Constants.getString("jpaAddPackages");
-        em.setPackagesToScan(scanPackages);
-
-        JpaVendorAdapter vendorAdapter = new EclipseLinkJpaVendorAdapter();
-        em.setJpaVendorAdapter(vendorAdapter);
-        Properties properties = new Properties();
-        properties.setProperty("eclipselink.weaving", "false");
-        em.setJpaProperties(properties);
-
-        return em;
-    }
-
-    @Bean
-    public DataSource dataSource(){
-        DataSource dataSource = DBPool.getInstance().getDataSource("iwcm");
-        return dataSource;
-    }
-
-    @Bean
-    public PlatformTransactionManager transactionManager(EntityManagerFactory emf){
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(emf);
-
-        return transactionManager;
-    }
-    */
 }

@@ -102,11 +102,10 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.amOnPage('/admin/');
     I.fillField("username", "user_sha512");
 
-    I.fillField("password", secret("N0v3H3sL0"));
+    I.fillField("password", secret(I.getDefaultPassword()+".sha512"));
     I.click("login-submit");
 
-    I.wait(5);
-    I.see("Vitajte, TestUser SHA512");
+    I.waitForText("Vitajte, TestUser SHA512", 30, ".overview__dashboard__title h2");
 
     I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
 
@@ -114,11 +113,10 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.amOnPage('/admin/');
     I.fillField("username", "user_bcrypt");
 
-    I.fillField("password", secret("N0v3H3sL0"));
+    I.fillField("password", secret(I.getDefaultPassword()+".bcrypt"));
     I.click("login-submit");
 
-    I.wait(5);
-    I.see("Vitajte, TestUser Bcrypto");
+    I.waitForText("Vitajte, TestUser Bcrypto", 30, ".overview__dashboard__title h2");
 
     I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
  });

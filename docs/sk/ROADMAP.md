@@ -60,6 +60,8 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Prieskumník - nastaviť vlastnosti priečinka (indexovanie, práva) podľa rodičovského (rekurzívne) pri prvom otvorení, ak priečinok nemá nastavenia v databáze.
 - [ ] +Pre pole typu `DataTableColumnType.JSON`, konkrétne `className = "dt-tree-page-null"` pridať možnosť definovať koreňový priečinok.
 - [ ] +Presunúť všetky `Converter` triedy ako napr. `DocDetailsNotNullConverter` do samostatného `package` kde nebudú iné entity aby bolo možné tento `Converter` použiť aj v projektoch kde je použitý samostatný `JPA`.
+- [ ] +Pridať možnosť nastaviť meno HTTP hlavičky pre `x-forwarded-for` a určiť, ktorá z IP adries sa použije (prvá VS posledná).
+- [ ] +Datatabuľky - pridať možnosť usporiadania podľa viacerých stĺpcov kliknutím s klávesou `SHIFT`.
 
 ## 2024
 
