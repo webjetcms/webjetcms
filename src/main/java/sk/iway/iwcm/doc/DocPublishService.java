@@ -50,16 +50,19 @@ public class DocPublishService {
 			//If publicableDocs is null, read pages to public -> could happen if Service was crated before Webjet was initialized
 			if(publicableDocs == null) refreshPagesToPublish();
 
-			List<DocBasic> stillWaitingPublishList = new ArrayList<>();
 			long now = Tools.getNow();
 
+			ArrayList<DocHistory> copyDHtoD = new ArrayList<>(); // specify which pForm-s to copy from documents_history to documents
+			ArrayList<DocDetails> removeAfterEndList = new ArrayList<>();
+
 			if (publicableDocs != null && publicableDocs.size() > 0) {
+				//use good old for loop to avoid ConcurrentModificationException
 				for (DocBasic pdoc : publicableDocs) {
 					if (pdoc instanceof DocHistory) {
 						DocHistory doc = (DocHistory) pdoc;
 						//Is ready to by published
 						if(Tools.isTrue(doc.getPublicable()) && (doc.getPublishStart() > 0) && (now >= doc.getPublishStart())) {
-							copyDHistory(doc, docDB);
+							copyDHtoD.add(doc);
 							continue;
 						}
 					}
@@ -68,18 +71,24 @@ public class DocPublishService {
 						DocDetails doc = (DocDetails) pdoc;
 						//Is ready to be disabled
 						if (doc.isPublicable()==false && doc.isDisableAfterEnd() && (doc.getPublishEnd()>0) && (now >= doc.getPublishEnd())) {
-							disableAfterEnd(doc);
+							removeAfterEndList.add(doc);
 							continue;
 						}
 					}
-
-					//Neither
-					//STILL WAITING -> not ready
-					stillWaitingPublishList.add(pdoc);
 				}
 
-				//SWAP lists
-				publicableDocs = stillWaitingPublishList;
+				//execute changes
+				for (DocHistory doc : copyDHtoD) {
+					copyDHistory(doc, docDB);
+				}
+				for (DocDetails doc : removeAfterEndList) {
+					disableAfterEnd(doc);
+				}
+
+				if (copyDHtoD.size()>0 || removeAfterEndList.size()>0) {
+					//Refresh list of pages to publish - because there can be page published which need to be depublished later
+					//refreshPagesToPublish();
+				}
 			}
 		}
 	}
@@ -230,13 +239,7 @@ public class DocPublishService {
 				GroupsDB groupsDB = GroupsDB.getInstance();
 				publicableDocsLocal = publicableDocsLocal.stream().filter(doc -> groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());
 
-				try {
-					if (publicableDocs == null) publicableDocs = new ArrayList<>();
-					else publicableDocs.clear();
-					publicableDocs.addAll(publicableDocsLocal);
-				} catch (Exception e) {
-					Logger.error(this, "Error while refreshing pages to publish", e);
-				}
+				publicableDocs = publicableDocsLocal;
 
 				dt.diff("done, size="+publicableDocs.size());
 			}

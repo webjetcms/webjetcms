@@ -77,12 +77,12 @@ async function setPublishPageDefault(webpageText, webpageTitle, I, DTE, docId) {
      I.waitForText(webpageText, 10);
 }
 
-Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii a nasledne vypublikuje @singlethread @current', async ({ I, DT, DTE, Document }) => {
+Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii a nasledne vypublikuje @singlethread', async ({ I, DT, DTE, Document }) => {
      const webpageTitle = "Test casoveho publikovania";
      const docId = 22956;
      const webpageText = `Test casoveho publikovania stranky ID:${docId}`;
-     const publishAfterMinutes = 3;
-     const keepPublishedMinutes = 10;
+     const publishAfterMinutes = 2;
+     const keepPublishedMinutes = 1;
 
      await setPublishPageDefault(webpageText, webpageTitle, I, DTE, docId);
 
@@ -140,7 +140,7 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
      I.dontSee(webpageTextPublish);
 
      await I.waitForTime(publishStartTime);
-     I.wait(5);
+     I.wait(10);
      I.amOnPage(publishableWebpageUrl);
      I.waitForText(webpageTextPublish, 10);
      I.dontSee(webpageText);
