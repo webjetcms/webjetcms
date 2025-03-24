@@ -252,9 +252,9 @@ Scenario('Overbooking', async ({ I, DT, DTE }) => {
     DT.waitForLoader();
     await DT.showColumn("Účel", "reservationDataTable");
     DT.filterContains("purpose", "autotest-overbooking");
-    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "", "", "120,00", `autotest-overbooking1-${randomNumber}`]);
-    DT.checkTableRow("reservationDataTable", 2, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "", "", "120,00", `autotest-overbooking2-${randomNumber}`]);
-    DT.checkTableRow("reservationDataTable", 3, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "", "", "120,00", `autotest-overbooking3-${randomNumber}`]);
+    DT.checkTableRow("reservationDataTable", 1, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "120,00", `autotest-overbooking1-${randomNumber}`]);
+    DT.checkTableRow("reservationDataTable", 2, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "120,00", `autotest-overbooking2-${randomNumber}`]);
+    DT.checkTableRow("reservationDataTable", 3, ["", "Tester", "Playwright", "tester@balat.sk", "Spa celodenné", getShiftedDate(1), "09:00", getShiftedDate(2), "19:00", "120,00", `autotest-overbooking3-${randomNumber}`]);
 });
 
 Scenario('Edit record', async ({ I, DT, DTE }) => {

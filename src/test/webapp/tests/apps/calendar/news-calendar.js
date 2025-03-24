@@ -1,4 +1,4 @@
-Feature('apps.news-calendar');
+Feature('apps.calendar.news-calendar');
 
 Before(({ I, login, DT }) => {
     login('admin');
@@ -32,7 +32,6 @@ Scenario('testovanie app - Kalendar news', async ({ I, DTE, DT, Apps }) => {
         expandGroupIds: 'true',
         perexGroup: '1032'
     };
-
 
     I.clickCss("#editorAppDTE_Field_groupIds button");
     I.waitForElement("#custom-modal-id", 10);

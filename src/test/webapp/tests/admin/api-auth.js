@@ -115,14 +115,14 @@ Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     let logonToken = letter+btoa("tester:"+I.getDefaultPassword());
     logonToken = logonToken.replace(/=/g, "|");
 
-    I.executeScript(function() {
+    I.executeScript((logonToken) => {
         $.ajax({
             url: "/admin/v9",
             headers: {
                 'wjlogontoken': logonToken
             }
         });
-    });
+    }, logonToken);
 
     //musime cakat kym dobehne ajax na prihlasenie
     I.wait(5);
