@@ -120,7 +120,7 @@ Scenario('logoff', ({ I }) => {
     I.logout();
 });
 
-Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps }) => {
+Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps, Document }) => {
     I.amOnPage("/apps/calendar/admin/");
     I.click(DT.btn.calendar_add_button);
     DTE.waitForEditor("calendarEventsDataTable");
