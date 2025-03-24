@@ -173,3 +173,7 @@ Scenario('Revert', ({ I, DT }) => {
     DT.filterContains("title", "autotest-event-" + randomNumber);
     DT.deleteAll("calendarEventsDataTable");
 });
+
+Scenario('logout', async ({I}) => {
+    I.logout();
+});

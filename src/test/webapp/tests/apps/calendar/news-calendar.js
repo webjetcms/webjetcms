@@ -31,7 +31,7 @@ Scenario('testovanie app - Kalendar news', async ({ I, DTE, Document, Apps }) =>
     const changedParams = {
         groupIds: '24',
         expandGroupIds: 'true',
-        perexGroup: '1095'
+        perexGroup: '1032'
     };
 
     I.clickCss("#editorAppDTE_Field_groupIds button");
