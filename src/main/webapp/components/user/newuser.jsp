@@ -149,14 +149,14 @@ float: left;
 		</p>
 		<p<%=isShow(show, "password")%>>
 			<stripes:label for="usrPassword" name="usr.password"><iwcm:text key="components.user.newuser.password"/>:</stripes:label>
-			<stripes:password class='<%=isReq(required, "password", "minLen3")%>' id="usrPassword" name="usr.password" size="20" maxlength="16" value='<%=(user != null) ? sk.iway.iwcm.common.UserTools.PASS_UNCHANGED : "" %>' />
+			<stripes:password class='<%=isReq(required, "password", "minLen3")%>' id="usrPassword" name="usr.password" size="20" maxlength="64" value='<%=(user != null) ? sk.iway.iwcm.common.UserTools.PASS_UNCHANGED : "" %>' />
 		</p>
 		<%
 			if (user == null) {
 		%>
 		<p<%=isShow(show, "password2")%>>
 			<label for="usrPassword2" name="password2"><iwcm:text key="components.user.newuser.password2"/>:</label>
-			<input type="password" class='<%=isReq(required, "password2", "minLen3")%>' autocomplete="off" id="usrPassword2" name="password2" size="20" maxlength="16" />
+			<input type="password" class='<%=isReq(required, "password2", "minLen3")%>' autocomplete="off" id="usrPassword2" name="password2" size="20" maxlength="64" />
 		</p>
 		<%
 			// len prihlaseny pouzivatel moze zadat stare heslo
@@ -164,7 +164,7 @@ float: left;
 		%>
 		<p>
 			<stripes:label for="usrOldPassword" name="usr.oldPassword"><iwcm:text key="components.user.newuser.oldPassword"/></stripes:label>
-			<stripes:password id="usrOldPassword" name="usr.oldPassword" size="20" maxlength="32"/>
+			<stripes:password id="usrOldPassword" name="usr.oldPassword" size="20" maxlength="64"/>
 		</p>
 		<%
 			}

@@ -116,11 +116,11 @@ Scenario('Domain test', ({I, DT, DTE, Document}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 });
 
-Scenario('logout', async ({I}) => {
+Scenario('logoff', ({ I }) => {
     I.logout();
 });
 
-Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps, Document }) => {
+Scenario('testovanie app - Kalendar', async ({ I, DTE, DT, Apps }) => {
     I.amOnPage("/apps/calendar/admin/");
     I.click(DT.btn.calendar_add_button);
     DTE.waitForEditor("calendarEventsDataTable");

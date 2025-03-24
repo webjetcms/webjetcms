@@ -1,4 +1,4 @@
-Feature('apps.news-calendar');
+Feature('apps.calendar.news-calendar');
 
 Before(({ I, login, DT }) => {
     login('admin');

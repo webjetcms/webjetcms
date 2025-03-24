@@ -294,8 +294,8 @@ async function openRegisterForm(I, DTE) {
     I.switchTo("iframe.cke_wysiwyg_frame");
     I.waitForElement("iframe.wj_component");
     I.switchTo("iframe.wj_component");
-    I.seeElement("div.inlineComponentButtons > a:nth-child(1)");
-    I.wait(2);
+    I.waitForElement("div.inlineComponentButtons > a:nth-child(1)", 10);
+    I.wait(1);
     I.clickCss("div.inlineComponentButtons > a:nth-child(1)");
     I.switchTo();
 

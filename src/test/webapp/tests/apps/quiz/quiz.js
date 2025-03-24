@@ -1,4 +1,4 @@
-Feature('apps.quiz');
+Feature('apps.quiz.quiz');
 
 var randomNumber;
 

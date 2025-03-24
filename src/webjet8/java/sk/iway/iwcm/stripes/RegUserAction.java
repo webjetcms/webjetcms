@@ -416,7 +416,7 @@ public class RegUserAction extends WebJETActionBean
 		{
 			db_conn = DBPool.getConnection();
 
-			ps = db_conn.prepareStatement("SELECT user_id, password FROM  users WHERE email=? AND is_admin="+DB.getBooleanSql(true)+" ORDER BY user_id ASC");
+			ps = db_conn.prepareStatement("SELECT user_id, password FROM  users WHERE email=? AND is_admin="+DB.getBooleanSql(true)+UsersDB.getDomainIdSqlWhere(true)+ " ORDER BY user_id ASC");
 			ps.setString(1, infoemail);
 			rs = ps.executeQuery();
 			if (rs.next())
@@ -655,8 +655,8 @@ public class RegUserAction extends WebJETActionBean
                 try
                 {
                     sk.iway.Password pass = new sk.iway.Password();
-					String passwordHashDB = (new SimpleQuery()).forString("SELECT password FROM users WHERE user_id = ?", this.usr.getUserId());
-					String passwordSaltDB = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE user_id = ?", this.usr.getUserId());
+					String passwordHashDB = (new SimpleQuery()).forString("SELECT password FROM users WHERE user_id = ?"+UsersDB.getDomainIdSqlWhere(true), this.usr.getUserId());
+					String passwordSaltDB = (new SimpleQuery()).forString("SELECT password_salt FROM users WHERE user_id = ?"+UsersDB.getDomainIdSqlWhere(true), this.usr.getUserId());
                     if (!this.usr.isInUserGroup(Constants.getInt("socialMediaUserGroupId",-1))) {
 						if (Tools.isEmpty(this.usr.getOldPassword())) {
 							errors.add("user.oldPassword", new SimpleError(prop.getText("components.user.newuser.wrong.oldPassword")));
@@ -759,7 +759,7 @@ public class RegUserAction extends WebJETActionBean
 
 			String sql = "SELECT user_id FROM  users WHERE login=?";
 			if (emailUnique) sql = "SELECT user_id FROM  users WHERE (login=? OR email=?)";
-			if (usr.getUserId()>0) sql +=" AND user_id<>?";
+			if (usr.getUserId()>0) sql +=" AND user_id<>?"+UsersDB.getDomainIdSqlWhere(true);
 			ps = db_conn.prepareStatement(sql);
 			ps.setString(psCounter++, usr.getLogin());
 			if (emailUnique) ps.setString(psCounter++, usr.getEmail());

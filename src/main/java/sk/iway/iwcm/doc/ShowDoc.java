@@ -485,7 +485,7 @@ private static String combineCss(String cssStyle)
                 //aby sme sa nezacyklili
                 request.setAttribute("doShowdocActionCycle", doShowdocAction);
 
-                request.getRequestDispatcher(doShowdocAction).forward(request, response);
+                request.getRequestDispatcher(Tools.replace(doShowdocAction, ".do", ".struts")).forward(request, response);
                 return;
             }
         }

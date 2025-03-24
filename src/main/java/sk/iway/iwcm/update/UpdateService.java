@@ -373,6 +373,7 @@ public class UpdateService {
 		if ("universal_component".equals(moduleKey)) return true;
 		if ("cta".equals(moduleKey)) return true;
 		if ("webjet9".equals(moduleKey)) return true;
+		if ("admin".equals(moduleKey)) return true;
 
 		//fix renames in /apps folder
 		if ("enumeration".equals(moduleKey)) moduleKey = "enumerations";
@@ -388,8 +389,13 @@ public class UpdateService {
 		if ("qa".equals(moduleKey)) moduleKey = "menuQa";
 		if ("sharing_icons".equals(moduleKey)) moduleKey = "sharedIcons";
 
+		if ("eshop".equals(moduleKey)) moduleKey = "basket";
+		if ("news-calendar".equals(moduleKey)) moduleKey = "calendar";
+
 		//test if module is available
-		if (modules.get("cmp_"+directoryName) != null || modules.get("cmp_"+moduleKey) != null || modules.get(moduleKey) != null) return true;
+		if (modules.get("cmp_"+directoryName) != null || modules.get("cmp_"+Tools.replace(directoryName, "-", "_")) != null ||
+			modules.get("cmp_"+moduleKey) != null || modules.get("cmp_"+Tools.replace(moduleKey, "-", "_")) != null ||
+			modules.get(moduleKey) != null) return true;
 		return false;
 	}
 

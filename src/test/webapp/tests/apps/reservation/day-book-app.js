@@ -74,7 +74,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
     checkReservation(I, DT, 1, [
         "", "Tester", "Playwright", "tester@balat.sk",
         "Spa celodenné", "01.01.2045", "14:00", "07.01.2045",
-        "10:30", "", "", "760,00", "Schválená" ]);
+        "10:30", "760,00", "Schválená" ]);
 
     clickDate(I, 2045, 1, 5);
     clickDate(I, 2045, 1, 11);
@@ -84,7 +84,7 @@ Scenario('Check reservation TABLE + logic', async ({I, DT}) => {
     checkReservation(I, DT, 2, [
         "", "Tester", "Playwright", "tester@balat.sk",
         "Spa celodenné", "05.01.2045", "14:00", "11.01.2045",
-        "10:30", "", "", "720,00", "Schválená"
+        "10:30", "720,00", "Schválená"
     ]);
 
     checkCheckOutOnly(I, 2045, 1, 5);
@@ -189,7 +189,7 @@ Scenario('Verify discount on user in discount group 40 percent', ({ I, DT }) => 
     checkReservation(I, DT, 3, [
         "", "Tester_L2", "Playwright", "tester3@balat.sk",
         "Spa celodenné", "10.12.2030", "14:00", "13.12.2030",
-         "10:30", "", "", "216,00", "Schválená"
+         "10:30", "216,00", "Schválená"
     ]);
 });
 
@@ -217,7 +217,7 @@ Scenario('Verify reservation creation and price validation based on user type an
     checkReservation(I, DT, 4, [
         "", `autotest-${randomNumber}`, "Playwright", "tester@balat.sk",
          "Spa celodenné", "24.12.2030", "14:00", "25.12.2030",
-         "10:30", "", "", "120,00", "Schválená"
+         "10:30", "120,00", "Schválená"
     ]);
 });
 

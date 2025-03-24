@@ -16,7 +16,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.ShowDoc;
 
 /**
- * It take unknow Action and change path postfix from .doc to .struts, because we probably allready delete maping from xml struts confing file and replace it with Spring mapping.
+ * It take unknow Action and change path postfix from .do to .struts, because we probably allready delete maping from xml struts confing file and replace it with Spring mapping.
  * Spring mapping use .struts postfix because .doc postrfix path could not be catched in Spring.
  */
 public class UnknownAction extends Action {

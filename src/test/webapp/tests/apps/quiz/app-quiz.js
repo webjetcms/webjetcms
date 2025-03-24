@@ -1,4 +1,4 @@
-Feature('apps.app-quiz');
+Feature('apps.quiz.app-quiz');
 
 Before(({ I, login }) => {
     login('admin');
@@ -28,7 +28,7 @@ Scenario('testovanie app - Dotazniky' , async ({ I, DTE, Apps }) => {
     I.closeOtherTabs();
 
     Apps.openAppEditor();
-    
+
     const changedParams = {
         'quizId' : '2',
         'showAllAnswers' : 'true'

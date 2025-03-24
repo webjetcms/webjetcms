@@ -45,9 +45,6 @@ import sk.iway.iwcm.system.dbpool.WebJetHikariDataSource;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
-import static sk.iway.iwcm.Tools.*;
-
-
 /**
  *  Database pooling s pouzitim DBCP
  *
@@ -115,8 +112,6 @@ public class DBPool
 		int initialSize;
 		int minActive;
 		int maxActive;
-
-		String autoCommit = "false";
 
 		int removeAbandonedTimeout;
 
@@ -195,8 +190,6 @@ public class DBPool
 							initialSize = getIntValue(XmlUtils.getFirstChildValue(n, "initialConnections"), initialSize);
 							minActive = getIntValue(XmlUtils.getFirstChildValue(n, "minimumSize"), minActive);
 							maxActive = getIntValue(XmlUtils.getFirstChildValue(n, "maximumSize"), maxActive);
-
-							autoCommit = getStringValue(XmlUtils.getFirstChildValue(n, "autoCommit"), autoCommit);
 
 							removeAbandonedTimeout = getIntValue(XmlUtils.getFirstChildValue(n, "connectionTimeout"), removeAbandonedTimeout);
 
@@ -301,7 +294,6 @@ public class DBPool
 								source.setConnectionProperty("SetBigStringTryClob", "true");
 								Logger.println(DBPool.class, "HikariCP SetBigStringTryClob=" + true);
 							}
-
 
 							//okrem Oracle mozeme robit takyto validation query
 							ds.setPreferredTestQuery("SELECT 1");

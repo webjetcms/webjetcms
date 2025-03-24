@@ -161,7 +161,8 @@ Scenario('Optional fields - yellow template test', async ({ I, DT, DTE }) => {
 
 async function checkOptionalFields(I, DTE, DT, fields, pageUrl, showColumns) {
     if (pageUrl != null) I.amOnPage(pageUrl);
-    const columnLabelSelector = "#datatableInit_wrapper .dt-scroll-head .dt-column-title";
+    const columnLabelSelector = "#datatableInit_wrapper tr > th > span.dt-column-title";
+
     if (showColumns) {
         for (const field of fields) {
             await DT.showColumn(field);

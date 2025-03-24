@@ -50,16 +50,19 @@ public class DocPublishService {
 			//If publicableDocs is null, read pages to public -> could happen if Service was crated before Webjet was initialized
 			if(publicableDocs == null) refreshPagesToPublish();
 
-			List<DocBasic> stillWaitingPublishList = new ArrayList<>();
 			long now = Tools.getNow();
 
+			ArrayList<DocHistory> copyDHtoD = new ArrayList<>(); // specify which pForm-s to copy from documents_history to documents
+			ArrayList<DocDetails> removeAfterEndList = new ArrayList<>();
+
 			if (publicableDocs != null && publicableDocs.size() > 0) {
+				//use good old for loop to avoid ConcurrentModificationException
 				for (DocBasic pdoc : publicableDocs) {
 					if (pdoc instanceof DocHistory) {
 						DocHistory doc = (DocHistory) pdoc;
 						//Is ready to by published
 						if(Tools.isTrue(doc.getPublicable()) && (doc.getPublishStart() > 0) && (now >= doc.getPublishStart())) {
-							copyDHistory(doc, docDB);
+							copyDHtoD.add(doc);
 							continue;
 						}
 					}
@@ -68,18 +71,21 @@ public class DocPublishService {
 						DocDetails doc = (DocDetails) pdoc;
 						//Is ready to be disabled
 						if (doc.isPublicable()==false && doc.isDisableAfterEnd() && (doc.getPublishEnd()>0) && (now >= doc.getPublishEnd())) {
-							disableAfterEnd(doc);
+							removeAfterEndList.add(doc);
 							continue;
 						}
 					}
-
-					//Neither
-					//STILL WAITING -> not ready
-					stillWaitingPublishList.add(pdoc);
 				}
 
-				//SWAP lists
-				publicableDocs = stillWaitingPublishList;
+				//execute changes
+				for (DocHistory doc : copyDHtoD) {
+					copyDHistory(doc, docDB);
+				}
+				for (DocDetails doc : removeAfterEndList) {
+					disableAfterEnd(doc);
+				}
+
+				//publicableDocs is refreshed in DocDB.updateInternalCache call
 			}
 		}
 	}
@@ -209,28 +215,31 @@ public class DocPublishService {
 	 * Read pages waiting for publishing or to be disabled
 	 */
 	public void refreshPagesToPublish() {
-		if(InitServlet.isWebjetInitialized() == true && dhr != null && ddr != null) {
+		if(InitServlet.isWebjetInitialized() == true) {
 			DebugTimer dt = new DebugTimer("readPagesToPublic");
 
 			prepareRepositories();
 
-			//Clear list
-			List<DocBasic> publicableDocsLocal = new ArrayList<>();
+			if (dhr != null && ddr != null) {
 
-			//Get all pages that are publicable (publicable = true) and are not awaiting to approve (awaitingApprove = null or awaitingApprove = "")
-			List<DocHistory> publicableHistoryDocs = dhr.getPublicableThatAreNotAwaitingToApprove().orElse(new ArrayList<>());
-			publicableDocsLocal.addAll( publicableHistoryDocs );
+				//Clear list
+				List<DocBasic> publicableDocsLocal = new ArrayList<>();
 
-			//Add pages where disable_after_end = true
-			publicableDocsLocal.addAll( ddr.findAllByDisableAfterEndTrue() );
+				//Get all pages that are publicable (publicable = true) and are not awaiting to approve (awaitingApprove = null or awaitingApprove = "")
+				List<DocHistory> publicableHistoryDocs = dhr.getPublicableThatAreNotAwaitingToApprove().orElse(new ArrayList<>());
+				publicableDocsLocal.addAll( publicableHistoryDocs );
 
-			//filter pages in trash - boolean isInTrash = groupsDB.isInTrash(docDetails.getGroupId());
-			GroupsDB groupsDB = GroupsDB.getInstance();
-			publicableDocsLocal = publicableDocsLocal.stream().filter(doc -> groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());
+				//Add pages where disable_after_end = true
+				publicableDocsLocal.addAll( ddr.findAllByDisableAfterEndTrue() );
 
-			publicableDocs = publicableDocsLocal;
+				//filter pages in trash - boolean isInTrash = groupsDB.isInTrash(docDetails.getGroupId());
+				GroupsDB groupsDB = GroupsDB.getInstance();
+				publicableDocsLocal = publicableDocsLocal.stream().filter(doc -> groupsDB.isInTrash(doc.getGroupId())==false).collect(Collectors.toList());
 
-			dt.diff("done");
+				publicableDocs = publicableDocsLocal;
+
+				dt.diff("done, size="+publicableDocs.size());
+			}
 		}
 	}
 
