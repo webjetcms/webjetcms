@@ -25,7 +25,8 @@ Knižnica [datatables.net](http://datatables.net) je pokročilá tabuľka s napo
   - [Export/import](#exportimport)
   - [API volania](#api-volania)
   - [Ukážky kódu](#ukážky-kódu)
-    - [Počúvanie udalosti obnovenia tabuľky:](#počúvanie-udalosti-obnovenia-tabuľky)
+    - [Počúvanie udalosti obnovenia tabuľky](#počúvanie-udalosti-obnovenia-tabuľky)
+    - [Zmena hodnôt výberového poľa](#zmena-hodnôt-výberového-poľa)
 
 <!-- /code_chunk_output -->
 
@@ -163,14 +164,14 @@ Minimálna konfigurácia:
 - ```lastExportColumnName``` ak je zadané zobrazí v exportnom dialógu možnosť exportovať zatiaľ neexportované údaje (používa sa vo formulároch). Hodnota reprezentuje meno stĺpca, ktorý sa pridáva ako ```NULL``` podmienka do výberu dát (je potrebné korektne implementovať v REST službe).
 - ```byIdExportColumnName``` ak je zadané v exportnom dialógu povolí export podľa zvolených riadkov. Hodnota je meno stĺpca v databáze s ID hodnotou (typicky id, používa sa vo formulároch). Filtrovanie je potrebné implementovať ako ```predicates.add(root.get("id").in(idsList));``` v REST službe.
 - ```editorButtons``` pole tlačidiel, ktoré sa zobrazia v editore. Príklad ```editorButtons: [ {title: "Uložiť", action: function() { this.submit(); } }, { title: ...} ]```. Využíva API pre Datatables Editor.
-- ```createButtons``` pole tlačidiel pre pridanie nového záznamu, formát rovnaký ako pre `editorButtons`.
+- ```createButtons``` pole tlačidiel pre pridanie nového záznamu, formát rovnaký ako pre ```editorButtons```.
 - ```keyboardSave {boolean}``` - nastavením na hodnotu ```false``` deaktivujete možnosť uložiť záznam v editore klávesovou skratkou ```CTRL+S/CMS+S```.
 - ```stateSave {boolean}``` - nastavením na hodnotu ```false``` deaktivujete možnosť pamätania si poradia stĺpcov a usporiadania tabuľky v prehliadači.
 - ```customFieldsUpdateColumns {boolean}``` - nastavením na hodnotu ```true``` sa pri získaní [voliteľných polí](../datatables-editor/customfields.md) aktualizujú aj názvy stĺpcov v tabuľke a v nastavení zobrazených stĺpcov (predvolene pri hodnote ```false``` sa názvy voliteľných polia aktualizujú len v editore).
 - `customFieldsUpdateColumnsPreserveVisibility {boolean}` - nastavením na hodnotu `true` sa pre používateľa zachová nastavenie zobrazenia stĺpcov pre režim `customFieldsUpdateColumns`. Je možné použiť len v prípade, kedy pre datatabuľku nie sú menené stĺpce počas zobrazenia. Napr. v sekcii Prekladové kľúče sa dáta nemenia, je možné nastaviť na `true`, ale v sekcii Číselníky sa menia aj stĺpce pri zmene číselníka, tam táto možnosť nie je použiteľná.
 - ```autoHeight {boolean}``` - predvolene tabuľka počíta svoju výšku aby maximálne využila priestor okna. Nastavením na hodnotu ```false``` bude mať tabuľka výšku podľa obsahu (počtu riadkov).
 - ```editorLocking {boolean}``` - predvolene tabuľka volá službu notifikácie pri editácii rovnakého záznamu viacerými používateľmi, ak je toto neželané nastavte na hodnotu `false`.
-- ```updateEditorAfterSave {boolean}``` - nastavením na `true` sa aktualizuje obsah editora po uložení dát (ak editor zostáva otvorený).
+- ```updateEditorAfterSave {boolean}``` - nastavením na ```true``` sa aktualizuje obsah editora po uložení dát (ak editor zostáva otvorený).
 
 ```javascript
 let columns = [
@@ -750,7 +751,7 @@ TABLE.calculateAutoPageLength(updateLengthSelect)
 
 ## Ukážky kódu
 
-### Počúvanie udalosti obnovenia tabuľky:
+### Počúvanie udalosti obnovenia tabuľky
 
 Kliknutie na tlačítko ```reload``` vyvolá udalosť ```WJ.DTE.forceReload``` na ktorý môžete počúvať a napr. aktualizovať stromovú štruktúru:
 
@@ -759,4 +760,34 @@ window.addEventListener('WJ.DTE.forceReload', (e) => {
     //console.log("FORCE RELOAD listener, e=", e);
     $('#SomStromcek').jstree(true).refresh();
 }, false);
+```
+
+### Zmena hodnôt výberového poľa
+
+Ak potrebujete dynamicky meniť možnosti výberového poľa `select` je potrebné okrem zmeny `option` objektov nastaviť aj atribút `_editor_val`, ktorý sa použije ako zvolená hodnota. Príklad je pre vnorenú datatabuľku, kde bolo potrebné na základe hodnoty načítať možnosti do výberového poľa.
+
+```javascript
+var documentItemsEventsBinded = false;
+window.addEventListener("WJ.DTE.opened", function(e) {
+    if ("datatableFieldDTE_Field_documentItems"===e.detail.id) {
+        let select = document.getElementById("DTE_Field_adressId");
+        //reset options
+        select.options.length=0
+        $.ajax({
+            url: "/admin/rest/apps/appname/list/" + $("#DTE_Field_customerId").val(),
+            success: function(data) {
+                if (data) {
+                    $.each(data, function (i, item) {
+                        let option = new Option(item.label, item.value);
+                        //this value is important, DT use this value instead of option.value
+                        option._editor_val = item.value;
+                        select.add(option);
+                    });
+                    //refresh selectpicker
+                    $(select).selectpicker('refresh');
+                }
+            }
+        });
+    }
+});
 ```
