@@ -92,6 +92,8 @@ Iné zmeny:
 - GDPR - opravené zobrazenie karty Čistenie databázy pri použití `Oracle/PostgreSQL` databázy (#54273-57).
 - Archív súborov - opravené zobrazenie ikon v dialógu dátumu a času (#54273-57).
 - Bezpečnosť - aktualizovaná knižnica `Swagger UI` na verziu `5.20.0`, doplnené výnimky v `dependency-check-suppressions.xml`.
+- Aktualizácia - doplnené mazanie nepotrebných súborov pri aktualizácii rozbalenej verzie (#57657-4).
+- Multiweb - doplnená kontrola `ID` domény pri registrácii návštevníka web sídla (#57657-4).
 
 ## 2025.0
 
