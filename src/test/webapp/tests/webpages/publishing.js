@@ -140,7 +140,7 @@ Scenario('overit ze s casovym publikovanim sa stranka ulozi a zobrazi v historii
      I.dontSee(webpageTextPublish);
 
      await I.waitForTime(publishStartTime);
-     I.wait(10);
+     I.wait(5);
      I.amOnPage(publishableWebpageUrl);
      I.waitForText(webpageTextPublish, 10);
      I.dontSee(webpageText);

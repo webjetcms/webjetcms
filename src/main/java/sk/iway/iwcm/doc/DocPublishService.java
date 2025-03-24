@@ -85,10 +85,7 @@ public class DocPublishService {
 					disableAfterEnd(doc);
 				}
 
-				if (copyDHtoD.size()>0 || removeAfterEndList.size()>0) {
-					//Refresh list of pages to publish - because there can be page published which need to be depublished later
-					//refreshPagesToPublish();
-				}
+				//publicableDocs is refreshed in DocDB.updateInternalCache call
 			}
 		}
 	}
