@@ -119,7 +119,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.waitForText("Vitajte, TestUser Bcrypto", 30, ".overview__dashboard__title h2");
 
     I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
- });
+});
 
  function changePasswordHeslo(I, DT, DTE) {
     I.logout();

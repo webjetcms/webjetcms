@@ -98,13 +98,14 @@ module.exports = {
         I.waitForElement(".cke_wysiwyg_frame.cke_reset");
         I.wait(1);
         I.switchTo(".cke_wysiwyg_frame.cke_reset");
-        I.waitForElement("iframe.wj_component");
+        I.waitForElement("iframe.wj_component", 10);
         I.wait(1);
 
-        within({frame: [".cke_wysiwyg_frame.cke_reset", "iframe.wj_component"]}, () => {
-            I.click("a.inlineComponentButton.cke_button");
-        });
-        I.waitForInvisible('Čakajte prosím');
+        I.switchTo(locate("iframe.wj_component").first());
+        I.waitForElement("a.inlineComponentButton.cke_button", 10);
+        I.clickCss("a.inlineComponentButton.cke_button");
+        I.switchTo();
+        I.waitForInvisible('Čakajte prosím', 20);
         I.switchTo('.cke_dialog_ui_iframe');
         I.wait(1);
         I.switchTo('#editorComponent');
