@@ -16,6 +16,19 @@
     });
 </script>
 
+<style type="text/css">
+    .row-no-padding [class*=col]:nth-child(2) {
+        padding-right: 0 !important;
+    }
+    .amchart-header {
+        padding-left: 10px;
+    }
+    .row-no-padding [class*=col]:nth-child(3) .monitoring-table tr td:nth-child(2),
+    .row-no-padding [class*=col]:nth-child(4) .monitoring-table tr td:nth-child(2) {
+        text-align: right;
+    }
+</style>
+
 <div id="server-monitoring-app">
     <webjet-server-monitoring :iscomplex="true"></webjet-server-monitoring>
 </div>
@@ -40,8 +53,10 @@
         vueMonitoringApp.config.globalProperties.$serverIP = '[[#{components.monitoring.server_ip}]]';
         vueMonitoringApp.config.globalProperties.$serverContry = '[[#{components.monitoring.server_contry}]]';
         vueMonitoringApp.config.globalProperties.$serverLanguage = '[[#{components.monitoring.server_language}]]';
+        vueMonitoringApp.config.globalProperties.$dbTotal = '[[#{components.monitoring.db_total}]]';
         vueMonitoringApp.config.globalProperties.$dbActive = '[[#{components.monitoring.db_active}]]';
         vueMonitoringApp.config.globalProperties.$dbIdle = '[[#{components.monitoring.db_idle}]]';
+        vueMonitoringApp.config.globalProperties.$dbWaiting = '[[#{components.monitoring.db_waiting}]]';
         vueMonitoringApp.config.globalProperties.$cacheItems = '[[#{components.monitoring.cache_items}]]';
         vueMonitoringApp.config.globalProperties.$sessionsTotal = '[[#{components.monitoring.sessions_total}]]';
         vueMonitoringApp.config.globalProperties.$swJavaVendor = '[[#{components.monitoring.sw_java_vendor}]]';
@@ -63,6 +78,15 @@
         vueMonitoringApp.config.globalProperties.$uptimeSeconds= '[[#{components.monitor.monitoring.basic.server.uptime.date.sec}]]';
 
         vueMonitoringApp.config.globalProperties.$licenseExpirationDate = '[[#{components.monitoring.license_expiration_date}]]';
+
+        vueMonitoringApp.config.globalProperties.$clusterNodeName = '[[#{components.monitoring.node_name}]]';
+        vueMonitoringApp.config.globalProperties.$memTotal = '[[#{components.monitoring.mem_total}]]';
+        vueMonitoringApp.config.globalProperties.$memFree = '[[#{components.monitoring.mem_free}]]';
+        vueMonitoringApp.config.globalProperties.$memUsed = '[[#{components.monitoring.memUsed}]]';
+        vueMonitoringApp.config.globalProperties.$memMax = '[[#{components.monitoring.memMax}]]';
+
+        vueMonitoringApp.config.globalProperties.$dbPool = '[[#{components.monitoring.dbPool}]]';
+        vueMonitoringApp.config.globalProperties.$memInfo = '[[#{components.monitoring.memInfo}]]';
 
         window.VueTools.setDefaultObjects(vueMonitoringApp);
         window.vueMonitoringApp = vueMonitoringApp;

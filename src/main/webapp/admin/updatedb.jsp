@@ -59,6 +59,7 @@ if (query!=null && query.trim().length()>0)
 				if (Constants.DB_TYPE == Constants.DB_ORACLE)
 				{
 					sql = Tools.replace(sql, "|", ";");
+					sql = Tools.replace(sql, ";;", "|");
 					 if (sql.indexOf("TRIGGER")!=-1)
 					   {
 					   	sql = sql.replace('\n', ' ');

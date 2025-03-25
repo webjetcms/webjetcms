@@ -42,17 +42,19 @@ public class JpaSessionCustomizer implements SessionCustomizer {
             }
         }
 
-        /**
-         * Replace default EclipseLink.TableSequence with our WJGenSequence using PkeyGenerator
-         */
-        @SuppressWarnings("unchecked")
-        Set<Map.Entry<String, Object>> entrySet = session.getLogin().getDatasourcePlatform().getSequences().entrySet();
-        for (Map.Entry<String, Object> entry : entrySet) {
-            Logger.debug(getClass(), "sequence=" + entry.getKey() + " " + entry.getValue().getClass());
+        if (session.getLogin().getDatasourcePlatform().getSequences() != null) {
+            /**
+             * Replace default EclipseLink.TableSequence with our WJGenSequence using PkeyGenerator
+             */
+            @SuppressWarnings("unchecked")
+            Set<Map.Entry<String, Object>> entrySet = session.getLogin().getDatasourcePlatform().getSequences().entrySet();
+            for (Map.Entry<String, Object> entry : entrySet) {
+                Logger.debug(getClass(), "sequence=" + entry.getKey() + " " + entry.getValue().getClass());
 
-            if (entry.getValue() instanceof org.eclipse.persistence.sequencing.TableSequence) {
-                WJGenSequence wjgen = new WJGenSequence(entry.getKey());
-                session.getLogin().addSequence(wjgen);
+                if (entry.getValue() instanceof org.eclipse.persistence.sequencing.TableSequence) {
+                    WJGenSequence wjgen = new WJGenSequence(entry.getKey());
+                    session.getLogin().addSequence(wjgen);
+                }
             }
         }
     }

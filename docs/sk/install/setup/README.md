@@ -30,11 +30,11 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
     <datasource>
       <dbname>iwcm</dbname>
-      <driver>com.mysql.jdbc.Driver</driver>
-      <url>jdbc:mysql://MENO-SQL-SERVERA/MENO-SCHEMY</url>
+      <driver>org.mariadb.jdbc.Driver</driver>
+      <url>jdbc:mariadb://MENO-SQL-SERVERA/MENO-SCHEMY</url>
       <username>DB-LOGIN</username>
       <password>DB-HESLO</password>
   </datasource>
@@ -46,7 +46,7 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
   <datasource>
       <dbname>iwcm</dbname>
       <driver>net.sourceforge.jtds.jdbc.Driver</driver>
@@ -62,7 +62,7 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
   <datasource>
       <dbname>iwcm</dbname>
       <driver>oracle.jdbc.OracleDriver</driver>
@@ -78,7 +78,7 @@ Pre inštalácie produktov ako je `NET, LMS, DSK` je na serveri potrebné povoli
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 
-<poolman><management-mode>local</management-mode>
+<poolman>
     <datasource>
         <dbname>iwcm</dbname>
         <driver>org.postgresql.Driver</driver>
@@ -99,12 +99,41 @@ Podporované sú nasledovné XML elementy:
 
 Voliteľne je možné nastaviť:
 
-- `initialConnections` - predvolený počet otvorených databázových spojení (predvolene 0)
 - `minimumSize` - minimálny počet neustále otvorených databázových spojení (predvolene 0)
 - `maximumSize` - maximálny počet otvorených databázových spojení (predvolene 50)
-- `connectionTimeout` - počet sekúnd, kedy je spojenie považované za neuzavreté (predvolene 300)
-- `autoCommit` - ak je nastavené na true nastaví sa `connection.setAutoCommit(true);` (predvolene `false`)
+- `autoCommit` - ak je nastavené na `true` nastaví sa `connection.setAutoCommit(true);`, po nastavení na `false` je potrebné transakciu ukončiť programovo (predvolene `false`)
+- `readOnly` - nastavte na `true` ak je databázové spojenie určené len na čítanie dát (predvolene `false`)
+- `transactionIsolation` - nastavenie [izolácie transakcií](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#infrequently-used) (predvolene prázdne)
+- `connectionTimeout` - počet sekúnd, kedy je spojenie považované za neuzavreté (predvolene 300), nastavuje hodnotu `LeakDetectionThreshold`
 - `testQuery` - testovací SQL výraz pre overenie funkčnosti spojenia. Pre `JDBC` ovládače v4 sa používa volanie `isValid()`, pre staršie ovládače je potrebné nastaviť. Hodnota `true` nastaví predvolený výraz `SELECT 1` (použije sa automaticky pre `jtds` ovládač). Je ale možné nastaviť váš vlastný SQL výraz.
+- `hikariProperties` - umožní nastaviť ďalšie vlastnosti [HikariCP](https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#gear-configuration-knobs-baby) vo formáte `properties`
+
+Príklad nastavenia špecifických vlastností:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<poolman>
+    <datasource>
+        <dbname>iwcm</dbname>
+        <driver>org.mariadb.jdbc.Driver</driver>
+
+        <url>jdbc:mariadb://MENO-SQL-SERVERA/MENO-SCHEMY</url>
+
+        <username>root</username>
+        <password>heslo</password>
+
+        <initialConnections>0</initialConnections>
+        <minimumSize>0</minimumSize>
+        <maximumSize>60</maximumSize>
+        <hikariProperties>
+            maxLifetime=600000
+            connectionTestQuery=SELECT 100
+            connectionInitSql=SELECT 500
+        </hikariProperties>
+    </datasource>
+</poolman>
+```
 
 ## Naplnenie DB schémy
 

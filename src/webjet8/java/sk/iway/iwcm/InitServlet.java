@@ -755,7 +755,7 @@ public class InitServlet extends HttpServlet
 
 					Logger.println(InitServlet.class, "get hostname");
 					String serverName = InetAddress.getLocalHost().getHostName();
-					Logger.println(InitServlet.class, "get hostname done");
+					Logger.println(InitServlet.class, "get hostname done, serverName="+serverName);
 					emailBody.append("ServerName: ").append(serverName).append('\n');
 					//emailBody += "ServerIP: " + InetAddress.getLocalHost().getHostAddress() + "\n";
 
