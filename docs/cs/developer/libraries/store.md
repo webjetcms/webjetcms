@@ -1,14 +1,14 @@
-# `Store` Třída rozšíření úložiště `localStorage, sessionStorage`
+# `Store` rozšiřující třída Storage `localStorage, sessionStorage`
 
-Třída `Store` upravuje funkčnost nativního [Úložiště](https://developer.mozilla.org/en-US/docs/Web/API/Storage). *[Přesměruje na oficiální dokumentaci]*
+Třída `Store` upravuje funkcionalitu nativního [Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage). *[Přesměruje na oficiální dokumentaci]*
 
-### Popis operace:
+### Popis fungování:
 
-Jedná se o wrapper, který umožňuje přímé ukládání do adresáře `Storage` údaje různých typů `[number, string, object, array, boolean, null, undefined, ...]` s ošetřením proti nechtěnému vypadnutí aplikace při nesprávném zadání. Vstupy jsou automaticky převedeny na `JSON`.
+Jedná se o wrapper, který umožňuje přímo ukládat do `Storage` data různých typů `[number, string, object, array, boolean, null, undefined, ...]` s ošetřením proti nežádoucímu padnutí aplikace při nesprávném vstupu. Vstupy jsou automaticky konvertovány do formátu `JSON`.
 
-!>**Varování:** Není možné ukládat `HTMLElementy`, `NodeListy` a `funkcie`.
+!>**Upozornění:** Nelze ukládat `HTMLElementy`, `NodeListy` a `funkcie`.
 
-V systému **WebJET** se globálně nepoužívá. Instanci této třídy byste měli vždy vytvořit v rámci nové třídy nebo knihovny.
+V systému **WebJET** se nepoužívá globálně. Je třeba si instanci této třídu vždy vytvořit v rámci své nové třídy nebo knihovny.
 
 ## Vytvoření instance:
 
@@ -27,29 +27,31 @@ store.setItem('key', 'value');
 const valueVar = store.getItem('key');
 ```
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
 | Metody | Poznámka | Gettery |
 | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------- |
-| [setLocalStorage()](#setlocalstorage)     | [Oficiální dokumentace - localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)     | [skladování](#skladování) |
+| [setLocalStorage()](#setlocalstorage)     | [Oficiální dokumentace - localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)     | [storage](#storage) |
 | [setSessionStorage()](#setsessionstorage) | [Oficiální dokumentace - sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) |
 | [getItem()](#getitem)                     |
 | [setItem()](#setitem)                     |
 | [removeItem()](#removeitem)               |
-| [clear()](#přehledně)                         |
-| [klíč()](#klíč)                             |
-| [getKeys()](#getkeys)                     |
+
+ | [clear()](#clear)                         |
+| [key()](#key)                             |
+
+ | [getKeys()](#getkeys)                     |
 | [itemExist()](#itemexist)                 |
 
-### Podrobný popis funkcí
+### Detailní popis funkcí
 
 #### getItem()
 
 [getItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem). *[Přesměruje na oficiální dokumentaci]*
 
-**Popis rozšíření:** Výstup této metody bude automaticky převeden z formátu `JSON` do původního vstupního formátu, takže výstupy není třeba znovu zadávat do původního formátu. Pokud zadaný klíč neexistuje nebo pod zadaným klíčem nejsou žádná data, metoda vrátí hodnotu `null`
+**Popis rozšíření:** Výstup této metody bude automaticky konvertován z formátu `JSON` do původního vstupního formátu, takže odpadá nutnost výstupy přetypovat zpět do původní formy. Pokud neexistuje zadaný klíč nebo pod zadaným klíčem neexistují data, metoda vrátí `null`
 
 ***
 
@@ -57,7 +59,7 @@ const valueVar = store.getItem('key');
 
 [setItem()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem). *[Přesměruje na oficiální dokumentaci]*
 
-**Popis rozšíření:** Vstupní data této metody se automaticky převedou do formátu `JSON`. Pokud je vstup neplatný, uložená hodnota bude `null`
+**Popis rozšíření:** Vstupní data této metody budou automaticky konvertována do formátu `JSON`. Pokud je vstup nevalidní, bude uložena hodnota `null`
 
 ***
 
@@ -73,15 +75,15 @@ const valueVar = store.getItem('key');
 
 ***
 
-#### klíč()
+#### key()
 
-[klíč()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/key). *[Přesměruje na oficiální dokumentaci]*
+[key()](https://developer.mozilla.org/en-US/docs/Web/API/Storage/key). *[Přesměruje na oficiální dokumentaci]*
 
 ***
 
 #### setLocalStorage()
 
-Nastaví typ úložiště na **localStorage**.
+Nastaví typ Storage na **localStorage**.
 
 ```javascript
 /**
@@ -96,7 +98,7 @@ setLocalStorage();
 
 #### setSessionStorage()
 
-Nastaví typ úložiště na **sessionStorage**.
+Nastaví typ Storage na **sessionStorage**.
 
 ```javascript
 /**
@@ -111,7 +113,7 @@ setSessionStorage();
 
 #### getKeys()
 
-Vrací seznam (pole) všech klíčů v aktuálním Úložišti.
+Vrátí seznam (array), všech klíčů v aktuálním Storage.
 
 ```javascript
 /**
@@ -126,7 +128,7 @@ getKeys();
 
 #### itemExist()
 
-Ověří, zda zadaný klíč existuje v úložišti.
+Ověří, zda v Storage existuje zadaný klíč.
 
 ```javascript
 /**
@@ -140,7 +142,7 @@ itemExist(key);
 
 ***
 
-#### skladování
+#### storage
 
 ```javascript
 /**

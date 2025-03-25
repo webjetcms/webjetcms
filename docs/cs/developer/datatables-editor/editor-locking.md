@@ -1,12 +1,12 @@
-# Oznámení o konfliktu
+# Upozornění o konfliktu
 
-Oznámení o konfliktu poskytuje funkci, která uživatele při úpravě záznamu upozorní, pokud stejný záznam ve stejné tabulce upravuje i jiný uživatel.
+Upozornění o konfliktu zajišťuje funkcionalitu, která upozorní uživatele během editace záznamu, pokud i jiný uživatel edituje stejný záznam ve stejné tabulce.
 
 ![](editor-locking.png)
 
 ## Backend
 
-Implementaci logiky backendu najdete v souboru [EditorLockingRestController.java](../../../src/main/java/sk/iway/iwcm/system/datatable/editorlocking/EditorLockingRestController.java). REST url této služby je `/admin/rest/editorlocking`. Tento řadič se stará o přidávání a mazání `editoLocking` záznamy z mezipaměti. Ve vyrovnávací paměti jsou tyto záznamy uloženy jako seznam `EditorLockingBean` entity pro každou tabulku zvlášť (samostatný záznam v mezipaměti), přičemž každá entita představuje editaci jednoho záznamu konkrétním uživatelem.
+Implementace backend logiky se nachází v souboru [EditorLockingRestController.java](../../../src/main/java/sk/iway/iwcm/system/datatable/editorlocking/EditorLockingRestController.java). REST url této služby je `/admin/rest/editorlocking`. Tento controller se stará o přidávání a mazání `editoLocking` záznamů z cache paměti. V cache jsou tyto záznamy uloženy jako seznam `EditorLockingBean` entit pro každou tabulku samostatně (samostatný cache záznam), kde každá entita představuje editování jednoho záznamu konkrétním uživatelem.
 
 ```java
 @RestController
@@ -15,9 +15,9 @@ Implementaci logiky backendu najdete v souboru [EditorLockingRestController.java
 public class EditorLockingRestController {
 ```
 
-### Přidání položky
+### Přidání záznamu
 
-Po zavolání url REST `/admin/rest/editorlocking/open/{entityId}/{tableUniqueId}` objekt obsahující seznam všech `EditorLockingBean` entity podle `tableUniqueId` (pokud v paměti neexistuje, vytvoří se nový seznam) voláním `getCacheList(tableUniqueId);`. Zkontroluje se, zda již obsahuje entitu podle `entityId` a `userId`. V opačném případě je třeba vytvořit nový `EditorLockingBean` entita, která má být přidán do seznamu. Před uložením jsou entity, jejichž platnost vypršela, z pole odstraněny. `editorLocking` Záznamy. Metoda vrací seznam ostatních uživatelů, kteří upravují stejný záznam (nebo prázdné pole).
+Po zavolání REST url `/admin/rest/editorlocking/open/{entityId}/{tableUniqueId}` se z cache paměti získá objekt obsahující seznam všech `EditorLockingBean` entit podle `tableUniqueId` (pokud v paměti neexistuje vytvoří se nový seznam) voláním `getCacheList(tableUniqueId);`. Ověří se ať už obsahuje entitu podle `entityId` a `userId`. Pokud ne vytvoří se nová `EditorLockingBean` entita, která se do seznamu přidá. Před uložením se z pole odstraní exspirované `editorLocking` záznamy. Metoda vrátí seznam ostatních uživatelů, kteří editují stejný záznam (nebo prázdné pole).
 
 ```java
 @GetMapping({ "/open/{entityId}/{tableUniqueId}" })
@@ -27,9 +27,9 @@ public List<UserDto> addEdit(
     HttpServletRequest request) {
 ```
 
-### Odstranění položky
+### Vymazání záznamu
 
-Po zavolání url REST `/admin/rest/editorlocking/close/{entityId}/{tableUniqueId}` objekt obsahující seznam všech `EditorLockingBean` entit voláním `getCacheList(tableUniqueId);`. Podle parametrů `EditorLockingBean` v seznamu a odstraněny.
+Po zavolání REST url `/admin/rest/editorlocking/close/{entityId}/{tableUniqueId}` se z cache paměti získá objekt obsahující seznam všech `EditorLockingBean` entit voláním `getCacheList(tableUniqueId);`. Podle parametrů se vyhledá daný `EditorLockingBean` v seznamu a odstraní se.
 
 ```java
 @GetMapping({ "/close/{entityId}/{tableUniqueId}" })
@@ -39,26 +39,26 @@ public void removeEdit(
     HttpServletRequest request) {
 ```
 
-Záznam je v uloženém seznamu zapamatován po dobu 2 minut (definováno v konstantě `CACHE_EXPIRE_MINUTES`). V uživatelském rozhraní je služba `addEdit` volán každou minutu, pokud uživatel okno jednoduše zavře, aniž by zavřel dialogové okno editoru, platnost záznamu vyprší po 2 minutách.
+Záznam je v uloženém seznamu zapamatován na 2 minuty (definováno v konstantě `CACHE_EXPIRE_MINUTES`). Z uživatelského rozhraní je služba `addEdit` volána každou minutu, pokud uživatel jen jednoduše zavře okno bez zavření dialogového okna editoru záznam tedy exspiruje po 2 minutách.
 
-### Ukládání do mezipaměti
+### Ukládání do cache
 
-Seznam uživatelů, kteří upravují stejnou tabulku, je uložen ve složce `Cache` objekt s klíčem `"editor.locking-"+tableUniqueId`. Logika je v metodě `private List<EditorLockingBean> getCacheList(String tableUniqueId)`. Pokud pro daný `tableUniqueId` seznam v mezipaměti neexistuje, pokud existuje, je prodloužen o 7 minut. Pokud tabulka neexistuje `tableUniqueId` do 7 minut nebylo uskutečněno žádné volání, záznam je z mezipaměti zcela vymazán.
+Seznam uživatelů editujících stejnou tabulku se ukládá do `Cache` objektu s klíčem `"editor.locking-"+tableUniqueId`. Logika je v metodě `private List<EditorLockingBean> getCacheList(String tableUniqueId)`. Pokud pro danou `tableUniqueId` seznam v cache neexistuje vytvoří se, pokud existuje prodlouží se mu platnost o 7 minut. Pokud nebude na tabulku `tableUniqueId` během 7 minut provedeno žádné volání, záznam zcela exspiruje z cache
 
 ## Frontend
 
-Hlavní implementace logiky frontendu se nachází v souboru [datatables-wjfunctions.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js).
+Hlavní implementace frontend logiky se nachází v souboru [datatables-wjfunctions.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/datatables-wjfunctions.js).
 
-Funkce `bindEditorNotify` obsahuje 2 události, které se nastavují a volají při otevření a zavření editoru. Vstupním parametrem této funce je EDITOR, z něhož se získávají další potřebné informace, jako je jedinečný název tabulky nebo id editovaného záznamu. Samotné volání funkce se provádí v souboru [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js). Volaná událost bude dále volat editor při otevření editoru. `callAddEditorLocking` (navíc nastaví 60sekundový interval, který se přeruší pouze při zavření editoru) a volání událostí při zavření editoru. `callRemoveEditorLocking` funkce.
+Funkce `bindEditorNotify` obsahuje 2 eventy, které jsou nabidnodvané a volají se při otevření a zavření editoru. Vstupním parametrem této funkce je EDITOR, ze kterého se získávají další potřebné informace jako unikátní název tabulky nebo id editovaného záznamu. Samotné volání funkce se provádí v souboru [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js). Zavolaný event při otevření editoru dále zavolá `callAddEditorLocking` funkci (plus nastaví 60 sekundový interval, který se přeruší až při zavření editoru) a event při zavření editoru zavolá `callRemoveEditorLocking` funkci.
 
-Jedinečný název tabulky je generován ve funkci `getUniqueTableId(TABLE)` a je vytvořen z adresy URL rozhraní REST (znak / je nahrazen znakem -, předpona `/admin/rest/` je odstraněn).
+Unikátní jméno tabulky se generuje ve funkci `getUniqueTableId(TABLE)` a je vytvořeno z URL adresy REST rozhraní (znak / je nahrazen za znak -, prefix `/admin/rest/` je odstraněn).
 
-Služba REST je volána při otevření dialogového okna editoru a poté každých 60 sekund.
+REST služba je volána při otevření dialogového okna editoru a následně každých 60 sekund.
 
-### Přidání položky
+### Přidání záznamu
 
-Funkce `callAddEditorLocking` je vyvolán událostí po otevření editoru. Pokud je hodnota `entityId` získané od EDITORA jiné než `null` nebo -1 (což představuje nový záznam), zavolá se ajaxové volání REST url a přidá se nový záznam. `editorLocking`. Návratovou hodnotou z Backendu je pole dalších uživatelů, kteří právě upravují stejný záznam ve stejné tabulce. Pokud pole není prázdné, pomocí příkazu `WJ.notifyInfo` bude uživatel opakovaně upozorněn, kteří další uživatelé upravují stejný záznam.
+Funkce `callAddEditorLocking` je volána událostí po otevření editoru. Pokud je hodnota `entityId` získaná z EDITORu jiná než `null` nebo -1 (což reprezentuje nový záznam), pomocí ajax volání se zavolá REST url pro přidání nového `editorLocking`. Návratová hodnota z Backendu je pole ostatních uživatelů, kteří právě editují tentýž záznam ve stejné tabulce. Pokud pole není prázdné, pomocí `WJ.notifyInfo` bude uživatel opakovaně upozorněn, který další uživatelé editují stejný záznam.
 
-### Odstranění položky
+### Vymazání záznamu
 
-Funkce `callRemoveEditorLocking` je volán událostí po zavření editoru. Pokud je hodnota `entityId` získané od EDITORA jiné než `null` nebo -1 (což představuje nový záznam), zavolá se ajaxové volání REST url pro smazání stávajícího záznamu. `editorLocking` záznamu.
+Funkce `callRemoveEditorLocking` je volána událostí po zavření editoru. Pokud je hodnota `entityId` získaná z EDITORu jiná než `null` nebo -1 (což reprezentuje nový záznam), pomocí ajax volání se zavolá REST url pro vymazání již existujícího `editorLocking` záznamu.

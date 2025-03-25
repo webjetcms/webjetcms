@@ -1,6 +1,6 @@
 # PUGjs
 
-Předzpracování do souborů HTML zjednodušuje psaní a umožňuje iterovat v kódu JS atd.
+Preprocesing na HTML soubory, zjednodušuje zápis a umožňuje v JS kódu např. iterovat a podobně
 
 Formát a základní popis použití:
 - https://pugjs.org/language/attributes.html

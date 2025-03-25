@@ -10,7 +10,7 @@ Vítejte v dokumentaci k WebJET CMS verze 2024. Doporučujeme přečíst si [sez
 >
 > Jednou z hlavních změn je přesunutí **druhé úrovně menu** do **karet v hlavičce stránky**, čímž se zjednodušila navigace. Ve webových stránkách jsme také **sloučily karty složek a webových stránek**, abyste měli vše přehledně na jednom místě. Pokud hlavička neobsahuje karty, tabulky se automaticky přizpůsobí a zobrazí **řádek navíc**.
 >
-> Prosíme vás o zpětnou vazbu prostřednictvím **formuláře Zpětná vazba**, pokud při používání nové verze identifikujete **jakýkoli problém se zobrazením**. Připomínku můžete doplnit také o **fotku obrazovky**, což nám pomůže rychleji identifikovat a vyřešit případné nedostatky.
+> Prosíme vás o zpětnou vazbu prostřednictvím **formuláře Zpětná vazba**, pokud při používání nové verze identifikujete **jakýkoli problém se zobrazením**. Připomínku můžete doplnit io **fotku obrazovky**, což nám pomůže rychleji identifikovat a vyřešit případné nedostatky.
 >
 > Děkujeme za spolupráci a pomoc při vylepšování WebJET CMS!
 
@@ -27,7 +27,7 @@ Ve verzi **2025.0** jsme přinesli vylepšený **design administrace**, který j
 - **Upravený přihlašovací dialog** – nové pozadí a přesunutí přihlašovacího dialogu na pravou stranu. Na **přihlášení** je možné použít nejen přihlašovací jméno ale **už i email adresu**. ![](redactor/admin/logon.png)
 - **Přehlednější hlavička** – název aktuální stránky nebo sekce se nyní zobrazuje přímo v hlavičce.
 - **Nová navigace v levém menu** – pod položky již nejsou součástí levého menu, ale zobrazují se **jako karty v horní části** stránky. ![](redactor/admin/welcome.png)
-- **Sloučené karty v sekci Webové stránky** – přepínání typů složky a typů web stránek se nyní zobrazují ve společné části, čímž se zjednodušila navigace. **Výběr domény** byl přesunut na spodní část levého menu. ![](redactor/webpages/domain-select.png)
+- **Sloučené karty v sekci Webové stránky** – přepínání typů složky a typů webových stránek se nyní zobrazují ve společné části, čímž se zjednodušila navigace. **Výběr domény** byl přesunut na spodní část levého menu. ![](redactor/webpages/domain-select.png)
 - **Přeorganizované menu položky**:
   - **SEO** přesunuty do sekce **Přehledy**.
   - **GDPR a Skripty** přesunuty do sekce **Šablony**.

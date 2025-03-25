@@ -1,59 +1,59 @@
 # Mapa stránek
 
-Aplikace Mapa webu dokáže automaticky vygenerovat stromovou strukturu webu.
+Aplikace Mapa stránky dokáže automaticky generovat stromovou strukturu web sídla.
 
-Zobrazení položky na mapě webu závisí na nastavení pole Navigační panel na kartě Navigace v adresáři webu. Má následující možnosti:
-- Stejně jako v nabídce - zobrazení v mapě stránek se chová stejně, jako je nastaveno pole zobrazení v nabídce.
-- Zobrazit - položka se zobrazí v mapě stránek.
-- Nezobrazovat - položka se nezobrazí v mapě stránek (včetně podsložek).
-- Zobrazit bez podsložek - položka se zobrazí v mapě stránek, ale její další podsložky se nezobrazí (výhodou je, že podsložky nemusí nastavovat způsob zobrazení).
-- Zobrazit včetně webových stránek - v mapě webu se zobrazí složka a všechny webové stránky z této složky se zobrazí také jako samostatné položky. Ve výchozím nastavení možnost Zobrazit nezobrazuje webové stránky ze složky jako samostatné položky v mapě stránek.
+Zobrazení položky v mapě stránek je závislé na nastavení pole Navigační lišta v kartě Navigace adresáře web stránek. Má následující možnosti:
+- Stejně jako menu - zobrazení v mapě stránek se chová stejně jako je nastaveno pole pro zobrazení v menu.
+- Zobrazit - položka se v mapě stránek zobrazí.
+- Nezobrazit - položka se v mapě stránek nezobrazí (a to včetně podsložek).
+- Zobrazit bez podsložek - položka se v mapě stránek zobrazí, ale nebudou zobrazeny její další pod-složky (výhoda je v tom, že pod-složkou není třeba nastavovat způsob zobrazení).
+- Zobrazit včetně web stránek - v mapě stránek se zobrazí složka a zobrazí se také všechny web stránky ze složky jako samostatné položky. Standardně u možnosti Zobrazit se nezobrazují webové stránky z adresáře jako samostatné položky v mapě stránek.
 
-Při zobrazování včetně webových stránek můžete stále nastavit, aby se v mapě stránek zobrazovala každá webová stránka zvlášť. Tato možnost se nachází také na kartě Navigace a obsahuje tyto možnosti:
-- Stejně jako v nabídce - zobrazení v mapě stránek se chová stejně, jako je nastaveno pole zobrazení v nabídce.
-- Zobrazit - webová stránka se zobrazí v mapě stránek.
-- Nezobrazovat - webová stránka se nezobrazí v mapě stránek.
+Při zobrazení včetně webových stránek můžete ještě samostatně každé webové stránce nastavit možnost zobrazení v mapě stránek. Možnost je rovněž v kartě Navigace a obsahuje možnosti:
+- Stejně jako menu - zobrazení v mapě stránek se chová stejně jako je nastaveno pole pro zobrazení v menu.
+- Zobrazit - web stránka se v mapě stránek zobrazí.
+- Nezobrazit - web stránka se v mapě stránek nezobrazí.
 
 ![](groups-dialog.png)
 
 ## Nastavení aplikace
 
-Ve vlastnostech aplikace můžete nastavit:
+Ve vlastnostech aplikace lze nastavit:
 - Kořenový adresář - výběr kořenového adresáře
-- Typ zobrazení - způsob zobrazení mapy webu, viz možnosti níže.
+- Typ zobrazení - způsob zobrazení mapy stránek, viz. možnosti níže
 
-pro některé typy zobrazení lze nastavit i nadále:
-- Hloubka vyhledávání v adresáři - maximální vnoření zobrazených položek
-- Počet sloupců ve výpisu - zobrazení lze rozdělit do zadaného počtu sloupců (pro hezčí zobrazení na webové stránce).
+pro některé typy zobrazení je ještě možné nastavit:
+- Hloubka prohledávání adresářů - maximální vnoření zobrazených položek
+- Počet sloupců ve výpisu - zobrazení lze rozdělit do zadaného počtu sloupců (pro krásnější zobrazení na web stránce)
 
 ![](editor-dialog.png)
 
-## Vyvinutý strom (HTML)
+## Rozvinutý strom (HTML)
 
-Stromová struktura je v kódu HTML zobrazena jako vnořený seznam UL-LI. Jedná se o nejlepší řešení mapy stránek s ohledem na vyhledávače. Není vhodné pro rozsáhlé webové stránky (resp. maximální vnoření by mělo být omezeno, aby stránka nebyla příliš velká).
+Stromová struktura je zobrazena v HTML kódu jako vnořený UL-LI seznam. Jedná se o nejlepší řešení mapy stránek s ohledem na vyhledávače. Není vhodné pro rozsáhlá web sídla (případně je třeba maximální vnoření omezit aby stránka nebyla příliš rozsáhlá).
 
 ![](sitemap.png)
 
-## Mapa sedadel (Průzkumník Windows)
+## Mapa sídla (Windows Explorer)
 
-Stromová struktura je podobná struktuře Průzkumníka Windows, takže je návštěvníkům známá a snadno se v ní orientují. V levém sloupci se zobrazuje seznam adresářů a v pravém sloupci stránky ve vybraném adresáři.
+Stromová struktura je podobná jako v Exploreru systému Windows, takže je pro návštěvníky známá a jednoduchá na ovládání. V levém sloupci je zobrazen seznam adresářů a v pravém sloupci stránky ve vybraném adresáři.
 
-Kliknutím na znaménko + nebo - otevřete/zavřete webové stránky v daném adresáři. Kliknutím na název adresáře se zobrazí hlavní dokument daného adresáře, kliknutím na název webové stránky se zobrazí požadovaná stránka.
+Klepnutím na znak + nebo - se zobrazí / zavřou web stránky v daném adresáři. Klepnutím na název adresáře se zobrazí hlavní dokument daného adresáře, kliknutím na název web stránky se zobrazí požadovaná stránka.
 
-## Vyvinutý strom (Javascript)
+## Rozvinutý strom (Javascript)
 
-Stromovou strukturu lze rozšířit pomocí JavaScriptu. Nedoporučuje se pro velké webové stránky.
+Stromová struktura je rozklikatelná pomocí JavaScriptu. Nedoporučujeme pro rozsáhlá web sídla.
 
-Kliknutím na znaménko + nebo - otevřete/zavřete webovou stránku/adresář.
+Klepnutím na znak + nebo - se zobrazí / zavřou web stránky / adresář.
 
-## Vyvinutý strom (AJAX)
+## Rozvinutý strom (AJAX)
 
-Stromová struktura je klikací pomocí JavaScriptu, jednotlivé části stromu se načítají ze serveru pomocí volání AJAX (jQuery).
+Stromová struktura je rozklikatelná pomocí JavaScriptu, jednotlivé části stromu jsou nahrávány ze serveru pomocí AJAX volání (jQuery).
 
-Kliknutím na znaménko + nebo - otevřete/zavřete webovou stránku/adresář.
+Klepnutím na znak + nebo - se zobrazí / zavřou web stránky / adresář.
 
-## Soubor XML pro vyhledávače
+## XML soubor pro vyhledávače
 
-Vyhledávače stránek (např. Google) automaticky vyhledají soubor. `/sitemap.xml` s mapou webu. WebJET automaticky poskytuje tento soubor pomocí souboru `/components/sitemap/google-sitemap.jsp`.
+Vyhledávače stránek (např. Google) automaticky hledají soubor `/sitemap.xml` s mapou stránek web sídla. WebJET tento soubor automaticky poskytuje pomocí souboru `/components/sitemap/google-sitemap.jsp`.
 
-Vygenerované položky se chovají podobně jako v zobrazení Rozšířený strom (HTML).
+Generované položky se chovají podobně jako zobrazení Rozvinutý strom (HTML).

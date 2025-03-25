@@ -1,10 +1,10 @@
-# Audit
+# Auditing
 
-## Subjekt JPA
+## JPA entity
 
-> Automatické generování auditních záznamů z entit JPA (obsahujících seznam změn ve tvaru název\_atributu: stará hodnota -> nová hodnota) pomocí jednoduché anotace `@EntityListeners(AuditEntityListener.class)`
+> Automatické generování auditních záznamů z JPA entit (obsahujících seznam změn ve formě jméno\_atributu: stará hodnota -> nová hodnota) pomocí jednoduché anotace `@EntityListeners(AuditEntityListener.class)`
 
-Auditování změn entit JPA lze automatizovat přidáním anotace. `@EntityListeners(AuditEntityListener.class)`, kde nastavíte typ auditního záznamu poznámkou. `@EntityListenersType(Adminlog.TYPE_GALLERY)`:
+Auditing změn v JPA entitách lze automatizovat přidáním anotace `@EntityListeners(AuditEntityListener.class)`, přičemž typ auditního záznamu nastavíte anotací `@EntityListenersType(Adminlog.TYPE_GALLERY)`:
 
 ```java
 @Entity
@@ -16,16 +16,16 @@ Auditování změn entit JPA lze automatizovat přidáním anotace. `@EntityList
 public class GalleryEntity {
 ```
 
-Audit se provádí v [AuditEntityListener](../../../src/main/java/sk/iway/iwcm/system/audit/AuditEntityListener.java) Metody:
+Auditing se provádí v [AuditEntityListener](../../../src/main/java/sk/iway/iwcm/system/audit/AuditEntityListener.java) metodách:
 - `postPersist` pro nově vytvořený záznam
-- `preUpdate` a `postUpdate` aktualizovat existující záznam (v preUpdate se načte aktuální entita v databázi, aby se porovnaly změny).
-- `preRemove` při mazání záznamu
+- `preUpdate` a `postUpdate` pro aktualizaci stávajícího záznamu (v preUpdate se získá aktuální Entita v databázi pro porovnání změn)
+- `preRemove` při smazání záznamu
 
-v metodě `private String getChangedProperties(Object entity)` seznam změněných hodnot při změně záznamu nebo seznam aktuálních hodnot pro nový záznam. Pro existující záznam se nejprve v metodě `prePersist` ukládá do mapy `private Hashtable<Long, String> preUpdateChanges;` porovnání existujícího záznamu v databázi. Z této mapy se po úspěšném uložení v metodě `postUpdate` získá seznam změn pro auditování z mapy.
+v metodě `private String getChangedProperties(Object entity)` se získá seznam změněných hodnot při změně záznamu, respektive seznam aktuálních hodnot pro nový záznam. Pro již existující záznam se nejprve v metodě `prePersist` uloží do mapy `private Hashtable<Long, String> preUpdateChanges;` srovnání existujícího záznamu v databázi. Z této mapy se následně po úspěšném uložení v metodě `postUpdate` získá z mapy seznam změn pro auditing.
 
-**Získání aktuální fazole pro porovnání** z databáze před zápisem změn je poměrně složité. Řešením je **získání nového správce entit EntityManager** a načtení objektu pomocí tohoto nového EntityManageru. Objekty spravované prostřednictvím SpringData tímto problémem netrpěly, ale standardní entity JPA vrácené z databáze v rámci aktuální relace se změnily na nové hodnoty. To je způsobeno tím, že SpringData používá vlastní EntityManager.
+**Získání aktuálního beanu k porovnání** z databáze před zápisem změn je poměrně komplikované. Vyřešeno to je **získáním nového EntityManagera** a načtením objektu s tímto novým EntityManagerem. Objekty manažované přes SpringData s tímto problémem netrpěly, ale standardní JPA entity se v rámci aktuální session vracely z databáze změněny na nové hodnoty. Je to způsobeno tím, že SpringData používá vlastní EntityManager.
 
-V konfigurační proměnné `auditHideProperties` je seznam atributů, které budou v auditu nahrazeny značkou `*****`. Ve výchozím nastavení je atribut nastaven `password,password2,password_salt`, ale v konfiguraci můžete přidat **další citlivé atributy, které se v auditu nemají zobrazovat**.
+V konfigurační proměnné `auditHideProperties` je seznam atributů, které se v auditu nahradí značkou `*****`. Ve výchozím nastavení je nastaven atribut `password,password2,password_salt`, v konfiguraci ale můžete přidat **další citlivé atributy, které nechcete mít zobrazeny v auditu**.
 
 Příklad auditu nově vytvořené entity:
 
@@ -44,7 +44,7 @@ Domain: iwcm.interway.sk
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36
 ```
 
-Příklad auditu změněného entita. V auditu jsou zaznamenána pouze změněná pole (redirect\_to, redirect\_params a redirect\_path):
+Příklad auditu změněné entity. Do auditu se zaznamenají pouze změněná pole (redirect\_to, redirect\_params a redirect\_path):
 
 ```
 UPDATE:
@@ -58,7 +58,7 @@ Domain: iwcm.interway.sk
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36
 ```
 
-Příklad auditu vymazání položky. Audit zaznamenává všechny údaje o smazané entitě:
+Příklad auditu smazání položky. Do auditu se zaznamenají všechny údaje mazané entity:
 
 ```
 DELETE:

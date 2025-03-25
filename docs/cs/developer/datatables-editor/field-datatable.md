@@ -1,17 +1,17 @@
-# Typ pole - datová tabulka
+# Field Type - datatable
 
-Datové pole umožňuje zobrazit vnořenou datovou tabulku v editoru stránky (např. seznam Média v editoru stránky). Všimněte si, že datová tabulka je inicializována vlastní adresou URL. V samotném objektu nadřazené tabulky není třeba data odesílat ani dodatečně přijímat, data se změní automaticky při volání služby REST vnořeného datatabulky. Technicky by bylo možné pracovat přímo s daty JSON z nadřazené tabulky, ale tato možnost zatím není implementována.
+Pole datatable umožňuje v editoru stránek zobrazit vnořenou datatabulku (např. seznam Médii v editoru stránek). Je třeba si uvědomit, že datatabulka je inicializována s vlastní URL adresou. V samotném objektu rodičovské tabulky není třeba data posílat ani je následně přijímat, data se mění automaticky při volání REST služby vnořené datatabulky. Technicky by bylo možné pracovat přímo s JSON daty z rodičovské tabulky, zatím tato možnost není implementována.
 
-Vzhledem k tomu, že aktuálně vložená datová tabulka pracuje se samostatnými službami REST, jsou vrácená data prázdným polem. `[]`.
+Jelikož aktuálně vložená datatabulka pracuje se samostatnými REST službami vrácená data jsou prázdné pole `[]`.
 
 ## Použití anotace
 
-Anotace se používá jako `DataTableColumnType.DATATABLE` a musí být nastaveny následující atributy editoru:
-- `data-dt-field-dt-url` - URL služby REST, může obsahovat makra pro vkládání hodnot z nadřazeného editoru, např.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
-- `data-dt-field-dt-columns` - název třídy (včetně balíčků), ze které se má použít. [definice datových sloupců](datatable-columns.md), např. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
-- `data-dt-field-dt-tabs` - seznam karet editoru ve formátu JSON. Všechny názvy a hodnoty objektu JSON je třeba zabalit do tvaru `'`, překlady se nahrazují automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
+Anotace se používá jako `DataTableColumnType.DATATABLE`, přičemž je třeba nastavit následující atributy editoru:
+- `data-dt-field-dt-url` - URL adresa REST služby, může obsahovat makra pro vložení hodnoty z rodičovského editoru, např.: `/admin/rest/audit/notify?docid={docId}&groupId={groupId}`
+- `data-dt-field-dt-columns` - jméno třídy (včetně packages) ze které se použije [definice sloupců datatabulky](datatable-columns.md) Např. `sk.iway.iwcm.system.audit.AuditNotifyEntity`
+- `data-dt-field-dt-tabs` - seznam karet pro editor v JSON formátu. Všechny názvy i hodnoty JSON objektu je třeba obalit do `'`, překlady jsou nahrazeny automaticky. Příklad: `@DataTableColumnEditorAttr(key = "data-dt-field-dt-tabs", value = "[{ 'id': 'basic', 'title': '[[#{datatable.tab.basic}]]', 'selected': true },{ 'id': 'fields', 'title': '[[#{editor.tab.fields}]]' }]")`.
 
-Příklad úplné anotace:
+Kompletní příklad anotace:
 
 ```java
 @DataTableColumn(inputType = DataTableColumnType.DATATABLE, title = "&nbsp;",
@@ -26,9 +26,9 @@ Příklad úplné anotace:
 private List<Media> media;
 ```
 
-Pomocí datových atributů můžete nastavit i další možnosti konfigurace datové tabulky. Data jsou odesílána jako řetězec. Hodnoty `true` a `false` jsou převedeny na `boolean` objekt. Nastavení atributu `order` umožňuje nastavit rozložení pouze pro jeden sloupec. Ostatní možnosti se přenášejí jako řetězec.
+Pomocí data atributů lze nastavovat i další konfigurační možnosti datatabulky. Data jsou zasílána jako řetězec. Hodnoty `true` a `false` se konvertují na `boolean` objekt. Nastavení atributu `order` umožňuje nastavit uspořádání pouze pro jeden sloupec. Ostatní možnosti se přenesou jako řetězec.
 
-Přidání předpony do nabídky nastavené možnosti `data-dt-field-dt-`, tj. nastavit možnost `serverSide` použít klíč `data-dt-field-dt-serverSide`. Příklad dalších poznámek:
+K menu nastavované možnosti přidejte předponu `data-dt-field-dt-`, tedy pro nastavení možnosti `serverSide` použijte klíč `data-dt-field-dt-serverSide`. Příklad doplňkových anotací:
 
 ```java
     @DataTableColumnEditorAttr(key = "data-dt-field-dt-serverSide", value = "false"), //vypnutie serveroveho strankovania/vyhladavania
@@ -41,18 +41,18 @@ Přidání předpony do nabídky nastavené možnosti `data-dt-field-dt-`, tj. n
 
 **API a události**
 
-Vytvořená datová tabulka je k dispozici jako:
-- `conf.datatable` na původní `conf` objekt datového sloupce
-- `window` objekt s názvem `datatableInnerTable_fieldName` - lze použít pro automatizované testování nebo jiné operace v JavaScriptu.
+Vytvořená datatabulka se zpřístupní jako:
+- `conf.datatable` na původním `conf` objektu sloupce datatabulky
+- `window` objekt s názvem `datatableInnerTable_fieldName` - objekt lze použít pro automatizované testování nebo jiné JavaScript operace.
 
-Po vytvoření vnořené datové tabulky je vyvolána událost `WJ.DTE.innerTableInitialized` kde v objektu `event.detail.conf` je přenesená konfigurace.
+Po vytvoření vnořené datatabulky je vyvolána událost `WJ.DTE.innerTableInitialized` kde v objektu `event.detail.conf` je přenesena konfigurace.
 
 ## Poznámky k implementaci
 
-Implementace je v souboru [field-type-datatatable.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastavit jako `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
+Implementace je v souboru [field-type-datatable.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-datatable.js) a v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) nastaveno jako `$.fn.dataTable.Editor.fieldTypes.datatable = fieldTypeDatatable.typeDatatable();`.
 
-Funkce `resizeDatatable` se používá k výpočtu velikosti datové tabulky (pro posouvání pouze řádků), přepočet se volá při inicializaci pole, v intervalu každých 20 sekund (pro jistotu), při změně velikosti okna a při kliknutí na záložku v editoru. Přepočet se provádí pouze tehdy, je-li pole viditelné.
+Funkce `resizeDatatable` se používá pro výpočet velikosti datatabulky (aby scrolovaly jen řádky), přepočet je volán při inicializaci pole, intervalem každých 20 sekund (pro jistotu), při změně velikosti okna a při kliknutí na tab v editoru. Přepočet se provede jen když je pole viditelné.
 
-Po kliknutí na kartu v editoru se název karty porovná s kartou, do které je vložena datová tabulka, a pokud se shoduje, šířka sloupce se upraví voláním příkazu. `conf.datatable.columns.adjust();`. Datovou tabulku lze opakovaně použít pro různá data, což zajistí správné nastavení šířky sloupců v záhlaví podle obsahu tabulky.
+Při kliknutí na tab v editoru se testuje jméno tabu vůči tabu kde je vložena datatabulka a pokud se shoduje provede se nastavení šířky sloupců voláním `conf.datatable.columns.adjust();`. Datatabulka se může znovu použít pro různá data a toto zajistí korektní nastavení šířky sloupců v hlavičce podle obsahu tabulky.
 
-Funkce `getUrlWithParams` může nahradit pole z objektu json v adrese URL. Pokud adresa URL datového souboru obsahuje `?docid={docId}&groupId={groupId}` takže hodnota `{docId}` a `{groupId}` je nahrazen hodnotami z objektu JSON `EDITOR.currentJson`.
+Funkce `getUrlWithParams` dokáže v URL adrese nahradit pole z json objektu. Pokud URL adresa datatabulky obsahuje `?docid={docId}&groupId={groupId}` tak hodnota `{docId}` a `{groupId}` je nahrazena hodnotami z JSON objektu `EDITOR.currentJson`.

@@ -1,33 +1,33 @@
-# Klonovací struktura
+# Klonování struktury
 
-Pomocí klonování struktury můžeme klonovat celý obsah adresáře na stránkách do jiného adresáře, aniž bychom museli znovu vytvářet celou strukturu adresáře. Tato možnost je k dispozici v **Webové stránky** Stejně jako **Klonovací struktura**. Po výběru této možnosti se zobrazí okno akce klonování. Obvykle se používá k vytvoření nové jazykové verze webu ze stávající verze. Jazyk je převzat z nastavení zdrojové a cílové složky.
+Pomocí Klonování struktury můžeme naklonovat celý obsah adresáře ve stránkách do jiného adresáře bez nutnosti znovu vytváření celé adresářové struktury. Tato možnost je dostupná v sekci **Web stránky** jak **Klonování struktury**. Po výběru této možnosti se zobrazí okno k akci klonování. Typicky se používá k vytvoření nové jazykové mutace web sídla ze stávající verze. Jazyk je stažen z nastavení zdrojové a cílové složky.
 
 ![](clone_structure.png)
 
-Chcete-li provést klonování, musíte zadat ID zdrojové složky (která složka se má klonovat) a ID cílové složky (kam se má zdrojová složka klonovat). ID složek můžete zadat přímo, pokud si je pamatujete, nebo můžete použít příkaz **Vyberte**, čímž se otevře nové okno se stromovou strukturou složek, kde můžete vybrat konkrétní složku kliknutím na její název.
+Pro provedení akce klonování je třeba zadat ID zdrojové složky (kterou složku klonujeme) a ID cílové složky (kam na naklonuje zdrojovou složku). ID složek můžete zadat přímo, pokud si je pamatujete, nebo může využít možnosti **Vybrat**, která otevře nové okno se stromovou strukturou složek, kde si konkrétní složku volíte kliknutím na její název.
 
-Samotné klonování využívá [Zrcadlení struktury](../docmirroring/README.md) a [Automatický překlad](../../../admin/setup/translation.md). To znamená, že při spuštění klonování se vybrané složky (pokud již nejsou) automaticky propojí pomocí konfigurační proměnné `structureMirroringConfig`. Ze zdrojové složky se do cílové složky naklonují všechny podsložky (a všechny jejich vnořené složky) a webové stránky, přičemž původní a klonované složky/stránky se propojí. Jazyk se přebírá z nastavení zdrojové a cílové složky. Také tyto složky/stránky jsou automaticky přeloženy, pokud je nastaven překladač.
+Samotné klonování využívá [Zrcadlení struktury](../docmirroring/README.md) a [Automatický překlad](../../../admin/setup/translation.md). To znamená, že při spuštění klonování se vybrané složky (pokud již nejsou) automaticky propojí konfigurační proměnnou `structureMirroringConfig`. Ze zdrojové složky se naklonují všechny podsložky (i jejich všechna vnoření) is web stránkami do cílové složky s tím, že originální a klonované složky/stránky se mezi sebou propojí. Jazyk je stažen z nastavení zdrojové a cílové složky. Tyto složky/stránky se také automaticky přeloží, pokud je nastaven překladač.
 
 ## Možnosti
 
 ### ID zdrojového adresáře
 
-Nastavte ID složky, ze které se má klonovat.
+Nastavte ID složky ze které se bude klonovat.
 
 ### ID cílového adresáře
 
-Nastavte ID složky, do které se má klonovat. V této složce budou vytvořeny stránky a podsložky podle zdrojové složky.
+Nastavte ID složky do které se bude klonovat. Tato složka vytvoří stránky a podsložky podle zdrojové složky.
 
-### Udržujte zrcadlení aktivní
+### Ponechat aktivní zrcadlení
 
-Pokud zvolíte možnost **Po klonování ponechte aktivní zrcadlení struktury.** zachovává množinu [zrcadlení](../docmirroring/README.md) mezi zdrojovou a cílovou složkou. Když pak vytvoříte novou složku nebo webovou stránku, přenese se mezi zrcadlenými složkami.
+Pokud zvolíte možnost **Po naklonování ponechat aktivní zrcadlení struktury** zachová se nastaveno [zrcadlení](../docmirroring/README.md) mezi zdrojovou a cílovou složkou. Následně když vznikne nová složka, nebo web stránka bude se přenášet mezi zrcadlenými složkami.
 
-Nastavení můžete také později odpojit úpravou proměnné conf. `structureMirroringConfig` ze kterého odstraníte řádek s nastavenými ID složek.
+Nastavení můžete rozpojit i později úpravou konf. proměnné `structureMirroringConfig` ze které vymažete řádek s nastavenými ID složek.
 
-### Zanechte adresu URL
+### Ponechat URL adresu
 
-Výběrem možnosti **Zanechte adresu URL** lze předpokládat, že adresy URL stránek a složek nebudou přeloženy do jazyka cílové složky. To znamená, že nová jazyková mutace bude mít **stejné adresy URL, ale jiný prefix, kterým tyto adresy URL začínají**.
+Zvolením možnosti **Ponechat URL adresu** za bezpečí, že se URL adresa stránek a složek nebude překládat do jazykové mutace cílové složky. To znamená, že nová jazyková mutace bude mít **stejné URL adresy ale jiný prefix, kterým tyto adresy začínají**.
 
-Příklad: Mějme složky SK (se slovenskou jazykovou sadou) a EN (se slovenskou jazykovou sadou). Složka SK obsahuje podsložku **Majetek** která má hlavní stránku se stejným názvem. Adresa takové stránky je **/sk/majetok/**. Pokud použijeme strukturu klonování **bez opuštění adresy URL**, ze složky SK do složky EN, bude mít kopie této stránky adresu URL. **/en/property/**. Pokud použijeme strukturu klonování **ponechání adresy URL**, ze složky SK do složky EN, bude mít kopie této stránky adresu URL. **/en/majetok/**. Jak vidíme, url adresa nebyla přeložena, pouze se změnil prefix z /sk na /en, který představuje nadřazenou složku.
+Příklad: Mějme složky SK (s nastaveným slovenským jazykem) a EN (s nastaveným slovenským jazykem). Složka SK obsahuje podsložku **majetek**, který má hlavní stránku se stejným názvem. Adresa takové stránky je **/cs/majetek/**. Použijeme-li klonování struktury **bez ponechání URL**, ze složky SK do složky EN, kopie této stránky bude mít URL **/en/property/**. Použijeme-li klonování struktury **s ponecháním URL**, ze složky SK do složky EN, kopie této stránky bude mít URL **/en/majetek/**. Jak vidíme, url nebyla přeložena, změnil se pouze prefix ze /sk na /en, což reprezentuje nadřazenou složku.
 
 ![](clone_structure_result.png)

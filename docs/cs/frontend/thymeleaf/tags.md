@@ -1,10 +1,10 @@
-# Štítky WebJET CMS
+# Značky WebJET CMS
 
 V šablonách můžete používat speciální značky WebJET CMS.
 
 ## Standardní atributy
 
-Seznam dostupných atributů při zobrazování webové stránky naleznete v části [samostatná kapitola](webjet-objects.md).
+Seznam dostupných atributů při zobrazení web stránky naleznete v [samostatné kapitole](webjet-objects.md).
 
 ```html
 <span data-th-text="${docDetails.title}">Titulok stránky</span>
@@ -17,7 +17,7 @@ Seznam dostupných atributů při zobrazování webové stránky naleznete v č�
 <div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
 ```
 
-Atributy začínající na `data-th-XXX` se provede a nahradí `XXX` atribut podle hodnoty zadaného kódu. Při vytváření prototypů bez spuštěného systému WebJET CMS můžete atribut nastavit na výchozí hodnotu a nahradit ji při spuštění prostřednictvím systému WebJET pomocí příkazu `data-th-` Atribut:
+Atributy začínající na `data-th-XXX` se provedou a nahradí `XXX` atribut hodnotou zadaného kódu. Při prototypování bez spuštěného WebJET CMS můžete nastavit atribut na výchozí hodnotu a ten při spuštění přes WebJET nahradit pomocí `data-th-` atributu:
 
 ```html
 <!-- content atribut sa pri zobrazeni cez WebJET nahradi za data-th-content hodnotu -->
@@ -26,14 +26,14 @@ Atributy začínající na `data-th-XXX` se provede a nahradí `XXX` atribut pod
 <body class="subpage" data-th-class="${docDetails.fieldA}">
 ```
 
-## Provedení značky INCLUDE
+## Provedení INCLUDE značky
 
-Objekty webové stránky mohou obsahovat značku `!INCLUDE(...)!`, není možné použít standardní atribut pro jeho provedení. `data-th-text` ale musíte použít speciální atribut `data-iwcm-write`. Buď lze provést [atribut stránky](webjet-objects.md) nebo přímo zadané `!INCLUDE(...)!` Soudní příkaz.
+Objekty web stránky mohou obsahovat značku `!INCLUDE(...)!`, pro její provedení nelze použít standardní atribut `data-th-text` ale je třeba použít speciální atribut `data-iwcm-write`. Provést je možné buď [atribut stránky](webjet-objects.md) nebo přímo zadaný `!INCLUDE(...)!` příkaz.
 
-Převzato z **může** odstranění obalu `div` prvek. Chování je následující:
-- pokud název atributu začíná na `doc_` (např. `doc_data`) balení `div` prvek **budou zachovány** (pro lepší kompatibilitu při prototypování a možnost nastavení atributů jako `class` a podobně)
-- pokud je hodnota atributu `data-iwcm-remove` Je `false` nebo NE `tag` obalový prvek **budou zachovány**
-- v ostatních případech je obal `div` prvek **odstraněno** a kód z WebJETu je vložen do stránky.
+Provedení **může** odstranit obalovací `div` element. Chování je následující:
+- pokud název atributu začíná na `doc_` (Např. `doc_data`) obalovací `div` element **se zachová** (pro lepší kompatibilitu při prototypování a možnosti nastavení atributů jako `class` a podobně)
+- pokud hodnota atributu `data-iwcm-remove` je `false` nebo NENÍ `tag` obalovací element **se zachová**
+- v ostatních případech se obalovací `div` element **odstraní** a do stránky se vloží kód z WebJETu
 
 ```html
 <!-- zacina na doc_ standardne by header element zostal, ale nastavenim data-iwcm-remove="tag" header element odstranime -->
@@ -44,9 +44,9 @@ Převzato z **může** odstranění obalu `div` prvek. Chování je následujíc
 <div data-iwcm-write="!INCLUDE(/components/gdpr/gtm_init.jsp)!" />
 ```
 
-Použijte `data-iwcm-remove` zjednodušené z hlediska kódu HTML prováděného při nastavování `true` Volejte `element[0].outerHTML=data` (to znamená, že je nahrazen i tag, na kterém je nastaven), jinak se provede `element.html(data)`, tj. nahradí vnitřek značky.
+Použití `data-iwcm-remove` zjednodušeně z pohledu HTML kódu provádí při nastavení `true` volání `element[0].outerHTML=data` (čili nahradí se i tag na kterém je to nastaveno), jinak provede `element.html(data)`, neboli nahradí vnitřek tag-u.
 
-**Doporučujeme také** využívat vlastnosti značky `data-iwcm-write` který **odstraní tělo**, `div` Znaky. Můžete tak **efektivně vytvářet prototypy na úrovni html, aniž by bylo nutné spouštět šablonu v aplikaci WebJET.**:
+**Zároveň doporučujeme** využít vlastnost značky `data-iwcm-write`, která **odstraňuje tělo**, `div` značky. Můžete tak **efektivně prototypovat na úrovni html bez spuštění šablony ve WebJETu**:
 
 ```html
 <article data-iwcm-write="doc_data">
@@ -61,11 +61,11 @@ Použijte `data-iwcm-remove` zjednodušené z hlediska kódu HTML prováděného
 </article>
 ```
 
-což znamená, že při zobrazení html šablony přímo v prohlížeči se zobrazí. `<article>Lorem ipsum</article>`. Když je šablona spuštěna v aplikaci WebJET, vše, co je uvnitř, se `<article data-iwcm-write="doc_data">` pro html kód webové stránky (včetně obalů `<div class="container">....`).
+což znamená, že pokud zobrazíte přímo html šablonu v prohlížeči budete vidět `<article>Lorem ipsum</article>`. Když se šablona provede ve WebJETu nahradí se vše uvnitř `<article data-iwcm-write="doc_data">` za html kód web stránky (včetně obalovačů `<div class="container">....`).
 
 ## Kombinování souborů
 
-Chcete-li kombinovat soubory JavaScript a CSS, můžete použít atribut `data-iwcm-combine`. Automaticky rozdělí soubory na JavaScript a CSS podle přípony a vloží dva samostatné odkazy na. `combine.jsp`. Můžete použít libovolnou značku, v příkladu je to `combine`, po zobrazení se odstraní.
+Pro kombinování JavaScript a CSS souborů lze použít atribut `data-iwcm-combine`. Ten automaticky podle přípony rozdělí soubory na JavaScript a CSS a vloží dva samostatné odkazy na `combine.jsp`. Můžete použít libovolný tag, v příkladu je to `combine`, při zobrazení se odstraní.
 
 ```html
 <combine
@@ -82,7 +82,7 @@ ${ninja.webjet.pageFunctionsPath}"
 </combine>
 ```
 
-případně jako `PUG` Zápis:
+případně jako `PUG` zápis:
 
 ```html
 combine(
@@ -98,30 +98,30 @@ data-iwcm-combine="${ninja.userAgent.blind ? 'css/blind-friendly.min.css' : ''}\
     <script src="js/ninja.min.js" type="text/javascript"></script>
 ```
 
-Všimněte si, že v těle `combine` jsou vloženy standardní `link` a `script` Znaky. Ty jsou zpracovány a použity v kombinovaném záznamu. Výhodou je, že si je můžete nechat zobrazit přímo `.html` v prohlížeči a výše uvedené skripty a soubory CSS se do stránky vloží ve výchozím nastavení. I bez spuštění stránky ve WebJETu je stránka v prohlížeči funkční.
+Všimněte si, že v těle `combine` jsou vloženy standardní `link` a `script` značky. Tyto se zpracují a použijí se do kombinovaného zápisu. Výhoda je v tom, že můžete mít zobrazen přímo `.html` soubor v prohlížeči a uvedené skripty a CSS soubory se standardně vloží do stránky. I bez provedení stránky ve WebJETu je funkční v prohlížeči.
 
-Kombinace nejprve vloží skripty a CSS z těla a poté přidá ty, které jsou definovány v položce `data-iwcm-combine` Atribut. Vložte pouze specifické skripty a CSS, které se používají pouze při zpracování prostřednictvím WebJET CMS.
+Kombinace nejprve vloží skripty a CSS z těla a následně doplní ty definované v `data-iwcm-combine` atribute. Tam vkládejte jen specifické skripty a CSS, které se používají pouze při zpracování přes WebJET CMS.
 
 ## Vkládání skriptů
 
-Pro vkládání skriptů z aplikace skripty existuje speciální značka. `data-iwcm-script`. Jako název obdrží pozici skriptu (např. `header`), jak je definováno v žádosti. Značka používá značku `div`, ale při zobrazení se odstraní.
+Pro vkládání skriptů z aplikace skripty existuje speciální značka `data-iwcm-script`. Jako jméno dostává pozici skriptu (např. `header`) podle definice v aplikaci. Značka používá tag `div`, ten se ale při zobrazení odstraní.
 
 ```html
 <div data-iwcm-script="header"/>
 ```
 
-## Vložení jQuery
+## Vkládání jQuery
 
-WebJET typicky potřebuje vestavěnou knihovnu jQuery od společnosti `/components/_common/javascript/jquery.min.js` a soubory `/components/_common/javascript/page_functions.js.jsp` a `/components/form/check_form.css`.
+WebJET k zobrazení stránky typicky potřebuje vloženou knihovnu jQuery z `/components/_common/javascript/jquery.min.js` a soubory `/components/_common/javascript/page_functions.js.jsp` a `/components/form/check_form.css`.
 
-Ale při použití npm můžete jQuery vložit do `ninja.js` a proto nechcete, aby WebJET při zobrazování objektu duplikoval knihovnu. `doc_data`. To lze ovlivnit následujícími možnostmi:
-- Pokud `data-iwcm-combine` Obsahuje `${ninja.webjet.pageFunctionsPath}` předpokládá se, že jQuery je vloženo např. prostřednictvím. `ninja.js` a již se nevkládá automaticky.
-- Při použití `data-iwcm-write="doc_data"` lze přidat atribut `data-iwcm-jquery` s následujícími hodnotami:
-  - `false` - jQuery je již vloženo, nechceme ho automaticky vkládat pomocí WebJETu.
-  - `true` - jQuery se vkládá automaticky, ale kontroluje se, zda se neduplikuje, a vkládá se pouze tehdy, pokud ještě nebyl vložen pomocí WebJET (vkládá se také). `page_functions.js.jsp` a `check_form.css`)
-  - `force` - i když si WebJET myslí, že je jQuery vloženo (např. z `data-iwcm-combine`) je nucen být znovu vložen (je také vložen `page_functions.js.jsp` a `check_form.css`)
+Při použití npm ale můžete vkládat jQuery do `ninja.js` a tedy nechcete, aby knihovnu duplicitně vložil WebJET při zobrazení objektu `doc_data`. To lze ovlivnit následujícími možnostmi:
+- Pokud `data-iwcm-combine` obsahuje `${ninja.webjet.pageFunctionsPath}` předpokládá se, že jQuery je vloženo přes např. `ninja.js` a už se automaticky nevloží.
+- Při použití `data-iwcm-write="doc_data"` je možné přidat atribut `data-iwcm-jquery` s následujícími hodnotami:
+  - `false` - jQuery už je vloženo, nechceme jej automaticky vložit WebJETem
+  - `true` - jQuery se vkládá automaticky, kontroluje se ale duplicita a vloží se jen pokud dosud nebylo WebJETem vloženo (vloží se i `page_functions.js.jsp` a `check_form.css`)
+  - `force` - i když si WebJET myslí, že je jQuery vloženo (např. z `data-iwcm-combine`) vynutí se jeho znovu vložení (vloží se i `page_functions.js.jsp` a `check_form.css`)
 
-Doporučujeme vložit jQuery prostřednictvím modulu NPM do souboru ninja.js a poté použít nástroj `combine` s `${ninja.webjet.pageFunctionsPath}` upozornit WebJET, že je vložen jQuery:
+Doporučujeme vkládat jQuery přes NPM modul do ninja.js a následně použít `combine` s `${ninja.webjet.pageFunctionsPath}` pro oznámení WebJETu, že jQuery je vloženo:
 
 ```html
 <combine
@@ -133,4 +133,4 @@ Doporučujeme vložit jQuery prostřednictvím modulu NPM do souboru ninja.js a 
 </combine>
 ```
 
-CSS pro `/components/form/check_form.css` musíte vložit do svého scss (stáhněte si obsah v prohlížeči z výše uvedené adresy URL). Doporučujeme jej vložit do `5-modules/md-checkform.scss`.
+CSS pro `/components/form/check_form.css` musíte vložit do vašeho scss (obsah si stáhněte v prohlížeči z uvedené URL adresy). Doporučujeme jej vložit do `5-modules/md-checkform.scss`.

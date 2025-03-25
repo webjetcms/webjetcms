@@ -7,6 +7,7 @@
 ### Průlomové změny
 
 - Aplikace Kalendář novinek oddělena do samostatné aplikace, pokud kalendář novinek používáte je třeba upravit cestu `/components/calendar/news_calendar.jsp` na `/components/news-calendar/news_calendar.jsp` (#57409).
+- Upravená inicializace Spring a JPA, více informací v sekci pro programátora (#43144).
 
 ### Aplikace
 
@@ -40,6 +41,12 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 - **Podpora pro nadměrnou rezervaci** – umožňuje administrátorům vytvořit více rezervací `overbooking` na tentýž termín (#57405).
 - **Vylepšená validace při importu** – nyní lze importovat [rezervace](redactor/apps/reservation/reservations/README.md) i do minulosti, nebo vytvořit `overbooking` rezervace při importu údajů (#57405).
+- **Podpora pro přidání rezervace do minulosti** – umožňuje administrátorům vytvořit rezervace v minulosti (#57389).
+- Do [rezervačních objektů](redactor/apps/reservation/reservation-objects/README.md) byl přidán sloupec **Emaily pro notifikace**, který pro každý zadaný platný email (oddělený čárkou) odešle email pokud byla rezervace přidána a schválena (#57389).
+- Notifikacím pro potvrzení rezervace a dalším systémovým notifikacím lze nastavit jméno a email odesílatele pomocí konfiguračních proměnných `reservationDefaultSenderName,reservationDefaultSenderEmail` (#57389).
+- Přidána nová aplikace [Rezervace dní](redactor/apps/reservation/day-book-app/README.md), pro rezervaci celodenních objektů na určitý interval pomocí integrovaného kalendáře (#57389).
+
+![](redactor/apps/reservation/day-book-app/app-table_B.png)
 
 ### Oprava chyb
 
@@ -49,8 +56,14 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 ### Pro programátora
 
+!> **Upozornění:** upravená inicializace Spring a JPA, postupujte podle [návodu v sekci instalace](install/versions.md#změny-při-přechodu-na-20250-snapshot).
+
+Jiné změny:
 - Přidána možnost provést [doplňkový HTML/JavaScript kód](custom-apps/appstore/README.md#doplňkový-html-kód) ve Spring aplikaci s anotací `@WebjetAppStore` nastavením atributu `customHtml = "/apps/calendar/admin/editor-component.html"` (#57409).
 - V datatable editoru přidán typ pole [IMAGE\_RADIO](developer/datatables-editor/standard-fields.md#image_radio) pro výběr jedné z možnosti pomocí obrázku (#57409).
+- Přidána podpora pro získání jména a emailu odesílatele pro různé emailové notifikace použitím `SendMail.getDefaultSenderName(String module, String fallbackName), getDefaultSenderEmail(String module, String fallbackEmail)` (#57389).
+- Přidána možnost nastavit kořenovou složku pro [pole typu JSON](developer/datatables-editor/field-json.md) ve formátu ID i cesty: `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "/Aplikácie/Atribúty stránky")` nebo `@DataTableColumnEditorAttr(key = "data-dt-field-root", value = "26")`.
+- Spuštění úloh na pozadí se provede až po kompletní inicializaci včetně `Spring` (#43144).
 
 ### Testování
 
@@ -69,12 +82,15 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Datové tabulky - doplněný limit počtu záznamů při zobrazení všechny. Hodnota je shodná s maximálním počtem řádků pro exportu, nastavuje se v konfigurační proměnné `datatablesExportMaxRows` (#57657-2).
 - Editor obrázků - při editaci obrázku ze vzdáleného serveru doplněna notifikace o potřebě stažení obrázku na lokální server (#57657-2).
 - Web stránky - opraveno vložení bloku obsahující aplikaci (#57657-2).
+- Web stránky - doplněn `ninja` objekt při vkládání aplikace do nové webové stránky (#57389).
 - Aplikace - opraveno zobrazení karty překladové klíče při použití komponenty `editor_component_universal.jsp` (#54273-57).
 - Přihlášení - opravena chyba přihlášení při exspirování časové platnosti hesla (#54273-57).
 - Přihlášení - opravené přihlášení v multiweb instalaci (#54273-57).
 - GDPR - opravené zobrazení karty Čištění databáze při použití `Oracle/PostgreSQL` databáze (#54273-57).
 - Archiv souborů - opraveno zobrazení ikon v dialogu data a času (#54273-57).
 - Bezpečnost - aktualizovaná knihovna `Swagger UI` na verzi `5.20.0`, doplněné výjimky v `dependency-check-suppressions.xml`.
+- Aktualizace - doplněno mazání nepotřebných souborů při aktualizaci rozbalené verze (#57657-4).
+- Multiweb - doplněná kontrola `ID` domény při registraci návštěvníka web sídla (#57657-4).
 
 ## 2025.0
 
@@ -82,7 +98,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 >
 > Jednou z hlavních změn je přesunutí **druhé úrovně menu** do **karet v hlavičce stránky**, čímž se zjednodušila navigace. Ve webových stránkách jsme také **sloučily karty složek a webových stránek**, abyste měli vše přehledně na jednom místě. Pokud hlavička neobsahuje karty, tabulky se automaticky přizpůsobí a zobrazí **řádek navíc**.
 >
-> Prosíme vás o zpětnou vazbu prostřednictvím **formuláře Zpětná vazba**, pokud při používání nové verze identifikujete **jakýkoli problém se zobrazením**. Připomínku můžete doplnit také o **fotku obrazovky**, což nám pomůže rychleji identifikovat a vyřešit případné nedostatky.
+> Prosíme vás o zpětnou vazbu prostřednictvím **formuláře Zpětná vazba**, pokud při používání nové verze identifikujete **jakýkoli problém se zobrazením**. Připomínku můžete doplnit io **fotku obrazovky**, což nám pomůže rychleji identifikovat a vyřešit případné nedostatky.
 >
 > Děkujeme za spolupráci a pomoc při vylepšování WebJET CMS!
 
@@ -102,7 +118,7 @@ Ve verzi **2025.0** jsme přinesli vylepšený **design administrace**, který j
 
 **Nová navigace v levém menu** – pod položky již nejsou součástí levého menu, ale zobrazují se **jako karty v horní části** stránky. ![](redactor/admin/welcome.png)
 
-**Sloučené karty v sekci Webové stránky** – přepínání typů složky a typů web stránek se nyní zobrazují ve společné části, čímž se zjednodušila navigace. **Výběr domény** byl přesunut na spodní část levého menu. ![](redactor/webpages/domain-select.png)
+**Sloučené karty v sekci Webové stránky** – přepínání typů složky a typů webových stránek se nyní zobrazují ve společné části, čímž se zjednodušila navigace. **Výběr domény** byl přesunut na spodní část levého menu. ![](redactor/webpages/domain-select.png)
 
 **Přeorganizované menu položky**:
 - **SEO** přesunuty do sekce **Přehledy**.

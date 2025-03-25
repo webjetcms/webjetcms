@@ -1,5 +1,5 @@
-# Kód VS
+# VS Code
 
-[Kód aplikace Visual Studio](https://code.visualstudio.com/) je bezplatné vývojové prostředí pro programování. Doporučujeme jej používat pro programování pro WebJET CMS.
+[Visual Studio Code](https://code.visualstudio.com/) je volné vývojové prostředí pro programování. Doporučujeme jej použít k programování pro WebJET CMS.
 
-V této sekci najdete různé návody na jeho použití a integraci se systémem WebJET CMS.
+V této sekci naleznete různé návody k jeho použití a integraci s WebJET CMS.

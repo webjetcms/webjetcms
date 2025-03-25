@@ -1,113 +1,113 @@
-# Statistiky
+# Statistika
 
-Aplikace statistiky umožňuje zobrazit statistické informace o návštěvnících vašich webových stránek. Je k dispozici v sekci Přehled v levém menu jako položka Statistiky.
+Aplikace statistika vám umožňuje zobrazit statistické informace o návštěvnících vašeho web sídla. Je dostupná v sekci Přehled levém menu jako položka Statistiky.
 
-V žádosti jsou použity následující pojmy:
-- views - celkový počet zobrazených stránek
-- návštěvy (nebo relace) - počet návštěv každé osoby, přičemž za návštěvu se považuje doba, po kterou návštěvník nezavřel webový prohlížeč. Pokud tedy návštěvník přišel na váš web a zobrazil si 5 stránek, započítává se 5 zobrazení a 1 návštěva. Pokud zavře prohlížeč (nebo si žádnou stránku neprohlíží déle než 30 minut) a přijde na web znovu, počítá se to jako další návštěva.
-- různých uživatelů - přibližný počet skutečně různých návštěvníků webu. Pokud návštěvník navštíví vaše stránky, bude mu zaslán soubor cookie, který bude použit k jeho identifikaci při další návštěvě. Platnost tohoto souboru cookie je nastavena na jeden rok, takže i když přijde na web po relativně dlouhé době, bude stále považován za stejného návštěvníka
+V aplikaci se používají následující výrazy:
+- vidění - celkový počet zobrazených stránek
+- návštěv (nebo sezení) - počet návštěv jednotlivých lidí, přičemž za jednu návštěvu se považuje doba, po kterou návštěvník nezavřel internetový prohlížeč. Čili pokud se návštěvník dostal na vaši stránku a prohlédl si 5 stránek započítá se 5 vidění a 1 návštěva. Když zavře internetový prohlížeč (nebo si nepodívá žádnou stránku za více než 30 minut) a na stránku přijde znovu, započítá se to jako další návštěva
+- různých uživatelů – přibližné číslo skutečně rozdílných návštěvníků stránky. Pokud návštěvník navštíví vaši stránku zašle se mu cookie, pomocí kterého bude identifikován i při příští návštěvě. Platnost této cookie je nastavena na jeden rok, čili i kdyby přišel na stránku za relativně dlouhé období, stále se bude považovat za stejného návštěvníka
 
-Upozornění: ukládání statistických údajů podléhá souhlasu s ukládáním statistických souborů cookie podle GDPR. Pokud návštěvník nedá souhlas s jejich ukládáním, jsou statistiky anonymizovány:
-- doba návštěvy se zaokrouhluje na 15 minut
-- prohlížeč je nastaven na hodnotu unknown
-- krajina je připravena pro neznámé
+Upozornění: ukládání statistiky je podmíněno GDPR souhlasem na ukládání statistických cookies. Pokud návštěvník nedá souhlas k jejich ukládání je statistika anonymizována:
+- doba návštěvy je zaokrouhlena na 15 minut
+- prohlížeč je nastaven na neznámý
+- země je nastavena na neznámá
 
-Sekce Statistiky používá externí filtr, který je podrobněji popsán zde. [Externí filtr](./external-filter.md)
+Sekce Statistika využívá externí filtr, který je podrobněji popsán zde [Externí filtr](./external-filter.md)
 
-## Doprava
+## Návštěvnost
 
-> Můžete zjistit, ve kterých dnech (např. pravidelně ve středu) se návštěvnost zvyšuje, nebo v seskupení podle hodin, kdy máte nejvyšší/nejnižší návštěvnost.
+> Zjistíte ve které dny (např. pravidelně ve středy) roste návštěvnost, případně v seskupení podle hodin, ve kterém čase máte nejvyšší/nejnižší návštěvnost.
 
-Sekce **Doprava** nabízí přehled návštěvnosti celého webu a sloupcové grafy návštěvnosti podle dnů, týdnů, měsíců a hodin.
+Sekce **Návštěvnost** nabízí přehled návštěvnosti celého web sídla a čárové grafy návštěvností podle dní, týdnů, měsíců a hodin.
 
 ![](stats-page.png)
 
-**Volba seskupení**
+**Výběr seskupení**
 
 ![](stats-statType.png)
 
-K dispozici jsou čtyři možnosti seskupení statistik. Seskupování mění počítání především jedinečných (různých) uživatelů. Pokud jako jedinečný uživatel navštívím webovou stránku dnes a zítra, jsem do seskupení započítán každý den. Ale ve seskupení podle týdne nebo měsíce se mohu seskupit pouze jednou.
+K výběru jsou čtyři možnosti seskupení statistik. Seskupení mění počítání hlavně unikátních (různých) uživatelů. Pokud já jako unikátní uživatel navštívím web stránku dnes i zítra jsem v seskupení podle dní započítán každý den. V uskupení podle týdne nebo měsíce ale už jen jednou.
 
-Měsíční seskupení porovnává celkovou návštěvnost mezi více měsíci. Můžete vidět celkový počet zobrazení stránek a také počet různých uživatelů podle měsíců v roce.
+Měsíční uskupení porovná celkovou návštěvnost mezi několika měsíci. Vidíte celkový počet zobrazení web stránky a také počet různých uživatelů podle měsíců v roce.
 
-Seskupení podle hodin je užitečné pro určení nejvyšší návštěvnosti během dne - v kterou hodinu je na webu největší provoz, což je obvykle spojeno s největším zatížením serverů a infrastruktury.
+Seskupení podle hodin je vhodné pro určení největší návštěvnosti během dne – ve kterou hodinu má web největší návštěvnost, což je typicky spojeno s největší zátěží na servery a infrastrukturu.
 
-## Horní stránky
+## Top stránky
 
 > Jaké stránky jsou nejnavštěvovanější?
 
-Zobrazí seznam webových stránek s největším počtem zobrazení. Zobrazuje koláčový graf 10 nejnavštěvovanějších stránek, časovou osu a tabulku 100 nejnavštěvovanějších stránek.
+Zobrazuje seznam web stránek s největším počtem vidění. Zobrazen je koláčový graf 10 nejnavštěvovanějších stránek, časový přehled a tabulka se seznamem 100 nejnavštěvovanějších stránek.
 
-V následující tabulce jsou uvedeny nejnavštěvovanější stránky s údaji o počtu zobrazení, návštěv a počtu různých uživatelů.
+V tabulce je seznam nejnavštěvovanějších stránek s údaji o počtu vidění, návštěv a počtu různých uživatelů.
 
 ![](top-page.png)
 
 ## Země
 
-> Z jakých zemí návštěvníci přicházejí? Na které jazyky se zaměřit?
+> Ze kterých zemí přicházejí návštěvníci? Na jaké jazykové mutace je třeba se zaměřit?
 
-Zobrazuje provoz podle země. Země se určuje podle hlavičky HTTP `accept-language` prohlížeč, který zobrazuje webovou stránku. Obvykle se jedná o jazyk, který uživatel nastavil v operačním systému. Pokud se zemi nepodařilo identifikovat, je klasifikována jako **Neznámý**.
+Zobrazuje návštěvnost podle zemí. Země se určí podle HTTP hlavičky `accept-language` prohlížeče, který zobrazuje web stránku. Typicky je to jazyk, který má uživatel nastaven v operačním systému. Pokud se zemi nepodařilo identifikovat je zařazena jako **Neznámá**.
 
 ![](country-page.png)
 
 ## Prohlížeče
 
-> Jaké prohlížeče návštěvníci používají? Pro které prohlížeče a operační systémy je třeba web optimalizovat?
+> Jaké prohlížeče návštěvníci používají? Na jaké prohlížeče a jaké operační systémy je třeba stránku optimalizovat?
 
-Seznam prohlížečů a jejich verzí. Tabulka zobrazuje nejpoužívanější prohlížeče s verzí, časovým zobrazením a kompletní tabulkou.
+Seznam používaných prohlížečů a jejich verzí. V grafu jsou zobrazeny nejpoužívanější prohlížeče s verzí, časové zobrazení a kompletní tabulka.
 
-Hodnota **Neznámý** nebo **???** se zobrazuje u neznámých prohlížečů a u prohlížečů, u nichž návštěvník nedal souhlas ke shromažďování statistických souborů cookie.
+Hodnota **Neznámý** nebo **???** se zobrazuje pro neznámé prohlížeče a pro prohlížeče u kterých návštěvník nedal souhlas ke sbírání statistických cookies.
 
 ![](browser-page.png)
 
-**Poznámka:** typ, verze, operační systém se zjišťuje pomocí hlavičky HTTP `User-Agent`. Knihovna se používá [UAP-java](https://github.com/ua-parser/uap-java). Použité [YAML](https://github.com/ua-parser/uap-core/blob/master/regexes.yaml) soubor lze aktualizovat a cestu k němu lze nastavit v proměnné conf. `uaParserYamlPath`. Použije se po restartování aplikačního serveru.
+**Poznámka:** typ, verze, operační systém se detekuje podle HTTP hlavičky `User-Agent`. Používá se knihovna [UAP-java](https://github.com/ua-parser/uap-java). Použitý [YAML](https://github.com/ua-parser/uap-core/blob/master/regexes.yaml) soubor lze aktualizovat a cestu k němu nastavit do konf. proměnné `uaParserYamlPath`. Aplikuje se po restartování aplikačního serveru.
 
 ## Vyhledávače
 
-> Co návštěvníci na našich webových stránkách hledají? Jaké výrazy přišly na naše stránky z vyhledávačů?
+> Co návštěvníci vyhledávají na naší stránce? Na jaké vyhledávané výrazy se dostaly na náš web z vyhledávačů?
 
-Seznam vyhledávaných výrazů na vašich webových stránkách, ale také v externích vyhledávačích `Google`, `Seznam` atd. Kliknutím na hledaný výraz se zobrazí podrobný seznam časů a vyhledávač, který byl pro hledání daného výrazu použit. Ve sloupci adresa počítače se zobrazuje IP adresa/název domény počítače, ze kterého bylo vyhledávání provedeno. Hodnota `0.0.0.0` se zobrazí, pokud návštěvník nesouhlasil se shromažďováním statistických souborů cookie.
+Seznam vyhledávaných výrazů na vašem web sídle, ale také na externích vyhledávačích `Google`, `Seznam` atp. Klepnutím na hledaný výraz zobrazíte detailní seznam časů a použitého vyhledávače pro hledání daného výrazu. Ve sloupci adresa počítače se zobrazuje IP adresa/doménové jméno počítače ze kterého bylo provedeno hledání. Hodnota `0.0.0.0` se zobrazí pokud návštěvník nedal souhlas ke sbírání statistických cookies.
 
-Graf a tabulku lze dále filtrovat v hlavním horním filtru podle vyhledávače a případně podle stránky, na které se výsledky vyhledávání nacházejí (nebo na kterou bylo přejito z externího vyhledávače).
+Graf a tabulku můžete dále v hlavním horním filtru filtrovat podle vyhledávače a případně stránky kde se nacházejí výsledky vyhledávání (nebo byl přechod na danou stránku z externího vyhledávače).
 
 ![](search-engines-page.png)
 
-## Odkud pocházejí
+## Odkud přišli
 
-> Z jakých externích stránek se návštěvníci "proklikli" na naše webové stránky?
+> Z jakých externích stránek se "pre-klikli" návštěvníci na náš web?
 
-Seznam domén webových stránek, ze kterých návštěvníci přišli na vaši webovou stránku (klikli na odkaz na dané doméně). Stránka, ze které přišli, musí být na zabezpečeném protokolu (https) a nesmí zakazovat přenos odkazu na jiný server (hlavička HTTP `referrer`).
+Seznam domén web stránek ze kterých přišli návštěvníci na vaši web stránku (klikli na odkaz na uvedené doméně). Stránka ze které přicházejí musí být na zabezpečeném (https) protokolu a nesmí zakazovat přenos odkazu na jiný server (HTTP hlavička `referrer`).
 
 ![](referer-page.png)
 
-## Vadné stránky
+## Chybné stránky
 
-> Jaké adresy URL/stránky jsou "někam" odkazovány, ale stránka/URL již neexistuje?
+> Na jaké URL adresy/stránky vede "někde" odkaz, ale stránka/URL již neexistuje?
 
-Seznam adres URL, pro které se zobrazí chybová stránka (kód HTTP 404). Každá chybná adresa URL je seskupena podle týdnů, takže v tabulce vidíte počet volání chybné adresy URL za týden.
+Seznam URL adres, pro které je zobrazena chybová stránka (HTTP kód 404). Každá chybná URL adresa je seskupena podle týdne, v tabulce tak vidíte počty volání chybné URL adresy za týden.
 
-Graf a tabulku můžete dále filtrovat v hlavním horním filtru podle výrazu URL (hledáno v režimu obsahuje). Můžete tak zúžit zobrazení pouze na zadaný výraz (např. `/files/` nebo `.pdf` zobrazit odkazy na chybějící soubory).
+Graf a tabulku můžete dále v hlavním horním filtru filtrovat podle URL výrazu (vyhledává se v režimu obsahuje). Můžete tak zúžit zobrazení pouze pro zadaný výraz (např. `/files/` nebo `.pdf` zobrazí odkazy na chybějící soubory).
 
-**TIP:** Doporučujeme opravit nesprávné stránky nebo je přesměrovat na jinou vhodnou stránku/URL adresu.
+**TIP:** Chybné stránky doporučujeme opravit, nebo přesměrovat na jinou vhodnou stránku/URL adresu.
 
 ![](error-page.png)
 
 ## Přihlášení
 
-> Jak dlouho a kolikrát se návštěvníci nebo správci webu přihlašovali?
+> Jak dlouho a kolikrát se přihlásili návštěvníci nebo administrátoři web sídla?
 
-Statistiky přihlášení uživatelů do zabezpečené (heslem chráněné) zóny nebo do administrace. Počet minut přihlášení nemusí být přesný, uživatel nemusí být správně odhlášen a může být přihlášen ve více oknech/prohlížečích současně, jedná se pouze o orientační údaj.
+Statistika přihlášení uživatelů do zabezpečené (zaheslované) zóny, nebo do administrace. Údaj o počtu minut přihlášení nemusí být přesný, uživatel se nemusí korektně odhlásit a zároveň může být najednou přihlášen ve více oknech/prohlížečích, jedná se pouze o orientační údaj.
 
-Kliknutím na jméno uživatele zobrazíte podrobné statistiky přihlášení vybraného uživatele.
+Klepnutím na uživatelské jméno zobrazíte podrobnou statistiku přihlášení zvoleného uživatele.
 
 ![](logon-user-page.png)
 
-## Současní návštěvníci
+## Aktuální návštěvníci
 
-> Kolik návštěvníků mají webové stránky právě teď?
+> Kolik má web právě návštěvníků?
 
-Seznam aktuálních relací na webové stránce, obsahuje také seznam nepřihlášených uživatelů (jejich relací). Pokud máte webovou stránku v clusteru, obsahuje tento seznam pouze uživatele na uzlu, na kterém jste právě přihlášeni, nevidíte seznam ze všech uzlů.
+Seznam aktuálních sezení na web stránce, obsahuje také seznam nepřihlášených uživatelů (jejich sezení). Pokud máte web sídlo v clusteru obsahuje tento seznam pouze uživatele na uzlu na kterém jste právě přihlášeni, není vidět seznam ze všech uzlů.
 
-Kliknutím na jméno uživatele zobrazíte podrobné statistiky přihlášení vybraného uživatele.
+Klepnutím na uživatelské jméno zobrazíte podrobnou statistiku přihlášení zvoleného uživatele.
 
 ![](logon-current-page.png)

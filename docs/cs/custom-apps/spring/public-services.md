@@ -1,25 +1,25 @@
 # Veřejné služby
 
-WebJET nabízí několik "veřejných služeb" přes služby REST, které můžete využít při programování zákaznických aplikací.
+WebJET nabízí několik „veřejných služeb“ přes REST služby, které můžete využít při programování zákaznických aplikací.
 
-Volání těchto služeb musí být povoleno, jinak jsou služby nedostupné. Povolení pro IP adresy se nastavuje pomocí konfiguračních proměnných:
-- `restAllowedIpAddresses` - seznam povolených IP adres pro volání všech veřejných služeb.
-- `restAllowedIpAddresses-DocRestController` - povolené IP adresy pro volání textové služby načtení webové stránky.
-- `restAllowedIpAddresses-PropertiesRestController` - povolené IP adresy pro volání služby překladu klíčů
+Volání těchto služeb musí být povoleno, jinak jsou služby nedostupné. Povolení pro IP adresy se nastavuje přes konfigurační proměnné:
+- `restAllowedIpAddresses` - seznam povolených IP adres pro volání všech veřejných služeb
+- `restAllowedIpAddresses-DocRestController` - povolené IP adresy pro volání služby získání textu web stránky
+- `restAllowedIpAddresses-PropertiesRestController` - povolené IP adresy pro volání služby překladových klíčů
 
-Zadání znaku `*` jsou povoleny všechny IP adresy, můžete zadat více počátečních IP adres oddělených čárkou, například: `192.168.,62.65.161.4,10.10.0.`.
+Zadáním znaku `*` se povolí všechny IP adresy, můžete zadat několik začátků IP adres oddělených čárkou, například: `192.168.,62.65.161.4,10.10.0.`.
 
-Pokud máte vlastní službu REST, která rozšiřuje třídu [RestController](../../../../src/webjet8/java/sk/iway/iwcm/rest/RestController.java) název třídy se používá k získání speciálního klíče pro kontrolu oprávnění IP adres.
+Máte-li vlastní REST službu, která rozšiřuje třídu [RestController](../../../../src/webjet8/java/sk/iway/iwcm/rest/RestController.java) použije se jméno třídy pro získání speciálního klíče pro kontrolu povolení IP adresy.
 
-## Text webové stránky
+## Text web stránky
 
-Získat `DocDetails` objekt je obsluhován následujícím typem koncového bodu `GET` :
+Na získání `DocDetails` objektu slouží následující koncový bod typu `GET` :
 
 ```java
     @RequestMapping(path={"/rest/documents/{param}/**"}, method=RequestMethod.GET)
 ```
 
-Vstupní parametr je **id** nebo **virtuální cesta** objekt, který chcete získat.
+Vstupním parametrem je **id** nebo **virtuální cesta** objektu, který chcete získat.
 
 Příklady použití:
 - `/rest/documents/50124`
@@ -28,22 +28,22 @@ Příklady použití:
 
 ## Překladové klíče
 
-Služba vrací pouze ty překladové klíče, jejichž začátky jsou nastaveny v konfigurační proměnné `propertiesRestControllerAllowedKeysPrefixes` oddělené novým řádkem nebo čárkou. Ve výchozím nastavení je hodnota prázdná, před použitím je třeba nastavit předponu nebo znak `*` povolit všechny klávesy.
+Služba vrátí pouze překladové klíče, jejichž začátky jsou nastaveny v konfigurační proměnné `propertiesRestControllerAllowedKeysPrefixes` odděleny novým řádkem nebo čárkou. Ve výchozím nastavení je hodnota prázdná, před použitím je třeba nastavit prefix nebo znak `*` pro povolení všech klíčů.
 
 ### Získání překladových textů
 
-Pro získání textů překladu se použije koncový bod typu `GET` :
+K získání překladových textů slouží koncový bod typu `GET` :
 
 ```java
     @RequestMapping(path={"/rest/properties/{lng}/{prefix:.+}"}, method=RequestMethod.GET)
 ```
 
-Vstupní parametry jsou **Jazyk** (např. `sk`, `en`), ve kterém budou přeloženy hodnoty klíčů a počáteční/prefix samotných překladových klíčů.
+Vstupními parametry jsou **jazyk** (Např. `sk`, `en`), ve kterém budou přeloženy hodnoty klíče a samotný začátek/prefix překladových klíčů.
 
 Příklady použití:
 - `/rest/properties/sk/components.abtesting`
 
-Tento koncový bod vrací seznam párů jako mapu `Map<String, String>` kde každá dvojice se skládá z **klíč s předponou** a jeho **hodnota (překlad)**.
+Tento koncový bod vrátí seznam párů jako mapu `Map<String, String>`, kde každý pár se skládá z **klíče s prefixem** a jeho **hodnotou (překladem)**.
 
 Příklad vrácených hodnot:
 - `components.abtesting.dialog_title = AB testovanie`
@@ -54,22 +54,22 @@ Příklad vrácených hodnot:
 
 ### Získání překladů podle klíče
 
-Získání překladů podle klíče s hodnotou ve formátu `Entry<String, String>` je použit následující typ koncového bodu `GET` :
+Pro získání překladů podle klíče s hodnotou ve formátu `Entry<String, String>` slouží následující koncový bod typu `GET` :
 
 ```java
     @RequestMapping(path={"/rest/property/{lng}/{key:.+}/**"}, method=RequestMethod.GET)
 ```
 
-Vstupní parametry jsou **Jazyk** (např. `sk`, `en`), který přeloží hodnotu klíče a **překladatelský klíč**. Pokud hodnota klíče překladu obsahuje proměnné `{0}, {1} ...` mohou být vyplněny dalšími proměnnými z cesty (z koncového bodu).
+Vstupními parametry jsou **jazyk** (Např. `sk`, `en`), ve kterém bude přeložena hodnota klíče a samotný **překladový klíč**. Pokud hodnota překladového klíče obsahuje proměnné `{0}, {1} ...` je možné je vyplnit dalšími proměnnými ze silnice (z koncového bodu).
 
-#### Příklady požití a návratových hodnot
+#### Příklady požití a vrácených hodnot
 
-Po zadání cesty `/rest/property/sk/calendar.invitation.saveok-A` je vrácena hodnota klíče překladu `calendar.invitation.saveok-A` ve slovenštině (`sk`) jazyk jako `Dakujeme za akceptovanie schodzky.`.
+Při zadání cesty `/rest/property/sk/calendar.invitation.saveok-A` se vrátí hodnota překladového klíče `calendar.invitation.saveok-A` v češtině (`sk`) jazyce jako `Dakujeme za akceptovanie schodzky.`.
 
 **Složitý příklad**
 
-Pokud zadáte cestu jako `/rest/property/sk/converter.number.invalidNumber/4/test` chceme získat překladový klíč `converter.number.invalidNumber` s hodnotou přeloženou do jazyka `sk`. Hodnota klíče překladu je `Hodnota ({1}) v poli {0} musi byt cislo`.
+Při zadání cesty jako `/rest/property/sk/converter.number.invalidNumber/4/test` chceme získat překladový klíč `converter.number.invalidNumber` s hodnotou přeloženou do jazyka `sk`. Hodnota překladového klíče je `Hodnota ({1}) v poli {0} musi byt cislo`.
 
-Byly zadány 2 nepovinné parametry, a to `4` a `test`. Vzhledem k tomu, že parametr `4` byl první, který nahradil parametr `{0}` parametr `test` nahradí `{1}`.
+Zadány byly 2 volitelné parametry a to `4` a `test`. Jelikož parametr `4` byl první, nahradí parametr `{0}` a parametr `test` nahradí `{1}`.
 
 Výsledná vrácená kombinace je `converter.number.invalidNumber` - `Hodnota (test) v poli 4 musi byt cislo`.

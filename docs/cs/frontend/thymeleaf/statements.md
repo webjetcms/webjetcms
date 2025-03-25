@@ -1,16 +1,16 @@
 # Atributy, podmínky a cykly
 
-## Základní výpis textu/atributů
+## Základní výpis textu / atributu
 
-Text nelze vypsat přímo, musí se vložit např. do. `span` obalů s atributem `data-th-text` který nahradí obsah `span` prvek (bude vytvořen prototyp). Podobně se nastavují atributy, např. `data-th-href=...`
+Text nelze vypsat přímo, je nutné jej dát do např. `span` obalovače s atributem `data-th-text`, co nahradí obsah `span` elementu (aby se dalo prototypovat). Podobně se nastavují i atributy, tzn. `data-th-href=...`
 
 ```html
 <span data-th-text="${docDetails.title}">Titulok stránky</span>
 ```
 
-Pro vložení **Kód HTML (bez escapování znaků)** atribut musí být použit `data-th-utext`.
+Pro vložení **HTML kódu (bez escapingu znaků)** je třeba použít atribut `data-th-utext`.
 
-v kódu JavaScriptu lze hodnotu přiřadit následujícím způsobem:
+v JavaScript kódu lze hodnotu přiřadit následovně:
 
 ```javascript
     //standardne vlozenie s escapovanim HTML kodu (bezpecne)
@@ -19,21 +19,21 @@ v kódu JavaScriptu lze hodnotu přiřadit následujícím způsobem:
     window.title = [(${docDetails.title})];
 ```
 
-Pokud potřebujete následně [také odstranit celou značku](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#removing-template-fragments) můžete použít atribut `data-th-remove="tag"`:
+Potřebujete-li následně [odstranit i celý tag](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#removing-template-fragments) můžete použít atribut `data-th-remove="tag"`:
 
 ```html
 <div data-th-utext='${ninja.temp.insertTouchIconsHtml}' data-th-remove="tag"></div>
 ```
 
-Pokud potřebujete vypsat [jednoduchý atribut](webjet-objects.md) z `request` můžete použít:
+Pokud potřebujete vypsat [jednoduchý atribut](webjet-objects.md) z `request` objektu, můžete použít:
 
 ```html
 <link data-th-href="${base_css_link}" rel="stylesheet" type="text/css"/>
 ```
 
-## Text překladu
+## Překladový text
 
-Text překladu se píše ve tvaru `#{prekladovy.kluc}`.
+Překladový text se zapisuje ve formě `#{prekladovy.kluc}`.
 
 ```html
 <span data-th-text="#{menu.top.help}">Pomocník</span>
@@ -41,7 +41,7 @@ alebo priamo ako text:
 [[#{menu.top.help}]]
 ```
 
-## Propojení řetězců
+## Spojování řetězců
 
 ```html
 <img
@@ -50,13 +50,13 @@ alebo priamo ako text:
 >
 ```
 
-kromě toho je možné použít také [Doslovné záměny](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#literal-substitutions):
+kromě toho lze použít i [Literal substitutions](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#literal-substitutions):
 
 ```html
 <span data-th-text="|Welcome to our application, ${docDetails.title}!|">
 ```
 
-!>**Varování:** pokud vyhodí chybu jako: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. Jedná se o speciální značku pro [předprocesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) a je třeba jej escapovat jako \\\\\_, příklad:
+!>**Upozornění:** pokud vám vyhodí chybu typu: `Could not parse as expression: "aitem--open md-large-menu"`, je to kvůli `__`. To je speciální značka pro [pre-procesor](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#preprocessing) a je třeba to escapovat jako \\\\\_, příklad:
 
 ```html
 <div data-th-each="menuItem : ${layout.menu}" data-th-class="${menuItem.active} ? 'md-large-menu\\_\\_item--open md-large-menu\\_\\_item--active' : 'md-large-menu__item'">
@@ -64,7 +64,7 @@ kromě toho je možné použít také [Doslovné záměny](https://www.thymeleaf
 
 ## Cyklus
 
-Pro [cyklus](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#iteration) značka se používá `data-th-each`:
+Pro [cyklus](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#iteration) se používá značka `data-th-each`:
 
 ```html
 <select data-th-field="${layout.header.currentDomain}" onchange="WJ.changeDomain(this);" data-th-data-previous="${layout.header.currentDomain}">
@@ -72,17 +72,17 @@ Pro [cyklus](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#ite
 </select>
 ```
 
-## Stav
+## Podmínka
 
-Atribut `data-th-if` zajistit zobrazení `tagu` pouze při setkání [uvedenou podmínku](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#conditional-evaluation).
+Atribut `data-th-if` zajistí zobrazení `tagu` jedině při splnění [zadané podmínky](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#conditional-evaluation).
 
 ```html
 <i data-th-if="${!docDetails.available}" class="ti ti-chevron-down"></i>
 ```
 
-## Zahrnout
+## Include
 
-Použití atributu `data-th-replace` můžete snadno přidat do šablon HTML [vložit include jiného HTML](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#including-template-fragments) soubor:
+Pomocí atributu `data-th-replace` víte do HTML šablony jednoduše [vložit include jiného HTML](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#including-template-fragments) souboru:
 
 ```html
 <header class="ly-header">
@@ -91,12 +91,12 @@ Použití atributu `data-th-replace` můžete snadno přidat do šablon HTML [vl
 ```
 
 Lze použít následující atributy:
-- `data-th-insert` - vloží zadaný soubor do těla značky
-- `data-th-replace` - nahradí celou značku zadaným souborem
+- `data-th-insert` - do těla tagu vloží zadaný soubor
+- `data-th-replace` - celý tag nahradí zadaným souborem
 
 ## Volání statické metody
 
-Pokud potřebujete zavolat statickou metodu, můžete použít příkaz `T()` funkce:
+Pokud potřebujete volat statickou metodu můžete použít `T()` funkci:
 
 ```html
 <p>date: <span data-th-text="${T(sk.iway.iwcm.Tools).formatDateTimeSeconds(demoComponent.date)}"></span></p>

@@ -1,17 +1,17 @@
-# Vymazání dat
+# Mazání dat
 
-Aplikace GDPR obsahuje uzel "Odstranit data", který slouží k odstranění starých dat z databáze.
+Aplikace GDPR obsahuje uzel „Mazání dat“, který slouží k odstraňování starých dat z databáze.
 
-Umožňuje mazání:
-- Účty **neaktivní uživatelé** (ti, kteří se nepřihlásili za posledních X dní, základ je nastaven na 730 dní = 2 roky)
-- **formuláře** (záznamy starší než X dní, základ nastaven na 730dní = 2roky)
-- **objednávky z elektronického obchodu** (záznamy starší než X dní, základna nastavena na 10 let)
-- **e-maily** (mazání dat z hromadného odesílání e-mailů, základna nastavena na 186 dní)
+Umožňuje mazat:
+- účty **neaktivních uživatelů** (ti, kteří nebyli přihlášeni za posledních X dní, základny nastaveny na 730dnů = 2roky)
+- **formuláře** (záznamy starší než X dnů, základny nastavené na 730dní = 2roky
+- **objednávky z elektronického obchodu** (záznamy starší než X dnů, základny nastavené na 10 let)
+- **emaily** (mazání dat z hromadného e-mailingu, základny nastaveno na 186 dní)
 
 ![](data-deleting-dataTable.png)
 
-V datové tabulce není možné vytvářet nové záznamy, jejich počet je pevně stanoven funkcí WebJET CMS. Při editaci lze měnit pouze číselnou hodnotu **Období** který udává, za jaké období budou hodnoty při provedení akce zadány. **Odstranění dat** Vymazáno.
+V data tabulce není možné vytvářet nové záznamy, jejich počet je fixně daný funkčností WebJET CMS. Při úpravě lze změnit pouze číselnou hodnotu **Období**, která udává za jaké období budou dané hodnoty při provedení akce **Vymazat data** smazány.
 
 ![](data-deleting-editor.png)
 
-Všechny akce uživatele WebJET při mazání dat jsou auditovány (typ `GDPR_DELETE_*`) a je možné získat informace o tom, jaké bylo ID operace, kdo, kdy a kolik dat smazal.
+Všechny činnosti uživatele WebJETu při mazání dat jsou auditovány (typ `GDPR_DELETE_*`) a lze získat informaci o tom jaké bylo ID operace, kdo, kdy a kolik dat smazal.

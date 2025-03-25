@@ -1,28 +1,28 @@
 # Nastavení šablon
 
-## Jedna webová stránka
+## Jedno web sídlo
 
-Při použití pro jednu webovou stránku/doménu není třeba nastavovat nic zvláštního/odlišného od WebJET 8.
+Při použití pro jedno web sídlo/doménu není třeba nastavovat nic speciálního/rozdílného vůči WebJET 8
 
 ## Správa více domén
 
 Při správě více domén je třeba definovat následující konfigurační proměnné:
-- `multiDomainEnabled=true` - umožnění správy více domén
-- `enableStaticFilesExternalDir=true` - umožnění odděleného dělení aplikačních dat pro domény a použití externího adresáře pro statické soubory.
-- `cloudStaticFilesDir=/cesta/na/disku/` - Nastavení cesty k souborům externí domény. Jedná se o cestu na disku (např. `/mnt/cluster/static-files/`), který může být i mimo složku webové aplikace (např. na síťovém disku sdíleném mezi uzly clusteru). Pokud však chcete mít soubory domény ve složce webové aplikace, můžete nastavit hodnotu `{FILE_ROOT}static-files` ve kterém makro `{FILE_ROOT}` nahradí složkou, ze které je webová aplikace spuštěna.
-- `templatesUseDomainLocalSystemFolder=true` - zapnout používání místních `System` adresáře pro domény
-- `multiDomainAdminHost` - pokud máte samostatnou/vyhrazenou doménu pro přístup ke správě, nastavte název domény. Pokud je hodnota prázdná, budete mít přístup k administraci na všech doménách.
+- `multiDomainEnabled=true` - zapnutí správy více domén
+- `enableStaticFilesExternalDir=true` - zapnutí dělení dat aplikaci pro domény samostatně a použití externího adresáře na statické soubory.
+- `cloudStaticFilesDir=/cesta/na/disku/` - nastavení cesty k externím souborům domén. Jedná se o cestu na disku (např. `/mnt/cluster/static-files/`), která může být i mimo složku s web aplikací (např. na síťovém disku sdíleném mezi uzly clusteru). V případě potřeby můžete ale doménové soubory mít ve složce s web aplikací, tehdy můžete nastavit hodnotu `{FILE_ROOT}static-files` při kterém se makro `{FILE_ROOT}` nahradí za složku, ze které je web aplikace spuštěna.
+- `templatesUseDomainLocalSystemFolder=true` - zapnutí používání lokálního `System` adresáře pro domény
+- `multiDomainAdminHost` - pokud máte samostatnou/vyhrazenou doménu pro přístup do administrace nastavte doménové jméno. Pokud hodnota bude prázdná bude možné přistoupit do administrace na všech doménách.
 
-Po nastavení těchto proměnných doporučujeme restartovat server nebo alespoň odstranit všechny objekty z mezipaměti.
+Po nastavení těchto proměnných doporučujeme restart serveru nebo minimální smazání všech cache objektů.
 
-Toto nastavení zajišťuje oddělení dat a souborů jednotlivých domén. Pokud potřebujete sdílet soubory mezi doménami, můžete použít příkaz `/shared` který je sdílený mezi doménami.
+Takové nastavení zajistí oddělení dat a souborů jednotlivých domén. Pokud potřebujete sdílet soubory mezi doménami můžete použít složku `/shared`, který je mezi doménami sdílen.
 
-!>**Varování:** při použití externího adresáře musí mít WebJET také prázdné složky. `/images, /files` a případně `/shared` v kořenovém adresáři, aby se zobrazily v části Všechny soubory. Technicky nelze do úložiště GIT vložit prázdný adresář, takže v těchto adresářích vytvořte několik prázdných souborů (nejlépe něco jako `velmi-dlhy-nahodny-text.txt`).
+!>**Upozornění:** při použití externího adresáře WebJET potřebuje mít i prázdné složky `/images, /files` a případně `/shared` v kořenovém adresáři, aby je zobrazil v sekci Všechny soubory. Technicky do GIT repozitáře nelze push-nout prázdný adresář, vytvořte tedy v těchto adresářích nějaký prázdný soubor (ideálně něco jako `velmi-dlhy-nahodny-text.txt`).
 
-WebJET 2021 zobrazuje složky v seznamu webových stránek pouze pro vybranou doménu. Při uložení kořenové složky domény se zobrazí místní `System` složka pro záhlaví stránek, zápatí, nabídky atd. Při ukládání kořenové složky domény je proto nutné obnovit celou stránku, aby se správně načetl odkaz na složku. `System`.
+WebJET 2021 zobrazuje složky v seznamu webových stránek pouze pro zvolenou doménu. Při uložení kořenové složky domény se automaticky vytvoří lokální `System` složka pro stránky hlaviček, patiček, menu atp. Při uložení kořenové složky domény je proto třeba obnovit celou stránku, aby se korektně načetl odkaz na složku `System`.
 
-Složka `System` je na rozdíl od WebJETu 8 uložen v kořenovém adresáři (můžete si jej zobrazit ve struktuře složek kliknutím na list Složky při stisknutí tlačítka `shift` a ne v prvním adresáři vybrané domény (pokud však v adresáři domény existuje, bude použit).
+Složka `System` je na rozdíl od WebJET 8 uložen v kořeni (můžete jej zobrazit ve struktuře složek kliknutím na list Složky pri stlačené `shift` klávese) a ne v prvním adresáři zvolené domény (pokud ale existuje v doménovém adresáři, použije se ten).
 
-Výběrová pole pro záhlaví, zápatí, menu, volná pole v seznamu webových stránek nebo v úpravě šablony zobrazit stránky ve složce `System` včetně první úrovně podsložek (na rozdíl od WebJET 8). Ve složce `System` takže můžete vytvářet vlastní podsložky pro záhlaví, zápatí, nabídky nebo podle šablon či jiného klíče. Název stránky je uvozen názvem adresáře, např. `Hlavičky/Homepage`.
+Výběrová pole pro hlavičku, patičku, menu, volná pole v seznamu web stránek, nebo v úpravě šablony zobrazují stránky ve složce `System` a to včetně první úrovně podsložek (na rozdíl od WebJET 8). Ve složce `System` si tedy můžete sami vytvářet pod složky pro hlavičky, patičky, menu, případně podle šablon nebo jiného klíče. Jméno stránky má prefix jméno adresáře, tzn. `Hlavičky/Homepage`.
 
 ![](header-footer.png)

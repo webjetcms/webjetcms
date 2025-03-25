@@ -1,82 +1,82 @@
 ## Použití bodu zájmu
 
-Pro `/thumb` používání [nastavený bod zájmu](../../redactor/apps/gallery/README.md) přidáním parametru URL `ip` (bod zájmu). Bod zájmu lze nastavit na libovolný obrázek, nejen na ten v galerii, kliknutím na tlačítko upravit v editoru stránky nebo v průzkumníku.
+Pro `/thumb` se použití [nastavený bod zájmu](../../redactor/apps/gallery/README.md) přidáním URL parametru `ip` (interest point). Oblast zájmu lze nastavit na libovolný obrázek, nejen ten v galerii kliknutím na editaci v editoru stránek nebo v průzkumníku.
 
-Pro demonstrační účely je označená oblast zájmu poměrně vysoká, aby bylo vidět, jak se provádí posun při generování snímků převážně čtvercového rozměru vzhledem k označené oblasti.
+Pro ukázku je označená oblast zájmu poměrně vysoká, aby bylo zřejmé, jak se provádí posun při generování obrázků zejména čtvercového rozměru vůči označené oblasti.
 
-Pokud není označena žádná oblast, považuje se za označený celý obrázek.
+Není-li označena žádná oblast považuje se za označený celý obrázek.
 
 ![](editor-original-image.png)
 
-Všimněte si pevně označeného stojanu Tesla.
+Všimněte si, že je těsně označen stojan Tesla.
 
-## Pevná šířka
+## Fixní šířka
 
-Máte pouze parametr `w`, výška `h` se vypočítá podle poměru stran původního výřezu.
+Máte zadaný pouze parametr `w`, výška `h` se dopočítá podle poměru stran původního výřezu.
 
-Vytvoří se obrázek široký 200 pixelů, vypočítá se výška (tj. výsledek může být libovolně vysoký - v závislosti na poměru stran oblasti) a použije se pouze vybraná oblast. Výsledný obrázek má rozměr `200x270` bodů:
+Vygeneruje se obrázek široký 200 bodů, výška se dopočítá (tedy výsledek může být libovolně vysoký - podle poměru stran oblasti) a použije se jen zvolená oblast. Výsledný obrázek má rozměr `200x270` bodů:
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=200&ip=1`
 
 ![IP 1](ip-1.png)
 
-## Pevná výška
+## Fixní výška
 
-Máte pouze parametr `h`, šířka `w` se vypočítá podle poměru stran původního výřezu.
+Máte zadaný pouze parametr `h`, šířka `w` se dopočítá podle poměru stran původního výřezu.
 
-Stejně jako `ip=1` jsme zadali pouze výšku, šířka se vypočítá, výsledný obrázek má rozměr `148x200` bodů:
+Totéž jako `ip=1` jen máme zadanou pouze výšku, šířka se dopočítá, výsledný obrázek má rozměr `148x200` bodů:
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?h=200&ip=2`
 
 ![IP 2](ip-2.png)
 
-## Pevná šířka a výška vyplněná barvou
+## Fixní šířka a výška vyplněná barvou
 
-Výřez se celý vejde do zvolené velikosti. `w` a `h`, **Ne** je vycentrován a zbytek je obarven barvou z parametru `c` (výchozí bílá)
+Výřez se vejde celý do zvolené velikosti `w` a `h`, **ne** je centrován a zbytek je zabarven barvou z parametru `c` (výchozí bílá)
 
-Zadali jste PŘESNOU velikost obrázku, do které se musí vybraná oblast vejít, ale obrázek může být reálně menší než zadaná část, v tomto případě. `300x200` bodů, pravá strana se obarví zadanou barvou (v příkladu výchozí bílá bez zadané barvy `c` parametr).
+Máte zadanou PŘESNOU velikost obrázku, do které se zvolená oblast musí vejít, obrázek ale může být reálně menší než zadaná část, v tomto případě `300x200` bodů, pravá strana se obarví zadanou barvou (v ukázce výchozí bílá bez zadaného `c` parametru).
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=300&h=200&ip=3`
 
 ![IP 3](ip-3.png)
 
-## Pevná šířka a výška vyplněná barvou - vycentrovaná
+## Fixní šířka a výška vyplněná barvou - centrovaný
 
-Výřez se celý vejde do zvolené velikosti. `w` a `h`, je vycentrován a zbytek je obarven barvou z parametru `c` (výchozí bílá)
+Výřez se vejde celý do zvolené velikosti `w` a `h`, je centrován a zbytek je zabarven barvou z parametru `c` (výchozí bílá)
 
-Zadali jste PŘESNOU velikost obrázku, do které se musí vybraná oblast vejít, ale obrázek může být reálně menší než zadaná část. V tomto případě `300x200` bodů, okolí se obarví zvolenou barvou, takže obrázek bude mít VŽDY zadaný rozměr (nebude přeskakovat). Barva se zadává jako hexadecimální hodnota pomocí parametru `c` (bez znamení `#`).
+Máte zadanou PŘESNOU velikost obrázku, do které se zvolená oblast musí vejít, obrázek ale může být reálně menší než zadaná část. V tomto případě `300x200` bodů, okolí se obarví zvolenou barvou, takže obrázek má VŽDY zadaný rozměr (nebude poskakovat). Barva se zadává jako hex hodnota parametrem `c` (bez znaku `#`).
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=300&h=200&ip=4&c=ffff00`
 
 ![IP 4](ip-4.png)
 
-## Vystředěný s poměrem stran - snížený
+## Centrovaný s poměrem stran - zmenšený
 
-Zmenšete výřez a vycentrujte jej tak, aby byl zachován poměr stran požadované velikosti.
+Zmenší výřez a vycentruje tak, aby byl dodržen poměr stran požadované velikosti.
 
-Máte plochu 271x362 a chcete čtverec 200x200, výsledný obrázek je vystředěná část plochy v požadovaném poměru stran jako maximální velikost. To znamená, že celou oblast jakoby posuneme dolů a vycentrujeme (POZOR: nebereme oblast 200x200, ale čtverec 271x271 podle požadovaného poměru stran). Jako byste zvolenou oblast zvětšovali směrem k jejímu středu, dokud nevyplníte celý výřez (podle poměru stran, ne podle rozměru). Nejprve tedy provedete ořez podle poměru stran a poté jej zmenšíte na požadovaný rozměr.
+Máte oblast 271x362 a chcete čtverec 200x200, výsledný obrázek je centrovaná část z oblasti v požadovaném poměru stran jako max. velikost. Čili celou oblast jako kdyby posuneme směrem dolů a centrujeme (POZOR: nesebereme z ní 200x200, ale čtverec 271x271 podle požadovaného poměru stran). Jako kdyby přibližujete zvolenou oblast směrem do jejího středu, dokud nemáte vyplněn celý výřez (dle poměru stran, ne rozměru). Nejprve se tedy provede ořez podle poměru stran a následně zmenšení do požadované velikosti.
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=200&h=200&ip=5`
 
 ![Crop](ip-5.png)
 
-Všimněte si, že v porovnání s označenou oblastí je obrázek oříznutý shora a zespodu (méně viditelný než označená oblast) kvůli odlišnému poměru stran označené oblasti a požadované velikosti.
+Všimněte si, že oproti označené oblasti je obrázek z důvodu rozdílného poměru stran označené oblasti a požadovaného rozměru oříznut z horní a spodní části (zřejmě méně než je označená oblast).
 
-## Vystředěno s poměrem stran - zvětšeno
+## Centrovaný s poměrem stran - zvětšený
 
-Vybraný výřez bude ve výsledku kompletní, ale celkový výřez bude zvětšen podle poměru stran požadované velikosti.
+Zvolený výřez bude komplet ve výsledku, ale celkově se výřez zvětší podle poměru stran požadované velikosti.
 
-V podstatě podobně jako `ip=5`, ale plocha se nezmenšuje, ale protože obrázek má i okolí, zvětšíme jej podle požadovaného poměru stran. To znamená, že výsledkem bude vždy CELÁ vybraná oblast, ale bude rozšířena do okolí (ideálně vystředěná, ale pokud je oblast na okraji, posune se):
+V podstatě podobné jako `ip=5`, ale oblast se nezmenšuje, ale jelikož obrázek má i okolí tak ji naopak zvětšíme podle požadovaného poměru stran. Čili ve výsledku bude vždy CELÁ zvolená oblast, ale bude rozšířena do okolí (ideálně centrovaná, pokud je ale oblast na kraji posune se):
 
 `/thumb/images/gallery/test-vela-foto/dsc04131.jpg?w=200&h=200&ip=6`
 
 ![Crop](ip-6.png)
 
-Všimněte si, že v porovnání s označenou oblastí je obrázek rozšířen doprava a doleva (je viditelnější než označená oblast) z důvodu odlišného poměru stran označené oblasti a požadovaného rozměru.
+Všimněte si, že oproti označené oblasti je obrázek z důvodu rozdílného poměru stran označené oblasti a požadovaného rozměru rozšířen vpravo a vlevo (vidno více než je označená oblast).
 
 ## Vypnutí nastavené hodnoty bodu zájmu
 
-V některých případech je vhodné nepoužít nastavenou hodnotu bodu zájmu, např. chcete-li použít. `ip=4`, tj. přesnou velikost obrázku vyplněného bílou barvou, ale nechcete použít nastavenou oblast zájmu (tj. použít co největší část obrázku). Stačí do adresy URL přidat parametr `noip=true` a nastavená hodnota se nepoužije.
+V některých případech je vhodné nepoužít nastavenou hodnotu bodu zájmu. chcete použít `ip=4`, neboli přesný rozměr obrázku vyplněný bílou barvou, ale nechcete použít nastavenou oblast zájmu (tedy použít co největší část obrázku). Do URL adresy stačí přidat parametr `noip=true` a nastavená hodnota se nepoužije.
 
 `/thumb/images/gallery/test-vela-foto/dsc04068.jpeg?w=300&h=200&ip=4&noip=true&c=ffff00`
 

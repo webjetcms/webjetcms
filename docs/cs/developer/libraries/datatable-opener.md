@@ -1,10 +1,10 @@
 # DatatableOpener
 
-Třída `DatatableOpener` zajistí, aby se ID aktuálně otevřeného záznamu zobrazilo v adrese URL prohlížeče (parametr `id`), zobrazení ID v záhlaví datového souboru a vyhledání zadaného ID v záhlaví datového souboru. Třída je implementována podle třídy [AbstractJsTreeOpener](js-tree-document-opener.md).
+Třída `DatatableOpener` zabezpečuje zobrazení ID aktuálně otevřeného záznamu v URL adrese prohlížeče (parametr `id`), zobrazení ID v hlavičce datatabulky a vyhledání zadaného ID v hlavičce datatabulky. Třída je implementována podle třídy [AbstractJsTreeOpener](js-tree-document-opener.md).
 
 ![](datatable-opener.png)
 
-Třída je inicializována přímo v `index.js` DATATabulky. Otevírání lze zakázat nastavením konfiguračního parametru `idAutoOpener: false`.
+Třída je inicializována přímo v `index.js` datatabulky. Opener lze vypnout nastavením parametru konfigurace `idAutoOpener: false`.
 
 ```javascript
 ...
@@ -31,36 +31,36 @@ webpagesDatatable = WJ.DataTable({
 });
 ```
 
-Hodnota ID je v parametru URL nastavena pouze v době, kdy je editor otevřen, po zavření editoru je parametr z URL odstraněn. `id` vymaže. Takové chování nám připadá přirozenější a reprezentuje současný stav věcí.
+Hodnota ID se do URL parametru nastaví pouze během otevřeného editoru, po jeho zavření se z URL adresy parametr `id` smaže. Takového chování se nám zdá přirozenější a vystihující aktuální stav.
 
-Třída po inicializaci v záhlaví datového souboru vytvoří volání funkce `bindInput` vstupní pole pro zadání ID, ve kterém klávesa čeká na stisknutí. `Enter`. Poté nastaví zadanou hodnotu atributu `this.id` a spustí `this.dataTable.draw();` k zahájení procesu zobrazení editoru, podobně jako při inicializaci z parametru URL.
+Třída po inicializaci v hlavičce datatabulky vytvoří voláním funkce `bindInput` vstupní pole pro zadání ID, ve kterém čeká na stisk klávesy `Enter`. Následně zadanou hodnotu nastaví do atributu `this.id` a vyvolá `this.dataTable.draw();`, aby se spustil proces zobrazení editoru podobně jako při inicializaci z URL parametru.
 
-## Nastavení ID v adrese URL
+## Nastavení ID do URL adresy
 
-Třída po otevření editoru (pomocí události `this.dataTable.EDITOR.on( 'open', ( e, type ) => {`) získá aktuální objekt JSON `this.dataTable.EDITOR.currentJson` z něhož ID získá hodnotu podle sloupce v položce `this.dataTable.DATA.editorId` (ID není vždy hodnota ve sloupci id, může to být např. `insertScriptId`). Získanou hodnotu nastaví voláním `setInputValue` ve vstupním poli a v parametru URL id.
+Třída po otevření editoru (pomocí události `this.dataTable.EDITOR.on( 'open', ( e, type ) => {`) získá aktuální JSON objekt `this.dataTable.EDITOR.currentJson` ze kterého získá ID hodnotu podle sloupce v `this.dataTable.DATA.editorId` (ne vždy je ID hodnota ve sloupci id, může to být například. `insertScriptId`). Získanou hodnotu nastaví voláním `setInputValue` do vstupního pole a do URL parametru id.
 
-## Otevření editoru na základě parametru URL
+## Otevření editoru na základě URL parametru
 
-Po inicializaci v `index.js` nastaví hodnotu z parametru URL na interní objekty. Událost je vyslechnuta `this.dataTable.on('draw.dt', (evt, settings) => {`, tj. vykreslení tabulky. Z ní se na základě ID načte příslušný řádek a vyvolá se funkce pro otevření editoru `this.dataTable.wjEditFetch($('.datatableInit tr[id=' + id + ']'));`.
+Po inicializování v `index.js` se nastaví hodnota z URL parametru do interních objektů. Poslouchá se událost `this.dataTable.on('draw.dt', (evt, settings) => {`, neboli vykreslení tabulky. Z ní se získá na základě ID příslušný řádek a vyvolá se funkce otevření editoru `this.dataTable.wjEditFetch($('.datatableInit tr[id=' + id + ']'));`.
 
-## Vyhledání zadaného ID
+## Vyhledávání zadaného ID
 
-Problémem při otevírání editoru je stav, kdy se zadané ID nenachází na aktuálně zobrazené stránce datové tabulky. I zde je třeba rozlišovat mezi stavem stránkování serveru a klienta. Voláním `const idIndex = Object.keys(settings.aIds).indexOf(id.toString());` získá se pořadový index v aktuálních datech pro zadané id. Současně se vypočítá stránka, na které se má záznam nacházet, a to tak, že se vypočte `const pageNumber = info.length < 0 ? 0 : Math.floor(idIndex / info.length);`.
+Problémem otevření editoru je stav, kdy zadané ID není na aktuálně zobrazené straně datatabulky. Zde také musíme rozlišovat stav serverového a klientského stránkování. Voláním `const idIndex = Object.keys(settings.aIds).indexOf(id.toString());` se získá pořadový index v aktuálních datech pro zadané id. Zároveň se vypočítá strana, na které by se měl záznam nacházet výpočtem `const pageNumber = info.length < 0 ? 0 : Math.floor(idIndex / info.length);`.
 
-Pokud se jedná o aktuální stránku (nebo byl záznam nalezen v datech během stránkování serveru), je zobrazení editoru vyvoláno voláním `this.dataTable.wjEditFetch($('.datatableInit tr[id=' + id + ']'));`.
+Jedná-li se o aktuální stránku (nebo byl záznam nalezen v datech při serverovém stránkování) vyvolá se zobrazení editoru voláním `this.dataTable.wjEditFetch($('.datatableInit tr[id=' + id + ']'));`.
 
-Pokud se záznam nachází na jiné stránce, vyvolá se zobrazení této stránky voláním `setTimeout(() => this.dataTable.page(pageNumber).draw('page'), 500);`.
+Pokud záznam je na jiné straně vyvolá se zobrazení této strany voláním `setTimeout(() => this.dataTable.page(pageNumber).draw('page'), 500);`.
 
-Při stránkování na straně serveru však nemůžeme snadno určit stránku, na které se záznam nachází na straně klienta. Proto se spouští postupné stránkování dat voláním služby REST serveru. Aby nedocházelo k zahlcení, je stránkování voláno prostřednictvím funkce `setTimeout` v intervalu 500 ms. Aby se zabránilo zacyklení, počítá se volání serveru v atriu. `failsafeCounter`, kde je stanoven limit 30 volání. **Vyhledávání tedy najde zadané ID maximálně na prvních 30 stránkách**.
+Při serverovém stránkování ale neumíme jednoduše na klientské straně určit stranu, na které se záznam nachází. Je proto spuštěno postupné stránkování údajů voláním REST služby serveru. Aby nedošlo k zahlcení je stránkování voláno přes funkci `setTimeout` v 500ms intervalu. Aby nedošlo k zacyklení je počítáno volání serveru v atrium `failsafeCounter`, kde je nastaven limit 30 volání. **Vyhledávání tedy najde zadané ID v maximálně prvních 30 stranách**.
 
-V budoucnu zvažujeme implementaci načítání stránek do služby REST na straně serveru, což by odstranilo problém s inkrementálním stránkováním dat na straně klienta.
+Do budoucna zvažujeme implementovat získání strany v serverové REST službě, což by eliminovalo problém postupného stránkování údajů na klientské straně.
 
-## Filtrování podle parametrů hash
+## Filtrování podle hash parametrů
 
-Knihovna také umožňuje filtrovat tabulku podle parametrů zadaných v hashovém výrazu, např. `/admin/v9/users/user-list/#dt-filter-id=3`. Parametry zadané v `window.location.hash` začínající na `dt-filter-` jsou po inicializaci tabulky nastaveny na příslušná pole filtru v záhlaví. Následně se provede kliknutí na ikonu vyhledávání vedle prvního pole.
+Knihovna poskytuje také možnost filtrování tabulky podle zadaných parametrů v hash výrazu, tedy např. `/admin/v9/users/user-list/#dt-filter-id=3`. Parametry zadané ve `window.location.hash` začínající na `dt-filter-` jsou po inicializaci tabulky nastaveny do příslušných filtrovacích polí v hlavičce. Následně je provedeno kliknutí na ikonu vyhledávání při prvním poli.
 
-Pokud je v hashovém výrazu také hodnota `dt-select=true`, takže po načtení záznamů jsou řádky označeny. Je tedy snadné provést akci, jako je schválení uživatelem kliknutím na tlačítko apod.
+Pokud je v hash výrazu i hodnota `dt-select=true`, tak po načtení záznamů jsou řádky označeny. Je tedy snadno možné provést akci typu schválení uživatele kliknutím na tlačítko a podobně.
 
-Pokud je v hashovém výrazu také hodnota `dt-open-editor=true` editor se otevře po označení řádků (řádky jsou označeny automaticky, není potřeba žádný parametr `dt-select=true`).
+Pokud je v hash výrazu i hodnota `dt-open-editor=true` otevře se po označení řádků i editor (řádky se automaticky i označí, není potřebný i parametr `dt-select=true`).
 
-Implementace je ve funkci `filterTableByHashParameters` která je spuštěna událostí `this.dataTable.one('draw.dt', (evt, settings) => {`.
+Implementace je ve funkci `filterTableByHashParameters`, která je vyvolána při události `this.dataTable.one('draw.dt', (evt, settings) => {`.

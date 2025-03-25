@@ -1,52 +1,52 @@
-# Informace o společnosti Webjet
+# Informace o Webjetu
 
-| Metoda | Typ | Popis
+| Metoda | Typ | Popis |
 | --------------------------------- | -------- | ------------------------------------ |
-| ${ninja.webjet.installName}       | *Řetězec* | Název instalace |
-| ${ninja.webjet.generatedTime}     | *Řetězec* | Doba generování stránky |
-| ${ninja.webjet.pageFunctionsPath} | *Řetězec* | Základní funkce JS |
-| ${ninja.webjet.insertJqueryHtml}  | *Řetězec* | Globální knihovna Jquery |
-| ${ninja.webjet.insertJqueryFake}  | *Řetězec* | Blokování globální knihovny Jquery |
+| ${ninja.webjet.installName}       | *String* | Installname |
+| ${ninja.webjet.generatedTime}     | *String* | Čas vygenerování stránky |
+| ${ninja.webjet.pageFunctionsPath} | *String* | Základní JS funkce |
+| ${ninja.webjet.insertJqueryHtml}  | *String* | Globální Jquery knihovna |
+| ${ninja.webjet.insertJqueryFake}  | *String* | Blokování globální Jquery knihovny |
 
-## Název instalace *Řetězec*
+## Installname *String*
 
-Vrací hodnotu InstallName
+Vrátí hodnotu InstallName
 
 ```java
 ${ninja.webjet.installName}
 ```
 
-## Doba generování stránky *Řetězec*
+## Čas vygenerování stránky *String*
 
-Vrací čas generování stránky na straně serveru ve formátu `DD:MM:RRRR HH:MM:SS` Např. `27.11.2018 16:18:24`.
+Vrátí čas vygenerování stránky na serverové straně ve formátu `DD:MM:RRRR HH:MM:SS` Např. `27.11.2018 16:18:24`.
 
 ```java
 ${ninja.webjet.generatedTime}
 ```
 
-## Základní funkce JS *Řetězec*
+## Základní JS funkce *String*
 
-Vrací cestu k základním globálním funkcím Webjet, které jsou nutné pro správnou funkci webu.Cesta musí být vytvořena v tagu combine nebo script jako odkaz.
+Vrátí cestu k základním globálním funkcím webjetu, které jsou potřebné pro správné fungování webu. cestu je třeba vygenerovat do combine, nebo do script tagu jako link.
 
 ```java
 ${ninja.webjet.pageFunctionsPath}
 ```
 
-Vygenerovaná cesta:
+Cesta, která se vygeneruje:
 
 ```url
 /components/_common/javascript/page_functions.js.jsp
 ```
 
-## Globální knihovna Jquery *Řetězec*
+## Globální Jquery knihovna *String*
 
-Vloží skript s odkazem na aktuální verzi jquery, která je použita ve webovém projektu. Pokud jej tímto způsobem nevložíte, vloží se stejně sám. Tímto způsobem můžete alespoň určit místo, kde se má volání vygenerovat. Pokud nechcete, aby se jquery přidávalo, zavolejte metodu `${ninja.webjet.insertJqueryFake}`. Simuluje to a jquery se nepřipojí.
+Vloží skript s linkem na aktuální verzi jquery, která se ve webjetu používá. Pokud ji nevložíš tímto způsobem, vloží se stejně sama. Tímto způsobem alespoň umíš určit vísto, kam se má volání vygenerovat. Pokud nechceš aby se jquery přidalo, zavolej metodu `${ninja.webjet.insertJqueryFake}`. Ona to nasimuluje a jquery se nepřidá.
 
 ```java
 ${ninja.webjet.insertJqueryHtml}
 ```
 
-Vygenerovaná zpráva:
+Odkaz, který se vygeneruje:
 
 ```html
 <script type="text/javascript" src="/components/_common/javascript/jquery.js" ></script>
@@ -54,9 +54,9 @@ Vygenerovaná zpráva:
 <link rel="stylesheet" type="text/css" media="screen" href="/components/form/check_form.css" />
 ```
 
-## Blokování globální knihovny Jquery *Řetězec*
+## Blokování globální Jquery knihovny *String*
 
-Simulace vložení verze jquery. Tím se zablokuje automatické vložení aktuální knihovny jquery na web. Pak je nutné ručně přidat globální volání funkcí JS pomocí příkazu `${ninja.webjet.pageFunctionsPath}`.
+Nasimulování vložení jquery verze. Tím se blokuje automatické vložení aktuální jquery knihovny na web. Je třeba pak ručně přidat volání globálních JS funkcí pomocí `${ninja.webjet.pageFunctionsPath}`.
 
 ```java
 ${ninja.webjet.insertJqueryFake}

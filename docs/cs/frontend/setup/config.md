@@ -1,13 +1,13 @@
-# Obecná nastavení
+# Všeobecná nastavení
 
-Níže naleznete seznam obecných nastavení, kterými lze změnit chování primárního webu. Jednotlivé konfigurační proměnné se nastavují v [Konfigurace](../../admin/setup/configuration/README.md).
+Níže naleznete seznam obecných nastavení pomocí kterých je možné změnit chování primárně web stránek. Jednotlivé konfigurační proměnné se nastavují v sekci [Konfigurace](../../admin/setup/configuration/README.md).
 
-Doporučujeme nastavit tyto hodnoty na začátku vytváření webové stránky a neměnit je později, protože mohou ovlivnit chování již vytvořených webových stránek.
+Hodnoty doporučujeme nastavit na začátku vytváření web sídla a následně již neměnit, jelikož mohou ovlivnit chování již vytvořených web stránek.
 
-## Adresy URL
+## URL adresy
 
-Chování adres URL webových stránek lze nastavit pomocí následujících konfiguračních proměnných:
-- `virtualPathLastSlash` Výchozí `true` - nastaví možnost posledního `/` pro adresy URL **hlavní stránka**. Při nastavení na `true` adresa URL stránky Produkty bude vytvořena jako `/products/`, pokud je nastavena na hodnotu `false` Stejně jako `/products`.
-- `editorPageExtension` Výchozí `.html` - nastaví příponu pro **další stránky ve složce**. Při nastavení na `.html` bude adresa URL stránky `iPhone` vytvořené jako `/products/iphone.html`, pokud je nastavena na hodnotu `/` bude vytvořen jako `/products/iphone/`.
+Chování URL adres web stránek lze nastavit následujícími konfiguračními proměnnými:
+- `virtualPathLastSlash` ve výchozím nastavení `true` - nastavuje možnost posledního `/` pro URL adresy **hlavní stránky**. Při nastavení na `true` bude URL adresa stránky Produkty vytvořena jako `/products/`, při nastavení na `false` jak `/products`.
+- `editorPageExtension` ve výchozím nastavení `.html` - nastavuje příponu pro **další stránky ve složce**. Při nastavení na `.html` bude URL adresa stránky `iPhone` vytvořena jako `/products/iphone.html`, při nastavení na `/` bude vytvořena jako `/products/iphone/`.
 
-Po změně hodnot je nutné restartovat aplikační server.
+Po změně hodnot je třeba provést restart aplikačního serveru.

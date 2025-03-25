@@ -1,219 +1,219 @@
-# Úprava webové stránky
+# Editace web stránky
 
-Editor webových stránek je univerzální nástroj pro úpravu a vytváření webových stránek. Při úpravě existující webové stránky se obsah uložené webové stránky načte do hlavního okna editoru. Při vytváření nové stránky je okno editoru prázdné a můžete začít psát obsah.
+Editor web stránek je univerzální nástroj pro úpravu a tvorbu web stránek. Při editaci stávající web stránky se vám do hlavního okna editoru načte obsah uložené web stránky. Při tvorbě nové stránky je okno editoru prázdné a vy můžete začít s psaním jejího obsahu.
 
-Pokud chcete vytvořit novou webovou stránku, musíte nejprve nastavit správný adresář, ve kterém má být webová stránka umístěna, a poté kliknutím na ikonu "Přidat" zobrazit okno editoru.
+Pokud jdete vytvořit novou web stránku, nejprve se musíte nastavit do správného adresáře, ve kterém se má web stránka nacházet a následně kliknutím na ikonu "Přidat" se vám zobrazí okno editoru.
 
-## Obsah karty
+## Karta obsah
 
-Na kartě "Obsah" můžete upravit obsah samotné webové stránky. Úprava stránky nabízí standardní funkce pro úpravu obsahu dokumentu podobné těm, které se běžně používají v programech MS Word a Excel. Většina příkazů je přístupná pomocí formátovacích tlačítek z panelu nástrojů editoru. Kontextové funkce jsou přístupné po kliknutí pravým tlačítkem myši na příslušný objekt stránky, např. obrázek, tabulku, vybraný blok textu atd.
+V kartě „Obsah“ lze upravovat obsahovou část samotné webové stránky. Editace stránek nabízí standardní funkce úpravy obsahu dokumentů podobné funkcím běžně používaných v aplikacích MS Word a Excel. Většina příkazů je přístupná pomocí formátovacích tlačítek z nástrojové lišty editoru. Kontextové funkce jsou přístupné po kliknutí pravým tlačítkem myši nad příslušným objektem stránky. obrázkem, tabulkou, označeným blokem textu a pod.
 
-V závislosti na nastavení skupiny šablon nebo šablony (pole Typ editoru stránky) je k dispozici několik typů editorů. V současné době jsou podporovány následující typy editorů:
-- Standardní - typ editoru `WYSIWYG`, vizuální editor, ve kterém se ukládá i to, co vidíte na obrazovce. Práce se podobá práci v MS Word, kde můžete snadno vybírat text, nastavovat tučné písmo, vkládat obrázky atd.
-- Editor HTML - po otevření se zobrazí kód HTML stránky. Je určen pro speciální stránky, jejichž kód by se při použití editoru, jako je např. `WYSIWYG`, např. stránky hromadných e-mailů, které obsahují veškerý kód HTML včetně záhlaví a zápatí. V tomto případě je kód obvykle dodáván externí agenturou a je pouze vložen do stránky bez nutnosti jeho změny.
-- Page Builder - způsob tvorby webových stránek z [připravené bloky](pagebuilder.md), umožňuje snadno upravovat bloky, přidávat, přesouvat pořadí atd. Je určen pro vytváření komplexních webových stránek.
+Dostupné jsou více typů editorů podle nastavení skupiny šablon nebo šablony (pole Typ editoru stránek). Aktuálně jsou podporovány následující typy editorů:
+- Standardní - editor typu `WYSIWYG`, tedy vizuální editor ve kterém to co vidíte na obrazovce se také uloží. Práce je podobná práci v MS Word, kdy umíte jednoduše označit text, nastavit tučné písmo, vkládat obrázky atp.
+- HTML editor - při otevření se zobrazí HTML kód stránky. Je určen pro speciální stránky, jejichž kód by byl porouchaný u editoru typu `WYSIWYG` Např. stránky pro hromadný email, které obsahují celý HTML kód včetně hlavičky a patičky. Kód je v takovém případě typicky dodán z externí agentury a je pouze vložen do stránky bez potřeby jeho změn.
+- Page Builder - režim skládání web stránky z [připravených bloků](pagebuilder.md), umožňuje jednoduše bloky upravovat, přidávat, přesouvat pořadí atp. Je určen k vytváření komplexních web stránek.
 
-## Základní karta
+## Karta základní
 
-Nejdůležitějším parametrem každé webové stránky je její titulek. Nadpis se zadává do textového pole na kartě Základní. Pokud vytvoříte novou webovou stránku v prázdné složce, systém automaticky převezme název z názvu této složky. V opačném případě je při vytváření nové webové stránky uveden text "Nová webová stránka", který je ovšem nutné změnit na smysluplný titulek, který definuje obsah webové stránky. Název se obvykle zadává s diakritikou i mezerami jako prostý text.
+Nejdůležitějším parametrem každé web stránky je její titulek (nadpis). Titulek se zadává do textového pole v kartě Základní. Pokud vytváříte novou web stránku v prázdné složce, tak si systém automaticky přebere titulek z názvu této složky. V opačném případě je tam při vytvoření nové web stránky text „Nová web stránka“, který samozřejmě musíte změnit na smysluplný název definující obsah web stránky. Titulek se zadává normálně s diakritikou i mezerami jako obyčejný text.
 
-Domovská stránka složky je ve výchozím nastavení synchronizována. [název webové stránky s názvem složky.](group.md#synchronizace-názvu-složky-a-webové-stránky).
+Hlavní stránka složky má standardně synchronizovaný [název web stránky s názvem složky](group.md#synchronizace-názvu-složky-a-web-stránky).
 
 ![](editor/tab-basic.png)
 
-Na každé stránce, která má být veřejně přístupná na webu, musí být v poli "Ano" uvedeno "Ano". **Zobrazit**. Pokud toto nastavení nemá, není pro návštěvníka k dispozici. Bude k dispozici pouze přihlášenému správci, aby viděl, jak bude webová stránka během procesu vytváření skutečně vypadat.
+Každá stránka, která má být veřejně zobrazitelná na web sídle musí mít zadané „Ano“ v části **Zobrazovat**. Pokud nemá takové nastavení, je pro návštěvníka nedostupná. Dostupná bude jen pro přihlášeného administrátora, aby během tvorby web stránky viděl, jak bude skutečně vypadat.
 
-### Zařazení do stromové struktury
+### Zařazení ve stromové struktuře
 
-Webovou stránku můžete uložit do **více složek**, jejichž seznam je uveden v části Klasifikace stromové struktury. Hlavní složka je označena jako Nadřazená složka, další složky jsou v Kopie webové stránky v. Technicky se kopie webové stránky vytvoří ve všech vybraných složkách. Při uložení libovolné stránky se do ostatních kopií webové stránky zkopírují všechna data kromě:
-- Adresa URL - stránka a její kopie mohou mít v případě potřeby upravenou adresu URL (pokud není vybrána možnost Automaticky generovat adresu URL z názvu položky nabídky).
-- Pořadí rozvržení - v případě potřeby můžete nastavit vhodné pořadí rozvržení pro kopii stránky.
+Web stránku můžete uložit do **více složek**, jejichž seznam je v sekci Zařazení ve stromové struktuře. Hlavní složka je označena jako Nadřazená složka, dodatečné jsou v části Kopie web stránky v. Technicky vzniknou kopie web stránky ve všech zvolených složkách. Při uložení libovolné stránky se zkopírují všechny údaje do ostatních kopií web stránky kromě:
+- URL adresa - stránce a jejím kopiím lze URL adresu v případě potřeby modifikovat (není-li zvolena možnost Automaticky generovat URL adresu z názvu položky v menu)
+- Pořadí uspořádání - v případě potřeby můžete kopii stránky nastavit vhodné pořadí uspořádání
 
-V případě, že **odstranit kopii webové stránky** takže bude přesunuta do koše. Zatímco je tato kopie v koši, adresa původní stránky z nadřazené složky se při úpravách změní na adresu složky s kopií do koše. Samozřejmě můžete pokračovat v přidávání dalších kopií, a to i do složky, ze které jsme odstranili první kopii. Odstraněné kopie webové stránky se po trvalém odstranění z koše již nebudou při úpravách původní stránky zobrazovat jako existující kopie.
+V případě, že **vymažete kopii web stránky** tak bude přesunuta do koše. Než bude tato kopie v koši, tak originální stránka z nadřazené složky bude mít při editaci změněnu adresu složky kopie na koš. Samozřejmě můžete dále přidávat další kopie a to i do složky, odkud jsme vymazali tu první kopii. Vymazané kopie web stránky se po permanentním vymazání z koše již nadále nebudou zobrazovat jako existující kopie při editaci originální stránky.
 
-V případě, že **odstranit původní webovou stránku** z nadřazené složky, bude přesunuta do koše, aniž by byly ovlivněny existující kopie této stránky. Všimněte si však, že při úpravách stránky bude mít vypnutý atribut Zobrazit, který samozřejmě můžete opět zapnout, aby se stránka zobrazila. Po trvalém **vymazání původního** webové stránky z koše pomocí **trvale odstranit všechny jeho kopie**. To znamená, že tyto kopie již nebudou k dispozici (ani v koši) a nebude možné je obnovit.
+V případě, že **vymažete originální web stránku** z nadřazené složky, ta se přesune do koše, aniž by to ovlivnilo již existující kopie této stránky. Upozorňujeme ale, že při editaci stránky bude mít vypnutý atribut Zobrazovat, který samozřejmě můžete znovu zapnout pro zobrazování stránek. Po permanentním **vymazání originální** web stránky z koše se **permanentně vymažou všechny její kopie**. To znamená, že tyto kopie již nebudou nadále dostupné (ani v koši) a nebudou se dát obnovit.
 
-### Adresa URL
+### URL adresa
 
-V poli Adresa URL nastavíte adresu webové stránky na internetu (část za názvem domény), např. `/produkty/webjet-cms/funkcie.html`.
+V poli URL adresa nastavujete adresu web stránky na internetu (část za doménovým jménem). `/produkty/webjet-cms/funkcie.html`.
 
-Pole je **při ukládání nové webové stránky se automaticky vyplní.** podle adresy URL složky a pole Název položky v nabídce, nemusíte je vyplňovat ručně.
+Pole se **při uložení nové web stránky automaticky vyplní** podle URL adresy složky a pole Název položky v menu, nemusíte jej manuálně vyplňovat.
 
-Z hlediska optimalizace pro vyhledávače by adresa URL stránky měla obsahovat klíčová slova. Ta by však měla být v ideálním případě obsažena také v názvu stránky, nadpisech a textu stránky.
+Z pohledu optimalizace pro vyhledávače by URL adresa stránky měla obsahovat klíčová slova. Ty ale musí být ideální i v titulku stránky, nadpisech a textu stránky.
 
-Pokud změníte adresu URL stránky, v aplikaci Path Redirects se automaticky vytvoří přesměrování. Pokud na původní adresu URL odkazuje jiná stránka, bude přesměrována na novou adresu stránky.
+Pokud URL adresu stránky změníte, automaticky se vytvoří přesměrování v aplikaci Přesměrování cest. Pokud jiná stránka odkazuje na původní URL adresu bude přesměrována na novou adresu stránky.
 
-#### Automatické generování adresy URL z názvu položky nabídky
+#### Automaticky generovat URL adresu z názvu položky v menu
 
-Pokud tuto možnost vyberete, adresa URL stránky se automaticky změní:
-- při změně hodnoty pole Název položky nabídky
-- při změně hodnoty pole URL adresu složky, ve které se webová stránka nachází, ale také nadřazených složek.
-- při přesunu webové stránky do jiné složky
+Při zvolení této možnosti se bude URL adresa stránky automaticky měnit:
+- při změně hodnoty pole Název položky v menu
+- při změně hodnoty pole URL adresa složky, ve které se web stránka nachází ale i rodičovských složek
+- při přesunu web stránky do jiné složky
 
-Při změně adresy URL stránky se v aplikaci Path Redirects automaticky vytvoří přesměrování ze staré adresy URL na novou.
+Při změně URL adresy stránky se automaticky vytvoří přesměrování v aplikaci Přesměrování cest ze staré URL adresy na novou.
 
 ![](virtual-path-title.png)
 
-#### Zdědění začátku adresy URL z adresáře
+#### Zdědit začátek URL adresy z adresáře
 
-Pomocí této možnosti můžete zadat koncovou adresu URL webové stránky, přičemž počáteční adresa URL bude převzata z nadřazených adresářů. To je užitečné, pokud potřebujete, aby stránka měla vždy stejnou koncovou adresu URL, např. `404.html` nebo `cta.html`.
+Při této volbě můžete zadat koncovou URL web stránky, přičemž její začátek se převezme z rodičovských adresářů. Je to vhodné, pokud potřebujete aby stránka měla vždy stejné koncové URL, například `404.html` nebo `cta.html`.
 
-Hodnota URL se změní, když:
-- při změně hodnoty pole URL adresu složky, ve které se webová stránka nachází, ale také nadřazených složek.
-- při přesunu webové stránky do jiné složky
+Hodnota URL adresy se bude měnit při:
+- při změně hodnoty pole URL adresa složky, ve které se web stránka nachází ale i rodičovských složek
+- při přesunu web stránky do jiné složky
 
-zatímco jak je napsáno výše, koncová část se bere podle zadané hodnoty.
+přičemž jak je napsáno výše koncová část se přebere podle zadané hodnoty.
 
-Při změně adresy URL stránky se v aplikaci Path Redirects automaticky vytvoří přesměrování ze staré adresy URL na novou.
+Při změně URL adresy stránky se automaticky vytvoří přesměrování v aplikaci Přesměrování cest ze staré URL adresy na novou.
 
 ![](virtual-path-inherit.png)
 
-### Poznámka redakce
+### Poznámka redaktora
 
-Na kartě Základna je pole Poznámka editora. Zadaný text se zobrazí v horní části editoru jako upozornění pro všechny editory/administrátory při úpravách webové stránky. Jedná se o interní atribut, který se nezobrazuje ve veřejné části webu. Poznámka se neukládá do historie stránky, vždy se aktualizuje zadanou/aktuální hodnotou.
+V kartě Základny je pole Poznámka redaktora. Zadaný text se zobrazí v horní části editoru jako upozornění pro všechny redaktory/administrátory při editaci dané web stránky. Jedná se o interní atribut, který se nezobrazuje ve veřejné části web sídla. Poznámka se neukládá do historie stránky, je vždy aktualizována zadanou/aktuální hodnotou.
 
-Umožňuje zobrazit informace, jako jsou: **Upozornění: na stránky vede odkaz z VOP, adresu stránek nikdy neměňte**.
+Umožňuje zobrazovat informace jako: **Upozornění: na stránku vede odkaz z VOP, nikdy neměňte adresu stránky**.
 
 ## Správa více domén
 
-Pokud WebJET [nastavení pro správu více domén](../../frontend/setup/README.md#správa-více-domén) takže na kartě Základní se pro složky v kořenové složce zobrazí pole Doména.
+Pokud je WebJET [nastaven na správu více domén](../../frontend/setup/README.md#správa-více-domén) tak v kartě Základny se pro složky v kořenové složce zobrazuje pole Doména.
 
 ### Vytvoření nové domény
 
-Pokud potřebujete vytvořit novou doménu, postupujte podle následujících kroků:
-- Kliknutím na ikonu přidáte novou složku
-- Zadejte potřebné údaje, například Název složky atd.
+Pokud potřebujete vytvořit novou doménu postupujte následovně:
+- Klepněte na ikonu pro přidání nové složky
+- Zadejte potřebné údaje jako Název složky atd.
 - Změňte nadřazenou složku na kořenovou složku.
-- Po nastavení kořenové složky se zobrazí pole Doména, do kterého zadejte název domény.
+- Po nastavení na kořenovou složku se zobrazí pole Doména, zadejte doménové jméno.
 - Uložte složku kliknutím na tlačítko Přidat.
 
-Vytvoří se složka a ve WebJET CMS se vytvoří nová doména, na kterou se automaticky přepne seznam webových stránek. Dostupné domény se zobrazí v záhlaví administrace v poli pro výběr domény. Prostřednictvím tohoto výběrového pole lze mezi nimi přepínat.
+Složka se vytvoří a ve WebJET CMS vznikne nová doména a automaticky se na ni přepne seznam web stránek. Dostupné domény se zobrazují v záhlaví administrace ve výběrovém poli domén. Můžete se na mezi nimi přepínat přes toto výběrové pole.
 
 ![](../webpages/domain-select.png)
 
-Poznámka: kromě přidání domény v systému WebJET CMS je třeba ji nastavit i na aplikačním serveru. Aplikační server spravuje pouze domény, které zná. Pokud používáte Tomcat, správce serveru v okně `conf/server.xml` Nastavení `defaultHost="domena.sk"` o prvcích `<Engine` pro směrování všech domén do `domena.sk`, nebo musí implicitně definovat doménu pomocí příkazu `<Alias>www.domena.sk</Alias>` pro příslušné `<Host` prvky. Samozřejmě doporučujeme také vytvořit certifikáty httpS pro jednotlivé domény.
+Poznámka: kromě přidání domény ve WebJET CMS je třeba její nastavení na aplikačním serveru. Aplikační server spravuje pouze domény, které zná. Pokud používáte Tomcat může správce serveru v `conf/server.xml` nastavit `defaultHost="domena.sk"` na elementu `<Engine` pro směrování všech domén na `domena.sk`, nebo musí implicitně definovat domény pomocí `<Alias>www.domena.sk</Alias>` pro příslušné `<Host` elementy. Samozřejmě doporučujeme také vytvořit httpS certifikáty pro jednotlivé domény.
 
 ### Přejmenování domény
 
-Doménu přejmenujete v okně úprav složky. Do pole Doména zadejte novou hodnotu a vyberte možnost **Změna přesměrování domény, konfiguračních proměnných a překladových textů s předponou domény**. Pokud je tato možnost zaškrtnuta, provedou se změny:
-- Zadaná doména se nastaví také pro všechny subdomény.
-- Doména je nastavena také pro složku `Systém`.
-- Změní doménu ze staré hodnoty na novou hodnotu v přesměrování cest, konfiguračních proměnných a textech překladu.
+Přejmenování domény provedete v editačním okně složky. V poli doména zadejte novou hodnotu a zvolte možnost **Změnit přesměrování domény, konfigurační proměnné a překladové texty s prefixem domény**. Při zaškrtnutí této možnosti se provedou změny:
+- Zadaná doména se nastaví i všem podsložkám.
+- Doména se nastaví také pro složku `Systém`.
+- Změní se doména ze staré hodnoty na novou v přesměrování cest, konfiguračních proměnných a překladových textech.
 
-Pokud máte v doméně více kořenových složek (například podle jazyka), proveďte změnu domény postupně u všech složek.
+Máte-li v doméně více kořenových složek (např. podle jazyků), proveďte změnu domény postupně na všech složkách.
 
-## Šablona karty
+## Karta Šablona
 
-Každá webová stránka musí mít nastavenou šablonu návrhu. O správné nastavení šablony se stará správce, který je definuje pro jednotlivé složky webu. Při vytváření nové stránky ve složce se šablona nastaví podle nastavení složky. Ve výchozím nastavení by nemělo být nutné šablonu webové stránky během práce měnit.
+Každá web stránka musí mít nastavenou designovou šablonu. O správné nastavení šablony se stará administrátor, který je definuje pro jednotlivé složky web sídla. Při vytvoření nové stránky ve složce se nastaví šablona podle nastavení složky. Standardně byste při své práci neměli potřebovat měnit šablonu webové stránky.
 
-V polích můžete v případě potřeby změnit záhlaví/zápatí/menu a volné objekty ve vybrané šabloně (například pokud potřebujete jiné zápatí nebo konkrétní menu na stránce).
+V polích můžete v případě potřeby změnit hlavičku/patičku/menu a volné objekty ve vybrané šabloně (pokud např. potřebujete mít na stránce jinou patičku, nebo specifické menu).
 
 ![](editor-templates-tab.png)
 
-Pole pro výběr šablony obsahuje ikonu tužky, kliknutím na ni se otevře dialogové okno pro úpravu šablony (pokud potřebujete například upravit některé její vlastnosti). Klepnutím na ikonu + vytvoříte novou šablonu.
+Pole pro výběr šablony obsahuje ikonu tužky, kliknutím na ni se otevře dialogové okno s editací šablony (pokud např. potřebujete upravit nějaké její vlastnosti). Klepnutím na ikonu + můžete vytvořit novou šablonu.
 
-V polích záhlaví/zápatí/menu/volný objekt se při výběru konkrétní stránky zobrazí ikona tužky, která umožňuje vybranou stránku upravit. Můžete tak snadno upravovat např. záhlaví přímo při editaci webové stránky.
+U polí hlavička/patička/menu/volný objekt při výběru konkrétní stránky se zobrazí ikona tužky pro možnost úpravy zvolené stránky. Můžete tak snadno upravit např. hlavičku přímo během editace web stránky.
 
-## Karta Navigace
+## Karta navigace
 
-Na kartě Navigace můžete upravit další možnosti zobrazení stránky ve stromové struktuře (zobrazení stránky v nabídce, navigačním panelu nebo mapě webu). Zobrazení lze rozlišit podle přihlášení uživatele.
+V kartě Navigace lze upravovat další možnosti zobrazování stránky ve stromových strukturách (zobrazení stránky v menu, navigační liště nebo mapě stránky). Zobrazení lze rozlišit podle přihlášení uživatele.
 
-Pole Pořadí uspořádání určuje pořadí stránky v nabídce a v mapě stránek. Čím vyšší číslo, tím níže bude stránka umístěna.
+Pole Pořadí uspořádání určuje pořadí stránky v menu a v mapě stránek. Čím je číslo vyšší tím níže bude stránka umístěna.
 
 ![](editor/tab-menu.png)
 
-## Přístup ke kartě
+## Karta přístup
 
-V části "Přístup" můžete spravovat, kdo a za jakých podmínek může na stránku přistupovat. Pokud je stránka určena pro aplikaci hromadné elektronické pošty, je možné definovat také přiřazení ke skupině elektronické pošty (typ newsletteru).
+V části „Přístup“ je možné pro danou stránku spravovat kdo a za jakých podmínek může ke stránce přistupovat. Pokud je stránka určena pro aplikaci hromadný email je možné definovat také zařazení do email skupiny (typu newsletra).
 
 ![](editor/tab-access.png)
 
 ## Karta perex
 
-Na kartě Perex můžete nastavit platnost zobrazení stránky nebo nastavit její odložení či změnu. Stránce můžete také přiřadit příslušné značky a zařadit ji do kategorie.
+V kartě Perex můžete nastavit platnost zobrazení stránky, nebo nastavit její opožděné zveřejnění nebo změnu. Umíte stránce přiřadit i vhodné značky pro její kategorizování.
 
 ![](editor/tab-perex.png)
 
-Pole **Datum zahájení**, **Datum ukončení** a **Datum konání akce** se obvykle používají pouze pro zprávy, tiskové zprávy, události a konference. Pole **Datum zahájení** a **Datum ukončení** Mají však také speciální funkci, pokud chcete načasovat zveřejnění nebo zrušení stránky od určitého okamžiku v budoucnosti. Tato funkce se aktivuje zaškrtnutím políčka **Zveřejnit stránku po tomto datu**, resp. **Zveřejnit stránku po tomto datu**. Hodnota polí **Datum zahájení** a **Datum ukončení** musí být vyplněny u všech akcí a konferencí v kalendáři akcí. U novinek stačí zadat datum zahájení.
+Pole **Datum začátku**, **Datum konce** a **Datum konání** se obvykle používají pouze u novinek, tiskových zpráv, událostí a konferencí. Pole **Datum začátku** a **Datum konce** mají však i speciální funkci v případě, že chcete načasovat publikování nebo zrušení stránky od jistého časového okamžiku v budoucnosti. Tato funkce je aktivována po zaškrtnutí políčka **Zveřejnit stránku po tomto datu**, resp. **Odveřejnit stránku po tomto datu**. Hodnotu polí **Datum začátku** a **Datum konce** je nutné vyplnit pro všechny události a konference v kalendáři událostí. Pro novinky stačí zadat datum začátku.
 
-Perex (Anotace) obsahuje stručný popis toho, čeho se stránka týká. Neměl by být delší než 160 znaků. Perex se používá hlavně při psaní zpráv, tiskových zpráv, událostí a konferencí, kde se jedná o stručný popis článku, který se zobrazuje v seznamu zpráv.
+Perex (Anotace) obsahuje stručný popis, čeho se stránka týká. Neměl by být delší než cca 160 znaků. Perex se používá hlavně při psaní novinek, tiskových zpráv, událostí a konferencí, kde představuje krátký popis k článku, který je zobrazen v seznamu zpráv.
 
-Obrázek můžete definovat pomocí ikony za polem. **Obrázek**.
+Obrázek můžete definovat přes ikonku, která se nachází za políčkem **Obrázek**.
 
-### Zveřejnění webové stránky
+### Publikování web stránky
 
-Pokud jste si načasovali zveřejnění webové stránky a chcete být co nejrychleji. **autor stránky** informován, stačí nastavit konfigurační proměnnou `webpagesNotifyAutorOnPublish`. Přednastavená hodnota je **Pravda** to znamená, že kdykoli je zveřejněna nová verze webové stránky, je jejímu autorovi zaslán následující informační e-mail.
+Pokud jste si načasovali publikování web stránky a chcete být o tomto publikování jako **autor stránky** informován, stačí nastavit konfigurační proměnnou `webpagesNotifyAutorOnPublish`. Přednastavená hodnota je **true**, čili vždy po publikování nové verze web stránky se jejímu autorovi odešle následující informační email.
 
 ![](editor/publish-email-notification.png)
 
-Na konci e-mailu je odkaz na stránku, kde si můžete zkontrolovat novou verzi stránky. Pokud tyto informační e-maily nechcete, musíte nastavit hodnotu konfigurační proměnné `webpagesNotifyAutorOnPublish` na adrese **false**.
+Konec emailu obsahuje odkaz na stránku, kde můžete zkontrolovat novou verzi stránky. Pokud si tyto informační emaily nepřejete, musíte nastavit hodnotu konfigurační proměnné `webpagesNotifyAutorOnPublish` na **false**.
 
-Tato událost bude [Auditováno](../../sysadmin/audit/README.md) kde typ auditu je `SAVEDOC` a popis kontrolované akce musí obsahovat informace o `publishStatus: Webpage was published` abyste mohli snadno najít publikační akce.
+Tato akce se [Audituje](../../sysadmin/audit/README.md) kde typ auditu je `SAVEDOC` a popis auditované akce obsahuje informaci `publishStatus: Webpage was published`, díky čemuž víte akce publikování jednoduše najít.
 
 ![](editor/publish-audit-logs.png)
 
-## Mediální karta
+## Karta média
 
-Na kartě Média můžete spravovat dokumenty a soubory související se stránkou. Další informace naleznete v části [Mediální sekce](media.md).
+V kartě Média umíte spravovat dokumenty a soubory související s danou stránkou. Více informací v [sekci Média](media.md).
 
 ![](media.png)
 
-Kliknutím na tlačítko "přidat" se zobrazí formulář pro přidání odkazu.
+Klepnutím na tlačítko „přidat“ se vám zobrazí formulář pro přidání odkazu.
 
-V poli "Odkaz" vyberete, kam má odkaz směřovat. U dokumentů ke stažení se tlačítkem Vybrat vybere dokument a u Souvisejících odkazů konkrétní webová stránka.
+V poli „Linka“ si volíte, kam má daný odkaz směřovat. U Dokumentů ke stažení si tlačítkem Vybrat zvolíte dokument, u Souvisejících odkazů konkrétní Web stránku.
 
-Nadpis představuje text, který se zobrazí na webové stránce. Proto by měl být definován jako normální text (s diakritikou a mezerami).
+Název představuje text, který bude zobrazen na web stránce. Proto by měl být definován jako normální text (s diakritikou a mezerami).
 
-V poli Náhledový obrázek lze nastavit odkaz na vhodný náhledový obrázek, pokud jej aplikace médií vložená do stránky/šablony používá.
+V poli Náhledový obrázek lze odkazu nastavit vhodný náhledový obrázek, pokud to aplikace média vložená ve stránce/šabloně používá.
 
-Uspořádání určuje pořadí odkazů. Média přiřazená do různých skupin se navzájem neovlivňují. Pořadová čísla mohou být také stejná, v takovém případě systém seřadí odkazy podle abecedy.
+Uspořádání definuje pořadí odkazů. Média přiřazená do různých skupin se navzájem neovlivňují. Čísla pořadí mohou být i stejná, v takovém případě seřadí systém odkazy podle abecedy.
 
-!>**Varování:** nově přidaná média se na webové stránce začnou zobrazovat až po uložení webové stránky. Tímto způsobem můžete v případě potřeby načasovat přidání médií spolu s webovou stránkou, pokud nastavíte odložení publikování stránky.
+!>**Upozornění:** nově přidané médium se na web stránce začne zobrazovat až po uložení web stránky. Umíte tak v případě potřeby časovat přidání média spolu s web stránkou, pokud stránce nastavíte opožděné publikování.
 
-## Karta Volitelná pole
+## Karta volitelná pole
 
-Na kartě Volitelná pole můžete nastavit volitelné atributy (hodnoty, texty) webové stránky a adresáře podle svých potřeb. Tyto hodnoty pak můžete přenést a použít v šabloně stránky. Typy (text, číslo, výběrové pole, výběr souboru...) a názvy polí lze nastavit podle potřeby, viz oddíl [Volitelná pole](../../frontend/webpages/customfields/README.md).
+V kartě Volitelná pole lze web stránce a adresáři nastavovat volitelné atributy (hodnoty, texty) podle vaší potřeby. Hodnoty lze následně přenést a použít v šabloně stránky. Typy (text, číslo, výběrové pole, výběr souboru...) a názvy polí lze nastavit dle potřeby, více informací je v sekci [Volitelná pole](../../frontend/webpages/customfields/README.md).
 
 ![](../../frontend/webpages/customfields/webpages.png)
 
-## Karta Historie
+## Karta historie
 
-Na kartě Historie se zobrazují publikované historické verze webové stránky a aktuální rozpracované (dosud nepublikované) verze. Při publikování rozpracované verze se dočasné/pracovní verze stránky z historie odstraní a v historii zůstanou pouze publikované verze.
+V kartě Historie se zobrazují publikované historické verze web stránky a aktuálně rozpracované (ještě nepublikované) verze. Při publikování rozpracované verze se z historie smažou dočasné/pracovní verze stránky, v historii se ponechají jen publikované verze.
 
-V případě schválení/odmítnutí stránky se zobrazí také jméno uživatele, který verzi schválil nebo odmítl.
+V případě schvalování/zamítnutí stránky se zobrazuje i jméno uživatele, který danou verzi schválil, nebo zamítl.
 
-Více informací najdete v části [Historie](history.md).
+Více informací je v sekci [Historie](history.md).
 
 ![](history.png)
 
-## Uložení pracovní verze
+## Uložit pracovní verzi
 
-Pokud před kliknutím na tlačítko Uložit vyberete možnost Uložit pracovní verzi, upravená webová stránka se uloží do historie jako pracovní verze. Nebude k dispozici návštěvníkům webu.
+Po zvolení možnosti Uložit pracovní verzi před kliknutím na tlačítko Uložit se upravená web stránka uloží jako pracovní verze do historie. Nebude dostupná pro návštěvníky web sídla.
 
-To vám umožní strávit několik dní přípravou nové verze textu webové stránky, aniž by to ovlivnilo aktuálně zveřejněnou verzi pro návštěvníky. Po uložení pracovní verze a opětovném otevření editoru webové stránky se zobrazí zpráva, že je k dispozici rozpracovaná verze stránky. Přejděte na kartu Historie, vyberte v tabulce řádek s verzí, kterou chcete v editoru otevřít (obvykle nejnovější verzi nahoře), a klikněte na žlutou ikonu Upravit stránku.
+Umožní vám to i několik dní připravovat novou verzi textu web stránky bez dopadu na aktuálně zveřejněnou verzi pro návštěvníky. Po uložení pracovní verze a znovu otevření editoru web stránek se zobrazí hlášení, že existuje rozpracovaná verze stránky. Přejděte do karty Historie, označte řádek v tabulce s verzí, kterou chcete do editoru otevřít (typicky nejnovější verze na vrchu) a klikněte na žlutou ikonu Edituj stránku.
 
-Pokaždé, když uložíte pracovní verzi, zůstane na kartě Historie, takže tam budete mít více záznamů. Kvůli efektivitě však kliknutím na tlačítko Uložit bez zaškrtnuté možnosti Uložit pracovní verzi (tj. když ji zveřejníte pro návštěvníky webu) odstraníte všechny pracovní verze webu.
+Po každém uložení pracovní verze se tato ponechá v kartě Historie, budete tam tedy mít více záznamů. Kvůli efektivitě ale po kliknutí na Uložit bez zvolené možnosti Uložit pracovní verzi (tedy při vypublikování pro návštěvníky web sídla) se smažou všechny vaše pracovní verze web stránky.
 
-Uložením pracovní verze se zároveň nezavře okno editoru, takže můžete pokračovat v práci.
+Zároveň při uložení pracovní verze se nezavře okno editoru, můžete tak pokračovat v práci.
 
 ![](save-work-version.png)
 
 ## Náhled stránky
 
-Klikněte na tlačítko `Náhľad` v zápatí okna editoru se v prohlížeči otevře nová karta s náhledem celé stránky bez nutnosti jejího uložení. Na stránce můžete provádět změny a podívat se, jak bude vypadat po uložení.
+Klepnutím na tlačítko `Náhľad` v patičce okna editoru se otevře nová karta v prohlížeči s náhledem kompletní stránky bez potřeby jejího uložení. Můžete tak provést změny ve stránce a prohlédnout si jak reálně bude vypadat po jejím uložení.
 
-Pokud okno náhledu nezavřete, náhled se při uložení stránky automaticky aktualizuje. To je výhodné použití s [Uložení pracovní verze](#uložit-pracovní-verzi) kde můžete okno náhledu přesunout například na druhý monitor a nechat ho otevřené během práce. Při každém uložení se náhled automaticky aktualizuje.
+Zároveň pokud okno náhledu nezavřete se náhled automaticky aktualizuje při uložení stránky. To je výhodné využití s funkcí [Uložit pracovní verzi](#uložit-pracovní-verzi) kde můžete přesunout okno náhledu např. na druhý monitor a mít ho stále otevřeno během práce. Při každém uložení se vám náhled automaticky aktualizuje.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/6OSTrMJj8z4" title="Přehrávač videí YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/6OSTrMJj8z4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-## Spolupráce několika redaktorů
+## Kolaborace více redaktorů
 
-Abyste zabránili současným úpravám stejné stránky dvěma různými uživateli, WebJET vás upozorní, že na stránce právě někdo pracuje. To znamená, že někdo již načetl upravovanou stránku v editoru. V takové situaci musíte opustit editor a počkat, až dotyčný uživatel dokončí svou práci, abyste si vzájemně nepřepsali úpravy.
+Aby nedošlo k případu, že jednu stránku editují současně dva různí uživatelé, systém WebJET vás v takovém případě upozorní hlášením, že na stránce v současnosti již někdo pracuje. Znamená to, že editovanou stránku má již někdo načtenou v editoru. V takové situaci musíte opustit editor a počkat, dokud dotyčný uživatel neskončí svou práci, abyste si navzájem nepřepsali své úpravy.
 
-Doporučujeme, abyste po dokončení práce a uložení/publikování stránky opustili editor stránky, čímž se minimalizuje možnost zobrazení zprávy jinému editoru.
+Doporučujeme, abyste po ukončení práce a uložení/publikování stránky opustili editor stránek, minimalizujete tím možnost zobrazení hlášení pro jiného redaktora.
 
-Tuto funkci mají i aplikace, takže pracovní postup se vztahuje na všechny části, nejen na editor stránek.
+Takovou vlastnost mají také aplikace, postup práce tedy platí pro všechny části, nejen pro editor stránek.
 
 ![](../../developer/datatables-editor/editor-locking.png)

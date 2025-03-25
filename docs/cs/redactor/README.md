@@ -1,15 +1,15 @@
-# Dokumentace pro editor
+# Dokumentace pro redaktora
 
-V této příručce je zatím pouze **specifická dokumentace pro verzi 2021**. Stejně jako **základna** Použijte **stávající příručka pro WebJET 8** a zde si můžete přečíst o **nové funkce a změny** s původní dokumentací.
+V tomto návodu se zatím nachází jen **specifická dokumentace pro verzi 2021**. Jak **základ** použijte **stávající manuál pro WebJET 8** a zde si přečtěte o **nových vlastnostech a změnách** vůči původní dokumentaci.
 
 Pokračujte výběrem sekce v levém menu.
 
-## Stáhnout dokumentaci
+## Dokumentace ke stažení
 
-Tuto dokumentaci si můžete stáhnout také ve formátu PDF a vytisknout.
+Tuto dokumentaci si můžete stáhnout také v PDF formátu pro možnost vytištění.
 
-[Příručka pro editora - PDF](../_media/manuals/webjetcms-redactor.pdf)
+[Manuál pro redaktora - PDF](../_media/manuals/webjetcms-redactor.pdf)
 
-Starší základní dokumentace ve formátu `docx` Stáhnout. Obsahuje informace o základní práci s WebJET CMS, nemusí obsahovat všechny nejnovější změny a neobsahuje popis všech aplikací a možností. Za směrodatnou vždy považujte online dokumentaci na této stránce, verzi v. `docx` formát je pouze doplňkovou možností.
+Starší základní dokumentace ve formátu `docx` ke stažení. Obsahuje informace k základní práci s WebJET CMS, nemusí obsahovat všechny nejnovější změny a neobsahuje popis všech aplikací a možností. Vždy považujte za právoplatnou online dokumentaci na této stránce, verze v `docx` formátu je jen doplňková možnost.
 
-[WebJET\_for\_editors.docx](../_media/manuals/WebJET_pre_redaktorov.docx)
+[WebJET\_pre\_redaktorů.docx](../_media/manuals/WebJET_pre_redaktorov.docx)

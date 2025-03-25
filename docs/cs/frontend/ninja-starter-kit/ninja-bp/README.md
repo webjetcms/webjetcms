@@ -1,6 +1,6 @@
 # Základní kód
 
-Kód HTML je rozdělen do více souborů, aby bylo možné vložit společný kód (např. kód záhlaví v souboru `head.jsp`) na různé typy stránek (`home-page.jsp/sub-page.jsp`).
+HTML kód je rozdělen do více souborů pro možnost vložení společného kódu (např. kódu hlavičky v `head.jsp`) do rozdílných typů stránek (`home-page.jsp/sub-page.jsp`).
 
 <!-- tabs:start -->
 
@@ -65,7 +65,7 @@ Kód HTML je rozdělen do více souborů, aby bylo možné vložit společný k�
 </html>
 ```
 
-#### ** sidebar.jsp **
+#### **sidebar.jsp**
 
 ```html
 <iwcm:write name="doc_right_menu"/>
@@ -274,4 +274,4 @@ minBrowserVersion.EDGE=12
 minBrowserVersion.ANDROID_BROWSER=4
 ```
 
-všechny tyto vlastnosti mohou být ovlivněny parametrem URL nebo `request` atribut se stejným názvem.
+všechny tyto vlastnosti je při zobrazení stránky možné ovlivnit URL parametrem nebo `request` atributem se stejným jménem.

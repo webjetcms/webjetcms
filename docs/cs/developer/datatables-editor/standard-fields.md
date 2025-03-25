@@ -1,6 +1,6 @@
 # Typy polí pro editor
 
-V editoru lze použít všechna standardní pole formuláře.
+V editoru lze použít všechna standardní formulářová pole.
 
 ## ID
 
@@ -20,7 +20,7 @@ public class CalendarEventsEntity {
 
 ## OPEN\_EDITOR
 
-Pole textového typu, které zobrazuje odkaz pro otevření editoru záznamu, například:
+Textový typ pole který zobrazí odkaz na otevření editoru záznamu, příklad:
 
 ```java
     @Column(name = "title")
@@ -44,9 +44,9 @@ Standardní textové pole, příklad:
 
 ![](../../frontend/webpages/customfields/webpages-text.png)
 
-## NUMBER / TEXT\_NUMBER
+## NUMBER/TEXT\_NUMBER
 
-Textové pole `type="number"`, prohlížeč obvykle také zobrazuje šipky v poli pro přiblížení nebo oddálení zadané hodnoty. Příklad: Na obrázku se zobrazí obrázek, ve kterém se zobrazí informace, které se mají zobrazit:
+Textové pole `type="number"`, prohlížeč typicky zobrazí v poli i šipky pro zvětšení/zmenšení zadané hodnoty. Příklad:
 
 ```java
     @Column(name = "priority")
@@ -59,11 +59,11 @@ Textové pole `type="number"`, prohlížeč obvykle také zobrazuje šipky v pol
 	private Integer priority;
 ```
 
-Rozdíl mezi `NUMBER` a `TEXT_NUMBER` je v zobrazení datové tabulky. `TEXT_NUMBER` zobrazí zaokrouhlené číslo, vyšší číslo vypíše v textové podobě, např. `10 tis.` místo `10000`. V editoru se chová stejně (zobrazí se přesná hodnota).
+Rozdíl mezi `NUMBER` a `TEXT_NUMBER` je v zobrazení v datatabulce. `TEXT_NUMBER` zobrazí zaokrouhlené číslo, při vyšším čísle vypíše v textové podobě. `10 tis.` místo `10000`. V editoru je chování stejné (zobrazí se přesná hodnota).
 
 ## PASSWORD
 
-Textové pole `type="password"` zadat heslo.
+Textové pole `type="password"` pro zadání hesla.
 
 ```java
     @DataTableColumn(
@@ -78,7 +78,7 @@ Textové pole `type="password"` zadat heslo.
 
 ## TEXTAREA
 
-Víceřádkové textové pole. Dlouhý text se nezabaluje, pokud chcete dlouhý text zabalit do více řádků, nastavte možnost `className = "wrap"`:
+Více řádkové textové pole. Dlouhý text se nezalamuje, pokud chcete zalomit dlouhý text do více řádků nastavte `className = "wrap"`:
 
 ```java
     @Column(name = "gallery_perex")
@@ -108,9 +108,9 @@ Víceřádkové textové pole. Dlouhý text se nezabaluje, pokud chcete dlouhý 
 
 ## DATE
 
-Při výběru data se po kliknutí do pole zobrazí okno pro výběr data.
+Výběr data, po kliknutí do pole zobrazí okno pro výběr data.
 
-Všimněte si nastavení `@Temporal(TemporalType.TIMESTAMP)` pro správnou konverzi polí do databázových sloupců (vyžadováno JPA).
+Všimněte si nastavení `@Temporal(TemporalType.TIMESTAMP)` pro korektní konverzi pole do databázového sloupce (vyžaduje to JPA).
 
 ```java
     @Column(name = "date_from")
@@ -125,7 +125,7 @@ Všimněte si nastavení `@Temporal(TemporalType.TIMESTAMP)` pro správnou konve
 
 ## DATETIME
 
-Podobná oblast jako `DATE` ale kromě toho umožňuje také výběr času.
+Podobné pole jako `DATE` ale navíc umožňuje také výběr času.
 
 ```java
     @Column(name = "date_to")
@@ -141,11 +141,11 @@ Podobná oblast jako `DATE` ale kromě toho umožňuje také výběr času.
 
 ## TIME\_HM a TIME\_HMS
 
-Pole podobná `DATETIME` ale umožňují pouze výběr času. Verze `TIME_HM` je výběr času pomocí hodin a minut. Verze `TIME_HMS` umožňuje vybrat čas pomocí hodin, minut a sekund.
+Podobná pole jako `DATETIME` ale umožňují POUZE výběr času. Verze `TIME_HM` je výběr času pomocí hodin a minut. Verze `TIME_HMS` umožňuje výběr času pomocí hodin, minut a vteřin.
 
-Všimněte si nastavení `@Convert(converter = DefaultTimeValueConverter.class)` který nastaví stejné datum pro každý zvolený čas, a to `01.01.2000` přičemž výběr času zůstává nezměněn. Stejné nastavení data není viditelné, ale je důležité z hlediska toho, jak funguje při filtrování záznamů pomocí těchto časových polí.
+Všimněte si nastavení `@Convert(converter = DefaultTimeValueConverter.class)`, které nastaví pro každý zvolený čas stejné datum a to `01.01.2000` přičemž výběr času se nezmění. Toto nastavení stejného data není vidět, ale je důležité z hlediska fungování při filtrování záznamů pomocí těchto časových polí.
 
-Je třeba mít na paměti, že třída `DefaultTimeValueConverter` provedené `AttributeConverter`, což ze své podstaty znamená, že tento převodník funguje pouze tehdy, když se jedná o sloupec v entitě, která představuje sloupec databáze. Pokud vybraný sloupec toto nesplňuje, musíte jeho hodnotu nastavit pomocí některé ze statických funkcí obsažených ve třídě `DefaultTimeValueConverter`.
+Třeba si uvědomit že třída `DefaultTimeValueConverter` implementuje `AttributeConverter`, což vlastní znamená, že tento konvertor funguje pouze v případě, když se jedná o sloupec v entitě, který reprezentuje sloupec databáze. Pokud vámi vybraný sloupec toto nesplňuje, musíte nastavit jeho hodnotu pomocí jedné ze statických funkcí, které jsou obsaženy ve třídě `DefaultTimeValueConverter`.
 
 ```java
     @Column(name = "reservation_time_to")
@@ -159,17 +159,17 @@ Je třeba mít na paměti, že třída `DefaultTimeValueConverter` provedené `A
     private Date reservationTimeTo;
 ```
 
-## VYBRAT
+## SELECT
 
-Výběrové pole, nastavené podle typu `DataTableColumnType.SELECT`.
+Výběrové pole, nastavuje se typem `DataTableColumnType.SELECT`.
 
 ![](../../frontend/webpages/customfields/webpages-select.png)
 
-Je důležité definovat možnosti výběrového pole:
+Důležité je definovat možnosti výběrového pole:
 
-### Přenosem dat ze služby REST
+### Přenosem údajů z REST služby
 
-Při čtení datové tabulky je možné přenášet nejen záznamy, ale také tzv. `option` Atributy. Ty jsou pak také nastaveny jako možnosti pro zadaná pole. Volby lze nastavit přepsáním metody `getOptions`.
+Při čtení datatabulky je možné kromě záznamů přenést také tzv. datatabulky. `option` atributy. Ty se následně nastaví i jako možnosti zadaných polí. Možnosti lze nastavit přepsáním metody `getOptions`.
 
 ```java
 public class ContactRestController extends DatatableRestControllerV2<ContactEntity, Long> {
@@ -205,11 +205,11 @@ public class ContactEntity {
 }
 ```
 
-Upozornění: pokud jste metodu přepsali, také `getAll(Pageable pageable)` je třeba zavolat `getOptions` ve svém kódu metody `getAll`.
+Upozornění: pokud byste přepsali i metodu `getAll(Pageable pageable)` je třeba volání `getOptions` provést ve vašem kódu metody `getAll`.
 
-### Propojením s číselníkem
+### Propojením na číselník
 
-V aplikaci číselníků lze snadno vytvářet uživatelsky editovatelné seznamy dat. Ty lze použít jako možnosti výběrových polí. To se nastavuje pomocí hodnoty `enumeration:MENO-CISELNIKA`:
+V aplikaci číselníky lze snadno vytvářet uživatelsky upravitelné seznamy údajů. Ty lze využít jako možnosti výběrového pole. To se nastavuje hodnotou `enumeration:MENO-CISELNIKA`:
 
 ```java
 public class ContactEntity {
@@ -227,9 +227,9 @@ public class ContactEntity {
 }
 ```
 
-### Propojení s třídou Java
+### Propojením na Java třídu
 
-Pokud jsou data získána speciálním způsobem, můžete získat seznam možností zavoláním třídy jazyka Java, která vrací seznam dat. Ten je nastaven hodnotou `method:PACKAGE.TRIEDA.METODA` přičemž `value` je možné zadat názvy atributů pro načtení textu a hodnot ve formátu `LABEL-PROPERTY:VALUE-PROPERTY`.
+Pokud jsou data získávána speciálním způsobem víte získat seznam možností voláním Java třídy, která vrátí seznam údajů. To se nastavuje hodnotou `method:PACKAGE.TRIEDA.METODA`, přičemž do `value` je možné zadat jména atributů pro získání textu a hodnoty ve formátu `LABEL-PROPERTY:VALUE-PROPERTY`.
 
 ```java
 public class ContactRestController extends DatatableRestControllerV2<ContactEntity, Long> {
@@ -263,9 +263,9 @@ public class ContactEntity {
 }
 ```
 
-### Uvedením možností přímo v entitě
+### Jmenováním možností přímo v entitě
 
-Jednotlivé možnosti můžete přímo vypsat pomocí seznamu `@DataTableColumnEditorAttr`, jako zobrazený text (atribut `key`), můžete použít překladový klíč:
+Jednotlivé možnosti můžete přímo jmenovat pomocí seznamu `@DataTableColumnEditorAttr`, jako zobrazený text (atribut `key`) můžete použít překladový klíč:
 
 ```java
 	@Column(name = "banner_type")
@@ -286,11 +286,11 @@ Jednotlivé možnosti můžete přímo vypsat pomocí seznamu `@DataTableColumnE
 	private Integer bannerType;
 ```
 
-Všimněte si, že i když zadáváte hodnoty do value jako řetězec, jsou správně převedeny na číslo (technicky je v kódu HTML vše řetězec, ale Spring je při odesílání a zobrazování správně převádí).
+Všimněte si, že i když hodnoty do value zadáváte jako řetězec korektně se přetypují na číslo (technicky v HTML kódu je všechno řetězec, ale při odeslání i zobrazení to Spring korektně konvertuje).
 
 ## MULTISELECT
 
-Do pole pro výběr z více možností zadejte `DataTableColumnType.MULTISELECT`. Umožňuje pracovat s polem objektů nebo se seznamem odděleným čárkou (po nastavení atributu `separator` ve kterém zadáte oddělovací znak).
+Výběrové pole s možností volby více možností, typ `DataTableColumnType.MULTISELECT`. Umožňuje pracovat s polem objektů nebo s čárkou odděleným seznamem (po nastavení atributu `separator` ve kterém uvedete oddělovací znak).
 
 ![](../../frontend/webpages/customfields/webpages-select-multi.png)
 
@@ -339,9 +339,9 @@ public class ContactEntity {
 }
 ```
 
-Pro atribut `multipleOddeleneCiarkou` hodnoty jsou odděleny znakem definovaným v atributu `separator`. Takže hodnota po odeslání bude vypadat např. takto. `"Tri,Pat"`.
+Pro atribut `multipleOddeleneCiarkou` se hodnoty oddělují pomocí znaku definovaného v atributu `separator`. Hodnota po odeslání tedy bude vypadat jako např. `"Tri,Pat"`.
 
-Hodnoty oddělené čárkou by se měly používat pro `MULTISELECT` pole používaná pro nastavení aplikace (pomocí anotace `@WebjetAppStore`):
+Hodnoty oddělené čárkou je třeba použít pro `MULTISELECT` pole použitá pro nastavení aplikace (používající anotaci `@WebjetAppStore`):
 
 ```java
 @WebjetComponent("sk.iway.basecms.contact.ContactApp")
@@ -368,9 +368,9 @@ public class ContactApp extends WebjetComponentAbstract {
 
 ## CHECKBOX
 
-Standardní zaškrtávací políčko, umožňuje pracovat s polem objektů (výběr více možností). Použití atributu `unselectedValue` je nastaveno, pokud je pole nezaškrtnuté.
+Standardní zaškrtávací pole, umožňuje pracovat is polem objektů (zvoleno více možností). Pomocí atributu `unselectedValue` se nastavuje hodnota pokud pole není zaškrtnuté.
 
-Můžete také použít možnost nastavení atributu `data-dt-field-headline` pro samostatný nadpis nad seznamem polí.
+Můžete využít i možnosti nastavení atributu `data-dt-field-headline` pro samostatný nadpis nad seznamem polí.
 
 ```java
     @DataTableColumn(
@@ -398,7 +398,7 @@ Můžete také použít možnost nastavení atributu `data-dt-field-headline` pr
 
 ## RADIO
 
-Standardní pole pro výběr jedné z možností.
+Standardní pole pro výběr jedné z možnosti.
 
 ```java
     @Column(name = "sex_male")
@@ -420,7 +420,7 @@ Standardní pole pro výběr jedné z možností.
 
 ## BOOLEAN
 
-Představuje zjednodušený zápis typu pole `CHECKBOX` pro binární volbu ano/ne.
+Reprezentuje zjednodušený zápis pole typu `CHECKBOX` pro binární volbu ano/ne.
 
 ```java
     @Column(name = "require_approve")
@@ -434,7 +434,7 @@ Představuje zjednodušený zápis typu pole `CHECKBOX` pro binární volbu ano/
 
 ## BOOLEAN\_TEXT
 
-Představuje typ `BOOLEAN` pro binární možnost ano/ne s popiskem vpravo místo vlevo a možností Ano vedle zaškrtávacího políčka.
+Reprezentuje typ `BOOLEAN` pro binární volbu ano/ne s titulkem napravo místo nalevo a možnosti Ano při zaškrtávacím poli.
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, tab = "basic", title="components.news.paging")
@@ -443,7 +443,7 @@ Představuje typ `BOOLEAN` pro binární možnost ano/ne s popiskem vpravo míst
 
 ## HIDDEN
 
-Skryté pole, v editoru se nezobrazí.
+Skryté pole, v editoru nebude zobrazeno.
 
 ```java
 	@Column(name = "domain_id")
@@ -456,7 +456,7 @@ Skryté pole, v editoru se nezobrazí.
 
 ## DISABLED
 
-Zobrazí textové pole, jehož hodnotu nelze změnit. V příkladu si všimněte, že typy polí lze kombinovat. Nastavení `DISABLED` nastaví atribut HTML `disabled="disabled"`.
+Zobrazí textové pole, jehož hodnotu nelze měnit. V příkladu si všimněte, že typy polí lze kombinovat. Nastavení `DISABLED` nastaví HTML atribut `disabled="disabled"`.
 
 ```java
     @Size(max = 255)
@@ -467,9 +467,9 @@ Zobrazí textové pole, jehož hodnotu nelze změnit. V příkladu si všimněte
 
 ## QUILL
 
-Zobrazí jednoduchý editor HTML, který umožňuje základní formátování textu, například tučné/velké písmo/podtržení, nadpisy, seznamy a odkazy.
+Zobrazí jednoduchý HTML editor, který umožňuje základní formátování textu jako tučné písmo/kurzíva/podtržené, nadpisy, seznamy a odkaz.
 
-Všimněte si použití převodníku `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)` která vám umožní odesílat pouze [zabezpečený kód HTML](../backend/security.md) (bez vložených prvků JavaScriptu atd.).
+Všimněte si použití konvertoru `@javax.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)`, který povolí odeslat pouze [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementů a podobně).
 
 ```java
     @Column(name = "l_description_sk")
@@ -486,7 +486,7 @@ Všimněte si použití převodníku `@javax.persistence.Convert(converter = All
 
 ## WYSIWYG
 
-Zobrazí plnohodnotný editor HTML, který se používá pro úpravu webových stránek.
+Zobrazí plnohodnotný editor HTML jak se používá pro editaci webových stránek.
 
 ```java
     @Column(name = "description")
@@ -499,7 +499,7 @@ Zobrazí plnohodnotný editor HTML, který se používá pro úpravu webových s
     private String description;
 ```
 
-pole musí být použito na samostatné kartě, která má nastavený atribut `content: ''`:
+pole musí být použito v samostatné kartě, která má nastavený atribut `content: ''`:
 
 ```javascript
     var tabs = [
@@ -512,7 +512,7 @@ pole musí být použito na samostatné kartě, která má nastavený atribut `c
 
 ## JSON
 
-Pole [přidávání adresářů a webových stránek](field-json.md).
+Pole [přidávání adresářů a web stránek](field-json.md).
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.JSON, title="admin.temp.edit.showForDir", className = "dt-tree-group-array")
@@ -521,9 +521,9 @@ Pole [přidávání adresářů a webových stránek](field-json.md).
 
 ![](field-json-group-array.png)
 
-## DATOVÁ TABULKA
+## DATATABLE
 
-Pole [vnořená datová tabulka v editoru](field-datatable.md).
+Pole [vnořená datatabulka v editoru](field-datatable.md).
 
 ```java
     @Transient
@@ -546,7 +546,7 @@ Pole [vnořená datová tabulka v editoru](field-datatable.md).
 
 ## ELFINDER
 
-Pole pro [výběr souborů](field-elfinder.md) (odkaz na soubor).
+Pole pro [výběr souboru](field-elfinder.md) (odkazu na soubor).
 
 ```java
     @Column(name = "watermark")
@@ -582,7 +582,7 @@ Pole pro výběr [stromové struktury](field-jstree.md).
 
 ## COLOR
 
-Pole pro výběr barvy v `HEX` formát včetně průhlednosti, např. `#FF0000FF`:
+Pole pro výběr barvy v `HEX` formátu včetně průsvitnosti, například. `#FF0000FF`:
 
 ```java
     @DataTableColumn(inputType = DataTableColumnType.COLOR, tab = "basic", title="components.app-cookiebar.textColor")
@@ -591,7 +591,7 @@ Pole pro výběr barvy v `HEX` formát včetně průhlednosti, např. `#FF0000FF
 
 ## IFRAME
 
-Pole pro vložení další stránky do `iframe` element, který se používá v aplikacích v editoru pro vkládání např. fotogalerií:
+Pole pro vložení jiné stránky do `iframe` elementu, používá se v aplikacích v editoru pro vložení např. foto galerie:
 
 ```java
 @WebjetComponent("sk.iway.iwcm.components.gallery.GalleryApp")
@@ -612,9 +612,9 @@ public class GalleryApp extends WebjetComponentAbstract {
 
 ### BASE64
 
-Pole, které kóduje a dekóduje hodnotu pomocí algoritmu. `base64`, zobrazené jako `textarea`. Používá se především jako pole pro použití v editoru pro zachování speciálních znaků vkládané hodnoty. Pokud potřebujete použít `base64` můžete také nastavit na jiný typ pole `className = "dt-style-base64"`.
+Pole, které kóduje a dekóduje hodnotu pomocí algoritmu `base64`, zobrazeno jako `textarea`. Používá se primárně jako pole pro aplikaci v editoru pro zachování speciálních znaků vložené hodnoty. Pokud potřebujete použít `base64` i na jiný typ pole můžete nastavit `className = "dt-style-base64"`.
 
-!>**Varování:** Funkce JavaScriptu `btoa` podporuje pouze `ASCII` Postavy.
+!>**Upozornění:** JavaScript funkce `btoa` podporuje jen `ASCII` znaky.
 
 ```java
     @DataTableColumn(
@@ -635,7 +635,7 @@ Pole, které kóduje a dekóduje hodnotu pomocí algoritmu. `base64`, zobrazené
 
 ### STATIC\_TEXT
 
-Zobrazení statického textu na pozici běžného vstupního pole, tj. vpravo. V překladovém klíči je podporována syntaxe Markdown.
+Zobrazení statického textu na pozici běžného vstupního pole, tedy v pravé části. V překladovém klíči je podporována markdown syntax.
 
 ```java
     @DataTableColumn(
@@ -644,4 +644,61 @@ Zobrazení statického textu na pozici běžného vstupního pole, tj. vpravo. V
         title="components.app-vyhladavanie_info"
     )
     private String explain;
+```
+
+### IMAGE\_RADIO
+
+Zobrazení výběru jedné z možností na základě obrázku. Používá se například v aplikaci Anketa. Obrázky se získají jako seznam ze souborového systému, je třeba je plnit do objektu `options` odpovědi REST služby. Odkaz na obrázek se zadává do objektu `OptionDto.original`.
+
+Nastavením `className = "image-radio-horizontal"` lze přepnout zobrazení možností na horizontální v řádku. Přidáním CSS třídy `image-radio-fullwidth` se přepne zobrazení popisku a výběru do řádku namísto do sloupce, v takovém případě doporučujeme v kartě nemít jiná pole a nastavit v definici karty hodnotu `content = ""` aby karta neměla v pozadí šedý pruh podbarvující popisky.
+
+Implementace je v souboru [field-type-imageradio.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-imageradio.js).
+
+```java
+@WebjetComponent("sk.iway.iwcm.components.inquiry.InquiryApp")
+@WebjetAppStore(
+    nameKey = "components.inquiry.title",
+    descKey = "components.inquiry.desc",
+    itemKey= "cmp_inquiry",
+    imagePath = "/components/inquiry/editoricon.png",
+    galleryImages = "/components/inquiry/",
+    componentPath = "/components/inquiry/inquiry.jsp"
+)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "components.universalComponentDialog.title", selected = true),
+    @DataTableTab(id = "styleSelectArea", title = "components.roots.new.style", content = ""),
+    @DataTableTab(id = "componentIframeWindowTabList", title = "menu.inquiry", content = ""),
+})
+@Getter
+@Setter
+public class InquiryApp extends WebjetComponentAbstract {
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = "components.roots.new.style",
+        tab = "styleSelectArea",
+        className = "image-radio-horizontal image-radio-fullwidth"
+    )
+    private String style = "01";
+
+    @DataTableColumn(
+        inputType = DataTableColumnType.IMAGE_RADIO,
+        title = "components.catalog.color",
+        tab = "styleSelectArea",
+        className = "image-radio-horizontal image-radio-fullwidth"
+    )
+    private String color = "01";
+
+    @Override
+    public Map<String, List<OptionDto>> getAppOptions(ComponentRequest componentRequest, HttpServletRequest request) {
+        Map<String, List<OptionDto>> options = new HashMap<>();
+
+        //style & color options
+        options.put("style", DatatableTools.getImageRadioOptions("/components/inquiry/admin-styles/"));
+        options.put("color", DatatableTools.getImageRadioOptions("/components/inquiry/admin-colors/"));
+
+        return options;
+    }
+
+}
 ```

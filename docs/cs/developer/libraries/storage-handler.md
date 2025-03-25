@@ -1,17 +1,17 @@
 # Knihovna 'StorageHandler'
 
-pro správu a používání úložiště
+pro správu a používání Storage
 
 ***
 
-**Závislosti**
+**Dependencies (závislosti)**
 
-- [Nástroje](tools.md)
+- [Tools](tools.md)
 - [Store](store.md)
 
 ***
 
-`StorageHandler` umožňuje manipulovat s `window.localStorage` a `window.sessionStorage` na úrovni vnořených objektů, kde každý vytvořený hlavní klíč zadaný parametrem [setStoreName()](#setstorename) obsahuje objekt, ve kterém můžeme snadno definovat [setStorageItem()](#setstorageitem) a vyberte [getStorageItem()](#getstorageitem) data na základě dílčího klíče.
+`StorageHandler` umožňuje manipulovat s `window.localStorage` a `window.sessionStorage` na úrovni vnořených objektů, kde každý vytvořený master klíč zadaný pomocí [setStoreName()](#setstorename) obsahuje objekt, ve kterém můžeme jednoduše definovat [setStorageItem()](#setstorageitem) a vybírat [getStorageItem()](#getstorageitem) data na základě sub-klíče.
 
 Rozšiřuje třídu [Store](store.md).
 
@@ -21,13 +21,13 @@ import Store from '../store/store';
 class StorageHandler extends Store {}
 ```
 
-### Popis operace:
+### Popis fungování:
 
-V systému **WebJET** Je `StorageHandler` používá se jako rozhraní v rozšiřujících třídách a knihovnách pro ukládání dat pod klíčem používané třídy nebo knihovny.
+V systému **WebJET** je `StorageHandler` používaný, jako rozhraní v rozšiřujících třídách a knihovnách, pro ukládání dat pod klíčem používané třídy nebo knihovny.
 
-Příklady takových použití jsou např.. [Translator](translator.md) nebo [CellVisibilityService](cell-visibility-service.md)
+Příkladem takových použití jsou například. [Translator](translator.md) nebo [CellVisibilityService](cell-visibility-service.md)
 
-Metody [getStorageItem()](#getstorageitem) a [setStorageItem()](#setstorageitem) nepracují přímo s místním klíčem/klíčem relace úložiště, ale s klíčem objektu, který je pod hlavním klíčem zadaným příkazem [setStoreName()](#setstorename) při vytváření instance třídy. Data jsou uložena jako objekt JSON. Proto se při každé změně objektu přepíše hodnota hlavního klíče novým záznamem celého objektu JSON.
+Metody [getStorageItem()](#getstorageitem) a [setStorageItem()](#setstorageitem) nepracují přímo s klíčem local/session Storage ale s klíčem objektu, který se nachází pod master klíčem zadaným pomocí [setStoreName()](#setstorename) při vytváření instance třídy. Data se ukládají, jako JSON objekt. Proto se při každé změně v objektu přepíše hodnota master klíče novým záznamem celého JSON objektu.
 
 ## Vytvoření instance:
 
@@ -46,29 +46,30 @@ store.setStorageItem('sub-kľúč-1', 'hodnota-1');
 store.setStorageItem('sub-kľúč-2', 'hodnota-2');
 ```
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
-| Metody | Poznámka
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Metody | Poznámka |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [setStoreName()](#setstorename)                      |
-| [setSessionStorage()](store.md?id=setsessionstorage) | Zděděná metoda ze třídy [Store](store.md) [přesměruje na soubor [store.md](store.md) ] |
-| [setLocalStorage()](store.md?id=setlocalstorage)     | Zděděná metoda ze třídy [Store](store.md) [přesměruje na soubor [store.md](store.md) ] |
-| [getStorageItem()](#getstorageitem)                  |
-| [setStorageItem()](#setstorageitem)                  |
-| [removeStorageItem()](#odstranit-skladovací-položku)            |
-| [clearData()](#cleardata)                            |
-| [destroy()](#zničit)                                |
-| [storeExist()](#storeexist)                          |
+| [setSessionStorage()](store.md?id=setsessionstorage) | Zděděná metoda ze třídy [Store](store.md) [přesměruje do souboru [store.md](store.md) ] |
 
-Podrobnější rozhraní API najdete v [Úložiště GIT](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/storage-handler#storagehandler-kni%C5%BEnica-na-spr%C3%A1vu-a-pou%C5%BE%C3%ADvanie-storage)
+ | [setLocalStorage()](store.md?id=setlocalstorage)     | Zděděná metoda ze třídy [Store](store.md) [přesměruje do souboru [store.md](store.md) ] |
+ | [getStorageItem()](#getstorageitem)                  |
+ | [setStorageItem()](#setstorageitem)                  |
+ | [removeStorageItem()](#removestorageitem)            |
+ | [clearData()](#cleardata)                            |
+ | [destroy()](#destroy)                                |
+ | [storeExist()](#storeexist)                          |
 
-### Podrobný popis funkcí
+Podrobnější API se nachází v [GIT repozitáři](https://gitlab.web.iway.local/webjet/webjet8v9/-/tree/master/src/main/webapp/admin/v9/src/js/libs/storage-handler#storagehandler-kni%C5%BEnica-na-spr%C3%A1vu-a-pou%C5%BE%C3%ADvanie-storage)
+
+### Detailní popis funkcí
 
 #### setStoreName()
 
-Nastaví třídu na nový název klíče, do kterého budou data uložena. Může být použita za běhu, a mít tak pouze jednu instanci. Metoda vrací třídu `StorageHandler`
+Nastaví třídě nový název klíče, do kterého se budou ukládat data. Lze jej použít za běhu, a tak mít pouze jednu instanci. Metoda vrací třídu `StorageHandler`
 
 ```javascript
 /**
@@ -102,7 +103,7 @@ getStorageItem(key);
 
 #### setStorageItem()
 
-Vytvoří klíč zadaný v úložišti a uloží pod něj zadanou hodnotu.
+Vytvoří zadaný v úložišti klíč a uloží pod ním zadanou hodnotu.
 
 ```javascript
 /**
@@ -119,7 +120,7 @@ setStorageItem(key, value);
 
 #### removeStorageItem()
 
-Odebere položku na základě klíče. Metoda může mít vypnutou kontrolu caseSensitive.
+Odstraní položku na základě klíče. Metodě může být vypnuta kontrola caseSensitive.
 
 ```javascript
 /**
@@ -137,7 +138,7 @@ removeStorageItem(key, caseSensitive = true);
 
 #### clearData()
 
-Odstraní aktuálně používané úložiště a ponechá ho prázdné - null. Hlavní klíč však zůstane zachován.
+Smaže aktuálně používané úložiště a nechá jej prázdné – null. Ponechá však master klíč.
 
 ```javascript
 /**
@@ -167,7 +168,7 @@ destroy()
 
 #### storeExist()
 
-Testuje, zda zadané úložiště existuje.
+Otestuje, zda existuje zadané úložiště.
 
 ```javascript
 /**

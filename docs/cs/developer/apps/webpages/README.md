@@ -1,26 +1,26 @@
-# Webové stránky
+# Web stránky
 
-Sekce webové stránky je specifická tím, že obsahuje více datových tabulek:
-- `webpagesDatatable` - hlavní datová tabulka pro seznam webových stránek
-- `groupsDatatable` - skrytý (`display:none`) datová tabulka pro úpravu položky složky (synchronizovaná se stromovou strukturou)
-- `mediaTable` - zobrazí média připojená k webové stránce v editoru stránky.
-- `historyTable` - zobrazuje historické záznamy (změny) v editoru webové stránky.
+Sekce web stránky je specifická v tom, že obsahuje více datatabulek:
+- `webpagesDatatable` - hlavní datatabulka pro seznam web stránek
+- `groupsDatatable` - skrytá (`display:none`) datatabulka pro editaci položky složky (synchronizovaná se stromovou strukturou)
+- `mediaTable` - zobrazuje připojená média k web stránce v editoru stránky
+- `historyTable` - zobrazuje historické záznamy (změny) v editoru web stránky
 
-## Historie webových stránek
+## Historie web stránek
 
-Historie webové stránky je implementována jako vnořená datová tabulka v editoru stránky. Je inicializována ve třídě [DocEditorFields.java](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) na objektu `private List<DocHistoryDto> history;`.
+Historie web stránek je implementována jako vnořená datatabulka v editoru stránek. Inicializována je ve třídě [DocEditorFields.java](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) na objektu `private List<DocHistoryDto> history;`.
 
-### Rozhraní REST
+### REST rozhraní
 
-Rozhraní REST je k dispozici na adrese URL `/admin/rest/web-pages/history?docId={docId}&groupId={groupId}` a je implementována ve třídě [DocHistoryRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryRestController.java).
+REST rozhraní je dostupné na URL adrese `/admin/rest/web-pages/history?docId={docId}&groupId={groupId}` a implementováno je ve třídě [DocHistoryRestController.java](../../../../src/main/java/sk/iway/iwcm/editor/rest/DocHistoryRestController.java).
 
-Používá [mapování](../../backend/mapstruct.md) zařízení `DocDetails` na jednodušší objekt DTO. V datové tabulce se zobrazují pouze základní údaje.
+Využívá [mapování](../../backend/mapstruct.md) objektů `DocDetails` na jednodušší DTO objekt. V datatabulce se zobrazují pouze základní údaje.
 
-Přístup k historii je **pouze pro čtení**, ve službě REST je zápis zakázán v metodě `beforeDelete` a `beforeSave`.
+Přístup k historii je **jen ke čtení**, v REST službě je zápis zakázán v metodě `beforeDelete` a `beforeSave`.
 
 ### Frontend
 
-Datová tabulka je upravena nasloucháním události `WJ.DTE.innerTableInitialized`, který se volá pro každou datovou tabulku, ověřením prostřednictvím `id` kód se provede pouze pro tabulku historie. Inicializovaný objekt je přiřazen do globální proměnné `historyTable`.
+Datatabulka je upravena poslechem události `WJ.DTE.innerTableInitialized`, ten se jmenuje pro každou datatabulku, ověřením přes `id` se kód provede pouze pro tabulku historie. Inicializovaný objekt je přiřazen do globální proměnné `historyTable`.
 
 ```javascript
 window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
@@ -32,9 +32,9 @@ window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
 });
 ```
 
-Po inicializaci se nepotřebná tlačítka skryjí voláním `historyTable.hideButton`.
+Po inicializaci jsou schovaná nepotřebná tlačítka voláním `historyTable.hideButton`.
 
-Složitá úprava spočívá ve způsobu načítání dat historie do editoru. Do editoru se musí načítat data JSON podle vybraného ID historie. O to se stará následující kód editačního tlačítka:
+Komplikovaná úprava je ve způsobu načítání dat z historie do editoru. Editoru je třeba podvrhnout JSON data načtená podle zvoleného ID z historie. Zajišťuje to následující kód tlačítka editace:
 
 ```javascript
 historyTable.button().add(buttonCounter++, {
@@ -75,11 +75,11 @@ historyTable.button().add(buttonCounter++, {
 });
 ```
 
-Použití požadavku ajax se zadaným `historyId` data webové stránky se načítají z historie. Ty jsou nastaveny v datovém řádku pomocí `docId` (což by měl být aktuálně upravený řádek). S novými daty se editor otevře voláním funkce `wjEdit` a poté jsou původní data uložená v objektu vrácena do řádku datové tabulky. `oldJson` (jinak by se po zavření okna editoru historická data zobrazovala v datové tabulce webových stránek).
+Pomocí ajax požadavky se zadaným `historyId` se získají data web stránky z historie. Ty jsou nastaveny v datatabulce řádku podle `docId` (což by měl být aktuálně editován řádek). S novými daty je otevřený editor voláním funkce `wjEdit` a následně jsou do řádku datatabulky vrácena původní data uložená v objektu `oldJson` (jinak by se po zavření okna editoru zobrazila historická data v datatabulce web stránek).
 
-V `init` možnost je nastavena `showIfOneRowSelected` které se zobrazí pouze v případě, že je vybrán přesně jeden řádek.
+V `init` je nastavena možnost `showIfOneRowSelected` která tlačítko zobrazí jen pokud je zvolen přesně jeden řádek.
 
-Tlačítka náhledu stránky a porovnání procházejí všechny vybrané řádky a otevírají nové okno náhledu stránky nebo porovnání podle původní funkce v aplikaci WebJET 8. Funkce Porovnání stránky vždy zobrazí porovnání vybraného řádku s aktuální verzí (nikoli porovnání vybraných řádků).
+Tlačítka pro zobrazení náhledu stránky a porovnání procházejí všechny zvolené řádky a otevírají do nového okna náhled, nebo porovnání stránky podle původní funkcionality ve WebJET 8. Porovnání stránek vždy zobrazí porovnání zvoleného řádku vůči aktuální verzi (nikoli srovnání zvolených řádků).
 
 ```javascript
 action: function (e, dt, node) {
@@ -96,11 +96,11 @@ action: function (e, dt, node) {
 
 ## Optimalizace rychlosti zobrazení
 
-Protože správa webových stránek je základní funkcí systému CMS, snažili jsme se optimalizovat rychlost jejich načítání a zobrazování. Z tohoto důvodu jsou použity specifické funkce a kód.
+Jelikož správa web stránek je základní funkcionalita CMS systému snažili jsme se optimalizovat její rychlost načítání a zobrazení. Z toho důvodu jsou použity specifické funkce a kód.
 
-### Volání služeb REST
+### Volání REST služeb
 
-Inicializační data JSON jsou vložena přímo do stránky prostřednictvím třídy [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java). Při prvním zobrazení stránky tedy není třeba čekat na volání služeb REST. V kódu stránky se používají jako:
+Inicializační JSON data jsou vložena přímo do stránky přes třídu [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java). Při prvotním zobrazení stránky se tedy nemusí čekat na volání REST služeb. V kódu stránky se použijí jako:
 
 ```javascript
 window.treeInitialJson = [(${treeInitialJson})];
@@ -119,11 +119,11 @@ groupsDatatable = WJ.DataTable({
 }
 ```
 
-`jstree` objekt automaticky vyhledá `window.treeInitialJson` a použijte ji místo zadané adresy URL. Zadané adresy URL pro služby REST se použijí pouze pro následná volání.
+`jstree` objekt automaticky hledá `window.treeInitialJson` a použije jej místo zadané URL adresy. Zadané URL adresy pro REST služby se použijí až pro další volání.
 
-### Optimalizace načítání adresářů
+### Optimalizace načítání adresáře
 
-K úpravě adresáře webové stránky se používá skrytá datová tabulka. Data se ve výchozím nastavení načítají pro data `jstree` stromovou strukturu. Ty obsahují `original` objekt, ve kterém je fakticky `GroupDetails`. Tento objekt je uměle vložen do datové tabulky adresáře v adresáři `loadTablesForGroup` Stejně jako:
+Pro editaci adresáře web stránky se využívá schovaná datatabulka. Data se standardně čtou pro data `jstree` stromové struktury. Ty obsahují `original` objekt, ve kterém je fakticky `GroupDetails`. Tento objekt se uměle vkládá do datatabulky adresáře ve funkci `loadTablesForGroup` jako:
 
 ```javascript
 if (groupsDatatable.rows().count()==0) {
@@ -134,18 +134,18 @@ if (groupsDatatable.rows().count()==0) {
 groupsDatatable.draw();
 ```
 
-aby nemusel volat službu REST pro načtení dat. To však samo o sobě nepomůže, protože datová tabulka nemá hodnoty pro výběrová pole, protože uměle vložený objekt tato data neobsahuje.
+nemusí se tedy jmenovat REST služba pro načítání dat. Toto samotné ale nepomůže, protože datatabulka nemá hodnoty pro výběrová pole, jelikož uměle vložený objekt tyto údaje neobsahuje.
 
-Načítání je tedy realizováno jako volání pro obnovení datové tabulky a následné otevření záznamu pro úpravu/přidání. Tlačítka pro editaci a přidání nového záznamu se zobrazují nad stromovou strukturou. Kliknutí na tato tlačítka vyvolá nastavení proměnné `groupsDatatableClickButtonAfterXhr` na hodnotu tlačítka, které má být vyvoláno po obnovení dat (např. `"buttons-create"`). `groupsDatatable` má funkci množiny `onXhr`, který po načtení dat ověří stav proměnné. `groupsDatatableClickButtonAfterXhr`. Pokud není `null` aby se spustilo kliknutí na zadané tlačítko.
+Načtení je tedy implementováno jako volání obnovení datatabulky a následné otevření editace/přidání záznamu. Tlačítka pro editaci a přidání nového záznamu jsou zobrazena nad stromovou strukturou. Klepnutí na tato tlačítka vyvolá nastavení proměnné `groupsDatatableClickButtonAfterXhr` na hodnotu tlačítka, které se má zavolat po obnovení dat (např. `"buttons-create"`). `groupsDatatable` má nastavenou funkci `onXhr`, která po načtení údajů ověřuje stav proměnné `groupsDatatableClickButtonAfterXhr`. Pokud není `null` tak vyvolá kliknutí na zadané tlačítko.
 
-Postup je tedy následující:
-- při kliknutí na uzel ve stromové struktuře se objekt nastaví na datovou tabulku a jeho nová adresa URL se nastaví podle následujícího postupu `groupId`
-- při kliknutí na tlačítko Přidat nebo Upravit složku nad stromovou strukturou se zapamatuje název tlačítka v proměnné. `groupsDatatableClickButtonAfterXhr` a tlačítko se bude jmenovat `buttons-refresh` v datové tabulce pro načtení dat ze serveru
-- po načtení dat ze serveru se zkontroluje stav proměnné. `groupsDatatableClickButtonAfterXhr` a pokud není `null`, je vyvoláno zadané tlačítko v datové tabulce (které otevře editor adresáře).
+Proces je tedy následující:
+- při kliknutí na uzel ve stromové struktuře se nastaví objekt do datatabulky a nastaví se její nové URL podle `groupId`
+- při klepnutí na tlačítko Přidat nebo Upravit složku nad stromovou strukturou se zapamatuje jméno tlačítka v proměnné `groupsDatatableClickButtonAfterXhr` a vyvolá se tlačítko `buttons-refresh` v datatabulce pro načtení dat ze serveru
+- po načtení dat ze serveru se ověří stav v proměnné `groupsDatatableClickButtonAfterXhr` a pokud není `null`, tak se vyvolá zadané tlačítko v datatabulce (což otevře editor adresáře).
 
-### Optimalizace načítání souborů JavaScript
+### Optimalizace načítání JavaScript souborů
 
-Webové stránky používané `ckeditor` jehož soubor JavaScript je třeba načíst. Jedná se však o poměrně velký soubor, jehož zpracování zvyšuje zatížení procesoru a následně zpomaluje zobrazení webové stránky. Proto se tento soubor načítá asynchronně po 2 sekundách po inicializaci DOM ve funkci `window.domReady.add`:
+Web stránky používají `ckeditor`, jehož JavaScript soubor je třeba načíst. Je to ovšem poměrně velký soubor a jeho zpracování zvyšuje zátěž procesoru a následně zpomaluje zobrazení web stránky. Tento soubor se tedy načte asynchronně po 2 sekundách po inicializaci DOM ve funkci `window.domReady.add`:
 
 ```javascript
 setTimeout(()=> {
@@ -159,7 +159,7 @@ setTimeout(()=> {
 }, 2000);
 ```
 
-Problémem však může být otevření okna editoru stránky před načtením `ckeditor.js`, takže je ošetřena přímo ve funkci pro otevření okna, kde je objekt testován. `window.CKEDITOR` a pokud neexistuje, je inicializace odložena pomocí funkce `setTimeout`.
+Problémem ale následně může být otevření okna editoru stránek před načtením `ckeditor.js`, ošetřeno to je tedy přímo ve funkci otevření okna, kde se testuje objekt `window.CKEDITOR` a pokud neexistuje, tak se inicializace pozdrží přes funkci `setTimeout`.
 
 ```javascript
 webpagesDatatable.EDITOR.on( 'open', function ( e, type ) {
@@ -176,49 +176,49 @@ webpagesDatatable.EDITOR.on( 'open', function ( e, type ) {
 }
 ```
 
-## Zobrazení podle parametru docid
+## Zobrazení podle docid parametru
 
-Zobrazení podle zadání `docid` parametr URL (nebo zadaný `docid` prostřednictvím textového pole) používá knihovnu [js-tree-auto-opener](../../libraries/js-tree-auto-opener.md). Automatické otevírání získá seznam ID adresářů voláním služby REST. `/admin/rest/web-pages/parents/{id}`. Poté se pokusí otevřít získaný seznam ID adresářů (postupným voláním služby REST pro získání údajů o podadresářích). Po otevření všech adresářů otevře webovou stránku pro editaci.
+Zobrazení podle zadaného `docid` URL parametru (nebo zadaného `docid` přes textové pole) využívá knihovnu [js-tree-auto-opener](../../libraries/js-tree-auto-opener.md). Automatické otevření získá seznam ID adresářů voláním REST služby `/admin/rest/web-pages/parents/{id}`. Získaný seznam ID adresářů se následně snaží otevřít (postupným voláním REST služby pro získání údajů podadresářů). Po otevření všech adresářů otevře k editaci web stránku.
 
-Vstupní pole pro zadávání `docid` ve stránce je implementován přímo v [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) z předpřipraveného kódu HTML `#docIdInputWrapper`, který je přesunut do kontejneru datového panelu nástrojů. Po stisknutí tlačítka `Enter` je vyvolána akce otevření zadaného ID stránky.
+Vstupní pole pro zadání `docid` ve stránce je implementováno přímo ve [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) z před připraveného HTML kódu `#docIdInputWrapper`, který je přesunut do kontejneru nástrojové lišty datatabulky. Po stisku klávesy `Enter` je vyvolána akce otevření zadaného ID stránky.
 
-Vstupní pole je připojeno k `autocomplete` vyhledávání podle názvu stránky nebo adresy URL nastavením `data-ac` Atributy.
+Na vstupní pole je napojen `autocomplete` vyhledávání podle názvu stránky nebo její URL adresy nastavením `data-ac` atributů.
 
-!>**Varování:** aktuální implementace nemůže otevřít webovou stránku na druhé straně seznamu webových stránek (protože ji v seznamu nenajde). Také pokud je `docid` v adresáři Systém nebo Koš a tento list není aktuálně zobrazen, nezobrazí se ani tento adresář.
+!>**Upozornění:** aktuální implementace nedokáže otevřít web stránku na druhé straně seznamu web stránek (jelikož ji nenajde v seznamu). Také pokud je zadáno `docid` v adresáři Systém nebo Koš a tento list není aktuálně zobrazen, také nedokáže adresář zobrazit.
 
-## Zobrazit kartu Naposledy upraveno
+## Zobrazení karty Naposledy upraveno
 
-Kliknutím na kartu Naposledy změněné se do datové tabulky načte seznam naposledy změněných stránek od všech uživatelů. Kliknutí na jméno se zpracovává v záložce `webpagesDatatable.onEdit`. Protože stránky v seznamu mohou být v různých adresářích, neotevírají se přímo, ale jejich ID se zadává do pole `Doc ID` a následně načteny včetně stromové struktury.
+Po kliknutí na kartu Naposledy upravené se načte do datatabulky seznam naposledy upravených stránek od všech uživatelů. Klepnutí na jméno je zpracováno ve funkci `webpagesDatatable.onEdit`. Jelikož stránky v seznamu mohou být v různých adresářích neotevře se přímo, ale jejich ID je zadáno do pole `Doc ID` a následně načteno včetně stromové struktury.
 
-Kliknutím na list se načte obsah datové tabulky jako pro adresář nastavený v konfigurační proměnné. `systemPagesRecentPages` který je kontrolován ve třídě [Webové stránkySlužba](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java) a pokud se shoduje s ID adresáře, je zavolán pro načtení seznamu posledních stránek.
+Klepnutí na list načte obsah datatabulky jakoby pro adresář nastavený v konfigurační proměnné `systemPagesRecentPages`, který se kontroluje ve třídě [WebpagesService](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java) a pokud se ID adresáře shoduje jmenuje se načtení seznamu posledních stránek.
 
 ## Zobrazení karty Čekající na schválení
 
-Zobrazení seznamu na kartě čekajících je složitější. Backend kontroluje, zda existují stránky, které má aktuálně přihlášený uživatel schválit. Pokud ano, je to nastaveno ve třídě [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java) atribut v modelu `hasPagesToApprove` na hodnotu `TRUE`. To se testuje v [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) a pokud `FALSE` aby se písmeno skrylo.
+Zobrazení seznamu v kartě čekající na schválení je komplikovanější. Na backendu se kontroluje, zda pro aktuálně přihlášeného uživatel existují stránky, které má schválit. Pokud ano, nastaví se ve třídě [WebPagesListener](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebPagesListener.java) do modelu atribut `hasPagesToApprove` na hodnotu `TRUE`. Tento se testuje ve [web-pages-list.pug](../../../../src/main/webapp/admin/v9/views/pages/webpages/web-pages-list.pug) a je-li `FALSE` tak se list skryje.
 
-Po kliknutí na záložku se do datové tabulky načte adresář s ID nastaveným v konfigurační proměnné, jako kdyby `systemPagesDocsToApprove` co se kontroluje ve třídě [Webové stránkySlužba](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java). Načítání je komplikováno tím, že hodnota se používá jako jedinečné ID. `docId`. Může však existovat více záznamů pro stejnou položku. `docId`. Jako nejjednodušší řešení jsme změnili hodnotu `docId` a `historyId` které jsou vyměňovány v přenášených datech.
+Po kliknutí na kartu se do datatabulky načte jakoby adresář s ID nastaveným v konfigurační proměnné `systemPagesDocsToApprove`, co se kontroluje ve třídě [WebpagesService](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesService.java). Načtení komplikuje fakt, že jako unikátní ID se používá hodnota `docId`. Pro schvalování ale může existovat vícero záznamů pro stejné `docId`. Jako nejjednodušší řešení jsme otočili hodnotu `docId` a `historyId`, které se navzájem v přenášených datech vymění.
 
-Problémem je volání obnovení dat po kliknutí, které volá `WebpagesRestController.getOne` kde je hodnota odeslána `historyId` Stejně jako `id`. Podle zaslaných `id` (což je ve skutečnosti `historyId`) získáme správnou hodnotu dotazem do databáze. `docId` získat obsah podle kombinace `docId, historyId`.
+Problémem je zavolání obnovení dat po kliknutí, které volá `WebpagesRestController.getOne`, kde je zaslána hodnota `historyId` jak `id`. Podle zaslaného `id` (což je ve skutečnosti `historyId`) získáme dotazem do databáze korektní hodnotu `docId` pro získání obsahu podle kombinace `docId, historyId`.
 
-Kliknutí se provádí ve funkci `webpagesDatatable.onEdit` otevřením nového okna `/admin/approve.jsp` se schvalovacím dialogem.
+Klepnutí je obslouženo ve funkci `webpagesDatatable.onEdit` otevřením nového okna `/admin/approve.jsp` se schvalovacím dialogem.
 
-V tabulce posledních změn i v tabulce čekajících záznamů byla skryta tlačítka přidat/upravit/odstranit záznam. To je řešeno nasloucháním události přepnutí karty `$('#pills-pages a[data-toggle="pill"]').on('shown.bs.tab', function (e) {`.
+Pro tabulku naposledy upravené i čekající na schválení se schovanou tlačítka pro přidání/editaci/smazání záznamu. Je to ošetřeno poslechem události přepnutí karty `$('#pills-pages a[data-toggle="pill"]').on('shown.bs.tab', function (e) {`.
 
 ## Náhled stránky
 
-Náhled stránky je implementován třídou `EditorPreview` v souboru `src/js/pages/web-pages-list/preview.js`. Funkce `window.previewPage` nastaví atribut `isPreviewClicked` a provede volání API pro uložení editoru. Také naslouchá události `preSubmit` kde zjišťuje stav atributu `isPreviewClicked`.
+Náhled stránky implementuje třída `EditorPreview` v souboru `src/js/pages/web-pages-list/preview.js`. Funkce `window.previewPage` nastavuje atribut `isPreviewClicked` a provede API volání pro uložení editoru. Zároveň poslouchá událost `preSubmit` při které detekuje stav atributu `isPreviewClicked`.
 
-Pokud je nastavena na `true` získá data JSON z editoru a uloží je do objektu relace `session.setAttribute("ShowdocAction.showDocData", entity)` zavoláním `/admin/rest/web-pages/preview/`. V prohlížeči se pak otevře nová karta s adresou `/admin/webpages/preview/?docid=+jsonData.id` provozované třídou `PreviewController.java`. Získá objekt DocDetails z relace DocDetails `DocDetails doc = (DocDetails)request.getSession().getAttribute("ShowdocAction.showDocData");`, nastaví potřebné `request` objekty a volá `/showdoc.do` zobrazit webové stránky. To však nezíská aktuální objekt z databáze, ale použije objekt `request.getAttribute("ShowdocAction.showDocData")` pro zobrazení dat.
+Je-li nastaven na `true` získá JSON data z editoru a uloží je do session objektu `session.setAttribute("ShowdocAction.showDocData", entity)` voláním `/admin/rest/web-pages/preview/`. Následně otevře novou kartu v prohlížeči s adresou `/admin/webpages/preview/?docid=+jsonData.id`, kterou obsluhuje třída `PreviewController.java`. Ta získá ze session DocDetails objekt `DocDetails doc = (DocDetails)request.getSession().getAttribute("ShowdocAction.showDocData");`, nastaví potřebné `request` objekty a provede volání `/showdoc.do` pro zobrazení web stránky. Toto ale nezíská aktuální objekt z databáze, ale použije objekt `request.getAttribute("ShowdocAction.showDocData")` pro zobrazení údajů.
 
-Současně posloucháte událost `webpagesDatatable.EDITOR.on('postSubmit'`, který aktualizuje obsah okna náhledu při uložení webové stránky (entita je uložena do adresáře `session` zavoláním `WebpagesRestController.afterSave`). To se provádí pouze v případě, že je okno náhledu stále otevřené, což se testuje pomocí `self.previewWindow.name != ""`. Pokud uživatel okno zavře, zůstane prázdné.
+Zároveň poslouchá událost `webpagesDatatable.EDITOR.on('postSubmit'`, pomocí které aktualizuje obsah okna náhledu při uložení web stránky (entita se uloží do `session` voláním `WebpagesRestController.afterSave`). Toto se provede pouze pokud je okno náhledu stále otevřeno, to se testuje pomocí `self.previewWindow.name != ""`. Toto zůstane prázdné, pokud okno uživatel zavře.
 
-Tlačítko Náhled je vloženo do zápatí okna při události `webpagesDatatable.EDITOR.on('open'`.
+Tlačítko Náhled je do patičky okna vloženo při události `webpagesDatatable.EDITOR.on('open'`.
 
-## Ukládání klávesových zkratek
+## Uložení klávesovou zkratkou
 
-Webovou stránku lze uložit pomocí klávesové zkratky `CTRL+s/CMS+s`, který je inicializován přímo v datové tabulce funkcí `bindKeyboardSave`. Technicky vzato se po stisknutí klávesové zkratky spustí událost. `WJ.DTE.save` a tato událost provede fyzické uložení (volání `EDITOR.submit`). Při ukládání tímto způsobem zůstane okno otevřené, takže uživatel může pokračovat v práci.
+Web stránka lze uložit pomocí klávesové zkratky `CTRL+s/CMS+s`, což je inicializováno přímo v datatabulce funkcí `bindKeyboardSave`. Technicky po stisku klávesové zkratky je vyvolána událost `WJ.DTE.save` na kterou se poslouchá a tato událost provede fyzické uložení (volání `EDITOR.submit`). Při takovém uložení je okno ponecháno v otevřeném stavu, aby uživatel mohl pokračovat v práci.
 
-Problémem webových stránek je však to, že samotné úpravy probíhají v prostředí `iframe` prvek. Událost tedy nebyla správně nastavena. Událost je třeba přidat pro ckeditor i PageBuilder ručně a událost je třeba vyvolat v nadřazeném frameworku.
+U web stránek ale nastal problém v tom, že samotná editace probíhá v `iframe` elemente. Událost tedy nebyla korektně nastavena. Událost je třeba přidat jak pro ckeditor, tak pro PageBuilder manuálně a vyvolat událost v rodičovském rámci.
 
 V `/admin/v9/src/js/datatables-ckeditor.js afterInit` je přidána událost:
 
@@ -260,4 +260,4 @@ $(document).ready(function() {
 });
 ```
 
-Tato inicializace správně nastaví událost stisknutí klávesy, které se má naslouchat.
+Taková inicializace korektně nastaví poslech události stisku klávesové zkratky.

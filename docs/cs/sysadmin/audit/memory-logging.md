@@ -1,16 +1,16 @@
-# Nejnovější protokoly
+# Poslední logy
 
-Aplikace je navržena tak, aby zobrazovala nejnovější protokoly pro případ, že nemáte přístup k protokolům v souborovém systému. Zobrazuje protokoly, které procházejí logovacím rámcem (tj. používají třídu `Logger`), nezobrazuje protokoly zapsané přímo prostřednictvím `System.out` nebo `System.err`.
+Aplikace je určena k zobrazení posledních logů, v případě, že nemáte přístup k logům na souborovém systému. Zobrazuje logy, které procházejí přes log framework (čili používají třídu `Logger`), nezobrazí logy zapsané přímo přes `System.out` nebo `System.err`.
 
 ![](memory-logging.png)
 
-Podporuje clustering, takže je možné vyžádat si poslední protokoly z jiného uzlu clusteru. Na kartě `Stack Trace` výpis zásobníku (obsah se však zobrazuje pouze u chybových protokolů, u standardních úrovní protokolů je prázdný).
+Podporuje cluster, je tak možné vyžádat i poslední logy z jiného uzlu clusteru. V kartě `Stack Trace` se nachází výpis zásobníku (obsah se ale zobrazí pouze pro chybové záznamy, pro standardní log úrovně je prázdný).
 
-## Možnosti/nastavení konfigurace:
-- `loggingInMemoryEnabled` - nastavením na hodnotu `true/false` Povolení nebo zakázání ukládání protokolů.
-- `loggingInMemoryQueueSize` - maximální počet protokolů zapsaných do paměti (výchozí 200). Vezměte prosím na vědomí, že všechna data jsou do tabulky načtena najednou a vzhledem k přenosu `stack trace` mohou být velké. Nedoporučujeme nastavovat tuto proměnnou na extrémně vysokou hodnotu.
+## Konfigurační možnosti/nastavení:
+- `loggingInMemoryEnabled` - nastavením na `true/false` povolíte nebo zakážete ukládání logů do paměti.
+- `loggingInMemoryQueueSize` - maximální počet logů zapsaných do paměti (výchozí 200). Upozorňujeme, že všechna data jsou načtena najednou do tabulky a z důvodu přenosu `stack trace` mohou být velké. Nedoporučujeme tuto proměnnou nastavovat na extrémně vysokou hodnotu.
 
-Aby správně fungoval, musí být `logger` nastavené také v souboru `logback.xml`. Ve výchozím nastavení je to tak nastaveno, ale pokud jste soubor změnili, musíte přidat. `IN_MEMORY appender` a přidat jeho výzvu k `root` prvek.
+Pro správné fungování musí být `logger` nastaven iv souboru `logback.xml`. Ve výchozím nastavení je takto nastaven, pokud jste ale soubor měnili, je třeba doplnit `IN_MEMORY appender` a přidat jeho volání pro `root` element.
 
 ```xml
     ...
@@ -25,7 +25,7 @@ Aby správně fungoval, musí být `logger` nastavené také v souboru `logback.
 
 ## Implementační detaily
 
-- `sk.iway.iwcm.system.logging.InMemoryLoggerAppender` - `appender` Pro `logback`, který zajišťuje, že protokoly jsou odesílány na adresu `InMemoryLoggingDB`
-- `sk.iway.iwcm.system.logging.InMemoryLoggingDB` - třída zajišťuje zápis a načítání protokolů z a na `queue`, načítání protokolů v clusteru
-- `sk.iway.iwcm.system.logging.InMemoryLoggingEvent` - model pro událost protokolu
-- `sk.iway.iwcm.system.logging.InMemoryLoggerRestController` - řadič pro výpis protokolu do DataTable
+- `sk.iway.iwcm.system.logging.InMemoryLoggerAppender` - `appender` pro `logback`, který zajišťuje odeslání logů do `InMemoryLoggingDB`
+- `sk.iway.iwcm.system.logging.InMemoryLoggingDB` - třída zajišťuje zápis a získání logů z a do `queue`, načítání logů na clusteru
+- `sk.iway.iwcm.system.logging.InMemoryLoggingEvent` - model pro log event
+- `sk.iway.iwcm.system.logging.InMemoryLoggerRestController` - controller pro výpis logů do DataTable

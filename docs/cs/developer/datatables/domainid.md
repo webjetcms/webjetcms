@@ -1,16 +1,16 @@
-# Oddělení dat domény
+# Oddělení údajů domén
 
-Při instalaci s více doménami je často nutné oddělit data aplikace pro doménu (každá doména má v aplikaci externě oddělená data). WebJET takové oddělení podporuje přidáním databázového sloupce `domain_id`, které představuje ID domény (technicky stejné jako ID prvního adresáře v doméně) v databázové tabulce (např. `questions_answers`). Při výběru dat z tabulky se pak data filtrují podle aktuálně vybrané domény podle sloupce `domain_id` v databázi.
+Často je třeba ve více doménové instalaci oddělit data aplikace pro doménu (každá doména má navenek samostatná data v aplikaci). WebJET takové oddělení podporuje přidáním databázového sloupce `domain_id`, který reprezentuje ID domény (technicky je shodný s prvním ID adresáře v dané doméně) do databázové tabulky (např. `questions_answers`). Následně se při výběru dat z tabulky tyto filtrují na základě aktuálně zvolené domény podle sloupce `domain_id` v databázi.
 
-Nastavení multidoménového režimu je popsáno v části [nastavení šablony](../../frontend/setup/README.md#správa-více-domén), nastavení konfigurační proměnné je důležité `enableStaticFilesExternalDir=true` který umožňuje oddělit data domén (ve výchozím nastavení se v režimu multidomény používají společná data, proměnná conf. je nastavena na hodnotu `false`).
+Nastavení režimu více domén je popsáno v [nastavení šablon](../../frontend/setup/README.md#správa-více-domén), důležité je nastavení konfigurační proměnné `enableStaticFilesExternalDir=true`, který zapne oddělení dat domén (výchozí se v multidomain režim používají společná data, konf. proměnná je ve výchozím nastavení nastavena na `false`).
 
-Hodnota sloupce `domain_id` lze v kódu Javy získat voláním `CloudToolsForCore.getDomainId()`.
+Hodnotu pro sloupec `domain_id` získáte v Java kódu voláním `CloudToolsForCore.getDomainId()`.
 
 ![](../../redactor/webpages/domain-select.png)
 
 ## Entita
 
-Entita Java musí obsahovat sloupec `domainId`:
+Java entita musí obsahovat sloupec `domainId`:
 
 ```java
     @Column(name = "domain_id")
@@ -20,15 +20,15 @@ Entita Java musí obsahovat sloupec `domainId`:
 	private Integer domainId;
 ```
 
-a samozřejmě musí být v databázi sloupec `domain_id`:
+a samozřejmě v databázi musí existovat sloupec `domain_id`:
 
 ```sql
 ALTER TABLE table_name ADD domain_id int DEFAULT 1 NOT NULL;
 ```
 
-## Úložiště
+## Repozitář
 
-WebJET připravil základní úložiště, které automaticky podporuje všechny potřebné operace pro zajištění oddělení doménových dat, ve vaší implementaci stačí rozšířit úložiště z třídy `DomainIdRepository<T, ID>`:
+WebJET má připravený základní repozitář, který automaticky podporuje všechny potřebné operace pro zabezpečení oddělení údajů domén, ve vaší implementaci stačí rozšířit váš repozitář ze třídy `DomainIdRepository<T, ID>`:
 
 ```java
 package sk.iway.iwcm.components.qa;
@@ -43,11 +43,11 @@ public interface QuestionsAnswersRepository extends DomainIdRepository<Questions
 }
 ```
 
-přímo `DatatableRestControllerV2` pak zajistí, že filtrování dat bude dokončeno podle aktuálně vybrané domény.
+přímo `DatatableRestControllerV2` následně zajistí doplnění filtrování údajů podle aktuálně zvolené domény.
 
-## Rozhraní REST
+## REST rozhraní
 
-Když je metoda ve vaší implementaci přetížená. `getOneItem` (nebo jiné `Item` metody) vždy zkontrolujte správnost své implementace. Pokud potřebujete pouze přidat data, použijte volání `super.get...`, který zkontroluje doménu a poté zpracuje další kód:
+Při vaší implementaci při přetížení metody `getOneItem` (nebo jiných `Item` metod) vždy zkontrolujte správnost vaší implementace. Případně pokud potřebujete jen doplnit údaje využijte volání `super.get...`, které zajistí kontrolu domény a až následně zpracujte další kód:
 
 ```java
 @Override
@@ -69,7 +69,7 @@ public QuestionsAnswersEntity getOneItem(long id) {
 
 ## Implementační detaily
 
-Ve třídě `DatatableRestControllerV2` podpora je detekována v konstruktoru `DomainIdRepository` úložiště, což způsobí nastavení proměnné `checkDomainId` na hodnotu `true`.
+Ve třídě `DatatableRestControllerV2` se v konstruktoru detekuje podpora `DomainIdRepository` repozitáře, což způsobí nastavení proměnné `checkDomainId` na hodnotu `true`.
 
 ```java
     if (InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true) {
@@ -77,7 +77,7 @@ Ve třídě `DatatableRestControllerV2` podpora je detekována v konstruktoru `D
 	}
 ```
 
-Toto úložiště definuje metody pro vyhledávání dat podle ID domény:
+Tento repozitář definuje metody pro získání údajů podle ID domény:
 
 ```java
 package sk.iway.iwcm.system.datatable.spring;
@@ -93,7 +93,7 @@ public interface DomainIdRepository<T, ID> extends JpaRepository<T, ID>, JpaSpec
 }
 ```
 
-Proměnná `checkDomainId` je následně v `DatatableRestControllerV2` se otestuje, zda se jedná o multidoménové úložiště, a poté se zavolají příslušné metody (např. `findAllByDomainId`):
+Proměnná `checkDomainId` se následně v `DatatableRestControllerV2` používá k testování, zda se jedná o repozitář s podporou více domén a následně se jmenují příslušné metody (např. `findAllByDomainId`):
 
 ```java
 public Page<T> getAllItems(Pageable pageable) {
@@ -115,7 +115,7 @@ public Page<T> getAllItems(Pageable pageable) {
 }
 ```
 
-Podobně se ID domény používá při načítání, úpravě nebo mazání záznamu (mazání se technicky provádí načtením entity voláním `findFirstByIdAndDomainId` a pak zavolání `delete`). Vyhledávání používá `JpaSpecificationExecutor` který přidá do vyhledávání podmínku:
+Podobně se ID domény používá při získání záznamu, jeho editaci nebo mazání (mazání se technicky provede získáním entity voláním `findFirstByIdAndDomainId` a následným voláním `delete`). Při vyhledávání se využívá `JpaSpecificationExecutor` pomocí kterého se k vyhledávání přidává podmínka:
 
 ```java
 @SuppressWarnings("unchecked")

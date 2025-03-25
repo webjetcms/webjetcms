@@ -1,15 +1,15 @@
 # Chybějící klíče
 
-V části Chybějící klíče jsou zobrazeny překladové klíče, které byly požadovány k překladu, ale nebyly nalezeny. V této sekci není povolena žádná editace záznamů. Je povolen pouze export záznamů.
+Sekce Chybějící klíče zobrazuje překladové klíče, které byly vyžádány k překladu, ale nebyly nalezeny. V této sekci není povolen žádný typ editace záznamů. Povolen je pouze export záznamů.
 
-Kromě chybějícího klíče a samotného jazyka je v tabulce uveden čas, kdy byl překlad klíče naposledy vyžádán, a poslední adresa URL stránky, na které byl překlad vyvolán.
+Kromě samotného chývajícího klíče a jazyka tabulka zobrazuje čas ve kterém bylo naposledy požádáno o překlad daného klíče a poslední URL adresu stránky na které bylo získání překlado voláno.
 
-Klikněte na tlačítko **Odstranit vše** vymažete paměť seznamu chybějících klíčů, pak se seznam začne znovu vyplňovat. To je užitečné, pokud například potřebujete zkontrolovat, zda na stránce nechybí překlady.
+Klepnutím na tlačítko **Smazat vše** smažete paměť seznamu chybějících klíčů, následně se seznam začne plnit znovu. Je to vhodné, pokud například. potřebujete ověřit, zda na některé stránce nechybí překlady.
 
 ![](dataTable.png)
 
-Poznámka: sloupec ID obsahuje pouze pořadové číslo pro správné zobrazení, klíč může mít vždy náhodnou hodnotu ID, nelze podle něj navigovat.
+Upozornění: ve sloupci ID je pouze pořadové číslo z důvodu korektního zobrazení, klíč může mít hodnotu ID vždy náhodnou, nelze podle ní orientovat.
 
-Kliknutím na klíč se zobrazí editor, kde můžete překlad dokončit a ihned uložit.
+Klepnutím na klíč se zobrazí editor, ve kterém můžete doplnit překlad a ihned jej uložit.
 
 ![](editor.png)

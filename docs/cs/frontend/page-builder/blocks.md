@@ -1,13 +1,13 @@
 # Bloky
 
-Nástroj Page Builder zahrnuje také vkládání připravených bloků. Jejich seznam se automaticky načte z adresáře `/templates/INSTALL_NAME/skupina_sablon/menosablony/pagebuilder`. **Vždy doporučujeme připravit sadu bloků pro šablonu.**
+Součástí Page Builder je i vkládání připravených bloků. Jejich seznam se automaticky načte z adresáře `/templates/INSTALL_NAME/skupina_sablon/menosablony/pagebuilder`. **Vždy doporučujeme připravit sadu bloků pro šablonu.**
 
-V kořenovém adresáři pro bloky můžete mít následující podadresáře:
-- `section` - pro bloky sekcí (modré označení v nástroji Page Builder)
-- `container` - pro kontejnery (červené označení v nástroji Page Builder)
-- `column` - pro sloupce (zelené označení v nástroji Page Builder)
+V kořenovém adresáři pro bloky můžete mít následující pod adresáře:
+- `section` - pro bloky sekcí (modré označení v Page Builderu)
+- `container` - pro kontejnery (červené označení v Page Builderu)
+- `column` - pro sloupce (zelené označení v Page Builderu)
 
-V každém z těchto podadresářů musíte ještě vytvořit **skupiny bloků jako další podadresáře**, např. `Contact, Features`. Pouze v těchto podadresářích vytváříte jednotlivé bloky HTML. Příkladem je adresářová struktura:
+V každém z těchto podadresářů je třeba ještě vytvořit **skupiny bloků jako další pod adresáře** Např. `Contact, Features`. Teprve v těchto pod adresářích vytváříte jednotlivé HTML bloky. Příkladem je tedy adresářová struktura:
 
 ```java
 - section
@@ -37,15 +37,15 @@ V každém z těchto podadresářů musíte ještě vytvořit **skupiny bloků j
 
 ## Nastavení šířky sloupců
 
-Editor umožňuje upravit šířku sloupců podle vybraného zařízení. Na panelu nástrojů je vedle přepínače typu editoru možnost nastavit velikost (šířku) zařízení.
+Editor umožňuje nastavit šířky sloupce podle zvoleného zařízení. V nástrojové liště u přepínače typu editoru je možnost nastavit velikost (šířku) zařízení.
 
 ![](../../redactor/webpages/pagebuilder-switcher.png)
 
-- Desktop - je pro šířku větší nebo rovnou 1200 pixelů (nastavuje třídu CSS `col-xl`).
-- Tablet - je navržen pro šířku 768-1199 pixelů (nastavuje třídu CSS `col-md`)
-- Mobilní - je pro šířku menší než 768 pixelů (nastavuje třídu CSS `col-`)
+- Desktop - je určen pro šířku větší/rovnou než 1200 bodů (nastavuje CSS třídu `col-xl`).
+- Tablet - je určen pro šířku 768-1199 bodů (nastavuje CSS třídu `col-md`)
+- Mobil - je určen pro šířku menší než 768 bodů (nastavuje CSS třídu `col-`)
 
-Správné nastavení bloku zahrnuje všechny přednastavené šířky, např. `col-12 col-md-6 col-xl-3`:
+Správné nastavení bloku obsahuje přednastavené všechny šířky, například. `col-12 col-md-6 col-xl-3`:
 
 ```html
 <section>
@@ -89,15 +89,15 @@ Správné nastavení bloku zahrnuje všechny přednastavené šířky, např. `c
 </section>
 ```
 
-## Podpora kódu Thymeleaf
+## Podpora Thymeleaf kódu
 
-Je důležité si uvědomit, že bloky jsou do stránky vloženy bez provedení kódu Thymeleaf (technicky je kód vložen přímo ze souboru html do editoru). V současné době jsou však při vkládání podporovány následující atributy Thymeleaf:
+Důležité je si uvědomit, že bloky se do stránky vloží bez provedení Thymeleaf kódu (technicky se vloží přímo kód z html souboru do editoru). Při vložení jsou aktuální ale podporovány následující thymeleaf atributy:
 - `data-iwcm-write` - pro podporu vkládání aplikací
 - `data-iwcm-remove` - pro podporu vkládání aplikací
-- `data-th-src` - vložení obrázku
-- `data-th-href` - vložení odkazu
+- `data-th-src` - vkládání obrázku
+- `data-th-href` - vkládání odkazu
 
-Současně se při vkládání provádějí následující objekty ninja (zapsané např. jako `src="./assets/images/logo.png" data-th-src="${ninja.temp.basePathImg}logo.png"`):
+Zároveň při vkládání jsou provedeny následující ninja objekty (zapsáno např. jako `src="./assets/images/logo.png" data-th-src="${ninja.temp.basePathImg}logo.png"`):
 - `${ninja.temp.basePath}`
 - `${ninja.temp.basePathAssets}`
 - `${ninja.temp.basePathCss}`
@@ -105,39 +105,39 @@ Současně se při vkládání provádějí následující objekty ninja (zapsan
 - `${ninja.temp.basePathPlugins}`
 - `${ninja.temp.basePathImg}`
 
-Pokud potřebujete pro svou práci vyrobit další štítky Thymeleaf, můžete nám poslat žádost prostřednictvím funkce Zpětná vazba na domovské stránce administrace.
+Pokud pro vaši práci potřebujete provedení jiných Thymeleaf značek můžete nám zaslat požadavek přes funkci Zpětná vazba na úvodní straně administrace.
 
 ## Generování náhledových obrázků
 
-Všimněte si, že pro každý blok HTML existuje také obrázek se stejným názvem. Pokud existuje, zobrazí se v nástroji Page Builder v seznamu bloků jako obrázek bloku. Obrázky lze připravit ručně, ale lze je také automaticky vygenerovat zavoláním skriptu `/components/grideditor/phantom/generator.jsp`.
+Všimněte si, že ke každému HTML bloku existuje také obrázek se stejným názvem. Pokud existuje, zobrazí se v Page Builder v seznamu bloků jako obrázek bloku. Obrázky lze připravit manuálně, ale také automaticky vygenerovat voláním skriptu `/components/grideditor/phantom/generator.jsp`.
 
-Skript vloží do zadané šablony JSP jednotlivé bloky se simulací zadaného kódu. `docid` a vytváří snímky obrazovky. Vyžaduje nainstalovaný program [PhantomJS](https://phantomjs.org) a v konfigurační proměnné `grideditorPhantomjsPath` nastavit cestu k adresáři, ve kterém `PhantomJS` instalován.
+Skript vkládá jednotlivé bloky do zadané JSP šablony se simulací zadaného `docid` a vytváří screenshoty. Vyžaduje nainstalovaný program [PhantomJS](https://phantomjs.org) a v konfigurační proměnné `grideditorPhantomjsPath` nastavenou cestu k adresáři kde je `PhantomJS` nainstalován.
 
-## Běžné bloky
+## Společné bloky
 
-V současné době bohužel neexistuje možnost vnořit bloky do sebe. Může existovat požadavek na vložení `section` blok obsahující určitý `container` blok, přičemž je nutné, aby bylo možné vložit i stejný `container` blok samostatně. V tomto případě se duplikuje kód HTML bloků v adresáři. `section` Také `container`.
+Bohužel aktuálně neexistuje možnost vkládání bloků do sebe. Může existovat požadavek vkládat `section` blok obsahující určitý `container` blok, přičemž je třeba mít možnost vložit i stejný `container` blok samostatně. V takovém případě vzniká duplicita HTML kódu bloků v adresáři `section` i `container`.
 
-Doporučujeme generovat bloky pomocí [PugJS](https://pugjs.org).
+Doporučujeme bloky generovat pomocí [PugJS](https://pugjs.org).
 
-## Třídy CSS pro obrázek
+## CSS třídy pro obrázek
 
-Pokud má obrázek nastavenou třídu CSS `fixedSize-w-h-ip` zadaný rozměr se nastaví automaticky po změně adresy obrázku. `w` a `h` pokud je zadána i poslední položka `ip` je také nastaven [bod zájmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). Např. třída CSS `fixedSize-160-160-5` automaticky vygeneruje obrázek o rozměrech 160 x 160 pixelů s nastaveným bodem zájmu 5. Tuto třídu doporučujeme nastavit pro všechny ilustrační obrázky, u kterých je důležitá velikost.
+Pokud má obrázek nastavenou CSS třídu `fixedSize-w-h-ip` je automaticky po změně adresy obrázku nastaven zadaný rozměr `w` a `h`, je-li zadán i poslední údaj `ip` nastaví se také [bod zájmu](http://docs.webjetcms.sk/v8/#/front-end/thumb-servlet/bod-zaujmu). Např. CSS třída `fixedSize-160-160-5` automaticky generuje obrázek rozměru 160 x 160 bodů s nastaveným bodem zájmu 5. Třídu doporučujeme nastavit na všechny ilustrační obrázky, u kterých je důležitý jejich rozměr.
 
-Když kliknete na obrázek s třídou CSS `fixedSize/w-100/autoimg` okamžitě otevře okno s vlastnostmi obrázku pro snadnou výměnu. Editor tak nemusí klikat na obrázek a poté na ikonu pro změnu obrázku na panelu nástrojů.
+Při kliknutí na obrázek s CSS třídou `fixedSize/w-100/autoimg` se ihned otevře okno vlastností obrázku pro jeho jednoduchou výměnu. Redaktor tak nemusí kliknout na obrázek a následně v nástrojové liště na ikonu změny obrázku.
 
 ## Podpora karet
 
-Pro pohodlnou úpravu karet (`tabs`) je podporováno jejich automatické generování ze struktury HTML. Každá karta je reprezentována kontejnerem. Kontejnery lze snadno duplikovat a přesouvat a záložky se automaticky generují z jejich obsahu.
+Pro pohodlnou editaci karet (`tabs`) je podporováno jejich automatické generování z HTML struktury. Každá karta je reprezentována kontejnerem. Kontejnery lze snadno duplikovat a přesouvat, z jejich obsahu se automaticky generují karty.
 
-Prvek `UL` by měly být označeny třídou CSS `pb-autotabs`. JavaScriptový kód v souboru `/admin/webpages/page-builder/scripts/pagesupport.js` zajistit generování karty po přidání prvku / každých 5 sekund. Přebírá název karty z `title` atributu kontejneru nebo z prvku s třídou CSS `pb-tab-title` (což je výhodnější pro úpravy).
+Element `UL` je třeba označit CSS třídou `pb-autotabs`. JavaScript kód v souboru `/admin/webpages/page-builder/scripts/pagesupport.js` zajistí generování karet po přidání elementu / každých 5 sekund. Jméno karty bere z `title` atributu kontejneru, nebo z elementu s CSS třídou `pb-tab-title` (což je pohodlnější pro editaci).
 
-Samotné karty tedy nelze upravovat, jsou generovány automaticky. Upravitelný je pouze obsah `tab` kontejner. Všimněte si, že v ukázkovém kódu neobsahuje prvek UL žádné prvky. `LI taby`, budou vygenerovány automaticky. V kódu HTML zůstanou i poté a budou také správně uloženy. Na stránce zůstane zobrazena karta tak, jak byla zobrazena během úprav (na to je třeba pamatovat).
+Samotné karty nejsou tedy editovatelné, generují se automaticky. Editovatelný je pouze obsah `tab` kontejneru. Všimněte si, že v ukázkovém kódu UL element neobsahuje žádné `LI taby`, ty se vygenerují automaticky. V HTML kódu zůstanou následně vygenerovány a také se korektně uloží. Na stránce zůstane zobrazená karta tak, jak byla zobrazena během editace (je na to třeba myslet).
 
-Všimněte si použití třídy CSS `pb-not-container` na hlavních prvcích kontejneru. Tím se zajistí, že tento prvek nebude označen jako kontejner a za kontejnery budou považovány pouze jednotlivé karty. Každá karta používá třídu CSS `pb-custom-container`, který zajistí zobrazení červeného rámečku/nástrojové lišty kontejneru.
+Všimněte si použití CSS třídy `pb-not-container` na hlavním kontejner elementu. To zajistí, že tento element nebude označen jako kontejner a za kontejnery budou považovány až jednotlivé karty. Každá karta používá CSS třídu `pb-custom-container`, což zajistí zobrazení červeného rámu/nástrojové lišty kontejneru.
 
-Po výběru možnosti přesunout kartu (na panelu nástrojů kontejneru) se automaticky zobrazí všechny karty, takže můžete snadno označit, kam chcete kartu přesunout. To zajišťuje styl CSS nástroje Sestavení stránky.
+Při zvolení možnosti přesunutí tabu (v nástrojové liště kontejneru) se automaticky zobrazí všechny karty, aby bylo možné snadno označit kartu, kde se má přesunout. To je zajištěno CSS stylem Page Builder.
 
-Ukázka blokového kódu (v `section` adresář):
+Ukázkový kód bloku (v `section` adresáři):
 
 ```html
 <section>
@@ -190,11 +190,11 @@ Ukázka blokového kódu (v `section` adresář):
  </section>
 ```
 
-## Podpora akordeonu
+## Podpora accordion
 
-`Accordion` funguje podobně jako karty, Page Builder zajišťuje správné generování potřebných atributů a jejich automatické obnovení při duplikování položky. `accordion-u`. Funkčnost je spojena s třídou CSS `pb-autoaccordion` a implementovány podobně jako u karet. Kontejnery se používají podobným způsobem.
+`Accordion` pracuje podobně jako karty, Page Builder zajistí korektní vygenerování potřebných atributů a jejich automatickou obnovu při zduplikování položky `accordion-u`. Funkčnost je napojena na CSS třídu `pb-autoaccordion` a implementována podobně jako pro karty. Podobně se používají i kontejnery.
 
-Vzorový kód:
+Ukázkový kód:
 
 ```html
 <section>
@@ -244,15 +244,15 @@ Vzorový kód:
 </section>
 ```
 
-## Karty v harmonice
+## Karty v accordion
 
-Pokud je požadavek na vložení objektů typu karta do `accordion-u` je možné použít vlastnost Page Builder - označuje také **vnořené kontejnery**. Je třeba zvážit, co bude možné upravovat, jak duplikovat jednotlivé položky apod. Prakticky se vkládání karet do `accordion-ov` (což je kontejner) jako vložení dalšího `columnu` do kontejnera (přičemž vložený `column` dále obsahuje vnořené kontejnery jednotlivých karet).
+Při požadavku vnořování objektů typu karta do `accordion-u` lze využít vlastnost Page Builder - označuje i **vnořené kontejnery**. Je třeba uvažovat, co bude možné editovat, jak duplikovat jednotlivé položky a podobně. Prakticky funguje vkládání karet do `accordion-ov` (což je kontejner) jako vložení dalšího `columnu` do kontejneru (přičemž vložen `column` dále obsahuje vnořené kontejnery jednotlivých tabů).
 
-V příkladu si všimněte, že hlavní `column` má styl CSS `pb-not-editable` aby nebyl automaticky editovatelný editorem CK a zároveň třída CSS `pb-always-mark`. Needitovatelný sloupec není ve výchozím nastavení označen zeleným rámečkem, ale bez této možnosti by nebylo možné přidat další sloupec za karty nebo celé karty odstranit (nástroje pro sloupce by nebyly k dispozici).
+V příkladu si všimněte, že hlavní `column` má CSS styl `pb-not-editable` aby automaticky nebyl editovatelný CK editorem a zároveň CSS třídu `pb-always-mark`. Needitovatelný column se standardně neoznačí zeleným rámem, bez této možnosti by ale nebylo možné přidat za karty další column, nebo celé karty smazat (nebyly by dostupné nástroje columnu).
 
-Při vkládání kódu HTML obsahujícího výraz `container` při spuštění sloupce objektů `PageBuilder.mark_grid_elements();` označit všechny prvky (aby se panely nástrojů zobrazily i pro vnořené kontejnery).
+Při vložení HTML kódu obsahujícího výraz `container` jako column objektu je spuštěn `PageBuilder.mark_grid_elements();` pro označení všech elementů (aby se zobrazily nástrojové lišty i pro vnořené kontejnery).
 
-Ukázka kódu karty pro akordeon (v adresáři sloupců):
+Ukázkový kód karet pro accordion (v adresáři column):
 
 ```html
 <div class="col-12 pb-not-editable pb-always-mark">
@@ -288,7 +288,7 @@ Ukázka kódu karty pro akordeon (v adresáři sloupců):
 </div>
 ```
 
-po vložení se na webové stránce vytvoří struktura typu:
+po vložení vznikne ve web stránce struktura typu:
 
 ```html
 <section>
@@ -349,19 +349,19 @@ po vložení se na webové stránce vytvoří struktura typu:
 </section>
 ```
 
-## Podpora nabídky
+## Podpora menu
 
-PageBuilder umí generovat položky menu do bootstrapových menu, což zajišťuje nástroj `pbAutoMenu` v `pagesupport.js`. Položka nabídky se generuje na `ul.pb-automenu` všech `section` prvky na webové stránce. Funguje to takto:
-- `section.pb-not-automenu` je v seznamu vynechán.
-- Název položky nabídky je převzat z:
-  - prvek se stylem CSS `.section-title`
-  - pokud není nalezen, je převzat z `h1` prvek
-  - pokud není nalezen, je atribut převzat `title` na adrese `section` prvek
-- Pokud není oddíl nastaven `id` je nastaven podle pořadového čísla sekce.
+PageBuilder umí generovat menu položky do bootstrap menu, zajišťuje to funkce `pbAutoMenu` v `pagesupport.js`. Menu položky generuje do `ul.pb-automenu` ze všech `section` elementů ve web stránce. Pracuje následovně:
+- `section.pb-not-automenu` je vynecháno ze seznamu.
+- Název položky v menu se bere z:
+  - elementu s CSS stylem `.section-title`
+  - není-li nalezen bere se z `h1` elementu
+  - není-li nalezen, bere se atribut `title` na `section` elemente
+- Pokud section nemá nastaven `id` atribut, je nastaven podle pořadového čísla sekce.
 
-Z nalezených údajů se vygenerují položky `li.nav-item` na `ul.pb-automenu`.
+Z nalezených údajů se vygenerují položky `li.nav-item` do `ul.pb-automenu`.
 
-Ukázkový blok s nabídkou:
+Ukázkový blok s menu:
 
 ```html
 <section class="pb-not-automenu">
@@ -395,9 +395,9 @@ Ukázkový blok s nabídkou:
 </section>
 ```
 
-V ukázce jsou prvky `Home, Features, Pricing a Disabled` nahradit obsah stránky PageBuilder. Obsah se automaticky aktualizuje při přidání, odstranění nebo přesunutí sekce na webové stránce. Nadpis se aktualizuje každých 5 sekund, takže pokud změníte název `h1` Chvíli počkejte, než se vygeneruje nová verze nabídky.
+V ukázce se elementy `Home, Features, Pricing a Disabled` nahradí za obsah v PageBuilder stránce. Obsah se automaticky aktualizuje po přidání, smazání nebo přesunu sekce ve web stránce. Název se aktualizuje jednou za 5 sekund, pokud tedy změníte `h1` nadpis počkejte chvíli na vygenerování nové verze menu.
 
-Kompletní ukázka webové stránky v kódu HTML s ukázkovými sekcemi:
+Kompletní ukázka HTML kódu web stránky s ukázkovými sekcemi:
 
 ```html
 <section class="pb-not-automenu">

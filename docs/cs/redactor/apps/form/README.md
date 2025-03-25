@@ -1,78 +1,78 @@
 # Seznam formulářů
 
-Aplikace formuláře slouží k pokročilé správě vyplněných formulářů. Každá webová stránka může obsahovat formulář, který návštěvník vyplní. Může se jednat o žádosti o zaměstnání, žádosti o podrobnější informace apod.
+Aplikace formuláře slouží k pokročilé správě vyplněných formulářů. Každá web stránka může obsahovat formulář, který návštěvník vyplní. Mohou to být žádosti o pracovní místo, žádosti o podrobnější informace a podobně.
 
-Formuláře lze odeslat na e-mailovou adresu a formulář vypadá v e-mailové zprávě stejně jako na webu, lze jej vytisknout a dále zpracovat.
+Formuláře mohou být odeslány na email adresu, přičemž v email zprávě formulář vypadá stejně jako na web stránce, lze jej vytisknout a dále zpracovat.
 
-Všechny formuláře jsou navíc uloženy v databázi a můžete se k nim kdykoli vrátit v administrační oblasti Web JET. Položky ve formulářích lze třídit podle libovolného sloupce a exportovat do MS Excel.
+Navíc všechny formuláře se ukládají do databáze, v administrační části Web JET je možné se k nim kdykoli vrátit. Položky ve formulářích lze pořádat podle libovolného sloupce a exportovat do programu MS Excel.
 
 ![](detail.png)
 
-Kliknutím na ikonu oka zobrazíte formulář tak, jak je zobrazen na webové stránce, a vytisknete jej.
+Klepnutím na ikonu oka můžete formulář zobrazit do podoby, v jaké je na webové stránce a vytisknout jej.
 
-V úpravách formuláře můžete změnit pole poznámky (kam můžete zaznamenat zpracování/stav formuláře). Jednotlivá vyplněná pole jsou určena pouze pro čtení, po odeslání je nelze měnit. Záložka data obsahuje jednotlivá pole vyplněného formuláře, záložka přihlášený uživatel obsahuje údaje o uživateli, který formulář odeslal (pokud byl při odeslání přihlášen).
+V editaci formuláře můžete měnit pole poznámka (ve kterém si můžete evidovat zpracování/stav formuláře). Jednotlivá vyplněná pole jsou pouze pro čtení, nelze je po odeslání měnit. V kartě údaje jsou jednotlivé položky vyplněného formuláře, v kartě Přihlášený uživatel údaje uživatele, který formulář odeslal (pokud byl při jeho odeslání přihlášen).
 
 ![](detail-editnote.png)
 
 ## Export dat
 
-Záznamy formuláře lze exportovat do formátu `xlsx` a `csv`. Na kartě Upřesnit lze nastavit následující možnosti exportu:
-- Aktuálně filtrovaná data - pokud máte data filtrovaná podle určitého sloupce v tabulce, exportují se pouze tato data.
-- Všechna data - exportují se všechna data bez ohledu na filtr nastavený v zobrazené tabulce.
-- Dosud neexportovaná data - exportují se pouze data, která dosud nebyla exportována (mají prázdnou hodnotu ve sloupci Datum posledního exportu). Můžete tedy jednoduše exportovat pouze nově přidaná data jedno po druhém.
-- Pouze vybrané řádky - exportují se pouze vybrané řádky tabulky.
+Formulářové záznamy lze exportovat do formátu `xlsx` a `csv`. V kartě Pokročilé lze nastavit následující možnosti exportu:
+- Aktuálně vyfiltrovaná data - máte-li v tabulce data filtrována podle určitého sloupce exportují se pouze tyto údaje.
+- Všechna data - exportují se všechna data bez ohledu na nastavený filtr v zobrazené tabulce.
+- Zatím neexportovaná data - exportují se pouze data, která zatím nebyla exportována (mají prázdnou hodnotu ve sloupci Datum posledního exportu). Můžete tak snadno postupně exportovat jen nově přidaná data.
+- Pouze označené řádky - exportují se pouze označené řádky v tabulce.
 
-Po exportu se sloupec Datum posledního exportu automaticky nastaví na aktuální datum a čas.
+Po exportu se automaticky nastaví sloupec Datum posledního exportu na aktuální datum a čas.
 
 ![](export-advanced.png)
 
-## Možnosti pokročilého nastavení
+## Pokročilé možnosti nastavení
 
-Formuláři je možné nastavit některé skryté hodnoty, které ovlivní jeho zpracování. Ve výchozím nastavení není nutné žádnou z těchto hodnot konkrétně nastavovat.
+Formuláři lze nastavit některé skryté hodnoty, které ovlivní jeho zpracování. Standardně není třeba speciálně nastavovat ani jednu z těchto hodnot.
 
-- `recipients` - seznam příjemců e-mailu. Může obsahovat více příjemců oddělených čárkou.
-  - **Varování:** zabránit odesílání e-mailů prostřednictvím systému na zahraniční adresy (`mail relay server`), systém zkontroluje, zda se zadaná cílová e-mailová adresa nachází v těle původní stránky. Pokud tedy e-mailovou adresu dynamicky změníte, musí být v těle stránky.
-- `ccEmails` - seznam e-mailových adres oddělených čárkou, na které má být zaslána kopie e-mailu.
-- `bccEmails` - seznam e-mailových adres oddělených čárkou, na které má být odeslána skrytá kopie e-mailu.
-- `subject` - předmět e-mailu. Pokud není vyplněn automaticky, použije se podle webové stránky.
-- `email / e-mail` - pole určující e-mailovou adresu odesílatele e-mailu. Pokud se jedná o kontaktní formulář, je ideální, když se pole, do kterého návštěvník zadává e-mail, jmenuje takto.
-- `name / firstname / lastname / meno / priezvisko / jmeno / prijmeni` - pole určující jméno odesílatele e-mailu. Pokud se jedná o kontaktní formulář, je ideální, když se takto nazývá pole, do kterého návštěvník zadává své jméno.
-- `savedb` - název, pod kterým je formulář uložen v databázi.
-- `forward` - url adresa, na kterou se po uložení formuláře přesměruje. Pokud není zadána, dojde k přesměrování na původní stránku.
-- `forwardFail` - url adresa, na kterou se má přesměrovat, pokud se formulář nepodaří odeslat. Pokud není zadána, použije se stejná hodnota, jakou má `forward`.
+- `recipients` - seznam příjemců emailu. Může obsahovat více příjemců oddělených čárkou.
+  - **Upozornění:** z důvodu zamezení odesílání emailů přes systém na cizí adresy (`mail relay server`) kontroluje systém, zda zadaná cílová email adresa se nachází v těle původní stránky. Pokud tedy emailovou adresu dynamicky měníte, musí se nacházet v těle stránky.
+- `ccEmails` - seznam email adres oddělených čárkami na které má být zaslána kopie emailu.
+- `bccEmails` - seznam email adres oddělených čárkami na které má být zaslána skrytá kopie emailu.
+- `subject` - předmět emailu. Není-li vyplněno automaticky se použije podle web stránky.
+- `email / e-mail` - pole určující emailovou adresu odesílatele emailu. Pokud se jedná o kontaktní formulář je ideální pokud se takto jmenuje přímo pole, kde návštěvník stránky zadává email.
+- `name / firstname / lastname / meno / priezvisko / jmeno / prijmeni` - pole určující jméno odesílatele emailu. Pokud se jedná o kontaktní formulář je ideální pokud se takto jmenuje přímo pole, kde návštěvník stránky zadává své jméno.
+- `savedb` - název pod kterým se formulář uloží do databáze.
+- `forward` - url adresa, na kterou se má provést přesměrování po uložení formuláře. Není-li zadáno, přesměruje se na původní stránku.
+- `forwardFail` - url adresa, na kterou se má provést přesměrování, pokud se formulář nepodaří odeslat. Pokud není zadáno, použije se stejná hodnota jako má `forward`.
 - `forwardType` - typ přesměrování po zpracování formuláře.
-  - Pokud hodnota není zadána, formulář se zpracuje a poté se provede přesměrování na zadanou stránku s nastaveným parametrem stavu odeslání (např.` formSend=true`).
-  - Hodnota `forward` znamená, že se provede interní přesměrování na cílovou stránku. Cílová stránka pak může přistupovat ke stejným parametrům jako formulář a provést další akci. Protože se jedná o interní přesměrování, hodnota zůstane v adresním řádku prohlížeče. `/formmail.do`.
-  - Hodnota `addParams` provede přesměrování na cílovou stránku s přidáním jednotlivých parametrů do adresy URL. V tomto případě prohlížeč provede přesměrování a adresa cílové stránky zůstane v adresním řádku. Protože se však parametry přidávají do adresy URL, je jejich počet omezen délkou adresy URL, která je ve výchozím nastavení 2048 znaků.
-- `useFormDocId` - ID dokumentu stránky, na které se formulář nachází. Ve výchozím nastavení se systém snaží určit tuto stránku na základě `refereru` nebo poslední zobrazenou stránku v `session`. Pro přesné určení lze tuto hodnotu zadat. Pokud není zadána, WebJET ji automaticky doplní při zobrazení formuláře.
-- `useFormMailDocId` - ID dokumentu stránky s verzí pro e-mail. Systém potřebuje stránku, aby mohl vygenerovat verzi pro e-mail. Pokud je zadána hodnota none, určení webové stránky pro e-mail se nepoužije. Není-li hodnota zadána vůbec, použije se hodnota určená parametrem `useFormDocId`. Tato hodnota je užitečná, pokud máte jeden kontaktní formulář vložený na všech stránkách, např. v zápatí. Při generování e-mailu se jako kód použije kód samotné stránky, ale formulář se v ní nenachází. Tímto způsobem můžete říci, aby se pro e-mail použila jiná stránka.
-- `forceTextPlain` - pokud parametr existuje, je e-mail odeslán jako `text/plain` jinak je odeslána jako `multipart`.
-- `formMailEncoding` - typ kódování znaků e-mailu. Ve výchozím nastavení je použito stejné kódování jako na webové stránce. Pokud je jako hodnota nastaveno ASCII, je z textu odstraněna diakritika.
-- `fieldsEmailHeader` - pokud má generovaný e-mail obsahovat speciální hlavičku, je možné do tohoto pole zadat čárkou oddělený seznam názvů polí, jejichž hodnoty se nastaví do hlavičky.
-- `formmail_overwriteOldForms` - pokud je uživatel přihlášen a toto pole je nastaveno na hodnotu `true`, pokud uživatel již formulář odeslal, bude jeho hodnota přepsána novou verzí. Tímto způsobem se formulář v databázi od jednoho uživatele objeví pouze jednou.
-- `formmail_allowOnlyOneSubmit` - pokud je uživatel přihlášen a toto pole je nastaveno na hodnotu `true` pokud uživatel již formulář odeslal, systém mu nedovolí jej odeslat znovu. Tímto způsobem se formulář v databázi od jednoho uživatele objeví pouze jednou.
-- `formmail_sendUserInfoDocId` - pokud je nastavena na `docId` webové stránky se po úspěšném uložení formuláře odešle na e-mail návštěvníka (z pole e-mail / email) e-mail s textem webové stránky. Může se jednat například o poděkování za vyplnění formuláře nebo o další pokyny, jak postupovat.
-- `isPdfVersion` - pokud je nastavena na hodnotu true, systém po uložení formuláře do adresáře vygeneruje také jeho verzi ve formátu PDF. `/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf`, kde hodnota `ID_FORMULARU` Je `id` v databázi.
+  - Pokud není hodnota zadaná tak se formulář zpracuje a následně se provede přesměrování na zadanou stránku s nastaveným parametrem stavu odeslání (např.` formSend=true`).
+  - Hodnota `forward` znamená, že na cílovou stránku se provede interní přesměrování. Cílová stránka má tak přístup k identickým parametrům jako formulář a může provést dodatečnou akci. Jelikož se jedná o interní přesměrování v adresním řádku prohlížeče zůstane hodnota `/formmail.do`.
+  - Hodnota `addParams` provede přesměrování na cílovou stránku s přidáním jednotlivých parametrů do URL. V takovém případě přesměrování provede prohlížeč a v adresním řádku zůstane adresa cílové stránky. Jelikož ale parametry jsou přidány do URL adresy je limitován jejich počet délkou URL což je standardně 2048 znaků.
+- `useFormDocId` - doc ID stránky na které se formulář nachází. Standardně se systém tuto stránku snaží určit na základě `refereru`, nebo posledně zobrazené stránky v `session`. Pro přesné určení lze zadat tuto hodnotu. Pokud není zadaná WebJET ji automaticky doplní při zobrazení formuláře.
+- `useFormMailDocId` - doc ID stránky s verzí pro email. Stránku systém potřebuje k tomu, aby uměl vygenerovat emailovou podobu. Pokud je zadaná hodnota none nepoužije se určení web stránky pro email. Pokud hodnota není zadaná vůbec použije se hodnota zadaná parametrem `useFormDocId`. Hodnota je užitečná v tom případě, pokud na všech stránkách máte jeden kontaktní formulář vkládaný např. v patičce. Při generování emailu se jako kód použije kód samotné stránky, ve které se ale formulář nenachází. Takto lze říci, aby pro email použil jinou stránku.
+- `forceTextPlain` - pokud parametr existuje je email odeslán jako `text/plain` verze, jinak je odeslán jako `multipart`.
+- `formMailEncoding` - typ kódování znaků emailu. Standardně se použije kódování stejné jako má web stránka. Pokud je jako hodnota nastaveno ASCII tak je z textu odstraněna diakritika.
+- `fieldsEmailHeader` - má-li vygenerovaný email obsahovat speciální hlavičku je možné do tohoto pole zadat čárkou oddělený seznam názvů polí, jejichž hodnoty se nastaví do hlavičky.
+- `formmail_overwriteOldForms` - je-li přihlášen uživatel a toto pole je nastaveno na hodnotu `true`, tak pokud již daný uživatel formulář odeslal, bude jeho hodnota přepsána novou verzí. Formulář se takto bude v databázi od jednoho uživatele nacházet jen jednou.
+- `formmail_allowOnlyOneSubmit` - je-li přihlášen uživatel a toto pole je nastaveno na hodnotu `true`, tak pokud již daný uživatel formulář odeslal, systém mu nedovolí další odeslání. Formulář se takto bude v databázi od jednoho uživatele nacházet jen jednou.
+- `formmail_sendUserInfoDocId` - je-li nastaveno na hodnotu `docId` některé web stránky, tak po úspěšném uložení formuláře je na email návštěvníka (z pole email/e-mail) zaslán email s textem dané web stránky. Může se jednat například o poděkování za vyplnění formuláře, nebo další instrukce postupu.
+- `isPdfVersion` - pokud je nastaveno na true, tak systém po uložení formuláře vygeneruje i jeho PDF verzi do adresáře `/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf`, přičemž hodnota `ID_FORMULARU` je `id` formuláře v databázi.
 
-## Potvrzení nastavení e-mailové adresy
+## Nastavení potvrzení emailové adresy
 
-Formulář lze nastavit **potvrzení e-mailové adresy** ( `double opt-in` ). Odeslání formuláře můžete potvrdit kliknutím na odkaz v e-mailu, a tím. **Ověřit** že návštěvník, který vyplnil formulář, zadal **platnou e-mailovou adresu**.
+Formuláři lze nastavit **potvrzení e-mailové adresy** ( `double opt-in` ). Dosáhnete tak potvrzení odeslání formuláře kliknutím na odkaz v e-mailu a tedy **ověříte**, že návštěvník, který formulář vyplnil, zadal **skutečně platnou e-mailovou adresu**.
 
-Chcete-li povolit potvrzení e-mailové adresy, musíte nastavit:
+Pro zapnutí potvrzení emailové adresy je třeba nastavit:
 
-1. Ve vlastnostech formuláře, konkrétně v pokročilém nastavení. ![](advanced-settings.png) je třeba vybrat možnost **Vyžadovat potvrzení souhlasu e-mailem**. ![](checkbox-confirmation.png)
+1. Ve vlastnostech formuláře, konkrétně v rozšířených nastaveních ![](advanced-settings.png) je třeba zvolit možnost **Vyžadovat potvrzení souhlasu e-mailem**. ![](checkbox-confirmation.png)
 
-2. Vytvoření stránky pro potvrzení souhlasu, aplikace musí být vložena do ní. `!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!`, který potvrdí souhlas na základě parametrů v databázi. Stránka může být použita pro několik různých formulářů, může mít adresu URL např. `/potvrdenie-double-optin/`.
+2. Vytvořit stránku pro potvrzení souhlasu, v ní musí být vložena aplikace `!INCLUDE(sk.iway.iwcm.components.form.DoubleOptInComponent)!`, která souhlas na základě parametrů v databázi potvrdí. Stránka může být použita pro více různých formulářů, může mít URL adresu například `/potvrdenie-double-optin/`.
 
-3. Vytvořte stránku s textem e-mailu, např. "Pro potvrzení e-mailové adresy klikněte na následující odkaz", a vložte odkaz na stránku, kde bude souhlas potvrzen. Odkaz musí obsahovat parametry `!FORM_ID!,!OPTIN_HASH!`, např. `/potvrdenie-double-optin/?formId=!FORM_ID!&hash=!OPTIN_HASH!`. Nastavte ID této stránky v poli `Doc ID` oznámení pro uživatele.
+3. Vytvořit stránku s textem e-mailu "Pro potvrzení platnosti email adresy klikněte na následující odkaz" a vložit odkaz na stránku, kde bude potvrzení souhlasu. Odkaz musí obsahovat parametry `!FORM_ID!,!OPTIN_HASH!`, tedy např. `/potvrdenie-double-optin/?formId=!FORM_ID!&hash=!OPTIN_HASH!`. ID této stránky nastavit do pole `Doc ID` oznámení pro uživatele.
 
-Po kliknutí na odkaz v e-mailu se ve formuláři nastaví pole Datum potvrzení souhlasu, takže můžete identifikovat formuláře, u kterých byl souhlas potvrzen. Zároveň se červeně zobrazí formuláře, které nemají potvrzený souhlas.
+Po kliknutí na odkaz v emailu se ve formuláři nastaví pole Datum potvrzení souhlasu, tak umíte identifikovat formuláře, které mají souhlas potvrzen. Zároveň formuláře, které nemají potvrzený souhlas, jsou zobrazeny červenou barvou.
 
 ![](forms-list.png)
 
-## Událost odeslání formuláře
+## Událost při odeslání formuláře
 
-Po odeslání formuláře pomocí AJAXu je zveřejněna událost. `WJ.formSubmit` které je možné poslouchat, např. jako:
+Po odeslání formuláře přes AJAX je publikována událost `WJ.formSubmit`, na kterou lze poslouchat, například. jako:
 
 ```javascript
     window.addEventListener("WJ.formSubmit", function(e) { console.log("DataLayer, submitEvent: ", e); dataLayer.push({"formSubmit": e.detail.formDiv, "formSuccess": e.detail.success}); });
@@ -80,20 +80,20 @@ Po odeslání formuláře pomocí AJAXu je zveřejněna událost. `WJ.formSubmit
 
 ## Možné konfigurační proměnné
 
-- `formmailAllowedRecipients` - Seznam e-mailových adres, na které lze zasílat formuláře, například: `@interway.sk,podpora@demo.webjet.sk`. Ve výchozím nastavení je formulář prázdný, což znamená, že může být odeslán na libovolnou adresu.
-- `formMailEncoding` - znakovou sadu pro odesílání e-mailů z formulářů. Výchozí hodnota je prázdná, což znamená, že se použije stejné kódování znaků, jaké je nastaveno pro webové stránky.
-- `spamProtection` - pokud je nastavena na `true`, bude ve formulářích povolena ochrana proti spamu. Ve výchozím nastavení nastaveno na `true`.
-- `spamProtectionJavascript` - pokud je nastavena na `all` (všechny formuláře budou chráněny) nebo `formmail` (chráněny budou pouze formuláře zaslané na e-mail), formuláře budou chráněny `javascriptom`, pro deaktivaci funkce je třeba zadat. `none`. Výchozí nastavení je `all`.
-- `spamProtectionSendInterval` - doba v sekundách, po kterou nelze formulář znovu odeslat na e-mail. Ve výchozím nastavení nastaveno na 30.
-- `spamProtectionDisabledIPs` - seznam začátků IP adres oddělený čárkou (nebo znakem `*` pro všechny), pro které je ochrana proti spamu vypnutá.
-- `formMailSendPlainText` - pokud je nastavena na `true` e-mail z formuláře je odeslán jako prostý text (nikoli ve formátu HTML).
-- `formMailRenderRadioCheckboxText` - pokud je nastavena na `true` zobrazí výběr a zaškrtávací políčka jako text `[X]` nebo `[ ]`.
-- `formMailCropForm` - pokud je nastavena na `true` pouze část zabalená do `tagov` Forma.
-- `formmailHttpsDomains` - Seznam domén oddělených čárkou, pro které budou formuláře vždy odesílány přes zabezpečené připojení httpS.
-- `checkFormValidateOnInit` - Nastavení validace formuláře při jeho inicializaci, pokud je nastavena na hodnotu `false` celý formulář se při zobrazení nevaliduje, pokud je nastaven na hodnotu `true` je ověřena.
-- `formMailFixedSenderEmail` - Pokud je nastavena na e-mailovou adresu, bude použita jako pevná hodnota e-mailu odesílatele. Na rozdíl od adresy `emailProtectionSenderEmail` nenastaví původní e-mail v poli `reply-to` aby odesílatel nebyl informován o chybném doručení (což může být někdy nutné z bezpečnostních důvodů).
-- `formmailShowClassicErrorMessage` - Pokud je nastavena na `true` zobrazí klasickou zprávu o ověření formuláře v horní části formuláře namísto zprávy vedle každého pole.
-- `formmailScrollTopAfterSend` - Pokud je nastavena na `true` po odeslání přetočí stránku na začátek formuláře (aby se zobrazila zpráva o odeslání).
-- `formmailResetFormAfterSend` - Pokud je nastavena na `true` po úspěšném odeslání se formulář vymaže.
-- `formmailSendUserInfoSenderName` - Bude odesláno jako jméno odesílatele v e-mailu při odesílání stránky podle zadané hodnoty. `formmail_sendUserInfoDocId`. Pokud je prázdný, je odesláno jméno autora stránky, jejíž obsah je odesílán do e-mailu.
-- `formmailSendUserInfoSenderEmail` - Bude odeslán jako e-mail odesílatele v e-mailu při odesílání stránky podle zadané hodnoty. `formmail_sendUserInfoDocId`. Pokud je prázdná, je e-mail odeslán autorovi stránky, jejíž obsah je odeslán do e-mailu.
+- `formmailAllowedRecipients` - Seznam koncových částí email adres na které lze odeslat formuláře, například: `@interway.sk,podpora@demo.webjet.sk`. Standardně prázdné, což znamená, že formulář lze odeslat na libovolnou adresu
+- `formMailEncoding` - znaková sada pro odesílání emailů z formulářů. Standardně nastaveno na prázdnou hodnotu, což znamená, že se použije stejné kódování znaků jako je nastaveno pro web stránky.
+- `spamProtection` - pokud je nastaveno na `true`, bude zapnuta ochrana proti spamu ve formulářích. Standardně nastaveno na `true`.
+- `spamProtectionJavascript` - pokud je nastaveno na `all` (budou chráněny všechny formuláře) nebo `formmail` (chráněny budou pouze formuláře odesílané na email), budou formuláře chráněny `javascriptom`, pro deaktivování funkce je třeba zadat `none`. Standardně nastaveno na `all`.
+- `spamProtectionSendInterval` - čas v sekundách během kterého není možné znovu odeslat formulář na email. Standardně nastaveno na 30.
+- `spamProtectionDisabledIPs` - seznam začátků IP adres oddělených čárkou (nebo znak `*` pro všechny), pro které je spam ochrana vypnuta.
+- `formMailSendPlainText` - je-li nastaveno na `true` je email z formuláře odeslán jako čistý text (ne HTML formát).
+- `formMailRenderRadioCheckboxText` - je-li nastaveno na `true` bude zobrazovat výběrová a zaškrtávací pole jako text `[X]` nebo `[ ]`.
+- `formMailCropForm` - pokud je nastaveno na `true` bude se odesílat jen část obalená do `tagov` form.
+- `formmailHttpsDomains` - Seznam domén oddělených čárkou, pro které se budou formuláře vždy odesílat přes zabezpečené httpS spojení.
+- `checkFormValidateOnInit` - Nastavení validace formuláře při jeho inicializaci, při nastavení na `false` se při zobrazení nevaliduje celý formulář, při nastavení na `true` se validuje.
+- `formMailFixedSenderEmail` - Je-li nastaveno na email adresu, použije se jako fixní hodnota emailu odesílatele. Na rozdíl od `emailProtectionSenderEmail` nenastaví původní email do pole `reply-to`, takže odesílatel není žádný notifikován při chybném doručení (což kvůli bezpečnosti může být někdy zapotřebí).
+- `formmailShowClassicErrorMessage` - Je-li nastaveno na `true` bude zobrazovat klasické validační hlášení formuláře nahoře nad formulářem namísto hlášení u jednotlivých polí.
+- `formmailScrollTopAfterSend` - Je-li nastaveno na `true` posune se stránka po odeslání na vrch formuláře (aby bylo vidět hlášení o odeslání).
+- `formmailResetFormAfterSend` - Je-li nastaveno na `true` po úspěšném odeslání se vyčistí formulář.
+- `formmailSendUserInfoSenderName` - Pošle se jako jméno odesílatele v e-mailu při odesílání stránky podle zadaného `formmail_sendUserInfoDocId`. Pokud je prázdné, zašle se jméno autora stránky, jejíž obsah se posílá do e-mailu.
+- `formmailSendUserInfoSenderEmail` - Pošle se jako e-mail odesílatele v e-mailu při odesílání stránky podle zadaného `formmail_sendUserInfoDocId`. Pokud je prázdné, zašle se e-mail autora stránky, jejíž obsah se posílá do e-mailu.

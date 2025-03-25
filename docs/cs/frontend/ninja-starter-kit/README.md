@@ -1,28 +1,28 @@
 # Úvod
 
-Ninja Starter Kit představuje ukázkovou šablonu ve formátu JSP využívající objekty Ninja z WebJET CMS.
+Ninja Starter Kit reprezentuje ukázkovou šablonu ve formátu JSP s využitím objektů Ninja z WebJET CMS.
 
 # Instalace
 
-- Kopírovat **Startovací sada Ninja** Z [Archiv ZIP](ninja-starter-kit.zip) do projektu, do kořenové složky `/templates/installName`.
-- V případě potřeby složku přejmenujte `ninja-starter-kit` na nový název šablony podle vašeho výběru.
-- Nastavení správných cest v `SCSS` ve složce na adrese `ninja-starter-kit/assets/scss/2-helpers/_variables.scss`:
-  - `$wj-install-name`: název hlavní složky v `/templates` pro daný projekt (rovná se konstantě `installName` nastaveno v aplikaci webJet)
-  - `$wj-template-name`: název kořenové složky šablony (pokud se název změnil)
-- Zkontrolujte nastavení `breakpointy` v `SCSS` ve složce na adrese `ninja-starter-kit/assets/scss/2-helpers/_variables.scss`:
-  - V současné době jsou `breakpointy` nastaveno pomocí Bootstrap 4
-  - Tyto stránky `breakpointy` se rovněž přenášejí do [Zásuvný modul Ninja](ninja-js/events/README.md)
+- Zkopíruj si **Ninja Starter KIT** ze [ZIP archivu](ninja-starter-kit.zip) do svého projektu, do kořenové složky `/templates/installName`.
+- Pokud je třeba, přejmenujte složku `ninja-starter-kit` na nový název šablony dle vlastního uvážení.
+- Nastav si správné cesty v `SCSS` souboru `ninja-starter-kit/assets/scss/2-helpers/_variables.scss`:
+  - `$wj-install-name`: název hlavní složky v `/templates` pro daný projekt (rovanký jako konstanta `installName` nastavena ve webJete)
+  - `$wj-template-name`: název kořenové složky šablony (pokud se měnil název)
+- Zkontroluj si nastaveno `breakpointy` v `SCSS` souboru `ninja-starter-kit/assets/scss/2-helpers/_variables.scss`:
+  - Aktuální jsou `breakpointy` nastaveno podle Bootstrap 4
+  - Tyto `breakpointy` se přebírají i do [Ninja pluginu](ninja-js/events/README.md)
 
 ## Legenda použitých emoji
 
-- :muscle: Ninja **Startovací sada**
-- :rocket: Ninja **Šablona**
+- :muscle: Ninja **Starter KIT**
+- :rocket: Ninja **Boilerplate**
 - :gem: Ninja **Java**
-- :tophat: Ninja **Skript**
-- :cherries: Ninja **Styl**
+- :tophat: Ninja **Script**
+- :cherries: Ninja **Style**
 
 **:muscle: = :rocket: + :gem: + :tophat: + :cherries:**
 
 - :ghost: složka `/ninja-starter-kit/installName`
 - :carousel\_horse: Třída **DocDetails.java**
-- :european\_castle: **Skupina** šablony
+- :european\_castle: **Skupina** šablon

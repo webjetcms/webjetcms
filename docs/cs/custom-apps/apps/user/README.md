@@ -2,9 +2,9 @@
 
 ## Registrační formulář
 
-Pokud máte na stránce [zóna chráněná heslem](../../../redactor/zaheslovana-zona/README.md) pomocí registračního formuláře můžete při registraci vyvolat vlastní kód a například upravit/přidat údaje uživatele nebo nastavit skupiny, do kterých patří na základě dalších informací (např. e-mailové adresy).
+Máte-li ve stránce [zaheslovanou zónu](../../../redactor/zaheslovana-zona/README.md) s registračním formulářem můžete při registraci vyvolat váš vlastní kód. upravit/doplnit údaje uživatele, nebo nastavit skupiny do kterých patří na základě dodatečných informací (např. email adresy).
 
-Na `pageParams` registrace přidat parametr `afterSaveInterceptor` - `!INCLUDE(/components/user/newuser.jsp, ..., afterSaveInterceptor=sk.iway...MojaTrieda`, zatímco tato třída implementuje `sk.iway.iwcm.stripes.AfterRegUserSaveInterceptor`. V metodě `public boolean intercept(UserDetails user, HttpServletRequest request)` můžete upravit `user` objekt. Když metoda vrátí `true`, změny se pak rovněž zapíší do databáze. Název třídy lze zadat také prostřednictvím konf. proměnné `stripesUserAfterSaveClass` pokud nejste spokojeni se vstupem do `pageParams` objekt.
+Do `pageParams` registrace přidejte parametr `afterSaveInterceptor` - `!INCLUDE(/components/user/newuser.jsp, ..., afterSaveInterceptor=sk.iway...MojaTrieda`, přičemž tato třída implementuje `sk.iway.iwcm.stripes.AfterRegUserSaveInterceptor`. V metodě `public boolean intercept(UserDetails user, HttpServletRequest request)` můžete modifikovat `user` objekt. Když metoda vrátí `true`, tak se následně změny zapíší i do databáze. Jméno třídy lze zadat i přes konf. proměnnou `stripesUserAfterSaveClass` pokud vám nevyhovuje zadání do `pageParams` objektu.
 
 Příklad třídy:
 
@@ -28,8 +28,8 @@ public class RegUserInterceptor implements AfterRegUserSaveInterceptor {
 }
 ```
 
-Po registraci WebJET odešle uvítací e-mail, pokud jej ve své implementaci odešlete sami, můžete tuto metodu přepsat. `shouldSendUserWelcomeEmail` a vrátit false.
+Po registraci WebJET posílá uvítací email, pokud ho posíláte sami ve vaší implementaci můžete přepsat metodu `shouldSendUserWelcomeEmail` a vrátit hodnotu false.
 
-## Přihlašování a odhlašování
+## Přihlášení a odhlášení
 
-Pokud potřebujete spustit vlastní kód při přihlášení/odhlášení uživatele ze zóny chráněné heslem, můžete implementovat třídu. `sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor`, který obsahuje metody `public boolean logon(UserDetails user, HttpServletRequest request);` volané při přihlášení a `public boolean logoff(UserDetails user, HttpServletRequest request);` zavolán při odhlášení uživatele. Název třídy zadejte do proměnné conf. `stripesLogonLogoffInterceptorClass`.
+Pokud potřebujete provést vlastní kód při přihlášení uživatele/odhlášení uživatele do zaheslované zóny, můžete implementovat třídu `sk.iway.iwcm.stripes.AfterLogonLogoffInterceptor`, která obsahuje metody `public boolean logon(UserDetails user, HttpServletRequest request);` volanou při přihlášení a `public boolean logoff(UserDetails user, HttpServletRequest request);` volanou při odhlášení uživatele. Zadejte název vaší třídy do konf. proměnné `stripesLogonLogoffInterceptorClass`.

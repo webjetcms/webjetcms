@@ -1,18 +1,18 @@
-# Souběžné provádění testů
+# Paralelní spuštění testů
 
-Aby se ušetřil čas potřebný k provedení testu, mohou být testy [běží paralelně](https://codecept.io/parallel/#parallel-execution-by-workers). Skripty jsou připraveny `parallel4,parallel6,parallel8,parallel12` pro paralelní provádění ve 4 až 12 oknech prohlížeče současně.
+Z důvodu ušetření času provedení testů je možné je [spustit paralelně](https://codecept.io/parallel/#parallel-execution-by-workers). Jsou připraveny skripty `parallel4,parallel6,parallel8,parallel12` pro paralelní provedení ve 4 až 12 oken prohlížeče najednou.
 
 <div class="video-container">
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/dkXVqNnZPWg" title="Přehrávač videí YouTube" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/dkXVqNnZPWg" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 </div>
 
 ## Použití
 
-Z důvodu kontinuity testů v rámci jednoho scénáře jsou testy rozděleny mezi okna prohlížeče podle `Feature` (to zajišťuje přepínač `--suites`), tj. obvykle podle názvu souboru. Scénáře v jednom souboru se pak provádějí postupně za sebou jako při standardním běhu.
+Z důvodu návaznosti testů v jednom scénáři jsou mezi jednotlivá okna prohlížeče děleny testy podle `Feature` (zajišťuje to přepínač `--suites`), tedy typicky podle jména souboru. Scénáře v jednom souboru se následně provedou postupně za sebou jako při standardním spuštění.
 
-Některé testy však nelze provádět paralelně, protože kontrolují stav podle IP adresy apod. Příkladem může být kontrola chybného hesla, která, pokud se provede, zabrání přihlášení po stanovenou dobu. Pokud by k tomu došlo v paralelně prováděném testu, nebylo by možné se přihlásit ani v jiných oknech prohlížeče, což by testy přerušilo.
+Některé testy ale nemohou být paralelně provedeny, protože např. kontrolují stav podle IP adresy a podobně. Příkladem je kontrola špatně zadaného hesla, která pokud se provede, tak znemožní přihlášení na určený čas. Pokud by se toto událo v paralelně spuštěném testu, nedá se přihlásit ani v dalších oknech prohlížeče, což pokazí testy.
 
-Z tohoto důvodu je připraven skript `singlethread` který spustí pouze testy označené `@singlethread` v názvu scénáře. Zároveň jsou takto označené testy vyloučeny z paralelního provádění.
+Z toho důvodu je připraven skript `singlethread`, který spustí pouze testy označené značkou `@singlethread` v názvu scénáře. Zároveň takto označené testy jsou vyloučeny z paralelního spuštění.
 
 ```javascript
 Feature('admin.login');
@@ -24,14 +24,14 @@ Scenario('zle zadane heslo @singlethread', ({ I }) => {
 });
 ```
 
-Aby byl test kompletní, je třeba spouštět skripty postupně:
+Pro kompletní test je tedy třeba spustit skripty za sebou:
 
 ```bash
 npm run singlethread
 npm run parallel8
 ```
 
-## Podrobnosti o provádění
+## Detaily implementace
 
 Jednotlivé skripty jsou definovány v `package.json`:
 

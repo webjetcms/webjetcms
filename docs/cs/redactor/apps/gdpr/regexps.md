@@ -1,11 +1,11 @@
 # Správa regulárních výrazů
 
-Modul GDPR obsahuje uzel "Správa regulárních výrazů", který slouží k vytváření a úpravám regulárních výrazů pro určité typy vyhledávaných údajů.
+Modul GDPR obsahuje uzel "Správa regulárních výrazů", který slouží k vytváření a upravování regulárních výrazů pro jednotlivé typy hledaných údajů.
 
 ![](regexp-datatable.png)
 
-V levém horním rohu je řada tlačítek pro vytváření/úpravu/duplikaci/odstranění regulárních výrazů, export regulárních výrazů do Excelu a jejich import z Excelu.
+V levém horním rohu se nachází série tlačítek pro vytvoření/úpravu/duplikování/mazání regulárních výrazů, export regulárních výrazů do excelu a jejich import z excelu.
 
-Při vytváření, úpravě, duplikování regulárního výrazu se v editoru zadává název a hodnota regulárního výrazu.
+Při vytváření, editování, duplikování regulárního výrazu se v editoru zadává název a hodnota regulárního výrazu.
 
 ![](regexp-editor.png)

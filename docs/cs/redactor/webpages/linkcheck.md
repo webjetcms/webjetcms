@@ -1,16 +1,16 @@
 # Kontrola odkazů a prázdných stránek
 
-> Na webových stránkách můžete po výběru složky a stisknutí tlačítka ![](linkcheck-href-button.png ":no-zoom") zobrazí tabulku se seznamem nefunkčních odkazů a prázdných stránek.
+> Ve web stránkách po zvolení složky a následném stisknutí tlačítka ![](linkcheck-href-button.png ":no-zoom") se zobrazí tabulka s výpisem chybných odkazů a prázdných stránek.
 
-Aplikace zkontroluje odkazy a webové stránky z vybrané složky a také ze všech podsložek. Výsledek se zobrazí na 3 kartách:
-- Nefunkční odkazy - odkazy, které neexistují. Kontrolují se pouze místní odkazy, nikoli odkazy na externí stránky (začínající na http).
-- Zakázané stránky - stránky, jejichž zobrazení je zakázáno.
-- Prázdné stránky - stránky, které jsou prázdné (méně než 100 znaků, tento počet lze nastavit v proměnné conf. `linkCheckEmptyPageSize`).
+Aplikace zkontroluje odkazy a webové stránky ze zvolené složky a také ze všech pod složek. Výsledek zobrazí ve 3 kartách:
+- Nefunkční odkazy – odkazy které neexistují. Kontrolují se pouze lokální odkazy, nikoli odkazy na externí stránky (začínající na http).
+- Stránky se zakázaným zobrazováním - stránky, které mají vypnuté zobrazení.
+- Prázdné stránky - stránky, které jsou prázdné (mají méně než 100 znaků, tento počet lze nastavit v konf. proměnné `linkCheckEmptyPageSize`).
 
 ![](linkcheck-datatable.png)
 
-Všechny karty obsahují tabulku s webovou stránkou a popisem chyby. Tabulka obsahuje sloupce:
+Všechny karty obsahují tabulku zobrazující web stránky a popis chyby. Tabulka obsahuje sloupce:
 - ID - `id` webové stránky (`docid`).
-- Stránka - cesta (struktura složek) a název webové stránky. Kliknutím na odkaz zobrazíte webovou stránku pro úpravy.
-- Chyba - popis chyby zjištěné při kontrole odkazu a stránky.
-- Adresa URL - adresa URL nefunkčního odkazu nebo adresa URL stránky (na kartě Prázdné stránky). Kliknutím na odkaz se zobrazená Url adresa otevře v novém okně.
+- Stránka - cesta (složková struktura) a název web stránky. Klepnutím na odkaz zobrazí editace web stránky.
+- Chyba - popis nalezené chyby při kontrole odkazu a stránky.
+- Url adresa - URL adresa nefunkčního odkazu, nebo URL adresa stránky (v kartě Prázdné stránky). Klepnutím na odkaz se v novém okně otevře zobrazená Url adresa.

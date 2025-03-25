@@ -2,34 +2,34 @@
 
 ## Backend
 
-Backend je implementován v balíčku `sk.iway.iwcm.components.users`, řadič REST je ve třídě `UserDetailsController`.
+Backend je implementován v package `sk.iway.iwcm.components.users`, REST controller je ve třídě `UserDetailsController`.
 
 ### Třídy pro generování seznamu práv
 
-Karta Práva obsahuje stromovou strukturu v jstree zobrazující jednotlivá práva. Seznam všech práv je generován v `MenuService.getAllPermissions()`. Použití třídy MenuService není šťastné, ale protože sdílí několik metod pro úpravu práv z verze WebJET 8 na verzi 2021, bylo pro nás jednodušší použít ji i pro seznam práv.
+V kartě Práva se nachází stromová struktura ve jstree zobrazující jednotlivá práva. Seznam všech práv se generuje v `MenuService.getAllPermissions()`. Použití třídy MenuService není šťastné, jelikož ale sdílí několik metod pro úpravu práv z WebJET verze 8 do verze 2021 zdálo se nám jednodušší použít ji i pro seznam práv.
 
-První úroveň představují stejné sekce jako v menu, druhou jednotlivé moduly a třetí práva v rámci modulů (hodnoty `leftSubmenuXItemKey` v `modinfo.properties`).
+První úroveň reprezentují sekce stejné jako jsou v menu, druhou jednotlivé moduly a třetí práva v rámci modulů (hodnoty `leftSubmenuXItemKey` v `modinfo.properties`).
 
-Specifické je generování tříd CSS `permgroup` a `permgroup-ID ` podle skupiny práv, která zobrazuje barevné kroužky u každého práva obsaženého ve skupině práv.
+Specifické je generování CSS tříd `permgroup` a `permgroup-ID ` podle skupin práv, pomocí kterých se zobrazují barevné kruhy u jednotlivých práv obsažených ve skupině práv.
 
-Pokud se má zobrazit 3. úroveň stromové struktury (modul obsahuje dílčí práva), položka na 2. úrovni se upraví - k jejímu ID se přidá přípona. `-leaf` aby byla položka jedinečná a zároveň byla přidána se stejným názvem do 3. úrovně nabídky.
+Pokud se má zobrazit i 3. úroveň ve stromové struktuře (modul obsahuje pod práva) je upravena položka na 2. úrovni - k jejímu ID je doplněna přípona `-leaf` aby položka byla jedinečná a zároveň je doplněna se stejným názvem i do 3. úrovně menu.
 
-Údaje pro stromovou strukturu práv se do modelu vkládají v položce `UserDetailsListener` Stejně jako `model.addAttribute("jstreePerms", JsonTools.objectToJSON(MenuService.getAllPermissions()));`.
+Data pro stromovou strukturu práv jsou do modelu vložena v `UserDetailsListener` jak `model.addAttribute("jstreePerms", JsonTools.objectToJSON(MenuService.getAllPermissions()));`.
 
-Práva přidělená uživateli se přenášejí v. `String[] UserDetailsEditorFields.enabledItems`. Zde je seznam povolených uživatelských práv. Technicky však WebJET ukládá do databáze pouze nepovolená (zakázaná) práva, a to z historických důvodů. V metodách `fromUserDetailsEntity` a `toUserDetailsEntity` seznam práv je obrácený.
+Práva, která uživatel má přiřazena se přenášejí v `String[] UserDetailsEditorFields.enabledItems`. Zde je seznam povolených práv uživatele. Technicky ale WebJET z historických důvodů ukládá do databáze jen nepovolená (zakázaná) práva. V metodách `fromUserDetailsEntity` a `toUserDetailsEntity` se seznam práv invertuje.
 
 ## Frontend
 
-Zobrazení seznamu uživatelů je v souboru [user-list.pug](../../../../src/main/webapp/admin/v9/views/pages/users/user-list.pug). Obsahuje specifické funkce JS pro zobrazení barevných kruhů spárovaných se skupinami práv. Kruhy se používají k zobrazení skupiny práv, která obsahuje jednotlivé právo.
+Zobrazení seznamu uživatelů je v souboru [user-list.pug](../../../../src/main/webapp/admin/v9/views/pages/users/user-list.pug). Obsahuje specifické JS funkce pro zobrazení barevných kruhů spárovaných se skupinami práv. Pomocí kruhů se v jednotlivých právech zobrazuje skupina práv, která dané jednotlivé právo obsahuje.
 
 ![](../../datatables-editor/field-type-jstree.png)
 
-Okruhy skupin událostí a práv jsou inicializovány při prvním otevření okna pomocí příkazu `usersDatatable.EDITOR.on('opened', function (e, type, action)`. Pomocí proměnné `permGroupsColorBinded` inicializace je zajištěna pouze při prvním otevření.
+Události a kruhy skupin práv se inicializují při prvním otevření okna přes funkci `usersDatatable.EDITOR.on('opened', function (e, type, action)`. Pomocí proměnné `permGroupsColorBinded` se zajistí inicializace jen při prvním otevření.
 
-V proměnné `niceColors` je seznam barev kruhů (pro zobrazení stejných barev podle pořadí skupin práv), byly použity barvy z Finderu v systému MacOS. Pokud je skupin práv více, než je velikost pole, jsou další barvy generovány náhodně voláním funkce `randomColor`.
+V proměnné `niceColors` je seznam barev kruhů (aby se podle pořadí skupin práv zobrazily ve stejných barvách), použity byly barvy z Finderu v MacOS. Je-li skupin práv více než velikost pole generují se další barvy náhodně voláním funkce `randomColor`.
 
-Nejprve se seznam skupin práv prochází voláním `$(".DTE_Field_Name_editorFields\\.permGroups input").each(function(index)`. ID skupiny se získá ze vstupního pole a přiřazeného `label` prvek jejího jména. První písmeno názvu skupiny je pro lepší přehlednost zobrazeno v kroužcích. Současně se podle ID skupiny práv vygeneruje definice souboru stylů CSS, která se vloží do prvku `head` prvek.
+Nejprve se prochází seznam skupin práv voláním `$(".DTE_Field_Name_editorFields\\.permGroups input").each(function(index)`. Ze vstupního pole se získá ID skupiny a z přiřazeného `label` elementu její jméno. V kruzích se zobrazuje pro lepší přehled první písmeno ze jména skupiny. Zároveň se generuje definice CSS stylů podle ID skupiny práv, která se následně vloží do `head` elementu.
 
-Po získání seznamu skupin práv jsou ke každému prvku LI jsTree přidány kruhy podle stylů CSS voláním `$("#DTE_Field_editorFields-enabledItems li.permgroup").each(function(index)`. Styly CSS jsou přidány pro každý prvek stromové struktury na backendu v části `MenuService.getAllPermissions()` kde každý prvek LI obsahuje třídy CSS `permgroup permgroup-ID`. Přechod podle třídy CSS `permgroup` Kód HTML se generuje uvnitř prvku LI s barevnými kroužky skupin práv.
+Po získání seznamu skupin práv se do každého LI elementu jsTree doplní kruhy podle CSS stylů voláním `$("#DTE_Field_editorFields-enabledItems li.permgroup").each(function(index)`. CSS styly jsou pro každý element stromové struktury přidány na backende v `MenuService.getAllPermissions()`, kde každý LI element obsahuje CSS třídy `permgroup permgroup-ID`. Přechodem podle CSS třídy `permgroup` se vygeneruje dovnitř LI elementu HTML kód s barevnými kruhy skupin práv.
 
-Kliknutí na políčko pro výběr skupiny práv se provádí v režimu `$(".DTE_Field_Name_editorFields\\.permGroups").on("click", "input", function() {` a způsobí přidání třídy CSS `permgroup-ID-checked` na adrese `body` prvek. To následně způsobí, že se kruh představující skupinu práv plně vybarví.
+Klepnutí na výběrové pole skupiny práv je zpracováno v `$(".DTE_Field_Name_editorFields\\.permGroups").on("click", "input", function() {` a způsobí přidání CSS třídy `permgroup-ID-checked` na `body` elemente. To následně způsobí plné zabarvení kruhu reprezentující skupinu práv.

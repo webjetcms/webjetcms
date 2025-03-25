@@ -2,91 +2,91 @@
 
 | Metoda | Typ | Popis
 | ---------------------------------- | -------- | ----------------------------- |
-| ${ninja.temp.basePath}             | *Řetězec* | Cesta ke kořenovému adresáři šablony |
-| ${ninja.temp.basePathCss}          | *Řetězec* | Cesta k souborům stylů CSS |
-| ${ninja.temp.basePathJs}           | *Řetězec* | Cesta ke skriptům JS |
-| ${ninja.temp.basePathImg}          | *Řetězec* | Cesta k obrázkům |
-| ${ninja.temp.lngIso}               | *Řetězec* | HTML ISO Language Cod |
-| ${ninja.temp.charset}              | *Řetězec* | Kódování souborů |
-| ${ninja.temp.insertTouchIconsHtml} | *Řetězec* | Nastavení dotykových ikon |
-| ${ninja.temp.templateFolderName}   | *Řetězec* | Název složky šablony |
+| ${ninja.temp.basePath}             | *String* | Cesta ke kořenovému adresáři šablony |
+| ${ninja.temp.basePathCss}          | *String* | Cesta k souborům stylů CSS |
+| ${ninja.temp.basePathJs}           | *String* | Cesta ke skriptům JS |
+| ${ninja.temp.basePathImg}          | *String* | Cesta k obrázkům |
+| ${ninja.temp.lngIso}               | *String* | HTML ISO Language Cod |
+| ${ninja.temp.charset}              | *String* | Kódování souborů |
+| ${ninja.temp.insertTouchIconsHtml} | *String* | Nastavení dotykových ikon |
+| ${ninja.temp.templateFolderName}   | *String* | Název složky šablony |
 
-## Cesta ke kořenovému adresáři šablony *Řetězec*
+## Cesta k root adresáři šablony *String*
 
-Cesta ke kořenovému adresáři šablony, který se skládá z `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
+Cesta k root adresáři šablony vyskládaná z `/templates/ + ${ninja.webjet.installName} + ${ninja.temp.templateFolderName}`.
 
 ```java
 ${ninja.temp.basePath}
 ```
 
-## Cesta ke stylům CSS *Řetězec*
+## Cesta k CSS stylům *String*
 
-Cesta k souborům stylů CSS se skládá z následujících položek `${ninja.temp.basePath} + /assets/css/`.
+Cesta k CSS stylům vyskládaná z `${ninja.temp.basePath} + /assets/css/`.
 
 ```java
 ${ninja.temp.basePathCss}
 ```
 
-## Cesta ke skriptům JS *Řetězec*
+## Cesta k JS skriptům *String*
 
-Cesta ke skriptům JS složeným z `${ninja.temp.basePath} + /assets/js/`.
+Cesta k JS skriptům vyskládaná z `${ninja.temp.basePath} + /assets/js/`.
 
 ```java
 ${ninja.temp.basePathJs}
 ```
 
-## Cesta k obrázkům *Řetězec*
+## Cesta k obrázkům *String*
 
-Cesta k obrázkům se skládá z `${ninja.temp.basePath} + /assets/images/`.
+Cesta k obrázkům vyskládaná z `${ninja.temp.basePath} + /assets/images/`.
 
 ```java
 ${ninja.temp.basePathImg}
 ```
 
-## Kód jazyka HTML ISO *Řetězec*
+## HTML ISO Language Code *String*
 
-Odkaz na kód jazyka HTML ISO například ve tvaru `sk-SK`.
+HTML ISO Language Code reference ve tvaru například `sk-SK`.
 
 ```java
 ${ninja.temp.lngIso}
 ```
 
-Používá se v :ghost:<code>head.jsp</code>
+Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta property="og:locale" content="${ninja.temp.lngIso}" />
 ```
 
-Používá se v :ghost:<code>html-attributes.jsp</code>
+Použité v :ghost:<code>html-attributes.jsp</code>
 
 ```html
 <html lang="${ninja.temp.lngIso}" >
 ```
 
-## Kódování souborů *Řetězec*
+## Kódování souboru *String*
 
-Kódování souborů, např. `utf-8`.
+Kódování souboru Např. `utf-8`.
 
 ```java
 ${ninja.temp.charset}
 ```
 
-Používá se v :ghost:<code>head.jsp</code>
+Použité v :ghost:<code>head.jsp</code>
 
 ```html
 <meta charset="${ninja.temp.charset}">
 <meta http-equiv="Content-type" content="text/html;charset=${ninja.temp.charset}" />
 ```
 
-## Nastavení dotykových ikon *Řetězec*
+## Nastavení touch ikon *String*
 
-Vrátí kód HTML se sadou dotykových ikon. Ikona musí být uložena v `/templates/ + ${ninja.temp.basePathImg}` s názvem `touch-icon.png`. Ikona by měla mít velikost `192px x 192px`. Dotykové ikony se nastavují pomocí palce, aby byla zajištěna přesná velikost ikony pro každé zařízení.
+Vrátí HTML kód s nastavenými touch ikonami. Ikonu je třeba mít uloženou v `/templates/ + ${ninja.temp.basePathImg}` s názvem `touch-icon.png`. Ikona by měla mít velikost `192px x 192px`. Touch ikony jsou nastaveny přes thumb, aby měla ikona přesnou velikost pro každé zařízení.
 
 ```java
 ${ninja.temp.insertTouchIconsHtml}
 ```
 
-Vygenerovaný kód HTML:
+HTML kód, který se vygeneruje:
 
 ```html
 <link rel="apple-touch-icon-precomposed" href="/thumb/templates/interway/ninja-starter-kit/assets/images/touch-icon.png?w=0&h=0&ip=5" />
@@ -100,9 +100,9 @@ Vygenerovaný kód HTML:
 <link rel="icon" sizes="192x192" href="/thumb/templates/interway/ninja-starter-kit/assets/images/touch-icon.png?w=192&h=192&ip=5" />
 ```
 
-## Název složky šablony *Řetězec*
+## Název složky šablony *String*
 
-Název složky šablony, výchozí `/ninja-starter-kit/`
+Název složky šablony, defaultně `/ninja-starter-kit/`
 
 ```java
 ${ninja.temp.templateFolderName}

@@ -1,27 +1,27 @@
-# Přihlašování a odhlašování
+# Přihlášení a odhlášení
 
 ## Přihlášení
 
-Do administrace systému WebJET CMS se můžete přihlásit na adrese `https://vasa-domena.sk/admin/`. Zobrazí se přihlašovací obrazovka:
+Do administrace WebJET CMS se přihlásíte na adrese `https://vasa-domena.sk/admin/`. Zobrazí se přihlašovací obrazovka:
 
 ![](logon.png)
 
-do kterého zadáte své přihlašovací jméno a heslo. V přihlašovacím dialogu je integrována kontrola kvality hesla, pokud vaše heslo nemá kvalitu alespoň 4, je třeba heslo po přihlášení změnit na bezpečnější (musí obsahovat více velkých a malých písmen, číslic a speciálních znaků, jako např. `.-_?/`).
+ve které zadejte vaše přihlašovací jméno a heslo. Do přihlašovacího dialogu je integrovaná kontrola kvality hesla, pokud vaše heslo nedosahuje kvality minimálně 4 je třeba heslo po přihlášení změnit na bezpečnější heslo (musí obsahovat několik velká a malá písmena, číslice a speciální znaky jako `.-_?/`).
 
-Klikněte na odkaz **Zapomenuté heslo** zobrazí se formulář pro změnu hesla. Zadejte svou e-mailovou adresu, pokud je v systému zaregistrována, obdržíte e-mail s odkazem na změnu hesla. Kliknutím na odkaz v obdrženém e-mailu zobrazíte formulář pro změnu hesla.
+Klepnutím na odkaz **Zapomenuté heslo** se zobrazí formulář pro změnu hesla. Zadejte vaši emailovou adresu, pokud je evidována v systému dostanete na email odkaz na změnu hesla. Klikněte na odkaz v mailu, který jste obdrželi pro zobrazení formuláře na změnu hesla.
 
-V závislosti na nastavení systému může platnost vašeho hesla vypršet nebo již nemusí splňovat bezpečnostní požadavky. V takovém případě budete po zadání správného hesla vyzváni k zadání nového hesla:
+Podle nastavení systému může exspirovat platnost vašeho hesla, nebo nemusí již splňovat bezpečnostní požadavky. Tehdy se po zadání správného hesla zobrazí výzva k zadání nového hesla:
 
 ![](logon-weak-password.png)
 
-Zadejte nové heslo, které splňuje požadovaná kritéria.
+Zadejte nové heslo tak, aby splňovalo požadovaná kritéria.
 
 ## Odhlášení
 
-Odkaz na odhlášení se nachází v záhlaví administrace v pravé horní části jako ikona. ![](icon-logoff.png ":no-zoom"):
+Odkaz na odhlášení se nachází v hlavičce administrace v pravé horní části jako ikona ![](icon-logoff.png ":no-zoom"):
 
 ![](header-logoff.png)
 
-Kliknutím na ikonu odhlášení se odhlásíte ze systému WebJET CMS. Z bezpečnostních důvodů doporučujeme, abyste **vždy se po práci odhlaste** a ne jen zavřít okno prohlížeče.
+Klepnutím na ikonu odhlášení se odhlásíte z WebJET CMS. Z důvodu bezpečnosti doporučujeme, abyste se **vždy po skončení práce odhlásili** a nejen zavřeli okno v prohlížeči.
 
-!>**Varování:** pokud je velikost okna menší a záhlaví se nezobrazuje, klikněte na ikonu nabídky hamburgeru. ![](icon-hamburger.png ":no-zoom") zobrazit záhlaví.
+!>**Upozornění:** při menší velikosti okna se nezobrazuje hlavička, klikněte na ikonu hamburger menu ![](icon-hamburger.png ":no-zoom") pro zobrazení hlavičky.

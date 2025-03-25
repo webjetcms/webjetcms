@@ -1,22 +1,22 @@
-# Kontrola zranitelnosti knihoven
+# Kontrola zranitelností knihoven
 
-Použití nástroje [Kontrola závislostí OWASP](https://jeremylong.github.io/DependencyCheck/index.html) můžete snadno zkontrolovat zranitelnosti v knihovnách Java a JavaScript webové aplikace. Doporučujeme je pravidelně kontrolovat.
+Pomocí nástroje [OWASP Dependency-Check](https://jeremylong.github.io/DependencyCheck/index.html) můžete jednoduše kontrolovat zranitelnosti v Java a JavaScript knihovnách web aplikace. Ty doporučujeme kontrolovat na pravidelné bázi.
 
-Pokud máte přístup ke zdrojovému kódu/gradu projektu, můžete analýzu spustit přímo pomocí příkazu [příkaz gradlew](../../developer/backend/security.md#skenování-zranitelností-v-knihovnách).
+Máte-li přístup ke zdrojovému kódu/gradle projektu můžete spustit analýzu přímo pomocí [gradlew příkazu](../../developer/backend/security.md#kontrola-zranitelností-v-knihovnách).
 
-Nástroj však lze spustit i nad vygenerovanými `war` archiv webových aplikací. Nainstalujte verzi nástroje pro [příkazový řádek](https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html).
+Nástroj je ale možné spustit i nad vygenerovaným `war` archivem web aplikace. Nainstalujte si verzi nástroje pro [příkazový řádek](https://jeremylong.github.io/DependencyCheck/dependency-check-cli/index.html).
 
-Kontrolu pak můžete spustit pomocí příkazu:
+Následně můžete spustit kontrolu pomocí příkazu:
 
 ```sh
 dependency-check --project "Meno projektu" --suppression dependency-check-suppressions.xml --suppression dependency-check-suppressions-project.xml --scan build/libs/*.war
 ```
 
-jsou nastaveny parametry:
-- `--project` - název projektu, který se zobrazí v sestavě.
-- `--suppression` - způsob, jak [soubor s výjimkami](../../developer/backend/security.md#skenování-zranitelností-v-knihovnách), obvykle je tento soubor součástí repozitáře git.
-- `--scan` - cesta k analyzovanému souboru/adresáři.
+parametry se nastavuje:
+- `--project` - jméno projektu, které se zobrazí v reportu.
+- `--suppression` - cesta k [souborem s výjimkami](../../developer/backend/security.md#kontrola-zranitelností-v-knihovnách), typicky je tento soubor součástí git repozitáře.
+- `--scan` - cesta k souboru/adresáři, který má být analyzován.
 
-Výsledkem je sada `dependency-check-report.html` v aktuálním adresáři.
+Výsledkem je soubor `dependency-check-report.html` v aktuálním adresáři.
 
 ![](dependency-check-cli.png)

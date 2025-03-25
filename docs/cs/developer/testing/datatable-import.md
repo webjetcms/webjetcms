@@ -1,20 +1,20 @@
-# Testování importu do datové tabulky
+# Testování importu do datatabulky
 
-Přidali jsme také možnost automatického testování importu dat do datové tabulky. Test provede následující operace:
-- ověří, zda v tabulce nejsou zadána žádná data.
-- importuje data a ověřuje jejich zobrazení/filtraci.
-- upravuje povinná pole (přidává výraz `-changed`) a po uložení ověří jejich zobrazení
-- reimportuje data se shodou podle zadaného sloupce, ověří, zda data již neobsahují. `-changed` text
+Připravili jsme také možnost automaticky testovat import dat do datatabulky. Test provede následující operace:
+- ověří, že v tabulce nejsou zadaná data
+- naimportuje data a ověří jejich zobrazení/filtrování
+- upraví povinná pole (přidá výraz `-changed`) a ověří jejich zobrazení po uložení
+- znovu naimportuje data s párováním podle zadaného sloupce, ověří že data již neobsahují `-changed` text
 
-Implementace je podobná jako u [Automatické testování DataTables](datatable.md). Pro přípravu potřebujete:
-- vytvořit testovací záznam v tabulkovém procesoru (ideálně s co největším počtem vyplněných údajů).
-- exportovat tabulku do Excelu a ponechat pouze záhlaví a testovací záznam.
-- v aplikaci Excel upravte data následujícím způsobem:
-  - zachovat hodnotu ID sloupce, tím se ověří přepsání původního záznamu (nesmí být přepsán importem).
-  - upravit ostatní sloupce odpovídajícím způsobem, doporučujeme přidat výraz `-import-test`
-  - zadejte jeden jedinečný sloupec (např. jméno), který bude použit k ověření Aktualizovat existující záznamy.
+Implementace je podobná jako pro [Automatické testování DataTables](datatable.md). Pro přípravu je třeba:
+- vytvořit testovací záznam v tabulce (ideální, aby měl vyplněných co nejvíce údajů)
+- exportovat tabulku do Excelu, v něm ponechte jen hlavičku a testovací záznam
+- v Excelu upravte data následovně:
+  - hodnotu ID sloupce ponechte, bude se tak ověřovat přepsání původního záznamu (nesmí se importem přepsat)
+  - ostatní sloupce patřičně upravte, doporučujeme doplnit výraz `-import-test`
+  - určit jeden unikátní sloupec (např. jméno) který se bude používat k ověření Aktualizovat stávající záznamy
 
-Pro pořádek uložte připravený soubor Excelu do stejného adresáře jako testovací skript a pojmenujte jej stejně (samozřejmě jen s příponou .xlsx). Příklad: `insert-script.js` a `insert-script.xlsx`.
+Takto připravený Excel soubor pro řád uložte do stejného adresáře jako máte testovací script a také jej rovněž pojmenujte (jen samozřejmě s .xlsx příponou). Příkladem je `insert-script.js` a `insert-script.xlsx`.
 
 ![](test-import-excel.png)
 
@@ -37,10 +37,10 @@ Scenario('insert script-import', async ({ I, DataTables }) => {
 });
 ```
 
-Kromě standardních parametrů [automatizovaný test datových souborů](datatable.md) jsou použity další parametry:
-- `file` - cesta k souboru xlsx s importovanými testovacími daty
-- `updateBy` - hodnota použitá pro testování Aktualizovat existující záznamy
-- `rows` - pole obsahující název sloupce a hodnotu, která bude po importu použita pro kontrolu/filtraci v tabulce.
-- `preserveColumns` - seznam sloupců, které nejsou v souboru aplikace Excel. Během změny budou nastaveny na náhodnou hodnotu a při aktualizaci importem bude ověřeno, že hodnota nebyla přepsána/zachována. Například. `preserveColumns: [ 'title', 'deliveryFirstName','deliveryLastName' ]`.
+Kromě standardních parametrů [automatizovaného testu datatabulky](datatable.md) jsou použity doplňující parametry:
+- `file` - cesta k xlsx souboru s testovacími daty importu
+- `updateBy` - hodnota použitá pro testování Aktualizovat stávající záznamy
+- `rows` - pole obsahující jméno sloupce a hodnotu, která se použije pro kontrolu/filtrování v tabulce po importu
+- `preserveColumns` - seznam sloupců, které se nenacházejí v Excel souboru. Budou během změny nastaveny na náhodnou hodnotu a následně při aktualizaci importem se ověří, že hodnota se nepřepsala/zachovala. Např. `preserveColumns: [ 'title', 'deliveryFirstName','deliveryLastName' ]`.
 
-Důležitým parametrem je `rows` ve kterém definujete seznam sloupců, které budou použity k filtrování záznamů po importu. Hodnota musí odpovídat hodnotě v souboru aplikace Excel.
+Důležitý je parametr `rows` ve kterém definujete seznam sloupců, které se použijí pro filtrování záznamů po importu. Hodnota se musí shodovat s hodnotou v Excel souboru.

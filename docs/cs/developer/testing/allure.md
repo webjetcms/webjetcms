@@ -1,32 +1,32 @@
 # Reporty přes Allure
 
-Během automatizovaného testu je také vygenerována zpráva ve formátu pro [Allure](https://docs.qameta.io/allure/). Jsou publikovány pro [chrom](http://docs.webjetcms.sk/allure/chromium/) také pro [firefox](http://docs.webjetcms.sk/allure/firefox/).
+Během automatizovaného testu se generuje i report ve formátu pro [Allure](https://docs.qameta.io/allure/). Zveřejněny jsou pro [chromium](http://docs.webjetcms.sk/allure/chromium/) i pro [firefox](http://docs.webjetcms.sk/allure/firefox/).
 
-Generování vstupních dat pro zprávu zajišťuje rozšíření [codecept-allure](https://codecept.io/plugins/).
+Generování vstupních dat pro report je zajištěno rozšířením [codecept-allure](https://codecept.io/plugins/).
 
 ![](allure-overview.png)
 
-Zobrazí se následující údaje:
-- `Overview` - základní přehled o stavu a historii
-- `Categories` - zobrazí kategorizovaný seznam chyb, jejichž kategorie jsou definovány pomocí [regulární výrazy](https://docs.qameta.io/allure/#_categories_2) vrácená chyba v souboru `src/test/webapp/allure/categories.json`
-- `Suites` - seznam jednotlivých testů s uvedením provedených kroků
-- `Graphs` - grafy současného a historického vývoje
-- `Timeline` - zobrazení času provedení každého testu
-- `Behaviors` - umožňuje rozdělit testy na `Epic, Feature, Story` co WebJET CMS v současné době nepoužívá
-- `Packages` - stromové znázornění jednotlivých testů
+Zobrazeny jsou následující údaje:
+- `Overview` - základní přehled stavu a historie
+- `Categories` - zobrazuje kategorizovaný seznam chyb, kategorie se definují podle [regulárních výrazů](https://docs.qameta.io/allure/#_categories_2) vrácené chyby v souboru `src/test/webapp/allure/categories.json`
+- `Suites` - seznam jednotlivých testů, vidět jednotlivé provedené kroky
+- `Graphs` - grafy aktuálního a historického vývoje
+- `Timeline` - časové zobrazení provedení jednotlivých testů
+- `Behaviors` - umožňuje členění testů na `Epic, Feature, Story`, co WebJET CMS se aktuálně nepoužívá
+- `Packages` - stromová reprezentace jednotlivých testů
 
-## Spuštění zprávy
+## Spuštění reportu
 
-Proces generování zprávy je složitější kvůli uchování historie. Vyžaduje to načtení předchozí zprávy (pro `history`) před vygenerováním sestavy.
+Proces generování reportu je komplikovanější z důvodu zachování historie. To vyžaduje získat předchozí report (přečinek `history`) před generováním reportu.
 
-Celý proces je uveden ve scénáři `npx-allure.sh`, který před spuštěním testu stáhne nejnovější výsledky z dokumentačního serveru a po spuštění testu je uloží na dokumentační server.
+Celý proces je ve skriptu `npx-allure.sh`, který před spuštěním testu stáhne poslední výsledky z dokumentačního serveru a po provedení testu je na dokumentační server uloží.
 
 Skript se používá s parametry:
-- `CODECEPT_BROWSER` - název použitého prohlížeče - `chromium` nebo `firefox` (výchozí nastavení `chromium`)
-- `CODECEPT_URL` - URL testované domény (výchozí `demotest.webjetcms.sk`)
-- `HOST_USER` - Uživatelské jméno SSH pro stažení historie a uložení výsledku
-- `HOST_NAME` - název domény serveru pro ukládání historie připojení SSH a výsledků.
-- `HOST_DIR` - složka se zprávou na serveru, k názvu složky se přidá název použitého prohlížeče.
+- `CODECEPT_BROWSER` - jméno použitého prohlížeče - `chromium` nebo `firefox` (výchozí `chromium`)
+- `CODECEPT_URL` - URL adresa domény, která se bude testovat (výchozí `demotest.webjetcms.sk`)
+- `HOST_USER` - jméno SSH uživatele pro stažení historie a uložení výsledku
+- `HOST_NAME` - doménové jméno serveru pro SSH spojení historie a uložení výsledku
+- `HOST_DIR` - složku s reportem na serveru, ke jménu složky se přidává ještě jméno použitého prohlížeče
 
 ```sh
 #spustenie s chrome a predvolenou domenou
@@ -41,8 +41,8 @@ npx-allure.sh chromium http://demo.webjetcms.sk
 
 ## Technické informace
 
-Jak bylo napsáno výše, pro zachování historie je nutné získat složku před generováním zprávy. `history` z předchozí verze. To je ve skriptu zajištěno použitím `rsync` ze strany dokumentace.
+Jak je psáno výše, pro zachování historie je třeba před generováním reportu získat složku `history` z předchozí verze. To je ve skriptu zabezpečeno použitím `rsync` z dokumentační stránky.
 
-Kromě toho se při spuštění generuje soubor. `build/test/environment.properties` s názvem použitého prohlížeče a použité domény. To se zobrazí na kartě `Overview` částečně `environment`.
+Kromě toho se při spuštění generuje soubor `build/test/environment.properties` se jménem použitého prohlížeče a použitou doménou. To se zobrazí na kartě `Overview` v části `environment`.
 
-Provádění testů a generování zpráv zajišťuje CI-CD v souboru `gitlab-ci.yml` spuštěním úlohy gradle `rune2etest` a `rune2etestfirefox`.
+Spouštění testů a generování reportu je zajištěno pomocí CI-CD v souboru `gitlab-ci.yml` spuštěním gradle úlohy `rune2etest` a `rune2etestfirefox`.

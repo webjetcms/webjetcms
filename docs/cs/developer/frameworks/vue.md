@@ -1,15 +1,15 @@
 # Vue.js
 
-- [Vue.js](#vuey)
-  - [Databázová vazba](#vazba-na-databázi)
-  - [Vue.js jako samostatná komponenta](#vuejs-jako-samostatná-komponenta)
+- [Vue.js](#vuejs)
+  - [Databinding](#databinding)
+  - [Vue.js jako samostatný komponent](#vuejs-jako-samostatný-komponent)
   - [Formátování data a času](#formátování-data-a-času)
 
-## Databázová vazba
+## Databinding
 
-Pro Databinding můžete použít také Vue.js, který je importován v části `app.js` ze třídy `vuetools.js` a k dispozici jako globální objekt `window.VueTools.getVue()`. Příklad použití v [folder-tree-gallery.pug](src/main/webapp/admin/v9/views/partials/folder-tree-galleria.pug).
+Na Databinding lze využít i Vue.js, to je importováno v `app.js` ze třídy `vuetools.js` a dostupné jako globální objekt `window.VueTools.getVue()`. Příklad použití v [folder-tree-galeria.pug](src/main/webapp/admin/v9/views/partials/folder-tree-galleria.pug).
 
-Použití v kódu HTML pomocí atributů v-modelu a `{{ objekt.property }}`:
+Použití v HTML kódu přes v-model atributy a `{{ objekt.property }}`:
 
 ```html
 <input type="text" class="form-control" v-model="galleryFolder.galleryName">
@@ -27,7 +27,7 @@ Použití v kódu HTML pomocí atributů v-modelu a `{{ objekt.property }}`:
 
 ```
 
-Inicializace vazby na databázi:
+Inicializace Databinding:
 
 ```javascript
     //zakladny objekt vlastnosti adresara galerie
@@ -45,9 +45,9 @@ Inicializace vazby na databázi:
     vm.mount('#galleryFolderEdit');
 ```
 
-## Vue.js jako samostatná komponenta
+## Vue.js jako samostatný komponent
 
-Pokud ji chceme použít jako samostatnou komponentu, je k tomu určena složka. `vue/components`, pak musí být komponenta zaregistrována v `vuetools.js` pro jeho asynchronní načítání. Důvodem je, že přímo v `pug` JavaScript nelze použít `import`. Můžete si však vytvořit vlastní soubor JavaScriptu, použít potřebné `import` a prostřednictvím `script src=...` označit v souboru pug.
+Pokud chceme použít, jako samostatný komponent je k tomu provedena složka `vue/components`, následně je třeba komponentu zaregistrovat v `vuetools.js` pro jeho asynchronní načítání. Důvod je ten, že přímo v `pug` nelze použít JavaScript `import`. Můžete ale vytvořit vlastní JavaScript soubor, v něm použít potřebný/é `import` a přes `script src=...` tag jej vložit do pug souboru.
 
 ```javascript
     //príklad s použitím dynamického importu
@@ -62,7 +62,7 @@ Pokud ji chceme použít jako samostatnou komponentu, je k tomu určena složka.
     }
 ```
 
-V současné době neinicializujeme nový objekt Vue v položce `app.js` to znamená, že pro každý soubor .pug, ve kterém chceme použít naši komponentu, musíme inicializovat nový objekt Vue, pokud ještě není vytvořen.
+Momentálně neinicializujeme nový Vue objekt v `app.js`, tedy třeba pro každý .pug soubor, kde chceme použít naši komponentu inicializovat nový Vue objekt pokud již není vytvořen.
 
 ```html
     <div id="app"><nazov-nasho-komponentu></nazov-nasho-komponentu></div>
@@ -76,11 +76,11 @@ V současné době neinicializujeme nový objekt Vue v položce `app.js` to znam
     vm.mount("#app")
 ```
 
-Pokud chceme použít místo `css` Například `scss` by měly být doplněny do `webpack.common.js` na `rules.options.loaders` Také `scss loader`.
+Pokud chceme využívat místo `css` například `scss` je třeba doplnit ve `webpack.common.js` do `rules.options.loaders` i `scss loader`.
 
 ## Formátování data a času
 
-V `VueTools.setDefaultObjects` objekt je nastaven `$WJ`, z něhož je možné volat [standardní funkce](webjetjs.md) pro formátování data a času.
+V `VueTools.setDefaultObjects` je nastaven objekt `$WJ`, z něj lze volat [standardní funkce](webjetjs.md) pro formátování data a času.
 
 Příklad použití:
 

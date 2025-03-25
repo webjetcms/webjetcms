@@ -1,16 +1,16 @@
-# Seznam webových stránek/novinek
+# Seznam web stránek/novinek
 
-Aplikace [Novinky](../../redactor/apps/news/README.md), vloží do stránky seznam webových stránek v zadané složce. Slouží k vložení seznamu novinek, tiskových zpráv, ale i dalších podobných výpisů (seznam kontaktních míst, osobních kontaktů, produktů apod.).
+Aplikace [Novinky](../../redactor/apps/news/README.md), vloží do stránky seznam web stránek v zadané složce. Používá se pro vkládání seznamu novinek, tiskových zpráv, ale i jiných podobných výpisů (seznam kontaktních míst, osobních kontaktů, produktů a podobně).
 
-Tabulka poskytuje možnosti úprav podobné seznamu webových stránek.
+Tabulka poskytuje editační možnosti podobně jako seznam web stránek.
 
 ![](../../redactor/apps/news/admin-dt.png)
 
-Pokud má zákazník specifické požadavky na zobrazení sloupců (např. pro seznam produktů) nebo informací, můžete implementovat vlastní aplikaci, která použije kód pro seznam novinek.
+Pokud má zákazník specifické požadavky na zobrazení sloupců (např. pro seznam produktů) nebo informací můžete implementovat vlastní aplikaci, která využívá kód pro seznam novinek.
 
-Níže je uveden kompletní kód stránky s novinkami. Můžete využít funkci úpravy standardních sloupců pomocí příkazu `window.WJ.DataTable.mergeColumns`. Příklad upravuje nastavení atributu viditelnosti sloupce, ale můžete také přejmenovat název, jak je uvedeno v příkladu názvu stránky.
+Níže je uveden kompletní kód stránky se seznamem novinek. Můžete využít vlastnost úpravy standardních sloupců pomocí funkce `window.WJ.DataTable.mergeColumns`. V příkladu se upravuje nastavení atributu viditelnosti sloupce, můžete ale také přejmenovat název jak je ukázáno v případě názvu stránky.
 
-Pokud nepotřebujete měnit hodnotu ID složky, můžete samozřejmě volání AJAXu odstranit. `/admin/rest/news/news-list/convertIdsToNamePair`, který získá seznam pro pole výběru složky v záhlaví.
+Pokud nepotřebujete měnit hodnotu ID složky, můžete samozřejmě odstranit AJAX volání `/admin/rest/news/news-list/convertIdsToNamePair`, která získává seznam pro výběrové pole složky v hlavičce.
 
 ```html
 <script data-th-inline="javascript">
@@ -136,11 +136,11 @@ Pokud nepotřebujete měnit hodnotu ID složky, můžete samozřejmě volání A
 <table id="newsDataTable" class="datatableInit table"></table>
 ```
 
-Pokud uživatel nemá přímý přístup k webovým stránkám, je třeba přidat právo aplikace do proměnné conf. `webpagesFunctionsPerms`, kde jsou uvedena práva pro práci s webovou stránkou. To zahrnuje funkce pro vložení obrázku a podobně.
+Pokud uživatel nemá přímo přístup k web stránkám je třeba přidat ještě vaše právo aplikace do konf. proměnné `webpagesFunctionsPerms`, která obsahuje seznam práv, která získávají právo na práci s web stránkami. Jedná se také o funkce pro vložení obrázku a podobně.
 
 ## Backend
 
-Pokud potřebujete konkrétní službu REST pro poskytování seznamu webových stránek/novinek, můžete použít třídu ready. [Webové stránkyDatovatelné](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) který můžete rozšířit a přepsat jeho metody podle svých potřeb.
+Pokud potřebujete specifickou REST službu pro poskytování seznamu web stránek/novinek můžete využít připravenou třídu [WebpagesDatatable](../../../../src/main/java/sk/iway/iwcm/editor/rest/WebpagesDatatable.java) kterou rozšíříte a přepíšete metody podle vašich potřeb.
 
 ```java
 @Datatable

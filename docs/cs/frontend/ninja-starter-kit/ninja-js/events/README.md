@@ -2,25 +2,25 @@
 
 | Událost | Zařízení |
 | ------------------------- | ---------------------------------------------------------------- |
-| na{deviceName}() | {deviceName} : Dinosaurus / Mobilní telefon / Tablet / Notebook / Stolní počítač |
-| na{deviceName}Blink() | {deviceName} : Dinosaurus / Mobilní telefon / Tablet / Notebook / Stolní počítač |
-| na{deviceName}Up() | {deviceName} : Dinosaurus / Mobilní / Tablet / Notebook / ~~Desktop~~ |
-| na{deviceName}UpBlink() | {deviceName} : Dinosaurus / Mobilní / Tablet / Notebook / ~~Desktop~~ |
-| na{deviceName}Down() | {deviceName} : ~~Dinosaur~~ / Mobilní / Tablet / Notebook / Stolní počítač |
-| na{deviceName}DownBlink() | {deviceName} : ~~Dinosaur~~ / Mobilní / Tablet / Notebook / Stolní počítač |
-| onResize() |
-| onResizeWidth() | |
-| onResizeHeight() | |
+| on{deviceName}() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop |
+| on{deviceName}Blink() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop |
+| on{deviceName}Up() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~ |
+| on{deviceName}UpBlink() | {deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~ |
+| on{deviceName}Down() | {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop |
+| on{deviceName}DownBlink() | {deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop |
+| onResize() |                                                                  |
+| onResizeWidth() |                                                                  |
+| onResizeHeight() |                                                                  |
 
 ## `on{deviceName}()`
 
-{deviceName} : Dinosaurus / Mobilní telefon / Tablet / Notebook / Stolní počítač
+{deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop
 
-Událost je vyvolána (se zpožděním podle nastavení `fireTime`), pokud:
-- při načítání stránky je šířka zařízení v rozsahu pro {deviceName}.
-- při změně šířky zařízení, pokud je nová šířka zařízení v rozmezí šířky pro {deviceName}.
+Událost se zavolá (se zpožděním podle nastavení `fireTime`) pokud:
+- při načítání stránky je šířka zařízení v rozmezí pro {deviceName}.
+- při změně šířky zařízení, je-li nová šířka zařízení v rozmezí pro {deviceName}.
 
-Akce je určena pro všechny {deviceName} zavolá pouze jednou. Pokud byla velikost obrazovky při načtení stránky stejná. {deviceName} a uživatel změnil velikost okna (ale stále v rámci rozsahu pro {deviceName}), událost nebude podruhé vyvolána.
+Událost se pro každý {deviceName} zavolá jen jednou. Pokud byla při načítání stránky obrazovka o velikosti {deviceName} a uživatel změnil velikost okna (ale stále v rozmezí pro {deviceName}), tak se událost již podruhé nezavolá.
 
 ```javascript
 Nina.init({
@@ -30,19 +30,19 @@ Nina.init({
 });
 ```
 
-Body zlomu se přebírají ze stylů CSS nastavených v položce `_variables.scss`
+Breakpointy se přebírají z CSS stylů, které jsou nastaveny ve `_variables.scss`
 
-- **onDinosaur()** < 576px
-- 575px < **onMobile()** < 768px
-- 767px < **onTablet()** < 992px
-- 991px < **onLaptop()** < 1200px
-- 1199px < **onDesktop()**
+- **onDinosaur()** \< 576px
+- 575px \< **onMobile()** \< 768px
+- 767px \< **onTablet()** \< 992px
+- 991px \< **onLaptop()** \< 1200px
+- 1199px \< **onDesktop()**
 
 ## `on{deviceName}Blink()`
 
-{deviceName} : Dinosaurus / Mobilní telefon / Tablet / Notebook / Stolní počítač
+{deviceName} : Dinosaur / Mobile / Tablet / Laptop / Desktop
 
-Akce bude svolána za stejných podmínek jako on.{deviceName}() s tím rozdílem, že tato událost je volána vícekrát, nikoli pouze jednou. Pokud uživatel změní šířku vícekrát a je stále v dosahu pro funkci {deviceName}, bude událost vyvolána pokaždé. Když se událost o\*{deviceName}() by se již neozval.
+Událost se zavolá za stejných podmínek jako on{deviceName}() až na to, že tato událost se jmenuje mnohokrát, ne jen jednou. Pokud uživatel změní vícekrát šířku a stále je v rozmezí pro {deviceName}, událost se pokaždé zavolá. Při události o\*{deviceName}() by se to již vícekrát nezavolalo.
 
 ```javascript
 Nina.init({
@@ -52,19 +52,19 @@ Nina.init({
 });
 ```
 
-Body zlomu se přebírají ze stylů CSS nastavených v položce `_variables.scss`
+Breakpointy se přebírají z CSS stylů, které jsou nastaveny ve `_variables.scss`
 
-- **onDinosaurBlink()** < 576px
-- 575px < **onMobileBlink()** < 768px
-- 767px < **onTabletBlink()** < 992px
-- 991px < **onLaptopBlink()** < 1200px
-- 1199px < **onDesktopBlink()**
+- **onDinosaurBlink()** \< 576px
+- 575px \< **onMobileBlink()** \< 768px
+- 767px \< **onTabletBlink()** \< 992px
+- 991px \< **onLaptopBlink()** \< 1200px
+- 1199px \< **onDesktopBlink()**
 
 ## `on{deviceName}Up()`
 
-{deviceName} : Dinosaurus / Mobilní / Tablet / Notebook / ~~Desktop~~
+{deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~
 
-Událost je vyvolána (se zpožděním podle nastavení `fireTime`), pokud: při načítání stránky je šířka zařízení větší než {deviceName}. při změně šířky zařízení, pokud je nová šířka zařízení větší než {deviceName}. Akce je určena pro všechny {deviceName} zavolá pouze jednou. Například pokud byla obrazovka při načítání stránky větší než stránka. {deviceName} a uživatel změnil velikost okna (ale stále je větší než velikost okna {deviceName}), událost nebude podruhé vyvolána.
+Událost se zavolá (se zpožděním podle nastavení `fireTime`) pokud: při načítání stránky je šířka zařízení větší než {deviceName}. při změně šířky zařízení, je-li nová šířka zařízení větší než {deviceName}. Událost se pro každý {deviceName} zavolá jen jednou. Pokud například byla při načítání stránky obrazovka větší než {deviceName} a uživatel změnil velikost okna (ale stále je větší než {deviceName}), tak se událost již podruhé nezavolá.
 
 ```javascript
 Nina.init({
@@ -74,18 +74,18 @@ Nina.init({
 });
 ```
 
-Body zlomu se přebírají ze stylů CSS nastavených v položce `_variables.scss`
+Breakpointy se přebírají z CSS stylů, které jsou nastaveny ve `_variables.scss`
 
-- 575px < **onDinosaurUp()**
-- 767px < **onMobileUp()**
-- 991px < **onTabletUp()**
-- 1199px < **onLaptopUp()**
+- 575px \< **onDinosaurUp()**
+- 767px \< **onMobileUp()**
+- 991px \< **onTabletUp()**
+- 1199px \< **onLaptopUp()**
 
 ## `on{deviceName}UpBlink()`
 
-{deviceName} : Dinosaurus / Mobilní / Tablet / Notebook / ~~Desktop~~
+{deviceName} : Dinosaur / Mobile / Tablet / Laptop / ~~Desktop~~
 
-Akce bude svolána za stejných podmínek jako on.{deviceName}Up() s tím rozdílem, že tato událost je volána mnohokrát, nikoli pouze jednou. Pokud uživatel změní šířku vícekrát a ta je stále větší než {deviceName}, bude událost vyvolána pokaždé. Když se událost o\*{deviceName}Up() by ji znovu nevolal.
+Událost se zavolá za stejných podmínek jako on{deviceName}Up() až na to, že tato událost se jmenuje mnohokrát, ne jen jednou. Pokud uživatel změní vícekrát šířku a stále je větší než {deviceName}, událost se pokaždé zavolá. Při události o\*{deviceName}Up() by se to již vícekrát nezavolalo.
 
 ```javascript
 Nina.init({
@@ -95,18 +95,18 @@ Nina.init({
 });
 ```
 
-Body zlomu se přebírají ze stylů CSS nastavených v položce `_variables.scss`
+Breakpointy se přebírají z CSS stylů, které jsou nastaveny ve `_variables.scss`
 
-- 575px < **onDinosaurUpBlink()**
-- 767px < **onMobileUpBlink()**
-- 991px < **onTabletUpBlink()**
-- 1199px < **onLaptopUpBlink()**
+- 575px \< **onDinosaurUpBlink()**
+- 767px \< **onMobileUpBlink()**
+- 991px \< **onTabletUpBlink()**
+- 1199px \< **onLaptopUpBlink()**
 
 ## `on{deviceName}Down()`
 
-{deviceName} : ~~Dinosaur~~ / Mobilní / Tablet / Notebook / Stolní počítač
+{deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop
 
-Událost je vyvolána (se zpožděním podle nastavení `fireTime`), pokud: při načítání stránky je šířka zařízení menší než {deviceName}. při změně šířky zařízení, pokud je nová šířka zařízení menší než {deviceName}. Akce je určena pro všechny {deviceName} zavolá pouze jednou. Například pokud by obrazovka byla menší než obrazovka {deviceName} a uživatel změnil velikost okna (ale stále je menší než velikost okna {deviceName}), událost nebude podruhé vyvolána.
+Událost se zavolá (se zpožděním podle nastavení `fireTime`) pokud: při načítání stránky je šířka zařízení menší než {deviceName}. při změně šířky zařízení, je-li nová šířka zařízení menší než {deviceName}. Událost se pro každý {deviceName} zavolá jen jednou. Pokud například byla při načítání stránky obrazovka menší než {deviceName} a uživatel změnil velikost okna (ale stále je menší než {deviceName}), tak se událost již podruhé nezavolá.
 
 ```javascript
 Nina.init({
@@ -116,18 +116,18 @@ Nina.init({
 });
 ```
 
-Body zlomu se přebírají ze stylů CSS nastavených v položce `_variables.scss`
+Breakpointy se přebírají z CSS stylů, které jsou nastaveny ve `_variables.scss`
 
-- **onMobileDown()** < 576px
-- **onTabletDown()** < 768px
-- **onLaptopDown()** < 992px
-- **onDesktopDown()** < 1200px
+- **onMobileDown()** \< 576px
+- **onTabletDown()** \< 768px
+- **onLaptopDown()** \< 992px
+- **onDesktopDown()** \< 1200px
 
 ## `on{deviceName}DownBlink()`
 
-{deviceName} : ~~Dinosaur~~ / Mobilní / Tablet / Notebook / Stolní počítač
+{deviceName} : ~~Dinosaur~~ / Mobile / Tablet / Laptop / Desktop
 
-Akce bude svolána za stejných podmínek jako on.{deviceName}Down() s tím rozdílem, že tato událost je volána mnohokrát, nikoli pouze jednou. Pokud uživatel několikrát změní šířku a ta je stále menší než {deviceName}, bude událost vyvolána pokaždé. Když se událost o\*{deviceName}Down() by ji znovu nevolal.
+Událost se zavolá za stejných podmínek jako on{deviceName}Down() až na to, že tato událost se jmenuje mnohokrát, ne jen jednou. Pokud uživatel změní vícekrát šířku a stále je menší než {deviceName}, událost se pokaždé zavolá. Při události o\*{deviceName}Down() by se to už vícekrát nezavolalo.
 
 ```javascript
 Nina.init({
@@ -137,16 +137,16 @@ Nina.init({
 });
 ```
 
-Body zlomu se přebírají ze stylů CSS nastavených v položce `_variables.scss`
+Breakpointy se přebírají z CSS stylů, které jsou nastaveny ve `_variables.scss`
 
-- **onMobileDownBlink()** < 576px
-- **onTabletDownBlink()** < 768px
-- **onLaptopDownBlink()** < 992px
-- **onDesktopDownBlink()** < 1200px
+- **onMobileDownBlink()** \< 576px
+- **onTabletDownBlink()** \< 768px
+- **onLaptopDownBlink()** \< 992px
+- **onDesktopDownBlink()** \< 1200px
 
 ## `onResize()`
 
-Událost je vyvolána (se zpožděním podle nastavení `fireTime`), pokud se změní velikost obrazovky.
+Událost se zavolá (se zpožděním podle nastavení `fireTime`) pokud se změní velikost obrazovky.
 
 ```javascript
 Nina.init({
@@ -158,7 +158,7 @@ Nina.init({
 
 ## `onResizeWidth()`
 
-Událost je vyvolána (se zpožděním podle nastavení `fireTime`), pokud se změní šířka obrazovky.
+Událost se zavolá (se zpožděním podle nastavení `fireTime`) pokud se změní šířka obrazovky.
 
 ```javascript
 Nina.init({
@@ -170,7 +170,7 @@ Nina.init({
 
 ## `onResizeHeight()`
 
-Událost je vyvolána (se zpožděním podle nastavení `fireTime`), pokud se změní výška obrazovky.
+Událost se zavolá (se zpožděním podle nastavení `fireTime`) pokud se změní výška obrazovky.
 
 ```javascript
 Nina.init({

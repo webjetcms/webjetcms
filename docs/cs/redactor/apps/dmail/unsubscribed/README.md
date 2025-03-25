@@ -1,27 +1,27 @@
 # Odhlášené e-maily
 
-Aplikace Hromadné e-maily obsahuje uzel Neodebrané e-maily, který zaznamenává seznam neodebraných e-mailů. Na adresy v tomto seznamu nebudou prostřednictvím aplikace Hromadná pošta odesílány žádné e-maily/kampaň.
+Aplikace Hromadný e-mail obsahuje uzel Odhlášené e-maily, ve kterém se eviduje seznam odhlášených emailů. Na adresy v tomto seznamu nebudou přes aplikaci Hromadný e-mail odeslány žádné emaily/kampaně.
 
-Před odesláním se vždy kontroluje seznam pro odhlášení, takže i když e-mail znovu importujete do hromadného e-mailu, kampaň nebude odeslána na e-mailové adresy v seznamu pro odhlášení.
+Před odesláním se vždy kontroluje seznam odhlášených e-mailů, tedy i kdybyste email naimportovali nově do hromadného e-mailu nebude na e-mail adresy ze seznamu odhlášených emailů kampaň zaslána.
 
 ![](unsubscribed-datatable.png)
 
-Seznam můžete naplnit ručně, importem ze souboru aplikace Excel a automaticky propojením v e-mailové zprávě. Stačí do e-mailové zprávy přidat následující kód HTML:
+Seznam můžete plnit manuálně, importem z Excel souboru a automaticky odkazem v email zprávě. Stačí do email zprávy přidat následující HTML kód:
 
 ```html
 <a href="/odhlasenie-z-mailingu.html?email=!RECIPIENT_EMAIL!&save=true">Kliknite pre odhlásenie</a>
 ```
 
-čímž se stránka s adresou `/odhlasenie-z-mailingu.html` obsahuje aplikaci pro odhlášení:
+přičemž stránka s adresou `/odhlasenie-z-mailingu.html` obsahuje aplikaci pro odhlášení:
 
 ```html
 !INCLUDE(/components/dmail/unsubscribe.jsp, senderEmail=name@your-domain.com, senderName="Your Name", confirmUnsubscribe=true)!
 ```
 
-[Klikněte na odkaz](../form/README.md#odhlášení) zajistit, aby byla e-mailová adresa příjemce odhlášena z poštovní kampaně.
+[Klepnutí na odkaz](../form/README.md#odhlášení) zajistí odhlášení email adresy příjemce z mailové kampaně.
 
 ![](unsubscribed-form.png)
 
-Při vytváření, úpravách nebo duplikaci záznamu je nutné zadat e-mail, abyste se mohli v editoru odhlásit.
+Při vytváření, editování, duplikování záznamu se v editoru povinně zadává e-mail na odhlášení.
 
 ![](unsubscribed-editor.png)

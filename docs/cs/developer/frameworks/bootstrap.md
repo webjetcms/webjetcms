@@ -1,17 +1,17 @@
 # Bootstrap
 
-Jako `grid` se používá systém [Bootstrap verze 5](https://getbootstrap.com/docs/5.0/).
+Jak `grid` systém se používá [Bootstrap verze 5](https://getbootstrap.com/docs/5.0/).
 
-## Reakce
+## Responziva
 
-Zobrazení administrace je responzivní a používá následující šířky zlomů (definované v souboru \_variables.scss):
-- `$bp-laptop:1200px` - při šířce menší než tato jsou záhlaví a levé menu skryté a dostupné kliknutím na hamburger menu.
-- `$bp-tablet:992px` - menší než tato šířka, zobrazí se editor datových souborů v celé ploše okna (horizontálně i vertikálně).
-- `$bp-dinosaur:576px` - při menší šířce než je tato šířka se změní rozložení v editoru - názvy polí se přesunou zleva nad pole.
+Zobrazení administrace je responzivní, používají se následující šířky zlomu (definované v \_variables.scss):
+- `$bp-laptop:1200px` - při menší než této šířce je hlavička a levé menu schované a dostupné po kliknutí na hamburger menu.
+- `$bp-tablet:992px` - při menší než této šířce je editor datatabulky zobrazen na plnou plochu okna (horizontálně i vertikálně).
+- `$bp-dinosaur:576px` - při menší než této šířce je změněno rozložení v editoru - názvy polí se přesunou z levé části nad pole.
 
-Více je popsáno v části [Hlavní ovládací prvky](../../redactor/admin/README.md) v příručce pro editor.
+Více je popsáno v sekci [Hlavní ovládací prvky](../../redactor/admin/README.md) v manuálně pro redaktora.
 
-## Použité příslušenství
+## Použité doplňky
 
 ### Bootstrap select
 

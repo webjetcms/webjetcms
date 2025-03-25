@@ -1,3 +1,3 @@
 # Testování
 
-Projekt `basecms` ze kterého bude pravděpodobně vytvořen projekt zákazníka, obsahuje integrované možnosti testování pomocí testů JUnit, `selenium` a pomocí e2e codeceptjs používaného v systému WebJET CMS. Doporučujeme postupovat podle dokumentace pro [testování v systému WebJET CMS](../../developer/testing/README.md).
+Projekt `basecms` ze kterého je pravděpodobně vytvořen zákaznický projekt obsahuje integrované možnosti testování pomocí JUnit testů, `selenium` a pomocí ve WebJET CMS používaného e2e codeceptjs. Doporučujeme postupovat podle dokumentace pro [testování ve WebJET CMS](../../developer/testing/README.md).

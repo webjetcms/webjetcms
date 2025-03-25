@@ -1,15 +1,15 @@
-# Omezení domény
+# Doménové limity
 
-Aplikace Omezení domén umožňuje nastavit omezení počtu e-mailů odeslaných na doménu. Tím se zlepší doručování e-mailů, protože poštovní servery s vysokým počtem e-mailů odeslaných z jedné IP adresy mohou e-maily zablokovat nebo je rovnou zařadit do složky spamu.
+Aplikace doménové limity umožňuje nastavit limity počtu odesílaných emailů podle domény. Zlepší tak doručení emailů, protože mail servery při vysokém počtu odeslaných emailů z jedné IP adresy mohou emaily blokovat, nebo je rovnou dávat do složky spam.
 
-V tabulce jsou červeně zvýrazněny limity, které jsou neaktivní a nejsou použity při odesílání e-mailů. U nespecifikovaných domén se použijí hodnoty zadané pro danou doménu. `*`, tj. stanovení limitů s doménou `*` se použije na všechny domény, které nejsou uvedeny v seznamu.
+V tabulce jsou červenou barvou zvýrazněny limity, které jsou neaktivní a neaplikují se při odesílání emailů. Pro přesně nespecifikované domény se použijí hodnoty zadané pro doménu `*`, neboli nastavení limitů s doménou `*` se aplikuje na všechny neuvedené domény.
 
 ![](datatable.png)
 
-Do pole "Doména" zadejte za e-mailovou adresu název domény (např. gmail.com, centrum.sk, seznam.sk).
+V editaci v poli "Doména" zadejte doménové jméno za zavináčem email adresy (např. gmail.com, centrum.sk, seznam.sk).
 
-Pole "Množství e-mailů" definuje maximální množství e-mailů odeslaných do dané domény v intervalu časové jednotky. Můžete tedy nastavit např. 10 e-mailů za minutu.
+Pole "Množství emailů" definuje maximální množství emailů zaslaných na danou doménu v intervalu Časová jednotka. Můžete tedy nastavit např. 10 emailů za minutu.
 
-Pole "Minimální mezera (v milisekundách)" nastavuje minimální interval mezi e-maily. Při nastavení hodnoty 5000 bude minimální interval mezi odesláním e-mailu do zadané domény 5000 ms (5 sekund).
+Pole "Minimální mezera (v milisekundách)" nastavuje minimální interval mezi jednotlivými emaily. Nastavením hodnoty 5000 bude minimální interval 5000 ms (5 sekund) mezi odesláními emailu na zadanou doménu.
 
 ![](editor.png)

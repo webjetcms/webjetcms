@@ -1,3 +1,3 @@
 # Backend
 
-V levém menu vyberte oddíl.
+Vyberte si v levém menu sekci.

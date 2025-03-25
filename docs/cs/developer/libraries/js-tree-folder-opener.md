@@ -1,16 +1,16 @@
 # 'JsTree Folder Opener'
 
-Rozšiřování knihovny
+Rozšiřující knihovna
 
 ***
 
-**Závislosti**
+**Dependencies (závislosti)**
 
-- [Nástroje](tools.md)
+- [Tools](tools.md)
 
 ***
 
-Knihovna umožňuje automatizovanou manipulaci (otevírání) uzlů stromů generovaných knihovnou jsTree na základě ID uzlu (složky).
+Knihovna umožňuje automatizovanou manipulaci (otevírání) s uzly stromu, který generuje knihovna jsTree, na základě ID uzlu (složky).
 
 Rozšiřuje třídu `AbstractJsTreeOpener`
 
@@ -24,7 +24,7 @@ export class JsTreeFolderOpener extends AbstractJsTreeOpener {}
 
 ## Vytvoření instance:
 
-**WebJET** vytvoří instanci v souboru [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
+**WebJET** vytváří instanci v souboru [app.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app.js)
 
 ```javascript
 import JsTreeFolderOpener from "./libs/js-tree-document-opener/js-tree-document-opener";
@@ -34,9 +34,9 @@ window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
 **Použití:**
 
-### Iniciace:
+### Inicializace:
 
-V ideálním případě se inicializace provede vždy, když se inicializuje strom jstree voláním metody [init()](#init)
+Inicializaci provedeme ideálně vždy, když je inicializován jstree zavoláním metody [init()](#init)
 
 ```javascript
 window.jsTreeFolderOpener.init();
@@ -55,44 +55,44 @@ window.jstree = somStromcek.jstree({
 });
 ```
 
-Metoda [init()](#init) zajistit: <a id="init-algo" />
-- Parsuje z url prohlížeče pomocí [Tools.getUrlQuery()](tools.md#geturlquery) vyhledávací dotaz za otazníkem
-- Odstraní klíč z vypreparovaného objektu `groupid` pokud jsme ji nezměnili dříve pomocí [idKeyName](#idkeyname)
-- Hodnota z `groupid` prasnice se setrem [id](#id)
-- Setter [id](#id) uvede třídu do nového stavu a ověří platnost vstupu: <a id="id-algo" />
-  - Pokud je vstup neplatný, prostředí DEV vypíše zprávu o neplatném vstupu a přeruší provádění.
-    - Třída se přepne do stavu `Not Ready & Iddle`, čekající na výzvu zadavatele [id](#id)
-  - Pokud je vstup platný, je odeslán požadavek na rozhraní API, jehož výchozí adresu lze změnit pomocí příkazu [apiUrl](#apiurl)
-    - Přijatá data jsou uložena ve třídě, aby s nimi bylo možné pracovat.
-    - Třída se přepne do stavu `Ready & Iddle` a čeká na zavolání [next()](#další) nebo [id](#id)
+Metoda [init()](#init) zajistí: <a id="init-algo" />
+- Vyparsuje z url adresy prohlížeče pomocí [Tools.getUrlQuery()](tools.md#geturlquery) search query za otazníkem
+- Vybere z vyparsovaného objektu klíč `groupid` pokud jsme ho před tím nezměnili pomocí [idKeyName](#idkeyname)
+- Hodnotu z `groupid` setne pomocí setteru [id](#id)
+- Setter [id](#id) resetuje třídu do new stavu a ověří vstup: <a id="id-algo" />
+  - Pokud je vstup nevalidní, tak v DEV prostředí vypíše hlášku o nevalidním vstupu a přeruší se provedení
+    - Třída se přepne do stavu `Not Ready & Iddle`, čeká na zavolání setteru [id](#id)
+  - Pokud je vstup validní provede se request na API, jehož defaultní adresu můžeme změnit pomocí [apiUrl](#apiurl)
+    - Uloží se přijatá data do třídy aby se s nimi mohlo pracovat
+    - Třída se přepne do stavu `Ready & Iddle` a čeká na zavolání [next()](#next) nebo [id](#id)
 
 ***
 
 ### Otevírání uzlů stromu:
 
-Otevírání uzlů stromu se provádí voláním metody [next()](#další):
+Otevírání uzlů stromu se provádí voláním metody [next()](#next):
 
 ```javascript
 window.jsTreeFolderOpener.next();
 ```
 
-Wo **WebJET** v souboru probíhá volání [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js)
+Wo **WebJET** probíhá volání v souboru [app-init.js](https://github.com/webjetcms/webjetcms/blob/main/src/main/webapp/admin/v9/src/js/app-init.js)
 
-1. Po prořezání stromu `/listener: loaded.jstree`
+1. Po vyrederování stromu `/listener: loaded.jstree`
 
-2. Po otevření (*otevřený uzel*) uzlu `/listener: after_open.jstree`
+2. Po otevření (*open node*) uzlu `/listener: after_open.jstree`
 
-3. Po výběru (*vybrat uzel*) uzlu `/listener: select_node.jstree`
+3. Po vyjmutí (*select node*) uzlu `/listener: select_node.jstree`
 
-Zadávání speciálních značek v parametru je podporováno `groupid`:
+Podporováno je zadání speciálních značek do parametru `groupid`:
 - `SYSTEM` - otevře se karta Systém
-- `TRASH` - otevře se karta Košík
+- `TRASH` - otevře se karta Koš
 
-Příklad takové adresy URL: `/admin/v9/webpages/web-pages-list/?groupid=SYSTEM`.
+Příklad takové URL adresy: `/admin/v9/webpages/web-pages-list/?groupid=SYSTEM`.
 
 ***
 
-!>**Varování:** V případě, že chceme externě nastavit [id](#id) je dobré použít metodu před [loaded()](#Převzato-z) ve kterém můžeme volat [next()](#další) a testovat [notFound](#notfound).
+!>**Upozornění:** V případě, že chceme externě nastavovat [id](#id) je dobré před tím použít metodu [loaded()](#loaded), ve které můžeme volat [next()](#next) a testovat [notFound](#notfound).
 
 ```javascript
 /** @type {JsTreeFolderOpener} jstfo */
@@ -109,9 +109,9 @@ jstfo.id = 4;
 
 ***
 
-## Seznam rozhraní API
+## Seznam API
 
-**(Kliknutím zobrazíte detail funkce)**
+**(Kliknutím zobrazíš detail pro funkci)**
 
 | Metody | Gettery | Settery |
 | --------------------------------- | --------------------- | ----------------------- |
@@ -123,11 +123,11 @@ jstfo.id = 4;
 
 ***
 
-### Podrobný popis funkcí
+### Detailní popis funkcí
 
 #### init()
 
-vyvolá inicializaci, která poskytuje [následující postup](#init-algo)
+Vyvolá inicializaci, která zajistí [tento následující postup](#init-algo)
 
 ```javascript
 /**
@@ -142,7 +142,7 @@ window.jsTreeFolderOpener.init();
 
 #### next()
 
-Otevře další uzel v pořadí.
+Otevře následující nodě v pořadí.
 
 ```javascript
 /**
@@ -157,7 +157,7 @@ window.jsTreeFolderOpener.next();
 
 #### loaded()
 
-Nastaví zpětné volání, které se provede po vytvoření nového [id](#id) a přijímání dat.
+Nastaví callback, který se provede po zadání nového [id](#id) a přijetí dat.
 
 ```javascript
 /**
@@ -173,7 +173,7 @@ window.jsTreeFolderOpener.loaded(callback);
 
 #### inputDataFrom()
 
-Připojí zadaný vstup, který musí být vložen jako objekt jQuery `$('.input-css-trieda')`. Vstup zajišťuje zadání nového ID
+Připojí zadaný input, který musí být vložen jako jQuery objekt `$('.input-css-trieda')`. Input zajišťuje zadání nového ID
 
 ```javascript
 /**
@@ -192,7 +192,7 @@ window.jsTreeFolderOpener.inputDataFrom(openerInput, withNotifyCallback);
 
 #### setInputValue()
 
-Pokud byl připojen pomocí [inputDataFrom()](#vstupní-data-z) můžeme nastavit hodnotu vstupu odkudkoli.
+Pokud byl připojen pomocí [inputDataFrom()](#inputdatafrom) input, tak danému inputu můžeme odkudkoli nastavit hodnotu.
 
 ```javascript
 /**
@@ -209,9 +209,9 @@ window.jsTreeFolderOpener.setInputValue(value);
 
 #### id
 
-Nastavte nové ID složky. Toto ID bude odesláno prostřednictvím rozhraní API
+Nastavení nového ID složky. Toto ID bude odesláno přes API
 
-[Klikněte pro více informací o tom, co dělá setter id](#id-algo)
+[Klik pro více info, co setter id dělá](#id-algo)
 
 ```javascript
 /**
@@ -230,7 +230,7 @@ window.jsTreeFolderOpener.docId = value;
 
 #### apiUrl
 
-Nastavení nové url adresy API
+Nastavení nové API url
 
 ```javascript
 /**
@@ -250,7 +250,7 @@ window.jsTreeFolderOpener.apiUrl = value;
 
 #### idKeyName
 
-Nový název klíče dotazu URl, který bude obsahovat ID uzlu.
+Nový název url query klíče, ve kterém se bude nacházet ID uzlu.
 
 ```javascript
 /**
@@ -267,9 +267,9 @@ window.jsTreeFolderOpener.idKeyName = value;
 
 #### notFound
 
-Slouží k určení, zda po přijetí dat existuje ve stromu jsTree uzel, který chceme otevřít jako první. Pokud takový uzel neexistuje (nebyl nalezen), vrátí se hodnota TRUE. Pokud takový uzel existuje (byl nalezen), vrací se hodnota FALSE.
+Slouží ke zjištění, zda po přijetí dat, existuje v jsTree uzel, který chceme otevřít jako první. Pokud takový uzel neexistuje (nebyl nalezen / not found), tak se nám vrátí hodnota TRUE. Pokud takový uzel existuje (byl nalezen / found), tak se nám vrátí hodnota FALSE.
 
-Ideální použití tohoto getteru je uvnitř metody [loaded()](#Převzato-z)
+Ideální použití tohoto gettera je uvnitř metody [loaded()](#loaded)
 
 ```javascript
 /**

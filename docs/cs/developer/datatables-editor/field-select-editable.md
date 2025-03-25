@@ -1,12 +1,12 @@
-# Výběrové pole s úpravami
+# Výběrové pole s možností editace
 
-Do kódových polí je možné přidat ikonu pro editaci nebo přidání nového záznamu. Pole se zobrazí jako standardní výběrové pole, ale obsahuje ikonu ![](field-select-icon-edit.png ":no-zoom") pro úpravu vybraného záznamu nebo ikona ![](field-select-icon-add.png ":no-zoom") přidat nový záznam.
+Pro číselníková pole lze doplnit ikonu pro editaci nebo přidání nového záznamu. Pole se zobrazuje jako standardní výběrové pole, ale obsahuje ikonu ![](field-select-icon-edit.png ":no-zoom") pro editaci zvoleného záznamu, nebo ikonu ![](field-select-icon-add.png ":no-zoom") pro přidání nového záznamu.
 
-Ukázka je z editace webových stránek, kde je možné vybrat šablonu ve výběrovém poli. **Šablona webových stránek**.
+Ukázka je z editace web stránek, kde lze vybrat šablonu ve výběrovém poli **Šablona web stránky**.
 
 ![](field-select.png)
 
-Někdy je však nutné v šabloně něco zkontrolovat/upravit, proto je vhodné mít možnost načíst vybranou šablonu přímo z webové stránky do editoru. Výsledkem je vnořené dialogové okno s úpravou např. šablony:
+Někdy je ale třeba v šabloně něco zkontrolovat/upravit, proto možnost přímo z web stránky načíst do editoru zvolenou šablonu je výhodné. Výsledkem je načtení vnořeného dialogového okna s editací např. šablony:
 
 ![](field-select-editable.png)
 
@@ -28,12 +28,12 @@ Pole se aktivuje nastavením atributů editoru pomocí anotace `@DataTableColumn
 private Integer tempId;
 ```
 
-Podporovány jsou pouze následující povinné atributy `data-dt-edit-url`, ale vždy doporučujeme nastavit pole `data-dt-edit-perms`:
-- `data-dt-edit-url` - URL webové stránky pro editaci záznamu, až do hodnoty `{id}` přenese se aktuálně vybraná hodnota ve výběrovém poli.
-- `data-dt-edit-perms` - název práva, pokud uživatel toto právo nemá, možnost editace záznamu se nezobrazí (pole se zobrazí jako standardní výběrové pole).
-- `data-dt-edit-title` - (nepovinné) překladový klíč popisku okna, pokud není uveden, použije se název pole z editoru.
+Podporovány jsou následující atributy, povinné je pouze `data-dt-edit-url`, vždy ale doporučujeme nastavit i pole `data-dt-edit-perms`:
+- `data-dt-edit-url` - URL adresa web stránky pro editaci záznamu, do hodnoty `{id}` se přenese aktuálně zvolená hodnota ve výběrovém poli.
+- `data-dt-edit-perms` - jméno práva, pokud uživatel toto právo nemá, možnost editace záznamu se nezobrazí (pole se zobrazí jako standardní výběrové pole).
+- `data-dt-edit-title` - (nepovinné) překladový klíč titulku okna, není-li zadáno použije se název pole z editoru.
 
-Při volání webové stránky lze zadat speciální značky pro url adresu, která otevře kartu Systém nebo Koš:
+Při volání web stránky je pro url možné zadat speciální značky pro otevření karty Systém, nebo Koš:
 
 ```java
 @DataTableColumnEditorAttr(key = "data-dt-edit-url", value = "/admin/v9/webpages/web-pages-list/?groupid=SYSTEM&docid={id}")
@@ -44,22 +44,22 @@ Při volání webové stránky lze zadat speciální značky pro url adresu, kte
 
 ## Poznámky k implementaci
 
-Implementace je v souboru `/admin/v9/npm_packages/webjetdatatables/field-type-select-editable.js` a prostřednictvím výzvy `$.fn.dataTable.Editor.fieldTypes.select.create` upravuje původní pole typu `select` z Editoru datových tabulek. Úprava spočívá v přidání tlačítek pro editaci a přidání záznamu. Kliknutím na jedno z těchto tlačítek se vyvolá funkce `openIframeModal` otevřít dialogové okno iframe.
+Implementace je v souboru `/admin/v9/npm_packages/webjetdatatables/field-type-select-editable.js` a přes volání `$.fn.dataTable.Editor.fieldTypes.select.create` upravuje původní pole typu `select` z Datatables Editoru. Úprava spočívá v přidání tlačítek pro editaci a přidání záznamu. Klepnutí na jedno z těchto tlačítek volá funkci `openIframeModal` pro otevření iframe dialogu.
 
-V případě `onload` je přidáno naslouchání události pro otevření a zavření okna editoru ve vnořeném dialogu. Pro událost `WJ.DTE.close` (tj. zavření okna editoru), dialogové okno iframe se zavře a vyvolá se aktualizace datové tabulky. Tím dojde také k obnovení hodnot ve výběrových polích.
+V události `onload` se přidá poslech události k otevření a zavření okna editoru ve vnořeném dialogovém okně. Při události `WJ.DTE.close` (tedy zavření okna editoru) se zavře iframe dialog a vyvolá se obnovení dat datatabulky. To způsobí i obnovení hodnot ve výběrových polích.
 
-V případě `WJ.DTE.open` vnořený editor nastaví titulek okna podle zadaného atributu `data-dt-edit-title`, nebo podle názvu pole v editoru.
+Při události `WJ.DTE.open` se vnořenému editoru nastaví titulek okna podle zadaného atributu `data-dt-edit-title`, nebo podle jména pole v editoru.
 
-Otevření příslušného záznamu pro editaci zajišťuje [datatable-opener.js](../libraries/datatable-opener.md) který pro záznam s `?id=-1` vyvolá kliknutí na tlačítko přidat záznam.
+Otevření příslušného záznamu k editaci zabezpečuje [datatable-opener.js](../libraries/datatable-opener.md), který pro záznam s `?id=-1` vyvolá kliknutí na tlačítko přidání záznamu.
 
-Po uložení se data datové tabulky obnoví voláním `EDITOR.TABLE.wjUpdateOptions();`. Volá rozhraní REST `/all` pro získání `json.options` údaje výběrových polí.
+Po uložení se provede obnovení dat datatabulky voláním `EDITOR.TABLE.wjUpdateOptions();`. To volá na REST rozhraní `/all` pro získání `json.options` údajů výběrových polí.
 
 ### Způsob zobrazení
 
-Ve vnořeném dialogovém okně nechceme zobrazovat datovou tabulku ani navigační možnosti, ale pouze samotný editor. To zajišťují styly CSS:
-- v `app-init.js` třída CSS je nastavena pro okno iframe `in-iframe` na adrese `html` Odznak. Nastavuje se pomocí parametru URL `showOnlyEditor=true` který se automaticky přidá do adresy URL při otevření dialogového okna. Dialogové okno nastavuje třídu CSS pro ostatní případy `in-iframe-show-table`, čímž se datová tabulka rovněž zobrazí. Parametr `showEditorFooterPrimary=true` je možné zobrazit zápatí s aktivním primárním tlačítkem (pokud se ukládání neprovádí vnořeným způsobem).
-- po inicializaci je vyvolána událost `WJ.iframeLoaded`, který poté provede kód funkce `onload`, [iframe dialogu](../frameworks/webjetjs.md?id=iframe-dialóg).
+Ve vnořeném dialogovém okně nechceme zobrazovat datatabulku, ani navigační možnosti, ale pouze samotný editor. To je zajištěno pomocí CSS stylů:
+- v `app-init.js` je pro případ okna v iframu nastavena CSS třída `in-iframe` na `html` značce. Nastavuje se podle URL parametru `showOnlyEditor=true` který se přidává při otevření dialogu k URL automaticky. Dialog pro ostatní případy nastavuje CSS třídu `in-iframe-show-table`, která ponechá zobrazenou i datatabulku. Parametrem `showEditorFooterPrimary=true` je možné zobrazit patičku s aktivním primárním tlačítkem (pokud se Uložení neprovádí vnořeným způsobem).
+- po inicializaci je vyvolána událost `WJ.iframeLoaded`, která následně spustí kód funkce `onload`, [iframe dialogu](../frameworks/webjetjs.md?id=iframe-dialóg).
 
-V souboru `src/main/webapp/admin/v9/src/scss/3-base/_modal.scss` je nastaven na zobrazení v režimu `html.in-iframe` která skrývá celou `.ly-page-wrapper` který obsahuje datovou tabulku a celé grafické uživatelské rozhraní.
+V souboru `src/main/webapp/admin/v9/src/scss/3-base/_modal.scss` je nastaveno zobrazení v režimu `html.in-iframe`, které schová celý `.ly-page-wrapper` ve kterém je datatabulka a celé GUI.
 
-Protože však načítání může chvíli trvat, prvek se zobrazí. `#modalIframeLoader` (který je ve výchozím nastavení skrytý) a skrývá se po příkazu `onload` události. Uživatel tak ví, že se načítá něco jiného (editor je inicializován).
+Jelikož ale načítání může chvíli trvat zobrazuje se element `#modalIframeLoader` (který je standardně skrytý) a schová se po provedení `onload` události. Takto uživatel ví, že se ještě něco načítá (inicializuje se editor).

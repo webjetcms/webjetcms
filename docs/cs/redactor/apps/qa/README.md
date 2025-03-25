@@ -1,30 +1,30 @@
 # Otázky a odpovědi
 
-Aplikace Otázky a odpovědi umožňuje vkládat na stránku často kladené otázky a odpovědi. Je možné je kategorizovat podle skupin. Nová otázka přijde na zadaný e-mail.
+Aplikace Otázky a odpovědi, umožňuje do stránky vložit časté dotazy a odpovědi. Je možné je kategorizovat podle skupiny. Nová otázka přijde na zadaný email.
 
 ## Parametry aplikace
 
 - Vložit
   - Otázky s odpověďmi
-  - Formulář pro položení otázky
-- Issue Group - zadejte název skupiny, ze které budou příspěvky vybírány pro zobrazení na webu.
-- Počet otázek na stránce (zobrazí se, pokud je vybrána možnost: Otázky s odpověďmi)
-- E-mail pro zasílání dotazů (zobrazí se, pokud je vybrána možnost: Poptávkový formulář)
+  - Formulář pro zadání otázky
+- Skupina otázek - zadejte název skupiny, ze které se vyberou příspěvky pro zobrazení na stránce
+- Počet otázek na stránce (zobrazí se pokud je zvoleno: Otázky s odpověďmi)
+- Email pro zasílání otázek (zobrazí se pokud je zvoleno: Formulář pro zadání otázky)
 
-Otázky jsou roztříděny do skupin, které zadáte při odesílání žádosti. Pokud potřebujete vytvořit více podskupin, můžete soubor upravit. `/components/qa/qa-ask.jsp` kde nahradíte skryté pole `categoryName` pro výběrové menu, které návštěvníkům umožní vybrat podskupinu.
+Otázky jsou řazeny do skupin, kterou zadáváte při vkládání aplikace. Pokud potřebujete udělat ještě podskupiny, můžete modifikovat soubor `/components/qa/qa-ask.jsp`, kde nahradíte skryté pole `categoryName` za výběrové menu, pomocí kterého budou návštěvníci moci vybrat podskupinu.
 
 ![](webform.png)
 
 ## Administrace
 
-Přehled všech příspěvků v sekci Otázky a odpovědi si můžete prohlédnout výběrem možnosti Otázky a odpovědi v části Aplikace. Otázky, na které není odpověď, jsou zobrazeny červeně.
+Přehled všech příspěvků do sekce Otázky a odpovědi si můžete prohlédnout zvolením položky Otázky a odpovědi v sekci Aplikace. Červenou barvou jsou zobrazeny dotazy, které nemají zadanou odpověď.
 
 ![](admin.png)
 
-Po kliknutí na otázku se zobrazí formulář s parametry otázky a odpovědí. Kromě toho, že se otázka a odpověď zobrazí na stránce, lze je také odeslat e-mailem na adresu tazatele. Pokud tazatel neoznačil možnost **Souhlasím se zveřejněním otázky na webových stránkách**, může být odpověď zaslána pouze na jeho e-mail (možnost Zobrazit na webových stránkách ponechte nezaškrtnutou). Kliknutím na tlačítko Uložit potvrďte provedené změny.
+Klepnutím na dotaz, se vám zobrazí formulář s parametry otázky a odpovědi. Otázku s odpovědí lze kromě zobrazení na stránce i odeslat emailem na adresu zadavatele dotazy. Pokud zadavatel neoznačil možnost **Souhlasím se zveřejněním otázky na webové stránce**, odpověď lze pouze zaslat na jeho email (možnost Zobrazovat na web stránce nechte nezvolenou). Provedené změny potvrdíte kliknutím na Uložit.
 
 ![](admin-edit.png)
 
-Pokud zadáte "Odpovědět na e-mail" a vyberete možnost **Zobrazení na webové stránce**, text z "Odpovědět na e-mail" se automaticky zkopíruje do "Odpovědět na stránku".
+V případě, že zadáte "Odpověď do e-mailu" a zvolíte možnost **Zobrazovat na web stránce**, tak se text z "Odpověď do e-mailu" automaticky zkopíruje do "Odpověď na stránku".
 
-Aplikace podporuje nastavení [volitelná pole](../../../frontend/webpages/customfields/README.md).
+Aplikace podporuje nastavení [volitelných polí](../../../frontend/webpages/customfields/README.md).

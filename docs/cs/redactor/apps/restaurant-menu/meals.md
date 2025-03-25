@@ -1,19 +1,19 @@
 # Jídla
 
-Část **Jídla** spadá do sekce Menu restaurace. Umožňuje definovat pokrmy, které se používají při vytváření jídelního lístku restaurace. Je možné přidávat/upravovat/duplikovat/odstraňovat pokrmy a také je importovat a exportovat.
+Část **Jídla** spadá pod sekci Restaurační menu. Umožňuje zadefinování jídel, která se využívají při vytváření restauračního menu. Možné je přidávání/upravování/duplikování/mazání jídla i jejich importování a exportování.
 
 ![](meals-data-table.png)
 
-Při vytváření nového pokrmu jsou v editoru k dispozici následující parametry:
-- Název - název nového pokrmu (jediný povinný parametr)
-- Kategorie - kategorie jídel s výběrem možností Polévka / Hlavní jídlo / Příloha / Dezert
+Při vytváření nového jídla jsou v editoru tyto parametry:
+- Jméno - jméno nového jídla (jediný povinný parametr)
+- Kategorie - kategorie jídla s výběrem možností Polévka / Hlavní jídlo / Příloha / Dezert
 - Popis
 - Hmotnost (g)
 - Cena
-- Alergeny - alergeny obsažené v této potravině. Tento parametr je typu MULTISELECT, což znamená, že můžete vybrat více hodnot nebo žádnou hodnotu (na výběr je několik hodnot).
+- Alergeny - alergeny obsažené v tomto jídle. Tento parametr je typu MULTISELECT, což znamená, že si můžete vybrat více nebo žádnou hodnotu (na výběr je několik hodnot).
 
 ![](meals-editor.png)
 
-Alergeny se vybírají z výběrové nabídky, ve které lze zvolit několik možností. K dispozici je 14 alergenů (jejich počet lze nastavit v konfigurační proměnné `restaurantMenu.alergensCount`) a jsou definovány v překladových klíčích s předponou `components.restaurant_menu.alergen`:
+Alergeny vybíráte z výběrového menu, ve kterém lze označit více možností. Alergenů je 14 (počet lze nastavit v konfigurační proměnné `restaurantMenu.alergensCount`) a definují se v překladových klíčích s prefixem `components.restaurant_menu.alergen`:
 
 ![](meals-allergens-list.png)

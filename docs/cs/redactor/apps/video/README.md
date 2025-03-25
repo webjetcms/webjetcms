@@ -1,12 +1,12 @@
 # Video
 
-Přidejte na stránku poutavý videoobsah z YouTube, Vimeo, Facebooku nebo nahraných souborů mp4. Díky přizpůsobitelné velikosti a vlastnostem přehrávání můžete zaujmout a zapojit návštěvníky.
+Přidejte na svou stránku poutavé video obsahy z YouTube, Vimeo, Facebook nebo nahraných mp4 souborů. S možností nastavení velikosti a vlastností přehrávání, můžete zaujmout a angažovat své návštěvníky.
 
 ## Nastavení aplikace
 
 ### Zdroj videa
 
-V této části můžete vybírat z dostupných zdrojů videa:
+V této části lze vybrat z dostupných zdrojů videa:
 - YouTube
 - Vimeo
 - Facebook
@@ -16,13 +16,13 @@ V této části můžete vybírat z dostupných zdrojů videa:
 
 ### Parametry
 
-V této části můžete nastavit:
-- Adresa stránky - pro odkazy na YouTube/Vimeo/Facebook stačí vložit odkaz na webovou stránku s videem, aplikace vloží potřebný přehrávač podle kódu v adrese URL.
-- Pevná/reaktivní velikost
+V této části lze nastavit:
+- Adresa stránky - při odkazech na YouTube/Vimeo/Facebook stačí jednoduše vložit odkaz na web stránku s videem, aplikace podle kódu v URL adrese vloží potřebný přehrávač.
+- Fixní/Responzivní velikost
 - Zarovnání videa
 - Šířka
 
-A další nastavení v závislosti na vybraném zdroji
+A ostatní nastavení v závislosti na vybraném zdroji
 
 ![](editor-parameters.png)
 

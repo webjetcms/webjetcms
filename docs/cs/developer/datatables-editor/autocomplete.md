@@ -1,12 +1,12 @@
-# Automatické dokončování
+# Autocomplete
 
-V editoru lze snadno přidat **"našeptávač" pro textová pole** pro uživatelsky přívětivější načtení zapsané hodnoty:
+V editoru lze snadno doplnit **"našeptávač" k textovým polím** pro uživatelsky příjemnější získání psané hodnoty:
 
 ![](autocomplete.png)
 
 ## Konfigurace
 
-Pole automatického dokončování se aktivuje nastavením atributů editoru pomocí anotace `@DataTableColumnEditorAttr`:
+Autocomplete pole se aktivuje nastavením atributů editoru pomocí anotace `@DataTableColumnEditorAttr`:
 
 ```java
 @DataTableColumn(
@@ -19,18 +19,18 @@ Pole automatického dokončování se aktivuje nastavením atributů editoru pom
 )
 ```
 
-Podporovány jsou pouze následující povinné atributy `data-ac-url`:
-- `data-ac-url` - Adresa URL služby REST, která vrací pole/seznam. `String` hodnoty.
-- `data-ac-click` - název funkce, která se zavolá po kliknutí na možnost v automatickém dokončování (pro nastavení dalších polí). Nastavení na hodnotu `fireEnter` při výběru hodnoty se spustí událost stisknutí klávesy. `Enter`.
-- `data-ac-name` - název parametru URL, ve kterém je zapsaná hodnota odeslána službě REST (výchozí termín).
-- `data-ac-min-length` - minimální počet znaků pro volání služby REST (výchozí 1).
+Podporovány jsou následující atributy, povinné je pouze `data-ac-url`:
+- `data-ac-url` - URL adresa REST služby, která vrátí pole/list `String` hodnot.
+- `data-ac-click` - jméno funkce, která se zavolá po kliknutí na možnost v autocompletu (pro nastavení dalších polí). Nastavením na hodnotu `fireEnter` je po zvolení hodnoty vyvolána událost stisknutí klávesy `Enter`.
+- `data-ac-name` - jméno URL parametru, ve kterém se do REST služby zašle napsaná hodnota (výchozí term).
+- `data-ac-min-length` - minimální počet znaků pro volání REST služby (výchozí 1).
 - `data-ac-max-rows` - maximální počet zobrazených řádků (výchozí 30).
-- `data-ac-params` - seznam selektorů polí, jejichž hodnoty se přidají do adresy URL volání služby REST, např. `#DTE_Field_templateInstallName,#DTE_Field_templatesGroupId`.
-- `data-ac-select` - při nastavení na `true` v automatickém dokončování se chová podobně jako výběrové pole - po kliknutí myší do vstupního pole se načtou a zobrazí všechny možnosti.
-- `data-ac-collision` - umístění načtených možností vzhledem k zadávacímu poli. Výchozí `flipfit` pro automatické umístění, pro možnost `select` je přednastavena na hodnotu `none` pro přesné umístění pod vstupní pole.
-- `data-ac-render-item-fn` - název funkce, která konkrétně generuje prvek seznamu dat.
+- `data-ac-params` - seznam selektorů polí, jejichž hodnoty se přidají do URL adresy volání REST služby, například. `#DTE_Field_templateInstallName,#DTE_Field_templatesGroupId`.
+- `data-ac-select` - při nastavení na `true` se autocomplete chová podobně jako výběrové pole - po kliknutí myší do vstupního pole jsou načteny a zobrazeny všechny možnosti.
+- `data-ac-collision` - umístění načtených možností vůči vstupnímu poli. Ve výchozím nastavení `flipfit` pro automatické umístění, pro možnost `select` je přednastaveno na `none` pro striktní umístění pod vstupní pole.
+- `data-ac-render-item-fn` - název funkce, která specificky vygeneruje prvek seznamu dat
 
-Příklad služby REST, která vrací data, je uveden v dokumentu [ConfigurationController.getAutocomplete](../../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), implementace je jednoduchá - na základě zadaného `term` parametr vrací seznam `List<String>` odpovídající záznamy:
+Příklad REST služby vracející údaje je v [ConfigurationController.getAutocomplete](../../../../src/main/java/sk/iway/iwcm/components/configuration/ConfigurationController.java), implementace je jednoduchá - na základě zadaného `term` parametru vrátí seznam `List<String>` vyhovujících záznamů:
 
 ```java
 @GetMapping("/autocomplete")
@@ -42,11 +42,11 @@ public List<String> getAutocomplete(@RequestParam String term) {
 }
 ```
 
-Vzhledem k tomu, že vyhledávání pomocí LIKE se obvykle používá na zadní straně, je možné do vyhledávání zadat znak. `%` zobrazit všechny výsledky. To je však pro uživatele netypické, takže při zadávání mezery nebo znaku `*` hodnota je vložena do hledání znaku `%` zobrazit všechny záznamy.
+Jelikož na backendu se typicky používá LIKE vyhledávání je možné zadat do vyhledávání znak `%` pro zobrazení všech výsledků. To je ale pro uživatele netypické, proto při zadání mezery nebo znaku `*` se do vyhledávání hodnota nahradí za znak `%` pro zobrazení všech záznamů.
 
-## Použití mimo datovou tabulku
+## Použití mimo datatabulky
 
-`Autocompleter` lze použít i mimo datovou tabulku jednoduchým nastavením `data-ac` atributy a třídy CSS `autocomplete`. Inicializace se automaticky aktivuje v [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) všem `input` prvky s třídou CSS `autocomplete`. Příklad:
+`Autocompleter` lze využít i mimo datatabulky jednoduše jednoduchým nastavením `data-ac` atributů a CSS třídy `autocomplete`. Inicializace je automaticky aktivována v [app-init.js](../../../../src/main/webapp/admin/v9/src/js/app-init.js) na všechny `input` elementy s CSS třídou `autocomplete`. Příklad:
 
 ```html
 <div id="docIdInputWrapper" class="col-auto col-pk-input">
@@ -57,9 +57,9 @@ Vzhledem k tomu, že vyhledávání pomocí LIKE se obvykle používá na zadní
 
 ## Poznámky k implementaci
 
-Automatické dokončování používá [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) funkce. Vnitřně je zapouzdřena ve třídě JavaScriptu [AutoCompleter](../../../../src/main/webapp/admin/v9/src/js/autocompleter.js). Tato verze je upravena oproti původní verzi ve WebJET 8, měla by být zpětně kompatibilní (ve WebJET 8 je také možné použít URL původních služeb automatického dokončování).
+Autocomplete používá [jQuery-ui-autocomplete](https://api.jqueryui.com/autocomplete/) funkce. Interně je zapouzdřen do JavaScript třídy [AutoCompleter](../../../../src/main/webapp/admin/v9/src/js/autocompleter.js). Ta je upravena z původní verze ve WebJET 8, zpětně by měla být kompatibilní (lze použít i URL adresy původních autocomplete služeb ve WebJET 8).
 
-Funkce je přidána `autobind()`, který přebírá nastavení z datových atributů zadaného vstupního prvku. Inicializace automatického dokončování je implementována v index.js v kódu:
+Doplněna je funkce `autobind()`, která převezme nastavení z data atributů zadaného input elementu. Inicializace autocomplete je implementována v index.js v kódu:
 
 ```javascript
 //nastav autocomplete
@@ -69,16 +69,16 @@ $('#'+DATA.id+'_modal input.form-control[data-ac-url]').each(function() {
 });
 ```
 
-přičemž, jak je vidět `div.DTE_Field` prvku je také nastavena třída CSS `dt-autocomplete` pro budoucí stylování prvku.
+přičemž jak je vidět `div.DTE_Field` elementu se také nastaví CSS třída `dt-autocomplete` pro možnost budoucího stylování elementu.
 
-Nastavení funkce prostřednictvím `click` parametr je volán se zpožděním 100 ms, aby se nejprve nastavila hodnota v poli, kterou lze poté načíst a použít.
+Funkce nastavena přes `click` parametr se jmenuje se zpožděním 100ms, aby se nejprve nastavila hodnota v poli, kterou je následně možné získat a použít.
 
 ## Speciální generování prvků seznamu
 
-Použití parametru `data-ac-render-item-fn` lze nastavit název funkce, která konkrétně generuje prvek v seznamu dat. Aby to fungovalo, musí být splněno :
-- generovaný prvek musí být `li` prvek (co v něm je, záleží na vás)
-- tento vygenerovaný prvek musí být vložen do listu `ul`
-- zadanou funkci v `data-ac-render-item-fn` musí být definovány pomocí `window` a musí mít vstupní parametry `ul` a `item`
+Pomocí parametru `data-ac-render-item-fn` lze nastavit název funkce, která specificky vygeneruje prvek do seznamu dat. Aby to fungovalo musí být splněno :
+- vygenerovaný prvek musí být `li` element (to co je v něm je už na vás)
+- tento vygenerovaný element musí být vložen do listu `ul`
+- zadaná funkce v `data-ac-render-item-fn` musí být definována pomocí `window` a musí mít vstupní parametry `ul` a `item`
 
 Příklad vlastní funkce
 
@@ -106,4 +106,4 @@ window.disableDeletedEnum = function(ul, item) {
 }
 ```
 
-V tomto příkladu jsme přidali třídu prvků, když je splněna podmínka. `disabled`. Automatické dokončování jsme nastavili tak, aby data (prvky) označená třídou `disabled` jsou barevně zvýrazněny a nelze je vybrat.
+V tomto příkladu jsme při splnění podmínky přidali elementu třídu `disabled`. Autocomplete jsme nastavili tak, že data (prvky) označená třídou `disabled` se barevně zvýrazní a nelze je zvolit.

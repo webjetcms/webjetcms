@@ -1,11 +1,11 @@
 # Vložení dokumentu
 
-Nabídněte návštěvníkům možnost prohlížet si dokumenty přímo na webu bez nutnosti stahování. Prohlížejte dokumenty doc, xls, ppt nebo pdf pomocí aplikace Google Docs Viewer a zajistěte si pohodlné a rychlé prohlížení obsahu.
+Nabídněte návštěvníkům možnost prohlížet dokumenty přímo na vaší stránce bez nutnosti stahování. Vložte náhled dokumentů typu doc, xls, ppt nebo pdf pomocí služby Google Docs Viewer a zajistěte pohodlné a rychlé zobrazení obsahu.
 
 ## Nastavení aplikace
 
-V nastavení můžete nastavit:
-- Adresa URL dokumentu
+V nastaveních lze nastavit:
+- URL adresa dokumentu
 - Šířka
 - Výška
 

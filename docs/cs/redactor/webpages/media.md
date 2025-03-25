@@ -1,48 +1,48 @@
 # Média
 
-## Zobrazení na webové stránce
+## Zobrazení ve web stránce
 
-Média slouží k přiřazení souvisejících souborů/obrázků/odkazů k aktuální stránce.
+Média slouží k přiřazení souvisejících souborů / obrázků / odkazů k aktuální stránce.
 
-Zobrazují se na kartě Média v editoru webové stránky, kde můžete zadat Název, Skupinu (média lze podle potřeby roztřídit do více skupin), odkaz na soubor/stránku, náhledový obrázek (je-li třeba) a prioritu rozložení.
+Zobrazují se v editoru web stránek v kartě média, kde lze zadat Název, skupinu (média lze řadit do více skupin podle potřeb), linku na soubor/stránku, náhledový obrázek (je-li třeba) a prioritu uspořádání.
 
-Média lze použít k různým účelům:
-- seznam souvisejících souborů se stránkou
-- seznam souvisejících stránek s aktuální stránkou
-- seznam audio/video souborů pro stránku (obrázky, animace, videa).
+Média lze používat pro různé účely:
+- seznam souvisejících souborů ke stránce
+- seznam souvisejících stránek k aktuální stránce
+- seznam audio/video souborů ke stránce (obrázky, animace, videa)
 
 ![](media.png)
 
-Na stránce/šabloně můžete v aplikaci Média získat seznam médií podle ID stránky a skupiny médií.
+Ve stránce / šabloně je v aplikaci Média možné získat seznam médií podle ID stránky a skupiny médií.
 
-Poznámka: aplikace Média zobrazuje pouze média:
-- Odkazování na existující soubor (pokud je soubor odstraněn, médium se automaticky přestane zobrazovat).
-- Vloženo před datum a čas uložení webové stránky (po přidání nových médií uložte webovou stránku, abyste ji mohli zobrazit). To umožňuje načasovat zobrazení nových médií - stačí je přidat na webovou stránku, nastavit časové zobrazení do budoucna a přidaná média se zobrazí po včasném zveřejnění webové stránky.
+Upozornění: aplikace média zobrazuje pouze média:
+- Odkazující na existující soubor (pokud se soubor smaže médium se automaticky přestane zobrazovat).
+- Vloženo dříve než je datum a čas uložení web stránky (po přidání nového média uložte web stránku pro jeho zobrazení). Umožňuje to časovat zobrazení nových médií - jednoduše je přidejte k web stránce, nastavte její časové zobrazení do budoucna a přidaná média se zobrazí až po časovém publikování web stránky.
 
 ## Správa všech médií
 
-V nabídce Webové stránky/Média/Správa všech médií můžete vyhledávat a spravovat všechna média. **na všech webových stránkách** v aktuálně zobrazené doméně. Při filtrování můžete zadat název webové stránky, celou cestu nebo dokonce ID stránky (docid) přímo do pole Webová stránka.
+V menu Web stránky/Média/Správa všech médií lze vyhledávat a spravovat všechna média **napříč všemi web stránkami** v aktuálně zobrazené doméně. Při filtrování můžete do pole Web stránka zadat její název, nebo celou cestu, nebo i přímo ID stránky (docid).
 
 ![](media-all.png)
 
-Při úpravě/vytváření nového média je nutné zadat název média a vybrat webovou stránku pomocí stromové struktury.
+Při editaci/vytváření nového média je zapotřebí zadání názvu média a výběr web stránky pomocí stromové struktury.
 
 ![](media-all-editor.png)
 
-Zobrazit tuto možnost **vyžadováno zákonem** "Média - Správa všech médií".
+Zobrazení této možnosti **vyžaduje právo** "Média - Správa všech média".
 
-## Správa mediálních skupin
+## Správa média skupin
 
-Zadaná média můžete uspořádat do skupin pomocí Skupin médií. Například "Ke stažení" nebo "Související odkazy". Spravují se v nabídce Webové stránky/Média/Správa skupin a **vyžadují právo** "Média - řízení skupiny".
+Pomocí média skupin můžete organizovat zadávaná média do skupin. Například "Soubory ke stažení" nebo "Související odkazy". Spravují se v menu Web stránky/Média/Správa skupin a **vyžadují právo** "Média - Správa skupin".
 
-Pomocí aplikace Média zobrazíte média webové stránky podle vybrané skupiny médií (nebo v šabloně, např. v pravém menu nebo pod textem webové stránky).
+Pomocí aplikace Média následně do web stránky (nebo v šabloně např. v pravém menu, nebo pod textem web stránky) zobrazíte média web stránky podle vybrané skupiny médií.
 
-Skupina médií může mít nastaveno omezení, aby se skupina zobrazovala pouze v určitém adresáři webových stránek.
+Skupina médií může mít nastaveno omezení pro zobrazení skupiny jen v určitém adresáři web stránek.
 
 ![](media-groups.png)
 
 ## Implementační detaily
 
-Všechny záznamy médií jsou filtrovány podle aktuálně vybrané domény.
+Všechny Média záznamy jsou filtrovány podle právě zvolené domény.
 
-V případě záznamů z **Správa všech médií** parametr název tabulky je nastaven na hodnotu **dokumenty** automaticky na pozadí. K určení, zda je datová tabulka volána z této sekce, slouží parametr url `isCalledFromTable=true`.
+V případě záznamů z **Správa všech médií** je parametr jména tabulky nastavován na hodnotu **documents** automaticky na pozadí. Pro identifikaci zda se jedná o volání datatabulky právě z této sekce zajišťuje url parametr `isCalledFromTable=true`.
